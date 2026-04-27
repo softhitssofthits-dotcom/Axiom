@@ -581,9 +581,23 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         if (!closed)
         {
             StatusBar.StatusText = GetLocalizedString("Exit.StatusCancelled", "Exit cancelled.");
+            LogIdeEvent(
+                IdeEventLevel.Info,
+                "commands",
+                "command.cancelled",
+                commandName: "Exit",
+                menuName: "File",
+                document: Documents.ActiveDocument);
             return;
         }
 
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "Exit",
+            menuName: "File",
+            document: Documents.ActiveDocument);
         System.Windows.Application.Current.Shutdown();
     }
 
@@ -595,6 +609,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private void ShowAbout()
     {
         StatusBar.StatusText = GetLocalizedString("About.StatusOpened", "About dialog opened.");
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "About",
+            menuName: "Help",
+            document: Documents.ActiveDocument);
         _promptService.ShowInfo(
             GetLocalizedString(
                 "About.Message",
@@ -632,6 +653,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             _externalNavigationService.OpenPath(manualPath);
             StatusBar.StatusText = GetLocalizedString("Manual.StatusOpened", "Manual opened.");
+            LogIdeEvent(
+                IdeEventLevel.Info,
+                "commands",
+                "command.executed",
+                commandName: "OpenManual",
+                menuName: "Help",
+                document: Documents.ActiveDocument,
+                textPreview: manualPath);
         }
         catch (Exception exception)
         {
@@ -1623,22 +1652,62 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         _traceService.Write("theme.switch", "theme=Light");
         SelectedTheme = IdeTheme.Light;
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseLightTheme",
+            menuName: "View",
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["theme"] = SelectedTheme.ToString()
+            });
     }
 
     private void UseDarkTheme()
     {
         _traceService.Write("theme.switch", "theme=Dark");
         SelectedTheme = IdeTheme.Dark;
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseDarkTheme",
+            menuName: "View",
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["theme"] = SelectedTheme.ToString()
+            });
     }
 
     private void UseRussianLanguage()
     {
         SelectedLanguage = IdeLanguage.Russian;
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseRussianLanguage",
+            menuName: "View",
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["language"] = SelectedLanguage.ToString()
+            });
     }
 
     private void UseEnglishLanguage()
     {
         SelectedLanguage = IdeLanguage.English;
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseEnglishLanguage",
+            menuName: "View",
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["language"] = SelectedLanguage.ToString()
+            });
     }
 
     public void RefreshLocalizedShellText()
@@ -1650,21 +1719,65 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private void UseInterpreterExecutionMode()
     {
         SelectedExecutionMode = ExecutionMode.Interpreter;
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseInterpreterExecutionMode",
+            menuName: "Run",
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["executionMode"] = SelectedExecutionMode.ToString()
+            });
     }
 
     private void UseBytecodeExecutionMode()
     {
         SelectedExecutionMode = ExecutionMode.Bytecode;
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseBytecodeExecutionMode",
+            menuName: "Run",
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["executionMode"] = SelectedExecutionMode.ToString()
+            });
     }
 
     private void CloseOutputPane()
     {
         BottomPane.HideOutput();
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "CloseOutputPane",
+            menuName: "View",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["pane"] = "Output",
+                ["visible"] = BottomPane.IsOutputVisible.ToString()
+            });
     }
 
     private void CloseDiagnosticsPane()
     {
         BottomPane.HideDiagnostics();
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "CloseDiagnosticsPane",
+            menuName: "View",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["pane"] = "Diagnostics",
+                ["visible"] = BottomPane.IsDiagnosticsVisible.ToString()
+            });
     }
 
     private void OpenFilesPaneNode(object? parameter)
@@ -2305,12 +2418,36 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         BottomPane.ShowOutput();
         BottomPane.RequestOutputFocus();
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "ShowOutputPane",
+            menuName: "View",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["pane"] = "Output",
+                ["selectedTabIndex"] = BottomPane.SelectedTabIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
     }
 
     private void ShowDiagnosticsPane()
     {
         BottomPane.ShowDiagnostics();
         BottomPane.RequestDiagnosticsFocus();
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "ShowDiagnosticsPane",
+            menuName: "View",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["pane"] = "Diagnostics",
+                ["selectedTabIndex"] = BottomPane.SelectedTabIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
     }
 
     private bool CanModifyDocuments() => !IsShellInteractionLocked();
@@ -2595,6 +2732,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         string category,
         string eventName,
         string? commandName = null,
+        string? menuName = null,
         DocumentTabViewModel? document = null,
         int? line = null,
         int? column = null,
@@ -2611,6 +2749,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             EventName = eventName,
             Source = nameof(MainWindowViewModel),
             CommandName = commandName,
+            MenuName = menuName,
             DocumentPath = document?.FilePath,
             DocumentName = document?.DisplayName,
             Line = line,

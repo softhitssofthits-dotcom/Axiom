@@ -6020,3 +6020,23 @@ IDE теперь позволяет начинать пошаговую отла
 - из `OutputTextBoxStyle` удалены `SelectionBrush` и `SelectionOpacity`;
 - сохранено `IsInactiveSelectionHighlightEnabled=True`, чтобы выделение оставалось заметным при открытом контекстном меню;
 - логика сохранения диапазона выделения на правый клик и состав контекстного меню `Копировать` / `Очистить` / `Выделить всё` не менялись.
+
+## Обновление 2026-04-27 - события пользовательских команд оболочки в журнале IDE
+
+Структурированный журнал действий IDE расширен событиями пользовательских команд, которые помогают восстановить сценарий работы по `.jsonl` без чтения технического trace-журнала.
+
+Текущее поведение:
+- смена темы пишет событие `command.executed` с `commandName` `UseLightTheme` или `UseDarkTheme`, `menuName` `View` и свойством `theme`;
+- смена языка пишет событие `command.executed` с `commandName` `UseRussianLanguage` или `UseEnglishLanguage`, `menuName` `View` и свойством `language`;
+- смена режима выполнения пишет событие `command.executed` с `commandName` `UseInterpreterExecutionMode` или `UseBytecodeExecutionMode`, `menuName` `Run` и свойством `executionMode`;
+- смена стиля форматирования пишет событие `command.executed` с `commandName` `UseClassicFormatting` или `UseModernFormatting`, `menuName` `Format` и свойствами `formattingStyle` и `smartIdentifier`;
+- переключение умного идентификатора пишет событие `command.executed` с `commandName` `ToggleSmartIdentifier`, `menuName` `Format` и свойством `enabled`;
+- открытие и закрытие нижних панелей пишет событие `command.executed` с `commandName` `ShowOutputPane`, `ShowDiagnosticsPane`, `CloseOutputPane` или `CloseDiagnosticsPane`, `menuName` `View` и свойством `pane`;
+- успешное открытие руководства пишет событие `command.executed` с `commandName` `OpenManual`, `menuName` `Help` и путём руководства в кратком тексте;
+- открытие окна `О программе` пишет событие `command.executed` с `commandName` `About` и `menuName` `Help`;
+- попытка выхода из IDE пишет событие `command.executed` с `commandName` `Exit`, а отменённый выход пишет `command.cancelled`.
+
+Граница решения:
+- формат `IdeEventLogEntry` не меняется, потому что поле `menuName` уже было частью модели события;
+- события редакторного шума по-прежнему сжимаются пакетами и не расширяются в этом шаге;
+- пользовательская семантика языка Axiom не менялась.

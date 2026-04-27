@@ -456,6 +456,7 @@ public sealed class EditorFeatureTests
         Assert.Contains("AutomationProperties.AutomationId=\"MainMenu\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"FileMenuItem\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"FileCloseTabMenuItem\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("AutomationProperties.AutomationId=\"FormatMenuItem\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"SearchMenuItem\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"SearchFindMenuItem\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"RunMenuItem\"", xaml, StringComparison.Ordinal);

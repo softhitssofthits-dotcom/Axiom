@@ -84,6 +84,14 @@ internal sealed class IdeSmokeHarness
             LaunchIde();
             var mainWindow = WaitForMainWindow();
 
+            if (_options.EventLogOnly)
+            {
+                RunEventLogOnlySmoke(mainWindow);
+                Console.WriteLine();
+                Console.WriteLine("Axiom IDE event log smoke completed successfully.");
+                return;
+            }
+
             RunUiSmoke(mainWindow);
 
             ReportStep("Persist maximized window + hidden file manager");
@@ -110,6 +118,22 @@ internal sealed class IdeSmokeHarness
                 Directory.Delete(_workspaceRootPath, recursive: true);
             }
         }
+    }
+
+    private void RunEventLogOnlySmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Initial shell state");
+        RequireElement(mainWindow, "MainMenu");
+        RequireElement(mainWindow, "ShellStatusBar");
+        ReportStepCompleted();
+
+        ReportStep("IDE event log viewer shows menu command events");
+        RunIdeEventLogViewerSmoke(mainWindow);
+        ReportStepCompleted();
+
+        ReportStep("Close IDE after event log smoke");
+        CloseWindow(mainWindow, expectProcessExit: true);
+        ReportStepCompleted();
     }
 
     private void RunUiSmoke(AutomationElement mainWindow)
@@ -177,6 +201,10 @@ internal sealed class IdeSmokeHarness
         OpenFileFromTree(mainWindow, Path.GetFileName(_syntaxErrorProgramPath));
         SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
         WaitForDataGridRows(mainWindow, "DiagnosticsDataGrid", minimumRowCount: 1);
+        ReportStepCompleted();
+
+        ReportStep("IDE event log viewer shows menu command events");
+        RunIdeEventLogViewerSmoke(mainWindow);
         ReportStepCompleted();
 
         ReportStep("Bottom pane toggles");
@@ -253,6 +281,66 @@ internal sealed class IdeSmokeHarness
         var deleteDialog = WaitForAnyOwnedWindow(excludedAutomationIds: ["MainWindow", "FindReplaceDialog", "TextInputDialog"]);
         AcceptDialog(deleteDialog);
         AssertWorkspaceNodeMissing(Path.Combine(folderName, moveFileName));
+    }
+
+    private void RunIdeEventLogViewerSmoke(AutomationElement mainWindow)
+    {
+        InvokeMenuItem(mainWindow, "ViewMenuItem", "ViewLanguageMenuItem", "ViewLanguageEnglishMenuItem");
+        InvokeMenuItem(mainWindow, "RunMenuItem", "ExecutionModeMenuItem", "ExecutionModeInterpreterMenuItem");
+        InvokeMenuItem(mainWindow, "FormatMenuItem", "FormatSmartIdentifierMenuItem");
+        InvokeMenuItem(mainWindow, "HelpMenuItem", "HelpAboutMenuItem");
+
+        var informationDialog = WaitForWindow("InformationDialog");
+        InvokeButton(informationDialog, "InformationDialogOkButton");
+        WaitFor(
+            () => FindElementForProcess("InformationDialog") is null ? true : (bool?)null,
+            "Timed out waiting for InformationDialog to close.");
+
+        InvokeMenuItem(mainWindow, "ViewMenuItem", "ViewEventLogMenuItem", "ViewEventLogViewerMenuItem");
+        var viewerWindow = WaitForWindow("IdeEventLogViewerWindow");
+
+        AssertIdeEventLogViewerEntry(
+            viewerWindow,
+            "UseEnglishLanguage",
+            "commandName: UseEnglishLanguage",
+            "menuName: View",
+            "language: English");
+        AssertIdeEventLogViewerEntry(
+            viewerWindow,
+            "UseInterpreterExecutionMode",
+            "commandName: UseInterpreterExecutionMode",
+            "menuName: Run",
+            "executionMode: Interpreter");
+        AssertIdeEventLogViewerEntry(
+            viewerWindow,
+            "ToggleSmartIdentifier",
+            "commandName: ToggleSmartIdentifier",
+            "menuName: Format",
+            "enabled: True");
+        AssertIdeEventLogViewerEntry(
+            viewerWindow,
+            "About",
+            "commandName: About",
+            "menuName: Help");
+
+        InvokeButton(viewerWindow, "IdeEventLogViewerCloseButton");
+        WaitFor(
+            () => FindElementForProcess("IdeEventLogViewerWindow") is null ? true : (bool?)null,
+            "Timed out waiting for IdeEventLogViewerWindow to close.");
+    }
+
+    private void AssertIdeEventLogViewerEntry(
+        AutomationElement viewerWindow,
+        string searchText,
+        params string[] expectedFragments)
+    {
+        SetElementValue(viewerWindow, "IdeEventLogViewerSearchTextBox", searchText);
+        InvokeButton(viewerWindow, "IdeEventLogViewerRefreshButton");
+        WaitForElementText(
+            viewerWindow,
+            "IdeEventLogViewerSelectedDetailsTextBox",
+            text => expectedFragments.All(fragment => text.Contains(fragment, StringComparison.Ordinal)),
+            $"Timed out waiting for event log viewer details for '{searchText}'.");
     }
 
     private void LaunchIde()
@@ -845,6 +933,23 @@ internal sealed class IdeSmokeHarness
             $"Timed out waiting for text in '{automationId}'. Last value: '{lastText}'.");
     }
 
+    private void WaitForElementText(
+        AutomationElement root,
+        string automationId,
+        Func<string, bool> predicate,
+        string failureMessage)
+    {
+        var lastText = string.Empty;
+
+        WaitFor(
+            () =>
+            {
+                lastText = ReadElementText(root, automationId);
+                return predicate(lastText) ? true : (bool?)null;
+            },
+            $"{failureMessage} Last value: '{lastText}'.");
+    }
+
     private void WaitForStatusText(Func<string, bool> predicate)
     {
         WaitForText("StatusBarTextBlock", predicate);
@@ -1172,7 +1277,11 @@ internal sealed class IdeSmokeHarness
             LastDirectoryPath = _workspaceRootPath,
             IsFilesPaneVisible = isFilesPaneVisible,
             IsStatusBarVisible = isStatusBarVisible,
-            WindowState = windowState
+            WindowState = windowState,
+            Theme = "Light",
+            Language = "Russian",
+            SmartIdentifierEnabled = false,
+            PreferredExecutionMode = "Bytecode"
         };
 
         File.WriteAllText(

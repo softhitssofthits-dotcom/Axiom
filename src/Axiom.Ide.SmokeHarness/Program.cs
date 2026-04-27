@@ -21,12 +21,14 @@ internal static class Program
     }
 }
 
-internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecutablePath)
+internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecutablePath, bool EventLogOnly)
 {
     public static SmokeHarnessOptions Parse(string[] args)
     {
         var keepWorkspace = args.Any(static argument =>
             string.Equals(argument, "--keep-workspace", StringComparison.OrdinalIgnoreCase));
+        var eventLogOnly = args.Any(static argument =>
+            string.Equals(argument, "--event-log-only", StringComparison.OrdinalIgnoreCase));
         string? ideExecutablePath = null;
 
         for (var index = 0; index < args.Length; index++)
@@ -45,6 +47,6 @@ internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecut
             index++;
         }
 
-        return new SmokeHarnessOptions(keepWorkspace, ideExecutablePath);
+        return new SmokeHarnessOptions(keepWorkspace, ideExecutablePath, eventLogOnly);
     }
 }

@@ -1521,6 +1521,123 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public void ShellPreferenceCommands_WriteStructuredEventLogEntries()
+    {
+        var recentFilesService = new FakeRecentFilesService(
+            new RecentFilesSnapshot([], @"C:\temp", true, IdeWindowState.Normal));
+        var eventLogService = new FakeIdeEventLogServiceForShell();
+        var viewModel = CreateViewModel(
+            recentFilesService: recentFilesService,
+            eventLogService: eventLogService);
+        eventLogService.Entries.Clear();
+
+        viewModel.UseDarkThemeCommand.Execute(null);
+        viewModel.UseEnglishLanguageCommand.Execute(null);
+        viewModel.UseInterpreterExecutionModeCommand.Execute(null);
+        viewModel.ToggleSmartIdentifierCommand.Execute(null);
+        viewModel.UseModernFormattingCommand.Execute(null);
+
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "UseDarkTheme"
+                && entry.MenuName == "View"
+                && entry.Properties?["theme"] == "Dark");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "UseEnglishLanguage"
+                && entry.MenuName == "View"
+                && entry.Properties?["language"] == "English");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "UseInterpreterExecutionMode"
+                && entry.MenuName == "Run"
+                && entry.Properties?["executionMode"] == "Interpreter");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "ToggleSmartIdentifier"
+                && entry.MenuName == "Format"
+                && entry.Properties?["enabled"] == "True");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "UseModernFormatting"
+                && entry.MenuName == "Format"
+                && entry.Properties?["formattingStyle"] == "Modern");
+    }
+
+    [Fact]
+    public void BottomPaneCommands_WriteStructuredEventLogEntries()
+    {
+        var eventLogService = new FakeIdeEventLogServiceForShell();
+        var viewModel = CreateViewModel(eventLogService: eventLogService);
+        eventLogService.Entries.Clear();
+
+        viewModel.ShowDiagnosticsCommand.Execute(null);
+        viewModel.ShowOutputCommand.Execute(null);
+        viewModel.CloseOutputPaneCommand.Execute(null);
+        viewModel.CloseDiagnosticsPaneCommand.Execute(null);
+
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "ShowDiagnosticsPane"
+                && entry.MenuName == "View"
+                && entry.Properties?["pane"] == "Diagnostics"
+                && entry.Properties?["selectedTabIndex"] == "1");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "ShowOutputPane"
+                && entry.MenuName == "View"
+                && entry.Properties?["pane"] == "Output"
+                && entry.Properties?["selectedTabIndex"] == "0");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "CloseOutputPane"
+                && entry.MenuName == "View"
+                && entry.Properties?["pane"] == "Output"
+                && entry.Properties?["visible"] == "False");
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "CloseDiagnosticsPane"
+                && entry.MenuName == "View"
+                && entry.Properties?["pane"] == "Diagnostics"
+                && entry.Properties?["visible"] == "False");
+    }
+
+    [Fact]
+    public void HelpCommands_WriteStructuredEventLogEntries()
+    {
+        var eventLogService = new FakeIdeEventLogServiceForShell();
+        var expectedManualPath = @"C:\repo\docs\manual\index.html";
+        var viewModel = CreateViewModel(
+            eventLogService: eventLogService,
+            manualPathResolver: () => expectedManualPath);
+        eventLogService.Entries.Clear();
+
+        viewModel.OpenManualCommand.Execute(null);
+        viewModel.AboutCommand.Execute(null);
+
+        Assert.Contains(
+            eventLogService.Entries,
+            entry => entry.EventName == "command.executed"
+                && entry.CommandName == "OpenManual"
+                && entry.MenuName == "Help"
+                && entry.TextPreview == expectedManualPath);
+        Assert.Contains(
+            eventLogService.Entries,
+            static entry => entry.EventName == "command.executed"
+                && entry.CommandName == "About"
+                && entry.MenuName == "Help");
+    }
+
+    [Fact]
     public void RunProgram_PassesSelectedExecutionModeToRunService()
     {
         var documentService = new FakeDocumentFileService

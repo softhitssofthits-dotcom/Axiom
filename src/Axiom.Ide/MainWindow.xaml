@@ -148,7 +148,9 @@
             </MenuItem>
 
             <!-- Format -->
-            <MenuItem Header="{DynamicResource Menu.Format}" Style="{StaticResource MainMenuItemStyle}">
+            <MenuItem Header="{DynamicResource Menu.Format}"
+                      Style="{StaticResource MainMenuItemStyle}"
+                      AutomationProperties.AutomationId="FormatMenuItem">
                 <MenuItem Header="{DynamicResource Menu.Format.Classic}"
                           IsCheckable="True"
                           IsChecked="{Binding IsClassicFormattingEnabled, Mode=OneWay}"

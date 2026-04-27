@@ -66,6 +66,13 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj
 Полезные детали:
 - harness запускает реальный `Axiom.Ide.exe`, готовит временную workspace в `.artifacts/ui-smoke/` и восстанавливает shell-state после прогона;
 - текущий smoke baseline покрывает tree-open, blocked `.exe`, `Find/Replace` включая режим `Regex`, `Run -> Output`, `Run -> Diagnostics`, toggle shell-панелей, persisted shell-state и context-menu/file-operations сценарии `File Manager` (`Show hidden files`, `New File`, `New Directory`, `Rename`, `Copy/Paste`, `Cut/Paste`, `Delete`);
+- для отдельной проверки просмотра журнала действий IDE есть сфокусированный маршрут без полного прогона файловых операций:
+
+```powershell
+dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj -- --event-log-only
+```
+
+- этот режим проходит через меню `View`, `Run`, `Format`, `Help`, открывает встроенный просмотр журнала и проверяет, что в деталях видны корректные `commandName`, `menuName` и свойства событий;
 - для отладки workspace можно оставить:
 
 ```powershell

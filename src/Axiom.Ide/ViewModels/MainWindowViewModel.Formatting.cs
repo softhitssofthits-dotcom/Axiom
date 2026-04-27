@@ -1,5 +1,6 @@
 using Axiom.Ide.Documents;
 using Axiom.Ide.Editor.Formatting;
+using Axiom.Ide.Services.EventLog;
 
 namespace Axiom.Ide.ViewModels;
 
@@ -9,18 +10,53 @@ public sealed partial class MainWindowViewModel
     {
         _traceService.Write("format.style-switch", "style=Classic");
         ApplyFormattingStyle(CodeFormattingStyle.Classic);
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseClassicFormatting",
+            menuName: "Format",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["formattingStyle"] = SelectedFormattingStyle.ToString(),
+                ["smartIdentifier"] = IsSmartIdentifierEnabled.ToString()
+            });
     }
 
     private void UseModernFormatting()
     {
         _traceService.Write("format.style-switch", "style=Modern");
         ApplyFormattingStyle(CodeFormattingStyle.Modern);
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "UseModernFormatting",
+            menuName: "Format",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["formattingStyle"] = SelectedFormattingStyle.ToString(),
+                ["smartIdentifier"] = IsSmartIdentifierEnabled.ToString()
+            });
     }
 
     private void ToggleSmartIdentifier()
     {
         IsSmartIdentifierEnabled = !IsSmartIdentifierEnabled;
         _traceService.Write("editor.smart-identifier.toggle", $"enabled={IsSmartIdentifierEnabled}");
+        LogIdeEvent(
+            IdeEventLevel.Info,
+            "commands",
+            "command.executed",
+            commandName: "ToggleSmartIdentifier",
+            menuName: "Format",
+            document: Documents.ActiveDocument,
+            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["enabled"] = IsSmartIdentifierEnabled.ToString()
+            });
     }
 
     private void ApplyFormattingStyle(CodeFormattingStyle style)
