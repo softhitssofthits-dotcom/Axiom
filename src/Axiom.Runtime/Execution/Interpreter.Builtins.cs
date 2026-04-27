@@ -16,8 +16,8 @@ public sealed partial class Interpreter
 
         return function.BuiltinId.Value switch
         {
-            BuiltinFunctionId.LBound => EvaluateLBound(expression, arguments[0]),
-            BuiltinFunctionId.UBound => EvaluateUBound(expression, arguments[0]),
+            BuiltinFunctionId.LBound => EvaluateLBound(expression, arguments),
+            BuiltinFunctionId.UBound => EvaluateUBound(expression, arguments),
             BuiltinFunctionId.ArrayLength => EvaluateArrayLength(arguments[0]),
             BuiltinFunctionId.ArrayIsAllocated => EvaluateArrayIsAllocated(arguments[0]),
             BuiltinFunctionId.ArrayClone => EvaluateArrayClone(arguments[0]),

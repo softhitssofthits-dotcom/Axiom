@@ -209,28 +209,7 @@ public sealed partial class Parser
             ? NextToken()
             : null;
         var target = ParseRedimTargetExpression();
-        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
-
-        ExpressionSyntax lowerBound;
-        SyntaxToken toKeyword;
-        ExpressionSyntax upperBound;
-
-        if (Current.Kind == SyntaxKind.CloseParenToken)
-        {
-            ReportExpectedExpression();
-            lowerBound = new ErrorExpressionSyntax(CreateMissingToken(SyntaxKind.IntegerLiteralToken));
-            toKeyword = CreateMissingToken(SyntaxKind.ToKeyword);
-            upperBound = new ErrorExpressionSyntax(CreateMissingToken(SyntaxKind.IntegerLiteralToken));
-        }
-        else
-        {
-            lowerBound = ParseExpression();
-            toKeyword = Match(SyntaxKind.ToKeyword, "TO");
-            upperBound = ParseExpression();
-        }
-
-        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
-        var arrayBounds = new ArrayBoundsSyntax(openParenToken, lowerBound, toKeyword, upperBound, closeParenToken);
+        var arrayBounds = ParseExplicitArrayBounds();
         return new RedimStatementSyntax(redimKeyword, preserveKeyword, target, arrayBounds);
     }
 
@@ -306,6 +285,41 @@ public sealed partial class Parser
                     return true;
             }
         }
+    }
+
+    private ArrayBoundsSyntax ParseExplicitArrayBounds()
+    {
+        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var dimensions = new List<ArrayDimensionSyntax>();
+        var commaTokens = new List<SyntaxToken>();
+
+        while (true)
+        {
+            if (Current.Kind == SyntaxKind.CloseParenToken)
+            {
+                ReportExpectedExpression();
+                dimensions.Add(new ArrayDimensionSyntax(
+                    new ErrorExpressionSyntax(CreateMissingToken(SyntaxKind.IntegerLiteralToken)),
+                    CreateMissingToken(SyntaxKind.ToKeyword),
+                    new ErrorExpressionSyntax(CreateMissingToken(SyntaxKind.IntegerLiteralToken))));
+                break;
+            }
+
+            var lowerBound = ParseExpression();
+            var toKeyword = Match(SyntaxKind.ToKeyword, "TO");
+            var upperBound = ParseExpression();
+            dimensions.Add(new ArrayDimensionSyntax(lowerBound, toKeyword, upperBound));
+
+            if (Current.Kind != SyntaxKind.CommaToken)
+            {
+                break;
+            }
+
+            commaTokens.Add(NextToken());
+        }
+
+        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+        return new ArrayBoundsSyntax(openParenToken, dimensions, commaTokens, closeParenToken);
     }
 
     private SyntaxToken ParseOpenModeKeyword()

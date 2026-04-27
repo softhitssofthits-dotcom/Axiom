@@ -83,6 +83,14 @@ public sealed partial class Binder
         _diagnostics.Report(TypeMismatchCode, $"Несовместимые типы: ожидался массив, получен {actualType.Name}.", location);
     }
 
+    private void ReportOneDimensionalArrayRequired(string name, int actualRank, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Форма '{name}' пока поддерживает только одномерные массивы, а получен массив ранга {actualRank}.",
+            location);
+    }
+
     private void ReportBinarySearchRequiresOrderedArray(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
@@ -165,6 +173,14 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportTypeFieldMultidimensionalArrayNotSupported(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidTypeMemberCode,
+            $"Поле '{name}' в TYPE пока поддерживает только одномерную массивную форму.",
+            location);
+    }
+
     private void ReportInvalidFixedTypeArrayBounds(string name, TextLocation location, string details)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -219,6 +235,14 @@ public sealed partial class Binder
     private void ReportInvalidArrayAccess(string name, TextLocation location)
     {
         _diagnostics.Report(InvalidArrayAccessCode, $"Имя '{name}' не является массивом.", location);
+    }
+
+    private void ReportInvalidArrayBoundsForm(string name, TextLocation location, string details)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Объявление массива '{name}' использует недопустимую форму измерений. {details}",
+            location);
     }
 
     private void ReportInvalidReturnContext(TextLocation location)

@@ -117,15 +117,34 @@ public sealed partial class Interpreter
     private void AssignArrayElement(BoundArrayAccessExpression target, RuntimeValue value)
     {
         var array = GetAllocatedArray(EvaluateExpression(target.Target), target.DisplayName, target.Location);
-        var index = ToArrayBound(EvaluateExpression(target.Index), target.Index.Location, "Значение индекса массива");
+        var indices = EvaluateArrayIndices(target.Indices, "Значение индекса массива");
 
-        if (!array.ContainsIndex(index))
+        if (!array.ContainsIndices(indices))
         {
-            ReportArrayIndexOutOfBounds(target.DisplayName, index, array.LowerBound, array.UpperBound, target.Location);
+            ReportArrayIndicesOutOfBounds(target.DisplayName, indices, array, target.Location);
             throw new RuntimeFailureException();
         }
 
-        array.SetValue(index, value);
+        array.SetValue(indices, value);
+    }
+
+    private int[] EvaluateArrayIndices(IReadOnlyList<BoundExpression> indexExpressions, string detailPrefix)
+    {
+        ArgumentNullException.ThrowIfNull(indexExpressions);
+        ArgumentException.ThrowIfNullOrWhiteSpace(detailPrefix);
+
+        var indices = new int[indexExpressions.Count];
+
+        for (var index = 0; index < indexExpressions.Count; index++)
+        {
+            var expression = indexExpressions[index];
+            var detail = indexExpressions.Count == 1
+                ? detailPrefix
+                : $"{detailPrefix} #{index + 1}";
+            indices[index] = ToArrayBound(EvaluateExpression(expression), expression.Location, detail);
+        }
+
+        return indices;
     }
 
     private void AssignRecordField(BoundFieldAccessExpression target, RuntimeValue value)
@@ -390,12 +409,25 @@ public sealed partial class Interpreter
         ReportRuntimeDiagnostic(DivisionByZeroCode, "Деление на ноль.", location);
     }
 
-    private void ReportArrayIndexOutOfBounds(string arrayName, int index, int lowerBound, int upperBound, TextLocation location)
+    private void ReportArrayIndicesOutOfBounds(string arrayName, IReadOnlyList<int> indices, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
             ArrayBoundsCode,
-            $"Индекс {index} выходит за границы массива '{arrayName}' ({lowerBound}..{upperBound}).",
+            $"Индексы {FormatArrayIndices(indices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
+    }
+
+    private static string FormatArrayIndices(IReadOnlyList<int> indices)
+    {
+        return $"({string.Join(", ", indices)})";
+    }
+
+    private static string FormatArrayBounds(RuntimeArrayValue array)
+    {
+        return string.Join(
+            ", ",
+            Enumerable.Range(1, array.Rank)
+                .Select(dimension => $"{array.GetLowerBound(dimension)}..{array.GetUpperBound(dimension)}"));
     }
 
     private void ReportInputConversionFailure(TypeSymbol type, string text, TextLocation location)

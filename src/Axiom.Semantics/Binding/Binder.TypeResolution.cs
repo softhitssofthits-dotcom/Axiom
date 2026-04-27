@@ -22,7 +22,7 @@ public sealed partial class Binder
             FunctionTypeSyntax functionType => FunctionTypeSymbol.Create(
                 functionType.ParameterTypes.Select(ResolveType).ToArray(),
                 ResolveType(functionType.ReturnType)),
-            ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(ResolveType(arrayType.ElementType)),
+            ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(ResolveType(arrayType.ElementType), arrayType.Rank),
             _ => TypeSymbol.Error
         };
     }

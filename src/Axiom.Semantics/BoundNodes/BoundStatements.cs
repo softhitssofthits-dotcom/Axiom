@@ -2,22 +2,37 @@ using Axiom.Core;
 
 namespace Axiom.Semantics;
 
+public sealed class BoundArrayBound
+{
+    public BoundArrayBound(BoundExpression lowerBound, BoundExpression upperBound)
+    {
+        ArgumentNullException.ThrowIfNull(lowerBound);
+        ArgumentNullException.ThrowIfNull(upperBound);
+
+        LowerBound = lowerBound;
+        UpperBound = upperBound;
+    }
+
+    public BoundExpression LowerBound { get; }
+
+    public BoundExpression UpperBound { get; }
+}
+
 public sealed class BoundVariableDeclarationStatement : BoundStatement
 {
     public BoundVariableDeclarationStatement(
         TextLocation location,
         VariableSymbol variable,
         BoundExpression? initializer,
-        BoundExpression? lowerBound,
-        BoundExpression? upperBound)
+        IReadOnlyList<BoundArrayBound> arrayBounds)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(variable);
+        ArgumentNullException.ThrowIfNull(arrayBounds);
 
         Variable = variable;
         Initializer = initializer;
-        LowerBound = lowerBound;
-        UpperBound = upperBound;
+        ArrayBounds = arrayBounds;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.VariableDeclarationStatement;
@@ -26,9 +41,11 @@ public sealed class BoundVariableDeclarationStatement : BoundStatement
 
     public BoundExpression? Initializer { get; }
 
-    public BoundExpression? LowerBound { get; }
+    public IReadOnlyList<BoundArrayBound> ArrayBounds { get; }
 
-    public BoundExpression? UpperBound { get; }
+    public BoundExpression? LowerBound => ArrayBounds.Count == 0 ? null : ArrayBounds[0].LowerBound;
+
+    public BoundExpression? UpperBound => ArrayBounds.Count == 0 ? null : ArrayBounds[0].UpperBound;
 }
 
 public sealed class BoundVariableDeclarationsStatement : BoundStatement
@@ -91,20 +108,17 @@ public sealed class BoundRedimStatement : BoundStatement
         BoundExpression target,
         string displayName,
         bool preserve,
-        BoundExpression lowerBound,
-        BoundExpression upperBound)
+        IReadOnlyList<BoundArrayBound> arrayBounds)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        ArgumentNullException.ThrowIfNull(lowerBound);
-        ArgumentNullException.ThrowIfNull(upperBound);
+        ArgumentNullException.ThrowIfNull(arrayBounds);
 
         Target = target;
         DisplayName = displayName;
         Preserve = preserve;
-        LowerBound = lowerBound;
-        UpperBound = upperBound;
+        ArrayBounds = arrayBounds;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.RedimStatement;
@@ -117,9 +131,11 @@ public sealed class BoundRedimStatement : BoundStatement
 
     public bool Preserve { get; }
 
-    public BoundExpression LowerBound { get; }
+    public IReadOnlyList<BoundArrayBound> ArrayBounds { get; }
 
-    public BoundExpression UpperBound { get; }
+    public BoundExpression LowerBound => ArrayBounds[0].LowerBound;
+
+    public BoundExpression UpperBound => ArrayBounds[0].UpperBound;
 }
 
 public enum PrintSeparatorKind

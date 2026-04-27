@@ -1,4 +1,4 @@
-﻿# IDE Redesign — Thonny-style shell for Axiom.Ide
+# IDE Redesign — Thonny-style shell for Axiom.Ide
 
 ## Status
 
@@ -291,14 +291,14 @@ Axiom.Ide -> ProgramRunService -> AxiomExecutionPipeline
 2. `PROJECT.md`
 3. `README.md`
 4. `docs/ARCHITECTURE.md`
-5. `docs/PLANS2.md`
-6. `docs/WORKLOG3.md`
+5. `docs/PLANS3.md`
+6. `docs/WORKLOG4.md`
 7. **Этот файл** (`docs/IDE_REDESIGN.md`)
 
 ### Что обновлять после каждого slice
 
-- `docs/WORKLOG3.md` — что сделано, touched paths, manual checks, exact next step;
-- `docs/PLANS2.md` — если следующий шаг изменился;
+- `docs/WORKLOG4.md` — что сделано, touched paths, manual checks, exact next step;
+- `docs/PLANS3.md` — если следующий шаг изменился;
 - `docs/ARCHITECTURE.md` — если изменилась техническая структура IDE.
 
 ### Какие тесты гонять

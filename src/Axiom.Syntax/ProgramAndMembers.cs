@@ -85,14 +85,20 @@ public sealed class FunctionTypeSyntax : TypeSyntax
 
 public sealed class ArrayTypeSyntax : TypeSyntax
 {
-    public ArrayTypeSyntax(TypeSyntax elementType, SyntaxToken openParenToken, SyntaxToken closeParenToken)
+    public ArrayTypeSyntax(
+        TypeSyntax elementType,
+        SyntaxToken openParenToken,
+        IReadOnlyList<SyntaxToken> commaTokens,
+        SyntaxToken closeParenToken)
     {
         ArgumentNullException.ThrowIfNull(elementType);
         ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(commaTokens);
         ArgumentNullException.ThrowIfNull(closeParenToken);
 
         ElementType = elementType;
         OpenParenToken = openParenToken;
+        CommaTokens = commaTokens;
         CloseParenToken = closeParenToken;
     }
 
@@ -102,7 +108,11 @@ public sealed class ArrayTypeSyntax : TypeSyntax
 
     public SyntaxToken OpenParenToken { get; }
 
+    public IReadOnlyList<SyntaxToken> CommaTokens { get; }
+
     public SyntaxToken CloseParenToken { get; }
+
+    public int Rank => CommaTokens.Count + 1;
 }
 
 public sealed class ProgramSyntax : SyntaxNode

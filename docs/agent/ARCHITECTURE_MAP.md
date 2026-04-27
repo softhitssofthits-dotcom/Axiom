@@ -1,4 +1,4 @@
-﻿# Architecture Map
+# Architecture Map
 
 ## Code Hotspots
 
@@ -60,7 +60,7 @@ Look at:
 - `src/Axiom.Syntax/`
 - `src/Axiom.Parsing/`
 - `tests/Axiom.Parsing.Tests/`
-- `docs/SPECIFICATION2.md`
+- `docs/SPECIFICATION3.md`
 
 ### Change Semantic Rules
 
@@ -68,7 +68,7 @@ Look at:
 
 - `src/Axiom.Semantics/`
 - `tests/Axiom.Semantics.Tests/`
-- `docs/SPECIFICATION2.md`
+- `docs/SPECIFICATION3.md`
 
 ### Change IDE Shell Behavior
 
@@ -83,6 +83,6 @@ Look at:
 ## Retrieval Notes
 
 - Prefer this file for orientation, not for detailed contracts.
-- For exact language behavior, always fall back to `docs/SPECIFICATION2.md`.
-- For exact session continuity, always fall back to `docs/WORKLOG3.md`.
+- For exact language behavior, always fall back to `docs/SPECIFICATION3.md`.
+- For exact session continuity, always fall back to `docs/WORKLOG4.md`.
 

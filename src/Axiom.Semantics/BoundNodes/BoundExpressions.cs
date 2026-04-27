@@ -46,15 +46,19 @@ public sealed class BoundVariableExpression : BoundExpression
 
 public sealed class BoundArrayAccessExpression : BoundExpression
 {
-    public BoundArrayAccessExpression(TextLocation location, BoundExpression target, BoundExpression index, string displayName)
+    public BoundArrayAccessExpression(
+        TextLocation location,
+        BoundExpression target,
+        IReadOnlyList<BoundExpression> indices,
+        string displayName)
         : base(location, GetElementType(target))
     {
         ArgumentNullException.ThrowIfNull(target);
-        ArgumentNullException.ThrowIfNull(index);
+        ArgumentNullException.ThrowIfNull(indices);
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
 
         Target = target;
-        Index = index;
+        Indices = indices;
         DisplayName = displayName;
     }
 
@@ -62,7 +66,9 @@ public sealed class BoundArrayAccessExpression : BoundExpression
 
     public BoundExpression Target { get; }
 
-    public BoundExpression Index { get; }
+    public IReadOnlyList<BoundExpression> Indices { get; }
+
+    public BoundExpression Index => Indices[0];
 
     public string DisplayName { get; }
 

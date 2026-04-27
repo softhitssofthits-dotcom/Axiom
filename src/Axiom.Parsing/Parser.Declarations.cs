@@ -131,11 +131,18 @@ public sealed partial class Parser
             typeSyntax = new NamedTypeSyntax(MatchNamedTypeToken());
         }
 
-        if (Current.Kind == SyntaxKind.OpenParenToken && Peek(1).Kind == SyntaxKind.CloseParenToken)
+        if (IsArrayTypeSuffix())
         {
             var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+            var commaTokens = new List<SyntaxToken>();
+
+            while (Current.Kind == SyntaxKind.CommaToken)
+            {
+                commaTokens.Add(NextToken());
+            }
+
             var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
-            typeSyntax = new ArrayTypeSyntax(typeSyntax, openParenToken, closeParenToken);
+            typeSyntax = new ArrayTypeSyntax(typeSyntax, openParenToken, commaTokens, closeParenToken);
         }
 
         return typeSyntax;
@@ -162,19 +169,56 @@ public sealed partial class Parser
     private ArrayBoundsSyntax ParseArrayBounds()
     {
         var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var dimensions = new List<ArrayDimensionSyntax>();
+        var commaTokens = new List<SyntaxToken>();
 
-        if (Current.Kind == SyntaxKind.CloseParenToken)
+        while (true)
         {
-            var dynamicCloseParenToken = Match(SyntaxKind.CloseParenToken, ")");
-            return new ArrayBoundsSyntax(openParenToken, startExpression: null, toKeyword: null, endExpression: null, dynamicCloseParenToken);
+            if (Current.Kind is SyntaxKind.CommaToken or SyntaxKind.CloseParenToken)
+            {
+                dimensions.Add(new ArrayDimensionSyntax(startExpression: null, toKeyword: null, endExpression: null));
+            }
+            else
+            {
+                var startExpression = ParseExpression();
+                var toKeyword = Match(SyntaxKind.ToKeyword, "TO");
+                var endExpression = ParseExpression();
+                dimensions.Add(new ArrayDimensionSyntax(startExpression, toKeyword, endExpression));
+            }
+
+            if (Current.Kind != SyntaxKind.CommaToken)
+            {
+                break;
+            }
+
+            commaTokens.Add(NextToken());
         }
 
-        var startExpression = ParseExpression();
-        var toKeyword = Match(SyntaxKind.ToKeyword, "TO");
-        var endExpression = ParseExpression();
         var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+        return new ArrayBoundsSyntax(openParenToken, dimensions, commaTokens, closeParenToken);
+    }
 
-        return new ArrayBoundsSyntax(openParenToken, startExpression, toKeyword, endExpression, closeParenToken);
+    private bool IsArrayTypeSuffix()
+    {
+        if (Current.Kind != SyntaxKind.OpenParenToken)
+        {
+            return false;
+        }
+
+        for (var offset = 1; ; offset++)
+        {
+            var token = Peek(offset);
+
+            if (token.Kind == SyntaxKind.CloseParenToken)
+            {
+                return true;
+            }
+
+            if (token.Kind != SyntaxKind.CommaToken)
+            {
+                return false;
+            }
+        }
     }
 
     private void ParseSeparatedParameters(

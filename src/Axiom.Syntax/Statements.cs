@@ -1,27 +1,18 @@
 namespace Axiom.Syntax;
 
-public sealed class ArrayBoundsSyntax : SyntaxNode
+public sealed class ArrayDimensionSyntax : SyntaxNode
 {
-    public ArrayBoundsSyntax(
-        SyntaxToken openParenToken,
+    public ArrayDimensionSyntax(
         ExpressionSyntax? startExpression,
         SyntaxToken? toKeyword,
-        ExpressionSyntax? endExpression,
-        SyntaxToken closeParenToken)
+        ExpressionSyntax? endExpression)
     {
-        ArgumentNullException.ThrowIfNull(openParenToken);
-        ArgumentNullException.ThrowIfNull(closeParenToken);
-
-        OpenParenToken = openParenToken;
         StartExpression = startExpression;
         ToKeyword = toKeyword;
         EndExpression = endExpression;
-        CloseParenToken = closeParenToken;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ArrayBounds;
-
-    public SyntaxToken OpenParenToken { get; }
 
     public ExpressionSyntax? StartExpression { get; }
 
@@ -29,9 +20,50 @@ public sealed class ArrayBoundsSyntax : SyntaxNode
 
     public ExpressionSyntax? EndExpression { get; }
 
+    public bool IsDynamic => StartExpression is null && ToKeyword is null && EndExpression is null;
+}
+
+public sealed class ArrayBoundsSyntax : SyntaxNode
+{
+    public ArrayBoundsSyntax(
+        SyntaxToken openParenToken,
+        IReadOnlyList<ArrayDimensionSyntax> dimensions,
+        IReadOnlyList<SyntaxToken> commaTokens,
+        SyntaxToken closeParenToken)
+    {
+        ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(dimensions);
+        ArgumentNullException.ThrowIfNull(commaTokens);
+        ArgumentNullException.ThrowIfNull(closeParenToken);
+
+        OpenParenToken = openParenToken;
+        Dimensions = dimensions;
+        CommaTokens = commaTokens;
+        CloseParenToken = closeParenToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ArrayBounds;
+
+    public SyntaxToken OpenParenToken { get; }
+
+    public IReadOnlyList<ArrayDimensionSyntax> Dimensions { get; }
+
+    public IReadOnlyList<SyntaxToken> CommaTokens { get; }
+
+    public ExpressionSyntax? StartExpression => Dimensions.Count == 0 ? null : Dimensions[0].StartExpression;
+
+    public SyntaxToken? ToKeyword => Dimensions.Count == 0 ? null : Dimensions[0].ToKeyword;
+
+    public ExpressionSyntax? EndExpression => Dimensions.Count == 0 ? null : Dimensions[0].EndExpression;
+
     public SyntaxToken CloseParenToken { get; }
 
-    public bool IsDynamic => StartExpression is null && ToKeyword is null && EndExpression is null;
+    public int Rank => Dimensions.Count;
+
+    public bool IsDynamic => Dimensions.Count > 0 && Dimensions.All(static dimension => dimension.IsDynamic);
+
+    public bool HasMixedDimensions => Dimensions.Any(static dimension => dimension.IsDynamic)
+        && Dimensions.Any(static dimension => !dimension.IsDynamic);
 }
 
 public sealed class VariableDeclarationSyntax : SyntaxNode

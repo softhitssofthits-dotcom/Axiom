@@ -4,16 +4,18 @@ namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
-    private RuntimeValue EvaluateLBound(BoundCallExpression expression, RuntimeValue argument)
+    private RuntimeValue EvaluateLBound(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "LBOUND", "array", 0, argument);
-        return RuntimeValue.FromInteger(array.LowerBound);
+        var array = RequireAllocatedArrayArgument(expression, "LBOUND", "array", 0, arguments[0]);
+        var dimension = ResolveArrayInfoDimension(expression, "LBOUND", array, arguments);
+        return RuntimeValue.FromInteger(array.GetLowerBound(dimension));
     }
 
-    private RuntimeValue EvaluateUBound(BoundCallExpression expression, RuntimeValue argument)
+    private RuntimeValue EvaluateUBound(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "UBOUND", "array", 0, argument);
-        return RuntimeValue.FromInteger(array.UpperBound);
+        var array = RequireAllocatedArrayArgument(expression, "UBOUND", "array", 0, arguments[0]);
+        var dimension = ResolveArrayInfoDimension(expression, "UBOUND", array, arguments);
+        return RuntimeValue.FromInteger(array.GetUpperBound(dimension));
     }
 
     private RuntimeValue EvaluateArrayLength(RuntimeValue argument)
@@ -610,7 +612,7 @@ public sealed partial class Interpreter
     private static RuntimeValue CreateUnallocatedArrayValue(ArrayTypeSymbol arrayType)
     {
         ArgumentNullException.ThrowIfNull(arrayType);
-        return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType));
+        return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, rank: arrayType.Rank));
     }
 
     private static RuntimeValue CreateArrayValue(
@@ -622,7 +624,7 @@ public sealed partial class Interpreter
         ArgumentNullException.ThrowIfNull(arrayType);
         ArgumentNullException.ThrowIfNull(valueFactory);
 
-        var array = new RuntimeArrayValue(arrayType.ElementType);
+        var array = new RuntimeArrayValue(arrayType.ElementType, rank: arrayType.Rank);
         array.Allocate(lowerBound, upperBound);
 
         ForEachIndexAscending(lowerBound, upperBound, index => array.SetValue(index, valueFactory(index)));
@@ -652,7 +654,38 @@ public sealed partial class Interpreter
             return CreateUnallocatedArrayValue(arrayType);
         }
 
-        return CreateArrayValue(arrayType, source.LowerBound, source.UpperBound, source.GetValue);
+        return source.Rank == 1
+            ? CreateArrayValue(arrayType, source.LowerBound, source.UpperBound, source.GetValue)
+            : RuntimeValue.FromArray(arrayType, source.Clone());
+    }
+
+    private int ResolveArrayInfoDimension(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeArrayValue array,
+        IReadOnlyList<RuntimeValue> arguments)
+    {
+        if (arguments.Count == 1)
+        {
+            return 1;
+        }
+
+        var dimension = ToArrayBound(
+            arguments[1],
+            GetBuiltInArgumentLocation(expression, 1),
+            $"Измерение для {functionName}");
+
+        if (dimension < 1 || dimension > array.Rank)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "dimension",
+                $"должен быть в диапазоне от 1 до {array.Rank}.",
+                GetBuiltInArgumentLocation(expression, 1));
+            throw new RuntimeFailureException();
+        }
+
+        return dimension;
     }
 
     private bool ArrayContainsValue(RuntimeArrayValue array, RuntimeValue value)

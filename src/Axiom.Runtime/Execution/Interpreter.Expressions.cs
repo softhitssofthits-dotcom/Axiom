@@ -52,15 +52,15 @@ public sealed partial class Interpreter
     private RuntimeValue EvaluateArrayAccessExpression(BoundArrayAccessExpression expression)
     {
         var array = GetAllocatedArray(EvaluateExpression(expression.Target), expression.DisplayName, expression.Location);
-        var index = ToArrayBound(EvaluateExpression(expression.Index), expression.Index.Location, "Значение индекса массива");
+        var indices = EvaluateArrayIndices(expression.Indices, "Значение индекса массива");
 
-        if (!array.ContainsIndex(index))
+        if (!array.ContainsIndices(indices))
         {
-            ReportArrayIndexOutOfBounds(expression.DisplayName, index, array.LowerBound, array.UpperBound, expression.Location);
+            ReportArrayIndicesOutOfBounds(expression.DisplayName, indices, array, expression.Location);
             throw new RuntimeFailureException();
         }
 
-        return array.GetValue(index);
+        return array.GetValue(indices);
     }
 
     private RuntimeValue EvaluateFieldAccessExpression(BoundFieldAccessExpression expression)

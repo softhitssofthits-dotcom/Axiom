@@ -274,8 +274,8 @@ Axiom сейчас уже имеет хорошую верхнюю полови�
 Нужно:
 
 - обновить `docs/ARCHITECTURE.md` полной схемой двух backend-ов
-- обновить `docs/SPECIFICATION2.md` пользовательским и системным договором `Compile`, `Run`, `ExecutionMode`, `ExecutionEngineKind`
-- обновить `docs/PLANS2.md` очередями внедрения
+- обновить `docs/SPECIFICATION3.md` пользовательским и системным договором `Compile`, `Run`, `ExecutionMode`, `ExecutionEngineKind`
+- обновить `docs/PLANS3.md` очередями внедрения
 - зафиксировать в документации, что `Compile` теперь имеет две ступени:
   - frontend-подготовка
   - backend-подготовка байткода

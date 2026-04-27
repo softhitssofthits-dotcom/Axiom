@@ -1,0 +1,124 @@
+ПУБЛИКАЦИЯ ПРОЕКТА AXIOM НА GITHUB
+==================================
+
+Репозиторий:
+https://github.com/softhitssofthits-dotcom/Axiom
+
+
+1. Разовая настройка на этом компьютере
+---------------------------------------
+
+Эти команды обычно выполняются один раз:
+
+```powershell
+Set-Location "C:\Axiom"
+
+git config --global user.name "softhitssofthits-dotcom"
+git config --global user.email "ВАШ_EMAIL_ИЗ_GITHUB"
+
+gh auth login -h github.com -p https -w
+gh auth setup-git
+```
+
+Что важно:
+- вход в GitHub в браузере и авторизация Git в PowerShell — это не одно и то же;
+- код для страницы `github.com/login/device` берётся из окна PowerShell после команды `gh auth login -h github.com -p https -w`;
+- после успешной авторизации `gh auth setup-git` связывает обычный `git push` с этой авторизацией.
+
+
+2. Обычная публикация изменений
+-------------------------------
+
+Если нужно отправить текущий снимок проекта в GitHub:
+
+```powershell
+Set-Location "C:\Axiom"
+
+git add -A
+git commit -m "Короткое описание изменений"
+git push origin master
+```
+
+Этого достаточно почти всегда.
+
+
+3. Если изменений для коммита нет
+---------------------------------
+
+Если Git пишет, что коммитить нечего, а нужно просто отправить уже существующий локальный коммит:
+
+```powershell
+Set-Location "C:\Axiom"
+git push origin master
+```
+
+
+4. Если нужна жёсткая перезапись удалённой ветки
+-----------------------------------------------
+
+Использовать только когда обычный `git push` не проходит из-за расхождения истории:
+
+```powershell
+Set-Location "C:\Axiom"
+
+git add -A
+git commit -m "Полная замена содержимого репозитория"
+git push --force-with-lease origin master
+```
+
+Почему именно так:
+- `--force-with-lease` безопаснее, чем `--force`;
+- он жёстко обновляет удалённую ветку, но всё же проверяет, что её не изменили неожиданно с другой стороны.
+
+
+5. Как понять, что всё прошло успешно
+-------------------------------------
+
+Успешный `push` выглядит примерно так:
+
+```powershell
+To https://github.com/softhitssofthits-dotcom/Axiom.git
+   СТАРЫЙ_ХЕШ..НОВЫЙ_ХЕШ  master -> master
+```
+
+После этого снова появляется приглашение PowerShell:
+
+```powershell
+PS C:\Axiom>
+```
+
+Только после этого имеет смысл обновлять страницу GitHub.
+
+
+6. Самая короткая памятка
+-------------------------
+
+Если всё уже один раз настроено, то обычно достаточно только этого:
+
+```powershell
+Set-Location "C:\Axiom"
+git add -A
+git commit -m "Описание изменений"
+git push origin master
+```
+
+
+7. Если снова откроется страница Device Activation
+--------------------------------------------------
+
+Порядок такой:
+1. Запустить в PowerShell:
+
+```powershell
+gh auth login -h github.com -p https -w
+```
+
+2. Посмотреть код в PowerShell.
+3. Ввести этот код на странице GitHub.
+4. Вернуться в PowerShell.
+5. Выполнить:
+
+```powershell
+gh auth setup-git
+git push origin master
+```

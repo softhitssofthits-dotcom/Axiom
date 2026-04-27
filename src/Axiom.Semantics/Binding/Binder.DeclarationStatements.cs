@@ -14,9 +14,10 @@ public sealed partial class Binder
 
             foreach (var declarator in declaration.Declarators)
             {
+                var arrayRank = declarator.ArrayBounds?.Rank ?? 0;
                 var variableType = declarator.ArrayBounds is null
                     ? type
-                    : BindArrayVariableType(type);
+                    : BindArrayVariableType(type, arrayRank);
                 var variable = new VariableSymbol(
                     declarator.Identifier.Text,
                     variableType,
@@ -26,13 +27,8 @@ public sealed partial class Binder
 
                 TryDeclareScopedVariable(variable, declarator.Identifier.Location);
 
-                var lowerBound = declarator.ArrayBounds is null || declarator.ArrayBounds.IsDynamic
-                    ? null
-                    : BindNumericExpression(declarator.ArrayBounds.StartExpression!);
-                var upperBound = declarator.ArrayBounds is null || declarator.ArrayBounds.IsDynamic
-                    ? null
-                    : BindNumericExpression(declarator.ArrayBounds.EndExpression!);
-                declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, initializer, lowerBound, upperBound));
+                var arrayBounds = BindDeclaratorArrayBounds(declarator);
+                declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, initializer, arrayBounds));
             }
         }
 
@@ -94,7 +90,7 @@ public sealed partial class Binder
             _boundIntegralConstants[constant] = integralValue;
         }
 
-        return new BoundVariableDeclarationStatement(GetLocation(statement), constant, initializer, lowerBound: null, upperBound: null);
+        return new BoundVariableDeclarationStatement(GetLocation(statement), constant, initializer, arrayBounds: []);
     }
 
     private BoundStatement BindAssignmentStatement(AssignmentStatementSyntax statement)
@@ -163,13 +159,53 @@ public sealed partial class Binder
             ReportFixedTypeArrayFieldOperation("REDIM", displayName, GetLocation(statement.Target));
         }
 
-        var lowerBound = BindNumericExpression(statement.ArrayBounds.StartExpression!);
-        var upperBound = BindNumericExpression(statement.ArrayBounds.EndExpression!);
-        return new BoundRedimStatement(GetLocation(statement), target, displayName, statement.IsPreserve, lowerBound, upperBound);
+        if (target.Type is ArrayTypeSymbol arrayType
+            && statement.ArrayBounds.Rank != arrayType.Rank)
+        {
+            ReportWrongArgumentCount(displayName, arrayType.Rank, statement.ArrayBounds.Rank, statement.ArrayBounds.OpenParenToken.Location);
+        }
+
+        var arrayBounds = statement.ArrayBounds.Dimensions
+            .Select(BindExplicitArrayBound)
+            .ToArray();
+        return new BoundRedimStatement(GetLocation(statement), target, displayName, statement.IsPreserve, arrayBounds);
     }
 
-    private static TypeSymbol BindArrayVariableType(TypeSymbol elementType)
+    private IReadOnlyList<BoundArrayBound> BindDeclaratorArrayBounds(VariableDeclaratorSyntax declarator)
     {
-        return ArrayTypeSymbol.Create(elementType);
+        if (declarator.ArrayBounds is null)
+        {
+            return [];
+        }
+
+        if (declarator.ArrayBounds.HasMixedDimensions)
+        {
+            ReportInvalidArrayBoundsForm(
+                declarator.Identifier.Text,
+                declarator.ArrayBounds.OpenParenToken.Location,
+                "Либо укажите границы для каждого измерения, либо оставьте все измерения пустыми.");
+            return [];
+        }
+
+        if (declarator.ArrayBounds.IsDynamic)
+        {
+            return [];
+        }
+
+        return declarator.ArrayBounds.Dimensions
+            .Select(BindExplicitArrayBound)
+            .ToArray();
+    }
+
+    private BoundArrayBound BindExplicitArrayBound(ArrayDimensionSyntax dimension)
+    {
+        return new BoundArrayBound(
+            BindNumericExpression(dimension.StartExpression!),
+            BindNumericExpression(dimension.EndExpression!));
+    }
+
+    private static TypeSymbol BindArrayVariableType(TypeSymbol elementType, int rank)
+    {
+        return ArrayTypeSymbol.Create(elementType, rank);
     }
 }

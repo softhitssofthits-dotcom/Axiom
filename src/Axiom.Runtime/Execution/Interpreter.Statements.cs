@@ -54,9 +54,9 @@ public sealed partial class Interpreter
         {
             var arrayType = (ArrayTypeSymbol)statement.Variable.Type;
 
-            if (statement.LowerBound is null || statement.UpperBound is null)
+            if (statement.ArrayBounds.Count == 0)
             {
-                CurrentScope.Define(statement.Variable, new RuntimeArrayValue(arrayType.ElementType, statement.Variable.FixedStringLength));
+                CurrentScope.Define(statement.Variable, new RuntimeArrayValue(arrayType.ElementType, statement.Variable.FixedStringLength, arrayType.Rank));
                 return ExecutionSignal.None;
             }
 
@@ -65,19 +65,20 @@ public sealed partial class Interpreter
                 return ReportInvalidRuntimeState<ExecutionSignal>($"Array initializer for '{statement.Variable.Name}' is not supported in v0.1.", statement.Location);
             }
 
-            var lowerBound = ToArrayBound(EvaluateExpression(statement.LowerBound), statement.LowerBound.Location, "Нижняя граница массива");
-            var upperBound = ToArrayBound(EvaluateExpression(statement.UpperBound), statement.UpperBound.Location, "Верхняя граница массива");
+            var (lowerBounds, upperBounds) = EvaluateArrayBounds(statement.ArrayBounds);
+            EnsureAllowedArrayLowerBounds(statement.Variable.Name, lowerBounds, statement.ArrayBounds);
 
-            EnsureAllowedArrayLowerBound(statement.Variable.Name, lowerBound, statement.LowerBound.Location);
-
-            if (!IsValidArrayBounds(lowerBound, upperBound))
+            try
+            {
+                CurrentScope.Define(statement.Variable, new RuntimeArrayValue(arrayType.ElementType, statement.Variable.FixedStringLength, lowerBounds, upperBounds));
+            }
+            catch (ArgumentOutOfRangeException)
             {
                 return ReportInvalidRuntimeState<ExecutionSignal>(
-                    $"Массив '{statement.Variable.Name}' имеет неверные границы. Верхняя граница не может быть меньше нижней, кроме пустой формы 1 TO 0.",
+                    $"Массив '{statement.Variable.Name}' имеет недопустимые границы. В каждом измерении верхняя граница не может быть меньше нижней, кроме канонической пустой формы 1 TO 0.",
                     statement.Location);
             }
 
-            CurrentScope.Define(statement.Variable, new RuntimeArrayValue(arrayType.ElementType, statement.Variable.FixedStringLength, lowerBound, upperBound));
             return ExecutionSignal.None;
         }
 
@@ -137,54 +138,70 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteRedim(BoundRedimStatement statement)
     {
         var array = EvaluateExpression(statement.Target).AsArray();
+        var (lowerBounds, upperBounds) = EvaluateArrayBounds(statement.ArrayBounds);
+        EnsureAllowedArrayLowerBounds(statement.DisplayName, lowerBounds, statement.ArrayBounds);
 
-        var lowerBound = ToArrayBound(
-            EvaluateExpression(statement.LowerBound),
-            statement.LowerBound.Location,
-            "Нижняя граница массива");
-        var upperBound = ToArrayBound(
-            EvaluateExpression(statement.UpperBound),
-            statement.UpperBound.Location,
-            "Верхняя граница массива");
-
-        EnsureAllowedArrayLowerBound(statement.DisplayName, lowerBound, statement.LowerBound.Location);
-
-        if (!IsValidArrayBounds(lowerBound, upperBound))
+        try
+        {
+            if (statement.Preserve)
+            {
+                array.AllocatePreserving(lowerBounds, upperBounds);
+            }
+            else
+            {
+                array.Allocate(lowerBounds, upperBounds);
+            }
+        }
+        catch (ArgumentOutOfRangeException)
         {
             return ReportInvalidRuntimeState<ExecutionSignal>(
-                $"Массив '{statement.DisplayName}' имеет неверные границы. Верхняя граница не может быть меньше нижней, кроме пустой формы 1 TO 0.",
+                $"Массив '{statement.DisplayName}' имеет недопустимые границы. В каждом измерении верхняя граница не может быть меньше нижней, кроме канонической пустой формы 1 TO 0.",
                 statement.Location);
-        }
-
-        if (statement.Preserve)
-        {
-            array.AllocatePreserving(lowerBound, upperBound);
-        }
-        else
-        {
-            array.Allocate(lowerBound, upperBound);
         }
 
         return ExecutionSignal.None;
     }
 
-    private static bool IsValidArrayBounds(int lowerBound, int upperBound)
+    private (int[] LowerBounds, int[] UpperBounds) EvaluateArrayBounds(IReadOnlyList<BoundArrayBound> arrayBounds)
     {
-        return upperBound >= lowerBound || (lowerBound == 1 && upperBound == 0);
-    }
+        var lowerBounds = new int[arrayBounds.Count];
+        var upperBounds = new int[arrayBounds.Count];
 
-    private void EnsureAllowedArrayLowerBound(string variableName, int lowerBound, TextLocation location)
-    {
-        if (lowerBound != int.MinValue)
+        for (var index = 0; index < arrayBounds.Count; index++)
         {
-            return;
+            var bound = arrayBounds[index];
+            var lowerDetail = arrayBounds.Count == 1
+                ? "Нижняя граница массива"
+                : $"Нижняя граница массива по измерению #{index + 1}";
+            var upperDetail = arrayBounds.Count == 1
+                ? "Верхняя граница массива"
+                : $"Верхняя граница массива по измерению #{index + 1}";
+
+            lowerBounds[index] = ToArrayBound(EvaluateExpression(bound.LowerBound), bound.LowerBound.Location, lowerDetail);
+            upperBounds[index] = ToArrayBound(EvaluateExpression(bound.UpperBound), bound.UpperBound.Location, upperDetail);
         }
 
-        ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
-            $"Массив '{variableName}' не может иметь нижнюю границу {int.MinValue}, потому что значение слева от диапазона используется поисковыми функциями массива как признак отсутствия совпадения.",
-            location);
-        throw new RuntimeFailureException();
+        return (lowerBounds, upperBounds);
+    }
+
+    private void EnsureAllowedArrayLowerBounds(string variableName, IReadOnlyList<int> lowerBounds, IReadOnlyList<BoundArrayBound> arrayBounds)
+    {
+        for (var index = 0; index < lowerBounds.Count; index++)
+        {
+            if (lowerBounds[index] != int.MinValue)
+            {
+                continue;
+            }
+
+            var dimensionText = lowerBounds.Count == 1
+                ? string.Empty
+                : $" по измерению #{index + 1}";
+            ReportRuntimeDiagnostic(
+                BuiltinArgumentCode,
+                $"Массив '{variableName}' не может иметь нижнюю границу {int.MinValue}{dimensionText}, потому что значение слева от диапазона используется поисковыми функциями массива как признак отсутствия совпадения.",
+                arrayBounds[index].LowerBound.Location);
+            throw new RuntimeFailureException();
+        }
     }
 
     private ExecutionSignal ExecutePrint(BoundPrintStatement statement)

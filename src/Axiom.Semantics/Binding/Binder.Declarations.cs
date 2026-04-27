@@ -162,7 +162,13 @@ public sealed partial class Binder
             return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
         }
 
-        var arrayType = ArrayTypeSymbol.Create(fieldType);
+        if (declarator.ArrayBounds.Rank != 1)
+        {
+            ReportTypeFieldMultidimensionalArrayNotSupported(declarator.Identifier.Text, declarator.ArrayBounds.OpenParenToken.Location);
+            return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
+        }
+
+        var arrayType = ArrayTypeSymbol.Create(fieldType, declarator.ArrayBounds.Rank);
 
         if (declarator.ArrayBounds.IsDynamic)
         {
@@ -186,6 +192,7 @@ public sealed partial class Binder
 
         if (declarator.ArrayBounds is null
             || declarator.ArrayBounds.IsDynamic
+            || declarator.ArrayBounds.Rank != 1
             || declarator.ArrayBounds.StartExpression is null
             || declarator.ArrayBounds.EndExpression is null)
         {

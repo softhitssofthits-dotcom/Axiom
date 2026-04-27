@@ -80,7 +80,7 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
                 FixedArrayUpperBound: { } upperBound
             })
         {
-            return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, field.FixedStringLength, lowerBound, upperBound));
+            return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, field.FixedStringLength, [lowerBound], [upperBound]));
         }
 
         return RuntimeValue.Default(field.Type, field.FixedStringLength);

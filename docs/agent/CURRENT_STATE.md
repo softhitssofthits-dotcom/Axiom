@@ -1,4 +1,4 @@
-﻿# Current State
+# Current State
 
 ## Project
 
@@ -56,9 +56,9 @@ Before more code, the next date/time contract should be fixed in docs for:
 
 ## First Files To Read For Most Tasks
 
-- `docs/PLANS2.md` for the active next step
-- `docs/WORKLOG3.md` for the latest completed slice
-- `docs/SPECIFICATION2.md` for behavior contracts
+- `docs/PLANS3.md` for the active next step
+- `docs/WORKLOG4.md` for the latest completed slice
+- `docs/SPECIFICATION3.md` for behavior contracts
 - `docs/ARCHITECTURE.md` for layer boundaries
 - `docs/manual/` if behavior is user-visible
 

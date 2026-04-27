@@ -62,7 +62,7 @@ public class TypeSymbol : Symbol
             FunctionTypeSyntax functionType => FunctionTypeSymbol.Create(
                 functionType.ParameterTypes.Select(FromTypeSyntax).ToArray(),
                 FromTypeSyntax(functionType.ReturnType)),
-            ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(FromTypeSyntax(arrayType.ElementType)),
+            ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(FromTypeSyntax(arrayType.ElementType), arrayType.Rank),
             _ => Error
         };
     }
@@ -99,34 +99,44 @@ public class TypeSymbol : Symbol
 
 public sealed class ArrayTypeSymbol : TypeSymbol
 {
-    private ArrayTypeSymbol(TypeSymbol elementType)
-        : base($"{elementType.Name}()")
+    private ArrayTypeSymbol(TypeSymbol elementType, int rank)
+        : base(CreateName(elementType, rank))
     {
         ElementType = elementType;
+        Rank = rank;
     }
 
     public TypeSymbol ElementType { get; }
 
-    public static TypeSymbol Create(TypeSymbol elementType)
+    public int Rank { get; }
+
+    public static TypeSymbol Create(TypeSymbol elementType, int rank = 1)
     {
         ArgumentNullException.ThrowIfNull(elementType);
 
-        if (elementType == TypeSymbol.Error || elementType is ArrayTypeSymbol)
+        if (rank < 1 || elementType == TypeSymbol.Error || elementType is ArrayTypeSymbol)
         {
             return TypeSymbol.Error;
         }
 
-        return new ArrayTypeSymbol(elementType);
+        return new ArrayTypeSymbol(elementType, rank);
     }
 
     public override bool Equals(object? obj)
     {
-        return obj is ArrayTypeSymbol other && ElementType == other.ElementType;
+        return obj is ArrayTypeSymbol other
+            && ElementType == other.ElementType
+            && Rank == other.Rank;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(typeof(ArrayTypeSymbol), ElementType);
+        return HashCode.Combine(typeof(ArrayTypeSymbol), ElementType, Rank);
+    }
+
+    private static string CreateName(TypeSymbol elementType, int rank)
+    {
+        return $"{elementType.Name}({new string(',', rank - 1)})";
     }
 }
 

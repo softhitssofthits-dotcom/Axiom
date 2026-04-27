@@ -67,7 +67,7 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
         if (type is ArrayTypeSymbol arrayType)
         {
-            return FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, fixedStringLength));
+            return FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, fixedStringLength, arrayType.Rank));
         }
 
         if (type is UserDefinedTypeSymbol userType)

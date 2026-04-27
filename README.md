@@ -143,13 +143,16 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 ## Основные документы
 
 - `PROJECT.md` — описание проекта и ограничений
-- `docs/SPECIFICATION2.md` — спецификация языка и среды
+- `docs/SPECIFICATION3.md` — активная спецификация языка и среды
+- `docs/SPECIFICATION2.md` — историческая вторая часть спецификации
 - `docs/SPECIFICATION.md` — историческая первая часть спецификации
 - `docs/ARCHITECTURE.md` — техническая структура
 - `docs/manual/index.html` — основной человекочитаемый справочник по Axiom
-- `docs/PLANS2.md` — текущий план
+- `docs/PLANS3.md` — текущий план
+- `docs/PLANS2.md` — историческая вторая часть плана
 - `docs/PLANS.md` — историческая первая часть плана
-- `docs/WORKLOG3.md` — активный журнал состояния
+- `docs/WORKLOG4.md` — активный журнал состояния
+- `docs/WORKLOG3.md` — историческая третья часть журнала (Session 310-480)
 - `docs/WORKLOG2.md` — историческая вторая часть журнала (Session 169-309)
 - `docs/WORKLOG.md` — историческая первая часть журнала до Session 168 включительно
 

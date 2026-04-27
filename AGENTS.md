@@ -28,11 +28,11 @@ At the beginning of every session, do this in order:
 2. Read `PROJECT.md`
 3. If they exist, read:
    - `README.md`
-   - `docs/SPECIFICATION2.md`
+   - `docs/SPECIFICATION3.md`
    - `docs/ARCHITECTURE.md`
-   - `docs/PLANS2.md`
-   - `docs/WORKLOG3.md`
-   - `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
+   - `docs/PLANS3.md`
+   - `docs/WORKLOG4.md`
+   - `docs/SPECIFICATION2.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
 
 Then:
 1. briefly summarize what this project is;
@@ -52,10 +52,10 @@ Use Bootstrap mode if the repository is empty or key project files are missing.
 If the following files do not exist, create them:
 
 - `README.md`
-- `docs/SPECIFICATION2.md`
+- `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
-- `docs/PLANS2.md`
-- `docs/WORKLOG3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
 
 If the following folders do not exist, create them:
 
@@ -73,8 +73,8 @@ Rules for Bootstrap mode:
 At the end of Bootstrap mode:
 1. show the created file tree;
 2. explain what each created file is for in brief;
-3. record the current state in `docs/WORKLOG3.md`;
-4. record the next step in `docs/PLANS2.md`.
+3. record the current state in `docs/WORKLOG4.md`;
+4. record the next step in `docs/PLANS3.md`.
 
 ---
 
@@ -85,7 +85,7 @@ Use Resume mode when the repository already contains project documents.
 Rules for Resume mode:
 - Read the required files first.
 - Continue from the latest plan instead of inventing a new direction.
-- Prefer the next unfinished item from `docs/PLANS2.md`.
+- Prefer the next unfinished item from `docs/PLANS3.md`.
 - If documentation is stale, update it before or together with code changes.
 
 ---
@@ -109,7 +109,7 @@ Human-facing repository entry point:
 - how to test it;
 - repository layout.
 
-### `docs/SPECIFICATION2.md`
+### `docs/SPECIFICATION3.md`
 Implementation source of truth.
 For each feature or module, document:
 - user stories;
@@ -126,7 +126,7 @@ Technical structure and major decisions:
 - layer boundaries;
 - key architectural choices.
 
-### `docs/PLANS2.md`
+### `docs/PLANS3.md`
 Current work plan:
 - current milestone;
 - next tasks in order;
@@ -134,29 +134,45 @@ Current work plan:
 - deferred items;
 - append-only ordering from top to bottom for all evolving sections unless the document explicitly says otherwise.
 
+### `docs/SPECIFICATION2.md`
+Historical second part of specification:
+- kept for historical context before `docs/SPECIFICATION3.md` became active;
+- no new updates should be added there after the switch.
+
 ### `docs/SPECIFICATION.md`
 Historical first part of specification:
-- kept for historical context before `docs/SPECIFICATION2.md` became active;
+- kept for historical context before `docs/SPECIFICATION3.md` became active;
 - no new updates should be added there after the switch.
+
+### `docs/PLANS2.md`
+Historical second part of planning:
+- kept for historical context before `docs/PLANS3.md` became active;
+- no new planning updates should be added there after the switch.
 
 ### `docs/PLANS.md`
 Historical first part of planning:
-- kept for historical context before `docs/PLANS2.md` became active;
+- kept for historical context before `docs/PLANS3.md` became active;
 - no new planning updates should be added there after the switch.
+
+### `docs/WORKLOG3.md`
+Historical third part of session continuity:
+- kept for sessions from 310 to 480;
+- no new entries should be added there after `docs/WORKLOG4.md` is introduced;
+- read it when context from sessions 310-480 is needed.
 
 ### `docs/WORKLOG2.md`
 Historical second part of session continuity:
 - kept for sessions from 169 to 309;
-- no new entries should be added there after `docs/WORKLOG3.md` is introduced;
+- no new entries should be added there after `docs/WORKLOG4.md` is introduced;
 - read it when context from sessions 169-309 is needed.
 
 ### `docs/WORKLOG.md`
 Historical session continuity log:
 - kept for sessions up to and including Session 168;
-- no new entries should be added there after `docs/WORKLOG3.md` is introduced;
+- no new entries should be added there after `docs/WORKLOG4.md` is introduced;
 - read it only when older historical context is needed.
 
-### `docs/WORKLOG3.md`
+### `docs/WORKLOG4.md`
 Active session continuity log:
 - what changed;
 - which files changed;
@@ -196,7 +212,7 @@ the same task must also update the user-facing manual in `docs/manual/`.
 Minimum required manual follow-up:
 - update the relevant reference page, or the nearest correct manual page if no separate page exists yet;
 - update manual navigation/index metadata when the new entity should be discoverable through the manual index;
-- do not leave the new behavior documented only in code comments, tests, `samples/`, `docs/SPECIFICATION2.md`, or chat output.
+- do not leave the new behavior documented only in code comments, tests, `samples/`, `docs/SPECIFICATION3.md`, or chat output.
 
 ### 5. Validation after code changes
 After code changes, run the most relevant checks available:
@@ -218,25 +234,25 @@ Permanent requirements:
 - do not treat file-lock failures from shared `obj` as an acceptable normal workflow; prevent them by command ordering or true intermediate-directory isolation.
 
 ### 6. Worklog is mandatory
-After every meaningful task, update `docs/WORKLOG3.md`.
+After every meaningful task, update `docs/WORKLOG4.md`.
 
 ### 7. Repository documents are append-only
 All repository documents must be maintained from top to bottom.
 
 Permanent requirements:
-- never prepend new records to the top of `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
+- never prepend new records to the top of `docs/WORKLOG4.md`, `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
 - add new records only below the existing records in the same document;
 - preserve chronological reading order: earlier entries stay above later entries;
 - do not silently reorder old records unless the task is explicitly to normalize document chronology.
 
-For `docs/WORKLOG3.md`, continuing the sequence from `docs/WORKLOG.md` and `docs/WORKLOG2.md`, every new entry:
+For `docs/WORKLOG4.md`, continuing the sequence from `docs/WORKLOG.md`, `docs/WORKLOG2.md` and `docs/WORKLOG3.md`, every new entry:
 - every new entry must use a heading in the form `## Session <N> - YYYY-MM-DD HH:mm - <title>`;
 - `<N>` must be the next sequential session number after the highest existing numbered session;
 - date and time are mandatory and must use the local project time zone;
 - historical entries created before this rule may remain in the legacy format, but they must not be renumbered with invented timestamps.
 
 ### 8. Plans must stay current
-If the next steps change, update `docs/PLANS2.md`.
+If the next steps change, update `docs/PLANS3.md`.
 
 ### 9. Architecture changes must be recorded
 If technical structure changes materially, update `docs/ARCHITECTURE.md`.
@@ -311,8 +327,8 @@ A task is complete only if:
 - the requested change is done;
 - relevant validation was run when possible;
 - relevant docs were updated;
-- `docs/WORKLOG3.md` was updated;
-- `docs/PLANS2.md` reflects the next step.
+- `docs/WORKLOG4.md` was updated;
+- `docs/PLANS3.md` reflects the next step.
 
 If a task changes language behavior, it is complete only if:
 - code changes are done;
@@ -398,7 +414,7 @@ If the user says:
 “Start implementing feature X”
 then:
 - read project files first;
-- update `docs/SPECIFICATION2.md` or `docs/PLANS2.md` if needed;
+- update `docs/SPECIFICATION3.md` or `docs/PLANS3.md` if needed;
 - then implement.
 
 ---
