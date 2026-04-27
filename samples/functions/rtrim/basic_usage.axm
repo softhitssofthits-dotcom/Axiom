@@ -1,0 +1,3 @@
+' Expected: prints __hello and then hello.
+PRINT RTRIM("  hello  ")
+PRINT RTRIM("helloxyxy", "xy")

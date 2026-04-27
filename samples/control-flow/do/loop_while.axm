@@ -1,0 +1,11 @@
+' Expected output:
+' 0
+' 1
+' 2
+
+DIM i AS INTEGER = 0
+
+DO
+    PRINT i
+    i = i + 1
+LOOP WHILE i < 3

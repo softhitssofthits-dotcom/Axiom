@@ -1,0 +1,7 @@
+' Ожидается диагностика MB2026:
+' STRING * N пока не поддержан в типе результата FUNCTION.
+FUNCTION Code() AS STRING * 4
+    RETURN "AB"
+END FUNCTION
+
+PRINT Code()

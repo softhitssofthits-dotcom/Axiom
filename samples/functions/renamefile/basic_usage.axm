@@ -1,0 +1,8 @@
+' Создаёт файл и переименовывает его в текущей рабочей папке.
+DIM source AS STRING = ".artifacts/axiom_sample_rename_source.txt"
+DIM target AS STRING = ".artifacts/axiom_sample_rename_target.txt"
+
+PRINT DELETEFILE(target)
+PRINT WRITEFILE(source, "Hello")
+PRINT RENAMEFILE(source, ".artifacts/axiom_sample_rename_target.txt")
+PRINT FILEEXISTS(target)

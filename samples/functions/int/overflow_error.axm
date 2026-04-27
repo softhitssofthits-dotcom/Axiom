@@ -1,0 +1,2 @@
+' Expected runtime diagnostic MB3007: INT result after floor must stay within INTEGER range.
+PRINT INT(3000000000.5)

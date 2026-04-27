@@ -1,0 +1,2 @@
+' Expected runtime diagnostic MB3007: STRING fill cannot be an empty string.
+PRINT STRING(3, "")

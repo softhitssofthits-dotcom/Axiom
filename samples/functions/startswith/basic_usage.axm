@@ -1,0 +1,4 @@
+' Ожидается: TRUE, FALSE, TRUE.
+PRINT STARTSWITH("Hello", "He")
+PRINT STARTSWITH("Hello", "he")
+PRINT STARTSWITH("Hello", "")

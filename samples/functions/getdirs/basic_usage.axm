@@ -1,0 +1,21 @@
+' Ожидается: 1, data, TRUE, 0.
+
+DIM root AS STRING = MAKETEMPDIR("getdirs_")
+DIM dataDir AS STRING = COMBINEPATH(root, "data")
+DIM tempDir AS STRING = COMBINEPATH(root, "temp")
+DIM ok AS BOOLEAN
+DIM dirs() AS STRING
+DIM emptyDirs() AS STRING
+
+ok = MAKEDIR(dataDir)
+ok = MAKEDIR(tempDir)
+
+dirs = GETDIRS(root, "data*")
+emptyDirs = GETDIRS(root, "missing*")
+
+PRINT ARRAYLENGTH(dirs)
+PRINT FILENAME(dirs(1))
+PRINT ARRAYISALLOCATED(emptyDirs)
+PRINT ARRAYLENGTH(emptyDirs)
+
+ok = DELETEDIRRECURSIVE(root)

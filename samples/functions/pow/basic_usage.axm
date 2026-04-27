@@ -1,0 +1,2 @@
+PRINT POW(2, 3)
+PRINT POW(9, 0.5)

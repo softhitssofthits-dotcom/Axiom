@@ -1,0 +1,3 @@
+' Умножение создаёт значение вне диапазона DOUBLE и должно дать runtime diagnostic.
+DIM value AS DOUBLE = VAL("1e308")
+PRINT value * 10

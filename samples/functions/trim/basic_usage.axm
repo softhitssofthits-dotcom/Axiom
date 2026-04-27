@@ -1,0 +1,3 @@
+' Expected: prints hello, then hello.
+PRINT TRIM("  hello  ")
+PRINT TRIM("--hello--", "-")

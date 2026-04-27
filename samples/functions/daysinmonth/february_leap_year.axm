@@ -1,0 +1,3 @@
+' Expected output:
+' 29
+PRINT DAYSINMONTH(2024, 2)

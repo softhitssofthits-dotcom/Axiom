@@ -1,0 +1,6 @@
+IF TRUE THEN
+    DIM message AS STRING = "inside"
+    PRINT message
+END IF
+
+PRINT message

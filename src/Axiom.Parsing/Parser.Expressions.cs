@@ -1,0 +1,169 @@
+using Axiom.Syntax;
+
+namespace Axiom.Parsing;
+
+public sealed partial class Parser
+{
+    private ExpressionSyntax ParseExpression(int parentPrecedence = 0)
+    {
+        ExpressionSyntax left;
+        var unaryPrecedence = GetUnaryOperatorPrecedence(Current.Kind);
+
+        if (unaryPrecedence > 0 && unaryPrecedence >= parentPrecedence)
+        {
+            var operatorToken = NextToken();
+            var operand = ParseExpression(unaryPrecedence);
+            left = new UnaryExpressionSyntax(operatorToken, operand);
+        }
+        else
+        {
+            left = ParsePrimaryExpression();
+        }
+
+        while (true)
+        {
+            var precedence = GetBinaryOperatorPrecedence(Current.Kind);
+
+            if (precedence == 0 || precedence <= parentPrecedence)
+            {
+                break;
+            }
+
+            var operatorToken = NextToken();
+            var right = ParseExpression(IsRightAssociativeBinaryOperator(operatorToken.Kind) ? precedence - 1 : precedence);
+            left = new BinaryExpressionSyntax(left, operatorToken, right);
+        }
+
+        return left;
+    }
+
+    private ExpressionSyntax ParsePrimaryExpression()
+    {
+        ExpressionSyntax atom = Current.Kind switch
+        {
+            SyntaxKind.OpenParenToken => ParseParenthesizedExpression(),
+            SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken or SyntaxKind.StringLiteralToken or SyntaxKind.BooleanLiteralToken => new LiteralExpressionSyntax(NextToken()),
+            SyntaxKind.IdentifierToken
+                or SyntaxKind.IntegerKeyword
+                or SyntaxKind.LongKeyword
+                or SyntaxKind.DoubleKeyword
+                or SyntaxKind.DecimalKeyword
+                or SyntaxKind.StringKeyword
+                or SyntaxKind.BooleanKeyword => new NameExpressionSyntax(NextToken()),
+            _ => ParseMissingExpression()
+        };
+
+        return ParsePostfixExpression(atom);
+    }
+
+    private ParenthesizedExpressionSyntax ParseParenthesizedExpression()
+    {
+        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var expression = ParseExpression();
+        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+        return new ParenthesizedExpressionSyntax(openParenToken, expression, closeParenToken);
+    }
+
+    private ExpressionSyntax ParsePostfixExpression(ExpressionSyntax target)
+    {
+        var expression = target;
+
+        while (Current.Kind is SyntaxKind.OpenParenToken or SyntaxKind.DotToken)
+        {
+            if (Current.Kind == SyntaxKind.OpenParenToken)
+            {
+                var openParenToken = NextToken();
+                ParseSeparatedExpressions(
+                    out var arguments,
+                    out var commaTokens,
+                    SyntaxKind.CloseParenToken,
+                    ")",
+                    out var closeParenToken);
+
+                expression = new CallExpressionSyntax(expression, openParenToken, arguments, commaTokens, closeParenToken);
+                continue;
+            }
+
+            var dotToken = Match(SyntaxKind.DotToken, ".");
+            var identifier = MatchIdentifier();
+            expression = new FieldAccessExpressionSyntax(expression, dotToken, identifier);
+        }
+
+        return expression;
+    }
+
+    private ErrorExpressionSyntax ParseMissingExpression()
+    {
+        ReportExpectedExpression();
+
+        if (CanConsumeUnexpectedExpressionToken(Current.Kind))
+        {
+            return new ErrorExpressionSyntax(NextToken());
+        }
+
+        return new ErrorExpressionSyntax(CreateMissingToken(SyntaxKind.BadToken));
+    }
+
+    private void ParseSeparatedExpressions(
+        out IReadOnlyList<ExpressionSyntax> expressions,
+        out IReadOnlyList<SyntaxToken> commaTokens,
+        SyntaxKind closingKind,
+        string closingDisplayName,
+        out SyntaxToken closingToken)
+    {
+        var items = new List<ExpressionSyntax>();
+        var commas = new List<SyntaxToken>();
+
+        if (Current.Kind != closingKind)
+        {
+            while (true)
+            {
+                items.Add(ParseExpression());
+
+                if (Current.Kind != SyntaxKind.CommaToken)
+                {
+                    break;
+                }
+
+                commas.Add(NextToken());
+            }
+        }
+
+        closingToken = Match(closingKind, closingDisplayName);
+        expressions = items;
+        commaTokens = commas;
+    }
+
+    private static int GetUnaryOperatorPrecedence(SyntaxKind kind)
+    {
+        return kind switch
+        {
+            SyntaxKind.MinusToken => 10,
+            SyntaxKind.NotKeyword => 10,
+            _ => 0
+        };
+    }
+
+    private static int GetBinaryOperatorPrecedence(SyntaxKind kind)
+    {
+        return kind switch
+        {
+            SyntaxKind.CaretToken => 11,
+            SyntaxKind.StarToken or SyntaxKind.SlashToken or SyntaxKind.BackslashToken or SyntaxKind.ModKeyword => 9,
+            SyntaxKind.PlusToken or SyntaxKind.MinusToken => 8,
+            SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => 7,
+            SyntaxKind.EqualsToken or SyntaxKind.NotEqualsToken or SyntaxKind.LessToken or SyntaxKind.LessOrEqualsToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualsToken => 6,
+            SyntaxKind.AndKeyword => 5,
+            SyntaxKind.XorKeyword => 4,
+            SyntaxKind.OrKeyword => 3,
+            SyntaxKind.EqvKeyword => 2,
+            SyntaxKind.ImpKeyword => 1,
+            _ => 0
+        };
+    }
+
+    private static bool IsRightAssociativeBinaryOperator(SyntaxKind kind)
+    {
+        return kind == SyntaxKind.CaretToken;
+    }
+}

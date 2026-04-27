@@ -1,0 +1,5 @@
+' Foundation-stage dynamic array declaration.
+' In the current contract the array is declared but not allocated yet.
+
+DIM names() AS STRING
+PRINT "dynamic array declared"

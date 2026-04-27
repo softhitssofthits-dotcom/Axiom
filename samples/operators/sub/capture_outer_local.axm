@@ -1,0 +1,13 @@
+' Local SUB captures and updates the outer local variable.
+SUB Outer()
+    DIM total AS INTEGER = 2
+    Increase()
+    Increase()
+    PRINT total
+
+    SUB Increase()
+        total = total + 1
+    END SUB
+END SUB
+
+Outer()

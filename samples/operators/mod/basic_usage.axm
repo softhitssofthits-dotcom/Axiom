@@ -1,0 +1,7 @@
+' Expected: prints 1, -1, 1 and 1.
+PRINT 7 MOD 2
+PRINT -7 MOD 2
+PRINT 7 MOD -2
+
+DIM value AS LONG = 21474836479
+PRINT value MOD 2

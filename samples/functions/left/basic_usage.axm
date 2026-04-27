@@ -1,0 +1,2 @@
+' Expected: prints Hel.
+PRINT LEFT("Hello", 3)

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор OPEN</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="open">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Открытие текстового файла в переменную FILE</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор OPEN</p><p class="sidebar__subtitle">Справочная глава по открытию текстовых файлов для чтения, записи и дописывания.</p></div><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Оператор OPEN</span>
+            </nav>
+            <p class="eyebrow">Ввод и вывод</p>
+            <h1 class="page-title">Оператор OPEN</h1>
+            <p class="lead">Оператор <code>OPEN</code> открывает текстовый файл и связывает его с переменной специального типа <code>FILE</code>. В Axiom не используются исторические файловые номера вида <code>#1</code>: файл открывается сразу в именованную переменную.</p>
+
+            <section class="article-section">
+                <h2>Главные правила</h2>
+                <ul>
+                    <li>Переменная после <code>AS</code> должна иметь тип <code>FILE</code>.</li>
+                    <li>Поддерживаются режимы <code>INPUT</code>, <code>OUTPUT</code> и <code>APPEND</code>.</li>
+                    <li><code>INPUT</code> открывает существующий текстовый файл для чтения.</li>
+                    <li><code>OUTPUT</code> создаёт новый файл или полностью перезаписывает существующий.</li>
+                    <li><code>APPEND</code> открывает файл для дописывания в конец и при отсутствии создаёт его.</li>
+                    <li>Если в переменной уже есть открытый файл, повторный <code>OPEN</code> даёт ошибку времени выполнения.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">OPEN &lt;путь&gt; FOR INPUT AS &lt;файл&gt;
+OPEN &lt;путь&gt; FOR OUTPUT AS &lt;файл&gt;
+OPEN &lt;путь&gt; FOR APPEND AS &lt;файл&gt;</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">DIM sourceFile AS FILE
+DIM line AS STRING
+
+OPEN "data.txt" FOR INPUT AS sourceFile
+
+WHILE NOT EOF(sourceFile)
+    line = READLINE(sourceFile)
+    PRINT line
+END WHILE
+
+CLOSE sourceFile</code></pre>
+                <pre><code class="language-basic">DIM logFile AS FILE
+
+OPEN "log.txt" FOR OUTPUT AS logFile
+WRITELINE(logFile, "Первая строка")
+CLOSE logFile</code></pre>
+                <pre><code class="language-basic">DIM logFile AS FILE
+
+OPEN "log.txt" FOR APPEND AS logFile
+WRITELINE(logFile, "Добавленная строка")
+CLOSE logFile</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/open/basic_usage.axm">OPEN: базовое открытие файла</a></li>
+                    <li><a href="../../samples/functions/eof/basic_usage.axm">EOF: чтение до конца файла</a></li>
+                    <li><a href="../../samples/functions/readline/basic_usage.axm">READLINE: построчное чтение</a></li>
+                    <li><a href="../../samples/functions/write/basic_usage.axm">WRITE: запись без перевода строки</a></li>
+                    <li><a href="../../samples/functions/writeline/basic_usage.axm">WRITELINE: запись строки</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="close.html">Оператор CLOSE</a>
+                    <a href="file-system-functions.html">Функции файловой системы</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

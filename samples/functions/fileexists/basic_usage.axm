@@ -1,0 +1,6 @@
+' Создаёт небольшой файл в текущей рабочей папке.
+DIM path AS STRING = ".artifacts/axiom_sample_fileexists.txt"
+
+PRINT FILEEXISTS(path)
+PRINT WRITEFILE(path, "Hello")
+PRINT FILEEXISTS(path)

@@ -1,0 +1,2 @@
+' Expected: prints Hello, world.
+PRINT "Hello, " + "world"

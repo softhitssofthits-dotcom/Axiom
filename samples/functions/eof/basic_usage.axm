@@ -1,0 +1,13 @@
+DIM folder AS STRING = MAKETEMPDIR("eof_demo_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+DIM f AS FILE
+DIM line AS STRING
+
+PRINT WRITEFILE(path, "A" + CHR(10) + "B")
+
+OPEN path FOR INPUT AS f
+WHILE NOT EOF(f)
+    line = READLINE(f)
+    PRINT "[" + line + "]"
+END WHILE
+CLOSE f

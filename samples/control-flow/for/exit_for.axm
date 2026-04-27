@@ -1,0 +1,14 @@
+' Expected:
+' 1
+' 2
+' done
+
+FOR i = 1 TO 5
+    IF i = 3 THEN
+        EXIT FOR
+    END IF
+
+    PRINT i
+NEXT
+
+PRINT "done"

@@ -1,0 +1,127 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Цикл WHILE</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="while">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Предусловный цикл по логическому условию</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Цикл WHILE</p>
+                    <p class="sidebar__subtitle">Справочная глава по предусловному циклу и его блочной области видимости.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Цикл WHILE</span>
+            </nav>
+            <p class="eyebrow">Циклы</p>
+            <h1 class="page-title">Цикл WHILE</h1>
+            <p class="lead"><code>WHILE</code> выполняет тело цикла, пока логическое условие остается истинным. Условие проверяется до входа в каждую итерацию, поэтому цикл может не выполниться ни разу.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#syntax">Синтаксис</a></li>
+                    <li><a href="#parts">Части синтаксиса</a></li>
+                    <li><a href="#remarks">Замечания</a></li>
+                    <li><a href="#examples">Примеры</a></li>
+                    <li><a href="#diagnostics">Диагностика</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <p><code>WHILE</code> используется для повторения по условию, когда число итераций заранее не фиксируется диапазоном. Если выражение условия ложно уже при первой проверке, выполнение сразу продолжается после <code>END WHILE</code>.</p>
+            </section>
+
+            <section class="article-section" id="syntax">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">WHILE &lt;условие&gt;
+    &lt;инструкции&gt;
+END WHILE</code></pre>
+            </section>
+
+            <section class="article-section" id="parts">
+                <h2>Части синтаксиса</h2>
+                <ul>
+                    <li><code>&lt;условие&gt;</code> — логическое выражение, которое проверяется перед каждой итерацией.</li>
+                    <li><code>&lt;инструкции&gt;</code> — тело цикла между <code>WHILE</code> и <code>END WHILE</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="remarks">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>Условие <code>WHILE</code> должно иметь тип <code>BOOLEAN</code>.</li>
+                    <li>Проверка выполняется перед каждой новой итерацией.</li>
+                    <li>Тело <code>WHILE</code> образует собственную блочную область видимости.</li>
+                    <li>Вложенные циклы разрешены; <code>EXIT FOR</code> внутри вложенного <code>FOR</code> относится именно к ближайшему <code>FOR</code>, а не к окружающему <code>WHILE</code>.</li>
+                    <li>Для цикла <code>WHILE</code> не предусмотрен отдельный оператор <code>EXIT WHILE</code>; завершение обычно достигается изменением условия, а внутри процедуры или функции возможен <code>RETURN</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Для проверки предусловного поведения используйте краткий готовый пример из тематического каталога.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/control-flow/while/basic_loop.axm">WHILE: базовый цикл с изменением счетчика</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="examples">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">DIM i AS INTEGER = 0
+
+WHILE i &lt; 3
+    PRINT i
+    i = i + 1
+END WHILE</code></pre>
+                <pre><code class="language-basic">DIM ready AS BOOLEAN = FALSE
+
+WHILE ready
+    PRINT "Этот код не будет выполнен"
+END WHILE</code></pre>
+            </section>
+
+            <section class="article-section" id="diagnostics">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB2008</code> — условие цикла не приводится к <code>BOOLEAN</code> и не может использоваться в <code>WHILE</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="for.html">Цикл FOR</a>
+                    <a href="do-loop.html">Цикл DO ... LOOP</a>
+                    <a href="if.html">Оператор IF</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+' DRIVEFORMAT возвращает формат файловой системы.
+PRINT DRIVEFORMAT(CURRENTDIR())

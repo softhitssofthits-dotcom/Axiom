@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Одномерные массивы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Массивы в текущей реализации языка</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Одномерные массивы</p>
+                    <p class="sidebar__subtitle">Структура данных для хранения набора однотипных значений под одним именем.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
+                <span>/</span>
+                <span>Одномерные массивы</span>
+            </nav>
+            <p class="eyebrow">Операторы и управление</p>
+            <h1 class="page-title">Одномерные массивы</h1>
+            <p class="lead">Массив нужен тогда, когда под одним именем требуется хранить сразу несколько значений одного типа. В текущей реализации Axiom поддерживаются только одномерные массивы.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ol class="contents-list">
+                    <li><a href="#declaration">Объявление массива</a></li>
+                    <li><a href="#redim">REDIM: выделение и смена диапазона</a></li>
+                    <li><a href="#erase">ERASE: сброс в невыделенное состояние</a></li>
+                    <li><a href="#value">Массив как значение</a></li>
+                    <li><a href="#access">Доступ к элементам</a></li>
+                    <li><a href="#array-info">Информационные встроенные функции</a></li>
+                    <li><a href="#pure-array-functions">Чистые функции массива</a></li>
+                    <li><a href="#bounds">Границы и ошибки</a></li>
+                    <li><a href="#summary">Краткий итог</a></li>
+                </ol>
+            </section>
+
+            <section class="article-section" id="declaration">
+                <h2>Объявление массива</h2>
+                <pre><code class="language-basic">DIM scores(1 TO 3) AS INTEGER
+DIM names() AS STRING</code></pre>
+                <pre><code class="language-basic">TYPE Person
+    Name AS STRING
+END TYPE
+
+DIM people(1 TO 3) AS Person</code></pre>
+                <p>В первой записи <code>scores</code> это имя массива, а <code>1 TO 3</code> задает его нижнюю и верхнюю границу включительно. Тип <code>INTEGER</code> говорит о том, что все элементы массива должны быть целыми числами.</p>
+                <p>Во второй записи <code>names()</code> объявляет динамический одномерный массив без немедленного выделения диапазона элементов. Такой массив уже существует как значение языка, но ещё не содержит доступного диапазона индексов.</p>
+                <p>Типом элемента может быть встроенный тип или пользовательский тип записи, объявленный через <code>TYPE ... END TYPE</code>. Например, <code>DIM people(1 TO 3) AS Person</code> создаёт массив записей <code>Person</code>.</p>
+                <p>Поле пользовательской записи тоже может иметь динамический массивный тип, например <code>Scores() AS INTEGER</code>. Для такого поля работают индексирование, <code>REDIM</code>, <code>REDIM PRESERVE</code> и <code>ERASE</code>.</p>
+                <p>Внутри <code>TYPE</code> поддержана и фиксированная массивная форма, например <code>Scores(1 TO 3) AS INTEGER</code>. Такой диапазон создаётся сразу вместе с записью, не требует отдельного <code>REDIM</code> и копируется как часть значения записи.</p>
+                <p>Для границ фиксированного поля записи можно использовать не только литералы, но и верхнеуровневые <code>CONST</code>, если они сводятся к целочисленному значению. Порядок объявления таких констант относительно <code>TYPE</code> для этой формы не важен.</p>
+                <p>Если несколько полей записи имеют общий тип, их можно объединить в одну строку. В такой форме скобки указываются у каждого имени отдельно: <code>Scores(), Flags(1 TO 2) AS INTEGER</code>.</p>
+            </section>
+
+            <section class="article-section" id="redim">
+                <h2>REDIM: выделение и смена диапазона</h2>
+                <pre><code class="language-basic">DIM names() AS STRING
+REDIM names(1 TO 3)
+
+names(1) = "Ada"
+names(2) = "Bob"
+names(3) = "Cara"</code></pre>
+                <p><code>REDIM</code> выделяет диапазон элементов для уже существующего одномерного массива и может затем заново задать его границы. На текущем этапе поддерживаются обе формы: обычная и <code>REDIM PRESERVE</code>.</p>
+                <p>Для массивных полей записей это правило относится только к динамической форме <code>fieldName() AS TYPE</code>. Если поле объявлено внутри <code>TYPE</code> как фиксированный массив с диапазоном, его размеры уже закреплены в объявлении и не меняются через <code>REDIM</code>.</p>
+                <p>Если массив уже был выделен, обычный <code>REDIM</code> создаёт новый диапазон и заново заполняет все элементы значениями по умолчанию для типа массива. Старое содержимое не сохраняется.</p>
+                <p><code>REDIM PRESERVE</code> тоже меняет диапазон, но перед этим сохраняет элементы из пересечения старых и новых границ. Сохраняются именно те индексы, которые существуют в обоих диапазонах. Новые индексы, которых раньше не было, получают значения по умолчанию.</p>
+                <p>Текущая семантика массивов остаётся ссылочной, поэтому <code>REDIM</code> меняет общее хранилище массива. Если на тот же массив ссылается другая переменная или параметр, она увидит новый диапазон и новые значения по умолчанию.</p>
+                <p>Форма записи остаётся явной и совпадает с объявлением массива:</p>
+                <pre><code class="language-basic">REDIM name(&lt;lower&gt; TO &lt;upper&gt;)
+REDIM PRESERVE name(&lt;lower&gt; TO &lt;upper&gt;)</code></pre>
+                <p>Пустой, но уже выделенный массив записывается как <code>1 TO 0</code>. Такой массив отличается от состояния после <code>DIM name() AS TYPE</code> и <code>ERASE</code>: он считается выделенным, но содержит ноль элементов.</p>
+                <pre><code class="language-basic">REDIM values(1 TO 0)</code></pre>
+                <p>Другие диапазоны, где верхняя граница меньше нижней, например <code>5 TO 3</code>, остаются ошибкой времени выполнения. Пустая форма <code>REDIM name()</code> пока не поддерживается.</p>
+            </section>
+
+            <section class="article-section" id="erase">
+                <h2>ERASE: сброс в невыделенное состояние</h2>
+                <pre><code class="language-basic">DIM values() AS INTEGER
+REDIM values(1 TO 3)
+
+ERASE values</code></pre>
+                <p><code>ERASE</code> сбрасывает одномерный массив обратно в невыделенное состояние. После этого массив остаётся существующим значением языка, но обращаться к его элементам снова нельзя до следующего успешного <code>REDIM</code> или <code>REDIM PRESERVE</code>.</p>
+                <p>В текущем этапе поддерживается форма <code>ERASE arrayTarget</code> для одного массивного значения. В роли <code>arrayTarget</code> может выступать имя массива, динамическое поле записи массивного типа или такое поле у элемента массива. Список целей через запятую пока не входит в контракт.</p>
+                <p>Фиксированное массивное поле в <code>TYPE</code> не возвращается в невыделенное состояние: для него <code>ERASE</code> не поддерживается, потому что диапазон такого поля считается частью самой формы записи.</p>
+                <p>Ссылочная семантика остаётся прежней. Если на тот же массив ссылаются другие переменные или параметры, после <code>ERASE</code> они увидят тот же самый результат: массив станет невыделенным для всех ссылок на это же значение.</p>
+            </section>
+
+            <section class="article-section" id="value">
+                <h2>Массив как значение</h2>
+                <pre><code class="language-basic">DIM source(1 TO 2) AS INTEGER
+DIM alias() AS INTEGER
+
+alias = source
+
+FUNCTION Echo(values AS INTEGER()) AS INTEGER()
+    RETURN values
+END FUNCTION</code></pre>
+                <p>На текущем этапе основания одномерный массив больше не считается только специальным видом переменной. Его можно присваивать целиком, передавать в параметры и возвращать из <code>FUNCTION</code>.</p>
+                <p>В объявлениях параметров и типа результата массив записывается как тип с пустыми круглыми скобками: <code>INTEGER()</code>, <code>STRING()</code>, <code>FUNCTION(INTEGER) AS INTEGER()</code> и так далее.</p>
+                <p>Базовая семантика массива остаётся ссылочной: присваивание массива целиком и передача массива в параметр не клонируют весь массив автоматически. Если нужна независимая копия массива, используйте <code>ARRAYCLONE</code>. При этом запись пользовательского типа, которую присваивают отдельному элементу массива, копируется как значение.</p>
+            </section>
+
+            <section class="article-section" id="access">
+                <h2>Доступ к элементам</h2>
+                <pre><code class="language-basic">scores(1) = 10
+scores(2) = 20
+scores(3) = 30
+
+                PRINT scores(2)</code></pre>
+                <p>Элемент массива выбирается через круглые скобки с индексом. Индекс должен быть числовым значением, попадающим в объявленный диапазон.</p>
+                <p>Если элемент имеет пользовательский тип, после индексирования можно обращаться к его полям:</p>
+                <pre><code class="language-basic">people(1).Name = "Ada"
+PRINT people(1).Name</code></pre>
+            </section>
+
+            <section class="article-section" id="array-info">
+                <h2>Информационные встроенные функции</h2>
+                <p>После выделения массива через <code>DIM ... TO ...</code>, <code>REDIM</code> или <code>REDIM PRESERVE</code> программа может узнать его текущее состояние и границы через четыре встроенные функции.</p>
+
+                <h3 id="lbound">LBOUND(array)</h3>
+                <pre><code class="language-basic">DIM values() AS INTEGER
+REDIM values(5 TO 7)
+
+PRINT LBOUND(values)</code></pre>
+                <p><code>LBOUND</code> возвращает нижнюю границу выделенного массива. Если массив ещё не выделен, во время выполнения возникает та же диагностика состояния массива, что и при попытке индексировать его слишком рано.</p>
+
+                <h3 id="ubound">UBOUND(array)</h3>
+                <pre><code class="language-basic">DIM values() AS INTEGER
+REDIM values(5 TO 7)
+
+PRINT UBOUND(values)</code></pre>
+                <p><code>UBOUND</code> возвращает верхнюю границу выделенного массива. Для невыделенного массива эта функция тоже недопустима и завершится диагностикой времени выполнения.</p>
+
+                <h3 id="arraylength">ARRAYLENGTH(array)</h3>
+                <pre><code class="language-basic">DIM values() AS INTEGER
+
+PRINT ARRAYLENGTH(values)
+REDIM values(5 TO 7)
+PRINT ARRAYLENGTH(values)</code></pre>
+                <p><code>ARRAYLENGTH</code> возвращает текущее число элементов в массиве. Для невыделенного массива и для пустого выделенного массива <code>1 TO 0</code> функция возвращает <code>0</code>. Различить эти два состояния можно через <code>ARRAYISALLOCATED</code>.</p>
+
+                <h3 id="arrayisallocated">ARRAYISALLOCATED(array)</h3>
+                <pre><code class="language-basic">DIM values() AS INTEGER
+
+PRINT ARRAYISALLOCATED(values)
+REDIM values(5 TO 7)
+PRINT ARRAYISALLOCATED(values)</code></pre>
+                <p><code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code> для невыделенного массива и <code>TRUE</code> после успешного выделения диапазона. Эту функцию удобно использовать перед вызовом <code>LBOUND</code> и <code>UBOUND</code>, если массив может ещё не иметь доступных индексов.</p>
+            </section>
+
+            <section class="article-section" id="pure-array-functions">
+                <h2>Чистые функции массива</h2>
+
+                <h3 id="arrayclone">ARRAYCLONE(array)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 6) AS INTEGER
+DIM copy() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+
+copy = ARRAYCLONE(source)
+copy(5) = 99
+
+PRINT source(5)
+PRINT copy(5)</code></pre>
+                <p><code>ARRAYCLONE</code> создаёт новый одномерный массив того же типа, что и исходный аргумент. Исходный массив при этом не изменяется.</p>
+                <p>Функция сохраняет текущее состояние исходного массива:</p>
+                <ul>
+                    <li>невыделенный массив клонируется как новый невыделенный массив того же типа;</li>
+                    <li>выделенный непустой массив сохраняет те же нижнюю и верхнюю границы;</li>
+                    <li>пустой выделенный массив сохраняет форму <code>1 TO 0</code>.</li>
+                </ul>
+                <p>Результат не разделяет то же хранилище элементов с исходным массивом. Если изменить элементы клона после вызова, исходный массив останется прежним.</p>
+
+                <h3 id="arrayslice">ARRAYSLICE(array, start, count)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+part = ARRAYSLICE(source, 6, 2)
+
+PRINT LBOUND(part)
+PRINT UBOUND(part)
+PRINT part(1)
+PRINT part(2)</code></pre>
+                <p><code>ARRAYSLICE</code> создаёт новый массив из части исходного одномерного массива. Исходный массив при этом не изменяется.</p>
+                <p>Аргумент <code>start</code> задаёт логический индекс исходного массива, с которого начинается чтение, а <code>count</code> задаёт число элементов результата.</p>
+                <p>Непустой результат всегда получает компактные границы <code>1 TO N</code>, даже если исходный массив имел другой нижний индекс. Это позволяет безопасно использовать результат как новый самостоятельный массив.</p>
+                <p>Если <code>count = 0</code>, функция возвращает пустой выделенный массив <code>1 TO 0</code>. Если исходный массив ещё не выделен, возникает диагностика состояния массива. Если диапазон от <code>start</code> до <code>start + count - 1</code> выходит за текущие границы исходного массива, выполнение завершится диагностикой ошибки аргумента.</p>
+                <p>Как и <code>ARRAYCLONE</code>, результат <code>ARRAYSLICE</code> не разделяет хранилище элементов с исходным массивом.</p>
+
+                <h3 id="arrayconcat">ARRAYCONCAT(left, right)</h3>
+                <pre><code class="language-basic">DIM left(5 TO 6) AS INTEGER
+DIM right(10 TO 11) AS INTEGER
+DIM merged() AS INTEGER
+
+left(5) = 10
+left(6) = 20
+right(10) = 30
+right(11) = 40
+
+merged = ARRAYCONCAT(left, right)
+
+PRINT LBOUND(merged)
+PRINT UBOUND(merged)
+PRINT merged(1)
+PRINT merged(4)</code></pre>
+                <p><code>ARRAYCONCAT</code> создаёт новый массив из элементов двух исходных одномерных массивов одного и того же типа. Сначала в результат попадают элементы <code>left</code>, затем элементы <code>right</code>.</p>
+                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если оба массива выделены, но суммарно содержат ноль элементов, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Оба аргумента должны быть уже выделенными массивами. Невыделенный аргумент даёт диагностику состояния массива во время выполнения.</p>
+                <p>Как и <code>ARRAYCLONE</code> с <code>ARRAYSLICE</code>, результат <code>ARRAYCONCAT</code> не разделяет хранилище элементов с исходными массивами. Изменение результата после вызова не меняет <code>left</code> и <code>right</code>.</p>
+
+                <h3 id="arraytosorted">ARRAYTOSORTED(array)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 9) AS INTEGER
+DIM sortedValues() AS INTEGER
+
+source(5) = 30
+source(6) = 10
+source(7) = 20
+source(8) = 20
+source(9) = 10
+
+sortedValues = ARRAYTOSORTED(source)
+
+PRINT LBOUND(sortedValues)
+PRINT UBOUND(sortedValues)
+PRINT sortedValues(5)
+PRINT sortedValues(9)</code></pre>
+                <p><code>ARRAYTOSORTED</code> создаёт новую отсортированную копию уже выделенного одномерного массива и не меняет исходное значение.</p>
+                <p>В отличие от <code>ARRAYSLICE</code>, <code>ARRAYCONCAT</code> и <code>ARRAYTOREVERSED</code>, функция сохраняет текущие границы исходного массива. Для диапазона <code>5 TO 9</code> результат тоже останется в диапазоне <code>5 TO 9</code>.</p>
+                <p>Сортировка поддерживается только для числовых и строковых массивов и использует то же упорядоченное сравнение, что уже действует в языке для чисел и строк.</p>
+                <p>Дубликаты сохраняются. Если исходный массив выделен как пустой <code>1 TO 0</code>, результатом становится такой же пустой выделенный массив <code>1 TO 0</code>. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+                <p>Как и другие чистые операции над массивами, <code>ARRAYTOSORTED</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+
+                <h3 id="arraytoreversed">ARRAYTOREVERSED(array)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
+DIM reversed() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+reversed = ARRAYTOREVERSED(source)
+
+PRINT LBOUND(reversed)
+PRINT UBOUND(reversed)
+PRINT reversed(1)
+PRINT reversed(3)</code></pre>
+                <p><code>ARRAYTOREVERSED</code> создаёт новый массив из элементов исходного одномерного массива, но в обратном логическом порядке.</p>
+                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если исходный массив выделен, но пуст, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт диагностику состояния массива во время выполнения.</p>
+                <p>Как и другие чистые операции над массивами, <code>ARRAYTOREVERSED</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+
+                <h3 id="arraytake">ARRAYTAKE(array, count)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+part = ARRAYTAKE(source, 2)
+
+PRINT LBOUND(part)
+PRINT UBOUND(part)
+PRINT part(1)
+PRINT part(2)</code></pre>
+                <p><code>ARRAYTAKE</code> создаёт новый массив из первых <code>count</code> элементов исходного одномерного массива, считая от его текущей нижней границы.</p>
+                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если <code>count = 0</code> или исходный массив выделен, но пуст, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Если <code>count</code> больше текущей длины массива, функция мягко возвращает весь массив в компактной форме без ошибки.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>, а отрицательный <code>count</code> даёт <code>MB3007</code>.</p>
+                <p>Как и другие чистые операции над массивами, <code>ARRAYTAKE</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+
+                <h3 id="arrayskip">ARRAYSKIP(array, count)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+part = ARRAYSKIP(source, 1)
+
+PRINT LBOUND(part)
+PRINT UBOUND(part)
+PRINT part(1)
+PRINT part(2)</code></pre>
+                <p><code>ARRAYSKIP</code> создаёт новый массив из элементов исходного одномерного массива после пропуска первых <code>count</code> логических элементов, считая от текущей нижней границы.</p>
+                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если <code>count = 0</code>, функция возвращает весь исходный массив в компактной форме. Если <code>count</code> не меньше текущей длины массива или исходный массив выделен, но пуст, результатом становится пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>, а отрицательный <code>count</code> даёт <code>MB3007</code>.</p>
+                <p>Как и другие чистые операции над массивами, <code>ARRAYSKIP</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+
+                <h3 id="arraydistinct">ARRAYDISTINCT(array)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 9) AS INTEGER
+DIM uniqueValues() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 10
+source(8) = 30
+source(9) = 20
+
+uniqueValues = ARRAYDISTINCT(source)
+
+PRINT LBOUND(uniqueValues)
+PRINT UBOUND(uniqueValues)
+PRINT uniqueValues(1)
+PRINT uniqueValues(3)</code></pre>
+                <p><code>ARRAYDISTINCT</code> создаёт новый массив, в который входят только уникальные элементы исходного одномерного массива.</p>
+                <p>Порядок результата определяется первым появлением значений в исходном массиве. Если значение встретилось несколько раз, в результат попадает только его первое вхождение.</p>
+                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если исходный массив выделен, но пуст, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+                <p>Как и другие чистые операции над массивами, <code>ARRAYDISTINCT</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+            </section>
+
+            <section class="article-section" id="search-array-functions">
+                <h2>Поисковые и счётные функции массива</h2>
+
+                <h3 id="arraycontains">ARRAYCONTAINS(array, value)</h3>
+                <pre><code class="language-basic">DIM values(0 TO 2) AS INTEGER
+
+values(0) = 10
+values(1) = 20
+values(2) = 30
+
+PRINT ARRAYCONTAINS(values, 20)
+PRINT ARRAYCONTAINS(values, 99)</code></pre>
+                <p><code>ARRAYCONTAINS</code> проверяет, содержит ли уже выделенный одномерный массив хотя бы одно значение, равное аргументу <code>value</code>.</p>
+                <p>Если совпадение найдено, функция возвращает <code>TRUE</code>. Если совпадения нет или массив выделен как пустой <code>1 TO 0</code>, функция возвращает <code>FALSE</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <h3 id="arraycount">ARRAYCOUNT(array, value)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
+
+values(5) = 20
+values(6) = 10
+values(7) = 20
+values(8) = 20
+
+PRINT ARRAYCOUNT(values, 20)
+PRINT ARRAYCOUNT(values, 99)</code></pre>
+                <p><code>ARRAYCOUNT</code> возвращает число элементов массива, равных аргументу <code>value</code>.</p>
+                <p>Если совпадений нет, результатом становится <code>0</code>. Для пустого выделенного массива результат тоже равен <code>0</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <h3 id="arrayindexof">ARRAYINDEXOF(array, value)</h3>
+                <pre><code class="language-basic">DIM values(0 TO 3) AS INTEGER
+
+values(0) = 10
+values(1) = 20
+values(2) = 30
+values(3) = 20
+
+PRINT ARRAYINDEXOF(values, 20)
+PRINT ARRAYINDEXOF(values, 99)</code></pre>
+                <p><code>ARRAYINDEXOF</code> возвращает логический индекс первого совпадения с <code>value</code> в текущем диапазоне массива.</p>
+                <p>Если совпадения нет, функция возвращает значение строго левее диапазона массива, то есть <code>LBOUND(array) - 1</code>. Для массива <code>0 TO 3</code> это будет <code>-1</code>, а для массива <code>5 TO 7</code> — <code>4</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <h3 id="arraylastindexof">ARRAYLASTINDEXOF(array, value)</h3>
+                <pre><code class="language-basic">DIM values(-3 TO -1) AS INTEGER
+
+values(-3) = 10
+values(-2) = 20
+values(-1) = 20
+
+PRINT ARRAYLASTINDEXOF(values, 20)
+PRINT ARRAYLASTINDEXOF(values, 99)</code></pre>
+                <p><code>ARRAYLASTINDEXOF</code> возвращает логический индекс последнего совпадения с <code>value</code> в текущем диапазоне массива.</p>
+                <p>Если совпадения нет, функция тоже возвращает значение <code>LBOUND(array) - 1</code>, то есть индекс строго левее диапазона текущего массива.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <h3 id="arrayfindall">ARRAYFINDALL(array, value)</h3>
+                <pre><code class="language-basic">DIM values(-3 TO 1) AS INTEGER
+DIM matches() AS INTEGER
+
+values(-3) = 20
+values(-2) = 10
+values(-1) = 20
+values(0) = 30
+values(1) = 20
+
+matches = ARRAYFINDALL(values, 20)
+
+PRINT LBOUND(matches)
+PRINT UBOUND(matches)
+PRINT matches(1)
+PRINT matches(3)</code></pre>
+                <p><code>ARRAYFINDALL</code> возвращает новый массив логических индексов всех совпадений с <code>value</code> в текущем диапазоне исходного массива.</p>
+                <p>Результат всегда имеет тип <code>INTEGER()</code> и компактные границы <code>1 TO N</code>. Если совпадений нет или исходный массив выделен как пустой <code>1 TO 0</code>, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Внутри результата сохраняются именно логические индексы исходного массива. Для примера выше это будут индексы <code>-3</code>, <code>-1</code> и <code>1</code>, а не позиции <code>1</code>, <code>2</code> и <code>3</code>.</p>
+                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <h3 id="arraybinarysearch">ARRAYBINARYSEARCH(array, value)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 9) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 20
+values(8) = 20
+values(9) = 30
+
+PRINT ARRAYBINARYSEARCH(values, 20)
+PRINT ARRAYBINARYSEARCH(values, 15)</code></pre>
+                <p><code>ARRAYBINARYSEARCH</code> выполняет бинарный поиск по уже выделенному и заранее отсортированному одномерному массиву.</p>
+                <p>Массив должен быть отсортирован по неубыванию в тех же правилах упорядоченного сравнения, которые Axiom использует для чисел и строк. В текущей реализации функция поддерживает только числовые и строковые массивы.</p>
+                <p>Если совпадение найдено, функция возвращает логический индекс первого равного элемента. Если совпадения нет, результатом становится значение строго левее диапазона массива, то есть <code>LBOUND(array) - 1</code>.</p>
+                <p>Для пустого выделенного массива <code>1 TO 0</code> отсутствие совпадения считается нормальным результатом и тоже даёт <code>0</code>. Невыделенный массив сообщает <code>MB3005</code>.</p>
+                <p>Порядок исходного массива функция не проверяет и не изменяет. Если передать неотсортированный массив, результат не определён договором этой функции.</p>
+            </section>
+
+            <section class="article-section" id="mutating-array-procedures">
+                <h2>Изменяющие операции массива</h2>
+
+                <h3 id="arrayfill">ARRAYFILL(array, value)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+
+values(5) = 1
+values(6) = 2
+values(7) = 3
+
+ARRAYFILL(values, 42)
+
+PRINT values(5)
+PRINT values(7)</code></pre>
+                <p><code>ARRAYFILL</code> заполняет уже выделенный одномерный массив одним значением и меняет его на месте.</p>
+                <p>Аргумент <code>value</code> должен иметь тот же тип, что и элементы массива. После вызова все логические индексы текущего диапазона будут содержать именно это значение.</p>
+                <p>Границы массива не меняются. Для пустого выделенного массива <code>1 TO 0</code> процедура допустима и ничего не делает. Невыделенный массив сообщает <code>MB3005</code>.</p>
+
+                <h3 id="arrayreverse">ARRAYREVERSE(array)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+values(8) = 40
+
+ARRAYREVERSE(values)
+
+PRINT values(5)
+PRINT values(8)</code></pre>
+                <p><code>ARRAYREVERSE</code> меняет порядок элементов уже выделенного одномерного массива на обратный.</p>
+                <p>Операция выполняется на месте и сохраняет текущие логические границы массива. Для диапазона <code>5 TO 8</code> результат останется в диапазоне <code>5 TO 8</code>, но элементы будут переставлены в обратном порядке.</p>
+                <p>Пустой выделенный массив допустим и остаётся пустым. Невыделенный массив сообщает <code>MB3005</code>.</p>
+
+                <h3 id="arraysort">ARRAYSORT(array)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 9) AS INTEGER
+
+values(5) = 30
+values(6) = 10
+values(7) = 20
+values(8) = 20
+values(9) = 10
+
+ARRAYSORT(values)
+
+PRINT values(5)
+PRINT values(9)</code></pre>
+                <p><code>ARRAYSORT</code> сортирует уже выделенный одномерный массив по неубыванию и меняет его на месте.</p>
+                <p>Процедура поддерживает только числовые и строковые массивы. Она использует то же упорядоченное сравнение, что язык уже применяет для чисел и строк.</p>
+                <p>Границы массива не меняются, дубликаты сохраняются. Пустой выделенный массив допустим и остаётся пустым. Невыделенный массив сообщает <code>MB3005</code>.</p>
+
+                <h3 id="arraypush">ARRAYPUSH(array, value)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 6) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+
+ARRAYPUSH(values, 30)
+
+PRINT values(5)
+PRINT values(6)
+PRINT values(7)</code></pre>
+                <p><code>ARRAYPUSH</code> расширяет уже выделенный одномерный массив вправо на один логический индекс и записывает туда переданное значение.</p>
+                <p>Аргумент <code>value</code> должен иметь тот же тип, что и элементы массива. Для непустого массива нижняя граница сохраняется, а верхняя увеличивается на <code>1</code>.</p>
+                <p>Для пустого выделенного массива <code>1 TO 0</code> процедура создаёт первый элемент и переводит массив в форму <code>1 TO 1</code>. Невыделенный массив сообщает <code>MB3005</code>.</p>
+
+                <h3 id="arraypop">ARRAYPOP(array)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+
+PRINT ARRAYPOP(values)
+PRINT LBOUND(values)
+PRINT UBOUND(values)</code></pre>
+                <p><code>ARRAYPOP</code> снимает последний элемент уже выделенного массива, возвращает его как обычное значение языка и укорачивает сам массив на месте.</p>
+                <p>Если после снятия элементов массив остаётся непустым, его нижняя граница сохраняется, а верхняя уменьшается на <code>1</code>. Если массив состоял ровно из одного элемента, результатом мутации становится канонический пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Пустой выделенный массив не поддерживается: попытка вызвать <code>ARRAYPOP</code> для <code>1 TO 0</code> сообщает <code>MB3007</code>. Невыделенный массив сообщает <code>MB3005</code>.</p>
+
+                <h3 id="arrayinsert">ARRAYINSERT(array, index, value)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+
+values(5) = 10
+values(6) = 30
+values(7) = 40
+
+ARRAYINSERT(values, 6, 20)
+
+PRINT values(5)
+PRINT values(6)
+PRINT values(7)
+PRINT values(8)</code></pre>
+                <p><code>ARRAYINSERT</code> вставляет новое значение в уже выделенный одномерный массив по логическому индексу и расширяет массив на месте.</p>
+                <p>Аргумент <code>index</code> задаётся в логических индексах текущего массива. Для непустого массива допустим диапазон от <code>LBOUND(array)</code> до <code>UBOUND(array) + 1</code>: вставка внутрь диапазона сдвигает хвост вправо, а вставка по <code>UBOUND(array) + 1</code> работает как добавление в конец.</p>
+                <p>Нижняя граница непустого массива сохраняется, а верхняя увеличивается на <code>1</code>. Для пустого выделенного массива <code>1 TO 0</code> допустим только индекс <code>1</code>, после чего массив переходит в форму <code>1 TO 1</code>. Невыделенный массив сообщает <code>MB3005</code>, а недопустимый индекс или переполнение правой границы сообщает <code>MB3007</code>.</p>
+
+                <h3 id="arrayremove">ARRAYREMOVE(array, index)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+values(8) = 40
+
+PRINT ARRAYREMOVE(values, 6)
+PRINT values(5)
+PRINT values(6)
+PRINT values(7)</code></pre>
+                <p><code>ARRAYREMOVE</code> удаляет элемент уже выделенного массива по логическому индексу, возвращает удалённое значение как обычное значение языка и сужает массив на месте.</p>
+                <p>Аргумент <code>index</code> должен указывать на существующий логический индекс в текущем диапазоне массива. Все элементы правее удаляемого сдвигаются влево на одну позицию.</p>
+                <p>Если после удаления массив остаётся непустым, его нижняя граница сохраняется, а верхняя уменьшается на <code>1</code>. Если удалён единственный элемент массива, результат мутации нормализуется к каноническому пустому диапазону <code>1 TO 0</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустой выделенный массив или индекс вне текущего диапазона сообщает <code>MB3007</code>.</p>
+
+                <h3 id="arrayevery">ARRAYEVERY(array, predicate)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+
+PRINT ARRAYEVERY(values, IsPositive)
+
+FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value &gt; 0
+END FUNCTION</code></pre>
+                <p><code>ARRAYEVERY</code> проверяет, что predicate возвращает <code>TRUE</code> для каждого элемента уже выделенного массива.</p>
+                <p>Аргумент <code>predicate</code> должен быть значением функции или замыкания типа <code>FUNCTION(T) AS BOOLEAN</code>, где <code>T</code> — тип элемента массива. Callback получает только текущее значение элемента и может использовать захваченные внешние данные через обычные замыкания Axiom.</p>
+                <p>Для пустого выделенного массива <code>1 TO 0</code> результатом считается <code>TRUE</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в predicate сообщает <code>MB3009</code>.</p>
+
+                <h3 id="arraysome">ARRAYSOME(array, predicate)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+DIM limit AS INTEGER = 15
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+
+PRINT ARRAYSOME(values, IsAboveLimit)
+
+FUNCTION IsAboveLimit(value AS INTEGER) AS BOOLEAN
+    RETURN value &gt; limit
+END FUNCTION</code></pre>
+                <p><code>ARRAYSOME</code> проверяет, что predicate возвращает <code>TRUE</code> хотя бы для одного элемента уже выделенного массива.</p>
+                <p>Аргумент <code>predicate</code> подчиняется тому же контракту, что и у <code>ARRAYEVERY</code>: это значение функции или замыкания типа <code>FUNCTION(T) AS BOOLEAN</code>, согласованного с типом элемента массива.</p>
+                <p>Для пустого выделенного массива <code>1 TO 0</code> результатом считается <code>FALSE</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в predicate сообщает <code>MB3009</code>.</p>
+
+                <h3 id="arrayfilter">ARRAYFILTER(array, predicate)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
+DIM filtered() AS INTEGER
+DIM threshold AS INTEGER = 25
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+values(8) = 40
+
+filtered = ARRAYFILTER(values, GreaterThanThreshold)
+PRINT LBOUND(filtered)
+PRINT UBOUND(filtered)
+PRINT ARRAYLENGTH(filtered)
+
+FUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN
+    RETURN value &gt; threshold
+END FUNCTION</code></pre>
+                <p><code>ARRAYFILTER</code> строит новый массив из элементов, для которых predicate возвращает <code>TRUE</code>.</p>
+                <p>Аргумент <code>predicate</code> подчиняется тому же контракту, что и у <code>ARRAYEVERY</code> и <code>ARRAYSOME</code>: это значение функции или замыкания типа <code>FUNCTION(T) AS BOOLEAN</code>, согласованного с типом элемента массива.</p>
+                <p>Исходный массив не меняется. Результат всегда нормализуется к компактным границам <code>1 TO N</code>, а если совпадений нет, возвращается канонический выделенный пустой массив <code>1 TO 0</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в predicate сообщает <code>MB3009</code>.</p>
+
+                <h3 id="arraymap">ARRAYMAP(array, selector)</h3>
+                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+DIM prefix AS STRING = "item:"
+DIM mapped() AS STRING
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+
+mapped = ARRAYMAP(values, FormatValue)
+PRINT mapped(1)
+PRINT mapped(2)
+
+FUNCTION FormatValue(value AS INTEGER) AS STRING
+    RETURN prefix + STR(value)
+END FUNCTION</code></pre>
+                <p><code>ARRAYMAP</code> строит новый массив, применяя selector к каждому элементу исходного массива.</p>
+                <p><code>selector</code> должен быть значением функции или замыкания типа <code>FUNCTION(T) AS U</code>, где <code>T</code> совпадает с типом элемента исходного массива, а <code>U</code> задаёт тип элемента результирующего массива.</p>
+                <p>Это означает, что <code>ARRAYMAP</code> может не только менять значения, но и переводить массив в другой тип элементов, например из <code>INTEGER()</code> в <code>STRING()</code>. Вложенные массивы по-прежнему не поддерживаются, поэтому <code>U</code> не может быть типом массива.</p>
+                <p>Исходный массив не меняется. Результат всегда нормализуется к компактным границам <code>1 TO N</code>, а для пустого выделенного массива возвращается канонический результат <code>1 TO 0</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в selector сообщает <code>MB3009</code>.</p>
+
+                <h3 id="arrayreduce">ARRAYREDUCE(array, seed, reducer)</h3>
+                <pre><code class="language-basic">DIM words(3 TO 5) AS STRING
+
+words(3) = "alpha"
+words(4) = "bb"
+words(5) = "ccc"
+
+PRINT ARRAYREDUCE(words, 0, AddLength)
+
+FUNCTION AddLength(acc AS INTEGER, value AS STRING) AS INTEGER
+    RETURN acc + LEN(value)
+END FUNCTION</code></pre>
+                <p><code>ARRAYREDUCE</code> сворачивает массив в одно итоговое значение, начиная с <code>seed</code> и применяя reducer слева направо.</p>
+                <p><code>seed</code> и результат имеют тип аккумулятора <code>A</code>, а <code>reducer</code> должен быть значением функции или замыкания типа <code>FUNCTION(A, T) AS A</code>, где <code>T</code> — тип элемента массива.</p>
+                <p>Тип аккумулятора может отличаться от типа элемента массива. Например, можно сворачивать <code>STRING()</code> в итоговое <code>INTEGER</code>, суммируя длины строк, или собирать <code>INTEGER()</code> в итоговую строку.</p>
+                <p>Исходный массив не меняется. Для пустого выделенного массива результатом становится исходный <code>seed</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в reducer сообщает <code>MB3009</code>.</p>
+            </section>
+
+            <section class="article-section" id="bounds">
+                <h2>Границы и ошибки</h2>
+                <ul>
+                    <li>индекс вне границ массива приводит к ошибке времени выполнения;</li>
+                    <li>массив, объявленный через <code>DIM name() AS TYPE</code>, нельзя индексировать до первого успешного <code>REDIM</code>;</li>
+                    <li>диапазон <code>1 TO 0</code> задаёт пустой выделенный массив, а не невыделенное состояние;</li>
+                    <li>любой другой диапазон, где верхняя граница меньше нижней, недопустим;</li>
+                    <li>нижняя граница массива не может быть равна минимальному значению <code>INTEGER</code>;</li>
+                    <li>нечисловой индекс недопустим;</li>
+                    <li>многомерные массивы в текущую реализацию языка не входят.</li>
+                </ul>
+                <p>Иными словами, массивы в Axiom уже полезны для учебных и прикладных задач, но пока сознательно остаются простыми и предсказуемыми. Динамическая форма <code>DIM name() AS TYPE</code>, семейство <code>REDIM</code>, оператор <code>ERASE</code>, информационные встроенные функции, чистые операции <code>ARRAYCLONE</code>, <code>ARRAYSLICE</code>, <code>ARRAYCONCAT</code>, <code>ARRAYTOSORTED</code>, <code>ARRAYTOREVERSED</code>, <code>ARRAYTAKE</code>, <code>ARRAYSKIP</code>, <code>ARRAYDISTINCT</code>, поисковые built-ins <code>ARRAYCONTAINS</code>, <code>ARRAYCOUNT</code>, <code>ARRAYINDEXOF</code>, <code>ARRAYLASTINDEXOF</code>, <code>ARRAYFINDALL</code>, <code>ARRAYBINARYSEARCH</code>, первые higher-order built-ins <code>ARRAYEVERY</code>, <code>ARRAYSOME</code>, <code>ARRAYFILTER</code>, <code>ARRAYMAP</code> и <code>ARRAYREDUCE</code> и изменяющие операции <code>ARRAYFILL</code>, <code>ARRAYSORT</code>, <code>ARRAYREVERSE</code>, <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code>, <code>ARRAYREMOVE</code> уже покрывают базовый жизненный цикл выделения, смены диапазона, явного сброса, проверки состояния, независимого копирования, среза, объединения, сортировки, разворота, массового заполнения, поиска совпадений, predicate-проверок, фильтрации, полиморфного преобразования, полиморфной свёртки, добавления, вставки, снятия и удаления элементов и локальной мутации массива на месте.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Показательные примеры</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/dim/array_declaration.axm">DIM: объявление массива</a></li>
+                    <li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">DIM: динамическое объявление массива</a></li>
+                    <li><a href="../../samples/operators/dim/minimum_lower_bound_error.axm">DIM: запрет минимальной нижней границы INTEGER</a></li>
+                    <li><a href="../../samples/operators/redim/basic_usage.axm">REDIM: выделение и переаллоцирование массива</a></li>
+                    <li><a href="../../samples/operators/redim/preserve_basic_usage.axm">REDIM PRESERVE: сохранение пересечения диапазонов</a></li>
+                    <li><a href="../../samples/operators/redim/empty_array.axm">REDIM: пустой выделенный массив</a></li>
+                    <li><a href="../../samples/operators/erase/basic_usage.axm">ERASE: сброс массива</a></li>
+                    <li><a href="../../samples/smoke/array_first_class_values.axm">Сквозной пример: массив как значение</a></li>
+                    <li><a href="../../samples/expressions/arrays/index_access.axm">Индексный доступ к элементу</a></li>
+                    <li><a href="../../samples/operators/type/array_elements.axm">TYPE: массив записей и поля элементов</a></li>
+                    <li><a href="../../samples/operators/type/array_fields.axm">TYPE: динамические массивные поля записи</a></li>
+                    <li><a href="../../samples/operators/type/fixed_array_fields.axm">TYPE: фиксированные массивные поля записи</a></li>
+                    <li><a href="../../samples/operators/type/const_fixed_array_fields.axm">TYPE: фиксированные поля записи с CONST-границами</a></li>
+                    <li><a href="../../samples/operators/type/const_fixed_array_fields_forward.axm">TYPE: CONST-границы ниже объявления TYPE</a></li>
+                    <li><a href="../../samples/operators/type/grouped_fields.axm">TYPE: групповые объявления полей записи</a></li>
+                    <li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: обход диапазона</a></li>
+                    <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND: нижняя граница массива</a></li>
+                    <li><a href="../../samples/functions/ubound/basic_usage.axm">UBOUND: верхняя граница массива</a></li>
+                    <li><a href="../../samples/functions/arraylength/basic_usage.axm">ARRAYLENGTH: текущее число элементов</a></li>
+                    <li><a href="../../samples/functions/arrayisallocated/basic_usage.axm">ARRAYISALLOCATED: проверка выделения</a></li>
+                    <li><a href="../../samples/functions/arrayclone/basic_usage.axm">ARRAYCLONE: независимая копия массива</a></li>
+                    <li><a href="../../samples/functions/arrayclone/unallocated_and_empty.axm">ARRAYCLONE: невыделенный и пустой выделенный массив</a></li>
+                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: компактный срез массива</a></li>
+                    <li><a href="../../samples/functions/arrayslice/zero_count.axm">ARRAYSLICE: пустой результат при нулевом количестве</a></li>
+                    <li><a href="../../samples/functions/arrayconcat/basic_usage.axm">ARRAYCONCAT: объединение в новый компактный массив</a></li>
+                    <li><a href="../../samples/functions/arrayfill/basic_usage.axm">ARRAYFILL: заполнение массива значением</a></li>
+                    <li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH: добавление элемента в конец массива</a></li>
+                    <li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP: снятие последнего элемента массива</a></li>
+                    <li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT: вставка элемента по индексу</a></li>
+                    <li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE: удаление элемента по индексу</a></li>
+                    <li><a href="../../samples/functions/arrayevery/basic_usage.axm">ARRAYEVERY: predicate для всех элементов</a></li>
+                    <li><a href="../../samples/functions/arraysome/basic_usage.axm">ARRAYSOME: predicate хотя бы для одного элемента</a></li>
+                    <li><a href="../../samples/functions/arrayfilter/basic_usage.axm">ARRAYFILTER: фильтрация в новый компактный массив</a></li>
+                    <li><a href="../../samples/functions/arraymap/polymorphic_transform.axm">ARRAYMAP: полиморфное преобразование массива</a></li>
+                    <li><a href="../../samples/functions/arrayreduce/polymorphic_accumulator.axm">ARRAYREDUCE: полиморфная свёртка массива</a></li>
+                    <li><a href="../../samples/functions/arrayreverse/basic_usage.axm">ARRAYREVERSE: разворот массива на месте</a></li>
+                    <li><a href="../../samples/functions/arraysort/basic_usage.axm">ARRAYSORT: сортировка массива на месте</a></li>
+                    <li><a href="../../samples/functions/arraytosorted/basic_usage.axm">ARRAYTOSORTED: отсортированная копия с сохранением границ</a></li>
+                    <li><a href="../../samples/functions/arraytoreversed/basic_usage.axm">ARRAYTOREVERSED: разворот в новый компактный массив</a></li>
+                    <li><a href="../../samples/functions/arraytake/basic_usage.axm">ARRAYTAKE: первые элементы в новом компактном массиве</a></li>
+                    <li><a href="../../samples/functions/arrayskip/basic_usage.axm">ARRAYSKIP: пропуск начальной части массива</a></li>
+                    <li><a href="../../samples/functions/arraydistinct/basic_usage.axm">ARRAYDISTINCT: устранение повторов с сохранением порядка</a></li>
+                    <li><a href="../../samples/functions/arraybinarysearch/basic_usage.axm">ARRAYBINARYSEARCH: бинарный поиск по отсортированному массиву</a></li>
+                    <li><a href="../../samples/functions/arraycontains/basic_usage.axm">ARRAYCONTAINS: проверка наличия совпадения</a></li>
+                    <li><a href="../../samples/functions/arraycount/basic_usage.axm">ARRAYCOUNT: число совпадений</a></li>
+                    <li><a href="../../samples/functions/arrayfindall/basic_usage.axm">ARRAYFINDALL: все индексы совпадений</a></li>
+                    <li><a href="../../samples/functions/arrayindexof/basic_usage.axm">ARRAYINDEXOF: первый индекс совпадения</a></li>
+                    <li><a href="../../samples/functions/arraylastindexof/basic_usage.axm">ARRAYLASTINDEXOF: последний индекс совпадения</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Краткий итог</h2>
+                <div class="summary-box">
+                    <h3>Что стоит запомнить про массивы</h3>
+                    <ul>
+                        <li>массив хранит несколько однотипных значений;</li>
+                        <li>элементом массива может быть пользовательская запись, объявленная через <code>TYPE ... END TYPE</code>;</li>
+                        <li>массив можно объявить сразу с диапазоном или в динамической форме <code>name()</code>;</li>
+                        <li><code>REDIM</code> выделяет или заново задаёт диапазон уже существующего массива, в том числе динамического массивного поля записи;</li>
+                        <li><code>REDIM PRESERVE</code> сохраняет элементы из пересечения старого и нового диапазона;</li>
+                        <li><code>1 TO 0</code> означает пустой выделенный массив с длиной <code>0</code>;</li>
+                        <li><code>ERASE</code> возвращает массив в невыделенное состояние, в том числе когда массив хранится в динамическом поле записи;</li>
+                        <li>фиксированное массивное поле внутри <code>TYPE</code> получает диапазон сразу, копируется вместе с записью и не принимает <code>REDIM</code> или <code>ERASE</code>;</li>
+                        <li><code>LBOUND</code> и <code>UBOUND</code> возвращают текущие границы выделенного массива;</li>
+                        <li><code>ARRAYLENGTH</code> возвращает число элементов, а <code>ARRAYISALLOCATED</code> показывает, выделен ли массив;</li>
+                        <li><code>ARRAYCLONE</code> создаёт независимую копию массива и сохраняет его текущее состояние;</li>
+                        <li><code>ARRAYSLICE</code> создаёт независимый срез и возвращает компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYCONCAT</code> объединяет два массива одного типа и возвращает новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYFILL</code> меняет уже выделенный массив на месте и записывает одно значение во все его элементы;</li>
+                        <li><code>ARRAYPUSH</code> расширяет уже выделенный массив вправо на один элемент и записывает туда переданное значение;</li>
+                        <li><code>ARRAYPOP</code> возвращает последний элемент уже выделенного массива и укорачивает сам массив на месте;</li>
+                        <li><code>ARRAYINSERT</code> вставляет значение по логическому индексу, сдвигает хвост вправо и расширяет массив на месте;</li>
+                        <li><code>ARRAYREMOVE</code> удаляет элемент по логическому индексу, возвращает его и сдвигает хвост массива влево;</li>
+                        <li><code>ARRAYEVERY</code> возвращает <code>TRUE</code>, если predicate типа <code>FUNCTION(T) AS BOOLEAN</code> истинен для каждого элемента массива;</li>
+                        <li><code>ARRAYSOME</code> возвращает <code>TRUE</code>, если predicate типа <code>FUNCTION(T) AS BOOLEAN</code> истинен хотя бы для одного элемента массива;</li>
+                        <li><code>ARRAYFILTER</code> возвращает новый компактный массив из элементов, для которых predicate типа <code>FUNCTION(T) AS BOOLEAN</code> истинен;</li>
+                        <li><code>ARRAYMAP</code> возвращает новый компактный массив, применяя selector типа <code>FUNCTION(T) AS U</code> к каждому элементу исходного массива;</li>
+                        <li><code>ARRAYREDUCE</code> возвращает итоговое значение типа <code>A</code>, последовательно применяя reducer типа <code>FUNCTION(A, T) AS A</code> к seed и элементам массива;</li>
+                        <li><code>ARRAYREVERSE</code> разворачивает уже выделенный массив на месте и сохраняет его текущие границы;</li>
+                        <li><code>ARRAYSORT</code> сортирует уже выделенный числовой или строковый массив на месте и сохраняет его текущие границы;</li>
+                        <li><code>ARRAYTOSORTED</code> создаёт новую отсортированную копию числового или строкового массива и сохраняет его текущие границы;</li>
+                        <li><code>ARRAYTOREVERSED</code> создаёт новый массив с обратным порядком элементов и возвращает компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYTAKE</code> возвращает первые элементы массива как новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYSKIP</code> возвращает хвост массива после пропуска первых элементов как новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYDISTINCT</code> возвращает только первые вхождения уникальных значений и создаёт новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                    <li><code>ARRAYBINARYSEARCH</code> ищет первое совпадение в отсортированном числовом или строковом массиве и при отсутствии совпадения возвращает <code>LBOUND(array) - 1</code>;</li>
+                    <li><code>ARRAYCONTAINS</code> возвращает <code>TRUE</code> или <code>FALSE</code> в зависимости от наличия совпадения;</li>
+                    <li><code>ARRAYCOUNT</code> возвращает число совпадений, а при отсутствии совпадений — <code>0</code>;</li>
+                    <li><code>ARRAYFINDALL</code> возвращает новый компактный массив индексов типа <code>INTEGER()</code>, а при отсутствии совпадений — пустой выделенный массив <code>1 TO 0</code>;</li>
+                    <li><code>ARRAYINDEXOF</code> и <code>ARRAYLASTINDEXOF</code> возвращают логические индексы совпадений, а при отсутствии совпадения — значение <code>LBOUND(array) - 1</code>;</li>
+                        <li>массив можно присваивать целиком, передавать в параметр и возвращать из функции;</li>
+                        <li>обычный <code>REDIM</code> не сохраняет старые элементы и заполняет новый диапазон значениями по умолчанию;</li>
+                        <li>границы выделенного массива задаются при объявлении или через <code>REDIM</code> и включаются в диапазон;</li>
+                        <li>доступ к элементу записывается как <code>&lt;имя массива&gt;(&lt;индекс&gt;)</code>, а доступ к полю записи в элементе — как <code>&lt;имя массива&gt;(&lt;индекс&gt;).&lt;поле&gt;</code>.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                    <a href="for.html">Цикл FOR</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

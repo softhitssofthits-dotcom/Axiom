@@ -1,0 +1,4 @@
+' Expected: prints 7.
+DIM values(0 TO 2) AS INTEGER
+values(1) = 7
+PRINT values(1)

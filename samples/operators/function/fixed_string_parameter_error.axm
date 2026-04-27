@@ -1,0 +1,8 @@
+' Ожидается диагностика MB2026:
+' STRING * N пока не поддержан в параметрах FUNCTION.
+FUNCTION Pad(value AS STRING * 4) AS STRING
+    RETURN value
+END FUNCTION
+
+PRINT Pad("AB")
+

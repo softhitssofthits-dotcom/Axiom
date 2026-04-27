@@ -1,0 +1,2 @@
+' TOTALFREESPACE возвращает общее свободное место на диске.
+PRINT TOTALFREESPACE(CURRENTDIR()) > 0

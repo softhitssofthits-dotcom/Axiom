@@ -1,0 +1,4 @@
+' Ожидается вывод: TRUE, затем FALSE, затем TRUE.
+PRINT REGEXISMATCH("A12", "\d+")
+PRINT REGEXISMATCH("A12", "^a\d+")
+PRINT REGEXISMATCH("A12", "^a\d+", "i")

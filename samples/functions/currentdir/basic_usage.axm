@@ -1,0 +1,3 @@
+' CURRENTDIR возвращает текущую папку программы.
+PRINT CURRENTDIR()
+PRINT DIREXISTS(CURRENTDIR())

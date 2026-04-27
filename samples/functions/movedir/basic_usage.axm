@@ -1,0 +1,9 @@
+' Создаёт папку и переносит её.
+DIM sourceDir AS STRING = ".artifacts/axiom_sample_movedir_source"
+DIM targetDir AS STRING = ".artifacts/axiom_sample_movedir_target"
+
+PRINT DELETEDIR(targetDir)
+PRINT MAKEDIR(sourceDir)
+PRINT MOVEDIR(sourceDir, targetDir)
+PRINT DIREXISTS(sourceDir)
+PRINT DIREXISTS(targetDir)

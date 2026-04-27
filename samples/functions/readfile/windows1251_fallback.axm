@@ -1,0 +1,10 @@
+' Проверочный пример: READFILE читает старый текстовый файл Windows-1251.
+' Ожидаемый вывод:
+' Привет
+'
+' Файл windows1251_fallback_source.txt намеренно сохранён не в UTF-8, а в Windows-1251.
+' Если READFILE теряет такие байты как символы замены, здесь будет напечатан мусор.
+
+DIM sourcePath AS STRING = "samples\functions\readfile\windows1251_fallback_source.txt" ' Путь к короткому файлу Windows-1251.
+
+PRINT READFILE(sourcePath) ' Должно напечатать нормальное русское слово из файла Windows-1251.

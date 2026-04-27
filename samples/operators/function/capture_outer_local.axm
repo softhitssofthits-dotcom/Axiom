@@ -1,0 +1,11 @@
+' Local FUNCTION captures an outer parameter and an earlier local variable.
+PRINT Outer(5)
+
+FUNCTION Outer(seed AS INTEGER) AS INTEGER
+    DIM offset AS INTEGER = 3
+    RETURN Inner(4)
+
+    FUNCTION Inner(multiplier AS INTEGER) AS INTEGER
+        RETURN seed * multiplier + offset
+    END FUNCTION
+END FUNCTION

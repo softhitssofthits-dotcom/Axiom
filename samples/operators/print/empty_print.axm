@@ -1,0 +1,4 @@
+' Expected: prints Before, then an empty line, then After.
+PRINT "Before"
+PRINT
+PRINT "After"

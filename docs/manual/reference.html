@@ -1,0 +1,123 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Алфавитный и тематический указатель</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="reference">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Справочник по словам языка, типам и встроенным функциям</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Указатель Axiom</p>
+                    <p class="sidebar__subtitle">Фильтруйте материал по первой букве официального имени и по смысловому разделу.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Алфавитный и тематический указатель</span>
+            </nav>
+            <p class="eyebrow">Справочник</p>
+            <h1 class="page-title">Алфавитный и тематический указатель</h1>
+            <p class="lead">Эта страница служит общим указателем руководства. Отсюда удобно переходить к операторам, типам данных, строковым функциям, функциям файловой системы, функциям даты и времени, числовым функциям и связанным справочным разделам.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#catalog">Каталог справки</a></li>
+                    <li><a href="#classification">Как устроена классификация</a></li>
+                    <li><a href="#next">Куда идти дальше</a></li>
+                    <li><a href="#samples">Ручная проверка встроенных функций</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="catalog">
+                <div class="note">
+                    <h3>Как читать буквенный фильтр</h3>
+                    <p>Буквы относятся к официальным именам синтаксиса Axiom. Например, оператор <code>PRINT</code> попадает под букву <code>P</code>, а функция <code>ROUND</code> — под букву <code>R</code>.</p>
+                </div>
+                <div class="catalog-controls">
+                    <div class="filter-group">
+                        <h3>Фильтр по первой букве</h3>
+                        <div id="reference-letter-filters" class="filter-bar"></div>
+                    </div>
+                    <div class="filter-group">
+                        <h3>Фильтр по разделу</h3>
+                        <div id="reference-category-filters" class="filter-bar"></div>
+                    </div>
+                </div>
+                <div id="reference-catalog" class="reference-grid"></div>
+            </section>
+
+            <section class="article-section" id="classification">
+                <h2>Как устроена классификация</h2>
+                <ul>
+                    <li><strong>Декларации</strong> — объявления переменных, констант и правила имён.</li>
+                    <li><strong>Типы данных</strong> — свойства <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code>.</li>
+                    <li><strong>Ветвление</strong> — <code>IF</code> и <code>SELECT CASE</code>.</li>
+                    <li><strong>Циклы</strong> — <code>FOR</code>, <code>WHILE</code>, <code>DO ... LOOP</code>.</li>
+                    <li><strong>Строковые функции, регулярные выражения, файловая система, дата и время и числовые функции</strong> — встроенные функции с отдельными сигнатурами, правилами области допустимых значений и примерами ручной проверки.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="next">
+                <h2>Куда идти дальше</h2>
+                <div class="link-list">
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="file-system-functions.html">Функции файловой системы</a>
+                    <a href="date-time-functions.html">Функции даты и времени</a>
+                    <a href="numeric-functions.html">Числовые, математические и преобразующие функции</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="examples.html">Примеры и сценарии</a>
+                </div>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Ручная проверка встроенных функций</h2>
+                <p>Для ручной проверки открывайте готовые примеры из репозитория прямо из IDE.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/len/basic_usage.axm">LEN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/left/zero_count_error.axm">LEFT: ошибка при нулевом количестве символов</a></li>
+                    <li><a href="../../samples/functions/readfile/basic_usage.axm">READFILE: чтение текстового файла</a></li>
+                    <li><a href="../../samples/functions/readalllines/basic_usage.axm">READALLLINES: чтение строк файла</a></li>
+                    <li><a href="../../samples/functions/readlines/basic_usage.axm">READLINES: чтение набора строк</a></li>
+                    <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущая локальная дата</a></li>
+                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: базовое использование</a></li>
+                    <li><a href="../../samples/functions/asin/out_of_range_error.axm">ASIN: ошибка вне диапазона</a></li>
+                    <li><a href="../../samples/functions/pow/invalid_domain_error.axm">POW: ошибка области определения</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="file-system-functions.html">Функции файловой системы</a>
+                    <a href="date-time-functions.html">Функции даты и времени</a>
+                    <a href="numeric-functions.html">Числовые функции</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="getting-started.html">Начало работы</a>
+                    <a href="examples.html">Примеры</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

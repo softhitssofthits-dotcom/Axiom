@@ -1,0 +1,3 @@
+' Expected output:
+' current UTC time in HH:mm:ss
+PRINT UTCTIME()

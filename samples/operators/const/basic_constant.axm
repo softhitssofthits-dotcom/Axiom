@@ -1,0 +1,3 @@
+' Expected: prints Axiom.
+CONST APP_NAME AS STRING = "Axiom"
+PRINT APP_NAME

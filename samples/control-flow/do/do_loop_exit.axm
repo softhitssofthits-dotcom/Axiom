@@ -1,0 +1,17 @@
+﻿' Expected output:
+' 0
+' 1
+' done
+
+Dim i As Integer = 0
+
+Do
+    If i = 2 Then
+        Exit Do
+    End If
+
+    Print i
+    i = i + 1
+Loop
+
+Print "done"

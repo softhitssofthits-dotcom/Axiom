@@ -1,0 +1,3 @@
+' Expected output:
+' 2026-01-01
+PRINT STARTOFYEAR("2026-04-20 14:05:06")

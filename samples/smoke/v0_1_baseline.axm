@@ -1,0 +1,46 @@
+' Expected: a compact end-to-end walkthrough of the current Axiom baseline.
+CONST APP_NAME AS STRING = "Axiom sample catalog"
+
+DIM counter AS INTEGER = 0
+DIM name AS STRING
+DIM age AS INTEGER
+DIM values(1 TO 3) AS INTEGER
+
+FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER
+    RETURN a + b
+END FUNCTION
+
+SUB PrintDivider()
+    PRINT "--------------------"
+END SUB
+
+PrintDivider()
+PRINT APP_NAME
+PrintDivider()
+
+PRINT "Enter your name:"
+INPUT name
+
+PRINT "Enter your age:"
+INPUT age
+
+values(1) = age
+values(2) = Add(age, 5)
+values(3) = INT(VAL("12.9"))
+
+IF age >= 18 THEN
+    PRINT "adult"
+ELSE
+    PRINT "minor"
+END IF
+
+FOR i = 1 TO 3
+    PRINT "value"; STR(i); ":"; values(i)
+NEXT
+
+WHILE counter < 2
+    PRINT "counter", counter
+    counter = counter + 1
+END WHILE
+
+PRINT LEN(name), UCASE(LEFT(name, 1))

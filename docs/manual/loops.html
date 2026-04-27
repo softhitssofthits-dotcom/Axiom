@@ -1,0 +1,84 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Циклы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="loops">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Обзорный раздел по циклам</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Циклы</p>
+                    <p class="sidebar__subtitle">Краткая карта раздела перед переходом к отдельным статьям по каждому циклу.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Циклы</span>
+            </nav>
+            <p class="eyebrow">Обзор</p>
+            <h1 class="page-title">Циклы</h1>
+            <p class="lead">Чтобы справочник оставался удобным, каждая разновидность цикла вынесена на отдельную страницу. Здесь остается короткая карта: какой цикл для чего подходит.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#route">Навигация по циклам</a></li>
+                    <li><a href="#samples">Показательные примеры</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <p><code>FOR</code> подходит для счётного повторения по диапазону, <code>WHILE</code> — для предусловного повторения по логическому условию, а <code>DO ... LOOP</code> — для случаев, где нужно выбирать между предусловием, постусловием и безусловной формой.</p>
+            </section>
+
+            <section class="article-section" id="route">
+                <h2>Навигация по циклам</h2>
+                <div class="cards-grid">
+                    <section class="card">
+                        <h3><a href="for.html">FOR</a></h3>
+                        <p>Счетный цикл для случаев, когда диапазон и шаг известны заранее.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="while.html">WHILE</a></h3>
+                        <p>Цикл с предусловием: тело выполняется, пока условие истинно.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="do-loop.html">DO ... LOOP</a></h3>
+                        <p>Гибкое семейство циклов с предусловием, постусловием и ручным выходом через <code>EXIT DO</code>.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Показательные примеры</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: базовый счётный цикл</a></li>
+                    <li><a href="../../samples/control-flow/while/basic_loop.axm">WHILE: предусловный цикл</a></li>
+                    <li><a href="../../samples/control-flow/do/do_while_loop.axm">DO WHILE: предусловная форма</a></li>
+                    <li><a href="../../samples/control-flow/do/loop_until.axm">LOOP UNTIL: постусловная форма</a></li>
+                </ul>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

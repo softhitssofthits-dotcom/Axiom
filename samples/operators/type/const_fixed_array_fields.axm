@@ -1,0 +1,20 @@
+' Проверка CONST в границах фиксированного поля-массива TYPE.
+
+CONST MinScore AS INTEGER = 1
+CONST MaxScore AS LONG = MinScore + 2
+
+TYPE Person
+    Scores(MinScore TO MaxScore) AS INTEGER
+END TYPE
+
+DIM first AS Person
+DIM second AS Person
+
+PRINT first.Scores(1)
+PRINT ARRAYLENGTH(first.Scores)
+
+first.Scores(3) = 30
+second = first
+first.Scores(3) = 99
+
+PRINT second.Scores(3)

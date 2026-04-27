@@ -1,0 +1,2 @@
+' Expected: prints 12.
+PRINT INT(12.9)

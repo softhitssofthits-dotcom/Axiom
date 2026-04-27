@@ -1,0 +1,7 @@
+' WRITEFILE создаёт или перезаписывает текстовый файл.
+DIM path AS STRING = ".artifacts/axiom_sample_writefile.txt"
+
+PRINT WRITEFILE(path, "Hello")
+PRINT READFILE(path)
+PRINT WRITEFILE(path, "New text")
+PRINT READFILE(path)

@@ -1,0 +1,11 @@
+' SELECT CASE with string values
+DIM command AS STRING = "SAVE"
+
+SELECT CASE command
+    CASE "OPEN"
+        PRINT "open"
+    CASE "SAVE"
+        PRINT "save"
+    CASE ELSE
+        PRINT "unknown"
+END SELECT

@@ -1,0 +1,4 @@
+' Type a name such as Ada. Expected: Name Ada.
+DIM name AS STRING
+INPUT "Enter name", name
+PRINT "Name", name

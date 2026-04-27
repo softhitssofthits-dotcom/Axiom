@@ -1,0 +1,2 @@
+' Expected: prints 7.
+PRINT 1 + 2 * 3

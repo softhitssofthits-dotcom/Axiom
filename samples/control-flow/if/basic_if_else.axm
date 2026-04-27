@@ -1,0 +1,8 @@
+﻿' Expected: prints positive.
+DIM value AS INTEGER = -89
+
+IF value > 0 THEN
+    PRINT "positive"
+ELSE
+    PRINT "not positive"
+END IF

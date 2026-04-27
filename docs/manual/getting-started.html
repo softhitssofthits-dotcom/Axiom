@@ -1,0 +1,148 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Начало работы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="getting-started">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Первые шаги</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Начало работы</p>
+                    <p class="sidebar__subtitle">Что представляет собой программа Axiom и с какого минимума стоит начинать.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Начало работы</span>
+            </nav>
+            <p class="eyebrow">Старт</p>
+            <h1 class="page-title">Начало работы</h1>
+            <p class="lead">Для первого знакомства с языком достаточно понять три вещи: программа читается сверху вниз, новые имена обычно объявляются через <code>DIM</code>, а результат работы проще всего наблюдать через <code>PRINT</code>.</p>
+
+            <section class="article-section">
+                <h2>Главные правила</h2>
+                <ul>
+                    <li>первая программа должна быть короткой и проверяемой за один запуск;</li>
+                    <li>для начала достаточно понимать последовательное чтение программы, <code>DIM</code> и <code>PRINT</code>;</li>
+                    <li>для подробностей переходите к соседним справочным страницам по <code>PRINT</code>, <code>INPUT</code> и типам данных.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ol class="contents-list">
+                    <li><a href="#program-file">Как устроен файл программы</a></li>
+                    <li><a href="#first-program">Первая программа</a></li>
+                    <li><a href="#comments">Комментарии</a></li>
+                    <li><a href="#run">Как запускать примеры</a></li>
+                    <li><a href="#summary">Краткий итог</a></li>
+                </ol>
+            </section>
+
+            <section class="article-section">
+                <h2>Показательные примеры</h2>
+                <p>Для первых запусков в IDE используйте несколько коротких файлов.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/print/basic_expression.axm">PRINT: базовое выражение</a></li>
+                    <li><a href="../../samples/operators/print/empty_print.axm">PRINT: пустой оператор</a></li>
+                    <li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li>
+                    <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
+                    <li><a href="../../samples/smoke/v0_1_baseline.axm">Сводный пример для первой проверки</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="program-file">
+                <h2>Как устроен файл программы</h2>
+                <p>Исходные тексты обычно хранятся в файлах с расширением <code>.axm</code>. Интерпретатор воспринимает такой файл как последовательность инструкций и блоков. Поэтому программу следует записывать так, чтобы её можно было читать сверху вниз.</p>
+                <div class="checklist">
+                    <strong>Что полезно помнить с самого начала:</strong>
+                    <ul>
+                        <li>одна строка обычно содержит одну инструкцию;</li>
+                        <li>пустые строки допустимы и помогают отделять смысловые блоки;</li>
+                        <li>вложенные конструкции должны быть явно закрыты: <code>END IF</code>, <code>END SELECT</code>, <code>END WHILE</code>, <code>LOOP</code>, <code>NEXT</code>.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="article-section" id="first-program">
+                <h2>Первая программа</h2>
+                <p>Самая простая проверка среды — вывести строку в панель <code>Output</code>.</p>
+                <pre><code class="language-basic">PRINT "Привет, Axiom!"</code></pre>
+                <p>Оператор <code>PRINT</code> вычисляет выражение после своего имени и отправляет результат в поток вывода. Если в качестве аргумента дана строка в кавычках, на экран попадает именно этот текст.</p>
+                <pre><code class="language-basic">PRINT "Заголовок"
+PRINT 42
+PRINT 1 + 2 * 3
+PRINT</code></pre>
+                <p>Этот пример показывает, что <code>PRINT</code> выводит строки, числа, результаты выражений и пустую строку.</p>
+            </section>
+
+            <section class="article-section" id="comments">
+                <h2>Комментарии</h2>
+                <p>Комментарий можно записать двумя способами: через апостроф <code>'</code> и через ключевое слово <code>REM</code>. Оба варианта оставляют пояснение для читателя и не влияют на выполнение программы.</p>
+                <pre><code class="language-basic">' Современная краткая запись комментария
+REM Классическая запись комментария
+
+PRINT "Комментарий в вывод не попадает"</code></pre>
+                <p>Комментарий уместен там, где нужно кратко пояснить назначение блока. Он должен дополнять код, а не пересказывать его построчно.</p>
+            </section>
+
+            <section class="article-section" id="run">
+                <h2>Как запускать примеры</h2>
+                <ol>
+                    <li>Откройте <code>Axiom.Ide</code>.</li>
+                    <li>Создайте новый документ или откройте существующий файл <code>.axm</code>.</li>
+                    <li>Вставьте пример программы.</li>
+                    <li>Запустите его через кнопку <code>Run</code>.</li>
+                    <li>Посмотрите результат в панели <code>Output</code>.</li>
+                </ol>
+                <div class="note">
+                    <h3>Если программа не запускается</h3>
+                    <p>Чаще всего причина связана с синтаксисом или с неверным типом данных. В этом случае нужно посмотреть, на какой строке и в каком месте интерпретатор остановил выполнение.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Краткий итог</h2>
+                <div class="summary-box">
+                    <h3>Что стоит запомнить сразу</h3>
+                    <ul>
+                        <li>программа Axiom читается сверху вниз;</li>
+                        <li><code>PRINT</code> является самым простым способом увидеть результат;</li>
+                        <li>комментарии задаются через <code>'</code> или <code>REM</code>;</li>
+                        <li>первые примеры должны быть короткими и легко проверяемыми.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="data-and-input.html">Данные и ввод</a>
+                    <a href="print.html">Оператор PRINT</a>
+                    <a href="input.html">Оператор INPUT</a>
+                    <a href="examples.html">Готовые примеры</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

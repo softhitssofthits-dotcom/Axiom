@@ -1,0 +1,129 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор INPUT</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="input">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Ввод данных от пользователя</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор INPUT</p><p class="sidebar__subtitle">Справочная глава по чтению значений, приглашениям и преобразованию ввода.</p></div><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Оператор INPUT</span>
+            </nav>
+            <p class="eyebrow">Ввод и вывод</p>
+            <h1 class="page-title">Оператор INPUT</h1>
+            <p class="lead">Оператор <code>INPUT</code> читает одну логическую строку ввода и преобразует её к типу одной или нескольких целевых переменных. Глава описывает базовую форму, варианты со строкой приглашения и условия возникновения диагностики времени выполнения.</p>
+
+            <section class="article-section">
+                <h2>Главные правила</h2>
+                <ul>
+                    <li><code>INPUT</code> поддерживает чтение одной переменной, списка переменных и формы с текстом приглашения.</li>
+                    <li>При вводе нескольких переменных строка разбирается как минимальный список значений, разделённых запятыми.</li>
+                    <li>Количество введённых значений должно совпадать с количеством целевых переменных.</li>
+                    <li>Для <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> и <code>BOOLEAN</code> ввод преобразуется из текста после минимальной нормализации пробелов.</li>
+                    <li>Если преобразование невозможно или число значений не совпадает, возникает диагностика времени выполнения <code>MB3003</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#basic-form">Базовая форма INPUT</a></li>
+                    <li><a href="#multi-input">Ввод нескольких значений</a></li>
+                    <li><a href="#prompt">Форма с приглашением</a></li>
+                    <li><a href="#conversion">Преобразование значений</a></li>
+                    <li><a href="#errors">Когда возникает ошибка</a></li>
+                    <li><a href="#summary">Итого</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Для ручной проверки используйте файлы примеров, которые можно открыть в IDE и выполнить с разными вариантами ввода.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li>
+                    <li><a href="../../samples/operators/input/multiple_variables.axm">INPUT: несколько переменных</a></li>
+                    <li><a href="../../samples/operators/input/prompt_semicolon.axm">INPUT: приглашение через ;</a></li>
+                    <li><a href="../../samples/operators/input/prompt_comma.axm">INPUT: приглашение через ,</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="basic-form">
+                <h2>Базовая форма INPUT</h2>
+                <pre><code class="language-basic">Dim name As String
+INPUT name</code></pre>
+                <p>В этом случае программа ожидает, что пользователь введёт одно значение, и затем записывает его в указанную переменную.</p>
+            </section>
+
+            <section class="article-section" id="multi-input">
+                <h2>Ввод нескольких значений</h2>
+                <pre><code class="language-basic">Dim first As Integer
+Dim second As Integer
+
+INPUT first, second</code></pre>
+                <p>Здесь пользователь должен ввести значения в одной строке, разделяя их запятыми. Количество введённых значений должно совпасть с количеством переменных.</p>
+            </section>
+
+            <section class="article-section" id="prompt">
+                <h2>Форма с приглашением</h2>
+                <p>Перед списком переменных можно указать текст приглашения:</p>
+                <pre><code class="language-basic">INPUT "Введите имя"; name
+INPUT "Введите два числа", first, second</code></pre>
+                <p>В текущей реализации обе формы, через <code>;</code> и через <code>,</code>, синтаксически поддерживаются, но не разводятся в две отдельные модели консольного форматирования.</p>
+            </section>
+
+            <section class="article-section" id="conversion">
+                <h2>Преобразование значений</h2>
+                <p>После ввода данные преобразуются к типу целевой переменной.</p>
+                <ul>
+                    <li>для <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> и <code>BOOLEAN</code> значение читается из текста и преобразуется;</li>
+                    <li>для <code>STRING</code> текст берётся как есть;</li>
+                    <li>если переменных несколько, ввод разбирается как минимальный список значений, разделённых запятыми.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="errors">
+                <h2>Когда возникает ошибка</h2>
+                <p>Диагностика времени выполнения <code>MB3003</code> появляется в двух типичных ситуациях:</p>
+                <ul>
+                    <li>число введённых значений не совпадает с числом переменных;</li>
+                    <li>введённый текст нельзя преобразовать к требуемому типу.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Итого</h2>
+                <p><code>INPUT</code> позволяет считать одно или несколько пользовательских значений, при необходимости показать приглашение и затем преобразовать ввод к типу целевых переменных.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="print.html">Оператор PRINT</a>
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                    <a href="examples.html">Примеры</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функции даты и времени</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="date-time-functions">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Справочник по текущим встроенным функциям даты и времени</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Дата и время</p>
+                    <p class="sidebar__subtitle">Чтение текущих локальных даты и времени, построение канонических строк и извлечение календарных частей.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Функции даты и времени</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Функции даты и времени</h1>
+            <p class="lead">Axiom поддерживает строковый пакет работы с датой и временем. На этой странице собраны функции чтения текущих локальных даты и времени, построения канонических строк и извлечения календарных частей из канонических значений.</p>
+
+            <section class="article-section">
+                <h2>Сводка</h2>
+                <ul>
+                    <li><code>DATE()</code>, <code>TIME()</code> и <code>NOW()</code> возвращают текущие локальные дату и время, а формы с аргументом пояса возвращают те же значения для указанного часового пояса.</li>
+                    <li><code>UTCDATE()</code>, <code>UTCTIME()</code> и <code>UTCNOW()</code> возвращают текущие дату и время в UTC.</li>
+                    <li><code>TIMER()</code> возвращает число секунд с локальной полуночи текущего дня как <code>DOUBLE</code>.</li>
+                    <li><code>DATESERIAL()</code> и <code>TIMESERIAL()</code> строят канонические строковые значения даты и времени.</li>
+                    <li><code>YEAR()</code>, <code>MONTH()</code>, <code>DAY()</code>, <code>HOUR()</code>, <code>MINUTE()</code>, <code>SECOND()</code> и <code>WEEKDAY()</code> извлекают части из канонических строк.</li>
+                    <li><code>MONTHNAME()</code> и <code>WEEKDAYNAME()</code> возвращают фиксированные англоязычные названия месяца и дня недели без зависимости от локали хоста.</li>
+                    <li><code>DATEADD()</code>, <code>DATEDIFF()</code> и <code>DATEPART()</code> добавляют минимальный слой арифметики и разбора по токенам поверх тех же канонических строк.</li>
+                    <li><code>DATEVALUE()</code>, <code>TIMEVALUE()</code> и <code>ISDATE()</code> работают только с каноническими форматами Axiom и не используют локалезависимый разбор.</li>
+                    <li><code>UTCOFFSET()</code> возвращает текущее локальное смещение, <code>UTCOFFSET(&lt;значение&gt;)</code> — локальное смещение для конкретной локальной даты-времени, а <code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;)</code> — смещение для конкретной даты-времени в указанном часовом поясе.</li>
+                    <li><code>ISLEAPYEAR()</code> и <code>DAYSINMONTH()</code> дают календарные свойства года и месяца.</li>
+                    <li><code>STARTOFMONTH()</code>, <code>ENDOFMONTH()</code>, <code>STARTOFYEAR()</code> и <code>ENDOFYEAR()</code> возвращают канонические даты границ месяца и года.</li>
+                    <li>Идентификатор часового пояса задаётся строкой: поддерживаются переносимые псевдонимы <code>UTC</code> и <code>LOCAL</code>, а также известные хосту идентификаторы пояса.</li>
+                    <li>Канонические форматы на этом этапе фиксированы: <code>yyyy-MM-dd</code>, <code>HH:mm:ss</code> и <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+                    <li>Локально-зависимый разбор текстовых дат и времени не поддерживается.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">DATE() AS STRING
+DATE(&lt;пояс&gt;) AS STRING
+TIME() AS STRING
+TIME(&lt;пояс&gt;) AS STRING
+NOW() AS STRING
+NOW(&lt;пояс&gt;) AS STRING
+UTCDATE() AS STRING
+UTCTIME() AS STRING
+UTCNOW() AS STRING
+TIMER() AS DOUBLE
+DATESERIAL(&lt;год&gt;, &lt;месяц&gt;, &lt;день&gt;) AS STRING
+TIMESERIAL(&lt;час&gt;, &lt;минута&gt;, &lt;секунда&gt;) AS STRING
+YEAR(&lt;значение&gt;) AS INTEGER
+MONTH(&lt;значение&gt;) AS INTEGER
+MONTHNAME(&lt;месяц&gt;) AS STRING
+DAY(&lt;значение&gt;) AS INTEGER
+HOUR(&lt;значение&gt;) AS INTEGER
+MINUTE(&lt;значение&gt;) AS INTEGER
+SECOND(&lt;значение&gt;) AS INTEGER
+WEEKDAY(&lt;значение&gt;) AS INTEGER
+WEEKDAYNAME(&lt;деньНедели&gt;) AS STRING
+DATEADD(&lt;interval&gt;, &lt;number&gt;, &lt;значение&gt;) AS STRING
+DATEDIFF(&lt;interval&gt;, &lt;fromValue&gt;, &lt;toValue&gt;) AS LONG
+DATEPART(&lt;part&gt;, &lt;значение&gt;) AS INTEGER
+DATEVALUE(&lt;значение&gt;) AS STRING
+TIMEVALUE(&lt;значение&gt;) AS STRING
+ISDATE(&lt;значение&gt;) AS BOOLEAN
+UTCOFFSET() AS INTEGER
+UTCOFFSET(&lt;значение&gt;) AS INTEGER
+UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;) AS INTEGER
+TOUTC(&lt;значение&gt;) AS STRING
+TOUTC(&lt;значение&gt;, &lt;пояс&gt;) AS STRING
+FROMUTC(&lt;значение&gt;) AS STRING
+FROMUTC(&lt;значение&gt;, &lt;пояс&gt;) AS STRING
+ISLEAPYEAR(&lt;год&gt;) AS BOOLEAN
+DAYSINMONTH(&lt;год&gt;, &lt;месяц&gt;) AS INTEGER
+STARTOFMONTH(&lt;значение&gt;) AS STRING
+ENDOFMONTH(&lt;значение&gt;) AS STRING
+STARTOFYEAR(&lt;значение&gt;) AS STRING
+ENDOFYEAR(&lt;значение&gt;) AS STRING</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Параметры</h2>
+                <ul>
+                    <li><code>&lt;год&gt;</code> — целое число в диапазоне <code>1..9999</code>.</li>
+                    <li><code>&lt;месяц&gt;</code> — целое число в диапазоне <code>1..12</code>.</li>
+                    <li><code>&lt;день&gt;</code> — день месяца; значение должно образовывать реальную календарную дату вместе с годом и месяцем.</li>
+                    <li><code>&lt;час&gt;</code> — целое число в диапазоне <code>0..23</code>.</li>
+                    <li><code>&lt;минута&gt;</code> и <code>&lt;секунда&gt;</code> — целые числа в диапазоне <code>0..59</code>.</li>
+                    <li><code>&lt;месяц&gt;</code> для <code>MONTHNAME</code> — целое число от <code>1</code> до <code>12</code>.</li>
+                    <li><code>&lt;деньНедели&gt;</code> для <code>WEEKDAYNAME</code> — целое число от <code>1</code> до <code>7</code> по схеме <code>1 = Monday</code>, <code>7 = Sunday</code>.</li>
+                    <li><code>&lt;interval&gt;</code> для <code>DATEADD</code> и <code>DATEDIFF</code> поддерживает только токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>.</li>
+                    <li><code>&lt;part&gt;</code> для <code>DATEPART</code> поддерживает только токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>.</li>
+                    <li><code>&lt;number&gt;</code> — целочисленное смещение для <code>DATEADD</code>.</li>
+                    <li><code>&lt;год&gt;</code> для <code>ISLEAPYEAR</code> и <code>DAYSINMONTH</code> — целое число в диапазоне <code>1..9999</code>.</li>
+                    <li><code>&lt;месяц&gt;</code> для <code>DAYSINMONTH</code> — целое число в диапазоне <code>1..12</code>.</li>
+                    <li><code>&lt;fromValue&gt;</code> и <code>&lt;toValue&gt;</code> — канонические строки даты, времени или даты-времени в зависимости от выбранного интервала.</li>
+                    <li><code>&lt;значение&gt;</code> — каноническая строка даты, времени или даты-времени в зависимости от функции.</li>
+                    <li><code>&lt;значение&gt;</code> для <code>UTCOFFSET(&lt;значение&gt;)</code>, <code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;)</code>, <code>TOUTC</code> и <code>FROMUTC</code> — только каноническая дата-время <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+                    <li><code>&lt;пояс&gt;</code> — строковый идентификатор часового пояса. Поддерживаются <code>UTC</code>, <code>LOCAL</code> и известные хосту идентификаторы пояса. В Windows это обычно имена вида <code>Russian Standard Time</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>DATE</code>, <code>TIME</code>, <code>NOW</code>, <code>DATESERIAL</code> и <code>TIMESERIAL</code> возвращают строки, а не отдельный тип даты или времени.</li>
+                    <li><code>YEAR</code>, <code>MONTH</code>, <code>DAY</code> и <code>WEEKDAY</code> принимают только каноническую дату <code>yyyy-MM-dd</code> или каноническую дату-время <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+                    <li><code>MONTHNAME</code> и <code>WEEKDAYNAME</code> не используют локаль ОС и всегда возвращают полные английские названия.</li>
+                    <li><code>HOUR</code>, <code>MINUTE</code> и <code>SECOND</code> принимают только каноническое время <code>HH:mm:ss</code> или каноническую дату-время <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+                    <li><code>WEEKDAY</code> использует нумерацию <code>1..7</code>, где <code>1 = понедельник</code>, <code>7 = воскресенье</code>.</li>
+                    <li><code>MONTHNAME</code> и <code>WEEKDAYNAME</code> на этом этапе намеренно не имеют необязательных параметров сокращения и перенастройки первого дня недели.</li>
+                    <li><code>DATESERIAL</code> и <code>TIMESERIAL</code> не выполняют автоматический перенос переполненных компонентов в следующий месяц, день или час. Неверные компоненты считаются ошибкой.</li>
+                    <li><code>DATEADD</code> сохраняет форму исходной строки: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем.</li>
+                    <li>Для time-only значения <code>DATEADD("h" | "n" | "s", ...)</code> выполняет арифметику по модулю 24 часов и не создаёт скрытую дату.</li>
+                    <li><code>DATEDIFF</code> возвращает signed <code>LONG</code> и считает число пересечённых границ интервала, а не округлённую длительность.</li>
+                    <li><code>DATEVALUE</code>, <code>TIMEVALUE</code> и <code>ISDATE</code> не распознают locale-specific формы вроде <code>20.04.2026</code>, <code>04/20/2026</code> или <code>2:24PM</code>.</li>
+                    <li><code>DATE(&lt;пояс&gt;)</code>, <code>TIME(&lt;пояс&gt;)</code> и <code>NOW(&lt;пояс&gt;)</code> используют текущий момент хоста, но форматируют его в указанном часовом поясе.</li>
+                    <li><code>UTCOFFSET()</code> возвращает текущее локальное смещение хоста от UTC в минутах, например <code>180</code> или <code>-300</code>.</li>
+                    <li><code>UTCOFFSET(&lt;значение&gt;)</code> и <code>TOUTC()</code> используют правила локального часового пояса именно для переданной даты-времени, а не текущее смещение «на сейчас».</li>
+                    <li><code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;)</code>, <code>TOUTC(&lt;значение&gt;, &lt;пояс&gt;)</code> и <code>FROMUTC(&lt;значение&gt;, &lt;пояс&gt;)</code> работают с явно указанным часовым поясом, не завися от локального пояса хоста.</li>
+                    <li>Если локальная дата-время попадает в пропущенный или повторённый диапазон перевода часов, <code>UTCOFFSET(&lt;значение&gt;)</code>, <code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;)</code>, <code>TOUTC()</code> и <code>TOUTC(&lt;значение&gt;, &lt;пояс&gt;)</code> завершаются диагностикой ошибки аргумента вместо молчаливого выбора одного из вариантов.</li>
+                    <li><code>FROMUTC()</code> и <code>FROMUTC(&lt;значение&gt;, &lt;пояс&gt;)</code> переводят каноническую дату-время UTC по правилам соответствующего часового пояса для этого момента.</li>
+                    <li>Отдельная форма <code>UTCOFFSET(&lt;пояс&gt;)</code> намеренно не вводилась, чтобы не столкнуть два разных строковых смысла в одной одноаргументной форме вызова. Если нужно текущее смещение указанного пояса, используйте <code>UTCOFFSET(NOW(&lt;пояс&gt;), &lt;пояс&gt;)</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Функции</h2>
+
+                <h3 id="date">DATE</h3>
+                <p><strong>Форма вызова:</strong> <code>DATE() AS STRING</code></p>
+                <p><strong>Форма вызова:</strong> <code>DATE(&lt;пояс&gt;) AS STRING</code></p>
+                <p>Без аргумента возвращает текущую локальную дату в форме <code>yyyy-MM-dd</code>. С аргументом возвращает текущую дату в указанном часовом поясе.</p>
+
+                <h3 id="time">TIME</h3>
+                <p><strong>Форма вызова:</strong> <code>TIME() AS STRING</code></p>
+                <p><strong>Форма вызова:</strong> <code>TIME(&lt;пояс&gt;) AS STRING</code></p>
+                <p>Без аргумента возвращает текущее локальное время в форме <code>HH:mm:ss</code>. С аргументом возвращает текущее время в указанном часовом поясе.</p>
+
+                <h3 id="now">NOW</h3>
+                <p><strong>Форма вызова:</strong> <code>NOW() AS STRING</code></p>
+                <p><strong>Форма вызова:</strong> <code>NOW(&lt;пояс&gt;) AS STRING</code></p>
+                <p>Без аргумента возвращает текущие локальные дату и время в форме <code>yyyy-MM-dd HH:mm:ss</code>. С аргументом возвращает текущие дату и время в указанном часовом поясе.</p>
+
+                <h3 id="utcdate">UTCDATE</h3>
+                <p><strong>Форма вызова:</strong> <code>UTCDATE() AS STRING</code></p>
+                <p>Возвращает текущую дату в UTC в форме <code>yyyy-MM-dd</code>.</p>
+
+                <h3 id="utctime">UTCTIME</h3>
+                <p><strong>Форма вызова:</strong> <code>UTCTIME() AS STRING</code></p>
+                <p>Возвращает текущее время в UTC в форме <code>HH:mm:ss</code>.</p>
+
+                <h3 id="utcnow">UTCNOW</h3>
+                <p><strong>Форма вызова:</strong> <code>UTCNOW() AS STRING</code></p>
+                <p>Возвращает текущие дату и время в UTC в форме <code>yyyy-MM-dd HH:mm:ss</code>.</p>
+
+                <h3 id="timer">TIMER</h3>
+                <p><strong>Форма вызова:</strong> <code>TIMER() AS DOUBLE</code></p>
+                <p>Возвращает число секунд, прошедших с локальной полуночи текущего дня. Значение может содержать дробную часть.</p>
+
+                <h3 id="dateserial">DATESERIAL</h3>
+                <p><strong>Форма вызова:</strong> <code>DATESERIAL(&lt;год&gt;, &lt;месяц&gt;, &lt;день&gt;) AS STRING</code></p>
+                <p>Строит каноническую дату <code>yyyy-MM-dd</code> из отдельных целочисленных компонентов.</p>
+
+                <h3 id="timeserial">TIMESERIAL</h3>
+                <p><strong>Форма вызова:</strong> <code>TIMESERIAL(&lt;час&gt;, &lt;минута&gt;, &lt;секунда&gt;) AS STRING</code></p>
+                <p>Строит каноническое время <code>HH:mm:ss</code> из отдельных целочисленных компонентов.</p>
+
+                <h3 id="year">YEAR</h3>
+                <p><strong>Форма вызова:</strong> <code>YEAR(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает год из канонической даты или канонической даты-времени.</p>
+
+                <h3 id="month">MONTH</h3>
+                <p><strong>Форма вызова:</strong> <code>MONTH(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает номер месяца из канонической даты или канонической даты-времени.</p>
+
+                <h3 id="monthname">MONTHNAME</h3>
+                <p><strong>Форма вызова:</strong> <code>MONTHNAME(&lt;месяц&gt;) AS STRING</code></p>
+                <p>Возвращает полное английское название месяца по номеру от <code>1</code> до <code>12</code>.</p>
+
+                <h3 id="day">DAY</h3>
+                <p><strong>Форма вызова:</strong> <code>DAY(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает день месяца из канонической даты или канонической даты-времени.</p>
+
+                <h3 id="hour">HOUR</h3>
+                <p><strong>Форма вызова:</strong> <code>HOUR(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает час из канонического времени или канонической даты-времени.</p>
+
+                <h3 id="minute">MINUTE</h3>
+                <p><strong>Форма вызова:</strong> <code>MINUTE(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает минуту из канонического времени или канонической даты-времени.</p>
+
+                <h3 id="second">SECOND</h3>
+                <p><strong>Форма вызова:</strong> <code>SECOND(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает секунду из канонического времени или канонической даты-времени.</p>
+
+                <h3 id="weekday">WEEKDAY</h3>
+                <p><strong>Форма вызова:</strong> <code>WEEKDAY(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Возвращает номер дня недели для канонической даты или канонической даты-времени. На этом этапе используется нумерация <code>1 = понедельник</code>, <code>7 = воскресенье</code>.</p>
+
+                <h3 id="weekdayname">WEEKDAYNAME</h3>
+                <p><strong>Форма вызова:</strong> <code>WEEKDAYNAME(&lt;деньНедели&gt;) AS STRING</code></p>
+                <p>Возвращает полное английское название дня недели по нумерации от понедельника, от <code>1</code> до <code>7</code>.</p>
+
+                <h3 id="isleapyear">ISLEAPYEAR</h3>
+                <p><strong>Форма вызова:</strong> <code>ISLEAPYEAR(&lt;год&gt;) AS BOOLEAN</code></p>
+                <p>Возвращает <code>TRUE</code>, если год является високосным по обычным правилам календаря Gregorian, и <code>FALSE</code> в остальных случаях.</p>
+
+                <h3 id="daysinmonth">DAYSINMONTH</h3>
+                <p><strong>Форма вызова:</strong> <code>DAYSINMONTH(&lt;год&gt;, &lt;месяц&gt;) AS INTEGER</code></p>
+                <p>Возвращает число дней в указанном месяце указанного года.</p>
+
+                <h3 id="startofmonth">STARTOFMONTH</h3>
+                <p><strong>Форма вызова:</strong> <code>STARTOFMONTH(&lt;значение&gt;) AS STRING</code></p>
+                <p>Возвращает каноническую дату первого дня месяца для переданной даты или даты-времени.</p>
+
+                <h3 id="endofmonth">ENDOFMONTH</h3>
+                <p><strong>Форма вызова:</strong> <code>ENDOFMONTH(&lt;значение&gt;) AS STRING</code></p>
+                <p>Возвращает каноническую дату последнего дня месяца для переданной даты или даты-времени.</p>
+
+                <h3 id="startofyear">STARTOFYEAR</h3>
+                <p><strong>Форма вызова:</strong> <code>STARTOFYEAR(&lt;значение&gt;) AS STRING</code></p>
+                <p>Возвращает каноническую дату первого дня года для переданной даты или даты-времени.</p>
+
+                <h3 id="endofyear">ENDOFYEAR</h3>
+                <p><strong>Форма вызова:</strong> <code>ENDOFYEAR(&lt;значение&gt;) AS STRING</code></p>
+                <p>Возвращает каноническую дату последнего дня года для переданной даты или даты-времени.</p>
+
+                <h3 id="dateadd">DATEADD</h3>
+                <p><strong>Форма вызова:</strong> <code>DATEADD(&lt;interval&gt;, &lt;number&gt;, &lt;значение&gt;) AS STRING</code></p>
+                <p>Сдвигает каноническую дату, время или дату-время на заданное целочисленное количество интервалов. Поддерживаемые токены: <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
+
+                <h3 id="datediff">DATEDIFF</h3>
+                <p><strong>Форма вызова:</strong> <code>DATEDIFF(&lt;interval&gt;, &lt;fromValue&gt;, &lt;toValue&gt;) AS LONG</code></p>
+                <p>Возвращает signed количество границ интервала между двумя каноническими значениями. Поддерживаемые токены: <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
+
+                <h3 id="datepart">DATEPART</h3>
+                <p><strong>Форма вызова:</strong> <code>DATEPART(&lt;part&gt;, &lt;значение&gt;) AS INTEGER</code></p>
+                <p>Извлекает часть из канонической даты, времени или даты-времени по token-based аргументу. Поддерживаются <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
+
+                <h3 id="datevalue">DATEVALUE</h3>
+                <p><strong>Форма вызова:</strong> <code>DATEVALUE(&lt;значение&gt;) AS STRING</code></p>
+                <p>Принимает каноническую дату или дату-время и возвращает каноническую дату <code>yyyy-MM-dd</code>.</p>
+
+                <h3 id="timevalue">TIMEVALUE</h3>
+                <p><strong>Форма вызова:</strong> <code>TIMEVALUE(&lt;значение&gt;) AS STRING</code></p>
+                <p>Принимает каноническое время или дату-время и возвращает каноническое время <code>HH:mm:ss</code>.</p>
+
+                <h3 id="isdate">ISDATE</h3>
+                <p><strong>Форма вызова:</strong> <code>ISDATE(&lt;значение&gt;) AS BOOLEAN</code></p>
+                <p>Возвращает <code>TRUE</code>, если строка распознаётся как каноническая дата, время или дата-время Axiom, и <code>FALSE</code> в остальных случаях.</p>
+
+                <h3 id="utcoffset">UTCOFFSET</h3>
+                <p><strong>Форма вызова:</strong> <code>UTCOFFSET() AS INTEGER</code></p>
+                <p><strong>Форма вызова:</strong> <code>UTCOFFSET(&lt;значение&gt;) AS INTEGER</code></p>
+                <p><strong>Форма вызова:</strong> <code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;) AS INTEGER</code></p>
+                <p>Без аргумента возвращает текущее локальное смещение хоста от UTC в минутах. Форма с одним аргументом принимает каноническую локальную дату-время <code>yyyy-MM-dd HH:mm:ss</code> и возвращает смещение локального часового пояса для этого момента. Форма с двумя аргументами рассчитывает смещение для указанной даты-времени в явно заданном часовом поясе.</p>
+
+                <h3 id="toutc">TOUTC</h3>
+                <p><strong>Форма вызова:</strong> <code>TOUTC(&lt;значение&gt;) AS STRING</code></p>
+                <p><strong>Форма вызова:</strong> <code>TOUTC(&lt;значение&gt;, &lt;пояс&gt;) AS STRING</code></p>
+                <p>Форма с одним аргументом принимает каноническую локальную дату-время <code>yyyy-MM-dd HH:mm:ss</code> и переводит её в каноническую дату-время UTC по правилам локального пояса хоста. Форма с двумя аргументами трактует дату-время как значение указанного часового пояса.</p>
+
+                <h3 id="fromutc">FROMUTC</h3>
+                <p><strong>Форма вызова:</strong> <code>FROMUTC(&lt;значение&gt;) AS STRING</code></p>
+                <p><strong>Форма вызова:</strong> <code>FROMUTC(&lt;значение&gt;, &lt;пояс&gt;) AS STRING</code></p>
+                <p>Форма с одним аргументом принимает каноническую дату-время UTC <code>yyyy-MM-dd HH:mm:ss</code> и переводит её в каноническую локальную дату-время. Форма с двумя аргументами переводит то же значение UTC в каноническую дату-время указанного часового пояса.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">PRINT DATE()
+PRINT DATE("UTC")
+PRINT TIME()
+PRINT TIME("UTC")
+PRINT NOW()
+PRINT NOW("UTC")
+PRINT UTCDATE()
+PRINT UTCTIME()
+PRINT UTCNOW()
+PRINT UTCOFFSET()
+PRINT UTCOFFSET("2026-04-20 14:05:06")
+PRINT UTCOFFSET("2026-04-20 14:05:06", "UTC")
+
+PRINT DATESERIAL(2026, 4, 20)
+PRINT TIMESERIAL(14, 5, 6)
+
+PRINT YEAR("2026-04-20 14:05:06")
+PRINT MONTHNAME(MONTH("2026-04-20"))
+PRINT WEEKDAY("2026-04-20")
+PRINT WEEKDAYNAME(WEEKDAY("2026-04-26"))
+PRINT ISLEAPYEAR(2024)
+PRINT DAYSINMONTH(2024, 2)
+PRINT STARTOFMONTH("2026-04-20 14:05:06")
+PRINT ENDOFMONTH("2024-02-11")
+PRINT STARTOFYEAR("2026-04-20")
+PRINT ENDOFYEAR("2026-04-20 14:05:06")
+PRINT DATEADD("m", 1, "2026-01-31")
+PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")
+PRINT DATEPART("y", "2026-04-21")
+PRINT DATEVALUE("2026-04-20 14:05:06")
+PRINT TIMEVALUE("2026-04-20 14:05:06")
+PRINT ISDATE("2026-04-20 14:05:06")
+PRINT TOUTC("2026-04-20 14:05:06")
+PRINT TOUTC("2026-04-20 11:05:06", "UTC")
+PRINT FROMUTC("2026-04-20 11:05:06")
+PRINT FROMUTC("2026-04-20 11:05:06", "UTC")</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>Неверное количество аргументов даёт обычную смысловую диагностику о неподходящей форме вызова.</li>
+                    <li>Неканонический текст вроде <code>"20.04.2026"</code> или <code>"14.05.06"</code> даёт диагностику ошибки аргумента встроенной функции во время выполнения.</li>
+                    <li>Неверные компоненты в <code>DATESERIAL</code> и <code>TIMESERIAL</code>, например <code>DATESERIAL(2025, 2, 29)</code> или <code>TIMESERIAL(24, 0, 0)</code>, тоже завершаются диагностикой ошибки аргумента встроенной функции.</li>
+                    <li>Значения вне диапазона, например <code>MONTHNAME(13)</code> или <code>WEEKDAYNAME(0)</code>, завершаются диагностикой ошибки аргумента встроенной функции.</li>
+                    <li>Неверный календарный год или месяц, например <code>ISLEAPYEAR(10000)</code> или <code>DAYSINMONTH(2026, 13)</code>, тоже завершаются диагностикой ошибки аргумента встроенной функции.</li>
+                    <li>Неподдерживаемые tokens вроде <code>"ww"</code> для <code>DATEADD</code>, <code>DATEDIFF</code> и <code>DATEPART</code> считаются ошибкой аргумента.</li>
+                    <li>Арифметика, выводящая результат за допустимый канонический диапазон даты и времени, завершается обычной runtime-диагностикой ошибки аргумента встроенной функции.</li>
+                    <li><code>UTCOFFSET(&lt;значение&gt;)</code>, <code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;)</code>, <code>TOUTC</code> и <code>FROMUTC</code> требуют именно каноническую дату-время <code>yyyy-MM-dd HH:mm:ss</code>; отдельная дата или отдельное время для них не подходят.</li>
+                    <li>Неизвестный или пустой идентификатор <code>&lt;пояс&gt;</code> даёт диагностику ошибки аргумента встроенной функции.</li>
+                    <li>Если локальная дата-время попадает в пропущенный или повторённый диапазон перевода часов, <code>UTCOFFSET(&lt;значение&gt;)</code>, <code>UTCOFFSET(&lt;значение&gt;, &lt;пояс&gt;)</code>, <code>TOUTC</code> и <code>TOUTC(&lt;значение&gt;, &lt;пояс&gt;)</code> завершаются диагностикой ошибки аргумента.</li>
+                    <li>Если перевод даты-времени выводит значение за допустимый канонический диапазон, <code>TOUTC</code>, <code>TOUTC(&lt;значение&gt;, &lt;пояс&gt;)</code>, <code>FROMUTC</code> и <code>FROMUTC(&lt;значение&gt;, &lt;пояс&gt;)</code> завершаются диагностикой ошибки аргумента.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущее локальное значение</a></li>
+                    <li><a href="../../samples/functions/date/named_timezone_current_date.axm">DATE: текущая дата в указанном поясе</a></li>
+                    <li><a href="../../samples/functions/time/basic_usage.axm">TIME: текущее локальное значение</a></li>
+                    <li><a href="../../samples/functions/time/named_timezone_current_time.axm">TIME: текущее время в указанном поясе</a></li>
+                    <li><a href="../../samples/functions/now/basic_usage.axm">NOW: текущие локальные дата и время</a></li>
+                    <li><a href="../../samples/functions/now/named_timezone_current_datetime.axm">NOW: текущие дата и время в указанном поясе</a></li>
+                    <li><a href="../../samples/functions/utcdate/current_utc_date.axm">UTCDATE: текущая дата в UTC</a></li>
+                    <li><a href="../../samples/functions/utctime/current_utc_time.axm">UTCTIME: текущее время в UTC</a></li>
+                    <li><a href="../../samples/functions/utcnow/current_utc_now.axm">UTCNOW: текущие дата и время в UTC</a></li>
+                    <li><a href="../../samples/functions/timer/basic_usage.axm">TIMER: секунды с полуночи</a></li>
+                    <li><a href="../../samples/functions/dateserial/basic_usage.axm">DATESERIAL: построение даты</a></li>
+                    <li><a href="../../samples/functions/timeserial/basic_usage.axm">TIMESERIAL: построение времени</a></li>
+                    <li><a href="../../samples/functions/year/basic_usage.axm">YEAR: извлечение года</a></li>
+                    <li><a href="../../samples/functions/month/basic_usage.axm">MONTH: извлечение месяца</a></li>
+                    <li><a href="../../samples/functions/monthname/calendar_month_name.axm">MONTHNAME: имя месяца</a></li>
+                    <li><a href="../../samples/functions/day/basic_usage.axm">DAY: извлечение дня месяца</a></li>
+                    <li><a href="../../samples/functions/hour/basic_usage.axm">HOUR: извлечение часа</a></li>
+                    <li><a href="../../samples/functions/minute/basic_usage.axm">MINUTE: извлечение минут</a></li>
+                    <li><a href="../../samples/functions/second/basic_usage.axm">SECOND: извлечение секунд</a></li>
+                    <li><a href="../../samples/functions/weekday/basic_usage.axm">WEEKDAY: день недели по схеме с понедельника</a></li>
+                    <li><a href="../../samples/functions/weekdayname/weekend_name.axm">WEEKDAYNAME: имя дня недели</a></li>
+                    <li><a href="../../samples/functions/isleapyear/leap_year_true_false.axm">ISLEAPYEAR: високосный год</a></li>
+                    <li><a href="../../samples/functions/daysinmonth/february_leap_year.axm">DAYSINMONTH: число дней в месяце</a></li>
+                    <li><a href="../../samples/functions/startofmonth/from_datetime.axm">STARTOFMONTH: начало месяца</a></li>
+                    <li><a href="../../samples/functions/endofmonth/leap_february.axm">ENDOFMONTH: конец месяца</a></li>
+                    <li><a href="../../samples/functions/startofyear/from_datetime.axm">STARTOFYEAR: начало года</a></li>
+                    <li><a href="../../samples/functions/endofyear/from_datetime.axm">ENDOFYEAR: конец года</a></li>
+                    <li><a href="../../samples/functions/dateadd/month_end_shift.axm">DATEADD: сдвиг даты на конец месяца</a></li>
+                    <li><a href="../../samples/functions/datediff/day_boundary.axm">DATEDIFF: переход через границу дня</a></li>
+                    <li><a href="../../samples/functions/datepart/day_of_year.axm">DATEPART: номер дня в году</a></li>
+                    <li><a href="../../samples/functions/datevalue/from_datetime.axm">DATEVALUE: дата из даты-времени</a></li>
+                    <li><a href="../../samples/functions/timevalue/from_datetime.axm">TIMEVALUE: время из даты-времени</a></li>
+                    <li><a href="../../samples/functions/isdate/canonical_datetime.axm">ISDATE: каноническая дата-время</a></li>
+                    <li><a href="../../samples/functions/utcoffset/current_local_offset.axm">UTCOFFSET: текущее локальное смещение</a></li>
+                    <li><a href="../../samples/functions/utcoffset/specific_local_datetime_offset.axm">UTCOFFSET: смещение для конкретной даты-времени</a></li>
+                    <li><a href="../../samples/functions/utcoffset/named_timezone_specific_offset.axm">UTCOFFSET: смещение для даты-времени в указанном поясе</a></li>
+                    <li><a href="../../samples/functions/toutc/roundtrip_to_local.axm">TOUTC: перевод в UTC и обратный возврат</a></li>
+                    <li><a href="../../samples/functions/toutc/named_timezone_to_utc.axm">TOUTC: перевод в UTC из указанного пояса</a></li>
+                    <li><a href="../../samples/functions/fromutc/roundtrip_to_utc.axm">FROMUTC: перевод из UTC и обратный возврат</a></li>
+                    <li><a href="../../samples/functions/fromutc/named_timezone_from_utc.axm">FROMUTC: перевод из UTC в указанный пояс</a></li>
+                </ul>
+                <p>Откройте нужный файл в <code>Axiom.Ide</code> и запустите его. Для функций построения и извлечения частей ожидается точный результат, указанный в комментарии в начале файла.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="file-system-functions.html">Функции файловой системы</a>
+                    <a href="numeric-functions.html">Числовые функции</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

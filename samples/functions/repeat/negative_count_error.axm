@@ -1,0 +1,2 @@
+' Expected runtime diagnostic MB3007: REPEAT count cannot be negative.
+PRINT REPEAT("ha", -1)

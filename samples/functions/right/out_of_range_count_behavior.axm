@@ -1,0 +1,2 @@
+' Expected output: Hello
+PRINT RIGHT("Hello", 100)

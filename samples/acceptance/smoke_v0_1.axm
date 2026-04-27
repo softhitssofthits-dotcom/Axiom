@@ -1,0 +1,97 @@
+﻿CONST APP_NAME AS STRING = "Axiom v0.1 smoke test"
+CONST PI2 AS DOUBLE = 6.28
+
+DIM globalCounter AS INTEGER = 0
+DIM globalFlag AS BOOLEAN = TRUE
+
+FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER
+    RETURN a + b
+END FUNCTION
+
+FUNCTION IsAdult(age AS INTEGER) AS BOOLEAN
+    RETURN age >= 18
+END FUNCTION
+
+FUNCTION Half(value AS DOUBLE) AS DOUBLE
+    RETURN value / 2
+END FUNCTION
+
+SUB PrintHeader(title AS STRING)
+    PRINT "=============================="
+    PRINT title
+    PRINT "=============================="
+END SUB
+
+SUB PrintUser(name AS STRING, age AS INTEGER)
+    PRINT "User: " + name
+    PRINT "Age: " + STR(age)
+END SUB
+
+DIM userName AS STRING
+DIM age AS INTEGER
+DIM j AS INTEGER
+DIM sum AS INTEGER
+DIM avg AS DOUBLE
+DIM isAdultFlag AS BOOLEAN
+DIM text AS STRING
+DIM parsedValue AS DOUBLE
+
+PrintHeader(APP_NAME)
+
+PRINT "Enter your name:"
+INPUT userName
+
+PRINT "Enter your age:"
+INPUT age
+
+PrintUser(userName, age)
+
+sum = Add(age, 10)
+PRINT "Age + 10 = " + STR(sum)
+
+avg = Half(PI2)
+PRINT "Half of PI2 = " + STR(avg)
+
+isAdultFlag = IsAdult(age)
+
+IF isAdultFlag AND globalFlag = TRUE THEN
+    PRINT "Status: adult"
+ELSE
+    PRINT "Status: minor"
+END IF
+
+PRINT "FOR loop test:"
+FOR i = 1 TO 3
+    PRINT "FOR i = " + STR(i)
+NEXT
+
+PRINT "WHILE loop test:"
+j = 0
+WHILE j < 3
+    PRINT "WHILE j = " + STR(j)
+    j = j + 1
+END WHILE
+
+text = "HelloWorld"
+PRINT "LEN(text) = " + STR(LEN(text))
+PRINT "LEFT(text, 5) = " + LEFT(text, 5)
+PRINT "RIGHT(text, 5) = " + RIGHT(text, 5)
+PRINT "MID(text, 2, 4) = " + MID(text, 2, 4)
+PRINT "LCASE(text) = " + LCASE(text)
+PRINT "UCASE(text) = " + UCASE(text)
+
+parsedValue = VAL("123.5")
+PRINT "VAL(""123.5"") = " + STR(parsedValue)
+PRINT "INT(12.9) = " + STR(INT(12.9))
+
+IF LEN(userName) > 0 OR age > 0 THEN
+    PRINT "Input check passed"
+ELSE
+    PRINT "Input check failed"
+END IF
+
+globalCounter = 0
+globalCounter = globalCounter + 1
+PRINT "globalCounter = " + STR(globalCounter)
+
+PRINT "Smoke тесты завершены"

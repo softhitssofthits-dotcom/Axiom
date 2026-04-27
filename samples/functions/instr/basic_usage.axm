@@ -1,0 +1,4 @@
+' Ожидается вывод: 3, затем 5, затем 0.
+PRINT INSTR("banana", "na")
+PRINT INSTR(4, "banana", "na")
+PRINT INSTR("banana", "NA")

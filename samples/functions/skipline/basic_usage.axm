@@ -1,0 +1,11 @@
+' SKIPLINE пропускает одну строку и оставляет файл на следующей строке.
+DIM path AS STRING = MAKETEMPFILE("skipline_")
+PRINT WRITEFILE(path, "alpha" + CHR(10) + "beta" + CHR(10) + "gamma")
+
+DIM f AS FILE
+OPEN path FOR INPUT AS f
+PRINT SKIPLINE(f)
+PRINT READLINE(f)
+CLOSE f
+
+PRINT DELETEFILE(path)

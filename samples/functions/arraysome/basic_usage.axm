@@ -1,0 +1,15 @@
+' ARRAYSOME manual acceptance sample with captured external state.
+DIM values(5 TO 7) AS INTEGER
+DIM limit AS INTEGER = 15
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+
+PRINT ARRAYSOME(values, IsAboveLimit)
+limit = 100
+PRINT ARRAYSOME(values, IsAboveLimit)
+
+FUNCTION IsAboveLimit(value AS INTEGER) AS BOOLEAN
+    RETURN value > limit
+END FUNCTION

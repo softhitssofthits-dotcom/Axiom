@@ -1,0 +1,8 @@
+' Создаёт папку и переименовывает её.
+DIM sourceDir AS STRING = ".artifacts/axiom_sample_renamedir_source"
+DIM targetDir AS STRING = ".artifacts/axiom_sample_renamedir_target"
+
+PRINT DELETEDIR(targetDir)
+PRINT MAKEDIR(sourceDir)
+PRINT RENAMEDIR(sourceDir, ".artifacts/axiom_sample_renamedir_target")
+PRINT DIREXISTS(targetDir)

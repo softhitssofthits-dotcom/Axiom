@@ -1,0 +1,9 @@
+﻿' Expected:
+' A B C
+' 1 2 3 4 5 
+PRINT "A", "B", "C"
+
+FOR i = 1 TO 5
+    PRINT i,
+NEXT
+

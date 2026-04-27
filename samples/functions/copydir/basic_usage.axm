@@ -1,0 +1,10 @@
+' Создаёт папку с файлом и копирует её.
+DIM sourceDir AS STRING = ".artifacts/axiom_sample_copydir_source"
+DIM targetDir AS STRING = ".artifacts/axiom_sample_copydir_target"
+DIM sourceFile AS STRING = COMBINEPATH(sourceDir, "notes.txt")
+DIM targetFile AS STRING = COMBINEPATH(targetDir, "notes.txt")
+
+PRINT MAKEDIR(sourceDir)
+PRINT WRITEFILE(sourceFile, "Hello")
+PRINT COPYDIR(sourceDir, targetDir, TRUE)
+PRINT READFILE(targetFile)

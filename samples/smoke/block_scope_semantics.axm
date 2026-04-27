@@ -1,0 +1,19 @@
+' Expected:
+' branch
+' 1
+' 2
+' done
+
+IF TRUE THEN
+    DIM message AS STRING = "branch"
+    PRINT message
+ELSE
+    DIM message AS STRING = "other"
+    PRINT message
+END IF
+
+FOR i = 1 TO 2
+    PRINT i
+NEXT
+
+PRINT "done"

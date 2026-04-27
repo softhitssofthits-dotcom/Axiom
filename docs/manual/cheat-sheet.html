@@ -1,0 +1,184 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Шпаргалка</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="cheat-sheet">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Быстрый синтаксический конспект</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Шпаргалка</p>
+                    <p class="sidebar__subtitle">Короткая сводка по базовому синтаксису языка без длинных пояснений.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Шпаргалка</span>
+            </nav>
+            <p class="eyebrow">Практика и справка</p>
+            <h1 class="page-title">Краткая шпаргалка</h1>
+            <p class="lead">Эта страница служит краткой сводкой по основным формам синтаксиса. Откройте её, когда нужно быстро восстановить в памяти форму объявления, цикла, ветвления или вызова встроенной функции.</p>
+
+            <section class="article-section">
+                <h2>Когда открывать шпаргалку</h2>
+                <ul>
+                    <li>когда нужна краткая форма конструкции без подробного объяснения;</li>
+                    <li>когда нужно восстановить синтаксис перед запуском примера в IDE;</li>
+                    <li>когда после шпаргалки требуется перейти к подробной справочной статье.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Типы и объявления</h2>
+                <pre><code class="language-basic">DIM age AS INTEGER
+DIM price AS DOUBLE = 1.5
+DIM title = "Пример"
+CONST APP_NAME AS STRING = "Demo"</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ввод и вывод</h2>
+                <pre><code class="language-basic">PRINT "Привет"
+PRINT 10, 20
+PRINT "Имя: "; "Анна"
+PRINT
+
+INPUT value
+INPUT "Введите имя: "; name
+INPUT x, y</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Условия</h2>
+                <pre><code class="language-basic">IF &lt;условие&gt; THEN
+    &lt;инструкции&gt;
+[ELSEIF &lt;другое условие&gt; THEN
+    &lt;инструкции&gt;]
+...
+[ELSE
+    &lt;инструкции&gt;]
+END IF
+
+SELECT CASE &lt;выражение&gt;
+    CASE 1
+        &lt;инструкции&gt;
+    CASE 2, 3
+        &lt;инструкции&gt;
+    CASE 10 TO 20
+        &lt;инструкции&gt;
+    CASE IS &gt; 100
+        &lt;инструкции&gt;
+    CASE ELSE
+        &lt;инструкции&gt;
+END SELECT</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Циклы</h2>
+                <pre><code class="language-basic">FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]
+    &lt;инструкции&gt;
+NEXT
+
+WHILE &lt;условие&gt;
+    &lt;инструкции&gt;
+END WHILE
+
+DO WHILE &lt;условие&gt;
+    &lt;инструкции&gt;
+LOOP
+
+DO UNTIL &lt;условие&gt;
+    &lt;инструкции&gt;
+LOOP
+
+DO
+    &lt;инструкции&gt;
+LOOP WHILE &lt;условие&gt;
+
+DO
+    &lt;инструкции&gt;
+LOOP UNTIL &lt;условие&gt;
+
+DO
+    &lt;инструкции&gt;
+    EXIT DO
+LOOP</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Подпрограммы и функции</h2>
+                <pre><code class="language-basic">SUB ShowMessage(text AS STRING)
+    PRINT text
+END SUB
+
+FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER
+    RETURN a + b
+END FUNCTION</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Массивы</h2>
+                <pre><code class="language-basic">DIM numbers(1 TO 3) AS INTEGER
+numbers(1) = 10
+PRINT numbers(1)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Встроенные функции</h2>
+                <ul class="inline-list">
+                    <li><code>LEN(&lt;текст&gt;)</code></li>
+                    <li><code>LEFT(&lt;текст&gt;, &lt;количество&gt;)</code></li>
+                    <li><code>RIGHT(&lt;текст&gt;, &lt;количество&gt;)</code></li>
+                    <li><code>MID(&lt;текст&gt;, &lt;начало&gt;, &lt;количество&gt;)</code></li>
+                    <li><code>LCASE(text)</code></li>
+                    <li><code>UCASE(text)</code></li>
+                    <li><code>INT(value)</code></li>
+                    <li><code>STR(value)</code></li>
+                    <li><code>VAL(text)</code></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Напоминания</h2>
+                <div class="summary-box">
+                    <h3>Самые частые правила</h3>
+                    <ul>
+                        <li>новые переменные обычно объявляются через <code>DIM</code>;</li>
+                        <li>локальная переменная блока недоступна после выхода из блока;</li>
+                        <li><code>FOR</code>-счетчик не требует отдельного предварительного <code>DIM</code>;</li>
+                        <li><code>MID</code> использует позицию с единицы.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="getting-started.html">Начало работы</a>
+                    <a href="examples.html">Готовые примеры</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

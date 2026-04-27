@@ -1,0 +1,2 @@
+' Expected: MB2018 because the literal does not fit DECIMAL.
+DIM value AS DECIMAL = 792281625142643375935439503350.0

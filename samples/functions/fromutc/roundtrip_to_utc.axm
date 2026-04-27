@@ -1,0 +1,6 @@
+' Expected output:
+' TRUE
+' 2026-04-20 11:05:06
+DIM localValue AS STRING = FROMUTC("2026-04-20 11:05:06")
+PRINT ISDATE(localValue)
+PRINT TOUTC(localValue)

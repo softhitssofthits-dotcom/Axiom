@@ -1,0 +1,4 @@
+' LONG выводится автоматически, потому что литерал не помещается в INTEGER.
+DIM value = 21474836479
+PRINT value
+PRINT value + value

@@ -1,0 +1,3 @@
+' Expected output:
+' TRUE
+PRINT UTCOFFSET("2026-04-20 14:05:06", "UTC") = 0

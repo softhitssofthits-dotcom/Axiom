@@ -1,0 +1,8 @@
+' Создаёт и удаляет пустую учебную папку.
+DIM path AS STRING = ".artifacts/axiom_sample_deletedir"
+
+PRINT MAKEDIR(path)
+PRINT DIREXISTS(path)
+PRINT DELETEDIR(path)
+PRINT DIREXISTS(path)
+PRINT DELETEDIR(path)

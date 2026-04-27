@@ -1,0 +1,2 @@
+' Expected: prints Value = 42.
+PRINT "Value = " + STR(42)

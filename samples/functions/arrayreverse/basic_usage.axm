@@ -1,0 +1,15 @@
+' ARRAYREVERSE mutates the allocated array in place and keeps bounds.
+
+DIM values(5 TO 8) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+values(8) = 40
+
+ARRAYREVERSE(values)
+
+PRINT LBOUND(values)
+PRINT UBOUND(values)
+PRINT values(5)
+PRINT values(8)

@@ -1,0 +1,9 @@
+' SELECT CASE with mixed selector forms in one CASE
+DIM value AS INTEGER = 8
+
+SELECT CASE value
+    CASE 1, 5 TO 10, IS > 100
+        PRINT "matched"
+    CASE ELSE
+        PRINT "other"
+END SELECT

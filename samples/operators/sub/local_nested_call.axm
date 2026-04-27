@@ -1,0 +1,16 @@
+' Локальная подпрограмма доступна внутри внешней процедуры
+' и может вызываться до своего текстового объявления.
+
+DIM total AS INTEGER = 0
+
+Demo()
+PRINT total
+
+SUB Demo()
+    AddOne()
+    AddOne()
+
+    SUB AddOne()
+        total = total + 1
+    END SUB
+END SUB

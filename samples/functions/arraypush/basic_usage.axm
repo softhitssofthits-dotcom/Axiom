@@ -1,0 +1,15 @@
+' ARRAYPUSH appends a value to the logical end of an allocated array.
+
+DIM values(5 TO 6) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+
+ARRAYPUSH(values, 30)
+
+PRINT LBOUND(values)
+PRINT UBOUND(values)
+PRINT ARRAYLENGTH(values)
+PRINT values(5)
+PRINT values(6)
+PRINT values(7)

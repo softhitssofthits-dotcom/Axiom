@@ -1,0 +1,4 @@
+' Ожидается: TRUE, FALSE, TRUE.
+PRINT ENDSWITH("Hello", "lo")
+PRINT ENDSWITH("Hello", "LO")
+PRINT ENDSWITH("Hello", "")

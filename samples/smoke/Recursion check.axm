@@ -1,0 +1,19 @@
+﻿PRINT "Recursion check"
+PRINT "Factorial 5 = "; Factorial(5)
+PRINT "Fibonacci 8 = "; Fibonacci(8)
+
+FUNCTION Factorial(n AS INTEGER) AS INTEGER
+    IF n <= 1 THEN
+        RETURN 1
+    END IF
+
+    RETURN n * Factorial(n - 1)
+END FUNCTION
+
+FUNCTION Fibonacci(n AS INTEGER) AS INTEGER
+    IF n <= 1 THEN
+        RETURN n
+    END IF
+
+    RETURN Fibonacci(n - 1) + Fibonacci(n - 2)
+END FUNCTION

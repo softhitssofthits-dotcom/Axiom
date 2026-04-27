@@ -1,0 +1,17 @@
+TYPE Employee
+    Name AS STRING * 5
+    Role AS STRING * 8
+END TYPE
+
+DIM user AS Employee
+
+PRINT "[" + user.Name + "]"
+
+user.Name = "Ada"
+user.Role = "Analyst"
+
+PRINT "[" + user.Name + "]"
+PRINT "[" + user.Role + "]"
+
+user.Role = "Architect"
+PRINT "[" + user.Role + "]"

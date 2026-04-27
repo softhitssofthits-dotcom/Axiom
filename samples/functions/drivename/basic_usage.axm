@@ -1,0 +1,2 @@
+' DRIVENAME возвращает имя диска для указанного пути.
+PRINT DRIVENAME(CURRENTDIR())

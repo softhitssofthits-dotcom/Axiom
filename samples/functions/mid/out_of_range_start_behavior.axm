@@ -1,0 +1,2 @@
+' Expected output: empty line
+PRINT MID("Hello", 10, 2)

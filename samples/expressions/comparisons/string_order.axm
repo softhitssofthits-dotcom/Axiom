@@ -1,0 +1,4 @@
+﻿' Expected: ordinal string comparisons print TRUE, TRUE, TRUE.
+Print "Z" > "M"
+Print "nuts" > "Nuts"
+Print "abc" < "abd"

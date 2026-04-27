@@ -1,0 +1,10 @@
+' Expected: prints 1.5, 8, and 0.
+DIM seed AS INTEGER = 1
+DIM amount AS DECIMAL = seed
+DIM half AS DECIMAL = 0.5
+DIM wide AS LONG = seed
+DIM angle AS INTEGER = 0
+
+PRINT amount + half
+PRINT wide + 7
+PRINT SIN(angle)

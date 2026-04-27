@@ -1,0 +1,10 @@
+' Ожидается: 2, 42, 100, 0.
+DIM values() AS STRING
+
+values = REGEXMATCHES("Order 42 and 100", "\d+")
+PRINT ARRAYLENGTH(values)
+PRINT values(1)
+PRINT values(2)
+
+values = REGEXMATCHES("Order", "\d+")
+PRINT ARRAYLENGTH(values)

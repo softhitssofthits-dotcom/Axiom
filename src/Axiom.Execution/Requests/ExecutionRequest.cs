@@ -1,0 +1,70 @@
+using Axiom.Runtime;
+
+namespace Axiom.Execution;
+
+public sealed class ExecutionRequest
+{
+    public ExecutionRequest(
+        string sourceText,
+        IInputProvider? inputProvider = null,
+        IOutputWriter? outputWriter = null,
+        IDiagnosticSink? diagnosticSink = null,
+        ExecutionMode mode = ExecutionMode.Bytecode,
+        string? bytecodeSnapshotPath = null,
+        IEnumerable<int>? sourceBreakpointLines = null,
+        bool stopBeforeFirstInstruction = false)
+    {
+        ArgumentNullException.ThrowIfNull(sourceText);
+
+        SourceText = sourceText;
+        InputProvider = inputProvider ?? NullRuntimeHost.Instance;
+        OutputWriter = outputWriter ?? NullRuntimeHost.Instance;
+        DiagnosticSink = diagnosticSink ?? NullDiagnosticSink.Instance;
+        Mode = mode;
+        BytecodeSnapshotPath = bytecodeSnapshotPath;
+        SourceBreakpointLines = NormalizeSourceBreakpointLines(sourceBreakpointLines);
+        StopBeforeFirstInstruction = stopBeforeFirstInstruction;
+    }
+
+    public string SourceText { get; }
+
+    public IInputProvider InputProvider { get; }
+
+    public IOutputWriter OutputWriter { get; }
+
+    public IDiagnosticSink DiagnosticSink { get; }
+
+    public ExecutionMode Mode { get; }
+
+    public string? BytecodeSnapshotPath { get; }
+
+    public IReadOnlyList<int> SourceBreakpointLines { get; }
+
+    public bool StopBeforeFirstInstruction { get; }
+
+    private static IReadOnlyList<int> NormalizeSourceBreakpointLines(IEnumerable<int>? lines)
+    {
+        if (lines is null)
+        {
+            return [];
+        }
+
+        var result = new List<int>();
+        var seen = new HashSet<int>();
+
+        foreach (var line in lines)
+        {
+            if (line <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(lines), line, "Source breakpoint line must be greater than zero.");
+            }
+
+            if (seen.Add(line))
+            {
+                result.Add(line);
+            }
+        }
+
+        return result;
+    }
+}

@@ -1,0 +1,31 @@
+' Проверка TYPE: массив записей, поля элементов массива и копирование записи в элемент.
+
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM first AS Person
+DIM people(1 TO 2) AS Person
+
+first.Name = "Ada"
+first.Age = 36
+first.Home.City = "London"
+
+people(1) = first
+first.Name = "Grace"
+
+people(2).Name = "Alan"
+
+PRINT people(1).Name
+PRINT people(1).Age
+PRINT people(1).Home.City
+PRINT people(2).Name
+PRINT first.Name
+PRINT LBOUND(people)
+PRINT UBOUND(people)

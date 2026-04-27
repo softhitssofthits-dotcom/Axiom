@@ -1,0 +1,10 @@
+' ARRAYSLICE с count = 0 возвращает пустой выделенный массив 1 TO 0.
+DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
+
+part = ARRAYSLICE(source, 999, 0)
+
+PRINT ARRAYISALLOCATED(part)
+PRINT ARRAYLENGTH(part)
+PRINT LBOUND(part)
+PRINT UBOUND(part)

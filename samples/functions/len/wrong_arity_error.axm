@@ -1,0 +1,2 @@
+' Expected semantic diagnostic MB2004: LEN requires exactly one argument.
+PRINT LEN()

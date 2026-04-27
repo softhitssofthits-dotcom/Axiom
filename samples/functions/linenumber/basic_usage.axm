@@ -1,0 +1,14 @@
+' LINENUMBER показывает номер текущей строки для чтения.
+DIM path AS STRING = MAKETEMPFILE("linenumber_")
+PRINT WRITEFILE(path, "alpha" + CHR(10) + "beta" + CHR(10) + "gamma")
+
+DIM f AS FILE
+OPEN path FOR INPUT AS f
+PRINT LINENUMBER(f)
+PRINT READLINE(f)
+PRINT LINENUMBER(f)
+PRINT SKIPLINE(f)
+PRINT LINENUMBER(f)
+CLOSE f
+
+PRINT DELETEFILE(path)

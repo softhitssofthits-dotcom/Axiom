@@ -1,0 +1,194 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Примеры программ</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="examples">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Небольшие программы для запуска и разбора</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Примеры программ</p>
+                    <p class="sidebar__subtitle">Короткие программы, на которых удобно повторять синтаксис, логику и диагностику.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Примеры программ</span>
+            </nav>
+            <p class="eyebrow">Практика и справка</p>
+            <h1 class="page-title">Примеры программ</h1>
+            <p class="lead">Эти программы следует изучать в запуске. Откройте файл, выполните его и затем изменяйте входные данные или отдельные фрагменты кода, чтобы увидеть совместную работу конструкций языка.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#starter-files">Файлы для первого запуска</a></li>
+                    <li><a href="#collection">Подборка коротких программ</a></li>
+                    <li><a href="#work">Как работать с примерами</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <ul>
+                    <li>когда нужен законченный пример, а не отдельная справочная статья;</li>
+                    <li>когда нужно проверить несколько конструкций в одном файле;</li>
+                    <li>когда после чтения справки требуется закрепить материал на небольшой программе.</li>
+                </ul>
+                <div class="note">
+                    <h3>Коротко</h3>
+                    <p>Эта страница нужна для практики. Она собирает небольшие запускаемые программы, на которых удобно повторять синтаксис, ввод-вывод, ветвление, циклы и вызовы функций.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="starter-files">
+                <h2>Файлы для запуска в IDE</h2>
+                <p>Для запуска в IDE начните с этих образцов.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li>
+                    <li><a href="../../samples/control-flow/select_case/ranges_and_is.axm">SELECT CASE: диапазоны и CASE IS</a></li>
+                    <li><a href="../../samples/functions/left/basic_usage.axm">LEFT: базовое использование</a></li>
+                    <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое определение</a></li>
+                    <li><a href="../../samples/smoke/v0_1_baseline.axm">Общий базовый сценарий</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="collection">
+                <h2>Подборка коротких программ</h2>
+                <p>Каждый пример ниже показывает один небольшой завершённый сценарий. Их можно открывать как образцы для разбора, а можно брать как основу для собственных экспериментов.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>1. Карточка студента</h2>
+                <pre><code class="language-basic">DIM name AS STRING
+DIM year AS INTEGER
+
+INPUT "Имя: "; name
+INPUT "Курс: "; year
+
+PRINT
+PRINT "Студент: "; name
+PRINT "Курс: "; year
+
+IF year &gt;= 4 THEN
+    PRINT "Старшие курсы"
+ELSE
+    PRINT "Начальный этап"
+END IF</code></pre>
+                <p>Этот пример объединяет <code>INPUT</code>, <code>PRINT</code>, типы данных и оператор <code>IF</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>2. Классификация оценки через SELECT CASE</h2>
+                <pre><code class="language-basic">DIM score AS INTEGER
+INPUT "Баллы: "; score
+
+SELECT CASE score
+    CASE 90 TO 100
+        PRINT "Отличный результат"
+    CASE 70 TO 89
+        PRINT "Уверенный результат"
+    CASE 50 TO 69
+        PRINT "Есть запас для роста"
+    CASE ELSE
+        PRINT "Нужно повторить тему"
+END SELECT</code></pre>
+                <p>Этот пример показывает, как одно значение сравнивается с диапазонами и с запасной ветвью <code>CASE ELSE</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>3. Функция нормализации строки</h2>
+                <pre><code class="language-basic">FUNCTION NormalizeName(text AS STRING) AS STRING
+    IF LEN(text) = 0 THEN
+        RETURN ""
+    END IF
+
+    IF LEN(text) = 1 THEN
+        RETURN UCASE(text)
+    END IF
+
+    RETURN UCASE(LEFT(text, 1)) + LCASE(MID(text, 2, LEN(text) - 1))
+END FUNCTION
+
+DIM rawName AS STRING
+INPUT "Имя в любом регистре: "; rawName
+
+PRINT NormalizeName(rawName)</code></pre>
+                <p>Этот пример показывает совместную работу пользовательской функции и встроенных строковых операций.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>4. Работа с массивом оценок</h2>
+                <pre><code class="language-basic">DIM marks(1 TO 3) AS INTEGER
+DIM total AS INTEGER = 0
+DIM i AS INTEGER
+
+marks(1) = 4
+marks(2) = 5
+marks(3) = 3
+
+FOR i = 1 TO 3
+    total = total + marks(i)
+NEXT
+
+PRINT "Сумма = "; total
+PRINT "Среднее = "; total / 3</code></pre>
+                <p>Этот пример показывает совместную работу массива и цикла <code>FOR</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>5. Повторный ввод через DO ... LOOP UNTIL</h2>
+                <pre><code class="language-basic">DIM answer AS STRING
+
+DO
+    INPUT "Введите ДА для подтверждения: "; answer
+    answer = LCASE(answer)
+LOOP UNTIL answer = "да"
+
+PRINT "Подтверждение принято"</code></pre>
+                <p>Такой образец подходит для повторного запроса пользовательского ввода.</p>
+            </section>
+
+            <section class="article-section" id="work">
+                <h2>Как работать с этими примерами</h2>
+                <ul>
+                    <li>изменяйте входные данные и наблюдайте, как меняется поведение программы;</li>
+                    <li>намеренно вызывайте ошибку и отмечайте, на каком этапе она возникает;</li>
+                    <li>выносите повторяющиеся части в собственные <code>SUB</code> и <code>FUNCTION</code>;</li>
+                    <li>соберите на основе этих фрагментов собственную небольшую программу.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="getting-started.html">Начало работы</a>
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="data-and-input.html">Данные и ввод</a>
+                    <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
+                    <a href="cheat-sheet.html">Шпаргалка</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

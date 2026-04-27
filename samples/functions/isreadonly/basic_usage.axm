@@ -1,0 +1,6 @@
+' ISREADONLY проверяет атрибут только для чтения.
+DIM path AS STRING = "readonly.txt"
+
+PRINT WRITEFILE(path, "x")
+PRINT ISREADONLY(path)
+PRINT DELETEFILE(path)

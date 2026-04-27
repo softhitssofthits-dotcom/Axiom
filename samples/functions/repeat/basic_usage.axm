@@ -1,0 +1,2 @@
+' Expected: prints hahaha.
+PRINT REPEAT("ha", 3)

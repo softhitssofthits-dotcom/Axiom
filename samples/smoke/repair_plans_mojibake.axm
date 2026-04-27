@@ -1,0 +1,535 @@
+﻿' Проверочный пример: восстанавливает рабочую копию файла с битой кодировкой.
+' Укажите в начале программы любой исходный файл и путь к рабочей копии.
+'
+' Как пользоваться примером:
+' 1. Впишите путь к файлу, который нужно исправить.
+' 2. Впишите путь к рабочей копии, в которую сначала будет скопирован оригинал.
+' 3. Программа чинит только рабочую копию, исходный файл остаётся нетронутым.
+'
+' Вывод программы:
+' - "Копирование исходного файла в рабочую копию: TRUE/FALSE";
+' - "Исправлено строк с восстановимой битой кодировкой: <число>";
+' - "Строк с невосстановимыми маркерами пїЅ/U+FFFD: <число>";
+' - "Запись исправленной рабочей копии: TRUE/FALSE".
+'
+' Главная идея восстановления:
+' - документ может быть испорчен неравномерно;
+' - часть строки уже может быть нормальной, а часть ещё выглядит как
+'   "РџР»Р°РЅ", "СЃР»РѕР№" или "вЂ”";
+' - если перекодировать всю строку сразу, можно повредить уже исправленные
+'   куски текста;
+' - поэтому ниже программа работает по фрагментам: режет строку на небольшие
+'   части и чинит только те, которые действительно похожи на типичную поломку
+'   UTF-8 -> ошибочное чтение как Windows-1251.
+
+DIM sourcePath AS STRING = "C:\Axiom\README.md" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
+DIM workPath AS STRING = "C:\Axiom\README_copy.md" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
+Dim sourceText As String ' Здесь будет весь текст рабочей копии до исправления.
+Dim repairedText As String ' Здесь будет весь текст рабочей копии после исправления.
+
+Print "Копирование исходного файла в рабочую копию: "; Copyfile(sourcePath, workPath, True) ' TRUE разрешает перезаписать старую рабочую копию, если она уже существует.
+
+sourceText = Readfile(workPath) ' Читаем именно рабочую копию, чтобы случайно не менять исходный файл напрямую.
+repairedText = RepairMixedDocumentText(sourceText) ' Прогоняем текст через восстановление смешанной нормальной и битой кодировки.
+
+Print "Исправлено строк с восстановимой битой кодировкой: "; CountFixedLines(sourceText) ' Печатаем, сколько строк программа считает реально изменёнными.
+Print "Строк с невосстановимыми маркерами пїЅ/U+FFFD: "; CountUnrecoverableLines(repairedText) ' Печатаем, сколько строк похоже на уже невосстановимую потерю байтов через символ замены.
+Print "Запись исправленной рабочей копии: "; Writefile(workPath, repairedText) ' Записываем исправленный текст обратно в рабочую копию.
+
+Function RepairMixedDocumentText(inputText As String) As String
+    Dim lines() As String ' Массив строк документа после разбиения по LF.
+    Dim currentLine As String ' Текущая строка без хвостового CR.
+
+    lines = Split(inputText, Chr(10)) ' Делим по символу LF; возможный CR убираем отдельно ниже.
+
+    For lineIndex = 1 To Arraylength(lines) ' Массивы в примерах Axiom индексируются с единицы.
+        currentLine = TrimTrailingCr(lines(lineIndex)) ' Убираем хвостовой CR, если строка пришла из Windows CRLF.
+
+        lines(lineIndex) = RepairLine(currentLine) ' Чиним одну строку и кладём результат обратно в тот же элемент массива.
+    Next
+
+    Return Join(lines, Chr(13) + Chr(10)) ' Собираем документ обратно с Windows-переносами CRLF.
+End Function
+
+Function CountFixedLines(inputText As String) As Integer
+    Dim lines() As String ' Тот же список строк, но только для подсчёта изменений.
+    Dim count As Integer = 0 ' Счётчик строк, где RepairLine реально меняет текст.
+    Dim currentLine As String ' Текущая строка для сравнения до и после RepairLine.
+
+    lines = Split(inputText, Chr(10)) ' Разбиваем так же, как при основном исправлении.
+
+    For lineIndex = 1 To Arraylength(lines) ' Проверяем каждую строку отдельно.
+        currentLine = TrimTrailingCr(lines(lineIndex)) ' Сравнивать удобнее без завершающего CR.
+
+        If RepairLine(currentLine) <> currentLine Then ' Если исправленная версия отличается, строка была затронута.
+            count = count + 1 ' Увеличиваем счётчик изменённых строк.
+        End If
+    Next
+
+    Return count ' Возвращаем число строк, которое печатается в основном коде.
+End Function
+
+Function CountUnrecoverableLines(inputText As String) As Integer
+    Dim lines() As String ' Список строк документа после обычного разбиения по LF.
+    Dim count As Integer = 0 ' Счётчик строк, где уже встречается символ замены или его mojibake-вид.
+    Dim currentLine As String ' Текущая строка без завершающего CR.
+
+    lines = Split(inputText, Chr(10)) ' Используем тот же способ обхода строк, что и при основном ремонте.
+
+    For lineIndex = 1 To Arraylength(lines) ' Проверяем каждую строку отдельно.
+        currentLine = TrimTrailingCr(lines(lineIndex)) ' Убираем CR, чтобы маркеры искались только в содержимом строки.
+
+        If HasUnrecoverableReplacementMarker(currentLine) Then ' Такая строка уже потеряла исходные байты.
+            count = count + 1 ' Её можно восстановить только вручную по контексту или из резервной копии.
+        End If
+    Next
+
+    Return count ' Возвращаем число строк, требующих ручного внимания.
+End Function
+
+Function RepairLine(inputText As String) As String
+    Dim resultText As String = "" ' Сюда постепенно собирается исправленная строка.
+    Dim currentChunk As String = "" ' Текущий фрагмент между пробелами или ASCII-пунктуацией.
+    Dim currentChar As String ' Один символ входной строки на текущей позиции.
+
+    ' В старом варианте программа пыталась чинить строку целиком.
+    ' Для PLANS этого хватало, но в SPECIFICATION и ARCHITECTURE часто встречаются
+    ' смешанные строки: начало уже нормальное, а середина или конец ещё битые.
+    '
+    ' Поэтому теперь мы разбиваем строку на безопасные фрагменты между пробелами,
+    ' табами и ASCII-знаками пунктуации. Такие границы хорошо подходят для Markdown:
+    ' отдельно живут слова, даты, номера версий, пути, кодовые идентификаторы,
+    ' английские термины и битые русские куски.
+    For charIndex = 1 To Len(inputText) ' Идём по строке посимвольно.
+        currentChar = Mid(inputText, charIndex, 1) ' Берём один символ, потому что LEN/MID работают в символьных позициях.
+
+        If IsRepairSeparator(currentChar) Then ' Разделитель завершает текущий фрагмент.
+            If Len(currentChunk) > 0 Then ' Пустой фрагмент чинить не нужно.
+                resultText = resultText + RepairFragment(currentChunk) ' Чиним накопленное слово или битую последовательность.
+                currentChunk = "" ' Начинаем следующий фрагмент с нуля.
+            End If
+
+            resultText = resultText + currentChar ' Сам разделитель возвращаем без изменения.
+        Else
+            currentChunk = currentChunk + currentChar ' Не разделитель, значит продолжаем копить фрагмент.
+        End If
+    Next
+
+    If Len(currentChunk) > 0 Then ' После цикла мог остаться последний фрагмент без разделителя справа.
+        resultText = resultText + RepairFragment(currentChunk) ' Его тоже нужно проверить и при необходимости исправить.
+    End If
+
+    Return resultText ' Возвращаем строку с сохранёнными разделителями и исправленными фрагментами.
+End Function
+
+Function RepairFragment(inputText As String) As String
+    Dim currentText As String = inputText ' Рабочая версия фрагмента; она меняется от прохода к проходу.
+    Dim passCount As Integer = 0 ' Защита от бесконечного цикла на странных данных.
+    Dim decodedText As String ' Результат одной попытки обратной перекодировки.
+
+    ' Один и тот же фрагмент может быть испорчен несколько раз подряд.
+    ' Поэтому даём до четырёх проходов восстановления: после каждого прохода
+    ' ещё раз проверяем, остались ли характерные следы порчи.
+    While passCount < 4 ' Четырёх проходов хватает для нескольких повторных поломок подряд.
+        If Not LooksBroken(currentText) Then ' Если характерной поломки больше нет, фрагмент уже готов.
+            Return currentText ' Возвращаем текущую версию без лишнего декодирования.
+        End If
+
+        decodedText = DecodeUtf8FromBrokenCp1251(currentText) ' Восстанавливаем байты Windows-1251 и читаем их как UTF-8.
+
+        If decodedText = currentText Then ' Если проход ничего не изменил, дальше пытаться бессмысленно.
+            Return currentText ' Возвращаем исходный фрагмент для этого прохода.
+        End If
+
+        currentText = decodedText ' Берём исправленный текст как основу для следующей проверки.
+        passCount = passCount + 1 ' Считаем успешный проход восстановления.
+    End While
+
+    Return currentText ' Возвращаем то, что получилось после разрешённых проходов.
+End Function
+
+Function HasUnrecoverableReplacementMarker(inputText As String) As Boolean
+    ' Последовательность "пїЅ" обычно является строковым видом символа замены U+FFFD,
+    ' который когда-то записали как UTF-8, а потом прочитали как Windows-1251.
+    ' Сам символ замены означает, что исходные байты уже были отброшены декодером.
+    If Contains(inputText, "пїЅ") Then
+        Return True
+    End If
+
+    If Contains(inputText, Chr(65533)) Then ' Настоящий символ Unicode replacement character: �.
+        Return True
+    End If
+
+    Return False
+End Function
+
+Function IsRepairSeparator(inputText As String) As Boolean
+    Dim code As Integer = Asc(inputText) ' ASC нужен, чтобы сравнивать символ с диапазонами ASCII.
+
+    ' Разделителями считаем пробельные символы и обычную ASCII-пунктуацию.
+    ' Это даёт нам маленькие безопасные куски текста, которые можно чинить
+    ' независимо друг от друга.
+    If code <= 32 Then ' Пробелы, табы и управляющие символы отделяют фрагменты.
+        Return True ' Это безопасная граница для Markdown-текста.
+    End If
+
+    If code >= 33 And code <= 47 Then ' ASCII-пунктуация от ! до /.
+        Return True ' Знаки препинания не смешиваем с соседними словами.
+    End If
+
+    If code >= 58 And code <= 64 Then ' ASCII-пунктуация от : до @.
+        Return True ' Так даты, ссылки и списки режутся на небольшие куски.
+    End If
+
+    If code >= 91 And code <= 96 Then ' ASCII-пунктуация от [ до `.
+        Return True ' Это важно для Markdown-ссылок и кода в обратных кавычках.
+    End If
+
+    If code >= 123 And code <= 126 Then ' ASCII-пунктуация от { до ~.
+        Return True ' Фигурные скобки и похожие знаки тоже отделяют фрагменты.
+    End If
+
+    Return False ' Все остальные символы считаем частью текущего фрагмента.
+End Function
+
+Function TrimTrailingCr(inputText As String) As String
+    If Len(inputText) = 0 Then ' Пустую строку трогать нельзя: RIGHT("", 1) был бы лишним.
+        Return inputText ' Возвращаем пустую строку как есть.
+    End If
+
+    If Asc(Right(inputText, 1)) = 13 Then ' Код 13 - это CR из пары CRLF.
+        If Len(inputText) = 1 Then ' Строка может состоять только из CR.
+            Return "" ' В таком случае после удаления CR остаётся пустая строка.
+        End If
+
+        Return Left(inputText, Len(inputText) - 1) ' Отрезаем последний символ CR и оставляем содержимое строки.
+    End If
+
+    Return inputText ' Если CR нет, строка уже готова к обработке.
+End Function
+
+Function LooksBroken(inputText As String) As Boolean
+    Dim b1 As Integer = 0 ' Первый байт после обратного восстановления из символа Windows-1251.
+    Dim b2 As Integer = 0 ' Второй байт нужен для 2-, 3- и 4-байтовых последовательностей.
+    Dim b3 As Integer = 0 ' Третий байт нужен для 3- и 4-байтовых последовательностей.
+    Dim b4 As Integer = 0 ' Четвёртый байт нужен только для 4-байтовых последовательностей.
+    Dim decodedCode As Integer = 0 ' Здесь считаем Unicode-код символа, который получился бы из UTF-8.
+
+    If Len(inputText) < 2 Then ' Короткий фрагмент не может содержать даже двухбайтовую UTF-8 последовательность.
+        Return False ' Значит, чинить его не нужно.
+    End If
+
+    ' Ищем не просто похожую пару символов, а полноценную UTF-8
+    ' последовательность, восстановленную из ошибочно прочитанных байтов
+    ' Windows-1251. Это защищает уже нормальные русские слова вроде "вёрстки".
+    For checkIndex = 1 To Len(inputText) - 1 ' Проверяем каждую позицию как возможное начало UTF-8 последовательности.
+        b1 = ReadBrokenByte(inputText, checkIndex) ' Читаем первый восстановленный байт на текущей позиции.
+        b2 = 0 ' Сбрасываем второй байт перед проверкой новой позиции.
+        b3 = 0 ' Сбрасываем третий байт перед проверкой новой позиции.
+        b4 = 0 ' Сбрасываем четвёртый байт перед проверкой новой позиции.
+        decodedCode = 0 ' Сбрасываем код результата перед новой попыткой сборки UTF-8.
+
+        If b1 >= 194 And b1 <= 223 Then ' Диапазон начала обычной 2-байтовой UTF-8 последовательности.
+            b2 = ReadBrokenByte(inputText, checkIndex + 1) ' Читаем байт продолжения сразу после первого байта.
+
+            If IsUtf8Continuation(b2) Then ' Второй байт обязан иметь вид 10xxxxxx.
+                decodedCode = ((b1 And 31) << 6) Or (b2 And 63) ' Собираем Unicode-код по формуле UTF-8 для двух байтов.
+
+                If IsLikelyRepairedCode(decodedCode) Then ' Нас интересуют русские буквы и типографская пунктуация.
+                    Return True ' Такой фрагмент действительно похож на битую перекодировку.
+                End If
+            End If
+        Elseif b1 >= 224 And b1 <= 239 Then ' Диапазон начала 3-байтовой UTF-8 последовательности.
+            b2 = ReadBrokenByte(inputText, checkIndex + 1) ' Первый байт продолжения.
+            b3 = ReadBrokenByte(inputText, checkIndex + 2) ' Второй байт продолжения.
+
+            If IsUtf8Continuation(b2) And IsUtf8Continuation(b3) Then ' Оба продолжения должны иметь вид 10xxxxxx.
+                decodedCode = ((b1 And 15) << 12) Or ((b2 And 63) << 6) Or (b3 And 63) ' Собираем Unicode-код из трёх байтов.
+
+                If IsLikelyRepairedCode(decodedCode) Then ' Тире вида "вЂ”" попадает именно в эту ветку.
+                    Return True ' Значит, фрагмент стоит прогнать через восстановление.
+                End If
+            End If
+        Elseif b1 >= 240 And b1 <= 247 Then ' Диапазон начала 4-байтовой UTF-8 последовательности.
+            b2 = ReadBrokenByte(inputText, checkIndex + 1) ' Первое продолжение 4-байтовой последовательности.
+            b3 = ReadBrokenByte(inputText, checkIndex + 2) ' Второе продолжение 4-байтовой последовательности.
+            b4 = ReadBrokenByte(inputText, checkIndex + 3) ' Третье продолжение 4-байтовой последовательности.
+
+            If IsUtf8Continuation(b2) And IsUtf8Continuation(b3) And IsUtf8Continuation(b4) Then ' Все три продолжения должны быть валидными.
+                decodedCode = ((b1 And 7) << 18) Or ((b2 And 63) << 12) Or ((b3 And 63) << 6) Or (b4 And 63) ' Собираем Unicode-код из четырёх байтов.
+
+                If IsLikelyRepairedCode(decodedCode) Then ' Редкий случай, но он безопасно поддержан тем же правилом.
+                    Return True ' Подтверждаем, что фрагмент выглядит как mojibake.
+                End If
+            End If
+        End If
+    Next
+
+    Return False ' Ни одной правдоподобной UTF-8 последовательности не найдено.
+End Function
+
+Function IsUtf8Continuation(byteValue As Integer) As Boolean
+    Return byteValue >= 128 And byteValue <= 191 ' В UTF-8 байт продолжения всегда лежит в диапазоне 80..BF.
+End Function
+
+Function IsLikelyRepairedCode(code As Integer) As Boolean
+    If code >= 1024 And code <= 1279 Then ' Основной диапазон кириллицы в Unicode.
+        Return True ' Русские буквы после восстановления считаем хорошим признаком.
+    End If
+
+    Select Case code ' Отдельно разрешаем частую типографскую пунктуацию.
+        Case 160 ' Неразрывный пробел.
+            Return True
+        Case 8211 ' Короткое тире.
+            Return True
+        Case 8212 ' Длинное тире.
+            Return True
+        Case 8216 ' Левая одинарная кавычка.
+            Return True
+        Case 8217 ' Правая одинарная кавычка.
+            Return True
+        Case 8220 ' Левая двойная кавычка.
+            Return True
+        Case 8221 ' Правая двойная кавычка.
+            Return True
+        Case 8226 ' Маркер списка.
+            Return True
+        Case 8230 ' Многоточие.
+            Return True
+        Case 8364 ' Знак евро из таблицы Windows-1251.
+            Return True
+        Case Else ' Остальные коды не считаем достаточным доказательством поломки.
+            Return False
+    End Select
+End Function
+
+Function DecodeUtf8FromBrokenCp1251(inputText As String) As String
+    Dim resultText As String = "" ' Сюда собираем уже нормальный текст после декодирования UTF-8.
+    Dim byteIndex As Integer = 1 ' Позиция в исходном фрагменте, которую читаем как байт.
+    Dim b1 As Integer = 0 ' Первый байт текущей UTF-8 последовательности.
+    Dim b2 As Integer = 0 ' Второй байт текущей UTF-8 последовательности.
+    Dim b3 As Integer = 0 ' Третий байт текущей UTF-8 последовательности.
+    Dim b4 As Integer = 0 ' Четвёртый байт текущей UTF-8 последовательности.
+
+    ' Здесь находится главный трюк всей программы.
+    '
+    ' Если строка когда-то была нормальным UTF-8 текстом, а потом её ошибочно
+    ' прочитали как Windows-1251, на экране появляются странные последовательности.
+    ' Чтобы вернуть исходный текст, мы делаем два шага:
+    '
+    ' 1. Для каждого символа восстанавливаем тот байт Windows-1251, который
+    '    когда-то был ошибочно получен.
+    ' 2. Из полученной цепочки байтов заново собираем уже нормальные символы UTF-8.
+    '
+    ' Ниже отдельно разложены 1-, 2-, 3- и 4-байтовые последовательности UTF-8,
+    ' чтобы пример оставался самодостаточным и понятным без внешних библиотек.
+    While byteIndex <= Len(inputText) ' Идём по фрагменту, каждый символ трактуем как один восстановленный байт.
+        b1 = ReadBrokenByte(inputText, byteIndex) ' Читаем первый байт будущего UTF-8 символа.
+        b2 = 0 ' Сбрасываем второй байт перед разбором новой последовательности.
+        b3 = 0 ' Сбрасываем третий байт перед разбором новой последовательности.
+        b4 = 0 ' Сбрасываем четвёртый байт перед разбором новой последовательности.
+
+        If b1 < 0 Then ' Символ не удалось сопоставить с байтом Windows-1251.
+            resultText = resultText + Mid(inputText, byteIndex, 1) ' Оставляем такой символ как есть.
+            byteIndex = byteIndex + 1 ' Сдвигаемся на один исходный символ.
+        Elseif b1 < 128 Then ' ASCII-байт уже является тем же самым символом Unicode.
+            resultText = resultText + Chr(b1) ' Добавляем ASCII без сложной сборки.
+            byteIndex = byteIndex + 1 ' ASCII занимает один байт.
+        Elseif (b1 And 224) = 192 Then ' Маска 110xxxxx: начало 2-байтовой UTF-8 последовательности.
+            b2 = ReadBrokenByte(inputText, byteIndex + 1) ' Читаем обязательный байт продолжения.
+
+            If b2 < 0 Or (b2 And 192) <> 128 Then ' Если продолжение отсутствует или не похоже на UTF-8.
+                resultText = resultText + Mid(inputText, byteIndex, 1) ' Не рискуем портить данные и оставляем первый символ как есть.
+                byteIndex = byteIndex + 1 ' Продолжаем со следующего символа.
+            Else
+                resultText = resultText + Chr(((b1 And 31) << 6) Or (b2 And 63)) ' Склеиваем два байта в один Unicode-символ.
+                byteIndex = byteIndex + 2 ' Два исходных символа были двумя байтами одного результата.
+            End If
+        Elseif (b1 And 240) = 224 Then ' Маска 1110xxxx: начало 3-байтовой UTF-8 последовательности.
+            b2 = ReadBrokenByte(inputText, byteIndex + 1) ' Первое продолжение.
+            b3 = ReadBrokenByte(inputText, byteIndex + 2) ' Второе продолжение.
+
+            If b2 < 0 Or b3 < 0 Or (b2 And 192) <> 128 Or (b3 And 192) <> 128 Then ' Оба продолжения должны быть валидными.
+                resultText = resultText + Mid(inputText, byteIndex, 1) ' При сомнении сохраняем исходный символ.
+                byteIndex = byteIndex + 1 ' Сдвигаемся только на один символ.
+            Else
+                resultText = resultText + Chr(((b1 And 15) << 12) Or ((b2 And 63) << 6) Or (b3 And 63)) ' Склеиваем три байта в Unicode-код.
+                byteIndex = byteIndex + 3 ' Три исходных символа дали один исправленный символ.
+            End If
+        Elseif (b1 And 248) = 240 Then ' Маска 11110xxx: начало 4-байтовой UTF-8 последовательности.
+            b2 = ReadBrokenByte(inputText, byteIndex + 1) ' Первое продолжение.
+            b3 = ReadBrokenByte(inputText, byteIndex + 2) ' Второе продолжение.
+            b4 = ReadBrokenByte(inputText, byteIndex + 3) ' Третье продолжение.
+
+            If b2 < 0 Or b3 < 0 Or b4 < 0 Or (b2 And 192) <> 128 Or (b3 And 192) <> 128 Or (b4 And 192) <> 128 Then ' Все три продолжения обязательны.
+                resultText = resultText + Mid(inputText, byteIndex, 1) ' Невалидную последовательность не перекодируем.
+                byteIndex = byteIndex + 1 ' Двигаемся аккуратно, чтобы не потерять символы.
+            Else
+                resultText = resultText + Chr(((b1 And 7) << 18) Or ((b2 And 63) << 12) Or ((b3 And 63) << 6) Or (b4 And 63)) ' Склеиваем четыре байта.
+                byteIndex = byteIndex + 4 ' Четыре исходных символа стали одним Unicode-символом.
+            End If
+        Else
+            resultText = resultText + Mid(inputText, byteIndex, 1) ' Байт не похож на поддержанное начало UTF-8.
+            byteIndex = byteIndex + 1 ' Оставляем символ и идём дальше.
+        End If
+    End While
+
+    Return resultText ' Возвращаем восстановленный фрагмент.
+End Function
+
+Function ReadBrokenByte(inputText As String, position As Integer) As Integer
+    If position < 1 Or position > Len(inputText) Then ' За границами строки байта нет.
+        Return - 1 ' -1 означает "байт прочитать нельзя".
+    End If
+
+    Return ByteFromBrokenChar(Asc(Mid(inputText, position, 1))) ' Берём символ, получаем его код и переводим обратно в байт Windows-1251.
+End Function
+
+Function ByteFromBrokenChar(code As Integer) As Integer
+    ' ASCII переживает такую поломку без изменений.
+    If code >= 0 And code <= 127 Then ' ASCII-коды совпадают с байтами Windows-1251.
+        Return code ' Возвращаем тот же номер байта.
+    End If
+
+    ' Основной диапазон кириллицы Windows-1251.
+    If code >= 1040 And code <= 1103 Then ' А..я в Unicode соответствуют байтам C0..FF в Windows-1251.
+        Return code - 848 ' 1040 - 848 = 192, то есть буква А превращается обратно в байт C0.
+    End If
+
+    ' Ниже вручную перечислены специальные символы верхней половины Windows-1251:
+    ' кавычки, тире, многоточие, знак номера, украинские и белорусские буквы
+    ' и прочая пунктуация. Благодаря этому программа может чинить не только
+    ' русские слова, но и типографику Markdown-документов.
+    Select Case code
+        Case 1026
+            Return 128
+        Case 1027
+            Return 129
+        Case 8218
+            Return 130
+        Case 1107
+            Return 131
+        Case 8222
+            Return 132
+        Case 8230
+            Return 133
+        Case 8224
+            Return 134
+        Case 8225
+            Return 135
+        Case 8364
+            Return 136
+        Case 8240
+            Return 137
+        Case 1033
+            Return 138
+        Case 8249
+            Return 139
+        Case 1034
+            Return 140
+        Case 1036
+            Return 141
+        Case 1035
+            Return 142
+        Case 1039
+            Return 143
+        Case 1106
+            Return 144
+        Case 8216
+            Return 145
+        Case 8217
+            Return 146
+        Case 8220
+            Return 147
+        Case 8221
+            Return 148
+        Case 8226
+            Return 149
+        Case 8211
+            Return 150
+        Case 8212
+            Return 151
+        Case 152
+            Return 152
+        Case 8482
+            Return 153
+        Case 1113
+            Return 154
+        Case 8250
+            Return 155
+        Case 1114
+            Return 156
+        Case 1116
+            Return 157
+        Case 1115
+            Return 158
+        Case 1119
+            Return 159
+        Case 160
+            Return 160
+        Case 1038
+            Return 161
+        Case 1118
+            Return 162
+        Case 1032
+            Return 163
+        Case 164
+            Return 164
+        Case 1168
+            Return 165
+        Case 166
+            Return 166
+        Case 167
+            Return 167
+        Case 1025
+            Return 168
+        Case 169
+            Return 169
+        Case 1028
+            Return 170
+        Case 171
+            Return 171
+        Case 172
+            Return 172
+        Case 173
+            Return 173
+        Case 174
+            Return 174
+        Case 1031
+            Return 175
+        Case 176
+            Return 176
+        Case 177
+            Return 177
+        Case 1030
+            Return 178
+        Case 1110
+            Return 179
+        Case 1169
+            Return 180
+        Case 181
+            Return 181
+        Case 182
+            Return 182
+        Case 183
+            Return 183
+        Case 1105
+            Return 184
+        Case 8470
+            Return 185
+        Case 1108
+            Return 186
+        Case 187
+            Return 187
+        Case 1112
+            Return 188
+        Case 1029
+            Return 189
+        Case 1109
+            Return 190
+        Case 1111
+            Return 191
+        Case Else
+            Return - 1
+    End Select
+End Function

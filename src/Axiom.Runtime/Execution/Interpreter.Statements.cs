@@ -1,0 +1,621 @@
+using Axiom.Core;
+using Axiom.Semantics;
+using Axiom.Syntax;
+
+namespace Axiom.Runtime;
+
+public sealed partial class Interpreter
+{
+    private ExecutionSignal ExecuteStatements(IReadOnlyList<BoundStatement> statements)
+    {
+        foreach (var statement in statements)
+        {
+            var signal = ExecuteStatement(statement);
+
+            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
+            {
+                return signal;
+            }
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteStatement(BoundStatement statement)
+    {
+        return statement switch
+        {
+            BoundVariableDeclarationStatement variableDeclaration => ExecuteVariableDeclaration(variableDeclaration),
+            BoundVariableDeclarationsStatement variableDeclarations => ExecuteVariableDeclarations(variableDeclarations),
+            BoundAssignmentStatement assignment => ExecuteAssignment(assignment),
+            BoundEraseStatement erase => ExecuteErase(erase),
+            BoundRedimStatement redim => ExecuteRedim(redim),
+            BoundPrintStatement print => ExecutePrint(print),
+            BoundPrintUsingStatement printUsing => ExecutePrintUsing(printUsing),
+            BoundInputStatement input => ExecuteInput(input),
+            BoundOpenStatement open => ExecuteOpen(open),
+            BoundCloseStatement close => ExecuteClose(close),
+            BoundIfStatement ifStatement => ExecuteIf(ifStatement),
+            BoundSelectCaseStatement selectCaseStatement => ExecuteSelectCase(selectCaseStatement),
+            BoundDoLoopStatement doLoopStatement => ExecuteDoLoop(doLoopStatement),
+            BoundWhileStatement whileStatement => ExecuteWhile(whileStatement),
+            BoundForStatement forStatement => ExecuteFor(forStatement),
+            BoundExitForStatement exitForStatement => ExecuteExitFor(exitForStatement),
+            BoundExitDoStatement exitDoStatement => ExecuteExitDo(exitDoStatement),
+            BoundReturnStatement returnStatement => ExecuteReturn(returnStatement),
+            BoundExpressionStatement expressionStatement => ExecuteExpressionStatement(expressionStatement),
+            _ => ReportInvalidRuntimeState<ExecutionSignal>($"Unsupported bound statement: {statement.Kind}.", statement.Location)
+        };
+    }
+
+    private ExecutionSignal ExecuteVariableDeclaration(BoundVariableDeclarationStatement statement)
+    {
+        if (statement.Variable.IsArray)
+        {
+            var arrayType = (ArrayTypeSymbol)statement.Variable.Type;
+
+            if (statement.LowerBound is null || statement.UpperBound is null)
+            {
+                CurrentScope.Define(statement.Variable, new RuntimeArrayValue(arrayType.ElementType, statement.Variable.FixedStringLength));
+                return ExecutionSignal.None;
+            }
+
+            if (statement.Initializer is not null)
+            {
+                return ReportInvalidRuntimeState<ExecutionSignal>($"Array initializer for '{statement.Variable.Name}' is not supported in v0.1.", statement.Location);
+            }
+
+            var lowerBound = ToArrayBound(EvaluateExpression(statement.LowerBound), statement.LowerBound.Location, "Нижняя граница массива");
+            var upperBound = ToArrayBound(EvaluateExpression(statement.UpperBound), statement.UpperBound.Location, "Верхняя граница массива");
+
+            EnsureAllowedArrayLowerBound(statement.Variable.Name, lowerBound, statement.LowerBound.Location);
+
+            if (!IsValidArrayBounds(lowerBound, upperBound))
+            {
+                return ReportInvalidRuntimeState<ExecutionSignal>(
+                    $"Массив '{statement.Variable.Name}' имеет неверные границы. Верхняя граница не может быть меньше нижней, кроме пустой формы 1 TO 0.",
+                    statement.Location);
+            }
+
+            CurrentScope.Define(statement.Variable, new RuntimeArrayValue(arrayType.ElementType, statement.Variable.FixedStringLength, lowerBound, upperBound));
+            return ExecutionSignal.None;
+        }
+
+        var value = statement.Initializer is null
+            ? RuntimeValue.Default(statement.Variable.Type, statement.Variable.FixedStringLength)
+            : EvaluateExpression(statement.Initializer);
+
+        CurrentScope.Define(statement.Variable, value.CopyForStorage(statement.Variable.FixedStringLength));
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteVariableDeclarations(BoundVariableDeclarationsStatement statement)
+    {
+        foreach (var declaration in statement.Declarations)
+        {
+            var signal = ExecuteVariableDeclaration(declaration);
+
+            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
+            {
+                return signal;
+            }
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteAssignment(BoundAssignmentStatement statement)
+    {
+        var value = EvaluateExpression(statement.Expression);
+
+        switch (statement.Target)
+        {
+            case BoundVariableExpression variableExpression:
+                AssignVariable(variableExpression.Variable, value);
+                return ExecutionSignal.None;
+
+            case BoundArrayAccessExpression arrayAccessExpression:
+                AssignArrayElement(arrayAccessExpression, value);
+                return ExecutionSignal.None;
+
+            case BoundFieldAccessExpression fieldAccessExpression:
+                AssignRecordField(fieldAccessExpression, value);
+                return ExecutionSignal.None;
+
+            default:
+                return ReportInvalidRuntimeState<ExecutionSignal>($"Unsupported assignment target: {statement.Target.Kind}.", statement.Location);
+        }
+    }
+
+    private ExecutionSignal ExecuteErase(BoundEraseStatement statement)
+    {
+        var array = EvaluateExpression(statement.Target).AsArray();
+        array.Deallocate();
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteRedim(BoundRedimStatement statement)
+    {
+        var array = EvaluateExpression(statement.Target).AsArray();
+
+        var lowerBound = ToArrayBound(
+            EvaluateExpression(statement.LowerBound),
+            statement.LowerBound.Location,
+            "Нижняя граница массива");
+        var upperBound = ToArrayBound(
+            EvaluateExpression(statement.UpperBound),
+            statement.UpperBound.Location,
+            "Верхняя граница массива");
+
+        EnsureAllowedArrayLowerBound(statement.DisplayName, lowerBound, statement.LowerBound.Location);
+
+        if (!IsValidArrayBounds(lowerBound, upperBound))
+        {
+            return ReportInvalidRuntimeState<ExecutionSignal>(
+                $"Массив '{statement.DisplayName}' имеет неверные границы. Верхняя граница не может быть меньше нижней, кроме пустой формы 1 TO 0.",
+                statement.Location);
+        }
+
+        if (statement.Preserve)
+        {
+            array.AllocatePreserving(lowerBound, upperBound);
+        }
+        else
+        {
+            array.Allocate(lowerBound, upperBound);
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private static bool IsValidArrayBounds(int lowerBound, int upperBound)
+    {
+        return upperBound >= lowerBound || (lowerBound == 1 && upperBound == 0);
+    }
+
+    private void EnsureAllowedArrayLowerBound(string variableName, int lowerBound, TextLocation location)
+    {
+        if (lowerBound != int.MinValue)
+        {
+            return;
+        }
+
+        ReportRuntimeDiagnostic(
+            BuiltinArgumentCode,
+            $"Массив '{variableName}' не может иметь нижнюю границу {int.MinValue}, потому что значение слева от диапазона используется поисковыми функциями массива как признак отсутствия совпадения.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    private ExecutionSignal ExecutePrint(BoundPrintStatement statement)
+    {
+        if (statement.Items.Count == 0)
+        {
+            FlushPendingOutput(forceEmptyLine: true);
+            return ExecutionSignal.None;
+        }
+
+        foreach (var item in statement.Items)
+        {
+            var value = EvaluateExpression(item.Expression);
+            AppendPendingOutput(value.ToDisplayString());
+
+            switch (item.SeparatorKind)
+            {
+                case PrintSeparatorKind.Semicolon:
+                    break;
+
+                case PrintSeparatorKind.Comma:
+                    AppendPrintSeparator();
+                    break;
+
+                default:
+                    FlushPendingOutput(forceEmptyLine: false);
+                    break;
+            }
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecutePrintUsing(BoundPrintUsingStatement statement)
+    {
+        var format = EvaluateExpression(statement.FormatExpression).AsString();
+        var values = new List<(RuntimeValue Value, TextLocation Location)>(statement.Items.Count);
+
+        foreach (var item in statement.Items)
+        {
+            values.Add((EvaluateExpression(item.Expression), item.Expression.Location));
+        }
+
+        AppendPendingOutput(FormatUsing(format, values, statement.Location));
+
+        var trailingSeparator = statement.Items.Count == 0
+            ? null
+            : statement.Items[^1].SeparatorKind;
+
+        switch (trailingSeparator)
+        {
+            case PrintSeparatorKind.Semicolon:
+                break;
+
+            case PrintSeparatorKind.Comma:
+                AppendPrintSeparator();
+                break;
+
+            default:
+                FlushPendingOutput(forceEmptyLine: false);
+                break;
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteInput(BoundInputStatement statement)
+    {
+        if (statement.Variables.Any(static variable => variable.IsArray))
+        {
+            var arrayVariable = statement.Variables.First(static variable => variable.IsArray);
+            return ReportInvalidRuntimeState<ExecutionSignal>($"INPUT does not support array '{arrayVariable.Name}'.", statement.Location);
+        }
+
+        var text = _host.ReadInput(new InputRequest(statement.PromptText, statement.Variables.Count));
+
+        if (!TryParseInputValues(statement.Variables, text, statement.Location, out var values))
+        {
+            throw new RuntimeFailureException();
+        }
+
+        for (var index = 0; index < statement.Variables.Count; index++)
+        {
+            AssignVariable(statement.Variables[index], values[index]);
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteIf(BoundIfStatement statement)
+    {
+        var condition = EvaluateExpression(statement.Condition).AsBoolean();
+        return condition
+            ? ExecuteStatementsInChildScope(statement.Statements)
+            : ExecuteStatementsInChildScope(statement.ElseStatements);
+    }
+
+    private ExecutionSignal ExecuteWhile(BoundWhileStatement statement)
+    {
+        while (EvaluateExpression(statement.Condition).AsBoolean())
+        {
+            var signal = ExecuteStatementsInChildScope(statement.Statements);
+
+            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
+            {
+                return signal;
+            }
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteSelectCase(BoundSelectCaseStatement statement)
+    {
+        var testValue = EvaluateExpression(statement.TestExpression);
+
+        foreach (var clause in statement.Clauses)
+        {
+            if (MatchesSelectCaseClause(testValue, clause))
+            {
+                return ExecuteStatementsInChildScope(clause.Statements);
+            }
+        }
+
+        return ExecuteStatementsInChildScope(statement.ElseStatements);
+    }
+
+    private bool MatchesSelectCaseClause(RuntimeValue testValue, BoundSelectCaseClause clause)
+    {
+        foreach (var selector in clause.Selectors)
+        {
+            if (MatchesSelectCaseSelector(testValue, selector))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool MatchesSelectCaseSelector(RuntimeValue testValue, BoundSelectCaseSelector selector)
+    {
+        return selector switch
+        {
+            BoundCaseValueSelector valueSelector => ValuesEqual(testValue, EvaluateExpression(valueSelector.Expression)),
+            BoundCaseRangeSelector rangeSelector => MatchesCaseRange(testValue, rangeSelector),
+            BoundCaseComparisonSelector comparisonSelector => MatchesCaseComparison(testValue, comparisonSelector),
+            _ => ReportInvalidRuntimeState<bool>($"Unsupported SELECT CASE selector: {selector.GetType().Name}.", selector.Location)
+        };
+    }
+
+    private bool MatchesCaseRange(RuntimeValue testValue, BoundCaseRangeSelector selector)
+    {
+        var lowerBound = EvaluateExpression(selector.LowerBound);
+        var upperBound = EvaluateExpression(selector.UpperBound);
+        return Compare(testValue, lowerBound) >= 0 && Compare(testValue, upperBound) <= 0;
+    }
+
+    private bool MatchesCaseComparison(RuntimeValue testValue, BoundCaseComparisonSelector selector)
+    {
+        var value = EvaluateExpression(selector.Expression);
+
+        return selector.OperatorKind switch
+        {
+            SyntaxKind.EqualsToken => ValuesEqual(testValue, value),
+            SyntaxKind.NotEqualsToken => !ValuesEqual(testValue, value),
+            SyntaxKind.LessToken => Compare(testValue, value) < 0,
+            SyntaxKind.LessOrEqualsToken => Compare(testValue, value) <= 0,
+            SyntaxKind.GreaterToken => Compare(testValue, value) > 0,
+            SyntaxKind.GreaterOrEqualsToken => Compare(testValue, value) >= 0,
+            _ => ReportInvalidRuntimeState<bool>($"Unsupported CASE IS operator: {selector.OperatorKind}.", selector.Location)
+        };
+    }
+
+    private ExecutionSignal ExecuteDoLoop(BoundDoLoopStatement statement)
+    {
+        if (!statement.EvaluateConditionAfterBody && !ShouldContinueDoLoop(statement))
+        {
+            return ExecutionSignal.None;
+        }
+
+        while (true)
+        {
+            var signal = ExecuteStatementsInChildScope(statement.Statements);
+
+            if (signal.HasReturn)
+            {
+                return signal;
+            }
+
+            if (signal.HasExitDo)
+            {
+                break;
+            }
+
+            if (statement.EvaluateConditionAfterBody)
+            {
+                if (!ShouldContinueDoLoop(statement))
+                {
+                    break;
+                }
+            }
+            else if (!ShouldContinueDoLoop(statement))
+            {
+                break;
+            }
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private bool ShouldContinueDoLoop(BoundDoLoopStatement statement)
+    {
+        if (statement.Condition is null || statement.ConditionKind == BoundDoLoopConditionKind.None)
+        {
+            return true;
+        }
+
+        var condition = EvaluateExpression(statement.Condition).AsBoolean();
+        return statement.ConditionKind == BoundDoLoopConditionKind.While
+            ? condition
+            : !condition;
+    }
+
+    private ExecutionSignal ExecuteFor(BoundForStatement statement)
+    {
+        var start = EvaluateExpression(statement.StartExpression);
+        var end = EvaluateExpression(statement.EndExpression);
+        var step = EvaluateExpression(statement.StepExpression);
+
+        if (IsZero(step))
+        {
+            ReportStepZero(statement.Variable.Name, statement.StepExpression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        var loopScope = new RuntimeScope(CurrentScope);
+
+        if (statement.Variable.Type == TypeSymbol.Integer)
+        {
+            loopScope.Define(statement.Variable, RuntimeValue.FromInteger(start.AsInteger()));
+            EnterScope(loopScope);
+
+            try
+            {
+                return RunIntegerForLoop(statement, end.AsInteger(), step.AsInteger());
+            }
+            finally
+            {
+                LeaveScope();
+            }
+        }
+
+        if (statement.Variable.Type == TypeSymbol.Long)
+        {
+            loopScope.Define(statement.Variable, RuntimeValue.FromLong(start.AsLong()));
+            EnterScope(loopScope);
+
+            try
+            {
+                return RunLongForLoop(statement, end.AsLong(), step.AsLong());
+            }
+            finally
+            {
+                LeaveScope();
+            }
+        }
+
+        if (statement.Variable.Type == TypeSymbol.Double)
+        {
+            loopScope.Define(statement.Variable, RuntimeValue.FromDouble(start.AsDouble()));
+            EnterScope(loopScope);
+
+            try
+            {
+                return RunDoubleForLoop(statement, end.AsDouble(), step.AsDouble());
+            }
+            finally
+            {
+                LeaveScope();
+            }
+        }
+
+        return ReportInvalidRuntimeState<ExecutionSignal>($"Unsupported FOR control variable type: {statement.Variable.Type.Name}.", statement.Location);
+    }
+
+    private ExecutionSignal RunIntegerForLoop(BoundForStatement statement, int endValue, int stepValue)
+    {
+        while (true)
+        {
+            var current = GetVariableValue(statement.Variable).AsInteger();
+
+            if (stepValue > 0)
+            {
+                if (current > endValue)
+                {
+                    break;
+                }
+            }
+            else if (current < endValue)
+            {
+                break;
+            }
+
+            var signal = ExecuteStatementsInChildScope(statement.Statements);
+
+            if (signal.HasReturn || signal.HasExitDo)
+            {
+                return signal;
+            }
+
+            if (signal.HasExitFor)
+            {
+                break;
+            }
+
+            AssignVariable(
+                statement.Variable,
+                EvaluateCheckedIntegerOperation(
+                    () => checked(current + stepValue),
+                    $"Следующее значение FOR для переменной '{statement.Variable.Name}'",
+                    statement.StepExpression.Location));
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal RunLongForLoop(BoundForStatement statement, long endValue, long stepValue)
+    {
+        while (true)
+        {
+            var current = GetVariableValue(statement.Variable).AsLong();
+
+            if (stepValue > 0L)
+            {
+                if (current > endValue)
+                {
+                    break;
+                }
+            }
+            else if (current < endValue)
+            {
+                break;
+            }
+
+            var signal = ExecuteStatementsInChildScope(statement.Statements);
+
+            if (signal.HasReturn || signal.HasExitDo)
+            {
+                return signal;
+            }
+
+            if (signal.HasExitFor)
+            {
+                break;
+            }
+
+            AssignVariable(
+                statement.Variable,
+                EvaluateCheckedLongOperation(
+                    () => checked(current + stepValue),
+                    $"Следующее значение FOR для переменной '{statement.Variable.Name}'",
+                    statement.StepExpression.Location));
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal RunDoubleForLoop(BoundForStatement statement, double endValue, double stepValue)
+    {
+        while (true)
+        {
+            var current = GetVariableValue(statement.Variable).AsDouble();
+
+            if (stepValue > 0d)
+            {
+                if (current > endValue)
+                {
+                    break;
+                }
+            }
+            else if (current < endValue)
+            {
+                break;
+            }
+
+            var signal = ExecuteStatementsInChildScope(statement.Statements);
+
+            if (signal.HasReturn || signal.HasExitDo)
+            {
+                return signal;
+            }
+
+            if (signal.HasExitFor)
+            {
+                break;
+            }
+
+            AssignVariable(
+                statement.Variable,
+                EnsureFiniteDoubleResult(
+                    current + stepValue,
+                    $"Следующее значение FOR для переменной '{statement.Variable.Name}'",
+                    statement.StepExpression.Location));
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private static ExecutionSignal ExecuteExitFor(BoundExitForStatement statement)
+    {
+        return ExecutionSignal.ExitFor();
+    }
+
+    private static ExecutionSignal ExecuteExitDo(BoundExitDoStatement statement)
+    {
+        return ExecutionSignal.ExitDo();
+    }
+
+    private ExecutionSignal ExecuteReturn(BoundReturnStatement statement)
+    {
+        var value = statement.Expression is null
+            ? RuntimeValue.Void
+            : EvaluateExpression(statement.Expression);
+
+        return ExecutionSignal.Return(value);
+    }
+
+    private ExecutionSignal ExecuteExpressionStatement(BoundExpressionStatement statement)
+    {
+        _ = EvaluateExpression(statement.Expression);
+        return ExecutionSignal.None;
+    }
+}

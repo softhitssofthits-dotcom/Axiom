@@ -1,0 +1,4 @@
+' Ожидается вывод: one # two #, затем one # two 34, затем A-12 B-34.
+PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
+PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
+PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")

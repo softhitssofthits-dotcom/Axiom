@@ -1,0 +1,3 @@
+' Ожидается вывод: 42, затем пустая строка в квадратных скобках.
+PRINT REGEXMATCH("Order 42 and 100", "\d+")
+PRINT "[" + REGEXMATCH("Order", "\d+") + "]"

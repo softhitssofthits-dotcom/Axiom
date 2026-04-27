@@ -1,0 +1,13 @@
+' SELECT CASE with ranges and IS comparisons
+DIM score AS INTEGER = 82
+
+SELECT CASE score
+    CASE IS > 90
+        PRINT "excellent"
+    CASE IS >= 75
+        PRINT "good"
+    CASE IS < 50
+        PRINT "fail"
+    CASE ELSE
+        PRINT "retry"
+END SELECT

@@ -1,0 +1,118 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Данные и ввод</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="data-and-input">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Обзор типов данных, объявлений и ввода</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Данные и ввод</p>
+                    <p class="sidebar__subtitle">Связывает типы данных, <code>DIM</code>, <code>CONST</code>, <code>INPUT</code> и <code>PRINT</code>.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Данные и ввод</span>
+            </nav>
+            <p class="eyebrow">Обзор</p>
+            <h1 class="page-title">Типы данных, объявления и ввод</h1>
+            <p class="lead">Эта глава помогает выбрать нужную справочную статью, если вы работаете с типами данных, объявлением переменных и констант, а также с вводом и выводом.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#route">Куда переходить дальше</a></li>
+                    <li><a href="#reading-order">Как читать раздел</a></li>
+                    <li><a href="#samples">Показательные примеры</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <ul>
+                    <li>когда нужно понять, с какой справочной главы начать работу с данными;</li>
+                    <li>когда требуется перейти от типов данных к объявлениям, а затем к <code>INPUT</code> и <code>PRINT</code>;</li>
+                    <li>когда нужна короткая карта раздела без повторения синтаксиса, диагностики и пограничных случаев на одной странице.</li>
+                </ul>
+                <div class="note">
+                    <h3>Коротко</h3>
+                    <p>Эта страница не дублирует точную справку по каждой конструкции. Она нужна для того, чтобы быстро выбрать нужную статью о типах, объявлениях или вводе-выводе.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="route">
+                <h2>Куда переходить дальше</h2>
+                <div class="cards-grid">
+                    <section class="card">
+                        <h3><a href="data-types.html">Типы данных</a></h3>
+                        <p><code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code> и <code>BOOLEAN</code>, а также основные правила преобразования.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="variables-and-constants.html">Переменные и константы</a></h3>
+                        <p>Правила именования, <code>DIM</code>, <code>CONST</code>, инициализация и область видимости.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="input.html">Оператор INPUT</a></h3>
+                        <p>Чтение одного или нескольких значений, строка приглашения, преобразование типов и частые ошибки.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="print.html">Оператор PRINT</a></h3>
+                        <p>Вывод строк, чисел, выражений и списков значений с разделителями <code>;</code> и <code>,</code>.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="reading-order">
+                <h2>Как читать раздел</h2>
+                <ol>
+                    <li>Если важно понять, какие значения можно хранить в программе, начинайте со статьи о типах данных.</li>
+                    <li>Если нужно объявить переменную или константу, переходите к статье о <code>DIM</code> и <code>CONST</code>.</li>
+                    <li>Если нужно считать данные с клавиатуры или вывести результат, открывайте статьи по <code>INPUT</code> и <code>PRINT</code>.</li>
+                </ol>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Показательные примеры</h2>
+                <p>Для проверки этого маршрута через IDE достаточно открыть несколько коротких файлов из соседних тем.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
+                    <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
+                    <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление</a></li>
+                    <li><a href="../../samples/operators/input/multiple_variables.axm">INPUT: несколько переменных</a></li>
+                    <li><a href="../../samples/operators/print/separator_semicolon.axm">PRINT: разделитель <code>;</code></a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="getting-started.html">Старт и первая программа</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="examples.html">Примеры программ</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+﻿' Возвращаемая функция делит одно и то же захваченное состояние между вызовами.
+DIM counter AS FUNCTION () AS INTEGER
+counter = MakeCounter()
+PRINT counter()
+PRINT counter()
+PRINT counter()
+
+FUNCTION MakeCounter() AS FUNCTION () AS INTEGER
+    DIM current AS INTEGER = 0
+
+    FUNCTION NextValue() AS INTEGER
+        current = current + 1
+        RETURN current
+    END FUNCTION
+
+    RETURN NextValue
+END FUNCTION

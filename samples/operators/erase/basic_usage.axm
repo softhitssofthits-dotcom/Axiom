@@ -1,0 +1,10 @@
+' ERASE returns an array to the unallocated state.
+
+DIM values() AS INTEGER
+REDIM values(1 TO 2)
+values(1) = 10
+
+ERASE values
+REDIM values(5 TO 5)
+
+PRINT values(5)

@@ -1,0 +1,8 @@
+' Ожидается: 3, one, two, three.
+DIM parts() AS STRING
+
+parts = REGEXSPLIT("one, two;three", "[,;]\s*")
+PRINT ARRAYLENGTH(parts)
+PRINT parts(1)
+PRINT parts(2)
+PRINT parts(3)

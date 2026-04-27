@@ -1,0 +1,158 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Массивы и встроенные функции</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-and-builtins">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Обзор массивов и встроенных функций</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Массивы и встроенные функции</p>
+                    <p class="sidebar__subtitle">Помогает перейти к справке по массивам, строковым и числовым функциям.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Массивы и встроенные функции</span>
+            </nav>
+            <p class="eyebrow">Обзор</p>
+            <h1 class="page-title">Массивы и встроенные функции</h1>
+            <p class="lead">Эта обзорная глава связывает статьи по массивам, строковым функциям, регулярным выражениям, файловой системе, дате и времени и числовым функциям. Она помогает выбрать нужную справочную страницу и не повторяет подробности, вынесенные в отдельные статьи.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#route">Навигация по разделу</a></li>
+                    <li><a href="#samples">Показательные примеры</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <ul>
+                    <li>когда нужно перейти от хранения набора значений к операциям над строками и числами;</li>
+                    <li>когда важно увидеть, как массивы, строковые функции, функции регулярных выражений, функции файловой системы, функции даты и времени и числовые функции разнесены по отдельным справочным статьям;</li>
+                    <li>когда нужен короткий маршрут по связанным разделам без повторения всех сигнатур на одной странице.</li>
+                </ul>
+                <div class="note">
+                    <h3>Как читать раздел</h3>
+                    <p>Если вы только начинаете работу с массивами, откройте сначала справочную статью по массивам. Если нужно обрабатывать текст простыми операциями, переходите к строковым функциям. Если нужен поиск по регулярному выражению, открывайте отдельную страницу по регулярным выражениям. Если нужно читать или записывать текстовые файлы, откройте страницу файловой системы. Если нужны текущие дата и время, переходите к отдельной странице дата-временных функций. Если важны вычисления и преобразование чисел, открывайте главу по числовым функциям.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="route">
+                <h2>Навигация по разделу</h2>
+                <div class="cards-grid">
+                    <section class="card">
+                        <h3><a href="arrays.html">Одномерные массивы</a></h3>
+                        <p>Объявление, границы, доступ к элементам, информационные функции и операции над массивами.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="string-functions.html">Строковые функции</a></h3>
+                        <p><code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code>, <code>SPLIT</code>, <code>JOIN</code> и другие операции над текстом.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="regex-functions.html">Функции регулярных выражений</a></h3>
+                        <p><code>REGEXISMATCH</code>, <code>REGEXMATCH</code>, <code>REGEXMATCHES</code>, <code>REGEXEXTRACTALL</code>, <code>REGEXSPLIT</code>, <code>REGEXREPLACE</code> и <code>REGEXCOUNT</code> для поиска по образцу.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="file-system-functions.html">Функции файловой системы</a></h3>
+                        <p><code>READFILE</code>, <code>READALLLINES</code>, <code>READLINES</code>, <code>GETFILES</code>, <code>GETDIRS</code>, запись текста, проверки существования, пути и сведения о файлах.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="date-time-functions.html">Функции даты и времени</a></h3>
+                        <p><code>DATE</code>, <code>TIME</code>, <code>NOW</code> и <code>TIMER</code> для чтения локальных даты и времени в каноническом формате.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="numeric-functions.html">Числовые функции</a></h3>
+                        <p><code>INT</code>, <code>STR</code>, <code>VAL</code> и математические функции с отдельными справочными описаниями.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Показательные примеры</h2>
+                <p>Ниже приведён набор файлов для проверки этого маршрута через IDE.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/dim/array_declaration.axm">Массив: объявление через DIM</a></li>
+                    <li><a href="../../samples/expressions/arrays/index_access.axm">Массив: доступ по индексу</a></li>
+                    <li><a href="../../samples/functions/left/basic_usage.axm">LEFT: базовое использование</a></li>
+                    <li><a href="../../samples/functions/mid/basic_usage.axm">MID: извлечение фрагмента строки</a></li>
+                    <li><a href="../../samples/functions/split/basic_usage.axm">SPLIT: разделение строки</a></li>
+                    <li><a href="../../samples/functions/join/basic_usage.axm">JOIN: сборка строки из массива</a></li>
+                    <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND: нижняя граница массива</a></li>
+                    <li><a href="../../samples/functions/ubound/basic_usage.axm">UBOUND: верхняя граница массива</a></li>
+                    <li><a href="../../samples/functions/arraylength/basic_usage.axm">ARRAYLENGTH: текущее число элементов</a></li>
+                    <li><a href="../../samples/functions/arrayisallocated/basic_usage.axm">ARRAYISALLOCATED: проверка выделения массива</a></li>
+                    <li><a href="../../samples/functions/arrayclone/basic_usage.axm">ARRAYCLONE: независимая копия массива</a></li>
+                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: компактный срез массива</a></li>
+                    <li><a href="../../samples/functions/arrayconcat/basic_usage.axm">ARRAYCONCAT: объединение двух массивов</a></li>
+                    <li><a href="../../samples/functions/arrayfill/basic_usage.axm">ARRAYFILL: заполнение массива значением</a></li>
+                    <li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH: добавление элемента в конец массива</a></li>
+                    <li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP: снятие последнего элемента массива</a></li>
+                    <li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT: вставка элемента по индексу</a></li>
+                    <li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE: удаление элемента по индексу</a></li>
+                    <li><a href="../../samples/functions/arrayevery/basic_usage.axm">ARRAYEVERY: predicate для всех элементов</a></li>
+                    <li><a href="../../samples/functions/arraysome/basic_usage.axm">ARRAYSOME: predicate хотя бы для одного элемента</a></li>
+                    <li><a href="../../samples/functions/arrayfilter/basic_usage.axm">ARRAYFILTER: фильтрация массива</a></li>
+                    <li><a href="../../samples/functions/arraymap/polymorphic_transform.axm">ARRAYMAP: полиморфное преобразование массива</a></li>
+                    <li><a href="../../samples/functions/arrayreduce/polymorphic_accumulator.axm">ARRAYREDUCE: полиморфная свёртка массива</a></li>
+                    <li><a href="../../samples/functions/arrayreverse/basic_usage.axm">ARRAYREVERSE: разворот массива на месте</a></li>
+                    <li><a href="../../samples/functions/arraysort/basic_usage.axm">ARRAYSORT: сортировка массива на месте</a></li>
+                    <li><a href="../../samples/functions/arraytosorted/basic_usage.axm">ARRAYTOSORTED: отсортированная копия массива</a></li>
+                    <li><a href="../../samples/functions/arraytoreversed/basic_usage.axm">ARRAYTOREVERSED: разворот массива</a></li>
+                    <li><a href="../../samples/functions/arraytake/basic_usage.axm">ARRAYTAKE: первые элементы массива</a></li>
+                    <li><a href="../../samples/functions/arrayskip/basic_usage.axm">ARRAYSKIP: пропуск начальной части массива</a></li>
+                    <li><a href="../../samples/functions/arraydistinct/basic_usage.axm">ARRAYDISTINCT: устранение повторов массива</a></li>
+                    <li><a href="../../samples/functions/arraybinarysearch/basic_usage.axm">ARRAYBINARYSEARCH: бинарный поиск по отсортированному массиву</a></li>
+                    <li><a href="../../samples/functions/arraycontains/basic_usage.axm">ARRAYCONTAINS: проверка наличия совпадения</a></li>
+                    <li><a href="../../samples/functions/arraycount/basic_usage.axm">ARRAYCOUNT: число совпадений</a></li>
+                    <li><a href="../../samples/functions/arrayfindall/basic_usage.axm">ARRAYFINDALL: все индексы совпадений</a></li>
+                    <li><a href="../../samples/functions/arrayindexof/basic_usage.axm">ARRAYINDEXOF: первый индекс совпадения</a></li>
+                    <li><a href="../../samples/functions/arraylastindexof/basic_usage.axm">ARRAYLASTINDEXOF: последний индекс совпадения</a></li>
+                    <li><a href="../../samples/functions/regexismatch/basic_usage.axm">REGEXISMATCH: проверка по образцу</a></li>
+                    <li><a href="../../samples/functions/regexmatches/all_matches.axm">REGEXMATCHES: все совпадения</a></li>
+                    <li><a href="../../samples/functions/regexextractall/group_values.axm">REGEXEXTRACTALL: группы из всех совпадений</a></li>
+                    <li><a href="../../samples/functions/regexsplit/split_on_pattern.axm">REGEXSPLIT: разделение по образцу</a></li>
+                    <li><a href="../../samples/functions/readalllines/basic_usage.axm">READALLLINES: чтение строк файла</a></li>
+                    <li><a href="../../samples/functions/readlines/basic_usage.axm">READLINES: чтение набора строк</a></li>
+                    <li><a href="../../samples/functions/writefile/basic_usage.axm">WRITEFILE: запись текстового файла</a></li>
+                    <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущая локальная дата</a></li>
+                    <li><a href="../../samples/functions/timer/basic_usage.axm">TIMER: секунды с локальной полуночи</a></li>
+                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: базовое использование</a></li>
+                    <li><a href="../../samples/functions/pow/basic_usage.axm">POW: базовое использование</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="examples.html">Примеры программ</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

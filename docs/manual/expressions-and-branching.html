@@ -1,0 +1,106 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Выражения и ветвление</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="expressions-and-branching">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Обзор арифметики, логики и ветвления</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Выражения и ветвление</p>
+                    <p class="sidebar__subtitle">Обзорный маршрут по арифметике, сравнениям, логике и управляющим конструкциям.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Выражения и ветвление</span>
+            </nav>
+            <p class="eyebrow">Обзор</p>
+            <h1 class="page-title">Выражения, сравнения и ветвление</h1>
+            <p class="lead">Эта страница служит обзорным входом в выражения и ветвление. Она связывает арифметику, сравнения, логику, <code>IF</code> и <code>SELECT CASE</code>, не повторяя подробности отдельных справочных статей.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#route">Основные статьи раздела</a></li>
+                    <li><a href="#samples">Показательные примеры</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <ul>
+                    <li>когда нужно понять маршрут от выражений к управляющим конструкциям;</li>
+                    <li>когда требуется подобрать правильную главу: арифметика и логика, <code>IF</code> или <code>SELECT CASE</code>;</li>
+                    <li>когда нужен обзор связей между вычислениями, условиями и выбором ветви выполнения.</li>
+                </ul>
+                <div class="note">
+                    <h3>Роль страницы</h3>
+                    <p>Обзорная глава связывает темы между собой. За точным синтаксисом, пограничными случаями и примерами ручной проверки переходите к профильным справочным статьям.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="route">
+                <h2>Основные статьи раздела</h2>
+                <div class="cards-grid">
+                    <section class="card">
+                        <h3><a href="arithmetic-and-logic.html">Арифметика и логика</a></h3>
+                        <p>Операторы <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, сравнения, логические операции и приоритет.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="if.html">Оператор IF</a></h3>
+                        <p>Блочное условие, ветви <code>ELSEIF</code> и <code>ELSE</code>, область видимости внутри ветвей.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="select-case.html">Оператор SELECT CASE</a></h3>
+                        <p>Многовариантное ветвление, диапазоны, списки значений и <code>CASE ELSE</code>.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Показательные примеры</h2>
+                <p>Этот набор примеров даёт обзор выражений, условий и многовариантного ветвления при запуске в IDE.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/expressions/arithmetic/basic_math.axm">Арифметика: базовые вычисления</a></li>
+                    <li><a href="../../samples/expressions/comparisons/basic_compare.axm">Сравнения: базовые сравнения</a></li>
+                    <li><a href="../../samples/expressions/logical/basic_logic.axm">Логика: AND, OR, NOT</a></li>
+                    <li><a href="../../samples/expressions/string_concat/basic_concat.axm">Строки: конкатенация через +</a></li>
+                    <li><a href="../../samples/control-flow/if/basic_if_else.axm">IF: базовое ветвление</a></li>
+                    <li><a href="../../samples/control-flow/select_case/mixed_selectors.axm">SELECT CASE: смешанные селекторы</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="for.html">Цикл FOR</a>
+                    <a href="while.html">Цикл WHILE</a>
+                    <a href="do-loop.html">Цикл DO ... LOOP</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

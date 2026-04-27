@@ -1,0 +1,17 @@
+' SELECT CASE with string ranges and CASE IS comparisons
+DIM command AS STRING = "Nuts"
+DIM letter AS STRING = "B"
+
+SELECT CASE command
+    CASE IS > "M"
+        PRINT "after"
+    CASE ELSE
+        PRINT "before"
+END SELECT
+
+SELECT CASE letter
+    CASE "A" TO "M"
+        PRINT "first"
+    CASE ELSE
+        PRINT "second"
+END SELECT

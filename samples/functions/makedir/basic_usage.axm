@@ -1,0 +1,4 @@
+DIM path AS STRING = ".artifacts/axiom_sample_directory"
+
+PRINT MAKEDIR(path)
+PRINT DIREXISTS(path)

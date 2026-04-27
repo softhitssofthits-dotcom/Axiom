@@ -1,0 +1,2 @@
+' Expected runtime diagnostic MB3007: MID start must be >= 1.
+PRINT MID("Hello", 0, 2)

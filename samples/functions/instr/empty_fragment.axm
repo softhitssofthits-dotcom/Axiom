@@ -1,0 +1,4 @@
+' Ожидается вывод: 1, затем 4, затем 0.
+PRINT INSTR("abc", "")
+PRINT INSTR(4, "abc", "")
+PRINT INSTR(5, "abc", "")

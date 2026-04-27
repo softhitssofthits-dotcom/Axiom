@@ -1,0 +1,18 @@
+' ARRAYSLICE создаёт независимый компактный срез 1 TO N.
+DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+part = ARRAYSLICE(source, 6, 2)
+part(1) = 99
+
+PRINT LBOUND(part)
+PRINT UBOUND(part)
+PRINT ARRAYLENGTH(part)
+PRINT source(6)
+PRINT part(1)
+PRINT source(7)
+PRINT part(2)

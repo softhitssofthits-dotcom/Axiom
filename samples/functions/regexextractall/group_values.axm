@@ -1,0 +1,11 @@
+' Ожидается: 2, 12, 34, a, b.
+DIM values() AS STRING
+
+values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
+PRINT ARRAYLENGTH(values)
+PRINT values(1)
+PRINT values(2)
+
+values = REGEXEXTRACTALL("a12 b34", "([A-Z])(\d+)", 1, "i")
+PRINT values(1)
+PRINT values(2)

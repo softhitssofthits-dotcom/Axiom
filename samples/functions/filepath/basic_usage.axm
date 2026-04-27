@@ -1,0 +1,7 @@
+DIM path AS STRING = MAKETEMPFILE("filepath_demo_")
+DIM f AS FILE
+
+OPEN path FOR INPUT AS f
+PRINT FILEPATH(f)
+PRINT FULLPATH(path)
+CLOSE f

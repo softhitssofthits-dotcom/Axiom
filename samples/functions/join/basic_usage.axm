@@ -1,0 +1,6 @@
+' Ожидается: red/green/blue.
+
+DIM parts() AS STRING
+parts = SPLIT("red,green,blue")
+
+PRINT JOIN(parts, "/")

@@ -1,0 +1,2 @@
+' FREESPACE возвращает свободное место на диске в байтах.
+PRINT FREESPACE(CURRENTDIR()) > 0

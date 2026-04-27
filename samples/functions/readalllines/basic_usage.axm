@@ -1,0 +1,13 @@
+' Ожидается: 2, alpha, beta.
+DIM path AS STRING = MAKETEMPFILE("readalllines_")
+DIM ok AS BOOLEAN
+DIM lines() AS STRING
+
+ok = WRITEFILE(path, "alpha" + CHR(13) + CHR(10) + "beta")
+lines = READALLLINES(path)
+
+PRINT ARRAYLENGTH(lines)
+PRINT lines(1)
+PRINT lines(2)
+
+ok = DELETEFILE(path)

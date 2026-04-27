@@ -1,0 +1,7 @@
+' Ожидаемый результат:
+' [  7]
+' 007
+' word
+PRINT "[" + PADLEFT("7", 3) + "]"
+PRINT PADLEFT("7", 3, "0")
+PRINT PADLEFT("word", 2, ".")

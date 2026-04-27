@@ -1,0 +1,2 @@
+' Expected: prints 5.
+PRINT LEN("Hello")

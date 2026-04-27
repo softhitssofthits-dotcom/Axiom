@@ -1,0 +1,14 @@
+' ARRAYREDUCE acceptance sample for polymorphic STRING() -> INTEGER accumulation.
+' Expected output:
+' 10
+DIM words(3 TO 5) AS STRING
+
+words(3) = "alpha"
+words(4) = "bb"
+words(5) = "ccc"
+
+PRINT ARRAYREDUCE(words, 0, AddLength)
+
+FUNCTION AddLength(acc AS INTEGER, value AS STRING) AS INTEGER
+    RETURN acc + LEN(value)
+END FUNCTION

@@ -1,0 +1,4 @@
+' Type a name such as Ada. Expected: the same name is printed back.
+DIM name AS STRING
+INPUT name
+PRINT name

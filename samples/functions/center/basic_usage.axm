@@ -1,0 +1,3 @@
+PRINT "[" + CENTER("A", 3) + "]"
+PRINT "[" + CENTER("A", 4, ".") + "]"
+PRINT "[" + CENTER("AB", 5, ".") + "]"

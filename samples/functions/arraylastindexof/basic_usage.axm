@@ -1,0 +1,10 @@
+' ARRAYLASTINDEXOF: последний логический индекс совпадения.
+
+Dim values(-3 To -1) As Integer
+
+values(-3) = 10
+values(-2) = 20
+values(-1) = 20
+
+Print ARRAYLASTINDEXOF(values, 20)
+Print ARRAYLASTINDEXOF(values, 99)

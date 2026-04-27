@@ -1,0 +1,2 @@
+' Expected runtime diagnostic MB3007: LEFT count must be greater than 0.
+PRINT LEFT("Hello", -1)

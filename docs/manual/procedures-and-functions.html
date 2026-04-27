@@ -1,0 +1,129 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Процедуры и функции</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="procedures-and-functions">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Обзор процедур, функций и оператора RETURN</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Процедуры и функции</p>
+                    <p class="sidebar__subtitle">Связывает статьи по <code>SUB</code>, <code>FUNCTION</code> и <code>RETURN</code>.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <span>Процедуры и функции</span>
+            </nav>
+            <p class="eyebrow">Обзор</p>
+            <h1 class="page-title">Процедуры и функции</h1>
+            <p class="lead">Эта обзорная глава помогает быстро понять, когда нужна подпрограмма, когда нужна функция и как теперь работают функции как значения языка.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#route">Куда переходить дальше</a></li>
+                    <li><a href="#orientation">Короткий ориентир</a></li>
+                    <li><a href="#samples">Показательные примеры</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <ul>
+                    <li>когда нужно понять, чем подпрограмма отличается от функции;</li>
+                    <li>когда нужно выбрать форму для вычисления, побочного действия или раннего выхода;</li>
+                    <li>когда нужно быстро перейти к точной справке по <code>SUB</code>, <code>FUNCTION</code> или <code>RETURN</code>.</li>
+                </ul>
+                <div class="note">
+                    <h3>Коротко</h3>
+                    <p><code>SUB</code> выполняет действия и не становится значением. <code>FUNCTION</code> вычисляет значение и теперь сама может быть значением, если для неё указан функциональный тип.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="route">
+                <h2>Куда переходить дальше</h2>
+                <div class="cards-grid">
+                    <section class="card">
+                        <h3><a href="sub.html">Подпрограмма SUB</a></h3>
+                        <p>Именованные действия без возвращаемого значения: вывод, проверки, изменение уже доступных переменных.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="function.html">Функция FUNCTION</a></h3>
+                        <p>Именованные вычисления с обязательным результатом, функциональными типами и возвращаемыми замыканиями.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="return.html">Оператор RETURN</a></h3>
+                        <p>Возврат значения из функции и досрочное завершение подпрограммы.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="orientation">
+                <h2>Короткий ориентир</h2>
+                <pre><code class="language-basic">SUB ShowBanner(text AS STRING)
+    PRINT "=="; text; "=="
+END SUB
+
+FUNCTION Square(value AS INTEGER) AS INTEGER
+    RETURN value * value
+END FUNCTION
+
+ShowBanner("Axiom")
+PRINT Square(5)</code></pre>
+                <p><code>SUB</code> выполняет действия, а <code>FUNCTION</code> вычисляет и возвращает значение. Оператор <code>RETURN</code> в <code>FUNCTION</code> обязателен для возврата результата, а в <code>SUB</code> используется только для досрочного выхода.</p>
+                <p>Язык также поддерживает локальные <code>SUB</code> и <code>FUNCTION</code> внутри другой процедуры или функции. Локальная функция может захватывать внешние данные, а если она возвращается наружу, то сохраняет их и после завершения внешней функции.</p>
+                <p>Функции можно хранить в переменных функционального типа, передавать в параметры и возвращать как результат. Подпрограммы <code>SUB</code> в этой роли не используются.</p>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Показательные примеры</h2>
+                <p>Для проверки раздела через IDE откройте несколько коротких файлов по основным сценариям.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов</a></li>
+                    <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная подпрограмма</a></li>
+                    <li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li>
+                    <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление</a></li>
+                    <li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li>
+                    <li><a href="../../samples/operators/function/capture_outer_local.axm">FUNCTION: захват внешнего параметра и локальной переменной</a></li>
+                    <li><a href="../../samples/operators/function/first_class_value.axm">FUNCTION: функция как значение</a></li>
+                    <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возвращаемая функция с захваченными данными</a></li>
+                    <li><a href="../../samples/operators/function/shared_closure_state.axm">FUNCTION: общее захваченное состояние</a></li>
+                    <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
+                    <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="sub.html">Подпрограмма SUB</a>
+                    <a href="function.html">Функция FUNCTION</a>
+                    <a href="return.html">Оператор RETURN</a>
+                    <a href="examples.html">Примеры программ</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

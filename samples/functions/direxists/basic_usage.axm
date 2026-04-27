@@ -1,0 +1,3 @@
+' Текущая рабочая папка должна существовать.
+PRINT DIREXISTS(".")
+PRINT DIREXISTS(".artifacts/axiom_sample_missing_directory")

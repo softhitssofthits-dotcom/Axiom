@@ -1,0 +1,7 @@
+' Ожидаемый результат:
+' aef
+' abcde
+' abcdef
+PRINT REMOVE("abcdef", 2, 3)
+PRINT REMOVE("abcdef", 6, 10)
+PRINT REMOVE("abcdef", 99, 2)

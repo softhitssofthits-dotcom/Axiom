@@ -1,0 +1,13 @@
+' SELECT CASE exact values and CASE ELSE
+DIM x AS INTEGER = 2
+
+SELECT CASE x
+    CASE 1
+        PRINT "one"
+    CASE 2
+        PRINT "two"
+    CASE 3
+        PRINT "three"
+    CASE ELSE
+        PRINT "other"
+END SELECT

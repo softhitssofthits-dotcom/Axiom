@@ -1,0 +1,2 @@
+PRINT EXTNAME("folder/notes.txt")
+PRINT "[" + EXTNAME("folder/notes") + "]"

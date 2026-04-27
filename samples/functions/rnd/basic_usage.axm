@@ -1,0 +1,7 @@
+﻿' Expected:
+' TRUE
+' TRUE
+DIM value AS DOUBLE = RND()
+PRINT value >= 0
+PRINT value < 1
+PRINT value

@@ -1,0 +1,20 @@
+' ARRAYDISTINCT returns unique elements in order of first appearance.
+
+Dim source(5 To 9) As Integer
+Dim uniqueValues() As Integer
+
+source(5) = 10
+source(6) = 20
+source(7) = 10
+source(8) = 30
+source(9) = 20
+
+uniqueValues = ARRAYDISTINCT(source)
+uniqueValues(1) = 99
+
+Print LBOUND(uniqueValues)
+Print UBOUND(uniqueValues)
+Print uniqueValues(1)
+Print uniqueValues(2)
+Print uniqueValues(3)
+Print source(5)

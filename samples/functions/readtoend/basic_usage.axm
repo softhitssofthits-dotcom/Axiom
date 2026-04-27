@@ -1,0 +1,9 @@
+DIM path AS STRING = MAKETEMPFILE("readtoend_demo_")
+DIM f AS FILE
+
+PRINT WRITEFILE(path, "alpha" + CHR(13) + CHR(10) + "beta")
+
+OPEN path FOR INPUT AS f
+PRINT READLINE(f)
+PRINT READTOEND(f)
+CLOSE f

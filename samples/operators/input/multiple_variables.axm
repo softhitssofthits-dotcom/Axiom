@@ -1,0 +1,5 @@
+' Type values such as Ada, 42. Expected: Ada 42.
+DIM name AS STRING
+DIM age AS INTEGER
+INPUT name, age
+PRINT name, age

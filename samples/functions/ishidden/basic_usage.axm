@@ -1,0 +1,6 @@
+' ISHIDDEN проверяет скрытый атрибут.
+DIM path AS STRING = "hidden.txt"
+
+PRINT WRITEFILE(path, "x")
+PRINT ISHIDDEN(path)
+PRINT DELETEFILE(path)

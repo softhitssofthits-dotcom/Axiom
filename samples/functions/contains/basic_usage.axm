@@ -1,0 +1,4 @@
+' Ожидается: TRUE, FALSE, TRUE.
+PRINT CONTAINS("Hello", "ell")
+PRINT CONTAINS("Hello", "ELL")
+PRINT CONTAINS("Hello", "")

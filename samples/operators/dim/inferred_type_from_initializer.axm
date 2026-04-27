@@ -1,0 +1,22 @@
+' Expected output:
+' 15
+' ALICE
+' YES
+' 2
+' 14
+
+DIM count = 10
+DIM name = "Alice"
+DIM ready = TRUE
+DIM price = 1.5
+DIM left, right = 7
+
+PRINT count + 5
+PRINT UCASE(name)
+
+IF ready THEN
+    PRINT "YES"
+END IF
+
+PRINT price + 0.5
+PRINT left + right

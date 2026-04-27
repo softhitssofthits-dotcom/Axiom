@@ -1,0 +1,2 @@
+' Expected: prints 12 3 on one line.
+PRINT 1; 2, 3

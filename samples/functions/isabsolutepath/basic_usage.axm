@@ -1,0 +1,3 @@
+' ISABSOLUTEPATH различает абсолютный и относительный путь.
+PRINT ISABSOLUTEPATH(CURRENTDIR())
+PRINT ISABSOLUTEPATH("notes.txt")

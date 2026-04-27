@@ -1,0 +1,6 @@
+DIM path AS STRING = MAKETEMPFILE("filemode_demo_")
+DIM f AS FILE
+
+OPEN path FOR APPEND AS f
+PRINT FILEMODE(f)
+CLOSE f

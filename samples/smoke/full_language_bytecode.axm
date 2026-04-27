@@ -1,0 +1,262 @@
+' Большая ручная smoke-проверка для запуска в Axiom.Ide в режиме Bytecode.
+' Этот файл специально длиннее обычных тематических примеров: он проверяет не одну
+' возможность, а совместную работу большого куска языка в одной программе.
+' Если программа падает в режиме Bytecode, это хороший кандидат на реальную границу VM.
+
+PRINT "full-smoke-start"
+
+' INPUT проверяется в самом начале, чтобы ручной запуск сразу запросил данные.
+' Для автоматического теста подаются значения: Ника, 7.
+DIM inputName AS STRING
+DIM inputValue AS INTEGER
+INPUT "Введите имя и число"; inputName, inputValue
+PRINT "input:" + inputName + ":" + STR(inputValue)
+
+' Константы, DIM с инициализатором, обычное присваивание и цикл FOR.
+CONST APP_NAME AS STRING = "Axiom"
+CONST LIMIT AS INTEGER = 3
+
+DIM total AS INTEGER = 0
+
+FOR i = 1 TO LIMIT
+    total = total + i
+NEXT
+
+PRINT "const-for:" + APP_NAME + ":" + STR(total)
+
+' IF, логические операции и NOT.
+IF total = 6 AND NOT FALSE THEN
+    PRINT "if:ok"
+ELSE
+    PRINT "if:fail"
+END IF
+
+' WHILE проверяет блочную область видимости и повторное присваивание.
+DIM whileCount AS INTEGER = 0
+WHILE whileCount < 2
+    PRINT "while:" + STR(whileCount)
+    whileCount = whileCount + 1
+END WHILE
+
+' DO ... LOOP и EXIT DO проверяют ещё одну форму цикла.
+DIM doCount AS INTEGER = 0
+DO
+    doCount = doCount + 1
+    IF doCount = 2 THEN
+        EXIT DO
+    END IF
+LOOP
+PRINT "do:" + STR(doCount)
+
+' SELECT CASE проверяет выбор по точному значению.
+SELECT CASE total
+    CASE 1 TO 5
+        PRINT "case:small"
+    CASE 6
+        PRINT "case:six"
+    CASE ELSE
+        PRINT "case:other"
+END SELECT
+
+' Арифметические, битовые и логические операторы.
+PRINT 7 \ 2
+PRINT 7 MOD 2
+PRINT 2 ^ 3
+PRINT 1 << 3
+PRINT 8 >> 1
+PRINT 6 XOR 3
+PRINT TRUE EQV TRUE
+PRINT TRUE IMP FALSE
+
+' PRINT USING проверяется отдельно: числовая маска, строковое поле и усечение.
+PRINT USING "Name: \    \|"; "Bob"
+PRINT USING "Total: ###.##"; 12.5
+PRINT USING "Flag: !"; "XYZ"
+
+' Строковые функции: обрезка, регистр, поиск, замена, вставка, удаление и генерация строк.
+DIM text AS STRING = "  alpha,beta,gamma  "
+PRINT LEN(text)
+PRINT LEFT(TRIM(text), 5)
+PRINT RIGHT(TRIM(text), 5)
+PRINT MID(TRIM(text), 7, 4)
+PRINT REPLACE(TRIM(text), ",", "|")
+PRINT INSTR(TRIM(text), "beta")
+PRINT LCASE("HeLLo")
+PRINT UCASE("HeLLo")
+PRINT PADLEFT("7", 3, "0")
+PRINT "[" + CENTER("A", 3) + "]"
+PRINT INSERT("abcd", 3, "-")
+PRINT REMOVE("abcdef", 2, 3)
+PRINT ASC("A")
+PRINT CHR(66)
+PRINT "[" + SPACE(4) + "]"
+PRINT STRING(5, "ab")
+PRINT SUBSTRCOUNT("banana", "na")
+PRINT CONTAINS("Hello", "ell")
+PRINT STARTSWITH("Hello", "He")
+PRINT ENDSWITH("Hello", "lo")
+
+' SPLIT и JOIN дают быстрый интеграционный тест строк и массивов.
+DIM parts() AS STRING
+parts = SPLIT(TRIM(text), ",")
+PRINT ARRAYLENGTH(parts)
+PRINT JOIN(parts, "/")
+
+' Числовые встроенные функции.
+PRINT ABS(-5)
+PRINT SQR(9)
+PRINT POW(2, 4)
+PRINT ROUND(3.14159)
+PRINT MIN(10, 3)
+PRINT MAX(10, 3)
+PRINT CLAMP(20, 1, 10)
+
+' Базовый массив, индексирование и поисковые функции.
+DIM numbers(1 TO 5) AS INTEGER
+numbers(1) = 10
+numbers(2) = 20
+numbers(3) = 30
+numbers(4) = 20
+numbers(5) = 15
+
+PRINT ARRAYLENGTH(numbers)
+PRINT ARRAYCONTAINS(numbers, 30)
+PRINT ARRAYINDEXOF(numbers, 20)
+PRINT ARRAYLASTINDEXOF(numbers, 20)
+
+' Higher-order массивные функции: ARRAYMAP, ARRAYFILTER, ARRAYREDUCE.
+DIM doubled() AS INTEGER
+doubled = ARRAYMAP(numbers, DoubleValue)
+PRINT doubled(3)
+
+DIM filtered() AS INTEGER
+filtered = ARRAYFILTER(numbers, IsLarge)
+PRINT ARRAYLENGTH(filtered)
+PRINT filtered(1)
+
+PRINT ARRAYREDUCE(numbers, 0, AddValues)
+
+' Мутирующие и чистые массивные операции.
+ARRAYPUSH(numbers, 40)
+PRINT UBOUND(numbers)
+PRINT ARRAYPOP(numbers)
+
+DIM sorted() AS INTEGER
+sorted = ARRAYTOSORTED(numbers)
+PRINT sorted(1)
+PRINT sorted(UBOUND(sorted))
+
+DIM reversed() AS INTEGER
+reversed = ARRAYTOREVERSED(numbers)
+PRINT reversed(1)
+
+DIM slice() AS INTEGER
+slice = ARRAYSLICE(numbers, 2, 2)
+PRINT JOIN(ARRAYMAP(slice, IntToString), ",")
+
+' Пользовательский TYPE: строковое поле, динамическое массивное поле и фиксированное поле.
+TYPE Person
+    Name AS STRING
+    Scores(), Flags(1 TO 2) AS INTEGER
+END TYPE
+
+DIM user AS Person
+user.Name = "Ada"
+REDIM user.Scores(1 TO 2)
+user.Scores(1) = 99
+user.Scores(2) = 100
+user.Flags(2) = 7
+PRINT user.Name
+PRINT user.Scores(2)
+PRINT user.Flags(2)
+
+' Функциональное значение и замыкание: MakeAdder возвращает локальную функцию Add.
+DIM adder AS FUNCTION (INTEGER) AS INTEGER
+adder = MakeAdder(4)
+PRINT adder(6)
+
+' SUB проверяет обычный вызов процедуры без возвращаемого значения.
+ShowMessage("sub:ok")
+
+' Регулярные выражения: проверка совпадения, массив совпадений и замена по группам.
+PRINT REGEXISMATCH("A12", "^a\d+", "i")
+DIM matches() AS STRING
+matches = REGEXMATCHES("Order 42 and 100", "\d+")
+PRINT ARRAYLENGTH(matches)
+PRINT matches(1)
+PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")
+
+' Дата и время: используем стабильные формы, а текущие значения проверяем предикатами.
+PRINT DATESERIAL(2026, 4, 20)
+PRINT TIMESERIAL(14, 5, 6)
+PRINT YEAR("2026-04-20 14:05:06")
+PRINT MONTHNAME(MONTH("2026-04-20"))
+PRINT DATEADD("m", 1, "2026-01-31")
+PRINT DATEDIFF("d", "2026-04-20", "2026-04-22")
+PRINT ISDATE(NOW())
+PRINT LEN(DATE()) = 10
+PRINT LEN(TIME()) = 8
+PRINT LEN(UTCDATE()) = 10
+PRINT LEN(UTCTIME()) = 8
+PRINT TOUTC("2026-04-20 11:05:06", "UTC")
+PRINT FROMUTC("2026-04-20 11:05:06", "UTC")
+PRINT UTCOFFSET("2026-04-20 14:05:06", "UTC")
+
+' Файловая система и открытый FILE: временный файл, чтение строк, дозапись и закрытие.
+DIM path AS STRING = MAKETEMPFILE("axiom_full_smoke_")
+DIM ok AS BOOLEAN
+DIM reader AS FILE
+DIM fileLines() AS STRING
+
+PRINT FILEEXISTS(path)
+ok = WRITEFILE(path, "alpha" + CHR(10) + "beta")
+PRINT ok
+PRINT FILESIZE(path) > 0
+
+fileLines = READALLLINES(path)
+PRINT ARRAYLENGTH(fileLines)
+PRINT fileLines(1)
+PRINT APPENDFILE(path, CHR(10) + "gamma")
+PRINT FILENAME(path) <> ""
+PRINT LEN(FILEDATE(path)) > 0
+
+OPEN path FOR INPUT AS reader
+PRINT ISOPEN(reader)
+PRINT FILEMODE(reader)
+PRINT READLINE(reader)
+PRINT READTEXT(reader, 2)
+PRINT LEN(READTOEND(reader)) > 0
+CLOSE reader
+PRINT ISOPEN(reader)
+PRINT DELETEFILE(path)
+
+PRINT "full-smoke-done"
+
+' Ниже находятся пользовательские функции и процедура, которые вызываются выше.
+FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION
+
+FUNCTION IsLarge(value AS INTEGER) AS BOOLEAN
+    RETURN value >= 30
+END FUNCTION
+
+FUNCTION AddValues(acc AS INTEGER, value AS INTEGER) AS INTEGER
+    RETURN acc + value
+END FUNCTION
+
+FUNCTION IntToString(value AS INTEGER) AS STRING
+    RETURN STR(value)
+END FUNCTION
+
+FUNCTION MakeAdder(baseValue AS INTEGER) AS FUNCTION (INTEGER) AS INTEGER
+    FUNCTION Add(delta AS INTEGER) AS INTEGER
+        RETURN baseValue + delta
+    END FUNCTION
+
+    RETURN Add
+END FUNCTION
+
+SUB ShowMessage(message AS STRING)
+    PRINT message
+END SUB

@@ -1,0 +1,13 @@
+﻿' Возвращаемая функция хранит захваченные внешние данные.
+DIM addTen AS FUNCTION (INTEGER) AS INTEGER
+addTen = MakeAdder(10)
+PRINT addTen(5)
+PRINT MakeAdder(3)(4)
+
+FUNCTION MakeAdder(baseValue AS INTEGER) AS FUNCTION (INTEGER) AS INTEGER
+    FUNCTION Add(delta AS INTEGER) AS INTEGER
+        RETURN baseValue + delta
+    END FUNCTION
+
+    RETURN Add
+END FUNCTION

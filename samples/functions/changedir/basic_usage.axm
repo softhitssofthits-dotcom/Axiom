@@ -1,0 +1,8 @@
+' CHANGEDIR меняет текущую папку программы.
+DIM oldDir AS STRING = CURRENTDIR()
+DIM tempDir AS STRING = MAKETEMPDIR("cd_")
+
+PRINT CHANGEDIR(tempDir)
+PRINT CURRENTDIR() = tempDir
+PRINT CHANGEDIR(oldDir)
+

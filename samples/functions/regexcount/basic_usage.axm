@@ -1,0 +1,4 @@
+' Ожидается вывод: 2, затем 2, затем 0.
+PRINT REGEXCOUNT("one 12 two 34", "\d+")
+PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")
+PRINT REGEXCOUNT("text", "\d+")

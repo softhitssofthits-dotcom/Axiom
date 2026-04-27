@@ -1,0 +1,6 @@
+DIM path AS STRING = ".artifacts/axiom_sample_pathexists.txt"
+
+PRINT PATHEXISTS(path)
+PRINT WRITEFILE(path, "Hello")
+PRINT PATHEXISTS(path)
+PRINT PATHEXISTS(".")

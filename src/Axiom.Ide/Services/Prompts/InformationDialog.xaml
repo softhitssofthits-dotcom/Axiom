@@ -1,0 +1,95 @@
+<Window x:Class="Axiom.Ide.Services.Prompts.InformationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource Prompts.DefaultTitle}"
+        Width="430"
+        MinWidth="360"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Icon="/Axiom.Ide;component/Assets/axiom.ico"
+        AutomationProperties.AutomationId="InformationDialog"
+        Style="{StaticResource DialogWindowStyle}">
+    <Border Margin="12"
+            Padding="4"
+            Background="{DynamicResource PaneBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1">
+        <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Viewbox Width="48"
+                         Height="48"
+                         Margin="0,0,16,0"
+                         VerticalAlignment="Top"
+                         Stretch="Uniform"
+                         SnapsToDevicePixels="True"
+                         UseLayoutRounding="True"
+                         AutomationProperties.AutomationId="InformationDialogIcon">
+                    <Canvas Width="256" Height="256">
+                        <Rectangle Width="256"
+                                   Height="256"
+                                   RadiusX="38"
+                                   RadiusY="38"
+                                   Fill="#1E1E1E" />
+                        <Rectangle Canvas.Left="20"
+                                   Canvas.Top="20"
+                                   Width="216"
+                                   Height="216"
+                                   RadiusX="28"
+                                   RadiusY="28"
+                                   Fill="#252526"
+                                   Stroke="#3794FF"
+                                   StrokeThickness="8" />
+                        <Path Data="M70 188 122 62h20l52 126h-27l-10-27H107l-10 27H70Z"
+                              Fill="#D4D4D4" />
+                        <Path Data="M116 137h32l-16-43-16 43Z"
+                              Fill="#1E1E1E" />
+                        <Path Data="M62 201h132"
+                              Stroke="#89D185"
+                              StrokeThickness="12"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round" />
+                        <Path Data="M74 54h44"
+                              Stroke="#89D185"
+                              StrokeThickness="10"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round" />
+                        <Path Data="M158 54h24"
+                              Stroke="#3794FF"
+                              StrokeThickness="10"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round" />
+                    </Canvas>
+                </Viewbox>
+
+                <TextBlock x:Name="MessageTextBlock"
+                           Grid.Column="1"
+                           AutomationProperties.AutomationId="InformationDialogMessageTextBlock"
+                           Style="{StaticResource DialogTextBlockStyle}"
+                           TextWrapping="Wrap" />
+            </Grid>
+
+            <Button Grid.Row="1"
+                    Width="88"
+                    Margin="0,18,0,0"
+                    HorizontalAlignment="Right"
+                    IsDefault="True"
+                    IsCancel="True"
+                    AutomationProperties.AutomationId="InformationDialogOkButton"
+                    Style="{StaticResource DialogButtonStyle}"
+                    Click="OnOkClick"
+                    Content="{DynamicResource Prompts.Ok}" />
+        </Grid>
+    </Border>
+</Window>

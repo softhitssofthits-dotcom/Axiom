@@ -1,0 +1,8 @@
+' TIMER возвращает число секунд с локальной полуночи.
+' Для ручной проверки этот пример выводит только устойчивые логические свойства результата.
+DIM first AS DOUBLE = TIMER()
+DIM second AS DOUBLE = TIMER()
+
+PRINT first >= 0
+PRINT first < 86400
+PRINT second >= first

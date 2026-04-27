@@ -1,0 +1,12 @@
+' Локальная функция доступна внутри внешней функции
+' и может вызываться до своего текстового объявления.
+
+PRINT Outer(10)
+
+FUNCTION Outer(base AS INTEGER) AS INTEGER
+    RETURN AddTwo(base)
+
+    FUNCTION AddTwo(value AS INTEGER) AS INTEGER
+        RETURN value + 2
+    END FUNCTION
+END FUNCTION

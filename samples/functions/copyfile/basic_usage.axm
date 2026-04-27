@@ -1,0 +1,7 @@
+' Создаёт исходный файл и копирует его в текущей рабочей папке.
+DIM source AS STRING = ".artifacts/axiom_sample_copy_source.txt"
+DIM target AS STRING = ".artifacts/axiom_sample_copy_target.txt"
+
+PRINT WRITEFILE(source, "Hello")
+PRINT COPYFILE(source, target, TRUE)
+PRINT READFILE(target)

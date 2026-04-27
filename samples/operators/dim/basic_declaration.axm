@@ -1,0 +1,3 @@
+' Expected: prints 42.
+DIM value AS INTEGER = 42
+PRINT value

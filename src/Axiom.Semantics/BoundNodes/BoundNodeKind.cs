@@ -1,0 +1,36 @@
+namespace Axiom.Semantics;
+
+public enum BoundNodeKind
+{
+    Program,
+    Routine,
+    VariableDeclarationStatement,
+    VariableDeclarationsStatement,
+    AssignmentStatement,
+    EraseStatement,
+    RedimStatement,
+    PrintStatement,
+    PrintUsingStatement,
+    InputStatement,
+    OpenStatement,
+    CloseStatement,
+    IfStatement,
+    SelectCaseStatement,
+    DoLoopStatement,
+    WhileStatement,
+    ForStatement,
+    ExitForStatement,
+    ExitDoStatement,
+    ReturnStatement,
+    ExpressionStatement,
+    LiteralExpression,
+    FunctionExpression,
+    VariableExpression,
+    ArrayAccessExpression,
+    FieldAccessExpression,
+    UnaryExpression,
+    BinaryExpression,
+    CallExpression,
+    ConversionExpression,
+    ErrorExpression
+}

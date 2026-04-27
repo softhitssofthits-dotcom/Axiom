@@ -1,0 +1,18 @@
+' ARRAYTOREVERSED creates a new compact array in reverse logical order.
+
+Dim source(5 To 7) As Integer
+Dim reversed() As Integer
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+reversed = ARRAYTOREVERSED(source)
+reversed(1) = 99
+
+Print LBOUND(reversed)
+Print UBOUND(reversed)
+Print reversed(1)
+Print reversed(2)
+Print reversed(3)
+Print source(7)

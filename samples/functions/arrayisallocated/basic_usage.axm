@@ -1,0 +1,7 @@
+﻿' Ожидается:оложджджджоло FALSE, затем TRUE.
+
+DIM values() AS INTEGER
+
+PRINT ARRAYISALLOCATED(values)
+REDIM values(5 TO 7)
+PRINT ARRAYISALLOCATED(values)

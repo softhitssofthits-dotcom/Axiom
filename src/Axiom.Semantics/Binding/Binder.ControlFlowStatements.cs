@@ -1,0 +1,215 @@
+using Axiom.Syntax;
+
+namespace Axiom.Semantics;
+
+public sealed partial class Binder
+{
+    private BoundStatement BindIfStatement(IfStatementSyntax statement)
+    {
+        var condition = BindCondition(statement.Condition);
+        var statements = BindStatementsInChildScope(statement.Statements, DeclarationContexts.IfBlock);
+        var elseStatements = BindElseBranch(statement.ElseIfClauses, statement.ElseClause);
+
+        return new BoundIfStatement(GetLocation(statement), condition, statements, elseStatements);
+    }
+
+    private IReadOnlyList<BoundStatement> BindElseBranch(
+        IReadOnlyList<ElseIfClauseSyntax> elseIfClauses,
+        ElseClauseSyntax? elseClause)
+    {
+        if (elseIfClauses.Count > 0)
+        {
+            return [BindElseIfChain(elseIfClauses, 0, elseClause)];
+        }
+
+        return elseClause is null
+            ? Array.Empty<BoundStatement>()
+            : BindStatementsInChildScope(elseClause.Statements, DeclarationContexts.ElseBranch);
+    }
+
+    private BoundIfStatement BindElseIfChain(
+        IReadOnlyList<ElseIfClauseSyntax> elseIfClauses,
+        int index,
+        ElseClauseSyntax? elseClause)
+    {
+        var clause = elseIfClauses[index];
+        var condition = BindCondition(clause.Condition);
+        var statements = BindStatementsInChildScope(clause.Statements, DeclarationContexts.ElseIfBranch);
+        var elseStatements = index + 1 < elseIfClauses.Count
+            ? new BoundStatement[] { BindElseIfChain(elseIfClauses, index + 1, elseClause) }
+            : elseClause is null
+                ? Array.Empty<BoundStatement>()
+                : BindStatementsInChildScope(elseClause.Statements, DeclarationContexts.ElseBranch);
+
+        return new BoundIfStatement(clause.ElseIfKeyword.Location, condition, statements, elseStatements);
+    }
+
+    private BoundStatement BindWhileStatement(WhileStatementSyntax statement)
+    {
+        var condition = BindCondition(statement.Condition);
+        var statements = BindStatementsInChildScope(statement.Statements, DeclarationContexts.WhileBlock);
+        return new BoundWhileStatement(GetLocation(statement), condition, statements);
+    }
+
+    private BoundStatement BindDoLoopStatement(DoLoopStatementSyntax statement)
+    {
+        var leadingCondition = BindDoLoopCondition(statement.LeadingCondition);
+        var trailingCondition = BindDoLoopCondition(statement.TrailingCondition);
+        var condition = leadingCondition.condition ?? trailingCondition.condition;
+        var conditionKind = leadingCondition.kind != BoundDoLoopConditionKind.None
+            ? leadingCondition.kind
+            : trailingCondition.kind;
+        var evaluateConditionAfterBody = trailingCondition.kind != BoundDoLoopConditionKind.None;
+
+        _doLoopDepth++;
+        IReadOnlyList<BoundStatement> statements;
+
+        try
+        {
+            statements = BindStatementsInChildScope(statement.Statements, DeclarationContexts.DoBlock);
+        }
+        finally
+        {
+            _doLoopDepth--;
+        }
+
+        return new BoundDoLoopStatement(GetLocation(statement), condition, conditionKind, evaluateConditionAfterBody, statements);
+    }
+
+    private (BoundExpression? condition, BoundDoLoopConditionKind kind) BindDoLoopCondition(DoLoopConditionClauseSyntax? clause)
+    {
+        if (clause is null)
+        {
+            return (null, BoundDoLoopConditionKind.None);
+        }
+
+        var condition = BindCondition(clause.Condition);
+        var kind = clause.Keyword.Kind switch
+        {
+            SyntaxKind.WhileKeyword => BoundDoLoopConditionKind.While,
+            SyntaxKind.UntilKeyword => BoundDoLoopConditionKind.Until,
+            _ => throw new ArgumentOutOfRangeException(nameof(clause), clause.Keyword.Kind, "Unsupported DO LOOP condition keyword.")
+        };
+
+        return (condition, kind);
+    }
+
+    private BoundStatement BindForStatement(ForStatementSyntax statement)
+    {
+        var startExpression = BindExpression(statement.StartExpression);
+        var provisionalType = startExpression.Type == TypeSymbol.Double ? TypeSymbol.Double : TypeSymbol.Integer;
+
+        EnterScope(DeclarationContexts.ForLoop);
+
+        try
+        {
+            var provisionalVariable = new VariableSymbol(
+                statement.Identifier.Text,
+                provisionalType,
+                isReadOnly: false,
+                isGlobal: false);
+
+            _scope.TryDeclareVariable(provisionalVariable);
+
+            var boundEndExpression = BindExpression(statement.EndExpression);
+            var boundStepExpression = statement.StepClause is null
+                ? null
+                : BindExpression(statement.StepClause.Expression);
+
+            var variableType = InferForControlVariableType(startExpression, boundEndExpression, boundStepExpression);
+
+            if (variableType == TypeSymbol.Error)
+            {
+                ReportInvalidForControlVariable(statement.Identifier.Text, TypeSymbol.Error, statement.Identifier.Location);
+            }
+
+            LeaveScope();
+            EnterScope(DeclarationContexts.ForLoop);
+
+            var variable = new VariableSymbol(
+                statement.Identifier.Text,
+                variableType == TypeSymbol.Error ? TypeSymbol.Integer : variableType,
+                isReadOnly: false,
+                isGlobal: false);
+
+            TryDeclareScopedVariable(variable, statement.Identifier.Location);
+
+            var expectedType = variableType == TypeSymbol.Error ? TypeSymbol.Error : variable.Type;
+            startExpression = expectedType == TypeSymbol.Error
+                ? BindExpression(statement.StartExpression)
+                : BindExpression(statement.StartExpression, expectedType);
+            var endExpression = expectedType == TypeSymbol.Error
+                ? BindExpression(statement.EndExpression)
+                : BindExpression(statement.EndExpression, expectedType);
+            var stepExpression = statement.StepClause is null
+                ? CreateDefaultStepExpression(statement.ForKeyword.Location, expectedType == TypeSymbol.Error ? TypeSymbol.Integer : expectedType)
+                : expectedType == TypeSymbol.Error
+                    ? BindExpression(statement.StepClause.Expression)
+                    : BindExpression(statement.StepClause.Expression, expectedType);
+            _forDepth++;
+            IReadOnlyList<BoundStatement> statements;
+
+            try
+            {
+                statements = BindStatements(statement.Statements);
+            }
+            finally
+            {
+                _forDepth--;
+            }
+
+            return new BoundForStatement(GetLocation(statement), variable, startExpression, endExpression, stepExpression, statements);
+        }
+        finally
+        {
+            LeaveScope();
+        }
+    }
+
+    private BoundStatement BindExitForStatement(ExitForStatementSyntax statement)
+    {
+        if (_forDepth <= 0)
+        {
+            ReportInvalidExitForContext(statement.ExitKeyword.Location);
+        }
+
+        return new BoundExitForStatement(GetLocation(statement));
+    }
+
+    private BoundStatement BindExitDoStatement(ExitDoStatementSyntax statement)
+    {
+        if (_doLoopDepth <= 0)
+        {
+            ReportInvalidExitDoContext(statement.ExitKeyword.Location);
+        }
+
+        return new BoundExitDoStatement(GetLocation(statement));
+    }
+
+    private BoundStatement BindReturnStatement(ReturnStatementSyntax statement)
+    {
+        if (_currentFunction is null)
+        {
+            ReportInvalidReturnContext(statement.ReturnKeyword.Location);
+            return new BoundReturnStatement(statement.ReturnKeyword.Location, statement.Expression is null ? null : BindExpression(statement.Expression));
+        }
+
+        if (_currentFunction.IsSub)
+        {
+            if (statement.Expression is not null)
+            {
+                ReportReturnValueInSub(_currentFunction.Name, statement.ReturnKeyword.Location);
+            }
+
+            return new BoundReturnStatement(statement.ReturnKeyword.Location, statement.Expression is null ? null : BindExpression(statement.Expression));
+        }
+
+        if (statement.Expression is null)
+        {
+            ReportMissingReturnValue(_currentFunction.Name, statement.ReturnKeyword.Location);
+            return new BoundReturnStatement(statement.ReturnKeyword.Location, null);
+        }
+
+        return new BoundReturnStatement(statement.ReturnKeyword.Location, BindExpression(statement.Expression, _currentFunction.ReturnType));
+    }
+}

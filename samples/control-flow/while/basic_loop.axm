@@ -1,0 +1,7 @@
+' Expected: prints 0, 1, 2 on separate lines.
+DIM i AS INTEGER = 0
+
+WHILE i < 3
+    PRINT i
+    i = i + 1
+END WHILE

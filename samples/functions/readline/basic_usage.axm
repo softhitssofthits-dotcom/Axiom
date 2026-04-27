@@ -1,0 +1,10 @@
+DIM folder AS STRING = MAKETEMPDIR("readline_demo_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+DIM f AS FILE
+
+PRINT WRITEFILE(path, "alpha" + CHR(10) + "beta")
+
+OPEN path FOR INPUT AS f
+PRINT READLINE(f)
+PRINT READLINE(f)
+CLOSE f

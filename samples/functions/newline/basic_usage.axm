@@ -1,0 +1,12 @@
+' NEWLINE записывает перевод строки без дополнительного текста.
+DIM path AS STRING = MAKETEMPFILE("newline_")
+
+DIM f AS FILE
+OPEN path FOR OUTPUT AS f
+PRINT WRITELINE(f, "alpha")
+PRINT NEWLINE(f)
+PRINT WRITELINE(f, "beta")
+CLOSE f
+
+PRINT READFILE(path)
+PRINT DELETEFILE(path)

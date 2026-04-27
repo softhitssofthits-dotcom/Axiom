@@ -1,0 +1,3 @@
+' Expected output:
+' Sunday
+PRINT WEEKDAYNAME(WEEKDAY("2026-04-26"))

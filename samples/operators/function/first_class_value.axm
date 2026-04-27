@@ -1,0 +1,12 @@
+﻿' FUNCTION как значение: хранение в переменной и передача в параметр.
+DIM action AS FUNCTION (INTEGER) AS INTEGER
+action = DoubleValue
+PRINT ApplyTwice(action, 3)
+
+FUNCTION ApplyTwice(op AS FUNCTION (INTEGER) AS INTEGER, value AS INTEGER) AS INTEGER
+    RETURN op(op(value))
+END FUNCTION
+
+FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION

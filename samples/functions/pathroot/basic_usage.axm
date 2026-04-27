@@ -1,0 +1,2 @@
+' PATHROOT возвращает корень полного пути.
+PRINT PATHROOT(CURRENTDIR())

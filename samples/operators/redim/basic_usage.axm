@@ -1,0 +1,14 @@
+' REDIM allocates a dynamic array and can later reset its range.
+
+DIM values() AS INTEGER
+
+REDIM values(1 TO 3)
+values(1) = 10
+values(2) = 20
+values(3) = 30
+
+PRINT values(1)
+PRINT values(3)
+
+REDIM values(5 TO 6)
+PRINT values(5)

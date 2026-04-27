@@ -1,0 +1,3 @@
+' Expected runtime diagnostic MB3007: MID count must be greater than 0.
+' Manual note: 0 and -0 remain valid expressions but must fail the same runtime way.
+PRINT MID("Hello", 1, 0)

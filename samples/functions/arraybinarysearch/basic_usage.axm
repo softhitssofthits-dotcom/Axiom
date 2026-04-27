@@ -1,0 +1,13 @@
+' ARRAYBINARYSEARCH expects a sorted array and returns the first logical index.
+
+DIM values(5 TO 9) AS INTEGER
+
+values(5) = 10
+values(6) = 20
+values(7) = 20
+values(8) = 20
+values(9) = 30
+
+PRINT ARRAYBINARYSEARCH(values, 20)
+PRINT ARRAYBINARYSEARCH(values, 30)
+PRINT ARRAYBINARYSEARCH(values, 15)

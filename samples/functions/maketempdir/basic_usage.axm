@@ -1,0 +1,4 @@
+' MAKETEMPDIR создаёт временную папку и возвращает её полный путь.
+DIM path AS STRING = MAKETEMPDIR("demo_")
+PRINT DIREXISTS(path)
+PRINT LEN(DIRNAME(path)) > 0

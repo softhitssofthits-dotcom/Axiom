@@ -1,0 +1,181 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функция FUNCTION</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="function">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Именованная функция с обязательным результатом</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Функция FUNCTION</p>
+                    <p class="sidebar__subtitle">Справочная глава по объявлению функций, функциональным типам и возврату значений.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Функция FUNCTION</span>
+            </nav>
+            <p class="eyebrow">Процедуры и функции</p>
+            <h1 class="page-title">Функция FUNCTION</h1>
+            <p class="lead"><code>FUNCTION</code> объявляет именованную функцию, которая вычисляет значение заданного типа. Функцию можно вызывать прямо по имени, хранить в переменной функционального типа, передавать в параметр другой функции и возвращать как результат.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#syntax">Синтаксис</a></li>
+                    <li><a href="#parameters">Параметры и части синтаксиса</a></li>
+                    <li><a href="#remarks">Замечания</a></li>
+                    <li><a href="#examples">Примеры</a></li>
+                    <li><a href="#diagnostics">Диагностика</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <p>У функции всегда есть объявленный тип результата. Рабочая ветвь выполнения должна завершаться формой <code>RETURN &lt;выражение&gt;</code>. Если выполнение дошло до конца функции без возвращаемого значения, возникает ошибка времени выполнения.</p>
+                <p>Если требуется хранить функцию как значение, используется функциональный тип вида <code>FUNCTION(INTEGER, INTEGER) AS INTEGER</code>. Он разрешён в <code>DIM</code>, в параметрах и в типе результата другой функции.</p>
+                <p>Если параметр или результат функции должен быть массивом, тип записывается как <code>INTEGER()</code>, <code>STRING()</code> и так далее.</p>
+                <p>Фиксированная строковая форма <code>STRING * N</code> в параметрах и типе результата <code>FUNCTION</code> сейчас не поддерживается. Для сигнатур функций используйте обычный <code>STRING</code>.</p>
+            </section>
+
+            <section class="article-section" id="syntax">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">FUNCTION &lt;имя&gt;([&lt;список параметров&gt;]) AS &lt;тип результата&gt;
+    &lt;инструкции&gt;
+    RETURN &lt;выражение&gt;
+END FUNCTION</code></pre>
+                <pre><code class="language-basic">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
+                <pre><code class="language-basic">DIM &lt;переменная&gt; AS FUNCTION([&lt;список типов параметров&gt;]) AS &lt;тип результата&gt;
+&lt;переменная&gt; = &lt;имя&gt;</code></pre>
+            </section>
+
+            <section class="article-section" id="parameters">
+                <h2>Параметры и части синтаксиса</h2>
+                <ul>
+                    <li><code>&lt;имя&gt;</code> — имя функции.</li>
+                    <li><code>[&lt;список параметров&gt;]</code> — необязательная часть. Если параметров нет, функция объявляется с пустыми круглыми скобками.</li>
+                    <li><code>&lt;тип результата&gt;</code> — тип значения, которое функция обязана вернуть.</li>
+                    <li><code>&lt;выражение&gt;</code> — выражение, вычисляемое оператором <code>RETURN</code>.</li>
+                    <li><code>[&lt;список аргументов&gt;]</code> — необязательная часть вызова. Если аргументов нет, вызов оформляется с пустыми круглыми скобками.</li>
+                    <li><code>[&lt;список типов параметров&gt;]</code> — список типов внутри функционального типа. Если параметров нет, используется форма <code>FUNCTION() AS &lt;тип результата&gt;</code>.</li>
+                </ul>
+                <p>Как и у <code>SUB</code>, параметры функции передаются по значению и объявляются с обязательным типом. Типом параметра или результата может быть обычный тип данных, массивный тип вида <code>TYPE()</code> или функциональный тип.</p>
+                <p>Если нужно принимать или возвращать текст, сигнатура функции должна использовать обычный <code>STRING</code>. Форма <code>STRING * N</code> в параметрах, в типе результата и внутри функциональных типов сейчас запрещена диагностикой <code>MB2026</code>.</p>
+                <pre><code class="language-basic">FUNCTION IsAdult(age AS INTEGER) AS BOOLEAN
+    RETURN age &gt;= 18
+END FUNCTION</code></pre>
+                <pre><code class="language-basic">FUNCTION ApplyTwice(op AS FUNCTION(INTEGER) AS INTEGER, value AS INTEGER) AS INTEGER
+    RETURN op(op(value))
+END FUNCTION</code></pre>
+                <pre><code class="language-basic">FUNCTION Echo(values AS INTEGER()) AS INTEGER()
+    RETURN values
+END FUNCTION</code></pre>
+            </section>
+
+            <section class="article-section" id="remarks">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>После списка параметров функция обязана объявить тип результата через <code>AS &lt;тип результата&gt;</code>.</li>
+                    <li>Форма <code>RETURN &lt;выражение&gt;</code> завершает выполнение функции и передаёт значение наружу.</li>
+                    <li>Функцию можно использовать в выражении, в <code>PRINT</code>, в правой части присваивания и как значение функционального типа.</li>
+                    <li>Подпрограммы <code>SUB</code> не являются значениями. Их нельзя присваивать переменной и передавать как аргумент.</li>
+                    <li>Определение функции может располагаться ниже первого вызова: язык сначала объявляет имена процедур и функций, затем связывает их тела.</li>
+                    <li>Внутри <code>FUNCTION</code> можно объявлять локальные <code>SUB</code> и <code>FUNCTION</code>. Их имена доступны только внутри текущей внешней процедуры или функции.</li>
+                    <li>Локальная функция может вызываться до своего текстового объявления, потому что её имя заранее регистрируется в теле внешней процедуры или функции.</li>
+                    <li>Локальная функция лексически захватывает параметры и локальные переменные внешней процедуры или функции, если они объявлены раньше по тексту.</li>
+                    <li>Если такая локальная функция возвращается наружу, она сохраняет захваченные внешние данные и может быть вызвана после завершения внешней функции.</li>
+                    <li>Внешние локальные имена, объявленные ниже по тексту после локальной <code>FUNCTION</code>, для неё недоступны.</li>
+                    <li>Пустое значение функционального типа вызывать нельзя. Для него возникает отдельная ошибка времени выполнения.</li>
+                    <li><code>RETURN</code> без выражения внутри <code>FUNCTION</code> считается ошибкой семантики.</li>
+                    <li>Фиксированная строковая форма <code>STRING * N</code> не используется в сигнатурах функций и в функциональных типах; вместо неё применяйте обычный <code>STRING</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Для проверки объявления функции, функциональных типов и возвращаемых замыканий используйте готовые примеры.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление и вызов</a></li>
+                    <li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li>
+                    <li><a href="../../samples/operators/function/capture_outer_local.axm">FUNCTION: захват внешнего параметра и локальной переменной</a></li>
+                    <li><a href="../../samples/operators/function/first_class_value.axm">FUNCTION: функция как значение</a></li>
+                    <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возвращаемая функция с захваченными данными</a></li>
+                    <li><a href="../../samples/operators/function/shared_closure_state.axm">FUNCTION: общее захваченное состояние между вызовами</a></li>
+                    <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
+                    <li><a href="../../samples/smoke/array_first_class_values.axm">Smoke: массив как параметр и результат функции</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="examples">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">FUNCTION Square(value AS INTEGER) AS INTEGER
+    RETURN value * value
+END FUNCTION
+
+PRINT Square(5)</code></pre>
+                <pre><code class="language-basic">DIM op AS FUNCTION(INTEGER) AS INTEGER
+op = DoubleValue
+PRINT op(5)
+
+FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION</code></pre>
+                <pre><code class="language-basic">DIM addTen AS FUNCTION(INTEGER) AS INTEGER
+addTen = MakeAdder(10)
+PRINT addTen(5)
+
+FUNCTION MakeAdder(baseValue AS INTEGER) AS FUNCTION(INTEGER) AS INTEGER
+    FUNCTION Add(delta AS INTEGER) AS INTEGER
+        RETURN baseValue + delta
+    END FUNCTION
+
+    RETURN Add
+END FUNCTION</code></pre>
+            </section>
+
+            <section class="article-section" id="diagnostics">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB2019</code> — попытка использовать <code>SUB</code> как значение.</li>
+                    <li><code>MB2020</code> — попытка вызвать значение, которое не имеет функционального типа.</li>
+                    <li><code>MB2026</code> — неподдержанная форма <code>STRING * N</code> использована в параметре, типе результата <code>FUNCTION</code> или внутри функционального типа.</li>
+                    <li><code>MB2007</code> — в <code>FUNCTION</code> использован <code>RETURN</code> без выражения.</li>
+                    <li><code>MB3006</code> — выполнение дошло до конца функции без <code>RETURN</code> со значением.</li>
+                    <li><code>MB3009</code> — попытка вызвать пустое значение функционального типа.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="sub.html">Подпрограмма SUB</a>
+                    <a href="return.html">Оператор RETURN</a>
+                    <a href="procedures-and-functions.html">Процедуры и функции</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

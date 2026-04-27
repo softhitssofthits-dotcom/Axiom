@@ -1,0 +1,2 @@
+' Expected output: 0
+PRINT STR(VAL("abc"))

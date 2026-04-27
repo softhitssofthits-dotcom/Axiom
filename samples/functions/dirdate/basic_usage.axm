@@ -1,0 +1,6 @@
+' DIRDATE возвращает дату последнего изменения папки.
+DIM path AS STRING = "datedir"
+
+PRINT MAKEDIR(path)
+PRINT LEN(DIRDATE(path)) > 0
+PRINT DELETEDIR(path)

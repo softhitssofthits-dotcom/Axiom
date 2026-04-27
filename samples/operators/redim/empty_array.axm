@@ -1,0 +1,9 @@
+' Ожидается: TRUE, 0, 1, 0.
+
+DIM values() AS INTEGER
+REDIM values(1 TO 0)
+
+PRINT ARRAYISALLOCATED(values)
+PRINT ARRAYLENGTH(values)
+PRINT LBOUND(values)
+PRINT UBOUND(values)

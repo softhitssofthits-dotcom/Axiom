@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функции файловой системы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="file-system-functions">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Справочник по функциям файлов и папок</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Функции файловой системы</p>
+                    <p class="sidebar__subtitle">Текстовые файлы, папки, пути и сведения о файлах.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Функции файловой системы</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Функции файловой системы</h1>
+            <p class="lead">Функции файловой системы позволяют проверить существование файла или папки, прочитать и записать текстовый файл, скопировать, перенести, переименовать или удалить файл, получить даты и признаки объектов файловой системы, получить сведения о папке и диске, создать временный файл или временную папку, а также работать с открытыми текстовыми файлами через тип <code>FILE</code> и операторы <code>OPEN</code> / <code>CLOSE</code>.</p>
+
+            <section class="article-section">
+                <h2>Главные правила</h2>
+                <ul>
+                    <li>Все функции принимают путь как значение типа <code>STRING</code>.</li>
+                    <li>Перед обращением к файловой системе путь приводится к полному виду.</li>
+                    <li><code>READFILE</code> и <code>READALLLINES</code> сначала читают текст как строгий UTF-8; если в файле есть недопустимые UTF-8 байты, чтение выполняется как Windows-1251.</li>
+                    <li><code>WRITEFILE</code> и <code>APPENDFILE</code> записывают текст в UTF-8 без BOM.</li>
+                    <li><code>WRITEFILE</code> создаёт новый файл или перезаписывает существующий.</li>
+                    <li><code>APPENDFILE</code> добавляет текст в конец файла и создаёт файл, если его ещё нет.</li>
+                    <li><code>FILEDATE</code>, <code>FILECREATEDATE</code>, <code>FILEACCESSEDDATE</code> и <code>DIRDATE</code> возвращают дату и время в форме <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+                    <li>Этот формат согласован со страницей <a href="date-time-functions.html">функций даты и времени</a> и подходит для прямой передачи в следующие дата-временные built-ins будущих этапов.</li>
+                    <li><code>EXTNAME</code> возвращает расширение вместе с точкой, например <code>.txt</code>. Если расширения нет, возвращается пустая строка.</li>
+                    <li><code>PATHROOT</code> возвращает корневую часть полного пути, а <code>ISABSOLUTEPATH</code> показывает, был ли путь абсолютным уже в исходном виде.</li>
+                    <li><code>DELETEFILE</code>, <code>DELETEDIR</code> и <code>DELETEDIRRECURSIVE</code> возвращают <code>FALSE</code>, если удаляемого файла или папки нет.</li>
+                    <li><code>DELETEDIR</code> удаляет только пустую папку, а <code>DELETEDIRRECURSIVE</code> удаляет папку вместе со всем содержимым.</li>
+                    <li><code>DIRSIZE</code> считает файлы во вложенных папках, но не заходит в папки-ссылки и другие точки повторного анализа.</li>
+                    <li><code>CHANGEDIR</code> меняет текущую папку программы, и после этого все относительные пути считаются уже от новой папки.</li>
+                    <li><code>FREESPACE</code> возвращает доступное свободное место, <code>TOTALFREESPACE</code> — общее свободное место, а <code>TOTALSPACE</code> — полный размер диска.</li>
+                    <li><code>ISREADONLY</code> и <code>ISHIDDEN</code> проверяют атрибуты файла или папки.</li>
+                    <li><code>DRIVENAME</code>, <code>DRIVEFORMAT</code> и <code>DRIVETYPE</code> возвращают сведения о диске, к которому относится путь.</li>
+                    <li><code>MAKETEMPFILE</code> и <code>MAKETEMPDIR</code> создают новые временные объекты в системной временной папке и возвращают их полный путь.</li>
+                    <li>Для открытых текстовых файлов используется специальный тип <code>FILE</code> и операторы <code>OPEN</code> / <code>CLOSE</code>, а не исторические файловые номера.</li>
+                    <li><code>GETFILES</code> и <code>GETDIRS</code> возвращают одномерный массив строк с полными путями файлов или папок ближайшего уровня.</li>
+                    <li><code>READALLLINES</code> возвращает строки текстового файла как одномерный массив <code>STRING()</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ol class="contents-list">
+                    <li><a href="#exists">Проверка существования</a></li>
+                    <li><a href="#text-files">Чтение и запись текста</a></li>
+                    <li><a href="#open-files">Открытые текстовые файлы</a></li>
+                    <li><a href="#file-info">Сведения о файле</a></li>
+                    <li><a href="#enumeration">Перечисление файлов и папок</a></li>
+                    <li><a href="#paths">Работа с путями</a></li>
+                    <li><a href="#folders">Создание папки</a></li>
+                    <li><a href="#file-operations">Операции с файлами</a></li>
+                    <li><a href="#dir-operations">Операции с папками</a></li>
+                    <li><a href="#environment">Текущая папка и временные объекты</a></li>
+                    <li><a href="#object-flags">Признаки объекта файловой системы</a></li>
+                    <li><a href="#dir-info">Сведения о папке и диске</a></li>
+                    <li><a href="#future-enumeration">Будущие расширения файловой подсистемы</a></li>
+                    <li><a href="#diagnostics">Диагностика</a></li>
+                    <li><a href="#samples">Примеры для ручной проверки</a></li>
+                </ol>
+            </section>
+
+            <section class="article-section" id="exists">
+                <h2>Проверка существования</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">FILEEXISTS(&lt;путь&gt; AS STRING) AS BOOLEAN
+DIREXISTS(&lt;путь&gt; AS STRING) AS BOOLEAN
+PATHEXISTS(&lt;путь&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p><code>FILEEXISTS</code> проверяет существование файла, <code>DIREXISTS</code> проверяет существование папки, а <code>PATHEXISTS</code> возвращает <code>TRUE</code>, если по указанному пути найден файл или папка.</p>
+                <pre><code class="language-basic">PRINT FILEEXISTS("notes.txt")
+PRINT DIREXISTS(".")
+PRINT PATHEXISTS("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="text-files">
+                <h2>Чтение и запись текста</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">READFILE(&lt;путь&gt; AS STRING) AS STRING
+READALLLINES(&lt;путь&gt; AS STRING) AS STRING()
+WRITEFILE(&lt;путь&gt; AS STRING, &lt;текст&gt; AS STRING) AS BOOLEAN
+APPENDFILE(&lt;путь&gt; AS STRING, &lt;текст&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p><code>READFILE</code> возвращает содержимое текстового файла целиком. <code>READALLLINES</code> читает весь текстовый файл по строкам и возвращает массив строк без символов перевода строки. При чтении обе функции сначала используют строгий UTF-8, а если файл содержит недопустимые UTF-8 байты, читают его как Windows-1251. Если UTF-8-файл начинается с BOM, эта служебная метка не попадает в результат чтения. <code>WRITEFILE</code> записывает текст в файл с начала в UTF-8 без BOM. <code>APPENDFILE</code> добавляет текст в конец файла в UTF-8 без BOM.</p>
+                <ul>
+                    <li>Непустой результат <code>READALLLINES</code> получает границы массива <code>1 TO N</code>.</li>
+                    <li>Пустой файл возвращает выделенный пустой массив <code>1 TO 0</code>.</li>
+                    <li>Чтобы обратиться к строкам результата, сначала присвойте результат переменной массива, а затем используйте индексирование вида <code>lines(1)</code>.</li>
+                    <li>Резервное чтение Windows-1251 нужно для старых или частично повреждённых русскоязычных файлов, где иначе байты превратились бы в символы замены <code>�</code> и уже не могли бы быть восстановлены программой.</li>
+                </ul>
+                <pre><code class="language-basic">DIM path AS STRING = "notes.txt"
+DIM lines() AS STRING
+
+PRINT WRITEFILE(path, "Hello")
+PRINT APPENDFILE(path, "!")
+PRINT READFILE(path)
+
+lines = READALLLINES(path)
+PRINT ARRAYLENGTH(lines)</code></pre>
+            </section>
+
+            <section class="article-section" id="open-files">
+                <h2>Открытые текстовые файлы</h2>
+                <p><strong>Синтаксис:</strong></p>
+                <pre><code class="language-basic">DIM f AS FILE
+
+OPEN "data.txt" FOR INPUT AS f
+OPEN "log.txt" FOR OUTPUT AS f
+OPEN "log.txt" FOR APPEND AS f
+
+CLOSE f</code></pre>
+                <p><strong>Встроенные функции:</strong></p>
+                <pre><code class="language-basic">ISOPEN(&lt;file&gt; AS FILE) AS BOOLEAN
+FILEPATH(&lt;file&gt; AS FILE) AS STRING
+FILEMODE(&lt;file&gt; AS FILE) AS STRING
+FILEPOS(&lt;file&gt; AS FILE) AS LONG
+FILELENGTH(&lt;file&gt; AS FILE) AS LONG
+EOF(&lt;file&gt; AS FILE) AS BOOLEAN
+READTOEND(&lt;file&gt; AS FILE) AS STRING
+READTEXT(&lt;file&gt; AS FILE, &lt;count&gt; AS INTEGER) AS STRING
+READLINE(&lt;file&gt; AS FILE) AS STRING
+READLINES(&lt;file&gt; AS FILE, &lt;count&gt; AS INTEGER) AS STRING()
+LINENUMBER(&lt;file&gt; AS FILE) AS LONG
+SKIPLINE(&lt;file&gt; AS FILE) AS BOOLEAN
+WRITE(&lt;file&gt; AS FILE, &lt;текст&gt; AS STRING) AS BOOLEAN
+WRITELINE(&lt;file&gt; AS FILE, &lt;текст&gt; AS STRING) AS BOOLEAN
+NEWLINE(&lt;file&gt; AS FILE) AS BOOLEAN
+FLUSH(&lt;file&gt; AS FILE) AS BOOLEAN
+SEEKFILE(&lt;file&gt; AS FILE, &lt;position&gt; AS LONG) AS BOOLEAN
+REWIND(&lt;file&gt; AS FILE) AS BOOLEAN</code></pre>
+                <p>Тип <code>FILE</code> хранит состояние открытого текстового файла. Исторические записи вида <code>AS #1</code> в Axiom не используются. Вместо этого файл открывается сразу в понятную переменную, например <code>sourceFile</code> или <code>logFile</code>.</p>
+                <ul>
+                    <li><code>INPUT</code> открывает существующий файл для чтения.</li>
+                    <li><code>OUTPUT</code> создаёт новый файл или полностью очищает существующий перед записью.</li>
+                    <li><code>APPEND</code> открывает файл для дописывания в конец и при отсутствии создаёт его.</li>
+                    <li><code>ISOPEN</code> удобно проверяет, есть ли сейчас в переменной <code>FILE</code> открытый файл.</li>
+                    <li><code>FILEPATH</code> возвращает полный путь уже открытого файла, а <code>FILEMODE</code> - его режим: <code>INPUT</code>, <code>OUTPUT</code> или <code>APPEND</code>.</li>
+                    <li><code>FILEPOS</code> возвращает текущую позицию внутри уже открытого файла в байтах от начала файла, а <code>FILELENGTH</code> возвращает текущую длину файла в байтах.</li>
+                    <li><code>READTOEND</code> возвращает весь оставшийся текст от текущей позиции до конца файла, а <code>READTEXT</code> читает следующий фрагмент текста длиной до указанного числа символов.</li>
+                    <li><code>READTEXT</code> с нулевым значением <code>count</code> возвращает пустую строку, а если до конца файла осталось меньше текста, то возвращает только доступный остаток.</li>
+                    <li><code>READLINES</code> читает до указанного числа следующих строк и возвращает массив <code>STRING()</code> без символов перевода строки.</li>
+                    <li><code>READLINES</code> с нулевым значением <code>count</code> возвращает выделенный пустой массив <code>1 TO 0</code> и не меняет позицию чтения.</li>
+                    <li>Если <code>READLINES</code> достигает конца файла раньше указанного количества строк, она возвращает только прочитанные строки. Если файл уже стоит в конце, результатом будет выделенный пустой массив <code>1 TO 0</code>.</li>
+                    <li><code>EOF</code>, <code>READTOEND</code>, <code>READTEXT</code>, <code>READLINE</code>, <code>READLINES</code>, <code>LINENUMBER</code> и <code>SKIPLINE</code> работают только с файлом, открытым через <code>FOR INPUT</code>.</li>
+                    <li><code>LINENUMBER</code> возвращает номер следующей текстовой строки. Первая строка имеет номер <code>1</code>.</li>
+                    <li>После <code>READLINE</code>, <code>READLINES</code> и <code>SKIPLINE</code> номер следующей строки увеличивается на число фактически прочитанных или пропущенных строк. После <code>SEEKFILE</code> и <code>REWIND</code> функция <code>LINENUMBER</code> пересчитывает его по текущей байтовой позиции.</li>
+                    <li><code>SKIPLINE</code> пропускает одну строку текста без возврата её содержимого. Если файл уже стоит в конце, вызывается диагностика времени выполнения.</li>
+                    <li><code>WRITE</code>, <code>WRITELINE</code> и <code>NEWLINE</code> работают только с файлом, открытым через <code>FOR OUTPUT</code> или <code>FOR APPEND</code>, и записывают данные в буфер.</li>
+                    <li><code>NEWLINE</code> записывает только перевод строки. Это удобная короткая форма для добавления пустой строки.</li>
+                    <li><code>FLUSH</code> работает только с файлом, открытым через <code>FOR OUTPUT</code> или <code>FOR APPEND</code>, и принудительно сбрасывает буфер записи на диск.</li>
+                    <li><code>SEEKFILE</code> переводит уже открытый файл на указанную позицию в байтах от начала файла. Первая позиция равна <code>0</code>.</li>
+                    <li><code>REWIND</code> переводит уже открытый файл в начало. По смыслу это короткая форма для перехода на позицию <code>0</code>.</li>
+                    <li><code>SEEKFILE</code> разрешён только для режимов <code>INPUT</code> и <code>OUTPUT</code>. Для режима <code>APPEND</code> явный переход по позиции не поддерживается.</li>
+                    <li><code>REWIND</code> тоже разрешён только для режимов <code>INPUT</code> и <code>OUTPUT</code>. Для режима <code>APPEND</code> он не поддерживается.</li>
+                    <li>В режиме записи <code>FILEPOS</code> и <code>FILELENGTH</code> учитывают уже накопленные в буфере данные, даже если отдельный <code>FLUSH</code> ещё не был вызван.</li>
+                    <li>Низкоуровневая позиция в <code>FILEPOS</code>, <code>FILELENGTH</code>, <code>SEEKFILE</code> и <code>REWIND</code> всегда считается в байтах, а <code>READLINE</code>, <code>READLINES</code>, <code>READTEXT</code> и <code>READTOEND</code> читают текст по символам.</li>
+                    <li>Эти модели можно смешивать, но позиция перед текстовым чтением должна попадать на корректную границу символа UTF-8. Если перейти внутрь многобайтного символа, последующее текстовое чтение даст ошибку времени выполнения.</li>
+                    <li><code>CLOSE</code> тоже завершает запись буфера, поэтому перед закрытием отдельный <code>FLUSH</code> нужен только тогда, когда надо увидеть данные на диске прямо сейчас, не закрывая файл.</li>
+                    <li>Переменной <code>FILE</code> нельзя вручную присвоить другое значение обычным оператором присваивания.</li>
+                </ul>
+                <pre><code class="language-basic">DIM path AS STRING = MAKETEMPFILE("open_demo_")
+DIM reader AS FILE
+DIM writer AS FILE
+
+PRINT WRITEFILE(path, "alpha" + CHR(13) + CHR(10) + "beta")
+
+OPEN path FOR INPUT AS reader
+PRINT FILEPOS(reader)
+PRINT READTEXT(reader, 2)
+PRINT READLINE(reader)
+PRINT READTOEND(reader)
+PRINT REWIND(reader)
+PRINT FILEPOS(reader)
+CLOSE reader
+
+OPEN path FOR OUTPUT AS writer
+PRINT WRITE(writer, "ABCDE")
+PRINT FILELENGTH(writer)
+PRINT SEEKFILE(writer, 2)
+PRINT WRITE(writer, "Z")
+CLOSE writer
+
+PRINT READFILE(path)</code></pre>
+            </section>
+
+            <section class="article-section" id="file-info">
+                <h2>Сведения о файле</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">FILESIZE(&lt;путь&gt; AS STRING) AS LONG
+FILEDATE(&lt;путь&gt; AS STRING) AS STRING
+FILECREATEDATE(&lt;путь&gt; AS STRING) AS STRING
+FILEACCESSEDDATE(&lt;путь&gt; AS STRING) AS STRING
+DIRDATE(&lt;путь&gt; AS STRING) AS STRING</code></pre>
+                <p><code>FILESIZE</code> возвращает размер файла в байтах. <code>FILEDATE</code> возвращает дату и время последнего изменения файла. <code>FILECREATEDATE</code> возвращает дату создания файла. <code>FILEACCESSEDDATE</code> возвращает дату последнего доступа к файлу. <code>DIRDATE</code> возвращает дату последнего изменения папки.</p>
+                <pre><code class="language-basic">PRINT FILESIZE("notes.txt")
+PRINT FILEDATE("notes.txt")
+PRINT FILECREATEDATE("notes.txt")
+PRINT FILEACCESSEDDATE("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="enumeration">
+                <h2>Перечисление файлов и папок</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">GETFILES(&lt;путь&gt; AS STRING) AS STRING()
+GETFILES(&lt;путь&gt; AS STRING, &lt;маска&gt; AS STRING) AS STRING()
+GETDIRS(&lt;путь&gt; AS STRING) AS STRING()
+GETDIRS(&lt;путь&gt; AS STRING, &lt;маска&gt; AS STRING) AS STRING()</code></pre>
+                <p><code>GETFILES</code> возвращает массив полных путей файлов из указанной папки. <code>GETDIRS</code> возвращает массив полных путей папок из указанной папки. Обе функции перечисляют только ближайший уровень и не заходят во вложенные папки.</p>
+                <ul>
+                    <li>Если маска не указана, используется <code>*</code>.</li>
+                    <li>Маска применяется как файловая маска текущей платформы, например <code>*.txt</code> или <code>data*</code>.</li>
+                    <li>Порядок результата стабилен: пути сортируются без учёта регистра.</li>
+                    <li>Непустой результат получает границы массива <code>1 TO N</code>.</li>
+                    <li>Пустой результат возвращается как выделенный пустой массив <code>1 TO 0</code>.</li>
+                    <li>Чтобы обратиться к элементам результата, сначала присвойте результат переменной массива, а затем используйте индексирование вида <code>files(1)</code>.</li>
+                </ul>
+                <pre><code class="language-basic">DIM root AS STRING = MAKETEMPDIR("list_")
+DIM path AS STRING = COMBINEPATH(root, "notes.txt")
+DIM ok AS BOOLEAN
+DIM files() AS STRING
+
+ok = WRITEFILE(path, "Hello")
+files = GETFILES(root, "*.txt")
+
+PRINT ARRAYLENGTH(files)
+PRINT FILENAME(files(1))</code></pre>
+            </section>
+
+            <section class="article-section" id="paths">
+                <h2>Работа с путями</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">COMBINEPATH(&lt;левая часть&gt; AS STRING, &lt;правая часть&gt; AS STRING) AS STRING
+FILENAME(&lt;путь&gt; AS STRING) AS STRING
+DIRNAME(&lt;путь&gt; AS STRING) AS STRING
+EXTNAME(&lt;путь&gt; AS STRING) AS STRING
+FULLPATH(&lt;путь&gt; AS STRING) AS STRING
+PATHROOT(&lt;путь&gt; AS STRING) AS STRING
+ISABSOLUTEPATH(&lt;путь&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p><code>COMBINEPATH</code> соединяет две части пути. <code>FILENAME</code> возвращает имя файла, <code>DIRNAME</code> возвращает имя папки из полного пути, <code>EXTNAME</code> возвращает расширение файла, <code>FULLPATH</code> возвращает полный путь, <code>PATHROOT</code> возвращает корень этого пути, а <code>ISABSOLUTEPATH</code> показывает, был ли путь абсолютным уже в исходном виде.</p>
+                <pre><code class="language-basic">PRINT COMBINEPATH("folder", "notes.txt")
+PRINT FILENAME("folder/notes.txt")
+PRINT EXTNAME("folder/notes.txt")
+PRINT PATHROOT("notes.txt")
+PRINT ISABSOLUTEPATH(CURRENTDIR())</code></pre>
+            </section>
+
+            <section class="article-section" id="folders">
+                <h2>Создание папки</h2>
+                <p><strong>Форма вызова:</strong></p>
+                <pre><code class="language-basic">MAKEDIR(&lt;путь&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p><code>MAKEDIR</code> создаёт папку и возвращает <code>TRUE</code>, если операция завершилась успешно. Если папка уже существует, функция также возвращает <code>TRUE</code>.</p>
+                <pre><code class="language-basic">PRINT MAKEDIR("my_folder")
+PRINT DIREXISTS("my_folder")</code></pre>
+            </section>
+
+            <section class="article-section" id="file-operations">
+                <h2>Операции с файлами</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">DELETEFILE(&lt;путь&gt; AS STRING) AS BOOLEAN
+COPYFILE(&lt;исходный путь&gt; AS STRING, &lt;целевой путь&gt; AS STRING[, &lt;перезаписать&gt; AS BOOLEAN]) AS BOOLEAN
+MOVEFILE(&lt;исходный путь&gt; AS STRING, &lt;целевой путь&gt; AS STRING[, &lt;перезаписать&gt; AS BOOLEAN]) AS BOOLEAN
+RENAMEFILE(&lt;путь&gt; AS STRING, &lt;новое имя&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p><code>DELETEFILE</code> удаляет файл и возвращает <code>TRUE</code>, если файл был найден и удалён. Если файла нет, возвращается <code>FALSE</code>.</p>
+                <p><code>COPYFILE</code> копирует файл. <code>MOVEFILE</code> переносит файл. Если третий аргумент равен <code>TRUE</code>, существующий целевой файл может быть перезаписан.</p>
+                <p><code>RENAMEFILE</code> переименовывает файл в той же папке.</p>
+                <pre><code class="language-basic">PRINT WRITEFILE("source.txt", "Hello")
+PRINT COPYFILE("source.txt", "copy.txt", TRUE)
+PRINT MOVEFILE("copy.txt", "moved.txt", TRUE)
+PRINT RENAMEFILE("moved.txt", "renamed.txt")
+PRINT DELETEFILE("renamed.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="dir-operations">
+                <h2>Операции с папками</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">DELETEDIR(&lt;путь&gt; AS STRING) AS BOOLEAN
+DELETEDIRRECURSIVE(&lt;путь&gt; AS STRING) AS BOOLEAN
+COPYDIR(&lt;исходный путь&gt; AS STRING, &lt;целевой путь&gt; AS STRING[, &lt;перезаписать&gt; AS BOOLEAN]) AS BOOLEAN
+MOVEDIR(&lt;исходный путь&gt; AS STRING, &lt;целевой путь&gt; AS STRING) AS BOOLEAN
+RENAMEDIR(&lt;путь&gt; AS STRING, &lt;новое имя&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p><code>DELETEDIR</code> удаляет пустую папку и возвращает <code>TRUE</code>, если папка была найдена и удалена. Если папки нет, возвращается <code>FALSE</code>. Непустая папка не удаляется.</p>
+                <p><code>DELETEDIRRECURSIVE</code> удаляет папку вместе со всеми вложенными папками и файлами. Если папки нет, возвращается <code>FALSE</code>.</p>
+                <p><code>COPYDIR</code> копирует папку вместе с содержимым. Если третий аргумент равен <code>TRUE</code>, существующие файлы в целевой папке могут быть перезаписаны.</p>
+                <p><code>MOVEDIR</code> переносит папку. <code>RENAMEDIR</code> переименовывает папку в той же родительской папке.</p>
+                <pre><code class="language-basic">PRINT MAKEDIR("source_dir")
+PRINT COPYDIR("source_dir", "copy_dir", TRUE)
+PRINT MOVEDIR("copy_dir", "moved_dir")
+PRINT RENAMEDIR("moved_dir", "renamed_dir")
+PRINT DELETEDIR("source_dir")</code></pre>
+            </section>
+
+            <section class="article-section" id="environment">
+                <h2>Текущая папка и временные объекты</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">CURRENTDIR() AS STRING
+CHANGEDIR(&lt;путь&gt; AS STRING) AS BOOLEAN
+MAKETEMPFILE(&lt;префикс&gt; AS STRING) AS STRING
+MAKETEMPDIR(&lt;префикс&gt; AS STRING) AS STRING</code></pre>
+                <p><code>CURRENTDIR</code> возвращает текущую папку программы. <code>CHANGEDIR</code> меняет её. После успешного вызова <code>CHANGEDIR</code> все относительные пути считаются уже от новой текущей папки.</p>
+                <p><code>MAKETEMPFILE</code> создаёт новый пустой временный файл, а <code>MAKETEMPDIR</code> создаёт новую временную папку. Обе функции возвращают полный путь к созданному объекту.</p>
+                <p>Аргумент <code>&lt;префикс&gt;</code> задаёт только начало имени. Он не должен содержать путь.</p>
+                <pre><code class="language-basic">DIM oldDir AS STRING = CURRENTDIR()
+DIM tempDir AS STRING = MAKETEMPDIR("demo_")
+
+PRINT CHANGEDIR(tempDir)
+PRINT CURRENTDIR() = tempDir
+PRINT CHANGEDIR(oldDir)</code></pre>
+            </section>
+
+            <section class="article-section" id="object-flags">
+                <h2>Признаки объекта файловой системы</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">ISREADONLY(&lt;путь&gt; AS STRING) AS BOOLEAN
+ISHIDDEN(&lt;путь&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p>Эти функции работают и с файлами, и с папками. <code>ISREADONLY</code> возвращает <code>TRUE</code>, если у объекта установлен атрибут только для чтения. <code>ISHIDDEN</code> возвращает <code>TRUE</code>, если объект скрыт.</p>
+                <pre><code class="language-basic">DIM path AS STRING = "notes.txt"
+
+PRINT WRITEFILE(path, "Hello")
+PRINT ISREADONLY(path)
+PRINT ISHIDDEN(path)</code></pre>
+            </section>
+
+            <section class="article-section" id="dir-info">
+                <h2>Сведения о папке и диске</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">DIRSIZE(&lt;путь&gt; AS STRING) AS LONG
+FREESPACE(&lt;путь&gt; AS STRING) AS LONG
+TOTALFREESPACE(&lt;путь&gt; AS STRING) AS LONG
+TOTALSPACE(&lt;путь&gt; AS STRING) AS LONG
+DRIVENAME(&lt;путь&gt; AS STRING) AS STRING
+DRIVEFORMAT(&lt;путь&gt; AS STRING) AS STRING
+DRIVETYPE(&lt;путь&gt; AS STRING) AS STRING</code></pre>
+                <p><code>DIRSIZE</code> возвращает суммарный размер файлов в указанной папке и её вложенных папках. <code>FREESPACE</code> возвращает доступное свободное место на диске, <code>TOTALFREESPACE</code> — общее свободное место, а <code>TOTALSPACE</code> — полный размер диска.</p>
+                <p><code>DRIVENAME</code> возвращает имя диска, например <code>C:\</code>. <code>DRIVEFORMAT</code> возвращает строковое имя файловой системы, например <code>NTFS</code>. <code>DRIVETYPE</code> возвращает строковое имя типа диска, например <code>Fixed</code>, <code>Network</code> или <code>Removable</code>.</p>
+                <p><code>DIRSIZE</code> не заходит в папки-ссылки и другие точки повторного анализа, чтобы не образовывать циклы обхода.</p>
+                <pre><code class="language-basic">DIM folder AS STRING = MAKETEMPDIR("size_")
+DIM filePath AS STRING = COMBINEPATH(folder, "notes.txt")
+
+PRINT WRITEFILE(filePath, "Hello")
+PRINT DIRSIZE(folder)
+PRINT FREESPACE(folder) &gt; 0
+PRINT TOTALSPACE(folder) &gt; 0
+PRINT DRIVETYPE(folder)</code></pre>
+            </section>
+
+            <section class="article-section" id="future-enumeration">
+                <h2>Будущие расширения файловой подсистемы</h2>
+                <p>Этот раздел фиксирует заранее согласованные направления развития, чтобы они не потерялись. Эти возможности ещё не реализованы и приведены здесь только как проектный список.</p>
+                <pre><code class="language-basic">OPEN &lt;путь&gt; FOR BINARY AS &lt;file&gt;
+READBYTE(&lt;file&gt; AS FILE) AS ...
+WRITEBYTE(&lt;file&gt; AS FILE, ...) AS ...</code></pre>
+                <ul>
+                    <li>Двоичная модель файлов будет выделена в отдельный этап. Там же будут уточнены режим <code>FOR BINARY</code>, побайтовое чтение и запись, а также работа с блоками данных.</li>
+                    <li>После двоичной модели список файловых функций будет расширен дальше, но без возврата к старой нумерованной модели файловых каналов.</li>
+                </ul>
+                <p>Пока эти формы и направления приведены в справочнике только как проектный задел. Вызывать их в программе ещё нельзя.</p>
+            </section>
+
+            <section class="article-section" id="diagnostics">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>неверное число аргументов диагностируется на этапе семантического анализа;</li>
+                    <li>неверный тип аргумента диагностируется на этапе семантического анализа;</li>
+                    <li>ошибка доступа к файловой системе, недопустимый путь или отсутствие файла для <code>READFILE</code>, <code>READALLLINES</code>, <code>FILESIZE</code>, <code>FILEDATE</code>, <code>FILECREATEDATE</code>, <code>FILEACCESSEDDATE</code>, <code>COPYFILE</code>, <code>MOVEFILE</code> и <code>RENAMEFILE</code> дают диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка вызвать <code>FILEPATH</code>, <code>FILEMODE</code>, <code>FILEPOS</code>, <code>FILELENGTH</code>, <code>EOF</code>, <code>READTOEND</code>, <code>READTEXT</code>, <code>READLINE</code>, <code>READLINES</code>, <code>LINENUMBER</code>, <code>SKIPLINE</code>, <code>WRITE</code>, <code>WRITELINE</code>, <code>NEWLINE</code>, <code>FLUSH</code>, <code>SEEKFILE</code> или <code>REWIND</code> для закрытого <code>FILE</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка вызвать <code>READTOEND</code>, <code>READTEXT</code>, <code>READLINE</code>, <code>READLINES</code>, <code>LINENUMBER</code> или <code>SKIPLINE</code> для файла, открытого не через <code>FOR INPUT</code>, даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка вызвать <code>WRITE</code>, <code>WRITELINE</code> или <code>NEWLINE</code> для файла, открытого не через <code>FOR OUTPUT</code> или <code>FOR APPEND</code>, даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка вызвать <code>SEEKFILE</code> для файла, открытого через <code>FOR APPEND</code>, даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка вызвать <code>REWIND</code> для файла, открытого через <code>FOR APPEND</code>, даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>отрицательная позиция и попытка выйти за пределы файла в <code>SEEKFILE</code> дают диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>отрицательное значение <code>count</code> в <code>READTEXT</code> и <code>READLINES</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка вызвать <code>SKIPLINE</code>, когда файл уже находится в конце, даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка текстового чтения из позиции, которая не попадает на корректную границу символа UTF-8, даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>отсутствие исходной папки для <code>GETFILES</code>, <code>GETDIRS</code>, <code>COPYDIR</code>, <code>MOVEDIR</code>, <code>RENAMEDIR</code>, <code>CHANGEDIR</code>, <code>DIRSIZE</code> и <code>DIRDATE</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>пустая маска в <code>GETFILES</code> и <code>GETDIRS</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>отсутствие файла или папки для <code>ISREADONLY</code> и <code>ISHIDDEN</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>недопустимый префикс имени для <code>MAKETEMPFILE</code> и <code>MAKETEMPDIR</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>попытка удалить непустую папку через <code>DELETEDIR</code> даёт диагностику времени выполнения <code>MB3007</code>;</li>
+                    <li>переполнение суммарного размера в <code>DIRSIZE</code> даёт диагностику времени выполнения <code>MB3008</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Примеры для ручной проверки</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/fileexists/basic_usage.axm">FILEEXISTS: проверка файла</a></li>
+                    <li><a href="../../samples/functions/direxists/basic_usage.axm">DIREXISTS: проверка папки</a></li>
+                    <li><a href="../../samples/functions/pathexists/basic_usage.axm">PATHEXISTS: проверка файла или папки</a></li>
+                    <li><a href="../../samples/functions/readfile/basic_usage.axm">READFILE: чтение текста</a></li>
+                    <li><a href="../../samples/functions/readalllines/basic_usage.axm">READALLLINES: чтение строк файла</a></li>
+                    <li><a href="../../samples/functions/readalllines/empty_file.axm">READALLLINES: пустой файл</a></li>
+                    <li><a href="../../samples/functions/readalllines/utf8_bom.axm">READALLLINES: UTF-8 BOM не попадает в первую строку</a></li>
+                    <li><a href="../../samples/functions/writefile/basic_usage.axm">WRITEFILE: запись текста</a></li>
+                    <li><a href="../../samples/functions/appendfile/basic_usage.axm">APPENDFILE: добавление текста</a></li>
+                    <li><a href="../../samples/operators/open/basic_usage.axm">OPEN: базовое открытие файла</a></li>
+                    <li><a href="../../samples/operators/close/basic_usage.axm">CLOSE: закрытие файла</a></li>
+                    <li><a href="../../samples/functions/isopen/basic_usage.axm">ISOPEN: проверка состояния файла</a></li>
+                    <li><a href="../../samples/functions/filepath/basic_usage.axm">FILEPATH: полный путь открытого файла</a></li>
+                    <li><a href="../../samples/functions/filemode/basic_usage.axm">FILEMODE: режим открытого файла</a></li>
+                    <li><a href="../../samples/functions/filepos/basic_usage.axm">FILEPOS: текущая позиция открытого файла</a></li>
+                    <li><a href="../../samples/functions/filelength/basic_usage.axm">FILELENGTH: длина открытого файла</a></li>
+                    <li><a href="../../samples/functions/eof/basic_usage.axm">EOF: чтение до конца файла</a></li>
+                    <li><a href="../../samples/functions/readtoend/basic_usage.axm">READTOEND: чтение остатка файла</a></li>
+                    <li><a href="../../samples/functions/readtext/basic_usage.axm">READTEXT: чтение фрагмента текста</a></li>
+                    <li><a href="../../samples/functions/readline/basic_usage.axm">READLINE: построчное чтение</a></li>
+                    <li><a href="../../samples/functions/readlines/basic_usage.axm">READLINES: чтение набора строк</a></li>
+                    <li><a href="../../samples/functions/readlines/zero_and_end.axm">READLINES: ноль строк и конец файла</a></li>
+                    <li><a href="../../samples/functions/linenumber/basic_usage.axm">LINENUMBER: номер текущей строки</a></li>
+                    <li><a href="../../samples/functions/skipline/basic_usage.axm">SKIPLINE: пропуск строки</a></li>
+                    <li><a href="../../samples/functions/write/basic_usage.axm">WRITE: запись без перевода строки</a></li>
+                    <li><a href="../../samples/functions/writeline/basic_usage.axm">WRITELINE: запись строки</a></li>
+                    <li><a href="../../samples/functions/newline/basic_usage.axm">NEWLINE: запись пустой строки</a></li>
+                    <li><a href="../../samples/functions/flush/basic_usage.axm">FLUSH: принудительный сброс буфера записи</a></li>
+                    <li><a href="../../samples/functions/seekfile/basic_usage.axm">SEEKFILE: переход по позиции открытого файла</a></li>
+                    <li><a href="../../samples/functions/rewind/basic_usage.axm">REWIND: переход в начало файла</a></li>
+                    <li><a href="../../samples/functions/filesize/basic_usage.axm">FILESIZE: размер файла</a></li>
+                    <li><a href="../../samples/functions/filedate/basic_usage.axm">FILEDATE: дата изменения</a></li>
+                    <li><a href="../../samples/functions/filecreatedate/basic_usage.axm">FILECREATEDATE: дата создания файла</a></li>
+                    <li><a href="../../samples/functions/fileaccesseddate/basic_usage.axm">FILEACCESSEDDATE: дата доступа к файлу</a></li>
+                    <li><a href="../../samples/functions/dirdate/basic_usage.axm">DIRDATE: дата изменения папки</a></li>
+                    <li><a href="../../samples/functions/getfiles/basic_usage.axm">GETFILES: перечисление файлов</a></li>
+                    <li><a href="../../samples/functions/getdirs/basic_usage.axm">GETDIRS: перечисление папок</a></li>
+                    <li><a href="../../samples/functions/combinepath/basic_usage.axm">COMBINEPATH: соединение пути</a></li>
+                    <li><a href="../../samples/functions/filename/basic_usage.axm">FILENAME: имя файла</a></li>
+                    <li><a href="../../samples/functions/dirname/basic_usage.axm">DIRNAME: имя папки</a></li>
+                    <li><a href="../../samples/functions/extname/basic_usage.axm">EXTNAME: расширение файла</a></li>
+                    <li><a href="../../samples/functions/fullpath/basic_usage.axm">FULLPATH: полный путь</a></li>
+                    <li><a href="../../samples/functions/pathroot/basic_usage.axm">PATHROOT: корень пути</a></li>
+                    <li><a href="../../samples/functions/isabsolutepath/basic_usage.axm">ISABSOLUTEPATH: признак абсолютного пути</a></li>
+                    <li><a href="../../samples/functions/makedir/basic_usage.axm">MAKEDIR: создание папки</a></li>
+                    <li><a href="../../samples/functions/deletefile/basic_usage.axm">DELETEFILE: удаление файла</a></li>
+                    <li><a href="../../samples/functions/copyfile/basic_usage.axm">COPYFILE: копирование файла</a></li>
+                    <li><a href="../../samples/functions/movefile/basic_usage.axm">MOVEFILE: перенос файла</a></li>
+                    <li><a href="../../samples/functions/renamefile/basic_usage.axm">RENAMEFILE: переименование файла</a></li>
+                    <li><a href="../../samples/functions/deletedir/basic_usage.axm">DELETEDIR: удаление пустой папки</a></li>
+                    <li><a href="../../samples/functions/deletedirrecursive/basic_usage.axm">DELETEDIRRECURSIVE: рекурсивное удаление папки</a></li>
+                    <li><a href="../../samples/functions/copydir/basic_usage.axm">COPYDIR: копирование папки</a></li>
+                    <li><a href="../../samples/functions/movedir/basic_usage.axm">MOVEDIR: перенос папки</a></li>
+                    <li><a href="../../samples/functions/renamedir/basic_usage.axm">RENAMEDIR: переименование папки</a></li>
+                    <li><a href="../../samples/functions/currentdir/basic_usage.axm">CURRENTDIR: текущая папка</a></li>
+                    <li><a href="../../samples/functions/changedir/basic_usage.axm">CHANGEDIR: смена текущей папки</a></li>
+                    <li><a href="../../samples/functions/dirsize/basic_usage.axm">DIRSIZE: суммарный размер папки</a></li>
+                    <li><a href="../../samples/functions/freespace/basic_usage.axm">FREESPACE: свободное место на диске</a></li>
+                    <li><a href="../../samples/functions/totalfreespace/basic_usage.axm">TOTALFREESPACE: общее свободное место</a></li>
+                    <li><a href="../../samples/functions/totalspace/basic_usage.axm">TOTALSPACE: полный размер диска</a></li>
+                    <li><a href="../../samples/functions/isreadonly/basic_usage.axm">ISREADONLY: атрибут только для чтения</a></li>
+                    <li><a href="../../samples/functions/ishidden/basic_usage.axm">ISHIDDEN: скрытый атрибут</a></li>
+                    <li><a href="../../samples/functions/drivename/basic_usage.axm">DRIVENAME: имя диска</a></li>
+                    <li><a href="../../samples/functions/driveformat/basic_usage.axm">DRIVEFORMAT: формат диска</a></li>
+                    <li><a href="../../samples/functions/drivetype/basic_usage.axm">DRIVETYPE: тип диска</a></li>
+                    <li><a href="../../samples/functions/maketempfile/basic_usage.axm">MAKETEMPFILE: временный файл</a></li>
+                    <li><a href="../../samples/functions/maketempdir/basic_usage.axm">MAKETEMPDIR: временная папка</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="regex-functions.html">Функции регулярных выражений</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="examples.html">Примеры программ</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

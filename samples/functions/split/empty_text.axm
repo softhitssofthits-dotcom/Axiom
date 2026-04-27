@@ -1,0 +1,9 @@
+' Ожидается: TRUE, 0, 1, 0.
+
+DIM parts() AS STRING
+parts = SPLIT("", ",")
+
+PRINT ARRAYISALLOCATED(parts)
+PRINT ARRAYLENGTH(parts)
+PRINT LBOUND(parts)
+PRINT UBOUND(parts)

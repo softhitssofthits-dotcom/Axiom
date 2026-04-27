@@ -1,0 +1,9 @@
+DIM folder AS STRING = MAKETEMPDIR("close_demo_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+DIM f AS FILE
+
+OPEN path FOR OUTPUT AS f
+PRINT WRITE(f, "Файл будет закрыт явно.")
+CLOSE f
+
+PRINT READFILE(path)

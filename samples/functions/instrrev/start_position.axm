@@ -1,0 +1,4 @@
+' Ожидается вывод: 3, затем 0, затем 5.
+PRINT INSTRREV(4, "banana", "na")
+PRINT INSTRREV(2, "banana", "na")
+PRINT INSTRREV(100, "banana", "na")

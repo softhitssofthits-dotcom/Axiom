@@ -1,0 +1,156 @@
+<Window x:Class="Axiom.Ide.Editor.FindReplaceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        AutomationProperties.AutomationId="FindReplaceDialog"
+        Style="{StaticResource FindReplaceDialogWindowStyle}">
+    <Border Padding="12"
+            Background="{DynamicResource PaneBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="8" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TabControl x:Name="ModeTabControl"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="0"
+                        Margin="0"
+                        Style="{StaticResource DialogTabControlStyle}"
+                        SelectionChanged="OnModeTabSelectionChanged">
+                <TabControl.ItemContainerStyle>
+                    <Style TargetType="TabItem" BasedOn="{StaticResource ShellTabItemStyle}" />
+                </TabControl.ItemContainerStyle>
+                <TabItem x:Name="FindTabItem"
+                         Header="{DynamicResource FindReplace.FindTab}"
+                         AutomationProperties.AutomationId="FindTabItem" />
+                <TabItem x:Name="ReplaceTabItem"
+                         Header="{DynamicResource FindReplace.ReplaceTab}"
+                         AutomationProperties.AutomationId="ReplaceTabItem" />
+            </TabControl>
+
+            <Grid Grid.Column="0" Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Margin="0,4,8,0"
+                           Text="{DynamicResource FindReplace.Find}"
+                           Style="{StaticResource DialogTextBlockStyle}" />
+                <TextBox x:Name="SearchPatternTextBox"
+                         Grid.Column="1"
+                         Style="{StaticResource FindReplaceTextBoxStyle}"
+                         AutomationProperties.AutomationId="SearchPatternTextBox"
+                         TextChanged="OnOptionsChanged" />
+            </Grid>
+
+            <Grid x:Name="ReplaceRow"
+                  Grid.Column="0"
+                  Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Margin="0,4,8,0"
+                           Text="{DynamicResource FindReplace.ReplaceWith}"
+                           Style="{StaticResource DialogTextBlockStyle}" />
+                <TextBox x:Name="ReplacePatternTextBox"
+                         Grid.Column="1"
+                         Style="{StaticResource FindReplaceTextBoxStyle}"
+                         AutomationProperties.AutomationId="ReplacePatternTextBox"
+                         TextChanged="OnOptionsChanged" />
+            </Grid>
+
+            <Grid Grid.Column="0" Grid.Row="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Text="{DynamicResource FindReplace.Options}"
+                               Style="{StaticResource DialogTextBlockStyle}" />
+                    <Border Grid.Row="2"
+                            Style="{StaticResource FindReplaceOptionsBorderStyle}">
+                        <StackPanel>
+                            <CheckBox x:Name="ReverseDirectionCheckBox"
+                                      Content="{DynamicResource FindReplace.ReverseDirection}"
+                                      Margin="0,0,0,6"
+                                      Style="{StaticResource DialogCheckBoxStyle}"
+                                      AutomationProperties.AutomationId="ReverseDirectionCheckBox"
+                                      Checked="OnOptionsChanged"
+                                      Unchecked="OnOptionsChanged" />
+                            <CheckBox x:Name="WholeWordsCheckBox"
+                                      Content="{DynamicResource FindReplace.WholeWords}"
+                                      Margin="0,0,0,6"
+                                      Style="{StaticResource DialogCheckBoxStyle}"
+                                      AutomationProperties.AutomationId="WholeWordsCheckBox"
+                                      Checked="OnOptionsChanged"
+                                      Unchecked="OnOptionsChanged" />
+                            <CheckBox x:Name="MatchCaseCheckBox"
+                                      Content="{DynamicResource FindReplace.MatchCase}"
+                                      Margin="0,0,0,6"
+                                      Style="{StaticResource DialogCheckBoxStyle}"
+                                      AutomationProperties.AutomationId="MatchCaseCheckBox"
+                                      Checked="OnOptionsChanged"
+                                      Unchecked="OnOptionsChanged" />
+                            <CheckBox x:Name="UseRegexCheckBox"
+                                      Content="Regex"
+                                      Style="{StaticResource DialogCheckBoxStyle}"
+                                      AutomationProperties.AutomationId="UseRegexCheckBox"
+                                      Checked="OnOptionsChanged"
+                                      Unchecked="OnOptionsChanged" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <StackPanel Grid.Column="2"
+                            VerticalAlignment="Top">
+                    <Button x:Name="FindNextButton"
+                            AutomationProperties.AutomationId="FindNextButton"
+                            Content="{DynamicResource FindReplace.FindButton}"
+                            Click="OnFindNextClicked"
+                            Style="{StaticResource FindReplaceActionButtonStyle}" />
+                    <Button x:Name="ReplaceButton"
+                            AutomationProperties.AutomationId="ReplaceButton"
+                            Content="{DynamicResource FindReplace.ReplaceButton}"
+                            Click="OnReplaceClicked"
+                            Style="{StaticResource FindReplaceActionButtonStyle}" />
+                    <Button x:Name="ReplaceAllButton"
+                            AutomationProperties.AutomationId="ReplaceAllButton"
+                            Content="{DynamicResource FindReplace.ReplaceAllButton}"
+                            Click="OnReplaceAllClicked"
+                            Style="{StaticResource FindReplaceActionButtonStyle}" />
+                    <Button x:Name="CloseButton"
+                            AutomationProperties.AutomationId="FindReplaceCloseButton"
+                            Content="{DynamicResource FindReplace.CloseButton}"
+                            Click="OnCloseClicked"
+                            Style="{StaticResource FindReplaceLastActionButtonStyle}" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

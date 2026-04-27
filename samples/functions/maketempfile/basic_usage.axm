@@ -1,0 +1,4 @@
+' MAKETEMPFILE создаёт временный файл и возвращает его полный путь.
+DIM path AS STRING = MAKETEMPFILE("demo_")
+PRINT FILEEXISTS(path)
+PRINT LEN(FILENAME(path)) > 0

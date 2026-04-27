@@ -1,0 +1,29 @@
+==============================
+Axiom v0.1 smoke test
+==============================
+Enter your name:
+Enter your age:
+User: Иван
+Age: 45
+Age + 10 = 55
+Half of PI2 = 3.14
+Status: adult
+FOR loop test:
+FOR i = 1
+FOR i = 2
+FOR i = 3
+WHILE loop test:
+WHILE j = 0
+WHILE j = 1
+WHILE j = 2
+LEN(text) = 10
+LEFT(text, 5) = Hello
+RIGHT(text, 5) = World
+MID(text, 2, 4) = ello
+LCASE(text) = helloworld
+UCASE(text) = HELLOWORLD
+VAL("123.5") = 123.5
+INT(12.9) = 12
+Input check passed
+globalCounter = 1
+Smoke тесты завершены

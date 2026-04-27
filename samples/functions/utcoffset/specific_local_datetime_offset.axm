@@ -1,0 +1,6 @@
+' Expected output:
+' TRUE
+DIM localValue AS STRING = "2026-04-20 14:05:06"
+DIM utcValue AS STRING = TOUTC(localValue)
+DIM offsetMinutes AS INTEGER = UTCOFFSET(localValue)
+PRINT DATEADD("n", offsetMinutes, utcValue) = localValue

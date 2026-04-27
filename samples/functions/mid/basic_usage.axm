@@ -1,0 +1,2 @@
+' Expected: prints ello.
+PRINT MID("Hello", 2, 4)

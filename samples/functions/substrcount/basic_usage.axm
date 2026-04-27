@@ -1,0 +1,4 @@
+' Ожидается вывод: 2, затем 2, затем 0.
+PRINT SUBSTRCOUNT("banana", "na")
+PRINT SUBSTRCOUNT("aaaa", "aa")
+PRINT SUBSTRCOUNT("banana", "NA")

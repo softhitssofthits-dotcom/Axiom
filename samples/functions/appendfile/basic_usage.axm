@@ -1,0 +1,5 @@
+DIM path AS STRING = ".artifacts/axiom_sample_appendfile.txt"
+
+PRINT WRITEFILE(path, "Hello")
+PRINT APPENDFILE(path, "!")
+PRINT READFILE(path)

@@ -1,0 +1,2 @@
+' Expected: prints aaaaa.
+PRINT STRING(5, "ab")

@@ -1,0 +1,2 @@
+' Expected: prints 123.5.
+PRINT VAL("123.5")

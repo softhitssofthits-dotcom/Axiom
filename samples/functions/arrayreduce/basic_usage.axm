@@ -1,0 +1,15 @@
+' ARRAYREDUCE manual acceptance sample with seed and closure.
+DIM values(5 TO 7) AS INTEGER
+DIM bonus AS INTEGER = 1
+
+values(5) = 10
+values(6) = 20
+values(7) = 30
+
+PRINT ARRAYREDUCE(values, 5, AddWithBonus)
+bonus = 10
+PRINT ARRAYREDUCE(values, 5, AddWithBonus)
+
+FUNCTION AddWithBonus(acc AS INTEGER, value AS INTEGER) AS INTEGER
+    RETURN acc + value + bonus
+END FUNCTION

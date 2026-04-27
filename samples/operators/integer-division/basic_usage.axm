@@ -1,0 +1,7 @@
+' Expected: prints 3, -3, -3 and 10737418239.
+PRINT 7 \ 2
+PRINT -7 \ 2
+PRINT 7 \ -2
+
+DIM value AS LONG = 21474836479
+PRINT value \ 2

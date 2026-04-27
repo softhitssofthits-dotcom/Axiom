@@ -1,0 +1,3 @@
+' Expected output:
+' April
+PRINT MONTHNAME(MONTH("2026-04-20"))

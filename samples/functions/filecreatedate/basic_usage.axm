@@ -1,0 +1,6 @@
+' FILECREATEDATE возвращает дату создания файла.
+DIM path AS STRING = "created.txt"
+
+PRINT WRITEFILE(path, "x")
+PRINT LEN(FILECREATEDATE(path)) > 0
+PRINT DELETEFILE(path)

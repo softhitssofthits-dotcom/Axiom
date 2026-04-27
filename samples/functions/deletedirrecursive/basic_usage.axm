@@ -1,0 +1,9 @@
+' DELETEDIRRECURSIVE удаляет непустую папку вместе с содержимым.
+DIM root AS STRING = MAKETEMPDIR("delr_")
+DIM child AS STRING = COMBINEPATH(root, "nested")
+DIM filePath AS STRING = COMBINEPATH(child, "notes.txt")
+
+PRINT MAKEDIR(child)
+PRINT WRITEFILE(filePath, "data")
+PRINT DELETEDIRRECURSIVE(root)
+PRINT DIREXISTS(root)

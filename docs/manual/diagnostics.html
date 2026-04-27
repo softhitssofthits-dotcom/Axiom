@@ -1,0 +1,212 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Диагностика</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="diagnostics">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Коды ошибок и их чтение</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Диагностика</p>
+                    <p class="sidebar__subtitle">Справочная глава о видах ошибок, кодах и чтении сообщений Axiom.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Диагностика</span>
+            </nav>
+            <p class="eyebrow">Диагностика</p>
+            <h1 class="page-title">Диагностика</h1>
+            <p class="lead">Диагностика сообщает, на каком этапе язык столкнулся с проблемой: при чтении текста программы, при проверке её смысла или во время выполнения. Эта глава помогает определить вид ошибки, прочитать её код и выбрать следующий шаг исправления.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#format">Формат сообщения</a></li>
+                    <li><a href="#remarks">Замечания</a></li>
+                    <li><a href="#examples">Примеры</a></li>
+                    <li><a href="#diagnostics">Диагностика</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <p>Сообщение об ошибке в Axiom всегда привязано к месту в тексте и содержит код, по которому можно понять класс проблемы. В текущем публичном контракте различаются ошибки чтения и разбора, смысловые ошибки и ошибки времени выполнения.</p>
+            </section>
+
+            <section class="article-section" id="format">
+                <h2>Формат сообщения</h2>
+                <p>Каждая диагностика содержит не только текст объяснения, но и координаты проблемного участка.</p>
+                <table class="compact-table">
+                    <thead>
+                        <tr><th>Поле</th><th>Назначение</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>Код</code></td><td>Короткое обозначение вида ошибки, например <code>MB3003</code>.</td></tr>
+                        <tr><td><code>Сообщение</code></td><td>Человекочитаемое объяснение проблемы.</td></tr>
+                        <tr><td><code>Строка</code></td><td>Номер строки, к которой относится ошибка.</td></tr>
+                        <tr><td><code>Столбец</code></td><td>Позиция внутри строки.</td></tr>
+                        <tr><td><code>Длина</code></td><td>Протяжённость проблемного участка.</td></tr>
+                    </tbody>
+                </table>
+                <p>Префиксы кодов читаются так:</p>
+                <ul>
+                    <li><code>MB0xxx</code> — ошибка чтения текста программы;</li>
+                    <li><code>MB1xxx</code> — ошибка разбора конструкции;</li>
+                    <li><code>MB2xxx</code> — смысловая ошибка;</li>
+                    <li><code>MB3xxx</code> — ошибка во время выполнения.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="remarks">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>Сначала полезно определить не точный код, а общий вид ошибки: чтение текста, проверка смысла или выполнение программы.</li>
+                    <li>Если сообщение кажется неожиданным, проверьте несколько строк выше: в блочных конструкциях реальная причина часто находится раньше, чем место окончательной остановки.</li>
+                    <li>Коды <code>MB0004</code>, <code>MB2018</code> и <code>MB3008</code> особенно важны для числовой модели языка, потому что отделяют ошибочный литерал, ошибочное константное приведение и переполнение во время выполнения.</li>
+                    <li>Ошибки во время выполнения не означают, что программа написана синтаксически неверно: они возникают только после успешного запуска.</li>
+                    <li>Если ошибка возникает внутри локальной процедуры или функции, сообщение дополнительно показывает цепочку активных вызовов и внешнюю процедуру или функцию, внутри которой локальная объявлена.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Для ручной проверки в IDE удобно использовать короткие отрицательные примеры, каждый из которых показывает один основной вид ошибки.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/acceptance/negative/undeclared_variable.axm">Необъявленное имя</a></li>
+                    <li><a href="../../samples/acceptance/negative/dim_requires_type_or_initializer.axm">Объявление DIM без типа и инициализатора</a></li>
+                    <li><a href="../../samples/acceptance/negative/if_requires_boolean.axm">Условие IF без логического значения</a></li>
+                    <li><a href="../../samples/acceptance/negative/wrong_argument_count.axm">Неверное число аргументов</a></li>
+                    <li><a href="../../samples/acceptance/negative/division_by_zero.axm">Деление на ноль</a></li>
+                    <li><a href="../../samples/acceptance/negative/for_step_zero.axm">Цикл FOR со STEP 0</a></li>
+                    <li><a href="../../samples/acceptance/negative/invalid_numeric_input.axm">Неверное преобразование INPUT</a></li>
+                    <li><a href="../../samples/expressions/numeric_literals/long_out_of_range_error.axm">Литерал вне диапазона LONG</a></li>
+                    <li><a href="../../samples/expressions/numeric_literals/decimal_out_of_range_error.axm">Константа не помещается в DECIMAL</a></li>
+                    <li><a href="../../samples/expressions/arithmetic/double_overflow_error.axm">Неконечный результат DOUBLE</a></li>
+                    <li><a href="../../samples/functions/log/non_positive_error.axm">Недопустимое значение для LOG</a></li>
+                    <li><a href="../../samples/smoke/nested_runtime_diagnostic.axm">Ошибка внутри локальной функции с цепочкой вызовов</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="examples">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">IF TRUE THEN
+    DIM LOCAL_NAME AS STRING = "A"
+END IF
+
+PRINT LOCAL_NAME</code></pre>
+                <p>Этот пример читается правильно, но завершается смысловой ошибкой: имя <code>LOCAL_NAME</code> существует только внутри блока <code>IF</code>.</p>
+
+                <pre><code class="language-basic">DIM AGE AS INTEGER
+INPUT AGE
+PRINT AGE</code></pre>
+                <p>Если пользователь введёт текст вместо числа, программа дойдёт до оператора <code>INPUT</code> и завершится ошибкой времени выполнения.</p>
+
+                <pre><code class="language-basic">PRINT 1 / 0</code></pre>
+                <p>Деление на ноль не мешает прочитать программу, но делает невозможным корректное вычисление выражения при запуске.</p>
+
+                <pre><code class="language-basic">PRINT Outer()
+
+FUNCTION Outer() AS DOUBLE
+    RETURN Inner()
+
+    FUNCTION Inner() AS DOUBLE
+        RETURN 10 / 0
+    END FUNCTION
+END FUNCTION</code></pre>
+                <p>Если ошибка случится в локальной функции <code>Inner</code>, диагностика сохранит координаты строки с делением и дополнительно покажет цепочку вызовов: локальную функцию, внешнюю функцию <code>Outer</code> и места их вызова.</p>
+            </section>
+
+            <section class="article-section" id="diagnostics">
+                <h2>Диагностика</h2>
+
+                <h3>Ошибки чтения и разбора</h3>
+                <table class="compact-table">
+                    <thead>
+                        <tr><th>Код</th><th>Когда возникает</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>MB0004</code></td><td>Числовой литерал выходит за допустимый диапазон своего типа: не помещается в <code>LONG</code> или выходит за диапазон конечных значений <code>DOUBLE</code>.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Смысловые ошибки</h3>
+                <table class="compact-table">
+                    <thead>
+                        <tr><th>Код</th><th>Когда возникает</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>MB2001</code></td><td>Используется имя, которое не объявлено или уже вышло из области видимости.</td></tr>
+                        <tr><td><code>MB2004</code></td><td>Функция вызвана с неверным числом аргументов.</td></tr>
+                        <tr><td><code>MB2006</code></td><td>В <code>SUB</code> используется <code>RETURN</code> со значением.</td></tr>
+                        <tr><td><code>MB2007</code></td><td>В <code>FUNCTION</code> используется <code>RETURN</code> без выражения.</td></tr>
+                        <tr><td><code>MB2008</code></td><td>В условии используется выражение, которое не имеет тип <code>BOOLEAN</code>.</td></tr>
+                        <tr><td><code>MB2009</code></td><td>Управляющая переменная <code>FOR</code> имеет неподдерживаемый тип.</td></tr>
+                        <tr><td><code>MB2010</code></td><td>Выполняется присваивание константе.</td></tr>
+                        <tr><td><code>MB2012</code></td><td><code>RETURN</code> используется вне <code>SUB</code> или <code>FUNCTION</code>.</td></tr>
+                        <tr><td><code>MB2013</code></td><td><code>EXIT FOR</code> используется вне ближайшего цикла <code>FOR ... NEXT</code>.</td></tr>
+                        <tr><td><code>MB2016</code></td><td>Новое имя затеняет уже существующее имя во внешней области видимости или в заголовке <code>FOR</code>.</td></tr>
+                        <tr><td><code>MB2017</code></td><td>Группа в <code>DIM</code> не содержит ни явного типа, ни инициализатора для вывода типа.</td></tr>
+                        <tr><td><code>MB2018</code></td><td>Константное числовое значение не помещается в явно указанный целевой числовой тип.</td></tr>
+                        <tr><td><code>MB2021</code></td><td>Тип после <code>AS</code> не объявлен.</td></tr>
+                        <tr><td><code>MB2022</code></td><td>Поле внутри <code>TYPE</code> имеет неподдерживаемую форму или пользовательские типы образуют цикл вложенности.</td></tr>
+                        <tr><td><code>MB2023</code></td><td>В пользовательском типе отсутствует поле, к которому обращается программа.</td></tr>
+                        <tr><td><code>MB2024</code></td><td>Доступ через точку применён к значению, которое не является пользовательским <code>TYPE</code>.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Ошибки во время выполнения</h3>
+                <table class="compact-table">
+                    <thead>
+                        <tr><th>Код</th><th>Когда возникает</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>MB3001</code></td><td>Во время вычисления произошло деление на ноль.</td></tr>
+                        <tr><td><code>MB3002</code></td><td>Выполнено обращение к элементу массива вне допустимых границ.</td></tr>
+                        <tr><td><code>MB3003</code></td><td><code>INPUT</code> не смог преобразовать введённое значение или получил неверное число значений.</td></tr>
+                        <tr><td><code>MB3004</code></td><td>Цикл <code>FOR</code> запущен со значением <code>STEP 0</code>.</td></tr>
+                        <tr><td><code>MB3005</code></td><td>Во время выполнения потребовалось состояние, которое ещё не создано, например обращение к динамическому массиву до его выделения.</td></tr>
+                        <tr><td><code>MB3006</code></td><td><code>FUNCTION</code> завершилась по выполненной ветви без возвращаемого значения.</td></tr>
+                        <tr><td><code>MB3007</code></td><td>Во встроенной функции или операции получено недопустимое фактическое значение, например аргумент вне допустимой области.</td></tr>
+                        <tr><td><code>MB3008</code></td><td>Во время выполнения произошло числовое переполнение или получен недопустимый неконечный результат.</td></tr>
+                    </tbody>
+                </table>
+                <p>Если ошибка возникла внутри локальной процедуры или функции, в тексте диагностики появится блок <code>Цепочка вызовов</code> с перечнем активных вызовов, их местами вызова и внешней процедурой или функцией, где объявлена локальная.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                    <a href="if.html">Оператор IF</a>
+                    <a href="for.html">Цикл FOR</a>
+                    <a href="input.html">Оператор INPUT</a>
+                    <a href="return.html">Оператор RETURN</a>
+                    <a href="arithmetic-and-logic.html">Арифметика, сравнения и логика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

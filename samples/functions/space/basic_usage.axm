@@ -1,0 +1,2 @@
+' Expected: prints [    ] with four spaces inside brackets.
+PRINT "[" + SPACE(4) + "]"

@@ -1,0 +1,3 @@
+' Expected output:
+' TRUE
+PRINT TOUTC("2026-04-20 11:05:06", "UTC") = "2026-04-20 11:05:06"

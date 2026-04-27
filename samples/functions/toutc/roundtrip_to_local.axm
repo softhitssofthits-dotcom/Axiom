@@ -1,0 +1,6 @@
+' Expected output:
+' TRUE
+' 2026-04-20 14:05:06
+DIM utcValue AS STRING = TOUTC("2026-04-20 14:05:06")
+PRINT ISDATE(utcValue)
+PRINT FROMUTC(utcValue)

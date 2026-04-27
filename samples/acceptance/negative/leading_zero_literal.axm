@@ -1,0 +1,2 @@
+' Expected syntax diagnostic MB0003: numeric literals cannot use leading zeros.
+PRINT 001 + 1

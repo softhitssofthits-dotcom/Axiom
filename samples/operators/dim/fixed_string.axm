@@ -1,0 +1,9 @@
+DIM code AS STRING * 4
+
+PRINT "[" + code + "]"
+
+code = "AB"
+PRINT "[" + code + "]"
+
+code = "Alphabet"
+PRINT "[" + code + "]"

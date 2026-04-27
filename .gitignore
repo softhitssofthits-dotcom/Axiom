@@ -1,0 +1,22 @@
+# Build outputs
+.artifacts/
+**/bin/
+**/obj/
+
+# Local dotnet helper directories
+.dotnet-home/
+.dotnet-cli/
+.tmp-build/
+.vs/
+.codex/
+
+# Test and coverage outputs
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Local diagnostic and redirected logs
+*-build.log
+parser-*.log
+parser-*.txt

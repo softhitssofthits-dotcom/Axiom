@@ -1,0 +1,2 @@
+PRINT ATN2(0, 1)
+PRINT ATN2(1, 1)

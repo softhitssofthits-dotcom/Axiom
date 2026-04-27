@@ -1,0 +1,15 @@
+﻿' Expected: prints 3, 4, TRUE, TRUE, 2014-05-01.
+DIM i AS INTEGER, j AS INTEGER
+DIM anotherVar, choice AS BOOLEAN, birthDate AS STRING = "2014-05-01"
+
+i = 3
+j = 4
+anotherVar = TRUE
+choice = TRUE
+' birthDate = "2014-05-01"
+
+PRINT i
+PRINT j
+PRINT anotherVar
+PRINT choice
+PRINT birthDate

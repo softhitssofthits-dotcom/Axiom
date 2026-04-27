@@ -1,0 +1,17 @@
+' ARRAYTAKE returns the first N logical elements as a new compact array.
+
+Dim source(5 To 7) As Integer
+Dim part() As Integer
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+part = ARRAYTAKE(source, 2)
+part(1) = 99
+
+Print LBOUND(part)
+Print UBOUND(part)
+Print part(1)
+Print part(2)
+Print source(5)

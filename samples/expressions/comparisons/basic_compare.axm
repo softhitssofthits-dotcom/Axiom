@@ -1,0 +1,4 @@
+' Expected: prints TRUE, FALSE, TRUE.
+PRINT 10 > 3
+PRINT 10 = 3
+PRINT 5 <= 5

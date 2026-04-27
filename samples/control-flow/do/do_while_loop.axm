@@ -1,0 +1,14 @@
+' Expected output:
+' 0
+' 1
+' 2
+' done
+
+DIM i AS INTEGER = 0
+
+DO WHILE i < 3
+    PRINT i
+    i = i + 1
+LOOP
+
+PRINT "done"

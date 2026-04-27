@@ -1,0 +1,3 @@
+DIM age AS INTEGER
+INPUT age
+PRINT age

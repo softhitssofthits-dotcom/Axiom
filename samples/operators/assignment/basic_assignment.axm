@@ -1,0 +1,5 @@
+' Expected: prints 15.
+DIM total AS INTEGER
+total = 10
+total = total + 5
+PRINT total

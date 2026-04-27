@@ -1,0 +1,7 @@
+' Ожидаемый результат:
+' <abcd
+' ab-cd
+' abcd!
+PRINT INSERT("abcd", 1, "<")
+PRINT INSERT("abcd", 3, "-")
+PRINT INSERT("abcd", 99, "!")

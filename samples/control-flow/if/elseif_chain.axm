@@ -1,0 +1,10 @@
+' Expected: prints medium.
+DIM value AS INTEGER = 7
+
+IF value > 10 THEN
+    PRINT "large"
+ELSEIF value > 5 THEN
+    PRINT "medium"
+ELSE
+    PRINT "small"
+END IF

@@ -1,0 +1,6 @@
+' Expected: prints 42.
+FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value + value
+END FUNCTION
+
+PRINT DoubleValue(21)

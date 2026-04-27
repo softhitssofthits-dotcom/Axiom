@@ -1,0 +1,21 @@
+' Ожидается: 1, notes.txt, TRUE, 0.
+
+DIM root AS STRING = MAKETEMPDIR("getfiles_")
+DIM notesPath AS STRING = COMBINEPATH(root, "notes.txt")
+DIM logPath AS STRING = COMBINEPATH(root, "run.log")
+DIM ok AS BOOLEAN
+DIM files() AS STRING
+DIM emptyFiles() AS STRING
+
+ok = WRITEFILE(notesPath, "Hello")
+ok = WRITEFILE(logPath, "Log")
+
+files = GETFILES(root, "*.txt")
+emptyFiles = GETFILES(root, "*.none")
+
+PRINT ARRAYLENGTH(files)
+PRINT FILENAME(files(1))
+PRINT ARRAYISALLOCATED(emptyFiles)
+PRINT ARRAYLENGTH(emptyFiles)
+
+ok = DELETEDIRRECURSIVE(root)

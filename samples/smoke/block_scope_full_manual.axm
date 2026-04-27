@@ -1,0 +1,137 @@
+﻿' Full manual smoke sample for block scopes.
+' Run as-is for the positive path.
+' Then uncomment the negative probes at the end one by one to verify scope errors in the IDE.
+'
+' Expected output:
+' scope-smoke-start
+' if-branch
+' elseif-branch
+' else-branch
+' case-two
+' case-else
+' for-1
+' for-2
+' nested-if-2
+' while-0
+' while-1
+' do-0
+' do-1
+' sub-start
+' sub-for-1
+' sub-for-2
+' sub-if
+' sub-end
+' fn=7
+' scope-smoke-done
+
+PRINT "scope-smoke-start"
+
+IF TRUE THEN
+    DIM branchText AS STRING = "if-branch"
+    PRINT branchText
+END IF
+
+DIM mode AS INTEGER = 2
+IF mode = 1 THEN
+    DIM branchText AS STRING = "if-mode-1"
+    PRINT branchText
+ELSEIF mode = 2 THEN
+    DIM branchText AS STRING = "elseif-branch"
+    PRINT branchText
+ELSE
+    DIM branchText AS STRING = "if-mode-else"
+    PRINT branchText
+END IF
+
+IF FALSE THEN
+    DIM branchText AS STRING = "never"
+    PRINT branchText
+ELSE
+    DIM branchText AS STRING = "else-branch"
+    PRINT branchText
+END IF
+
+DIM code AS INTEGER = 2
+SELECT CASE code
+    CASE 1
+        DIM caseText AS STRING = "case-one"
+        PRINT caseText
+    CASE 2
+        DIM caseText AS STRING = "case-two"
+        PRINT caseText
+    CASE ELSE
+        DIM caseText AS STRING = "case-other"
+        PRINT caseText
+END SELECT
+
+DIM fallbackCode AS INTEGER = 9
+SELECT CASE fallbackCode
+    CASE 1
+        DIM caseText AS STRING = "fallback-one"
+        PRINT caseText
+    CASE ELSE
+        DIM caseText AS STRING = "case-else"
+        PRINT caseText
+END SELECT
+
+FOR i = 1 TO 2
+    DIM loopText AS STRING = "for-" + STR(i)
+    PRINT loopText
+
+    IF i = 2 THEN
+        DIM nestedText AS STRING = "nested-if-" + STR(i)
+        PRINT nestedText
+    END IF
+NEXT
+
+DIM counter AS INTEGER = 0
+WHILE counter < 2
+    DIM whileText AS STRING = "while-" + STR(counter)
+    PRINT whileText
+    counter = counter + 1
+END WHILE
+
+DIM probe AS INTEGER = 0
+DO
+    DIM doText AS STRING = "do-" + STR(probe)
+    PRINT doText
+    probe = probe + 1
+LOOP UNTIL probe = 2
+
+PrintScopeRoutine()
+PRINT "fn=" + STR(ComputeScopedValue(3))
+PRINT "scope-smoke-done"
+
+SUB PrintScopeRoutine()
+    PRINT "sub-start"
+
+    FOR localIndex = 1 TO 2
+        DIM subLoopText AS STRING = "sub-for-" + STR(localIndex)
+        PRINT subLoopText
+    NEXT
+
+    IF TRUE THEN
+        DIM subBranchText AS STRING = "sub-if"
+        PRINT subBranchText
+    END IF
+
+    PRINT "sub-end"
+END SUB
+
+FUNCTION ComputeScopedValue(value AS INTEGER) AS INTEGER
+    IF value > 2 THEN
+        DIM bonus AS INTEGER = 4
+        RETURN value + bonus
+    ELSE
+        DIM bonus AS INTEGER = 1
+        RETURN value + bonus
+    END IF
+END FUNCTION
+
+' Negative probes: uncomment one line at a time and run again.
+' PRINT branchText
+' PRINT caseText
+' PRINT i
+' PRINT loopText
+' PRINT localIndex
+' PRINT bonus

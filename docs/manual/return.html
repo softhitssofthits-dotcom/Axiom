@@ -1,0 +1,139 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор RETURN</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="return">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Досрочное завершение процедуры или функции и возврат значения</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Оператор RETURN</p>
+                    <p class="sidebar__subtitle">Справочная глава по <code>RETURN</code> в <code>FUNCTION</code> и <code>SUB</code>.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Оператор RETURN</span>
+            </nav>
+            <p class="eyebrow">Процедуры и функции</p>
+            <h1 class="page-title">Оператор RETURN</h1>
+            <p class="lead"><code>RETURN</code> завершает выполнение текущей процедуры или функции. В <code>FUNCTION</code> он возвращает значение вызывающему коду, а в <code>SUB</code> служит для досрочного выхода без возвращаемого результата.</p>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ul>
+                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#syntax">Синтаксис</a></li>
+                    <li><a href="#parts">Части синтаксиса</a></li>
+                    <li><a href="#remarks">Замечания</a></li>
+                    <li><a href="#examples">Примеры</a></li>
+                    <li><a href="#diagnostics">Диагностика</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="summary">
+                <h2>Сводка</h2>
+                <p>Семантика <code>RETURN</code> зависит от контекста: в функции требуется выражение результата, в подпрограмме значение не допускается. Оператор завершает текущую процедуру или функцию и пропускает оставшиеся инструкции её тела.</p>
+            </section>
+
+            <section class="article-section" id="syntax">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">RETURN &lt;выражение&gt;</code></pre>
+                <pre><code class="language-basic">RETURN</code></pre>
+            </section>
+
+            <section class="article-section" id="parts">
+                <h2>Части синтаксиса</h2>
+                <ul>
+                    <li><code>&lt;выражение&gt;</code> — значение, которое возвращает текущая функция.</li>
+                    <li>Форма <code>RETURN</code> без выражения допустима только в <code>SUB</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="remarks">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>В <code>FUNCTION</code> допустима только форма <code>RETURN &lt;выражение&gt;</code>.</li>
+                    <li>В <code>SUB</code> допустима только форма <code>RETURN</code> без значения.</li>
+                    <li><code>RETURN</code> разрешён только внутри <code>SUB</code> или <code>FUNCTION</code>.</li>
+                    <li>Те же правила действуют и для локальных <code>SUB</code>/<code>FUNCTION</code>, объявленных внутри другой процедуры или функции.</li>
+                    <li>В <code>FUNCTION</code> можно вернуть не только число, строку или логическое значение, но и саму функцию, если тип результата объявлен как функциональный.</li>
+                    <li>После выполнения <code>RETURN</code> управление сразу передаётся вызывающему коду.</li>
+                    <li>Если функция по реально выполненной ветви дошла до конца без возвращаемого значения, ошибка фиксируется на этапе времени выполнения.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Для проверки обеих ролей оператора используйте готовые примеры.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
+                    <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
+                    <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возврат функции с захваченными данными</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="examples">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION</code></pre>
+                <pre><code class="language-basic">SUB Check(value AS INTEGER)
+    IF value &lt; 0 THEN
+        PRINT "Нельзя"
+        RETURN
+    END IF
+
+    PRINT "Можно продолжать"
+END SUB</code></pre>
+                <pre><code class="language-basic">FUNCTION MakeAdder(baseValue AS INTEGER) AS FUNCTION(INTEGER) AS INTEGER
+    FUNCTION Add(delta AS INTEGER) AS INTEGER
+        RETURN baseValue + delta
+    END FUNCTION
+
+    RETURN Add
+END FUNCTION</code></pre>
+            </section>
+
+            <section class="article-section" id="diagnostics">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB2012</code> — <code>RETURN</code> использован вне <code>SUB</code> или <code>FUNCTION</code>.</li>
+                    <li><code>MB2006</code> — в <code>SUB</code> использован <code>RETURN</code> со значением.</li>
+                    <li><code>MB2007</code> — в <code>FUNCTION</code> использован <code>RETURN</code> без выражения.</li>
+                    <li><code>MB3006</code> — функция завершилась без возвращаемого значения по выполненной ветви.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="sub.html">Подпрограмма SUB</a>
+                    <a href="function.html">Функция FUNCTION</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

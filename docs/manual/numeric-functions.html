@@ -1,0 +1,276 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Числовые, математические и преобразующие функции</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="numeric-functions">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Справочник по числовым, математическим и преобразующим функциям</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Числовые функции</p>
+                    <p class="sidebar__subtitle">Справочник по встроенным функциям Axiom для вычислений, округления и преобразования чисел.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Числовые и математические функции</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Числовые, математические и преобразующие функции</h1>
+            <p class="lead">Axiom использует короткие имена функций в традиции BASIC. Тригонометрические и обратные тригонометрические функции работают в радианах. На этой странице собраны преобразующие, арифметические, тригонометрические, гиперболические и логарифмические функции, подтверждённые текущей реализацией.</p>
+
+            <section class="article-section">
+                <h2>Главные правила</h2>
+                <ul>
+                    <li><code>INT</code> остаётся традиционной функцией BASIC: выполняет округление вниз и возвращает <code>INTEGER</code> с проверкой диапазона.</li>
+                    <li><code>FIX</code> отбрасывает дробную часть к нулю и возвращает тот же числовой тип, что и аргумент.</li>
+                    <li><code>ROUND</code> округляет до целого по правилу округления половин от нуля.</li>
+                    <li><code>RND()</code> не принимает аргументов и возвращает псевдослучайное значение типа <code>DOUBLE</code> в диапазоне <code>[0, 1)</code>.</li>
+                    <li><code>ABS</code>, <code>MIN</code>, <code>MAX</code>, <code>CLAMP</code>, <code>SETSIGN</code>, <code>FLOOR</code>, <code>CEIL</code>, <code>ROUND</code> и <code>FIX</code> сохраняют числовое семейство аргумента по контракту функции.</li>
+                    <li><code>SIN</code>, <code>COS</code>, <code>TAN</code>, <code>ATN</code>, <code>ATN2</code>, <code>ASIN</code>, <code>ACOS</code>, <code>ASINH</code>, <code>ACOSH</code>, <code>ATANH</code>, <code>SINH</code>, <code>COSH</code>, <code>TANH</code>, <code>SQR</code>, <code>CBRT</code>, <code>EXP</code>, <code>LOG</code>, <code>LOG10</code>, <code>LOG2</code> и <code>POW</code> возвращают <code>DOUBLE</code>.</li>
+                    <li>Ошибки области допустимых значений идут через диагностику времени выполнения <code>MB3007</code>, а переполнение и неконечные результаты через <code>MB3008</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ol class="contents-list">
+                    <li><a href="#legacy">Традиционные функции и преобразование</a></li>
+                    <li><a href="#core-math">Базовая математика</a></li>
+                    <li><a href="#trig">Тригонометрия</a></li>
+                    <li><a href="#inverse-trig">Обратная тригонометрия</a></li>
+                    <li><a href="#hyperbolic">Гиперболические функции</a></li>
+                    <li><a href="#exp-log">Корни, степени и логарифмы</a></li>
+                    <li><a href="#rounding">Округление и отсечение</a></li>
+                    <li><a href="#deferred">Что пока не входит в текущую реализацию</a></li>
+                </ol>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Для ручной проверки в IDE используйте запускаемые примеры из тематических папок <code>samples/functions/</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/int/basic_usage.axm">INT: базовое использование</a></li>
+                    <li><a href="../../samples/functions/int/overflow_error.axm">INT: переполнение после округления вниз</a></li>
+                    <li><a href="../../samples/functions/str/basic_usage.axm">STR: базовое использование</a></li>
+                    <li><a href="../../samples/functions/val/basic_usage.axm">VAL: базовое использование</a></li>
+                    <li><a href="../../samples/functions/val/invalid_text_behavior.axm">VAL: некорректный текст возвращает 0</a></li>
+                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: базовое использование</a></li>
+                    <li><a href="../../samples/functions/rnd/basic_usage.axm">RND: базовое использование</a></li>
+                    <li><a href="../../samples/functions/sgn/basic_usage.axm">SGN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/min/basic_usage.axm">MIN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/max/basic_usage.axm">MAX: базовое использование</a></li>
+                    <li><a href="../../samples/functions/clamp/basic_usage.axm">CLAMP: базовое использование</a></li>
+                    <li><a href="../../samples/functions/clamp/invalid_bounds_error.axm">CLAMP: некорректные границы</a></li>
+                    <li><a href="../../samples/functions/setsign/basic_usage.axm">SETSIGN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/sin/basic_usage.axm">SIN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/cos/basic_usage.axm">COS: базовое использование</a></li>
+                    <li><a href="../../samples/functions/tan/basic_usage.axm">TAN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/atn/basic_usage.axm">ATN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/atn2/basic_usage.axm">ATN2: базовое использование</a></li>
+                    <li><a href="../../samples/functions/asin/basic_usage.axm">ASIN: базовое использование</a></li>
+                    <li><a href="../../samples/functions/asin/out_of_range_error.axm">ASIN: ошибка вне диапазона</a></li>
+                    <li><a href="../../samples/functions/acos/basic_usage.axm">ACOS: базовое использование</a></li>
+                    <li><a href="../../samples/functions/acos/out_of_range_error.axm">ACOS: ошибка вне диапазона</a></li>
+                    <li><a href="../../samples/functions/asinh/basic_usage.axm">ASINH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/acosh/basic_usage.axm">ACOSH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/acosh/less_than_one_error.axm">ACOSH: аргумент меньше 1</a></li>
+                    <li><a href="../../samples/functions/atanh/basic_usage.axm">ATANH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/atanh/out_of_range_error.axm">ATANH: ошибка вне диапазона</a></li>
+                    <li><a href="../../samples/functions/sinh/basic_usage.axm">SINH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/cosh/basic_usage.axm">COSH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/tanh/basic_usage.axm">TANH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/sqr/basic_usage.axm">SQR: базовое использование</a></li>
+                    <li><a href="../../samples/functions/sqr/negative_error.axm">SQR: отрицательный аргумент</a></li>
+                    <li><a href="../../samples/functions/cbrt/basic_usage.axm">CBRT: базовое использование</a></li>
+                    <li><a href="../../samples/functions/exp/basic_usage.axm">EXP: базовое использование</a></li>
+                    <li><a href="../../samples/functions/log/basic_usage.axm">LOG: базовое использование</a></li>
+                    <li><a href="../../samples/functions/log/non_positive_error.axm">LOG: неположительный аргумент</a></li>
+                    <li><a href="../../samples/functions/log10/basic_usage.axm">LOG10: базовое использование</a></li>
+                    <li><a href="../../samples/functions/log2/basic_usage.axm">LOG2: базовое использование</a></li>
+                    <li><a href="../../samples/functions/pow/basic_usage.axm">POW: базовое использование</a></li>
+                    <li><a href="../../samples/functions/pow/invalid_domain_error.axm">POW: ошибка области определения</a></li>
+                    <li><a href="../../samples/functions/floor/basic_usage.axm">FLOOR: базовое использование</a></li>
+                    <li><a href="../../samples/functions/ceil/basic_usage.axm">CEIL: базовое использование</a></li>
+                    <li><a href="../../samples/functions/round/basic_usage.axm">ROUND: базовое использование</a></li>
+                    <li><a href="../../samples/functions/fix/basic_usage.axm">FIX: базовое использование</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section" id="legacy">
+                <h2>Традиционные функции и преобразование</h2>
+
+                <h3 id="int">INT</h3>
+                <p><strong>Форма вызова:</strong> <code>INT(&lt;значение&gt;) AS INTEGER</code></p>
+                <p>Округляет значение вниз и затем пытается вернуть результат как <code>INTEGER</code>.</p>
+
+                <h3 id="str">STR</h3>
+                <p><strong>Форма вызова:</strong> <code>STR(&lt;значение&gt;) AS STRING</code></p>
+                <p>Преобразует числовое значение в строку с инвариантным форматом представления.</p>
+
+                <h3 id="val">VAL</h3>
+                <p><strong>Форма вызова:</strong> <code>VAL(&lt;текст&gt; AS STRING) AS DOUBLE</code></p>
+                <p>Пытается прочитать число из строки. Некорректный текст даёт <code>0</code>.</p>
+            </section>
+
+            <section class="article-section" id="core-math">
+                <h2>Базовая математика</h2>
+
+                <h3 id="abs">ABS</h3>
+                <p><code>ABS(&lt;число&gt;)</code> возвращает модуль числа и сохраняет исходный числовой тип.</p>
+
+                <h3 id="rnd">RND</h3>
+                <p><code>RND()</code> возвращает псевдослучайное число типа <code>DOUBLE</code> в диапазоне от <code>0</code> включительно до <code>1</code> не включительно. В текущей версии языка функция вызывается без аргументов.</p>
+
+                <h3 id="sgn">SGN</h3>
+                <p><code>SGN(&lt;число&gt;)</code> возвращает <code>-1</code>, <code>0</code> или <code>1</code> как <code>INTEGER</code>.</p>
+
+                <h3 id="min">MIN</h3>
+                <p><code>MIN(&lt;левое число&gt;, &lt;правое число&gt;)</code> возвращает меньшее из двух чисел.</p>
+
+                <h3 id="max">MAX</h3>
+                <p><code>MAX(&lt;левое число&gt;, &lt;правое число&gt;)</code> возвращает большее из двух чисел.</p>
+
+                <h3 id="clamp">CLAMP</h3>
+                <p><code>CLAMP(&lt;значение&gt;, &lt;нижняя граница&gt;, &lt;верхняя граница&gt;)</code> ограничивает значение диапазоном <code>[нижняя граница, верхняя граница]</code>. Если верхняя граница меньше нижней, выполнение завершается диагностикой времени выполнения.</p>
+
+                <h3 id="setsign">SETSIGN</h3>
+                <p><code>SETSIGN(&lt;значение&gt;, &lt;источник знака&gt;)</code> переносит знак второго аргумента на первый и возвращает результат в числовом типе первого аргумента.</p>
+            </section>
+
+            <section class="article-section" id="trig">
+                <h2>Тригонометрия</h2>
+
+                <h3 id="sin">SIN</h3>
+                <p><code>SIN(&lt;угол&gt;)</code> возвращает синус угла в радианах.</p>
+
+                <h3 id="cos">COS</h3>
+                <p><code>COS(&lt;угол&gt;)</code> возвращает косинус угла в радианах.</p>
+
+                <h3 id="tan">TAN</h3>
+                <p><code>TAN(&lt;угол&gt;)</code> возвращает тангенс угла в радианах.</p>
+
+                <h3 id="atn">ATN</h3>
+                <p><code>ATN(&lt;значение&gt;)</code> возвращает арктангенс значения.</p>
+
+                <h3 id="atn2">ATN2</h3>
+                <p><code>ATN2(&lt;ордината&gt;, &lt;абсцисса&gt;)</code> возвращает угол по координатам <code>(абсцисса, ордината)</code> с учётом квадранта.</p>
+            </section>
+
+            <section class="article-section" id="inverse-trig">
+                <h2>Обратная тригонометрия</h2>
+
+                <h3 id="asin">ASIN</h3>
+                <p><code>ASIN(&lt;значение&gt;)</code> возвращает арксинус. Аргумент должен лежать в диапазоне <code>[-1, 1]</code>.</p>
+
+                <h3 id="acos">ACOS</h3>
+                <p><code>ACOS(&lt;значение&gt;)</code> возвращает арккосинус. Аргумент должен лежать в диапазоне <code>[-1, 1]</code>.</p>
+            </section>
+
+            <section class="article-section" id="hyperbolic">
+                <h2>Гиперболические функции</h2>
+
+                <h3 id="asinh">ASINH</h3>
+                <p><code>ASINH(&lt;значение&gt;)</code> возвращает обратный гиперболический синус.</p>
+
+                <h3 id="acosh">ACOSH</h3>
+                <p><code>ACOSH(&lt;значение&gt;)</code> возвращает обратный гиперболический косинус. Аргумент должен быть не меньше <code>1</code>.</p>
+
+                <h3 id="atanh">ATANH</h3>
+                <p><code>ATANH(&lt;значение&gt;)</code> возвращает обратный гиперболический тангенс. Аргумент должен лежать строго внутри интервала <code>(-1, 1)</code>.</p>
+
+                <h3 id="sinh">SINH</h3>
+                <p><code>SINH(&lt;значение&gt;)</code> возвращает гиперболический синус.</p>
+
+                <h3 id="cosh">COSH</h3>
+                <p><code>COSH(&lt;значение&gt;)</code> возвращает гиперболический косинус.</p>
+
+                <h3 id="tanh">TANH</h3>
+                <p><code>TANH(&lt;значение&gt;)</code> возвращает гиперболический тангенс.</p>
+            </section>
+
+            <section class="article-section" id="exp-log">
+                <h2>Корни, степени и логарифмы</h2>
+
+                <h3 id="sqr">SQR</h3>
+                <p><code>SQR(&lt;значение&gt;)</code> возвращает квадратный корень. Аргумент должен быть неотрицательным.</p>
+
+                <h3 id="cbrt">CBRT</h3>
+                <p><code>CBRT(&lt;значение&gt;)</code> возвращает кубический корень.</p>
+
+                <h3 id="exp">EXP</h3>
+                <p><code>EXP(&lt;показатель&gt;)</code> вычисляет <code>e^показатель</code>.</p>
+
+                <h3 id="log">LOG</h3>
+                <p><code>LOG(&lt;значение&gt;)</code> вычисляет натуральный логарифм. Аргумент должен быть строго больше нуля.</p>
+
+                <h3 id="log10">LOG10</h3>
+                <p><code>LOG10(&lt;значение&gt;)</code> вычисляет десятичный логарифм. Аргумент должен быть строго больше нуля.</p>
+
+                <h3 id="log2">LOG2</h3>
+                <p><code>LOG2(&lt;значение&gt;)</code> вычисляет двоичный логарифм. Аргумент должен быть строго больше нуля.</p>
+
+                <h3 id="pow">POW</h3>
+                <p><code>POW(&lt;основание&gt;, &lt;показатель&gt;)</code> возводит число в степень. Недопустимая область определения даёт диагностику времени выполнения.</p>
+            </section>
+
+            <section class="article-section" id="rounding">
+                <h2>Округление и отсечение</h2>
+
+                <h3 id="floor">FLOOR</h3>
+                <p><code>FLOOR(&lt;значение&gt;)</code> округляет число вниз и возвращает тот же числовой тип.</p>
+
+                <h3 id="ceil">CEIL</h3>
+                <p><code>CEIL(&lt;значение&gt;)</code> округляет число вверх и возвращает тот же числовой тип.</p>
+
+                <h3 id="round">ROUND</h3>
+                <p><code>ROUND(&lt;значение&gt;)</code> округляет к ближайшему целому по правилу округления половин от нуля.</p>
+
+                <h3 id="fix">FIX</h3>
+                <p><code>FIX(&lt;значение&gt;)</code> отбрасывает дробную часть к нулю без перехода к <code>INTEGER</code>.</p>
+
+                <div class="note">
+                    <h3>Сравнение INT, FIX и ROUND</h3>
+                    <p><code>INT(-3.9)</code> даёт <code>-4</code>, <code>FIX(-3.9)</code> даёт <code>-3</code>, а <code>ROUND(-3.9)</code> даёт <code>-4</code>.</p>
+                </div>
+            </section>
+
+            <section class="article-section" id="deferred">
+                <h2>Что пока не входит в текущую реализацию</h2>
+                <p>В текущий набор математических функций не входят более аппаратно- и IEEE-специфичные функции вроде <code>DivRem</code>, <code>SinCos</code>, <code>FusedMultiplyAdd</code>, <code>IEEERemainder</code>, <code>ScaleB</code> и похожие низкоуровневые операции.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="examples.html">Примеры</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

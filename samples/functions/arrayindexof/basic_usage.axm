@@ -1,0 +1,11 @@
+' ARRAYINDEXOF: первый логический индекс совпадения.
+
+Dim values(0 To 3) As Integer
+
+values(0) = 10
+values(1) = 20
+values(2) = 30
+values(3) = 20
+
+Print ARRAYINDEXOF(values, 20)
+Print ARRAYINDEXOF(values, 99)

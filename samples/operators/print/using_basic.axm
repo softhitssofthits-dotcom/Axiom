@@ -1,0 +1,7 @@
+' Expected:
+' Name: Bob   |
+' Total:  12.50
+' Flag: X
+PRINT USING "Name: \    \|"; "Bob"
+PRINT USING "Total: ###.##"; 12.5
+PRINT USING "Flag: !"; "XYZ"

@@ -1,0 +1,18 @@
+' ARRAYEVERY manual acceptance sample.
+DIM values(1 TO 4) AS INTEGER
+
+values(1) = 2
+values(2) = 4
+values(3) = 6
+values(4) = 8
+
+PRINT ARRAYEVERY(values, IsPositive)
+PRINT ARRAYEVERY(values, IsEven)
+
+FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value > 0
+END FUNCTION
+
+FUNCTION IsEven(value AS INTEGER) AS BOOLEAN
+    RETURN value MOD 2 = 0
+END FUNCTION

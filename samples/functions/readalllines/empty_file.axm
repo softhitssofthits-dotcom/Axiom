@@ -1,0 +1,13 @@
+' Ожидается: TRUE, 0, 1, 0.
+DIM path AS STRING = MAKETEMPFILE("readalllines_empty_")
+DIM ok AS BOOLEAN
+DIM lines() AS STRING
+
+lines = READALLLINES(path)
+
+PRINT ARRAYISALLOCATED(lines)
+PRINT ARRAYLENGTH(lines)
+PRINT LBOUND(lines)
+PRINT UBOUND(lines)
+
+ok = DELETEFILE(path)

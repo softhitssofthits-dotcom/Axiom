@@ -1,0 +1,3 @@
+' Сложение выходит за диапазон LONG и должно дать runtime diagnostic.
+DIM value AS LONG = 9223372036854775807
+PRINT value + 1

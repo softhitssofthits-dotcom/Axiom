@@ -1,0 +1,6 @@
+' Expected: prints 25.
+FUNCTION Square(value AS INTEGER) AS INTEGER
+    RETURN value * value
+END FUNCTION
+
+PRINT Square(5)

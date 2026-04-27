@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функции регулярных выражений</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="regex-functions">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Справочник по функциям поиска по образцу</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Функции регулярных выражений</p>
+                    <p class="sidebar__subtitle">Поиск, извлечение, замена и подсчёт совпадений по образцу.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Функции регулярных выражений</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Функции регулярных выражений</h1>
+            <p class="lead">Функции регулярных выражений позволяют проверять строку по образцу, брать первое или все совпадения, извлекать группы, разделять строку, заменять найденные части текста и считать количество совпадений.</p>
+            <div class="note">
+                <h3>Имена и историческая линия</h3>
+                <p>Классический QuickBASIC не имел полноценного встроенного слоя регулярных выражений, а Visual Basic исторически давал более простую проверку через <code>Like</code>. Для Axiom выбрана современная линия имён вокруг <code>REGEX...</code>: <code>REGEXMATCH</code>, <code>REGEXMATCHES</code> и <code>REGEXSPLIT</code> согласованы с привычными операциями <code>Match</code>, <code>Matches</code> и <code>Split</code>, а <code>REGEXEXTRACTALL</code> является массивной парой к <code>REGEXEXTRACT</code>.</p>
+            </div>
+
+            <section class="article-section">
+                <h2>Главные правила</h2>
+                <ul>
+                    <li>Первый аргумент всегда содержит исходный текст, второй аргумент содержит регулярное выражение.</li>
+                    <li>Если совпадение не найдено, <code>REGEXMATCH</code> и <code>REGEXEXTRACT</code> возвращают пустую строку.</li>
+                    <li><code>REGEXEXTRACT</code> использует номер группы: <code>0</code> означает всё найденное совпадение, <code>1</code> — первую группу в скобках, <code>2</code> — вторую группу и так далее.</li>
+                    <li>Номер группы не может быть отрицательным; нарушение даёт диагностику времени выполнения <code>MB3007</code>.</li>
+                    <li><code>REGEXMATCHES</code>, <code>REGEXEXTRACTALL</code> и <code>REGEXSPLIT</code> возвращают новый массив <code>STRING()</code> с компактными границами <code>1 TO N</code>; пустой результат получает форму <code>1 TO 0</code>.</li>
+                    <li><code>REGEXREPLACE</code> заменяет все совпадения, если не указано ограничение количества замен.</li>
+                    <li>Количество замен в <code>REGEXREPLACE</code> не может быть отрицательным; значение <code>0</code> возвращает исходный текст без изменений.</li>
+                    <li>В строке замены можно ссылаться на группы через <code>$1</code>, <code>$2</code> и последующие номера.</li>
+                    <li>Каждая операция по регулярному выражению ограничена пятью секундами. При превышении ограничения выполнение завершается диагностикой <code>MB3007</code>.</li>
+                    <li>Недопустимое регулярное выражение или неизвестный режим также дают диагностику времени выполнения <code>MB3007</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Режимы поиска</h2>
+                <p>Необязательный аргумент <code>&lt;режимы&gt;</code> задаётся строкой. Режимы можно объединять, например <code>"im"</code>.</p>
+                <table class="reference-table">
+                    <thead>
+                        <tr>
+                            <th>Режим</th>
+                            <th>Назначение</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>i</code></td>
+                            <td>Не различать строчные и прописные буквы.</td>
+                        </tr>
+                        <tr>
+                            <td><code>m</code></td>
+                            <td>Считать начало и конец каждой строки отдельными границами для <code>^</code> и <code>$</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>s</code></td>
+                            <td>Позволить точке <code>.</code> совпадать с переводом строки.</td>
+                        </tr>
+                        <tr>
+                            <td><code>x</code></td>
+                            <td>Игнорировать незначащие пробелы в регулярном выражении, если они не экранированы и не входят в набор символов.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Содержание</h2>
+                <ol class="contents-list">
+                    <li><a href="#regexismatch">REGEXISMATCH</a></li>
+                    <li><a href="#regexmatch">REGEXMATCH</a></li>
+                    <li><a href="#regexextract">REGEXEXTRACT</a></li>
+                    <li><a href="#regexmatches">REGEXMATCHES</a></li>
+                    <li><a href="#regexextractall">REGEXEXTRACTALL</a></li>
+                    <li><a href="#regexsplit">REGEXSPLIT</a></li>
+                    <li><a href="#regexreplace">REGEXREPLACE</a></li>
+                    <li><a href="#regexcount">REGEXCOUNT</a></li>
+                    <li><a href="#samples">Примеры для ручной проверки</a></li>
+                </ol>
+            </section>
+
+            <section class="article-section" id="regexismatch">
+                <h2>REGEXISMATCH</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXISMATCH(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING) AS BOOLEAN
+REGEXISMATCH(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;режимы&gt; AS STRING) AS BOOLEAN</code></pre>
+                <p>Возвращает <code>TRUE</code>, если в тексте найдено хотя бы одно совпадение с регулярным выражением. Если совпадений нет, возвращает <code>FALSE</code>.</p>
+                <pre><code class="language-basic">PRINT REGEXISMATCH("A12", "\d+")
+PRINT REGEXISMATCH("A12", "^a\d+", "i")</code></pre>
+            </section>
+
+            <section class="article-section" id="regexmatch">
+                <h2>REGEXMATCH</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXMATCH(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING) AS STRING
+REGEXMATCH(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;режимы&gt; AS STRING) AS STRING</code></pre>
+                <p>Возвращает первое найденное совпадение целиком. Если совпадение не найдено, возвращает пустую строку.</p>
+                <pre><code class="language-basic">PRINT REGEXMATCH("Order 42 and 100", "\d+")
+PRINT "[" + REGEXMATCH("Order", "\d+") + "]"</code></pre>
+            </section>
+
+            <section class="article-section" id="regexextract">
+                <h2>REGEXEXTRACT</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXEXTRACT(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;номер группы&gt; AS INTEGER) AS STRING
+REGEXEXTRACT(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;номер группы&gt; AS INTEGER, &lt;режимы&gt; AS STRING) AS STRING</code></pre>
+                <p>Возвращает значение указанной группы из первого найденного совпадения. Если совпадение не найдено или указанной группы нет, возвращает пустую строку.</p>
+                <pre><code class="language-basic">PRINT REGEXEXTRACT("A12", "([A-Z])(\d+)", 2)
+PRINT REGEXEXTRACT("a12", "([A-Z])(\d+)", 1, "i")</code></pre>
+            </section>
+
+            <section class="article-section" id="regexmatches">
+                <h2>REGEXMATCHES</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXMATCHES(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING) AS STRING()
+REGEXMATCHES(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;режимы&gt; AS STRING) AS STRING()</code></pre>
+                <p>Возвращает все найденные совпадения целиком как новый массив строк. Если совпадений нет, возвращает пустой выделенный массив с границами <code>1 TO 0</code>.</p>
+                <pre><code class="language-basic">DIM values() AS STRING
+values = REGEXMATCHES("Order 42 and 100", "\d+")
+PRINT values(1)
+PRINT values(2)</code></pre>
+            </section>
+
+            <section class="article-section" id="regexextractall">
+                <h2>REGEXEXTRACTALL</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXEXTRACTALL(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;номер группы&gt; AS INTEGER) AS STRING()
+REGEXEXTRACTALL(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;номер группы&gt; AS INTEGER, &lt;режимы&gt; AS STRING) AS STRING()</code></pre>
+                <p>Возвращает значения указанной группы из всех найденных совпадений. Группа <code>0</code> означает всё совпадение целиком. Если для отдельного совпадения указанной группы нет, соответствующий элемент массива получает пустую строку.</p>
+                <pre><code class="language-basic">DIM values() AS STRING
+values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
+PRINT values(1)
+PRINT values(2)</code></pre>
+            </section>
+
+            <section class="article-section" id="regexsplit">
+                <h2>REGEXSPLIT</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXSPLIT(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING) AS STRING()
+REGEXSPLIT(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;режимы&gt; AS STRING) AS STRING()</code></pre>
+                <p>Разделяет строку по совпадениям регулярного выражения и возвращает части как новый массив строк. Пустые части сохраняются, если совпадение стоит в начале, в конце или рядом с другим совпадением. Для пустого исходного текста возвращается пустой массив <code>1 TO 0</code>.</p>
+                <pre><code class="language-basic">DIM parts() AS STRING
+parts = REGEXSPLIT("one, two;three", "[,;]\s*")
+PRINT parts(1)
+PRINT parts(2)
+PRINT parts(3)</code></pre>
+            </section>
+
+            <section class="article-section" id="regexreplace">
+                <h2>REGEXREPLACE</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXREPLACE(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;замена&gt; AS STRING) AS STRING
+REGEXREPLACE(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;замена&gt; AS STRING, &lt;режимы&gt; AS STRING) AS STRING
+REGEXREPLACE(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;замена&gt; AS STRING, &lt;количество&gt; AS INTEGER) AS STRING
+REGEXREPLACE(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;замена&gt; AS STRING, &lt;режимы&gt; AS STRING, &lt;количество&gt; AS INTEGER) AS STRING</code></pre>
+                <p>Возвращает новую строку, где найденные совпадения заменены указанной строкой. Если указан аргумент <code>&lt;количество&gt;</code>, заменяются только первые найденные совпадения в указанном количестве.</p>
+                <pre><code class="language-basic">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
+PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
+PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")</code></pre>
+            </section>
+
+            <section class="article-section" id="regexcount">
+                <h2>REGEXCOUNT</h2>
+                <p><strong>Формы вызова:</strong></p>
+                <pre><code class="language-basic">REGEXCOUNT(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING) AS INTEGER
+REGEXCOUNT(&lt;текст&gt; AS STRING, &lt;образец&gt; AS STRING, &lt;режимы&gt; AS STRING) AS INTEGER</code></pre>
+                <p>Возвращает количество найденных совпадений. Если совпадений нет, результат равен <code>0</code>.</p>
+                <pre><code class="language-basic">PRINT REGEXCOUNT("one 12 two 34", "\d+")
+PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre>
+            </section>
+
+            <section class="article-section" id="samples">
+                <h2>Примеры для ручной проверки</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/regexismatch/basic_usage.axm">REGEXISMATCH: базовое использование</a></li>
+                    <li><a href="../../samples/functions/regexmatch/basic_usage.axm">REGEXMATCH: первое совпадение</a></li>
+                    <li><a href="../../samples/functions/regexextract/basic_usage.axm">REGEXEXTRACT: извлечение группы</a></li>
+                    <li><a href="../../samples/functions/regexmatches/all_matches.axm">REGEXMATCHES: все совпадения</a></li>
+                    <li><a href="../../samples/functions/regexextractall/group_values.axm">REGEXEXTRACTALL: группы из всех совпадений</a></li>
+                    <li><a href="../../samples/functions/regexsplit/split_on_pattern.axm">REGEXSPLIT: разделение по образцу</a></li>
+                    <li><a href="../../samples/functions/regexreplace/basic_usage.axm">REGEXREPLACE: замена и ограничение количества</a></li>
+                    <li><a href="../../samples/functions/regexcount/basic_usage.axm">REGEXCOUNT: подсчёт совпадений</a></li>
+                    <li><a href="../../samples/functions/regexismatch/invalid_pattern_error.axm">REGEXISMATCH: ошибка в образце</a></li>
+                    <li><a href="../../samples/functions/regexismatch/unknown_mode_error.axm">REGEXISMATCH: неизвестный режим</a></li>
+                    <li><a href="../../samples/functions/regexextractall/negative_group_error.axm">REGEXEXTRACTALL: отрицательный номер группы</a></li>
+                    <li><a href="../../samples/functions/regexreplace/negative_count_error.axm">REGEXREPLACE: отрицательное количество замен</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                    <a href="examples.html">Примеры программ</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+' Ошибка времени выполнения внутри локальной функции должна показать цепочку вызовов.
+PRINT Outer()
+
+FUNCTION Outer() AS DOUBLE
+    RETURN Inner()
+
+    FUNCTION Inner() AS DOUBLE
+        RETURN 10 / 0
+    END FUNCTION
+END FUNCTION

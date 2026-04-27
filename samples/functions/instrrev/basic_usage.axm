@@ -1,0 +1,3 @@
+' Ожидается вывод: 5, затем 0.
+PRINT INSTRREV("banana", "na")
+PRINT INSTRREV("banana", "NA")

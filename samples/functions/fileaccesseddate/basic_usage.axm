@@ -1,0 +1,6 @@
+' FILEACCESSEDDATE возвращает дату последнего доступа к файлу.
+DIM path AS STRING = "accessed.txt"
+
+PRINT WRITEFILE(path, "x")
+PRINT LEN(FILEACCESSEDDATE(path)) > 0
+PRINT DELETEFILE(path)

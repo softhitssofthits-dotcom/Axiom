@@ -1,0 +1,17 @@
+' Expected output:
+' 0
+' 1
+' done
+
+DIM i AS INTEGER = 0
+
+DO WHILE i < 5
+    IF i = 2 THEN
+        EXIT DO
+    END IF
+
+    PRINT i
+    i = i + 1
+LOOP
+
+PRINT "done"

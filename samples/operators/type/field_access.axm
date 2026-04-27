@@ -1,0 +1,28 @@
+' Проверка TYPE: значения по умолчанию, поля, вложенный TYPE и копирование записи.
+
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM first AS Person
+DIM second AS Person
+
+PRINT first.Name
+PRINT first.Age
+
+first.Name = "Ada"
+first.Age = 36
+first.Home.City = "London"
+
+second = first
+first.Name = "Grace"
+
+PRINT second.Name
+PRINT second.Age
+PRINT second.Home.City

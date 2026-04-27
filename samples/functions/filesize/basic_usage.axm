@@ -1,0 +1,4 @@
+DIM path AS STRING = ".artifacts/axiom_sample_filesize.txt"
+
+PRINT WRITEFILE(path, "Hello")
+PRINT FILESIZE(path)

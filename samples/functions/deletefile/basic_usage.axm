@@ -1,0 +1,8 @@
+' Создаёт и удаляет учебный файл в текущей рабочей папке.
+DIM path AS STRING = ".artifacts/axiom_sample_deletefile.txt"
+
+PRINT WRITEFILE(path, "Hello")
+PRINT FILEEXISTS(path)
+PRINT DELETEFILE(path)
+PRINT FILEEXISTS(path)
+PRINT DELETEFILE(path)

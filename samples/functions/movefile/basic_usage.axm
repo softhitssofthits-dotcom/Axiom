@@ -1,0 +1,8 @@
+' Создаёт файл и переносит его в текущей рабочей папке.
+DIM source AS STRING = ".artifacts/axiom_sample_move_source.txt"
+DIM target AS STRING = ".artifacts/axiom_sample_move_target.txt"
+
+PRINT WRITEFILE(source, "Hello")
+PRINT MOVEFILE(source, target, TRUE)
+PRINT FILEEXISTS(source)
+PRINT FILEEXISTS(target)

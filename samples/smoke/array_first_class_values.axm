@@ -1,0 +1,25 @@
+﻿' Acceptance sample: arrays as first-class values.
+' Demonstrates whole-array assignment, parameter passing and function return.
+
+DIM values(1 TO 2) AS INTEGER
+values(1) = 10
+values(2) = 20
+
+DIM alias() AS INTEGER
+alias = values
+
+Bump(alias)
+
+DIM copy() AS INTEGER
+copy = Echo(values)
+
+PRINT values(1)
+PRINT copy(2)
+
+SUB Bump(items AS INTEGER ())
+    items(1) = items(1) + 1
+END SUB
+
+FUNCTION Echo(items AS INTEGER ()) AS INTEGER ()
+    RETURN items
+END FUNCTION

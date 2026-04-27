@@ -1,0 +1,6 @@
+' Expected: prints a simple banner.
+SUB ShowBanner(text AS STRING)
+    PRINT "=="; text; "=="
+END SUB
+
+ShowBanner("Axiom")

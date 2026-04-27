@@ -1,0 +1,4 @@
+PRINT 2 ^ 3
+PRINT 2 ^ 3 ^ 2
+PRINT -2 ^ 2
+PRINT (-2) ^ 2

@@ -1,0 +1,2 @@
+PRINT ATN(0)
+PRINT ATN(1)

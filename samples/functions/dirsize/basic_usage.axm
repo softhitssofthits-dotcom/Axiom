@@ -1,0 +1,10 @@
+' DIRSIZE считает суммарный размер файлов в папке и вложенных папках.
+DIM folder AS STRING = MAKETEMPDIR("dirsize_")
+DIM nested AS STRING = COMBINEPATH(folder, "nested")
+DIM firstFile AS STRING = COMBINEPATH(folder, "a.txt")
+DIM secondFile AS STRING = COMBINEPATH(nested, "b.txt")
+
+PRINT MAKEDIR(nested)
+PRINT WRITEFILE(firstFile, "1234")
+PRINT WRITEFILE(secondFile, "12")
+PRINT DIRSIZE(folder)

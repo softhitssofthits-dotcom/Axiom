@@ -1,0 +1,2 @@
+' TOTALSPACE возвращает полный размер диска.
+PRINT TOTALSPACE(CURRENTDIR()) > 0

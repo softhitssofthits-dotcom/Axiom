@@ -1,0 +1,3 @@
+DIM mask AS LONG = &H100000000
+PRINT 8 >> 1
+PRINT mask >> 4

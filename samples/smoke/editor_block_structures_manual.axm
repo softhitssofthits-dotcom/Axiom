@@ -1,0 +1,135 @@
+﻿' Manual smoke sample for IDE block auto-completion and structural indent.
+' Recommended use:
+' 1. Open this file in Axiom.Ide or retype it line by line in a new document.
+' 2. Pay special attention to Enter, repeated ElseIf, Case/Case Else, nested If,
+'    nested Select Case, For, While, Do ... Loop, Sub, and Function blocks.
+
+DIM source AS INTEGER = 2
+DIM result AS INTEGER = EvaluateScenario(source)
+
+IF result > 0 THEN
+    SELECT CASE result
+        CASE 1
+            FOR outer = 1 TO 2
+                IF outer = 1 THEN
+                    DO
+                        PRINT "case1-do"
+                        EXIT DO
+                    LOOP
+                ELSEIF outer = 2 THEN
+                    WHILE source < 4
+                        source = source + 1
+                        PRINT "case1-while"; source
+                    END WHILE
+                ELSE
+                    PRINT "case1-else"
+                END IF
+            NEXT
+        CASE 2
+            IF source = 2 THEN
+                SELECT CASE source + 1
+                    CASE 3
+                        PRINT "nested-select"
+                    CASE ELSE
+                        PRINT "nested-case-else"
+                END SELECT
+            ELSEIF source = 3 THEN
+                PRINT "case2-elseif"
+            ELSE
+                PRINT "case2-else"
+            END IF
+        CASE ELSE
+            ShowSummary(result)
+    END SELECT
+ELSEIF result = 0 THEN
+    FOR retry = 1 TO 2
+        IF retry = 1 THEN
+            PRINT "retry-one"
+        ELSEIF retry = 2 THEN
+            PRINT "retry-two"
+        ELSE
+            PRINT "retry-else"
+        END IF
+    NEXT
+ELSE
+    DO WHILE source > 0
+        source = source - 1
+        PRINT "fallback"; source
+    LOOP
+END IF
+
+ExerciseLoops(0)
+ShowSummary(result)
+PRINT AdjustValue(result)
+
+SUB ExerciseLoops(seed AS INTEGER)
+    DIM counter AS INTEGER = seed
+
+    DO WHILE counter < 2
+        counter = counter + 1
+        IF counter = 1 THEN
+            PRINT "do-while"; counter
+        ELSE
+            PRINT "do-while-else"; counter
+        END IF
+    LOOP
+
+    DO UNTIL counter = 4
+        counter = counter + 1
+        SELECT CASE counter
+            CASE 3
+                PRINT "do-until-case"; counter
+            CASE ELSE
+                PRINT "do-until-else"; counter
+        END SELECT
+    LOOP
+
+    DO
+        counter = counter - 1
+        IF counter > 1 THEN
+            PRINT "loop-while"; counter
+        ELSE
+            PRINT "loop-while-last"; counter
+        END IF
+    LOOP WHILE counter > 1
+
+    DO
+        counter = counter + 1
+        IF counter = 2 THEN
+            PRINT "loop-until"; counter
+        ELSE
+            PRINT "loop-until-last"; counter
+        END IF
+    LOOP UNTIL counter = 3
+END SUB
+
+SUB ShowSummary(value AS INTEGER)
+    IF value > 10 THEN
+        PRINT "big"
+    ELSEIF value > 5 THEN
+        PRINT "medium"
+    ELSE
+        PRINT "small"
+    END IF
+END SUB
+
+FUNCTION EvaluateScenario(value AS INTEGER) AS INTEGER
+    IF value = 1 THEN
+        RETURN 1
+    ELSEIF value = 2 THEN
+        RETURN 2
+    ELSE
+        RETURN 0
+    END IF
+END FUNCTION
+
+FUNCTION AdjustValue(value AS INTEGER) AS INTEGER
+    SELECT CASE value
+        CASE 0
+            RETURN 10
+        CASE 1
+            RETURN 20
+        CASE ELSE
+            RETURN 30
+    END SELECT
+END FUNCTION
