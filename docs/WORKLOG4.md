@@ -374,3 +374,43 @@
 
 Следующий шаг:
 - реализовать многомерную поддержку для `ARRAYEVERY`, `ARRAYSOME`, `ARRAYMAP` и `ARRAYREDUCE`, сохранив для `ARRAYMAP` форму и границы исходного видимого массива или среза.
+## Session 492 - 2026-04-28 12:01 - реализована вторая группа многомерных ARRAY-функций
+
+Что сделано:
+- `ARRAYEVERY`, `ARRAYSOME`, `ARRAYMAP` и `ARRAYREDUCE` расширены на массивы и представления любого ранга;
+- семантическая проверка больше не требует одномерности для этой callback-группы;
+- `ARRAYEVERY`, `ARRAYSOME` и `ARRAYREDUCE` переведены на общий обход видимых индексных наборов;
+- `ARRAYMAP` теперь создаёт новый массив той же видимой формы, с теми же границами и тем же рангом, что и исходный массив или представление;
+- в `RuntimeArrayValue` добавлено централизованное создание массива по видимой форме, включая пустые многомерные формы представлений;
+- обновлены старые acceptance-примеры `samples/functions/arraymap/`, чтобы они совпадали с новым наблюдаемым поведением;
+- обновлены пользовательское руководство, индекс руководства и добавлен runnable smoke-пример `samples/smoke/multidimensional-arrays/array_second_group.axm`.
+
+Изменённые файлы этого шага:
+- `src/Axiom.Semantics/Binding/Binder.InvocationExpressions.cs`
+- `src/Axiom.Runtime/Values/RuntimeArrayValue.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.Array.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `samples/functions/arraymap/basic_usage.axm`
+- `samples/functions/arraymap/polymorphic_transform.axm`
+- `samples/smoke/multidimensional-arrays/array_second_group.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/manual/arrays.html`
+- `docs/manual/scripts/manual.js`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj` проходит;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` проходит;
+- полный `dotnet test Axiom.sln` проходит.
+
+Решение:
+- callback-группа расширена только для функций, которые обходят все видимые элементы и не требуют отдельного координатного результата;
+- `ARRAYMAP` сохраняет видимую форму и для пустых многомерных представлений, вместо неявной нормализации к компактному одномерному результату.
+
+Следующий шаг:
+- перейти к отдельному договору для функций, меняющих форму массива: `ARRAYSLICE`, `ARRAYTAKE`, `ARRAYSKIP`, `ARRAYCONCAT`, `ARRAYPUSH`, `ARRAYPOP`, `ARRAYINSERT`, `ARRAYREMOVE`;
+- отдельно зафиксировать, какие из них получают многомерную семантику по измерению, а какие пока остаются одномерными.

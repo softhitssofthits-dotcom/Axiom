@@ -435,9 +435,9 @@ public sealed partial class Interpreter
 
         var every = true;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (every && !InvokeArrayPredicate(expression, predicate, array.GetValue(index)))
+            if (every && !InvokeArrayPredicate(expression, predicate, array.GetValue(indices)))
             {
                 every = false;
             }
@@ -456,9 +456,9 @@ public sealed partial class Interpreter
 
         var any = false;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (!any && InvokeArrayPredicate(expression, predicate, array.GetValue(index)))
+            if (!any && InvokeArrayPredicate(expression, predicate, array.GetValue(indices)))
             {
                 any = true;
             }
@@ -498,12 +498,10 @@ public sealed partial class Interpreter
         var array = RequireAllocatedArrayArgument(expression, "ARRAYMAP", "array", 0, argument);
         var arrayType = expression.Type as ArrayTypeSymbol ?? (ArrayTypeSymbol)argument.Type;
         var selector = RequireFunctionArgument(expression, 1, selectorArgument);
-        var values = new List<RuntimeValue>(array.Length);
-
-        ForEachArrayIndexAscending(array, index =>
-            values.Add(InvokeArrayCallback(expression, selector, callbackArgumentIndex: 1, array.GetValue(index))));
-
-        return CreateCompactArrayValue(arrayType, values);
+        return CreateVisibleShapeArrayValue(
+            arrayType,
+            array,
+            indices => InvokeArrayCallback(expression, selector, callbackArgumentIndex: 1, array.GetValue(indices)));
     }
 
     private RuntimeValue EvaluateArrayReduce(
@@ -516,8 +514,8 @@ public sealed partial class Interpreter
         var reducer = RequireFunctionArgument(expression, 2, reducerArgument);
         var accumulator = seed;
 
-        ForEachArrayIndexAscending(array, index =>
-            accumulator = InvokeArrayCallback(expression, reducer, callbackArgumentIndex: 2, accumulator, array.GetValue(index)));
+        ForEachArrayIndexSetAscending(array, indices =>
+            accumulator = InvokeArrayCallback(expression, reducer, callbackArgumentIndex: 2, accumulator, array.GetValue(indices)));
 
         return accumulator;
     }
@@ -642,6 +640,26 @@ public sealed partial class Interpreter
             lowerBound: 1,
             upperBound: values.Count == 0 ? 0 : values.Count,
             index => values[index - 1]);
+    }
+
+    private static RuntimeValue CreateVisibleShapeArrayValue(
+        ArrayTypeSymbol arrayType,
+        RuntimeArrayValue source,
+        Func<IReadOnlyList<int>, RuntimeValue> valueFactory)
+    {
+        ArgumentNullException.ThrowIfNull(arrayType);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueFactory);
+
+        var array = RuntimeArrayValue.CreateVisibleShape(
+            arrayType.ElementType,
+            fixedStringLength: null,
+            source.LowerBounds,
+            source.UpperBounds);
+
+        source.ForEachVisibleIndexSetAscending(indices => array.SetValue(indices, valueFactory(indices)));
+
+        return RuntimeValue.FromArray(arrayType, array);
     }
 
     private static RuntimeValue CloneArrayValue(ArrayTypeSymbol arrayType, RuntimeArrayValue source)

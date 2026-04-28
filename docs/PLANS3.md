@@ -162,3 +162,21 @@
    - расширить вторую безопасную группу обхода: `ARRAYEVERY`, `ARRAYSOME`, `ARRAYMAP` и `ARRAYREDUCE`;
    - для `ARRAYMAP` отдельно проверить сохранение формы и границ результата;
    - для `ARRAYREDUCE` закрепить порядок обхода в тестах и руководстве.
+## Обновление плана - 2026-04-28 - реализована вторая группа многомерных ARRAY-функций
+
+1. Вторая безопасная группа многомерных `ARRAY...`-функций реализована:
+   - `ARRAYEVERY`, `ARRAYSOME` и `ARRAYREDUCE` обходят все видимые элементы массива или представления любого ранга в стабильном порядке по измерениям;
+   - `ARRAYMAP` создаёт новый массив того же ранга и с теми же видимыми границами, что и исходный массив или представление;
+   - пустые видимые формы сохраняются и для результата `ARRAYMAP`, а не схлопываются к компактному одномерному `1 TO 0`;
+   - семантическая проверка больше не требует одномерности и для этой четвёрки callback-функций.
+2. Проверка:
+   - добавлены и обновлены автоматические проверки семантики, интерпретатора и виртуальной машины байт-кода;
+   - `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj` проходит;
+   - `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` проходит.
+3. Документация и ручная приёмка:
+   - обновлены `docs/manual/arrays.html` и `docs/manual/scripts/manual.js`;
+   - добавлен runnable `.axm`-пример `samples/smoke/multidimensional-arrays/array_second_group.axm`.
+4. Следующий шаг:
+   - перейти к отдельному договору для функций, меняющих форму: `ARRAYSLICE`, `ARRAYTAKE`, `ARRAYSKIP`, `ARRAYCONCAT`, `ARRAYPUSH`, `ARRAYPOP`, `ARRAYINSERT`, `ARRAYREMOVE`;
+   - отдельно зафиксировать, какие из них получают многомерную семантику по измерению, а какие пока остаются одномерными;
+   - не трогать координатную группу (`ARRAYINDEXOF`, `ARRAYLASTINDEXOF`, `ARRAYFINDALL`, `ARRAYSORT`, `ARRAYTOSORTED`, `ARRAYBINARYSEARCH`, `ARRAYDISTINCT`) до отдельного договора о форме результата и порядке обхода.

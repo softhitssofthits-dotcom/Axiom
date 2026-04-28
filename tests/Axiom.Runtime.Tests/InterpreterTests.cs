@@ -2185,6 +2185,51 @@ END FUNCTION
     }
 
     [Fact]
+    public void Execute_ArrayCallbackBuiltinsTraverseMultidimensionalVisibleElementsAndPreserveMappedShape()
+    {
+        const string text = """
+DIM values(2 TO 3, 4 TO 5) AS INTEGER
+DIM mapped(,) AS STRING
+values(2, 4) = 10
+values(2, 5) = 20
+values(3, 4) = 30
+values(3, 5) = 40
+
+PRINT ARRAYEVERY(values, IsPositive)
+PRINT ARRAYSOME(values(2 TO 3, 5 TO 5), IsLarge)
+mapped = ARRAYMAP(values(2 TO 3, 5 TO 5), FormatValue)
+PRINT LBOUND(mapped, 1)
+PRINT UBOUND(mapped, 1)
+PRINT LBOUND(mapped, 2)
+PRINT UBOUND(mapped, 2)
+PRINT mapped(2, 5)
+PRINT mapped(3, 5)
+PRINT ARRAYREDUCE(values(2 TO 3, 4 TO 5), "", AppendValue)
+
+FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value > 0
+END FUNCTION
+
+FUNCTION IsLarge(value AS INTEGER) AS BOOLEAN
+    RETURN value >= 40
+END FUNCTION
+
+FUNCTION FormatValue(value AS INTEGER) AS STRING
+    RETURN "N" + STR(value)
+END FUNCTION
+
+FUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING
+    RETURN accumulator + "[" + STR(value) + "]"
+END FUNCTION
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", "2", "3", "5", "5", "N20", "N40", "[10][20][30][40]"], host.Output);
+    }
+
+    [Fact]
     public void Execute_ArrayEveryTreatsCanonicalEmptyArrayAsTrueAndArraySomeAsFalse()
     {
         const string text = """
@@ -2308,7 +2353,7 @@ filtered = ARRAYFILTER(values, predicate)
     }
 
     [Fact]
-    public void Execute_ArrayMapReturnsCompactTransformedArrayAndPreservesSource()
+    public void Execute_ArrayMapPreservesTransformedArrayShapeAndPreservesSource()
     {
         const string text = """
 DIM values(5 TO 8) AS INTEGER
@@ -2319,15 +2364,15 @@ values(6) = 20
 values(7) = 30
 values(8) = 40
 mapped = ARRAYMAP(values, Multiply)
-mapped(1) = 99
+mapped(5) = 99
 PRINT LBOUND(mapped)
 PRINT UBOUND(mapped)
 PRINT ARRAYLENGTH(mapped)
 PRINT values(5)
-PRINT mapped(1)
-PRINT mapped(2)
-PRINT mapped(3)
-PRINT mapped(4)
+PRINT mapped(5)
+PRINT mapped(6)
+PRINT mapped(7)
+PRINT mapped(8)
 
 FUNCTION Multiply(value AS INTEGER) AS INTEGER
     RETURN value * factor
@@ -2337,7 +2382,7 @@ END FUNCTION
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["1", "4", "4", "10", "99", "60", "90", "120"], host.Output);
+        Assert.Equal(["5", "8", "4", "10", "99", "60", "90", "120"], host.Output);
     }
 
     [Fact]
@@ -2353,9 +2398,9 @@ values(7) = 30
 mapped = ARRAYMAP(values, FormatValue)
 PRINT LBOUND(mapped)
 PRINT UBOUND(mapped)
-PRINT mapped(1)
-PRINT mapped(2)
-PRINT mapped(3)
+PRINT mapped(5)
+PRINT mapped(6)
+PRINT mapped(7)
 
 FUNCTION FormatValue(value AS INTEGER) AS STRING
     RETURN prefix + STR(value)
@@ -2365,7 +2410,7 @@ END FUNCTION
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["1", "3", "item:10", "item:20", "item:30"], host.Output);
+        Assert.Equal(["5", "7", "item:10", "item:20", "item:30"], host.Output);
     }
 
     [Fact]
@@ -2389,6 +2434,31 @@ END FUNCTION
 
         Assert.True(result.Succeeded);
         Assert.Equal(["TRUE", "1", "0", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayMapPreservesMultidimensionalEmptyVisibleShape()
+    {
+        const string text = """
+DIM values(1 TO 2, 1 TO 2) AS INTEGER
+DIM mapped(,) AS INTEGER
+mapped = ARRAYMAP(values(2 TO 1, 1 TO 2), DoubleIt)
+PRINT ARRAYISALLOCATED(mapped)
+PRINT LBOUND(mapped, 1)
+PRINT UBOUND(mapped, 1)
+PRINT LBOUND(mapped, 2)
+PRINT UBOUND(mapped, 2)
+PRINT ARRAYLENGTH(mapped)
+
+FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "2", "1", "1", "2", "0"], host.Output);
     }
 
     [Fact]

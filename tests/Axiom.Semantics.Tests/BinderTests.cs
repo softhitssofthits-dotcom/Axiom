@@ -1009,6 +1009,47 @@ END FUNCTION
     }
 
     [Fact]
+    public void Bind_BuiltinArraySecondMultidimensionalGroupAcceptsMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM mapped(,) AS STRING
+PRINT ARRAYEVERY(values, IsPositive)
+PRINT ARRAYSOME(values, IsPositive)
+mapped = ARRAYMAP(values, FormatValue)
+PRINT ARRAYREDUCE(values, "", AppendValue)
+
+FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value > 0
+END FUNCTION
+
+FUNCTION FormatValue(value AS INTEGER) AS STRING
+    RETURN STR(value)
+END FUNCTION
+
+FUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING
+    RETURN accumulator + STR(value)
+END FUNCTION
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Boolean, BuiltinFunctionId.ArrayEvery);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Boolean, BuiltinFunctionId.ArraySome);
+
+        var mapAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[4]);
+        var mapCall = Assert.IsType<BoundCallExpression>(mapAssignment.Expression);
+        var mapResultType = Assert.IsType<ArrayTypeSymbol>(mapCall.Type);
+        Assert.Equal(TypeSymbol.String, mapResultType.ElementType);
+        Assert.Equal(2, mapResultType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayMap, AssertCalledFunction(mapCall).BuiltinId);
+
+        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.String, BuiltinFunctionId.ArrayReduce);
+    }
+
+    [Fact]
     public void Bind_BuiltinArraySortReportsScalarArgument()
     {
         BindProgram("ARRAYSORT(1)", out var diagnostics);

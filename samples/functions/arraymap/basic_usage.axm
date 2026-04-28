@@ -12,14 +12,14 @@ mapped = ARRAYMAP(values, Multiply)
 PRINT LBOUND(mapped)
 PRINT UBOUND(mapped)
 PRINT ARRAYLENGTH(mapped)
-PRINT mapped(1)
-PRINT mapped(2)
-PRINT mapped(3)
-PRINT mapped(4)
+PRINT mapped(5)
+PRINT mapped(6)
+PRINT mapped(7)
+PRINT mapped(8)
 
 factor = 10
 mapped = ARRAYMAP(values, Multiply)
-PRINT mapped(1)
+PRINT mapped(5)
 
 FUNCTION Multiply(value AS INTEGER) AS INTEGER
     RETURN value * factor

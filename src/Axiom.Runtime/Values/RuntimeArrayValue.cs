@@ -49,6 +49,34 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         Allocate(lowerBounds, upperBounds);
     }
 
+    public static RuntimeArrayValue CreateVisibleShape(
+        TypeSymbol elementType,
+        int? fixedStringLength,
+        IReadOnlyList<int> lowerBounds,
+        IReadOnlyList<int> upperBounds)
+    {
+        ArgumentNullException.ThrowIfNull(elementType);
+        ArgumentNullException.ThrowIfNull(lowerBounds);
+        ArgumentNullException.ThrowIfNull(upperBounds);
+
+        var array = new RuntimeArrayValue(elementType, fixedStringLength, lowerBounds.Count);
+
+        if (!HasNonCanonicalEmptyVisibleRange(lowerBounds, upperBounds))
+        {
+            array.Allocate(lowerBounds, upperBounds);
+            return array;
+        }
+
+        array._lowerBounds = lowerBounds.ToArray();
+        array._upperBounds = upperBounds.ToArray();
+        array._storageLowerBounds = NormalizeStorageLowerBounds(lowerBounds, upperBounds);
+        array._storageUpperBounds = NormalizeStorageUpperBounds(lowerBounds, upperBounds);
+        array._fixedStorageIndices = CreateEmptyFixedStorageIndices(array.Rank);
+        array._visibleStorageDimensions = CreateIdentityStorageDimensions(array.Rank);
+        array._elements = array.CreateDefaultElements(array._storageLowerBounds, array._storageUpperBounds);
+        return array;
+    }
+
     private RuntimeArrayValue(
         TypeSymbol elementType,
         int? fixedStringLength,
@@ -503,6 +531,48 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
     private static bool IsCanonicalEmptyRange(int lowerBound, int upperBound) => lowerBound == 1 && upperBound == 0;
 
     private static bool IsEmptyRange(int lowerBound, int upperBound) => upperBound < lowerBound;
+
+    private static bool HasNonCanonicalEmptyVisibleRange(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
+    {
+        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
+        {
+            if (IsEmptyRange(lowerBounds[dimension], upperBounds[dimension])
+                && !IsCanonicalEmptyRange(lowerBounds[dimension], upperBounds[dimension]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static int[] NormalizeStorageLowerBounds(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
+    {
+        var normalized = new int[lowerBounds.Count];
+
+        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
+        {
+            normalized[dimension] = IsEmptyRange(lowerBounds[dimension], upperBounds[dimension])
+                ? 1
+                : lowerBounds[dimension];
+        }
+
+        return normalized;
+    }
+
+    private static int[] NormalizeStorageUpperBounds(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
+    {
+        var normalized = new int[upperBounds.Count];
+
+        for (var dimension = 0; dimension < upperBounds.Count; dimension++)
+        {
+            normalized[dimension] = IsEmptyRange(lowerBounds[dimension], upperBounds[dimension])
+                ? 0
+                : upperBounds[dimension];
+        }
+
+        return normalized;
+    }
 
     private RuntimeValue[] CreateDefaultElements(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
     {

@@ -406,9 +406,9 @@ public sealed partial class BytecodeVm
         var predicate = RequireFunctionArgument(predicateArgument, location);
         var every = true;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (every && !InvokeArrayPredicate(predicate, array.GetValue(index), location))
+            if (every && !InvokeArrayPredicate(predicate, array.GetValue(indices), location))
             {
                 every = false;
             }
@@ -423,9 +423,9 @@ public sealed partial class BytecodeVm
         var predicate = RequireFunctionArgument(predicateArgument, location);
         var any = false;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (!any && InvokeArrayPredicate(predicate, array.GetValue(index), location))
+            if (!any && InvokeArrayPredicate(predicate, array.GetValue(indices), location))
             {
                 any = true;
             }
@@ -457,13 +457,11 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYMAP", location);
         var selector = RequireFunctionArgument(selectorArgument, location);
-        var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(selector.Function.ReturnType);
-        var values = new List<RuntimeValue>(array.Length);
-
-        ForEachArrayIndexAscending(array, index =>
-            values.Add(InvokeArrayCallback(selector, location, array.GetValue(index))));
-
-        return CreateCompactArrayValue(resultType, values);
+        var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(selector.Function.ReturnType, array.Rank);
+        return CreateVisibleShapeArrayValue(
+            resultType,
+            array,
+            indices => InvokeArrayCallback(selector, location, array.GetValue(indices)));
     }
 
     private RuntimeValue EvaluateArrayReduceBuiltin(
@@ -476,8 +474,8 @@ public sealed partial class BytecodeVm
         var reducer = RequireFunctionArgument(reducerArgument, location);
         var accumulator = seed;
 
-        ForEachArrayIndexAscending(array, index =>
-            accumulator = InvokeArrayCallback(reducer, location, accumulator, array.GetValue(index)));
+        ForEachArrayIndexSetAscending(array, indices =>
+            accumulator = InvokeArrayCallback(reducer, location, accumulator, array.GetValue(indices)));
 
         return accumulator;
     }
@@ -701,6 +699,26 @@ public sealed partial class BytecodeVm
             lowerBound: 1,
             upperBound: values.Count == 0 ? 0 : values.Count,
             index => values[index - 1]);
+    }
+
+    private static RuntimeValue CreateVisibleShapeArrayValue(
+        ArrayTypeSymbol arrayType,
+        RuntimeArrayValue source,
+        Func<IReadOnlyList<int>, RuntimeValue> valueFactory)
+    {
+        ArgumentNullException.ThrowIfNull(arrayType);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueFactory);
+
+        var array = RuntimeArrayValue.CreateVisibleShape(
+            arrayType.ElementType,
+            fixedStringLength: null,
+            source.LowerBounds,
+            source.UpperBounds);
+
+        source.ForEachVisibleIndexSetAscending(indices => array.SetValue(indices, valueFactory(indices)));
+
+        return RuntimeValue.FromArray(arrayType, array);
     }
 
     private static RuntimeValue CloneArrayValue(ArrayTypeSymbol arrayType, RuntimeArrayValue source)

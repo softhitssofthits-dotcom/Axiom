@@ -484,7 +484,7 @@ public sealed partial class Binder
             : arrayType.ElementType;
         var expectedSelectorType = FunctionTypeSymbol.Create([arrayType.ElementType], selectorReturnType);
         var selectorArgument = rawSelector;
-        var resultArrayType = ArrayTypeSymbol.Create(selectorReturnType) as ArrayTypeSymbol;
+        var resultArrayType = ArrayTypeSymbol.Create(selectorReturnType, arrayType.Rank) as ArrayTypeSymbol;
 
         if (rawSelector.Type != TypeSymbol.Error)
         {
@@ -894,7 +894,11 @@ public sealed partial class Binder
             or BuiltinFunctionId.ArrayClone
             or BuiltinFunctionId.ArrayFill
             or BuiltinFunctionId.ArrayContains
-            or BuiltinFunctionId.ArrayCount);
+            or BuiltinFunctionId.ArrayCount
+            or BuiltinFunctionId.ArrayEvery
+            or BuiltinFunctionId.ArraySome
+            or BuiltinFunctionId.ArrayMap
+            or BuiltinFunctionId.ArrayReduce);
     }
 
     private static bool IsValidReadableArrayIndexCount(ArrayTypeSymbol arrayType, int actualCount)
