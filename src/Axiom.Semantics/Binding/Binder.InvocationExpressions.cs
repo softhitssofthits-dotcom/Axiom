@@ -15,9 +15,9 @@ public sealed partial class Binder
                 {
                     var arrayType = (ArrayTypeSymbol)variable.Type;
 
-                    if (expression.Arguments.Count != arrayType.Rank)
+                    if (!IsValidReadableArrayIndexCount(arrayType, expression.Arguments.Count))
                     {
-                        ReportWrongArgumentCount(variable.Name, arrayType.Rank, expression.Arguments.Count, nameExpression.IdentifierToken.Location);
+                        ReportReadableArrayIndexCount(variable.Name, arrayType.Rank, expression.Arguments.Count, nameExpression.IdentifierToken.Location);
 
                         foreach (var argument in expression.Arguments)
                         {
@@ -67,9 +67,9 @@ public sealed partial class Binder
             var displayName = GetArrayTargetDisplayName(target);
             var arrayType = (ArrayTypeSymbol)target.Type;
 
-            if (expression.Arguments.Count != arrayType.Rank)
+            if (!IsValidReadableArrayIndexCount(arrayType, expression.Arguments.Count))
             {
-                ReportWrongArgumentCount(displayName, arrayType.Rank, expression.Arguments.Count, GetLocation(expression.Target));
+                ReportReadableArrayIndexCount(displayName, arrayType.Rank, expression.Arguments.Count, GetLocation(expression.Target));
 
                 foreach (var argument in expression.Arguments)
                 {
@@ -125,7 +125,7 @@ public sealed partial class Binder
         {
             NameExpressionSyntax nameExpression => BindAssignableNameTarget(nameExpression),
             CallExpressionSyntax callExpression => BindAssignableCallTarget(callExpression),
-            ArrayAccessExpressionSyntax arrayAccessExpression => BindArrayAccessExpression(arrayAccessExpression),
+            ArrayAccessExpressionSyntax arrayAccessExpression => BindAssignableArrayAccessTarget(arrayAccessExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             _ => new BoundErrorExpression(GetLocation(target))
         };
@@ -711,9 +711,16 @@ public sealed partial class Binder
         }
 
         var indices = indexExpressions
-            .Select(BindNumericExpression)
+            .Select(BindArrayIndexExpression)
             .ToArray();
-        return new BoundArrayAccessExpression(location, target, indices, displayName);
+        return new BoundArrayAccessExpression(location, target, indices, ResolveArrayAccessResultType(target.Type, indices), displayName);
+    }
+
+    private BoundExpression BindArrayIndexExpression(ExpressionSyntax expression)
+    {
+        return expression is RangeExpressionSyntax rangeExpression
+            ? BindRangeExpression(rangeExpression, reportInvalidStandaloneUse: false)
+            : BindNumericExpression(expression);
     }
 
     private static VariableSymbol? TryGetAssignedVariable(BoundExpression target)
@@ -748,6 +755,16 @@ public sealed partial class Binder
                 return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
             }
 
+            if (HasRangeArgument(expression.Arguments))
+            {
+                foreach (var argument in expression.Arguments)
+                {
+                    BindArrayIndexExpression(argument);
+                }
+
+                return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
+            }
+
             return BindArrayAccess(
                 new BoundVariableExpression(nameExpression.IdentifierToken.Location, variable),
                 expression.Arguments,
@@ -774,10 +791,56 @@ public sealed partial class Binder
                 return new BoundErrorExpression(GetLocation(expression.Target));
             }
 
+            if (HasRangeArgument(expression.Arguments))
+            {
+                foreach (var argument in expression.Arguments)
+                {
+                    BindArrayIndexExpression(argument);
+                }
+
+                return new BoundErrorExpression(GetLocation(expression.Target));
+            }
+
             return BindArrayAccess(target, expression.Arguments, GetLocation(expression.Target), displayName);
         }
 
         return new BoundErrorExpression(GetLocation(expression));
+    }
+
+    private BoundExpression BindAssignableArrayAccessTarget(ArrayAccessExpressionSyntax expression)
+    {
+        var target = BindArrayAccessExpression(expression);
+
+        if (target.Type is not ArrayTypeSymbol)
+        {
+            return target;
+        }
+
+        if (_scope.TryLookupVariable(expression.Identifier.Text, out var variable)
+            && variable?.Type is ArrayTypeSymbol arrayType)
+        {
+            ReportWrongArgumentCount(variable.Name, arrayType.Rank, actualCount: 1, expression.Identifier.Location);
+        }
+
+        return new BoundErrorExpression(expression.Identifier.Location);
+    }
+
+    private bool HasRangeArgument(IReadOnlyList<ExpressionSyntax> arguments)
+    {
+        var hasRange = false;
+
+        foreach (var argument in arguments)
+        {
+            if (argument is not RangeExpressionSyntax range)
+            {
+                continue;
+            }
+
+            ReportInvalidRangeExpression(range.ToKeyword.Location);
+            hasRange = true;
+        }
+
+        return hasRange;
     }
 
     private static string GetArrayTargetDisplayName(BoundExpression target)
@@ -828,6 +891,49 @@ public sealed partial class Binder
             or BuiltinFunctionId.UBound
             or BuiltinFunctionId.ArrayLength
             or BuiltinFunctionId.ArrayIsAllocated
-            or BuiltinFunctionId.ArrayClone);
+            or BuiltinFunctionId.ArrayClone
+            or BuiltinFunctionId.ArrayFill
+            or BuiltinFunctionId.ArrayContains
+            or BuiltinFunctionId.ArrayCount);
+    }
+
+    private static bool IsValidReadableArrayIndexCount(ArrayTypeSymbol arrayType, int actualCount)
+    {
+        return actualCount >= 1 && actualCount <= arrayType.Rank;
+    }
+
+    private void ReportReadableArrayIndexCount(string displayName, int rank, int actualCount, TextLocation location)
+    {
+        if (rank == 1)
+        {
+            ReportWrongArgumentCount(displayName, 1, actualCount, location);
+            return;
+        }
+
+        ReportWrongArgumentCount(displayName, Enumerable.Range(1, rank).ToArray(), actualCount, location);
+    }
+
+    private static TypeSymbol ResolveArrayAccessResultType(TypeSymbol targetType, IReadOnlyList<BoundExpression> indices)
+    {
+        if (targetType is not ArrayTypeSymbol arrayType)
+        {
+            return TypeSymbol.Error;
+        }
+
+        var indexCount = indices.Count;
+        if (indexCount < 1 || indexCount > arrayType.Rank)
+        {
+            return TypeSymbol.Error;
+        }
+
+        var fixedIndexCount = indices.Count(static index => index is not BoundArrayRangeExpression);
+        var hasRange = fixedIndexCount != indexCount;
+
+        if (!hasRange && indexCount == arrayType.Rank)
+        {
+            return arrayType.ElementType;
+        }
+
+        return ArrayTypeSymbol.Create(arrayType.ElementType, arrayType.Rank - fixedIndexCount);
     }
 }

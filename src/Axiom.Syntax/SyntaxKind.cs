@@ -130,6 +130,7 @@ public enum SyntaxKind
     NameExpression,
     UnaryExpression,
     BinaryExpression,
+    RangeExpression,
     ParenthesizedExpression,
     CallExpression,
     ArrayAccessExpression,

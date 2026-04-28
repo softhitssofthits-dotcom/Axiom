@@ -4,5 +4,5 @@ DIM target AS STRING = ".artifacts/axiom_sample_rename_target.txt"
 
 PRINT DELETEFILE(target)
 PRINT WRITEFILE(source, "Hello")
-PRINT RENAMEFILE(source, ".artifacts/axiom_sample_rename_target.txt")
+PRINT RENAMEFILE(source, "axiom_sample_rename_target.txt")
 PRINT FILEEXISTS(target)

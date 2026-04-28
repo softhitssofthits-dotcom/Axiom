@@ -308,6 +308,31 @@ copy = ARRAYCLONE(values)
     }
 
     [Fact]
+    public void Bind_BuiltinArrayFirstMultidimensionalGroupAcceptsMultidimensionalArray()
+    {
+        const string text = """
+DIM values(1 TO 2, 1 TO 2) AS INTEGER
+DIM copy(,) AS INTEGER
+copy = ARRAYCLONE(values)
+ARRAYFILL(values, 7)
+PRINT ARRAYCONTAINS(values, 7)
+PRINT ARRAYCOUNT(values, 7)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var cloneCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var cloneType = Assert.IsType<ArrayTypeSymbol>(cloneCall.Type);
+        Assert.Equal(2, cloneType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayClone, AssertCalledFunction(cloneCall).BuiltinId);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Void, BuiltinFunctionId.ArrayFill);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Boolean, BuiltinFunctionId.ArrayContains);
+        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.Integer, BuiltinFunctionId.ArrayCount);
+    }
+
+    [Fact]
     public void Bind_BuiltinArraySliceReturnsSameArrayType()
     {
         const string text = """

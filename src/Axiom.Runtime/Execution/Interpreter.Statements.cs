@@ -131,6 +131,13 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteErase(BoundEraseStatement statement)
     {
         var array = EvaluateExpression(statement.Target).AsArray();
+
+        if (array.IsView)
+        {
+            ReportBuiltInArgumentError("ERASE", "array", "не поддерживает подмассивы-представления.", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
         array.Deallocate();
         return ExecutionSignal.None;
     }
@@ -138,6 +145,13 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteRedim(BoundRedimStatement statement)
     {
         var array = EvaluateExpression(statement.Target).AsArray();
+
+        if (array.IsView)
+        {
+            ReportBuiltInArgumentError(statement.Preserve ? "REDIM PRESERVE" : "REDIM", "array", "не поддерживает подмассивы-представления.", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
         var (lowerBounds, upperBounds) = EvaluateArrayBounds(statement.ArrayBounds);
         EnsureAllowedArrayLowerBounds(statement.DisplayName, lowerBounds, statement.ArrayBounds);
 

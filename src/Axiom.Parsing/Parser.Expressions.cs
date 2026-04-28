@@ -118,7 +118,16 @@ public sealed partial class Parser
         {
             while (true)
             {
-                items.Add(ParseExpression());
+                var expression = ParseExpression();
+
+                if (Current.Kind == SyntaxKind.ToKeyword)
+                {
+                    var toKeyword = NextToken();
+                    var upperBound = ParseExpression();
+                    expression = new RangeExpressionSyntax(expression, toKeyword, upperBound);
+                }
+
+                items.Add(expression);
 
                 if (Current.Kind != SyntaxKind.CommaToken)
                 {

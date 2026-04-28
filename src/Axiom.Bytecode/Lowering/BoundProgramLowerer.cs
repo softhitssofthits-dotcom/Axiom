@@ -232,8 +232,12 @@ public sealed class BoundProgramLowerer
         {
             LowerExpression(assignment.Expression, instructions);
             LowerExpression(arrayAccess.Target, instructions);
-            LowerExpression(arrayAccess.Index, instructions);
-            instructions.Add(LoweredInstruction.StoreElement(assignment.Location, arrayAccess.DisplayName));
+            foreach (var index in arrayAccess.Indices)
+            {
+                LowerExpression(index, instructions);
+            }
+
+            instructions.Add(LoweredInstruction.StoreElement(assignment.Location, arrayAccess.DisplayName, arrayAccess.Indices.Count));
             return;
         }
 
@@ -263,21 +267,23 @@ public sealed class BoundProgramLowerer
             return;
         }
 
-        if (declaration.LowerBound is null && declaration.UpperBound is null)
+        if (declaration.ArrayBounds.Count == 0)
         {
-            return;
-        }
-
-        if (declaration.LowerBound is null || declaration.UpperBound is null)
-        {
-            ReportUnsupported(declaration, "РЅРµРїРѕР»РЅС‹Рµ РіСЂР°РЅРёС†С‹ РјР°СЃСЃРёРІР°");
             return;
         }
 
         instructions.Add(LoweredInstruction.LoadVariable(declaration.Location, declaration.Variable));
-        LowerExpression(declaration.LowerBound, instructions);
-        LowerExpression(declaration.UpperBound, instructions);
-        instructions.Add(LoweredInstruction.RedimArray(declaration.Location, declaration.Variable.Name, preserve: false));
+        foreach (var arrayBound in declaration.ArrayBounds)
+        {
+            LowerExpression(arrayBound.LowerBound, instructions);
+            LowerExpression(arrayBound.UpperBound, instructions);
+        }
+
+        instructions.Add(LoweredInstruction.RedimArray(
+            declaration.Location,
+            declaration.Variable.Name,
+            preserve: false,
+            declaration.ArrayBounds.Count));
     }
 
     private void LowerErase(BoundEraseStatement erase, List<LoweredInstruction> instructions)
@@ -289,9 +295,17 @@ public sealed class BoundProgramLowerer
     private void LowerRedim(BoundRedimStatement redim, List<LoweredInstruction> instructions)
     {
         LowerExpression(redim.Target, instructions);
-        LowerExpression(redim.LowerBound, instructions);
-        LowerExpression(redim.UpperBound, instructions);
-        instructions.Add(LoweredInstruction.RedimArray(redim.Location, redim.DisplayName, redim.Preserve));
+        foreach (var arrayBound in redim.ArrayBounds)
+        {
+            LowerExpression(arrayBound.LowerBound, instructions);
+            LowerExpression(arrayBound.UpperBound, instructions);
+        }
+
+        instructions.Add(LoweredInstruction.RedimArray(
+            redim.Location,
+            redim.DisplayName,
+            redim.Preserve,
+            redim.ArrayBounds.Count));
     }
 
     private void LowerPrint(BoundPrintStatement print, List<LoweredInstruction> instructions)
@@ -701,8 +715,16 @@ public sealed class BoundProgramLowerer
 
             case BoundArrayAccessExpression arrayAccess:
                 LowerExpression(arrayAccess.Target, instructions);
-                LowerExpression(arrayAccess.Index, instructions);
-                instructions.Add(LoweredInstruction.LoadElement(arrayAccess.Location, arrayAccess.DisplayName));
+                foreach (var index in arrayAccess.Indices)
+                {
+                    LowerArrayIndex(index, instructions);
+                }
+
+                instructions.Add(LoweredInstruction.LoadElement(
+                    arrayAccess.Location,
+                    arrayAccess.DisplayName,
+                    arrayAccess.Indices.Count,
+                    GetArrayIndexRangeMask(arrayAccess.Indices)));
                 break;
 
             case BoundFieldAccessExpression fieldAccess:
@@ -757,6 +779,33 @@ public sealed class BoundProgramLowerer
         }
 
         instructions.Add(LoweredInstruction.CallValue(call.Location, call.Arguments.Count, call.Type));
+    }
+
+    private void LowerArrayIndex(BoundExpression index, List<LoweredInstruction> instructions)
+    {
+        if (index is BoundArrayRangeExpression range)
+        {
+            LowerExpression(range.LowerBound, instructions);
+            LowerExpression(range.UpperBound, instructions);
+            return;
+        }
+
+        LowerExpression(index, instructions);
+    }
+
+    private static int GetArrayIndexRangeMask(IReadOnlyList<BoundExpression> indices)
+    {
+        var mask = 0;
+
+        for (var index = 0; index < indices.Count; index++)
+        {
+            if (indices[index] is BoundArrayRangeExpression)
+            {
+                mask |= 1 << index;
+            }
+        }
+
+        return mask;
     }
 
     private string CreateLabel()

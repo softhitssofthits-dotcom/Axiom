@@ -614,13 +614,19 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.RedimArray:
-                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 3);
                     ValidateRedimArrayInstruction(module, routine, instructionIndex, instruction);
                     break;
 
                 case Opcode.LoadElement:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 3);
+                    ValidateElementInstruction(module, routine, instructionIndex, instruction);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя массива");
+                    break;
+
                 case Opcode.StoreElement:
-                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateElementInstruction(module, routine, instructionIndex, instruction);
                     ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя массива");
                     break;
 
@@ -1140,34 +1146,108 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.RedimArray:
             {
-                var upperBoundType = Pop();
-                var lowerBoundType = Pop();
+                var dimensionCount = instruction.GetOperand(2);
+                var upperBoundTypes = new TypeSymbol?[dimensionCount];
+                var lowerBoundTypes = new TypeSymbol?[dimensionCount];
+                for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
+                {
+                    upperBoundTypes[dimension] = Pop();
+                    lowerBoundTypes[dimension] = Pop();
+                }
                 var arrayType = Pop();
                 ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив");
-                ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, lowerBoundType, "нижнюю границу массива");
-                ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, upperBoundType, "верхнюю границу массива");
+                for (var dimension = 0; dimension < dimensionCount; dimension++)
+                {
+                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, lowerBoundTypes[dimension], $"нижнюю границу измерения {dimension + 1}");
+                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, upperBoundTypes[dimension], $"верхнюю границу измерения {dimension + 1}");
+                }
                 break;
             }
 
             case Opcode.LoadElement:
             {
-                var indexType = Pop();
+                var dimensionCount = instruction.GetOperand(1);
+                var rangeMask = instruction.GetOperand(2);
+                var indexTypes = new TypeSymbol?[dimensionCount];
+                var upperBoundTypes = new TypeSymbol?[dimensionCount];
+                for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
+                {
+                    if (IsRangeDimension(rangeMask, dimension))
+                    {
+                        upperBoundTypes[dimension] = Pop();
+                        indexTypes[dimension] = Pop();
+                    }
+                    else
+                    {
+                        indexTypes[dimension] = Pop();
+                    }
+                }
                 var arrayType = Pop();
-                ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexType, "индекс массива");
-                Push(ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив") is { } typedArray
-                    ? typedArray.ElementType
-                    : null);
+                for (var dimension = 0; dimension < dimensionCount; dimension++)
+                {
+                    if (IsRangeDimension(rangeMask, dimension))
+                    {
+                        ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexTypes[dimension], $"нижнюю границу среза измерения {dimension + 1}");
+                        ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, upperBoundTypes[dimension], $"верхнюю границу среза измерения {dimension + 1}");
+                    }
+                    else
+                    {
+                        ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexTypes[dimension], $"индекс измерения {dimension + 1}");
+                    }
+                }
+                if (ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив") is { } typedArray)
+                {
+                    if (dimensionCount > typedArray.Rank)
+                    {
+                        Report(
+                            "BC4111",
+                            $"Инструкция LoadElement в процедуре '{routine.Name}' запрашивает {dimensionCount} индексов у массива ранга {typedArray.Rank}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                        Push(null);
+                    }
+                    else
+                    {
+                        var fixedDimensionCount = dimensionCount - CountRangeBits(instruction);
+                        Push(fixedDimensionCount == typedArray.Rank
+                            ? typedArray.ElementType
+                            : ArrayTypeSymbol.Create(typedArray.ElementType, typedArray.Rank - fixedDimensionCount));
+                    }
+                }
+                else
+                {
+                    Push(null);
+                }
                 break;
             }
 
             case Opcode.StoreElement:
             {
-                var indexType = Pop();
+                var dimensionCount = instruction.GetOperand(1);
+                var indexTypes = new TypeSymbol?[dimensionCount];
+                for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
+                {
+                    indexTypes[dimension] = Pop();
+                }
                 var arrayType = Pop();
                 var valueType = Pop();
-                ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexType, "индекс массива");
+                for (var dimension = 0; dimension < dimensionCount; dimension++)
+                {
+                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexTypes[dimension], $"индекс измерения {dimension + 1}");
+                }
                 if (ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив") is { } typedArray)
                 {
+                    if (dimensionCount != typedArray.Rank)
+                    {
+                        Report(
+                            "BC4112",
+                            $"Инструкция StoreElement в процедуре '{routine.Name}' запрашивает {dimensionCount} индексов у массива ранга {typedArray.Rank}; для записи элемента нужны все измерения.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+
                     ValidateAssignableStackType(module, routine, instructionIndex, instruction.Opcode, valueType, typedArray.ElementType, "значение элемента массива");
                 }
                 break;
@@ -2173,16 +2253,23 @@ public sealed class BytecodeModuleValidator
             case Opcode.CompareLessOrEqual:
             case Opcode.CompareGreater:
             case Opcode.CompareGreaterOrEqual:
-            case Opcode.LoadElement:
             case Opcode.OpenFile:
             case Opcode.StoreField:
                 popCount = 2;
                 pushCount = instruction.Opcode is Opcode.StoreField ? 0 : 1;
                 return true;
 
+            case Opcode.LoadElement:
+                popCount = instruction.GetOperand(1) + CountRangeBits(instruction) + 1;
+                pushCount = 1;
+                return true;
+
             case Opcode.RedimArray:
+                popCount = (instruction.GetOperand(2) * 2) + 1;
+                return true;
+
             case Opcode.StoreElement:
-                popCount = 3;
+                popCount = instruction.GetOperand(1) + 2;
                 return true;
 
             case Opcode.LoadField:
@@ -2429,7 +2516,7 @@ public sealed class BytecodeModuleValidator
         int instructionIndex,
         BytecodeInstruction instruction)
     {
-        if (instruction.OperandCount < 2)
+        if (instruction.OperandCount < 3)
         {
             return;
         }
@@ -2446,6 +2533,84 @@ public sealed class BytecodeModuleValidator
         }
 
         ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 1, "имя массива");
+        ValidatePositiveCountOperand(module, routine, instructionIndex, instruction, operandIndex: 2, code: "BC4109", label: "число измерений");
+    }
+
+    private void ValidateElementInstruction(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        ValidatePositiveCountOperand(module, routine, instructionIndex, instruction, operandIndex: 1, code: "BC4110", label: "число индексов");
+
+        if (instruction.Opcode == Opcode.LoadElement && instruction.OperandCount >= 3)
+        {
+            var indexCount = instruction.GetOperand(1);
+            var rangeMask = instruction.GetOperand(2);
+
+            if (rangeMask < 0 || (indexCount < 31 && (rangeMask >> indexCount) != 0))
+            {
+                Report(
+                    "BC4111",
+                    $"Инструкция LoadElement в процедуре '{routine.Name}' содержит некорректную маску диапазонов {rangeMask} для {indexCount} индексов.",
+                    module,
+                    routine.Id,
+                    instructionIndex);
+            }
+        }
+    }
+
+    private static int CountRangeBits(BytecodeInstruction instruction)
+    {
+        if (instruction.Opcode != Opcode.LoadElement || instruction.OperandCount < 3)
+        {
+            return 0;
+        }
+
+        var mask = instruction.GetOperand(2);
+        var count = 0;
+
+        while (mask > 0)
+        {
+            count += mask & 1;
+            mask >>= 1;
+        }
+
+        return count;
+    }
+
+    private static bool IsRangeDimension(int rangeMask, int dimension)
+    {
+        return (rangeMask & (1 << dimension)) != 0;
+    }
+
+    private void ValidatePositiveCountOperand(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction,
+        int operandIndex,
+        string code,
+        string label)
+    {
+        if (instruction.OperandCount <= operandIndex)
+        {
+            return;
+        }
+
+        var value = instruction.GetOperand(operandIndex);
+        if (value > 0)
+        {
+            return;
+        }
+
+        Report(
+            code,
+            $"Инструкция {instruction.Opcode} в процедуре '{routine.Name}' содержит некорректное {label} {value}.",
+            module,
+            routine.Id,
+            instructionIndex);
     }
 
     private void ValidateInputInstruction(

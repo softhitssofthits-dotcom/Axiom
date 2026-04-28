@@ -14,6 +14,7 @@ public sealed partial class Binder
             NameExpressionSyntax nameExpression => BindNameExpression(nameExpression),
             UnaryExpressionSyntax unaryExpression => BindUnaryExpression(unaryExpression),
             BinaryExpressionSyntax binaryExpression => BindBinaryExpression(binaryExpression),
+            RangeExpressionSyntax rangeExpression => BindRangeExpression(rangeExpression, reportInvalidStandaloneUse: true),
             ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             ArrayAccessExpressionSyntax arrayAccessExpression => BindArrayAccessExpression(arrayAccessExpression),
@@ -130,6 +131,19 @@ public sealed partial class Binder
             SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => BindShiftExpression(left, right, expression),
             _ => ReportInvalidBinaryOperator(expression.OperatorToken.Kind, left.Type, right.Type, expression.OperatorToken.Location)
         };
+    }
+
+    private BoundExpression BindRangeExpression(RangeExpressionSyntax expression, bool reportInvalidStandaloneUse)
+    {
+        var lowerBound = BindNumericExpression(expression.LowerBound);
+        var upperBound = BindNumericExpression(expression.UpperBound);
+
+        if (reportInvalidStandaloneUse)
+        {
+            ReportInvalidRangeExpression(expression.ToKeyword.Location);
+        }
+
+        return new BoundArrayRangeExpression(expression.ToKeyword.Location, lowerBound, upperBound);
     }
 
     private BoundExpression BindCondition(ExpressionSyntax expression)

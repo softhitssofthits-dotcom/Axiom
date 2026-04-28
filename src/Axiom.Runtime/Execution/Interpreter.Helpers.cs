@@ -147,6 +147,34 @@ public sealed partial class Interpreter
         return indices;
     }
 
+    private RuntimeArrayIndexSlice[] EvaluateArrayIndexSlices(IReadOnlyList<BoundExpression> indexExpressions, string detailPrefix)
+    {
+        ArgumentNullException.ThrowIfNull(indexExpressions);
+        ArgumentException.ThrowIfNullOrWhiteSpace(detailPrefix);
+
+        var slices = new RuntimeArrayIndexSlice[indexExpressions.Count];
+
+        for (var index = 0; index < indexExpressions.Count; index++)
+        {
+            var expression = indexExpressions[index];
+            var detail = indexExpressions.Count == 1
+                ? detailPrefix
+                : $"{detailPrefix} #{index + 1}";
+
+            if (expression is BoundArrayRangeExpression range)
+            {
+                var lowerBound = ToArrayBound(EvaluateExpression(range.LowerBound), range.LowerBound.Location, detail);
+                var upperBound = ToArrayBound(EvaluateExpression(range.UpperBound), range.UpperBound.Location, detail);
+                slices[index] = RuntimeArrayIndexSlice.Range(lowerBound, upperBound);
+                continue;
+            }
+
+            slices[index] = RuntimeArrayIndexSlice.Single(ToArrayBound(EvaluateExpression(expression), expression.Location, detail));
+        }
+
+        return slices;
+    }
+
     private void AssignRecordField(BoundFieldAccessExpression target, RuntimeValue value)
     {
         var record = EvaluateExpression(target.Target).AsRecord();
@@ -417,9 +445,49 @@ public sealed partial class Interpreter
             location);
     }
 
+    private void ReportArraySlicesOutOfBounds(string arrayName, IReadOnlyList<RuntimeArrayIndexSlice> slices, RuntimeArrayValue array, TextLocation location)
+    {
+        ReportRuntimeDiagnostic(
+            ArrayBoundsCode,
+            $"Индексы {FormatArraySlices(slices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
+            location);
+    }
+
     private static string FormatArrayIndices(IReadOnlyList<int> indices)
     {
         return $"({string.Join(", ", indices)})";
+    }
+
+    private static string FormatArraySlices(IReadOnlyList<RuntimeArrayIndexSlice> slices)
+    {
+        return $"({string.Join(", ", slices.Select(static slice => slice.IsRange ? $"{slice.LowerBound} TO {slice.UpperBound}" : slice.LowerBound.ToString(CultureInfo.InvariantCulture)))})";
+    }
+
+    private static bool TryValidateArraySlices(RuntimeArrayValue array, IReadOnlyList<RuntimeArrayIndexSlice> slices)
+    {
+        if (!array.IsAllocated || slices.Count < 1 || slices.Count > array.Rank)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < slices.Count; index++)
+        {
+            var lowerBound = array.GetLowerBound(index + 1);
+            var upperBound = array.GetUpperBound(index + 1);
+            var slice = slices[index];
+
+            if (slice.LowerBound < lowerBound || slice.LowerBound > upperBound)
+            {
+                return false;
+            }
+
+            if (slice.UpperBound < lowerBound || slice.UpperBound > upperBound)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static string FormatArrayBounds(RuntimeArrayValue array)

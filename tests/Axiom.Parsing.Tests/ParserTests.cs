@@ -291,6 +291,25 @@ END FUNCTION
     }
 
     [Fact]
+    public void Parse_CallArgumentRangeExpression()
+    {
+        var program = ParseProgram("PRINT grid(2, 3 TO 4)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var print = AssertPrintStatement(program);
+        var call = Assert.IsType<CallExpressionSyntax>(AssertSinglePrintExpression(print));
+
+        Assert.Equal("grid", Assert.IsType<NameExpressionSyntax>(call.Target).IdentifierToken.Text);
+        Assert.Equal(2, call.Arguments.Count);
+        Assert.IsType<LiteralExpressionSyntax>(call.Arguments[0]);
+
+        var range = Assert.IsType<RangeExpressionSyntax>(call.Arguments[1]);
+        Assert.Equal(SyntaxKind.ToKeyword, range.ToKeyword.Kind);
+        Assert.Equal(3, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(range.LowerBound).LiteralToken.Value));
+        Assert.Equal(4, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(range.UpperBound).LiteralToken.Value));
+    }
+
+    [Fact]
     public void Parse_DimStatementWithGroupedInferredDeclaration()
     {
         var program = ParseProgram("DIM x, y = 10", out var diagnostics);
@@ -320,6 +339,33 @@ END FUNCTION
         Assert.Null(bounds.ToKeyword);
         Assert.Null(bounds.EndExpression);
         AssertNamedType(typeClause.Type, SyntaxKind.StringKeyword);
+    }
+
+    [Fact]
+    public void Parse_DimStatementWithMultidimensionalArrayDeclarator()
+    {
+        var program = ParseProgram("DIM grid(1 TO 2, 10 TO 11) AS INTEGER", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var dim = AssertGlobalStatement<DimStatementSyntax>(program);
+        var declaration = Assert.Single(dim.Declarations);
+        var declarator = Assert.Single(declaration.Declarators);
+        var bounds = Assert.IsType<ArrayBoundsSyntax>(declarator.ArrayBounds);
+
+        Assert.Equal(2, bounds.Rank);
+        Assert.Single(bounds.CommaTokens);
+        Assert.False(bounds.IsDynamic);
+        Assert.False(bounds.HasMixedDimensions);
+
+        var firstDimension = bounds.Dimensions[0];
+        Assert.Equal(SyntaxKind.ToKeyword, firstDimension.ToKeyword?.Kind);
+        Assert.Equal(1, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(firstDimension.StartExpression).LiteralToken.Value));
+        Assert.Equal(2, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(firstDimension.EndExpression).LiteralToken.Value));
+
+        var secondDimension = bounds.Dimensions[1];
+        Assert.Equal(SyntaxKind.ToKeyword, secondDimension.ToKeyword?.Kind);
+        Assert.Equal(10, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(secondDimension.StartExpression).LiteralToken.Value));
+        Assert.Equal(11, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(secondDimension.EndExpression).LiteralToken.Value));
     }
 
     [Fact]
@@ -382,6 +428,26 @@ END FUNCTION
         Assert.IsType<LiteralExpressionSyntax>(redim.ArrayBounds.StartExpression);
         Assert.Equal(SyntaxKind.ToKeyword, redim.ArrayBounds.ToKeyword?.Kind);
         Assert.IsType<LiteralExpressionSyntax>(redim.ArrayBounds.EndExpression);
+    }
+
+    [Fact]
+    public void Parse_RedimStatementWithMultipleDimensions()
+    {
+        var program = ParseProgram("REDIM grid(1 TO 2, 10 TO 11)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var redim = AssertGlobalStatement<RedimStatementSyntax>(program);
+        Assert.Equal("grid", redim.Identifier!.Text);
+        Assert.Equal(2, redim.ArrayBounds.Rank);
+        Assert.Single(redim.ArrayBounds.CommaTokens);
+
+        var firstDimension = redim.ArrayBounds.Dimensions[0];
+        Assert.Equal(1, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(firstDimension.StartExpression).LiteralToken.Value));
+        Assert.Equal(2, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(firstDimension.EndExpression).LiteralToken.Value));
+
+        var secondDimension = redim.ArrayBounds.Dimensions[1];
+        Assert.Equal(10, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(secondDimension.StartExpression).LiteralToken.Value));
+        Assert.Equal(11, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(secondDimension.EndExpression).LiteralToken.Value));
     }
 
     [Fact]

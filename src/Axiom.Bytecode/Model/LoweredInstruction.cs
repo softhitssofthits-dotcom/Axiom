@@ -21,7 +21,8 @@ public sealed class LoweredInstruction
         string? displayName = null,
         string? promptText = null,
         int valueCount = 0,
-        bool preserve = false)
+        bool preserve = false,
+        int indexRangeMask = 0)
     {
         Kind = kind;
         Location = location;
@@ -38,6 +39,7 @@ public sealed class LoweredInstruction
         PromptText = promptText;
         ValueCount = valueCount;
         Preserve = preserve;
+        IndexRangeMask = indexRangeMask;
     }
 
     public LoweredInstructionKind Kind { get; }
@@ -69,6 +71,8 @@ public sealed class LoweredInstruction
     public int ValueCount { get; }
 
     public bool Preserve { get; }
+
+    public int IndexRangeMask { get; }
 
     public static LoweredInstruction LabelMarker(TextLocation location, string label)
     {
@@ -129,10 +133,16 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.CallValue, location, valueType: returnType, valueCount: argumentCount);
     }
 
-    public static LoweredInstruction RedimArray(TextLocation location, string displayName, bool preserve)
+    public static LoweredInstruction RedimArray(TextLocation location, string displayName, bool preserve, int dimensionCount)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        return new LoweredInstruction(LoweredInstructionKind.RedimArray, location, displayName: displayName, preserve: preserve);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dimensionCount);
+        return new LoweredInstruction(
+            LoweredInstructionKind.RedimArray,
+            location,
+            displayName: displayName,
+            valueCount: dimensionCount,
+            preserve: preserve);
     }
 
     public static LoweredInstruction EraseArray(TextLocation location, string displayName)
@@ -141,16 +151,27 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.EraseArray, location, displayName: displayName);
     }
 
-    public static LoweredInstruction LoadElement(TextLocation location, string displayName)
+    public static LoweredInstruction LoadElement(TextLocation location, string displayName, int dimensionCount, int indexRangeMask = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        return new LoweredInstruction(LoweredInstructionKind.LoadElement, location, displayName: displayName);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dimensionCount);
+        return new LoweredInstruction(
+            LoweredInstructionKind.LoadElement,
+            location,
+            displayName: displayName,
+            valueCount: dimensionCount,
+            indexRangeMask: indexRangeMask);
     }
 
-    public static LoweredInstruction StoreElement(TextLocation location, string displayName)
+    public static LoweredInstruction StoreElement(TextLocation location, string displayName, int dimensionCount)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        return new LoweredInstruction(LoweredInstructionKind.StoreElement, location, displayName: displayName);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dimensionCount);
+        return new LoweredInstruction(
+            LoweredInstructionKind.StoreElement,
+            location,
+            displayName: displayName,
+            valueCount: dimensionCount);
     }
 
     public static LoweredInstruction LoadField(TextLocation location, string displayName)

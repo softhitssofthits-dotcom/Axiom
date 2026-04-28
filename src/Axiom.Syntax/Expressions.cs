@@ -66,6 +66,28 @@ public sealed class BinaryExpressionSyntax : ExpressionSyntax
     public ExpressionSyntax Right { get; }
 }
 
+public sealed class RangeExpressionSyntax : ExpressionSyntax
+{
+    public RangeExpressionSyntax(ExpressionSyntax lowerBound, SyntaxToken toKeyword, ExpressionSyntax upperBound)
+    {
+        ArgumentNullException.ThrowIfNull(lowerBound);
+        ArgumentNullException.ThrowIfNull(toKeyword);
+        ArgumentNullException.ThrowIfNull(upperBound);
+
+        LowerBound = lowerBound;
+        ToKeyword = toKeyword;
+        UpperBound = upperBound;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.RangeExpression;
+
+    public ExpressionSyntax LowerBound { get; }
+
+    public SyntaxToken ToKeyword { get; }
+
+    public ExpressionSyntax UpperBound { get; }
+}
+
 public sealed class ParenthesizedExpressionSyntax : ExpressionSyntax
 {
     public ParenthesizedExpressionSyntax(SyntaxToken openParenToken, ExpressionSyntax expression, SyntaxToken closeParenToken)

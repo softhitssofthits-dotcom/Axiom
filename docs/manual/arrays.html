@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Одномерные массивы</title>
+    <title>Справочник Axiom - Массивы</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="arrays">
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Массивы в текущей реализации языка</div>
+            <div class="topbar__meta">Одномерные и многомерные массивы первого среза</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -18,8 +18,8 @@
         <aside class="sidebar">
             <div class="sidebar__inner">
                 <div class="sidebar__head">
-                    <p class="sidebar__title">Одномерные массивы</p>
-                    <p class="sidebar__subtitle">Структура данных для хранения набора однотипных значений под одним именем.</p>
+                    <p class="sidebar__title">Массивы</p>
+                    <p class="sidebar__subtitle">Структура данных для хранения набора однотипных значений под одним именем, включая многомерные формы первого среза.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -30,11 +30,11 @@
                 <span>/</span>
                 <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
                 <span>/</span>
-                <span>Одномерные массивы</span>
+                <span>Массивы</span>
             </nav>
             <p class="eyebrow">Операторы и управление</p>
-            <h1 class="page-title">Одномерные массивы</h1>
-            <p class="lead">Массив нужен тогда, когда под одним именем требуется хранить сразу несколько значений одного типа. В текущей реализации Axiom поддерживаются только одномерные массивы.</p>
+            <h1 class="page-title">Массивы</h1>
+            <p class="lead">Массив нужен тогда, когда под одним именем требуется хранить сразу несколько значений одного типа. В текущем первом срезе Axiom поддерживает одномерные и многомерные плотные массивы, а большинство функций семейства <code>ARRAY...</code> пока остаются одномерными.</p>
 
             <section class="article-section">
                 <h2>Содержание</h2>
@@ -44,6 +44,7 @@
                     <li><a href="#erase">ERASE: сброс в невыделенное состояние</a></li>
                     <li><a href="#value">Массив как значение</a></li>
                     <li><a href="#access">Доступ к элементам</a></li>
+                    <li><a href="#partial-indexing">Частичное и диапазонное индексирование</a></li>
                     <li><a href="#array-info">Информационные встроенные функции</a></li>
                     <li><a href="#pure-array-functions">Чистые функции массива</a></li>
                     <li><a href="#bounds">Границы и ошибки</a></li>
@@ -54,16 +55,19 @@
             <section class="article-section" id="declaration">
                 <h2>Объявление массива</h2>
                 <pre><code class="language-basic">DIM scores(1 TO 3) AS INTEGER
-DIM names() AS STRING</code></pre>
+DIM names() AS STRING
+DIM grid(1 TO 2, 10 TO 11) AS INTEGER
+DIM matrix(,) AS INTEGER</code></pre>
                 <pre><code class="language-basic">TYPE Person
     Name AS STRING
 END TYPE
 
 DIM people(1 TO 3) AS Person</code></pre>
                 <p>В первой записи <code>scores</code> это имя массива, а <code>1 TO 3</code> задает его нижнюю и верхнюю границу включительно. Тип <code>INTEGER</code> говорит о том, что все элементы массива должны быть целыми числами.</p>
-                <p>Во второй записи <code>names()</code> объявляет динамический одномерный массив без немедленного выделения диапазона элементов. Такой массив уже существует как значение языка, но ещё не содержит доступного диапазона индексов.</p>
+                <p>Запись <code>grid(1 TO 2, 10 TO 11)</code> создает двумерный массив: у первого измерения свой диапазон <code>1 TO 2</code>, у второго свой диапазон <code>10 TO 11</code>.</p>
+                <p>Запись <code>names()</code> объявляет динамический одномерный массив без немедленного выделения диапазона элементов, а <code>matrix(,)</code> таким же образом объявляет динамический двумерный массив. Такие массивы уже существуют как значения языка, но ещё не содержат доступного диапазона индексов до следующего <code>REDIM</code>.</p>
                 <p>Типом элемента может быть встроенный тип или пользовательский тип записи, объявленный через <code>TYPE ... END TYPE</code>. Например, <code>DIM people(1 TO 3) AS Person</code> создаёт массив записей <code>Person</code>.</p>
-                <p>Поле пользовательской записи тоже может иметь динамический массивный тип, например <code>Scores() AS INTEGER</code>. Для такого поля работают индексирование, <code>REDIM</code>, <code>REDIM PRESERVE</code> и <code>ERASE</code>.</p>
+                <p>Поле пользовательской записи тоже может иметь динамический массивный тип, например <code>Scores() AS INTEGER</code>. Для такого поля работают индексирование, <code>REDIM</code>, <code>REDIM PRESERVE</code> и <code>ERASE</code>, но в первом многомерном срезе массивные поля внутри <code>TYPE</code> остаются только одномерными.</p>
                 <p>Внутри <code>TYPE</code> поддержана и фиксированная массивная форма, например <code>Scores(1 TO 3) AS INTEGER</code>. Такой диапазон создаётся сразу вместе с записью, не требует отдельного <code>REDIM</code> и копируется как часть значения записи.</p>
                 <p>Для границ фиксированного поля записи можно использовать не только литералы, но и верхнеуровневые <code>CONST</code>, если они сводятся к целочисленному значению. Порядок объявления таких констант относительно <code>TYPE</code> для этой формы не важен.</p>
                 <p>Если несколько полей записи имеют общий тип, их можно объединить в одну строку. В такой форме скобки указываются у каждого имени отдельно: <code>Scores(), Flags(1 TO 2) AS INTEGER</code>.</p>
@@ -74,20 +78,22 @@ DIM people(1 TO 3) AS Person</code></pre>
                 <pre><code class="language-basic">DIM names() AS STRING
 REDIM names(1 TO 3)
 
-names(1) = "Ada"
-names(2) = "Bob"
-names(3) = "Cara"</code></pre>
-                <p><code>REDIM</code> выделяет диапазон элементов для уже существующего одномерного массива и может затем заново задать его границы. На текущем этапе поддерживаются обе формы: обычная и <code>REDIM PRESERVE</code>.</p>
+DIM grid(,) AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+REDIM PRESERVE grid(2 TO 3, 11 TO 12)</code></pre>
+                <p><code>REDIM</code> выделяет диапазон элементов для уже существующего массива и может затем заново задать его границы. На текущем этапе поддерживаются обе формы: обычная и <code>REDIM PRESERVE</code>.</p>
                 <p>Для массивных полей записей это правило относится только к динамической форме <code>fieldName() AS TYPE</code>. Если поле объявлено внутри <code>TYPE</code> как фиксированный массив с диапазоном, его размеры уже закреплены в объявлении и не меняются через <code>REDIM</code>.</p>
                 <p>Если массив уже был выделен, обычный <code>REDIM</code> создаёт новый диапазон и заново заполняет все элементы значениями по умолчанию для типа массива. Старое содержимое не сохраняется.</p>
                 <p><code>REDIM PRESERVE</code> тоже меняет диапазон, но перед этим сохраняет элементы из пересечения старых и новых границ. Сохраняются именно те индексы, которые существуют в обоих диапазонах. Новые индексы, которых раньше не было, получают значения по умолчанию.</p>
                 <p>Текущая семантика массивов остаётся ссылочной, поэтому <code>REDIM</code> меняет общее хранилище массива. Если на тот же массив ссылается другая переменная или параметр, она увидит новый диапазон и новые значения по умолчанию.</p>
                 <p>Форма записи остаётся явной и совпадает с объявлением массива:</p>
+                <p>Для многомерного массива указываются диапазоны всех измерений в одном списке. Число диапазонов должно совпадать с рангом массива.</p>
                 <pre><code class="language-basic">REDIM name(&lt;lower&gt; TO &lt;upper&gt;)
-REDIM PRESERVE name(&lt;lower&gt; TO &lt;upper&gt;)</code></pre>
+REDIM PRESERVE name(&lt;lower&gt; TO &lt;upper&gt;)
+REDIM matrix(&lt;rowLower&gt; TO &lt;rowUpper&gt;, &lt;colLower&gt; TO &lt;colUpper&gt;)</code></pre>
                 <p>Пустой, но уже выделенный массив записывается как <code>1 TO 0</code>. Такой массив отличается от состояния после <code>DIM name() AS TYPE</code> и <code>ERASE</code>: он считается выделенным, но содержит ноль элементов.</p>
                 <pre><code class="language-basic">REDIM values(1 TO 0)</code></pre>
-                <p>Другие диапазоны, где верхняя граница меньше нижней, например <code>5 TO 3</code>, остаются ошибкой времени выполнения. Пустая форма <code>REDIM name()</code> пока не поддерживается.</p>
+                <p>Другие диапазоны, где верхняя граница меньше нижней, например <code>5 TO 3</code>, остаются ошибкой времени выполнения. Пустая форма <code>REDIM name()</code> пока не поддерживается, а для многомерных массивов первый срез пока не вводит отдельную нормальную пустую форму.</p>
             </section>
 
             <section class="article-section" id="erase">
@@ -96,7 +102,7 @@ REDIM PRESERVE name(&lt;lower&gt; TO &lt;upper&gt;)</code></pre>
 REDIM values(1 TO 3)
 
 ERASE values</code></pre>
-                <p><code>ERASE</code> сбрасывает одномерный массив обратно в невыделенное состояние. После этого массив остаётся существующим значением языка, но обращаться к его элементам снова нельзя до следующего успешного <code>REDIM</code> или <code>REDIM PRESERVE</code>.</p>
+                <p><code>ERASE</code> сбрасывает массив обратно в невыделенное состояние. После этого массив остаётся существующим значением языка, но обращаться к его элементам снова нельзя до следующего успешного <code>REDIM</code> или <code>REDIM PRESERVE</code>.</p>
                 <p>В текущем этапе поддерживается форма <code>ERASE arrayTarget</code> для одного массивного значения. В роли <code>arrayTarget</code> может выступать имя массива, динамическое поле записи массивного типа или такое поле у элемента массива. Список целей через запятую пока не входит в контракт.</p>
                 <p>Фиксированное массивное поле в <code>TYPE</code> не возвращается в невыделенное состояние: для него <code>ERASE</code> не поддерживается, потому что диапазон такого поля считается частью самой формы записи.</p>
                 <p>Ссылочная семантика остаётся прежней. Если на тот же массив ссылаются другие переменные или параметры, после <code>ERASE</code> они увидят тот же самый результат: массив станет невыделенным для всех ссылок на это же значение.</p>
@@ -112,8 +118,8 @@ alias = source
 FUNCTION Echo(values AS INTEGER()) AS INTEGER()
     RETURN values
 END FUNCTION</code></pre>
-                <p>На текущем этапе основания одномерный массив больше не считается только специальным видом переменной. Его можно присваивать целиком, передавать в параметры и возвращать из <code>FUNCTION</code>.</p>
-                <p>В объявлениях параметров и типа результата массив записывается как тип с пустыми круглыми скобками: <code>INTEGER()</code>, <code>STRING()</code>, <code>FUNCTION(INTEGER) AS INTEGER()</code> и так далее.</p>
+                <p>На текущем этапе основания массив больше не считается только специальным видом переменной. Его можно присваивать целиком, передавать в параметры и возвращать из <code>FUNCTION</code> для любого поддержанного ранга.</p>
+                <p>В объявлениях параметров и типа результата массив записывается как тип со скобками нужного ранга: <code>INTEGER()</code>, <code>INTEGER(,)</code>, <code>STRING()</code>, <code>FUNCTION(INTEGER) AS INTEGER()</code> и так далее.</p>
                 <p>Базовая семантика массива остаётся ссылочной: присваивание массива целиком и передача массива в параметр не клонируют весь массив автоматически. Если нужна независимая копия массива, используйте <code>ARRAYCLONE</code>. При этом запись пользовательского типа, которую присваивают отдельному элементу массива, копируется как значение.</p>
             </section>
 
@@ -122,31 +128,62 @@ END FUNCTION</code></pre>
                 <pre><code class="language-basic">scores(1) = 10
 scores(2) = 20
 scores(3) = 30
+PRINT scores(2)
 
-                PRINT scores(2)</code></pre>
-                <p>Элемент массива выбирается через круглые скобки с индексом. Индекс должен быть числовым значением, попадающим в объявленный диапазон.</p>
+grid(1, 10) = 7
+PRINT grid(2, 11)</code></pre>
+                <p>Элемент массива выбирается через круглые скобки с индексом или списком индексов. Число индексов должно совпадать с числом измерений массива, а каждый индекс должен быть числовым значением, попадающим в диапазон своего измерения.</p>
                 <p>Если элемент имеет пользовательский тип, после индексирования можно обращаться к его полям:</p>
                 <pre><code class="language-basic">people(1).Name = "Ada"
 PRINT people(1).Name</code></pre>
             </section>
 
+            <section class="article-section" id="partial-indexing">
+                <h2>Частичное индексирование и подмассивы-представления</h2>
+                <pre><code class="language-basic">DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+
+REDIM grid(1 TO 2, 10 TO 11)
+grid(2, 10) = 7
+grid(2, 11) = 9
+
+row = grid(2)
+row(10) = 70
+
+PRINT grid(2, 10)
+PRINT row(11)</code></pre>
+                <p>Если у многомерного массива указать не все индексы, Axiom возвращает не копию, а подмассив-представление по оставшимся измерениям. В примере <code>grid(2)</code> означает всю строку с первым индексом <code>2</code>.</p>
+                <p>Границы оставшихся измерений сохраняются как есть. Если второе измерение исходного массива имело диапазон <code>10 TO 11</code>, то и результат <code>grid(2)</code> имеет те же <code>LBOUND</code> и <code>UBOUND</code>.</p>
+                <p>Подмассив-представление разделяет то же хранилище элементов. Изменение через представление видно корневому массиву, и наоборот.</p>
+                <pre><code class="language-basic">DIM block(,) AS INTEGER
+DIM row() AS INTEGER
+
+row = grid(2, 10 TO 11)
+block = grid(1 TO 2, 10 TO 11)</code></pre>
+                <p>В списке индексов можно указать включительный диапазон <code>lower TO upper</code>. Одиночный индекс фиксирует измерение и убирает его из результата, а диапазон сохраняет это измерение с указанными границами. Поэтому <code>grid(2, 10 TO 11)</code> возвращает одномерное представление строки, а <code>grid(1 TO 2, 10 TO 11)</code> возвращает двумерное представление прямоугольной области.</p>
+                <p>Диапазонный срез тоже является представлением без копирования. Изменение элемента через результат видно в исходном массиве. Границы диапазона должны попадать в текущие границы соответствующего измерения. Формы с пропущенной нижней или верхней границей, <code>STEP</code> и перестановка измерений пока не входят в контракт.</p>
+                <p>Диапазон <code>TO</code> допустим только внутри индексирования массива. Присваивать значение напрямую в диапазонный срез нельзя: сначала сохраните представление в массивную переменную подходящего ранга и затем меняйте отдельные элементы этого представления.</p>
+                <p>Для одномерного представления можно вызывать существующие одномерные функции <code>ARRAYTAKE</code>, <code>ARRAYSKIP</code>, <code>ARRAYSLICE</code>, <code>ARRAYCLONE</code> и другие. Они принимают представление как обычный одномерный массив, но их собственный результат по-прежнему является новой независимой копией.</p>
+                <p><code>REDIM</code>, <code>REDIM PRESERVE</code> и <code>ERASE</code> работают только с самим массивом, а не с подмассивом-представлением.</p>
+            </section>
+
             <section class="article-section" id="array-info">
                 <h2>Информационные встроенные функции</h2>
-                <p>После выделения массива через <code>DIM ... TO ...</code>, <code>REDIM</code> или <code>REDIM PRESERVE</code> программа может узнать его текущее состояние и границы через четыре встроенные функции.</p>
+                <p>После выделения массива через <code>DIM ... TO ...</code>, <code>REDIM</code> или <code>REDIM PRESERVE</code> программа может узнать его текущее состояние и границы через четыре встроенные функции. Для многомерных массивов <code>LBOUND</code> и <code>UBOUND</code> умеют работать с явным номером измерения.</p>
 
-                <h3 id="lbound">LBOUND(array)</h3>
+                <h3 id="lbound">LBOUND(array[, dimension])</h3>
                 <pre><code class="language-basic">DIM values() AS INTEGER
 REDIM values(5 TO 7)
 
 PRINT LBOUND(values)</code></pre>
-                <p><code>LBOUND</code> возвращает нижнюю границу выделенного массива. Если массив ещё не выделен, во время выполнения возникает та же диагностика состояния массива, что и при попытке индексировать его слишком рано.</p>
+                <p><code>LBOUND</code> возвращает нижнюю границу выделенного массива. Без второго аргумента используется первое измерение. Если передан <code>dimension</code>, он задаёт номер измерения начиная с <code>1</code>. Если массив ещё не выделен, во время выполнения возникает та же диагностика состояния массива, что и при попытке индексировать его слишком рано.</p>
 
-                <h3 id="ubound">UBOUND(array)</h3>
+                <h3 id="ubound">UBOUND(array[, dimension])</h3>
                 <pre><code class="language-basic">DIM values() AS INTEGER
 REDIM values(5 TO 7)
 
 PRINT UBOUND(values)</code></pre>
-                <p><code>UBOUND</code> возвращает верхнюю границу выделенного массива. Для невыделенного массива эта функция тоже недопустима и завершится диагностикой времени выполнения.</p>
+                <p><code>UBOUND</code> возвращает верхнюю границу выделенного массива. Без второго аргумента используется первое измерение. Для невыделенного массива эта функция тоже недопустима и завершится диагностикой времени выполнения. Недопустимый номер измерения даёт ошибку аргумента времени выполнения.</p>
 
                 <h3 id="arraylength">ARRAYLENGTH(array)</h3>
                 <pre><code class="language-basic">DIM values() AS INTEGER
@@ -154,7 +191,7 @@ PRINT UBOUND(values)</code></pre>
 PRINT ARRAYLENGTH(values)
 REDIM values(5 TO 7)
 PRINT ARRAYLENGTH(values)</code></pre>
-                <p><code>ARRAYLENGTH</code> возвращает текущее число элементов в массиве. Для невыделенного массива и для пустого выделенного массива <code>1 TO 0</code> функция возвращает <code>0</code>. Различить эти два состояния можно через <code>ARRAYISALLOCATED</code>.</p>
+                <p><code>ARRAYLENGTH</code> возвращает текущее число элементов в массиве. Для многомерного массива это общее число ячеек во всём прямоугольном хранилище. Для невыделенного массива и для пустого выделенного массива <code>1 TO 0</code> функция возвращает <code>0</code>. Различить эти два состояния можно через <code>ARRAYISALLOCATED</code>.</p>
 
                 <h3 id="arrayisallocated">ARRAYISALLOCATED(array)</h3>
                 <pre><code class="language-basic">DIM values() AS INTEGER
@@ -162,11 +199,20 @@ PRINT ARRAYLENGTH(values)</code></pre>
 PRINT ARRAYISALLOCATED(values)
 REDIM values(5 TO 7)
 PRINT ARRAYISALLOCATED(values)</code></pre>
-                <p><code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code> для невыделенного массива и <code>TRUE</code> после успешного выделения диапазона. Эту функцию удобно использовать перед вызовом <code>LBOUND</code> и <code>UBOUND</code>, если массив может ещё не иметь доступных индексов.</p>
+                <p><code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code> для невыделенного массива и <code>TRUE</code> после успешного выделения диапазона. Это правило одинаково для одномерных и многомерных массивов. Эту функцию удобно использовать перед вызовом <code>LBOUND</code> и <code>UBOUND</code>, если массив может ещё не иметь доступных индексов.</p>
             </section>
 
             <section class="article-section" id="pure-array-functions">
                 <h2>Чистые функции массива</h2>
+                <div class="note">
+                    <h3>Ограничение первого многомерного среза</h3>
+                    <p>Функции семейства <code>ARRAY...</code> из этого раздела, кроме <code>ARRAYLENGTH</code> и <code>ARRAYISALLOCATED</code>, пока принимают только одномерные массивы. Многомерные формы для них будут проектироваться отдельным следующим этапом.</p>
+                </div>
+
+                <div class="note">
+                    <h3>Первая многомерная группа</h3>
+                    <p><code>ARRAYCLONE</code>, <code>ARRAYFILL</code>, <code>ARRAYCONTAINS</code> и <code>ARRAYCOUNT</code> теперь принимают уже выделенные массивы и представления любого ранга. Они обходят только видимые элементы: для среза меняются или проверяются именно элементы среза, а не весь исходный массив.</p>
+                </div>
 
                 <h3 id="arrayclone">ARRAYCLONE(array)</h3>
                 <pre><code class="language-basic">DIM source(5 TO 6) AS INTEGER
@@ -188,6 +234,8 @@ PRINT copy(5)</code></pre>
                     <li>пустой выделенный массив сохраняет форму <code>1 TO 0</code>.</li>
                 </ul>
                 <p>Результат не разделяет то же хранилище элементов с исходным массивом. Если изменить элементы клона после вызова, исходный массив останется прежним.</p>
+
+                <p>Для многомерного массива или представления <code>ARRAYCLONE</code> сохраняет видимый ранг, границы всех видимых измерений и значения, но создаёт независимое хранилище.</p>
 
                 <h3 id="arrayslice">ARRAYSLICE(array, start, count)</h3>
                 <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
@@ -349,6 +397,8 @@ PRINT ARRAYCONTAINS(values, 99)</code></pre>
                 <p>Если совпадение найдено, функция возвращает <code>TRUE</code>. Если совпадения нет или массив выделен как пустой <code>1 TO 0</code>, функция возвращает <code>FALSE</code>.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
 
+                <p>Для многомерного массива или представления <code>ARRAYCONTAINS</code> проверяет все видимые элементы в стабильном порядке обхода по измерениям.</p>
+
                 <h3 id="arraycount">ARRAYCOUNT(array, value)</h3>
                 <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
 
@@ -362,6 +412,8 @@ PRINT ARRAYCOUNT(values, 99)</code></pre>
                 <p><code>ARRAYCOUNT</code> возвращает число элементов массива, равных аргументу <code>value</code>.</p>
                 <p>Если совпадений нет, результатом становится <code>0</code>. Для пустого выделенного массива результат тоже равен <code>0</code>.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <p>Для многомерного массива или представления <code>ARRAYCOUNT</code> учитывает все видимые элементы, включая элементы диапазонного среза.</p>
 
                 <h3 id="arrayindexof">ARRAYINDEXOF(array, value)</h3>
                 <pre><code class="language-basic">DIM values(0 TO 3) AS INTEGER
@@ -446,6 +498,8 @@ PRINT values(7)</code></pre>
                 <p><code>ARRAYFILL</code> заполняет уже выделенный одномерный массив одним значением и меняет его на месте.</p>
                 <p>Аргумент <code>value</code> должен иметь тот же тип, что и элементы массива. После вызова все логические индексы текущего диапазона будут содержать именно это значение.</p>
                 <p>Границы массива не меняются. Для пустого выделенного массива <code>1 TO 0</code> процедура допустима и ничего не делает. Невыделенный массив сообщает <code>MB3005</code>.</p>
+
+                <p>Для многомерного массива или представления <code>ARRAYFILL</code> меняет все видимые элементы на месте. Если аргументом передан срез, изменения видны в исходном массиве.</p>
 
                 <h3 id="arrayreverse">ARRAYREVERSE(array)</h3>
                 <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
@@ -645,9 +699,9 @@ END FUNCTION</code></pre>
                     <li>любой другой диапазон, где верхняя граница меньше нижней, недопустим;</li>
                     <li>нижняя граница массива не может быть равна минимальному значению <code>INTEGER</code>;</li>
                     <li>нечисловой индекс недопустим;</li>
-                    <li>многомерные массивы в текущую реализацию языка не входят.</li>
+                    <li>многомерные массивы первого среза уже поддержаны, но большинство функций семейства <code>ARRAY...</code> пока остаются одномерными.</li>
                 </ul>
-                <p>Иными словами, массивы в Axiom уже полезны для учебных и прикладных задач, но пока сознательно остаются простыми и предсказуемыми. Динамическая форма <code>DIM name() AS TYPE</code>, семейство <code>REDIM</code>, оператор <code>ERASE</code>, информационные встроенные функции, чистые операции <code>ARRAYCLONE</code>, <code>ARRAYSLICE</code>, <code>ARRAYCONCAT</code>, <code>ARRAYTOSORTED</code>, <code>ARRAYTOREVERSED</code>, <code>ARRAYTAKE</code>, <code>ARRAYSKIP</code>, <code>ARRAYDISTINCT</code>, поисковые built-ins <code>ARRAYCONTAINS</code>, <code>ARRAYCOUNT</code>, <code>ARRAYINDEXOF</code>, <code>ARRAYLASTINDEXOF</code>, <code>ARRAYFINDALL</code>, <code>ARRAYBINARYSEARCH</code>, первые higher-order built-ins <code>ARRAYEVERY</code>, <code>ARRAYSOME</code>, <code>ARRAYFILTER</code>, <code>ARRAYMAP</code> и <code>ARRAYREDUCE</code> и изменяющие операции <code>ARRAYFILL</code>, <code>ARRAYSORT</code>, <code>ARRAYREVERSE</code>, <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code>, <code>ARRAYREMOVE</code> уже покрывают базовый жизненный цикл выделения, смены диапазона, явного сброса, проверки состояния, независимого копирования, среза, объединения, сортировки, разворота, массового заполнения, поиска совпадений, predicate-проверок, фильтрации, полиморфного преобразования, полиморфной свёртки, добавления, вставки, снятия и удаления элементов и локальной мутации массива на месте.</p>
+                <p>Иными словами, массивы в Axiom уже полезны для учебных и прикладных задач и теперь охватывают не только одномерный случай, но и первый исполняемый срез многомерных массивов: многомерное <code>DIM</code>, <code>REDIM</code>, <code>REDIM PRESERVE</code>, индексирование <code>array(i, j, ...)</code>, а также формы <code>LBOUND</code> и <code>UBOUND</code> с номером измерения. При этом большая часть функций семейства <code>ARRAY...</code> пока сознательно остаётся одномерной, чтобы следующий этап можно было спроектировать отдельно и без скрытых компромиссов.</p>
             </section>
 
             <section class="article-section">
@@ -662,6 +716,8 @@ END FUNCTION</code></pre>
                     <li><a href="../../samples/operators/erase/basic_usage.axm">ERASE: сброс массива</a></li>
                     <li><a href="../../samples/smoke/array_first_class_values.axm">Сквозной пример: массив как значение</a></li>
                     <li><a href="../../samples/expressions/arrays/index_access.axm">Индексный доступ к элементу</a></li>
+                    <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Сквозной пример: двумерный массив и REDIM PRESERVE</a></li>
+                    <li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Сквозной пример: диапазонный срез многомерного массива</a></li>
                     <li><a href="../../samples/operators/type/array_elements.axm">TYPE: массив записей и поля элементов</a></li>
                     <li><a href="../../samples/operators/type/array_fields.axm">TYPE: динамические массивные поля записи</a></li>
                     <li><a href="../../samples/operators/type/fixed_array_fields.axm">TYPE: фиксированные массивные поля записи</a></li>

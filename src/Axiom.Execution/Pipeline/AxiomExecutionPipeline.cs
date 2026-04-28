@@ -775,8 +775,7 @@ public sealed class AxiomExecutionPipeline
 
             case BoundVariableDeclarationStatement declaration:
                 if (TryGetCapturedVariable(declaration.Initializer, ownVariables, out variable, out location)
-                    || TryGetCapturedVariable(declaration.LowerBound, ownVariables, out variable, out location)
-                    || TryGetCapturedVariable(declaration.UpperBound, ownVariables, out variable, out location))
+                    || TryGetCapturedVariable(declaration.ArrayBounds, ownVariables, out variable, out location))
                 {
                     return true;
                 }
@@ -799,8 +798,7 @@ public sealed class AxiomExecutionPipeline
 
             case BoundRedimStatement redimStatement:
                 if (TryGetCapturedVariable(redimStatement.Target, ownVariables, out variable, out location)
-                    || TryGetCapturedVariable(redimStatement.LowerBound, ownVariables, out variable, out location)
-                    || TryGetCapturedVariable(redimStatement.UpperBound, ownVariables, out variable, out location))
+                    || TryGetCapturedVariable(redimStatement.ArrayBounds, ownVariables, out variable, out location))
                 {
                     return true;
                 }
@@ -960,6 +958,26 @@ public sealed class AxiomExecutionPipeline
     }
 
     private static bool TryGetCapturedVariable(
+        IReadOnlyList<BoundArrayBound> bounds,
+        IReadOnlySet<VariableSymbol> ownVariables,
+        out VariableSymbol variable,
+        out TextLocation location)
+    {
+        foreach (var bound in bounds)
+        {
+            if (TryGetCapturedVariable(bound.LowerBound, ownVariables, out variable, out location)
+                || TryGetCapturedVariable(bound.UpperBound, ownVariables, out variable, out location))
+            {
+                return true;
+            }
+        }
+
+        variable = null!;
+        location = default;
+        return false;
+    }
+
+    private static bool TryGetCapturedVariable(
         BoundSelectCaseSelector selector,
         IReadOnlySet<VariableSymbol> ownVariables,
         out VariableSymbol variable,
@@ -1002,7 +1020,7 @@ public sealed class AxiomExecutionPipeline
 
             case BoundArrayAccessExpression arrayAccessExpression:
                 return TryGetCapturedVariable(arrayAccessExpression.Target, ownVariables, out variable, out location)
-                    || TryGetCapturedVariable(arrayAccessExpression.Index, ownVariables, out variable, out location);
+                    || TryGetCapturedVariable(arrayAccessExpression.Indices, ownVariables, out variable, out location);
 
             case BoundFieldAccessExpression fieldAccessExpression:
                 return TryGetCapturedVariable(fieldAccessExpression.Target, ownVariables, out variable, out location);
@@ -1031,6 +1049,25 @@ public sealed class AxiomExecutionPipeline
 
             case BoundConversionExpression conversionExpression:
                 return TryGetCapturedVariable(conversionExpression.Expression, ownVariables, out variable, out location);
+        }
+
+        variable = null!;
+        location = default;
+        return false;
+    }
+
+    private static bool TryGetCapturedVariable(
+        IReadOnlyList<BoundExpression> expressions,
+        IReadOnlySet<VariableSymbol> ownVariables,
+        out VariableSymbol variable,
+        out TextLocation location)
+    {
+        foreach (var expression in expressions)
+        {
+            if (TryGetCapturedVariable(expression, ownVariables, out variable, out location))
+            {
+                return true;
+            }
         }
 
         variable = null!;

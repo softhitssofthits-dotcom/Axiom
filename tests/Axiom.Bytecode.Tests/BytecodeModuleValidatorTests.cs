@@ -602,7 +602,10 @@ public sealed class BytecodeModuleValidatorTests
         var module = CreateValidModule(
             instructions:
             [
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
                 new BytecodeInstruction(Opcode.OpenFile, [0, 0]),
+                new BytecodeInstruction(Opcode.Pop),
                 new BytecodeInstruction(Opcode.Return)
             ]);
 
@@ -988,6 +991,8 @@ public sealed class BytecodeModuleValidatorTests
         var module = CreateValidModule(
             instructions:
             [
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
                 new BytecodeInstruction(Opcode.PrintUsing, [1, 3]),
                 new BytecodeInstruction(Opcode.Return)
             ]);
@@ -1045,7 +1050,10 @@ public sealed class BytecodeModuleValidatorTests
         var module = CreateValidModule(
             instructions:
             [
-                new BytecodeInstruction(Opcode.RedimArray, [2, 1]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.RedimArray, [2, 1, 1]),
                 new BytecodeInstruction(Opcode.Return)
             ]);
 
@@ -1064,7 +1072,10 @@ public sealed class BytecodeModuleValidatorTests
         var module = CreateValidModule(
             instructions:
             [
-                new BytecodeInstruction(Opcode.RedimArray, [-1, 1]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.RedimArray, [-1, 1, 1]),
                 new BytecodeInstruction(Opcode.Return)
             ]);
 
@@ -1239,7 +1250,7 @@ public sealed class BytecodeModuleValidatorTests
                 new BytecodeInstruction(Opcode.PushConst, [0]),
                 new BytecodeInstruction(Opcode.PushConst, [0]),
                 new BytecodeInstruction(Opcode.PushConst, [0]),
-                new BytecodeInstruction(Opcode.RedimArray, [0, 1]),
+                new BytecodeInstruction(Opcode.RedimArray, [0, 1, 1]),
                 new BytecodeInstruction(Opcode.Return)
             ]);
 
@@ -1260,7 +1271,7 @@ public sealed class BytecodeModuleValidatorTests
             [
                 new BytecodeInstruction(Opcode.LoadLocal, [0]),
                 new BytecodeInstruction(Opcode.PushConst, [1]),
-                new BytecodeInstruction(Opcode.LoadElement, [1]),
+                new BytecodeInstruction(Opcode.LoadElement, [1, 1, 0]),
                 new BytecodeInstruction(Opcode.Pop),
                 new BytecodeInstruction(Opcode.Return)
             ]);
@@ -1543,7 +1554,7 @@ public sealed class BytecodeModuleValidatorTests
                 new BytecodeInstruction(Opcode.PushConst, [1]),
                 new BytecodeInstruction(Opcode.LoadLocal, [0]),
                 new BytecodeInstruction(Opcode.PushConst, [0]),
-                new BytecodeInstruction(Opcode.StoreElement, [1]),
+                new BytecodeInstruction(Opcode.StoreElement, [1, 1]),
                 new BytecodeInstruction(Opcode.Return)
             ]);
         var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));

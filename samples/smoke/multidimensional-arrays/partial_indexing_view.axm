@@ -1,0 +1,19 @@
+' Подмассив-представление через частичное индексирование многомерного массива.
+DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+DIM firstOnly() AS INTEGER
+
+REDIM grid(1 TO 2, 10 TO 11)
+grid(2, 10) = 7
+grid(2, 11) = 9
+
+row = grid(2)
+row(10) = 70
+firstOnly = ARRAYTAKE(row, 1)
+
+PRINT grid(2, 10)
+PRINT row(11)
+PRINT LBOUND(row)
+PRINT UBOUND(row)
+PRINT ARRAYLENGTH(row)
+PRINT firstOnly(1)

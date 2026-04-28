@@ -1038,6 +1038,130 @@ PRINT ARRAYISALLOCATED(values)
     }
 
     [Fact]
+    public void Execute_CompiledMultidimensionalArrayProgram()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+grid(1, 10) = 7
+grid(2, 11) = 9
+PRINT ARRAYISALLOCATED(grid)
+PRINT LBOUND(grid, 1)
+PRINT UBOUND(grid, 1)
+PRINT LBOUND(grid, 2)
+PRINT UBOUND(grid, 2)
+PRINT grid(1, 10)
+PRINT grid(2, 11)
+REDIM PRESERVE grid(2 TO 3, 11 TO 12)
+PRINT grid(2, 11)
+PRINT grid(3, 12)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "1", "2", "10", "11", "7", "9", "9", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledPartialMultidimensionalIndexingReturnsSharedRowView()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+DIM firstOnly() AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+grid(2, 10) = 7
+grid(2, 11) = 9
+row = grid(2)
+row(10) = 70
+firstOnly = ARRAYTAKE(row, 1)
+PRINT grid(2, 10)
+PRINT row(11)
+PRINT LBOUND(row)
+PRINT UBOUND(row)
+PRINT ARRAYLENGTH(row)
+PRINT firstOnly(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["70", "9", "10", "11", "2", "70"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledRangeMultidimensionalIndexingReturnsSharedViews()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+DIM block(,) AS INTEGER
+REDIM grid(1 TO 3, 10 TO 14)
+grid(2, 11) = 21
+grid(2, 12) = 22
+grid(3, 12) = 32
+row = grid(2, 11 TO 12)
+block = grid(2 TO 3, 11 TO 12)
+row(11) = 210
+block(3, 12) = 320
+PRINT grid(2, 11)
+PRINT row(12)
+PRINT grid(3, 12)
+PRINT LBOUND(row)
+PRINT UBOUND(row)
+PRINT LBOUND(block, 1)
+PRINT UBOUND(block, 1)
+PRINT LBOUND(block, 2)
+PRINT UBOUND(block, 2)
+PRINT ARRAYLENGTH(block)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(
+            result.Succeeded,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.Equal(["210", "22", "320", "11", "12", "2", "3", "11", "12", "4"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledRedimOnArrayViewReportsBuiltinArgumentDiagnostic()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+row = grid(2)
+REDIM row(1 TO 2)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("REDIM", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("представления", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledEraseOnArrayViewReportsBuiltinArgumentDiagnostic()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+row = grid(2)
+ERASE row
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("ERASE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("представления", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Execute_CompiledPureArrayBuiltins()
     {
         const string text = """
@@ -1115,6 +1239,32 @@ PRINT UBOUND(copy)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["FALSE", "TRUE", "0", "1", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledArrayCloneCopiesMultidimensionalVisibleShape()
+    {
+        const string text = """
+DIM source(1 TO 3, 10 TO 12) AS INTEGER
+DIM copy(,) AS INTEGER
+source(1, 10) = 10
+source(2, 11) = 20
+source(3, 12) = 30
+copy = ARRAYCLONE(source(2 TO 3, 11 TO 12))
+copy(2, 11) = 99
+PRINT LBOUND(copy, 1)
+PRINT UBOUND(copy, 1)
+PRINT LBOUND(copy, 2)
+PRINT UBOUND(copy, 2)
+PRINT source(2, 11)
+PRINT copy(2, 11)
+PRINT copy(3, 12)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["2", "3", "11", "12", "20", "99", "30"], host.Output);
     }
 
     [Fact]
@@ -1222,6 +1372,28 @@ PRINT values(1)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["TRUE", "0", "1", "1", "77", "77", "0", "55"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledArrayFillMutatesMultidimensionalVisibleElements()
+    {
+        const string text = """
+DIM values(1 TO 3, 1 TO 3) AS INTEGER
+values(1, 1) = 1
+values(2, 2) = 2
+values(3, 3) = 3
+ARRAYFILL(values(2 TO 3, 2 TO 3), 8)
+PRINT values(1, 1)
+PRINT values(2, 2)
+PRINT values(2, 3)
+PRINT values(3, 2)
+PRINT values(3, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "8", "8", "8", "8"], host.Output);
     }
 
     [Fact]
@@ -1353,6 +1525,27 @@ PRINT ARRAYINDEXOF(values, 1)
         Assert.False(result.Succeeded);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3005", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Execute_CompiledArrayContainsAndCountScanMultidimensionalVisibleElements()
+    {
+        const string text = """
+DIM values(1 TO 3, 1 TO 3) AS INTEGER
+values(1, 1) = 5
+values(1, 2) = 7
+values(2, 2) = 7
+values(3, 3) = 7
+PRINT ARRAYCONTAINS(values, 7)
+PRINT ARRAYCOUNT(values, 7)
+PRINT ARRAYCONTAINS(values(2 TO 3, 2 TO 3), 5)
+PRINT ARRAYCOUNT(values(2 TO 3, 2 TO 3), 7)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "3", "FALSE", "2"], host.Output);
     }
 
     [Fact]

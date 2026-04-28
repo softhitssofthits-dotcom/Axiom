@@ -1332,6 +1332,60 @@ PRINT UBOUND(values)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalArrayProgram()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+grid(1, 10) = 7
+grid(2, 11) = 9
+PRINT LBOUND(grid, 1)
+PRINT UBOUND(grid, 1)
+PRINT LBOUND(grid, 2)
+PRINT UBOUND(grid, 2)
+REDIM PRESERVE grid(2 TO 3, 11 TO 12)
+PRINT grid(2, 11)
+PRINT grid(3, 12)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Null(result.InterpreterFallbackReason);
+        Assert.Equal(["1", "2", "10", "11", "9", "0"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForPartialMultidimensionalIndexingProgram()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+DIM row() AS INTEGER
+REDIM grid(1 TO 2, 10 TO 11)
+grid(2, 10) = 7
+grid(2, 11) = 9
+row = grid(2)
+row(10) = 70
+PRINT grid(2, 10)
+PRINT row(11)
+PRINT LBOUND(row)
+PRINT UBOUND(row)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Null(result.InterpreterFallbackReason);
+        Assert.Equal(["70", "9", "10", "11"], result.Output);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForPureArrayBuiltins()
     {
         const string text = """

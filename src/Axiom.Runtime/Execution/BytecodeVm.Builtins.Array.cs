@@ -5,14 +5,18 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private int EvaluateLBoundBuiltin(RuntimeValue argument, TextLocation location)
+    private int EvaluateLBoundBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        return RequireAllocatedArrayArgument(argument, "LBOUND", location).LowerBound;
+        var array = RequireAllocatedArrayArgument(arguments[0], "LBOUND", location);
+        var dimension = ResolveArrayInfoDimension("LBOUND", array, arguments, location);
+        return array.GetLowerBound(dimension);
     }
 
-    private int EvaluateUBoundBuiltin(RuntimeValue argument, TextLocation location)
+    private int EvaluateUBoundBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        return RequireAllocatedArrayArgument(argument, "UBOUND", location).UpperBound;
+        var array = RequireAllocatedArrayArgument(arguments[0], "UBOUND", location);
+        var dimension = ResolveArrayInfoDimension("UBOUND", array, arguments, location);
+        return array.GetUpperBound(dimension);
     }
 
     private static int EvaluateArrayLengthBuiltin(RuntimeValue argument)
@@ -189,7 +193,7 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYFILL", location);
 
-        ForEachArrayIndexAscending(array, index => array.SetValue(index, value));
+        ForEachArrayIndexSetAscending(array, indices => array.SetValue(indices, value));
 
         return RuntimeValue.Void;
     }
@@ -339,9 +343,9 @@ public sealed partial class BytecodeVm
         var array = RequireAllocatedArrayArgument(argument, "ARRAYCOUNT", location);
         var count = 0;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (ValuesEqual(array.GetValue(index), value))
+            if (ValuesEqual(array.GetValue(indices), value))
             {
                 count++;
             }
@@ -603,9 +607,9 @@ public sealed partial class BytecodeVm
     {
         var found = false;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (!found && ValuesEqual(array.GetValue(index), value))
+            if (!found && ValuesEqual(array.GetValue(indices), value))
             {
                 found = true;
             }
@@ -667,7 +671,7 @@ public sealed partial class BytecodeVm
     private static RuntimeValue CreateUnallocatedArrayValue(ArrayTypeSymbol arrayType)
     {
         ArgumentNullException.ThrowIfNull(arrayType);
-        return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType));
+        return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, rank: arrayType.Rank));
     }
 
     private static RuntimeValue CreateArrayValue(
@@ -709,7 +713,37 @@ public sealed partial class BytecodeVm
             return CreateUnallocatedArrayValue(arrayType);
         }
 
+        if (source.Rank != 1)
+        {
+            return RuntimeValue.FromArray(arrayType, source.Clone());
+        }
+
         return CreateArrayValue(arrayType, source.LowerBound, source.UpperBound, source.GetValue);
+    }
+
+    private int ResolveArrayInfoDimension(
+        string functionName,
+        RuntimeArrayValue array,
+        IReadOnlyList<RuntimeValue> arguments,
+        TextLocation location)
+    {
+        if (arguments.Count < 2)
+        {
+            return 1;
+        }
+
+        var dimension = ToArrayBound(arguments[1], location, $"Номер измерения функции {functionName}");
+        if (dimension < 1 || dimension > array.Rank)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "dimension",
+                $"должен быть целым числом от 1 до {array.Rank}.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        return dimension;
     }
 
     private static void ForEachArrayIndexAscending(RuntimeArrayValue array, Action<int> action)
@@ -724,6 +758,13 @@ public sealed partial class BytecodeVm
         ArgumentNullException.ThrowIfNull(array);
         ArgumentNullException.ThrowIfNull(action);
         ForEachIndexDescending(array.UpperBound, array.LowerBound, action);
+    }
+
+    private static void ForEachArrayIndexSetAscending(RuntimeArrayValue array, Action<IReadOnlyList<int>> action)
+    {
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentNullException.ThrowIfNull(action);
+        array.ForEachVisibleIndexSetAscending(action);
     }
 
     private static void ForEachIndexAscending(int lowerBound, int upperBound, Action<int> action)

@@ -639,12 +639,20 @@ public sealed class BytecodeCompiler
     {
         return new BytecodeInstruction(
             Opcode.RedimArray,
-            [instruction.Preserve ? 1 : 0, RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+            [
+                instruction.Preserve ? 1 : 0,
+                RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName),
+                instruction.ValueCount
+            ]);
     }
 
     private BytecodeInstruction EmitArrayElementInstruction(LoweredInstruction instruction, Opcode opcode)
     {
-        return new BytecodeInstruction(opcode, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+        return new BytecodeInstruction(
+            opcode,
+            opcode == Opcode.LoadElement
+                ? [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName), instruction.ValueCount, instruction.IndexRangeMask]
+                : [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName), instruction.ValueCount]);
     }
 
     private BytecodeInstruction EmitFieldInstruction(LoweredInstruction instruction, Opcode opcode)

@@ -265,6 +265,11 @@ public sealed partial class Binder
         _diagnostics.Report(InvalidSelectCaseRangeCode, "Диапазон CASE ... TO допустим только для числовых или строковых значений.", location);
     }
 
+    private void ReportInvalidRangeExpression(TextLocation location)
+    {
+        _diagnostics.Report(TypeMismatchCode, "Диапазон TO допустим только внутри индексирования массива.", location);
+    }
+
     private BoundErrorExpression ReportInvalidUnaryOperator(SyntaxKind operatorKind, TypeSymbol operandType, TextLocation location)
     {
         _diagnostics.Report(TypeMismatchCode, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типу {operandType.Name}.", location);

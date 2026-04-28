@@ -50,11 +50,13 @@ public sealed class BoundArrayAccessExpression : BoundExpression
         TextLocation location,
         BoundExpression target,
         IReadOnlyList<BoundExpression> indices,
+        TypeSymbol resultType,
         string displayName)
-        : base(location, GetElementType(target))
+        : base(location, resultType)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(indices);
+        ArgumentNullException.ThrowIfNull(resultType);
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
 
         Target = target;
@@ -71,14 +73,25 @@ public sealed class BoundArrayAccessExpression : BoundExpression
     public BoundExpression Index => Indices[0];
 
     public string DisplayName { get; }
+}
 
-    private static TypeSymbol GetElementType(BoundExpression target)
+public sealed class BoundArrayRangeExpression : BoundExpression
+{
+    public BoundArrayRangeExpression(TextLocation location, BoundExpression lowerBound, BoundExpression upperBound)
+        : base(location, TypeSymbol.Error)
     {
-        ArgumentNullException.ThrowIfNull(target);
-        return target.Type is ArrayTypeSymbol arrayType
-            ? arrayType.ElementType
-            : TypeSymbol.Error;
+        ArgumentNullException.ThrowIfNull(lowerBound);
+        ArgumentNullException.ThrowIfNull(upperBound);
+
+        LowerBound = lowerBound;
+        UpperBound = upperBound;
     }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ArrayRangeExpression;
+
+    public BoundExpression LowerBound { get; }
+
+    public BoundExpression UpperBound { get; }
 }
 
 public sealed class BoundFieldAccessExpression : BoundExpression

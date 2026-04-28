@@ -232,9 +232,9 @@ public sealed partial class Interpreter
         var array = RequireAllocatedArrayArgument(expression, "ARRAYCOUNT", "array", 0, argument);
         var count = 0;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (ValuesEqual(array.GetValue(index), value))
+            if (ValuesEqual(array.GetValue(indices), value))
             {
                 count++;
             }
@@ -278,7 +278,7 @@ public sealed partial class Interpreter
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYFILL", "array", 0, argument);
 
-        ForEachArrayIndexAscending(array, index => array.SetValue(index, value));
+        ForEachArrayIndexSetAscending(array, indices => array.SetValue(indices, value));
 
         return RuntimeValue.Void;
     }
@@ -692,9 +692,9 @@ public sealed partial class Interpreter
     {
         var found = false;
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            if (!found && ValuesEqual(array.GetValue(index), value))
+            if (!found && ValuesEqual(array.GetValue(indices), value))
             {
                 found = true;
             }
@@ -886,6 +886,13 @@ public sealed partial class Interpreter
         ArgumentNullException.ThrowIfNull(array);
         ArgumentNullException.ThrowIfNull(action);
         ForEachIndexDescending(array.UpperBound, array.LowerBound, action);
+    }
+
+    private static void ForEachArrayIndexSetAscending(RuntimeArrayValue array, Action<IReadOnlyList<int>> action)
+    {
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentNullException.ThrowIfNull(action);
+        array.ForEachVisibleIndexSetAscending(action);
     }
 
     private static void ForEachIndexAscending(int lowerBound, int upperBound, Action<int> action)
