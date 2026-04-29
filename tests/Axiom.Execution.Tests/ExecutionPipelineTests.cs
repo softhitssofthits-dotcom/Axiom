@@ -1363,16 +1363,16 @@ PRINT grid(3, 12)
     {
         const string text = """
 DIM grid(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 REDIM grid(1 TO 2, 10 TO 11)
 grid(2, 10) = 7
 grid(2, 11) = 9
-row = grid(2)
-row(10) = 70
+rowView = grid(2)
+rowView(10) = 70
 PRINT grid(2, 10)
-PRINT row(11)
-PRINT LBOUND(row)
-PRINT UBOUND(row)
+PRINT rowView(11)
+PRINT LBOUND(rowView)
+PRINT UBOUND(rowView)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
@@ -1538,6 +1538,46 @@ PRINT ARRAYBINARYSEARCH(sorted, 25)
         Assert.False(result.UsedInterpreterFallback);
         Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["TRUE", "5", "9", "2", "4", "6", "9", "6", "4"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalSortingGroup()
+    {
+        const string text = """
+DIM board(1 TO 2, 1 TO 4) AS INTEGER
+DIM sortedByColumn(1 TO 2, 1 TO 4) AS INTEGER
+DIM hit() AS INTEGER
+
+board(1, 1) = 4
+board(1, 2) = 2
+board(1, 3) = 2
+board(1, 4) = 7
+board(2, 1) = 3
+board(2, 2) = 1
+board(2, 3) = 5
+board(2, 4) = 8
+
+sortedByColumn = ARRAYTOSORTED(board, COLUMN)
+ARRAYSORT(board, ROW)
+hit = ARRAYBINARYSEARCH(board, 5, ROW)
+
+PRINT sortedByColumn(1, 1)
+PRINT sortedByColumn(1, 2)
+PRINT sortedByColumn(2, 2)
+PRINT board(1, 1)
+PRINT board(2, 3)
+PRINT hit(1)
+PRINT hit(2)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Null(result.InterpreterFallbackReason);
+        Assert.Equal(["2", "2", "3", "3", "5", "2", "3"], result.Output);
     }
 
     [Fact]

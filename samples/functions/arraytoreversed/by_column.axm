@@ -1,0 +1,22 @@
+' ARRAYTOREVERSED разворачивает двумерный массив только по выбранному измерению.
+
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM reversed(,) AS INTEGER
+
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+
+reversed = ARRAYTOREVERSED(board, COLUMN)
+
+PRINT LBOUND(reversed, ROW)
+PRINT UBOUND(reversed, ROW)
+PRINT LBOUND(reversed, COLUMN)
+PRINT UBOUND(reversed, COLUMN)
+PRINT reversed(1, 10)
+PRINT reversed(1, 11)
+PRINT reversed(1, 12)
+PRINT reversed(2, 10)

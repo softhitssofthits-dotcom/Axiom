@@ -21,7 +21,11 @@ public static partial class BuiltinFunctions
     ];
 
     private static readonly IReadOnlyDictionary<BuiltinFunctionId, BuiltinFunctionDescriptor> DescriptorsById =
-        AllDescriptors.ToDictionary(static descriptor => descriptor.Id);
+        AllDescriptors
+            .GroupBy(static descriptor => descriptor.Id)
+            .ToDictionary(
+                static group => group.Key,
+                static group => group.First());
 
     private static readonly IReadOnlyDictionary<string, IReadOnlyList<BuiltinFunctionDescriptor>> DescriptorsByName =
         AllDescriptors
@@ -116,27 +120,31 @@ public static partial class BuiltinFunctions
     private static BuiltinFunctionDescriptor CreateArrayInteger(
         BuiltinFunctionId id,
         string name,
-        IReadOnlyList<BuiltinParameterDescriptor> additionalParameters)
+        IReadOnlyList<BuiltinParameterDescriptor> additionalParameters,
+        BuiltinResultTypePolicy resultTypePolicy = BuiltinResultTypePolicy.Declared)
     {
         return new BuiltinFunctionDescriptor(
             id,
             name,
             [Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer)), .. additionalParameters],
             TypeSymbol.Integer,
-            bindingKind: BuiltinBindingKind.Array);
+            bindingKind: BuiltinBindingKind.Array,
+            resultTypePolicy: resultTypePolicy);
     }
 
     private static BuiltinFunctionDescriptor CreateArrayIntegerArray(
         BuiltinFunctionId id,
         string name,
-        IReadOnlyList<BuiltinParameterDescriptor> additionalParameters)
+        IReadOnlyList<BuiltinParameterDescriptor> additionalParameters,
+        BuiltinResultTypePolicy resultTypePolicy = BuiltinResultTypePolicy.Declared)
     {
         return new BuiltinFunctionDescriptor(
             id,
             name,
             [Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer)), .. additionalParameters],
             ArrayTypeSymbol.Create(TypeSymbol.Integer),
-            bindingKind: BuiltinBindingKind.Array);
+            bindingKind: BuiltinBindingKind.Array,
+            resultTypePolicy: resultTypePolicy);
     }
 
     private static BuiltinFunctionDescriptor CreateArrayVoid(

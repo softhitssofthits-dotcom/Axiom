@@ -1,0 +1,22 @@
+' ARRAYDISTINCT returns a compact 1D list of unique values
+' from the visible traversal of a multidimensional array.
+
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM uniqueValues() AS INTEGER
+
+board(1, 10) = 5
+board(1, 11) = 7
+board(1, 12) = 5
+board(2, 10) = 9
+board(2, 11) = 7
+board(2, 12) = 11
+
+uniqueValues = ARRAYDISTINCT(board)
+
+PRINT LBOUND(uniqueValues)
+PRINT UBOUND(uniqueValues)
+PRINT ARRAYLENGTH(uniqueValues)
+PRINT uniqueValues(1)
+PRINT uniqueValues(2)
+PRINT uniqueValues(3)
+PRINT uniqueValues(4)

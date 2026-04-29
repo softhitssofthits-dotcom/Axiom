@@ -2131,7 +2131,7 @@ public sealed class MainWindowViewModelTests
 
         viewModel.StepBackCommand.Execute(null);
         Assert.Equal(string.Empty, viewModel.BottomPane.OutputText);
-        Assert.Equal(2, viewModel.StoppedRunState!.Snapshot.SourceLocation.Line);
+        Assert.Equal(1, viewModel.StoppedRunState!.Snapshot.SourceLocation.Line);
     }
 
     [Fact]

@@ -213,6 +213,8 @@ Minimum required manual follow-up:
 - update the relevant reference page, or the nearest correct manual page if no separate page exists yet;
 - update manual navigation/index metadata when the new entity should be discoverable through the manual index;
 - do not leave the new behavior documented only in code comments, tests, `samples/`, `docs/SPECIFICATION3.md`, or chat output.
+- if an existing operator or built-in receives a new callable form, a new multidimensional mode, a new parameter contract, or another user-visible capability, reflect that capability directly on the manual page itself, not only through an external `.axm` sample link or a brief mention elsewhere;
+- when such a new callable form or multidimensional mode is important enough to confuse a reader without an example, add or update an inline manual example for that exact form on the same manual page.
 
 ### 5. Validation after code changes
 After code changes, run the most relevant checks available:

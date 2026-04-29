@@ -63,6 +63,26 @@ PRINT &H80000000
     }
 
     [Fact]
+    public void Execute_PredefinedConstantsCanBeReadInExpressionsAndArrayDimensions()
+    {
+        const string text = """
+DIM board(10 TO 12, 20 TO 21) AS INTEGER
+PRINT ROW
+PRINT COLUMN
+PRINT LBOUND(board, ROW)
+PRINT UBOUND(board, COLUMN)
+PRINT PI > 3
+PRINT PI < 4
+PRINT ROW + COLUMN
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "10", "21", "TRUE", "TRUE", "3"], host.Output);
+    }
+
+    [Fact]
     public void Execute_BitwiseOperatorsAndShifts()
     {
         const string text = """
@@ -961,19 +981,19 @@ PRINT grid(3, 12)
     {
         const string text = """
 DIM grid(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 DIM firstOnly() AS INTEGER
 REDIM grid(1 TO 2, 10 TO 11)
 grid(2, 10) = 7
 grid(2, 11) = 9
-row = grid(2)
-row(10) = 70
-firstOnly = ARRAYTAKE(row, 1)
+rowView = grid(2)
+rowView(10) = 70
+firstOnly = ARRAYTAKE(rowView, 1)
 PRINT grid(2, 10)
-PRINT row(11)
-PRINT LBOUND(row)
-PRINT UBOUND(row)
-PRINT ARRAYLENGTH(row)
+PRINT rowView(11)
+PRINT LBOUND(rowView)
+PRINT UBOUND(rowView)
+PRINT ARRAYLENGTH(rowView)
 PRINT firstOnly(1)
 """;
 
@@ -988,21 +1008,21 @@ PRINT firstOnly(1)
     {
         const string text = """
 DIM grid(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 DIM block(,) AS INTEGER
 REDIM grid(1 TO 3, 10 TO 14)
 grid(2, 11) = 21
 grid(2, 12) = 22
 grid(3, 12) = 32
-row = grid(2, 11 TO 12)
+rowView = grid(2, 11 TO 12)
 block = grid(2 TO 3, 11 TO 12)
-row(11) = 210
+rowView(11) = 210
 block(3, 12) = 320
 PRINT grid(2, 11)
-PRINT row(12)
+PRINT rowView(12)
 PRINT grid(3, 12)
-PRINT LBOUND(row)
-PRINT UBOUND(row)
+PRINT LBOUND(rowView)
+PRINT UBOUND(rowView)
 PRINT LBOUND(block, 1)
 PRINT UBOUND(block, 1)
 PRINT LBOUND(block, 2)
@@ -1021,10 +1041,10 @@ PRINT ARRAYLENGTH(block)
     {
         const string text = """
 DIM grid(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 REDIM grid(1 TO 2, 10 TO 11)
-row = grid(2)
-REDIM row(1 TO 2)
+rowView = grid(2)
+REDIM rowView(1 TO 2)
 """;
 
         var (_, _, result) = ExecuteProgram(text);
@@ -1039,10 +1059,10 @@ REDIM row(1 TO 2)
     {
         const string text = """
 DIM grid(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 REDIM grid(1 TO 2, 10 TO 11)
-row = grid(2)
-ERASE row
+rowView = grid(2)
+ERASE rowView
 """;
 
         var (_, _, result) = ExecuteProgram(text);
@@ -1449,6 +1469,40 @@ reversed = ARRAYTOREVERSED(source)
     }
 
     [Fact]
+    public void Execute_ArrayToReversedSupportsMultidimensionalDimension()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM byColumn(,) AS INTEGER
+DIM byRow(,) AS INTEGER
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+byColumn = ARRAYTOREVERSED(board, COLUMN)
+byRow = ARRAYTOREVERSED(board, ROW)
+byColumn(1, 10) = 999
+PRINT LBOUND(byColumn, ROW)
+PRINT UBOUND(byColumn, ROW)
+PRINT LBOUND(byColumn, COLUMN)
+PRINT UBOUND(byColumn, COLUMN)
+PRINT byColumn(1, 10)
+PRINT byColumn(2, 12)
+PRINT byRow(1, 10)
+PRINT byRow(2, 12)
+PRINT board(1, 12)
+PRINT board(2, 10)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "10", "12", "999", "210", "210", "112", "112", "210"], host.Output);
+    }
+
+    [Fact]
     public void Execute_ArrayTakeReturnsCompactIndependentPrefix()
     {
         const string text = """
@@ -1615,6 +1669,122 @@ PRINT ARRAYSKIP(source, -1)
     }
 
     [Fact]
+    public void Execute_ArrayShapeBuiltinsSupportExplicitDimensionForMultidimensionalArrays()
+    {
+        const string text = """
+DIM board(1 TO 3, 10 TO 13) AS INTEGER
+DIM slice(,) AS INTEGER
+DIM taken(,) AS INTEGER
+DIM skipped(,) AS INTEGER
+DIM leftPart(,) AS INTEGER
+DIM rightPart(,) AS INTEGER
+DIM merged(,) AS INTEGER
+
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(1, 13) = 113
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+board(2, 13) = 213
+board(3, 10) = 310
+board(3, 11) = 311
+board(3, 12) = 312
+board(3, 13) = 313
+
+slice = ARRAYSLICE(board, 11, 2, COLUMN)
+taken = ARRAYTAKE(board, 2, ROW)
+skipped = ARRAYSKIP(board, 1, ROW)
+leftPart = ARRAYTAKE(board, 2, COLUMN)
+rightPart = ARRAYSKIP(board, 2, COLUMN)
+merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)
+
+PRINT LBOUND(slice, ROW)
+PRINT UBOUND(slice, ROW)
+PRINT LBOUND(slice, COLUMN)
+PRINT UBOUND(slice, COLUMN)
+PRINT slice(2, 11)
+PRINT slice(3, 12)
+PRINT LBOUND(taken, ROW)
+PRINT UBOUND(taken, ROW)
+PRINT taken(2, 13)
+PRINT LBOUND(skipped, ROW)
+PRINT UBOUND(skipped, ROW)
+PRINT skipped(2, 10)
+PRINT LBOUND(merged, COLUMN)
+PRINT UBOUND(merged, COLUMN)
+PRINT merged(3, 13)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "3", "11", "12", "211", "312", "1", "2", "213", "2", "3", "210", "10", "13", "313"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayShapeBuiltinsRequireExplicitDimensionForMultidimensionalArrays()
+    {
+        const string text = """
+DIM board(1 TO 2, 1 TO 2) AS INTEGER
+DIM part(,) AS INTEGER
+part = ARRAYTAKE(board, 1)
+""";
+
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+        _ = Binder.Bind(syntax, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_ArrayConcatReportsIncompatibleMultidimensionalShapes()
+    {
+        const string text = """
+DIM leftPart(1 TO 2, 10 TO 11) AS INTEGER
+DIM rightPart(2 TO 3, 12 TO 13) AS INTEGER
+DIM merged(,) AS INTEGER
+merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("ARRAYCONCAT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("right", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_ArrayTakeAndSkipCanProduceAllocatedEmptyMultidimensionalResult()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM emptyTake(,) AS INTEGER
+DIM emptySkip(,) AS INTEGER
+emptyTake = ARRAYTAKE(board, 0, COLUMN)
+emptySkip = ARRAYSKIP(board, 99, COLUMN)
+PRINT ARRAYISALLOCATED(emptyTake)
+PRINT ARRAYLENGTH(emptyTake)
+PRINT LBOUND(emptyTake, ROW)
+PRINT UBOUND(emptyTake, ROW)
+PRINT LBOUND(emptyTake, COLUMN)
+PRINT UBOUND(emptyTake, COLUMN)
+PRINT ARRAYISALLOCATED(emptySkip)
+PRINT ARRAYLENGTH(emptySkip)
+PRINT LBOUND(emptySkip, COLUMN)
+PRINT UBOUND(emptySkip, COLUMN)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "0", "1", "2", "10", "9", "TRUE", "0", "13", "12"], host.Output);
+    }
+
+    [Fact]
     public void Execute_ArrayDistinctReturnsCompactUniqueArray()
     {
         const string text = """
@@ -1674,6 +1844,120 @@ uniqueValues = ARRAYDISTINCT(source)
 
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
         Assert.Contains("ARRAYDISTINCT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_ArrayDistinctOnMultidimensionalArrayReturnsCompactVisibleOrderResult()
+    {
+        const string text = """
+DIM source(1 TO 2, 10 TO 12) AS INTEGER
+DIM uniqueValues() AS INTEGER
+source(1, 10) = 5
+source(1, 11) = 7
+source(1, 12) = 5
+source(2, 10) = 9
+source(2, 11) = 7
+source(2, 12) = 11
+uniqueValues = ARRAYDISTINCT(source)
+PRINT LBOUND(uniqueValues)
+PRINT UBOUND(uniqueValues)
+PRINT ARRAYLENGTH(uniqueValues)
+PRINT uniqueValues(1)
+PRINT uniqueValues(2)
+PRINT uniqueValues(3)
+PRINT uniqueValues(4)
+PRINT ARRAYISALLOCATED(uniqueValues)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "4", "4", "5", "7", "9", "11", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayFlattenOnMultidimensionalArrayReturnsCompactVisibleOrderResult()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM flat() AS INTEGER
+board(1, 10) = 3
+board(1, 11) = 1
+board(1, 12) = 2
+board(2, 10) = 6
+board(2, 11) = 4
+board(2, 12) = 5
+flat = ARRAYFLATTEN(board)
+PRINT ARRAYISALLOCATED(flat)
+PRINT LBOUND(flat)
+PRINT UBOUND(flat)
+PRINT flat(1)
+PRINT flat(2)
+PRINT flat(3)
+PRINT flat(4)
+PRINT flat(5)
+PRINT flat(6)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "1", "6", "3", "1", "2", "6", "4", "5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayReshapeRebuildsTemplateShapeFromSortedFlat()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM flat() AS INTEGER
+DIM sorted() AS INTEGER
+DIM reshaped(,) AS INTEGER
+board(1, 10) = 3
+board(1, 11) = 1
+board(1, 12) = 2
+board(2, 10) = 6
+board(2, 11) = 4
+board(2, 12) = 5
+flat = ARRAYFLATTEN(board)
+sorted = ARRAYTOSORTED(flat)
+reshaped = ARRAYRESHAPE(sorted, board)
+PRINT LBOUND(reshaped, ROW)
+PRINT UBOUND(reshaped, ROW)
+PRINT LBOUND(reshaped, COLUMN)
+PRINT UBOUND(reshaped, COLUMN)
+PRINT reshaped(1, 10)
+PRINT reshaped(1, 11)
+PRINT reshaped(1, 12)
+PRINT reshaped(2, 10)
+PRINT reshaped(2, 11)
+PRINT reshaped(2, 12)
+PRINT board(1, 10)
+PRINT board(2, 12)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "10", "12", "1", "2", "3", "4", "5", "6", "3", "5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayReshapeReportsMismatchedVisibleElementCount()
+    {
+        const string text = """
+DIM source(1 TO 3) AS INTEGER
+DIM template(1 TO 2, 1 TO 2) AS INTEGER
+DIM reshaped(,) AS INTEGER
+reshaped = ARRAYRESHAPE(source, template)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("ARRAYRESHAPE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("template", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1821,6 +2105,43 @@ PRINT UBOUND(values)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["40", "30", "20", "10", "5", "8"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayReverseSupportsMultidimensionalDimension()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+ARRAYREVERSE(board, COLUMN)
+PRINT board(1, 10)
+PRINT board(1, 11)
+PRINT board(1, 12)
+PRINT board(2, 10)
+PRINT board(2, 11)
+PRINT board(2, 12)
+ARRAYREVERSE(board, ROW)
+PRINT board(1, 10)
+PRINT board(1, 11)
+PRINT board(1, 12)
+PRINT board(2, 10)
+PRINT board(2, 11)
+PRINT board(2, 12)
+PRINT LBOUND(board, ROW)
+PRINT UBOUND(board, ROW)
+PRINT LBOUND(board, COLUMN)
+PRINT UBOUND(board, COLUMN)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["112", "111", "110", "212", "211", "210", "212", "211", "210", "112", "111", "110", "1", "2", "10", "12"], host.Output);
     }
 
     [Fact]
@@ -2313,6 +2634,39 @@ END FUNCTION
 
         Assert.True(result.Succeeded);
         Assert.Equal(["TRUE", "1", "0", "0", "TRUE", "1", "0", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayFilterTraversesMultidimensionalVisibleElementsIntoCompactResult()
+    {
+        const string text = """
+DIM values(2 TO 3, 4 TO 6) AS INTEGER
+DIM filtered() AS INTEGER
+values(2, 4) = 10
+values(2, 5) = 21
+values(2, 6) = 30
+values(3, 4) = 41
+values(3, 5) = 50
+values(3, 6) = 61
+filtered = ARRAYFILTER(values(2 TO 3, 4 TO 6), IsOdd)
+PRINT LBOUND(filtered)
+PRINT UBOUND(filtered)
+PRINT ARRAYLENGTH(filtered)
+PRINT filtered(1)
+PRINT filtered(2)
+PRINT filtered(3)
+
+FUNCTION IsOdd(value AS INTEGER) AS BOOLEAN
+    RETURN value MOD 2 = 1
+END FUNCTION
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(
+            result.Succeeded,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.Equal(["1", "3", "3", "21", "41", "61"], host.Output);
     }
 
     [Fact]
@@ -2855,6 +3209,65 @@ PRINT UBOUND(missing)
     }
 
     [Fact]
+    public void Execute_ArrayCoordinateSearchFunctionsReturnCoordinateVectorsAndTables()
+    {
+        const string text = """
+DIM grid(1 TO 2, 5 TO 7) AS INTEGER
+DIM cube(0 TO 1, 10 TO 11, -1 TO 0) AS INTEGER
+DIM firstHit() AS INTEGER
+DIM lastHit() AS INTEGER
+DIM allHits(,) AS INTEGER
+DIM cubeHit() AS INTEGER
+DIM missing() AS INTEGER
+DIM noHits(,) AS INTEGER
+grid(1, 5) = 10
+grid(1, 6) = 20
+grid(2, 6) = 20
+grid(2, 7) = 20
+cube(1, 11, 0) = 7
+firstHit = ARRAYINDEXOF(grid, 20)
+lastHit = ARRAYLASTINDEXOF(grid, 20)
+allHits = ARRAYFINDALL(grid, 20)
+cubeHit = ARRAYINDEXOF(cube, 7)
+missing = ARRAYINDEXOF(grid, 99)
+noHits = ARRAYFINDALL(grid, 99)
+PRINT ARRAYISALLOCATED(firstHit)
+PRINT LBOUND(firstHit)
+PRINT UBOUND(firstHit)
+PRINT firstHit(1)
+PRINT firstHit(2)
+PRINT lastHit(1)
+PRINT lastHit(2)
+PRINT LBOUND(allHits, 1)
+PRINT UBOUND(allHits, 1)
+PRINT LBOUND(allHits, 2)
+PRINT UBOUND(allHits, 2)
+PRINT allHits(1, 1)
+PRINT allHits(1, 2)
+PRINT allHits(2, 1)
+PRINT allHits(2, 2)
+PRINT allHits(3, 1)
+PRINT allHits(3, 2)
+PRINT cubeHit(1)
+PRINT cubeHit(2)
+PRINT cubeHit(3)
+PRINT ARRAYISALLOCATED(missing)
+PRINT LBOUND(missing)
+PRINT UBOUND(missing)
+PRINT ARRAYISALLOCATED(noHits)
+PRINT LBOUND(noHits, 1)
+PRINT UBOUND(noHits, 1)
+PRINT LBOUND(noHits, 2)
+PRINT UBOUND(noHits, 2)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "1", "2", "1", "6", "2", "7", "1", "3", "1", "2", "1", "6", "2", "6", "2", "7", "1", "11", "0", "TRUE", "1", "0", "TRUE", "1", "0", "1", "2"], host.Output);
+    }
+
+    [Fact]
     public void Execute_ArrayBinarySearchReturnsFirstLogicalIndexAcrossLowerBounds()
     {
         const string text = """
@@ -2900,6 +3313,74 @@ PRINT ARRAYBINARYSEARCH(values, 1)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MultidimensionalSortingGroupSortsAlongExplicitDimension()
+    {
+        const string text = """
+DIM board(1 TO 2, 1 TO 3) AS INTEGER
+DIM sortedByColumn(1 TO 2, 1 TO 3) AS INTEGER
+board(1, 1) = 4
+board(1, 2) = 2
+board(1, 3) = 6
+board(2, 1) = 3
+board(2, 2) = 1
+board(2, 3) = 5
+sortedByColumn = ARRAYTOSORTED(board, COLUMN)
+PRINT board(1, 1)
+PRINT sortedByColumn(1, 1)
+PRINT sortedByColumn(1, 2)
+PRINT sortedByColumn(1, 3)
+PRINT sortedByColumn(2, 1)
+PRINT sortedByColumn(2, 2)
+PRINT sortedByColumn(2, 3)
+ARRAYSORT(board, ROW)
+PRINT board(1, 1)
+PRINT board(1, 2)
+PRINT board(1, 3)
+PRINT board(2, 1)
+PRINT board(2, 2)
+PRINT board(2, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["4", "2", "4", "6", "1", "3", "5", "3", "1", "5", "4", "2", "6"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MultidimensionalArrayBinarySearchReturnsCoordinateVectorOrEmptyArray()
+    {
+        const string text = """
+DIM board(1 TO 2, 1 TO 4) AS INTEGER
+DIM firstHit() AS INTEGER
+DIM missing() AS INTEGER
+board(1, 1) = 1
+board(1, 2) = 4
+board(1, 3) = 4
+board(1, 4) = 7
+board(2, 1) = 2
+board(2, 2) = 4
+board(2, 3) = 5
+board(2, 4) = 8
+firstHit = ARRAYBINARYSEARCH(board, 4, ROW)
+missing = ARRAYBINARYSEARCH(board, 6, ROW)
+PRINT ARRAYISALLOCATED(firstHit)
+PRINT LBOUND(firstHit)
+PRINT UBOUND(firstHit)
+PRINT firstHit(1)
+PRINT firstHit(2)
+PRINT ARRAYISALLOCATED(missing)
+PRINT LBOUND(missing)
+PRINT UBOUND(missing)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "1", "2", "1", "2", "TRUE", "1", "0"], host.Output);
     }
 
     [Fact]

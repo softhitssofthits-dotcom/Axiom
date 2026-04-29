@@ -323,6 +323,158 @@ PrintBanner("debug sample")
     }
 
     [Fact]
+    public void StepBack_WithArrayState_RemainsAvailable()
+    {
+        var consoleService = new ProgramConsoleService();
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+DIM values(1 TO 2) AS INTEGER
+values(1) = 10
+values(2) = 20
+PRINT values(1)
+""";
+
+        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [4]);
+
+        Assert.True(stoppedResult.Stopped);
+        Assert.True(stoppedResult.CanStepBack);
+        Assert.Equal(4, stoppedResult.StoppedAt!.SourceLocation.Line);
+
+        var steppedBack = service.StepBack(stoppedResult.StopState!);
+
+        Assert.Equal(ProgramRunStatus.Success, steppedBack.Status);
+        Assert.True(steppedBack.Stopped);
+        Assert.Equal(3, steppedBack.StoppedAt!.SourceLocation.Line);
+        Assert.True(steppedBack.CanStepBack);
+        Assert.Equal(string.Empty, consoleService.OutputText);
+    }
+
+    [Fact]
+    public void StepBack_FromArrayElementPrint_SkipsInternalExpressionStops()
+    {
+        var consoleService = new ProgramConsoleService();
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+DIM values(1 TO 2) AS INTEGER
+values(1) = 10
+PRINT values(1)
+PRINT 99
+""";
+
+        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [4]);
+
+        Assert.True(stoppedResult.Stopped);
+        Assert.Equal(4, stoppedResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal("10", consoleService.OutputText);
+
+        var steppedBack = service.StepBack(stoppedResult.StopState!);
+
+        Assert.Equal(ProgramRunStatus.Success, steppedBack.Status);
+        Assert.True(steppedBack.Stopped);
+        Assert.Equal(3, steppedBack.StoppedAt!.SourceLocation.Line);
+        Assert.True(steppedBack.CanStepBack);
+        Assert.Equal(string.Empty, consoleService.OutputText);
+    }
+
+    [Fact]
+    public void StepBack_AcrossArraySort_ReturnsToArraySortAndAssignments()
+    {
+        var consoleService = new ProgramConsoleService();
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+DIM board(1 TO 2, 1 TO 3) AS INTEGER
+
+board(1, 1) = 4
+board(1, 2) = 2
+board(1, 3) = 6
+board(2, 1) = 3
+board(2, 2) = 1
+board(2, 3) = 5
+
+ARRAYSORT(board, COLUMN)
+
+PRINT board(1, 1)
+PRINT board(1, 2)
+""";
+
+        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [13]);
+
+        Assert.True(stoppedResult.Stopped);
+        Assert.Equal(13, stoppedResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal("2", consoleService.OutputText);
+        Assert.True(stoppedResult.CanStepBack);
+
+        var toArraySort = service.StepBack(stoppedResult.StopState!);
+
+        Assert.Equal(ProgramRunStatus.Success, toArraySort.Status);
+        Assert.True(toArraySort.Stopped);
+        Assert.Equal(12, toArraySort.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(string.Empty, consoleService.OutputText);
+        Assert.True(toArraySort.CanStepBack);
+
+        var toLastAssignment = service.StepBack(toArraySort.StopState!);
+
+        Assert.Equal(ProgramRunStatus.Success, toLastAssignment.Status);
+        Assert.True(toLastAssignment.Stopped);
+        Assert.Equal(10, toLastAssignment.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(string.Empty, consoleService.OutputText);
+    }
+
+    [Fact]
+    public void StepBack_ThenContinue_PreservesArraySortResults()
+    {
+        var consoleService = new ProgramConsoleService();
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+DIM board(1 TO 2, 1 TO 3) AS INTEGER
+board(1, 1) = 4
+board(1, 2) = 2
+board(1, 3) = 6
+board(2, 1) = 3
+board(2, 2) = 1
+board(2, 3) = 5
+ARRAYSORT(board, COLUMN)
+PRINT board(1, 1)
+PRINT board(1, 2)
+PRINT board(1, 3)
+PRINT board(2, 1)
+PRINT board(2, 2)
+PRINT board(2, 3)
+""";
+
+        var firstPrint = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [10]);
+
+        Assert.True(firstPrint.Stopped);
+        Assert.Equal(10, firstPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal("2", consoleService.OutputText);
+
+        var atFirstPrint = service.StepBack(firstPrint.StopState!);
+        Assert.True(atFirstPrint.Stopped);
+        Assert.Equal(9, atFirstPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(string.Empty, consoleService.OutputText);
+
+        var atArraySort = service.StepBack(atFirstPrint.StopState!);
+        Assert.True(atArraySort.Stopped);
+        Assert.Equal(8, atArraySort.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(string.Empty, consoleService.OutputText);
+
+        var rerunPrint = service.Continue(atArraySort.StopState!);
+        Assert.True(rerunPrint.Stopped);
+        Assert.Equal(10, rerunPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal("2", consoleService.OutputText);
+
+        var completed = service.Continue(rerunPrint.StopState!);
+        Assert.False(completed.Stopped);
+        Assert.Equal(
+            string.Join(Environment.NewLine, ["2", "4", "6", "1", "3", "5"]),
+            consoleService.OutputText);
+    }
+
+    [Fact]
     public void Run_WithSourceBreakpointLines_UsesCompiledCache()
     {
         var service = CreateService();

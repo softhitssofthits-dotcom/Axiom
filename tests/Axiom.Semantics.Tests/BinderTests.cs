@@ -361,6 +361,40 @@ part = ARRAYSLICE(values, 1, 2)
     }
 
     [Fact]
+    public void Bind_BuiltinArraySliceAcceptsExplicitDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM part(,) AS INTEGER
+part = ARRAYSLICE(values, 2, 3, COLUMN)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var sliceCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var sliceType = Assert.IsType<ArrayTypeSymbol>(sliceCall.Type);
+        Assert.Equal(2, sliceType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArraySlice, AssertCalledFunction(sliceCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArraySliceRequiresDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM part(,) AS INTEGER
+part = ARRAYSLICE(values, 2, 3)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayConcatReturnsSameArrayType()
     {
         const string text = """
@@ -397,6 +431,41 @@ PRINT ARRAYCONCAT(left, right)
     }
 
     [Fact]
+    public void Bind_BuiltinArrayConcatAcceptsExplicitDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM left(,) AS INTEGER
+DIM right(,) AS INTEGER
+DIM merged(,) AS INTEGER
+merged = ARRAYCONCAT(left, right, ROW)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[3]);
+        var concatCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var concatType = Assert.IsType<ArrayTypeSymbol>(concatCall.Type);
+        Assert.Equal(2, concatType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayConcat, AssertCalledFunction(concatCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayConcatRequiresDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM left(,) AS INTEGER
+DIM right(,) AS INTEGER
+PRINT ARRAYCONCAT(left, right)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayToReversedReturnsSameArrayType()
     {
         const string text = """
@@ -422,6 +491,68 @@ reversed = ARRAYTOREVERSED(values)
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
         Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayToReversedAcceptsExplicitDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM reversed(,) AS INTEGER
+reversed = ARRAYTOREVERSED(values, COLUMN)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var reverseCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var reverseType = Assert.IsType<ArrayTypeSymbol>(reverseCall.Type);
+        Assert.Equal(2, reverseType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayToReversed, AssertCalledFunction(reverseCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayToReversedRequiresDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM reversed(,) AS INTEGER
+reversed = ARRAYTOREVERSED(values)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayReverseAcceptsExplicitDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+ARRAYREVERSE(values, COLUMN)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Void, BuiltinFunctionId.ArrayReverse);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayReverseRequiresDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+ARRAYREVERSE(values)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -453,6 +584,40 @@ part = ARRAYTAKE(values, 2)
     }
 
     [Fact]
+    public void Bind_BuiltinArrayTakeAcceptsExplicitDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM part(,) AS INTEGER
+part = ARRAYTAKE(values, 2, ROW)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var takeCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var takeType = Assert.IsType<ArrayTypeSymbol>(takeCall.Type);
+        Assert.Equal(2, takeType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayTake, AssertCalledFunction(takeCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayTakeRequiresDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM part(,) AS INTEGER
+part = ARRAYTAKE(values, 2)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_BuiltinArraySkipReturnsSameArrayType()
     {
         const string text = """
@@ -481,6 +646,40 @@ part = ARRAYSKIP(values, 2)
     }
 
     [Fact]
+    public void Bind_BuiltinArraySkipAcceptsExplicitDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS STRING
+DIM part(,) AS STRING
+part = ARRAYSKIP(values, 2, COLUMN)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var skipCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var skipType = Assert.IsType<ArrayTypeSymbol>(skipCall.Type);
+        Assert.Equal(2, skipType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArraySkip, AssertCalledFunction(skipCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArraySkipRequiresDimensionForMultidimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS STRING
+DIM part(,) AS STRING
+part = ARRAYSKIP(values, 2)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayDistinctReturnsSameArrayType()
     {
         const string text = """
@@ -496,7 +695,68 @@ uniqueValues = ARRAYDISTINCT(values)
         var distinctCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
         var distinctType = Assert.IsType<ArrayTypeSymbol>(distinctCall.Type);
         Assert.Equal(TypeSymbol.Integer, distinctType.ElementType);
+        Assert.Equal(1, distinctType.Rank);
         Assert.Equal(BuiltinFunctionId.ArrayDistinct, AssertCalledFunction(distinctCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayDistinctOnMultidimensionalArrayReturnsCompactOneDimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM uniqueValues() AS INTEGER
+uniqueValues = ARRAYDISTINCT(values)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var distinctCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var distinctType = Assert.IsType<ArrayTypeSymbol>(distinctCall.Type);
+        Assert.Equal(TypeSymbol.Integer, distinctType.ElementType);
+        Assert.Equal(1, distinctType.Rank);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayFlattenOnMultidimensionalArrayReturnsCompactOneDimensionalArray()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM flat() AS INTEGER
+flat = ARRAYFLATTEN(values)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var flattenCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var flattenType = Assert.IsType<ArrayTypeSymbol>(flattenCall.Type);
+        Assert.Equal(TypeSymbol.Integer, flattenType.ElementType);
+        Assert.Equal(1, flattenType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayFlatten, AssertCalledFunction(flattenCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayReshapeReturnsTemplateArrayType()
+    {
+        const string text = """
+DIM source() AS INTEGER
+DIM template(,) AS INTEGER
+DIM reshaped(,) AS INTEGER
+reshaped = ARRAYRESHAPE(source, template)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[3]);
+        var reshapeCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        var reshapeType = Assert.IsType<ArrayTypeSymbol>(reshapeCall.Type);
+        Assert.Equal(TypeSymbol.Integer, reshapeType.ElementType);
+        Assert.Equal(2, reshapeType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayReshape, AssertCalledFunction(reshapeCall).BuiltinId);
     }
 
     [Fact]
@@ -519,12 +779,71 @@ sortedValues = ARRAYTOSORTED(values)
     }
 
     [Fact]
+    public void Bind_BuiltinSortingGroupAcceptsMultidimensionalArrayWithExplicitDimension()
+    {
+        const string text = """
+DIM values(,) AS INTEGER
+DIM sortedValues(,) AS INTEGER
+DIM hit() AS INTEGER
+sortedValues = ARRAYTOSORTED(values, COLUMN)
+ARRAYSORT(values, ROW)
+hit = ARRAYBINARYSEARCH(values, 10, ROW)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var sortedAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[3]);
+        var sortedCall = Assert.IsType<BoundCallExpression>(sortedAssignment.Expression);
+        var sortedType = Assert.IsType<ArrayTypeSymbol>(sortedCall.Type);
+        Assert.Equal(TypeSymbol.Integer, sortedType.ElementType);
+        Assert.Equal(2, sortedType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayToSorted, AssertCalledFunction(sortedCall).BuiltinId);
+
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Void, BuiltinFunctionId.ArraySort);
+
+        var hitAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[5]);
+        var hitCall = Assert.IsType<BoundCallExpression>(hitAssignment.Expression);
+        var hitType = Assert.IsType<ArrayTypeSymbol>(hitCall.Type);
+        Assert.Equal(TypeSymbol.Integer, hitType.ElementType);
+        Assert.Equal(1, hitType.Rank);
+        Assert.Equal(BuiltinFunctionId.ArrayBinarySearch, AssertCalledFunction(hitCall).BuiltinId);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayDistinctReportsScalarArgument()
     {
         BindProgram("PRINT ARRAYDISTINCT(1)", out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
         Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayFlattenReportsScalarArgument()
+    {
+        BindProgram("PRINT ARRAYFLATTEN(1)", out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayReshapeRejectsDifferentElementTypeTemplates()
+    {
+        BindProgram(
+            """
+DIM source() AS INTEGER
+DIM template(,) AS STRING
+DIM reshaped(,) AS STRING
+reshaped = ARRAYRESHAPE(source, template)
+""",
+            out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -549,6 +868,28 @@ flags = ARRAYTOSORTED(flags)
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
         Assert.Contains("ARRAYTOSORTED", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("BOOLEAN", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_BuiltinSortingGroupRequiresExplicitDimensionForMultidimensionalArray()
+    {
+        BindProgram(
+            """
+DIM values(,) AS INTEGER
+DIM sortedValues(,) AS INTEGER
+DIM hit() AS INTEGER
+sortedValues = ARRAYTOSORTED(values)
+ARRAYSORT(values)
+hit = ARRAYBINARYSEARCH(values, 10)
+""",
+            out var diagnostics);
+
+        var dimensionDiagnostics = diagnostics
+            .Where(static d => d.Code == "MB2003")
+            .ToArray();
+
+        Assert.Equal(3, dimensionDiagnostics.Length);
+        Assert.All(dimensionDiagnostics, diagnostic => Assert.Contains("dimension", diagnostic.Message, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -653,6 +994,32 @@ END FUNCTION
         var filterCall = Assert.IsType<BoundCallExpression>(filterAssignment.Expression);
         Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer), filterCall.Type);
         Assert.Equal(BuiltinFunctionId.ArrayFilter, AssertCalledFunction(filterCall).BuiltinId);
+    }
+
+    [Fact]
+    public void Bind_BuiltinArrayFilterCompactsMultidimensionalArrayToOneDimensionalResult()
+    {
+        const string text = """
+DIM values(2 TO 3, 4 TO 6) AS INTEGER
+DIM filtered() AS INTEGER
+filtered = ARRAYFILTER(values(2 TO 3, 4 TO 6), IsOdd)
+
+FUNCTION IsOdd(value AS INTEGER) AS BOOLEAN
+    RETURN value MOD 2 = 1
+END FUNCTION
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var filterCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer), filterCall.Type);
+        Assert.Equal(BuiltinFunctionId.ArrayFilter, AssertCalledFunction(filterCall).BuiltinId);
+
+        var slicedArgument = Assert.IsType<BoundArrayAccessExpression>(filterCall.Arguments[0]);
+        Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2), slicedArgument.Type);
     }
 
     [Fact]
@@ -1144,6 +1511,51 @@ nameMatches = ARRAYFINDALL(names, "Ann")
     }
 
     [Fact]
+    public void Bind_BuiltinArrayCoordinateSearchFunctionsReturnCoordinateShapesForMultidimensionalArrays()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+DIM cube(,,) AS INTEGER
+DIM firstHit() AS INTEGER
+DIM lastHit() AS INTEGER
+DIM allHits(,) AS INTEGER
+DIM cubeHit() AS INTEGER
+firstHit = ARRAYINDEXOF(grid, 1)
+lastHit = ARRAYLASTINDEXOF(grid, 1)
+allHits = ARRAYFINDALL(grid, 1)
+cubeHit = ARRAYINDEXOF(cube, 1)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var firstAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[6]);
+        var firstCall = Assert.IsType<BoundCallExpression>(firstAssignment.Expression);
+        var firstType = Assert.IsType<ArrayTypeSymbol>(firstCall.Type);
+        Assert.Equal(TypeSymbol.Integer, firstType.ElementType);
+        Assert.Equal(1, firstType.Rank);
+
+        var lastAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[7]);
+        var lastCall = Assert.IsType<BoundCallExpression>(lastAssignment.Expression);
+        var lastType = Assert.IsType<ArrayTypeSymbol>(lastCall.Type);
+        Assert.Equal(TypeSymbol.Integer, lastType.ElementType);
+        Assert.Equal(1, lastType.Rank);
+
+        var allAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[8]);
+        var allCall = Assert.IsType<BoundCallExpression>(allAssignment.Expression);
+        var allType = Assert.IsType<ArrayTypeSymbol>(allCall.Type);
+        Assert.Equal(TypeSymbol.Integer, allType.ElementType);
+        Assert.Equal(2, allType.Rank);
+
+        var cubeAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[9]);
+        var cubeCall = Assert.IsType<BoundCallExpression>(cubeAssignment.Expression);
+        var cubeType = Assert.IsType<ArrayTypeSymbol>(cubeCall.Type);
+        Assert.Equal(TypeSymbol.Integer, cubeType.ElementType);
+        Assert.Equal(1, cubeType.Rank);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayFindAllBindsValueAsElementType()
     {
         BindProgram(
@@ -1264,6 +1676,39 @@ value = 10
         var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
         var target = Assert.IsType<BoundVariableExpression>(assignment.Target);
         Assert.Equal("value", target.Variable.Name);
+    }
+
+    [Fact]
+    public void Bind_AssignmentReportsScalarAssignedToArray()
+    {
+        const string text = """
+DIM values() AS INTEGER
+values = 5
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("values", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("объявлена как массив", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("индекс элемента", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_AssignmentReportsArrayAssignedToScalar()
+    {
+        const string text = """
+DIM values(1 TO 1) AS INTEGER
+DIM value AS INTEGER
+value = values
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("не является массивом", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("массив целиком", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -3127,6 +3572,101 @@ answer = 10
     }
 
     [Fact]
+    public void Bind_PredefinedConstantsProduceLiteralValues()
+    {
+        const string text = """
+DIM sum = ROW + COLUMN
+DIM circumference AS DOUBLE = PI * 2
+PRINT sum
+PRINT circumference
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var sumDeclaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        Assert.Equal(TypeSymbol.Integer, sumDeclaration.Variable.Type);
+        var sumInitializer = Assert.IsType<BoundBinaryExpression>(sumDeclaration.Initializer);
+        Assert.IsType<BoundLiteralExpression>(sumInitializer.Left);
+        Assert.IsType<BoundLiteralExpression>(sumInitializer.Right);
+
+        var circumferenceDeclaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[1]);
+        Assert.Equal(TypeSymbol.Double, circumferenceDeclaration.Variable.Type);
+        var circumferenceInitializer = Assert.IsType<BoundBinaryExpression>(circumferenceDeclaration.Initializer);
+        Assert.IsType<BoundLiteralExpression>(circumferenceInitializer.Left);
+    }
+
+    [Fact]
+    public void Bind_PredefinedIntegralConstantsWorkInConstantOnlyBounds()
+    {
+        const string text = """
+TYPE Pair
+    Values(1 TO ROW + COLUMN) AS INTEGER
+END TYPE
+
+DIM code AS STRING * (ROW + COLUMN + 2)
+DIM pair AS Pair
+PRINT pair.Values(3)
+PRINT code
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var codeDeclaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        Assert.Equal(5, codeDeclaration.Variable.FixedStringLength);
+
+        var pairDeclaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[1]);
+        var pairType = Assert.IsType<UserDefinedTypeSymbol>(pairDeclaration.Variable.Type);
+        var valuesField = Assert.Single(pairType.Fields);
+        Assert.True(valuesField.IsFixedArray);
+        Assert.Equal(1, valuesField.FixedArrayLowerBound);
+        Assert.Equal(3, valuesField.FixedArrayUpperBound);
+    }
+
+    [Fact]
+    public void Bind_ReportsAssignmentToPredefinedConstant()
+    {
+        const string text = """
+ROW = 10
+PI = 3
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var reportedNames = diagnostics
+            .Where(static d => d.Code == "MB2010")
+            .Select(static d => d.Message)
+            .ToArray();
+
+        Assert.Equal(2, reportedNames.Length);
+        Assert.Contains(reportedNames, static message => message.Contains("ROW", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(reportedNames, static message => message.Contains("PI", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Bind_ReportsRedeclarationOfPredefinedConstantName()
+    {
+        const string text = """
+DIM row AS INTEGER
+CONST PI AS DOUBLE = 3.14
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var reportedNames = diagnostics
+            .Where(static d => d.Code == "MB2002")
+            .Select(static d => d.Message)
+            .ToArray();
+
+        Assert.Equal(2, reportedNames.Length);
+        Assert.Contains(reportedNames, static message => message.Contains("row", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(reportedNames, static message => message.Contains("PI", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void Bind_ReportsUnknownCallable()
     {
         BindProgram("Missing()", out var diagnostics);
@@ -3722,6 +4262,17 @@ PRINT user.Age
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2023");
         Assert.Contains("Age", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_IncompleteConstDeclaration_DoesNotThrow()
+    {
+        var syntax = Parser.Parse("CONST", out var parserDiagnostics);
+        Assert.NotEmpty(parserDiagnostics);
+
+        var exception = Record.Exception(() => Binder.Bind(syntax, out _));
+
+        Assert.Null(exception);
     }
 
     [Fact]

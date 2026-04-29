@@ -39,21 +39,31 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateArraySlice(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        int start,
-        int count)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYSLICE", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYSLICE", "array", 0, arguments[0]);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
+        var start = arguments[1].AsInteger();
+        var count = RequireNonNegativeCount(expression, "ARRAYSLICE", "count", 2, arguments[2].AsInteger());
+
+        if (array.Rank == 1)
+        {
+            return EvaluateOneDimensionalArraySlice(expression, arrayType, array, start, count);
+        }
+
+        var dimension = ResolveTransformDimension(expression, "ARRAYSLICE", array, arguments, dimensionArgumentIndex: 3);
 
         if (count == 0)
         {
-            return CreateCompactArrayValue(arrayType, []);
+            return CreateArrayWindowCopy(
+                arrayType,
+                array,
+                CreateAdjustedBounds(array, dimension, start, start - 1));
         }
 
         var end = (long)start + count - 1L;
 
-        if (start < array.LowerBound || end > array.UpperBound)
+        if (start < array.GetLowerBound(dimension) || end > array.GetUpperBound(dimension))
         {
             ReportBuiltInArgumentError(
                 "ARRAYSLICE",
@@ -63,35 +73,94 @@ public sealed partial class Interpreter
             throw new RuntimeFailureException();
         }
 
-        var values = new RuntimeValue[count];
-
-        for (var index = 0; index < count; index++)
-        {
-            values[index] = array.GetValue(start + index);
-        }
-
-        return CreateCompactArrayValue(arrayType, values);
+        return CreateArrayWindowCopy(
+            arrayType,
+            array,
+            CreateAdjustedBounds(array, dimension, start, (int)end));
     }
 
-    private RuntimeValue EvaluateArrayToReversed(BoundCallExpression expression, RuntimeValue argument)
+    private RuntimeValue EvaluateArrayFlatten(
+        BoundCallExpression expression,
+        RuntimeValue argument)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYTOREVERSED", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYFLATTEN", "array", 0, argument);
+        var sourceArrayType = (ArrayTypeSymbol)argument.Type;
+        var resultArrayType = (ArrayTypeSymbol)(expression.Type as ArrayTypeSymbol ?? ArrayTypeSymbol.Create(sourceArrayType.ElementType));
         var values = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexDescending(array, index => values.Add(array.GetValue(index)));
+        ForEachArrayIndexSetAscending(array, indices => values.Add(array.GetValue(indices)));
 
-        return CreateCompactArrayValue(arrayType, values);
+        return CreateCompactArrayValue(resultArrayType, values);
     }
 
-    private RuntimeValue EvaluateArrayToSorted(BoundCallExpression expression, RuntimeValue argument)
+    private RuntimeValue EvaluateArrayReshape(
+        BoundCallExpression expression,
+        RuntimeValue sourceArgument,
+        RuntimeValue templateArgument)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYTOSORTED", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var source = RequireAllocatedArrayArgument(expression, "ARRAYRESHAPE", "source", 0, sourceArgument);
+        var template = RequireAllocatedArrayArgument(expression, "ARRAYRESHAPE", "template", 1, templateArgument);
+
+        if (source.Length != template.Length)
+        {
+            ReportBuiltInArgumentError(
+                "ARRAYRESHAPE",
+                "template",
+                "должен задавать то же число видимых элементов, что и 'source'.",
+                GetBuiltInArgumentLocation(expression, 1));
+            throw new RuntimeFailureException();
+        }
+
+        var resultArrayType = (ArrayTypeSymbol)(expression.Type as ArrayTypeSymbol ?? templateArgument.Type);
+        var values = new List<RuntimeValue>(source.Length);
+
+        ForEachArrayIndexSetAscending(source, indices => values.Add(source.GetValue(indices)));
+
+        var next = 0;
+        return CreateVisibleShapeArrayValue(
+            resultArrayType,
+            template,
+            _ => values[next++]);
+    }
+
+    private RuntimeValue EvaluateArrayToReversed(
+        BoundCallExpression expression,
+        IReadOnlyList<RuntimeValue> arguments)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYTOREVERSED", "array", 0, arguments[0]);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
+
+        if (array.Rank == 1)
+        {
+            var values = new List<RuntimeValue>(array.Length);
+
+            ForEachArrayIndexDescending(array, index => values.Add(array.GetValue(index)));
+
+            return CreateCompactArrayValue(arrayType, values);
+        }
+
+        var dimension = ResolveTransformDimension(expression, "ARRAYTOREVERSED", array, arguments, dimensionArgumentIndex: 1);
+        return CreateReversedArrayCopy(arrayType, array, dimension);
+    }
+
+    private RuntimeValue EvaluateArrayToSorted(
+        BoundCallExpression expression,
+        IReadOnlyList<RuntimeValue> arguments)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYTOSORTED", "array", 0, arguments[0]);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
         if (array.Length == 0)
         {
             return CloneArrayValue(arrayType, array);
+        }
+
+        if (array.Rank != 1)
+        {
+            var dimension = ResolveTransformDimension(expression, "ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1);
+            var clone = CloneArrayValue(arrayType, array).AsArray();
+            SortArrayAlongDimension(clone, dimension);
+            return RuntimeValue.FromArray(arrayType, clone);
         }
 
         var values = new List<(RuntimeValue Value, int OriginalOrder)>(array.Length);
@@ -120,50 +189,69 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateArrayTake(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        int count)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYTAKE", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYTAKE", "array", 0, arguments[0]);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
+        var count = RequireNonNegativeCount(expression, "ARRAYTAKE", "count", 1, arguments[1].AsInteger());
 
-        if (count == 0 || array.Length == 0)
+        if (array.Rank == 1)
         {
-            return CreateCompactArrayValue(arrayType, []);
+            return EvaluateOneDimensionalArrayTake(arrayType, array, count);
         }
 
-        var takeCount = Math.Min(count, array.Length);
-        var values = new RuntimeValue[takeCount];
+        var dimension = ResolveTransformDimension(expression, "ARRAYTAKE", array, arguments, dimensionArgumentIndex: 2);
+        var lowerBound = array.GetLowerBound(dimension);
+        var extent = GetDimensionLength(array, dimension);
+        var takeCount = Math.Min(count, extent);
+        var upperBound = takeCount == 0
+            ? lowerBound - 1
+            : lowerBound + takeCount - 1;
 
-        for (var index = 0; index < takeCount; index++)
-        {
-            values[index] = array.GetValue(array.LowerBound + index);
-        }
-
-        return CreateCompactArrayValue(arrayType, values);
+        return CreateArrayWindowCopy(
+            arrayType,
+            array,
+            CreateAdjustedBounds(array, dimension, lowerBound, upperBound));
     }
 
     private RuntimeValue EvaluateArraySkip(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        int count)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYSKIP", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYSKIP", "array", 0, arguments[0]);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
+        var count = RequireNonNegativeCount(expression, "ARRAYSKIP", "count", 1, arguments[1].AsInteger());
 
-        if (count >= array.Length)
+        if (array.Rank == 1)
         {
-            return CreateCompactArrayValue(arrayType, []);
+            return EvaluateOneDimensionalArraySkip(arrayType, array, count);
         }
 
-        var remainingCount = array.Length - count;
-        var values = new RuntimeValue[remainingCount];
+        var dimension = ResolveTransformDimension(expression, "ARRAYSKIP", array, arguments, dimensionArgumentIndex: 2);
+        var lowerBound = array.GetLowerBound(dimension);
+        var upperBound = array.GetUpperBound(dimension);
+        var extent = GetDimensionLength(array, dimension);
 
-        for (var index = 0; index < remainingCount; index++)
+        if (count <= 0)
         {
-            values[index] = array.GetValue(array.LowerBound + count + index);
+            return CreateArrayWindowCopy(
+                arrayType,
+                array,
+                CreateAdjustedBounds(array, dimension, lowerBound, upperBound));
         }
 
-        return CreateCompactArrayValue(arrayType, values);
+        if (count >= extent)
+        {
+            return CreateArrayWindowCopy(
+                arrayType,
+                array,
+                CreateAdjustedBounds(array, dimension, upperBound + 1, upperBound));
+        }
+
+        return CreateArrayWindowCopy(
+            arrayType,
+            array,
+            CreateAdjustedBounds(array, dimension, lowerBound + count, upperBound));
     }
 
     private RuntimeValue EvaluateArrayDistinct(
@@ -171,12 +259,13 @@ public sealed partial class Interpreter
         RuntimeValue argument)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYDISTINCT", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var sourceArrayType = (ArrayTypeSymbol)argument.Type;
+        var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var values = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            var candidate = array.GetValue(index);
+            var candidate = array.GetValue(indices);
             var alreadyPresent = false;
 
             foreach (var existing in values)
@@ -194,7 +283,7 @@ public sealed partial class Interpreter
             }
         });
 
-        return CreateCompactArrayValue(arrayType, values);
+        return CreateCompactArrayValue(resultArrayType, values);
     }
 
     private RuntimeValue EvaluateArrayContains(
@@ -212,6 +301,12 @@ public sealed partial class Interpreter
         RuntimeValue value)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYINDEXOF", "array", 0, argument);
+
+        if (array.Rank != 1)
+        {
+            return EvaluateArrayCoordinateIndexOf(array, value, searchFromEnd: false);
+        }
+
         return RuntimeValue.FromInteger(FindArrayIndex(expression, "ARRAYINDEXOF", array, value, searchFromEnd: false));
     }
 
@@ -221,6 +316,12 @@ public sealed partial class Interpreter
         RuntimeValue value)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYLASTINDEXOF", "array", 0, argument);
+
+        if (array.Rank != 1)
+        {
+            return EvaluateArrayCoordinateIndexOf(array, value, searchFromEnd: true);
+        }
+
         return RuntimeValue.FromInteger(FindArrayIndex(expression, "ARRAYLASTINDEXOF", array, value, searchFromEnd: true));
     }
 
@@ -249,6 +350,12 @@ public sealed partial class Interpreter
         RuntimeValue value)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYFINDALL", "array", 0, argument);
+
+        if (array.Rank != 1)
+        {
+            return EvaluateArrayCoordinateFindAll(array, value);
+        }
+
         var indices = new List<RuntimeValue>(array.Length);
 
         ForEachArrayIndexAscending(array, index =>
@@ -262,13 +369,68 @@ public sealed partial class Interpreter
         return CreateCompactArrayValue((ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer), indices);
     }
 
+    private RuntimeValue EvaluateArrayCoordinateIndexOf(
+        RuntimeArrayValue array,
+        RuntimeValue value,
+        bool searchFromEnd)
+    {
+        int[]? foundIndices = null;
+
+        ForEachArrayIndexSetAscending(array, indices =>
+        {
+            if (!ValuesEqual(array.GetValue(indices), value))
+            {
+                return;
+            }
+
+            if (searchFromEnd || foundIndices is null)
+            {
+                foundIndices = indices.ToArray();
+            }
+        });
+
+        return foundIndices is null
+            ? CreateCompactArrayValue((ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer), [])
+            : CreateCompactArrayValue(
+                (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer),
+                foundIndices.Select(RuntimeValue.FromInteger).ToArray());
+    }
+
+    private RuntimeValue EvaluateArrayCoordinateFindAll(RuntimeArrayValue array, RuntimeValue value)
+    {
+        var matches = new List<int[]>();
+
+        ForEachArrayIndexSetAscending(array, indices =>
+        {
+            if (ValuesEqual(array.GetValue(indices), value))
+            {
+                matches.Add(indices.ToArray());
+            }
+        });
+
+        var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2);
+        var lowerBounds = new[] { 1, 1 };
+        var upperBounds = new[] { matches.Count == 0 ? 0 : matches.Count, array.Rank };
+        return CreateVisibleShapeArrayValue(
+            resultArrayType,
+            lowerBounds,
+            upperBounds,
+            indices => RuntimeValue.FromInteger(matches[indices[0] - 1][indices[1] - 1]));
+    }
+
     private RuntimeValue EvaluateArrayBinarySearch(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        RuntimeValue value)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYBINARYSEARCH", "array", 0, argument);
-        return RuntimeValue.FromInteger(FindArrayBinarySearchIndex(expression, "ARRAYBINARYSEARCH", array, value));
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYBINARYSEARCH", "array", 0, arguments[0]);
+
+        if (array.Rank != 1)
+        {
+            var dimension = ResolveTransformDimension(expression, "ARRAYBINARYSEARCH", array, arguments, dimensionArgumentIndex: 2);
+            return FindArrayBinarySearchCoordinates(expression, "ARRAYBINARYSEARCH", array, arguments[1], dimension);
+        }
+
+        return RuntimeValue.FromInteger(FindArrayBinarySearchIndex(expression, "ARRAYBINARYSEARCH", array, arguments[1]));
     }
 
     private RuntimeValue EvaluateArrayFill(
@@ -285,33 +447,36 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateArrayReverse(
         BoundCallExpression expression,
-        RuntimeValue argument)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYREVERSE", "array", 0, argument);
-        var left = array.LowerBound;
-        var right = array.UpperBound;
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYREVERSE", "array", 0, arguments[0]);
 
-        while (left < right)
+        if (array.Rank == 1)
         {
-            var leftValue = array.GetValue(left);
-            var rightValue = array.GetValue(right);
-            array.SetValue(left, rightValue);
-            array.SetValue(right, leftValue);
-            left++;
-            right--;
+            ReverseOneDimensionalArray(array);
+            return RuntimeValue.Void;
         }
 
+        var dimension = ResolveTransformDimension(expression, "ARRAYREVERSE", array, arguments, dimensionArgumentIndex: 1);
+        ReverseArrayAlongDimension(array, dimension);
         return RuntimeValue.Void;
     }
 
     private RuntimeValue EvaluateArraySort(
         BoundCallExpression expression,
-        RuntimeValue argument)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYSORT", "array", 0, argument);
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYSORT", "array", 0, arguments[0]);
 
         if (array.Length <= 1)
         {
+            return RuntimeValue.Void;
+        }
+
+        if (array.Rank != 1)
+        {
+            var dimension = ResolveTransformDimension(expression, "ARRAYSORT", array, arguments, dimensionArgumentIndex: 1);
+            SortArrayAlongDimension(array, dimension);
             return RuntimeValue.Void;
         }
 
@@ -473,13 +638,14 @@ public sealed partial class Interpreter
         RuntimeValue predicateArgument)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYFILTER", "array", 0, argument);
-        var arrayType = (ArrayTypeSymbol)argument.Type;
+        var sourceArrayType = (ArrayTypeSymbol)argument.Type;
+        var resultArrayType = expression.Type as ArrayTypeSymbol ?? (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var predicate = RequireFunctionArgument(expression, 1, predicateArgument);
         var values = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexAscending(array, index =>
+        ForEachArrayIndexSetAscending(array, indices =>
         {
-            var value = array.GetValue(index);
+            var value = array.GetValue(indices);
 
             if (InvokeArrayPredicate(expression, predicate, value))
             {
@@ -487,7 +653,7 @@ public sealed partial class Interpreter
             }
         });
 
-        return CreateCompactArrayValue(arrayType, values);
+        return CreateCompactArrayValue(resultArrayType, values);
     }
 
     private RuntimeValue EvaluateArrayMap(
@@ -522,16 +688,128 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateArrayConcat(
         BoundCallExpression expression,
-        RuntimeValue leftArgument,
-        RuntimeValue rightArgument)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var left = RequireAllocatedArrayArgument(expression, "ARRAYCONCAT", "left", 0, leftArgument);
-        var right = RequireAllocatedArrayArgument(expression, "ARRAYCONCAT", "right", 1, rightArgument);
-        var arrayType = (ArrayTypeSymbol)leftArgument.Type;
-        var values = new List<RuntimeValue>(left.Length + right.Length);
+        var left = RequireAllocatedArrayArgument(expression, "ARRAYCONCAT", "left", 0, arguments[0]);
+        var right = RequireAllocatedArrayArgument(expression, "ARRAYCONCAT", "right", 1, arguments[1]);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
-        ForEachArrayIndexAscending(left, index => values.Add(left.GetValue(index)));
-        ForEachArrayIndexAscending(right, index => values.Add(right.GetValue(index)));
+        if (left.Rank == 1)
+        {
+            var values = new List<RuntimeValue>(left.Length + right.Length);
+            ForEachArrayIndexAscending(left, index => values.Add(left.GetValue(index)));
+            ForEachArrayIndexAscending(right, index => values.Add(right.GetValue(index)));
+            return CreateCompactArrayValue(arrayType, values);
+        }
+
+        var dimension = ResolveTransformDimension(expression, "ARRAYCONCAT", left, arguments, dimensionArgumentIndex: 2);
+        EnsureCompatibleConcatShapes(expression, left, right, dimension);
+
+        if (GetDimensionLength(left, dimension) == 0)
+        {
+            return CreateArrayWindowCopy(arrayType, right, (right.LowerBounds.ToArray(), right.UpperBounds.ToArray()));
+        }
+
+        if (GetDimensionLength(right, dimension) == 0)
+        {
+            return CreateArrayWindowCopy(arrayType, left, (left.LowerBounds.ToArray(), left.UpperBounds.ToArray()));
+        }
+
+        var resultLowerBounds = left.LowerBounds.ToArray();
+        var resultUpperBounds = left.UpperBounds.ToArray();
+        var selectedIndex = dimension - 1;
+        resultUpperBounds[selectedIndex] = checked(resultLowerBounds[selectedIndex] + GetDimensionLength(left, dimension) + GetDimensionLength(right, dimension) - 1);
+        var leftLength = GetDimensionLength(left, dimension);
+        var leftLowerBound = left.GetLowerBound(dimension);
+        var rightLowerBound = right.GetLowerBound(dimension);
+        var resultLowerBound = resultLowerBounds[selectedIndex];
+
+        return CreateVisibleShapeArrayValue(
+            arrayType,
+            resultLowerBounds,
+            resultUpperBounds,
+            resultIndices =>
+            {
+                var sourceIndices = resultIndices.ToArray();
+                var offset = resultIndices[selectedIndex] - resultLowerBound;
+
+                if (offset < leftLength)
+                {
+                    sourceIndices[selectedIndex] = leftLowerBound + offset;
+                    return left.GetValue(sourceIndices);
+                }
+
+                sourceIndices[selectedIndex] = rightLowerBound + (offset - leftLength);
+                return right.GetValue(sourceIndices);
+            });
+    }
+
+    private RuntimeValue EvaluateOneDimensionalArraySlice(
+        BoundCallExpression expression,
+        ArrayTypeSymbol arrayType,
+        RuntimeArrayValue array,
+        int start,
+        int count)
+    {
+        if (count == 0)
+        {
+            return CreateCompactArrayValue(arrayType, []);
+        }
+
+        var end = (long)start + count - 1L;
+
+        if (start < array.LowerBound || end > array.UpperBound)
+        {
+            ReportBuiltInArgumentError(
+                "ARRAYSLICE",
+                "start",
+                "РІРјРµСЃС‚Рµ СЃ 'count' Р·Р°РґР°С‘С‚ РґРёР°РїР°Р·РѕРЅ РІРЅРµ РіСЂР°РЅРёС† РёСЃС…РѕРґРЅРѕРіРѕ РјР°СЃСЃРёРІР°.",
+                GetBuiltInArgumentLocation(expression, 1));
+            throw new RuntimeFailureException();
+        }
+
+        var values = new RuntimeValue[count];
+
+        for (var index = 0; index < count; index++)
+        {
+            values[index] = array.GetValue(start + index);
+        }
+
+        return CreateCompactArrayValue(arrayType, values);
+    }
+
+    private static RuntimeValue EvaluateOneDimensionalArrayTake(ArrayTypeSymbol arrayType, RuntimeArrayValue array, int count)
+    {
+        if (count == 0 || array.Length == 0)
+        {
+            return CreateCompactArrayValue(arrayType, []);
+        }
+
+        var takeCount = Math.Min(count, array.Length);
+        var values = new RuntimeValue[takeCount];
+
+        for (var index = 0; index < takeCount; index++)
+        {
+            values[index] = array.GetValue(array.LowerBound + index);
+        }
+
+        return CreateCompactArrayValue(arrayType, values);
+    }
+
+    private static RuntimeValue EvaluateOneDimensionalArraySkip(ArrayTypeSymbol arrayType, RuntimeArrayValue array, int count)
+    {
+        if (count >= array.Length)
+        {
+            return CreateCompactArrayValue(arrayType, []);
+        }
+
+        var remainingCount = array.Length - count;
+        var values = new RuntimeValue[remainingCount];
+
+        for (var index = 0; index < remainingCount; index++)
+        {
+            values[index] = array.GetValue(array.LowerBound + count + index);
+        }
 
         return CreateCompactArrayValue(arrayType, values);
     }
@@ -647,17 +925,27 @@ public sealed partial class Interpreter
         RuntimeArrayValue source,
         Func<IReadOnlyList<int>, RuntimeValue> valueFactory)
     {
+        return CreateVisibleShapeArrayValue(arrayType, source.LowerBounds, source.UpperBounds, valueFactory);
+    }
+
+    private static RuntimeValue CreateVisibleShapeArrayValue(
+        ArrayTypeSymbol arrayType,
+        IReadOnlyList<int> lowerBounds,
+        IReadOnlyList<int> upperBounds,
+        Func<IReadOnlyList<int>, RuntimeValue> valueFactory)
+    {
         ArgumentNullException.ThrowIfNull(arrayType);
-        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(lowerBounds);
+        ArgumentNullException.ThrowIfNull(upperBounds);
         ArgumentNullException.ThrowIfNull(valueFactory);
 
         var array = RuntimeArrayValue.CreateVisibleShape(
             arrayType.ElementType,
             fixedStringLength: null,
-            source.LowerBounds,
-            source.UpperBounds);
+            lowerBounds,
+            upperBounds);
 
-        source.ForEachVisibleIndexSetAscending(indices => array.SetValue(indices, valueFactory(indices)));
+        ForEachIndexSetAscending(lowerBounds, upperBounds, indices => array.SetValue(indices, valueFactory(indices)));
 
         return RuntimeValue.FromArray(arrayType, array);
     }
@@ -704,6 +992,301 @@ public sealed partial class Interpreter
         }
 
         return dimension;
+    }
+
+    private int ResolveTransformDimension(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeArrayValue array,
+        IReadOnlyList<RuntimeValue> arguments,
+        int dimensionArgumentIndex)
+    {
+        if (arguments.Count <= dimensionArgumentIndex)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "dimension",
+                $"РґР»СЏ РјР°СЃСЃРёРІР° СЂР°РЅРіР° {array.Rank} РЅСѓР¶РЅРѕ СЏРІРЅРѕ СѓРєР°Р·Р°С‚СЊ РёР·РјРµСЂРµРЅРёРµ.",
+                expression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        var dimension = ToArrayBound(
+            arguments[dimensionArgumentIndex],
+            GetBuiltInArgumentLocation(expression, dimensionArgumentIndex),
+            $"РР·РјРµСЂРµРЅРёРµ РґР»СЏ {functionName}");
+
+        if (dimension < 1 || dimension > array.Rank)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "dimension",
+                $"РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ РґРёР°РїР°Р·РѕРЅРµ РѕС‚ 1 РґРѕ {array.Rank}.",
+                GetBuiltInArgumentLocation(expression, dimensionArgumentIndex));
+            throw new RuntimeFailureException();
+        }
+
+        return dimension;
+    }
+
+    private RuntimeValue CreateArrayWindowCopy(
+        ArrayTypeSymbol arrayType,
+        RuntimeArrayValue source,
+        (int[] LowerBounds, int[] UpperBounds) bounds)
+    {
+        return CreateVisibleShapeArrayValue(arrayType, bounds.LowerBounds, bounds.UpperBounds, source.GetValue);
+    }
+
+    private RuntimeValue CreateReversedArrayCopy(
+        ArrayTypeSymbol arrayType,
+        RuntimeArrayValue source,
+        int dimension)
+    {
+        var selectedIndex = dimension - 1;
+        var lowerBounds = source.LowerBounds.ToArray();
+        var upperBounds = source.UpperBounds.ToArray();
+        var lowerBound = lowerBounds[selectedIndex];
+        var upperBound = upperBounds[selectedIndex];
+
+        return CreateVisibleShapeArrayValue(
+            arrayType,
+            lowerBounds,
+            upperBounds,
+            indices =>
+            {
+                var sourceIndices = indices.ToArray();
+                var offset = indices[selectedIndex] - lowerBound;
+                sourceIndices[selectedIndex] = upperBound - offset;
+                return source.GetValue(sourceIndices);
+            });
+    }
+
+    private RuntimeValue FindArrayBinarySearchCoordinates(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeArrayValue array,
+        RuntimeValue value,
+        int dimension)
+    {
+        var foundIndices = FindArrayBinarySearchCoordinateSet(expression, functionName, array, value, dimension);
+        return foundIndices is null
+            ? CreateCompactArrayValue((ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer), [])
+            : CreateCompactArrayValue(
+                (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer),
+                foundIndices.Select(RuntimeValue.FromInteger).ToArray());
+    }
+
+    private int[]? FindArrayBinarySearchCoordinateSet(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeArrayValue array,
+        RuntimeValue value,
+        int dimension)
+    {
+        if (array.Length == 0 || GetDimensionLength(array, dimension) == 0)
+        {
+            return null;
+        }
+
+        int[]? foundIndices = null;
+        ForEachArrayLineBaseIndicesAscending(array, dimension, baseIndices =>
+        {
+            if (foundIndices is not null)
+            {
+                return;
+            }
+
+            var foundIndex = FindArrayBinarySearchIndex(expression, functionName, array, value, dimension, baseIndices);
+            if (foundIndex is null)
+            {
+                return;
+            }
+
+            foundIndices = baseIndices.ToArray();
+            foundIndices[dimension - 1] = foundIndex.Value;
+        });
+
+        return foundIndices;
+    }
+
+    private void SortArrayAlongDimension(RuntimeArrayValue array, int dimension)
+    {
+        if (array.Length <= 1 || GetDimensionLength(array, dimension) <= 1)
+        {
+            return;
+        }
+
+        ForEachArrayLineBaseIndicesAscending(array, dimension, baseIndices =>
+        {
+            var sortedLine = GetStableSortedLine(array, dimension, baseIndices);
+            var selectedIndex = dimension - 1;
+            var lowerBound = array.GetLowerBound(dimension);
+
+            for (var offset = 0; offset < sortedLine.Count; offset++)
+            {
+                var indices = baseIndices.ToArray();
+                indices[selectedIndex] = lowerBound + offset;
+                array.SetValue(indices, sortedLine[offset]);
+            }
+        });
+    }
+
+    private List<RuntimeValue> GetStableSortedLine(
+        RuntimeArrayValue array,
+        int dimension,
+        IReadOnlyList<int> baseIndices)
+    {
+        var values = new List<(RuntimeValue Value, int OriginalOrder)>(GetDimensionLength(array, dimension));
+        var selectedIndex = dimension - 1;
+        var lowerBound = array.GetLowerBound(dimension);
+        var upperBound = array.GetUpperBound(dimension);
+        var originalOrder = 0;
+
+        for (var index = lowerBound; index <= upperBound; index++)
+        {
+            var indices = baseIndices.ToArray();
+            indices[selectedIndex] = index;
+            values.Add((array.GetValue(indices), originalOrder));
+            originalOrder++;
+        }
+
+        values.Sort((left, right) =>
+        {
+            var comparison = Compare(left.Value, right.Value);
+            return comparison != 0
+                ? comparison
+                : left.OriginalOrder.CompareTo(right.OriginalOrder);
+        });
+
+        return values.Select(static item => item.Value).ToList();
+    }
+
+    private void ForEachArrayLineBaseIndicesAscending(RuntimeArrayValue array, int dimension, Action<IReadOnlyList<int>> action)
+    {
+        if (array.Length == 0)
+        {
+            return;
+        }
+
+        var selectedIndex = dimension - 1;
+        var fixedLowerBounds = array.LowerBounds.ToArray();
+        var fixedUpperBounds = array.UpperBounds.ToArray();
+        fixedLowerBounds[selectedIndex] = array.GetLowerBound(dimension);
+        fixedUpperBounds[selectedIndex] = array.GetLowerBound(dimension);
+        ForEachIndexSetAscending(fixedLowerBounds, fixedUpperBounds, action);
+    }
+
+    private static void ReverseOneDimensionalArray(RuntimeArrayValue array)
+    {
+        var left = array.LowerBound;
+        var right = array.UpperBound;
+
+        while (left < right)
+        {
+            var leftValue = array.GetValue(left);
+            var rightValue = array.GetValue(right);
+            array.SetValue(left, rightValue);
+            array.SetValue(right, leftValue);
+            left++;
+            right--;
+        }
+    }
+
+    private static void ReverseArrayAlongDimension(RuntimeArrayValue array, int dimension)
+    {
+        var selectedIndex = dimension - 1;
+        var lowerBounds = array.LowerBounds.ToArray();
+        var upperBounds = array.UpperBounds.ToArray();
+        var lowerBound = lowerBounds[selectedIndex];
+        var upperBound = upperBounds[selectedIndex];
+
+        if (lowerBound >= upperBound)
+        {
+            return;
+        }
+
+        var fixedLowerBounds = lowerBounds.ToArray();
+        var fixedUpperBounds = upperBounds.ToArray();
+        fixedLowerBounds[selectedIndex] = lowerBound;
+        fixedUpperBounds[selectedIndex] = lowerBound;
+
+        ForEachIndexSetAscending(fixedLowerBounds, fixedUpperBounds, baseIndices =>
+        {
+            var left = lowerBound;
+            var right = upperBound;
+
+            while (left < right)
+            {
+                var leftIndices = baseIndices.ToArray();
+                var rightIndices = baseIndices.ToArray();
+                leftIndices[selectedIndex] = left;
+                rightIndices[selectedIndex] = right;
+
+                var leftValue = array.GetValue(leftIndices);
+                var rightValue = array.GetValue(rightIndices);
+                array.SetValue(leftIndices, rightValue);
+                array.SetValue(rightIndices, leftValue);
+                left++;
+                right--;
+            }
+        });
+    }
+
+    private void EnsureCompatibleConcatShapes(
+        BoundCallExpression expression,
+        RuntimeArrayValue left,
+        RuntimeArrayValue right,
+        int dimension)
+    {
+        if (left.Rank != right.Rank)
+        {
+            ReportBuiltInArgumentError(
+                "ARRAYCONCAT",
+                "right",
+                "РґРѕР»Р¶РµРЅ РёРјРµС‚СЊ С‚РѕС‚ Р¶Рµ СЂР°РЅРі, С‡С‚Рѕ Рё Р°СЂРіСѓРјРµРЅС‚ 'left'.",
+                GetBuiltInArgumentLocation(expression, 1));
+            throw new RuntimeFailureException();
+        }
+
+        for (var currentDimension = 1; currentDimension <= left.Rank; currentDimension++)
+        {
+            if (currentDimension == dimension)
+            {
+                continue;
+            }
+
+            if (left.GetLowerBound(currentDimension) != right.GetLowerBound(currentDimension)
+                || left.GetUpperBound(currentDimension) != right.GetUpperBound(currentDimension))
+            {
+                ReportBuiltInArgumentError(
+                    "ARRAYCONCAT",
+                    "right",
+                    "РґРѕР»Р¶РµРЅ РёРјРµС‚СЊ СЃРѕРІРјРµСЃС‚РёРјСѓСЋ РІРёРґРёРјСѓСЋ С„РѕСЂРјСѓ РїРѕ РІСЃРµРј РёР·РјРµСЂРµРЅРёСЏРј, РєСЂРѕРјРµ РІС‹Р±СЂР°РЅРЅРѕРіРѕ.",
+                    GetBuiltInArgumentLocation(expression, 1));
+                throw new RuntimeFailureException();
+            }
+        }
+    }
+
+    private static int GetDimensionLength(RuntimeArrayValue array, int dimension)
+    {
+        var lowerBound = array.GetLowerBound(dimension);
+        var upperBound = array.GetUpperBound(dimension);
+        return upperBound < lowerBound ? 0 : upperBound - lowerBound + 1;
+    }
+
+    private static (int[] LowerBounds, int[] UpperBounds) CreateAdjustedBounds(
+        RuntimeArrayValue array,
+        int dimension,
+        int selectedLowerBound,
+        int selectedUpperBound)
+    {
+        var lowerBounds = array.LowerBounds.ToArray();
+        var upperBounds = array.UpperBounds.ToArray();
+        var selectedIndex = dimension - 1;
+        lowerBounds[selectedIndex] = selectedLowerBound;
+        upperBounds[selectedIndex] = selectedUpperBound;
+        return (lowerBounds, upperBounds);
     }
 
     private bool ArrayContainsValue(RuntimeArrayValue array, RuntimeValue value)
@@ -872,6 +1455,44 @@ public sealed partial class Interpreter
         return foundIndex ?? GetArrayNotFoundIndex(expression, functionName, array);
     }
 
+    private int? FindArrayBinarySearchIndex(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeArrayValue array,
+        RuntimeValue value,
+        int dimension,
+        IReadOnlyList<int> baseIndices)
+    {
+        var selectedIndex = dimension - 1;
+        long left = array.GetLowerBound(dimension);
+        long right = array.GetUpperBound(dimension);
+        int? foundIndex = null;
+
+        while (left <= right)
+        {
+            var middle = left + ((right - left) / 2);
+            var middleIndex = (int)middle;
+            var indices = baseIndices.ToArray();
+            indices[selectedIndex] = middleIndex;
+            var comparison = Compare(array.GetValue(indices), value);
+
+            if (comparison < 0)
+            {
+                left = middle + 1;
+                continue;
+            }
+
+            if (comparison == 0)
+            {
+                foundIndex = middleIndex;
+            }
+
+            right = middle - 1;
+        }
+
+        return foundIndex;
+    }
+
     private int GetArrayNotFoundIndex(
         BoundCallExpression expression,
         string functionName,
@@ -958,6 +1579,62 @@ public sealed partial class Interpreter
             }
 
             index--;
+        }
+    }
+
+    private static void ForEachIndexSetAscending(
+        IReadOnlyList<int> lowerBounds,
+        IReadOnlyList<int> upperBounds,
+        Action<IReadOnlyList<int>> action)
+    {
+        ArgumentNullException.ThrowIfNull(lowerBounds);
+        ArgumentNullException.ThrowIfNull(upperBounds);
+        ArgumentNullException.ThrowIfNull(action);
+
+        if (lowerBounds.Count != upperBounds.Count)
+        {
+            throw new ArgumentException("Lower and upper bounds must have the same rank.");
+        }
+
+        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
+        {
+            if (upperBounds[dimension] < lowerBounds[dimension])
+            {
+                return;
+            }
+        }
+
+        var indices = new int[lowerBounds.Count];
+        ForEachIndexSetAscendingRecursive(lowerBounds, upperBounds, indices, dimension: 0, action);
+    }
+
+    private static void ForEachIndexSetAscendingRecursive(
+        IReadOnlyList<int> lowerBounds,
+        IReadOnlyList<int> upperBounds,
+        int[] indices,
+        int dimension,
+        Action<IReadOnlyList<int>> action)
+    {
+        if (dimension == indices.Length)
+        {
+            action(indices);
+            return;
+        }
+
+        var index = lowerBounds[dimension];
+        var upperBound = upperBounds[dimension];
+
+        while (true)
+        {
+            indices[dimension] = index;
+            ForEachIndexSetAscendingRecursive(lowerBounds, upperBounds, indices, dimension + 1, action);
+
+            if (index == upperBound)
+            {
+                break;
+            }
+
+            index++;
         }
     }
 }

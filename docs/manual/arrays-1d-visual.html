@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Одномерные массивы наглядно</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-1d-visual">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Простое визуальное объяснение одномерных массивов</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Одномерные массивы наглядно</p>
+                    <p class="sidebar__subtitle">Короткая глава для чтения глазами, а не через сухие формулировки.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <span>Одномерные массивы наглядно</span>
+            </nav>
+            <p class="eyebrow">Практика и справка</p>
+            <h1 class="page-title">Одномерные массивы наглядно</h1>
+            <p class="lead">Одномерный массив удобно представлять как одну линию ячеек. У каждой ячейки есть индекс, а у всего массива есть имя.</p>
+
+            <section class="article-section">
+                <h2>Самая простая картинка</h2>
+                <pre><code class="language-text">DIM scores(1 TO 5) AS INTEGER
+
+индекс:   1    2    3    4    5
+         [ ]  [ ]  [ ]  [ ]  [ ]</code></pre>
+                <p>Здесь <code>scores</code> — это имя массива, а числа <code>1 TO 5</code> задают диапазон доступных индексов. Внутри каждой ячейки лежит одно значение типа <code>INTEGER</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Как читать запись</h2>
+                <pre><code class="language-basic">scores(3) = 99
+PRINT scores(3)</code></pre>
+                <p>Запись <code>scores(3)</code> читается как «элемент массива <code>scores</code> с индексом <code>3</code>».</p>
+                <pre><code class="language-text">индекс:   1    2    3    4    5
+         [ ]  [ ] [99] [ ]  [ ]</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Что важно помнить</h2>
+                <ul>
+                    <li>одномерный массив — это одна линия значений;</li>
+                    <li>индекс указывает, в какую именно ячейку мы смотрим;</li>
+                    <li>нижняя граница не обязана быть равна <code>1</code>.</li>
+                </ul>
+                <pre><code class="language-basic">DIM temperatures(-2 TO 2) AS DOUBLE</code></pre>
+                <pre><code class="language-text">индекс:  -2   -1    0    1    2
+         [ ]  [ ]  [ ]  [ ]  [ ]</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Когда это полезно</h2>
+                <p>Одномерный массив хорош, когда данные идут в один ряд: список имён, оценки ученика, цены товаров, строки файла, результаты вычислений.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays.html">Массивы</a>
+                    <a href="arrays-2d-visual.html">Двумерные массивы наглядно</a>
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

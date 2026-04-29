@@ -45,6 +45,22 @@ public sealed partial class Binder
         _diagnostics.Report(TypeMismatchCode, $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.", location);
     }
 
+    private void ReportScalarAssignedToArray(string targetName, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Переменная '{targetName}' объявлена как массив. Нельзя присвоить ей одно скалярное значение целиком: укажите индекс элемента или присвойте справа другой массив.",
+            location);
+    }
+
+    private void ReportArrayAssignedToScalar(string targetName, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Переменная '{targetName}' не является массивом. Нельзя присвоить ей массив целиком.",
+            location);
+    }
+
     private void ReportWrongArgumentCount(string name, int expectedCount, int actualCount, TextLocation location)
     {
         _diagnostics.Report(WrongArgumentCountCode, $"Неверное число аргументов у '{name}': ожидалось {expectedCount}, получено {actualCount}.", location);
@@ -88,6 +104,14 @@ public sealed partial class Binder
         _diagnostics.Report(
             TypeMismatchCode,
             $"Форма '{name}' пока поддерживает только одномерные массивы, а получен массив ранга {actualRank}.",
+            location);
+    }
+
+    private void ReportArrayDimensionArgumentRequired(string name, int actualRank, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Форма '{name}' для массива ранга {actualRank} требует явно указать аргумент dimension.",
             location);
     }
 

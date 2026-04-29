@@ -311,6 +311,7 @@ public sealed partial class Binder
         }
 
         ArrayTypeSymbol? resolvedArrayType = null;
+        TypeSymbol? reshapeElementType = null;
 
         for (var index = 0; index < rawArguments.Count; index++)
         {
@@ -328,6 +329,18 @@ public sealed partial class Binder
                 if (argument.Type is not ArrayTypeSymbol actualArrayType)
                 {
                     return false;
+                }
+
+                if (descriptor.Id == BuiltinFunctionId.ArrayReshape)
+                {
+                    reshapeElementType ??= actualArrayType.ElementType;
+
+                    if (actualArrayType.ElementType != reshapeElementType)
+                    {
+                        return false;
+                    }
+
+                    continue;
                 }
 
                 resolvedArrayType ??= actualArrayType;
@@ -393,12 +406,21 @@ public sealed partial class Binder
                 arguments.Add(BindExpression(expression.Arguments[index]));
             }
 
-            var invalidReturnType = descriptor.ResultTypePolicy switch
+            var invalidReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
+            var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
+            return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
+        }
+
+        if (RequiresExplicitDimensionArgument(descriptor.Id, arrayType.Rank, expression.Arguments.Count))
+        {
+            ReportArrayDimensionArgumentRequired(descriptor.Name, arrayType.Rank, location);
+
+            for (var index = 1; index < expression.Arguments.Count; index++)
             {
-                BuiltinResultTypePolicy.SameAsFirstArgument => arrayType,
-                BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => arrayType.ElementType,
-                _ => descriptor.DeclaredReturnType
-            };
+                arguments.Add(BindExpression(expression.Arguments[index]));
+            }
+
+            var invalidReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
             var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
             return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
         }
@@ -426,12 +448,7 @@ public sealed partial class Binder
                 arguments.Add(BindExpression(expression.Arguments[index]));
             }
 
-            var invalidReturnType = descriptor.ResultTypePolicy switch
-            {
-                BuiltinResultTypePolicy.SameAsFirstArgument => arrayType,
-                BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => arrayType.ElementType,
-                _ => descriptor.DeclaredReturnType
-            };
+            var invalidReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
             var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
             return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
         }
@@ -444,6 +461,11 @@ public sealed partial class Binder
         if (descriptor.Id == BuiltinFunctionId.ArrayReduce)
         {
             return BindPolymorphicArrayReduceBuiltInCall(expression, descriptor, location, arrayType, arguments);
+        }
+
+        if (descriptor.Id == BuiltinFunctionId.ArrayReshape)
+        {
+            return BindArrayReshapeBuiltInCall(expression, descriptor, location, arrayType, arguments);
         }
 
         var parameterTypes = new List<TypeSymbol>(descriptor.Parameters.Count)
@@ -459,15 +481,28 @@ public sealed partial class Binder
             parameterTypes.Add(parameterType);
         }
 
-        var resolvedReturnType = descriptor.ResultTypePolicy switch
-        {
-            BuiltinResultTypePolicy.SameAsFirstArgument => arrayType,
-            BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => arrayType.ElementType,
-            _ => descriptor.DeclaredReturnType
-        };
+        var resolvedReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
         var resolvedSymbol = descriptor.CreateResolvedSymbol(parameterTypes, resolvedReturnType);
         var resolvedTarget = new BoundFunctionExpression(location, resolvedSymbol);
         return new BoundCallExpression(location, resolvedTarget, arguments, resolvedSymbol.ReturnType);
+    }
+
+    private static TypeSymbol ResolveArrayBuiltInReturnType(BuiltinFunctionDescriptor descriptor, ArrayTypeSymbol arrayType)
+    {
+        return descriptor.ResultTypePolicy switch
+        {
+            BuiltinResultTypePolicy.SameAsFirstArgument => arrayType,
+            BuiltinResultTypePolicy.SameAsSecondArgument => descriptor.DeclaredReturnType,
+            BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => arrayType.ElementType,
+            BuiltinResultTypePolicy.ArrayOfFirstArrayElementType => ArrayTypeSymbol.Create(arrayType.ElementType),
+            BuiltinResultTypePolicy.ArrayIndexCoordinateResult => arrayType.Rank == 1
+                ? TypeSymbol.Integer
+                : ArrayTypeSymbol.Create(TypeSymbol.Integer),
+            BuiltinResultTypePolicy.ArrayFindAllCoordinateResult => arrayType.Rank == 1
+                ? ArrayTypeSymbol.Create(TypeSymbol.Integer)
+                : ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2),
+            _ => descriptor.DeclaredReturnType
+        };
     }
 
     private BoundExpression BindPolymorphicArrayMapBuiltInCall(
@@ -571,6 +606,49 @@ public sealed partial class Binder
         var resolvedSymbol = descriptor.CreateResolvedSymbol(parameterTypes, resolvedReturnType);
         var resolvedTarget = new BoundFunctionExpression(location, resolvedSymbol);
         return new BoundCallExpression(location, resolvedTarget, arguments, resolvedReturnType);
+    }
+
+    private BoundExpression BindArrayReshapeBuiltInCall(
+        CallExpressionSyntax expression,
+        BuiltinFunctionDescriptor descriptor,
+        TextLocation location,
+        ArrayTypeSymbol sourceArrayType,
+        List<BoundExpression> arguments)
+    {
+        var rawTemplate = BindExpression(expression.Arguments[1]);
+        arguments.Add(rawTemplate);
+
+        if (rawTemplate.Type == TypeSymbol.Error)
+        {
+            var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
+            return new BoundCallExpression(location, invalidTarget, arguments, descriptor.DeclaredReturnType);
+        }
+
+        if (rawTemplate.Type is not ArrayTypeSymbol templateArrayType)
+        {
+            ReportExpectedArrayType(rawTemplate.Type, GetLocation(expression.Arguments[1]));
+
+            var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
+            return new BoundCallExpression(location, invalidTarget, arguments, descriptor.DeclaredReturnType);
+        }
+
+        if (sourceArrayType.ElementType != templateArrayType.ElementType)
+        {
+            ReportTypeMismatch(sourceArrayType.ElementType, templateArrayType.ElementType, GetLocation(expression.Arguments[1]));
+
+            var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
+            return new BoundCallExpression(location, invalidTarget, arguments, templateArrayType);
+        }
+
+        var parameterTypes = new List<TypeSymbol>(descriptor.Parameters.Count)
+        {
+            sourceArrayType,
+            templateArrayType
+        };
+
+        var resolvedSymbol = descriptor.CreateResolvedSymbol(parameterTypes, templateArrayType);
+        var resolvedTarget = new BoundFunctionExpression(location, resolvedSymbol);
+        return new BoundCallExpression(location, resolvedTarget, arguments, resolvedSymbol.ReturnType);
     }
 
     private static TypeSymbol ResolvePolymorphicArrayReduceAccumulatorType(TypeSymbol seedType, TypeSymbol reducerType)
@@ -892,13 +970,51 @@ public sealed partial class Binder
             or BuiltinFunctionId.ArrayLength
             or BuiltinFunctionId.ArrayIsAllocated
             or BuiltinFunctionId.ArrayClone
+            or BuiltinFunctionId.ArraySlice
+            or BuiltinFunctionId.ArrayTake
+            or BuiltinFunctionId.ArraySkip
+            or BuiltinFunctionId.ArrayConcat
+            or BuiltinFunctionId.ArrayFlatten
+            or BuiltinFunctionId.ArrayReshape
+            or BuiltinFunctionId.ArrayToReversed
+            or BuiltinFunctionId.ArrayDistinct
+            or BuiltinFunctionId.ArrayToSorted
             or BuiltinFunctionId.ArrayFill
+            or BuiltinFunctionId.ArrayReverse
+            or BuiltinFunctionId.ArraySort
             or BuiltinFunctionId.ArrayContains
+            or BuiltinFunctionId.ArrayIndexOf
+            or BuiltinFunctionId.ArrayLastIndexOf
             or BuiltinFunctionId.ArrayCount
+            or BuiltinFunctionId.ArrayFindAll
+            or BuiltinFunctionId.ArrayBinarySearch
             or BuiltinFunctionId.ArrayEvery
             or BuiltinFunctionId.ArraySome
+            or BuiltinFunctionId.ArrayFilter
             or BuiltinFunctionId.ArrayMap
             or BuiltinFunctionId.ArrayReduce);
+    }
+
+    private static bool RequiresExplicitDimensionArgument(BuiltinFunctionId id, int arrayRank, int argumentCount)
+    {
+        if (arrayRank <= 1)
+        {
+            return false;
+        }
+
+        return id switch
+        {
+            BuiltinFunctionId.ArraySlice => argumentCount == 3,
+            BuiltinFunctionId.ArrayTake => argumentCount == 2,
+            BuiltinFunctionId.ArraySkip => argumentCount == 2,
+            BuiltinFunctionId.ArrayConcat => argumentCount == 2,
+            BuiltinFunctionId.ArrayToSorted => argumentCount == 1,
+            BuiltinFunctionId.ArrayToReversed => argumentCount == 1,
+            BuiltinFunctionId.ArrayReverse => argumentCount == 1,
+            BuiltinFunctionId.ArraySort => argumentCount == 1,
+            BuiltinFunctionId.ArrayBinarySearch => argumentCount == 2,
+            _ => false
+        };
     }
 
     private static bool IsValidReadableArrayIndexCount(ArrayTypeSymbol arrayType, int actualCount)

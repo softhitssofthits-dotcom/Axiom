@@ -19,7 +19,11 @@ public enum BuiltinResultTypePolicy
 {
     Declared,
     SameAsFirstArgument,
+    SameAsSecondArgument,
     ElementTypeOfFirstArrayArgument,
+    ArrayOfFirstArrayElementType,
+    ArrayIndexCoordinateResult,
+    ArrayFindAllCoordinateResult,
     ArrayMapSelectorReturnArray,
     ArrayReduceAccumulator,
     PromotedNumeric,

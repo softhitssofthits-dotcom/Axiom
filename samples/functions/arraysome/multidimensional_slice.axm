@@ -1,0 +1,20 @@
+' Ожидаемый вывод:
+' FALSE
+' TRUE
+
+DIM values(2 TO 3, 4 TO 6) AS INTEGER
+DIM threshold AS INTEGER = 45
+
+values(2, 4) = 10
+values(2, 5) = 20
+values(2, 6) = 30
+values(3, 4) = 40
+values(3, 5) = 50
+values(3, 6) = 60
+
+PRINT ARRAYSOME(values(2 TO 2, 4 TO 6), IsAboveThreshold)
+PRINT ARRAYSOME(values(2 TO 3, 5 TO 6), IsAboveThreshold)
+
+FUNCTION IsAboveThreshold(value AS INTEGER) AS BOOLEAN
+    RETURN value > threshold
+END FUNCTION

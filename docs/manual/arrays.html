@@ -65,7 +65,7 @@ END TYPE
 DIM people(1 TO 3) AS Person</code></pre>
                 <p>В первой записи <code>scores</code> это имя массива, а <code>1 TO 3</code> задает его нижнюю и верхнюю границу включительно. Тип <code>INTEGER</code> говорит о том, что все элементы массива должны быть целыми числами.</p>
                 <p>Запись <code>grid(1 TO 2, 10 TO 11)</code> создает двумерный массив: у первого измерения свой диапазон <code>1 TO 2</code>, у второго свой диапазон <code>10 TO 11</code>.</p>
-                <p>Запись <code>names()</code> объявляет динамический одномерный массив без немедленного выделения диапазона элементов, а <code>matrix(,)</code> таким же образом объявляет динамический двумерный массив. Такие массивы уже существуют как значения языка, но ещё не содержат доступного диапазона индексов до следующего <code>REDIM</code>.</p>
+                <p>Запись <code>names()</code> объявляет имя динамического одномерного массива без немедленного выделения диапазона элементов, а <code>matrix(,)</code> таким же образом объявляет имя динамического двумерного массива. Такие массивные значения уже существуют в модели языка, но ещё не содержат доступного диапазона индексов до следующего <code>REDIM</code>.</p>
                 <p>Типом элемента может быть встроенный тип или пользовательский тип записи, объявленный через <code>TYPE ... END TYPE</code>. Например, <code>DIM people(1 TO 3) AS Person</code> создаёт массив записей <code>Person</code>.</p>
                 <p>Поле пользовательской записи тоже может иметь динамический массивный тип, например <code>Scores() AS INTEGER</code>. Для такого поля работают индексирование, <code>REDIM</code>, <code>REDIM PRESERVE</code> и <code>ERASE</code>, но в первом многомерном срезе массивные поля внутри <code>TYPE</code> остаются только одномерными.</p>
                 <p>Внутри <code>TYPE</code> поддержана и фиксированная массивная форма, например <code>Scores(1 TO 3) AS INTEGER</code>. Такой диапазон создаётся сразу вместе с записью, не требует отдельного <code>REDIM</code> и копируется как часть значения записи.</p>
@@ -121,6 +121,7 @@ END FUNCTION</code></pre>
                 <p>На текущем этапе основания массив больше не считается только специальным видом переменной. Его можно присваивать целиком, передавать в параметры и возвращать из <code>FUNCTION</code> для любого поддержанного ранга.</p>
                 <p>В объявлениях параметров и типа результата массив записывается как тип со скобками нужного ранга: <code>INTEGER()</code>, <code>INTEGER(,)</code>, <code>STRING()</code>, <code>FUNCTION(INTEGER) AS INTEGER()</code> и так далее.</p>
                 <p>Базовая семантика массива остаётся ссылочной: присваивание массива целиком и передача массива в параметр не клонируют весь массив автоматически. Если нужна независимая копия массива, используйте <code>ARRAYCLONE</code>. При этом запись пользовательского типа, которую присваивают отдельному элементу массива, копируется как значение.</p>
+                <p>Важно не смешивать присваивание массива целиком и присваивание элемента. Если переменная объявлена как <code>DIM values() AS INTEGER</code>, то запись <code>values = otherArray</code> допустима только тогда, когда справа тоже стоит массивное значение типа <code>INTEGER()</code>. Запись <code>values = 5</code> недопустима, потому что справа скаляр, а не массив. Для записи числа в массив нужно указывать индекс, например <code>values(1) = 5</code>.</p>
             </section>
 
             <section class="article-section" id="access">
@@ -141,24 +142,24 @@ PRINT people(1).Name</code></pre>
             <section class="article-section" id="partial-indexing">
                 <h2>Частичное индексирование и подмассивы-представления</h2>
                 <pre><code class="language-basic">DIM grid(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 
 REDIM grid(1 TO 2, 10 TO 11)
 grid(2, 10) = 7
 grid(2, 11) = 9
 
-row = grid(2)
-row(10) = 70
+rowView = grid(2)
+rowView(10) = 70
 
 PRINT grid(2, 10)
-PRINT row(11)</code></pre>
+PRINT rowView(11)</code></pre>
                 <p>Если у многомерного массива указать не все индексы, Axiom возвращает не копию, а подмассив-представление по оставшимся измерениям. В примере <code>grid(2)</code> означает всю строку с первым индексом <code>2</code>.</p>
                 <p>Границы оставшихся измерений сохраняются как есть. Если второе измерение исходного массива имело диапазон <code>10 TO 11</code>, то и результат <code>grid(2)</code> имеет те же <code>LBOUND</code> и <code>UBOUND</code>.</p>
                 <p>Подмассив-представление разделяет то же хранилище элементов. Изменение через представление видно корневому массиву, и наоборот.</p>
                 <pre><code class="language-basic">DIM block(,) AS INTEGER
-DIM row() AS INTEGER
+DIM rowView() AS INTEGER
 
-row = grid(2, 10 TO 11)
+rowView = grid(2, 10 TO 11)
 block = grid(1 TO 2, 10 TO 11)</code></pre>
                 <p>В списке индексов можно указать включительный диапазон <code>lower TO upper</code>. Одиночный индекс фиксирует измерение и убирает его из результата, а диапазон сохраняет это измерение с указанными границами. Поэтому <code>grid(2, 10 TO 11)</code> возвращает одномерное представление строки, а <code>grid(1 TO 2, 10 TO 11)</code> возвращает двумерное представление прямоугольной области.</p>
                 <p>Диапазонный срез тоже является представлением без копирования. Изменение элемента через результат видно в исходном массиве. Границы диапазона должны попадать в текущие границы соответствующего измерения. Формы с пропущенной нижней или верхней границей, <code>STEP</code> и перестановка измерений пока не входят в контракт.</p>
@@ -205,8 +206,8 @@ PRINT ARRAYISALLOCATED(values)</code></pre>
             <section class="article-section" id="pure-array-functions">
                 <h2>Чистые функции массива</h2>
                 <div class="note">
-                    <h3>Ограничение первого многомерного среза</h3>
-                    <p>Функции семейства <code>ARRAY...</code> из этого раздела, кроме <code>ARRAYLENGTH</code> и <code>ARRAYISALLOCATED</code>, пока принимают только одномерные массивы. Многомерные формы для них будут проектироваться отдельным следующим этапом.</p>
+                    <h3>Текущее состояние многомерных ARRAY-функций</h3>
+                    <p>В этом разделе уже есть смешанная картина: часть функций работает только с одномерным массивом, а часть уже понимает массивы и представления любого ранга. Ориентируйтесь не на общее правило, а на описание конкретной функции ниже на странице.</p>
                 </div>
 
                 <div class="note">
@@ -237,7 +238,7 @@ PRINT copy(5)</code></pre>
 
                 <p>Для многомерного массива или представления <code>ARRAYCLONE</code> сохраняет видимый ранг, границы всех видимых измерений и значения, но создаёт независимое хранилище.</p>
 
-                <h3 id="arrayslice">ARRAYSLICE(array, start, count)</h3>
+                <h3 id="arrayslice">ARRAYSLICE(array, start, count[, dimension])</h3>
                 <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
 DIM part() AS INTEGER
 
@@ -251,13 +252,17 @@ PRINT LBOUND(part)
 PRINT UBOUND(part)
 PRINT part(1)
 PRINT part(2)</code></pre>
-                <p><code>ARRAYSLICE</code> создаёт новый массив из части исходного одномерного массива. Исходный массив при этом не изменяется.</p>
-                <p>Аргумент <code>start</code> задаёт логический индекс исходного массива, с которого начинается чтение, а <code>count</code> задаёт число элементов результата.</p>
-                <p>Непустой результат всегда получает компактные границы <code>1 TO N</code>, даже если исходный массив имел другой нижний индекс. Это позволяет безопасно использовать результат как новый самостоятельный массив.</p>
-                <p>Если <code>count = 0</code>, функция возвращает пустой выделенный массив <code>1 TO 0</code>. Если исходный массив ещё не выделен, возникает диагностика состояния массива. Если диапазон от <code>start</code> до <code>start + count - 1</code> выходит за текущие границы исходного массива, выполнение завершится диагностикой ошибки аргумента.</p>
-                <p>Как и <code>ARRAYCLONE</code>, результат <code>ARRAYSLICE</code> не разделяет хранилище элементов с исходным массивом.</p>
+                <pre><code class="language-basic">DIM grid(1 TO 2, 10 TO 13) AS INTEGER
+DIM part(,) AS INTEGER
 
-                <h3 id="arrayconcat">ARRAYCONCAT(left, right)</h3>
+part = ARRAYSLICE(grid, 11, 2, COLUMN)</code></pre>
+                <p><code>ARRAYSLICE</code> создаёт новый массив из части исходного массива. Исходный массив при этом не изменяется.</p>
+                <p>Для одномерного массива всё работает по-старому: <code>start</code> задаёт первый индекс, а <code>count</code> задаёт длину результата. Непустой результат получает компактные границы <code>1 TO N</code>, а при <code>count = 0</code> возвращается пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Для многомерного массива нужно явно указать <code>dimension</code>. Проще всего думать так: вы говорите функции, по чему именно резать массив. В двумерном случае обычно удобно писать <code>ROW</code> или <code>COLUMN</code>, но числа <code>1</code> и <code>2</code> тоже допустимы.</p>
+                <p>По выбранному измерению берётся отрезок длины <code>count</code>, начиная с <code>start</code>. Остальные измерения сохраняют свои видимые границы как есть. Например, <code>ARRAYSLICE(grid, 11, 2, COLUMN)</code> оставляет все строки, но берёт только столбцы <code>11 TO 12</code>.</p>
+                <p>Если исходный массив ещё не выделен, возникает диагностика состояния массива. Если запрошенный отрезок выходит за видимые границы выбранного измерения, выполнение завершится диагностикой ошибки аргумента. Как и <code>ARRAYCLONE</code>, результат <code>ARRAYSLICE</code> всегда является новой независимой копией.</p>
+
+                <h3 id="arrayconcat">ARRAYCONCAT(left, right[, dimension])</h3>
                 <pre><code class="language-basic">DIM left(5 TO 6) AS INTEGER
 DIM right(10 TO 11) AS INTEGER
 DIM merged() AS INTEGER
@@ -273,12 +278,80 @@ PRINT LBOUND(merged)
 PRINT UBOUND(merged)
 PRINT merged(1)
 PRINT merged(4)</code></pre>
-                <p><code>ARRAYCONCAT</code> создаёт новый массив из элементов двух исходных одномерных массивов одного и того же типа. Сначала в результат попадают элементы <code>left</code>, затем элементы <code>right</code>.</p>
-                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если оба массива выделены, но суммарно содержат ноль элементов, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
-                <p>Оба аргумента должны быть уже выделенными массивами. Невыделенный аргумент даёт диагностику состояния массива во время выполнения.</p>
-                <p>Как и <code>ARRAYCLONE</code> с <code>ARRAYSLICE</code>, результат <code>ARRAYCONCAT</code> не разделяет хранилище элементов с исходными массивами. Изменение результата после вызова не меняет <code>left</code> и <code>right</code>.</p>
+                <pre><code class="language-basic">DIM leftPart(1 TO 2, 10 TO 11) AS INTEGER
+DIM rightPart(1 TO 2, 20 TO 21) AS INTEGER
+DIM merged(,) AS INTEGER
 
-                <h3 id="arraytosorted">ARRAYTOSORTED(array)</h3>
+merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)</code></pre>
+                <p><code>ARRAYCONCAT</code> создаёт новый массив из элементов двух исходных массивов одного и того же типа. Сначала в результат попадают элементы <code>left</code>, затем элементы <code>right</code>.</p>
+                <p>Для одномерных массивов всё остаётся по-старому: результат получает компактные границы <code>1 TO N</code>, а если суммарно элементов нет, возвращается пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Для многомерных массивов нужно явно указать <code>dimension</code>. По-простому это означает: надо заранее сказать, склеиваем по строкам, по столбцам или по другому измерению. В двумерном случае обычно пишут <code>ROW</code> или <code>COLUMN</code>.</p>
+                <p>По выбранному измерению длины двух массивов складываются друг за другом. По всем остальным измерениям видимые границы должны совпадать. Например, <code>ARRAYCONCAT(leftPart, rightPart, COLUMN)</code> склеивает две таблицы одинаковой высоты по столбцам.</p>
+                <p>Оба аргумента должны быть уже выделенными массивами. Если формы по остальным измерениям не совпадают, выполнение завершится диагностикой ошибки аргумента. Как и <code>ARRAYCLONE</code> с <code>ARRAYSLICE</code>, результат <code>ARRAYCONCAT</code> всегда является новой независимой копией и не меняет <code>left</code> и <code>right</code>.</p>
+
+                <h3 id="arrayflatten">ARRAYFLATTEN(array)</h3>
+                <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
+DIM flat() AS INTEGER
+
+source(5) = 10
+source(6) = 20
+source(7) = 30
+
+flat = ARRAYFLATTEN(source)
+
+PRINT LBOUND(flat)
+PRINT UBOUND(flat)
+PRINT flat(1)
+PRINT flat(3)</code></pre>
+                <pre><code class="language-basic">DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM flat() AS INTEGER
+
+board(1, 10) = 3
+board(1, 11) = 1
+board(1, 12) = 2
+board(2, 10) = 6
+board(2, 11) = 4
+board(2, 12) = 5
+
+flat = ARRAYFLATTEN(board)
+
+PRINT flat(1)
+PRINT flat(6)</code></pre>
+                <p><code>ARRAYFLATTEN</code> создаёт новый компактный одномерный массив из всех видимых элементов исходного массива или представления.</p>
+                <p>Для одномерного массива это просто удобный способ получить новую независимую копию в форме <code>1 TO N</code> или <code>1 TO 0</code>. Если исходный массив уже имеет границы <code>5 TO 7</code>, результат всё равно будет компактным.</p>
+                <p>Для двумерного и более высокого ранга функция проходит по массиву в обычном видимом порядке обхода и складывает элементы в один линейный список. По-простому: таблица или куб превращаются в одну последовательность значений.</p>
+                <p><code>ARRAYFLATTEN</code> не меняет исходный массив и не делит с ним хранилище. Невыделенный аргумент даёт <code>MB3005</code>.</p>
+
+                <h3 id="arrayreshape">ARRAYRESHAPE(source, template)</h3>
+                <pre><code class="language-basic">DIM source(1 TO 4) AS INTEGER
+DIM template(10 TO 11, 20 TO 21) AS INTEGER
+DIM reshaped(,) AS INTEGER
+
+source(1) = 10
+source(2) = 20
+source(3) = 30
+source(4) = 40
+
+reshaped = ARRAYRESHAPE(source, template)
+
+PRINT LBOUND(reshaped, ROW)
+PRINT UBOUND(reshaped, COLUMN)
+PRINT reshaped(10, 20)
+PRINT reshaped(11, 21)</code></pre>
+                <pre><code class="language-basic">DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM flat() AS INTEGER
+DIM sorted() AS INTEGER
+DIM reshaped(,) AS INTEGER
+
+flat = ARRAYFLATTEN(board)
+sorted = ARRAYTOSORTED(flat)
+reshaped = ARRAYRESHAPE(sorted, board)</code></pre>
+                <p><code>ARRAYRESHAPE</code> создаёт новый массив по форме <code>template</code> и заполняет его значениями из <code>source</code> в обычном видимом порядке обхода.</p>
+                <p>По-простому: <code>template</code> задаёт, какие будут измерения и границы результата, а <code>source</code> даёт сами значения. Исходные массивы при этом не меняются.</p>
+                <p>Тип элементов у <code>source</code> и <code>template</code> должен совпадать. Число видимых элементов тоже должно совпадать, иначе выполнение завершается диагностикой ошибки аргумента.</p>
+                <p>Это штатный путь для многомерной сортировки в текущем договоре: <code>ARRAYFLATTEN</code>, затем <code>ARRAYTOSORTED</code> или <code>ARRAYSORT</code> уже на одномерном массиве, затем <code>ARRAYRESHAPE</code> обратно по нужной форме.</p>
+
+                <h3 id="arraytosorted">ARRAYTOSORTED(array[, dimension])</h3>
                 <pre><code class="language-basic">DIM source(5 TO 9) AS INTEGER
 DIM sortedValues() AS INTEGER
 
@@ -294,13 +367,20 @@ PRINT LBOUND(sortedValues)
 PRINT UBOUND(sortedValues)
 PRINT sortedValues(5)
 PRINT sortedValues(9)</code></pre>
-                <p><code>ARRAYTOSORTED</code> создаёт новую отсортированную копию уже выделенного одномерного массива и не меняет исходное значение.</p>
+                <p><code>ARRAYTOSORTED</code> создаёт новую отсортированную копию уже выделенного массива и не меняет исходное значение.</p>
                 <p>В отличие от <code>ARRAYSLICE</code>, <code>ARRAYCONCAT</code> и <code>ARRAYTOREVERSED</code>, функция сохраняет текущие границы исходного массива. Для диапазона <code>5 TO 9</code> результат тоже останется в диапазоне <code>5 TO 9</code>.</p>
                 <p>Сортировка поддерживается только для числовых и строковых массивов и использует то же упорядоченное сравнение, что уже действует в языке для чисел и строк.</p>
+                <p>Для массива ранга выше <code>1</code> нужно явно указать <code>dimension</code>. Тогда функция сортирует не весь массив целиком, а каждую видимую линию вдоль выбранного измерения и сохраняет остальные границы без перепаковки.</p>
+                <p>Для двумерного массива удобно писать <code>ROW</code> и <code>COLUMN</code>. Например, <code>ARRAYTOSORTED(board, COLUMN)</code> сортирует элементы внутри каждой строки слева направо, а <code>ARRAYTOSORTED(board, ROW)</code> сортирует элементы внутри каждого столбца сверху вниз.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 1 TO 3) AS INTEGER
+DIM sortedBoard(,) AS INTEGER
+
+sortedBoard = ARRAYTOSORTED(board, COLUMN)</code></pre>
+                <p>Если нужно отсортировать всю таблицу как один общий список, используйте явную связку <code>ARRAYFLATTEN</code> → <code>ARRAYTOSORTED</code> → <code>ARRAYRESHAPE</code>.</p>
                 <p>Дубликаты сохраняются. Если исходный массив выделен как пустой <code>1 TO 0</code>, результатом становится такой же пустой выделенный массив <code>1 TO 0</code>. Невыделенный аргумент даёт <code>MB3005</code>.</p>
                 <p>Как и другие чистые операции над массивами, <code>ARRAYTOSORTED</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
 
-                <h3 id="arraytoreversed">ARRAYTOREVERSED(array)</h3>
+                <h3 id="arraytoreversed">ARRAYTOREVERSED(array[, dimension])</h3>
                 <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
 DIM reversed() AS INTEGER
 
@@ -314,12 +394,29 @@ PRINT LBOUND(reversed)
 PRINT UBOUND(reversed)
 PRINT reversed(1)
 PRINT reversed(3)</code></pre>
-                <p><code>ARRAYTOREVERSED</code> создаёт новый массив из элементов исходного одномерного массива, но в обратном логическом порядке.</p>
-                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если исходный массив выделен, но пуст, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p><code>ARRAYTOREVERSED</code> создаёт новую копию массива с обратным порядком элементов.</p>
+                <p>Для одномерного массива всё остаётся как раньше: результат получает компактные границы <code>1 TO N</code> или <code>1 TO 0</code>. Для массива ранга выше <code>1</code> нужно явно указать <code>dimension</code>; тогда функция разворачивает только выбранное измерение и сохраняет остальные видимые границы без перепаковки.</p>
+                <p>Для двумерного массива удобно писать <code>ROW</code> и <code>COLUMN</code>. Например, <code>ARRAYTOREVERSED(board, COLUMN)</code> меняет порядок столбцов, а <code>ARRAYTOREVERSED(board, ROW)</code> меняет порядок строк.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM reversed(,) AS INTEGER
+
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+
+reversed = ARRAYTOREVERSED(board, COLUMN)
+
+PRINT reversed(1, 10)
+PRINT reversed(1, 11)
+PRINT reversed(1, 12)</code></pre>
+                <p>В этом примере результатом становится новая таблица с теми же строками и теми же границами столбцов, но порядок столбцов идёт справа налево.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт диагностику состояния массива во время выполнения.</p>
                 <p>Как и другие чистые операции над массивами, <code>ARRAYTOREVERSED</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
 
-                <h3 id="arraytake">ARRAYTAKE(array, count)</h3>
+                <h3 id="arraytake">ARRAYTAKE(array, count[, dimension])</h3>
                 <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
 DIM part() AS INTEGER
 
@@ -333,13 +430,17 @@ PRINT LBOUND(part)
 PRINT UBOUND(part)
 PRINT part(1)
 PRINT part(2)</code></pre>
-                <p><code>ARRAYTAKE</code> создаёт новый массив из первых <code>count</code> элементов исходного одномерного массива, считая от его текущей нижней границы.</p>
-                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если <code>count = 0</code> или исходный массив выделен, но пуст, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
-                <p>Если <code>count</code> больше текущей длины массива, функция мягко возвращает весь массив в компактной форме без ошибки.</p>
-                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>, а отрицательный <code>count</code> даёт <code>MB3007</code>.</p>
-                <p>Как и другие чистые операции над массивами, <code>ARRAYTAKE</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+                <pre><code class="language-basic">DIM grid(1 TO 3, 10 TO 11) AS INTEGER
+DIM topRows(,) AS INTEGER
 
-                <h3 id="arrayskip">ARRAYSKIP(array, count)</h3>
+topRows = ARRAYTAKE(grid, 2, ROW)</code></pre>
+                <p><code>ARRAYTAKE</code> создаёт новый массив из начальной части исходного массива.</p>
+                <p>Для одномерного массива всё остаётся по-старому: функция берёт первые <code>count</code> элементов, считая от текущей нижней границы, и возвращает новый компактный массив <code>1 TO N</code>. Если <code>count = 0</code> или исходный массив пуст, результатом становится пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Для многомерного массива нужно явно указать <code>dimension</code>. Тогда функция оставляет первые <code>count</code> видимых элементов только по выбранному измерению, а остальные измерения не трогает. Например, <code>ARRAYTAKE(grid, 2, ROW)</code> оставляет верхние две строки всей таблицы.</p>
+                <p>Если <code>count</code> больше видимой длины, функция просто возвращает всю видимую форму по выбранному измерению без ошибки. Если <code>count</code> меньше либо равен нулю, результатом становится пустой выделенный массив той же формы по остальным измерениям.</p>
+                <p>Исходный массив должен быть уже выделен. Как и другие чистые операции над массивами, <code>ARRAYTAKE</code> всегда создаёт новую независимую копию и не меняет исходные значения.</p>
+
+                <h3 id="arrayskip">ARRAYSKIP(array, count[, dimension])</h3>
                 <pre><code class="language-basic">DIM source(5 TO 7) AS INTEGER
 DIM part() AS INTEGER
 
@@ -353,10 +454,15 @@ PRINT LBOUND(part)
 PRINT UBOUND(part)
 PRINT part(1)
 PRINT part(2)</code></pre>
-                <p><code>ARRAYSKIP</code> создаёт новый массив из элементов исходного одномерного массива после пропуска первых <code>count</code> логических элементов, считая от текущей нижней границы.</p>
-                <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если <code>count = 0</code>, функция возвращает весь исходный массив в компактной форме. Если <code>count</code> не меньше текущей длины массива или исходный массив выделен, но пуст, результатом становится пустой выделенный массив <code>1 TO 0</code>.</p>
-                <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>, а отрицательный <code>count</code> даёт <code>MB3007</code>.</p>
-                <p>Как и другие чистые операции над массивами, <code>ARRAYSKIP</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
+                <pre><code class="language-basic">DIM grid(1 TO 4, 10 TO 11) AS INTEGER
+DIM tailRows(,) AS INTEGER
+
+tailRows = ARRAYSKIP(grid, 1, ROW)</code></pre>
+                <p><code>ARRAYSKIP</code> создаёт новый массив из оставшейся части исходного массива после пропуска начальных элементов.</p>
+                <p>Для одномерного массива всё остаётся по-старому: функция пропускает первые <code>count</code> логических элементов, считая от текущей нижней границы, и возвращает новый компактный массив <code>1 TO N</code>. Если <code>count = 0</code>, возвращается вся последовательность в компактной форме.</p>
+                <p>Для многомерного массива нужно явно указать <code>dimension</code>. Тогда функция пропускает начальную часть только по выбранному измерению, а остальные измерения сохраняет. Например, <code>ARRAYSKIP(grid, 1, ROW)</code> убирает первую строку, но оставляет все столбцы.</p>
+                <p>Если <code>count</code> меньше либо равен нулю, возвращается копия всей видимой формы. Если <code>count</code> не меньше видимой длины выбранного измерения, результатом становится пустой выделенный массив той же формы по остальным измерениям.</p>
+                <p>Исходный массив должен быть уже выделен. Как и другие чистые операции над массивами, <code>ARRAYSKIP</code> всегда создаёт новую независимую копию и не меняет исходные значения.</p>
 
                 <h3 id="arraydistinct">ARRAYDISTINCT(array)</h3>
                 <pre><code class="language-basic">DIM source(5 TO 9) AS INTEGER
@@ -374,9 +480,15 @@ PRINT LBOUND(uniqueValues)
 PRINT UBOUND(uniqueValues)
 PRINT uniqueValues(1)
 PRINT uniqueValues(3)</code></pre>
-                <p><code>ARRAYDISTINCT</code> создаёт новый массив, в который входят только уникальные элементы исходного одномерного массива.</p>
-                <p>Порядок результата определяется первым появлением значений в исходном массиве. Если значение встретилось несколько раз, в результат попадает только его первое вхождение.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM uniqueValues() AS INTEGER
+
+uniqueValues = ARRAYDISTINCT(board)</code></pre>
+                <p><code>ARRAYDISTINCT</code> создаёт новый массив, в который входят только уникальные элементы исходного массива или представления.</p>
+                <p>Для одномерного массива всё работает как раньше. Для двумерного и многомерного массива функция проходит по всем видимым элементам в обычном порядке обхода и собирает из них новый компактный одномерный список без повторов.</p>
+                <p>Порядок результата определяется первым появлением значений в видимом обходе. Если значение встретилось несколько раз, в результат попадает только его первое вхождение.</p>
                 <p>Результат всегда получает компактные границы <code>1 TO N</code>. Если исходный массив выделен, но пуст, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
+                <p>Для многомерного входа исходная форма не сохраняется. Например, <code>ARRAYDISTINCT(board)</code> не возвращает новую таблицу той же ширины и высоты, а строит один линейный массив уникальных значений.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
                 <p>Как и другие чистые операции над массивами, <code>ARRAYDISTINCT</code> не разделяет хранилище элементов с исходным массивом. Изменение результата после вызова не меняет исходные значения.</p>
             </section>
@@ -398,6 +510,16 @@ PRINT ARRAYCONTAINS(values, 99)</code></pre>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
 
                 <p>Для многомерного массива или представления <code>ARRAYCONTAINS</code> проверяет все видимые элементы в стабильном порядке обхода по измерениям.</p>
+                <pre><code class="language-basic">DIM values(1 TO 3, 1 TO 3) AS INTEGER
+
+values(1, 1) = 5
+values(1, 2) = 7
+values(2, 2) = 7
+values(3, 3) = 7
+
+PRINT ARRAYCONTAINS(values, 7)
+PRINT ARRAYCONTAINS(values(2 TO 3, 2 TO 3), 5)</code></pre>
+                <p>В этом многомерном примере полное представление содержит значение <code>7</code>, а вложенный срез <code>values(2 TO 3, 2 TO 3)</code> уже не содержит значение <code>5</code>. Runnable-вариант находится в <a href="../../samples/functions/arraycontains/multidimensional_values.axm">samples/functions/arraycontains/multidimensional_values.axm</a>.</p>
 
                 <h3 id="arraycount">ARRAYCOUNT(array, value)</h3>
                 <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
@@ -414,6 +536,16 @@ PRINT ARRAYCOUNT(values, 99)</code></pre>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
 
                 <p>Для многомерного массива или представления <code>ARRAYCOUNT</code> учитывает все видимые элементы, включая элементы диапазонного среза.</p>
+                <pre><code class="language-basic">DIM values(1 TO 3, 1 TO 3) AS INTEGER
+
+values(1, 1) = 5
+values(1, 2) = 7
+values(2, 2) = 7
+values(3, 3) = 7
+
+PRINT ARRAYCOUNT(values, 7)
+PRINT ARRAYCOUNT(values(2 TO 3, 2 TO 3), 7)</code></pre>
+                <p>Здесь полное представление даёт три совпадения, а многомерный срез — только два. Runnable-вариант находится в <a href="../../samples/functions/arraycount/multidimensional_values.axm">samples/functions/arraycount/multidimensional_values.axm</a>.</p>
 
                 <h3 id="arrayindexof">ARRAYINDEXOF(array, value)</h3>
                 <pre><code class="language-basic">DIM values(0 TO 3) AS INTEGER
@@ -425,6 +557,24 @@ values(3) = 20
 
 PRINT ARRAYINDEXOF(values, 20)
 PRINT ARRAYINDEXOF(values, 99)</code></pre>
+                <p>Для многомерного массива <code>ARRAYINDEXOF</code> работает иначе: результатом становится новый массив <code>INTEGER()</code>, содержащий координаты первого совпадения в стабильном видимом порядке обхода.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 5 TO 7) AS INTEGER
+DIM hit() AS INTEGER
+DIM missing() AS INTEGER
+
+board(1, 5) = 10
+board(1, 6) = 20
+board(2, 6) = 20
+board(2, 7) = 20
+
+hit = ARRAYINDEXOF(board, 20)
+missing = ARRAYINDEXOF(board, 99)
+
+PRINT hit(1)
+PRINT hit(2)
+PRINT LBOUND(missing)
+PRINT UBOUND(missing)</code></pre>
+                <p>Если совпадения в многомерном массиве нет, возвращается пустой выделенный массив <code>1 TO 0</code>. Плоский индекс для 2D/3D-массивов не используется.</p>
                 <p><code>ARRAYINDEXOF</code> возвращает логический индекс первого совпадения с <code>value</code> в текущем диапазоне массива.</p>
                 <p>Если совпадения нет, функция возвращает значение строго левее диапазона массива, то есть <code>LBOUND(array) - 1</code>. Для массива <code>0 TO 3</code> это будет <code>-1</code>, а для массива <code>5 TO 7</code> — <code>4</code>.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
@@ -438,6 +588,24 @@ values(-1) = 20
 
 PRINT ARRAYLASTINDEXOF(values, 20)
 PRINT ARRAYLASTINDEXOF(values, 99)</code></pre>
+                <p>Для многомерного массива <code>ARRAYLASTINDEXOF</code> возвращает не скалярный индекс, а координаты последнего совпадения в виде массива <code>INTEGER()</code>.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 5 TO 7) AS INTEGER
+DIM hit() AS INTEGER
+DIM missing() AS INTEGER
+
+board(1, 5) = 10
+board(1, 6) = 20
+board(2, 6) = 20
+board(2, 7) = 20
+
+hit = ARRAYLASTINDEXOF(board, 20)
+missing = ARRAYLASTINDEXOF(board, 99)
+
+PRINT hit(1)
+PRINT hit(2)
+PRINT LBOUND(missing)
+PRINT UBOUND(missing)</code></pre>
+                <p>Если совпадения в многомерном массиве нет, возвращается пустой выделенный массив <code>1 TO 0</code>. Плоский индекс не используется.</p>
                 <p><code>ARRAYLASTINDEXOF</code> возвращает логический индекс последнего совпадения с <code>value</code> в текущем диапазоне массива.</p>
                 <p>Если совпадения нет, функция тоже возвращает значение <code>LBOUND(array) - 1</code>, то есть индекс строго левее диапазона текущего массива.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
@@ -458,12 +626,34 @@ PRINT LBOUND(matches)
 PRINT UBOUND(matches)
 PRINT matches(1)
 PRINT matches(3)</code></pre>
+                <p>Для многомерного массива <code>ARRAYFINDALL</code> возвращает таблицу координат типа <code>INTEGER(,)</code>. Каждая строка описывает одно совпадение, а число столбцов равно рангу исходного массива.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 5 TO 7) AS INTEGER
+DIM hits(,) AS INTEGER
+DIM missing(,) AS INTEGER
+
+board(1, 5) = 10
+board(1, 6) = 20
+board(2, 6) = 20
+board(2, 7) = 20
+
+hits = ARRAYFINDALL(board, 20)
+missing = ARRAYFINDALL(board, 99)
+
+PRINT LBOUND(hits, 1)
+PRINT UBOUND(hits, 1)
+PRINT LBOUND(hits, 2)
+PRINT UBOUND(hits, 2)
+PRINT hits(1, 1)
+PRINT hits(1, 2)
+PRINT hits(3, 1)
+PRINT hits(3, 2)</code></pre>
+                <p>Если совпадений нет, первая размерность результата становится пустой <code>1 TO 0</code>, а вторая сохраняет число координат на строку.</p>
                 <p><code>ARRAYFINDALL</code> возвращает новый массив логических индексов всех совпадений с <code>value</code> в текущем диапазоне исходного массива.</p>
                 <p>Результат всегда имеет тип <code>INTEGER()</code> и компактные границы <code>1 TO N</code>. Если совпадений нет или исходный массив выделен как пустой <code>1 TO 0</code>, функция возвращает пустой выделенный массив <code>1 TO 0</code>.</p>
                 <p>Внутри результата сохраняются именно логические индексы исходного массива. Для примера выше это будут индексы <code>-3</code>, <code>-1</code> и <code>1</code>, а не позиции <code>1</code>, <code>2</code> и <code>3</code>.</p>
                 <p>Исходный массив должен быть уже выделен. Невыделенный аргумент даёт <code>MB3005</code>.</p>
 
-                <h3 id="arraybinarysearch">ARRAYBINARYSEARCH(array, value)</h3>
+                <h3 id="arraybinarysearch">ARRAYBINARYSEARCH(array, value[, dimension])</h3>
                 <pre><code class="language-basic">DIM values(5 TO 9) AS INTEGER
 
 values(5) = 10
@@ -474,10 +664,19 @@ values(9) = 30
 
 PRINT ARRAYBINARYSEARCH(values, 20)
 PRINT ARRAYBINARYSEARCH(values, 15)</code></pre>
-                <p><code>ARRAYBINARYSEARCH</code> выполняет бинарный поиск по уже выделенному и заранее отсортированному одномерному массиву.</p>
+                <p><code>ARRAYBINARYSEARCH</code> выполняет бинарный поиск по уже выделенному и заранее отсортированному массиву.</p>
                 <p>Массив должен быть отсортирован по неубыванию в тех же правилах упорядоченного сравнения, которые Axiom использует для чисел и строк. В текущей реализации функция поддерживает только числовые и строковые массивы.</p>
-                <p>Если совпадение найдено, функция возвращает логический индекс первого равного элемента. Если совпадения нет, результатом становится значение строго левее диапазона массива, то есть <code>LBOUND(array) - 1</code>.</p>
-                <p>Для пустого выделенного массива <code>1 TO 0</code> отсутствие совпадения считается нормальным результатом и тоже даёт <code>0</code>. Невыделенный массив сообщает <code>MB3005</code>.</p>
+                <p>Для одномерного массива всё остаётся по-прежнему: если совпадение найдено, функция возвращает логический индекс первого равного элемента. Если совпадения нет, результатом становится значение строго левее диапазона массива, то есть <code>LBOUND(array) - 1</code>.</p>
+                <p>Для массива ранга выше <code>1</code> нужно явно указать <code>dimension</code>. Тогда каждая видимая линия вдоль этого измерения должна быть заранее отсортирована по неубыванию, а поиск идёт отдельно по каждой линии в обычном видимом порядке обхода.</p>
+                <p>Если совпадение найдено в многомерном массиве, результатом становится вектор координат типа <code>INTEGER()</code>. Если совпадения нет, возвращается пустой выделенный массив <code>1 TO 0</code>; плоский служебный индекс в этом режиме не используется.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 1 TO 4) AS INTEGER
+DIM hit() AS INTEGER
+
+hit = ARRAYBINARYSEARCH(board, 4, ROW)
+
+PRINT hit(1)
+PRINT hit(2)</code></pre>
+                <p>Для пустого одномерного массива <code>1 TO 0</code> отсутствие совпадения считается нормальным результатом и тоже даёт <code>0</code>. Невыделенный массив сообщает <code>MB3005</code>.</p>
                 <p>Порядок исходного массива функция не проверяет и не изменяет. Если передать неотсортированный массив, результат не определён договором этой функции.</p>
             </section>
 
@@ -501,7 +700,7 @@ PRINT values(7)</code></pre>
 
                 <p>Для многомерного массива или представления <code>ARRAYFILL</code> меняет все видимые элементы на месте. Если аргументом передан срез, изменения видны в исходном массиве.</p>
 
-                <h3 id="arrayreverse">ARRAYREVERSE(array)</h3>
+                <h3 id="arrayreverse">ARRAYREVERSE(array[, dimension])</h3>
                 <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
 
 values(5) = 10
@@ -513,11 +712,27 @@ ARRAYREVERSE(values)
 
 PRINT values(5)
 PRINT values(8)</code></pre>
-                <p><code>ARRAYREVERSE</code> меняет порядок элементов уже выделенного одномерного массива на обратный.</p>
-                <p>Операция выполняется на месте и сохраняет текущие логические границы массива. Для диапазона <code>5 TO 8</code> результат останется в диапазоне <code>5 TO 8</code>, но элементы будут переставлены в обратном порядке.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 10 TO 12) AS INTEGER
+
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+
+ARRAYREVERSE(board, COLUMN)
+
+PRINT board(1, 10)
+PRINT board(1, 11)
+PRINT board(1, 12)</code></pre>
+                <p><code>ARRAYREVERSE</code> меняет порядок элементов уже выделенного массива на обратный и делает это прямо в исходном массиве.</p>
+                <p>Для одномерного массива всё остаётся как раньше: операция выполняется на месте и сохраняет текущие логические границы массива. Для диапазона <code>5 TO 8</code> результат останется в диапазоне <code>5 TO 8</code>, но элементы будут переставлены в обратном порядке.</p>
+                <p>Для массива ранга выше <code>1</code> нужно явно указать <code>dimension</code>. Тогда <code>ARRAYREVERSE</code> разворачивает только выбранное измерение и не меняет остальные видимые границы.</p>
+                <p>Для двумерного массива удобно писать <code>ROW</code> и <code>COLUMN</code>. Например, <code>ARRAYREVERSE(board, COLUMN)</code> меняет порядок столбцов, а <code>ARRAYREVERSE(board, ROW)</code> меняет порядок строк.</p>
                 <p>Пустой выделенный массив допустим и остаётся пустым. Невыделенный массив сообщает <code>MB3005</code>.</p>
 
-                <h3 id="arraysort">ARRAYSORT(array)</h3>
+                <h3 id="arraysort">ARRAYSORT(array[, dimension])</h3>
                 <pre><code class="language-basic">DIM values(5 TO 9) AS INTEGER
 
 values(5) = 30
@@ -530,8 +745,14 @@ ARRAYSORT(values)
 
 PRINT values(5)
 PRINT values(9)</code></pre>
-                <p><code>ARRAYSORT</code> сортирует уже выделенный одномерный массив по неубыванию и меняет его на месте.</p>
+                <p><code>ARRAYSORT</code> сортирует уже выделенный массив по неубыванию и меняет его на месте.</p>
                 <p>Процедура поддерживает только числовые и строковые массивы. Она использует то же упорядоченное сравнение, что язык уже применяет для чисел и строк.</p>
+                <p>Для массива ранга выше <code>1</code> нужно явно указать <code>dimension</code>. Тогда процедура сортирует каждую видимую линию вдоль выбранного измерения отдельно и не меняет остальные видимые границы.</p>
+                <p>Для двумерного массива <code>ARRAYSORT(board, COLUMN)</code> сортирует элементы внутри каждой строки, а <code>ARRAYSORT(board, ROW)</code> сортирует элементы внутри каждого столбца.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 1 TO 3) AS INTEGER
+
+ARRAYSORT(board, COLUMN)</code></pre>
+                <p>Если нужно отсортировать всю таблицу как один общий список, сначала сделайте <code>ARRAYFLATTEN</code>, затем отсортируйте полученный одномерный массив и при необходимости соберите результат обратно через <code>ARRAYRESHAPE</code>.</p>
                 <p>Границы массива не меняются, дубликаты сохраняются. Пустой выделенный массив допустим и остаётся пустым. Невыделенный массив сообщает <code>MB3005</code>.</p>
 
                 <h3 id="arraypush">ARRAYPUSH(array, value)</h3>
@@ -612,6 +833,22 @@ END FUNCTION</code></pre>
                 <p>Функция принимает не только обычный одномерный массив, но и массив или представление любого ранга. Для многомерного массива или среза проверяются все видимые элементы в стабильном порядке по измерениям.</p>
                 <p>Аргумент <code>predicate</code> должен быть значением функции или замыкания типа <code>FUNCTION(T) AS BOOLEAN</code>, где <code>T</code> — тип элемента массива. Callback получает только текущее значение элемента и может использовать захваченные внешние данные через обычные замыкания Axiom.</p>
                 <p>Для пустого выделенного массива <code>1 TO 0</code> результатом считается <code>TRUE</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в predicate сообщает <code>MB3009</code>.</p>
+                <pre><code class="language-basic">DIM values(2 TO 3, 4 TO 6) AS INTEGER
+
+values(2, 4) = 10
+values(2, 5) = 20
+values(2, 6) = 30
+values(3, 4) = 40
+values(3, 5) = -5
+values(3, 6) = 60
+
+PRINT ARRAYEVERY(values(2 TO 2, 4 TO 6), IsPositive)
+PRINT ARRAYEVERY(values(2 TO 3, 4 TO 6), IsPositive)
+
+FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value &gt; 0
+END FUNCTION</code></pre>
+                <p>Этот пример показывает две многомерные проверки подряд: для среза только второй строки результат равен <code>TRUE</code>, а для полного представления с отрицательным элементом — <code>FALSE</code>. Runnable-вариант находится в <a href="../../samples/functions/arrayevery/multidimensional_slice.axm">samples/functions/arrayevery/multidimensional_slice.axm</a>.</p>
 
                 <h3 id="arraysome">ARRAYSOME(array, predicate)</h3>
                 <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
@@ -630,6 +867,23 @@ END FUNCTION</code></pre>
                 <p>Как и <code>ARRAYEVERY</code>, эта функция работает с массивами и представлениями любого ранга и обходит все их видимые элементы.</p>
                 <p>Аргумент <code>predicate</code> подчиняется тому же контракту, что и у <code>ARRAYEVERY</code>: это значение функции или замыкания типа <code>FUNCTION(T) AS BOOLEAN</code>, согласованного с типом элемента массива.</p>
                 <p>Для пустого выделенного массива <code>1 TO 0</code> результатом считается <code>FALSE</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в predicate сообщает <code>MB3009</code>.</p>
+                <pre><code class="language-basic">DIM values(2 TO 3, 4 TO 6) AS INTEGER
+DIM threshold AS INTEGER = 45
+
+values(2, 4) = 10
+values(2, 5) = 20
+values(2, 6) = 30
+values(3, 4) = 40
+values(3, 5) = 50
+values(3, 6) = 60
+
+PRINT ARRAYSOME(values(2 TO 2, 4 TO 6), IsAboveThreshold)
+PRINT ARRAYSOME(values(2 TO 3, 5 TO 6), IsAboveThreshold)
+
+FUNCTION IsAboveThreshold(value AS INTEGER) AS BOOLEAN
+    RETURN value &gt; threshold
+END FUNCTION</code></pre>
+                <p>Здесь первый многомерный срез не содержит элементов выше порога и даёт <code>FALSE</code>, а второй содержит такие элементы и даёт <code>TRUE</code>. Runnable-вариант находится в <a href="../../samples/functions/arraysome/multidimensional_slice.axm">samples/functions/arraysome/multidimensional_slice.axm</a>.</p>
 
                 <h3 id="arrayfilter">ARRAYFILTER(array, predicate)</h3>
                 <pre><code class="language-basic">DIM values(5 TO 8) AS INTEGER
@@ -651,6 +905,7 @@ FUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN
 END FUNCTION</code></pre>
                 <p><code>ARRAYFILTER</code> строит новый массив из элементов, для которых predicate возвращает <code>TRUE</code>.</p>
                 <p>Аргумент <code>predicate</code> подчиняется тому же контракту, что и у <code>ARRAYEVERY</code> и <code>ARRAYSOME</code>: это значение функции или замыкания типа <code>FUNCTION(T) AS BOOLEAN</code>, согласованного с типом элемента массива.</p>
+                <p>Для многомерного массива или представления <code>ARRAYFILTER</code> обходит все видимые элементы в стабильном порядке по измерениям, но исходную форму не сохраняет: результатом всё равно становится новый компактный одномерный массив.</p>
                 <p>Исходный массив не меняется. Результат всегда нормализуется к компактным границам <code>1 TO N</code>, а если совпадений нет, возвращается канонический выделенный пустой массив <code>1 TO 0</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в predicate сообщает <code>MB3009</code>.</p>
 
                 <h3 id="arraymap">ARRAYMAP(array, selector)</h3>
@@ -673,6 +928,26 @@ END FUNCTION</code></pre>
                 <p><code>selector</code> должен быть значением функции или замыкания типа <code>FUNCTION(T) AS U</code>, где <code>T</code> совпадает с типом элемента исходного массива, а <code>U</code> задаёт тип элемента результирующего массива.</p>
                 <p>Это означает, что <code>ARRAYMAP</code> может не только менять значения, но и переводить массив в другой тип элементов, например из <code>INTEGER()</code> в <code>STRING()</code>. Вложенные массивы по-прежнему не поддерживаются, поэтому <code>U</code> не может быть типом массива.</p>
                 <p>Исходный массив не меняется. Для массива или представления любого ранга результат сохраняет тот же ранг и те же видимые границы, а меняются только значения и, при необходимости, тип элементов результата. Даже пустое многомерное представление сохраняет свою видимую пустую форму. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в selector сообщает <code>MB3009</code>.</p>
+                <pre><code class="language-basic">DIM values(2 TO 3, 4 TO 5) AS INTEGER
+DIM mapped(,) AS STRING
+
+values(2, 4) = 10
+values(2, 5) = 20
+values(3, 4) = 30
+values(3, 5) = 40
+
+mapped = ARRAYMAP(values(2 TO 3, 5 TO 5), FormatValue)
+PRINT LBOUND(mapped, 1)
+PRINT UBOUND(mapped, 1)
+PRINT LBOUND(mapped, 2)
+PRINT UBOUND(mapped, 2)
+PRINT mapped(2, 5)
+PRINT mapped(3, 5)
+
+FUNCTION FormatValue(value AS INTEGER) AS STRING
+    RETURN "N" + STR(value)
+END FUNCTION</code></pre>
+                <p>В этом многомерном примере результат сохраняет форму среза по обоим измерениям: остаются границы <code>2 TO 3</code> и <code>5 TO 5</code>, а меняются только тип и значения элементов. Runnable-вариант находится в <a href="../../samples/functions/arraymap/multidimensional_slice.axm">samples/functions/arraymap/multidimensional_slice.axm</a>.</p>
 
                 <h3 id="arrayreduce">ARRAYREDUCE(array, seed, reducer)</h3>
                 <pre><code class="language-basic">DIM words(3 TO 5) AS STRING
@@ -690,6 +965,20 @@ END FUNCTION</code></pre>
                 <p><code>seed</code> и результат имеют тип аккумулятора <code>A</code>, а <code>reducer</code> должен быть значением функции или замыкания типа <code>FUNCTION(A, T) AS A</code>, где <code>T</code> — тип элемента массива.</p>
                 <p>Тип аккумулятора может отличаться от типа элемента массива. Например, можно сворачивать <code>STRING()</code> в итоговое <code>INTEGER</code>, суммируя длины строк, или собирать <code>INTEGER()</code> в итоговую строку.</p>
                 <p>Исходный массив не меняется. Функция работает и с массивами или представлениями любого ранга, обходя все видимые элементы в стабильном порядке по измерениям. Для пустого выделенного массива или пустого представления результатом становится исходный <code>seed</code>. Невыделенный массив сообщает <code>MB3005</code>, а пустое значение функционального типа в reducer сообщает <code>MB3009</code>.</p>
+                <pre><code class="language-basic">DIM values(2 TO 3, 4 TO 5) AS INTEGER
+
+values(2, 4) = 10
+values(2, 5) = 20
+values(3, 4) = 30
+values(3, 5) = 40
+
+PRINT ARRAYREDUCE(values(2 TO 3, 4 TO 5), "", AppendValue)
+PRINT ARRAYREDUCE(values(2 TO 3, 5 TO 5), "", AppendValue)
+
+FUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING
+    RETURN accumulator + "[" + STR(value) + "]"
+END FUNCTION</code></pre>
+                <p>Этот пример показывает стабильный порядок обхода видимых элементов в многомерном представлении: сначала полный прямоугольный срез, затем только второй столбец. Runnable-вариант находится в <a href="../../samples/functions/arrayreduce/multidimensional_slice.axm">samples/functions/arrayreduce/multidimensional_slice.axm</a>.</p>
             </section>
 
             <section class="article-section" id="bounds">
@@ -735,30 +1024,52 @@ END FUNCTION</code></pre>
                     <li><a href="../../samples/functions/arrayclone/unallocated_and_empty.axm">ARRAYCLONE: невыделенный и пустой выделенный массив</a></li>
                     <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: компактный срез массива</a></li>
                     <li><a href="../../samples/functions/arrayslice/zero_count.axm">ARRAYSLICE: пустой результат при нулевом количестве</a></li>
+                    <li><a href="../../samples/functions/arrayslice/by_column.axm">ARRAYSLICE: срез двумерного массива по столбцам</a></li>
                     <li><a href="../../samples/functions/arrayconcat/basic_usage.axm">ARRAYCONCAT: объединение в новый компактный массив</a></li>
+                    <li><a href="../../samples/functions/arrayconcat/by_column.axm">ARRAYCONCAT: склейка двумерных частей по столбцам</a></li>
+                    <li><a href="../../samples/functions/arraycontains/multidimensional_values.axm">ARRAYCONTAINS: поиск в многомерном представлении</a></li>
+                    <li><a href="../../samples/functions/arraycount/multidimensional_values.axm">ARRAYCOUNT: число совпадений в многомерном представлении</a></li>
+                    <li><a href="../../samples/functions/arrayflatten/by_visible_order.axm">ARRAYFLATTEN: превращение двумерного массива в компактный список</a></li>
+                    <li><a href="../../samples/functions/arrayreshape/from_sorted_flat.axm">ARRAYRESHAPE: сборка таблицы из отсортированного списка</a></li>
                     <li><a href="../../samples/functions/arrayfill/basic_usage.axm">ARRAYFILL: заполнение массива значением</a></li>
                     <li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH: добавление элемента в конец массива</a></li>
                     <li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP: снятие последнего элемента массива</a></li>
                     <li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT: вставка элемента по индексу</a></li>
                     <li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE: удаление элемента по индексу</a></li>
                     <li><a href="../../samples/functions/arrayevery/basic_usage.axm">ARRAYEVERY: predicate для всех элементов</a></li>
+                    <li><a href="../../samples/functions/arrayevery/multidimensional_slice.axm">ARRAYEVERY: predicate для многомерного среза</a></li>
                     <li><a href="../../samples/functions/arraysome/basic_usage.axm">ARRAYSOME: predicate хотя бы для одного элемента</a></li>
+                    <li><a href="../../samples/functions/arraysome/multidimensional_slice.axm">ARRAYSOME: predicate для многомерного среза</a></li>
                     <li><a href="../../samples/functions/arrayfilter/basic_usage.axm">ARRAYFILTER: фильтрация в новый компактный массив</a></li>
+                    <li><a href="../../samples/functions/arrayfilter/multidimensional_values.axm">ARRAYFILTER: значения из многомерного представления</a></li>
                     <li><a href="../../samples/functions/arraymap/polymorphic_transform.axm">ARRAYMAP: полиморфное преобразование массива</a></li>
+                    <li><a href="../../samples/functions/arraymap/multidimensional_slice.axm">ARRAYMAP: преобразование многомерного среза</a></li>
                     <li><a href="../../samples/functions/arrayreduce/polymorphic_accumulator.axm">ARRAYREDUCE: полиморфная свёртка массива</a></li>
+                    <li><a href="../../samples/functions/arrayreduce/multidimensional_slice.axm">ARRAYREDUCE: свёртка многомерного среза</a></li>
                     <li><a href="../../samples/functions/arrayreverse/basic_usage.axm">ARRAYREVERSE: разворот массива на месте</a></li>
+                    <li><a href="../../samples/functions/arrayreverse/by_column.axm">ARRAYREVERSE: разворот двумерного массива по столбцам</a></li>
                     <li><a href="../../samples/functions/arraysort/basic_usage.axm">ARRAYSORT: сортировка массива на месте</a></li>
+                    <li><a href="../../samples/functions/arraysort/multidimensional_by_dimension.axm">ARRAYSORT: сортировка по выбранному измерению</a></li>
                     <li><a href="../../samples/functions/arraytosorted/basic_usage.axm">ARRAYTOSORTED: отсортированная копия с сохранением границ</a></li>
+                    <li><a href="../../samples/functions/arraytosorted/multidimensional_by_dimension.axm">ARRAYTOSORTED: независимая сортировка по выбранному измерению</a></li>
                     <li><a href="../../samples/functions/arraytoreversed/basic_usage.axm">ARRAYTOREVERSED: разворот в новый компактный массив</a></li>
+                    <li><a href="../../samples/functions/arraytoreversed/by_column.axm">ARRAYTOREVERSED: разворот двумерного массива по столбцам</a></li>
                     <li><a href="../../samples/functions/arraytake/basic_usage.axm">ARRAYTAKE: первые элементы в новом компактном массиве</a></li>
+                    <li><a href="../../samples/functions/arraytake/by_row.axm">ARRAYTAKE: верхние строки двумерного массива</a></li>
                     <li><a href="../../samples/functions/arrayskip/basic_usage.axm">ARRAYSKIP: пропуск начальной части массива</a></li>
+                    <li><a href="../../samples/functions/arrayskip/by_row.axm">ARRAYSKIP: пропуск первых строк двумерного массива</a></li>
                     <li><a href="../../samples/functions/arraydistinct/basic_usage.axm">ARRAYDISTINCT: устранение повторов с сохранением порядка</a></li>
+                    <li><a href="../../samples/functions/arraydistinct/multidimensional_values.axm">ARRAYDISTINCT: уникальные значения из двумерного массива</a></li>
                     <li><a href="../../samples/functions/arraybinarysearch/basic_usage.axm">ARRAYBINARYSEARCH: бинарный поиск по отсортированному массиву</a></li>
+                    <li><a href="../../samples/functions/arraybinarysearch/multidimensional_coordinates.axm">ARRAYBINARYSEARCH: координаты совпадения в многомерном массиве</a></li>
                     <li><a href="../../samples/functions/arraycontains/basic_usage.axm">ARRAYCONTAINS: проверка наличия совпадения</a></li>
                     <li><a href="../../samples/functions/arraycount/basic_usage.axm">ARRAYCOUNT: число совпадений</a></li>
-                    <li><a href="../../samples/functions/arrayfindall/basic_usage.axm">ARRAYFINDALL: все индексы совпадений</a></li>
-                    <li><a href="../../samples/functions/arrayindexof/basic_usage.axm">ARRAYINDEXOF: первый индекс совпадения</a></li>
-                    <li><a href="../../samples/functions/arraylastindexof/basic_usage.axm">ARRAYLASTINDEXOF: последний индекс совпадения</a></li>
+                    <li><a href="../../samples/functions/arrayfindall/basic_usage.axm">ARRAYFINDALL: все индексы совпадений в 1D</a></li>
+                    <li><a href="../../samples/functions/arrayfindall/multidimensional_coordinates.axm">ARRAYFINDALL: таблица координат в 2D</a></li>
+                    <li><a href="../../samples/functions/arrayindexof/basic_usage.axm">ARRAYINDEXOF: первый индекс совпадения в 1D</a></li>
+                    <li><a href="../../samples/functions/arrayindexof/multidimensional_coordinates.axm">ARRAYINDEXOF: координаты первого совпадения в 2D</a></li>
+                    <li><a href="../../samples/functions/arraylastindexof/basic_usage.axm">ARRAYLASTINDEXOF: последний индекс совпадения в 1D</a></li>
+                    <li><a href="../../samples/functions/arraylastindexof/multidimensional_coordinates.axm">ARRAYLASTINDEXOF: координаты последнего совпадения в 2D</a></li>
                 </ul>
             </section>
 
@@ -778,8 +1089,10 @@ END FUNCTION</code></pre>
                         <li><code>LBOUND</code> и <code>UBOUND</code> возвращают текущие границы выделенного массива;</li>
                         <li><code>ARRAYLENGTH</code> возвращает число элементов, а <code>ARRAYISALLOCATED</code> показывает, выделен ли массив;</li>
                         <li><code>ARRAYCLONE</code> создаёт независимую копию массива и сохраняет его текущее состояние;</li>
-                        <li><code>ARRAYSLICE</code> создаёт независимый срез и возвращает компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
-                        <li><code>ARRAYCONCAT</code> объединяет два массива одного типа и возвращает новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYSLICE</code> для одномерного массива возвращает компактный результат, а для многомерного режет по явно указанному измерению и сохраняет остальные границы;</li>
+                        <li><code>ARRAYCONCAT</code> для многомерного массива требует явно указать, по какому измерению склеивать, и создаёт новую независимую копию;</li>
+                        <li><code>ARRAYFLATTEN</code> превращает любой уже выделенный массив или видимый срез в новый компактный одномерный список <code>1 TO N</code> или <code>1 TO 0</code>;</li>
+                        <li><code>ARRAYRESHAPE</code> собирает новый массив по форме template и заполняет его значениями source в видимом порядке обхода;</li>
                         <li><code>ARRAYFILL</code> меняет уже выделенный массив на месте и записывает одно значение во все его элементы;</li>
                         <li><code>ARRAYPUSH</code> расширяет уже выделенный массив вправо на один элемент и записывает туда переданное значение;</li>
                         <li><code>ARRAYPOP</code> возвращает последний элемент уже выделенного массива и укорачивает сам массив на месте;</li>
@@ -790,14 +1103,14 @@ END FUNCTION</code></pre>
                         <li><code>ARRAYFILTER</code> возвращает новый компактный массив из элементов, для которых predicate типа <code>FUNCTION(T) AS BOOLEAN</code> истинен;</li>
                         <li><code>ARRAYMAP</code> возвращает новый компактный массив, применяя selector типа <code>FUNCTION(T) AS U</code> к каждому элементу исходного массива;</li>
                         <li><code>ARRAYREDUCE</code> возвращает итоговое значение типа <code>A</code>, последовательно применяя reducer типа <code>FUNCTION(A, T) AS A</code> к seed и элементам массива;</li>
-                        <li><code>ARRAYREVERSE</code> разворачивает уже выделенный массив на месте и сохраняет его текущие границы;</li>
-                        <li><code>ARRAYSORT</code> сортирует уже выделенный числовой или строковый массив на месте и сохраняет его текущие границы;</li>
-                        <li><code>ARRAYTOSORTED</code> создаёт новую отсортированную копию числового или строкового массива и сохраняет его текущие границы;</li>
-                        <li><code>ARRAYTOREVERSED</code> создаёт новый массив с обратным порядком элементов и возвращает компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
-                        <li><code>ARRAYTAKE</code> возвращает первые элементы массива как новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
-                        <li><code>ARRAYSKIP</code> возвращает хвост массива после пропуска первых элементов как новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
-                        <li><code>ARRAYDISTINCT</code> возвращает только первые вхождения уникальных значений и создаёт новый компактный результат <code>1 TO N</code> или <code>1 TO 0</code>;</li>
-                    <li><code>ARRAYBINARYSEARCH</code> ищет первое совпадение в отсортированном числовом или строковом массиве и при отсутствии совпадения возвращает <code>LBOUND(array) - 1</code>;</li>
+                        <li><code>ARRAYREVERSE</code> разворачивает уже выделенный массив на месте, а для многомерной формы требует явный <code>dimension</code> и меняет только выбранное измерение;</li>
+                        <li><code>ARRAYSORT</code> сортирует уже выделенный числовой или строковый массив на месте и сохраняет его текущие границы; для ранга <code>2+</code> требует <code>dimension</code> и сортирует каждую видимую линию вдоль выбранного измерения отдельно;</li>
+                        <li><code>ARRAYTOSORTED</code> создаёт новую отсортированную копию числового или строкового массива и сохраняет его текущие границы; для ранга <code>2+</code> тоже требует <code>dimension</code> и сортирует линии независимо, а для глобальной сортировки всей таблицы используйте связку <code>ARRAYFLATTEN</code> → <code>ARRAYTOSORTED</code> → <code>ARRAYRESHAPE</code>;</li>
+                        <li><code>ARRAYTOREVERSED</code> для одномерного массива создаёт новый компактный результат, а для многомерного требует явный <code>dimension</code> и разворачивает только выбранное измерение;</li>
+                        <li><code>ARRAYTAKE</code> и <code>ARRAYSKIP</code> для многомерного массива работают только по явно выбранному измерению, например по <code>ROW</code> или <code>COLUMN</code>;</li>
+                        <li>результат <code>ARRAYSLICE</code>, <code>ARRAYTAKE</code>, <code>ARRAYSKIP</code> и <code>ARRAYCONCAT</code> всегда является новой независимой копией, а не представлением без копирования;</li>
+                        <li><code>ARRAYDISTINCT</code> возвращает только первые вхождения уникальных значений и всегда создаёт новый компактный одномерный результат <code>1 TO N</code> или <code>1 TO 0</code>, даже если исходный массив был многомерным;</li>
+                    <li><code>ARRAYBINARYSEARCH</code> ищет первое совпадение в отсортированном числовом или строковом массиве; для ранга <code>1</code> возвращает логический индекс или <code>LBOUND(array) - 1</code>, а для ранга <code>2+</code> при явном <code>dimension</code> возвращает координаты первого совпадения как <code>INTEGER()</code> либо пустой <code>1 TO 0</code>;</li>
                     <li><code>ARRAYCONTAINS</code> возвращает <code>TRUE</code> или <code>FALSE</code> в зависимости от наличия совпадения;</li>
                     <li><code>ARRAYCOUNT</code> возвращает число совпадений, а при отсутствии совпадений — <code>0</code>;</li>
                     <li><code>ARRAYFINDALL</code> возвращает новый компактный массив индексов типа <code>INTEGER()</code>, а при отсутствии совпадений — пустой выделенный массив <code>1 TO 0</code>;</li>
@@ -814,6 +1127,8 @@ END FUNCTION</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
+                    <a href="arrays-1d-visual.html">Одномерные массивы наглядно</a>
+                    <a href="arrays-2d-visual.html">Двумерные массивы наглядно</a>
                     <a href="variables-and-constants.html">Переменные и константы</a>
                     <a href="for.html">Цикл FOR</a>
                     <a href="diagnostics.html">Диагностика</a>

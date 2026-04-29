@@ -21,7 +21,7 @@ public sealed class BytecodeVmStopState
 
     public bool CanResume => _vm is not null && !_resumed;
 
-    public bool CanStepBack => _vm is not null && PreviousStateSnapshot is not null && !_resumed;
+    public bool CanStepBack => _vm is not null && !_resumed && _vm.CanStepBackFrom(this);
 
     internal BytecodeVmStateSnapshot? PreviousStateSnapshot { get; }
 

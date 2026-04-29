@@ -1,0 +1,23 @@
+' ARRAYLASTINDEXOF для 2D-массива возвращает координаты последнего совпадения.
+' Ожидается:
+' 2
+' 7
+' 1
+' 0
+
+DIM board(1 TO 2, 5 TO 7) AS INTEGER
+DIM hit() AS INTEGER
+DIM missing() AS INTEGER
+
+board(1, 5) = 10
+board(1, 6) = 20
+board(2, 6) = 20
+board(2, 7) = 20
+
+hit = ARRAYLASTINDEXOF(board, 20)
+missing = ARRAYLASTINDEXOF(board, 99)
+
+PRINT hit(1)
+PRINT hit(2)
+PRINT LBOUND(missing)
+PRINT UBOUND(missing)

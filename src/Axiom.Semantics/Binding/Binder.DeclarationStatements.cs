@@ -71,9 +71,19 @@ public sealed partial class Binder
     private BoundStatement BindConstStatement(ConstStatementSyntax statement)
     {
         var declaration = statement.Declaration;
-        var type = ReportUnsupportedFixedStringType(declaration.TypeClause, declaration.Identifier.Text)
+        var declarationName = string.IsNullOrWhiteSpace(declaration.Identifier.Text)
+            ? statement.ConstKeyword.Text
+            : declaration.Identifier.Text;
+        var type = ReportUnsupportedFixedStringType(declaration.TypeClause, declarationName)
             ? TypeSymbol.Error
             : ResolveType(declaration.TypeClause);
+        var initializer = BindExpression(declaration.Initializer, type);
+
+        if (string.IsNullOrWhiteSpace(declaration.Identifier.Text))
+        {
+            return new BoundExpressionStatement(GetLocation(statement), initializer);
+        }
+
         var constant = new VariableSymbol(
             declaration.Identifier.Text,
             type,
@@ -81,8 +91,6 @@ public sealed partial class Binder
             isGlobal: _currentFunction is null);
 
         TryDeclareScopedVariable(constant, declaration.Identifier.Location);
-
-        var initializer = BindExpression(declaration.Initializer, type);
 
         if ((type == TypeSymbol.Integer || type == TypeSymbol.Long)
             && TryEvaluateBoundIntegralConstant(initializer, out var integralValue))
@@ -104,7 +112,7 @@ public sealed partial class Binder
         }
 
         var targetType = target.Type;
-        var expression = BindExpression(statement.Expression, targetType);
+        var expression = BindAssignmentExpression(statement.Expression, target, targetType);
 
         if (targetType == TypeSymbol.File || expression.Type == TypeSymbol.File)
         {
@@ -112,6 +120,47 @@ public sealed partial class Binder
         }
 
         return new BoundAssignmentStatement(GetLocation(statement), target, expression);
+    }
+
+    private BoundExpression BindAssignmentExpression(ExpressionSyntax expressionSyntax, BoundExpression target, TypeSymbol targetType)
+    {
+        var expression = BindExpression(expressionSyntax);
+        var targetName = GetArrayTargetDisplayName(target);
+
+        if (targetType == TypeSymbol.Error || expression.Type == TypeSymbol.Error)
+        {
+            return expression;
+        }
+
+        if (expression.Type == targetType)
+        {
+            return expression;
+        }
+
+        if (TryConvertConstant(expressionSyntax, expression, targetType, out var convertedConstant))
+        {
+            return convertedConstant;
+        }
+
+        if (CanConvert(expression.Type, targetType))
+        {
+            return new BoundConversionExpression(expression.Location, targetType, expression);
+        }
+
+        if (targetType is ArrayTypeSymbol && expression.Type is not ArrayTypeSymbol)
+        {
+            ReportScalarAssignedToArray(targetName, GetLocation(expressionSyntax));
+        }
+        else if (targetType is not ArrayTypeSymbol && expression.Type is ArrayTypeSymbol)
+        {
+            ReportArrayAssignedToScalar(targetName, GetLocation(expressionSyntax));
+        }
+        else
+        {
+            ReportTypeMismatch(expression.Type, targetType, GetLocation(expressionSyntax));
+        }
+
+        return new BoundErrorExpression(GetLocation(expressionSyntax));
     }
 
     private BoundStatement BindEraseStatement(EraseStatementSyntax statement)

@@ -147,7 +147,7 @@ public sealed partial class BytecodeVm
             throw new InvalidOperationException("Stopped bytecode VM state does not belong to the current suspended run.");
         }
 
-        if (stopState.PreviousStateSnapshot is not { } previousStateSnapshot)
+        if (FindStepBackTargetSnapshot(stopState.Snapshot, stopState.PreviousStateSnapshot) is not { } previousStateSnapshot)
         {
             throw new InvalidOperationException("Stopped bytecode VM run has no previous reversible state.");
         }
@@ -159,6 +159,12 @@ public sealed partial class BytecodeVm
             previousStateSnapshot.PreviousStateSnapshot);
 
         return new RuntimeResult(_diagnostics, _stopState, GetPendingOutputPreview());
+    }
+
+    internal bool CanStepBackFrom(BytecodeVmStopState stopState)
+    {
+        ArgumentNullException.ThrowIfNull(stopState);
+        return FindStepBackTargetSnapshot(stopState.Snapshot, stopState.PreviousStateSnapshot) is not null;
     }
 
     private RuntimeResult ResumeFrom(BytecodeVmStopState stopState, DebugStepMode stepMode)
@@ -193,6 +199,105 @@ public sealed partial class BytecodeVm
         }
 
         return new RuntimeResult(_diagnostics, _stopState, GetPendingOutputPreview());
+    }
+
+    private static BytecodeVmStateSnapshot? FindStepBackTargetSnapshot(
+        BytecodeVmExecutionSnapshot currentSnapshot,
+        BytecodeVmStateSnapshot? candidate)
+    {
+        while (candidate is not null
+            && candidate.ExecutionSnapshot.SourceLocation.Line == currentSnapshot.SourceLocation.Line)
+        {
+            candidate = candidate.PreviousStateSnapshot;
+        }
+
+        return candidate;
+    }
+
+    private static bool IsBuiltinReverseExecutionSafe(BuiltinFunctionId builtinId)
+    {
+        return builtinId switch
+        {
+            BuiltinFunctionId.Rnd => false,
+            BuiltinFunctionId.Date => false,
+            BuiltinFunctionId.DateInZone => false,
+            BuiltinFunctionId.Time => false,
+            BuiltinFunctionId.TimeInZone => false,
+            BuiltinFunctionId.Now => false,
+            BuiltinFunctionId.NowInZone => false,
+            BuiltinFunctionId.UtcDate => false,
+            BuiltinFunctionId.UtcTime => false,
+            BuiltinFunctionId.UtcNow => false,
+            BuiltinFunctionId.Timer => false,
+            BuiltinFunctionId.FileExists => false,
+            BuiltinFunctionId.DirExists => false,
+            BuiltinFunctionId.PathExists => false,
+            BuiltinFunctionId.ReadFile => false,
+            BuiltinFunctionId.ReadAllLines => false,
+            BuiltinFunctionId.WriteFile => false,
+            BuiltinFunctionId.AppendFile => false,
+            BuiltinFunctionId.FileSize => false,
+            BuiltinFunctionId.FileDate => false,
+            BuiltinFunctionId.FileCreateDate => false,
+            BuiltinFunctionId.FileAccessDate => false,
+            BuiltinFunctionId.DirDate => false,
+            BuiltinFunctionId.GetFiles => false,
+            BuiltinFunctionId.GetFilesPattern => false,
+            BuiltinFunctionId.GetDirs => false,
+            BuiltinFunctionId.GetDirsPattern => false,
+            BuiltinFunctionId.CombinePath => false,
+            BuiltinFunctionId.FileName => false,
+            BuiltinFunctionId.DirName => false,
+            BuiltinFunctionId.ExtName => false,
+            BuiltinFunctionId.FullPath => false,
+            BuiltinFunctionId.PathRoot => false,
+            BuiltinFunctionId.IsAbsolutePath => false,
+            BuiltinFunctionId.MakeDir => false,
+            BuiltinFunctionId.DeleteFile => false,
+            BuiltinFunctionId.CopyFile => false,
+            BuiltinFunctionId.CopyFileOverwrite => false,
+            BuiltinFunctionId.MoveFile => false,
+            BuiltinFunctionId.MoveFileOverwrite => false,
+            BuiltinFunctionId.RenameFile => false,
+            BuiltinFunctionId.DeleteDir => false,
+            BuiltinFunctionId.DeleteDirRecursive => false,
+            BuiltinFunctionId.CopyDir => false,
+            BuiltinFunctionId.CopyDirOverwrite => false,
+            BuiltinFunctionId.MoveDir => false,
+            BuiltinFunctionId.RenameDir => false,
+            BuiltinFunctionId.CurrentDir => false,
+            BuiltinFunctionId.ChangeDir => false,
+            BuiltinFunctionId.DirSize => false,
+            BuiltinFunctionId.FreeSpace => false,
+            BuiltinFunctionId.TotalFreeSpace => false,
+            BuiltinFunctionId.TotalSpace => false,
+            BuiltinFunctionId.IsReadOnly => false,
+            BuiltinFunctionId.IsHidden => false,
+            BuiltinFunctionId.DriveName => false,
+            BuiltinFunctionId.DriveFormat => false,
+            BuiltinFunctionId.DriveType => false,
+            BuiltinFunctionId.MakeTempFile => false,
+            BuiltinFunctionId.MakeTempDir => false,
+            BuiltinFunctionId.IsOpen => false,
+            BuiltinFunctionId.FilePath => false,
+            BuiltinFunctionId.FileMode => false,
+            BuiltinFunctionId.FilePos => false,
+            BuiltinFunctionId.FileLength => false,
+            BuiltinFunctionId.LineNumber => false,
+            BuiltinFunctionId.Eof => false,
+            BuiltinFunctionId.ReadToEnd => false,
+            BuiltinFunctionId.ReadText => false,
+            BuiltinFunctionId.ReadLine => false,
+            BuiltinFunctionId.ReadLines => false,
+            BuiltinFunctionId.SkipLine => false,
+            BuiltinFunctionId.Write => false,
+            BuiltinFunctionId.WriteLine => false,
+            BuiltinFunctionId.NewLine => false,
+            BuiltinFunctionId.Flush => false,
+            BuiltinFunctionId.SeekFile => false,
+            BuiltinFunctionId.Rewind => false,
+            _ => true
+        };
     }
 
     private BytecodeCallFrame CreateFrame(
@@ -728,7 +833,10 @@ public sealed partial class BytecodeVm
             frame.EvaluationStack.Push(result);
         }
 
-        InvalidateReverseExecutionHistory();
+        if (!IsBuiltinReverseExecutionSafe(builtin.CanonicalId))
+        {
+            InvalidateReverseExecutionHistory();
+        }
     }
 
     private RuntimeValue InvokeBytecodeFunction(
@@ -1079,7 +1187,9 @@ public sealed partial class BytecodeVm
             return null;
         }
 
-        if (!TryCreateGlobalSnapshots(out var globals))
+        var sharedValues = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
+
+        if (!TryCreateGlobalSnapshots(sharedValues, out var globals))
         {
             return null;
         }
@@ -1087,7 +1197,7 @@ public sealed partial class BytecodeVm
         var frames = new List<BytecodeCallFrameSnapshot>();
         foreach (var frame in _callStack.Reverse())
         {
-            var frameSnapshot = TryCreateCallFrameSnapshot(frame);
+            var frameSnapshot = TryCreateCallFrameSnapshot(frame, sharedValues);
             if (frameSnapshot is null)
             {
                 return null;
@@ -1108,10 +1218,12 @@ public sealed partial class BytecodeVm
 
     private void RestoreStateSnapshot(BytecodeVmStateSnapshot snapshot)
     {
+        var sharedValues = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
+
         _globals.Clear();
         foreach (var (slot, value) in snapshot.Globals)
         {
-            _globals[slot] = value.CopyForStorage(GetGlobalFixedStringLength(slot));
+            _globals[slot] = CloneSnapshotValue(value, GetGlobalFixedStringLength(slot), sharedValues);
         }
 
         _callStack.Clear();
@@ -1119,9 +1231,9 @@ public sealed partial class BytecodeVm
 
         foreach (var frameSnapshot in snapshot.CallFramesBottomToTop)
         {
-            var arguments = CreateSlotsFromSnapshots(frameSnapshot.Arguments);
-            var locals = CreateSlotsFromSnapshots(frameSnapshot.Locals);
-            var captures = RestoreCapturedSlots(frameSnapshot, visibleVariables);
+            var arguments = CreateSlotsFromSnapshots(frameSnapshot.Arguments, sharedValues);
+            var locals = CreateSlotsFromSnapshots(frameSnapshot.Locals, sharedValues);
+            var captures = RestoreCapturedSlots(frameSnapshot, visibleVariables, sharedValues);
             var frame = new BytecodeCallFrame(
                 frameSnapshot.Routine,
                 arguments,
@@ -1134,7 +1246,7 @@ public sealed partial class BytecodeVm
 
             foreach (var value in frameSnapshot.EvaluationStackBottomToTop)
             {
-                frame.EvaluationStack.Push(value.CopyForStorage());
+                frame.EvaluationStack.Push(CloneSnapshotValue(value, fixedStringLength: null, sharedValues));
             }
 
             _callStack.Push(frame);
@@ -1153,14 +1265,18 @@ public sealed partial class BytecodeVm
         _debugStepBoundary = null;
     }
 
-    private static BytecodeVariableSlot[] CreateSlotsFromSnapshots(IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots)
+    private static BytecodeVariableSlot[] CreateSlotsFromSnapshots(
+        IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots,
+        Dictionary<object, object> sharedValues)
     {
         var slots = new BytecodeVariableSlot[snapshots.Count];
 
         for (var index = 0; index < snapshots.Count; index++)
         {
             var snapshot = snapshots[index];
-            slots[index] = new BytecodeVariableSlot(snapshot.Value, snapshot.FixedStringLength);
+            slots[index] = new BytecodeVariableSlot(
+                CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues),
+                snapshot.FixedStringLength);
         }
 
         return slots;
@@ -1168,7 +1284,8 @@ public sealed partial class BytecodeVm
 
     private static BytecodeVariableSlot[] RestoreCapturedSlots(
         BytecodeCallFrameSnapshot frameSnapshot,
-        IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot> visibleVariables)
+        IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot> visibleVariables,
+        Dictionary<object, object> sharedValues)
     {
         var captures = new BytecodeVariableSlot[frameSnapshot.Captures.Count];
 
@@ -1184,10 +1301,47 @@ public sealed partial class BytecodeVm
             }
 
             var snapshot = frameSnapshot.Captures[index];
-            captures[index] = new BytecodeVariableSlot(snapshot.Value, snapshot.FixedStringLength);
+            captures[index] = new BytecodeVariableSlot(
+                CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues),
+                snapshot.FixedStringLength);
         }
 
         return captures;
+    }
+
+    private static RuntimeValue CloneSnapshotValue(
+        RuntimeValue value,
+        int? fixedStringLength,
+        Dictionary<object, object> sharedValues)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(sharedValues);
+
+        if (value.Type is ArrayTypeSymbol arrayType)
+        {
+            var array = value.AsArray();
+            if (!sharedValues.TryGetValue(array, out var clonedArray))
+            {
+                clonedArray = array.Clone(fixedStringLength);
+                sharedValues[array] = clonedArray;
+            }
+
+            return RuntimeValue.FromArray(arrayType, (RuntimeArrayValue)clonedArray);
+        }
+
+        if (value.Type is UserDefinedTypeSymbol userType)
+        {
+            var record = value.AsRecord();
+            if (!sharedValues.TryGetValue(record, out var clonedRecord))
+            {
+                clonedRecord = record.Clone();
+                sharedValues[record] = clonedRecord;
+            }
+
+            return RuntimeValue.FromRecord(userType, (RuntimeRecordValue)clonedRecord);
+        }
+
+        return value.CopyForStorage(fixedStringLength);
     }
 
     private static void AddVisibleVariables(
@@ -1201,13 +1355,15 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private bool TryCreateGlobalSnapshots(out IReadOnlyDictionary<int, RuntimeValue> globals)
+    private bool TryCreateGlobalSnapshots(
+        Dictionary<object, object> sharedValues,
+        out IReadOnlyDictionary<int, RuntimeValue> globals)
     {
         var snapshots = new Dictionary<int, RuntimeValue>();
 
         foreach (var (slot, value) in _globals)
         {
-            if (!TryCreateValueSnapshot(value, GetGlobalFixedStringLength(slot), out var valueSnapshot))
+            if (!TryCreateValueSnapshot(value, GetGlobalFixedStringLength(slot), sharedValues, out var valueSnapshot))
             {
                 globals = snapshots;
                 return false;
@@ -1220,12 +1376,14 @@ public sealed partial class BytecodeVm
         return true;
     }
 
-    private static BytecodeCallFrameSnapshot? TryCreateCallFrameSnapshot(BytecodeCallFrame frame)
+    private static BytecodeCallFrameSnapshot? TryCreateCallFrameSnapshot(
+        BytecodeCallFrame frame,
+        Dictionary<object, object> sharedValues)
     {
-        if (!TryCreateSlotSnapshots(frame.Arguments, out var argumentSnapshots)
-            || !TryCreateSlotSnapshots(frame.Locals, out var localSnapshots)
-            || !TryCreateSlotSnapshots(frame.Captures, out var captureSnapshots)
-            || !TryCreateEvaluationStackSnapshot(frame.EvaluationStack, out var evaluationStackSnapshot))
+        if (!TryCreateSlotSnapshots(frame.Arguments, sharedValues, out var argumentSnapshots)
+            || !TryCreateSlotSnapshots(frame.Locals, sharedValues, out var localSnapshots)
+            || !TryCreateSlotSnapshots(frame.Captures, sharedValues, out var captureSnapshots)
+            || !TryCreateEvaluationStackSnapshot(frame.EvaluationStack, sharedValues, out var evaluationStackSnapshot))
         {
             return null;
         }
@@ -1242,6 +1400,7 @@ public sealed partial class BytecodeVm
 
     private static bool TryCreateSlotSnapshots(
         IReadOnlyList<BytecodeVariableSlot> slots,
+        Dictionary<object, object> sharedValues,
         out IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots)
     {
         var result = new BytecodeVariableSlotSnapshot[slots.Count];
@@ -1249,7 +1408,7 @@ public sealed partial class BytecodeVm
         for (var index = 0; index < slots.Count; index++)
         {
             var slot = slots[index];
-            if (!TryCreateValueSnapshot(slot.Value, slot.FixedStringLength, out var valueSnapshot))
+            if (!TryCreateValueSnapshot(slot.Value, slot.FixedStringLength, sharedValues, out var valueSnapshot))
             {
                 snapshots = result;
                 return false;
@@ -1264,6 +1423,7 @@ public sealed partial class BytecodeVm
 
     private static bool TryCreateEvaluationStackSnapshot(
         Stack<RuntimeValue> evaluationStack,
+        Dictionary<object, object> sharedValues,
         out IReadOnlyList<RuntimeValue> snapshots)
     {
         var valuesTopToBottom = evaluationStack.ToArray();
@@ -1272,7 +1432,7 @@ public sealed partial class BytecodeVm
         for (var sourceIndex = valuesTopToBottom.Length - 1; sourceIndex >= 0; sourceIndex--)
         {
             var targetIndex = valuesTopToBottom.Length - 1 - sourceIndex;
-            if (!TryCreateValueSnapshot(valuesTopToBottom[sourceIndex], fixedStringLength: null, out var valueSnapshot))
+            if (!TryCreateValueSnapshot(valuesTopToBottom[sourceIndex], fixedStringLength: null, sharedValues, out var valueSnapshot))
             {
                 snapshots = result;
                 return false;
@@ -1285,7 +1445,11 @@ public sealed partial class BytecodeVm
         return true;
     }
 
-    private static bool TryCreateValueSnapshot(RuntimeValue value, int? fixedStringLength, out RuntimeValue snapshot)
+    private static bool TryCreateValueSnapshot(
+        RuntimeValue value,
+        int? fixedStringLength,
+        Dictionary<object, object> sharedValues,
+        out RuntimeValue snapshot)
     {
         if (value.Type == TypeSymbol.Integer
             || value.Type == TypeSymbol.Long
@@ -1296,6 +1460,19 @@ public sealed partial class BytecodeVm
             || value.Type == TypeSymbol.Void)
         {
             snapshot = value.CopyForStorage(fixedStringLength);
+            return true;
+        }
+
+        if (value.Type is ArrayTypeSymbol arrayType)
+        {
+            var array = value.AsArray();
+            if (!sharedValues.TryGetValue(array, out var clonedArray))
+            {
+                clonedArray = array.Clone(fixedStringLength);
+                sharedValues[array] = clonedArray;
+            }
+
+            snapshot = RuntimeValue.FromArray(arrayType, (RuntimeArrayValue)clonedArray);
             return true;
         }
 

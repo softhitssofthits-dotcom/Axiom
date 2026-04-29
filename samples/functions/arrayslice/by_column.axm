@@ -1,0 +1,25 @@
+' ARRAYSLICE по COLUMN берёт столбцы двумерного массива
+' и возвращает новую независимую копию.
+
+DIM grid(1 TO 2, 10 TO 13) AS INTEGER
+DIM part(,) AS INTEGER
+
+grid(1, 10) = 110
+grid(1, 11) = 111
+grid(1, 12) = 112
+grid(1, 13) = 113
+grid(2, 10) = 210
+grid(2, 11) = 211
+grid(2, 12) = 212
+grid(2, 13) = 213
+
+part = ARRAYSLICE(grid, 11, 2, COLUMN)
+part(1, 11) = 999
+
+PRINT LBOUND(part, ROW)
+PRINT UBOUND(part, ROW)
+PRINT LBOUND(part, COLUMN)
+PRINT UBOUND(part, COLUMN)
+PRINT part(1, 11)
+PRINT part(2, 12)
+PRINT grid(1, 11)

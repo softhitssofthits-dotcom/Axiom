@@ -98,6 +98,7 @@
             <Word>ARRAYLENGTH</Word>
             <Word>ARRAYREMOVE</Word>
             <Word>ARRAYREVERSE</Word>
+            <Word>ARRAYFLATTEN</Word>
             <Word>ARRAYPOP</Word>
             <Word>ARRAYPUSH</Word>
             <Word>ARRAYSLICE</Word>
@@ -106,6 +107,7 @@
             <Word>ARRAYTAKE</Word>
             <Word>ARRAYTOSORTED</Word>
             <Word>ARRAYDISTINCT</Word>
+            <Word>ARRAYRESHAPE</Word>
             <Word>ARRAYEVERY</Word>
             <Word>ARRAYFILTER</Word>
             <Word>ARRAYMAP</Word>

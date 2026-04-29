@@ -1,0 +1,19 @@
+' ARRAYREVERSE for a two-dimensional array works in place along the chosen dimension.
+
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+
+board(1, 10) = 110
+board(1, 11) = 111
+board(1, 12) = 112
+board(2, 10) = 210
+board(2, 11) = 211
+board(2, 12) = 212
+
+ARRAYREVERSE(board, COLUMN)
+
+PRINT board(1, 10)
+PRINT board(1, 11)
+PRINT board(1, 12)
+PRINT board(2, 10)
+PRINT board(2, 11)
+PRINT board(2, 12)

@@ -21,25 +21,20 @@ public sealed partial class Interpreter
             BuiltinFunctionId.ArrayLength => EvaluateArrayLength(arguments[0]),
             BuiltinFunctionId.ArrayIsAllocated => EvaluateArrayIsAllocated(arguments[0]),
             BuiltinFunctionId.ArrayClone => EvaluateArrayClone(arguments[0]),
-            BuiltinFunctionId.ArraySlice => EvaluateArraySlice(
+            BuiltinFunctionId.ArraySlice => EvaluateArraySlice(expression, arguments),
+            BuiltinFunctionId.ArrayFlatten => EvaluateArrayFlatten(
+                expression,
+                arguments[0]),
+            BuiltinFunctionId.ArrayReshape => EvaluateArrayReshape(
                 expression,
                 arguments[0],
-                arguments[1].AsInteger(),
-                RequireNonNegativeCount(expression, "ARRAYSLICE", "count", 2, arguments[2].AsInteger())),
+                arguments[1]),
             BuiltinFunctionId.ArrayToSorted => EvaluateArrayToSorted(
                 expression,
-                arguments[0]),
-            BuiltinFunctionId.ArrayToReversed => EvaluateArrayToReversed(
-                expression,
-                arguments[0]),
-            BuiltinFunctionId.ArrayTake => EvaluateArrayTake(
-                expression,
-                arguments[0],
-                RequireNonNegativeCount(expression, "ARRAYTAKE", "count", 1, arguments[1].AsInteger())),
-            BuiltinFunctionId.ArraySkip => EvaluateArraySkip(
-                expression,
-                arguments[0],
-                RequireNonNegativeCount(expression, "ARRAYSKIP", "count", 1, arguments[1].AsInteger())),
+                arguments),
+            BuiltinFunctionId.ArrayToReversed => EvaluateArrayToReversed(expression, arguments),
+            BuiltinFunctionId.ArrayTake => EvaluateArrayTake(expression, arguments),
+            BuiltinFunctionId.ArraySkip => EvaluateArraySkip(expression, arguments),
             BuiltinFunctionId.ArrayDistinct => EvaluateArrayDistinct(
                 expression,
                 arguments[0]),
@@ -65,18 +60,15 @@ public sealed partial class Interpreter
                 arguments[1]),
             BuiltinFunctionId.ArrayBinarySearch => EvaluateArrayBinarySearch(
                 expression,
-                arguments[0],
-                arguments[1]),
+                arguments),
             BuiltinFunctionId.ArrayFill => EvaluateArrayFill(
                 expression,
                 arguments[0],
                 arguments[1]),
-            BuiltinFunctionId.ArrayReverse => EvaluateArrayReverse(
-                expression,
-                arguments[0]),
+            BuiltinFunctionId.ArrayReverse => EvaluateArrayReverse(expression, arguments),
             BuiltinFunctionId.ArraySort => EvaluateArraySort(
                 expression,
-                arguments[0]),
+                arguments),
             BuiltinFunctionId.ArrayPush => EvaluateArrayPush(
                 expression,
                 arguments[0],
@@ -114,10 +106,7 @@ public sealed partial class Interpreter
                 arguments[0],
                 arguments[1],
                 arguments[2]),
-            BuiltinFunctionId.ArrayConcat => EvaluateArrayConcat(
-                expression,
-                arguments[0],
-                arguments[1]),
+            BuiltinFunctionId.ArrayConcat => EvaluateArrayConcat(expression, arguments),
             BuiltinFunctionId.Len => RuntimeValue.FromInteger(arguments[0].AsString().Length),
             BuiltinFunctionId.Left => RuntimeValue.FromString(
                 EvaluateLeft(

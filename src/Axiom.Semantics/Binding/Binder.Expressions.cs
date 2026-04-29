@@ -69,6 +69,11 @@ public sealed partial class Binder
             return new BoundVariableExpression(expression.IdentifierToken.Location, variable);
         }
 
+        if (TryBindPredefinedConstant(expression.IdentifierToken.Text, expression.IdentifierToken.Location, out var predefinedConstant))
+        {
+            return predefinedConstant;
+        }
+
         if (_scope.TryLookupFunction(expression.IdentifierToken.Text, out var function) && function is not null)
         {
             if (function.IsSub)

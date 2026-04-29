@@ -112,6 +112,11 @@ public sealed partial class Binder
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(activeConstants);
 
+        if (TryResolvePredefinedIntegralConstant(name, out value))
+        {
+            return true;
+        }
+
         if (_globalIntegralConstants.TryGetValue(name, out value))
         {
             return true;
@@ -384,6 +389,20 @@ public sealed partial class Binder
             FunctionDeclarationSyntax functionDeclaration => CreateFunctionSymbol(functionDeclaration.Identifier.Text, functionDeclaration.Parameters, returnType),
             _ => throw new ArgumentOutOfRangeException(nameof(declaration), declaration, "Unsupported callable declaration.")
         };
+
+        if (TryLookupPredefinedConstantVariable(symbol.Name, out _))
+        {
+            var predefinedLocation = declaration switch
+            {
+                SubDeclarationSyntax subDeclaration => subDeclaration.Identifier.Location,
+                FunctionDeclarationSyntax functionDeclaration => functionDeclaration.Identifier.Location,
+                _ => throw new ArgumentOutOfRangeException(nameof(declaration), declaration, "Unsupported callable declaration.")
+            };
+
+            _declaredFunctions[declaration] = symbol;
+            ReportDuplicateDeclaration(symbol.Name, predefinedLocation);
+            return;
+        }
 
         _declaredFunctions[declaration] = symbol;
 

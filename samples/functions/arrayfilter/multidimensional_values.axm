@@ -1,0 +1,25 @@
+' ARRAYFILTER для многомерного массива обходит видимые элементы
+' в стабильном порядке и возвращает новый компактный INTEGER().
+
+DIM values(2 TO 3, 4 TO 6) AS INTEGER
+DIM filtered() AS INTEGER
+
+values(2, 4) = 10
+values(2, 5) = 21
+values(2, 6) = 30
+values(3, 4) = 41
+values(3, 5) = 50
+values(3, 6) = 61
+
+filtered = ARRAYFILTER(values(2 TO 3, 4 TO 6), IsOdd)
+
+PRINT LBOUND(filtered)
+PRINT UBOUND(filtered)
+PRINT ARRAYLENGTH(filtered)
+PRINT filtered(1)
+PRINT filtered(2)
+PRINT filtered(3)
+
+FUNCTION IsOdd(value AS INTEGER) AS BOOLEAN
+    RETURN value MOD 2 = 1
+END FUNCTION

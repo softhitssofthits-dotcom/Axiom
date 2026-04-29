@@ -13,6 +13,8 @@ public enum BuiltinFunctionId
     ArrayToReversed,
     ArrayTake,
     ArraySkip,
+    ArrayFlatten,
+    ArrayReshape,
     ArrayDistinct,
     ArrayContains,
     ArrayIndexOf,

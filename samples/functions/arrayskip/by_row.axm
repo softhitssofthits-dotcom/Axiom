@@ -1,0 +1,24 @@
+' ARRAYSKIP по ROW пропускает начальные строки
+' и создаёт новую независимую копию.
+
+DIM grid(1 TO 4, 10 TO 11) AS INTEGER
+DIM tailRows(,) AS INTEGER
+
+grid(1, 10) = 110
+grid(1, 11) = 111
+grid(2, 10) = 210
+grid(2, 11) = 211
+grid(3, 10) = 310
+grid(3, 11) = 311
+grid(4, 10) = 410
+grid(4, 11) = 411
+
+tailRows = ARRAYSKIP(grid, 1, ROW)
+tailRows(2, 10) = 999
+
+PRINT LBOUND(tailRows, ROW)
+PRINT UBOUND(tailRows, ROW)
+PRINT LBOUND(tailRows, COLUMN)
+PRINT UBOUND(tailRows, COLUMN)
+PRINT tailRows(2, 11)
+PRINT grid(3, 10)

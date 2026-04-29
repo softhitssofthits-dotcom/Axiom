@@ -12,6 +12,11 @@ public sealed partial class Binder
             return variable;
         }
 
+        if (TryLookupPredefinedConstantVariable(name, out var predefinedConstant))
+        {
+            return predefinedConstant;
+        }
+
         ReportUnknownName(name, location);
         return new VariableSymbol(name, TypeSymbol.Error, isReadOnly: false, isGlobal: _currentFunction is null);
     }
@@ -49,6 +54,12 @@ public sealed partial class Binder
         TextLocation location,
         string? declarationContextOverride = null)
     {
+        if (TryLookupPredefinedConstantVariable(variable.Name, out _))
+        {
+            ReportDuplicateDeclaration(variable.Name, location);
+            return false;
+        }
+
         if (_scope.TryLookupVariableInCurrentScope(variable.Name, out _))
         {
             ReportDuplicateDeclaration(variable.Name, location);
