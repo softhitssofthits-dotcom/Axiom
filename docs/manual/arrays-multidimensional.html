@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Многомерные массивы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-multidimensional">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Массивы с тремя и более измерениями</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Многомерные массивы</p>
+                    <p class="sidebar__subtitle">Ранг массива, границы измерений и полная форма.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Массивы</p>
+            <h1 class="page-title">Многомерные массивы</h1>
+
+            <section class="article-section">
+                <h2>Сводка</h2>
+                <p>Многомерный массив хранит значения одного типа в пространстве из трёх и более измерений. Каждое измерение имеет собственные границы, а число измерений называется рангом массива.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">DIM cube(1 TO 3, 1 TO 4, 1 TO 2) AS INTEGER
+PRINT UBOUND(cube, 2)
+PRINT ARRAYRANK(cube)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>Ранг массива задаётся его объявлением и показывает количество измерений.</li>
+                    <li>Функция <code>ARRAYRANK</code> возвращает число измерений массива.</li>
+                    <li>Функции <code>LBOUND</code> и <code>UBOUND</code> позволяют получить границы отдельного измерения.</li>
+                    <li>Если нужно получить границы всех измерений сразу, используйте <code>ARRAYBOUNDS</code>.</li>
+                    <li><code>ARRAYBOUNDS</code> возвращает таблицу вида <code>INTEGER(1 TO rank, 1 TO 2)</code>, где каждая строка содержит нижнюю и верхнюю границу соответствующего измерения.</li>
+                    <li>В текущей реализации язык требует только положительный ранг массива. Отдельный верхний предел ранга пока не зафиксирован как часть пользовательского договора, поэтому manual не обещает число вроде <code>32</code> заранее.</li>
+                    <li>Для невыделенного массива полезно сначала проверять состояние через <code>ARRAYISALLOCATED</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+                <pre><code class="language-basic">DIM cube(1 TO 3, 1 TO 4, 1 TO 2) AS INTEGER
+DIM bounds(,) AS INTEGER
+
+PRINT ARRAYRANK(cube)
+
+bounds = ARRAYBOUNDS(cube)
+PRINT bounds(1, 1)
+PRINT bounds(1, 2)
+PRINT bounds(2, 1)
+PRINT bounds(2, 2)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/arrayrank/basic_usage.axm">ARRAYRANK: число измерений</a></li>
+                    <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS: полная форма массива</a></li>
+                    <li><a href="../../samples/smoke/engine-compare/high_rank_metadata.axm">Высокий ранг: ручная metadata-проверка</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays-2d.html">Двумерные массивы</a>
+                    <a href="arrays-functions.html">ARRAY-функции</a>
+                    <a href="arrays-dynamic.html">Динамические массивы</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

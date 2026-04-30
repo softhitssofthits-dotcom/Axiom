@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функции для открытого файла</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="file-system-functions-open-files">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Чтение, запись и позиционирование в открытом файле</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Функции для открытого файла</p>
+                    <p class="sidebar__subtitle">Работа с переменной типа FILE после оператора OPEN.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="file-system-functions.html">Функции файловой системы</a>
+                <span>/</span>
+                <span>Функции для открытого файла</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Функции для открытого файла</h1>
+            <p class="lead">Эти функции работают не с путём к файлу, а с уже открытой переменной типа <code>FILE</code>. Сначала файл открывается оператором <a href="open.html">OPEN</a>, затем эта переменная передаётся в функции чтения, записи, проверки состояния и перехода по позиции.</p>
+
+            <section class="article-section">
+                <h2>Сводка</h2>
+                <p>Функции этой страницы удобно читать по группам. Сначала идут функции состояния и сведений об открытом файле, затем функции чтения, потом функции записи и в конце функции позиционирования.</p>
+            </section>
+
+            <section class="article-section" id="isopen">
+                <h2>ISOPEN</h2>
+                <p>Функция <code>ISOPEN</code> проверяет, связан ли объект <code>FILE</code> с открытым файлом в текущий момент.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ISOPEN(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт переменную типа <code>FILE</code>. Функция возвращает <code>TRUE</code>, если файл открыт, и <code>FALSE</code>, если переменная ещё не открыта или уже закрыта.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Проверка состояния файла до и после открытия
+DIM f AS FILE
+
+PRINT ISOPEN(f)
+OPEN "notes.txt" FOR INPUT AS f
+PRINT ISOPEN(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="filepath">
+                <h2>FILEPATH</h2>
+                <p>Функция <code>FILEPATH</code> возвращает полный путь файла, который сейчас связан с переменной <code>FILE</code>.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">path = FILEPATH(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является строка с полным путём.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Получение полного пути открытого файла
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT FILEPATH(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="filemode">
+                <h2>FILEMODE</h2>
+                <p>Функция <code>FILEMODE</code> возвращает режим, в котором файл был открыт.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">modeName = FILEMODE(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат обычно имеет вид <code>INPUT</code>, <code>OUTPUT</code> или <code>APPEND</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Определение режима открытого файла
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT FILEMODE(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="filepos">
+                <h2>FILEPOS</h2>
+                <p>Функция <code>FILEPOS</code> возвращает текущую позицию чтения или записи в открытом файле.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">position = FILEPOS(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Возвращаемое значение имеет тип <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Позиция меняется после чтения строки
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT FILEPOS(f)
+PRINT READLINE(f)
+PRINT FILEPOS(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="filelength">
+                <h2>FILELENGTH</h2>
+                <p>Функция <code>FILELENGTH</code> возвращает длину открытого файла в тех же единицах, в которых работает <code>FILEPOS</code>.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">length = FILELENGTH(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является число типа <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Получение длины открытого файла
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT FILELENGTH(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="eof">
+                <h2>EOF</h2>
+                <p>Функция <code>EOF</code> показывает, достигнута ли конечная позиция файла при чтении.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = EOF(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, когда позиция чтения уже дошла до конца файла.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Чтение файла до конца
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+DO WHILE NOT EOF(f)
+    PRINT READLINE(f)
+LOOP
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="readtoend">
+                <h2>READTOEND</h2>
+                <p>Функция <code>READTOEND</code> читает остаток файла от текущей позиции до конца и возвращает его одной строкой.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">text = READTOEND(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Возвращается строка с остатком содержимого без дополнительного преобразования в массив строк.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Чтение первой строки отдельно, а затем остатка файла
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT READLINE(f)
+PRINT READTOEND(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="readtext">
+                <h2>READTEXT</h2>
+                <p>Функция <code>READTEXT</code> читает указанное количество символов или текстовых позиций от текущего места.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">text = READTEXT(file, count)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. <code>count</code> задаёт, сколько текста нужно прочитать. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Чтение первых пяти символов
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT READTEXT(f, 5)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="readline">
+                <h2>READLINE</h2>
+                <p>Функция <code>READLINE</code> читает одну текстовую строку от текущей позиции и возвращает её без символов перевода строки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">lineText = READLINE(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Результатом является одна строка текста.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Последовательное чтение строк
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT READLINE(f)
+PRINT READLINE(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="readlines">
+                <h2>READLINES</h2>
+                <p>Функция <code>READLINES</code> читает несколько строк подряд и возвращает их как массив <code>STRING()</code>.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">lines = READLINES(file, count)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. <code>count</code> задаёт число строк. Результатом является новый массив строк.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Чтение двух строк одним вызовом
+DIM f AS FILE
+DIM lines() AS STRING
+
+OPEN "notes.txt" FOR INPUT AS f
+lines = READLINES(f, 2)
+PRINT lines(1)
+PRINT lines(2)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="linenumber">
+                <h2>LINENUMBER</h2>
+                <p>Функция <code>LINENUMBER</code> возвращает номер текущей строки чтения в текстовом файле.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">lineNumber = LINENUMBER(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый в режиме <code>INPUT</code>. Результатом является номер строки типа <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Номер строки увеличивается после чтения
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT LINENUMBER(f)
+PRINT READLINE(f)
+PRINT LINENUMBER(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="skipline">
+                <h2>SKIPLINE</h2>
+                <p>Функция <code>SKIPLINE</code> пропускает текущую строку и переводит позицию к началу следующей строки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SKIPLINE(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, если переход выполнен.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Пропуск первой строки
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT SKIPLINE(f)
+PRINT READLINE(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="write">
+                <h2>WRITE</h2>
+                <p>Функция <code>WRITE</code> записывает текст в открытый файл без добавления перевода строки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = WRITE(file, text)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт строку, которую нужно записать. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Запись двух фрагментов в одну строку
+DIM f AS FILE
+
+OPEN "notes.txt" FOR OUTPUT AS f
+PRINT WRITE(f, "left")
+PRINT WRITE(f, "-right")
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="writeline">
+                <h2>WRITELINE</h2>
+                <p>Функция <code>WRITELINE</code> записывает строку и сразу завершает её переводом строки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = WRITELINE(file, text)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт содержимое строки. Возвращается <code>TRUE</code>, если запись выполнена.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Запись двух строк
+DIM f AS FILE
+
+OPEN "notes.txt" FOR OUTPUT AS f
+PRINT WRITELINE(f, "alpha")
+PRINT WRITELINE(f, "beta")
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="newline">
+                <h2>NEWLINE</h2>
+                <p>Функция <code>NEWLINE</code> добавляет в открытый файл перевод строки без дополнительного текста.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = NEWLINE(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Добавление пустой строки между двумя записями
+DIM f AS FILE
+
+OPEN "notes.txt" FOR OUTPUT AS f
+PRINT WRITELINE(f, "alpha")
+PRINT NEWLINE(f)
+PRINT WRITELINE(f, "beta")
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="flush">
+                <h2>FLUSH</h2>
+                <p>Функция <code>FLUSH</code> принудительно сбрасывает накопленную запись в файл.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = FLUSH(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. Результатом является <code>TRUE</code> при успешном сбросе.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Немедленная запись буфера
+DIM f AS FILE
+
+OPEN "notes.txt" FOR OUTPUT AS f
+PRINT WRITE(f, "alpha")
+PRINT FLUSH(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section" id="seekfile">
+                <h2>SEEKFILE</h2>
+                <p>Функция <code>SEEKFILE</code> переводит текущую позицию открытого файла в указанное место.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SEEKFILE(file, position)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. <code>position</code> задаёт целевую позицию типа <code>LONG</code>. Результатом является <code>TRUE</code>, если переход выполнен.</p>
+                <p><strong>Замечания.</strong> <code>SEEKFILE</code> разрешён для режимов <code>INPUT</code> и <code>OUTPUT</code>. Для режима <code>APPEND</code> явный переход по позиции не поддерживается.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Замена одного символа в уже записанном тексте
+' Ожидаемый вывод: ABZDE
+DIM path AS STRING
+DIM f AS FILE
+
+path = MAKETEMPFILE("seekfile_demo_")
+
+OPEN path FOR OUTPUT AS f
+PRINT WRITE(f, "ABCDE")
+PRINT SEEKFILE(f, 2)
+PRINT WRITE(f, "Z")
+CLOSE f
+
+PRINT READFILE(path)</code></pre>
+            </section>
+
+            <section class="article-section" id="rewind">
+                <h2>REWIND</h2>
+                <p>Функция <code>REWIND</code> возвращает позицию чтения или записи в начало открытого файла.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = REWIND(file)</code></pre>
+                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <p><strong>Замечания.</strong> Как и <code>SEEKFILE</code>, функция используется с режимами <code>INPUT</code> и <code>OUTPUT</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Возврат в начало после чтения первой строки
+DIM f AS FILE
+
+OPEN "notes.txt" FOR INPUT AS f
+PRINT READLINE(f)
+PRINT REWIND(f)
+PRINT FILEPOS(f)
+PRINT READLINE(f)
+CLOSE f</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>READTOEND</code>, <code>READTEXT</code>, <code>READLINE</code>, <code>READLINES</code>, <code>LINENUMBER</code> и <code>SKIPLINE</code> предназначены для файла, открытого через <code>FOR INPUT</code>.</li>
+                    <li><code>WRITE</code>, <code>WRITELINE</code>, <code>NEWLINE</code> и <code>FLUSH</code> используются с файлами, открытыми через <code>FOR OUTPUT</code> или <code>FOR APPEND</code>.</li>
+                    <li><code>FILEPOS</code> и <code>FILELENGTH</code> помогают контролировать позицию независимо от того, читаете вы файл или записываете его.</li>
+                    <li>Если нужно заново читать файл с начала, обычно удобно вызвать <code>REWIND</code>, а не вычислять начальную позицию вручную.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>Обращение к закрытому файлу даёт диагностику времени выполнения <code>MB3007</code>.</li>
+                    <li>Попытка вызвать функцию чтения или записи в неподходящем режиме открытия также даёт <code>MB3007</code>.</li>
+                    <li>Недопустимая позиция для <code>SEEKFILE</code> или попытка позиционирования в режиме <code>APPEND</code> завершается диагностикой времени выполнения <code>MB3007</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/isopen/basic_usage.axm">ISOPEN: состояние файла</a></li>
+                    <li><a href="../../samples/functions/filepath/basic_usage.axm">FILEPATH: путь открытого файла</a></li>
+                    <li><a href="../../samples/functions/filemode/basic_usage.axm">FILEMODE: режим открытия</a></li>
+                    <li><a href="../../samples/functions/filepos/basic_usage.axm">FILEPOS: текущая позиция</a></li>
+                    <li><a href="../../samples/functions/filelength/basic_usage.axm">FILELENGTH: длина файла</a></li>
+                    <li><a href="../../samples/functions/eof/basic_usage.axm">EOF: конец файла</a></li>
+                    <li><a href="../../samples/functions/readtoend/basic_usage.axm">READTOEND: остаток файла</a></li>
+                    <li><a href="../../samples/functions/readtext/basic_usage.axm">READTEXT: фрагмент текста</a></li>
+                    <li><a href="../../samples/functions/readline/basic_usage.axm">READLINE: одна строка</a></li>
+                    <li><a href="../../samples/functions/readlines/basic_usage.axm">READLINES: несколько строк</a></li>
+                    <li><a href="../../samples/functions/linenumber/basic_usage.axm">LINENUMBER: номер строки</a></li>
+                    <li><a href="../../samples/functions/skipline/basic_usage.axm">SKIPLINE: пропуск строки</a></li>
+                    <li><a href="../../samples/functions/write/basic_usage.axm">WRITE: запись без перевода строки</a></li>
+                    <li><a href="../../samples/functions/writeline/basic_usage.axm">WRITELINE: запись строки</a></li>
+                    <li><a href="../../samples/functions/newline/basic_usage.axm">NEWLINE: пустая строка</a></li>
+                    <li><a href="../../samples/functions/flush/basic_usage.axm">FLUSH: сброс буфера</a></li>
+                    <li><a href="../../samples/functions/seekfile/basic_usage.axm">SEEKFILE: переход по позиции</a></li>
+                    <li><a href="../../samples/functions/rewind/basic_usage.axm">REWIND: возврат в начало</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="open.html">OPEN</a>
+                    <a href="close.html">CLOSE</a>
+                    <a href="data-types-strings-and-files.html">Тип FILE</a>
+                    <a href="file-system-functions-text.html">Текстовые файлы</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

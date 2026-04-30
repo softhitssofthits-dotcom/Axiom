@@ -1,3 +1,4 @@
-' Expected: prints 42.
+' Пример показывает простое объявление переменной через DIM.
+' Ожидается вывод: 42.
 DIM value AS INTEGER = 42
 PRINT value

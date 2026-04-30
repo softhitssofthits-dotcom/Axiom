@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Динамические массивы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-dynamic">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">REDIM, REDIM PRESERVE и ERASE</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Динамические массивы</p>
+                    <p class="sidebar__subtitle">Изменение границ массива после объявления.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Массивы</p>
+            <h1 class="page-title">Динамические массивы</h1>
+
+            <section class="article-section">
+                <h2>Сводка</h2>
+                <p>Динамический массив объявляется без конкретных границ, а затем получает их через <code>REDIM</code>. Такой подход удобен, когда размер массива становится известен только во время выполнения программы.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">DIM arrayName() AS elementType</code></pre>
+                <pre><code class="language-basic">REDIM arrayName(lowerBound TO upperBound)</code></pre>
+                <pre><code class="language-basic">REDIM PRESERVE arrayName(lowerBound TO upperBound)</code></pre>
+                <pre><code class="language-basic">ERASE arrayName</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Части записи</h2>
+                <ul>
+                    <li><code>arrayName</code> — имя динамического массива.</li>
+                    <li><code>elementType</code> — тип элементов массива.</li>
+                    <li><code>lowerBound TO upperBound</code> — новые включительные границы массива.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>DIM values() AS INTEGER</code> объявляет динамический массив без выделения памяти для элементов.</li>
+                    <li><code>REDIM</code> задаёт новые границы массива и выделяет память в соответствии с ними.</li>
+                    <li><code>REDIM PRESERVE</code> изменяет размер массива с сохранением тех элементов, которые попадают в область пересечения старых и новых границ.</li>
+                    <li><code>ERASE</code> возвращает динамический массив в невыделенное состояние.</li>
+                    <li>После <code>ERASE</code> массив нельзя использовать снова, пока ему не будут заново назначены границы через <code>REDIM</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+                <pre><code class="language-basic">' Программа создаёт массив, расширяет его и сохраняет первые значения
+' Ожидаемый вывод:
+' 10
+' 30
+DIM values() AS INTEGER
+
+REDIM values(1 TO 3)
+values(1) = 10
+values(2) = 20
+values(3) = 30
+
+REDIM PRESERVE values(1 TO 5)
+PRINT values(1)
+PRINT values(3)
+
+ERASE values</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">DIM: объявление динамического массива</a></li>
+                    <li><a href="../../samples/operators/redim/basic_usage.axm">REDIM: базовое изменение размера</a></li>
+                    <li><a href="../../samples/operators/redim/preserve_basic_usage.axm">REDIM PRESERVE: сохранение значений</a></li>
+                    <li><a href="../../samples/operators/erase/basic_usage.axm">ERASE: возврат в невыделенное состояние</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays.html">Массивы</a>
+                    <a href="arrays-1d.html">Одномерные массивы</a>
+                    <a href="arrays-multidimensional.html">Многомерные массивы</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

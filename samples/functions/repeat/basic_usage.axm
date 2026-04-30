@@ -1,2 +1,4 @@
-' Expected: prints hahaha.
+' Функция REPEAT повторяет строку заданное число раз.
+' Ожидаемый вывод:
+' hahaha
 PRINT REPEAT("ha", 3)

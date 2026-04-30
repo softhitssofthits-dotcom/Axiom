@@ -1,4 +1,9 @@
-' Expected: prints 0, 2, 4, 6 on separate lines.
+' Пример показывает цикл FOR со STEP.
+' Ожидается вывод по строкам:
+' 0
+' 2
+' 4
+' 6
 
 FOR i = 0 TO 6 STEP 2
     PRINT i

@@ -7,117 +7,13 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="reference">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Справочник по словам языка, типам и встроенным функциям</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Указатель Axiom</p>
-                    <p class="sidebar__subtitle">Фильтруйте материал по первой букве официального имени и по смысловому разделу.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <span>Алфавитный и тематический указатель</span>
-            </nav>
-            <p class="eyebrow">Справочник</p>
-            <h1 class="page-title">Алфавитный и тематический указатель</h1>
-            <p class="lead">Эта страница служит общим указателем руководства. Отсюда удобно переходить к операторам, типам данных, строковым функциям, функциям файловой системы, функциям даты и времени, числовым функциям и связанным справочным разделам.</p>
-
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#catalog">Каталог справки</a></li>
-                    <li><a href="#classification">Как устроена классификация</a></li>
-                    <li><a href="#next">Куда идти дальше</a></li>
-                    <li><a href="#samples">Ручная проверка встроенных функций</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="catalog">
-                <div class="note">
-                    <h3>Как читать буквенный фильтр</h3>
-                    <p>Буквы относятся к официальным именам синтаксиса Axiom. Например, оператор <code>PRINT</code> попадает под букву <code>P</code>, а функция <code>ROUND</code> — под букву <code>R</code>.</p>
-                </div>
-                <div class="catalog-controls">
-                    <div class="filter-group">
-                        <h3>Фильтр по первой букве</h3>
-                        <div id="reference-letter-filters" class="filter-bar"></div>
-                    </div>
-                    <div class="filter-group">
-                        <h3>Фильтр по разделу</h3>
-                        <div id="reference-category-filters" class="filter-bar"></div>
-                    </div>
-                </div>
-                <div id="reference-catalog" class="reference-grid"></div>
-            </section>
-
-            <section class="article-section" id="classification">
-                <h2>Как устроена классификация</h2>
-                <ul>
-                    <li><strong>Декларации</strong> — объявления переменных, констант и правила имён.</li>
-                    <li><strong>Типы данных</strong> — свойства <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code>.</li>
-                    <li><strong>Ветвление</strong> — <code>IF</code> и <code>SELECT CASE</code>.</li>
-                    <li><strong>Циклы</strong> — <code>FOR</code>, <code>WHILE</code>, <code>DO ... LOOP</code>.</li>
-                    <li><strong>Строковые функции, регулярные выражения, файловая система, дата и время и числовые функции</strong> — встроенные функции с отдельными сигнатурами, правилами области допустимых значений и примерами ручной проверки.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="next">
-                <h2>Куда идти дальше</h2>
-                <div class="link-list">
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="file-system-functions.html">Функции файловой системы</a>
-                    <a href="date-time-functions.html">Функции даты и времени</a>
-                    <a href="numeric-functions.html">Числовые, математические и преобразующие функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                    <a href="examples.html">Примеры и сценарии</a>
-                </div>
-            </section>
-
-            <section class="article-section" id="samples">
-                <h2>Ручная проверка встроенных функций</h2>
-                <p>Для ручной проверки открывайте готовые примеры из репозитория прямо из IDE.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/len/basic_usage.axm">LEN: базовое использование</a></li>
-                    <li><a href="../../samples/functions/left/zero_count_error.axm">LEFT: ошибка при нулевом количестве символов</a></li>
-                    <li><a href="../../samples/functions/readfile/basic_usage.axm">READFILE: чтение текстового файла</a></li>
-                    <li><a href="../../samples/functions/readalllines/basic_usage.axm">READALLLINES: чтение строк файла</a></li>
-                    <li><a href="../../samples/functions/readlines/basic_usage.axm">READLINES: чтение набора строк</a></li>
-                    <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущая локальная дата</a></li>
-                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: базовое использование</a></li>
-                    <li><a href="../../samples/functions/asin/out_of_range_error.axm">ASIN: ошибка вне диапазона</a></li>
-                    <li><a href="../../samples/functions/pow/invalid_domain_error.axm">POW: ошибка области определения</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="file-system-functions.html">Функции файловой системы</a>
-                    <a href="date-time-functions.html">Функции даты и времени</a>
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                    <a href="getting-started.html">Начало работы</a>
-                    <a href="examples.html">Примеры</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Быстрый вход в разделы и ключевые сущности</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Указатель</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content"><p class="eyebrow">Справочник</p><h1 class="page-title">Алфавитный и тематический указатель</h1><p class="lead">Если вы уже знаете имя функции, оператора или крупного раздела, начинайте отсюда. Эта страница служит быстрым входом в manual, а для поиска по части имени лучше переходить на отдельную страницу поиска.</p>
+<section class="article-section"><h2>Когда полезно начинать отсюда</h2><p>Указатель особенно удобен в двух случаях: когда вы уже помните нужное имя и хотите сразу перейти к справке, или когда вам нужен не учебный маршрут, а быстрый обзор доступных тематических разделов.</p><ul><li>если нужна обзорная глава, открывайте крупные разделы вроде типов данных, массивов или выражений;</li><li>если нужно найти точную справку по группе встроенных функций, переходите сразу к тематическому блоку;</li><li>если известно только начало имени, используйте страницу поиска.</li></ul></section>
+<section class="article-section"><h2>Быстрые переходы</h2><div class="link-list"><a href="search.html">Поиск по справочнику</a><a href="getting-started.html">Начало работы</a><a href="data-and-input.html">Данные и ввод</a><a href="data-types.html">Типы данных</a><a href="expressions-and-branching.html">Выражения и ветвление</a><a href="loops.html">Циклы</a><a href="procedures-and-functions.html">Процедуры и функции</a><a href="arrays.html">Раздел массивов</a><a href="numeric-functions.html">Числовые функции</a><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Строковые: длина и фрагменты</a><a href="string-functions-trim-and-case.html">Строковые: обрезка и регистр</a><a href="string-functions-search-and-replace.html">Строковые: поиск и замена</a><a href="string-functions-build-and-split.html">Строковые: построение и массивы</a><a href="regex-functions.html">Регулярные выражения</a><a href="regex-functions-match-and-extract.html">Регулярные: проверка и извлечение</a><a href="regex-functions-arrays-and-split.html">Регулярные: массивы и разбиение</a><a href="regex-functions-replace-and-count.html">Регулярные: замена и подсчёт</a><a href="date-time-functions.html">Дата и время</a><a href="date-time-functions-current.html">Дата и время: текущие значения</a><a href="date-time-functions-parts-and-serial.html">Дата и время: части и сборка</a><a href="date-time-functions-arithmetic-and-validation.html">Дата и время: арифметика и проверка</a><a href="date-time-functions-time-zones.html">Дата и время: UTC и пояса</a><a href="file-system-functions.html">Файловая система</a><a href="file-system-functions-text.html">Файловая система: текстовые файлы</a><a href="file-system-functions-open-files.html">Файловая система: открытые файлы</a><a href="file-system-functions-paths.html">Файловая система: пути и сведения</a><a href="file-system-functions-management.html">Файловая система: операции</a><a href="diagnostics.html">Диагностика</a></div></section>
+<section class="article-section"><h2>Короткий маршрут по manual</h2><p>Если вы открыли указатель не ради одной конкретной ссылки, а чтобы быстро сориентироваться, обычно удобен такой порядок чтения:</p><ol><li><a href="getting-started.html">Начало работы</a> — когда нужен общий вход в язык и первые примеры.</li><li><a href="data-and-input.html">Данные и ввод</a> — когда нужно понять переменные, типы и базовый ввод-вывод.</li><li><a href="expressions-and-branching.html">Выражения и ветвление</a> и <a href="loops.html">Циклы</a> — когда программа начинает принимать решения и повторять действия.</li><li><a href="procedures-and-functions.html">Процедуры и функции</a> — когда код уже нужно делить на именованные части.</li></ol></section>
+<div id="page-pager" class="pager"></div></main></div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

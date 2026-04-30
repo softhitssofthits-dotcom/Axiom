@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - TYPE, массивы и групповые объявления</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="data-types-records-and-arrays">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Пользовательские записи и типы элементов массива</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Типы данных</p>
+                    <p class="sidebar__subtitle">TYPE, группы объявлений и массивы поверх типа элемента.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Типы данных</p>
+            <h1 class="page-title">TYPE, массивы и групповые объявления</h1>
+            <p class="lead">Помимо встроенных базовых типов Axiom поддерживает пользовательские записи через <code>TYPE</code>. Массивы строятся поверх типа элемента, а <code>AS &lt;тип&gt;</code> относится ко всей ближайшей группе имён.</p>
+
+            <section class="article-section">
+                <h2>Пользовательские записи TYPE</h2>
+                <p><code>TYPE ... END TYPE</code> объявляет новый тип записи с именованными полями. Переменная такого типа объявляется через <code>DIM name AS TypeName</code>, а поля читаются и записываются через точку: <code>name.Field</code>.</p>
+                <p>Внутри <code>TYPE</code> не пишутся обычные операторы программы. Тело записи состоит только из объявлений полей и их типов.</p>
+                <pre><code class="language-basic">TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+DIM user AS Person
+user.Name = "Алиса"
+user.Age = 30</code></pre>
+                <p>Подробнее синтаксис и ограничения описаны на странице <a href="type.html">Оператор TYPE</a>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Групповые объявления</h2>
+                <ul>
+                    <li><code>AS &lt;тип&gt;</code> относится ко всей ближайшей группе имён слева до начала оператора <code>DIM</code> или до предыдущего разделителя групп.</li>
+                    <li>Форма <code>DIM left, right AS BOOLEAN</code> объявляет обе переменные как <code>BOOLEAN</code>.</li>
+                    <li>Форма <code>DIM total = 10</code> выводит тип как <code>INTEGER</code>, а <code>DIM price = 1.5</code> выводит тип как <code>DOUBLE</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Массивы как тип поверх элемента</h2>
+                <p>Массивы используют тот же базовый набор типов, только через тип элемента, например <code>DIM scores(1 TO 3) AS INTEGER</code>. Отдельный базовый тип массива не вводится: в договоре участвуют тип элемента, ранг и видимые границы.</p>
+                <pre><code class="language-basic">DIM scores(1 TO 3) AS INTEGER
+DIM names(1 TO 2) AS STRING
+DIM board(1 TO 3, 1 TO 3) AS BOOLEAN</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: групповые объявления с общим типом</a></li>
+                    <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: строковые поля фиксированной длины</a></li>
+                    <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Многомерные массивы: двумерная сетка</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="data-types.html">Обзор типов данных</a>
+                    <a href="type.html">TYPE</a>
+                    <a href="arrays.html">Массивы</a>
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

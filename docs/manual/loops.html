@@ -32,13 +32,24 @@
             </nav>
             <p class="eyebrow">Обзор</p>
             <h1 class="page-title">Циклы</h1>
-            <p class="lead">Чтобы справочник оставался удобным, каждая разновидность цикла вынесена на отдельную страницу. Здесь остается короткая карта: какой цикл для чего подходит.</p>
+            <p class="lead">Циклы позволяют повторять один и тот же блок кода столько раз, сколько требует задача. В Axiom разные формы цикла нужны для разных сценариев: где-то заранее известен диапазон, где-то важно предусловие, а где-то удобнее постусловие или явный выход. Эта страница помогает быстро выбрать правильную форму перед переходом к точной справке.</p>
+
+            <section class="article-section">
+                <h2>Как выбирать цикл</h2>
+                <p>На практике нужная форма определяется не внешним видом кода, а характером повторения. Поэтому обзорный раздел лучше читать не как список ключевых слов, а как карту типовых случаев.</p>
+                <ul>
+                    <li><code>FOR</code> подходит, когда повторение связано со счётчиком, диапазоном и шагом;</li>
+                    <li><code>WHILE</code> удобно использовать, когда условие должно проверяться до входа в тело;</li>
+                    <li><code>DO ... LOOP</code> остаётся самой гибкой формой, когда нужно выбрать место проверки условия или использовать явный выход.</li>
+                </ul>
+            </section>
 
             <section class="article-section">
                 <h2>Содержание</h2>
                 <ul>
                     <li><a href="#summary">Сводка</a></li>
                     <li><a href="#route">Навигация по циклам</a></li>
+                    <li><a href="#orientation">Короткий ориентир</a></li>
                     <li><a href="#samples">Показательные примеры</a></li>
                 </ul>
             </section>
@@ -46,6 +57,10 @@
             <section class="article-section" id="summary">
                 <h2>Сводка</h2>
                 <p><code>FOR</code> подходит для счётного повторения по диапазону, <code>WHILE</code> — для предусловного повторения по логическому условию, а <code>DO ... LOOP</code> — для случаев, где нужно выбирать между предусловием, постусловием и безусловной формой.</p>
+                <div class="note">
+                    <h3>Коротко</h3>
+                    <p>Если вы заранее знаете, сколько раз должен выполниться блок, обычно начинайте с <code>FOR</code>. Если число повторений заранее неочевидно и зависит от логического состояния, чаще нужен <code>WHILE</code> или одна из форм <code>DO ... LOOP</code>.</p>
+                </div>
             </section>
 
             <section class="article-section" id="route">
@@ -66,14 +81,39 @@
                 </div>
             </section>
 
+            <section class="article-section" id="orientation">
+                <h2>Короткий ориентир</h2>
+                <pre><code class="language-basic">FOR i = 1 TO 3
+    PRINT "FOR:"; i
+NEXT
+
+DIM n AS INTEGER = 0
+WHILE n < 2
+    PRINT "WHILE:"; n
+    n = n + 1
+END WHILE</code></pre>
+                <p>В первом случае язык повторяет блок по счётчику, во втором — пока остаётся истинным условие. Такой контраст обычно помогает сразу выбрать нужную страницу manual для дальнейшего чтения.</p>
+            </section>
+
             <section class="article-section" id="samples">
                 <h2>Показательные примеры</h2>
+                <p>Для ручной проверки циклов в IDE полезно открывать по одному короткому сценарию на каждую форму повторения.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: базовый счётный цикл</a></li>
                     <li><a href="../../samples/control-flow/while/basic_loop.axm">WHILE: предусловный цикл</a></li>
                     <li><a href="../../samples/control-flow/do/do_while_loop.axm">DO WHILE: предусловная форма</a></li>
                     <li><a href="../../samples/control-flow/do/loop_until.axm">LOOP UNTIL: постусловная форма</a></li>
                 </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="reference.html">Алфавитный и тематический указатель</a>
+                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
+                    <a href="return.html">Оператор RETURN</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
             </section>
 
             <div id="page-pager" class="pager"></div>

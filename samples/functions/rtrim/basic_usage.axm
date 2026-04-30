@@ -1,3 +1,7 @@
-' Expected: prints __hello and then hello.
+' Функция RTRIM убирает символы только с правого края строки.
+' Во второй строке видно, что левый отступ остаётся без изменений.
+' Ожидаемый вывод:
+'   hello
+' hello
 PRINT RTRIM("  hello  ")
 PRINT RTRIM("helloxyxy", "xy")

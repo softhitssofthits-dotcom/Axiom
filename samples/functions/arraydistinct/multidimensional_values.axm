@@ -1,6 +1,13 @@
-' ARRAYDISTINCT returns a compact 1D list of unique values
-' from the visible traversal of a multidimensional array.
-
+' ARRAYDISTINCT для многомерного массива обходит элементы
+' в видимом порядке и возвращает компактный одномерный результат.
+' Ожидаемый вывод:
+' 1
+' 4
+' 4
+' 5
+' 7
+' 9
+' 11
 DIM board(1 TO 2, 10 TO 12) AS INTEGER
 DIM uniqueValues() AS INTEGER
 

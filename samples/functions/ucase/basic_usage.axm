@@ -1,2 +1,4 @@
-' Expected: prints HELLO.
+' Функция UCASE переводит строку в верхний регистр.
+' Ожидаемый вывод:
+' HELLO
 PRINT UCASE("HeLLo")

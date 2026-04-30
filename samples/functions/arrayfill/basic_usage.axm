@@ -1,5 +1,8 @@
-' ARRAYFILL mutates the allocated array in place.
-
+' ARRAYFILL заполняет существующий массив одним значением на месте.
+' Ожидаемый вывод:
+' 42
+' 42
+' 42
 DIM values(5 TO 7) AS INTEGER
 
 values(5) = 1

@@ -1,4 +1,4 @@
-' Expected: prints 15.
+' Пример показывает обычное присваивание и чтение обновлённого значения.
 DIM total AS INTEGER
 total = 10
 total = total + 5

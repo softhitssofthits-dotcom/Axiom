@@ -1,4 +1,4 @@
-' ARRAYPUSH appends a value to the logical end of an allocated array.
+' ARRAYPUSH добавляет значение в логический конец уже выделенного массива.
 
 DIM values(5 TO 6) AS INTEGER
 

@@ -587,6 +587,10 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.Jump:
+                case Opcode.JumpIfLess:
+                case Opcode.JumpIfLessOrEqual:
+                case Opcode.JumpIfGreater:
+                case Opcode.JumpIfGreaterOrEqual:
                 case Opcode.JumpIfTrue:
                 case Opcode.JumpIfFalse:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
@@ -611,6 +615,10 @@ public sealed class BytecodeModuleValidator
                 case Opcode.Convert:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidateConversionInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.AddLongInteger:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
 
                 case Opcode.RedimArray:
@@ -1084,6 +1092,25 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
+            case Opcode.AddLongInteger:
+            {
+                var rightType = Pop();
+                var leftType = Pop();
+                if (leftType is not null && rightType is not null
+                    && (leftType != TypeSymbol.Long || rightType != TypeSymbol.Integer))
+                {
+                    Report(
+                        "BC3068",
+                        $"Инструкция '{instruction.Opcode}' ожидает на стеке пару Long + Integer, но получила {leftType.Name} + {rightType.Name}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                Push(TypeSymbol.Long);
+                break;
+            }
+
             case Opcode.ValidateForStep:
             {
                 var stepType = Pop();
@@ -1291,6 +1318,17 @@ public sealed class BytecodeModuleValidator
             {
                 var conditionType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, conditionType, TypeSymbol.Boolean, "логическое условие");
+                break;
+            }
+
+            case Opcode.JumpIfLess:
+            case Opcode.JumpIfLessOrEqual:
+            case Opcode.JumpIfGreater:
+            case Opcode.JumpIfGreaterOrEqual:
+            {
+                var rightType = Pop();
+                var leftType = Pop();
+                ValidateBinaryOperationStackTypes(module, routine, instructionIndex, MapBranchComparisonOpcode(instruction.Opcode), leftType, rightType);
                 break;
             }
 
@@ -2066,6 +2104,18 @@ public sealed class BytecodeModuleValidator
         return leftType;
     }
 
+    private static Opcode MapBranchComparisonOpcode(Opcode opcode)
+    {
+        return opcode switch
+        {
+            Opcode.JumpIfLess => Opcode.CompareLess,
+            Opcode.JumpIfLessOrEqual => Opcode.CompareLessOrEqual,
+            Opcode.JumpIfGreater => Opcode.CompareGreater,
+            Opcode.JumpIfGreaterOrEqual => Opcode.CompareGreaterOrEqual,
+            _ => throw new InvalidOperationException($"Opcode '{opcode}' is not a comparison branch.")
+        };
+    }
+
     private static bool IsArithmeticOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
     {
         if (leftType == TypeSymbol.Integer || leftType == TypeSymbol.Long)
@@ -2233,6 +2283,7 @@ public sealed class BytecodeModuleValidator
                 pushCount = instruction.Opcode is Opcode.Negate or Opcode.Not or Opcode.Convert ? 1 : 0;
                 return true;
 
+            case Opcode.AddLongInteger:
             case Opcode.Add:
             case Opcode.Subtract:
             case Opcode.Multiply:
@@ -2325,6 +2376,13 @@ public sealed class BytecodeModuleValidator
                 popCount = 1;
                 return true;
 
+            case Opcode.JumpIfLess:
+            case Opcode.JumpIfLessOrEqual:
+            case Opcode.JumpIfGreater:
+            case Opcode.JumpIfGreaterOrEqual:
+                popCount = 2;
+                return true;
+
             case Opcode.Jump:
             case Opcode.PrintSeparator:
             case Opcode.PrintLine:
@@ -2355,6 +2413,10 @@ public sealed class BytecodeModuleValidator
                 }
                 break;
 
+            case Opcode.JumpIfLess:
+            case Opcode.JumpIfLessOrEqual:
+            case Opcode.JumpIfGreater:
+            case Opcode.JumpIfGreaterOrEqual:
             case Opcode.JumpIfTrue:
             case Opcode.JumpIfFalse:
                 if (instruction.OperandCount >= 1)

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Обрезка, регистр и разворот строки</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="string-functions-trim-and-case">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">TRIM, LTRIM, RTRIM, LCASE, UCASE и REVERSE</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Обрезка, регистр и разворот строки</p><p class="sidebar__subtitle">Удаление символов по краям, смена регистра и обратный порядок символов.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Строковые функции</p>
+<h1 class="page-title">Обрезка, регистр и разворот строки</h1>
+
+<section class="article-section" id="trim">
+<h2>TRIM</h2>
+<p>Функция <code>TRIM</code> убирает символы с обоих краёв строки.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = TRIM(text[, chars])</code></pre>
+<h3>Замечания</h3>
+<p>Без аргумента <code>chars</code> удаляются пробельные символы. Если <code>chars</code> указан, по краям убираются все символы из этого набора.</p>
+</section>
+
+<section class="article-section" id="ltrim">
+<h2>LTRIM</h2>
+<p>Функция <code>LTRIM</code> убирает символы только слева.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = LTRIM(text[, chars])</code></pre>
+<h3>Замечания</h3>
+<p>Без аргумента <code>chars</code> убираются пробельные символы слева. Если <code>chars</code> указан, убираются символы из этого набора.</p>
+</section>
+
+<section class="article-section" id="rtrim">
+<h2>RTRIM</h2>
+<p>Функция <code>RTRIM</code> убирает символы только справа.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = RTRIM(text[, chars])</code></pre>
+<h3>Замечания</h3>
+<p>Без аргумента <code>chars</code> убираются пробельные символы справа. Если <code>chars</code> указан, убираются символы из этого набора.</p>
+</section>
+
+<section class="article-section" id="lcase">
+<h2>LCASE и UCASE</h2>
+<p>Функции <code>LCASE</code> и <code>UCASE</code> возвращают строку в нижнем или верхнем регистре.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">lowerText = LCASE(text)
+upperText = UCASE(text)</code></pre>
+<h3>Замечания</h3>
+<p>Обе функции возвращают новое значение и не меняют исходную строку автоматически.</p>
+</section>
+
+<section class="article-section" id="reverse">
+<h2>REVERSE</h2>
+<p>Функция <code>REVERSE</code> возвращает строку в обратном порядке символов.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = REVERSE(text)</code></pre>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Обрезка строки, смена регистра и разворот
+PRINT TRIM("  abc  ")
+PRINT LCASE("ПРИМЕР")
+PRINT UCASE("пример")
+PRINT REVERSE("abcd")</code></pre>
+</section>
+
+<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li><li><a href="../../samples/functions/ltrim/basic_usage.axm">LTRIM</a></li><li><a href="../../samples/functions/rtrim/basic_usage.axm">RTRIM</a></li><li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE</a></li><li><a href="../../samples/functions/ucase/basic_usage.axm">UCASE</a></li></ul></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a></div></section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

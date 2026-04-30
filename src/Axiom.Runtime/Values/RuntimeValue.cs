@@ -5,6 +5,15 @@ namespace Axiom.Runtime;
 
 public sealed class RuntimeValue : IRuntimeStoredValue
 {
+    private const int CachedIntegerMin = -1;
+    private const int CachedIntegerMax = 1024;
+    private const long CachedLongMin = -1;
+    private const long CachedLongMax = 1024;
+    private static readonly RuntimeValue[] CachedIntegers = CreateCachedIntegers();
+    private static readonly RuntimeValue[] CachedLongs = CreateCachedLongs();
+    private static readonly RuntimeValue TrueValue = new(TypeSymbol.Boolean, true);
+    private static readonly RuntimeValue FalseValue = new(TypeSymbol.Boolean, false);
+
     private RuntimeValue(TypeSymbol type, object? value)
     {
         ArgumentNullException.ThrowIfNull(type);
@@ -78,9 +87,15 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return new RuntimeValue(type, value: null);
     }
 
-    public static RuntimeValue FromInteger(int value) => new(TypeSymbol.Integer, value);
+    public static RuntimeValue FromInteger(int value) =>
+        value is >= CachedIntegerMin and <= CachedIntegerMax
+            ? CachedIntegers[value - CachedIntegerMin]
+            : new RuntimeValue(TypeSymbol.Integer, value);
 
-    public static RuntimeValue FromLong(long value) => new(TypeSymbol.Long, value);
+    public static RuntimeValue FromLong(long value) =>
+        value is >= CachedLongMin and <= CachedLongMax
+            ? CachedLongs[(int)(value - CachedLongMin)]
+            : new RuntimeValue(TypeSymbol.Long, value);
 
     public static RuntimeValue FromDouble(double value) => new(TypeSymbol.Double, value);
 
@@ -88,7 +103,7 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
     public static RuntimeValue FromString(string value) => new(TypeSymbol.String, value);
 
-    public static RuntimeValue FromBoolean(bool value) => new(TypeSymbol.Boolean, value);
+    public static RuntimeValue FromBoolean(bool value) => value ? TrueValue : FalseValue;
 
     public static RuntimeValue FromFile(RuntimeTextFile? value) => new(TypeSymbol.File, value);
 
@@ -115,6 +130,28 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return new RuntimeValue(FunctionTypeSymbol.FromFunction(function), new RuntimeFunctionValue(function, capturedScope));
     }
 
+    private static RuntimeValue[] CreateCachedIntegers()
+    {
+        var values = new RuntimeValue[CachedIntegerMax - CachedIntegerMin + 1];
+        for (var value = CachedIntegerMin; value <= CachedIntegerMax; value++)
+        {
+            values[value - CachedIntegerMin] = new RuntimeValue(TypeSymbol.Integer, value);
+        }
+
+        return values;
+    }
+
+    private static RuntimeValue[] CreateCachedLongs()
+    {
+        var values = new RuntimeValue[(int)(CachedLongMax - CachedLongMin + 1)];
+        for (var value = CachedLongMin; value <= CachedLongMax; value++)
+        {
+            values[(int)(value - CachedLongMin)] = new RuntimeValue(TypeSymbol.Long, value);
+        }
+
+        return values;
+    }
+
     internal static RuntimeValue FromBytecodeFunction(FunctionSymbol function, IReadOnlyList<BytecodeVariableSlot> capturedSlots)
     {
         ArgumentNullException.ThrowIfNull(function);
@@ -122,10 +159,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return new RuntimeValue(FunctionTypeSymbol.FromFunction(function), new RuntimeFunctionValue(function, capturedSlots));
     }
 
-    internal static RuntimeValue FromBytecodeBuiltinFunction(FunctionSymbol function)
+    internal static RuntimeValue FromBytecodeBuiltinFunction(FunctionSymbol function, int builtinBindingId)
     {
         ArgumentNullException.ThrowIfNull(function);
-        return new RuntimeValue(FunctionTypeSymbol.FromFunction(function), new RuntimeFunctionValue(function, []));
+        return new RuntimeValue(
+            FunctionTypeSymbol.FromFunction(function),
+            new RuntimeFunctionValue(function, Array.Empty<BytecodeVariableSlot>(), builtinBindingId));
     }
 
     public int AsInteger() => Type == TypeSymbol.Integer
@@ -230,12 +269,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         {
             var text = AsString();
 
-            if (fixedStringLength is { } length)
+            if (fixedStringLength is null)
             {
-                text = NormalizeFixedString(text, length);
+                return this;
             }
 
-            return FromString(text);
+            return FromString(NormalizeFixedString(text, fixedStringLength.Value));
         }
 
         if (Type is ArrayTypeSymbol arrayType && fixedStringLength is not null)

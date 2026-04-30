@@ -1359,6 +1359,29 @@ PRINT grid(3, 12)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForArrayMetadataBuiltins()
+    {
+        const string text = """
+DIM cube(,,) AS INTEGER
+DIM bounds(,) AS INTEGER
+REDIM cube(2 TO 3, 10 TO 11, -1 TO 0)
+PRINT ARRAYRANK(cube)
+bounds = ARRAYBOUNDS(cube)
+PRINT bounds(1, 1)
+PRINT bounds(3, 2)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Null(result.InterpreterFallbackReason);
+        Assert.Equal(["3", "2", "0"], result.Output);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForPartialMultidimensionalIndexingProgram()
     {
         const string text = """
@@ -1478,6 +1501,43 @@ PRINT values(6)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalDynamicArrayBuiltins()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 11) AS INTEGER
+DIM newColumn(1 TO 2) AS INTEGER
+DIM removedColumn() AS INTEGER
+
+board(1, 10) = 110
+board(1, 11) = 111
+board(2, 10) = 210
+board(2, 11) = 211
+newColumn(1) = 112
+newColumn(2) = 212
+
+ARRAYPUSH(board, newColumn, COLUMN)
+removedColumn = ARRAYPOP(board, COLUMN)
+ARRAYINSERT(board, 11, newColumn, COLUMN)
+removedColumn = ARRAYREMOVE(board, 10, COLUMN)
+
+PRINT removedColumn(1)
+PRINT removedColumn(2)
+PRINT board(1, 10)
+PRINT board(1, 11)
+PRINT board(2, 10)
+PRINT board(2, 11)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["110", "210", "112", "111", "212", "211"], result.Output);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_ReportsMutatingArrayBuiltinArgumentError()
     {
         const string text = """
@@ -1578,6 +1638,40 @@ PRINT hit(2)
         Assert.False(result.UsedInterpreterFallback);
         Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["2", "2", "3", "3", "5", "2", "3"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForArrayFlattenAndReshape()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM flat() AS INTEGER
+DIM reshaped(,) AS INTEGER
+
+board(1, 10) = 3
+board(1, 11) = 1
+board(1, 12) = 2
+board(2, 10) = 6
+board(2, 11) = 4
+board(2, 12) = 5
+
+flat = ARRAYFLATTEN(board)
+reshaped = ARRAYRESHAPE(flat, board)
+
+PRINT flat(1)
+PRINT flat(6)
+PRINT reshaped(1, 10)
+PRINT reshaped(2, 12)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Null(result.InterpreterFallbackReason);
+        Assert.Equal(["3", "5", "3", "5"], result.Output);
     }
 
     [Fact]

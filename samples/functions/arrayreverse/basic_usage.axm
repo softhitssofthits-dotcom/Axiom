@@ -1,5 +1,10 @@
-' ARRAYREVERSE mutates the allocated array in place and keeps bounds.
-
+' ARRAYREVERSE разворачивает выделенный массив на месте
+' и сохраняет его исходные границы.
+' Ожидаемый вывод:
+' 5
+' 8
+' 40
+' 10
 DIM values(5 TO 8) AS INTEGER
 
 values(5) = 10

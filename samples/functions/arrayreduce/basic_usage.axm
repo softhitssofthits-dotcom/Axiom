@@ -1,4 +1,9 @@
-' ARRAYREDUCE manual acceptance sample with seed and closure.
+' ARRAYREDUCE сворачивает массив в одно значение.
+' Начальное значение аккумулятора задаётся вторым аргументом.
+' Переменная `bonus` показывает, что свёртка видит внешнее состояние.
+' Ожидаемый вывод:
+' 68
+' 95
 DIM values(5 TO 7) AS INTEGER
 DIM bonus AS INTEGER = 1
 

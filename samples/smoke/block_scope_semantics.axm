@@ -1,8 +1,5 @@
-' Expected:
-' branch
-' 1
-' 2
-' done
+' Короткий smoke-пример показывает, что блочная область видимости
+' внутри IF и FOR не мешает выполнению программы.
 
 IF TRUE THEN
     DIM message AS STRING = "branch"

@@ -1,4 +1,6 @@
-' Type values such as Ada, 42. Expected: Ada 42.
+' Пример показывает ввод нескольких переменных одной командой INPUT.
+' Введите, например, Ada, 42.
+' Ожидается вывод: Ada 42.
 DIM name AS STRING
 DIM age AS INTEGER
 INPUT name, age

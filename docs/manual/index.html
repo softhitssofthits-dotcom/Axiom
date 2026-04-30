@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -7,177 +7,113 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="home">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Статическое руководство по текущей реализации языка</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Меню</p>
-                    <p class="sidebar__subtitle">Пункты меню для быстрого перехода к нужному разделу.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-
-        <main class="content">
-            <p class="eyebrow">Введение</p>
-            <h1 class="page-title">Справочное руководство</h1>
-            <p class="lead">
-                Это руководство объединяет вводные главы, обзорные главы и справочные статьи по текущей реализации языка.
-                Его можно читать последовательно или использовать как справочник по отдельным операторам, типам данных и функциям.
-            </p>
-
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#overview">Обзорные главы</a></li>
-                    <li><a href="#sequence">Последовательность изучения</a></li>                    
-                </ul>
-            </section>
-
-            <section class="article-section" id="summary">
-                <h2>Сводка</h2>
-                <div class="hero-grid">
-                    <section class="card">
-                        <h3>Что включает руководство</h3>
-                        <ul>
-                            <li>Материал основан на текущей реализации языка без предположений о будущих возможностях.</li>
-                            <li>Операторы и управляющие конструкции вынесены на отдельные страницы.</li>
-                            <li>Встроенные функции сгруппированы по смыслу, но внутри описаны поштучно.</li>
-                        </ul>
-                    </section>
-                    <section class="card">
-                        <h3>Как пользоваться руководством</h3>
-                        <ul>
-                            <li>Для поиска отдельной темы начинайте с <a href="reference.html">алфавитного указателя</a>.</li>
-                            <li>Для последовательного чтения открывайте темы сверху вниз по меню слева.</li>
-                            <li>Для перехода к крупному разделу используйте обзорные главы по темам.</li>
-                            <li>Если нужна нормативная точность, сверяйтесь с <code>docs/SPECIFICATION.md</code>.</li>
-                        </ul>
-                    </section>
-                </div>
-            </section>
-
-            <section class="article-section" id="overview">
-                <h2>Обзорные главы</h2>
-                <div class="cards-grid">
-                    <article class="card">
-                        <h3><a href="data-and-input.html">Данные и ввод</a></h3>
-                        <p>Быстрый переход к типам данных, объявлениям, <code>INPUT</code> и <code>PRINT</code>.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="expressions-and-branching.html">Выражения и ветвление</a></h3>
-                        <p>Переход к арифметике, логике, <code>IF</code> и <code>SELECT CASE</code>.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="arrays-and-builtins.html">Массивы и встроенные функции</a></h3>
-                        <p>Связка между массивами, строковыми функциями, регулярными выражениями, файловой системой, датой и временем и числовыми функциями.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="procedures-and-functions.html">Процедуры и функции</a></h3>
-                        <p>Переход к <code>SUB</code>, <code>FUNCTION</code> и <code>RETURN</code> с пояснением их назначения.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="article-section" id="sequence">
-                <h2>Последовательность изучения</h2>
-                <div class="cards-grid">
-                    <article class="card">
-                        <h3><a href="reference.html">0. Алфавитный и тематический указатель</a></h3>
-                        <p>Фильтры по первой букве и по разделам: типы данных, ветвление, циклы, массивы, строковые и числовые функции.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="getting-started.html">1. Старт и первая программа</a></h3>
-                        <p>Структура файла, комментарии, первый <code>PRINT</code> и общий ритм работы в IDE.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="data-types.html">2. Типы данных</a></h3>
-                        <p><code>INTEGER</code>, <code>DOUBLE</code>, <code>STRING</code>, <code>BOOLEAN</code>, память, диапазоны и преобразования.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="variables-and-constants.html">3. Переменные и константы</a></h3>
-                        <p><code>DIM</code>, <code>CONST</code>, правила имён, недопустимые примеры и явный режим языка.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="print.html">4. Оператор PRINT</a></h3>
-                        <p>Печать выражений, пустой <code>PRINT</code>, список выводимых значений и разделители <code>;</code> и <code>,</code>.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="input.html">5. Оператор INPUT</a></h3>
-                        <p>Одиночный и множественный ввод, строки приглашения и ошибки преобразования.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="arithmetic-and-logic.html">6. Арифметика и логика</a></h3>
-                        <p>Операторы, приоритет, сравнения и логические комбинации условий.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="if.html">7. Условие IF</a></h3>
-                        <p>Полная блочная форма <code>IF / ELSEIF / ELSE / END IF</code> и блочная область видимости.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="select-case.html">8. SELECT CASE</a></h3>
-                        <p>Точные совпадения, списки, диапазоны, формы <code>CASE IS</code> и <code>CASE ELSE</code>.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="for.html">9. FOR</a>, <a href="while.html">WHILE</a>, <a href="do-loop.html">DO ... LOOP</a></h3>
-                        <p>Отдельные страницы по каждому семейству циклов, включая <code>STEP</code>, <code>EXIT FOR</code> и <code>EXIT DO</code>.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="procedures-and-functions.html">10. Процедуры и функции</a></h3>
-                        <p>Обзорная глава с переходом к отдельным статьям по <code>SUB</code>, <code>FUNCTION</code> и <code>RETURN</code>.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="arrays.html">11. Массивы</a></h3>
-                        <p>Одномерные массивы, включительные границы и типичные ошибки времени выполнения при индексировании.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="string-functions.html">12. Строковые функции</a></h3>
-                        <p><code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code>, <code>LCASE</code>, <code>UCASE</code> с отдельными секциями.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="regex-functions.html">13. Функции регулярных выражений</a></h3>
-                        <p><code>REGEXISMATCH</code>, <code>REGEXMATCH</code>, <code>REGEXEXTRACT</code>, <code>REGEXREPLACE</code> и <code>REGEXCOUNT</code> для поиска по образцу.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="file-system-functions.html">14. Функции файловой системы</a></h3>
-                        <p><code>READFILE</code>, <code>READALLLINES</code>, <code>READLINES</code>, <code>GETFILES</code>, <code>GETDIRS</code>, запись текста, проверки существования, пути и сведения о файлах.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="date-time-functions.html">15. Функции даты и времени</a></h3>
-                        <p><code>DATE</code>, <code>TIME</code>, <code>NOW</code> и <code>TIMER</code> с каноническими строковыми форматами и счётчиком секунд с полуночи.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="numeric-functions.html">16. Числовые и преобразующие функции</a></h3>
-                        <p><code>INT</code>, <code>STR</code>, <code>VAL</code> с правилами округления вниз, форматирования и преобразования текста в число.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="diagnostics.html">17. Диагностика</a></h3>
-                        <p>Как различать синтаксические ошибки, смысловые ошибки и ошибки времени выполнения.</p>
-                    </article>
-                    <article class="card">
-                        <h3><a href="examples.html">18. Примеры программ</a> и <a href="cheat-sheet.html">шпаргалка</a></h3>
-                        <p>Практика, повтор синтаксиса и краткие рабочие образцы.</p>
-                    </article>
-                </div>
-            </section>           
-
-            <p class="page-footer">
-                Последнее структурное обновление руководства: 2026-04-20. Компоновка ориентируется на классические технические справочники, а текст и деление по темам определяются текущей реализацией языка.
-            </p>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Руководство по языку Axiom</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Меню</p>
+            </div>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <p class="eyebrow">Введение</p>
+        <h1 class="page-title">Справочное руководство</h1>
+        <p class="lead">Справочник Axiom описывает язык так, чтобы по нему можно было и быстро найти точную форму конструкции, и спокойно понять, зачем эта конструкция нужна в программе. Если вы уже знаете имя оператора или функции, начинайте с указателя. Если только входите в язык, сначала удобнее пройти через вводные обзорные страницы разделов.</p>
 
-    <script src="scripts/manual.js"></script>
+        <section class="article-section">
+            <h2>С чего начинать</h2>
+            <p>Axiom — это BASIC-подобный язык, где программа строится из инструкций, выражений, данных, процедур и функций. Одни страницы этого manual работают как точная справка по одной сущности, например по <code>PRINT</code> или <code>FOR</code>. Другие страницы дают обзор темы целиком: массивы, типы данных, числовые функции, файловые операции. Такой порядок помогает сначала понять идею раздела, а потом уже переходить к атомарным правилам.</p>
+            <div class="link-list">
+                <a href="getting-started.html">Быстрый старт</a>
+                <a href="reference.html">Алфавитный указатель</a>
+                <a href="search.html">Поиск по справочнику</a>
+            </div>
+        </section>
+
+        <section class="article-section">
+            <h2>Как читать этот справочник</h2>
+            <div class="checklist">
+                <strong>Полезный рабочий порядок:</strong>
+                <ul>
+                    <li>если тема новая, начните с обзорной страницы раздела;</li>
+                    <li>если нужна точная форма записи, переходите на страницу конкретного оператора или функции;</li>
+                    <li>если хотите сразу проверить поведение в IDE, открывайте ссылки из блока ручной проверки и запускайте соответствующий файл из <code>samples/</code>;</li>
+                    <li>если вы уже знаете имя конструкции, используйте алфавитный указатель или поиск.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="article-section">
+            <h2>Основные маршруты</h2>
+            <div class="cards-grid">
+                <article class="card">
+                    <h3><a href="getting-started.html">Первый запуск</a></h3>
+                    <p>Короткий маршрут для первого файла, первых объявлений и первых выводов через <code>PRINT</code>.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="reference.html">Точная справка</a></h3>
+                    <p>Переход к алфавитному и тематическому указателю, когда имя конструкции уже известно.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="examples.html">Готовые примеры</a></h3>
+                    <p>Запускаемые сценарии для ручной проверки языка в <code>Axiom.Ide</code>.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="article-section">
+            <h2>Крупные разделы</h2>
+            <div class="cards-grid">
+                <article class="card">
+                    <h3><a href="arrays.html">Массивы</a></h3>
+                    <p>Как хранить набор связанных значений, менять размер массива, индексировать элементы и работать со срезами.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="data-types.html">Типы данных</a></h3>
+                    <p>Какие значения понимает язык, как тип влияет на вычисления и где проходят границы преобразований.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="procedures-and-functions.html">Процедуры и функции</a></h3>
+                    <p>Как выносить повторяющийся код, когда выбирать <code>SUB</code>, а когда <code>FUNCTION</code>.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="numeric-functions.html">Числовые функции</a></h3>
+                    <p>Преобразования, математика, округление, корни, тригонометрия и логарифмы.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="file-system-functions.html">Файлы и каталоги</a></h3>
+                    <p>Текстовые файлы, пути, операции с каталогами и функции для работы с файловой системой.</p>
+                </article>
+                <article class="card">
+                    <h3><a href="diagnostics.html">Диагностика</a></h3>
+                    <p>Коды ошибок и способ чтения сообщений синтаксического, семантического и runtime-уровня.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="article-section">
+            <h2>Что полезно помнить</h2>
+            <div class="summary-box">
+                <h3>Короткий ориентир по manual</h3>
+                <ul>
+                    <li>обзорные страницы объясняют тему целиком и связывают соседние материалы;</li>
+                    <li>атомарные страницы фиксируют точную форму оператора, функции или правила языка;</li>
+                    <li>ссылки на <code>samples/</code> нужны не как украшение, а как путь к ручной проверке поведения в IDE.</li>
+                </ul>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

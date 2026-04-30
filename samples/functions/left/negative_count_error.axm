@@ -1,2 +1,4 @@
-' Expected runtime diagnostic MB3007: LEFT count must be greater than 0.
+' Функция LEFT не принимает отрицательное значение count.
+' Ожидаемая диагностика времени выполнения:
+' MB3007: LEFT count must be greater than 0.
 PRINT LEFT("Hello", -1)

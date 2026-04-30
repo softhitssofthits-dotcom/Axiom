@@ -20,6 +20,8 @@ public sealed partial class Interpreter
             BuiltinFunctionId.UBound => EvaluateUBound(expression, arguments),
             BuiltinFunctionId.ArrayLength => EvaluateArrayLength(arguments[0]),
             BuiltinFunctionId.ArrayIsAllocated => EvaluateArrayIsAllocated(arguments[0]),
+            BuiltinFunctionId.ArrayRank => EvaluateArrayRank(arguments[0]),
+            BuiltinFunctionId.ArrayBounds => EvaluateArrayBounds(expression, arguments[0]),
             BuiltinFunctionId.ArrayClone => EvaluateArrayClone(arguments[0]),
             BuiltinFunctionId.ArraySlice => EvaluateArraySlice(expression, arguments),
             BuiltinFunctionId.ArrayFlatten => EvaluateArrayFlatten(
@@ -69,22 +71,10 @@ public sealed partial class Interpreter
             BuiltinFunctionId.ArraySort => EvaluateArraySort(
                 expression,
                 arguments),
-            BuiltinFunctionId.ArrayPush => EvaluateArrayPush(
-                expression,
-                arguments[0],
-                arguments[1]),
-            BuiltinFunctionId.ArrayPop => EvaluateArrayPop(
-                expression,
-                arguments[0]),
-            BuiltinFunctionId.ArrayInsert => EvaluateArrayInsert(
-                expression,
-                arguments[0],
-                arguments[1].AsInteger(),
-                arguments[2]),
-            BuiltinFunctionId.ArrayRemove => EvaluateArrayRemove(
-                expression,
-                arguments[0],
-                arguments[1].AsInteger()),
+            BuiltinFunctionId.ArrayPush => EvaluateArrayPush(expression, arguments),
+            BuiltinFunctionId.ArrayPop => EvaluateArrayPop(expression, arguments),
+            BuiltinFunctionId.ArrayInsert => EvaluateArrayInsert(expression, arguments),
+            BuiltinFunctionId.ArrayRemove => EvaluateArrayRemove(expression, arguments),
             BuiltinFunctionId.ArrayEvery => EvaluateArrayEvery(
                 expression,
                 arguments[0],

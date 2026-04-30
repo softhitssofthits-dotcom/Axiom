@@ -1,4 +1,4 @@
-' Expected: prints TRUE, FALSE, TRUE.
+' Пример показывает базовые операции сравнения чисел.
 PRINT 10 > 3
 PRINT 10 = 3
 PRINT 5 <= 5

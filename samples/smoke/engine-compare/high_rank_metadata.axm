@@ -1,0 +1,18 @@
+' Проверочный сценарий: многомерный массив высокого ранга.
+' Он полезен не как тяжёлый тест, а как ручная проверка текущего факта:
+' в реализации нет отдельного явного верхнего предела ранга массива.
+
+DIM hyper(,,,,,,,) AS INTEGER
+DIM bounds(,) AS INTEGER
+
+REDIM hyper(1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2)
+hyper(1, 2, 1, 2, 1, 2, 1, 2) = 812
+
+bounds = ARRAYBOUNDS(hyper)
+
+PRINT ARRAYRANK(hyper)
+PRINT LBOUND(hyper, 8)
+PRINT UBOUND(hyper, 8)
+PRINT hyper(1, 2, 1, 2, 1, 2, 1, 2)
+PRINT bounds(8, 1)
+PRINT bounds(8, 2)

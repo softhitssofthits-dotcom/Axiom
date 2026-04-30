@@ -1,0 +1,7 @@
+' Ожидается: 2, затем 1.
+
+DIM board(,) AS INTEGER
+DIM values() AS INTEGER
+
+PRINT ARRAYRANK(board)
+PRINT ARRAYRANK(values)

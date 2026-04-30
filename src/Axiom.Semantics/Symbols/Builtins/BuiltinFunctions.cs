@@ -171,13 +171,14 @@ public static partial class BuiltinFunctions
         BuiltinFunctionId id,
         string name)
     {
-        return CreateArrayElementType(id, name, []);
+        return CreateArrayElementType(id, name, [], BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument);
     }
 
     private static BuiltinFunctionDescriptor CreateArrayElementType(
         BuiltinFunctionId id,
         string name,
-        IReadOnlyList<BuiltinParameterDescriptor> additionalParameters)
+        IReadOnlyList<BuiltinParameterDescriptor> additionalParameters,
+        BuiltinResultTypePolicy resultTypePolicy = BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument)
     {
         return new BuiltinFunctionDescriptor(
             id,
@@ -185,7 +186,7 @@ public static partial class BuiltinFunctions
             [Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer)), .. additionalParameters],
             TypeSymbol.Integer,
             bindingKind: BuiltinBindingKind.Array,
-            resultTypePolicy: BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument);
+            resultTypePolicy: resultTypePolicy);
     }
 
     private static BuiltinFunctionDescriptor CreateArraySameType(

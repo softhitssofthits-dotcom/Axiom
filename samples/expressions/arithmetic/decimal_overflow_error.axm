@@ -1,3 +1,4 @@
-' Expected: MB3008 because DECIMAL arithmetic overflows at runtime.
+' Пример показывает переполнение арифметики DECIMAL во время выполнения.
+' Ожидаемая диагностика времени выполнения: `MB3008`.
 DIM value AS DECIMAL = 79228162514264337593543950335.0
 PRINT value * 10

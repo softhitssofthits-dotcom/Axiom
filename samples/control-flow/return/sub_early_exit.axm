@@ -1,4 +1,7 @@
-' Expected: prints before return, then after if.
+' Эта программа показывает досрочный выход через RETURN внутри SUB.
+' Ожидаемый вывод:
+' before return
+' after if
 SUB Show(flag AS BOOLEAN)
     IF flag THEN
         PRINT "before return"

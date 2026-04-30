@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Длина строки и фрагменты</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="string-functions-slices-and-length">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">LEN, LEFT, RIGHT и MID</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Длина строки и фрагменты</p><p class="sidebar__subtitle">Измерение строки и извлечение её частей.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Строковые функции</p>
+<h1 class="page-title">Длина строки и фрагменты</h1>
+
+<section class="article-section" id="len">
+<h2>LEN</h2>
+<p>Функция <code>LEN</code> возвращает длину строки в символах.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">length = LEN(text)</code></pre>
+<p><strong>Части записи.</strong> <code>text</code> задаёт строку, длину которой нужно получить. Результат имеет тип <code>INTEGER</code>.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Длина строки "Пример"
+PRINT LEN("Пример")</code></pre>
+</section>
+
+<section class="article-section" id="left">
+<h2>LEFT</h2>
+<p>Функция <code>LEFT</code> возвращает указанное количество символов с начала строки.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">part = LEFT(text, count)</code></pre>
+<p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять слева.</p>
+<h3>Замечания</h3>
+<p>Количество символов должно быть строго больше нуля. Иначе выполнение завершается диагностикой <code>MB3007</code>.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Первые два символа строки
+PRINT LEFT("abcdef", 2)</code></pre>
+</section>
+
+<section class="article-section" id="right">
+<h2>RIGHT</h2>
+<p>Функция <code>RIGHT</code> возвращает указанное количество символов с конца строки.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">part = RIGHT(text, count)</code></pre>
+<p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять справа.</p>
+<h3>Замечания</h3>
+<p>Количество символов должно быть строго больше нуля. Иначе выполнение завершается диагностикой <code>MB3007</code>.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Последние два символа строки
+PRINT RIGHT("abcdef", 2)</code></pre>
+</section>
+
+<section class="article-section" id="mid">
+<h2>MID</h2>
+<p>Функция <code>MID</code> возвращает фрагмент строки, начиная с заданной позиции.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">part = MID(text, start, count)</code></pre>
+<p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку. <code>start</code> задаёт начальную позицию. <code>count</code> задаёт длину фрагмента.</p>
+<h3>Замечания</h3>
+<p>Позиция считается с единицы. Если начало находится правее конца строки, функция возвращает пустую строку. Начальная позиция меньше <code>1</code> и количество меньше либо равно нулю дают <code>MB3007</code>.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Фрагмент строки с третьего символа длиной два знака
+PRINT MID("abcdef", 3, 2)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/functions/len/basic_usage.axm">LEN</a></li><li><a href="../../samples/functions/left/basic_usage.axm">LEFT</a></li><li><a href="../../samples/functions/right/basic_usage.axm">RIGHT</a></li><li><a href="../../samples/functions/mid/basic_usage.axm">MID</a></li></ul>
+</section>
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

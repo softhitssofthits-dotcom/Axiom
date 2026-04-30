@@ -1,3 +1,7 @@
-' Expected: prints hello__ and then hello.
+' Функция LTRIM убирает символы только с левого края строки.
+' Во второй строке видно, что правый хвост остаётся без изменений.
+' Ожидаемый вывод:
+' hello  
+' hello
 PRINT LTRIM("  hello  ")
 PRINT LTRIM("xyxyhello", "xy")

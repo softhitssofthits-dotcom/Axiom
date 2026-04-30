@@ -1,143 +1,73 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Цикл FOR</title>
+    <title>Справочник Axiom - Оператор цикла FOR</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="for">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Счетный цикл с диапазоном и шагом</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Цикл FOR</p>
-                    <p class="sidebar__subtitle">Справочная глава по счетному циклу, диапазону <code>TO</code>, шагу <code>STEP</code> и <code>EXIT FOR</code>.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Цикл FOR</span>
-            </nav>
-            <p class="eyebrow">Циклы</p>
-            <h1 class="page-title">Цикл FOR</h1>
-            <p class="lead"><code>FOR</code> задает счетный цикл, в котором управляющая переменная проходит диапазон от начального значения до конечного с шагом <code>STEP</code> или со значением шага по умолчанию. Конструкция применяется там, где число проходов определяется диапазоном и направлением счета.</p>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Оператор счётного цикла</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор цикла FOR</p><p class="sidebar__subtitle">Повторение по диапазону значений счётчика.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Циклы</p>
+<h1 class="page-title">Оператор цикла FOR</h1>
+<p class="lead">Цикл <code>FOR</code> подходит для повторения по счётчику, когда диапазон уже известен заранее или естественно выражается начальным, конечным значением и шагом. В такой форме сам язык берёт на себя изменение счётчика, а программа сосредотачивается на действиях внутри каждого прохода.</p>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#syntax">Синтаксис</a></li>
-                    <li><a href="#parts">Части синтаксиса</a></li>
-                    <li><a href="#remarks">Замечания</a></li>
-                    <li><a href="#examples">Примеры</a></li>
-                    <li><a href="#diagnostics">Диагностика</a></li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Цикл <code>FOR</code> используется, когда число проходов определяется диапазоном от начального значения до конечного. Счётчик изменяется автоматически, а направление цикла задаётся знаком шага <code>STEP</code>.</p>
+</section>
 
-            <section class="article-section" id="summary">
-                <h2>Сводка</h2>
-                <p><code>FOR</code> создает локальную управляющую переменную цикла и выполняет тело, пока текущее значение не выйдет за пределы диапазона. В Axiom подтверждены формы с <code>TO</code>, необязательным <code>STEP</code> и досрочным выходом через <code>EXIT FOR</code>.</p>
-            </section>
-
-            <section class="article-section" id="syntax">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-basic">FOR &lt;счётчик&gt; = &lt;начальное выражение&gt; TO &lt;конечное выражение&gt; [STEP &lt;шаг&gt;]
-    &lt;инструкции&gt;
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">FOR counter = startExpression TO endExpression [STEP stepExpression]
+    [statements]
 NEXT</code></pre>
-            </section>
+</section>
 
-            <section class="article-section" id="parts">
-                <h2>Части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;счётчик&gt;</code> — управляющая переменная цикла.</li>
-                    <li><code>&lt;начальное выражение&gt;</code> — значение, с которого начинается цикл.</li>
-                    <li><code>&lt;конечное выражение&gt;</code> — значение, которым ограничивается диапазон цикла.</li>
-                    <li><code>[STEP &lt;шаг&gt;]</code> — необязательная часть. Если она опущена, шаг равен <code>1</code>.</li>
-                    <li><code>&lt;инструкции&gt;</code> — тело цикла между <code>FOR</code> и <code>NEXT</code>.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Части записи</h2>
+<p><code>counter</code> задаёт управляющую переменную цикла. Она получает начальное значение перед первым проходом и затем автоматически изменяется после каждой итерации.</p>
+<p><code>startExpression</code> и <code>endExpression</code> определяют границы диапазона. Необязательное <code>stepExpression</code> задаёт шаг изменения счётчика. Если шаг не указан, используется <code>1</code>.</p>
+</section>
 
-            <section class="article-section" id="remarks">
-                <h2>Замечания</h2>
-                <ul>
-                    <li>Управляющая переменная цикла должна иметь тип <code>INTEGER</code>, <code>LONG</code> или <code>DOUBLE</code>.</li>
-                    <li>Если <code>STEP</code> не указан, используется шаг <code>1</code> того же числового типа, что и управляющая переменная.</li>
-                    <li>Начальное, конечное и шаговое выражения вычисляются один раз перед запуском цикла.</li>
-                    <li>Отрицательный <code>STEP</code> поддерживается и используется для убывающего счета.</li>
-                    <li>Значение <code>STEP 0</code> синтаксически допустимо, но приводит к диагностике времени выполнения.</li>
-                    <li>Имя счетчика существует только внутри цикла; после <code>NEXT</code> оно недоступно как обычная переменная программы.</li>
-                    <li>В текущей реализации после <code>NEXT</code> не указывается имя счетчика.</li>
-                    <li><code>EXIT FOR</code> завершает ближайший окружающий цикл <code>FOR ... NEXT</code>.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Замечания</h2>
+<p>Практически <code>FOR</code> выбирают тогда, когда нужно пройти по последовательности значений предсказуемым количеством шагов: например, посчитать элементы, напечатать диапазон или выполнить несколько одинаковых проходов.</p>
+<ul>
+<li>Начальное, конечное и шаговое выражения вычисляются один раз перед запуском цикла.</li>
+<li>Отрицательный <code>STEP</code> используется для убывающего счёта.</li>
+<li><code>STEP 0</code> синтаксически допустим, но приводит к ошибке времени выполнения.</li>
+<li><code>EXIT FOR</code> завершает ближайший окружающий цикл <code>FOR ... NEXT</code>.</li>
+<li>Имя счётчика существует только внутри цикла и после <code>NEXT</code> недоступно как обычная переменная программы.</li>
+</ul>
+</section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <p>Для ручной проверки в IDE удобно использовать готовые примеры из тематического каталога цикла <code>FOR</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: базовый счет по возрастанию</a></li>
-                    <li><a href="../../samples/control-flow/for/step_loop.axm">FOR: явный положительный шаг</a></li>
-                    <li><a href="../../samples/control-flow/for/exit_for.axm">FOR: досрочный выход через EXIT FOR</a></li>
-                    <li><a href="../../samples/control-flow/for/nested_loops.axm">FOR: вложенные циклы</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="examples">
-                <h2>Примеры</h2>
-                <pre><code class="language-basic">FOR i = 1 TO 3
-    PRINT i
-NEXT</code></pre>
-                <pre><code class="language-basic">FOR value = 10 TO 2 STEP -2
-    PRINT value
-NEXT</code></pre>
-                <pre><code class="language-basic">FOR i = 1 TO 5
-    IF i = 3 THEN
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">FOR i = 10 TO 2 STEP -2
+    IF i = 4 THEN
         EXIT FOR
     END IF
 
     PRINT i
-NEXT
+NEXT</code></pre>
+</section>
 
-PRINT "done"</code></pre>
-            </section>
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: базовый счёт по возрастанию</a></li><li><a href="../../samples/control-flow/for/step_loop.axm">FOR: явный положительный шаг</a></li><li><a href="../../samples/control-flow/for/exit_for.axm">FOR: досрочный выход через EXIT FOR</a></li><li><a href="../../samples/control-flow/for/nested_loops.axm">FOR: вложенные циклы</a></li></ul>
+</section>
 
-            <section class="article-section" id="diagnostics">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB2009</code> — управляющая переменная <code>FOR</code> имеет неподдерживаемый тип и не может быть счетчиком цикла.</li>
-                    <li><code>MB2013</code> — <code>EXIT FOR</code> использован вне ближайшего цикла <code>FOR ... NEXT</code>.</li>
-                    <li><code>MB3004</code> — цикл запущен с <code>STEP 0</code>.</li>
-                    <li><code>MB2001</code> — имя счетчика используется после завершения цикла, где оно уже вне области видимости.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Ошибки возможны, если счётчик имеет неподдерживаемый тип, если используется <code>STEP 0</code>, если <code>EXIT FOR</code> стоит вне цикла или если имя счётчика используется уже после выхода из своей области видимости.</p>
+</section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="while.html">Цикл WHILE</a>
-                    <a href="do-loop.html">Цикл DO ... LOOP</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="while.html">WHILE</a><a href="do-loop.html">DO ... LOOP</a><a href="if.html">IF</a><a href="diagnostics.html">Диагностика</a></div>
+</section>
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

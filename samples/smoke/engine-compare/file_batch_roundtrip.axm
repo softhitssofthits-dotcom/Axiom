@@ -1,0 +1,62 @@
+' Сравнительный сценарий: файловые проходы + каталоги + строки.
+' Программа создаёт пакет текстовых файлов в `.artifacts`, затем читает и агрегирует их обратно.
+
+DIM artifactsRoot AS STRING = COMBINEPATH(CURRENTDIR(), ".artifacts")
+DIM compareRoot AS STRING = COMBINEPATH(artifactsRoot, "manual-checks")
+DIM batchRoot AS STRING = COMBINEPATH(compareRoot, "file-batch-roundtrip")
+DIM filePaths() AS STRING
+DIM files() AS STRING
+DIM aggregateText AS STRING = ""
+DIM firstLines() AS STRING
+
+PRINT MAKEDIR(artifactsRoot)
+PRINT MAKEDIR(compareRoot)
+PRINT MAKEDIR(batchRoot)
+
+REDIM filePaths(1 TO 48)
+
+FOR fileIndex = 1 TO ARRAYLENGTH(filePaths)
+    filePaths(fileIndex) = COMBINEPATH(batchRoot, "part_" + TRIM(STR(fileIndex)) + ".txt")
+    PRINT WRITEFILE(filePaths(fileIndex), BuildChunk(fileIndex))
+NEXT
+
+files = GETFILES(batchRoot, "*.txt")
+
+FOR fileIndex = 1 TO ARRAYLENGTH(files)
+    aggregateText = aggregateText + READFILE(files(fileIndex))
+NEXT
+
+PRINT ARRAYLENGTH(files)
+PRINT LEN(aggregateText)
+PRINT REGEXCOUNT(aggregateText, "line=\d+")
+
+firstLines = READALLLINES(filePaths(1))
+PRINT ARRAYLENGTH(firstLines)
+PRINT LEFT(firstLines(1), 18)
+PRINT RIGHT(aggregateText, 18)
+
+FUNCTION BuildChunk(fileIndex AS INTEGER) AS STRING
+    DIM lines() AS STRING
+
+    REDIM lines(1 TO 40)
+
+    FOR lineIndex = 1 TO ARRAYLENGTH(lines)
+        lines(lineIndex) = "file=" + TRIM(STR(fileIndex)) + " line=" + TRIM(STR(lineIndex)) + " payload=" + BuildPayload(fileIndex, lineIndex)
+    NEXT
+
+    RETURN JOIN(lines, CHR(13) + CHR(10)) + CHR(13) + CHR(10)
+END FUNCTION
+
+FUNCTION BuildPayload(fileIndex AS INTEGER, lineIndex AS INTEGER) AS STRING
+    DIM selector AS INTEGER = (fileIndex + lineIndex) MOD 4
+
+    IF selector = 0 THEN
+        RETURN "alpha-beta-gamma"
+    ELSEIF selector = 1 THEN
+        RETURN "delta-epsilon-zeta"
+    ELSEIF selector = 2 THEN
+        RETURN "eta-theta-iota"
+    END IF
+
+    RETURN "kappa-lambda-mu"
+END FUNCTION

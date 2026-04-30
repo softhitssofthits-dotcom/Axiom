@@ -1,3 +1,3 @@
-' Expected output:
-' signed current local UTC offset in minutes
+' Пример показывает текущее локальное смещение от UTC в минутах.
+' Ожидается одно целое число со знаком.
 PRINT UTCOFFSET()

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -7,201 +7,72 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="print">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Вывод данных и форматированный вывод</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор PRINT</p><p class="sidebar__subtitle">Справочная глава по обычному и форматированному выводу, спискам вывода, разделителям и маскам PRINT USING.</p></div><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Оператор PRINT</span>
-            </nav>
-            <p class="eyebrow">Ввод и вывод</p>
-            <h1 class="page-title">Оператор PRINT</h1>
-            <p class="lead">Оператор <code>PRINT</code> выводит значения и результаты выражений в поток вывода программы. Эта глава описывает как обычный вывод со списком выражений, так и форматированный вывод через <code>PRINT USING</code>: строковые поля, числовые маски, завершающие разделители и ограничения текущей реализации.</p>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Вывод значений и форматированный вывод</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор PRINT</p><p class="sidebar__subtitle">Обычный вывод, список вывода и форма PRINT USING.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Ввод и вывод</p>
+<h1 class="page-title">Оператор PRINT</h1>
+<p class="lead">Оператор <code>PRINT</code> является основным способом показать результат работы программы. Через него Axiom выводит как отдельные значения и выражения, так и составные списки вывода, а при необходимости позволяет применить форматную строку через <code>PRINT USING</code>.</p>
 
-            <section class="article-section">
-                <h2>Главные правила</h2>
-                <ul>
-                    <li>Поддерживаются пустой <code>PRINT</code>, вывод одного выражения и форма со списком вывода с <code>;</code> и <code>,</code>.</li>
-                    <li>Поддерживается форматированный вывод <code>PRINT USING formatExpression; valueList</code>.</li>
-                    <li>Если список вывода не заканчивается на <code>;</code> или <code>,</code>, оператор завершает вывод переводом строки.</li>
-                    <li>Разделитель <code>;</code> соединяет соседние элементы без дополнительного текста между ними.</li>
-                    <li>Разделитель <code>,</code> в текущей реализации вставляет один пробел и, если стоит в конце, тоже подавляет автоматический перевод строки.</li>
-                    <li>Внутри <code>PRINT USING</code> внешний вид результата задаётся строкой формата: литералами, строковыми полями <code>!</code>, <code>&amp;</code>, <code>\   \</code> и числовыми масками на основе <code>#</code>, <code>0</code>, <code>.</code>, <code>+</code>, <code>-</code>, <code>,</code>, <code>$</code>, <code>*</code>, <code>^</code>.</li>
-                    <li>Текущая реализация не эмулирует исторические зоны вывода QuickBASIC и колонное форматирование.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Оператор <code>PRINT</code> выводит текст, числа и результаты выражений в поток вывода программы. Он поддерживает пустую форму для перевода строки, список вывода с разделителями и форматированный вывод через <code>PRINT USING</code>.</p>
+</section>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#what-is-print">Что делает PRINT</a></li>
-                    <li><a href="#basic-form">Простая форма</a></li>
-                    <li><a href="#empty-print">Пустой PRINT</a></li>
-                    <li><a href="#print-list">Список вывода и разделители</a></li>
-                    <li><a href="#print-using">PRINT USING</a></li>
-                    <li><a href="#print-using-string">Строковые поля PRINT USING</a></li>
-                    <li><a href="#print-using-numeric">Числовые маски PRINT USING</a></li>
-                    <li><a href="#print-using-notes">Практические замечания и диагностика</a></li>
-                    <li><a href="#limitations">Ограничения текущей реализации</a></li>
-                    <li><a href="#summary">Итого</a></li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">PRINT
+PRINT [expressionList]</code></pre>
+<pre><code class="language-basic">PRINT USING formatExpression; expressionList</code></pre>
+</section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <p>Для ручной проверки используйте готовые файлы примеров по основным формам оператора.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/print/basic_expression.axm">PRINT: базовое выражение</a></li>
-                    <li><a href="../../samples/operators/print/empty_print.axm">PRINT: пустой оператор</a></li>
-                    <li><a href="../../samples/operators/print/separator_semicolon.axm">PRINT: разделитель ;</a></li>
-                    <li><a href="../../samples/operators/print/separator_comma.axm">PRINT: разделитель ,</a></li>
-                    <li><a href="../../samples/operators/print/mixed_list.axm">PRINT: смешанный список вывода</a></li>
-                    <li><a href="../../samples/operators/print/using_basic.axm">PRINT USING: базовые строковые и числовые маски</a></li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Части записи</h2>
+<p><code>expressionList</code> обозначает одно или несколько выводимых значений, разделённых <code>;</code> или <code>,</code>. Пустая форма <code>PRINT</code> выводит только перевод строки.</p>
+<p><code>formatExpression</code> задаёт строку формата для <code>PRINT USING</code>. Значения после неё подставляются в поля формата слева направо.</p>
+</section>
 
-            <section class="article-section" id="what-is-print">
-                <h2>Что делает PRINT</h2>
-                <p>Оператор <code>PRINT</code> отправляет данные в поток вывода программы. Чаще всего это текст, который пользователь видит в окне выполнения программы в IDE.</p>
-            </section>
+<section class="article-section">
+<h2>Замечания</h2>
+<p>На практике <code>PRINT</code> используют и как самый простой инструмент отладки, и как обычный пользовательский вывод. Поэтому на одной странице собраны и базовый список вывода, и более формальная форма <code>PRINT USING</code>.</p>
+<ul>
+<li>Пустой <code>PRINT</code> выводит только перевод строки.</li>
+<li>Разделитель <code>;</code> соединяет соседние элементы без дополнительного текста между ними.</li>
+<li>Разделитель <code>,</code> в текущей реализации вставляет один пробел.</li>
+<li>Если список вывода не заканчивается на <code>;</code> или <code>,</code>, оператор завершает вывод переводом строки.</li>
+<li>Если в конце стоит <code>;</code> или <code>,</code>, автоматический перевод строки подавляется.</li>
+<li><code>PRINT USING</code> использует строковые и числовые маски. Поддерживаются строковые поля <code>!</code>, <code>&amp;</code>, <code>\   \</code> и числовые маски на основе <code>#</code>, <code>0</code>, <code>.</code>, <code>+</code>, <code>-</code>, <code>,</code>, <code>$</code>, <code>*</code>, <code>^</code>.</li>
+<li>Текущая реализация не повторяет старую зонную модель вывода QuickBASIC и сложное колонное форматирование консоли.</li>
+</ul>
+</section>
 
-            <section class="article-section" id="basic-form">
-                <h2>Простая форма</h2>
-                <p>В самом простом случае после <code>PRINT</code> указывается одно выражение:</p>
-                <pre><code class="language-basic">PRINT "Привет"
-PRINT 42
-PRINT 1 + 2 * 3</code></pre>
-                <p>Сначала выражение вычисляется, затем его результат выводится на экран.</p>
-            </section>
-
-            <section class="article-section" id="empty-print">
-                <h2>Пустой PRINT</h2>
-                <p>Если оператор записан без аргументов, он просто выводит перевод строки:</p>
-                <pre><code class="language-basic">PRINT</code></pre>
-                <p>Это удобно, когда нужно визуально разделить блоки вывода.</p>
-            </section>
-
-            <section class="article-section" id="print-list">
-                <h2>Список вывода и разделители</h2>
-                <p>Axiom поддерживает вывод нескольких элементов в одном операторе. Для этого используются разделители <code>;</code> и <code>,</code>.</p>
-                <pre><code class="language-basic">PRINT "Имя: "; "Анна"
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">' Программа печатает обычный и форматированный вывод
+' Ожидаемый вывод:
+' Имя: Анна
+' Курс: 2
+'
+' Total:  12.50
+PRINT "Имя: "; "Анна"
 PRINT "Курс:", 2
-PRINT "A"; "B"; "C"</code></pre>
-                <ul>
-                    <li><code>;</code> соединяет соседние элементы без дополнительного разделителя;</li>
-                    <li><code>,</code> в текущей реализации работает как мягкий разделитель и выводит один пробел;</li>
-                    <li>если список не заканчивается на <code>;</code> или <code>,</code>, после него автоматически выводится перевод строки;</li>
-                    <li>если в конце стоит <code>;</code> или <code>,</code>, перевод строки подавляется.</li>
-                    <li>Завершающий <code>;</code> или <code>,</code> сохраняет незавершённую строку вывода и в интерпретаторе, и в байткодном режиме, поэтому несколько выполнений <code>PRINT i,</code> внутри цикла продолжают одну строку.</li>
-                </ul>
-            </section>
+PRINT
+PRINT USING "Total: ###.##"; 12.5</code></pre>
+</section>
 
-            <section class="article-section" id="print-using">
-                <h2>PRINT USING</h2>
-                <p><code>PRINT USING</code> выводит значения по строке формата. Формат задаёт литералы и поля, а список значений подставляется в эти поля слева направо.</p>
-                <pre><code class="language-basic">PRINT USING "Name: \    \|"; "Bob"
-PRINT USING "Total: ###.##"; 12.5
-PRINT USING "Flag: !"; "XYZ"</code></pre>
-                <p>Основная форма выглядит так:</p>
-                <pre><code class="language-basic">PRINT USING formatExpression; expression { ; expression | , expression } [ ; | , ]</code></pre>
-                <ul>
-                    <li>после <code>USING</code> обязателен формат, который должен иметь тип <code>STRING</code>;</li>
-                    <li>после строки формата обязателен разделитель <code>;</code>;</li>
-                    <li>разделители между значениями после формата используются как синтаксис списка аргументов;</li>
-                    <li>только завершающий <code>;</code> или <code>,</code> после последнего аргумента влияет на перевод строки так же, как в обычном <code>PRINT</code>.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/operators/print/basic_expression.axm">PRINT: базовое выражение</a></li><li><a href="../../samples/operators/print/empty_print.axm">PRINT: пустой оператор</a></li><li><a href="../../samples/operators/print/separator_semicolon.axm">PRINT: разделитель ;</a></li><li><a href="../../samples/operators/print/separator_comma.axm">PRINT: разделитель ,</a></li><li><a href="../../samples/operators/print/mixed_list.axm">PRINT: смешанный список вывода</a></li><li><a href="../../samples/operators/print/using_basic.axm">PRINT USING: базовые маски</a></li></ul>
+</section>
 
-            <section class="article-section" id="print-using-string">
-                <h2>Строковые поля PRINT USING</h2>
-                <p>Строковые поля берут очередное значение типа <code>STRING</code> и выводят его по одной из трёх схем.</p>
-                <ul>
-                    <li><code>!</code> — выводит первый символ строки. Если строка пустая, ничего не печатает.</li>
-                    <li><code>&amp;</code> — выводит всю строку целиком без усечения.</li>
-                    <li><code>\   \</code> — выводит строку в поле фиксированной ширины. Ширина определяется записью между парой обратных слэшей, обычно через нужное число пробелов.</li>
-                </ul>
-                <pre><code class="language-basic">PRINT USING "!"; "Hello"
-PRINT USING "&"; "Hello"
-PRINT USING "\    \"; "Hi"</code></pre>
-                <p>Для поля <code>\   \</code> короткая строка дополняется пробелами справа, а длинная обрезается по ширине поля. Если строковых аргументов не хватило, <code>!</code> и <code>&amp;</code> дают пустой вывод, а фиксированное поле заполняется пробелами.</p>
-            </section>
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Ошибки возможны в режиме <code>PRINT USING</code>, если строка формата имеет неверный вид, если строковое поле получает не строку, если числовое поле получает не число или если числовому полю не хватило аргумента.</p>
+</section>
 
-            <section class="article-section" id="print-using-numeric">
-                <h2>Числовые маски PRINT USING</h2>
-                <p>Числовая маска берёт очередное числовое значение типа <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>. Поддерживаются следующие символы:</p>
-                <ul>
-                    <li><code>#</code> — позиция для цифры.</li>
-                    <li><code>0</code> — ещё одна позиция для цифры. В текущей реализации <code>#</code> и <code>0</code> работают одинаково: резервируют место, но не добавляют отдельной логики ведущих нулей.</li>
-                    <li><code>.</code> — разделитель целой и дробной части.</li>
-                    <li><code>+</code> — всегда выводит знак числа.</li>
-                    <li><code>-</code> — выводит знак только для отрицательных чисел.</li>
-                    <li><code>,</code> — вставляет разделители тысяч в целую часть.</li>
-                    <li><code>$</code> — добавляет префикс <code>$</code>.</li>
-                    <li><code>*</code> — заполняет свободное место слева символами <code>*</code>.</li>
-                    <li><code>^</code> — включает экспоненциальную запись вида <code>E+NN</code> или <code>E-NN</code>.</li>
-                </ul>
-                <pre><code class="language-basic">PRINT USING "###.##"; 12.5
-PRINT USING "+###.##"; 12.5
-PRINT USING "$$###.##"; 12.5
-PRINT USING "**###.##"; 12.5
-PRINT USING "#,###.##"; 1234.5
-PRINT USING "##.##^^"; 12.5</code></pre>
-                <p>Маски можно комбинировать. Например, <code>+$#,###.##</code> означает: знак, префикс доллара, разделители тысяч и две дробные позиции.</p>
-                <p>Если число не помещается в выделенную ширину, текущая реализация выводит знак <code>%</code> и затем полное исходное числовое представление.</p>
-            </section>
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="input.html">Оператор INPUT</a><a href="variables-and-constants.html">Переменные и константы</a><a href="examples.html">Примеры</a><a href="diagnostics.html">Диагностика</a></div>
+</section>
 
-            <section class="article-section" id="print-using-notes">
-                <h2>Практические замечания и диагностика</h2>
-                <ul>
-                    <li>Символ <code>_</code> экранирует следующий символ и заставляет вывести его как литерал. Например, <code>"Cost: _#"</code> печатает решётку как текст, а не как часть маски.</li>
-                    <li>Литералы в формате печатаются как есть и не расходуют аргументы.</li>
-                    <li>Если строковое поле получает не <code>STRING</code>, а числовое поле получает не число, возникает диагностика времени выполнения <code>PRINT USING</code>.</li>
-                    <li>Если числовому полю не хватило аргумента, возникает диагностика времени выполнения.</li>
-                    <li>Лишние аргументы, для которых в строке формата не оказалось полей, в текущей реализации просто игнорируются.</li>
-                    <li>Длина строки формата ограничена 2048 символами.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="limitations">
-                <h2>Ограничения текущей реализации</h2>
-                <p>Axiom сознательно не повторяет историческую консольную модель QuickBASIC целиком. В частности, текущая реализация не эмулирует старые зоны вывода и сложное поведение по колонкам консоли.</p>
-                <ul>
-                    <li>нет исторических зон вывода и привязки к ширине консоли в 80 колонок;</li>
-                    <li><code>#</code> и <code>0</code> пока не различаются по поведению ведущих нулей;</li>
-                    <li>валютный символ фиксирован как <code>$</code>, а не зависит от локали;</li>
-                    <li>экспоненциальная запись через <code>^</code> использует нормализованный вид <code>E±NN</code> текущей реализации времени выполнения.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="summary">
-                <h2>Итого</h2>
-                <p><code>PRINT</code> — это основной оператор вывода в Axiom. Он позволяет печатать отдельные значения, выражения, пустые строки, списки элементов с разделителями <code>;</code> и <code>,</code>, а также форматированный вывод через <code>PRINT USING</code> со строковыми и числовыми масками.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="input.html">Оператор INPUT</a>
-                    <a href="variables-and-constants.html">Переменные и константы</a>
-                    <a href="examples.html">Примеры</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

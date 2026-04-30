@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Преобразование чисел и классические функции</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="numeric-functions-conversion-and-legacy">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">INT, STR и VAL</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Преобразование чисел</p>
+                    <p class="sidebar__subtitle">Переход от числа к строке, от строки к числу и получение целой части.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="numeric-functions.html">Числовые функции</a>
+                <span>/</span>
+                <span>Преобразование чисел и классические функции</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Преобразование чисел и классические функции</h1>
+            <p class="lead">Эти функции помогают перейти от строки к числу, от числа к строке и получить целую часть значения в стиле BASIC. Они часто используются в программах, где данные сначала читаются как текст, а затем участвуют в вычислениях.</p>
+
+            <section class="article-section" id="int">
+                <h2>INT</h2>
+                <p>Функция <code>INT</code> округляет число вниз и возвращает результат в типе <code>INTEGER</code>.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = INT(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат всегда имеет тип <code>INTEGER</code>, даже если исходное значение было <code>DOUBLE</code> или <code>LONG</code>.</p>
+                <h3>Замечания</h3>
+                <p><code>INT</code> округляет именно вниз, а не к нулю. Поэтому <code>INT(3.9)</code> даёт <code>3</code>, а <code>INT(-3.9)</code> даёт <code>-4</code>. Если итоговое значение не помещается в диапазон <code>INTEGER</code>, выполнение завершается диагностикой переполнения.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Округление вниз для положительных и отрицательных значений
+PRINT INT(7.8)
+PRINT INT(-7.8)</code></pre>
+            </section>
+
+            <section class="article-section" id="str">
+                <h2>STR</h2>
+                <p>Функция <code>STR</code> преобразует число в строку.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">text = STR(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение любого поддерживаемого числового типа. Результат имеет тип <code>STRING</code>.</p>
+                <h3>Замечания</h3>
+                <p><code>STR</code> удобна, когда числовое значение нужно объединить с другим текстом, записать в файл или показать через <code>PRINT</code> как часть более длинной строки. Для обратного преобразования используется <code>VAL</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Преобразование числа в строку перед объединением
+DIM amount AS DOUBLE
+
+amount = 12.5
+PRINT "Сумма: " + STR(amount)</code></pre>
+            </section>
+
+            <section class="article-section" id="val">
+                <h2>VAL</h2>
+                <p>Функция <code>VAL</code> читает число из строки и возвращает результат в типе <code>DOUBLE</code>.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = VAL(text)</code></pre>
+                <p><strong>Части записи.</strong> <code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
+                <h3>Замечания</h3>
+                <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Преобразование строкового значения в число
+DIM text AS STRING
+
+text = "125.75"
+PRINT VAL(text) + 10</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>INT</code> и <code>FIX</code> похожи только на первый взгляд: <code>INT</code> округляет вниз, а <code>FIX</code> отбрасывает дробную часть к нулю.</li>
+                    <li><code>STR</code> и <code>VAL</code> часто используются парой, когда программа читает текстовые данные, а затем возвращает числовой результат обратно в строку.</li>
+                    <li>Если нужен числовой результат строго типа <code>INTEGER</code>, используйте <code>INT</code>. Если нужно сохранить исходный числовой тип, обычно подходят <code>FLOOR</code>, <code>CEIL</code>, <code>ROUND</code> или <code>FIX</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/int/basic_usage.axm">INT: округление вниз</a></li>
+                    <li><a href="../../samples/functions/int/overflow_error.axm">INT: переполнение результата</a></li>
+                    <li><a href="../../samples/functions/str/basic_usage.axm">STR: преобразование числа в строку</a></li>
+                    <li><a href="../../samples/functions/val/basic_usage.axm">VAL: чтение числа из строки</a></li>
+                    <li><a href="../../samples/functions/val/invalid_text_behavior.axm">VAL: некорректный текст возвращает 0</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
+                    <a href="numeric-functions-roots-rounding.html">Округление и корни</a>
+                    <a href="string-functions.html">Строковые функции</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

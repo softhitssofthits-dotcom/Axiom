@@ -1,2 +1,2 @@
-' Expected output: empty line
+' Если start указывает правее конца строки, MID возвращает пустую строку.
 PRINT MID("Hello", 10, 2)

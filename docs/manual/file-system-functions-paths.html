@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Пути и сведения о файлах</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="file-system-functions-paths">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Имена, даты, размеры, перечисление и сведения о диске</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Пути и сведения о файлах</p>
+                    <p class="sidebar__subtitle">Получение имён, дат, размеров и списков файлов и папок.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="file-system-functions.html">Функции файловой системы</a>
+                <span>/</span>
+                <span>Пути и сведения о файлах</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Пути и сведения о файлах</h1>
+            <p class="lead">Эти функции помогают работать с путями, узнавать свойства файлов и папок, перечислять содержимое каталогов и получать сведения о диске, на котором находится путь.</p>
+
+            <section class="article-section" id="filesize">
+                <h2>FILESIZE</h2>
+                <p>Функция <code>FILESIZE</code> возвращает размер файла в байтах.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">size = FILESIZE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Результат имеет тип <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Размер файла в байтах
+PRINT FILESIZE("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="filedate">
+                <h2>FILEDATE</h2>
+                <p>Функция <code>FILEDATE</code> возвращает дату и время последнего изменения файла.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">dateText = FILEDATE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Результатом является строка даты и времени.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Дата последнего изменения файла
+PRINT FILEDATE("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="filecreatedate">
+                <h2>FILECREATEDATE</h2>
+                <p>Функция <code>FILECREATEDATE</code> возвращает дату и время создания файла.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">dateText = FILECREATEDATE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Дата создания файла
+PRINT FILECREATEDATE("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="fileaccesseddate">
+                <h2>FILEACCESSEDDATE</h2>
+                <p>Функция <code>FILEACCESSEDDATE</code> возвращает дату и время последнего доступа к файлу.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">dateText = FILEACCESSEDDATE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Дата последнего доступа к файлу
+PRINT FILEACCESSEDDATE("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="dirdate">
+                <h2>DIRDATE</h2>
+                <p>Функция <code>DIRDATE</code> возвращает дату и время последнего изменения папки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">dateText = DIRDATE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к папке. Результат имеет строковый тип.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Дата изменения папки
+PRINT DIRDATE("docs")</code></pre>
+            </section>
+
+            <section class="article-section" id="getfiles">
+                <h2>GETFILES</h2>
+                <p>Функция <code>GETFILES</code> возвращает массив полных путей файлов, найденных в папке по маске.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">files = GETFILES(directoryPath[, mask])</code></pre>
+                <p><strong>Части записи.</strong> <code>directoryPath</code> задаёт папку поиска. Необязательный <code>mask</code> задаёт файловую маску, например <code>"*.txt"</code>. Если маска не указана, возвращаются все файлы ближайшего уровня. Результатом является массив <code>STRING()</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Список текстовых файлов в текущей папке
+DIM files() AS STRING
+
+files = GETFILES(".", "*.txt")
+PRINT ARRAYLENGTH(files)</code></pre>
+            </section>
+
+            <section class="article-section" id="getdirs">
+                <h2>GETDIRS</h2>
+                <p>Функция <code>GETDIRS</code> возвращает массив полных путей дочерних папок, найденных по маске.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">dirs = GETDIRS(directoryPath[, mask])</code></pre>
+                <p><strong>Части записи.</strong> <code>directoryPath</code> задаёт папку поиска. Необязательный <code>mask</code> задаёт маску для имён папок. Если маска не указана, возвращаются все дочерние папки ближайшего уровня. Результатом является массив <code>STRING()</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Список дочерних папок
+DIM dirs() AS STRING
+
+dirs = GETDIRS(".", "*")
+PRINT ARRAYLENGTH(dirs)</code></pre>
+            </section>
+
+            <section class="article-section" id="combinepath">
+                <h2>COMBINEPATH</h2>
+                <p>Функция <code>COMBINEPATH</code> соединяет две части пути в один корректный путь.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">path = COMBINEPATH(leftPart, rightPart)</code></pre>
+                <p><strong>Части записи.</strong> <code>leftPart</code> задаёт левую часть пути. <code>rightPart</code> задаёт правую часть. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Построение пути к подпапке
+PRINT COMBINEPATH("docs", "manual")</code></pre>
+            </section>
+
+            <section class="article-section" id="filename">
+                <h2>FILENAME</h2>
+                <p>Функция <code>FILENAME</code> возвращает имя файла вместе с расширением.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">nameText = FILENAME(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу или папке. Результатом является последняя часть пути, если она выглядит как имя файла.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Имя файла из полного пути
+PRINT FILENAME("docs/manual/index.html")</code></pre>
+            </section>
+
+            <section class="article-section" id="dirname">
+                <h2>DIRNAME</h2>
+                <p>Функция <code>DIRNAME</code> возвращает имя последней папки в пути.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">nameText = DIRNAME(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу или папке. Результатом является имя последнего каталога.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Имя последней папки пути
+PRINT DIRNAME("docs/manual/index.html")</code></pre>
+            </section>
+
+            <section class="article-section" id="extname">
+                <h2>EXTNAME</h2>
+                <p>Функция <code>EXTNAME</code> возвращает расширение файла вместе с точкой.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">extension = EXTNAME(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Результатом является строка вида <code>.txt</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Расширение файла
+PRINT EXTNAME("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="fullpath">
+                <h2>FULLPATH</h2>
+                <p>Функция <code>FULLPATH</code> преобразует относительный путь к полному виду.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">absolutePath = FULLPATH(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт относительный или полный путь. Результатом является полный путь.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Полный путь к файлу
+PRINT FULLPATH("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="pathroot">
+                <h2>PATHROOT</h2>
+                <p>Функция <code>PATHROOT</code> возвращает корневую часть полного пути.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">rootPath = PATHROOT(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь, для которого нужно получить корень. Результатом является строка, например буква диска с разделителем.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Корень полного пути
+PRINT PATHROOT(FULLPATH("notes.txt"))</code></pre>
+            </section>
+
+            <section class="article-section" id="isabsolutepath">
+                <h2>ISABSOLUTEPATH</h2>
+                <p>Функция <code>ISABSOLUTEPATH</code> проверяет, является ли путь абсолютным уже в исходной записи.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ISABSOLUTEPATH(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь для проверки. Функция возвращает <code>TRUE</code>, если путь не зависит от текущей рабочей папки.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Сравнение относительного и полного пути
+PRINT ISABSOLUTEPATH("notes.txt")
+PRINT ISABSOLUTEPATH(FULLPATH("notes.txt"))</code></pre>
+            </section>
+
+            <section class="article-section" id="dirsize">
+                <h2>DIRSIZE</h2>
+                <p>Функция <code>DIRSIZE</code> возвращает суммарный размер файлов внутри папки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">size = DIRSIZE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт папку. Результатом является число типа <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Суммарный размер папки docs
+PRINT DIRSIZE("docs")</code></pre>
+            </section>
+
+            <section class="article-section" id="isreadonly">
+                <h2>ISREADONLY</h2>
+                <p>Функция <code>ISREADONLY</code> показывает, помечен ли файл или папка как доступные только для чтения.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ISREADONLY(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу или папке. Функция возвращает логическое значение.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Проверка атрибута только для чтения
+PRINT ISREADONLY("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="ishidden">
+                <h2>ISHIDDEN</h2>
+                <p>Функция <code>ISHIDDEN</code> показывает, является ли объект скрытым.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ISHIDDEN(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу или папке. Результат имеет логический тип.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Проверка скрытого объекта
+PRINT ISHIDDEN("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="drivename">
+                <h2>DRIVENAME</h2>
+                <p>Функция <code>DRIVENAME</code> возвращает имя диска, к которому относится путь.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">nameText = DRIVENAME(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь, по которому определяется диск. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Имя диска для текущего пути
+PRINT DRIVENAME(FULLPATH("."))</code></pre>
+            </section>
+
+            <section class="article-section" id="driveformat">
+                <h2>DRIVEFORMAT</h2>
+                <p>Функция <code>DRIVEFORMAT</code> возвращает формат файловой системы диска.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">formatName = DRIVEFORMAT(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь, по которому определяется диск. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Формат файловой системы
+PRINT DRIVEFORMAT(FULLPATH("."))</code></pre>
+            </section>
+
+            <section class="article-section" id="drivetype">
+                <h2>DRIVETYPE</h2>
+                <p>Функция <code>DRIVETYPE</code> возвращает строковое имя типа диска.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">typeName = DRIVETYPE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь, по которому определяется диск. Результатом является строка.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Тип диска
+PRINT DRIVETYPE(FULLPATH("."))</code></pre>
+            </section>
+
+            <section class="article-section" id="freespace">
+                <h2>FREESPACE</h2>
+                <p>Функция <code>FREESPACE</code> возвращает доступное свободное место на диске для указанного пути.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">size = FREESPACE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь на интересующем диске. Результат имеет тип <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Доступное свободное место
+PRINT FREESPACE(FULLPATH("."))</code></pre>
+            </section>
+
+            <section class="article-section" id="totalfreespace">
+                <h2>TOTALFREESPACE</h2>
+                <p>Функция <code>TOTALFREESPACE</code> возвращает общее свободное место на диске.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">size = TOTALFREESPACE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь на нужном диске. Результат имеет тип <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Общее свободное место на диске
+PRINT TOTALFREESPACE(FULLPATH("."))</code></pre>
+            </section>
+
+            <section class="article-section" id="totalspace">
+                <h2>TOTALSPACE</h2>
+                <p>Функция <code>TOTALSPACE</code> возвращает полный размер диска.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">size = TOTALSPACE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь на нужном диске. Результат имеет тип <code>LONG</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Полный размер диска
+PRINT TOTALSPACE(FULLPATH("."))</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>FILEDATE</code>, <code>FILECREATEDATE</code>, <code>FILEACCESSEDDATE</code> и <code>DIRDATE</code> возвращают строку формата <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+                    <li><code>GETFILES</code> и <code>GETDIRS</code> можно вызывать как с маской, так и без неё. В обоих случаях возвращается массив полных путей ближайшего уровня.</li>
+                    <li><code>EXTNAME</code> возвращает расширение вместе с точкой, например <code>.txt</code>.</li>
+                    <li><code>DIRSIZE</code> учитывает вложенные файлы, но не уходит в циклические ссылки и другие точки повторного обхода.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>Отсутствие файла или папки для функций сведений и перечисления даёт диагностику времени выполнения <code>MB3007</code>.</li>
+                    <li>Пустая маска в <code>GETFILES</code> и <code>GETDIRS</code> также даёт <code>MB3007</code>.</li>
+                    <li>Переполнение суммарного размера в <code>DIRSIZE</code> даёт диагностику времени выполнения <code>MB3008</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/filesize/basic_usage.axm">FILESIZE: размер файла</a></li>
+                    <li><a href="../../samples/functions/filedate/basic_usage.axm">FILEDATE: дата изменения</a></li>
+                    <li><a href="../../samples/functions/filecreatedate/basic_usage.axm">FILECREATEDATE: дата создания</a></li>
+                    <li><a href="../../samples/functions/fileaccesseddate/basic_usage.axm">FILEACCESSEDDATE: дата доступа</a></li>
+                    <li><a href="../../samples/functions/dirdate/basic_usage.axm">DIRDATE: дата папки</a></li>
+                    <li><a href="../../samples/functions/getfiles/basic_usage.axm">GETFILES: список файлов</a></li>
+                    <li><a href="../../samples/functions/getdirs/basic_usage.axm">GETDIRS: список папок</a></li>
+                    <li><a href="../../samples/functions/combinepath/basic_usage.axm">COMBINEPATH: соединение пути</a></li>
+                    <li><a href="../../samples/functions/filename/basic_usage.axm">FILENAME: имя файла</a></li>
+                    <li><a href="../../samples/functions/dirname/basic_usage.axm">DIRNAME: имя папки</a></li>
+                    <li><a href="../../samples/functions/extname/basic_usage.axm">EXTNAME: расширение</a></li>
+                    <li><a href="../../samples/functions/fullpath/basic_usage.axm">FULLPATH: полный путь</a></li>
+                    <li><a href="../../samples/functions/pathroot/basic_usage.axm">PATHROOT: корень пути</a></li>
+                    <li><a href="../../samples/functions/isabsolutepath/basic_usage.axm">ISABSOLUTEPATH: абсолютный путь</a></li>
+                    <li><a href="../../samples/functions/dirsize/basic_usage.axm">DIRSIZE: размер папки</a></li>
+                    <li><a href="../../samples/functions/isreadonly/basic_usage.axm">ISREADONLY: атрибут только для чтения</a></li>
+                    <li><a href="../../samples/functions/ishidden/basic_usage.axm">ISHIDDEN: скрытый объект</a></li>
+                    <li><a href="../../samples/functions/drivename/basic_usage.axm">DRIVENAME: имя диска</a></li>
+                    <li><a href="../../samples/functions/driveformat/basic_usage.axm">DRIVEFORMAT: формат диска</a></li>
+                    <li><a href="../../samples/functions/drivetype/basic_usage.axm">DRIVETYPE: тип диска</a></li>
+                    <li><a href="../../samples/functions/freespace/basic_usage.axm">FREESPACE: доступное место</a></li>
+                    <li><a href="../../samples/functions/totalfreespace/basic_usage.axm">TOTALFREESPACE: общее свободное место</a></li>
+                    <li><a href="../../samples/functions/totalspace/basic_usage.axm">TOTALSPACE: полный размер диска</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="file-system-functions-management.html">Операции с файлами и папками</a>
+                    <a href="date-time-functions.html">Дата и время</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

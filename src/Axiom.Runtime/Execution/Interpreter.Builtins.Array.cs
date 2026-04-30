@@ -30,6 +30,25 @@ public sealed partial class Interpreter
         return RuntimeValue.FromBoolean(array.IsAllocated);
     }
 
+    private RuntimeValue EvaluateArrayRank(RuntimeValue argument)
+    {
+        var array = RequireArrayArgument(argument);
+        return RuntimeValue.FromInteger(array.Rank);
+    }
+
+    private RuntimeValue EvaluateArrayBounds(BoundCallExpression expression, RuntimeValue argument)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYBOUNDS", "array", 0, argument);
+        var resultType = (ArrayTypeSymbol)(expression.Type as ArrayTypeSymbol ?? ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2));
+        return CreateVisibleShapeArrayValue(
+            resultType,
+            lowerBounds: [1, 1],
+            upperBounds: [array.Rank, 2],
+            indices => indices[1] == 1
+                ? RuntimeValue.FromInteger(array.GetLowerBound(indices[0]))
+                : RuntimeValue.FromInteger(array.GetUpperBound(indices[0])));
+    }
+
     private RuntimeValue EvaluateArrayClone(RuntimeValue argument)
     {
         var array = RequireArrayArgument(argument);
@@ -504,90 +523,188 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateArrayPush(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        RuntimeValue value)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYPUSH", "array", 0, argument);
-        var newUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYPUSH", array);
+        var array = RequireResizableArrayArgument(expression, "ARRAYPUSH", arguments[0]);
 
-        array.AllocatePreserving(array.LowerBound, newUpperBound);
-        array.SetValue(newUpperBound, value);
+        if (array.Rank == 1)
+        {
+            var newUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYPUSH", array, dimension: 1);
+            array.AllocatePreserving(array.LowerBound, newUpperBound);
+            array.SetValue(newUpperBound, arguments[1]);
+            return RuntimeValue.Void;
+        }
+
+        var dimension = ResolveTransformDimension(expression, "ARRAYPUSH", array, arguments, dimensionArgumentIndex: 2);
+        var valueArray = RequireAllocatedArrayArgument(expression, "ARRAYPUSH", "value", 1, arguments[1]);
+        EnsureCompatibleDynamicArrayValueShape(expression, "ARRAYPUSH", array, valueArray, dimension, valueArgumentIndex: 1);
+
+        var expandedUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYPUSH", array, dimension);
+        var nextLowerBounds = array.LowerBounds.ToArray();
+        var nextUpperBounds = array.UpperBounds.ToArray();
+        nextUpperBounds[dimension - 1] = expandedUpperBound;
+        array.AllocatePreserving(nextLowerBounds, nextUpperBounds);
+
+        ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
+        {
+            var targetIndices = baseIndices.ToArray();
+            targetIndices[dimension - 1] = expandedUpperBound;
+            array.SetValue(targetIndices, valueArray.GetValue(RemoveSelectedDimensionIndices(baseIndices, dimension)));
+        });
 
         return RuntimeValue.Void;
     }
 
     private RuntimeValue EvaluateArrayPop(
         BoundCallExpression expression,
-        RuntimeValue argument)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYPOP", "array", 0, argument);
+        var array = RequireResizableArrayArgument(expression, "ARRAYPOP", arguments[0]);
 
-        if (array.Length == 0)
+        if (array.Rank == 1)
         {
-            ReportBuiltInArgumentError(
-                "ARRAYPOP",
-                "array",
-                "не может быть пустым выделенным массивом.",
-                GetBuiltInArgumentLocation(expression, 0));
-            throw new RuntimeFailureException();
-        }
+            if (array.Length == 0)
+            {
+                ReportBuiltInArgumentError(
+                    "ARRAYPOP",
+                    "array",
+                    "не может быть пустым выделенным массивом.",
+                    GetBuiltInArgumentLocation(expression, 0));
+                throw new RuntimeFailureException();
+            }
 
-        var poppedValue = array.GetValue(array.UpperBound);
+            var poppedValue = array.GetValue(array.UpperBound);
 
-        if (array.Length == 1)
-        {
-            array.Allocate(1, 0);
+            if (array.Length == 1)
+            {
+                array.Allocate(1, 0);
+                return poppedValue;
+            }
+
+            array.AllocatePreserving(array.LowerBound, array.UpperBound - 1);
             return poppedValue;
         }
 
-        array.AllocatePreserving(array.LowerBound, array.UpperBound - 1);
-        return poppedValue;
+        var dimension = ResolveTransformDimension(expression, "ARRAYPOP", array, arguments, dimensionArgumentIndex: 1);
+        var removalIndex = RequireArrayRemovalIndex(expression, "ARRAYPOP", array, array.GetUpperBound(dimension), dimension, argumentIndex: 0, emptyParameterName: "array");
+        var resultType = (ArrayTypeSymbol)expression.Type;
+        var resultBounds = CreateReducedBounds(array, dimension);
+        var removed = CreateVisibleShapeArrayValue(
+            resultType,
+            resultBounds.LowerBounds,
+            resultBounds.UpperBounds,
+            reducedIndices => array.GetValue(ExpandReducedIndices(reducedIndices, array.Rank, dimension, removalIndex)));
+
+        array.AllocatePreserving(CreateBoundsAfterDimensionShrink(array, dimension).LowerBounds, CreateBoundsAfterDimensionShrink(array, dimension).UpperBounds);
+        return removed;
     }
 
     private RuntimeValue EvaluateArrayInsert(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        int index,
-        RuntimeValue value)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYINSERT", "array", 0, argument);
-        var insertionIndex = RequireArrayInsertionIndex(expression, "ARRAYINSERT", array, index);
-        var newUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array);
-        var previousUpperBound = array.UpperBound;
+        var array = RequireResizableArrayArgument(expression, "ARRAYINSERT", arguments[0]);
+        var index = arguments[1].AsInteger();
 
-        array.AllocatePreserving(array.LowerBound, newUpperBound);
-
-        for (var currentIndex = previousUpperBound; currentIndex >= insertionIndex; currentIndex--)
+        if (array.Rank == 1)
         {
-            array.SetValue(currentIndex + 1, array.GetValue(currentIndex));
+            var insertionIndex = RequireArrayInsertionIndex(expression, "ARRAYINSERT", array, index, dimension: 1, argumentIndex: 1);
+            var newUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array, dimension: 1);
+            var previousUpperBound = array.UpperBound;
+
+            array.AllocatePreserving(array.LowerBound, newUpperBound);
+
+            for (var currentIndex = previousUpperBound; currentIndex >= insertionIndex; currentIndex--)
+            {
+                array.SetValue(currentIndex + 1, array.GetValue(currentIndex));
+            }
+
+            array.SetValue(insertionIndex, arguments[2]);
+            return RuntimeValue.Void;
         }
 
-        array.SetValue(insertionIndex, value);
+        var dimension = ResolveTransformDimension(expression, "ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3);
+        var valueArray = RequireAllocatedArrayArgument(expression, "ARRAYINSERT", "value", 2, arguments[2]);
+        EnsureCompatibleDynamicArrayValueShape(expression, "ARRAYINSERT", array, valueArray, dimension, valueArgumentIndex: 2);
+        var insertionDimensionIndex = RequireArrayInsertionIndex(expression, "ARRAYINSERT", array, index, dimension, argumentIndex: 1);
+        var previousDimensionUpperBound = array.GetUpperBound(dimension);
+        var expandedUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array, dimension);
+        var nextLowerBounds = array.LowerBounds.ToArray();
+        var nextUpperBounds = array.UpperBounds.ToArray();
+        nextUpperBounds[dimension - 1] = expandedUpperBound;
+        array.AllocatePreserving(nextLowerBounds, nextUpperBounds);
+
+        ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
+        {
+            for (var currentIndex = previousDimensionUpperBound; currentIndex >= insertionDimensionIndex; currentIndex--)
+            {
+                var sourceIndices = baseIndices.ToArray();
+                var targetIndices = baseIndices.ToArray();
+                sourceIndices[dimension - 1] = currentIndex;
+                targetIndices[dimension - 1] = currentIndex + 1;
+                array.SetValue(targetIndices, array.GetValue(sourceIndices));
+            }
+
+            var insertedIndices = baseIndices.ToArray();
+            insertedIndices[dimension - 1] = insertionDimensionIndex;
+            array.SetValue(insertedIndices, valueArray.GetValue(RemoveSelectedDimensionIndices(baseIndices, dimension)));
+        });
+
         return RuntimeValue.Void;
     }
 
     private RuntimeValue EvaluateArrayRemove(
         BoundCallExpression expression,
-        RuntimeValue argument,
-        int index)
+        IReadOnlyList<RuntimeValue> arguments)
     {
-        var array = RequireAllocatedArrayArgument(expression, "ARRAYREMOVE", "array", 0, argument);
-        var removalIndex = RequireArrayRemovalIndex(expression, "ARRAYREMOVE", array, index);
-        var removedValue = array.GetValue(removalIndex);
+        var array = RequireResizableArrayArgument(expression, "ARRAYREMOVE", arguments[0]);
+        var index = arguments[1].AsInteger();
 
-        if (array.Length == 1)
+        if (array.Rank == 1)
         {
-            array.Allocate(1, 0);
+            var removalIndex = RequireArrayRemovalIndex(expression, "ARRAYREMOVE", array, index, dimension: 1, argumentIndex: 1, emptyParameterName: "index");
+            var removedValue = array.GetValue(removalIndex);
+
+            if (array.Length == 1)
+            {
+                array.Allocate(1, 0);
+                return removedValue;
+            }
+
+            for (var currentIndex = removalIndex; currentIndex < array.UpperBound; currentIndex++)
+            {
+                array.SetValue(currentIndex, array.GetValue(currentIndex + 1));
+            }
+
+            array.AllocatePreserving(array.LowerBound, array.UpperBound - 1);
             return removedValue;
         }
 
-        for (var currentIndex = removalIndex; currentIndex < array.UpperBound; currentIndex++)
-        {
-            array.SetValue(currentIndex, array.GetValue(currentIndex + 1));
-        }
+        var dimension = ResolveTransformDimension(expression, "ARRAYREMOVE", array, arguments, dimensionArgumentIndex: 2);
+        var multidimensionalRemovalIndex = RequireArrayRemovalIndex(expression, "ARRAYREMOVE", array, index, dimension, argumentIndex: 1, emptyParameterName: "index");
+        var resultType = (ArrayTypeSymbol)expression.Type;
+        var resultBounds = CreateReducedBounds(array, dimension);
+        var removed = CreateVisibleShapeArrayValue(
+            resultType,
+            resultBounds.LowerBounds,
+            resultBounds.UpperBounds,
+            reducedIndices => array.GetValue(ExpandReducedIndices(reducedIndices, array.Rank, dimension, multidimensionalRemovalIndex)));
 
-        array.AllocatePreserving(array.LowerBound, array.UpperBound - 1);
-        return removedValue;
+        var upperBound = array.GetUpperBound(dimension);
+        ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
+        {
+            for (var currentIndex = multidimensionalRemovalIndex; currentIndex < upperBound; currentIndex++)
+            {
+                var targetIndices = baseIndices.ToArray();
+                var sourceIndices = baseIndices.ToArray();
+                targetIndices[dimension - 1] = currentIndex;
+                sourceIndices[dimension - 1] = currentIndex + 1;
+                array.SetValue(targetIndices, array.GetValue(sourceIndices));
+            }
+        });
+
+        array.AllocatePreserving(CreateBoundsAfterDimensionShrink(array, dimension).LowerBounds, CreateBoundsAfterDimensionShrink(array, dimension).UpperBounds);
+        return removed;
     }
 
     private RuntimeValue EvaluateArrayEvery(
@@ -1337,14 +1454,35 @@ public sealed partial class Interpreter
         return foundIndex ?? GetArrayNotFoundIndex(expression, functionName, array);
     }
 
+    private RuntimeArrayValue RequireResizableArrayArgument(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeValue argument)
+    {
+        var array = RequireAllocatedArrayArgument(expression, functionName, "array", 0, argument);
+
+        if (array.IsView)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "array",
+                "не поддерживает подмассивы-представления при изменении размера.",
+                GetBuiltInArgumentLocation(expression, 0));
+            throw new RuntimeFailureException();
+        }
+
+        return array;
+    }
+
     private int GetExpandedArrayUpperBound(
         BoundCallExpression expression,
         string functionName,
-        RuntimeArrayValue array)
+        RuntimeArrayValue array,
+        int dimension)
     {
         try
         {
-            return checked(array.UpperBound + 1);
+            return checked(array.GetUpperBound(dimension) + 1);
         }
         catch (OverflowException)
         {
@@ -1361,9 +1499,11 @@ public sealed partial class Interpreter
         BoundCallExpression expression,
         string functionName,
         RuntimeArrayValue array,
-        int index)
+        int index,
+        int dimension,
+        int argumentIndex)
     {
-        if (array.Length == 0)
+        if (GetDimensionLength(array, dimension) == 0)
         {
             if (index == 1)
             {
@@ -1373,20 +1513,23 @@ public sealed partial class Interpreter
             ReportBuiltInArgumentError(
                 functionName,
                 "index",
-                "для пустого выделенного массива должен быть равен 1.",
-                GetBuiltInArgumentLocation(expression, 1));
+                dimension == 1
+                    ? "для пустого выделенного массива должен быть равен 1."
+                    : "для пустого выделенного диапазона выбранного измерения должен быть равен 1.",
+                GetBuiltInArgumentLocation(expression, argumentIndex));
             throw new RuntimeFailureException();
         }
 
-        var allowedUpperBound = (long)array.UpperBound + 1;
+        var lowerBound = array.GetLowerBound(dimension);
+        var allowedUpperBound = (long)array.GetUpperBound(dimension) + 1;
 
-        if (index < array.LowerBound || index > allowedUpperBound)
+        if (index < lowerBound || index > allowedUpperBound)
         {
             ReportBuiltInArgumentError(
                 functionName,
                 "index",
                 "должен попадать в диапазон от текущей нижней границы до позиции сразу после текущего последнего элемента.",
-                GetBuiltInArgumentLocation(expression, 1));
+                GetBuiltInArgumentLocation(expression, argumentIndex));
             throw new RuntimeFailureException();
         }
 
@@ -1397,29 +1540,165 @@ public sealed partial class Interpreter
         BoundCallExpression expression,
         string functionName,
         RuntimeArrayValue array,
-        int index)
+        int index,
+        int dimension,
+        int argumentIndex,
+        string emptyParameterName)
     {
-        if (array.Length == 0)
+        if (GetDimensionLength(array, dimension) == 0)
         {
             ReportBuiltInArgumentError(
                 functionName,
-                "index",
-                "нельзя удалять элемент из пустого выделенного массива.",
-                GetBuiltInArgumentLocation(expression, 1));
+                emptyParameterName,
+                emptyParameterName == "array"
+                    ? "не может работать с пустым выделенным диапазоном выбранного измерения."
+                    : dimension == 1
+                        ? "нельзя удалять элемент из пустого выделенного массива."
+                        : "нельзя удалять элемент из пустого выделенного диапазона выбранного измерения.",
+                GetBuiltInArgumentLocation(expression, argumentIndex));
             throw new RuntimeFailureException();
         }
 
-        if (index < array.LowerBound || index > array.UpperBound)
+        var lowerBound = array.GetLowerBound(dimension);
+        var upperBound = array.GetUpperBound(dimension);
+
+        if (index < lowerBound || index > upperBound)
         {
             ReportBuiltInArgumentError(
                 functionName,
                 "index",
                 "должен указывать на существующий логический индекс массива.",
-                GetBuiltInArgumentLocation(expression, 1));
+                GetBuiltInArgumentLocation(expression, argumentIndex));
             throw new RuntimeFailureException();
         }
 
         return index;
+    }
+
+    private void EnsureCompatibleDynamicArrayValueShape(
+        BoundCallExpression expression,
+        string functionName,
+        RuntimeArrayValue source,
+        RuntimeArrayValue value,
+        int dimension,
+        int valueArgumentIndex)
+    {
+        if (value.Rank != source.Rank - 1)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "value",
+                "должен иметь ранг на единицу меньше исходного массива.",
+                GetBuiltInArgumentLocation(expression, valueArgumentIndex));
+            throw new RuntimeFailureException();
+        }
+
+        var valueDimension = 1;
+        for (var sourceDimension = 1; sourceDimension <= source.Rank; sourceDimension++)
+        {
+            if (sourceDimension == dimension)
+            {
+                continue;
+            }
+
+            if (source.GetLowerBound(sourceDimension) != value.GetLowerBound(valueDimension)
+                || source.GetUpperBound(sourceDimension) != value.GetUpperBound(valueDimension))
+            {
+                ReportBuiltInArgumentError(
+                    functionName,
+                    "value",
+                    "должен иметь видимую форму, согласованную со всеми невыбранными измерениями исходного массива.",
+                    GetBuiltInArgumentLocation(expression, valueArgumentIndex));
+                throw new RuntimeFailureException();
+            }
+
+            valueDimension++;
+        }
+    }
+
+    private static (int[] LowerBounds, int[] UpperBounds) CreateReducedBounds(RuntimeArrayValue array, int dimension)
+    {
+        var lowerBounds = new int[array.Rank - 1];
+        var upperBounds = new int[array.Rank - 1];
+        var next = 0;
+
+        for (var currentDimension = 1; currentDimension <= array.Rank; currentDimension++)
+        {
+            if (currentDimension == dimension)
+            {
+                continue;
+            }
+
+            lowerBounds[next] = array.GetLowerBound(currentDimension);
+            upperBounds[next] = array.GetUpperBound(currentDimension);
+            next++;
+        }
+
+        return (lowerBounds, upperBounds);
+    }
+
+    private static (int[] LowerBounds, int[] UpperBounds) CreateBoundsAfterDimensionShrink(RuntimeArrayValue array, int dimension)
+    {
+        var lowerBounds = array.LowerBounds.ToArray();
+        var upperBounds = array.UpperBounds.ToArray();
+        var selectedIndex = dimension - 1;
+
+        if (GetDimensionLength(array, dimension) == 1)
+        {
+            lowerBounds[selectedIndex] = 1;
+            upperBounds[selectedIndex] = 0;
+            return (lowerBounds, upperBounds);
+        }
+
+        upperBounds[selectedIndex]--;
+        return (lowerBounds, upperBounds);
+    }
+
+    private void ForEachArrayLineBaseIndicesForResize(RuntimeArrayValue array, int dimension, Action<IReadOnlyList<int>> action)
+    {
+        var selectedIndex = dimension - 1;
+        var fixedLowerBounds = array.LowerBounds.ToArray();
+        var fixedUpperBounds = array.UpperBounds.ToArray();
+        fixedLowerBounds[selectedIndex] = array.GetLowerBound(dimension);
+        fixedUpperBounds[selectedIndex] = array.GetLowerBound(dimension);
+        ForEachIndexSetAscending(fixedLowerBounds, fixedUpperBounds, action);
+    }
+
+    private static int[] RemoveSelectedDimensionIndices(IReadOnlyList<int> indices, int dimension)
+    {
+        var result = new int[indices.Count - 1];
+        var next = 0;
+
+        for (var index = 0; index < indices.Count; index++)
+        {
+            if (index == dimension - 1)
+            {
+                continue;
+            }
+
+            result[next++] = indices[index];
+        }
+
+        return result;
+    }
+
+    private static int[] ExpandReducedIndices(IReadOnlyList<int> reducedIndices, int rank, int dimension, int selectedValue)
+    {
+        var result = new int[rank];
+        var reducedIndex = 0;
+
+        for (var index = 0; index < rank; index++)
+        {
+            if (index == dimension - 1)
+            {
+                result[index] = selectedValue;
+                continue;
+            }
+
+            result[index] = reducedIndices[reducedIndex++];
+        }
+
+        return result;
     }
 
     private int FindArrayBinarySearchIndex(

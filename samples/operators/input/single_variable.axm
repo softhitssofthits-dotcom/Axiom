@@ -1,4 +1,6 @@
-' Type a name such as Ada. Expected: the same name is printed back.
+' Пример показывает ввод одной строковой переменной.
+' Введите, например, Ada.
+' Ожидается, что программа напечатает то же самое имя.
 DIM name AS STRING
 INPUT name
 PRINT name

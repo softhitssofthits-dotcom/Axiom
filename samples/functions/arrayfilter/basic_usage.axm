@@ -1,4 +1,15 @@
-' ARRAYFILTER manual acceptance sample with compact result and closure.
+' ARRAYFILTER отбирает значения, которые проходят проверку,
+' и возвращает их в новом компактном массиве.
+' Переменная `threshold` показывает, что предикат видит внешнее состояние.
+' Ожидаемый вывод:
+' 1
+' 2
+' 2
+' 30
+' 40
+' 1
+' 0
+' 0
 DIM values(5 TO 8) AS INTEGER
 DIM filtered() AS INTEGER
 DIM threshold AS INTEGER = 25

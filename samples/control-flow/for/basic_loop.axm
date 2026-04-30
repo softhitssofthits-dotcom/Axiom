@@ -1,4 +1,8 @@
-' Expected: prints 1, 2, 3 on separate lines.
+' Пример показывает базовый цикл FOR ... NEXT.
+' Ожидается вывод по строкам:
+' 1
+' 2
+' 3
 
 FOR i = 1 TO 3
     PRINT i

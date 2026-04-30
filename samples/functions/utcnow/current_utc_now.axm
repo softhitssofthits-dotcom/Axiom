@@ -1,3 +1,3 @@
-' Expected output:
-' current UTC date-time in yyyy-MM-dd HH:mm:ss
+' Пример показывает, что UTCNOW возвращает текущие дату и время UTC.
+' Ожидается одна строка в формате yyyy-MM-dd HH:mm:ss.
 PRINT UTCNOW()

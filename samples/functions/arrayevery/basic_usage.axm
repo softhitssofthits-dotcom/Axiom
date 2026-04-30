@@ -1,4 +1,8 @@
-' ARRAYEVERY manual acceptance sample.
+' ARRAYEVERY проверяет, удовлетворяют ли все элементы условию.
+' Первый вызов проверяет положительность, второй — чётность.
+' Ожидаемый вывод:
+' TRUE
+' TRUE
 DIM values(1 TO 4) AS INTEGER
 
 values(1) = 2

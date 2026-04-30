@@ -1,3 +1,3 @@
-' Expected output:
-' current UTC time in HH:mm:ss
+' Пример показывает, что UTCTIME возвращает текущее время UTC.
+' Ожидается одна строка в формате HH:mm:ss.
 PRINT UTCTIME()

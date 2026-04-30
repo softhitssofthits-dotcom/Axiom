@@ -1,2 +1,2 @@
-' Expected: prints Hello, world.
+' Пример показывает конкатенацию двух строк через оператор `+`.
 PRINT "Hello, " + "world"

@@ -495,6 +495,9 @@ public sealed partial class Binder
             BuiltinResultTypePolicy.SameAsSecondArgument => descriptor.DeclaredReturnType,
             BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => arrayType.ElementType,
             BuiltinResultTypePolicy.ArrayOfFirstArrayElementType => ArrayTypeSymbol.Create(arrayType.ElementType),
+            BuiltinResultTypePolicy.ArrayDynamicSliceResult => arrayType.Rank == 1
+                ? arrayType.ElementType
+                : ArrayTypeSymbol.Create(arrayType.ElementType, arrayType.Rank - 1),
             BuiltinResultTypePolicy.ArrayIndexCoordinateResult => arrayType.Rank == 1
                 ? TypeSymbol.Integer
                 : ArrayTypeSymbol.Create(TypeSymbol.Integer),
@@ -677,9 +680,40 @@ public sealed partial class Binder
             return arrayType;
         }
 
+        if (TryResolveDynamicArrayValueParameterType(descriptor, arrayType, parameterIndex, out var dynamicValueType))
+        {
+            return dynamicValueType;
+        }
+
         return UsesArrayElementTypeForValueParameter(descriptor.Id, parameterIndex)
             ? arrayType.ElementType
             : descriptor.Parameters[parameterIndex].Type;
+    }
+
+    private static bool TryResolveDynamicArrayValueParameterType(
+        BuiltinFunctionDescriptor descriptor,
+        ArrayTypeSymbol arrayType,
+        int parameterIndex,
+        out TypeSymbol parameterType)
+    {
+        if (descriptor.Id == BuiltinFunctionId.ArrayPush && parameterIndex == 1 && descriptor.Parameters.Count >= 3)
+        {
+            parameterType = arrayType.Rank == 1
+                ? arrayType.ElementType
+                : ArrayTypeSymbol.Create(arrayType.ElementType, arrayType.Rank - 1);
+            return true;
+        }
+
+        if (descriptor.Id == BuiltinFunctionId.ArrayInsert && parameterIndex == 2 && descriptor.Parameters.Count >= 4)
+        {
+            parameterType = arrayType.Rank == 1
+                ? arrayType.ElementType
+                : ArrayTypeSymbol.Create(arrayType.ElementType, arrayType.Rank - 1);
+            return true;
+        }
+
+        parameterType = TypeSymbol.Error;
+        return false;
     }
 
     private static bool UsesArrayElementTypeForValueParameter(BuiltinFunctionId id, int parameterIndex)
@@ -969,6 +1003,8 @@ public sealed partial class Binder
             or BuiltinFunctionId.UBound
             or BuiltinFunctionId.ArrayLength
             or BuiltinFunctionId.ArrayIsAllocated
+            or BuiltinFunctionId.ArrayRank
+            or BuiltinFunctionId.ArrayBounds
             or BuiltinFunctionId.ArrayClone
             or BuiltinFunctionId.ArraySlice
             or BuiltinFunctionId.ArrayTake
@@ -977,12 +1013,16 @@ public sealed partial class Binder
             or BuiltinFunctionId.ArrayFlatten
             or BuiltinFunctionId.ArrayReshape
             or BuiltinFunctionId.ArrayToReversed
-            or BuiltinFunctionId.ArrayDistinct
-            or BuiltinFunctionId.ArrayToSorted
-            or BuiltinFunctionId.ArrayFill
-            or BuiltinFunctionId.ArrayReverse
-            or BuiltinFunctionId.ArraySort
-            or BuiltinFunctionId.ArrayContains
+              or BuiltinFunctionId.ArrayDistinct
+              or BuiltinFunctionId.ArrayToSorted
+              or BuiltinFunctionId.ArrayFill
+              or BuiltinFunctionId.ArrayPush
+              or BuiltinFunctionId.ArrayPop
+              or BuiltinFunctionId.ArrayInsert
+              or BuiltinFunctionId.ArrayRemove
+              or BuiltinFunctionId.ArrayReverse
+              or BuiltinFunctionId.ArraySort
+              or BuiltinFunctionId.ArrayContains
             or BuiltinFunctionId.ArrayIndexOf
             or BuiltinFunctionId.ArrayLastIndexOf
             or BuiltinFunctionId.ArrayCount
@@ -1009,10 +1049,14 @@ public sealed partial class Binder
             BuiltinFunctionId.ArraySkip => argumentCount == 2,
             BuiltinFunctionId.ArrayConcat => argumentCount == 2,
             BuiltinFunctionId.ArrayToSorted => argumentCount == 1,
-            BuiltinFunctionId.ArrayToReversed => argumentCount == 1,
-            BuiltinFunctionId.ArrayReverse => argumentCount == 1,
-            BuiltinFunctionId.ArraySort => argumentCount == 1,
-            BuiltinFunctionId.ArrayBinarySearch => argumentCount == 2,
+              BuiltinFunctionId.ArrayToReversed => argumentCount == 1,
+              BuiltinFunctionId.ArrayPush => argumentCount == 2,
+              BuiltinFunctionId.ArrayPop => argumentCount == 1,
+              BuiltinFunctionId.ArrayInsert => argumentCount == 3,
+              BuiltinFunctionId.ArrayRemove => argumentCount == 2,
+              BuiltinFunctionId.ArrayReverse => argumentCount == 1,
+              BuiltinFunctionId.ArraySort => argumentCount == 1,
+              BuiltinFunctionId.ArrayBinarySearch => argumentCount == 2,
             _ => false
         };
     }

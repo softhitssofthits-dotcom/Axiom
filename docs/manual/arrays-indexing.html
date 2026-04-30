@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Индексирование массивов</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-indexing">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Полная и частичная форма обращения к массиву</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Индексирование</p>
+                    <p class="sidebar__subtitle">Доступ к элементу, строке, столбцу или диапазону элементов.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Массивы</p>
+            <h1 class="page-title">Индексирование</h1>
+            <p class="lead">Индексирование определяет, как программа выбирает нужную часть массива: отдельный элемент, целую строку, столбец или диапазон значений. Это одна из центральных тем при работе с массивами в Axiom, потому что именно форма обращения задаёт, получаете ли вы скалярное значение или представление на часть массива.</p>
+
+            <section class="article-section">
+                <h2>Сводка</h2>
+                <p>Индексирование определяет, как программа обращается к данным внутри массива. В полной форме указываются все индексы, а в частичной форме можно получить строку, столбец или другой видимый срез массива.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">значение = array(i)
+значение = matrix(i, j)
+
+view = matrix(i)
+slice = matrix(i, 2 TO 5)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <p>Полную форму индексирования используют, когда нужен конкретный элемент, а частичную — когда нужно передать дальше или обработать сразу видимую часть массива без ручного перебора каждого значения.</p>
+                <ul>
+                    <li>Полная форма индексирования возвращает конкретный элемент массива.</li>
+                    <li>Для двумерного и многомерного массива полная форма требует индекс по каждому измерению.</li>
+                    <li>Частичная форма индексирования используется тогда, когда нужно получить представление на часть массива, а не одно скалярное значение.</li>
+                    <li>Если индексы или диапазоны выходят за допустимые границы, выполнение завершается диагностикой времени выполнения.</li>
+                    <li>Подробные правила работы представлений и диапазонных срезов описаны на отдельной странице.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+                <pre><code class="language-basic">DIM matrix(1 TO 2, 1 TO 3) AS INTEGER
+
+matrix(1, 1) = 10
+matrix(1, 2) = 20
+matrix(2, 3) = 99
+
+PRINT matrix(1, 2)
+PRINT matrix(2, 3)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays-slices.html">Срезы и представления</a>
+                    <a href="arrays-1d.html">Одномерные массивы</a>
+                    <a href="arrays-2d.html">Двумерные массивы</a>
+                    <a href="arrays-diagnostics.html">Ошибки массивов</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

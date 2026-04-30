@@ -1,4 +1,5 @@
-' Local FUNCTION captures an outer parameter and an earlier local variable.
+' Эта программа показывает, что вложенная функция может захватывать
+' внешний параметр и ранее объявленную локальную переменную.
 PRINT Outer(5)
 
 FUNCTION Outer(seed AS INTEGER) AS INTEGER

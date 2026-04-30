@@ -1,144 +1,81 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Подпрограмма SUB</title>
+    <title>Справочник Axiom - Процедура SUB</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="sub">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Именованная подпрограмма без возвращаемого значения</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Подпрограмма SUB</p>
-                    <p class="sidebar__subtitle">Справочная глава по объявлению, параметрам и вызову подпрограмм.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Подпрограмма SUB</span>
-            </nav>
-            <p class="eyebrow">Процедуры и функции</p>
-            <h1 class="page-title">Подпрограмма SUB</h1>
-            <p class="lead"><code>SUB</code> объявляет именованную подпрограмму, которую можно вызывать по имени для выполнения набора действий. В отличие от <code>FUNCTION</code>, подпрограмма не возвращает значение как результат выражения.</p>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Именованная процедура без возвращаемого значения</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Процедура SUB</p><p class="sidebar__subtitle">Объявление процедуры, параметры и вызов по имени.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Процедуры и функции</p>
+<h1 class="page-title">Процедура SUB</h1>
+<p class="lead">Процедура <code>SUB</code> подходит для именованных действий, которые нужно вызывать по имени, но не нужно использовать как значение выражения. Через неё удобно собирать вывод, проверки, изменение уже доступных данных и другие шаги, где важен сам эффект выполнения, а не возвращаемый результат.</p>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#syntax">Синтаксис</a></li>
-                    <li><a href="#parameters">Параметры</a></li>
-                    <li><a href="#remarks">Замечания</a></li>
-                    <li><a href="#examples">Примеры</a></li>
-                    <li><a href="#diagnostics">Диагностика</a></li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Сводка</h2>
+<p><code>SUB ... END SUB</code> объявляет именованную процедуру. Процедура выполняет последовательность инструкций и вызывается по имени, но не возвращает значение как результат выражения.</p>
+</section>
 
-            <section class="article-section" id="summary">
-                <h2>Сводка</h2>
-                <p><code>SUB</code> подходит для именованных операций, где важен побочный эффект: вывод, изменение уже существующих переменных, группировка последовательности действий или ранний выход через <code>RETURN</code> без значения.</p>
-            </section>
-
-            <section class="article-section" id="syntax">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-basic">SUB &lt;имя&gt;([&lt;список параметров&gt;])
-    &lt;инструкции&gt;
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">SUB name([parameterDeclaration[, anotherParameterDeclaration] ...])
+    [statements]
+    [RETURN]
 END SUB</code></pre>
-                <pre><code class="language-basic">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
-            </section>
+<pre><code class="language-basic">name([argument[, anotherArgument] ...])</code></pre>
+</section>
 
-            <section class="article-section" id="parameters">
-                <h2>Параметры</h2>
-                <ul>
-                    <li><code>&lt;имя&gt;</code> — имя подпрограммы.</li>
-                    <li><code>[&lt;список параметров&gt;]</code> — необязательная часть. Если параметров нет, подпрограмма объявляется с пустыми круглыми скобками.</li>
-                    <li><code>[&lt;список аргументов&gt;]</code> — необязательная часть вызова. Если аргументов нет, вызов оформляется с пустыми круглыми скобками.</li>
-                </ul>
-                <p>В текущей реализации все параметры <code>SUB</code> передаются по значению. Параметр имеет собственное локальное имя и обязательное объявление типа через <code>AS &lt;тип&gt;</code>.</p>
-                <pre><code class="language-basic">SUB PrintPair(left AS STRING, right AS STRING)
-    PRINT left; " / "; right
-END SUB</code></pre>
-            </section>
+<section class="article-section">
+<h2>Части записи</h2>
+<p><code>name</code> задаёт имя процедуры.</p>
+<p><code>parameterDeclaration</code> обозначает объявление параметра вида <code>parameterName AS parameterType</code>.</p>
+<p><code>statements</code> обозначает любые допустимые инструкции внутри процедуры.</p>
+<p><code>RETURN</code> без значения завершает процедуру досрочно.</p>
+<p><code>argument</code> обозначает значение, которое передаётся при вызове процедуры. Если параметров несколько, аргументы перечисляются в том же порядке через запятую.</p>
+</section>
 
-            <section class="article-section" id="remarks">
-                <h2>Замечания</h2>
-                <ul>
-                    <li>Подпрограммы объявляются блоком <code>SUB ... END SUB</code>.</li>
-                    <li>Вызов оформляется как инструкция <code>&lt;имя&gt;([&lt;список аргументов&gt;])</code>.</li>
-                    <li>Параметры и локальные объявления внутри <code>SUB</code> принадлежат области видимости этой подпрограммы.</li>
-                    <li>Внутри <code>SUB</code> можно объявлять локальные <code>SUB</code> и <code>FUNCTION</code>. Они видны только внутри текущей внешней процедуры или функции.</li>
-                    <li>Локальные <code>SUB</code>/<code>FUNCTION</code> в текущей версии разрешены только прямо в теле внешней процедуры или функции, а не внутри <code>IF</code>, <code>FOR</code>, <code>WHILE</code>, <code>DO</code> или <code>SELECT CASE</code>.</li>
-                    <li>Локальная подпрограмма лексически захватывает параметры и локальные переменные внешней процедуры или функции, если они объявлены раньше по тексту самой локальной <code>SUB</code>.</li>
-                    <li>Имена, объявленные ниже по тексту после локальной <code>SUB</code>, для неё недоступны и продолжают считаться необъявленными.</li>
-                    <li>Даже после появления функций как значений подпрограмма <code>SUB</code> по-прежнему не может быть присвоена в переменную или передана как значение.</li>
-                    <li><code>RETURN</code> внутри <code>SUB</code> допустим только без значения и завершает выполнение подпрограммы досрочно.</li>
-                    <li>Подпрограмма может читать и изменять уже существующие доступные переменные программы; сама по себе она не возвращает вычисленный результат вызывающему коду.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Замечания</h2>
+<p>На практике <code>SUB</code> выбирают тогда, когда код становится достаточно длинным или повторяющимся и его нужно вынести в отдельный именованный блок без превращения в вычисляющее выражение.</p>
+<ul>
+<li>Процедуры объявляются блоком <code>SUB ... END SUB</code>.</li>
+<li>Вызов процедуры оформляется как отдельная инструкция.</li>
+<li>Параметры <code>SUB</code> в текущей реализации передаются по значению.</li>
+<li>Параметры и локальные объявления внутри <code>SUB</code> принадлежат области видимости этой процедуры.</li>
+<li>Внутри <code>SUB</code> допустим <code>RETURN</code> без значения для досрочного выхода.</li>
+<li><code>SUB</code> не является значением: процедуру нельзя присваивать переменной, передавать как значение или возвращать из функции.</li>
+<li>Внутри <code>SUB</code> можно объявлять локальные <code>SUB</code> и локальные <code>FUNCTION</code>.</li>
+<li>Локальная процедура или функция может захватывать параметры и локальные переменные внешней процедуры, если они объявлены раньше по тексту.</li>
+</ul>
+</section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <p>Для проверки базового объявления и вызова подпрограммы используйте готовые примеры.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов подпрограммы</a></li>
-                    <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная подпрограмма</a></li>
-                    <li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват и изменение внешней локальной переменной</a></li>
-                    <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="examples">
-                <h2>Примеры</h2>
-                <pre><code class="language-basic">SUB ShowBanner(text AS STRING)
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">' Процедура печатает строку вида ==Axiom==
+' Ожидаемый вывод: ==Axiom==
+SUB ShowBanner(text AS STRING)
     PRINT "=="; text; "=="
 END SUB
 
 ShowBanner("Axiom")</code></pre>
-                <pre><code class="language-basic">SUB CheckValue(value AS INTEGER)
-    IF value &lt; 0 THEN
-        PRINT "Отрицательное значение недопустимо"
-        RETURN
-    END IF
+</section>
 
-    PRINT "Обработка продолжается"
-END SUB</code></pre>
-            </section>
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов процедуры</a></li><li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li><li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li><li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li></ul>
+</section>
 
-            <section class="article-section" id="diagnostics">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB2006</code> — в <code>SUB</code> использован <code>RETURN</code> со значением.</li>
-                    <li><code>MB2019</code> — попытка использовать <code>SUB</code> как значение.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Ошибки возникают, если в <code>SUB</code> используется <code>RETURN</code> со значением или если предпринимается попытка использовать саму процедуру как значение.</p>
+</section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="function.html">Функция FUNCTION</a>
-                    <a href="return.html">Оператор RETURN</a>
-                    <a href="print.html">Оператор PRINT</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="function.html">Функция FUNCTION</a><a href="return.html">Оператор RETURN</a><a href="print.html">Оператор PRINT</a><a href="diagnostics.html">Диагностика</a></div>
+</section>
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

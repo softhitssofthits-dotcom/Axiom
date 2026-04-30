@@ -82,7 +82,7 @@ public sealed partial class BytecodeVm
 
     private static InputTarget ResolveLocalInputTarget(BytecodeCallFrame frame, int slot, int instructionIndex)
     {
-        if (slot < 0 || slot >= frame.Locals.Length || slot >= frame.Routine.LocalVariables.Count)
+        if (slot < 0 || slot >= frame.LocalCount || slot >= frame.Routine.LocalVariables.Count)
         {
             throw CreateInvalidSlotException(frame, "локальный", slot, instructionIndex);
         }

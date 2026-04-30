@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Справочник Axiom - Срезы и представления</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-slices">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Работа с частью массива без лишнего копирования</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Срезы и представления</p><p class="sidebar__subtitle">Выбор части массива по диапазону индексов и явная функция ARRAYSLICE.</p></div><nav id="manual-nav"></nav></div></aside><main class="content">
+<p class="eyebrow">Массивы</p>
+<h1 class="page-title">Срезы и представления</h1>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Срез позволяет взять не весь массив, а только нужную его часть. В Axiom это можно сделать либо формой индексирования с диапазоном, либо явным вызовом <code>ARRAYSLICE</code>.</p>
+<p>В обычном случае результатом становится представление, а не независимая копия. Это значит, что срез смотрит на те же данные, что и исходный массив, и изменения через срез видны в исходном массиве.</p>
+</section>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">view = array(startIndex TO finishIndex)</code></pre>
+<pre><code class="language-basic">view = array(rowStart TO rowFinish, columnStart TO columnFinish)</code></pre>
+<pre><code class="language-basic">view = array(rowIndex, columnStart TO columnFinish)</code></pre>
+<pre><code class="language-basic">part = ARRAYSLICE(array, startIndex, count)
+part = ARRAYSLICE(array, startIndex, count, dimension)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Части записи</h2>
+<ul>
+<li><code>array</code> — исходный массив, из которого выбирается часть данных.</li>
+<li><code>startIndex TO finishIndex</code> — включительный диапазон индексов для одномерного среза.</li>
+<li><code>rowStart TO rowFinish</code> и <code>columnStart TO columnFinish</code> — диапазоны строк и столбцов для двумерного среза.</li>
+<li><code>rowIndex</code> — фиксированный индекс строки, если нужно взять часть одной строки.</li>
+<li><code>view</code> — результат индексирования с диапазоном. Обычно это представление на часть исходного массива.</li>
+<li><code>startIndex</code> — индекс первого элемента или первого среза для <code>ARRAYSLICE</code>.</li>
+<li><code>count</code> — сколько элементов или срезов нужно взять через <code>ARRAYSLICE</code>.</li>
+<li><code>dimension</code> — измерение, вдоль которого строится срез в многомерном массиве.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Замечания</h2>
+<ul>
+<li>Представление не создаёт независимую копию данных. Если изменить элемент через представление, изменится и исходный массив.</li>
+<li>Срез полезен, когда нужно передать в вычисление только часть массива или работать с отдельной строкой, столбцом либо прямоугольным блоком.</li>
+<li>Если нужна именно копия, используйте <code>ARRAYCLONE</code> или создайте новый массив отдельно.</li>
+<li>Операции, меняющие размер массива, не выполняются через представление для группы <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code> и <code>ARRAYREMOVE</code>.</li>
+<li><code>ARRAYSLICE</code> полезна там, где нужен явный вызов функции, например при передаче результата как аргумента или когда удобнее задавать начало и длину, а не границы диапазона.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">' Программа берёт часть второй строки и меняет элемент через представление
+' Ожидаемый вывод:
+' 20
+' 99
+DIM board(1 TO 3, 1 TO 4) AS INTEGER
+DIM rowPart() AS INTEGER
+
+board(2, 2) = 20
+board(2, 3) = 30
+board(2, 4) = 40
+
+rowPart = board(2, 2 TO 4)
+PRINT rowPart(2)
+
+rowPart(3) = 99
+PRINT board(2, 3)</code></pre>
+<pre><code class="language-basic">' Тот же участок можно взять явным вызовом ARRAYSLICE
+DIM values(1 TO 5) AS INTEGER
+DIM part() AS INTEGER
+
+part = ARRAYSLICE(values, 2, 3)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list">
+<li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Представление на прямоугольный диапазон</a></li>
+<li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Представление на часть строки</a></li>
+<li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: базовое использование</a></li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list">
+<a href="arrays-indexing.html">Индексирование</a>
+<a href="arrays-2d-visual.html">Двумерные массивы наглядно</a>
+<a href="arrays-functions.html#arrayslice">ARRAYSLICE</a>
+<a href="arrays-functions.html">ARRAY-функции</a>
+</div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

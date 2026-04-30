@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -7,561 +7,66 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="string-functions">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Справочник по функциям для работы со строками</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Строковые функции</p>
-                    <p class="sidebar__subtitle">Справочные статьи по функциям обработки строк и их фактическому поведению.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Строковые функции</span>
-            </nav>
-            <p class="eyebrow">Встроенные функции</p>
-            <h1 class="page-title">Строковые функции</h1>
-            <p class="lead">В текущей реализации языка к строковым функциям относятся <code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code>, <code>TRIM</code>, <code>LTRIM</code>, <code>RTRIM</code>, <code>REVERSE</code>, <code>CONTAINS</code>, <code>STARTSWITH</code>, <code>ENDSWITH</code>, <code>REPLACE</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>SUBSTRCOUNT</code>, <code>REPEAT</code>, <code>SPACE</code>, <code>STRING</code>, <code>PADLEFT</code>, <code>PADRIGHT</code>, <code>CENTER</code>, <code>INSERT</code>, <code>REMOVE</code>, <code>ASC</code>, <code>CHR</code>, <code>LCASE</code>, <code>UCASE</code>, <code>SPLIT</code> и <code>JOIN</code>. Поиск по регулярному выражению вынесен на отдельную страницу <a href="regex-functions.html">функций регулярных выражений</a>. Ниже собраны формы вызова, пограничные случаи и ссылки на короткие примеры для ручной проверки.</p>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Длина, фрагменты, обрезка, поиск, замена и массивы строк</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Строковые функции</p><p class="sidebar__subtitle">Работа с длиной текста, частями строки, поиском, заменой и переходом к массивам строк.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Встроенные функции</p>
+<h1 class="page-title">Строковые функции</h1>
 
-            <section class="article-section">
-                <h2>Главные правила</h2>
-                <ul>
-                    <li><code>LEN</code> принимает один строковый аргумент и возвращает длину как <code>INTEGER</code>.</li>
-                    <li>Для <code>LEFT</code> и <code>RIGHT</code> количество символов должно быть строго больше нуля; иначе выполнение завершается диагностикой времени выполнения <code>MB3007</code>.</li>
-                    <li>Для <code>MID</code> начальная позиция должна быть не меньше <code>1</code>, а количество символов должно быть строго больше нуля; нарушение любого из условий даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                    <li>Если начальная позиция <code>MID</code> выходит за пределы строки, функция возвращает пустую строку.</li>
-                    <li><code>TRIM</code>, <code>LTRIM</code> и <code>RTRIM</code> поддерживают две формы: без второго аргумента они убирают пробелы, а со вторым аргументом убирают по краям символы из указанного набора.</li>
-                    <li><code>REPEAT</code> и <code>SPACE</code> допускают ноль, но не допускают отрицательное количество повторов или пробелов.</li>
-                    <li><code>STRING</code> использует только первый символ строки-заполнителя; пустой заполнитель даёт <code>MB3007</code>.</li>
-                    <li><code>CONTAINS</code>, <code>STARTSWITH</code>, <code>ENDSWITH</code> и <code>REPLACE</code> ищут совпадения строго по кодам символов, с учётом регистра.</li>
-                    <li>Для <code>CONTAINS</code>, <code>STARTSWITH</code> и <code>ENDSWITH</code> пустой фрагмент считается найденным и даёт <code>TRUE</code>.</li>
-                    <li><code>REPLACE</code> заменяет все найденные вхождения; пустой заменяемый фрагмент даёт <code>MB3007</code>.</li>
-                    <li><code>INSTR</code> возвращает позицию первого найденного фрагмента, считая с 1, или <code>0</code>, если совпадение не найдено.</li>
-                    <li><code>INSTRREV</code> возвращает позицию последнего найденного фрагмента, считая с 1, или <code>0</code>, если совпадение не найдено; форма с начальной позицией ищет назад от указанного места.</li>
-                    <li><code>SUBSTRCOUNT</code> считает непересекающиеся вхождения фрагмента; пустой фрагмент даёт <code>MB3007</code>.</li>
-                    <li><code>LCASE</code> и <code>UCASE</code> возвращают новое строковое значение и не изменяют исходную переменную автоматически.</li>
-                    <li><code>PADLEFT</code> и <code>PADRIGHT</code> дополняют строку до нужной ширины; необязательный заполнитель по умолчанию равен пробелу, а пустой заполнитель даёт <code>MB3007</code>.</li>
-                    <li><code>CENTER</code> центрирует строку в поле заданной ширины; необязательный заполнитель по умолчанию равен пробелу, а при нечётной разнице ширины лишний символ заполнения добавляется справа.</li>
-                    <li><code>INSERT</code> и <code>REMOVE</code> используют начальные позиции с единицы.</li>
-                    <li><code>INSERT</code> при позиции правее конца строки вставляет фрагмент в конец.</li>
-                    <li><code>REMOVE</code> допускает нулевое количество удаляемых символов и мягко обрезает удаление по правому краю строки.</li>
-                    <li><code>ASC</code> и <code>CHR</code> работают с кодами символов Unicode, а не с историческими основными и расширенными однобайтовыми таблицами.</li>
-                    <li><code>ASC</code> возвращает код первого символа строки; пустая строка даёт <code>MB3007</code>.</li>
-                    <li><code>CHR</code> принимает допустимый код символа Unicode; отрицательные значения, коды за верхней границей Unicode и суррогатный диапазон дают <code>MB3007</code>.</li>
-                    <li><code>SPLIT</code> разбивает строку в новый массив строк с границами <code>1 TO N</code>; пустая исходная строка даёт пустой выделенный массив <code>1 TO 0</code>.</li>
-                    <li><code>JOIN</code> собирает строковый массив в строку; для невыделенного или пустого массива результатом является пустая строка.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Строковые функции Axiom позволяют измерять длину текста, извлекать фрагменты, убирать символы по краям, менять регистр, искать и заменять подстроки, строить новые строки из повторов и заполнителей, а также переходить между строкой и массивом строк.</p>
+</section>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ol class="contents-list">
-                    <li><a href="#len">LEN</a></li>
-                    <li><a href="#left">LEFT</a></li>
-                    <li><a href="#right">RIGHT</a></li>
-                    <li><a href="#mid">MID</a></li>
-                    <li><a href="#trim">TRIM</a></li>
-                    <li><a href="#ltrim">LTRIM</a></li>
-                    <li><a href="#rtrim">RTRIM</a></li>
-                    <li><a href="#reverse">REVERSE</a></li>
-                    <li><a href="#contains">CONTAINS</a></li>
-                    <li><a href="#startswith">STARTSWITH</a></li>
-                    <li><a href="#endswith">ENDSWITH</a></li>
-                    <li><a href="#replace">REPLACE</a></li>
-                    <li><a href="#instr">INSTR</a></li>
-                    <li><a href="#instrrev">INSTRREV</a></li>
-                    <li><a href="#substrcount">SUBSTRCOUNT</a></li>
-                    <li><a href="#repeat">REPEAT</a></li>
-                    <li><a href="#space">SPACE</a></li>
-                    <li><a href="#string-fill">STRING</a></li>
-                    <li><a href="#padleft">PADLEFT</a></li>
-                    <li><a href="#padright">PADRIGHT</a></li>
-                    <li><a href="#center">CENTER</a></li>
-                    <li><a href="#insert">INSERT</a></li>
-                    <li><a href="#remove">REMOVE</a></li>
-                    <li><a href="#asc">ASC</a></li>
-                    <li><a href="#chr">CHR</a></li>
-                    <li><a href="#lcase">LCASE</a></li>
-                    <li><a href="#ucase">UCASE</a></li>
-                    <li><a href="#split">SPLIT</a></li>
-                    <li><a href="#join">JOIN</a></li>
-                </ol>
-            </section>
+<section class="article-section">
+<h2>Разделы</h2>
+<div class="link-list">
+<a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a>
+<a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a>
+<a href="string-functions-search-and-replace.html">Поиск и замена в строках</a>
+<a href="string-functions-build-and-split.html">Построение строк и массивы строк</a>
+</div>
+</section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <p>Для ручной проверки в IDE используйте соответствующие файлы примеров.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/len/basic_usage.axm">LEN: базовое использование</a></li>
-                    <li><a href="../../samples/functions/len/wrong_arity_error.axm">LEN: ошибка числа аргументов</a></li>
-                    <li><a href="../../samples/functions/left/basic_usage.axm">LEFT: базовое использование</a></li>
-                    <li><a href="../../samples/functions/left/negative_count_error.axm">LEFT: отрицательное количество символов</a></li>
-                    <li><a href="../../samples/functions/left/zero_count_error.axm">LEFT: нулевое количество символов</a></li>
-                    <li><a href="../../samples/functions/right/basic_usage.axm">RIGHT: базовое использование</a></li>
-                    <li><a href="../../samples/functions/right/negative_count_error.axm">RIGHT: отрицательное количество символов</a></li>
-                    <li><a href="../../samples/functions/right/out_of_range_count_behavior.axm">RIGHT: количество больше длины строки</a></li>
-                    <li><a href="../../samples/functions/right/zero_count_error.axm">RIGHT: нулевое количество символов</a></li>
-                    <li><a href="../../samples/functions/mid/basic_usage.axm">MID: базовое использование</a></li>
-                    <li><a href="../../samples/functions/mid/invalid_start_error.axm">MID: недопустимая начальная позиция</a></li>
-                    <li><a href="../../samples/functions/mid/out_of_range_start_behavior.axm">MID: начало за пределами строки</a></li>
-                    <li><a href="../../samples/functions/mid/zero_count_error.axm">MID: нулевое количество символов</a></li>
-                    <li><a href="../../samples/functions/trim/basic_usage.axm">TRIM: удаление пробелов и выбранных символов</a></li>
-                    <li><a href="../../samples/functions/ltrim/basic_usage.axm">LTRIM: удаление слева</a></li>
-                    <li><a href="../../samples/functions/rtrim/basic_usage.axm">RTRIM: удаление справа</a></li>
-                    <li><a href="../../samples/functions/reverse/basic_usage.axm">REVERSE: разворот строки</a></li>
-                    <li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS: проверка наличия фрагмента</a></li>
-                    <li><a href="../../samples/functions/startswith/basic_usage.axm">STARTSWITH: проверка начала строки</a></li>
-                    <li><a href="../../samples/functions/endswith/basic_usage.axm">ENDSWITH: проверка конца строки</a></li>
-                    <li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE: замена найденных фрагментов</a></li>
-                    <li><a href="../../samples/functions/replace/empty_old_text_error.axm">REPLACE: пустой заменяемый фрагмент</a></li>
-                    <li><a href="../../samples/functions/instr/basic_usage.axm">INSTR: позиция найденного фрагмента</a></li>
-                    <li><a href="../../samples/functions/instr/empty_fragment.axm">INSTR: пустой фрагмент</a></li>
-                    <li><a href="../../samples/functions/instr/invalid_start_error.axm">INSTR: недопустимая начальная позиция</a></li>
-                    <li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV: последнее вхождение</a></li>
-                    <li><a href="../../samples/functions/instrrev/empty_fragment.axm">INSTRREV: пустой фрагмент</a></li>
-                    <li><a href="../../samples/functions/instrrev/start_position.axm">INSTRREV: поиск назад от позиции</a></li>
-                    <li><a href="../../samples/functions/instrrev/invalid_start_error.axm">INSTRREV: недопустимая начальная позиция</a></li>
-                    <li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT: подсчёт вхождений</a></li>
-                    <li><a href="../../samples/functions/substrcount/empty_fragment_error.axm">SUBSTRCOUNT: пустой фрагмент</a></li>
-                    <li><a href="../../samples/functions/repeat/basic_usage.axm">REPEAT: повторение строки</a></li>
-                    <li><a href="../../samples/functions/repeat/negative_count_error.axm">REPEAT: отрицательное количество повторов</a></li>
-                    <li><a href="../../samples/functions/space/basic_usage.axm">SPACE: строка из пробелов</a></li>
-                    <li><a href="../../samples/functions/string/basic_usage.axm">STRING: заполнение первым символом</a></li>
-                    <li><a href="../../samples/functions/string/empty_fill_error.axm">STRING: пустой заполнитель</a></li>
-                    <li><a href="../../samples/functions/padleft/basic_usage.axm">PADLEFT: дополнение слева</a></li>
-                    <li><a href="../../samples/functions/padleft/negative_width_error.axm">PADLEFT: отрицательная ширина</a></li>
-                    <li><a href="../../samples/functions/padright/basic_usage.axm">PADRIGHT: дополнение справа</a></li>
-                    <li><a href="../../samples/functions/padright/empty_fill_error.axm">PADRIGHT: пустой заполнитель</a></li>
-                    <li><a href="../../samples/functions/center/basic_usage.axm">CENTER: центрирование строки</a></li>
-                    <li><a href="../../samples/functions/center/empty_fill_error.axm">CENTER: пустой заполнитель</a></li>
-                    <li><a href="../../samples/functions/insert/basic_usage.axm">INSERT: вставка фрагмента</a></li>
-                    <li><a href="../../samples/functions/insert/invalid_start_error.axm">INSERT: недопустимая начальная позиция</a></li>
-                    <li><a href="../../samples/functions/remove/basic_usage.axm">REMOVE: удаление фрагмента</a></li>
-                    <li><a href="../../samples/functions/remove/negative_count_error.axm">REMOVE: отрицательное количество</a></li>
-                    <li><a href="../../samples/functions/asc/basic_usage.axm">ASC: код первого символа Unicode</a></li>
-                    <li><a href="../../samples/functions/asc/empty_text_error.axm">ASC: пустая строка</a></li>
-                    <li><a href="../../samples/functions/chr/basic_usage.axm">CHR: символ по коду Unicode</a></li>
-                    <li><a href="../../samples/functions/chr/invalid_code_error.axm">CHR: недопустимый код символа</a></li>
-                    <li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE: базовое использование</a></li>
-                    <li><a href="../../samples/functions/ucase/basic_usage.axm">UCASE: базовое использование</a></li>
-                    <li><a href="../../samples/functions/split/basic_usage.axm">SPLIT: разделение строки</a></li>
-                    <li><a href="../../samples/functions/split/empty_text.axm">SPLIT: пустая исходная строка</a></li>
-                    <li><a href="../../samples/functions/join/basic_usage.axm">JOIN: сборка строки из массива</a></li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Что входит в раздел</h2>
+<ul>
+<li><code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code></li>
+<li><code>TRIM</code>, <code>LTRIM</code>, <code>RTRIM</code>, <code>LCASE</code>, <code>UCASE</code>, <code>REVERSE</code></li>
+<li><code>CONTAINS</code>, <code>STARTSWITH</code>, <code>ENDSWITH</code>, <code>REPLACE</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>SUBSTRCOUNT</code></li>
+<li><code>REPEAT</code>, <code>SPACE</code>, <code>STRING</code>, <code>PADLEFT</code>, <code>PADRIGHT</code>, <code>CENTER</code>, <code>INSERT</code>, <code>REMOVE</code>, <code>ASC</code>, <code>CHR</code>, <code>SPLIT</code>, <code>JOIN</code></li>
+</ul>
+<p>Поиск по регулярному выражению вынесен отдельно на страницу <a href="regex-functions.html">Регулярные выражения</a>.</p>
+</section>
 
-            <section class="article-section" id="len">
-                <h2>LEN</h2>
-                <p><strong>Форма вызова:</strong> <code>LEN(&lt;текст&gt; AS STRING) AS INTEGER</code></p>
-                <p>Функция возвращает длину строки в символах.</p>
-                <pre><code class="language-basic">PRINT LEN("Пример")</code></pre>
-                <ul>
-                    <li>принимает ровно один строковый аргумент;</li>
-                    <li>пустая строка дает результат <code>0</code>;</li>
-                    <li>неверный тип или число аргументов относится к диагностике использования функции.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Замечания</h2>
+<ul>
+<li>Строковые позиции в функциях вроде <code>MID</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>INSERT</code> и <code>REMOVE</code> считаются с единицы.</li>
+<li>Необязательные параметры, например у <code>TRIM</code>, <code>SPLIT</code>, <code>JOIN</code>, <code>PADLEFT</code>, <code>PADRIGHT</code> и <code>CENTER</code>, на справочных страницах показываются в квадратных скобках.</li>
+<li>Функции этого раздела работают с обычными строками <code>STRING</code>. Для массивов символов отдельного типа в языке нет.</li>
+</ul>
+</section>
 
-            <section class="article-section" id="left">
-                <h2>LEFT</h2>
-                <p><strong>Форма вызова:</strong> <code>LEFT(&lt;текст&gt; AS STRING, &lt;количество&gt; AS INTEGER) AS STRING</code></p>
-                <p>Функция возвращает указанное число символов с левого края строки.</p>
-                <pre><code class="language-basic">PRINT LEFT("пример", 3)</code></pre>
-                <ul>
-                    <li>если количество символов больше длины строки, возвращается вся строка;</li>
-                    <li>количество символов меньше 1 даёт диагностику времени выполнения <code>MB3007</code>;</li>
-                    <li>сама форма вызова должна соответствовать сигнатуре функции.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list">
+<li><a href="../../samples/functions/len/basic_usage.axm">LEN</a></li>
+<li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li>
+<li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li>
+<li><a href="../../samples/functions/split/basic_usage.axm">SPLIT</a></li>
+</ul>
+</section>
 
-            <section class="article-section" id="right">
-                <h2>RIGHT</h2>
-                <p><strong>Форма вызова:</strong> <code>RIGHT(&lt;текст&gt; AS STRING, &lt;количество&gt; AS INTEGER) AS STRING</code></p>
-                <p>Функция возвращает указанное число символов с правого края строки.</p>
-                <pre><code class="language-basic">PRINT RIGHT("пример", 4)</code></pre>
-                <ul>
-                    <li>если количество символов больше длины строки, возвращается вся строка;</li>
-                    <li>функция работает симметрично <code>LEFT</code>, только берет символы справа;</li>
-                    <li>количество символов меньше 1 даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list">
+<a href="regex-functions.html">Регулярные выражения</a>
+<a href="data-types-strings-and-files.html">STRING и FILE</a>
+</div>
+</section>
 
-            <section class="article-section" id="mid">
-                <h2>MID</h2>
-                <p><strong>Форма вызова:</strong> <code>MID(&lt;текст&gt; AS STRING, &lt;начало&gt; AS INTEGER, &lt;количество&gt; AS INTEGER) AS STRING</code></p>
-                <p>Функция извлекает фрагмент строки, начиная с заданной позиции и длиной в указанное количество символов.</p>
-                <pre><code class="language-basic">PRINT MID("пример", 3, 4)</code></pre>
-                <ul>
-                    <li>начальная позиция отсчитывается с единицы;</li>
-                    <li>если начало выходит за пределы строки, возвращается пустая строка;</li>
-                    <li>начальная позиция меньше 1 или количество символов меньше 1 дают диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="trim">
-                <h2>TRIM</h2>
-                <p><strong>Формы вызова:</strong> <code>TRIM(&lt;текст&gt; AS STRING) AS STRING</code>, <code>TRIM(&lt;текст&gt; AS STRING, &lt;символы&gt; AS STRING) AS STRING</code></p>
-                <p>Удаляет символы с обоих краёв строки. Без второго аргумента убирает пробелы. Со вторым аргументом убирает по краям любые символы из строки <code>chars</code>.</p>
-                <pre><code class="language-basic">PRINT TRIM("--пример--", "-")</code></pre>
-                <ul>
-                    <li><code>TRIM("  hello  ")</code> даёт <code>hello</code>;</li>
-                    <li><code>TRIM("--hello--", "-")</code> тоже даёт <code>hello</code>;</li>
-                    <li>если <code>chars</code> пустая строка, исходный текст возвращается без изменений;</li>
-                    <li>середина строки не затрагивается.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="ltrim">
-                <h2>LTRIM</h2>
-                <p><strong>Формы вызова:</strong> <code>LTRIM(&lt;текст&gt; AS STRING) AS STRING</code>, <code>LTRIM(&lt;текст&gt; AS STRING, &lt;символы&gt; AS STRING) AS STRING</code></p>
-                <p>Работает как <code>TRIM</code>, но удаляет символы только с левого края строки.</p>
-                <pre><code class="language-basic">PRINT LTRIM("xyxyhello", "xy")</code></pre>
-                <ul>
-                    <li>без второго аргумента убирает пробелы слева;</li>
-                    <li>со вторым аргументом использует строку <code>chars</code> как набор удаляемых символов;</li>
-                    <li>правый край строки не меняется.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="rtrim">
-                <h2>RTRIM</h2>
-                <p><strong>Формы вызова:</strong> <code>RTRIM(&lt;текст&gt; AS STRING) AS STRING</code>, <code>RTRIM(&lt;текст&gt; AS STRING, &lt;символы&gt; AS STRING) AS STRING</code></p>
-                <p>Работает как <code>TRIM</code>, но удаляет символы только с правого края строки.</p>
-                <pre><code class="language-basic">PRINT RTRIM("helloxyxy", "xy")</code></pre>
-                <ul>
-                    <li>без второго аргумента убирает пробелы справа;</li>
-                    <li>со вторым аргументом использует строку <code>chars</code> как набор удаляемых символов;</li>
-                    <li>левый край строки не меняется.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="reverse">
-                <h2>REVERSE</h2>
-                <p><strong>Форма вызова:</strong> <code>REVERSE(&lt;текст&gt; AS STRING) AS STRING</code></p>
-                <p>Возвращает строку с символами в обратном порядке.</p>
-                <pre><code class="language-basic">PRINT REVERSE("abcd")</code></pre>
-                <ul>
-                    <li>принимает один строковый аргумент;</li>
-                    <li>пустая строка остаётся пустой;</li>
-                    <li>исходная переменная не изменяется автоматически.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="contains">
-                <h2>CONTAINS</h2>
-                <p><strong>Форма вызова:</strong> <code>CONTAINS(&lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS BOOLEAN</code></p>
-                <p>Проверяет, есть ли строка <code>fragment</code> внутри строки <code>text</code>.</p>
-                <pre><code class="language-basic">PRINT CONTAINS("Hello", "ell")</code></pre>
-                <ul>
-                    <li>возвращает <code>TRUE</code>, если фрагмент найден;</li>
-                    <li>сравнение выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой <code>fragment</code> считается найденным и даёт <code>TRUE</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="startswith">
-                <h2>STARTSWITH</h2>
-                <p><strong>Форма вызова:</strong> <code>STARTSWITH(&lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS BOOLEAN</code></p>
-                <p>Проверяет, начинается ли строка <code>text</code> с указанного фрагмента.</p>
-                <pre><code class="language-basic">PRINT STARTSWITH("Hello", "He")</code></pre>
-                <ul>
-                    <li>возвращает <code>TRUE</code>, если начало строки совпадает с <code>fragment</code>;</li>
-                    <li>сравнение выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой <code>fragment</code> считается найденным и даёт <code>TRUE</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="endswith">
-                <h2>ENDSWITH</h2>
-                <p><strong>Форма вызова:</strong> <code>ENDSWITH(&lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS BOOLEAN</code></p>
-                <p>Проверяет, заканчивается ли строка <code>text</code> указанным фрагментом.</p>
-                <pre><code class="language-basic">PRINT ENDSWITH("Hello", "lo")</code></pre>
-                <ul>
-                    <li>возвращает <code>TRUE</code>, если конец строки совпадает с <code>fragment</code>;</li>
-                    <li>сравнение выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой <code>fragment</code> считается найденным и даёт <code>TRUE</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="replace">
-                <h2>REPLACE</h2>
-                <p><strong>Форма вызова:</strong> <code>REPLACE(&lt;текст&gt; AS STRING, &lt;старый фрагмент&gt; AS STRING, &lt;новый фрагмент&gt; AS STRING) AS STRING</code></p>
-                <p>Возвращает новую строку, где все найденные вхождения заменяемого фрагмента заменены на новый фрагмент.</p>
-                <pre><code class="language-basic">PRINT REPLACE("one two two", "two", "three")</code></pre>
-                <ul>
-                    <li>если заменяемый фрагмент не найден, возвращается исходный текст без изменений;</li>
-                    <li>поиск выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой заменяемый фрагмент даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="instr">
-                <h2>INSTR</h2>
-                <p><strong>Формы вызова:</strong> <code>INSTR(&lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS INTEGER</code>, <code>INSTR(&lt;начало&gt; AS INTEGER, &lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS INTEGER</code></p>
-                <p>Возвращает позицию первого найденного фрагмента внутри строки. Позиция считается с единицы. Если совпадение не найдено, результат равен <code>0</code>.</p>
-                <pre><code class="language-basic">PRINT INSTR("banana", "na")
-PRINT INSTR(4, "banana", "na")</code></pre>
-                <ul>
-                    <li><code>INSTR("banana", "na")</code> даёт <code>3</code>;</li>
-                    <li><code>INSTR(4, "banana", "na")</code> начинает поиск с четвёртой позиции и даёт <code>5</code>;</li>
-                    <li>поиск выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой фрагмент возвращает текущую позицию поиска, если она не больше <code>LEN(text) + 1</code>;</li>
-                    <li><code>start &lt; 1</code> даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="instrrev">
-                <h2>INSTRREV</h2>
-                <p><strong>Формы вызова:</strong> <code>INSTRREV(&lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS INTEGER</code>, <code>INSTRREV(&lt;начало&gt; AS INTEGER, &lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS INTEGER</code></p>
-                <p>Возвращает позицию последнего найденного фрагмента внутри строки. Позиция считается с единицы. Если совпадение не найдено, результат равен <code>0</code>. Форма с начальной позицией начинает поиск назад от указанного места.</p>
-                <pre><code class="language-basic">PRINT INSTRREV("banana", "na")</code></pre>
-                <ul>
-                    <li><code>INSTRREV("banana", "na")</code> даёт <code>5</code>;</li>
-                    <li><code>INSTRREV(4, "banana", "na")</code> ищет назад от четвёртой позиции и даёт <code>3</code>;</li>
-                    <li>если начальная позиция больше длины строки, поиск начинается с конца строки;</li>
-                    <li>поиск выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой фрагмент в форме с двумя аргументами возвращает <code>LEN(text) + 1</code>;</li>
-                    <li>пустой фрагмент в форме с начальной позицией возвращает значение начальной позиции плюс 1, но не больше <code>LEN(text) + 1</code>;</li>
-                    <li>начальная позиция меньше 1 даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="substrcount">
-                <h2>SUBSTRCOUNT</h2>
-                <p><strong>Форма вызова:</strong> <code>SUBSTRCOUNT(&lt;текст&gt; AS STRING, &lt;фрагмент&gt; AS STRING) AS INTEGER</code></p>
-                <p>Возвращает количество непересекающихся вхождений фрагмента внутри строки.</p>
-                <pre><code class="language-basic">PRINT SUBSTRCOUNT("banana", "na")
-PRINT SUBSTRCOUNT("aaaa", "aa")</code></pre>
-                <ul>
-                    <li><code>SUBSTRCOUNT("banana", "na")</code> даёт <code>2</code>;</li>
-                    <li><code>SUBSTRCOUNT("aaaa", "aa")</code> даёт <code>2</code>, потому что вхождения не пересекаются;</li>
-                    <li>поиск выполняется строго по кодам символов, с учётом регистра;</li>
-                    <li>пустой фрагмент даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="repeat">
-                <h2>REPEAT</h2>
-                <p><strong>Форма вызова:</strong> <code>REPEAT(&lt;текст&gt; AS STRING, &lt;количество&gt; AS INTEGER) AS STRING</code></p>
-                <p>Повторяет строку <code>text</code> указанное число раз.</p>
-                <pre><code class="language-basic">PRINT REPEAT("ha", 3)</code></pre>
-                <ul>
-                    <li><code>REPEAT("ha", 3)</code> даёт <code>hahaha</code>;</li>
-                    <li>нулевое количество повторов даёт пустую строку;</li>
-                    <li>отрицательное количество повторов даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="space">
-                <h2>SPACE</h2>
-                <p><strong>Форма вызова:</strong> <code>SPACE(&lt;количество&gt; AS INTEGER) AS STRING</code></p>
-                <p>Возвращает строку из указанного числа пробелов.</p>
-                <pre><code class="language-basic">PRINT "[" + SPACE(4) + "]"</code></pre>
-                <ul>
-                    <li>нулевое количество пробелов даёт пустую строку;</li>
-                    <li>отрицательное количество пробелов даёт диагностику времени выполнения <code>MB3007</code>;</li>
-                    <li>функция удобна для выравнивания и простого заполнения строк.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="string-fill">
-                <h2>STRING</h2>
-                <p><strong>Форма вызова:</strong> <code>STRING(&lt;количество&gt; AS INTEGER, &lt;заполнитель&gt; AS STRING) AS STRING</code></p>
-                <p>Создаёт строку заданной длины, заполненную первым символом строки-заполнителя.</p>
-                <pre><code class="language-basic">PRINT STRING(5, "ab")</code></pre>
-                <ul>
-                    <li><code>STRING(5, "ab")</code> даёт <code>aaaaa</code>;</li>
-                    <li>нулевая длина даёт пустую строку;</li>
-                    <li>если строка-заполнитель пустая, возникает диагностика времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="padleft">
-                <h2>PADLEFT</h2>
-                <p><strong>Форма вызова:</strong> <code>PADLEFT(&lt;текст&gt; AS STRING, &lt;ширина&gt; AS INTEGER[, &lt;заполнитель&gt; AS STRING]) AS STRING</code></p>
-                <p>Дополняет строку слева до указанной ширины. Если третий аргумент не передан, используется пробел.</p>
-                <pre><code class="language-basic">PRINT PADLEFT("7", 3, "0")</code></pre>
-                <ul>
-                    <li><code>PADLEFT("7", 3)</code> даёт <code>  7</code>;</li>
-                    <li><code>PADLEFT("7", 3, "0")</code> даёт <code>007</code>;</li>
-                    <li>если ширина меньше или равна длине строки, возвращается исходный текст без изменений;</li>
-                    <li>если строка заполнителя содержит несколько символов, используется только первый;</li>
-                    <li>отрицательная ширина или пустой заполнитель дают диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="padright">
-                <h2>PADRIGHT</h2>
-                <p><strong>Форма вызова:</strong> <code>PADRIGHT(&lt;текст&gt; AS STRING, &lt;ширина&gt; AS INTEGER[, &lt;заполнитель&gt; AS STRING]) AS STRING</code></p>
-                <p>Дополняет строку справа до указанной ширины. Если третий аргумент не передан, используется пробел.</p>
-                <pre><code class="language-basic">PRINT PADRIGHT("7", 3, ".")</code></pre>
-                <ul>
-                    <li><code>PADRIGHT("7", 3)</code> даёт <code>7  </code>;</li>
-                    <li><code>PADRIGHT("7", 3, ".")</code> даёт <code>7..</code>;</li>
-                    <li>если ширина меньше или равна длине строки, возвращается исходный текст без изменений;</li>
-                    <li>если строка заполнителя содержит несколько символов, используется только первый;</li>
-                    <li>отрицательная ширина или пустой заполнитель дают диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="center">
-                <h2>CENTER</h2>
-                <p><strong>Форма вызова:</strong> <code>CENTER(&lt;текст&gt; AS STRING, &lt;ширина&gt; AS INTEGER[, &lt;заполнитель&gt; AS STRING]) AS STRING</code></p>
-                <p>Центрирует строку в поле указанной ширины. Если третий аргумент не передан, используется пробел.</p>
-                <pre><code class="language-basic">PRINT "[" + CENTER("A", 4, ".") + "]"</code></pre>
-                <ul>
-                    <li><code>CENTER("A", 3)</code> даёт <code> A </code>;</li>
-                    <li><code>CENTER("A", 4, ".")</code> даёт <code>.A..</code>;</li>
-                    <li><code>CENTER("AB", 5, ".")</code> даёт <code>.AB..</code>;</li>
-                    <li>если ширина меньше или равна длине строки, возвращается исходный текст без изменений;</li>
-                    <li>если строка заполнителя содержит несколько символов, используется только первый;</li>
-                    <li>при нечётной разнице между шириной поля и длиной текста лишний символ заполнения добавляется справа;</li>
-                    <li>отрицательная ширина или пустой заполнитель дают диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="insert">
-                <h2>INSERT</h2>
-                <p><strong>Форма вызова:</strong> <code>INSERT(&lt;текст&gt; AS STRING, &lt;начало&gt; AS INTEGER, &lt;фрагмент&gt; AS STRING) AS STRING</code></p>
-                <p>Вставляет фрагмент в строку перед символом с указанной позицией. Позиция считается с единицы.</p>
-                <pre><code class="language-basic">PRINT INSERT("abcd", 3, "-")</code></pre>
-                <ul>
-                    <li><code>INSERT("abcd", 1, "&lt;")</code> даёт <code>&lt;abcd</code>;</li>
-                    <li><code>INSERT("abcd", 3, "-")</code> даёт <code>ab-cd</code>;</li>
-                    <li>если начальная позиция больше <code>LEN(text) + 1</code>, вставка выполняется в конец строки;</li>
-                    <li>пустой фрагмент допустим и оставляет строку без изменений;</li>
-                    <li>начальная позиция меньше 1 даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="remove">
-                <h2>REMOVE</h2>
-                <p><strong>Форма вызова:</strong> <code>REMOVE(&lt;текст&gt; AS STRING, &lt;начало&gt; AS INTEGER, &lt;количество&gt; AS INTEGER) AS STRING</code></p>
-                <p>Удаляет из строки указанное количество символов, начиная с заданной позиции. Позиция считается с единицы.</p>
-                <pre><code class="language-basic">PRINT REMOVE("abcdef", 2, 3)</code></pre>
-                <ul>
-                    <li><code>REMOVE("abcdef", 2, 3)</code> даёт <code>aef</code>;</li>
-                    <li>если количество равно <code>0</code>, возвращается исходная строка;</li>
-                    <li>если начало находится правее конца строки, возвращается исходная строка без изменений;</li>
-                    <li>если удаление выходит за правую границу строки, удаляются все доступные символы до конца;</li>
-                    <li>начальная позиция меньше 1 или отрицательное количество дают диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="asc">
-                <h2>ASC</h2>
-                <p><strong>Форма вызова:</strong> <code>ASC(&lt;текст&gt; AS STRING) AS INTEGER</code></p>
-                <p>Возвращает код первого символа Unicode в строке.</p>
-                <pre><code class="language-basic">PRINT ASC("A")
-PRINT ASC(CHR(1071))</code></pre>
-                <ul>
-                    <li><code>ASC("A")</code> даёт <code>65</code>;</li>
-                    <li><code>ASC(CHR(1071))</code> даёт <code>1071</code>;</li>
-                    <li>функция использует код символа Unicode, а не исторические основные или расширенные однобайтовые таблицы;</li>
-                    <li>пустая строка даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="chr">
-                <h2>CHR</h2>
-                <p><strong>Форма вызова:</strong> <code>CHR(&lt;код&gt; AS INTEGER) AS STRING</code></p>
-                <p>Возвращает строку из одного символа Unicode с указанным кодом.</p>
-                <pre><code class="language-basic">PRINT CHR(65)
-PRINT ASC(CHR(128512))</code></pre>
-                <ul>
-                    <li><code>CHR(65)</code> даёт <code>A</code>;</li>
-                    <li><code>ASC(CHR(128512))</code> даёт <code>128512</code>;</li>
-                    <li>функция принимает только допустимые коды символов Unicode;</li>
-                    <li>отрицательные значения, коды выше <code>1114111</code> и суррогатный диапазон <code>55296..57343</code> дают диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="lcase">
-                <h2>LCASE</h2>
-                <p><strong>Форма вызова:</strong> <code>LCASE(&lt;текст&gt; AS STRING) AS STRING</code></p>
-                <p>Переводит строку в нижний регистр.</p>
-                <pre><code class="language-basic">PRINT LCASE("ПРИМЕР")</code></pre>
-                <ul>
-                    <li>принимает один строковый аргумент;</li>
-                    <li>не меняет саму исходную переменную, а возвращает новое строковое значение;</li>
-                    <li>ошибка вызова возникает при неправильной сигнатуре.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="ucase">
-                <h2>UCASE</h2>
-                <p><strong>Форма вызова:</strong> <code>UCASE(&lt;текст&gt; AS STRING) AS STRING</code></p>
-                <p>Переводит строку в верхний регистр.</p>
-                <pre><code class="language-basic">PRINT UCASE("пример")</code></pre>
-                <ul>
-                    <li>принимает один строковый аргумент;</li>
-                    <li>возвращает новое значение, а не переписывает исходный текст автоматически;</li>
-                    <li>по смыслу является парной функцией для <code>LCASE</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="split">
-                <h2>SPLIT</h2>
-                <p><strong>Формы вызова:</strong> <code>SPLIT(&lt;текст&gt; AS STRING) AS STRING()</code>, <code>SPLIT(&lt;текст&gt; AS STRING, &lt;разделитель&gt; AS STRING) AS STRING()</code></p>
-                <p>Разбивает строку на части и возвращает новый одномерный массив строк. Если разделитель не передан, используется запятая.</p>
-                <pre><code class="language-basic">DIM parts() AS STRING
-parts = SPLIT("red,green,blue", ",")
-
-PRINT parts(1)
-PRINT parts(2)
-PRINT parts(3)</code></pre>
-                <ul>
-                    <li>результат имеет тип <code>STRING()</code>;</li>
-                    <li>непустой результат получает компактные границы <code>1 TO N</code>;</li>
-                    <li>пустые части между разделителями сохраняются;</li>
-                    <li>пустая исходная строка даёт пустой выделенный массив <code>1 TO 0</code>;</li>
-                    <li>пустой разделитель даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="join">
-                <h2>JOIN</h2>
-                <p><strong>Формы вызова:</strong> <code>JOIN(&lt;части&gt; AS STRING()) AS STRING</code>, <code>JOIN(&lt;части&gt; AS STRING(), &lt;разделитель&gt; AS STRING) AS STRING</code></p>
-                <p>Собирает элементы строкового массива в одну строку. Если разделитель не передан, используется запятая.</p>
-                <pre><code class="language-basic">DIM parts() AS STRING
-parts = SPLIT("red,green,blue")
-
-PRINT JOIN(parts, "/")</code></pre>
-                <ul>
-                    <li>первый аргумент должен иметь тип <code>STRING()</code>;</li>
-                    <li>элементы берутся в порядке их логических индексов от нижней границы к верхней;</li>
-                    <li>невыделенный массив даёт пустую строку;</li>
-                    <li>пустой выделенный массив <code>1 TO 0</code> тоже даёт пустую строку;</li>
-                    <li>пустой разделитель допустим и собирает элементы без промежутка между ними.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                    <a href="examples.html">Примеры</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+<div id="page-pager" class="pager"></div></main></div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

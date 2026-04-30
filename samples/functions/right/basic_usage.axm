@@ -1,2 +1,4 @@
-' Expected: prints llo.
+' Функция RIGHT возвращает указанное число символов справа.
+' Ожидаемый вывод:
+' llo
 PRINT RIGHT("Hello", 3)

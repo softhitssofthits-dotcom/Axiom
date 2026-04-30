@@ -454,6 +454,109 @@ public sealed class BytecodeCompilerTests
     }
 
     [Fact]
+    public void Compile_LongPlusConvertedInteger_CollapsesToAddLongInteger()
+    {
+        var total = new VariableSymbol("total", TypeSymbol.Long, isReadOnly: false, isGlobal: false);
+        var value = new VariableSymbol("value", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadVariable(Location(2), total),
+                LoweredInstruction.LoadVariable(Location(2), value),
+                LoweredInstruction.Convert(Location(2), TypeSymbol.Long),
+                LoweredInstruction.BinaryOperation(Location(2), SyntaxKind.PlusToken),
+                LoweredInstruction.StoreVariable(Location(2), total),
+                LoweredInstruction.Return(Location(3))
+            ],
+            isEntryPoint: true,
+            localVariables: [total, value]);
+
+        var loweredProgram = new LoweredProgram(Location(1), entryPoint, []);
+
+        var result = new BytecodeCompiler().Compile(loweredProgram);
+
+        Assert.True(result.Succeeded);
+
+        Assert.Collection(
+            result.Module!.Routines.Single().Instructions,
+            instruction =>
+            {
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
+                Assert.Equal(0, instruction.GetOperand(0));
+            },
+            instruction =>
+            {
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
+                Assert.Equal(1, instruction.GetOperand(0));
+            },
+            instruction => Assert.Equal(Opcode.AddLongInteger, instruction.Opcode),
+            instruction =>
+            {
+                Assert.Equal(Opcode.StoreLocal, instruction.Opcode);
+                Assert.Equal(0, instruction.GetOperand(0));
+            },
+            instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
+    }
+
+    [Fact]
+    public void Compile_CompareGreaterThenJumpIfFalse_CollapsesToJumpIfLessOrEqual()
+    {
+        var left = new VariableSymbol("left", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+        var right = new VariableSymbol("right", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadVariable(Location(2), left),
+                LoweredInstruction.LoadVariable(Location(2), right),
+                LoweredInstruction.BinaryOperation(Location(2), SyntaxKind.GreaterToken),
+                LoweredInstruction.JumpIfFalse(Location(2), "L_END"),
+                LoweredInstruction.LoadLiteral(Location(3), 1, TypeSymbol.Integer),
+                LoweredInstruction.Pop(Location(3)),
+                LoweredInstruction.LabelMarker(Location(4), "L_END"),
+                LoweredInstruction.Return(Location(4))
+            ],
+            isEntryPoint: true,
+            localVariables: [left, right]);
+
+        var loweredProgram = new LoweredProgram(Location(1), entryPoint, []);
+
+        var result = new BytecodeCompiler().Compile(loweredProgram);
+
+        Assert.True(result.Succeeded);
+
+        Assert.Collection(
+            result.Module!.Routines.Single().Instructions,
+            instruction =>
+            {
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
+                Assert.Equal(0, instruction.GetOperand(0));
+            },
+            instruction =>
+            {
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
+                Assert.Equal(1, instruction.GetOperand(0));
+            },
+            instruction =>
+            {
+                Assert.Equal(Opcode.JumpIfLessOrEqual, instruction.Opcode);
+                Assert.Equal(5, instruction.GetOperand(0));
+            },
+            instruction => Assert.Equal(Opcode.PushConst, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Pop, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
+    }
+
+    [Fact]
     public void Compile_BuiltinFunctionValue_EmitsLoadBuiltinFunction()
     {
         var textParameter = new ParameterSymbol("text", TypeSymbol.String, ordinal: 0);

@@ -10,7 +10,7 @@
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Простое визуальное объяснение строк, столбцов и обхода</div>
+            <div class="topbar__meta">Строки, столбцы и работа с прямоугольной таблицей</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -19,32 +19,29 @@
             <div class="sidebar__inner">
                 <div class="sidebar__head">
                     <p class="sidebar__title">Двумерные массивы наглядно</p>
-                    <p class="sidebar__subtitle">Табличная модель, строки, столбцы и живые представления без копирования.</p>
+                    <p class="sidebar__subtitle">Как представить таблицу и как читать два индекса.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
         </aside>
         <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Двумерные массивы наглядно</span>
-            </nav>
-            <p class="eyebrow">Практика и справка</p>
+            <p class="eyebrow">Массивы</p>
             <h1 class="page-title">Двумерные массивы наглядно</h1>
-            <p class="lead">Двумерный массив удобнее всего понимать как таблицу. Первое измерение — это строки, второе измерение — столбцы.</p>
 
             <section class="article-section">
-                <h2>Самая простая картинка</h2>
+                <h2>Сводка</h2>
+                <p>Двумерный массив удобно понимать как таблицу. Первый индекс выбирает строку, второй индекс выбирает столбец. Поэтому выражение вроде <code>board(2, 3)</code> читается как обращение к ячейке на пересечении второй строки и третьего столбца.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Самая простая схема</h2>
                 <pre><code class="language-basic">DIM board(1 TO 3, 1 TO 4) AS INTEGER</code></pre>
-                <pre><code class="language-text">            столбец
-          1    2    3    4
-строка 1  [ ]  [ ]  [ ]  [ ]
-строка 2  [ ]  [ ]  [ ]  [ ]
-строка 3  [ ]  [ ]  [ ]  [ ]</code></pre>
-                <p>Запись <code>board(2, 3)</code> означает: строка <code>2</code>, столбец <code>3</code>.</p>
+                <pre><code class="language-text">           столбец
+         1    2    3    4
+строка 1 [ ]  [ ]  [ ]  [ ]
+строка 2 [ ]  [ ]  [ ]  [ ]
+строка 3 [ ]  [ ]  [ ]  [ ]</code></pre>
+                <p>У такого массива три строки и четыре столбца. Все ячейки имеют один и тот же тип.</p>
             </section>
 
             <section class="article-section">
@@ -52,69 +49,37 @@
                 <pre><code class="language-text">board(1, 1)  board(1, 2)  board(1, 3)  board(1, 4)
 board(2, 1)  board(2, 2)  board(2, 3)  board(2, 4)
 board(3, 1)  board(3, 2)  board(3, 3)  board(3, 4)</code></pre>
-                <p>Порядок всегда такой: сначала номер строки, потом номер столбца.</p>
+                <p>Порядок всегда один и тот же: сначала номер строки, потом номер столбца.</p>
             </section>
 
             <section class="article-section">
                 <h2>Одна конкретная ячейка</h2>
                 <pre><code class="language-basic">board(2, 3) = 99</code></pre>
-                <pre><code class="language-text">            1    2    3    4
-строка 1    [ ]  [ ]  [ ]  [ ]
-строка 2    [ ]  [ ] [99] [ ]
-строка 3    [ ]  [ ]  [ ]  [ ]</code></pre>
+                <pre><code class="language-text">           1    2    3    4
+строка 1  [ ]  [ ]  [ ]  [ ]
+строка 2  [ ]  [ ] [99]  [ ]
+строка 3  [ ]  [ ]  [ ]  [ ]</code></pre>
+                <p>Такой вызов изменяет ровно одну ячейку таблицы.</p>
             </section>
 
             <section class="article-section">
-                <h2>Строка как представление</h2>
+                <h2>Часть строки как представление</h2>
                 <pre><code class="language-basic">rowView = board(2, 2 TO 4)</code></pre>
-                <pre><code class="language-text">исходный board:
-
-            1    2    3    4
-строка 1    [ ]  [ ]  [ ]  [ ]
-строка 2    [ ] [ ]  [ ]  [ ]
-строка 3    [ ]  [ ]  [ ]  [ ]
-
-rowView смотрит на:
-строка 2, столбцы 2..4</code></pre>
-                <p>Это не копия. Это живое представление части исходного массива. Если изменить <code>rowView</code>, изменится и <code>board</code>.</p>
+                <p>Эта запись выбирает часть второй строки. Полученное представление не копирует значения, а работает с тем же участком исходного массива.</p>
             </section>
 
             <section class="article-section">
                 <h2>Прямоугольный блок</h2>
                 <pre><code class="language-basic">block = board(2 TO 3, 2 TO 4)</code></pre>
-                <pre><code class="language-text">            1    2    3    4
-строка 1    [ ]  [ ]  [ ]  [ ]
-строка 2    [ ] [ ]  [ ]  [ ]
-строка 3    [ ] [ ]  [ ]  [ ]</code></pre>
-                <p><code>block</code> тоже не копирует значения. Он смотрит на тот же прямоугольный кусок исходной таблицы.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>В каком порядке массив обходится целиком</h2>
-                <pre><code class="language-text">(1,1) -&gt; (1,2) -&gt; (1,3) -&gt; (1,4)
-(2,1) -&gt; (2,2) -&gt; (2,3) -&gt; (2,4)
-(3,1) -&gt; (3,2) -&gt; (3,3) -&gt; (3,4)</code></pre>
-                <p>Сначала перебираются столбцы внутри текущей строки, потом начинается следующая строка. На этом порядке уже основаны многомерные <code>ARRAYCOUNT</code>, <code>ARRAYEVERY</code>, <code>ARRAYSOME</code> и <code>ARRAYREDUCE</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Почему нужны ROW и COLUMN</h2>
-                <p>Когда функция просит номер измерения, числа <code>1</code> и <code>2</code> работают, но читаются сухо. Поэтому в языке есть предопределённые константы:</p>
-                <pre><code class="language-basic">PRINT LBOUND(board, ROW)
-PRINT UBOUND(board, COLUMN)</code></pre>
-                <ul>
-                    <li><code>ROW</code> означает первое измерение, то есть строки;</li>
-                    <li><code>COLUMN</code> означает второе измерение, то есть столбцы;</li>
-                    <li>числа <code>1</code> и <code>2</code> при этом остаются полностью допустимыми.</li>
-                </ul>
+                <p>Так можно выбрать прямоугольную область таблицы. Это удобно, когда нужно передать в вычисление только часть большого массива.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="arrays.html">Массивы</a>
-                    <a href="arrays-1d-visual.html">Одномерные массивы наглядно</a>
-                    <a href="variables-and-constants.html#predefined-constants">Предопределённые константы</a>
+                    <a href="arrays-2d.html">Двумерные массивы</a>
+                    <a href="arrays-slices.html">Срезы и представления</a>
+                    <a href="arrays-functions.html">ARRAY-функции</a>
                 </div>
             </section>
 

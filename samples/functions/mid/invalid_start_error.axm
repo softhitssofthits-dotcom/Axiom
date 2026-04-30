@@ -1,2 +1,3 @@
-' Expected runtime diagnostic MB3007: MID start must be >= 1.
+' Функция MID требует, чтобы start был не меньше 1.
+' Ожидаемая диагностика времени выполнения: `MB3007`.
 PRINT MID("Hello", 0, 2)

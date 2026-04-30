@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - UTC и часовые пояса</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="date-time-functions-time-zones">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">UTCOFFSET, TOUTC и FROMUTC</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">UTC и часовые пояса</p><p class="sidebar__subtitle">Смещение, перевод в UTC и обратное преобразование.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Дата и время</p>
+<h1 class="page-title">UTC и часовые пояса</h1>
+
+<section class="article-section" id="utcoffset">
+<h2>UTCOFFSET</h2>
+<p>Функция <code>UTCOFFSET</code> возвращает смещение часового пояса относительно UTC в минутах.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">offsetMinutes = UTCOFFSET([value[, timeZone]])</code></pre>
+<p><strong>Части записи.</strong> Без аргументов функция возвращает текущее локальное смещение. Если указан <code>value</code>, он должен быть строкой даты и времени вида <code>yyyy-MM-dd HH:mm:ss</code>. Если также указан <code>timeZone</code>, смещение вычисляется для этого пояса.</p>
+</section>
+
+<section class="article-section" id="toutc">
+<h2>TOUTC</h2>
+<p>Функция <code>TOUTC</code> переводит локальную дату и время или дату и время указанного часового пояса в каноническое значение UTC.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">utcValue = TOUTC(value[, timeZone])</code></pre>
+<p><strong>Части записи.</strong> <code>value</code> задаёт строку даты и времени вида <code>yyyy-MM-dd HH:mm:ss</code>. Если <code>timeZone</code> не указан, исходное значение трактуется как локальное время.</p>
+</section>
+
+<section class="article-section" id="fromutc">
+<h2>FROMUTC</h2>
+<p>Функция <code>FROMUTC</code> переводит каноническую дату и время UTC в локальное время или во время указанного часового пояса.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">localValue = FROMUTC(value[, timeZone])</code></pre>
+<p><strong>Части записи.</strong> <code>value</code> задаёт строку даты и времени в UTC вида <code>yyyy-MM-dd HH:mm:ss</code>. Если <code>timeZone</code> не указан, используется локальный часовой пояс.</p>
+</section>
+
+<section class="article-section">
+<h2>Аргументы</h2>
+<ul>
+<li><code>value</code> — каноническая строка даты и времени вида <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+<li><code>timeZone</code> — строковый идентификатор часового пояса. Поддерживаются <code>UTC</code>, <code>LOCAL</code> и известные хосту системные идентификаторы.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">' Смещение и переводы между локальным временем и UTC
+PRINT UTCOFFSET()
+PRINT UTCOFFSET("2026-04-20 14:05:06")
+PRINT UTCOFFSET("2026-04-20 14:05:06", "UTC")
+PRINT TOUTC("2026-04-20 14:05:06")
+PRINT FROMUTC("2026-04-20 11:05:06")</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Диагностика</h2>
+<ul>
+<li>Функции этого раздела требуют каноническую дату и время, а не отдельную дату или отдельное время.</li>
+<li>Неизвестный или пустой идентификатор часового пояса считается ошибкой аргумента.</li>
+<li>Если локальная дата и время попадает в неоднозначный или невозможный диапазон перевода часов, функция завершается диагностикой ошибки аргумента.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list">
+<li><a href="../../samples/functions/utcoffset/current_local_offset.axm">UTCOFFSET</a></li>
+<li><a href="../../samples/functions/utcoffset/named_timezone_specific_offset.axm">UTCOFFSET для указанного пояса</a></li>
+<li><a href="../../samples/functions/toutc/named_timezone_to_utc.axm">TOUTC</a></li>
+<li><a href="../../samples/functions/fromutc/named_timezone_from_utc.axm">FROMUTC</a></li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list">
+<a href="date-time-functions.html">Дата и время</a>
+<a href="date-time-functions-current.html">Текущие дата и время</a>
+</div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

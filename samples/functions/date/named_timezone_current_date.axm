@@ -1,3 +1,4 @@
-' Expected output:
+' Пример показывает, что DATE("UTC") возвращает ту же дату, что и UTCDATE().
+' Ожидается вывод:
 ' TRUE
 PRINT DATE("UTC") = UTCDATE()

@@ -95,7 +95,9 @@
             <Word>ARRAYISALLOCATED</Word>
             <Word>ARRAYINSERT</Word>
             <Word>ARRAYLASTINDEXOF</Word>
+            <Word>ARRAYBOUNDS</Word>
             <Word>ARRAYLENGTH</Word>
+            <Word>ARRAYRANK</Word>
             <Word>ARRAYREMOVE</Word>
             <Word>ARRAYREVERSE</Word>
             <Word>ARRAYFLATTEN</Word>

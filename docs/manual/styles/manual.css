@@ -632,3 +632,13 @@ ol {
         flex-direction: column;
     }
 }
+
+.search-input {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    background: #fff;
+}

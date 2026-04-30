@@ -1,2 +1,4 @@
-' Expected runtime diagnostic MB3007: STRING fill cannot be an empty string.
+' Функция STRING требует непустую строку-образец.
+' Ожидаемая диагностика времени выполнения:
+' MB3007: STRING fill cannot be an empty string.
 PRINT STRING(3, "")

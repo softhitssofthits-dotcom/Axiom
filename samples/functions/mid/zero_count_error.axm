@@ -1,3 +1,6 @@
-' Expected runtime diagnostic MB3007: MID count must be greater than 0.
-' Manual note: 0 and -0 remain valid expressions but must fail the same runtime way.
+' Функция MID требует, чтобы count был больше нуля.
+' Ожидаемая диагностика времени выполнения:
+' MB3007: MID count must be greater than 0.
+' Значения 0 и -0 допустимы как выражения,
+' но должны завершаться одной и той же ошибкой.
 PRINT MID("Hello", 1, 0)

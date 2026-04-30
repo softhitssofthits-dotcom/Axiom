@@ -22,6 +22,7 @@ public enum BuiltinResultTypePolicy
     SameAsSecondArgument,
     ElementTypeOfFirstArrayArgument,
     ArrayOfFirstArrayElementType,
+    ArrayDynamicSliceResult,
     ArrayIndexCoordinateResult,
     ArrayFindAllCoordinateResult,
     ArrayMapSelectorReturnArray,

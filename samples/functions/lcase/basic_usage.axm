@@ -1,2 +1,4 @@
-' Expected: prints hello.
+' Функция LCASE переводит строку в нижний регистр.
+' Ожидаемый вывод:
+' hello
 PRINT LCASE("HeLLo")

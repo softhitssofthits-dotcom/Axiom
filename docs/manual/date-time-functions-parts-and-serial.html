@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Сборка даты и календарные части</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="date-time-functions-parts-and-serial">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">DATESERIAL, TIMESERIAL, YEAR, MONTH и связанные функции</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Сборка даты и части</p>
+                    <p class="sidebar__subtitle">Построение канонических значений и извлечение календарных компонентов.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Дата и время</p>
+            <h1 class="page-title">Сборка даты и календарные части</h1>
+
+            <section class="article-section" id="dateserial">
+                <h2>DATESERIAL</h2>
+                <p>Функция <code>DATESERIAL</code> строит строку даты из года, месяца и дня.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DATESERIAL(year, month, day)</code></pre>
+                <p><strong>Части записи.</strong> <code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат возвращается как строка формата <code>yyyy-MM-dd</code>.</p>
+                <h3>Замечания</h3>
+                <p>Компоненты должны образовывать реальную календарную дату. Автоматического переноса переполненных значений вроде тринадцатого месяца здесь нет.</p>
+            </section>
+
+            <section class="article-section" id="timeserial">
+                <h2>TIMESERIAL</h2>
+                <p>Функция <code>TIMESERIAL</code> строит строку времени из часов, минут и секунд.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = TIMESERIAL(hour, minute, second)</code></pre>
+                <p><strong>Части записи.</strong> <code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат возвращается как строка формата <code>HH:mm:ss</code>.</p>
+            </section>
+
+            <section class="article-section" id="year-month-day">
+                <h2>YEAR, MONTH, DAY</h2>
+                <p>Эти функции извлекают из канонической даты или даты-времени год, номер месяца и номер дня.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = YEAR(value)
+result = MONTH(value)
+result = DAY(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт строку даты или даты-времени в каноническом формате. Результат каждой функции имеет тип <code>INTEGER</code>.</p>
+            </section>
+
+            <section class="article-section" id="hour-minute-second">
+                <h2>HOUR, MINUTE, SECOND</h2>
+                <p>Эти функции извлекают из канонического времени или даты-времени часы, минуты и секунды.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = HOUR(value)
+result = MINUTE(value)
+result = SECOND(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="weekday">
+                <h2>WEEKDAY и WEEKDAYNAME</h2>
+                <p><code>WEEKDAY</code> возвращает номер дня недели, а <code>WEEKDAYNAME</code> его полное английское имя.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = WEEKDAY(value)
+result = WEEKDAYNAME(weekday)</code></pre>
+                <p><strong>Части записи.</strong> Для <code>WEEKDAY</code> аргумент <code>value</code> задаёт строку даты или даты-времени. Функция возвращает номер по схеме <code>1 = Monday</code>, <code>7 = Sunday</code>. Для <code>WEEKDAYNAME</code> аргумент <code>weekday</code> задаёт номер дня недели.</p>
+            </section>
+
+            <section class="article-section" id="monthname">
+                <h2>MONTHNAME</h2>
+                <p>Функция <code>MONTHNAME</code> возвращает полное английское имя месяца по его номеру.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = MONTHNAME(month)</code></pre>
+            </section>
+
+            <section class="article-section" id="calendar-helpers">
+                <h2>ISLEAPYEAR, DAYSINMONTH, STARTOFMONTH, ENDOFMONTH, STARTOFYEAR, ENDOFYEAR</h2>
+                <p>Эти функции проверяют свойства календаря и возвращают границы месяца или года.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ISLEAPYEAR(year)
+result = DAYSINMONTH(year, month)
+result = STARTOFMONTH(value)
+result = ENDOFMONTH(value)
+result = STARTOFYEAR(value)
+result = ENDOFYEAR(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают строку даты формата <code>yyyy-MM-dd</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Сборка даты и работа с календарными частями
+PRINT DATESERIAL(2026, 4, 20)
+PRINT YEAR("2026-04-20 14:05:06")
+PRINT MONTHNAME(4)
+PRINT WEEKDAYNAME(WEEKDAY("2026-04-26"))
+PRINT DAYSINMONTH(2024, 2)
+PRINT ENDOFMONTH("2024-02-11")</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>Неверные компоненты в <code>DATESERIAL</code> и <code>TIMESERIAL</code> приводят к ошибке аргумента встроенной функции.</li>
+                    <li>Значения вне диапазона для <code>MONTHNAME</code>, <code>WEEKDAYNAME</code>, <code>ISLEAPYEAR</code> и <code>DAYSINMONTH</code> также считаются ошибкой аргумента.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/dateserial/basic_usage.axm">DATESERIAL: построение даты</a></li>
+                    <li><a href="../../samples/functions/timeserial/basic_usage.axm">TIMESERIAL: построение времени</a></li>
+                    <li><a href="../../samples/functions/year/basic_usage.axm">YEAR: извлечение года</a></li>
+                    <li><a href="../../samples/functions/monthname/calendar_month_name.axm">MONTHNAME: имя месяца</a></li>
+                    <li><a href="../../samples/functions/weekdayname/weekend_name.axm">WEEKDAYNAME: имя дня недели</a></li>
+                    <li><a href="../../samples/functions/daysinmonth/february_leap_year.axm">DAYSINMONTH: количество дней в месяце</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="date-time-functions.html">Функции даты и времени</a>
+                    <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

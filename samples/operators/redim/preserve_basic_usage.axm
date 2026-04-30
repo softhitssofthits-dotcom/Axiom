@@ -1,4 +1,9 @@
-' REDIM PRESERVE keeps values for indices that stay inside the new bounds.
+' Пример показывает, что REDIM PRESERVE сохраняет значения
+' для индексов, которые остаются внутри нового диапазона.
+' Ожидается вывод:
+' 20
+' 30
+' 0
 
 DIM values(1 TO 3) AS INTEGER
 values(1) = 10

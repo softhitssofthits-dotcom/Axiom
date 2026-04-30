@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Арифметика, разбор и проверка дат</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="date-time-functions-arithmetic-and-validation">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">DATEADD, DATEDIFF, DATEPART, DATEVALUE, TIMEVALUE, ISDATE</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Арифметика и проверка</p>
+                    <p class="sidebar__subtitle">Сдвиг дат, сравнение интервалов, извлечение частей и проверка канонических строк.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Дата и время</p>
+            <h1 class="page-title">Арифметика, разбор и проверка</h1>
+
+            <section class="article-section" id="dateadd">
+                <h2>DATEADD</h2>
+                <p>Функция <code>DATEADD</code> добавляет к дате, времени или дате-времени указанное число интервалов.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DATEADD(interval, number, value)</code></pre>
+                <p><strong>Части записи.</strong> <code>interval</code> задаёт токен интервала, <code>number</code> число шагов, а <code>value</code> исходную дату, время или дату-время.</p>
+                <h3>Замечания</h3>
+                <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходной строки: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем.</p>
+            </section>
+
+            <section class="article-section" id="datediff">
+                <h2>DATEDIFF</h2>
+                <p>Функция <code>DATEDIFF</code> возвращает разницу между двумя значениями в выбранных интервалах.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DATEDIFF(interval, fromValue, toValue)</code></pre>
+                <p><strong>Части записи.</strong> <code>interval</code> задаёт единицу измерения, <code>fromValue</code> начальное значение, а <code>toValue</code> конечное. Результат имеет тип <code>LONG</code>.</p>
+            </section>
+
+            <section class="article-section" id="datepart">
+                <h2>DATEPART</h2>
+                <p>Функция <code>DATEPART</code> извлекает указанную часть даты или времени по токену.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DATEPART(part, value)</code></pre>
+                <p><strong>Части записи.</strong> <code>part</code> задаёт требуемую часть, а <code>value</code> строку даты, времени или даты-времени. Результат имеет тип <code>INTEGER</code>.</p>
+                <h3>Замечания</h3>
+                <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
+            </section>
+
+            <section class="article-section" id="datevalue-timevalue">
+                <h2>DATEVALUE и TIMEVALUE</h2>
+                <p><code>DATEVALUE</code> возвращает дату из строки даты-времени, а <code>TIMEVALUE</code> возвращает время из той же формы записи.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DATEVALUE(value)
+result = TIMEVALUE(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт строку даты-времени в каноническом формате. Обе функции возвращают строку.</p>
+            </section>
+
+            <section class="article-section" id="isdate">
+                <h2>ISDATE</h2>
+                <p>Функция <code>ISDATE</code> проверяет, является ли строка допустимой канонической датой, временем или датой-временем.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ISDATE(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт строку для проверки. Результат имеет тип <code>BOOLEAN</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+                <pre><code class="language-basic">' Арифметика и разбор канонических значений даты и времени
+PRINT DATEADD("m", 1, "2026-01-31")
+PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")
+PRINT DATEPART("y", "2026-04-21")
+PRINT DATEVALUE("2026-04-20 14:05:06")
+PRINT TIMEVALUE("2026-04-20 14:05:06")
+PRINT ISDATE("2026-04-20 14:05:06")</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>Неканонический текст вроде <code>"20.04.2026"</code> считается ошибкой аргумента встроенной функции.</li>
+                    <li>Неподдерживаемые токены для <code>DATEADD</code>, <code>DATEDIFF</code> и <code>DATEPART</code> также приводят к ошибке аргумента.</li>
+                    <li>Если вычисление выходит за допустимый диапазон даты или времени, функция завершается диагностикой времени выполнения.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/dateadd/month_end_shift.axm">DATEADD: сдвиг даты</a></li>
+                    <li><a href="../../samples/functions/datediff/day_boundary.axm">DATEDIFF: разница между датами</a></li>
+                    <li><a href="../../samples/functions/datepart/day_of_year.axm">DATEPART: извлечение части</a></li>
+                    <li><a href="../../samples/functions/datevalue/from_datetime.axm">DATEVALUE: дата из даты-времени</a></li>
+                    <li><a href="../../samples/functions/timevalue/from_datetime.axm">TIMEVALUE: время из даты-времени</a></li>
+                    <li><a href="../../samples/functions/isdate/canonical_datetime.axm">ISDATE: проверка канонической строки</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="date-time-functions.html">Функции даты и времени</a>
+                    <a href="date-time-functions-parts-and-serial.html">Сборка даты и календарные части</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

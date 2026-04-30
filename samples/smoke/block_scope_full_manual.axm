@@ -1,28 +1,6 @@
-﻿' Full manual smoke sample for block scopes.
-' Run as-is for the positive path.
-' Then uncomment the negative probes at the end one by one to verify scope errors in the IDE.
-'
-' Expected output:
-' scope-smoke-start
-' if-branch
-' elseif-branch
-' else-branch
-' case-two
-' case-else
-' for-1
-' for-2
-' nested-if-2
-' while-0
-' while-1
-' do-0
-' do-1
-' sub-start
-' sub-for-1
-' sub-for-2
-' sub-if
-' sub-end
-' fn=7
-' scope-smoke-done
+' Полный smoke-пример по блочной области видимости.
+' Сначала его нужно запускать как положительный сценарий,
+' а затем по одной строке можно раскомментировать отрицательные пробы внизу файла.
 
 PRINT "scope-smoke-start"
 
@@ -128,7 +106,7 @@ FUNCTION ComputeScopedValue(value AS INTEGER) AS INTEGER
     END IF
 END FUNCTION
 
-' Negative probes: uncomment one line at a time and run again.
+' Отрицательные пробы: раскомментируй по одной строке и запускай заново.
 ' PRINT branchText
 ' PRINT caseText
 ' PRINT i

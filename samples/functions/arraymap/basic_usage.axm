@@ -1,4 +1,15 @@
-' ARRAYMAP manual acceptance sample with same-type transform and closure.
+' ARRAYMAP применяет функцию к каждому элементу массива
+' и возвращает новый массив того же типа.
+' Переменная `factor` показывает, что преобразование видит внешнее состояние.
+' Ожидаемый вывод:
+' 5
+' 8
+' 4
+' 30
+' 60
+' 90
+' 120
+' 100
 DIM values(5 TO 8) AS INTEGER
 DIM mapped() AS INTEGER
 DIM factor AS INTEGER = 3

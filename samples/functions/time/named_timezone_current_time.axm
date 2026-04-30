@@ -1,3 +1,2 @@
-' Expected output:
-' TRUE
+' Пример показывает, что TIME("UTC") согласован с прямым вызовом UTCTIME().
 PRINT TIME("UTC") = UTCTIME()

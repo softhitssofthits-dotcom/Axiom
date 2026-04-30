@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -7,153 +7,76 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="if">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Ветвление через IF</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Оператор IF</p>
-                    <p class="sidebar__subtitle">Главная конструкция для выбора одной ветви из нескольких возможных.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                <span>/</span>
-                <span>Оператор IF</span>
-            </nav>
-            <p class="eyebrow">Операторы и управление</p>
-            <h1 class="page-title">Оператор IF</h1>
-            <p class="lead"><code>IF</code> позволяет выполнить одни инструкции при истинном условии и другие при ложном. Это базовый оператор ветвления, с которого обычно начинают знакомство с управлением потоком выполнения программы.</p>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Оператор условного ветвления</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор IF</p><p class="sidebar__subtitle">Проверка условия и выбор подходящей ветви.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Управление выполнением</p>
+<h1 class="page-title">Оператор IF</h1>
+<p class="lead">Оператор <code>IF</code> нужен там, где программа должна принять решение по логическому условию и выбрать одну из нескольких ветвей. Это самая прямая форма условного управления выполнением в Axiom: сначала вычисляется условие, затем выполняется только подходящая ветвь.</p>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ol class="contents-list">
-                    <li><a href="#syntax">Общая форма оператора</a></li>
-                    <li><a href="#parts">Части синтаксиса</a></li>
-                    <li><a href="#elseif">Ветви ELSEIF и ELSE</a></li>
-                    <li><a href="#scope">Область видимости внутри IF</a></li>
-                    <li><a href="#notes">Что важно помнить</a></li>
-                    <li><a href="#summary">Краткий итог</a></li>
-                </ol>
-            </section>
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Оператор <code>IF</code> используется, когда программа должна выполнить один набор инструкций при истинном условии и другой набор инструкций при ложном. Если вариантов больше двух, к основной ветви добавляют <code>ELSEIF</code> и <code>ELSE</code>.</p>
+</section>
 
-            <section class="article-section" id="syntax">
-                <h2>Общая форма оператора</h2>
-                <pre><code class="language-basic">IF &lt;условие&gt; THEN
-    &lt;инструкции&gt;
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">IF condition THEN
+    [statements]
 END IF</code></pre>
-                <pre><code class="language-basic">IF &lt;условие&gt; THEN
-    &lt;инструкции&gt;
-[ELSEIF &lt;другое условие&gt; THEN
-    &lt;инструкции&gt;]
-...
-[ELSE
-    &lt;инструкции&gt;]
+<pre><code class="language-basic">IF condition THEN
+    [statements]
+    [ELSEIF anotherCondition THEN
+        [elseifStatements]] ...
+    [ELSE
+        [elseStatements]]
 END IF</code></pre>
-                <p>Если выражение условия истинно, интерпретатор выполняет код между <code>THEN</code> и <code>END IF</code>. Если условие ложно, этот блок пропускается или управление переходит к следующей ветви.</p>
-                <pre><code class="language-basic">DIM score AS INTEGER = 82
+</section>
 
-IF score &gt;= 70 THEN
-    PRINT "Зачет получен"
-END IF</code></pre>
-            </section>
+<section class="article-section">
+<h2>Части записи</h2>
+<p><code>condition</code> и <code>anotherCondition</code> — логические выражения, которые проверяет оператор <code>IF</code>.</p>
+<p><code>statements</code>, <code>elseifStatements</code> и <code>elseStatements</code> — одна или несколько инструкций внутри соответствующей ветви.</p>
+</section>
 
-            <section class="article-section" id="parts">
-                <h2>Части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;условие&gt;</code> — логическое выражение, которое определяет, выполнять ли ветвь <code>THEN</code>.</li>
-                    <li><code>&lt;другое условие&gt;</code> — дополнительное логическое выражение для ветви <code>ELSEIF</code>.</li>
-                    <li><code>&lt;инструкции&gt;</code> — блок инструкций внутри соответствующей ветви.</li>
-                    <li><code>[ELSEIF ...]</code> и <code>[ELSE ...]</code> — необязательные части конструкции.</li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>Замечания</h2>
+<p>Обычно <code>IF</code> выбирают, когда условие читается естественно как последовательность проверок сверху вниз и когда число вариантов невелико либо сами варианты различаются не только значением, но и логикой проверки.</p>
+<ul>
+<li>Условие после <code>IF</code> и после каждого <code>ELSEIF</code> должно иметь тип <code>BOOLEAN</code>.</li>
+<li>Проверки ветвей <code>IF</code> и <code>ELSEIF</code> идут сверху вниз. Как только найдена первая истинная ветвь, остальные больше не рассматриваются.</li>
+<li>Ветвь <code>ELSE</code> выполняется только тогда, когда ни одно предыдущее условие не оказалось истинным.</li>
+<li>Блочная форма <code>IF ... END IF</code> является основной документируемой формой Axiom.</li>
+<li>Каждая ветвь образует собственную блочную область видимости. Имя, объявленное внутри ветви, недоступно после <code>END IF</code>.</li>
+</ul>
+</section>
 
-            <section class="article-section" id="elseif">
-                <h2>Ветви ELSEIF и ELSE</h2>
-                <p>Когда нужно выбрать один вариант из нескольких, в оператор <code>IF</code> добавляют ветви <code>ELSEIF</code> и <code>ELSE</code>.</p>
-                <pre><code class="language-basic">IF score &gt;= 90 THEN
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">DIM score AS INTEGER = 82
+
+IF score >= 90 THEN
     PRINT "Отлично"
-ELSEIF score &gt;= 70 THEN
+ELSEIF score >= 70 THEN
     PRINT "Хорошо"
 ELSE
     PRINT "Нужно доработать"
 END IF</code></pre>
-                <p>Проверки читаются сверху вниз. Как только находится первая истинная ветвь, остальные уже не рассматриваются.</p>
-                <div class="note">
-                    <h3>Важно</h3>
-                    <p>В текущей спецификации и реализации Axiom документируется именно блочная форма <code>IF</code>. Однострочный вариант вида <code>IF x &gt; 0 THEN PRINT x</code> не считается основной формой языка.</p>
-                </div>
-            </section>
+</section>
 
-            <section class="article-section" id="scope">
-                <h2>Область видимости внутри IF</h2>
-                <p>Ветка <code>IF</code> образует собственный блок. Переменная, объявленная внутри него, существует только в пределах этой ветви.</p>
-                <pre><code class="language-basic">IF TRUE THEN
-    DIM message AS STRING = "Внутри блока"
-    PRINT message
-END IF
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/control-flow/if/basic_if_else.axm">IF: базовая ветвь ELSE</a></li><li><a href="../../samples/control-flow/if/elseif_chain.axm">IF: цепочка ELSEIF</a></li><li><a href="../../samples/smoke/block_scope_semantics.axm">Блочная область видимости</a></li></ul>
+</section>
 
-' После END IF имя message уже недоступно</code></pre>
-                <p>Это правило важно помнить, иначе легко получить ошибку при обращении к имени уже после выхода из блока.</p>
-            </section>
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Если в условии используется выражение, которое не даёт логический результат, выполнение завершается диагностикой, связанной с неверным типом условия. Ошибки области видимости возможны, если имя, объявленное внутри ветви, используется уже после <code>END IF</code>.</p>
+</section>
 
-            <section class="article-section">
-                <h2>Показательные примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/control-flow/if/basic_if_else.axm">IF: базовая ветвь ELSE</a></li>
-                    <li><a href="../../samples/control-flow/if/elseif_chain.axm">IF: цепочка ELSEIF</a></li>
-                    <li><a href="../../samples/smoke/block_scope_semantics.axm">Блочная область видимости</a></li>
-                    <li><a href="../../samples/acceptance/negative/if_requires_boolean.axm">Ошибка: условие должно быть логическим</a></li>
-                </ul>
-            </section>
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="select-case.html">SELECT CASE</a><a href="arithmetic-and-logic.html">Арифметика и логика</a><a href="diagnostics.html">Диагностика</a></div>
+</section>
 
-            <section class="article-section" id="notes">
-                <h2>Что важно помнить</h2>
-                <ul>
-                    <li>после <code>IF</code> должно стоять логическое условие;</li>
-                    <li>блок всегда должен закрываться через <code>END IF</code>;</li>
-                    <li><code>ELSEIF</code> и <code>ELSE</code> являются необязательными;</li>
-                    <li>если условий много и все они сравнивают одно и то же выражение, удобнее может быть <code>SELECT CASE</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="summary">
-                <h2>Краткий итог</h2>
-                <div class="summary-box">
-                    <h3>IF в одном абзаце</h3>
-                    <ul>
-                        <li><code>IF</code> выбирает ветвь по условию;</li>
-                        <li><code>ELSEIF</code> добавляет дополнительные проверки;</li>
-                        <li><code>ELSE</code> служит запасной ветвью;</li>
-                        <li>локальные имена внутри ветвей не видны после <code>END IF</code>.</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                    <a href="select-case.html">Оператор SELECT CASE</a>
-                    <a href="arithmetic-and-logic.html">Арифметика и логика</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

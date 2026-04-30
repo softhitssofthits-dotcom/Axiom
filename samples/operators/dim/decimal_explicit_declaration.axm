@@ -1,4 +1,8 @@
-' DECIMAL requires explicit AS DECIMAL in v1.
+' Пример показывает явное объявление переменных типа DECIMAL через AS DECIMAL.
+' Ожидается вывод:
+' 10.30
+' 5.15
+' 10.30
 DIM price AS DECIMAL = 10.10
 DIM tax AS DECIMAL = 0.20
 DIM total AS DECIMAL = price + tax

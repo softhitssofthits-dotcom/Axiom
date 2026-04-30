@@ -1,4 +1,5 @@
-' SELECT CASE exact values and CASE ELSE
+' Пример показывает SELECT CASE с точными значениями и веткой CASE ELSE.
+' При текущем значении x ожидается вывод: two.
 DIM x AS INTEGER = 2
 
 SELECT CASE x

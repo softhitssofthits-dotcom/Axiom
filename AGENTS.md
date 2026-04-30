@@ -216,6 +216,42 @@ Minimum required manual follow-up:
 - if an existing operator or built-in receives a new callable form, a new multidimensional mode, a new parameter contract, or another user-visible capability, reflect that capability directly on the manual page itself, not only through an external `.axm` sample link or a brief mention elsewhere;
 - when such a new callable form or multidimensional mode is important enough to confuse a reader without an example, add or update an inline manual example for that exact form on the same manual page.
 
+### 4.1. Manual style must follow current Microsoft Visual Basic references by genre
+For this repository, `docs/manual/` must be written not only from project facts, but also with an explicit editorial reference process.
+
+Permanent requirements:
+- before rewriting or creating a page in `docs/manual/`, first identify the closest **current** official Visual Basic page on `learn.microsoft.com` by genre;
+- do not use one universal reference page for everything;
+- functions must be compared to Visual Basic function reference pages;
+- statements and control-flow constructs must be compared to Visual Basic statement pages such as `For...Next` and `Select...Case`;
+- arrays and related conceptual pages must be compared to Visual Basic array overview and array-operation pages;
+- use those Microsoft pages as a reference for:
+  - the style of the opening explanation;
+  - the balance between conceptual introduction and formal syntax;
+  - the order and density of sections;
+  - the tone of explanatory paragraphs;
+  - the amount of guidance before examples.
+
+Required editorial behavior:
+- do not just copy the section skeleton mechanically;
+- adapt the Microsoft-style introductory explanation to Axiom so the page first tells the reader what the construct is and why it exists, not only its syntax;
+- for overview topics like arrays, loops, branching, procedures, types, file operations and similar core language topics, add a short concept-first opening explanation in the same spirit;
+- when documenting a specific construct such as `FOR`, `SELECT CASE`, `PRINT`, `DIM`, `TYPE`, `REGEX...` or similar, search for the closest Visual Basic page of the same genre and follow that page's explanatory style;
+- if Microsoft has both an overview page and an atomic statement/function page for the topic, use the overview page for the conceptual opening and the atomic page for syntax and section rhythm.
+
+Source-of-truth boundary:
+- current Microsoft Learn pages are editorial and structural references only;
+- they are not allowed to override `PROJECT.md`, `docs/SPECIFICATION3.md`, code, tests or runnable samples;
+- never copy Microsoft syntax or semantics into Axiom without checking that Axiom actually supports it;
+- if Microsoft has a helpful introduction but Axiom differs semantically, keep the style and explanatory pattern, but rewrite the factual content for Axiom.
+
+Seed examples of acceptable genre references:
+- arrays overview: `https://learn.microsoft.com/ru-ru/dotnet/visual-basic/programming-guide/language-features/arrays/`
+- `For...Next`: `https://learn.microsoft.com/ru-ru/dotnet/visual-basic/language-reference/statements/for-next-statement`
+- `Select...Case`: `https://learn.microsoft.com/ru-ru/dotnet/visual-basic/language-reference/statements/select-case-statement`
+
+If a suitable Russian Learn page is unavailable, prefer the nearest official English Visual Basic page on `learn.microsoft.com` rather than switching to an unrelated source.
+
 ### 5. Validation after code changes
 After code changes, run the most relevant checks available:
 - tests

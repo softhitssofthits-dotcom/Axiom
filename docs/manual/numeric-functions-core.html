@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Базовые числовые функции</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="numeric-functions-core">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">ABS, RND, SGN, MIN, MAX, CLAMP и SETSIGN</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Базовые числовые функции</p>
+                    <p class="sidebar__subtitle">Модуль, знак, случайные числа и ограничение диапазона.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="numeric-functions.html">Числовые функции</a>
+                <span>/</span>
+                <span>Базовые числовые функции</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Базовые числовые функции</h1>
+            <p class="lead">На этой странице собраны функции общего назначения, которые чаще всего нужны в вычислениях: модуль числа, определение знака, выбор минимального и максимального значения, ограничение диапазона, перенос знака и генерация псевдослучайного числа.</p>
+
+            <section class="article-section" id="abs">
+                <h2>ABS</h2>
+                <p>Функция <code>ABS</code> возвращает модуль числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ABS(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат имеет тот же числовой тип, что и исходное значение.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Модуль числа всегда неотрицателен
+PRINT ABS(-18)
+PRINT ABS(3.25)</code></pre>
+            </section>
+
+            <section class="article-section" id="rnd">
+                <h2>RND</h2>
+                <p>Функция <code>RND</code> возвращает псевдослучайное число типа <code>DOUBLE</code>.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = RND()</code></pre>
+                <h3>Замечания</h3>
+                <p>Функция вызывается без аргументов. Результат лежит в диапазоне от <code>0</code> включительно до <code>1</code> не включительно. Если нужно получить число в другом диапазоне, обычно результат <code>RND()</code> масштабируют обычными арифметическими операциями.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Получение значения в диапазоне от 1 до 10
+DIM value AS INTEGER
+
+value = INT(RND() * 10) + 1
+PRINT value</code></pre>
+            </section>
+
+            <section class="article-section" id="sgn">
+                <h2>SGN</h2>
+                <p>Функция <code>SGN</code> определяет знак числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SGN(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат имеет тип <code>INTEGER</code> и равен <code>-1</code>, <code>0</code> или <code>1</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Определение знака трёх значений
+PRINT SGN(-9)
+PRINT SGN(0)
+PRINT SGN(9)</code></pre>
+            </section>
+
+            <section class="article-section" id="min">
+                <h2>MIN</h2>
+                <p>Функция <code>MIN</code> возвращает меньшее из двух чисел.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = MIN(left, right)</code></pre>
+                <p><strong>Части записи.</strong> <code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Если аргументы имеют разные числовые типы, язык приводит их к общему числовому типу.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Выбор меньшего значения
+PRINT MIN(8, 3)
+PRINT MIN(2.5, 7)</code></pre>
+            </section>
+
+            <section class="article-section" id="max">
+                <h2>MAX</h2>
+                <p>Функция <code>MAX</code> возвращает большее из двух чисел.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = MAX(left, right)</code></pre>
+                <p><strong>Части записи.</strong> <code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Возвращаемый тип определяется по тем же правилам, что и у <code>MIN</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Выбор большего значения
+PRINT MAX(8, 3)
+PRINT MAX(2.5, 7)</code></pre>
+            </section>
+
+            <section class="article-section" id="clamp">
+                <h2>CLAMP</h2>
+                <p>Функция <code>CLAMP</code> ограничивает значение заданным диапазоном.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = CLAMP(value, low, high)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт исходное число. <code>low</code> задаёт нижнюю границу, а <code>high</code> верхнюю. Если <code>value</code> меньше нижней границы, возвращается <code>low</code>; если больше верхней, возвращается <code>high</code>.</p>
+                <h3>Замечания</h3>
+                <p>Нижняя граница не должна быть больше верхней. Если диапазон задан неверно, выполнение завершается диагностикой времени выполнения.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Ограничение значения диапазоном от 0 до 100
+PRINT CLAMP(-5, 0, 100)
+PRINT CLAMP(45, 0, 100)
+PRINT CLAMP(120, 0, 100)</code></pre>
+            </section>
+
+            <section class="article-section" id="setsign">
+                <h2>SETSIGN</h2>
+                <p>Функция <code>SETSIGN</code> переносит знак второго аргумента на первый.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SETSIGN(value, signFrom)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт число, модуль которого нужно сохранить. <code>signFrom</code> задаёт источник знака. Результат возвращается в числовом типе первого аргумента.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Знак второго аргумента переносится на первый
+PRINT SETSIGN(12, -5)
+PRINT SETSIGN(-12, 5)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>ABS</code>, <code>CLAMP</code> и <code>SETSIGN</code> сохраняют тип первого аргумента, если это возможно по правилам языка.</li>
+                    <li><code>MIN</code> и <code>MAX</code> удобно использовать в выражениях, где не хочется писать отдельный <code>IF</code> только ради выбора одного из двух чисел.</li>
+                    <li><code>RND</code> не принимает параметров. Форма вроде <code>RND(1)</code> в Axiom не поддерживается.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: модуль числа</a></li>
+                    <li><a href="../../samples/functions/rnd/basic_usage.axm">RND: случайное число</a></li>
+                    <li><a href="../../samples/functions/sgn/basic_usage.axm">SGN: знак числа</a></li>
+                    <li><a href="../../samples/functions/min/basic_usage.axm">MIN: меньшее из двух чисел</a></li>
+                    <li><a href="../../samples/functions/max/basic_usage.axm">MAX: большее из двух чисел</a></li>
+                    <li><a href="../../samples/functions/clamp/basic_usage.axm">CLAMP: ограничение диапазона</a></li>
+                    <li><a href="../../samples/functions/clamp/invalid_bounds_error.axm">CLAMP: неверные границы</a></li>
+                    <li><a href="../../samples/functions/setsign/basic_usage.axm">SETSIGN: перенос знака</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="numeric-functions-conversion-and-legacy.html">Преобразование чисел</a>
+                    <a href="numeric-functions-roots-rounding.html">Корни и округление</a>
+                    <a href="if.html">IF</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

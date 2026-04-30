@@ -1,4 +1,5 @@
-' Ожидается: 3, one, two, three.
+' Пример показывает разбиение строки по регулярному выражению.
+' Ожидается вывод: 3, затем one, затем two, затем three.
 DIM parts() AS STRING
 
 parts = REGEXSPLIT("one, two;three", "[,;]\s*")

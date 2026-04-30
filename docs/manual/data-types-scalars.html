@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Скалярные типы и литералы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="data-types-scalars">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">INTEGER, LONG, DOUBLE, DECIMAL и BOOLEAN</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Типы данных</p>
+                    <p class="sidebar__subtitle">Скалярные числовые и логические значения.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Типы данных</p>
+            <h1 class="page-title">Скалярные типы и литералы</h1>
+            <p class="lead">Эта страница собирает базовые скалярные типы Axiom: целые, вещественные, точные десятичные и логические значения, а также правила литералов и диапазонов.</p>
+
+            <section class="article-section">
+                <h2>Поддерживаемые типы</h2>
+                <table class="compact-table">
+                    <thead>
+                        <tr><th>Тип</th><th>Назначение</th><th>Типичная запись</th><th>Замечания</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>INTEGER</code></td><td>32-битное знаковое целое</td><td><code>0</code>, <code>42</code>, <code>-7</code></td><td>Подходит для обычных счётчиков, индексов и малых целых значений.</td></tr>
+                        <tr><td><code>LONG</code></td><td>64-битное знаковое целое</td><td><code>21474836479</code>, <code>-3000000000</code></td><td>Используется, когда литерал уже не помещается в <code>INTEGER</code>, но ещё помещается в <code>LONG</code>.</td></tr>
+                        <tr><td><code>DOUBLE</code></td><td>64-битное число с плавающей точкой</td><td><code>1.5</code>, <code>0.25</code>, <code>7 / 2</code></td><td>Обычный тип для дробных литералов и большинства математических вычислений.</td></tr>
+                        <tr><td><code>DECIMAL</code></td><td>Точное десятичное число</td><td><code>DIM price AS DECIMAL = 10.50</code></td><td>Подходит для денежных и других точных десятичных расчётов.</td></tr>
+                        <tr><td><code>BOOLEAN</code></td><td>Логический тип</td><td><code>TRUE</code>, <code>FALSE</code></td><td>Используется в условиях, сравнениях и логических выражениях.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Литералы и вывод типа</h2>
+                <table>
+                    <thead>
+                        <tr><th>Форма</th><th>Результат</th><th>Что важно помнить</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>10</code></td><td><code>INTEGER</code></td><td>Ведущие нули вроде <code>001</code> не допускаются.</td></tr>
+                        <tr><td><code>21474836479</code></td><td><code>LONG</code></td><td>Если целый литерал не помещается даже в <code>LONG</code>, возникает <code>MB0004</code>.</td></tr>
+                        <tr><td><code>1.5</code></td><td><code>DOUBLE</code></td><td>Без явного <code>AS DECIMAL</code> вещественный литерал не становится <code>DECIMAL</code>.</td></tr>
+                        <tr><td><code>TRUE</code> / <code>FALSE</code></td><td><code>BOOLEAN</code></td><td>Логические литералы не считаются числовыми значениями.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Примеры</h2>
+                <pre><code class="language-basic">DIM count AS INTEGER = 10
+DIM big AS LONG = 21474836479
+DIM ratio AS DOUBLE = 1.5
+DIM price AS DECIMAL = 10.50
+DIM ready AS BOOLEAN = TRUE</code></pre>
+                <pre><code class="language-basic">DIM total = 10
+DIM fraction = 1.5
+
+PRINT total
+PRINT fraction</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB0004</code> — числовой литерал выходит за допустимый диапазон своего типа.</li>
+                    <li><code>MB2018</code> — константное числовое значение не помещается в явно указанный целевой тип.</li>
+                    <li><code>MB3008</code> — во время выполнения произошло числовое переполнение или получен неконечный результат <code>DOUBLE</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="data-types.html">Обзор типов данных</a>
+                    <a href="data-types-conversions.html">Вывод типа и преобразования</a>
+                    <a href="numeric-functions.html">Числовые функции</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

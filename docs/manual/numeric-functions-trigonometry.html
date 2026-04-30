@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Тригонометрические функции</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="numeric-functions-trigonometry">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">SIN, COS, TAN, ATN, ATN2, ASIN, ACOS, гиперболические функции</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Тригонометрические функции</p>
+                    <p class="sidebar__subtitle">Прямые, обратные и гиперболические функции для вычислений с углами.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="numeric-functions.html">Числовые функции</a>
+                <span>/</span>
+                <span>Тригонометрические функции</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Тригонометрические функции</h1>
+            <p class="lead">Функции этой страницы используются для работы с углами, координатами и гиперболическими значениями. Все они возвращают значение типа <code>DOUBLE</code>, а углы в Axiom задаются в радианах.</p>
+
+            <section class="article-section" id="sin">
+                <h2>SIN</h2>
+                <p>Функция <code>SIN</code> возвращает синус угла.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SIN(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт угол в радианах.</p>
+            </section>
+
+            <section class="article-section" id="cos">
+                <h2>COS</h2>
+                <p>Функция <code>COS</code> возвращает косинус угла.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = COS(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт угол в радианах.</p>
+            </section>
+
+            <section class="article-section" id="tan">
+                <h2>TAN</h2>
+                <p>Функция <code>TAN</code> возвращает тангенс угла.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = TAN(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт угол в радианах.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Значения тригонометрических функций для одного угла
+DIM angle AS DOUBLE
+
+angle = 0.5
+PRINT SIN(angle)
+PRINT COS(angle)
+PRINT TAN(angle)</code></pre>
+            </section>
+
+            <section class="article-section" id="atn">
+                <h2>ATN</h2>
+                <p>Функция <code>ATN</code> возвращает арктангенс значения.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ATN(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение, для которого нужно получить угол.</p>
+            </section>
+
+            <section class="article-section" id="atn2">
+                <h2>ATN2</h2>
+                <p>Функция <code>ATN2</code> возвращает угол по координатам точки на плоскости.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ATN2(y, x)</code></pre>
+                <p><strong>Части записи.</strong> <code>y</code> задаёт ординату точки, а <code>x</code> абсциссу. Функция учитывает квадрант и поэтому подходит для вычисления направления по двум координатам.</p>
+            </section>
+
+            <section class="article-section" id="asin">
+                <h2>ASIN</h2>
+                <p>Функция <code>ASIN</code> возвращает арксинус значения.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ASIN(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен находиться в диапазоне от <code>-1</code> до <code>1</code> включительно.</p>
+            </section>
+
+            <section class="article-section" id="acos">
+                <h2>ACOS</h2>
+                <p>Функция <code>ACOS</code> возвращает арккосинус значения.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ACOS(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен находиться в диапазоне от <code>-1</code> до <code>1</code> включительно.</p>
+            </section>
+
+            <section class="article-section" id="asinh">
+                <h2>ASINH</h2>
+                <p>Функция <code>ASINH</code> возвращает обратный гиперболический синус.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ASINH(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="acosh">
+                <h2>ACOSH</h2>
+                <p>Функция <code>ACOSH</code> возвращает обратный гиперболический косинус.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ACOSH(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен быть не меньше <code>1</code>.</p>
+            </section>
+
+            <section class="article-section" id="atanh">
+                <h2>ATANH</h2>
+                <p>Функция <code>ATANH</code> возвращает обратный гиперболический тангенс.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ATANH(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен лежать строго внутри интервала <code>(-1, 1)</code>.</p>
+            </section>
+
+            <section class="article-section" id="sinh">
+                <h2>SINH</h2>
+                <p>Функция <code>SINH</code> возвращает гиперболический синус.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SINH(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="cosh">
+                <h2>COSH</h2>
+                <p>Функция <code>COSH</code> возвращает гиперболический косинус.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = COSH(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="tanh">
+                <h2>TANH</h2>
+                <p>Функция <code>TANH</code> возвращает гиперболический тангенс.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = TANH(value)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>Все аргументы этой страницы интерпретируются как числовые значения и при необходимости приводятся к <code>DOUBLE</code>.</li>
+                    <li><code>SIN</code>, <code>COS</code> и <code>TAN</code> принимают угол в радианах. Если вы мыслите в градусах, переводите их в радианы вручную.</li>
+                    <li><code>ASIN</code>, <code>ACOS</code>, <code>ACOSH</code> и <code>ATANH</code> имеют ограничения по области допустимых значений. Нарушение этих ограничений даёт диагностику времени выполнения.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/sin/basic_usage.axm">SIN: синус угла</a></li>
+                    <li><a href="../../samples/functions/cos/basic_usage.axm">COS: косинус угла</a></li>
+                    <li><a href="../../samples/functions/tan/basic_usage.axm">TAN: тангенс угла</a></li>
+                    <li><a href="../../samples/functions/atn/basic_usage.axm">ATN: арктангенс</a></li>
+                    <li><a href="../../samples/functions/atn2/basic_usage.axm">ATN2: угол по координатам</a></li>
+                    <li><a href="../../samples/functions/asin/basic_usage.axm">ASIN: арксинус</a></li>
+                    <li><a href="../../samples/functions/asin/out_of_range_error.axm">ASIN: значение вне диапазона</a></li>
+                    <li><a href="../../samples/functions/acos/basic_usage.axm">ACOS: арккосинус</a></li>
+                    <li><a href="../../samples/functions/acos/out_of_range_error.axm">ACOS: значение вне диапазона</a></li>
+                    <li><a href="../../samples/functions/asinh/basic_usage.axm">ASINH: обратный гиперболический синус</a></li>
+                    <li><a href="../../samples/functions/acosh/basic_usage.axm">ACOSH: обратный гиперболический косинус</a></li>
+                    <li><a href="../../samples/functions/acosh/less_than_one_error.axm">ACOSH: аргумент меньше 1</a></li>
+                    <li><a href="../../samples/functions/atanh/basic_usage.axm">ATANH: обратный гиперболический тангенс</a></li>
+                    <li><a href="../../samples/functions/atanh/out_of_range_error.axm">ATANH: значение вне диапазона</a></li>
+                    <li><a href="../../samples/functions/sinh/basic_usage.axm">SINH: гиперболический синус</a></li>
+                    <li><a href="../../samples/functions/cosh/basic_usage.axm">COSH: гиперболический косинус</a></li>
+                    <li><a href="../../samples/functions/tanh/basic_usage.axm">TANH: гиперболический тангенс</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="numeric-functions-roots-rounding.html">Корни, логарифмы и округление</a>
+                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
+                    <a href="examples.html">Примеры</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

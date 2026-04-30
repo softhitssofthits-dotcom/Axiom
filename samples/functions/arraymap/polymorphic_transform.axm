@@ -1,5 +1,6 @@
-' ARRAYMAP acceptance sample for polymorphic INTEGER -> STRING transformation.
-' Expected output:
+' ARRAYMAP может менять тип результата.
+' Здесь INTEGER-массив преобразуется в STRING-массив.
+' Ожидаемый вывод:
 ' 5
 ' 7
 ' item:10

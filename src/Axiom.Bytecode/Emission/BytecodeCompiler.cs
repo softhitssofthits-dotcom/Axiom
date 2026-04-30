@@ -106,20 +106,36 @@ public sealed class BytecodeCompiler
         var labelTargets = ResolveLabelTargets(routine);
         var instructions = new List<BytecodeInstruction>(routine.Instructions.Count);
 
-        foreach (var instruction in routine.Instructions)
+        for (var loweredIndex = 0; loweredIndex < routine.Instructions.Count; loweredIndex++)
         {
+            var instruction = routine.Instructions[loweredIndex];
             if (instruction.Kind == LoweredInstructionKind.Label)
             {
                 continue;
             }
 
-            var bytecodeInstruction = EmitInstruction(
-                routine,
-                instruction,
-                parameterSlots,
-                localSlots,
-                captureSlots,
-                labelTargets);
+            BytecodeInstruction? bytecodeInstruction;
+            TextLocation sourceLocation;
+            if (TryEmitCollapsedInstruction(
+                    routine,
+                    loweredIndex,
+                    labelTargets,
+                    out bytecodeInstruction,
+                    out sourceLocation))
+            {
+                loweredIndex++;
+            }
+            else
+            {
+                bytecodeInstruction = EmitInstruction(
+                    routine,
+                    instruction,
+                    parameterSlots,
+                    localSlots,
+                    captureSlots,
+                    labelTargets);
+                sourceLocation = instruction.Location;
+            }
 
             if (bytecodeInstruction is null)
             {
@@ -128,7 +144,7 @@ public sealed class BytecodeCompiler
 
             var instructionIndex = instructions.Count;
             instructions.Add(bytecodeInstruction);
-            _instructionMap.Add(new SourceInstructionMap(routine.Id, instructionIndex, instruction.Location));
+            _instructionMap.Add(new SourceInstructionMap(routine.Id, instructionIndex, sourceLocation));
         }
 
         if (_diagnostics.Count > 0)
@@ -246,8 +262,9 @@ public sealed class BytecodeCompiler
         var targets = new Dictionary<string, int>(StringComparer.Ordinal);
         var instructionIndex = 0;
 
-        foreach (var instruction in routine.Instructions)
+        for (var loweredIndex = 0; loweredIndex < routine.Instructions.Count; loweredIndex++)
         {
+            var instruction = routine.Instructions[loweredIndex];
             if (instruction.Kind == LoweredInstructionKind.Label)
             {
                 if (!targets.TryAdd(instruction.Label!, instructionIndex))
@@ -258,6 +275,13 @@ public sealed class BytecodeCompiler
                         instruction.Location);
                 }
 
+                continue;
+            }
+
+            if (TryGetCollapsedInstructionWidth(routine.Instructions, loweredIndex, out var width))
+            {
+                instructionIndex++;
+                loweredIndex += width - 1;
                 continue;
             }
 
@@ -278,6 +302,109 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.UnaryOperation when instruction.OperatorKind == SyntaxKind.PlusToken => false,
             _ => true
         };
+    }
+
+    private static bool TryGetCollapsedInstructionWidth(IReadOnlyList<LoweredInstruction> instructions, int index, out int width)
+    {
+        width = 0;
+        if (index + 1 >= instructions.Count)
+        {
+            return false;
+        }
+
+        var current = instructions[index];
+        var next = instructions[index + 1];
+        if (TryGetCollapsedComparisonJumpOpcode(current, next, out _))
+        {
+            width = 2;
+            return true;
+        }
+
+        if (current.Kind == LoweredInstructionKind.Convert
+            && current.ValueType == TypeSymbol.Long
+            && next.Kind == LoweredInstructionKind.BinaryOperation
+            && next.OperatorKind == SyntaxKind.PlusToken)
+        {
+            width = 2;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryEmitCollapsedInstruction(
+        LoweredRoutine routine,
+        int loweredIndex,
+        IReadOnlyDictionary<string, int> labelTargets,
+        out BytecodeInstruction? instruction,
+        out TextLocation sourceLocation)
+    {
+        instruction = null;
+        sourceLocation = routine.Instructions[loweredIndex].Location;
+        if (loweredIndex + 1 >= routine.Instructions.Count)
+        {
+            return false;
+        }
+
+        var current = routine.Instructions[loweredIndex];
+        var next = routine.Instructions[loweredIndex + 1];
+
+        if (TryGetCollapsedComparisonJumpOpcode(current, next, out var comparisonJumpOpcode))
+        {
+            if (next.Label is null || !labelTargets.TryGetValue(next.Label, out var targetInstruction))
+            {
+                Report(
+                    "BC5012",
+                    $"Эмиттер байткода не нашёл метку '{next.Label ?? "<null>"}' в процедуре '{routine.Name}'.",
+                    next.Location);
+                return true;
+            }
+
+            instruction = new BytecodeInstruction(comparisonJumpOpcode, [targetInstruction]);
+            sourceLocation = next.Location;
+            return true;
+        }
+
+        if (!TryGetCollapsedInstructionWidth(routine.Instructions, loweredIndex, out _))
+        {
+            return false;
+        }
+
+        instruction = new BytecodeInstruction(Opcode.AddLongInteger);
+        sourceLocation = next.Location;
+        return true;
+    }
+
+    private static bool TryGetCollapsedComparisonJumpOpcode(
+        LoweredInstruction compareInstruction,
+        LoweredInstruction jumpInstruction,
+        out Opcode opcode)
+    {
+        opcode = default;
+        if (compareInstruction.Kind != LoweredInstructionKind.BinaryOperation)
+        {
+            return false;
+        }
+
+        if (jumpInstruction.Kind is not (LoweredInstructionKind.JumpIfTrue or LoweredInstructionKind.JumpIfFalse))
+        {
+            return false;
+        }
+
+        var jumpIfTrue = jumpInstruction.Kind == LoweredInstructionKind.JumpIfTrue;
+        opcode = compareInstruction.OperatorKind switch
+        {
+            SyntaxKind.LessToken => jumpIfTrue ? Opcode.JumpIfLess : Opcode.JumpIfGreaterOrEqual,
+            SyntaxKind.LessOrEqualsToken => jumpIfTrue ? Opcode.JumpIfLessOrEqual : Opcode.JumpIfGreater,
+            SyntaxKind.GreaterToken => jumpIfTrue ? Opcode.JumpIfGreater : Opcode.JumpIfLessOrEqual,
+            SyntaxKind.GreaterOrEqualsToken => jumpIfTrue ? Opcode.JumpIfGreaterOrEqual : Opcode.JumpIfLess,
+            _ => default
+        };
+
+        return opcode is Opcode.JumpIfLess
+            or Opcode.JumpIfLessOrEqual
+            or Opcode.JumpIfGreater
+            or Opcode.JumpIfGreaterOrEqual;
     }
 
     private BytecodeInstruction? EmitInstruction(

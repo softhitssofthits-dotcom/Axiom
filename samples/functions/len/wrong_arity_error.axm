@@ -1,2 +1,3 @@
-' Expected semantic diagnostic MB2004: LEN requires exactly one argument.
+' Функция LEN требует ровно один аргумент.
+' Ожидаемая семантическая диагностика: MB2004.
 PRINT LEN()

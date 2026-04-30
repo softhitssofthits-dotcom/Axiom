@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор TYPE</title>
+    <title>Справочник Axiom - Тип TYPE</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="type">
@@ -18,7 +18,7 @@
         <aside class="sidebar">
             <div class="sidebar__inner">
                 <div class="sidebar__head">
-                    <p class="sidebar__title">Оператор TYPE</p>
+                    <p class="sidebar__title">Тип TYPE</p>
                     <p class="sidebar__subtitle">Описание пользовательского типа записи и доступ к его полям.</p>
                 </div>
                 <nav id="manual-nav"></nav>
@@ -30,53 +30,39 @@
                 <span>/</span>
                 <a href="reference.html">Алфавитный и тематический указатель</a>
                 <span>/</span>
-                <span>Оператор TYPE</span>
+                <span>Тип TYPE</span>
             </nav>
             <p class="eyebrow">Данные и объявления</p>
-            <h1 class="page-title">Оператор TYPE</h1>
+            <h1 class="page-title">Тип TYPE</h1>
             <p class="lead"><code>TYPE ... END TYPE</code> объявляет пользовательский тип записи: набор именованных полей, к которым программа обращается через точку.</p>
-
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#syntax">Синтаксис</a></li>
-                    <li><a href="#parts">Части синтаксиса</a></li>
-                    <li><a href="#remarks">Замечания</a></li>
-                    <li><a href="#arrays">Массивы записей</a></li>
-                    <li><a href="#manual-check">Ручная проверка</a></li>
-                    <li><a href="#examples">Примеры</a></li>
-                    <li><a href="#diagnostics">Диагностика</a></li>
-                </ul>
-            </section>
 
             <section class="article-section" id="summary">
                 <h2>Сводка</h2>
-                <p><code>TYPE</code> задаёт новый тип данных, который затем можно использовать в <code>DIM</code>, параметрах <code>SUB</code>/<code>FUNCTION</code> и типах результата <code>FUNCTION</code>.</p>
+                <p><code>TYPE</code> задаёт новый тип данных, который затем можно использовать в <code>DIM</code>, параметрах <code>SUB</code> и <code>FUNCTION</code>, а также в типах результата <code>FUNCTION</code>.</p>
             </section>
 
             <section class="article-section" id="syntax">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">TYPE &lt;имя типа&gt;
-    &lt;имя поля&gt; AS &lt;тип поля&gt;
-    [&lt;имя поля&gt; AS &lt;тип поля&gt;]
+                <pre><code class="language-basic">TYPE typeName
+    fieldDeclaration
+    [anotherFieldDeclaration]
 END TYPE</code></pre>
-                <pre><code class="language-basic">DIM &lt;имя переменной&gt; AS &lt;имя типа&gt;
-&lt;имя переменной&gt;.&lt;имя поля&gt; = &lt;выражение&gt;
-PRINT &lt;имя переменной&gt;.&lt;имя поля&gt;</code></pre>
-                <pre><code class="language-basic">DIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;имя типа&gt;
-&lt;имя массива&gt;(&lt;индекс&gt;).&lt;имя поля&gt; = &lt;выражение&gt;
-PRINT &lt;имя массива&gt;(&lt;индекс&gt;).&lt;имя поля&gt;</code></pre>
+                <pre><code class="language-basic">DIM variableName AS typeName
+variableName.fieldName = expression
+PRINT variableName.fieldName</code></pre>
+                <pre><code class="language-basic">DIM arrayName(lowerBound TO upperBound) AS typeName
+arrayName(index).fieldName = expression
+PRINT arrayName(index).fieldName</code></pre>
             </section>
 
             <section class="article-section" id="parts">
                 <h2>Части синтаксиса</h2>
                 <ul>
-                    <li><code>&lt;имя типа&gt;</code> — имя пользовательского типа. Оно объявляется после <code>TYPE</code> и затем используется после <code>AS</code>.</li>
-                    <li><code>&lt;имя поля&gt;</code> — имя поля внутри записи. В одном <code>TYPE</code> имена полей не должны повторяться.</li>
-                    <li><code>&lt;тип поля&gt;</code> — скалярный встроенный тип Axiom или уже объявленный пользовательский тип.</li>
-                    <li><code>&lt;имя переменной&gt;.&lt;имя поля&gt;</code> — доступ к полю записи через точку.</li>
-                    <li><code>&lt;имя массива&gt;(&lt;индекс&gt;).&lt;имя поля&gt;</code> — доступ к полю записи, которая хранится в элементе одномерного массива.</li>
+                    <li><code>typeName</code> — имя пользовательского типа. Оно объявляется после <code>TYPE</code>, а затем используется после <code>AS</code>.</li>
+                    <li><code>fieldDeclaration</code> — объявление поля внутри записи. Обычно оно записывается в форме <code>fieldName AS fieldType</code>, но поддерживаются и групповые объявления с общим <code>AS</code>.</li>
+                    <li><code>fieldName</code> — имя поля внутри записи. В одном <code>TYPE</code> имена полей не должны повторяться.</li>
+                    <li><code>variableName.fieldName</code> — доступ к полю переменной пользовательского типа через точку.</li>
+                    <li><code>arrayName(index).fieldName</code> — доступ к полю записи, которая хранится в элементе массива.</li>
                 </ul>
             </section>
 
@@ -84,6 +70,7 @@ PRINT &lt;имя массива&gt;(&lt;индекс&gt;).&lt;имя поля&gt
                 <h2>Замечания</h2>
                 <ul>
                     <li><code>TYPE ... END TYPE</code> объявляется на верхнем уровне программы, а не внутри <code>SUB</code>, <code>FUNCTION</code>, <code>IF</code>, циклов или другого <code>TYPE</code>.</li>
+                    <li>Внутри <code>TYPE</code> не используются обычные операторы программы вроде <code>DIM</code>, <code>PRINT</code> или <code>IF</code>. Тело <code>TYPE</code> состоит только из объявлений полей.</li>
                     <li>Поле получает значение по умолчанию своего типа: <code>0</code> для чисел, пустую строку для <code>STRING</code> и <code>FALSE</code> для <code>BOOLEAN</code>.</li>
                     <li>Поле может иметь другой пользовательский тип, поэтому допустимы цепочки вида <code>person.Home.City</code>.</li>
                     <li>Обычное присваивание записи целиком создаёт независимую копию значения. После <code>second = first</code> изменение <code>first.Name</code> не меняет <code>second.Name</code>.</li>
@@ -102,7 +89,9 @@ PRINT &lt;имя массива&gt;(&lt;индекс&gt;).&lt;имя поля&gt
             <section class="article-section" id="arrays">
                 <h2>Массивы записей</h2>
                 <p>Если нужно хранить несколько записей одного вида, объявите одномерный массив пользовательского типа. После выбора элемента через индекс можно читать и менять его поля через точку.</p>
-                <pre><code class="language-basic">TYPE Person
+                <pre><code class="language-basic">' Простая запись с двумя полями
+' Ожидаемый вывод: Ada
+TYPE Person
     Name AS STRING
     Age AS INTEGER
 END TYPE
@@ -118,14 +107,16 @@ PRINT people(1).Name</code></pre>
 
             <section class="article-section" id="manual-check">
                 <h2>Ручная проверка</h2>
-                <p>Для ручной проверки откройте в IDE пример <a href="../../samples/operators/type/field_access.axm"><code>samples/operators/type/field_access.axm</code></a> и запустите его. Пример проверяет значения по умолчанию, присваивание полям, вложенный пользовательский тип и копирование записи.</p>
-                <p>Для проверки массива записей откройте пример <a href="../../samples/operators/type/array_elements.axm"><code>samples/operators/type/array_elements.axm</code></a> и запустите его. Пример проверяет поля элементов массива и копирование записи при присваивании в элемент.</p>
-                <p>Для проверки динамических массивных полей откройте пример <a href="../../samples/operators/type/array_fields.axm"><code>samples/operators/type/array_fields.axm</code></a> и запустите его. Пример проверяет <code>REDIM</code>, <code>REDIM PRESERVE</code>, <code>ERASE</code> и индексирование для массивного поля записи.</p>
-                <p>Для проверки фиксированных массивных полей откройте пример <a href="../../samples/operators/type/fixed_array_fields.axm"><code>samples/operators/type/fixed_array_fields.axm</code></a> и запустите его. Пример проверяет автоматическое создание диапазона, копирование записи вместе с полем и доступ к полю у элемента массива записей.</p>
-                <p>Для проверки границ через <code>CONST</code> откройте пример <a href="../../samples/operators/type/const_fixed_array_fields.axm"><code>samples/operators/type/const_fixed_array_fields.axm</code></a> и запустите его. Пример показывает, что фиксированное поле может брать диапазон из ранее объявленных констант.</p>
-                <p>Для проверки независимости от порядка объявления откройте пример <a href="../../samples/operators/type/const_fixed_array_fields_forward.axm"><code>samples/operators/type/const_fixed_array_fields_forward.axm</code></a> и запустите его. В нём <code>TYPE</code> идёт раньше, чем используемые им константы.</p>
-                <p>Для проверки фиксированных строковых полей откройте пример <a href="../../samples/operators/type/fixed_string_fields.axm"><code>samples/operators/type/fixed_string_fields.axm</code></a> и запустите его. Пример показывает пробельное значение по умолчанию, дополнение короткой строки и обрезку длинной строки в поле записи.</p>
-                <p>Для проверки групповых объявлений откройте пример <a href="../../samples/operators/type/grouped_fields.axm"><code>samples/operators/type/grouped_fields.axm</code></a> и запустите его. Пример показывает общую форму <code>Name, Alias AS STRING</code>, смешанные массивные деклараторы и то, что динамическое поле-массив сохраняет ссылочную семантику даже после копирования записи.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/type/field_access.axm">TYPE: поля, вложенный TYPE и копирование записи</a></li>
+                    <li><a href="../../samples/operators/type/array_elements.axm">TYPE: массив записей и поля элементов</a></li>
+                    <li><a href="../../samples/operators/type/array_fields.axm">TYPE: динамические массивные поля</a></li>
+                    <li><a href="../../samples/operators/type/fixed_array_fields.axm">TYPE: фиксированные массивные поля</a></li>
+                    <li><a href="../../samples/operators/type/const_fixed_array_fields.axm">TYPE: границы поля через CONST</a></li>
+                    <li><a href="../../samples/operators/type/const_fixed_array_fields_forward.axm">TYPE: границы через CONST при объявлении ниже</a></li>
+                    <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
+                    <li><a href="../../samples/operators/type/grouped_fields.axm">TYPE: групповые объявления полей</a></li>
+                </ul>
             </section>
 
             <section class="article-section" id="examples">
@@ -135,13 +126,15 @@ PRINT people(1).Name</code></pre>
     Age AS INTEGER
 END TYPE
 
-DIM USER AS Person
-USER.Name = "Ada"
-USER.Age = 36
+DIM user AS Person
+user.Name = "Ada"
+user.Age = 36
 
-PRINT USER.Name
-PRINT USER.Age</code></pre>
-                <pre><code class="language-basic">TYPE Address
+PRINT user.Name
+PRINT user.Age</code></pre>
+                <pre><code class="language-basic">' Вложенная запись позволяет обращаться к полю через цепочку
+' Ожидаемый вывод: London
+TYPE Address
     City AS STRING
 END TYPE
 
@@ -149,56 +142,9 @@ TYPE Person
     Home AS Address
 END TYPE
 
-DIM USER AS Person
-USER.Home.City = "London"
-PRINT USER.Home.City</code></pre>
-                <pre><code class="language-basic">TYPE Person
-    Name AS STRING
-END TYPE
-
-DIM people(1 TO 2) AS Person
-people(1).Name = "Ada"
-PRINT people(1).Name</code></pre>
-                <pre><code class="language-basic">TYPE Person
-    Scores(1 TO 3) AS INTEGER
-END TYPE
-
-DIM first AS Person
-DIM second AS Person
-
-first.Scores(1) = 10
-second = first
-PRINT second.Scores(1)</code></pre>
-                <pre><code class="language-basic">CONST MinScore AS INTEGER = 1
-CONST MaxScore AS LONG = MinScore + 2
-
-TYPE Person
-    Scores(MinScore TO MaxScore) AS INTEGER
-END TYPE
-
 DIM user AS Person
-PRINT ARRAYLENGTH(user.Scores)</code></pre>
-                <pre><code class="language-basic">TYPE Employee
-    Name AS STRING * 5
-    Role AS STRING * 8
-END TYPE
-
-DIM user AS Employee
-user.Name = "Ada"
-user.Role = "Architect"
-
-PRINT "[" + user.Name + "]"
-PRINT "[" + user.Role + "]"</code></pre>
-                <pre><code class="language-basic">TYPE Person
-    Name, Alias AS STRING
-    Scores(), Flags(1 TO 2) AS INTEGER
-END TYPE
-
-DIM user AS Person
-REDIM user.Scores(1 TO 2)
-user.Alias = "Ada"
-user.Flags(2) = 7
-PRINT user.Flags(2)</code></pre>
+user.Home.City = "London"
+PRINT user.Home.City</code></pre>
             </section>
 
             <section class="article-section" id="diagnostics">
@@ -221,7 +167,7 @@ PRINT user.Flags(2)</code></pre>
                     <a href="arrays.html">Одномерные массивы</a>
                     <a href="variables-and-constants.html">Переменные и константы</a>
                     <a href="function.html">Функция FUNCTION</a>
-                    <a href="sub.html">Подпрограмма SUB</a>
+                    <a href="sub.html">Процедура SUB</a>
                     <a href="diagnostics.html">Диагностика</a>
                 </div>
             </section>

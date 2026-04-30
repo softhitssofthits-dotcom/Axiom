@@ -1,4 +1,9 @@
-' ARRAYSOME manual acceptance sample with captured external state.
+' ARRAYSOME проверяет, есть ли хотя бы один элемент,
+' удовлетворяющий условию.
+' Переменная `limit` показывает, что предикат видит внешнее состояние.
+' Ожидаемый вывод:
+' TRUE
+' FALSE
 DIM values(5 TO 7) AS INTEGER
 DIM limit AS INTEGER = 15
 

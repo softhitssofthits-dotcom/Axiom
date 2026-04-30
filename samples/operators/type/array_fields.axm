@@ -1,4 +1,13 @@
-﻿' Dynamic arrays inside TYPE fields and inside array elements of TYPE.
+﻿' Эта программа показывает динамические массивные поля внутри TYPE
+' и те же поля у элементов массива записей.
+' Ожидаемый вывод:
+' 10
+' 20
+' FALSE
+' 7
+' 9
+' 9
+' 0
 TYPE Person
     Scores() AS INTEGER
 END TYPE

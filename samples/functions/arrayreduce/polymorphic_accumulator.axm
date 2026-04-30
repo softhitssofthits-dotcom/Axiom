@@ -1,5 +1,7 @@
-' ARRAYREDUCE acceptance sample for polymorphic STRING() -> INTEGER accumulation.
-' Expected output:
+' ARRAYREDUCE может сворачивать массив в тип,
+' отличный от типа его элементов.
+' Здесь суммируются длины строк.
+' Ожидаемый вывод:
 ' 10
 DIM words(3 TO 5) AS STRING
 

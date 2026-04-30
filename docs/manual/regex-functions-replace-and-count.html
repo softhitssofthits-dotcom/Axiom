@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Замена и подсчёт совпадений</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="regex-functions-replace-and-count">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">REGEXREPLACE и REGEXCOUNT</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Замена и подсчёт</p>
+                    <p class="sidebar__subtitle">Массовая замена найденных фрагментов и подсчёт числа совпадений.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Регулярные выражения</p>
+            <h1 class="page-title">Замена и подсчёт совпадений</h1>
+
+            <section class="article-section" id="regexreplace">
+                <h2>REGEXREPLACE</h2>
+                <p>Функция <code>REGEXREPLACE</code> возвращает новую строку, где найденные совпадения заменены указанным текстом.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = REGEXREPLACE(text, pattern, replacement[, modes][, count])</code></pre>
+                <p><strong>Части записи.</strong> <code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве.</p>
+                <h3>Замечания</h3>
+                <p>Если <code>count</code> равен нулю, функция возвращает исходный текст без изменений. Отрицательное количество замен даёт <code>MB3007</code>. В строке замены можно использовать ссылки на группы через <code>$1</code>, <code>$2</code> и далее.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
+PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
+PRINT REGEXREPLACE("A12 B34", "([A-Z])(\\d+)", "$1-$2")</code></pre>
+            </section>
+
+            <section class="article-section" id="regexcount">
+                <h2>REGEXCOUNT</h2>
+                <p>Функция <code>REGEXCOUNT</code> возвращает количество совпадений с регулярным выражением.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = REGEXCOUNT(text, pattern[, modes])</code></pre>
+                <h3>Замечания</h3>
+                <p>Если совпадений нет, результат равен <code>0</code>. Эта функция удобна, когда нужно только число найденных фрагментов без извлечения самих значений.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">PRINT REGEXCOUNT("one 12 two 34", "\d+")
+PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/regexreplace/basic_usage.axm">REGEXREPLACE: замена по шаблону</a></li>
+                    <li><a href="../../samples/functions/regexcount/basic_usage.axm">REGEXCOUNT: подсчёт совпадений</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="regex-functions.html">Функции регулярных выражений</a>
+                    <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
+                    <a href="regex-functions-arrays-and-split.html">Все совпадения, группы и разбиение</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

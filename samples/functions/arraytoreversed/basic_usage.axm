@@ -1,7 +1,14 @@
-' ARRAYTOREVERSED creates a new compact array in reverse logical order.
-
-Dim source(5 To 7) As Integer
-Dim reversed() As Integer
+' ARRAYTOREVERSED создаёт новую развёрнутую копию.
+' Присваивание `reversed(1) = 99` показывает, что исходный массив не меняется.
+' Ожидаемый вывод:
+' 1
+' 3
+' 99
+' 20
+' 10
+' 30
+DIM source(5 TO 7) AS INTEGER
+DIM reversed() AS INTEGER
 
 source(5) = 10
 source(6) = 20
@@ -10,9 +17,9 @@ source(7) = 30
 reversed = ARRAYTOREVERSED(source)
 reversed(1) = 99
 
-Print LBOUND(reversed)
-Print UBOUND(reversed)
-Print reversed(1)
-Print reversed(2)
-Print reversed(3)
-Print source(7)
+PRINT LBOUND(reversed)
+PRINT UBOUND(reversed)
+PRINT reversed(1)
+PRINT reversed(2)
+PRINT reversed(3)
+PRINT source(7)

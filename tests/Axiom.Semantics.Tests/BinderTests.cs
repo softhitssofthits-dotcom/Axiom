@@ -262,6 +262,22 @@ PRINT ARRAYISALLOCATED(values)
     }
 
     [Fact]
+    public void Bind_BuiltinArrayMetadataFunctions()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+PRINT ARRAYRANK(grid)
+PRINT ARRAYBOUNDS(grid)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Integer, BuiltinFunctionId.ArrayRank);
+        AssertBuiltinCall(program.GlobalStatements[2], ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2), BuiltinFunctionId.ArrayBounds);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayInformationReportsScalarArgument()
     {
         BindProgram("PRINT LBOUND(1)", out var diagnostics);
@@ -956,6 +972,43 @@ removedValue = ARRAYREMOVE(numbers, 1)
     }
 
     [Fact]
+    public void Bind_MultidimensionalDynamicArrayBuiltinsUseSliceContract()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+DIM newColumn(1 TO 2) AS INTEGER
+DIM removedColumn() AS INTEGER
+ARRAYPUSH(board, newColumn, COLUMN)
+removedColumn = ARRAYPOP(board, COLUMN)
+ARRAYINSERT(board, 11, newColumn, COLUMN)
+removedColumn = ARRAYREMOVE(board, 10, COLUMN)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var pushStatement = Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[3]);
+        var pushCall = Assert.IsType<BoundCallExpression>(pushStatement.Expression);
+        Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer), pushCall.Arguments[1].Type);
+        Assert.Equal(BuiltinFunctionId.ArrayPush, AssertCalledFunction(pushCall).BuiltinId);
+
+        var popAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[4]);
+        var popCall = Assert.IsType<BoundCallExpression>(popAssignment.Expression);
+        Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer), popCall.Type);
+        Assert.Equal(BuiltinFunctionId.ArrayPop, AssertCalledFunction(popCall).BuiltinId);
+
+        var insertStatement = Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[5]);
+        var insertCall = Assert.IsType<BoundCallExpression>(insertStatement.Expression);
+        Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer), insertCall.Arguments[2].Type);
+        Assert.Equal(BuiltinFunctionId.ArrayInsert, AssertCalledFunction(insertCall).BuiltinId);
+
+        var removeAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[6]);
+        var removeCall = Assert.IsType<BoundCallExpression>(removeAssignment.Expression);
+        Assert.Equal(ArrayTypeSymbol.Create(TypeSymbol.Integer), removeCall.Type);
+        Assert.Equal(BuiltinFunctionId.ArrayRemove, AssertCalledFunction(removeCall).BuiltinId);
+    }
+
+    [Fact]
     public void Bind_BuiltinArrayEverySomeAndFilter()
     {
         const string text = """
@@ -1268,6 +1321,20 @@ ARRAYINSERT(names, 1, 1)
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
         Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_MultidimensionalArrayPushRequiresSliceValueShape()
+    {
+        BindProgram(
+            """
+DIM board(1 TO 2, 10 TO 12) AS INTEGER
+ARRAYPUSH(board, 1, COLUMN)
+""",
+            out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("INTEGER()", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

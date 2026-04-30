@@ -1,7 +1,17 @@
-' ARRAYRESHAPE собирает новый массив по форме template.
-' Здесь показан штатный путь для многомерной сортировки:
+' ARRAYRESHAPE собирает новый массив по форме образца `template`.
+' В примере показана типовая цепочка:
 ' ARRAYFLATTEN -> ARRAYTOSORTED -> ARRAYRESHAPE
-
+' Ожидаемый вывод:
+' 1
+' 2
+' 10
+' 12
+' 1
+' 2
+' 3
+' 4
+' 5
+' 6
 DIM board(1 TO 2, 10 TO 12) AS INTEGER
 DIM flat() AS INTEGER
 DIM sorted() AS INTEGER

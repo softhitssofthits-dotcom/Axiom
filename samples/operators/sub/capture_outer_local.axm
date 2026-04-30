@@ -1,4 +1,5 @@
-' Local SUB captures and updates the outer local variable.
+' Эта программа показывает, что вложенная процедура может захватывать
+' и изменять внешнюю локальную переменную.
 SUB Outer()
     DIM total AS INTEGER = 2
     Increase()

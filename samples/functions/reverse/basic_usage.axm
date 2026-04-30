@@ -1,2 +1,4 @@
-' Expected: prints dcba.
+' Функция REVERSE разворачивает строку в обратном порядке.
+' Ожидаемый вывод:
+' dcba
 PRINT REVERSE("abcd")

@@ -1,4 +1,4 @@
-' Expected: prints FALSE, TRUE, TRUE.
+' Пример показывает базовые логические операции `AND`, `OR` и `NOT`.
 PRINT TRUE AND FALSE
 PRINT TRUE OR FALSE
 PRINT NOT FALSE

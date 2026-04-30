@@ -1,7 +1,15 @@
-' ARRAYDISTINCT returns unique elements in order of first appearance.
-
-Dim source(5 To 9) As Integer
-Dim uniqueValues() As Integer
+' ARRAYDISTINCT возвращает уникальные значения
+' в порядке их первого появления.
+' Присваивание `uniqueValues(1) = 99` показывает, что это независимая копия.
+' Ожидаемый вывод:
+' 1
+' 3
+' 99
+' 20
+' 30
+' 10
+DIM source(5 TO 9) AS INTEGER
+DIM uniqueValues() AS INTEGER
 
 source(5) = 10
 source(6) = 20
@@ -12,9 +20,9 @@ source(9) = 20
 uniqueValues = ARRAYDISTINCT(source)
 uniqueValues(1) = 99
 
-Print LBOUND(uniqueValues)
-Print UBOUND(uniqueValues)
-Print uniqueValues(1)
-Print uniqueValues(2)
-Print uniqueValues(3)
-Print source(5)
+PRINT LBOUND(uniqueValues)
+PRINT UBOUND(uniqueValues)
+PRINT uniqueValues(1)
+PRINT uniqueValues(2)
+PRINT uniqueValues(3)
+PRINT source(5)

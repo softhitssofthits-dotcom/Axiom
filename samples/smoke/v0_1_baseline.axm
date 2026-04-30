@@ -1,4 +1,5 @@
-' Expected: a compact end-to-end walkthrough of the current Axiom baseline.
+' Сквозной smoke-пример показывает компактный положительный сценарий
+' для текущей базовой линии Axiom.
 CONST APP_NAME AS STRING = "Axiom sample catalog"
 
 DIM counter AS INTEGER = 0

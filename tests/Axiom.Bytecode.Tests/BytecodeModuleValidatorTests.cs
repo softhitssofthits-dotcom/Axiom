@@ -17,6 +17,106 @@ public sealed class BytecodeModuleValidatorTests
     }
 
     [Fact]
+    public void Validate_AddLongIntegerWithLongAndInteger_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.AddLongInteger),
+                new BytecodeInstruction(Opcode.Pop),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 2),
+                new BytecodeConstant(BytecodeConstantKind.String, "value")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_AddLongIntegerWithInvalidStackTypes_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.AddLongInteger),
+                new BytecodeInstruction(Opcode.Pop),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 10),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 2),
+                new BytecodeConstant(BytecodeConstantKind.String, "value")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "BC3068");
+    }
+
+    [Fact]
+    public void Validate_JumpIfLessOrEqualWithComparableOperands_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.JumpIfLessOrEqual, [4]),
+                new BytecodeInstruction(Opcode.Return),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 2),
+                new BytecodeConstant(BytecodeConstantKind.String, "value")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_JumpIfLessOrEqualWithIncompatibleOperands_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.JumpIfLessOrEqual, [4]),
+                new BytecodeInstruction(Opcode.Return),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1),
+                new BytecodeConstant(BytecodeConstantKind.Boolean, true),
+                new BytecodeConstant(BytecodeConstantKind.String, "value")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "BC4116");
+    }
+
+    [Fact]
     public void Validate_HeaderWithUnsupportedFormatVersion_ReturnsDiagnostic()
     {
         var module = CreateValidModule(

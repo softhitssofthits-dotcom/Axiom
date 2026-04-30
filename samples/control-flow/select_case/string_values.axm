@@ -1,4 +1,5 @@
-' SELECT CASE with string values
+' Пример показывает SELECT CASE со строковыми значениями.
+' При текущем значении command ожидается вывод: save.
 DIM command AS STRING = "SAVE"
 
 SELECT CASE command

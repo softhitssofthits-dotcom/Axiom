@@ -1,0 +1,11 @@
+' Ожидается: 1, 2, 10, 11.
+
+DIM board(1 TO 2, 10 TO 11) AS INTEGER
+DIM bounds(,) AS INTEGER
+
+bounds = ARRAYBOUNDS(board)
+
+PRINT bounds(1, 1)
+PRINT bounds(1, 2)
+PRINT bounds(2, 1)
+PRINT bounds(2, 2)

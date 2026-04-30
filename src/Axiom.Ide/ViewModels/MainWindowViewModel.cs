@@ -200,13 +200,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         SaveAllCommand = new RelayCommand(SaveAllDocuments, CanSaveAllDocuments);
         CloseTabCommand = new RelayCommand(CloseTab, CanCloseTab);
         CompileCommand = new RelayCommand(async () => await CompileProgramAsync(), CanCompileProgram);
-        RunCommand = new RelayCommand(RunProgram, CanRunProgram);
-        ContinueRunCommand = new RelayCommand(ContinueProgram, CanContinueProgram);
-        StepOverCommand = new RelayCommand(StepOverProgram, CanStepOverProgram);
-        StepIntoCommand = new RelayCommand(StepIntoProgram, CanStepIntoProgram);
-        StepOutCommand = new RelayCommand(StepOutProgram, CanStepOutProgram);
-        StepBackCommand = new RelayCommand(StepBackProgram, CanStepBackProgram);
-        RunOrContinueCommand = new RelayCommand(RunOrContinueProgram, CanRunOrContinueProgram);
+        RunCommand = new RelayCommand(async () => await RunProgramAsync(useSourceBreakpoints: false), CanRunProgram);
+        ContinueRunCommand = new RelayCommand(async () => await ContinueProgramAsync(), CanContinueProgram);
+        StepOverCommand = new RelayCommand(async () => await StepOverProgramAsync(), CanStepOverProgram);
+        StepIntoCommand = new RelayCommand(async () => await StepIntoProgramAsync(), CanStepIntoProgram);
+        StepOutCommand = new RelayCommand(async () => await StepOutProgramAsync(), CanStepOutProgram);
+        StepBackCommand = new RelayCommand(async () => await StepBackProgramAsync(), CanStepBackProgram);
+        RunOrContinueCommand = new RelayCommand(async () => await RunOrContinueProgramAsync(), CanRunOrContinueProgram);
         StopDebuggingCommand = new RelayCommand(StopDebugging, CanStopDebugging);
         RestartDebuggingCommand = new RelayCommand(RestartDebugging, CanRestartDebugging);
         ClearAllSourceBreakpointsCommand = new RelayCommand(
@@ -791,17 +791,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             });
     }
 
-    private void RunProgram()
+    private Task RunProgramWithDebuggingAsync()
     {
-        RunProgram(useSourceBreakpoints: false);
+        return RunProgramAsync(useSourceBreakpoints: true);
     }
 
-    private void RunProgramWithDebugging()
-    {
-        RunProgram(useSourceBreakpoints: true);
-    }
-
-    private void RunProgram(bool useSourceBreakpoints)
+    private async Task RunProgramAsync(bool useSourceBreakpoints)
     {
         if (Documents.ActiveDocument is null)
         {
@@ -847,7 +842,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 ["breakpoints"] = sourceBreakpointLines.Count().ToString(System.Globalization.CultureInfo.InvariantCulture)
             });
 
-        var result = _programRunService.Run(documentContent.SourceText, SelectedExecutionMode, sourceBreakpointLines);
+        var result = await ExecuteRunOperationAsync(
+            () => _programRunService.Run(documentContent.SourceText, SelectedExecutionMode, sourceBreakpointLines));
 
         ApplyRunOutputFromResult(result, "run.output-sync");
 
@@ -896,20 +892,20 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         UpdateTitle();
     }
 
-    private void RunOrContinueProgram()
+    private async Task RunOrContinueProgramAsync()
     {
         if (HasStoppedRun)
         {
-            ContinueProgram();
+            await ContinueProgramAsync();
             return;
         }
 
-        RunProgramWithDebugging();
+        await RunProgramWithDebuggingAsync();
     }
 
-    private void ContinueProgram()
+    private async Task ContinueProgramAsync()
     {
-        ResumeStoppedProgram(
+        await ResumeStoppedProgramAsync(
             _programRunService.Continue,
             "Run.StatusContinuing",
             "Continuing...",
@@ -917,16 +913,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "Continue", document: Documents.ActiveDocument);
     }
 
-    private void StepOverProgram()
+    private async Task StepOverProgramAsync()
     {
         if (!HasStoppedRun)
         {
-            StartSteppingProgram("Run.StatusSteppingOver", "Stepping over...", "run.step-over.start");
+            await StartSteppingProgramAsync("Run.StatusSteppingOver", "Stepping over...", "run.step-over.start");
             LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "StepOver.Start", document: Documents.ActiveDocument);
             return;
         }
 
-        ResumeStoppedProgram(
+        await ResumeStoppedProgramAsync(
             _programRunService.StepOver,
             "Run.StatusSteppingOver",
             "Stepping over...",
@@ -934,16 +930,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "StepOver", document: Documents.ActiveDocument);
     }
 
-    private void StepIntoProgram()
+    private async Task StepIntoProgramAsync()
     {
         if (!HasStoppedRun)
         {
-            StartSteppingProgram("Run.StatusSteppingInto", "Stepping into...", "run.step-into.start");
+            await StartSteppingProgramAsync("Run.StatusSteppingInto", "Stepping into...", "run.step-into.start");
             LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "StepInto.Start", document: Documents.ActiveDocument);
             return;
         }
 
-        ResumeStoppedProgram(
+        await ResumeStoppedProgramAsync(
             _programRunService.StepInto,
             "Run.StatusSteppingInto",
             "Stepping into...",
@@ -951,9 +947,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "StepInto", document: Documents.ActiveDocument);
     }
 
-    private void StepOutProgram()
+    private async Task StepOutProgramAsync()
     {
-        ResumeStoppedProgram(
+        await ResumeStoppedProgramAsync(
             _programRunService.StepOut,
             "Run.StatusSteppingOut",
             "Stepping out...",
@@ -961,9 +957,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "StepOut", document: Documents.ActiveDocument);
     }
 
-    private void StepBackProgram()
+    private async Task StepBackProgramAsync()
     {
-        ResumeStoppedProgram(
+        await ResumeStoppedProgramAsync(
             _programRunService.StepBack,
             "Run.StatusSteppingBack",
             "Stepping back...",
@@ -972,7 +968,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         LogIdeEvent(IdeEventLevel.Info, "commands", "command.executed", commandName: "StepBack", document: Documents.ActiveDocument);
     }
 
-    private void StartSteppingProgram(
+    private async Task StartSteppingProgramAsync(
         string runningStatusKey,
         string runningStatusFallback,
         string resultTraceName)
@@ -1015,11 +1011,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             });
 
         var runDocument = Documents.ActiveDocument;
-        var result = _programRunService.Run(
-            documentContent.SourceText,
-            ExecutionMode.Bytecode,
-            SourceBreakpointLines,
-            stopBeforeFirstInstruction: true);
+        var result = await ExecuteRunOperationAsync(
+            () => _programRunService.Run(
+                documentContent.SourceText,
+                ExecutionMode.Bytecode,
+                SourceBreakpointLines,
+                stopBeforeFirstInstruction: true));
 
         ApplyRunOutputFromResult(result, "run.output-sync");
 
@@ -1068,7 +1065,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         UpdateTitle();
     }
 
-    private void ResumeStoppedProgram(
+    private async Task ResumeStoppedProgramAsync(
         Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult> resume,
         string runningStatusKey,
         string runningStatusFallback,
@@ -1092,7 +1089,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         BottomPane.ShowOutput();
         BottomPane.RequestOutputFocus();
 
-        var result = resume(_stoppedRunState);
+        var result = await ExecuteRunOperationAsync(() => resume(_stoppedRunState));
 
         ApplyRunOutputFromResult(result, "run.continue.output-sync");
 
@@ -1168,7 +1165,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         SetStoppedRunState(null, null);
         StatusBar.StatusText = GetLocalizedString("Run.StatusRestartingDebugging", "Restarting debugging...");
         LogIdeEvent(IdeEventLevel.Info, "debugger", "debugger.restarting", commandName: "RestartDebugging", document: Documents.ActiveDocument);
-        RunProgramWithDebugging();
+        _ = RunProgramWithDebuggingAsync();
     }
 
     private async Task CompileProgramAsync()
@@ -2935,6 +2932,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         return normalized.Length <= 220
             ? normalized
             : normalized[..220];
+    }
+
+    private static Task<TResult> ExecuteRunOperationAsync<TResult>(Func<TResult> operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        return System.Windows.Application.Current is null
+            ? Task.FromResult(operation())
+            : Task.Run(operation);
     }
 
     private void RaiseFilesPaneCommandCanExecuteChanged()

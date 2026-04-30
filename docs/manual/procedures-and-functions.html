@@ -10,7 +10,7 @@
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Обзор процедур, функций и оператора RETURN</div>
+            <div class="topbar__meta">Процедуры, функции и возврат из них</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -19,7 +19,7 @@
             <div class="sidebar__inner">
                 <div class="sidebar__head">
                     <p class="sidebar__title">Процедуры и функции</p>
-                    <p class="sidebar__subtitle">Связывает статьи по <code>SUB</code>, <code>FUNCTION</code> и <code>RETURN</code>.</p>
+                    <p class="sidebar__subtitle">Когда использовать <code>SUB</code>, когда <code>FUNCTION</code> и как работает <code>RETURN</code>.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -30,9 +30,9 @@
                 <span>/</span>
                 <span>Процедуры и функции</span>
             </nav>
-            <p class="eyebrow">Обзор</p>
+            <p class="eyebrow">Процедуры и функции</p>
             <h1 class="page-title">Процедуры и функции</h1>
-            <p class="lead">Эта обзорная глава помогает быстро понять, когда нужна подпрограмма, когда нужна функция и как теперь работают функции как значения языка.</p>
+            <p class="lead">Процедуры и функции позволяют разбивать программу на именованные части. В Axiom процедуры удобно использовать для действий, а функции — для вычислений, которые должны вернуть значение. Эта страница помогает увидеть общую картину до перехода к точной справке по <code>SUB</code>, <code>FUNCTION</code> и <code>RETURN</code>.</p>
 
             <section class="article-section">
                 <h2>Содержание</h2>
@@ -46,14 +46,15 @@
 
             <section class="article-section" id="summary">
                 <h2>Сводка</h2>
+                <p>Этот раздел особенно полезен, когда программа перестаёт помещаться в одну линейную последовательность инструкций и возникает естественная потребность выносить повторяющиеся шаги в отдельные именованные блоки.</p>
                 <ul>
-                    <li>когда нужно понять, чем подпрограмма отличается от функции;</li>
+                    <li>когда нужно понять, чем процедура отличается от функции;</li>
                     <li>когда нужно выбрать форму для вычисления, побочного действия или раннего выхода;</li>
                     <li>когда нужно быстро перейти к точной справке по <code>SUB</code>, <code>FUNCTION</code> или <code>RETURN</code>.</li>
                 </ul>
                 <div class="note">
                     <h3>Коротко</h3>
-                    <p><code>SUB</code> выполняет действия и не становится значением. <code>FUNCTION</code> вычисляет значение и теперь сама может быть значением, если для неё указан функциональный тип.</p>
+                    <p><code>SUB</code> выполняет действия и не становится значением. <code>FUNCTION</code> вычисляет значение, а в поддержанных формах функциональных типов сама тоже может использоваться как значение.</p>
                 </div>
             </section>
 
@@ -61,7 +62,7 @@
                 <h2>Куда переходить дальше</h2>
                 <div class="cards-grid">
                     <section class="card">
-                        <h3><a href="sub.html">Подпрограмма SUB</a></h3>
+                        <h3><a href="sub.html">Процедура SUB</a></h3>
                         <p>Именованные действия без возвращаемого значения: вывод, проверки, изменение уже доступных переменных.</p>
                     </section>
                     <section class="card">
@@ -70,13 +71,14 @@
                     </section>
                     <section class="card">
                         <h3><a href="return.html">Оператор RETURN</a></h3>
-                        <p>Возврат значения из функции и досрочное завершение подпрограммы.</p>
+                        <p>Возврат значения из функции и досрочное завершение процедуры.</p>
                     </section>
                 </div>
             </section>
 
             <section class="article-section" id="orientation">
                 <h2>Короткий ориентир</h2>
+                <p>Ниже показан минимальный контраст между процедурой и функцией. Он полезен как первая практическая модель: одна конструкция что-то делает, другая возвращает вычисленный результат.</p>
                 <pre><code class="language-basic">SUB ShowBanner(text AS STRING)
     PRINT "=="; text; "=="
 END SUB
@@ -88,16 +90,16 @@ END FUNCTION
 ShowBanner("Axiom")
 PRINT Square(5)</code></pre>
                 <p><code>SUB</code> выполняет действия, а <code>FUNCTION</code> вычисляет и возвращает значение. Оператор <code>RETURN</code> в <code>FUNCTION</code> обязателен для возврата результата, а в <code>SUB</code> используется только для досрочного выхода.</p>
-                <p>Язык также поддерживает локальные <code>SUB</code> и <code>FUNCTION</code> внутри другой процедуры или функции. Локальная функция может захватывать внешние данные, а если она возвращается наружу, то сохраняет их и после завершения внешней функции.</p>
-                <p>Функции можно хранить в переменных функционального типа, передавать в параметры и возвращать как результат. Подпрограммы <code>SUB</code> в этой роли не используются.</p>
+                <p>Axiom также поддерживает локальные <code>SUB</code> и <code>FUNCTION</code> внутри другой процедуры или функции. Локальная функция может захватывать внешние данные, а если она возвращается наружу, то сохраняет их и после завершения внешней функции.</p>
+                <p>Функции можно хранить в переменных функционального типа, передавать в параметры и возвращать как результат. Процедуры <code>SUB</code> в этой роли не используются, поэтому выбирать между ними стоит не по вкусу, а по реальной модели вызова.</p>
             </section>
 
             <section class="article-section" id="samples">
                 <h2>Показательные примеры</h2>
-                <p>Для проверки раздела через IDE откройте несколько коротких файлов по основным сценариям.</p>
+                <p>Для проверки раздела через IDE лучше открыть несколько коротких файлов по отдельным сценариям: базовый вызов, локальное объявление, захват внешних значений и возврат результата.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов</a></li>
-                    <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная подпрограмма</a></li>
+                    <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li>
                     <li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li>
                     <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление</a></li>
                     <li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li>
@@ -114,7 +116,7 @@ PRINT Square(5)</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="sub.html">Подпрограмма SUB</a>
+                    <a href="sub.html">Процедура SUB</a>
                     <a href="function.html">Функция FUNCTION</a>
                     <a href="return.html">Оператор RETURN</a>
                     <a href="examples.html">Примеры программ</a>

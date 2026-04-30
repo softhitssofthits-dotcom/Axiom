@@ -65,63 +65,62 @@ INPUT x, y</code></pre>
 
             <section class="article-section">
                 <h2>Условия</h2>
-                <pre><code class="language-basic">IF &lt;условие&gt; THEN
-    &lt;инструкции&gt;
-[ELSEIF &lt;другое условие&gt; THEN
-    &lt;инструкции&gt;]
-...
-[ELSE
-    &lt;инструкции&gt;]
+                <pre><code class="language-basic">IF score >= 90 THEN
+    PRINT "Отлично"
+ELSEIF score >= 70 THEN
+    PRINT "Хорошо"
+ELSE
+    PRINT "Нужно доработать"
 END IF
 
-SELECT CASE &lt;выражение&gt;
+SELECT CASE score
     CASE 1
-        &lt;инструкции&gt;
+        PRINT "Минимум"
     CASE 2, 3
-        &lt;инструкции&gt;
+        PRINT "Небольшое значение"
     CASE 10 TO 20
-        &lt;инструкции&gt;
+        PRINT "Диапазон от 10 до 20"
     CASE IS &gt; 100
-        &lt;инструкции&gt;
+        PRINT "Больше ста"
     CASE ELSE
-        &lt;инструкции&gt;
+        PRINT "Другой случай"
 END SELECT</code></pre>
             </section>
 
             <section class="article-section">
                 <h2>Циклы</h2>
-                <pre><code class="language-basic">FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]
-    &lt;инструкции&gt;
+                <pre><code class="language-basic">FOR i = 1 TO 10 STEP 2
+    PRINT i
 NEXT
 
-WHILE &lt;условие&gt;
-    &lt;инструкции&gt;
+WHILE total < 100
+    total = total + 10
 END WHILE
 
-DO WHILE &lt;условие&gt;
-    &lt;инструкции&gt;
+DO WHILE value <> 0
+    INPUT "Введите число"; value
 LOOP
 
-DO UNTIL &lt;условие&gt;
-    &lt;инструкции&gt;
+DO UNTIL ready = TRUE
+    ready = CheckState()
 LOOP
 
 DO
-    &lt;инструкции&gt;
-LOOP WHILE &lt;условие&gt;
+    PRINT "Первый проход обязателен"
+LOOP WHILE keepRunning
 
 DO
-    &lt;инструкции&gt;
-LOOP UNTIL &lt;условие&gt;
+    total = total + 1
+LOOP UNTIL total >= 10
 
 DO
-    &lt;инструкции&gt;
+    PRINT "Повторение до EXIT DO"
     EXIT DO
 LOOP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Подпрограммы и функции</h2>
+                <h2>Процедуры и функции</h2>
                 <pre><code class="language-basic">SUB ShowMessage(text AS STRING)
     PRINT text
 END SUB
@@ -141,10 +140,10 @@ PRINT numbers(1)</code></pre>
             <section class="article-section">
                 <h2>Встроенные функции</h2>
                 <ul class="inline-list">
-                    <li><code>LEN(&lt;текст&gt;)</code></li>
-                    <li><code>LEFT(&lt;текст&gt;, &lt;количество&gt;)</code></li>
-                    <li><code>RIGHT(&lt;текст&gt;, &lt;количество&gt;)</code></li>
-                    <li><code>MID(&lt;текст&gt;, &lt;начало&gt;, &lt;количество&gt;)</code></li>
+                    <li><code>LEN(text)</code></li>
+                    <li><code>LEFT(text, count)</code></li>
+                    <li><code>RIGHT(text, count)</code></li>
+                    <li><code>MID(text, start, count)</code></li>
                     <li><code>LCASE(text)</code></li>
                     <li><code>UCASE(text)</code></li>
                     <li><code>INT(value)</code></li>

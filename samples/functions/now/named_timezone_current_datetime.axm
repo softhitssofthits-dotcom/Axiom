@@ -1,3 +1,2 @@
-' Expected output:
-' TRUE
+' Пример показывает, что NOW("UTC") согласован с прямым вызовом UTCNOW().
 PRINT NOW("UTC") = UTCNOW()

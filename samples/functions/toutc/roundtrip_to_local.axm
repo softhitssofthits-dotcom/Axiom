@@ -1,6 +1,5 @@
-' Expected output:
-' TRUE
-' 2026-04-20 14:05:06
+' Пример показывает, что TOUTC переводит локальную дату-время в UTC,
+' а FROMUTC затем восстанавливает исходное локальное значение.
 DIM utcValue AS STRING = TOUTC("2026-04-20 14:05:06")
 PRINT ISDATE(utcValue)
 PRINT FROMUTC(utcValue)

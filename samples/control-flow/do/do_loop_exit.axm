@@ -1,17 +1,15 @@
-﻿' Expected output:
-' 0
-' 1
-' done
+' Пример показывает использование `EXIT DO`
+' для досрочного выхода из цикла.
 
-Dim i As Integer = 0
+DIM i AS INTEGER = 0
 
-Do
-    If i = 2 Then
-        Exit Do
-    End If
+DO
+    IF i = 2 THEN
+        EXIT DO
+    END IF
 
-    Print i
+    PRINT i
     i = i + 1
-Loop
+LOOP
 
-Print "done"
+PRINT "done"

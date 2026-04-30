@@ -977,6 +977,48 @@ PRINT grid(3, 12)
     }
 
     [Fact]
+    public void Execute_ArrayMetadataBuiltinsReportRankAndVisibleBounds()
+    {
+        const string text = """
+DIM cube(,,) AS INTEGER
+DIM bounds(,) AS INTEGER
+REDIM cube(2 TO 3, 10 TO 11, -1 TO 0)
+PRINT ARRAYRANK(cube)
+PRINT ARRAYRANK(bounds)
+bounds = ARRAYBOUNDS(cube)
+PRINT LBOUND(bounds, ROW)
+PRINT UBOUND(bounds, ROW)
+PRINT LBOUND(bounds, COLUMN)
+PRINT UBOUND(bounds, COLUMN)
+PRINT bounds(1, 1)
+PRINT bounds(1, 2)
+PRINT bounds(2, 1)
+PRINT bounds(2, 2)
+PRINT bounds(3, 1)
+PRINT bounds(3, 2)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3", "2", "1", "3", "1", "2", "2", "3", "10", "11", "-1", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ArrayBoundsReportsUnallocatedArrayState()
+    {
+        const string text = """
+DIM grid(,) AS INTEGER
+PRINT ARRAYBOUNDS(grid)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
+        Assert.Contains("выдел", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Execute_PartialMultidimensionalIndexingReturnsSharedRowView()
     {
         const string text = """
@@ -2474,6 +2516,61 @@ PRINT values(1)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["99", "TRUE", "1", "0", "0", "1", "1", "77"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MultidimensionalDynamicArrayBuiltinsWorkAlongExplicitDimension()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 11) AS INTEGER
+DIM newColumn(1 TO 2) AS INTEGER
+DIM removedColumn() AS INTEGER
+board(1, 10) = 110
+board(1, 11) = 111
+board(2, 10) = 210
+board(2, 11) = 211
+newColumn(1) = 112
+newColumn(2) = 212
+ARRAYPUSH(board, newColumn, COLUMN)
+PRINT board(1, 12)
+PRINT board(2, 12)
+removedColumn = ARRAYPOP(board, COLUMN)
+PRINT LBOUND(removedColumn)
+PRINT UBOUND(removedColumn)
+PRINT removedColumn(1)
+PRINT removedColumn(2)
+ARRAYINSERT(board, 11, newColumn, COLUMN)
+removedColumn = ARRAYREMOVE(board, 10, COLUMN)
+PRINT removedColumn(1)
+PRINT removedColumn(2)
+PRINT LBOUND(board, COLUMN)
+PRINT UBOUND(board, COLUMN)
+PRINT board(1, 10)
+PRINT board(1, 11)
+PRINT board(2, 10)
+PRINT board(2, 11)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["112", "212", "1", "2", "112", "212", "110", "210", "10", "11", "112", "111", "212", "211"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MultidimensionalArrayInsertReportsIncompatibleValueShape()
+    {
+        const string text = """
+DIM board(1 TO 2, 10 TO 11) AS INTEGER
+DIM wrongRow(10 TO 11) AS INTEGER
+ARRAYINSERT(board, 10, wrongRow, COLUMN)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("ARRAYINSERT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

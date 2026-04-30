@@ -1,2 +1,3 @@
-' Expected: MB2018 because the literal does not fit DECIMAL.
+' Пример показывает литерал DECIMAL, который не помещается в допустимый диапазон.
+' Ожидаемая семантическая диагностика: `MB2018`.
 DIM value AS DECIMAL = 792281625142643375935439503350.0

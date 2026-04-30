@@ -1,2 +1,4 @@
-' Expected runtime diagnostic MB3007: RIGHT count must be greater than 0.
+' Функция RIGHT не принимает отрицательное значение count.
+' Ожидаемая диагностика времени выполнения:
+' MB3007: RIGHT count must be greater than 0.
 PRINT RIGHT("Hello", -1)

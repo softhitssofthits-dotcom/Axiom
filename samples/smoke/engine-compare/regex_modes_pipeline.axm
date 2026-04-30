@@ -1,0 +1,42 @@
+' Сравнительный сценарий: регулярные выражения в режимах + замены + извлечение.
+' Программа собирает большой журнал и прогоняет несколько цепочек regex-функций с режимами.
+
+DIM lines() AS STRING
+DIM logText AS STRING
+DIM maskedText AS STRING
+DIM matches() AS STRING
+DIM groups() AS STRING
+DIM parts() AS STRING
+
+REDIM lines(1 TO 3600)
+
+FOR lineIndex = 1 TO ARRAYLENGTH(lines)
+    lines(lineIndex) = BuildRegexLine(lineIndex)
+NEXT
+
+logText = JOIN(lines, CHR(10))
+maskedText = REGEXREPLACE(logText, "token=[a-z]{3}\d{3}", "token=#", "i", 1)
+matches = REGEXMATCHES(logText, "warn-\d{3}", "i")
+groups = REGEXEXTRACTALL(logText, "user=([A-Z]{2}\d{2})", 1, "i")
+parts = REGEXSPLIT(maskedText, "\r?\n", "i")
+
+PRINT REGEXCOUNT(logText, "error-\d{3}", "i")
+PRINT ARRAYLENGTH(matches)
+PRINT ARRAYLENGTH(groups)
+PRINT ARRAYLENGTH(parts)
+PRINT LEFT(matches(1), 8)
+PRINT RIGHT(groups(ARRAYLENGTH(groups)), 4)
+
+FUNCTION BuildRegexLine(lineIndex AS INTEGER) AS STRING
+    DIM levelSelector AS INTEGER = lineIndex MOD 4
+
+    IF levelSelector = 0 THEN
+        RETURN "level=ERROR code=error-401 user=AB12 token=abc123 path=/runtime/vm"
+    ELSEIF levelSelector = 1 THEN
+        RETURN "level=Warn code=WARN-205 user=CD34 token=def456 path=/docs/manual"
+    ELSEIF levelSelector = 2 THEN
+        RETURN "level=error code=ERROR-302 user=EF56 token=ghi789 path=/samples/regex"
+    END IF
+
+    RETURN "level=info code=warn-777 user=GH78 token=jkl321 path=/execution/pipeline"
+END FUNCTION

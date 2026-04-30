@@ -1,4 +1,5 @@
-' Expected: prints 25.
+' Эта программа показывает базовое объявление функции FUNCTION.
+' Ожидаемый вывод: 25.
 FUNCTION Square(value AS INTEGER) AS INTEGER
     RETURN value * value
 END FUNCTION

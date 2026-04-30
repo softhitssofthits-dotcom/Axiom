@@ -1,4 +1,5 @@
-' Expected: prints a simple banner.
+' Эта программа показывает базовый вызов процедуры SUB.
+' Ожидаемый вывод: ==Axiom==
 SUB ShowBanner(text AS STRING)
     PRINT "=="; text; "=="
 END SUB

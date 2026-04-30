@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Справочник Axiom - ARRAY-функции</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-functions">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Функции для сведений о массиве и изменения его содержимого</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">ARRAY-функции</p><p class="sidebar__subtitle">Границы, форма, срезы и операции над элементами.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Массивы</p>
+<h1 class="page-title">ARRAY-функции</h1>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p>ARRAY-функции помогают узнать форму массива, получить его границы, выделить часть данных или изменить содержимое динамического массива. Ниже каждая функция описана отдельно: сначала назначение, затем запись, замечания и короткий пример вызова.</p>
+</section>
+
+<section class="article-section" id="lbound">
+<h2>LBOUND</h2>
+<p>Функция <code>LBOUND</code> возвращает нижнюю границу выбранного измерения массива.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">LBOUND(array)
+LBOUND(array, dimension)</code></pre>
+<h3>Аргументы</h3>
+<ul>
+<li><code>array</code> — массив, для которого определяется граница.</li>
+<li><code>dimension</code> — номер измерения. Если аргумент не указан, используется первое измерение.</li>
+</ul>
+<h3>Замечания</h3>
+<p>Для одномерного массива вызова <code>LBOUND(array)</code> обычно достаточно. Для двумерных и многомерных массивов можно явно указать измерение числом или, когда это уместно, через <code>ROW</code> и <code>COLUMN</code>.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM scores(1 TO 5) AS INTEGER
+PRINT LBOUND(scores)</code></pre>
+</section>
+
+<section class="article-section" id="ubound">
+<h2>UBOUND</h2>
+<p>Функция <code>UBOUND</code> возвращает верхнюю границу выбранного измерения массива.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">UBOUND(array)
+UBOUND(array, dimension)</code></pre>
+<h3>Аргументы</h3>
+<ul>
+<li><code>array</code> — массив, для которого определяется граница.</li>
+<li><code>dimension</code> — номер измерения. Если аргумент не указан, используется первое измерение.</li>
+</ul>
+<h3>Замечания</h3>
+<p>Эту функцию обычно используют вместе с <code>LBOUND</code>, чтобы обходить массив без жёстко записанных числовых границ.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM board(1 TO 3, 1 TO 4) AS INTEGER
+PRINT UBOUND(board, COLUMN)</code></pre>
+</section>
+
+<section class="article-section" id="arraylength">
+<h2>ARRAYLENGTH</h2>
+<p>Функция <code>ARRAYLENGTH</code> возвращает общее число элементов, видимых через данный массив.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYLENGTH(array)</code></pre>
+<h3>Замечания</h3>
+<p>Для одномерного массива это количество элементов в диапазоне. Для многомерного массива функция возвращает произведение длин всех измерений.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM board(1 TO 2, 1 TO 3) AS INTEGER
+PRINT ARRAYLENGTH(board)</code></pre>
+</section>
+
+<section class="article-section" id="arrayisallocated">
+<h2>ARRAYISALLOCATED</h2>
+<p>Функция <code>ARRAYISALLOCATED</code> показывает, была ли для массива уже выделена память.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYISALLOCATED(array)</code></pre>
+<h3>Замечания</h3>
+<p>Функция возвращает только признак готовности массива к работе с элементами. Она не сообщает ни число измерений, ни конкретные границы.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM values() AS INTEGER
+PRINT ARRAYISALLOCATED(values)
+REDIM values(1 TO 3)
+PRINT ARRAYISALLOCATED(values)</code></pre>
+</section>
+
+<section class="article-section" id="arrayrank">
+<h2>ARRAYRANK</h2>
+<p>Функция <code>ARRAYRANK</code> возвращает число измерений массива.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYRANK(array)</code></pre>
+<h3>Замечания</h3>
+<p>В отличие от функций, которым нужна уже выделенная память, <code>ARRAYRANK</code> может работать и с ещё не выделенным массивом, потому что число измерений известно уже по объявлению.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM cube(,,) AS INTEGER
+PRINT ARRAYRANK(cube)</code></pre>
+</section>
+
+<section class="article-section" id="arraybounds">
+<h2>ARRAYBOUNDS</h2>
+<p>Функция <code>ARRAYBOUNDS</code> возвращает таблицу границ массива по всем его измерениям.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYBOUNDS(array)</code></pre>
+<h3>Замечания</h3>
+<p>Результатом является новый массив <code>INTEGER(1 TO rank, 1 TO 2)</code>. В каждой строке хранится пара границ одного измерения: в первом столбце нижняя граница, во втором — верхняя.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM board(1 TO 2, 10 TO 11) AS INTEGER
+DIM bounds(,) AS INTEGER
+
+bounds = ARRAYBOUNDS(board)
+PRINT bounds(1, 1)
+PRINT bounds(1, 2)
+PRINT bounds(2, 1)
+PRINT bounds(2, 2)</code></pre>
+</section>
+
+<section class="article-section" id="arrayslice">
+<h2>ARRAYSLICE</h2>
+<p>Функция <code>ARRAYSLICE</code> возвращает часть массива по заданному диапазону индексов.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYSLICE(array, startIndex, count)
+ARRAYSLICE(array, startIndex, count, dimension)</code></pre>
+<h3>Аргументы</h3>
+<ul>
+<li><code>startIndex</code> — индекс первого элемента или первого среза.</li>
+<li><code>count</code> — сколько элементов или срезов нужно взять.</li>
+<li><code>dimension</code> — измерение, вдоль которого строится срез.</li>
+</ul>
+<h3>Замечания</h3>
+<p>Для одномерного массива функция возвращает непрерывный участок. Для многомерного массива она выбирает согласованный срез по указанному измерению.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM values(1 TO 5) AS INTEGER
+DIM part() AS INTEGER
+
+part = ARRAYSLICE(values, 2, 3)</code></pre>
+</section>
+
+<section class="article-section" id="arraypush">
+<h2>ARRAYPUSH</h2>
+<p>Функция <code>ARRAYPUSH</code> добавляет элемент в конец одномерного массива или целый срез в конец выбранного измерения многомерного массива.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYPUSH(array, value)
+ARRAYPUSH(array, value, dimension)</code></pre>
+<h3>Замечания</h3>
+<p>Для ранга <code>2+</code> аргумент <code>value</code> должен иметь форму, согласованную со всеми остальными измерениями массива.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM values() AS INTEGER
+
+REDIM values(1 TO 2)
+values(1) = 10
+values(2) = 20
+ARRAYPUSH(values, 30)</code></pre>
+</section>
+
+<section class="article-section" id="arraypop">
+<h2>ARRAYPOP</h2>
+<p>Функция <code>ARRAYPOP</code> снимает последний элемент или последний срез и возвращает его как результат.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYPOP(array)
+ARRAYPOP(array, dimension)</code></pre>
+<h3>Замечания</h3>
+<p>При вызове исходный массив одновременно уменьшается. Для многомерного массива результатом становится отдельный массив, представляющий снятый срез.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM values() AS INTEGER
+DIM lastValue AS INTEGER
+
+REDIM values(1 TO 3)
+values(3) = 30
+lastValue = ARRAYPOP(values)</code></pre>
+</section>
+
+<section class="article-section" id="arrayinsert">
+<h2>ARRAYINSERT</h2>
+<p>Функция <code>ARRAYINSERT</code> вставляет элемент или срез по указанной позиции.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYINSERT(array, index, value)
+ARRAYINSERT(array, index, value, dimension)</code></pre>
+<h3>Замечания</h3>
+<p>Все элементы после точки вставки сдвигаются. Для многомерного массива форма вставляемого значения должна соответствовать выбранному измерению.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM values() AS INTEGER
+
+REDIM values(1 TO 3)
+values(1) = 10
+values(2) = 30
+values(3) = 40
+ARRAYINSERT(values, 2, 20)</code></pre>
+</section>
+
+<section class="article-section" id="arrayremove">
+<h2>ARRAYREMOVE</h2>
+<p>Функция <code>ARRAYREMOVE</code> удаляет элемент или срез по указанной позиции и возвращает удалённое значение.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">ARRAYREMOVE(array, index)
+ARRAYREMOVE(array, index, dimension)</code></pre>
+<h3>Замечания</h3>
+<p>После удаления хвост массива сдвигается, а размер массива уменьшается. Для многомерного массива возвращается удалённый срез.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">DIM values() AS INTEGER
+DIM removedValue AS INTEGER
+
+REDIM values(1 TO 3)
+values(1) = 10
+values(2) = 20
+values(3) = 30
+removedValue = ARRAYREMOVE(values, 2)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list">
+<li><a href="../../samples/functions/arrayrank/basic_usage.axm">ARRAYRANK</a></li>
+<li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS</a></li>
+<li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE</a></li>
+<li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH</a></li>
+<li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP</a></li>
+<li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT</a></li>
+<li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE</a></li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list">
+<a href="arrays.html">Массивы</a>
+<a href="arrays-dynamic.html">Динамические массивы, REDIM, ERASE</a>
+<a href="arrays-slices.html">Срезы и представления</a>
+</div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,7 +1,14 @@
-' ARRAYTAKE returns the first N logical elements as a new compact array.
-
-Dim source(5 To 7) As Integer
-Dim part() As Integer
+' ARRAYTAKE возвращает первые N логических элементов
+' в новом компактном массиве.
+' Присваивание `part(1) = 99` показывает, что исходный массив не меняется.
+' Ожидаемый вывод:
+' 1
+' 2
+' 99
+' 20
+' 10
+DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
 
 source(5) = 10
 source(6) = 20
@@ -10,8 +17,8 @@ source(7) = 30
 part = ARRAYTAKE(source, 2)
 part(1) = 99
 
-Print LBOUND(part)
-Print UBOUND(part)
-Print part(1)
-Print part(2)
-Print source(5)
+PRINT LBOUND(part)
+PRINT UBOUND(part)
+PRINT part(1)
+PRINT part(2)
+PRINT source(5)

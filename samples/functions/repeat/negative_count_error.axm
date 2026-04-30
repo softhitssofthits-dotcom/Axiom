@@ -1,2 +1,3 @@
-' Expected runtime diagnostic MB3007: REPEAT count cannot be negative.
+' Функция REPEAT не принимает отрицательное значение count.
+' Ожидаемая диагностика времени выполнения: `MB3007`.
 PRINT REPEAT("ha", -1)

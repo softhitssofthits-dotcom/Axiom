@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Текущие дата и время</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="date-time-functions-current">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">DATE, TIME, NOW, UTCNOW и TIMER</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Текущие дата и время</p><p class="sidebar__subtitle">Чтение текущих значений в локальном времени и в UTC.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Дата и время</p>
+<h1 class="page-title">Текущие дата и время</h1>
+
+<section class="article-section" id="date">
+<h2>DATE</h2>
+<p>Функция <code>DATE</code> возвращает текущую дату в формате <code>yyyy-MM-dd</code>.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">dateText = DATE([timeZone])</code></pre>
+<p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, возвращается текущая дата для этого пояса.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Текущая локальная дата и дата в UTC
+PRINT DATE()
+PRINT DATE("UTC")</code></pre>
+</section>
+
+<section class="article-section" id="time">
+<h2>TIME</h2>
+<p>Функция <code>TIME</code> возвращает текущее время в формате <code>HH:mm:ss</code>.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">timeText = TIME([timeZone])</code></pre>
+<p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, время вычисляется для этого пояса.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Текущее локальное время и время в UTC
+PRINT TIME()
+PRINT TIME("UTC")</code></pre>
+</section>
+
+<section class="article-section" id="now">
+<h2>NOW</h2>
+<p>Функция <code>NOW</code> возвращает текущие дату и время в формате <code>yyyy-MM-dd HH:mm:ss</code>.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">dateTimeText = NOW([timeZone])</code></pre>
+<p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, дата и время вычисляются для него.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Текущие дата и время в локальном поясе и в UTC
+PRINT NOW()
+PRINT NOW("UTC")</code></pre>
+</section>
+
+<section class="article-section" id="utcdate">
+<h2>UTCDATE</h2>
+<p>Функция <code>UTCDATE</code> возвращает текущую дату в UTC.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">dateText = UTCDATE()</code></pre>
+</section>
+
+<section class="article-section" id="utctime">
+<h2>UTCTIME</h2>
+<p>Функция <code>UTCTIME</code> возвращает текущее время в UTC.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">timeText = UTCTIME()</code></pre>
+</section>
+
+<section class="article-section" id="utcnow">
+<h2>UTCNOW</h2>
+<p>Функция <code>UTCNOW</code> возвращает текущие дату и время в UTC.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">dateTimeText = UTCNOW()</code></pre>
+</section>
+
+<section class="article-section" id="timer">
+<h2>TIMER</h2>
+<p>Функция <code>TIMER</code> возвращает число секунд, прошедших с локальной полуночи текущего дня.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">seconds = TIMER()</code></pre>
+<p><strong>Части записи.</strong> Результат имеет тип <code>DOUBLE</code>.</p>
+<h3>Замечания</h3>
+<p>Эта функция удобна для простых измерений времени внутри одного дня.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">' Количество секунд от полуночи
+PRINT TIMER()</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list">
+<li><a href="../../samples/functions/date/basic_usage.axm">DATE</a></li>
+<li><a href="../../samples/functions/time/basic_usage.axm">TIME</a></li>
+<li><a href="../../samples/functions/now/basic_usage.axm">NOW</a></li>
+<li><a href="../../samples/functions/utcdate/current_utc_date.axm">UTCDATE</a></li>
+<li><a href="../../samples/functions/utctime/current_utc_time.axm">UTCTIME</a></li>
+<li><a href="../../samples/functions/utcnow/current_utc_now.axm">UTCNOW</a></li>
+<li><a href="../../samples/functions/timer/basic_usage.axm">TIMER</a></li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list">
+<a href="date-time-functions.html">Дата и время</a>
+<a href="date-time-functions-time-zones.html">UTC и часовые пояса</a>
+</div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

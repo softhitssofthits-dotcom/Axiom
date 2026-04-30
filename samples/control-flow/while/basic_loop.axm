@@ -1,4 +1,8 @@
-' Expected: prints 0, 1, 2 on separate lines.
+' Пример показывает цикл WHILE ... END WHILE.
+' Ожидается вывод по строкам:
+' 0
+' 1
+' 2
 DIM i AS INTEGER = 0
 
 WHILE i < 3

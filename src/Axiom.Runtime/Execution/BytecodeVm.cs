@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using System.Text;
 using Axiom.Bytecode;
@@ -23,8 +24,15 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<int, BytecodeRoutine> _routines;
     private readonly Dictionary<FunctionSymbol, BytecodeRoutine> _routinesBySymbol;
     private readonly Dictionary<int, BuiltinBinding> _builtins;
+    private readonly Dictionary<FunctionSymbol, BuiltinBinding> _builtinsByFunction;
+    private readonly Dictionary<int, BuiltinExecution> _builtinExecutions;
     private readonly Dictionary<int, BytecodeGlobal> _globalMetadata;
+    private readonly Dictionary<(int RoutineId, int InstructionIndex), TextLocation> _sourceLocationCache = [];
+    private readonly RuntimeValue?[] _constantValues;
     private readonly Dictionary<int, RuntimeValue> _globals = [];
+    private readonly RuntimeValue?[] _globalsBySlot;
+    private readonly int?[] _globalFixedStringLengths;
+    private readonly bool[] _hasGlobalSlot;
     private readonly Stack<BytecodeCallFrame> _callStack = new();
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
@@ -61,11 +69,26 @@ public sealed partial class BytecodeVm
             .Where(static routine => routine.Symbol is not null)
             .ToDictionary(static routine => routine.Symbol!);
         _builtins = module.Builtins.ToDictionary(static builtin => builtin.Id);
+        _builtinsByFunction = module.Builtins
+            .Where(static builtin => builtin.Function is not null)
+            .ToDictionary(static builtin => builtin.Function!);
+        _builtinExecutions = module.Builtins.ToDictionary(
+            static builtin => builtin.Id,
+            static builtin => CreateBuiltinExecution(builtin));
         _globalMetadata = module.Globals.ToDictionary(static global => global.Slot);
+        _constantValues = module.ConstantPool.Entries.Select(TryCreateRuntimeConstant).ToArray();
+        var maxGlobalSlot = module.Globals.Count == 0 ? -1 : module.Globals.Max(static global => global.Slot);
+        _globalsBySlot = maxGlobalSlot >= 0 ? new RuntimeValue[maxGlobalSlot + 1] : Array.Empty<RuntimeValue>();
+        _globalFixedStringLengths = maxGlobalSlot >= 0 ? new int?[maxGlobalSlot + 1] : Array.Empty<int?>();
+        _hasGlobalSlot = maxGlobalSlot >= 0 ? new bool[maxGlobalSlot + 1] : Array.Empty<bool>();
 
         foreach (var global in module.Globals)
         {
-            _globals[global.Slot] = RuntimeValue.Default(global.Type, global.FixedStringLength);
+            var initialValue = RuntimeValue.Default(global.Type, global.FixedStringLength);
+            _globals[global.Slot] = initialValue;
+            _globalsBySlot[global.Slot] = initialValue;
+            _globalFixedStringLengths[global.Slot] = global.FixedStringLength;
+            _hasGlobalSlot[global.Slot] = true;
         }
     }
 
@@ -302,7 +325,7 @@ public sealed partial class BytecodeVm
 
     private BytecodeCallFrame CreateFrame(
         BytecodeRoutine routine,
-        RuntimeValue[] arguments,
+        ReadOnlySpan<RuntimeValue> arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation)
     {
@@ -313,17 +336,26 @@ public sealed partial class BytecodeVm
             argumentSlots[index] = new BytecodeVariableSlot(value);
         }
 
-        var locals = new BytecodeVariableSlot[routine.LocalSlotCount];
+        var locals = new RuntimeValue[routine.LocalSlotCount];
+        var localFixedStringLengths = new int?[routine.LocalSlotCount];
         for (var index = 0; index < locals.Length; index++)
         {
             var variable = index < routine.LocalVariables.Count ? routine.LocalVariables[index] : null;
             var initialValue = variable is null
                 ? RuntimeValue.Void
                 : RuntimeValue.Default(variable.Type, variable.FixedStringLength);
-            locals[index] = new BytecodeVariableSlot(initialValue, variable?.FixedStringLength);
+            locals[index] = initialValue;
+            localFixedStringLengths[index] = variable?.FixedStringLength;
         }
 
-        return new BytecodeCallFrame(routine, argumentSlots, locals, captures, callSiteLocation);
+        return new BytecodeCallFrame(
+            routine,
+            argumentSlots,
+            locals,
+            localFixedStringLengths,
+            captures,
+            callSiteLocation,
+            routine.MaxEvaluationStackDepth);
     }
 
     private void ExecuteCurrentInstruction()
@@ -340,11 +372,20 @@ public sealed partial class BytecodeVm
 
         var instructionIndex = frame.InstructionPointer;
         var instruction = frame.Routine.Instructions[instructionIndex];
-        var snapshot = CreateExecutionSnapshot(frame, instructionIndex, instruction);
-        var stateBeforeInstruction = TryCreateReversibleStateSnapshot(snapshot);
-        _instructionObserver?.Invoke(snapshot);
+        var needsExecutionSnapshot = NeedsExecutionSnapshot();
+        var snapshot = needsExecutionSnapshot
+            ? CreateExecutionSnapshot(frame, instructionIndex, instruction)
+            : null;
+        var shouldCaptureReversibleState = ShouldCaptureReversibleStateHistory();
+        var stateBeforeInstruction = shouldCaptureReversibleState
+            ? TryCreateReversibleStateSnapshot(snapshot!)
+            : null;
+        if (snapshot is not null)
+        {
+            _instructionObserver?.Invoke(snapshot);
+        }
 
-        if (ShouldStopBefore(snapshot))
+        if (snapshot is not null && ShouldStopBefore(snapshot))
         {
             _stopState = new BytecodeVmStopState(snapshot, this, _previousReversibleStateSnapshot);
             return;
@@ -356,7 +397,7 @@ public sealed partial class BytecodeVm
         switch (instruction.Opcode)
         {
             case Opcode.PushConst:
-                frame.EvaluationStack.Push(ReadConstant(instruction.GetOperand(0)));
+                frame.EvaluationStack.Push(ReadConstantUnchecked(instruction.GetOperand(0)));
                 break;
 
             case Opcode.LoadFunction:
@@ -368,35 +409,35 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.LoadGlobal:
-                frame.EvaluationStack.Push(LoadGlobal(instruction.GetOperand(0)));
+                frame.EvaluationStack.Push(LoadGlobalUnchecked(instruction.GetOperand(0)));
                 break;
 
             case Opcode.StoreGlobal:
-                StoreGlobal(instruction.GetOperand(0), PopValue(frame, instructionIndex));
+                StoreGlobalUnchecked(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.LoadLocal:
-                frame.EvaluationStack.Push(LoadLocal(frame, instruction.GetOperand(0), instructionIndex));
+                frame.EvaluationStack.Push(frame.LoadLocalValue(instruction.GetOperand(0)));
                 break;
 
             case Opcode.StoreLocal:
-                StoreLocal(frame, instruction.GetOperand(0), PopValue(frame, instructionIndex), instructionIndex);
+                frame.StoreLocalValue(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.LoadArgument:
-                frame.EvaluationStack.Push(LoadArgument(frame, instruction.GetOperand(0), instructionIndex));
+                frame.EvaluationStack.Push(frame.Arguments[instruction.GetOperand(0)].Value);
                 break;
 
             case Opcode.StoreArgument:
-                StoreArgument(frame, instruction.GetOperand(0), PopValue(frame, instructionIndex), instructionIndex);
+                frame.Arguments[instruction.GetOperand(0)].Store(PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.LoadCapture:
-                frame.EvaluationStack.Push(LoadCapture(frame, instruction.GetOperand(0), instructionIndex));
+                frame.EvaluationStack.Push(frame.Captures[instruction.GetOperand(0)].Value);
                 break;
 
             case Opcode.StoreCapture:
-                StoreCapture(frame, instruction.GetOperand(0), PopValue(frame, instructionIndex), instructionIndex);
+                frame.Captures[instruction.GetOperand(0)].Store(PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.Pop:
@@ -408,8 +449,14 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.Add:
+                ExecuteAddInstruction(frame, instructionIndex);
+                break;
+
+            case Opcode.AddLongInteger:
+                ExecuteAddLongIntegerInstruction(frame, instructionIndex);
+                break;
+
             case Opcode.Subtract:
-            case Opcode.Multiply:
             case Opcode.Power:
             case Opcode.Divide:
             case Opcode.IntegralDivide:
@@ -425,9 +472,16 @@ public sealed partial class BytecodeVm
             case Opcode.CompareNotEqual:
             case Opcode.CompareLess:
             case Opcode.CompareLessOrEqual:
-            case Opcode.CompareGreater:
             case Opcode.CompareGreaterOrEqual:
                 ExecuteBinaryInstruction(frame, instruction.Opcode, instructionIndex);
+                break;
+
+            case Opcode.Multiply:
+                ExecuteMultiplyInstruction(frame, instructionIndex);
+                break;
+
+            case Opcode.CompareGreater:
+                ExecuteCompareGreaterInstruction(frame, instructionIndex);
                 break;
 
             case Opcode.Not:
@@ -440,6 +494,22 @@ public sealed partial class BytecodeVm
 
             case Opcode.Jump:
                 frame.InstructionPointer = instruction.GetOperand(0);
+                break;
+
+            case Opcode.JumpIfLess:
+                ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.Less);
+                break;
+
+            case Opcode.JumpIfLessOrEqual:
+                ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.LessOrEqual);
+                break;
+
+            case Opcode.JumpIfGreater:
+                ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.Greater);
+                break;
+
+            case Opcode.JumpIfGreaterOrEqual:
+                ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.GreaterOrEqual);
                 break;
 
             case Opcode.JumpIfTrue:
@@ -540,11 +610,19 @@ public sealed partial class BytecodeVm
 
     private void ExecuteBinaryInstruction(BytecodeCallFrame frame, Opcode opcode, int instructionIndex)
     {
-        var right = PopValue(frame, instructionIndex);
-        var left = PopValue(frame, instructionIndex);
+        var stack = frame.EvaluationStack;
+        var right = stack.Pop();
+        var left = stack.Pop();
+
+        if (TryEvaluateFastBinaryInstruction(opcode, left, right, out var fastResult))
+        {
+            stack.Push(fastResult);
+            return;
+        }
+
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
 
-        frame.EvaluationStack.Push(opcode switch
+        stack.Push(opcode switch
         {
             Opcode.Add => EvaluateAdd(left, right, location),
             Opcode.Subtract => EvaluateSubtract(left, right, location),
@@ -570,6 +648,441 @@ public sealed partial class BytecodeVm
         });
     }
 
+    private void ExecuteAddInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        var right = stack.Pop();
+        var left = stack.Pop();
+
+        if (TryEvaluateHotAdd(left, right, out var result))
+        {
+            stack.Push(result);
+            return;
+        }
+
+        stack.Push(EvaluateAdd(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
+    }
+
+    private void ExecuteAddLongIntegerInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        var right = stack.Pop();
+        var left = stack.Pop();
+
+        if (left.Type == TypeSymbol.Long && right.Type == TypeSymbol.Integer)
+        {
+            try
+            {
+                stack.Push(RuntimeValue.FromLong(checked(left.AsLong() + right.AsInteger())));
+                return;
+            }
+            catch (OverflowException)
+            {
+            }
+        }
+
+        stack.Push(EvaluateAdd(
+            ConvertValue(right, BytecodeScalarTypeCode.Long, ResolveLocation(frame.Routine.Id, instructionIndex)),
+            left,
+            ResolveLocation(frame.Routine.Id, instructionIndex)));
+    }
+
+    private void ExecuteComparisonJumpInstruction(
+        BytecodeCallFrame frame,
+        BytecodeInstruction instruction,
+        int instructionIndex,
+        ComparisonBranchKind branchKind)
+    {
+        var stack = frame.EvaluationStack;
+        var right = stack.Pop();
+        var left = stack.Pop();
+        var comparisonOpcode = branchKind switch
+        {
+            ComparisonBranchKind.Less => Opcode.CompareLess,
+            ComparisonBranchKind.LessOrEqual => Opcode.CompareLessOrEqual,
+            ComparisonBranchKind.Greater => Opcode.CompareGreater,
+            ComparisonBranchKind.GreaterOrEqual => Opcode.CompareGreaterOrEqual,
+            _ => throw new InvalidOperationException($"Unsupported comparison branch kind '{branchKind}'.")
+        };
+
+        if (TryEvaluateFastComparison(comparisonOpcode, left, right, out var result))
+        {
+            if (result.AsBoolean())
+            {
+                frame.InstructionPointer = instruction.GetOperand(0);
+            }
+
+            return;
+        }
+
+        var comparison = Compare(left, right, ResolveLocation(frame.Routine.Id, instructionIndex));
+        var shouldJump = branchKind switch
+        {
+            ComparisonBranchKind.Less => comparison < 0,
+            ComparisonBranchKind.LessOrEqual => comparison <= 0,
+            ComparisonBranchKind.Greater => comparison > 0,
+            ComparisonBranchKind.GreaterOrEqual => comparison >= 0,
+            _ => false
+        };
+
+        if (shouldJump)
+        {
+            frame.InstructionPointer = instruction.GetOperand(0);
+        }
+    }
+
+    private void ExecuteMultiplyInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        var right = stack.Pop();
+        var left = stack.Pop();
+
+        if (TryEvaluateHotMultiply(left, right, out var result))
+        {
+            stack.Push(result);
+            return;
+        }
+
+        stack.Push(EvaluateMultiply(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
+    }
+
+    private void ExecuteCompareGreaterInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        var right = stack.Pop();
+        var left = stack.Pop();
+
+        if (TryEvaluateHotCompareGreater(left, right, out var result))
+        {
+            stack.Push(result);
+            return;
+        }
+
+        stack.Push(RuntimeValue.FromBoolean(
+            Compare(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)) > 0));
+    }
+
+    private static bool TryEvaluateFastBinaryInstruction(
+        Opcode opcode,
+        RuntimeValue left,
+        RuntimeValue right,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        if (left.Type != right.Type)
+        {
+            return false;
+        }
+
+        if (opcode is Opcode.CompareEqual or Opcode.CompareNotEqual)
+        {
+            var equal = ValuesEqual(left, right);
+            result = RuntimeValue.FromBoolean(opcode == Opcode.CompareEqual ? equal : !equal);
+            return true;
+        }
+
+        if (TryEvaluateFastComparison(opcode, left, right, out result))
+        {
+            return true;
+        }
+
+        if (left.Type == TypeSymbol.Boolean)
+        {
+            return TryEvaluateFastBooleanBinaryInstruction(opcode, left.AsBoolean(), right.AsBoolean(), out result);
+        }
+
+        if (left.Type == TypeSymbol.Integer)
+        {
+            return TryEvaluateFastIntegerBinaryInstruction(opcode, left.AsInteger(), right.AsInteger(), out result);
+        }
+
+        if (left.Type == TypeSymbol.Long)
+        {
+            return TryEvaluateFastLongBinaryInstruction(opcode, left.AsLong(), right.AsLong(), out result);
+        }
+
+        if (left.Type == TypeSymbol.String && opcode == Opcode.Add)
+        {
+            result = RuntimeValue.FromString(left.AsString() + right.AsString());
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryEvaluateHotAdd(RuntimeValue left, RuntimeValue right, out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+        var type = left.Type;
+
+        if (type != right.Type)
+        {
+            return false;
+        }
+
+        if (type == TypeSymbol.Integer)
+        {
+            try
+            {
+                result = RuntimeValue.FromInteger(checked(left.AsInteger() + right.AsInteger()));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (type == TypeSymbol.Long)
+        {
+            try
+            {
+                result = RuntimeValue.FromLong(checked(left.AsLong() + right.AsLong()));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (type == TypeSymbol.Double)
+        {
+            result = TryCreateFiniteDouble(left.AsDouble() + right.AsDouble());
+            return result != RuntimeValue.Void;
+        }
+
+        if (type == TypeSymbol.Decimal)
+        {
+            try
+            {
+                result = RuntimeValue.FromDecimal(checked(left.AsDecimal() + right.AsDecimal()));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (type == TypeSymbol.String)
+        {
+            result = RuntimeValue.FromString(left.AsString() + right.AsString());
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryEvaluateHotMultiply(RuntimeValue left, RuntimeValue right, out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+        var type = left.Type;
+
+        if (type != right.Type)
+        {
+            return false;
+        }
+
+        if (type == TypeSymbol.Integer)
+        {
+            try
+            {
+                result = RuntimeValue.FromInteger(checked(left.AsInteger() * right.AsInteger()));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (type == TypeSymbol.Long)
+        {
+            try
+            {
+                result = RuntimeValue.FromLong(checked(left.AsLong() * right.AsLong()));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (type == TypeSymbol.Double)
+        {
+            result = TryCreateFiniteDouble(left.AsDouble() * right.AsDouble());
+            return result != RuntimeValue.Void;
+        }
+
+        if (type == TypeSymbol.Decimal)
+        {
+            try
+            {
+                result = RuntimeValue.FromDecimal(checked(left.AsDecimal() * right.AsDecimal()));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryEvaluateHotCompareGreater(RuntimeValue left, RuntimeValue right, out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        if (left.Type != right.Type)
+        {
+            return false;
+        }
+
+        result = left.Type switch
+        {
+            var type when type == TypeSymbol.Integer => RuntimeValue.FromBoolean(left.AsInteger() > right.AsInteger()),
+            var type when type == TypeSymbol.Long => RuntimeValue.FromBoolean(left.AsLong() > right.AsLong()),
+            var type when type == TypeSymbol.Double => RuntimeValue.FromBoolean(left.AsDouble() > right.AsDouble()),
+            var type when type == TypeSymbol.Decimal => RuntimeValue.FromBoolean(left.AsDecimal() > right.AsDecimal()),
+            var type when type == TypeSymbol.String => RuntimeValue.FromBoolean(
+                string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal) > 0),
+            _ => RuntimeValue.Void
+        };
+
+        return result != RuntimeValue.Void;
+    }
+
+    private static RuntimeValue TryCreateFiniteDouble(double value) =>
+        double.IsFinite(value)
+            ? RuntimeValue.FromDouble(value)
+            : RuntimeValue.Void;
+
+    private static bool TryEvaluateFastBooleanBinaryInstruction(
+        Opcode opcode,
+        bool left,
+        bool right,
+        out RuntimeValue result)
+    {
+        result = opcode switch
+        {
+            Opcode.And => RuntimeValue.FromBoolean(left && right),
+            Opcode.Or => RuntimeValue.FromBoolean(left || right),
+            Opcode.Xor => RuntimeValue.FromBoolean(left ^ right),
+            Opcode.Eqv => RuntimeValue.FromBoolean(left == right),
+            Opcode.Imp => RuntimeValue.FromBoolean(!left || right),
+            _ => RuntimeValue.Void
+        };
+
+        return result != RuntimeValue.Void;
+    }
+
+    private static bool TryEvaluateFastIntegerBinaryInstruction(
+        Opcode opcode,
+        int left,
+        int right,
+        out RuntimeValue result)
+    {
+        try
+        {
+            result = opcode switch
+            {
+                Opcode.Add => RuntimeValue.FromInteger(checked(left + right)),
+                Opcode.Subtract => RuntimeValue.FromInteger(checked(left - right)),
+                Opcode.Multiply => RuntimeValue.FromInteger(checked(left * right)),
+                Opcode.And => RuntimeValue.FromInteger(left & right),
+                Opcode.Or => RuntimeValue.FromInteger(left | right),
+                Opcode.Xor => RuntimeValue.FromInteger(left ^ right),
+                Opcode.Eqv => RuntimeValue.FromInteger(~(left ^ right)),
+                Opcode.Imp => RuntimeValue.FromInteger((~left) | right),
+                Opcode.ShiftLeft => RuntimeValue.FromInteger(left << right),
+                Opcode.ShiftRight => RuntimeValue.FromInteger(left >> right),
+                _ => RuntimeValue.Void
+            };
+        }
+        catch (OverflowException)
+        {
+            result = RuntimeValue.Void;
+            return false;
+        }
+
+        return result != RuntimeValue.Void;
+    }
+
+    private static bool TryEvaluateFastLongBinaryInstruction(
+        Opcode opcode,
+        long left,
+        long right,
+        out RuntimeValue result)
+    {
+        try
+        {
+            result = opcode switch
+            {
+                Opcode.Add => RuntimeValue.FromLong(checked(left + right)),
+                Opcode.Subtract => RuntimeValue.FromLong(checked(left - right)),
+                Opcode.Multiply => RuntimeValue.FromLong(checked(left * right)),
+                Opcode.And => RuntimeValue.FromLong(left & right),
+                Opcode.Or => RuntimeValue.FromLong(left | right),
+                Opcode.Xor => RuntimeValue.FromLong(left ^ right),
+                Opcode.Eqv => RuntimeValue.FromLong(~(left ^ right)),
+                Opcode.Imp => RuntimeValue.FromLong((~left) | right),
+                Opcode.ShiftLeft => RuntimeValue.FromLong(left << unchecked((int)right)),
+                Opcode.ShiftRight => RuntimeValue.FromLong(left >> unchecked((int)right)),
+                _ => RuntimeValue.Void
+            };
+        }
+        catch (OverflowException)
+        {
+            result = RuntimeValue.Void;
+            return false;
+        }
+
+        return result != RuntimeValue.Void;
+    }
+
+    private static bool TryEvaluateFastComparison(
+        Opcode opcode,
+        RuntimeValue left,
+        RuntimeValue right,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        if (opcode is not (Opcode.CompareLess or Opcode.CompareLessOrEqual or Opcode.CompareGreater or Opcode.CompareGreaterOrEqual))
+        {
+            return false;
+        }
+
+        var comparison = left.Type switch
+        {
+            var type when type == TypeSymbol.Integer => left.AsInteger().CompareTo(right.AsInteger()),
+            var type when type == TypeSymbol.Long => left.AsLong().CompareTo(right.AsLong()),
+            var type when type == TypeSymbol.Double => left.AsDouble().CompareTo(right.AsDouble()),
+            var type when type == TypeSymbol.Decimal => left.AsDecimal().CompareTo(right.AsDecimal()),
+            var type when type == TypeSymbol.String => string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal),
+            _ => (int?)null
+        };
+
+        if (comparison is null)
+        {
+            return false;
+        }
+
+        result = RuntimeValue.FromBoolean(opcode switch
+        {
+            Opcode.CompareLess => comparison < 0,
+            Opcode.CompareLessOrEqual => comparison <= 0,
+            Opcode.CompareGreater => comparison > 0,
+            Opcode.CompareGreaterOrEqual => comparison >= 0,
+            _ => throw new InvalidOperationException($"Unsupported comparison opcode '{opcode}'.")
+        });
+        return true;
+    }
+
     private RuntimeValue PopValue(BytecodeCallFrame frame, int instructionIndex)
     {
         if (frame.EvaluationStack.Count == 0)
@@ -585,13 +1098,31 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue ReadConstant(int constantIndex)
     {
-        if (constantIndex < 0 || constantIndex >= _module.ConstantPool.Count)
+        if (constantIndex < 0 || constantIndex >= _constantValues.Length)
         {
             ReportInvalidRuntimeState($"Не найдена константа с индексом {constantIndex}.", FallbackRuntimeLocation);
             throw new RuntimeFailureException();
         }
 
+        var value = _constantValues[constantIndex];
+        if (value is not null)
+        {
+            return value;
+        }
+
         var constant = _module.ConstantPool[constantIndex];
+        return ReportInvalidRuntimeState<RuntimeValue>(
+            $"Константа вида '{constant.Kind}' не поддерживается Bytecode VM.",
+            FallbackRuntimeLocation);
+    }
+
+    private RuntimeValue ReadConstantUnchecked(int constantIndex)
+    {
+        return _constantValues[constantIndex]!;
+    }
+
+    private static RuntimeValue? TryCreateRuntimeConstant(BytecodeConstant constant)
+    {
         return constant.Kind switch
         {
             BytecodeConstantKind.Integer => RuntimeValue.FromInteger((int)constant.Value!),
@@ -601,9 +1132,7 @@ public sealed partial class BytecodeVm
             BytecodeConstantKind.String => RuntimeValue.FromString((string)constant.Value!),
             BytecodeConstantKind.Boolean => RuntimeValue.FromBoolean((bool)constant.Value!),
             BytecodeConstantKind.Null => RuntimeValue.Void,
-            _ => ReportInvalidRuntimeState<RuntimeValue>(
-                $"Константа вида '{constant.Kind}' не поддерживается Bytecode VM.",
-                FallbackRuntimeLocation)
+            _ => null
         };
     }
 
@@ -622,12 +1151,17 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue LoadGlobal(int slot)
     {
-        if (_globals.TryGetValue(slot, out var value))
+        if ((uint)slot < (uint)_globalsBySlot.Length && _hasGlobalSlot[slot])
         {
-            return value;
+            return _globalsBySlot[slot]!;
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>($"Не найден глобальный слот {slot}.", FallbackRuntimeLocation);
+    }
+
+    private RuntimeValue LoadGlobalUnchecked(int slot)
+    {
+        return _globalsBySlot[slot]!;
     }
 
     private RuntimeValue LoadFunctionValue(BytecodeCallFrame frame, int routineId, int instructionIndex)
@@ -654,38 +1188,47 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        return RuntimeValue.FromBytecodeBuiltinFunction(builtin.Function);
+        return RuntimeValue.FromBytecodeBuiltinFunction(builtin.Function, builtin.Id);
     }
 
     private void StoreGlobal(int slot, RuntimeValue value)
     {
-        if (!_globals.ContainsKey(slot))
+        if ((uint)slot >= (uint)_globalsBySlot.Length || !_hasGlobalSlot[slot])
         {
             ReportInvalidRuntimeState($"Не найден глобальный слот {slot}.", FallbackRuntimeLocation);
             throw new RuntimeFailureException();
         }
 
-        _globals[slot] = value.CopyForStorage(GetGlobalFixedStringLength(slot));
+        var storedValue = value.CopyForStorage(GetGlobalFixedStringLength(slot));
+        _globals[slot] = storedValue;
+        _globalsBySlot[slot] = storedValue;
+    }
+
+    private void StoreGlobalUnchecked(int slot, RuntimeValue value)
+    {
+        var storedValue = value.CopyForStorage(_globalFixedStringLengths[slot]);
+        _globals[slot] = storedValue;
+        _globalsBySlot[slot] = storedValue;
     }
 
     private static RuntimeValue LoadLocal(BytecodeCallFrame frame, int slot, int instructionIndex)
     {
-        if (slot < 0 || slot >= frame.Locals.Length)
+        if (slot < 0 || slot >= frame.LocalCount)
         {
             throw CreateInvalidSlotException(frame, "локальный", slot, instructionIndex);
         }
 
-        return frame.Locals[slot].Value;
+        return frame.LoadLocalValue(slot);
     }
 
     private static void StoreLocal(BytecodeCallFrame frame, int slot, RuntimeValue value, int instructionIndex)
     {
-        if (slot < 0 || slot >= frame.Locals.Length)
+        if (slot < 0 || slot >= frame.LocalCount)
         {
             throw CreateInvalidSlotException(frame, "локальный", slot, instructionIndex);
         }
 
-        frame.Locals[slot].Store(value);
+        frame.StoreLocalValue(slot, value);
     }
 
     private static RuntimeValue LoadArgument(BytecodeCallFrame frame, int slot, int instructionIndex)
@@ -730,8 +1273,8 @@ public sealed partial class BytecodeVm
 
     private int? GetGlobalFixedStringLength(int slot)
     {
-        return _globalMetadata.TryGetValue(slot, out var global)
-            ? global.FixedStringLength
+        return (uint)slot < (uint)_globalFixedStringLengths.Length && _hasGlobalSlot[slot]
+            ? _globalFixedStringLengths[slot]
             : null;
     }
 
@@ -758,18 +1301,19 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var arguments = PopArguments(callerFrame, argumentCount, instructionIndex);
+        using var arguments = RentArguments(callerFrame, argumentCount, instructionIndex);
         var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
-        _callStack.Push(CreateFrame(targetRoutine, arguments, captures, ResolveLocation(callerFrame.Routine.Id, instructionIndex)));
+        _callStack.Push(CreateFrame(targetRoutine, arguments.Span, captures, ResolveLocation(callerFrame.Routine.Id, instructionIndex)));
     }
 
     private void ExecuteFunctionValueCall(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var argumentCount = instruction.GetOperand(0);
         var returnsValue = instruction.GetOperand(1) != 0;
-        var arguments = PopArguments(frame, argumentCount, instructionIndex);
-        var target = PopValue(frame, instructionIndex);
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+
+        using var arguments = RentArguments(frame, argumentCount, instructionIndex);
+        var target = PopValue(frame, instructionIndex);
         var functionValue = target.AsFunction();
 
         if (functionValue is null)
@@ -778,7 +1322,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var result = InvokeBytecodeFunction(functionValue, arguments, location);
+        var result = InvokeBytecodeFunction(functionValue, arguments.Span, location);
         if (returnsValue)
         {
             frame.EvaluationStack.Push(result);
@@ -825,8 +1369,9 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var arguments = PopArguments(frame, argumentCount, instructionIndex);
-        var result = ExecuteBuiltin(builtin, arguments, ResolveLocation(frame.Routine.Id, instructionIndex));
+        var execution = _builtinExecutions[builtin.Id];
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var result = ExecuteBuiltin(frame, execution, argumentCount, instructionIndex, location);
 
         if (builtin.ReturnsValue)
         {
@@ -839,9 +1384,47 @@ public sealed partial class BytecodeVm
         }
     }
 
+    private RuntimeValue ExecuteBuiltin(
+        BytecodeCallFrame frame,
+        BuiltinExecution execution,
+        int argumentCount,
+        int instructionIndex,
+        TextLocation location)
+    {
+        switch (execution.Arity)
+        {
+            case BuiltinExecutionArity.Nullary:
+                return execution.Zero!(this, location);
+
+            case BuiltinExecutionArity.Unary:
+                return execution.One!(this, PopValue(frame, instructionIndex), location);
+
+            case BuiltinExecutionArity.Binary:
+            {
+                var right = PopValue(frame, instructionIndex);
+                var left = PopValue(frame, instructionIndex);
+                return execution.Two!(this, left, right, location);
+            }
+
+            case BuiltinExecutionArity.Ternary:
+            {
+                var third = PopValue(frame, instructionIndex);
+                var second = PopValue(frame, instructionIndex);
+                var first = PopValue(frame, instructionIndex);
+                return execution.Three!(this, first, second, third, location);
+            }
+
+            default:
+                using (var arguments = RentArguments(frame, argumentCount, instructionIndex))
+                {
+                    return execution.Many!(this, arguments.Span, location);
+                }
+        }
+    }
+
     private RuntimeValue InvokeBytecodeFunction(
         RuntimeFunctionValue functionValue,
-        IReadOnlyList<RuntimeValue> arguments,
+        ReadOnlySpan<RuntimeValue> arguments,
         TextLocation callSiteLocation)
     {
         var function = functionValue.Function;
@@ -855,8 +1438,11 @@ public sealed partial class BytecodeVm
                     callSiteLocation);
             }
 
-            var builtin = _builtins.Values.FirstOrDefault(candidate => ReferenceEquals(candidate.Function, function))
-                ?? _builtins.Values.FirstOrDefault(candidate => candidate.CanonicalId == builtinId);
+            var builtin = functionValue.BytecodeBuiltinBindingId is { } builtinBindingId && _builtins.TryGetValue(builtinBindingId, out var directBuiltin)
+                ? directBuiltin
+                : _builtinsByFunction.TryGetValue(function, out var mappedBuiltin)
+                    ? mappedBuiltin
+                    : _builtins.Values.FirstOrDefault(candidate => candidate.CanonicalId == builtinId);
             if (builtin is null)
             {
                 return ReportInvalidRuntimeState<RuntimeValue>(
@@ -864,7 +1450,7 @@ public sealed partial class BytecodeVm
                     callSiteLocation);
             }
 
-            return ExecuteBuiltin(builtin, arguments, callSiteLocation);
+            return ExecuteBuiltinFromArguments(builtin, arguments, callSiteLocation);
         }
 
         if (!_routinesBySymbol.TryGetValue(function, out var routine))
@@ -874,12 +1460,17 @@ public sealed partial class BytecodeVm
                 callSiteLocation);
         }
 
-        var captures = functionValue.BytecodeCapturedSlots?.ToArray() ?? [];
+        var captures = functionValue.BytecodeCapturedSlots switch
+        {
+            null => Array.Empty<BytecodeVariableSlot>(),
+            BytecodeVariableSlot[] captureArray => captureArray,
+            _ => functionValue.BytecodeCapturedSlots.ToArray()
+        };
         var callerFrame = CurrentFrame;
         var callerStackDepth = callerFrame.EvaluationStack.Count;
         var callStackDepth = _callStack.Count;
 
-        _callStack.Push(CreateFrame(routine, arguments.ToArray(), captures, callSiteLocation));
+        _callStack.Push(CreateFrame(routine, arguments, captures, callSiteLocation));
 
         while (_callStack.Count > callStackDepth)
         {
@@ -903,22 +1494,77 @@ public sealed partial class BytecodeVm
         return callerFrame.EvaluationStack.Pop();
     }
 
-    private static RuntimeValue[] PopArguments(BytecodeCallFrame frame, int argumentCount, int instructionIndex)
+    private RuntimeValue ExecuteBuiltinFromArguments(
+        BuiltinBinding builtin,
+        ReadOnlySpan<RuntimeValue> arguments,
+        TextLocation location)
     {
-        var arguments = new RuntimeValue[argumentCount];
+        if (!_builtinExecutions.TryGetValue(builtin.Id, out var execution))
+        {
+            return ReportInvalidRuntimeState<RuntimeValue>(
+                $"Для built-in '{builtin.Name}' отсутствует исполняемый дескриптор Bytecode VM.",
+                location);
+        }
+
+        return execution.Arity switch
+        {
+            BuiltinExecutionArity.Nullary => execution.Zero!(this, location),
+            BuiltinExecutionArity.Unary => execution.One!(this, arguments[0], location),
+            BuiltinExecutionArity.Binary => execution.Two!(this, arguments[0], arguments[1], location),
+            BuiltinExecutionArity.Ternary => execution.Three!(this, arguments[0], arguments[1], arguments[2], location),
+            _ => execution.Many!(this, arguments, location)
+        };
+    }
+
+    private static PooledArgumentBuffer RentArguments(BytecodeCallFrame frame, int argumentCount, int instructionIndex)
+    {
+        if (argumentCount == 0)
+        {
+            return PooledArgumentBuffer.Empty;
+        }
+
+        var buffer = ArrayPool<RuntimeValue>.Shared.Rent(argumentCount);
+        var stack = frame.EvaluationStack;
 
         for (var index = argumentCount - 1; index >= 0; index--)
         {
-            if (frame.EvaluationStack.Count == 0)
+            if (stack.Count == 0)
             {
+                ArrayPool<RuntimeValue>.Shared.Return(buffer, clearArray: true);
                 throw new InvalidOperationException(
                     $"Стек вычисления опустел при снятии аргументов на инструкции {instructionIndex} процедуры '{frame.Routine.Name}'.");
             }
 
-            arguments[index] = frame.EvaluationStack.Pop();
+            buffer[index] = stack.Pop();
         }
 
-        return arguments;
+        return new PooledArgumentBuffer(buffer, argumentCount, pooled: true);
+    }
+
+    private readonly struct PooledArgumentBuffer : IDisposable
+    {
+        public static PooledArgumentBuffer Empty { get; } = new(Array.Empty<RuntimeValue>(), 0, pooled: false);
+
+        private readonly RuntimeValue[] _buffer;
+        private readonly int _count;
+        private readonly bool _pooled;
+
+        public PooledArgumentBuffer(RuntimeValue[] buffer, int count, bool pooled)
+        {
+            _buffer = buffer;
+            _count = count;
+            _pooled = pooled;
+        }
+
+        public ReadOnlySpan<RuntimeValue> Span => _buffer.AsSpan(0, _count);
+
+        public void Dispose()
+        {
+            if (_pooled)
+            {
+                ArrayPool<RuntimeValue>.Shared.Return(_buffer, clearArray: true);
+            }
+        }
     }
 
     private void ExecutePrintSeparator(int separatorKind, int instructionIndex)
@@ -947,13 +1593,14 @@ public sealed partial class BytecodeVm
         var separatorKind = instruction.GetOperand(1);
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var values = new (RuntimeValue Value, TextLocation Location)[valueCount];
+        var stack = frame.EvaluationStack;
 
         for (var index = valueCount - 1; index >= 0; index--)
         {
-            values[index] = (PopValue(frame, instructionIndex), location);
+            values[index] = (stack.Pop(), location);
         }
 
-        var format = PopValue(frame, instructionIndex).AsString();
+        var format = stack.Pop().AsString();
         AppendPendingOutput(FormatUsing(format, values, location));
 
         switch (separatorKind)
@@ -1128,18 +1775,25 @@ public sealed partial class BytecodeVm
 
     private TextLocation ResolveLocation(int routineId, int instructionIndex)
     {
+        var cacheKey = (routineId, instructionIndex);
+        if (_sourceLocationCache.TryGetValue(cacheKey, out var cachedLocation))
+        {
+            return cachedLocation;
+        }
+
+        var resolvedLocation = FallbackRuntimeLocation;
         if (_module.DebugInfo is not null
             && _module.DebugInfo.TryGetLocation(routineId, instructionIndex, out var location))
         {
-            return location;
+            resolvedLocation = location;
         }
-
-        if (_routines.TryGetValue(routineId, out var routine))
+        else if (_routines.TryGetValue(routineId, out var routine))
         {
-            return routine.Location;
+            resolvedLocation = routine.Location;
         }
 
-        return FallbackRuntimeLocation;
+        _sourceLocationCache[cacheKey] = resolvedLocation;
+        return resolvedLocation;
     }
 
     private void AppendPendingOutput(string text)
@@ -1216,14 +1870,37 @@ public sealed partial class BytecodeVm
             _previousReversibleStateSnapshot);
     }
 
+    private bool ShouldCaptureReversibleStateHistory()
+    {
+        return _breakpoints is not null
+            || _shouldStopBeforeInstruction is not null
+            || _debugStepBoundary is not null;
+    }
+
+    private bool NeedsExecutionSnapshot()
+    {
+        return _instructionObserver is not null
+            || _breakpoints is not null
+            || _shouldStopBeforeInstruction is not null
+            || _debugStepBoundary is not null
+            || _skipStopOnceAt is not null
+            || _suppressLineBreakpointsUntilDifferentLine is not null;
+    }
+
     private void RestoreStateSnapshot(BytecodeVmStateSnapshot snapshot)
     {
         var sharedValues = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
 
         _globals.Clear();
+        Array.Clear(_globalsBySlot);
         foreach (var (slot, value) in snapshot.Globals)
         {
-            _globals[slot] = CloneSnapshotValue(value, GetGlobalFixedStringLength(slot), sharedValues);
+            var clonedValue = CloneSnapshotValue(value, GetGlobalFixedStringLength(slot), sharedValues);
+            _globals[slot] = clonedValue;
+            if ((uint)slot < (uint)_globalsBySlot.Length)
+            {
+                _globalsBySlot[slot] = clonedValue;
+            }
         }
 
         _callStack.Clear();
@@ -1232,14 +1909,16 @@ public sealed partial class BytecodeVm
         foreach (var frameSnapshot in snapshot.CallFramesBottomToTop)
         {
             var arguments = CreateSlotsFromSnapshots(frameSnapshot.Arguments, sharedValues);
-            var locals = CreateSlotsFromSnapshots(frameSnapshot.Locals, sharedValues);
+            var (locals, localFixedStringLengths) = CreateLocalStateFromSnapshots(frameSnapshot.Locals, sharedValues);
             var captures = RestoreCapturedSlots(frameSnapshot, visibleVariables, sharedValues);
             var frame = new BytecodeCallFrame(
                 frameSnapshot.Routine,
                 arguments,
                 locals,
+                localFixedStringLengths,
                 captures,
-                frameSnapshot.CallSiteLocation)
+                frameSnapshot.CallSiteLocation,
+                frameSnapshot.Routine.MaxEvaluationStackDepth)
             {
                 InstructionPointer = frameSnapshot.InstructionPointer
             };
@@ -1251,7 +1930,7 @@ public sealed partial class BytecodeVm
 
             _callStack.Push(frame);
             AddVisibleVariables(frame.Routine.ParameterVariables, arguments, visibleVariables);
-            AddVisibleVariables(frame.Routine.LocalVariables, locals, visibleVariables);
+            AddVisibleLocalVariables(frame, visibleVariables);
             AddVisibleVariables(frame.Routine.CapturedVariables, captures, visibleVariables);
         }
 
@@ -1309,6 +1988,23 @@ public sealed partial class BytecodeVm
         return captures;
     }
 
+    private static (RuntimeValue[] Values, int?[] FixedStringLengths) CreateLocalStateFromSnapshots(
+        IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots,
+        Dictionary<object, object> sharedValues)
+    {
+        var values = new RuntimeValue[snapshots.Count];
+        var fixedStringLengths = new int?[snapshots.Count];
+
+        for (var index = 0; index < snapshots.Count; index++)
+        {
+            var snapshot = snapshots[index];
+            values[index] = CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues);
+            fixedStringLengths[index] = snapshot.FixedStringLength;
+        }
+
+        return (values, fixedStringLengths);
+    }
+
     private static RuntimeValue CloneSnapshotValue(
         RuntimeValue value,
         int? fixedStringLength,
@@ -1355,14 +2051,27 @@ public sealed partial class BytecodeVm
         }
     }
 
+    private static void AddVisibleLocalVariables(
+        BytecodeCallFrame frame,
+        Dictionary<VariableSymbol, BytecodeVariableSlot> visibleVariables)
+    {
+        var variables = frame.Routine.LocalVariables;
+        for (var index = 0; index < variables.Count && index < frame.LocalCount; index++)
+        {
+            visibleVariables[variables[index]] = frame.GetOrCreateLocalSlot(index);
+        }
+    }
+
     private bool TryCreateGlobalSnapshots(
         Dictionary<object, object> sharedValues,
         out IReadOnlyDictionary<int, RuntimeValue> globals)
     {
         var snapshots = new Dictionary<int, RuntimeValue>();
 
-        foreach (var (slot, value) in _globals)
+        foreach (var global in _module.Globals)
         {
+            var slot = global.Slot;
+            var value = _globalsBySlot[slot]!;
             if (!TryCreateValueSnapshot(value, GetGlobalFixedStringLength(slot), sharedValues, out var valueSnapshot))
             {
                 globals = snapshots;
@@ -1381,7 +2090,7 @@ public sealed partial class BytecodeVm
         Dictionary<object, object> sharedValues)
     {
         if (!TryCreateSlotSnapshots(frame.Arguments, sharedValues, out var argumentSnapshots)
-            || !TryCreateSlotSnapshots(frame.Locals, sharedValues, out var localSnapshots)
+            || !TryCreateLocalSnapshots(frame, sharedValues, out var localSnapshots)
             || !TryCreateSlotSnapshots(frame.Captures, sharedValues, out var captureSnapshots)
             || !TryCreateEvaluationStackSnapshot(frame.EvaluationStack, sharedValues, out var evaluationStackSnapshot))
         {
@@ -1421,24 +2130,47 @@ public sealed partial class BytecodeVm
         return true;
     }
 
-    private static bool TryCreateEvaluationStackSnapshot(
-        Stack<RuntimeValue> evaluationStack,
+    private static bool TryCreateLocalSnapshots(
+        BytecodeCallFrame frame,
         Dictionary<object, object> sharedValues,
-        out IReadOnlyList<RuntimeValue> snapshots)
+        out IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots)
     {
-        var valuesTopToBottom = evaluationStack.ToArray();
-        var result = new RuntimeValue[valuesTopToBottom.Length];
+        var result = new BytecodeVariableSlotSnapshot[frame.LocalCount];
 
-        for (var sourceIndex = valuesTopToBottom.Length - 1; sourceIndex >= 0; sourceIndex--)
+        for (var index = 0; index < frame.LocalCount; index++)
         {
-            var targetIndex = valuesTopToBottom.Length - 1 - sourceIndex;
-            if (!TryCreateValueSnapshot(valuesTopToBottom[sourceIndex], fixedStringLength: null, sharedValues, out var valueSnapshot))
+            var value = frame.LoadLocalValue(index);
+            var fixedStringLength = frame.GetLocalFixedStringLength(index);
+            if (!TryCreateValueSnapshot(value, fixedStringLength, sharedValues, out var valueSnapshot))
             {
                 snapshots = result;
                 return false;
             }
 
-            result[targetIndex] = valueSnapshot;
+            result[index] = new BytecodeVariableSlotSnapshot(valueSnapshot, fixedStringLength);
+        }
+
+        snapshots = result;
+        return true;
+    }
+
+    private static bool TryCreateEvaluationStackSnapshot(
+        BytecodeEvaluationStack evaluationStack,
+        Dictionary<object, object> sharedValues,
+        out IReadOnlyList<RuntimeValue> snapshots)
+    {
+        var valuesBottomToTop = evaluationStack.ToBottomToTopArray();
+        var result = new RuntimeValue[valuesBottomToTop.Length];
+
+        for (var index = 0; index < valuesBottomToTop.Length; index++)
+        {
+            if (!TryCreateValueSnapshot(valuesBottomToTop[index], fixedStringLength: null, sharedValues, out var valueSnapshot))
+            {
+                snapshots = result;
+                return false;
+            }
+
+            result[index] = valueSnapshot;
         }
 
         snapshots = result;
@@ -1487,7 +2219,9 @@ public sealed partial class BytecodeVm
 
             if (functionValue.Function.IsBuiltIn)
             {
-                snapshot = RuntimeValue.FromBytecodeBuiltinFunction(functionValue.Function);
+                snapshot = functionValue.BytecodeBuiltinBindingId is { } builtinBindingId
+                    ? RuntimeValue.FromBytecodeBuiltinFunction(functionValue.Function, builtinBindingId)
+                    : RuntimeValue.FromBytecodeFunction(functionValue.Function, []);
                 return true;
             }
 
@@ -2105,6 +2839,14 @@ public sealed partial class BytecodeVm
     }
 
     private readonly record struct DebugStepBoundary(DebugStepMode Mode, int StartLine, int StartCallDepth);
+
+    private enum ComparisonBranchKind
+    {
+        Less,
+        LessOrEqual,
+        Greater,
+        GreaterOrEqual
+    }
 
     private enum DebugStepMode
     {

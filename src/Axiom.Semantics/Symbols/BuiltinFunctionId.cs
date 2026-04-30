@@ -6,6 +6,8 @@ public enum BuiltinFunctionId
     UBound,
     ArrayLength,
     ArrayIsAllocated,
+    ArrayRank,
+    ArrayBounds,
     ArrayClone,
     ArraySlice,
     ArrayConcat,

@@ -1,4 +1,5 @@
-' ARRAYREVERSE for a two-dimensional array works in place along the chosen dimension.
+' ARRAYREVERSE для двумерного массива работает на месте
+' и разворачивает значения вдоль выбранного измерения.
 
 DIM board(1 TO 2, 10 TO 12) AS INTEGER
 

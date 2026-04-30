@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Справочник Axiom - Ошибки массивов</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-diagnostics">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Типичные ошибки при объявлении и использовании массивов</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Ошибки массивов</p><p class="sidebar__subtitle">Короткие пояснения к наиболее частым диагностическим сообщениям.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Массивы</p>
+<h1 class="page-title">Ошибки массивов</h1>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Ошибки при работе с массивами обычно связаны с двумя причинами: программа обращается к массиву до выделения памяти или использует индекс, форму либо измерение, которые не подходят для данного массива. Ниже перечислены наиболее частые диагностические сообщения, которые встречаются при такой работе.</p>
+</section>
+
+<section class="article-section">
+<h2>MB3005</h2>
+<p>Диагностика <code>MB3005</code> означает, что программа пытается использовать массив как уже выделенный, хотя память для его элементов ещё не была подготовлена.</p>
+<h3>Когда это бывает</h3>
+<ul>
+<li>объявлен динамический массив, но <code>REDIM</code> ещё не выполнялся;</li>
+<li>массив уже был очищен через <code>ERASE</code>;</li>
+<li>вызвана функция, которой нужны реальные границы массива, а не только сведения из объявления.</li>
+</ul>
+<h3>Замечания</h3>
+<p>Некоторые функции, например <code>ARRAYRANK</code>, могут работать и с ещё не выделенным массивом, потому что число измерений известно по объявлению. Но функции вроде <code>ARRAYBOUNDS</code> уже требуют существующий диапазон индексов.</p>
+</section>
+
+<section class="article-section">
+<h2>MB3007</h2>
+<p>Диагностика <code>MB3007</code> означает, что индекс, измерение или форма переданного значения не согласованы с массивом.</p>
+<h3>Когда это бывает</h3>
+<ul>
+<li>индекс выходит за допустимые границы;</li>
+<li>указано несуществующее измерение;</li>
+<li>в <code>ARRAYINSERT</code>, <code>ARRAYPUSH</code>, <code>ARRAYREMOVE</code> или похожую функцию передан срез неподходящей формы.</li>
+</ul>
+<h3>Что проверить</h3>
+<ul>
+<li>совпадает ли индекс с диапазоном от <code>LBOUND</code> до <code>UBOUND</code>;</li>
+<li>правильно ли выбрано измерение;</li>
+<li>подходит ли форма вставляемого или удаляемого среза к исходному массиву.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Практика</h2>
+<ul class="resource-list">
+<li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">Проверка формы через ARRAYBOUNDS</a></li>
+<li><a href="../../samples/functions/arrayinsert/multidimensional_by_column.axm">Проверка ARRAYINSERT для двумерного массива</a></li>
+<li><a href="../../samples/operators/redim/empty_array.axm">Пустой динамический массив и последующее выделение памяти</a></li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list">
+<a href="arrays-dynamic.html">Динамические массивы, REDIM, ERASE</a>
+<a href="arrays-indexing.html">Индексирование</a>
+<a href="arrays-functions.html">ARRAY-функции</a>
+</div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

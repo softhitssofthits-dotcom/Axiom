@@ -106,8 +106,12 @@ public sealed class AxiomExecutionPipeline
         BuiltinFunctionId.UBound,
         BuiltinFunctionId.ArrayLength,
         BuiltinFunctionId.ArrayIsAllocated,
+        BuiltinFunctionId.ArrayRank,
+        BuiltinFunctionId.ArrayBounds,
         BuiltinFunctionId.ArrayClone,
         BuiltinFunctionId.ArraySlice,
+        BuiltinFunctionId.ArrayFlatten,
+        BuiltinFunctionId.ArrayReshape,
         BuiltinFunctionId.ArrayConcat,
         BuiltinFunctionId.ArrayToSorted,
         BuiltinFunctionId.ArrayToReversed,
@@ -626,7 +630,7 @@ public sealed class AxiomExecutionPipeline
     {
         foreach (var builtin in module.Builtins)
         {
-            if (!VmSupportedBuiltins.Contains(builtin.CanonicalId))
+            if (!BytecodeVm.SupportsBuiltin(builtin.CanonicalId, builtin.ParameterCount))
             {
                 return false;
             }

@@ -1,2 +1,3 @@
-' Expected runtime diagnostic MB3007: INT result after floor must stay within INTEGER range.
+' Пример показывает переполнение результата INT после округления вниз.
+' Ожидается диагностика времени выполнения MB3007.
 PRINT INT(3000000000.5)

@@ -1,5 +1,10 @@
-' ARRAYBINARYSEARCH expects a sorted array and returns the first logical index.
-
+' ARRAYBINARYSEARCH ищет значение в уже отсортированном массиве
+' и возвращает первый логический индекс совпадения.
+' Если значения нет, функция возвращает 0.
+' Ожидаемый вывод:
+' 6
+' 9
+' 0
 DIM values(5 TO 9) AS INTEGER
 
 values(5) = 10

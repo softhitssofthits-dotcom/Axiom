@@ -14,6 +14,14 @@ public sealed class RuntimeFunctionValue
     }
 
     internal RuntimeFunctionValue(FunctionSymbol function, IReadOnlyList<BytecodeVariableSlot> capturedSlots)
+        : this(function, capturedSlots, bytecodeBuiltinBindingId: null)
+    {
+    }
+
+    internal RuntimeFunctionValue(
+        FunctionSymbol function,
+        IReadOnlyList<BytecodeVariableSlot> capturedSlots,
+        int? bytecodeBuiltinBindingId)
     {
         ArgumentNullException.ThrowIfNull(function);
         ArgumentNullException.ThrowIfNull(capturedSlots);
@@ -21,6 +29,7 @@ public sealed class RuntimeFunctionValue
         Function = function;
         CapturedScope = null!;
         BytecodeCapturedSlots = capturedSlots;
+        BytecodeBuiltinBindingId = bytecodeBuiltinBindingId;
     }
 
     public FunctionSymbol Function { get; }
@@ -28,4 +37,6 @@ public sealed class RuntimeFunctionValue
     public RuntimeScope CapturedScope { get; }
 
     internal IReadOnlyList<BytecodeVariableSlot>? BytecodeCapturedSlots { get; }
+
+    internal int? BytecodeBuiltinBindingId { get; }
 }

@@ -1,5 +1,9 @@
-' ARRAYSORT mutates the allocated array in place and keeps bounds.
-
+' ARRAYSORT сортирует выделенный массив на месте и сохраняет его границы.
+' Ожидаемый вывод:
+' 5
+' 9
+' 10
+' 30
 DIM values(5 TO 9) AS INTEGER
 
 values(5) = 30

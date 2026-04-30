@@ -1,4 +1,4 @@
-' Expected: prints 30.
+' Пример показывает чтение значения по индексу массива.
 DIM numbers(1 TO 3) AS INTEGER
 numbers(1) = 10
 numbers(2) = 20

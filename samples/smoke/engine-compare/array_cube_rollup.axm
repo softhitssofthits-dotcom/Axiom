@@ -1,0 +1,37 @@
+' Сравнительный сценарий: массивы + вложенные циклы + арифметика.
+' Программа заполняет трёхмерный блок, затем считает суммы по слоям и общий итог.
+
+DIM cube(,,) AS INTEGER
+DIM planeTotals() AS LONG
+DIM grandTotal AS LONG = 0
+
+REDIM cube(1 TO 18, 1 TO 20, 1 TO 24)
+REDIM planeTotals(1 TO 18)
+
+FOR planeIndex = 1 TO 18
+    FOR rowIndex = 1 TO 20
+        FOR columnIndex = 1 TO 24
+            cube(planeIndex, rowIndex, columnIndex) = planeIndex * 10000 + rowIndex * 100 + columnIndex
+        NEXT
+    NEXT
+NEXT
+
+FOR planeIndex = 1 TO 18
+    planeTotals(planeIndex) = 0
+
+    FOR rowIndex = 1 TO 20
+        FOR columnIndex = 1 TO 24
+            planeTotals(planeIndex) = planeTotals(planeIndex) + cube(planeIndex, rowIndex, columnIndex)
+        NEXT
+    NEXT
+
+    grandTotal = grandTotal + planeTotals(planeIndex)
+NEXT
+
+PRINT ARRAYRANK(cube)
+PRINT LBOUND(cube, 1)
+PRINT UBOUND(cube, 3)
+PRINT planeTotals(1)
+PRINT planeTotals(ARRAYLENGTH(planeTotals))
+PRINT grandTotal
+PRINT cube(18, 20, 24)

@@ -1,4 +1,11 @@
-﻿' Expected: prints 3, 4, TRUE, TRUE, 2014-05-01.
+' Пример показывает несколько объявлений DIM в одной строке
+' и вывод значений после присваивания.
+' Ожидается вывод по строкам:
+' 3
+' 4
+' TRUE
+' TRUE
+' 2014-05-01
 DIM i AS INTEGER, j AS INTEGER
 DIM anotherVar, choice AS BOOLEAN, birthDate AS STRING = "2014-05-01"
 

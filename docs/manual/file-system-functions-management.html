@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Операции с файлами и папками</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="file-system-functions-management">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Создание, удаление, копирование, перенос и временные объекты</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Операции с файлами и папками</p>
+                    <p class="sidebar__subtitle">Изменение состояния файловой системы и работа с текущей папкой.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="file-system-functions.html">Функции файловой системы</a>
+                <span>/</span>
+                <span>Операции с файлами и папками</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Операции с файлами и папками</h1>
+            <p class="lead">Функции этой страницы изменяют файловую систему: создают и удаляют объекты, копируют и перемещают их, меняют текущую рабочую папку и создают временные файлы и каталоги.</p>
+
+            <section class="article-section" id="makedir">
+                <h2>MAKEDIR</h2>
+                <p>Функция <code>MAKEDIR</code> создаёт папку по указанному пути.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = MAKEDIR(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к новой папке. Функция возвращает логическое значение.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Создание папки output
+PRINT MAKEDIR("output")</code></pre>
+            </section>
+
+            <section class="article-section" id="deletefile">
+                <h2>DELETEFILE</h2>
+                <p>Функция <code>DELETEFILE</code> удаляет файл.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DELETEFILE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Если файла нет, функция возвращает <code>FALSE</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Удаление файла
+PRINT DELETEFILE("notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="copyfile">
+                <h2>COPYFILE</h2>
+                <p>Функция <code>COPYFILE</code> копирует файл в другое место.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = COPYFILE(sourcePath, targetPath[, overwrite])</code></pre>
+                <p><strong>Части записи.</strong> <code>sourcePath</code> задаёт исходный файл. <code>targetPath</code> задаёт путь, куда нужно поместить копию. Необязательный <code>overwrite</code> задаёт логическое значение, разрешающее перезапись существующего файла назначения.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Создание копии файла
+PRINT COPYFILE("notes.txt", "notes-copy.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="movefile">
+                <h2>MOVEFILE</h2>
+                <p>Функция <code>MOVEFILE</code> перемещает файл в новый путь.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = MOVEFILE(sourcePath, targetPath[, overwrite])</code></pre>
+                <p><strong>Части записи.</strong> <code>sourcePath</code> задаёт исходный файл. <code>targetPath</code> задаёт новое место расположения. Необязательный <code>overwrite</code> разрешает заменить существующий файл назначения.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Перемещение файла в подпапку archive
+PRINT MOVEFILE("notes.txt", "archive/notes.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="renamefile">
+                <h2>RENAMEFILE</h2>
+                <p>Функция <code>RENAMEFILE</code> переименовывает файл в пределах его текущей папки.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = RENAMEFILE(path, newName)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к существующему файлу. <code>newName</code> задаёт новое имя файла без изменения родительской папки.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Переименование файла
+PRINT RENAMEFILE("notes.txt", "notes-old.txt")</code></pre>
+            </section>
+
+            <section class="article-section" id="deletedir">
+                <h2>DELETEDIR</h2>
+                <p>Функция <code>DELETEDIR</code> удаляет пустую папку.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DELETEDIR(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к папке. Если папки нет, функция возвращает <code>FALSE</code>.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Удаление пустой папки
+PRINT DELETEDIR("output")</code></pre>
+            </section>
+
+            <section class="article-section" id="deletedirrecursive">
+                <h2>DELETEDIRRECURSIVE</h2>
+                <p>Функция <code>DELETEDIRRECURSIVE</code> удаляет папку вместе со всем её содержимым.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = DELETEDIRRECURSIVE(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к папке, которую нужно удалить рекурсивно.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Рекурсивное удаление папки
+PRINT DELETEDIRRECURSIVE("output")</code></pre>
+            </section>
+
+            <section class="article-section" id="copydir">
+                <h2>COPYDIR</h2>
+                <p>Функция <code>COPYDIR</code> копирует папку вместе с её содержимым.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = COPYDIR(sourcePath, targetPath[, overwrite])</code></pre>
+                <p><strong>Части записи.</strong> <code>sourcePath</code> задаёт исходную папку. <code>targetPath</code> задаёт папку назначения. Необязательный <code>overwrite</code> разрешает заменить уже существующую папку назначения.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Копирование папки docs
+PRINT COPYDIR("docs", "docs-copy")</code></pre>
+            </section>
+
+            <section class="article-section" id="movedir">
+                <h2>MOVEDIR</h2>
+                <p>Функция <code>MOVEDIR</code> перемещает папку в новое место.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = MOVEDIR(sourcePath, targetPath)</code></pre>
+                <p><strong>Части записи.</strong> <code>sourcePath</code> задаёт исходную папку. <code>targetPath</code> задаёт путь назначения.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Перемещение папки в архив
+PRINT MOVEDIR("docs-copy", "archive/docs-copy")</code></pre>
+            </section>
+
+            <section class="article-section" id="renamedir">
+                <h2>RENAMEDIR</h2>
+                <p>Функция <code>RENAMEDIR</code> переименовывает папку в пределах её родительского каталога.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = RENAMEDIR(path, newName)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к папке. <code>newName</code> задаёт её новое имя.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Переименование папки
+PRINT RENAMEDIR("output", "output-old")</code></pre>
+            </section>
+
+            <section class="article-section" id="currentdir">
+                <h2>CURRENTDIR</h2>
+                <p>Функция <code>CURRENTDIR</code> возвращает текущую рабочую папку программы.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">path = CURRENTDIR()</code></pre>
+                <p><strong>Части записи.</strong> Функция не принимает аргументов. Результатом является строка с полным путём текущей папки.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Вывод текущей рабочей папки
+PRINT CURRENTDIR()</code></pre>
+            </section>
+
+            <section class="article-section" id="changedir">
+                <h2>CHANGEDIR</h2>
+                <p>Функция <code>CHANGEDIR</code> меняет текущую рабочую папку программы.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = CHANGEDIR(path)</code></pre>
+                <p><strong>Части записи.</strong> <code>path</code> задаёт папку, которая станет новой текущей папкой. После этого относительные пути вычисляются уже от неё.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Переход в папку docs
+PRINT CHANGEDIR("docs")
+PRINT CURRENTDIR()</code></pre>
+            </section>
+
+            <section class="article-section" id="maketempfile">
+                <h2>MAKETEMPFILE</h2>
+                <p>Функция <code>MAKETEMPFILE</code> создаёт новый временный файл и возвращает его полный путь.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">path = MAKETEMPFILE(prefix)</code></pre>
+                <p><strong>Части записи.</strong> <code>prefix</code> задаёт начало имени временного файла. Результатом является строка с полным путём.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Создание временного файла
+DIM path AS STRING
+
+path = MAKETEMPFILE("demo_")
+PRINT path</code></pre>
+            </section>
+
+            <section class="article-section" id="maketempdir">
+                <h2>MAKETEMPDIR</h2>
+                <p>Функция <code>MAKETEMPDIR</code> создаёт новую временную папку и возвращает её полный путь.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">path = MAKETEMPDIR(prefix)</code></pre>
+                <p><strong>Части записи.</strong> <code>prefix</code> задаёт начало имени временной папки. Результатом является строка с полным путём.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Создание временной папки
+DIM path AS STRING
+
+path = MAKETEMPDIR("demo_")
+PRINT path</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>DELETEFILE</code>, <code>DELETEDIR</code> и <code>DELETEDIRRECURSIVE</code> возвращают <code>FALSE</code>, если удаляемого объекта нет.</li>
+                    <li><code>COPYFILE</code>, <code>MOVEFILE</code> и <code>COPYDIR</code> принимают необязательный параметр <code>overwrite</code>, если нужно явно разрешить замену существующего объекта назначения.</li>
+                    <li><code>DELETEDIR</code> удаляет только пустую папку. Если папка содержит файлы или подпапки, используйте <code>DELETEDIRRECURSIVE</code>.</li>
+                    <li><code>CHANGEDIR</code> влияет на все последующие относительные пути в программе.</li>
+                    <li><code>MAKETEMPFILE</code> и <code>MAKETEMPDIR</code> создают объекты в системной временной папке.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li>Недоступный исходный путь, невозможность создать целевой объект или ошибка доступа дают диагностику времени выполнения <code>MB3007</code>.</li>
+                    <li>Попытка удалить непустую папку через <code>DELETEDIR</code> также завершается диагностикой <code>MB3007</code>.</li>
+                    <li>Недопустимый префикс имени для <code>MAKETEMPFILE</code> и <code>MAKETEMPDIR</code> даёт <code>MB3007</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/makedir/basic_usage.axm">MAKEDIR: создание папки</a></li>
+                    <li><a href="../../samples/functions/deletefile/basic_usage.axm">DELETEFILE: удаление файла</a></li>
+                    <li><a href="../../samples/functions/copyfile/basic_usage.axm">COPYFILE: копирование файла</a></li>
+                    <li><a href="../../samples/functions/movefile/basic_usage.axm">MOVEFILE: перенос файла</a></li>
+                    <li><a href="../../samples/functions/renamefile/basic_usage.axm">RENAMEFILE: переименование файла</a></li>
+                    <li><a href="../../samples/functions/deletedir/basic_usage.axm">DELETEDIR: удаление пустой папки</a></li>
+                    <li><a href="../../samples/functions/deletedirrecursive/basic_usage.axm">DELETEDIRRECURSIVE: рекурсивное удаление</a></li>
+                    <li><a href="../../samples/functions/copydir/basic_usage.axm">COPYDIR: копирование папки</a></li>
+                    <li><a href="../../samples/functions/movedir/basic_usage.axm">MOVEDIR: перенос папки</a></li>
+                    <li><a href="../../samples/functions/renamedir/basic_usage.axm">RENAMEDIR: переименование папки</a></li>
+                    <li><a href="../../samples/functions/currentdir/basic_usage.axm">CURRENTDIR: текущая папка</a></li>
+                    <li><a href="../../samples/functions/changedir/basic_usage.axm">CHANGEDIR: смена текущей папки</a></li>
+                    <li><a href="../../samples/functions/maketempfile/basic_usage.axm">MAKETEMPFILE: временный файл</a></li>
+                    <li><a href="../../samples/functions/maketempdir/basic_usage.axm">MAKETEMPDIR: временная папка</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="file-system-functions-paths.html">Пути и сведения</a>
+                    <a href="file-system-functions-text.html">Текстовые файлы</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

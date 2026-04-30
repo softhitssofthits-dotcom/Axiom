@@ -1,7 +1,14 @@
-' ARRSKIP returns the remaining logical elements as a new compact array.
-
-Dim source(5 To 7) As Integer
-Dim part() As Integer
+' ARRAYSKIP пропускает первые N логических элементов
+' и возвращает оставшуюся часть как новый компактный массив.
+' Присваивание `part(1) = 99` показывает, что исходный массив не меняется.
+' Ожидаемый вывод:
+' 1
+' 2
+' 99
+' 30
+' 20
+DIM source(5 TO 7) AS INTEGER
+DIM part() AS INTEGER
 
 source(5) = 10
 source(6) = 20
@@ -10,8 +17,8 @@ source(7) = 30
 part = ARRAYSKIP(source, 1)
 part(1) = 99
 
-Print LBOUND(part)
-Print UBOUND(part)
-Print part(1)
-Print part(2)
-Print source(6)
+PRINT LBOUND(part)
+PRINT UBOUND(part)
+PRINT part(1)
+PRINT part(2)
+PRINT source(6)

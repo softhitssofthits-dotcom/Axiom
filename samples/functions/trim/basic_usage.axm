@@ -1,3 +1,7 @@
-' Expected: prints hello, then hello.
+' Функция TRIM убирает пробелы по краям строки.
+' Второй вызов показывает удаление произвольного набора символов.
+' Ожидаемый вывод:
+' hello
+' hello
 PRINT TRIM("  hello  ")
 PRINT TRIM("--hello--", "-")

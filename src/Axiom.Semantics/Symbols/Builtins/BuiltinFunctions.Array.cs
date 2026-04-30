@@ -10,6 +10,15 @@ public static partial class BuiltinFunctions
             CreateArrayInfo(BuiltinFunctionId.UBound, "UBOUND", TypeSymbol.Integer),
             CreateArrayInfo(BuiltinFunctionId.ArrayLength, "ARRAYLENGTH", TypeSymbol.Integer),
             CreateArrayInfo(BuiltinFunctionId.ArrayIsAllocated, "ARRAYISALLOCATED", TypeSymbol.Boolean),
+            CreateArrayInfo(BuiltinFunctionId.ArrayRank, "ARRAYRANK", TypeSymbol.Integer),
+            new BuiltinFunctionDescriptor(
+                BuiltinFunctionId.ArrayBounds,
+                "ARRAYBOUNDS",
+                [
+                    Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer))
+                ],
+                ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2),
+                bindingKind: BuiltinBindingKind.Array),
             CreateArraySameType(BuiltinFunctionId.ArrayClone, "ARRAYCLONE"),
             CreateArraySameType(
                 BuiltinFunctionId.ArraySlice,
@@ -168,7 +177,25 @@ public static partial class BuiltinFunctions
                 [
                     Parameter("value", TypeSymbol.Integer)
                 ]),
-            CreateArrayElementType(BuiltinFunctionId.ArrayPop, "ARRAYPOP"),
+            CreateArrayVoid(
+                BuiltinFunctionId.ArrayPush,
+                "ARRAYPUSH",
+                [
+                    Parameter("value", TypeSymbol.Integer),
+                    Parameter("dimension", TypeSymbol.Integer)
+                ]),
+            CreateArrayElementType(
+                BuiltinFunctionId.ArrayPop,
+                "ARRAYPOP",
+                [],
+                resultTypePolicy: BuiltinResultTypePolicy.ArrayDynamicSliceResult),
+            CreateArrayElementType(
+                BuiltinFunctionId.ArrayPop,
+                "ARRAYPOP",
+                [
+                    Parameter("dimension", TypeSymbol.Integer)
+                ],
+                resultTypePolicy: BuiltinResultTypePolicy.ArrayDynamicSliceResult),
             CreateArrayVoid(
                 BuiltinFunctionId.ArrayInsert,
                 "ARRAYINSERT",
@@ -176,12 +203,29 @@ public static partial class BuiltinFunctions
                     Parameter("index", TypeSymbol.Integer),
                     Parameter("value", TypeSymbol.Integer)
                 ]),
+            CreateArrayVoid(
+                BuiltinFunctionId.ArrayInsert,
+                "ARRAYINSERT",
+                [
+                    Parameter("index", TypeSymbol.Integer),
+                    Parameter("value", TypeSymbol.Integer),
+                    Parameter("dimension", TypeSymbol.Integer)
+                ]),
             CreateArrayElementType(
                 BuiltinFunctionId.ArrayRemove,
                 "ARRAYREMOVE",
                 [
                     Parameter("index", TypeSymbol.Integer)
-                ]),
+                ],
+                resultTypePolicy: BuiltinResultTypePolicy.ArrayDynamicSliceResult),
+            CreateArrayElementType(
+                BuiltinFunctionId.ArrayRemove,
+                "ARRAYREMOVE",
+                [
+                    Parameter("index", TypeSymbol.Integer),
+                    Parameter("dimension", TypeSymbol.Integer)
+                ],
+                resultTypePolicy: BuiltinResultTypePolicy.ArrayDynamicSliceResult),
             CreateArrayBoolean(
                 BuiltinFunctionId.ArrayEvery,
                 "ARRAYEVERY",

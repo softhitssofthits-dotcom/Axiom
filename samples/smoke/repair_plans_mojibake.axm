@@ -22,8 +22,8 @@
 '   части и чинит только те, которые действительно похожи на типичную поломку
 '   UTF-8 -> ошибочное чтение как Windows-1251.
 
-DIM sourcePath AS STRING = "C:\Axiom\README.md" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
-DIM workPath AS STRING = "C:\Axiom\README_copy.md" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
+DIM sourcePath AS STRING = "C:\Axiom\docs\WORKLOG4.md" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
+DIM workPath AS STRING = "C:\Axiom\docs\WORKLOG4_copy.md" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
 Dim sourceText As String ' Здесь будет весь текст рабочей копии до исправления.
 Dim repairedText As String ' Здесь будет весь текст рабочей копии после исправления.
 
@@ -32,7 +32,7 @@ Print "Копирование исходного файла в рабочую к
 sourceText = Readfile(workPath) ' Читаем именно рабочую копию, чтобы случайно не менять исходный файл напрямую.
 repairedText = RepairMixedDocumentText(sourceText) ' Прогоняем текст через восстановление смешанной нормальной и битой кодировки.
 
-Print "Исправлено строк с восстановимой битой кодировкой: "; CountFixedLines(sourceText) ' Печатаем, сколько строк программа считает реально изменёнными.
+PRINT "Исправлено строк с восстановимой битой кодировкой: "; CountFixedLines(sourceText) ' Печатаем, сколько строк программа считает реально изменёнными.
 Print "Строк с невосстановимыми маркерами пїЅ/U+FFFD: "; CountUnrecoverableLines(repairedText) ' Печатаем, сколько строк похоже на уже невосстановимую потерю байтов через символ замены.
 Print "Запись исправленной рабочей копии: "; Writefile(workPath, repairedText) ' Записываем исправленный текст обратно в рабочую копию.
 
@@ -56,7 +56,7 @@ Function CountFixedLines(inputText As String) As Integer
     Dim count As Integer = 0 ' Счётчик строк, где RepairLine реально меняет текст.
     Dim currentLine As String ' Текущая строка для сравнения до и после RepairLine.
 
-    lines = Split(inputText, Chr(10)) ' Разбиваем так же, как при основном исправлении.
+    lines = SPLIT(inputText, CHR(10)) ' Разбиваем так же, как при основном исправлении.
 
     For lineIndex = 1 To Arraylength(lines) ' Проверяем каждую строку отдельно.
         currentLine = TrimTrailingCr(lines(lineIndex)) ' Сравнивать удобнее без завершающего CR.

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Двумерные массивы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="arrays-2d">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Табличные данные по строкам и столбцам</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Двумерные массивы</p>
+                    <p class="sidebar__subtitle">Табличная форма данных с двумя независимыми индексами.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <p class="eyebrow">Массивы</p>
+            <h1 class="page-title">Двумерные массивы</h1>
+
+            <section class="article-section">
+                <h2>Сводка</h2>
+                <p>Двумерный массив хранит значения одного типа в виде таблицы. Для доступа к элементу используются два индекса: первый выбирает строку, второй — столбец.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">DIM arrayName(rowLowerBound TO rowUpperBound, columnLowerBound TO columnUpperBound) AS elementType</code></pre>
+                <pre><code class="language-basic">DIM arrayName(,) AS elementType</code></pre>
+                <pre><code class="language-basic">arrayName(rowIndex, columnIndex) = expression
+variable = arrayName(rowIndex, columnIndex)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Части записи</h2>
+                <ul>
+                    <li><code>arrayName</code> — имя двумерного массива.</li>
+                    <li><code>rowLowerBound TO rowUpperBound</code> — включительный диапазон индексов по строкам.</li>
+                    <li><code>columnLowerBound TO columnUpperBound</code> — включительный диапазон индексов по столбцам.</li>
+                    <li><code>elementType</code> — тип всех элементов массива.</li>
+                    <li><code>rowIndex</code> и <code>columnIndex</code> — индексы строки и столбца для доступа к элементу.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li>Оба измерения имеют включительные границы.</li>
+                    <li>Первое измерение соответствует строкам, второе — столбцам.</li>
+                    <li>Если массив объявлен как <code>DIM board(1 TO 3, 1 TO 4) AS INTEGER</code>, у него три строки и четыре столбца.</li>
+                    <li>Двумерный массив можно объявить без выделения памяти, например <code>DIM board(,) AS INTEGER</code>, а затем задать границы через <code>REDIM</code>.</li>
+                    <li>Для обращения к элементу необходимо указывать оба индекса, если только вы не работаете со срезом или представлением на отдельной странице.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+                <pre><code class="language-basic">' Программа заполняет несколько ячеек таблицы и печатает их
+' Ожидаемый вывод:
+' 20
+' 99
+DIM board(1 TO 2, 1 TO 3) AS INTEGER
+
+board(1, 1) = 10
+board(1, 2) = 20
+board(2, 3) = 99
+
+PRINT board(1, 2)
+PRINT board(2, 3)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Двумерная таблица с изменением границ</a></li>
+                    <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS: форма двумерного массива</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays.html">Массивы</a>
+                    <a href="arrays-multidimensional.html">Многомерные массивы</a>
+                    <a href="arrays-2d-visual.html">Двумерные массивы наглядно</a>
+                    <a href="arrays-indexing.html">Индексирование</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

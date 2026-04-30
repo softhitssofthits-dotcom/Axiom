@@ -1,4 +1,9 @@
-' REDIM allocates a dynamic array and can later reset its range.
+' Пример показывает, что REDIM выделяет диапазон динамического массива
+' и может затем задать ему новый диапазон заново.
+' Ожидается вывод:
+' 10
+' 30
+' 0
 
 DIM values() AS INTEGER
 

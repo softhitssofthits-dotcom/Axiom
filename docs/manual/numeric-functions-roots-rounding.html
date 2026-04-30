@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Корни, логарифмы и округление</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="numeric-functions-roots-rounding">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">SQR, CBRT, EXP, LOG, POW, FLOOR, CEIL, ROUND и FIX</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Корни, логарифмы и округление</p>
+                    <p class="sidebar__subtitle">Степени, логарифмы, отсечение дробной части и округление чисел.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный указатель</a>
+                <span>/</span>
+                <a href="numeric-functions.html">Числовые функции</a>
+                <span>/</span>
+                <span>Корни, логарифмы и округление</span>
+            </nav>
+            <p class="eyebrow">Встроенные функции</p>
+            <h1 class="page-title">Корни, логарифмы и округление</h1>
+            <p class="lead">Эти функции нужны для степенных вычислений, получения логарифмов и разных способов перехода от дробного числа к целому значению. Здесь особенно важно различать округление вниз, вверх, к ближайшему целому и простое отсечение дробной части.</p>
+
+            <section class="article-section" id="sqr">
+                <h2>SQR</h2>
+                <p>Функция <code>SQR</code> возвращает квадратный корень числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = SQR(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен быть неотрицательным числом. Результат имеет тип <code>DOUBLE</code>.</p>
+            </section>
+
+            <section class="article-section" id="cbrt">
+                <h2>CBRT</h2>
+                <p>Функция <code>CBRT</code> возвращает кубический корень числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = CBRT(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="exp">
+                <h2>EXP</h2>
+                <p>Функция <code>EXP</code> вычисляет число <code>e</code> в заданной степени.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = EXP(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="log">
+                <h2>LOG</h2>
+                <p>Функция <code>LOG</code> возвращает натуральный логарифм числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = LOG(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен быть строго больше нуля.</p>
+            </section>
+
+            <section class="article-section" id="log10">
+                <h2>LOG10</h2>
+                <p>Функция <code>LOG10</code> возвращает десятичный логарифм числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = LOG10(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен быть строго больше нуля.</p>
+            </section>
+
+            <section class="article-section" id="log2">
+                <h2>LOG2</h2>
+                <p>Функция <code>LOG2</code> возвращает двоичный логарифм числа.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = LOG2(value)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> должен быть строго больше нуля.</p>
+            </section>
+
+            <section class="article-section" id="pow">
+                <h2>POW</h2>
+                <p>Функция <code>POW</code> возводит число в степень.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = POW(value, power)</code></pre>
+                <p><strong>Части записи.</strong> <code>value</code> задаёт основание степени, а <code>power</code> показатель степени.</p>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Степень, логарифм и квадратный корень
+PRINT POW(2, 8)
+PRINT LOG10(1000)
+PRINT SQR(81)</code></pre>
+            </section>
+
+            <section class="article-section" id="floor">
+                <h2>FLOOR</h2>
+                <p>Функция <code>FLOOR</code> округляет число вниз и сохраняет числовой тип аргумента.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = FLOOR(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="ceil">
+                <h2>CEIL</h2>
+                <p>Функция <code>CEIL</code> округляет число вверх и сохраняет числовой тип аргумента.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = CEIL(value)</code></pre>
+            </section>
+
+            <section class="article-section" id="round">
+                <h2>ROUND</h2>
+                <p>Функция <code>ROUND</code> округляет число к ближайшему целому и сохраняет числовой тип аргумента.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ROUND(value)</code></pre>
+                <h3>Замечания</h3>
+                <p>В Axiom половины округляются от нуля. Поэтому <code>ROUND(2.5)</code> даёт <code>3</code>, а <code>ROUND(-2.5)</code> даёт <code>-3</code>.</p>
+            </section>
+
+            <section class="article-section" id="fix">
+                <h2>FIX</h2>
+                <p>Функция <code>FIX</code> отбрасывает дробную часть числа по направлению к нулю и сохраняет числовой тип аргумента.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = FIX(value)</code></pre>
+                <h3>Пример</h3>
+                <pre><code class="language-basic">' Разница между INT, FLOOR, ROUND и FIX
+PRINT INT(-3.9)
+PRINT FLOOR(-3.9)
+PRINT ROUND(-3.9)
+PRINT FIX(-3.9)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <ul>
+                    <li><code>SQR</code> не принимает отрицательные значения, а <code>LOG</code>, <code>LOG10</code> и <code>LOG2</code> требуют аргумент строго больше нуля.</li>
+                    <li><code>POW</code> может завершиться диагностикой времени выполнения, если комбинация основания и показателя степени выходит за допустимую область определения.</li>
+                    <li><code>INT</code> отличается от <code>FLOOR</code> тем, что возвращает именно <code>INTEGER</code>, а <code>FLOOR</code> сохраняет числовой тип аргумента.</li>
+                    <li><code>FIX</code> удобен там, где нужно просто отбросить дробную часть без смещения вниз для отрицательных чисел.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/sqr/basic_usage.axm">SQR: квадратный корень</a></li>
+                    <li><a href="../../samples/functions/sqr/negative_error.axm">SQR: отрицательный аргумент</a></li>
+                    <li><a href="../../samples/functions/cbrt/basic_usage.axm">CBRT: кубический корень</a></li>
+                    <li><a href="../../samples/functions/exp/basic_usage.axm">EXP: степень числа e</a></li>
+                    <li><a href="../../samples/functions/log/basic_usage.axm">LOG: натуральный логарифм</a></li>
+                    <li><a href="../../samples/functions/log/non_positive_error.axm">LOG: неположительный аргумент</a></li>
+                    <li><a href="../../samples/functions/log10/basic_usage.axm">LOG10: десятичный логарифм</a></li>
+                    <li><a href="../../samples/functions/log2/basic_usage.axm">LOG2: двоичный логарифм</a></li>
+                    <li><a href="../../samples/functions/pow/basic_usage.axm">POW: возведение в степень</a></li>
+                    <li><a href="../../samples/functions/pow/invalid_domain_error.axm">POW: недопустимая область определения</a></li>
+                    <li><a href="../../samples/functions/floor/basic_usage.axm">FLOOR: округление вниз</a></li>
+                    <li><a href="../../samples/functions/ceil/basic_usage.axm">CEIL: округление вверх</a></li>
+                    <li><a href="../../samples/functions/round/basic_usage.axm">ROUND: округление к ближайшему</a></li>
+                    <li><a href="../../samples/functions/fix/basic_usage.axm">FIX: отсечение дробной части</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="numeric-functions-conversion-and-legacy.html">INT, STR и VAL</a>
+                    <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
+                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,2 +1,2 @@
-' Expected output: Hello
+' Если count больше длины строки, RIGHT возвращает всю строку целиком.
 PRINT RIGHT("Hello", 100)

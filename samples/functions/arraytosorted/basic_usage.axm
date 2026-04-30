@@ -1,5 +1,13 @@
-' ARRAYTOSORTED returns a sorted copy and preserves the source bounds.
-
+' ARRAYTOSORTED создаёт отсортированную копию массива
+' и не меняет исходные данные.
+' Ожидаемый вывод:
+' 5
+' 9
+' 10
+' 10
+' 20
+' 20
+' 30
 DIM values(5 TO 9) AS INTEGER
 DIM sortedValues() AS INTEGER
 

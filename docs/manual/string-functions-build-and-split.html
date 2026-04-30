@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Построение строк и массивы строк</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="string-functions-build-and-split">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">REPEAT, STRING, PADLEFT, SPLIT, JOIN и связанные функции</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Построение строк и массивы строк</p><p class="sidebar__subtitle">Повторы, заполнение, вставка, удаление и переход к массивам строк.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Строковые функции</p>
+<h1 class="page-title">Построение строк и массивы строк</h1>
+
+<section class="article-section" id="repeat">
+<h2>REPEAT, SPACE, STRING</h2>
+<p>Эти функции строят новую строку из повторов, пробелов или символа-заполнителя.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = REPEAT(text, count)
+result = SPACE(count)
+result = STRING(count, fillText)</code></pre>
+<h3>Замечания</h3>
+<p><code>REPEAT</code> и <code>SPACE</code> допускают ноль, но не допускают отрицательное количество. <code>STRING</code> использует только первый символ заполнителя.</p>
+</section>
+
+<section class="article-section" id="padding">
+<h2>PADLEFT, PADRIGHT, CENTER</h2>
+<p>Эти функции дополняют строку до нужной ширины слева, справа или с двух сторон.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = PADLEFT(text, width[, fillText])
+result = PADRIGHT(text, width[, fillText])
+result = CENTER(text, width[, fillText])</code></pre>
+</section>
+
+<section class="article-section" id="insertremove">
+<h2>INSERT и REMOVE</h2>
+<p>Функция <code>INSERT</code> вставляет фрагмент в строку, а <code>REMOVE</code> удаляет из неё часть символов.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = INSERT(text, start, fragment)
+result = REMOVE(text, start, count)</code></pre>
+<h3>Замечания</h3>
+<p>Позиции считаются с единицы.</p>
+</section>
+
+<section class="article-section" id="codes">
+<h2>ASC и CHR</h2>
+<p><code>ASC</code> возвращает код первого символа Unicode, а <code>CHR</code> строит строку из одного символа по его коду.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">code = ASC(text)
+charText = CHR(code)</code></pre>
+</section>
+
+<section class="article-section" id="split">
+<h2>SPLIT и JOIN</h2>
+<p>Функция <code>SPLIT</code> разбивает строку на новый массив строк, а <code>JOIN</code> собирает строковый массив обратно в одну строку.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">parts = SPLIT(text[, separator])
+text = JOIN(parts[, separator])</code></pre>
+<h3>Замечания</h3>
+<p>Пустая исходная строка в <code>SPLIT</code> даёт пустой выделенный массив <code>1 TO 0</code>. Для невыделенного или пустого массива <code>JOIN</code> возвращает пустую строку.</p>
+<h3>Пример</h3>
+<pre><code class="language-basic">PRINT REPEAT("ha", 3)
+PRINT "[" + SPACE(4) + "]"
+PRINT PADLEFT("7", 3, "0")
+PRINT INSERT("abcd", 3, "-")
+PRINT REMOVE("abcdef", 2, 3)
+PRINT CHR(65)
+
+DIM parts() AS STRING
+parts = SPLIT("red,green,blue", ",")
+PRINT JOIN(parts, "/")</code></pre>
+</section>
+
+<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/repeat/basic_usage.axm">REPEAT</a></li><li><a href="../../samples/functions/string/basic_usage.axm">STRING</a></li><li><a href="../../samples/functions/padleft/basic_usage.axm">PADLEFT</a></li><li><a href="../../samples/functions/insert/basic_usage.axm">INSERT</a></li><li><a href="../../samples/functions/remove/basic_usage.axm">REMOVE</a></li><li><a href="../../samples/functions/asc/basic_usage.axm">ASC</a></li><li><a href="../../samples/functions/chr/basic_usage.axm">CHR</a></li><li><a href="../../samples/functions/split/basic_usage.axm">SPLIT</a></li><li><a href="../../samples/functions/join/basic_usage.axm">JOIN</a></li></ul></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="arrays.html">Массивы</a></div></section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
