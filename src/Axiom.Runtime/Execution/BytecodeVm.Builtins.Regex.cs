@@ -6,6 +6,8 @@ namespace Axiom.Runtime;
 public sealed partial class BytecodeVm
 {
     private static readonly TimeSpan RegexExecutionLimit = TimeSpan.FromSeconds(5);
+    private readonly Dictionary<(string Pattern, RegexOptions Options), Regex> _regexCache = [];
+    private readonly Dictionary<string, RegexOptions> _regexModesCache = [];
 
     private RuntimeValue EvaluateRegexIsMatchBuiltin(
         string text,
@@ -55,7 +57,7 @@ public sealed partial class BytecodeVm
     {
         if (group < 0)
         {
-            ReportBuiltInArgumentError("REGEXEXTRACT", "group", "не может быть отрицательным.", location);
+            ReportBuiltInArgumentError("REGEXEXTRACT", "group", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј.", location);
             throw new RuntimeFailureException();
         }
 
@@ -113,7 +115,7 @@ public sealed partial class BytecodeVm
     {
         if (group < 0)
         {
-            ReportBuiltInArgumentError("REGEXEXTRACTALL", "group", "не может быть отрицательным.", location);
+            ReportBuiltInArgumentError("REGEXEXTRACTALL", "group", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј.", location);
             throw new RuntimeFailureException();
         }
 
@@ -166,6 +168,32 @@ public sealed partial class BytecodeVm
     }
 
     private RuntimeValue EvaluateRegexReplaceBuiltin(
+        RuntimeValue textValue,
+        RuntimeValue patternValue,
+        RuntimeValue replacementValue,
+        string modes,
+        int? count,
+        TextLocation location)
+    {
+        ValidateRegexReplaceCount(count, location);
+
+        if (count == 0)
+        {
+            return textValue;
+        }
+
+        var text = GetStringUnchecked(textValue);
+        var regex = CreateRegex("REGEXREPLACE", GetStringUnchecked(patternValue), modes, location);
+        return EvaluateRegexReplaceWithCachedRegex(
+            textValue,
+            text,
+            regex,
+            GetStringUnchecked(replacementValue),
+            count,
+            location);
+    }
+
+    private string EvaluateRegexReplaceCore(
         string text,
         string pattern,
         string replacement,
@@ -173,26 +201,39 @@ public sealed partial class BytecodeVm
         int? count,
         TextLocation location)
     {
-        if (count is < 0)
-        {
-            ReportBuiltInArgumentError("REGEXREPLACE", "count", "не может быть отрицательным.", location);
-            throw new RuntimeFailureException();
-        }
+        ValidateRegexReplaceCount(count, location);
 
         if (count == 0)
         {
-            return RuntimeValue.FromString(text);
+            return text;
         }
 
         var regex = CreateRegex("REGEXREPLACE", pattern, modes, location);
+        return EvaluateRegexReplaceWithCachedRegex(text, regex, replacement, count, location);
+    }
 
+    private RuntimeValue EvaluateRegexReplaceWithCachedRegex(
+        RuntimeValue textValue,
+        string text,
+        Regex regex,
+        string replacement,
+        int? count,
+        TextLocation location)
+    {
         try
         {
+            if (IsRegexReplaceGuaranteedNoOp(text, regex, replacement, count))
+            {
+                return textValue;
+            }
+
             var result = count is null
                 ? regex.Replace(text, replacement)
                 : ReplaceRegexMatches(regex, text, replacement, count.Value);
 
-            return RuntimeValue.FromString(result);
+            return string.Equals(result, text, StringComparison.Ordinal)
+                ? textValue
+                : RuntimeValue.FromString(result);
         }
         catch (RegexMatchTimeoutException)
         {
@@ -204,7 +245,38 @@ public sealed partial class BytecodeVm
             ReportBuiltInArgumentError(
                 "REGEXREPLACE",
                 "replacement",
-                $"содержит недопустимую ссылку на группу: {ex.Message}",
+                $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјСѓСЋ СЃСЃС‹Р»РєСѓ РЅР° РіСЂСѓРїРїСѓ: {ex.Message}",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private string EvaluateRegexReplaceWithCachedRegex(
+        string text,
+        Regex regex,
+        string replacement,
+        int? count,
+        TextLocation location)
+    {
+        try
+        {
+            return IsRegexReplaceGuaranteedNoOp(text, regex, replacement, count)
+                ? text
+                : count is null
+                    ? regex.Replace(text, replacement)
+                    : ReplaceRegexMatches(regex, text, replacement, count.Value);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            ReportRegexTimeout("REGEXREPLACE", location);
+            throw new RuntimeFailureException();
+        }
+        catch (ArgumentException ex)
+        {
+            ReportBuiltInArgumentError(
+                "REGEXREPLACE",
+                "replacement",
+                $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјСѓСЋ СЃСЃС‹Р»РєСѓ РЅР° РіСЂСѓРїРїСѓ: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
         }
@@ -229,20 +301,48 @@ public sealed partial class BytecodeVm
         }
     }
 
+    private RuntimeValue EvaluateRegexReplaceBuiltin(
+        string text,
+        string pattern,
+        string replacement,
+        string modes,
+        int? count,
+        TextLocation location)
+    {
+        return RuntimeValue.FromString(EvaluateRegexReplaceCore(text, pattern, replacement, modes, count, location));
+    }
+
+    private void ValidateRegexReplaceCount(int? count, TextLocation location)
+    {
+        if (count is < 0)
+        {
+            ReportBuiltInArgumentError("REGEXREPLACE", "count", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј.", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private Regex CreateRegex(string functionName, string pattern, string modes, TextLocation location)
     {
         var options = ParseRegexModes(functionName, modes, location);
+        var cacheKey = (pattern, options);
+
+        if (_regexCache.TryGetValue(cacheKey, out var cachedRegex))
+        {
+            return cachedRegex;
+        }
 
         try
         {
-            return new Regex(pattern, options, RegexExecutionLimit);
+            var regex = new Regex(pattern, options, RegexExecutionLimit);
+            _regexCache[cacheKey] = regex;
+            return regex;
         }
         catch (ArgumentException ex)
         {
             ReportBuiltInArgumentError(
                 functionName,
                 "pattern",
-                $"содержит недопустимое регулярное выражение: {ex.Message}",
+                $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјРѕРµ СЂРµРіСѓР»СЏСЂРЅРѕРµ РІС‹СЂР°Р¶РµРЅРёРµ: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
         }
@@ -250,6 +350,16 @@ public sealed partial class BytecodeVm
 
     private RegexOptions ParseRegexModes(string functionName, string modes, TextLocation location)
     {
+        if (modes.Length == 0)
+        {
+            return RegexOptions.CultureInvariant;
+        }
+
+        if (_regexModesCache.TryGetValue(modes, out var cachedOptions))
+        {
+            return cachedOptions;
+        }
+
         var options = RegexOptions.CultureInvariant;
 
         foreach (var mode in modes)
@@ -264,6 +374,7 @@ public sealed partial class BytecodeVm
             };
         }
 
+        _regexModesCache[modes] = options;
         return options;
     }
 
@@ -272,7 +383,7 @@ public sealed partial class BytecodeVm
         ReportBuiltInArgumentError(
             functionName,
             "modes",
-            $"содержит неизвестный режим '{mode}'. Допустимы только i, m, s, x.",
+            $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРёР·РІРµСЃС‚РЅС‹Р№ СЂРµР¶РёРј '{mode}'. Р”РѕРїСѓСЃС‚РёРјС‹ С‚РѕР»СЊРєРѕ i, m, s, x.",
             location);
         throw new RuntimeFailureException();
     }
@@ -308,8 +419,44 @@ public sealed partial class BytecodeVm
         return builder.ToString();
     }
 
+    private static bool IsRegexReplaceGuaranteedNoOp(string text, Regex regex, string replacement, int? count)
+    {
+        if (ReplacementDependsOnMatch(replacement))
+        {
+            return false;
+        }
+
+        var remaining = count ?? int.MaxValue;
+        var match = regex.Match(text);
+
+        if (!match.Success)
+        {
+            return true;
+        }
+
+        while (match.Success && remaining > 0)
+        {
+            if (!string.Equals(match.Value, replacement, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            remaining--;
+            if (remaining == 0)
+            {
+                return true;
+            }
+
+            match = match.NextMatch();
+        }
+
+        return true;
+    }
+
+    private static bool ReplacementDependsOnMatch(string replacement) => replacement.IndexOf('$') >= 0;
+
     private void ReportRegexTimeout(string functionName, TextLocation location)
     {
-        ReportBuiltInArgumentError(functionName, "pattern", "выполняется слишком долго.", location);
+        ReportBuiltInArgumentError(functionName, "pattern", "РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ СЃР»РёС€РєРѕРј РґРѕР»РіРѕ.", location);
     }
 }

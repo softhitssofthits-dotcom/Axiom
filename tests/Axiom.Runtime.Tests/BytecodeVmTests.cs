@@ -150,7 +150,7 @@ PRINT 2
         Assert.Contains(snapshots, static snapshot =>
             snapshot.RoutineId == 0
             && snapshot.RoutineName == "<global>"
-            && snapshot.Opcode == Opcode.PushConst
+            && snapshot.Opcode is Opcode.PushConst or Opcode.PushIntegerOne
             && snapshot.SourceLocation.Line == 1
             && snapshot.CallDepth == 1);
         Assert.Contains(snapshots, static snapshot =>
@@ -1038,6 +1038,8 @@ PRINT REGEXEXTRACT("A12", "([A-Z])(\d+)", 2)
 PRINT "[" + REGEXEXTRACT("A12", "([A-Z])(\d+)", 3) + "]"
 PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
 PRINT REGEXREPLACE("a12 b34", "[a-z]\d+", "#", "i", 1)
+PRINT REGEXREPLACE("payload 42", "payload\s+", "payload ", "i")
+PRINT REGEXREPLACE("abc", "x", "y", "i")
 PRINT REGEXCOUNT("one 12 two 34", "\d+")
 PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")
 """;
@@ -1047,7 +1049,7 @@ PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")
         Assert.True(
             result.Succeeded,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
-        Assert.Equal(["TRUE", "TRUE", "42", "[]", "12", "[]", "one # two 34", "# b34", "2", "2"], host.Output);
+        Assert.Equal(["TRUE", "TRUE", "42", "[]", "12", "[]", "one # two 34", "# b34", "payload 42", "abc", "2", "2"], host.Output);
     }
 
     [Fact]
@@ -2545,8 +2547,16 @@ PRINT values(1)
         const string text = """
 PRINT LEFT("Hello", 3)
 PRINT RIGHT("Hello", 3)
+PRINT RIGHT("Hello", 5)
+PRINT RIGHT("Hello", 1)
 PRINT MID("Hello", 2, 4)
 PRINT TRIM("  hello  ")
+PRINT TRIM("hello")
+PRINT "[" + TRIM("hello   ") + "]"
+PRINT "[" + TRIM("   hello") + "]"
+PRINT "[" + TRIM("   ") + "]"
+PRINT LTRIM("hello")
+PRINT RTRIM("hello")
 PRINT LTRIM("xyxyhello", "xy")
 PRINT RTRIM("helloxyxy", "xy")
 PRINT REVERSE("abcd")
@@ -2555,7 +2565,7 @@ PRINT REVERSE("abcd")
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["Hel", "llo", "ello", "hello", "hello", "hello", "dcba"], host.Output);
+        Assert.Equal(["Hel", "llo", "Hello", "o", "ello", "hello", "hello", "[hello]", "[hello]", "[]", "hello", "hello", "hello", "hello", "dcba"], host.Output);
     }
 
     [Fact]
@@ -2563,8 +2573,18 @@ PRINT REVERSE("abcd")
     {
         const string text = """
 PRINT CONTAINS("Hello", "ell")
+PRINT CONTAINS("", "x")
+PRINT CONTAINS("Hello", "Hello")
+PRINT CONTAINS("Hello", "Hello!")
+PRINT CONTAINS("Hello", "o")
 PRINT STARTSWITH("Hello", "He")
 PRINT ENDSWITH("Hello", "lo")
+PRINT STARTSWITH("Hello", "")
+PRINT ENDSWITH("Hello", "")
+PRINT STARTSWITH("Hello", "Hello")
+PRINT ENDSWITH("Hello", "Hello")
+PRINT STARTSWITH("Hello", "Hello!")
+PRINT ENDSWITH("Hello", "Hello!")
 PRINT REPLACE("one two two", "two", "three")
 PRINT INSTR("banana", "na")
 PRINT INSTR(4, "banana", "na")
@@ -2576,7 +2596,7 @@ PRINT SUBSTRCOUNT("banana", "na")
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "TRUE", "TRUE", "one three three", "3", "5", "5", "3", "2"], host.Output);
+        Assert.Equal(["TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "one three three", "3", "5", "5", "3", "2"], host.Output);
     }
 
     [Fact]
@@ -2590,13 +2610,33 @@ PRINT "[" + PADLEFT("7", 3) + "]"
 PRINT PADRIGHT("7", 3, ".")
 PRINT "[" + CENTER("A", 4, ".") + "]"
 PRINT INSERT("abcd", 3, "-")
+PRINT INSERT("", 5, "seed")
+PRINT INSERT("abcd", 2, "")
 PRINT REMOVE("abcdef", 2, 3)
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["hahaha", "[    ]", "aaaaa", "[  7]", "7..", "[.A..]", "ab-cd", "aef"], host.Output);
+        Assert.Equal(["hahaha", "[    ]", "aaaaa", "[  7]", "7..", "[.A..]", "ab-cd", "seed", "abcd", "aef"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledReplaceUsesOrdinalCaseSensitiveRules()
+    {
+        const string text = """
+PRINT REPLACE("one two two", "two", "three")
+PRINT REPLACE("One one", "one", "two")
+PRINT REPLACE("abc", "x", "y")
+PRINT REPLACE("hello", "he", "he")
+PRINT REPLACE("hello", "hello", "done")
+PRINT REPLACE("abba", "b", "c")
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["one three three", "One two", "abc", "hello", "done", "acca"], host.Output);
     }
 
     [Fact]

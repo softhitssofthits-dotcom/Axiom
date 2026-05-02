@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using Axiom.Bytecode;
 using Axiom.Core;
 using Axiom.Semantics;
@@ -125,7 +126,7 @@ public sealed partial class BytecodeVm
 
         var fixedIndexCount = slices.Count(static slice => !slice.IsRange);
         var resultType = ArrayTypeSymbol.Create(((ArrayTypeSymbol)arrayValue.Type).ElementType, array.Rank - fixedIndexCount);
-        frame.EvaluationStack.Push(RuntimeValue.FromArray((ArrayTypeSymbol)resultType, array.CreateView(slices)));
+        frame.EvaluationStack.PushUnchecked(RuntimeValue.FromArray((ArrayTypeSymbol)resultType, array.CreateView(slices)));
     }
 
     private void ExecuteStoreElement(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -250,7 +251,7 @@ public sealed partial class BytecodeVm
         {
             if (directArray.TryGetValue1(index0, out var directValue))
             {
-                stack.Push(directValue);
+                stack.PushUnchecked(directValue);
                 return;
             }
 
@@ -280,7 +281,7 @@ public sealed partial class BytecodeVm
         {
             if (directArray.TryGetValue3(index0, index1, index2, out var directValue))
             {
-                stack.Push(directValue);
+                stack.PushUnchecked(directValue);
                 return;
             }
 
@@ -305,7 +306,7 @@ public sealed partial class BytecodeVm
         {
             if (directArray.TryGetValue(indices, out var directValue))
             {
-                frame.EvaluationStack.Push(directValue);
+                frame.EvaluationStack.PushUnchecked(directValue);
                 return;
             }
 
@@ -328,7 +329,7 @@ public sealed partial class BytecodeVm
         }
 
         var directResultType = ArrayTypeSymbol.Create(((ArrayTypeSymbol)directArrayValue.Type).ElementType, directArray.Rank - indices.Length);
-        frame.EvaluationStack.Push(RuntimeValue.FromArray((ArrayTypeSymbol)directResultType, directArray.CreateView(indices)));
+        frame.EvaluationStack.PushUnchecked(RuntimeValue.FromArray((ArrayTypeSymbol)directResultType, directArray.CreateView(indices)));
     }
 
     private void ExecuteDirectStoreElement(
@@ -458,28 +459,47 @@ public sealed partial class BytecodeVm
         return array;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int ToArrayBound(RuntimeValue value, TextLocation location, string detail)
     {
         var type = value.Type;
 
         if (type == TypeSymbol.Integer)
         {
-            return value.AsInteger();
+            return (int)value.Value!;
         }
 
         if (type == TypeSymbol.Long)
         {
-            return ToInt32Checked(value.AsLong(), location, detail);
+            var longValue = (long)value.Value!;
+            if (longValue >= int.MinValue && longValue <= int.MaxValue)
+            {
+                return (int)longValue;
+            }
+
+            return ToInt32Checked(longValue, location, detail);
         }
 
         if (type == TypeSymbol.Double)
         {
-            return ToInt32Checked(Math.Truncate(value.AsDouble()), location, detail);
+            var doubleValue = Math.Truncate((double)value.Value!);
+            if (doubleValue >= int.MinValue && doubleValue <= int.MaxValue)
+            {
+                return (int)doubleValue;
+            }
+
+            return ToInt32Checked(doubleValue, location, detail);
         }
 
         if (type == TypeSymbol.Decimal)
         {
-            return ToInt32Checked(decimal.Truncate(value.AsDecimal()), location, detail);
+            var decimalValue = decimal.Truncate((decimal)value.Value!);
+            if (decimalValue >= int.MinValue && decimalValue <= int.MaxValue)
+            {
+                return (int)decimalValue;
+            }
+
+            return ToInt32Checked(decimalValue, location, detail);
         }
 
         return ReportInvalidRuntimeState<int>(

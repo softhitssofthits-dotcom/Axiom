@@ -11,6 +11,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     private const long CachedLongMax = 1024;
     private static readonly RuntimeValue[] CachedIntegers = CreateCachedIntegers();
     private static readonly RuntimeValue[] CachedLongs = CreateCachedLongs();
+    private static readonly RuntimeValue[] CachedIntegerDisplayValues = CreateCachedIntegerDisplayValues();
+    private static readonly RuntimeValue[] CachedLongDisplayValues = CreateCachedLongDisplayValues();
+    private static readonly RuntimeValue EmptyStringValue = new(TypeSymbol.String, string.Empty);
+    private static readonly RuntimeValue TrueStringValue = new(TypeSymbol.String, "TRUE");
+    private static readonly RuntimeValue FalseStringValue = new(TypeSymbol.String, "FALSE");
     private static readonly RuntimeValue TrueValue = new(TypeSymbol.Boolean, true);
     private static readonly RuntimeValue FalseValue = new(TypeSymbol.Boolean, false);
 
@@ -101,7 +106,9 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
     public static RuntimeValue FromDecimal(decimal value) => new(TypeSymbol.Decimal, value);
 
-    public static RuntimeValue FromString(string value) => new(TypeSymbol.String, value);
+    public static RuntimeValue FromString(string value) => value.Length == 0
+        ? EmptyStringValue
+        : new(TypeSymbol.String, value);
 
     public static RuntimeValue FromBoolean(bool value) => value ? TrueValue : FalseValue;
 
@@ -147,6 +154,32 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         for (var value = CachedLongMin; value <= CachedLongMax; value++)
         {
             values[(int)(value - CachedLongMin)] = new RuntimeValue(TypeSymbol.Long, value);
+        }
+
+        return values;
+    }
+
+    private static RuntimeValue[] CreateCachedIntegerDisplayValues()
+    {
+        var values = new RuntimeValue[CachedIntegerMax - CachedIntegerMin + 1];
+        for (var value = CachedIntegerMin; value <= CachedIntegerMax; value++)
+        {
+            values[value - CachedIntegerMin] = new RuntimeValue(
+                TypeSymbol.String,
+                value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return values;
+    }
+
+    private static RuntimeValue[] CreateCachedLongDisplayValues()
+    {
+        var values = new RuntimeValue[(int)(CachedLongMax - CachedLongMin + 1)];
+        for (var value = CachedLongMin; value <= CachedLongMax; value++)
+        {
+            values[(int)(value - CachedLongMin)] = new RuntimeValue(
+                TypeSymbol.String,
+                value.ToString(CultureInfo.InvariantCulture));
         }
 
         return values;
@@ -371,5 +404,36 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         }
 
         return string.Empty;
+    }
+
+    internal RuntimeValue ToDisplayRuntimeValue()
+    {
+        if (Type == TypeSymbol.String)
+        {
+            return this;
+        }
+
+        if (Type == TypeSymbol.Integer)
+        {
+            var value = AsInteger();
+            return value is >= CachedIntegerMin and <= CachedIntegerMax
+                ? CachedIntegerDisplayValues[value - CachedIntegerMin]
+                : FromString(value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (Type == TypeSymbol.Long)
+        {
+            var value = AsLong();
+            return value is >= CachedLongMin and <= CachedLongMax
+                ? CachedLongDisplayValues[(int)(value - CachedLongMin)]
+                : FromString(value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (Type == TypeSymbol.Boolean)
+        {
+            return AsBoolean() ? TrueStringValue : FalseStringValue;
+        }
+
+        return FromString(ToDisplayString());
     }
 }

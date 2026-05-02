@@ -521,6 +521,8 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("Регекс: режимы и цепочка замен", @"samples/smoke/engine-compare/regex_modes_pipeline.axm"),
         new BenchmarkCase("Массивы и циклы: 3D сводка", @"samples/smoke/engine-compare/array_cube_rollup.axm"),
         new BenchmarkCase("Массивы: цепочка преобразований", @"samples/smoke/engine-compare/array_transform_chain.axm"),
+        new BenchmarkCase("Строковые массивы: циклы и дата-время", @"samples/smoke/engine-compare/string_array_loop_pipeline.axm"),
+        new BenchmarkCase("Смешанная нагрузка: циклы, строки, regex, дата и SELECT CASE", @"samples/smoke/engine-compare/mixed_workload_pipeline.axm"),
         new BenchmarkCase("Многомерный ранг: metadata-проверка", @"samples/smoke/engine-compare/high_rank_metadata.axm")
     ];
 }

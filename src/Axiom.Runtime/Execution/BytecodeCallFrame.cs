@@ -1,6 +1,7 @@
 using Axiom.Bytecode;
 using Axiom.Core;
 using Axiom.Semantics;
+using System.Runtime.CompilerServices;
 
 namespace Axiom.Runtime;
 
@@ -10,6 +11,7 @@ internal sealed class BytecodeCallFrame
     private readonly RuntimeValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
     private readonly BytecodeVariableSlot?[] _sharedLocals;
+    private bool _hasSharedLocals;
 
     public BytecodeCallFrame(
         BytecodeRoutine routine,
@@ -59,13 +61,38 @@ internal sealed class BytecodeCallFrame
         return ((Dictionary<VariableSymbol, BytecodeVariableSlot>)VisibleVariables).TryGetValue(variable, out slot!);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RuntimeValue LoadLocalValue(int slot)
     {
+        if (!_hasSharedLocals)
+        {
+            return _locals[slot];
+        }
+
         return _sharedLocals[slot]?.Value ?? _locals[slot];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushLocalValueOntoEvaluationStack(int slot)
+    {
+        if (!_hasSharedLocals)
+        {
+            EvaluationStack.PushUnchecked(_locals[slot]);
+            return;
+        }
+
+        EvaluationStack.PushUnchecked(_sharedLocals[slot]?.Value ?? _locals[slot]);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void StoreLocalValue(int slot, RuntimeValue value)
     {
+        if (!_hasSharedLocals)
+        {
+            _locals[slot] = BytecodeVariableSlot.NormalizeForStorage(value, _localFixedStringLengths[slot]);
+            return;
+        }
+
         var sharedSlot = _sharedLocals[slot];
         if (sharedSlot is not null)
         {
@@ -74,6 +101,57 @@ internal sealed class BytecodeCallFrame
         }
 
         _locals[slot] = BytecodeVariableSlot.NormalizeForStorage(value, _localFixedStringLengths[slot]);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void LoadForLoopLocalValues(int currentSlot, int endSlot, int stepSlot, out RuntimeValue current, out RuntimeValue end, out RuntimeValue step)
+    {
+        if (!_hasSharedLocals)
+        {
+            var locals = _locals;
+            current = locals[currentSlot];
+            end = locals[endSlot];
+            step = locals[stepSlot];
+            return;
+        }
+
+        current = _sharedLocals[currentSlot]?.Value ?? _locals[currentSlot];
+        end = _sharedLocals[endSlot]?.Value ?? _locals[endSlot];
+        step = _sharedLocals[stepSlot]?.Value ?? _locals[stepSlot];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void LoadForLoopAdvanceValues(int currentSlot, int stepSlot, out RuntimeValue current, out RuntimeValue step)
+    {
+        if (!_hasSharedLocals)
+        {
+            var locals = _locals;
+            current = locals[currentSlot];
+            step = locals[stepSlot];
+            return;
+        }
+
+        current = _sharedLocals[currentSlot]?.Value ?? _locals[currentSlot];
+        step = _sharedLocals[stepSlot]?.Value ?? _locals[stepSlot];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void StoreNumericLocalValueUnchecked(int slot, RuntimeValue value)
+    {
+        if (!_hasSharedLocals)
+        {
+            _locals[slot] = value;
+            return;
+        }
+
+        var sharedSlot = _sharedLocals[slot];
+        if (sharedSlot is not null)
+        {
+            sharedSlot.Value = value;
+            return;
+        }
+
+        _locals[slot] = value;
     }
 
     public BytecodeVariableSlot GetOrCreateLocalSlot(int slot)
@@ -86,6 +164,7 @@ internal sealed class BytecodeCallFrame
 
         sharedSlot = new BytecodeVariableSlot(_locals[slot], _localFixedStringLengths[slot]);
         _sharedLocals[slot] = sharedSlot;
+        _hasSharedLocals = true;
         return sharedSlot;
     }
 

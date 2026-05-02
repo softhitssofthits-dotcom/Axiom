@@ -32,6 +32,7 @@ At the beginning of every session, do this in order:
    - `docs/ARCHITECTURE.md`
    - `docs/PLANS3.md`
    - `docs/WORKLOG4.md`
+   - `docs/BYTECODE_COVERAGE.md`
    - `docs/SPECIFICATION2.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
 
 Then:
@@ -183,6 +184,15 @@ Active session continuity log:
 - new session entries must be appended only at the end of the file;
 - starting from `2026-04-23 09:53` (local project time), every new session entry must include a sequential session number plus exact local date and time in the heading.
 
+### `docs/BYTECODE_COVERAGE.md`
+Active registry of bytecode coverage:
+- which user-visible operators, built-ins and language forms are covered by `BytecodeVm`;
+- whether they have automated tests;
+- whether they have runnable `.axm` samples;
+- whether they are reflected in `docs/manual/`;
+- whether bytecode/interpreter parity is explicitly checked;
+- whether the area is performance-hot or only functionally covered.
+
 ---
 
 ## Core working rules
@@ -292,6 +302,9 @@ For `docs/WORKLOG4.md`, continuing the sequence from `docs/WORKLOG.md`, `docs/WO
 ### 8. Plans must stay current
 If the next steps change, update `docs/PLANS3.md`.
 
+### 8.1. Bytecode coverage registry must stay current
+If a task changes bytecode coverage, parity, acceptance samples, manual coverage, or profiling status for a user-visible language form, update `docs/BYTECODE_COVERAGE.md` in the same task.
+
 ### 9. Architecture changes must be recorded
 If technical structure changes materially, update `docs/ARCHITECTURE.md`.
 
@@ -367,6 +380,9 @@ A task is complete only if:
 - relevant docs were updated;
 - `docs/WORKLOG4.md` was updated;
 - `docs/PLANS3.md` reflects the next step.
+
+If a task changes bytecode coverage, parity status, sample status, manual status, or profiling status for a user-visible language form, it is complete only if:
+- `docs/BYTECODE_COVERAGE.md` was updated too.
 
 If a task changes language behavior, it is complete only if:
 - code changes are done;

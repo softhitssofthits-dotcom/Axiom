@@ -1,4 +1,5 @@
 using Axiom.Semantics;
+using System.Runtime.CompilerServices;
 
 namespace Axiom.Runtime;
 
@@ -77,6 +78,77 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         array._fixedStorageIndices = CreateEmptyFixedStorageIndices(array.Rank);
         array._visibleStorageDimensions = CreateIdentityStorageDimensions(array.Rank);
         array._elements = array.CreateDefaultElements(array._storageLowerBounds, array._storageUpperBounds);
+        array.RefreshShapeMetadata();
+        return array;
+    }
+
+    internal static RuntimeArrayValue CreateCompactOneDimensional(
+        TypeSymbol elementType,
+        int? fixedStringLength,
+        IReadOnlyList<RuntimeValue> values)
+    {
+        ArgumentNullException.ThrowIfNull(elementType);
+        ArgumentNullException.ThrowIfNull(values);
+
+        var array = new RuntimeArrayValue(elementType, fixedStringLength, rank: 1);
+        array._lowerBounds = [1];
+        array._upperBounds = [values.Count == 0 ? 0 : values.Count];
+        array._storageLowerBounds = array._lowerBounds;
+        array._storageUpperBounds = array._upperBounds;
+        array._fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
+        array._visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
+        array._isView = false;
+
+        var elements = new RuntimeValue[values.Count];
+        for (var index = 0; index < values.Count; index++)
+        {
+            elements[index] = fixedStringLength is null && elementType is not UserDefinedTypeSymbol
+                ? values[index]
+                : values[index].CopyForStorage(fixedStringLength);
+        }
+
+        array._elements = elements;
+        array.RefreshShapeMetadata();
+        return array;
+    }
+
+    internal static RuntimeArrayValue CreateCompactTwoDimensional(
+        TypeSymbol elementType,
+        int? fixedStringLength,
+        int firstLength,
+        int secondLength,
+        Func<int, int, RuntimeValue> valueFactory)
+    {
+        ArgumentNullException.ThrowIfNull(elementType);
+        ArgumentNullException.ThrowIfNull(valueFactory);
+
+        var array = new RuntimeArrayValue(elementType, fixedStringLength, rank: 2);
+        array._lowerBounds = [1, 1];
+        array._upperBounds = [firstLength, secondLength];
+        array._storageLowerBounds = array._lowerBounds;
+        array._storageUpperBounds = array._upperBounds;
+        array._fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 2);
+        array._visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 2);
+        array._isView = false;
+
+        var totalLength = firstLength <= 0 || secondLength <= 0
+            ? 0
+            : checked(firstLength * secondLength);
+        var elements = new RuntimeValue[totalLength];
+        var elementIndex = 0;
+
+        for (var firstIndex = 1; firstIndex <= firstLength; firstIndex++)
+        {
+            for (var secondIndex = 1; secondIndex <= secondLength; secondIndex++)
+            {
+                var value = valueFactory(firstIndex, secondIndex);
+                elements[elementIndex++] = fixedStringLength is null && elementType is not UserDefinedTypeSymbol
+                    ? value
+                    : value.CopyForStorage(fixedStringLength);
+            }
+        }
+
+        array._elements = elements;
         array.RefreshShapeMetadata();
         return array;
     }
@@ -184,6 +256,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return _elements![GetLinearIndex(indices)];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetValue(ReadOnlySpan<int> indices, out RuntimeValue value)
     {
         EnsureAllocated();
@@ -198,6 +271,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetValue1(int index0, out RuntimeValue value)
     {
         EnsureAllocated();
@@ -212,6 +286,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetValue3(int index0, int index1, int index2, out RuntimeValue value)
     {
         EnsureAllocated();
@@ -362,6 +437,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         _elements![GetLinearIndex(indices)] = value.CopyForStorage(FixedStringLength);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TrySetValue(ReadOnlySpan<int> indices, RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -376,6 +452,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TrySetValue1(int index0, RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -390,6 +467,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TrySetValue3(int index0, int index1, int index2, RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -776,6 +854,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return linearIndex;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryGetLinearIndex(ReadOnlySpan<int> localIndices, out int linearIndex)
     {
         if (localIndices.Length != Rank)
@@ -807,6 +886,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryGetLinearIndex1(int index0, out int linearIndex)
     {
         if (Rank != 1)
@@ -831,6 +911,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryGetLinearIndex3(int index0, int index1, int index2, out int linearIndex)
     {
         if (Rank != 3)

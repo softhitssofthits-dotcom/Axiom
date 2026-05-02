@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Axiom.Bytecode;
 using Axiom.Core;
@@ -25,7 +26,9 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<FunctionSymbol, BytecodeRoutine> _routinesBySymbol;
     private readonly Dictionary<int, BuiltinBinding> _builtins;
     private readonly Dictionary<FunctionSymbol, BuiltinBinding> _builtinsByFunction;
+    private readonly Dictionary<BuiltinFunctionId, BuiltinBinding> _builtinsByCanonicalId;
     private readonly Dictionary<int, BuiltinExecution> _builtinExecutions;
+    private readonly BuiltinExecutionInfo[] _builtinExecutionInfosById;
     private readonly Dictionary<int, BytecodeGlobal> _globalMetadata;
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TextLocation> _sourceLocationCache = [];
     private readonly RuntimeValue?[] _constantValues;
@@ -72,9 +75,13 @@ public sealed partial class BytecodeVm
         _builtinsByFunction = module.Builtins
             .Where(static builtin => builtin.Function is not null)
             .ToDictionary(static builtin => builtin.Function!);
+        _builtinsByCanonicalId = module.Builtins
+            .GroupBy(static builtin => builtin.CanonicalId)
+            .ToDictionary(static group => group.Key, static group => group.First());
         _builtinExecutions = module.Builtins.ToDictionary(
             static builtin => builtin.Id,
             static builtin => CreateBuiltinExecution(builtin));
+        _builtinExecutionInfosById = CreateBuiltinExecutionInfosById(module.Builtins, _builtinExecutions);
         _globalMetadata = module.Globals.ToDictionary(static global => global.Slot);
         _constantValues = module.ConstantPool.Entries.Select(TryCreateRuntimeConstant).ToArray();
         var maxGlobalSlot = module.Globals.Count == 0 ? -1 : module.Globals.Max(static global => global.Slot);
@@ -372,6 +379,13 @@ public sealed partial class BytecodeVm
 
         var instructionIndex = frame.InstructionPointer;
         var instruction = frame.Routine.Instructions[instructionIndex];
+        if (CanUseFastInstructionPath())
+        {
+            frame.InstructionPointer++;
+            ExecuteInstruction(frame, instruction, instructionIndex);
+            return;
+        }
+
         var needsExecutionSnapshot = NeedsExecutionSnapshot();
         var snapshot = needsExecutionSnapshot
             ? CreateExecutionSnapshot(frame, instructionIndex, instruction)
@@ -393,11 +407,23 @@ public sealed partial class BytecodeVm
 
         _previousReversibleStateSnapshot = stateBeforeInstruction;
         frame.InstructionPointer++;
+        ExecuteInstruction(frame, instruction, instructionIndex);
+    }
 
+    private void ExecuteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
         switch (instruction.Opcode)
         {
             case Opcode.PushConst:
-                frame.EvaluationStack.Push(ReadConstantUnchecked(instruction.GetOperand(0)));
+                frame.EvaluationStack.PushUnchecked(ReadConstantUnchecked(instruction.GetOperand(0)));
+                break;
+
+            case Opcode.PushIntegerZero:
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromInteger(0));
+                break;
+
+            case Opcode.PushIntegerOne:
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromInteger(1));
                 break;
 
             case Opcode.LoadFunction:
@@ -417,7 +443,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.LoadLocal:
-                frame.EvaluationStack.Push(frame.LoadLocalValue(instruction.GetOperand(0)));
+                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
                 break;
 
             case Opcode.StoreLocal:
@@ -496,6 +522,14 @@ public sealed partial class BytecodeVm
                 frame.InstructionPointer = instruction.GetOperand(0);
                 break;
 
+            case Opcode.JumpIfEqual:
+                ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.Equal);
+                break;
+
+            case Opcode.JumpIfNotEqual:
+                ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.NotEqual);
+                break;
+
             case Opcode.JumpIfLess:
                 ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.Less);
                 break;
@@ -512,8 +546,12 @@ public sealed partial class BytecodeVm
                 ExecuteComparisonJumpInstruction(frame, instruction, instructionIndex, ComparisonBranchKind.GreaterOrEqual);
                 break;
 
+            case Opcode.JumpIfForDoneLocal:
+                ExecuteJumpIfForDoneLocalInstruction(frame, instruction, instructionIndex);
+                break;
+
             case Opcode.JumpIfTrue:
-                if (PopValue(frame, instructionIndex).AsBoolean())
+                if (GetBooleanUnchecked(PopValue(frame, instructionIndex)))
                 {
                     frame.InstructionPointer = instruction.GetOperand(0);
                 }
@@ -521,7 +559,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.JumpIfFalse:
-                if (!PopValue(frame, instructionIndex).AsBoolean())
+                if (!GetBooleanUnchecked(PopValue(frame, instructionIndex)))
                 {
                     frame.InstructionPointer = instruction.GetOperand(0);
                 }
@@ -576,6 +614,10 @@ public sealed partial class BytecodeVm
                 ValidateForStep(frame, instructionIndex);
                 break;
 
+            case Opcode.AdvanceForLoopLocal:
+                ExecuteAdvanceForLoopLocalInstruction(frame, instruction, instructionIndex);
+                break;
+
             case Opcode.PrintValue:
                 AppendPendingOutput(PopValue(frame, instructionIndex).ToDisplayString());
                 break;
@@ -606,6 +648,17 @@ public sealed partial class BytecodeVm
                     ResolveLocation(frame.Routine.Id, instructionIndex));
                 throw new RuntimeFailureException();
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool CanUseFastInstructionPath()
+    {
+        return _instructionObserver is null
+            && _breakpoints is null
+            && _shouldStopBeforeInstruction is null
+            && _debugStepBoundary is null
+            && _skipStopOnceAt is null
+            && _suppressLineBreakpointsUntilDifferentLine is null;
     }
 
     private void ExecuteBinaryInstruction(BytecodeCallFrame frame, Opcode opcode, int instructionIndex)
@@ -656,11 +709,11 @@ public sealed partial class BytecodeVm
 
         if (TryEvaluateHotAdd(left, right, out var result))
         {
-            stack.Push(result);
+            stack.PushUnchecked(result);
             return;
         }
 
-        stack.Push(EvaluateAdd(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
+        stack.PushUnchecked(EvaluateAdd(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
     private void ExecuteAddLongIntegerInstruction(BytecodeCallFrame frame, int instructionIndex)
@@ -673,7 +726,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                stack.Push(RuntimeValue.FromLong(checked(left.AsLong() + right.AsInteger())));
+                stack.PushUnchecked(RuntimeValue.FromLong(checked(GetLongUnchecked(left) + GetIntegerUnchecked(right))));
                 return;
             }
             catch (OverflowException)
@@ -681,10 +734,11 @@ public sealed partial class BytecodeVm
             }
         }
 
-        stack.Push(EvaluateAdd(
-            ConvertValue(right, BytecodeScalarTypeCode.Long, ResolveLocation(frame.Routine.Id, instructionIndex)),
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        stack.PushUnchecked(EvaluateAdd(
+            ConvertValue(right, BytecodeScalarTypeCode.Long, location),
             left,
-            ResolveLocation(frame.Routine.Id, instructionIndex)));
+            location));
     }
 
     private void ExecuteComparisonJumpInstruction(
@@ -698,6 +752,8 @@ public sealed partial class BytecodeVm
         var left = stack.Pop();
         var comparisonOpcode = branchKind switch
         {
+            ComparisonBranchKind.Equal => Opcode.CompareEqual,
+            ComparisonBranchKind.NotEqual => Opcode.CompareNotEqual,
             ComparisonBranchKind.Less => Opcode.CompareLess,
             ComparisonBranchKind.LessOrEqual => Opcode.CompareLessOrEqual,
             ComparisonBranchKind.Greater => Opcode.CompareGreater,
@@ -707,7 +763,7 @@ public sealed partial class BytecodeVm
 
         if (TryEvaluateFastComparison(comparisonOpcode, left, right, out var result))
         {
-            if (result.AsBoolean())
+            if (GetBooleanUnchecked(result))
             {
                 frame.InstructionPointer = instruction.GetOperand(0);
             }
@@ -718,6 +774,8 @@ public sealed partial class BytecodeVm
         var comparison = Compare(left, right, ResolveLocation(frame.Routine.Id, instructionIndex));
         var shouldJump = branchKind switch
         {
+            ComparisonBranchKind.Equal => comparison == 0,
+            ComparisonBranchKind.NotEqual => comparison != 0,
             ComparisonBranchKind.Less => comparison < 0,
             ComparisonBranchKind.LessOrEqual => comparison <= 0,
             ComparisonBranchKind.Greater => comparison > 0,
@@ -731,6 +789,51 @@ public sealed partial class BytecodeVm
         }
     }
 
+    private void ExecuteJumpIfForDoneLocalInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        frame.LoadForLoopLocalValues(
+            instruction.GetOperand(0),
+            instruction.GetOperand(1),
+            instruction.GetOperand(2),
+            out var current,
+            out var end,
+            out var step);
+
+        if (TryShouldTerminateLocalForLoop(current, end, step, out var shouldJump))
+        {
+            if (shouldJump)
+            {
+                frame.InstructionPointer = instruction.GetOperand(3);
+            }
+
+            return;
+        }
+
+        if (IsZero(step))
+        {
+            ReportRuntimeDiagnostic(
+                StepZeroCode,
+                "В цикле FOR недопустим STEP 0.",
+                ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var comparison = Compare(current, end, location);
+        var stepIsPositive = step.Type switch
+        {
+            var type when type == TypeSymbol.Integer => step.AsInteger() > 0,
+            var type when type == TypeSymbol.Long => step.AsLong() > 0L,
+            var type when type == TypeSymbol.Double => step.AsDouble() > 0d,
+            var type when type == TypeSymbol.Decimal => step.AsDecimal() > 0m,
+            _ => false
+        };
+        if (stepIsPositive ? comparison > 0 : comparison < 0)
+        {
+            frame.InstructionPointer = instruction.GetOperand(3);
+        }
+    }
+
     private void ExecuteMultiplyInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
@@ -739,11 +842,11 @@ public sealed partial class BytecodeVm
 
         if (TryEvaluateHotMultiply(left, right, out var result))
         {
-            stack.Push(result);
+            stack.PushUnchecked(result);
             return;
         }
 
-        stack.Push(EvaluateMultiply(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
+        stack.PushUnchecked(EvaluateMultiply(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
     private void ExecuteCompareGreaterInstruction(BytecodeCallFrame frame, int instructionIndex)
@@ -754,12 +857,28 @@ public sealed partial class BytecodeVm
 
         if (TryEvaluateHotCompareGreater(left, right, out var result))
         {
-            stack.Push(result);
+            stack.PushUnchecked(result);
             return;
         }
 
-        stack.Push(RuntimeValue.FromBoolean(
+        stack.PushUnchecked(RuntimeValue.FromBoolean(
             Compare(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)) > 0));
+    }
+
+    private void ExecuteAdvanceForLoopLocalInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var currentSlot = instruction.GetOperand(0);
+        frame.LoadForLoopAdvanceValues(currentSlot, instruction.GetOperand(1), out var current, out var step);
+
+        if (TryAdvanceLocalForLoop(current, step, out var nextValue))
+        {
+            frame.StoreNumericLocalValueUnchecked(currentSlot, nextValue);
+            return;
+        }
+
+        frame.StoreNumericLocalValueUnchecked(
+            currentSlot,
+            EvaluateAdd(current, step, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
     private static bool TryEvaluateFastBinaryInstruction(
@@ -789,22 +908,22 @@ public sealed partial class BytecodeVm
 
         if (left.Type == TypeSymbol.Boolean)
         {
-            return TryEvaluateFastBooleanBinaryInstruction(opcode, left.AsBoolean(), right.AsBoolean(), out result);
+            return TryEvaluateFastBooleanBinaryInstruction(opcode, GetBooleanUnchecked(left), GetBooleanUnchecked(right), out result);
         }
 
         if (left.Type == TypeSymbol.Integer)
         {
-            return TryEvaluateFastIntegerBinaryInstruction(opcode, left.AsInteger(), right.AsInteger(), out result);
+            return TryEvaluateFastIntegerBinaryInstruction(opcode, GetIntegerUnchecked(left), GetIntegerUnchecked(right), out result);
         }
 
         if (left.Type == TypeSymbol.Long)
         {
-            return TryEvaluateFastLongBinaryInstruction(opcode, left.AsLong(), right.AsLong(), out result);
+            return TryEvaluateFastLongBinaryInstruction(opcode, GetLongUnchecked(left), GetLongUnchecked(right), out result);
         }
 
         if (left.Type == TypeSymbol.String && opcode == Opcode.Add)
         {
-            result = RuntimeValue.FromString(left.AsString() + right.AsString());
+            result = RuntimeValue.FromString(GetStringUnchecked(left) + GetStringUnchecked(right));
             return true;
         }
 
@@ -825,7 +944,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                result = RuntimeValue.FromInteger(checked(left.AsInteger() + right.AsInteger()));
+                result = RuntimeValue.FromInteger(checked(GetIntegerUnchecked(left) + GetIntegerUnchecked(right)));
                 return true;
             }
             catch (OverflowException)
@@ -838,7 +957,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                result = RuntimeValue.FromLong(checked(left.AsLong() + right.AsLong()));
+                result = RuntimeValue.FromLong(checked(GetLongUnchecked(left) + GetLongUnchecked(right)));
                 return true;
             }
             catch (OverflowException)
@@ -849,7 +968,7 @@ public sealed partial class BytecodeVm
 
         if (type == TypeSymbol.Double)
         {
-            result = TryCreateFiniteDouble(left.AsDouble() + right.AsDouble());
+            result = TryCreateFiniteDouble(GetDoubleUnchecked(left) + GetDoubleUnchecked(right));
             return result != RuntimeValue.Void;
         }
 
@@ -857,7 +976,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                result = RuntimeValue.FromDecimal(checked(left.AsDecimal() + right.AsDecimal()));
+                result = RuntimeValue.FromDecimal(checked(GetDecimalUnchecked(left) + GetDecimalUnchecked(right)));
                 return true;
             }
             catch (OverflowException)
@@ -868,7 +987,7 @@ public sealed partial class BytecodeVm
 
         if (type == TypeSymbol.String)
         {
-            result = RuntimeValue.FromString(left.AsString() + right.AsString());
+            result = RuntimeValue.FromString(GetStringUnchecked(left) + GetStringUnchecked(right));
             return true;
         }
 
@@ -889,7 +1008,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                result = RuntimeValue.FromInteger(checked(left.AsInteger() * right.AsInteger()));
+                result = RuntimeValue.FromInteger(checked(GetIntegerUnchecked(left) * GetIntegerUnchecked(right)));
                 return true;
             }
             catch (OverflowException)
@@ -902,7 +1021,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                result = RuntimeValue.FromLong(checked(left.AsLong() * right.AsLong()));
+                result = RuntimeValue.FromLong(checked(GetLongUnchecked(left) * GetLongUnchecked(right)));
                 return true;
             }
             catch (OverflowException)
@@ -913,7 +1032,7 @@ public sealed partial class BytecodeVm
 
         if (type == TypeSymbol.Double)
         {
-            result = TryCreateFiniteDouble(left.AsDouble() * right.AsDouble());
+            result = TryCreateFiniteDouble(GetDoubleUnchecked(left) * GetDoubleUnchecked(right));
             return result != RuntimeValue.Void;
         }
 
@@ -921,7 +1040,7 @@ public sealed partial class BytecodeVm
         {
             try
             {
-                result = RuntimeValue.FromDecimal(checked(left.AsDecimal() * right.AsDecimal()));
+                result = RuntimeValue.FromDecimal(checked(GetDecimalUnchecked(left) * GetDecimalUnchecked(right)));
                 return true;
             }
             catch (OverflowException)
@@ -944,22 +1063,137 @@ public sealed partial class BytecodeVm
 
         result = left.Type switch
         {
-            var type when type == TypeSymbol.Integer => RuntimeValue.FromBoolean(left.AsInteger() > right.AsInteger()),
-            var type when type == TypeSymbol.Long => RuntimeValue.FromBoolean(left.AsLong() > right.AsLong()),
-            var type when type == TypeSymbol.Double => RuntimeValue.FromBoolean(left.AsDouble() > right.AsDouble()),
-            var type when type == TypeSymbol.Decimal => RuntimeValue.FromBoolean(left.AsDecimal() > right.AsDecimal()),
+            var type when type == TypeSymbol.Integer => RuntimeValue.FromBoolean(GetIntegerUnchecked(left) > GetIntegerUnchecked(right)),
+            var type when type == TypeSymbol.Long => RuntimeValue.FromBoolean(GetLongUnchecked(left) > GetLongUnchecked(right)),
+            var type when type == TypeSymbol.Double => RuntimeValue.FromBoolean(GetDoubleUnchecked(left) > GetDoubleUnchecked(right)),
+            var type when type == TypeSymbol.Decimal => RuntimeValue.FromBoolean(GetDecimalUnchecked(left) > GetDecimalUnchecked(right)),
             var type when type == TypeSymbol.String => RuntimeValue.FromBoolean(
-                string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal) > 0),
+                string.Compare(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal) > 0),
             _ => RuntimeValue.Void
         };
 
         return result != RuntimeValue.Void;
     }
 
+    private static bool TryShouldTerminateLocalForLoop(RuntimeValue current, RuntimeValue end, RuntimeValue step, out bool shouldTerminate)
+    {
+        shouldTerminate = false;
+        if (current.Type != end.Type || current.Type != step.Type)
+        {
+            return false;
+        }
+
+        if (current.Type == TypeSymbol.Integer)
+        {
+            var stepValue = GetIntegerUnchecked(step);
+            var currentValue = GetIntegerUnchecked(current);
+            var endValue = GetIntegerUnchecked(end);
+            shouldTerminate = stepValue > 0
+                ? currentValue > endValue
+                : currentValue < endValue;
+            return true;
+        }
+
+        if (current.Type == TypeSymbol.Long)
+        {
+            var stepValue = GetLongUnchecked(step);
+            var currentValue = GetLongUnchecked(current);
+            var endValue = GetLongUnchecked(end);
+            shouldTerminate = stepValue > 0L
+                ? currentValue > endValue
+                : currentValue < endValue;
+            return true;
+        }
+
+        if (current.Type == TypeSymbol.Double)
+        {
+            var stepValue = GetDoubleUnchecked(step);
+            var currentValue = GetDoubleUnchecked(current);
+            var endValue = GetDoubleUnchecked(end);
+            shouldTerminate = stepValue > 0d
+                ? currentValue > endValue
+                : currentValue < endValue;
+            return true;
+        }
+
+        if (current.Type == TypeSymbol.Decimal)
+        {
+            var stepValue = GetDecimalUnchecked(step);
+            var currentValue = GetDecimalUnchecked(current);
+            var endValue = GetDecimalUnchecked(end);
+            shouldTerminate = stepValue > 0m
+                ? currentValue > endValue
+                : currentValue < endValue;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryAdvanceLocalForLoop(RuntimeValue current, RuntimeValue step, out RuntimeValue nextValue)
+    {
+        nextValue = RuntimeValue.Void;
+        if (current.Type != step.Type)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (current.Type == TypeSymbol.Integer)
+            {
+                nextValue = RuntimeValue.FromInteger(checked(GetIntegerUnchecked(current) + GetIntegerUnchecked(step)));
+                return true;
+            }
+
+            if (current.Type == TypeSymbol.Long)
+            {
+                nextValue = RuntimeValue.FromLong(checked(GetLongUnchecked(current) + GetLongUnchecked(step)));
+                return true;
+            }
+
+            if (current.Type == TypeSymbol.Double)
+            {
+                nextValue = TryCreateFiniteDouble(GetDoubleUnchecked(current) + GetDoubleUnchecked(step));
+                return nextValue.Type != TypeSymbol.Void;
+            }
+
+            if (current.Type == TypeSymbol.Decimal)
+            {
+                nextValue = RuntimeValue.FromDecimal(checked(GetDecimalUnchecked(current) + GetDecimalUnchecked(step)));
+                return true;
+            }
+        }
+        catch (OverflowException)
+        {
+        }
+
+        nextValue = RuntimeValue.Void;
+        return false;
+    }
+
     private static RuntimeValue TryCreateFiniteDouble(double value) =>
         double.IsFinite(value)
             ? RuntimeValue.FromDouble(value)
             : RuntimeValue.Void;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetIntegerUnchecked(RuntimeValue value) => (int)value.Value!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static long GetLongUnchecked(RuntimeValue value) => (long)value.Value!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static double GetDoubleUnchecked(RuntimeValue value) => (double)value.Value!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static decimal GetDecimalUnchecked(RuntimeValue value) => (decimal)value.Value!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string GetStringUnchecked(RuntimeValue value) => (string)value.Value!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool GetBooleanUnchecked(RuntimeValue value) => (bool)value.Value!;
 
     private static bool TryEvaluateFastBooleanBinaryInstruction(
         Opcode opcode,
@@ -1116,6 +1350,7 @@ public sealed partial class BytecodeVm
             FallbackRuntimeLocation);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RuntimeValue ReadConstantUnchecked(int constantIndex)
     {
         return _constantValues[constantIndex]!;
@@ -1159,6 +1394,7 @@ public sealed partial class BytecodeVm
         return ReportInvalidRuntimeState<RuntimeValue>($"Не найден глобальный слот {slot}.", FallbackRuntimeLocation);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RuntimeValue LoadGlobalUnchecked(int slot)
     {
         return _globalsBySlot[slot]!;
@@ -1204,6 +1440,7 @@ public sealed partial class BytecodeVm
         _globalsBySlot[slot] = storedValue;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void StoreGlobalUnchecked(int slot, RuntimeValue value)
     {
         var storedValue = value.CopyForStorage(_globalFixedStringLengths[slot]);
@@ -1361,7 +1598,7 @@ public sealed partial class BytecodeVm
         var builtinId = instruction.GetOperand(0);
         var argumentCount = instruction.GetOperand(1);
 
-        if (!_builtins.TryGetValue(builtinId, out var builtin))
+        if ((uint)builtinId >= (uint)_builtinExecutionInfosById.Length)
         {
             ReportInvalidRuntimeState(
                 $"Не найден built-in с идентификатором {builtinId}.",
@@ -1369,16 +1606,26 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var execution = _builtinExecutions[builtin.Id];
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        var result = ExecuteBuiltin(frame, execution, argumentCount, instructionIndex, location);
-
-        if (builtin.ReturnsValue)
+        var executionInfo = _builtinExecutionInfosById[builtinId];
+        if (executionInfo is null)
         {
-            frame.EvaluationStack.Push(result);
+            ReportInvalidRuntimeState(
+                $"РќРµ РЅР°Р№РґРµРЅ built-in СЃ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРј {builtinId}.",
+                ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
         }
 
-        if (!IsBuiltinReverseExecutionSafe(builtin.CanonicalId))
+        var location = executionInfo.Execution.RequiresLocation
+            ? ResolveLocation(frame.Routine.Id, instructionIndex)
+            : FallbackRuntimeLocation;
+        var result = ExecuteBuiltin(frame, executionInfo.Execution, argumentCount, instructionIndex, location);
+
+        if (executionInfo.ReturnsValue)
+        {
+            frame.EvaluationStack.PushUnchecked(result);
+        }
+
+        if (!executionInfo.IsReverseExecutionSafe)
         {
             InvalidateReverseExecutionHistory();
         }
@@ -1442,7 +1689,7 @@ public sealed partial class BytecodeVm
                 ? directBuiltin
                 : _builtinsByFunction.TryGetValue(function, out var mappedBuiltin)
                     ? mappedBuiltin
-                    : _builtins.Values.FirstOrDefault(candidate => candidate.CanonicalId == builtinId);
+                    : _builtinsByCanonicalId.GetValueOrDefault(builtinId);
             if (builtin is null)
             {
                 return ReportInvalidRuntimeState<RuntimeValue>(
@@ -1506,13 +1753,14 @@ public sealed partial class BytecodeVm
                 location);
         }
 
+        var effectiveLocation = execution.RequiresLocation ? location : FallbackRuntimeLocation;
         return execution.Arity switch
         {
-            BuiltinExecutionArity.Nullary => execution.Zero!(this, location),
-            BuiltinExecutionArity.Unary => execution.One!(this, arguments[0], location),
-            BuiltinExecutionArity.Binary => execution.Two!(this, arguments[0], arguments[1], location),
-            BuiltinExecutionArity.Ternary => execution.Three!(this, arguments[0], arguments[1], arguments[2], location),
-            _ => execution.Many!(this, arguments, location)
+            BuiltinExecutionArity.Nullary => execution.Zero!(this, effectiveLocation),
+            BuiltinExecutionArity.Unary => execution.One!(this, arguments[0], effectiveLocation),
+            BuiltinExecutionArity.Binary => execution.Two!(this, arguments[0], arguments[1], effectiveLocation),
+            BuiltinExecutionArity.Ternary => execution.Three!(this, arguments[0], arguments[1], arguments[2], effectiveLocation),
+            _ => execution.Many!(this, arguments, effectiveLocation)
         };
     }
 
@@ -1541,6 +1789,29 @@ public sealed partial class BytecodeVm
         return new PooledArgumentBuffer(buffer, argumentCount, pooled: true);
     }
 
+    private static BuiltinExecutionInfo[] CreateBuiltinExecutionInfosById(
+        IReadOnlyList<BuiltinBinding> builtins,
+        IReadOnlyDictionary<int, BuiltinExecution> executions)
+    {
+        if (builtins.Count == 0)
+        {
+            return Array.Empty<BuiltinExecutionInfo>();
+        }
+
+        var maxBuiltinId = builtins.Max(static builtin => builtin.Id);
+        var infos = new BuiltinExecutionInfo[maxBuiltinId + 1];
+
+        foreach (var builtin in builtins)
+        {
+            infos[builtin.Id] = new BuiltinExecutionInfo(
+                executions[builtin.Id],
+                builtin.ReturnsValue,
+                IsBuiltinReverseExecutionSafe(builtin.CanonicalId));
+        }
+
+        return infos;
+    }
+
     private readonly struct PooledArgumentBuffer : IDisposable
     {
         public static PooledArgumentBuffer Empty { get; } = new(Array.Empty<RuntimeValue>(), 0, pooled: false);
@@ -1565,6 +1836,22 @@ public sealed partial class BytecodeVm
                 ArrayPool<RuntimeValue>.Shared.Return(_buffer, clearArray: true);
             }
         }
+    }
+
+    private sealed class BuiltinExecutionInfo
+    {
+        public BuiltinExecutionInfo(BuiltinExecution execution, bool returnsValue, bool isReverseExecutionSafe)
+        {
+            Execution = execution;
+            ReturnsValue = returnsValue;
+            IsReverseExecutionSafe = isReverseExecutionSafe;
+        }
+
+        public BuiltinExecution Execution { get; }
+
+        public bool ReturnsValue { get; }
+
+        public bool IsReverseExecutionSafe { get; }
     }
 
     private void ExecutePrintSeparator(int separatorKind, int instructionIndex)
@@ -2299,7 +2586,7 @@ public sealed partial class BytecodeVm
     {
         var value = PopValue(frame, instructionIndex);
         var typeCode = (BytecodeScalarTypeCode)instruction.GetOperand(0);
-        frame.EvaluationStack.Push(ConvertValue(value, typeCode, ResolveLocation(frame.Routine.Id, instructionIndex)));
+        frame.EvaluationStack.PushUnchecked(ConvertValue(value, typeCode, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
     private RuntimeValue ConvertValue(RuntimeValue value, BytecodeScalarTypeCode targetType, TextLocation location)
@@ -2318,7 +2605,7 @@ public sealed partial class BytecodeVm
 
             if (value.Type == TypeSymbol.Integer)
             {
-                return RuntimeValue.FromLong(value.AsInteger());
+                return RuntimeValue.FromLong(GetIntegerUnchecked(value));
             }
         }
 
@@ -2331,17 +2618,17 @@ public sealed partial class BytecodeVm
 
             if (value.Type == TypeSymbol.Integer)
             {
-                return RuntimeValue.FromDouble(value.AsInteger());
+                return RuntimeValue.FromDouble(GetIntegerUnchecked(value));
             }
 
             if (value.Type == TypeSymbol.Long)
             {
-                return RuntimeValue.FromDouble(value.AsLong());
+                return RuntimeValue.FromDouble(GetLongUnchecked(value));
             }
 
             if (value.Type == TypeSymbol.Decimal)
             {
-                return RuntimeValue.FromDouble((double)value.AsDecimal());
+                return RuntimeValue.FromDouble((double)GetDecimalUnchecked(value));
             }
         }
 
@@ -2354,12 +2641,12 @@ public sealed partial class BytecodeVm
 
             if (value.Type == TypeSymbol.Integer)
             {
-                return RuntimeValue.FromDecimal(value.AsInteger());
+                return RuntimeValue.FromDecimal(GetIntegerUnchecked(value));
             }
 
             if (value.Type == TypeSymbol.Long)
             {
-                return RuntimeValue.FromDecimal(value.AsLong());
+                return RuntimeValue.FromDecimal(GetLongUnchecked(value));
             }
         }
 
@@ -2372,10 +2659,10 @@ public sealed partial class BytecodeVm
     {
         return value.Type switch
         {
-            var type when type == TypeSymbol.Integer => value.AsInteger() == 0,
-            var type when type == TypeSymbol.Long => value.AsLong() == 0L,
-            var type when type == TypeSymbol.Double => value.AsDouble() == 0d,
-            var type when type == TypeSymbol.Decimal => value.AsDecimal() == 0m,
+            var type when type == TypeSymbol.Integer => GetIntegerUnchecked(value) == 0,
+            var type when type == TypeSymbol.Long => GetLongUnchecked(value) == 0L,
+            var type when type == TypeSymbol.Double => GetDoubleUnchecked(value) == 0d,
+            var type when type == TypeSymbol.Decimal => GetDecimalUnchecked(value) == 0m,
             _ => false
         };
     }
@@ -2658,32 +2945,32 @@ public sealed partial class BytecodeVm
     {
         if (left.Type == TypeSymbol.Integer)
         {
-            return left.AsInteger() == right.AsInteger();
+            return GetIntegerUnchecked(left) == GetIntegerUnchecked(right);
         }
 
         if (left.Type == TypeSymbol.Long)
         {
-            return left.AsLong() == right.AsLong();
+            return GetLongUnchecked(left) == GetLongUnchecked(right);
         }
 
         if (left.Type == TypeSymbol.Double)
         {
-            return left.AsDouble() == right.AsDouble();
+            return GetDoubleUnchecked(left) == GetDoubleUnchecked(right);
         }
 
         if (left.Type == TypeSymbol.Decimal)
         {
-            return left.AsDecimal() == right.AsDecimal();
+            return GetDecimalUnchecked(left) == GetDecimalUnchecked(right);
         }
 
         if (left.Type == TypeSymbol.String)
         {
-            return string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
+            return string.Equals(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal);
         }
 
         if (left.Type == TypeSymbol.Boolean)
         {
-            return left.AsBoolean() == right.AsBoolean();
+            return GetBooleanUnchecked(left) == GetBooleanUnchecked(right);
         }
 
         return false;
@@ -2693,27 +2980,27 @@ public sealed partial class BytecodeVm
     {
         if (left.Type == TypeSymbol.Integer)
         {
-            return left.AsInteger().CompareTo(right.AsInteger());
+            return GetIntegerUnchecked(left).CompareTo(GetIntegerUnchecked(right));
         }
 
         if (left.Type == TypeSymbol.Long)
         {
-            return left.AsLong().CompareTo(right.AsLong());
+            return GetLongUnchecked(left).CompareTo(GetLongUnchecked(right));
         }
 
         if (left.Type == TypeSymbol.Double)
         {
-            return left.AsDouble().CompareTo(right.AsDouble());
+            return GetDoubleUnchecked(left).CompareTo(GetDoubleUnchecked(right));
         }
 
         if (left.Type == TypeSymbol.Decimal)
         {
-            return left.AsDecimal().CompareTo(right.AsDecimal());
+            return GetDecimalUnchecked(left).CompareTo(GetDecimalUnchecked(right));
         }
 
         if (left.Type == TypeSymbol.String)
         {
-            return string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal);
+            return string.Compare(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal);
         }
 
         return ReportInvalidRuntimeState<int>(
@@ -2842,6 +3129,8 @@ public sealed partial class BytecodeVm
 
     private enum ComparisonBranchKind
     {
+        Equal,
+        NotEqual,
         Less,
         LessOrEqual,
         Greater,

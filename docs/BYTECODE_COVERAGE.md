@@ -1,100 +1,150 @@
-# Краткая карта покрытия языка в BytecodeVm
+# Реестр покрытия Bytecode VM
 
-Дата сверки: 2026-04-24.
+Этот файл фиксирует текущее покрытие пользовательских операторов, встроенных функций и связанных проверок для байткодного пути Axiom.
 
-Основание: `docs/План внедрения собственного байткода и виртуальной машины в Axiom.txt`, текущие `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, байткодные проекты и тесты.
+## Как использовать реестр
 
-## Короткий вывод
+- Это не разовый отчёт, а постоянный рабочий реестр.
+- После каждой задачи, которая меняет наблюдаемое поведение языка, покрытие `BytecodeVm`, acceptance-примеры, manual или паритет с интерпретатором, этот файл нужно обновлять в той же задаче.
+- Если задача касается только внутренней оптимизации без изменения пользовательского поведения, здесь всё равно нужно обновить как минимум столбцы `Профиль` и `Примечание`, если изменился статус горячего участка или появились новые замеры.
 
-Байткодный путь уже покрывает основную текущую поверхность языка Axiom: выражения, управляющие конструкции, процедуры, функции, замыкания, функциональные значения, массивы, `TYPE`, фиксированные строки, ввод-вывод, `PRINT USING`, регулярные выражения, дату и время, файловую систему и открытые `FILE`.
+## Что именно отслеживаем
 
-По плану внедрения фазы 1-9 фактически реализованы для исполняемого байткода в памяти процесса. Фаза 10 закрыта частично: стабилизация и проверки валидатора выполнены широко, но формальная карта покрытия появилась только сейчас, а отдельное проектное решение о статусе `Auto` как VM-first ещё нужно принять явно.
+Минимальный набор для строки реестра:
 
-## Сверка с планом внедрения
+- `VM`:
+  байткодный путь реально выполняет эту сущность без отката на интерпретатор.
+- `Автотесты`:
+  есть проверка поведения хотя бы на уровне `InterpreterTests`, `BytecodeVmTests`, `ExecutionPipelineTests` или acceptance-набора.
+- `Sample`:
+  есть runnable `.axm`-пример в `samples/`.
+- `Manual`:
+  поведение отражено в `docs/manual/`.
+- `Сквозной VM`:
+  есть явное подтверждение, что сценарий проходит через `ExecutionEngineKind.BytecodeVm` без fallback.
+- `Негативный паритет`:
+  есть проверка ошибок или стабильности диагностики между интерпретатором и байткодом, точечная или групповая.
+- `Профиль`:
+  нужно ли это сейчас ускорять по измерениям.
 
-| Фаза плана | Состояние | Комментарий |
-| --- | --- | --- |
-| 1. Документы и контракты | Закрыто | Описаны конвейер, границы `Axiom.Bytecode`, `Axiom.Runtime`, `Axiom.Execution`, формат модуля и диагностики. |
-| 2. Режимы исполнения и IDE | Закрыто | Есть `ExecutionMode`, `ExecutionEngineKind`, явный `Bytecode`, `Auto`, выбор режима в IDE и показ фактического движка. |
-| 3. Понижение | Закрыто | `BoundProgram` понижается в `LoweredProgram`; покрыты выражения, операторы, управление потоком, процедуры, массивы, записи, файлы, ввод и печать. |
-| 4. `BytecodeModule` и валидатор | Закрыто | Модель модуля и `BytecodeModuleValidator` проверяют заголовок, таблицы, переходы, вызовы, стек, типы и внутренние предположения VM. |
-| 5. Виртуальная машина | Закрыто | `BytecodeVm` исполняет модуль через стек значений, кадры вызова, слоты переменных, общий `IRuntimeHost` и общие runtime-значения. |
-| 6. Выражения и базовые операторы | Закрыто | Арифметика, сравнения, логика, сдвиги, преобразования, присваивание, `PRINT`, `PRINT USING` и `INPUT` исполняются через VM. |
-| 7. Управление потоком и процедуры | Закрыто | `IF`, `SELECT CASE`, `FOR`, `WHILE`, формы `DO`, `EXIT`, `RETURN`, `SUB`, `FUNCTION`, локальные процедуры, захваты, рекурсия и `CallValue` покрыты. |
-| 8. Массивы, записи, фиксированные строки и файлы | Закрыто для текущей публичной поверхности | Поддержаны `REDIM`, `ERASE`, индексирование, массивные built-in, `TYPE`, фиксированные строки, файловая система и открытые `FILE`. |
-| 9. Интеграция с IDE и кэшем | В основном закрыто | Запуск через `Axiom.Execution` и IDE работает; отдельная сериализация байткода в файл не вводилась и не считается обязательной для текущей волны. |
-| 10. Стабилизация и матрица покрытия | Частично закрыто | Валидатор и тесты усилены; эта карта закрывает недостающую матрицу. Осталось явно зафиксировать критерий VM-first для `Auto`. |
+Статусы:
 
-## Карта языка
+- `да`:
+  покрытие есть и подтверждено.
+- `частично`:
+  покрытие есть, но оно групповое, косвенное или требует точечной досверки.
+- `проверить`:
+  есть сильное основание считать, что покрытие есть, но это ещё не перенесено в явный учётный статус.
+- `нет`:
+  покрытия сейчас нет или оно не зафиксировано.
 
-| Группа языка | Состояние BytecodeVm | Чем подтверждено |
-| --- | --- | --- |
-| Объявления и присваивание | Покрыто | `DIM`, `CONST`, скалярное присваивание, присваивание элементу массива, fixed-string; есть явные приёмочные тесты в режиме `Bytecode`. |
-| Выражения и операторы | Покрыто | Арифметика, `^`, `\`, `MOD`, `<<`, `>>`, сравнения, логические операторы, конкатенация и преобразования проходят через VM. |
-| Печать и ввод | Покрыто | `PRINT`, разделители `;` и `,`, пустой `PRINT`, `PRINT USING`, одиночный и множественный `INPUT`. |
-| Управление потоком | Покрыто | `IF / ELSEIF / ELSE`, `SELECT CASE`, `FOR / NEXT`, `WHILE`, все текущие формы `DO ... LOOP`, `EXIT FOR`, `EXIT DO`, `RETURN`. |
-| Процедуры и функции | Покрыто | Обычные и локальные `SUB`/`FUNCTION`, захваты внешних переменных, рекурсия, функциональные значения, косвенный вызов и значения встроенных функций. |
-| Массивы | Покрыто | `REDIM`, `REDIM PRESERVE`, `ERASE`, чтение и запись элементов, сведения о границах, копирование, срезы, сортировка, поиск, мутация и built-in с обратным вызовом. |
-| Пользовательские `TYPE` | Покрыто | Чтение и запись полей, вложенные значения, fixed-string-поля и фиксированные массивные поля. |
-| Строковые функции | Покрыто | Текущий строковый набор, включая `LEN`, `LEFT`, `RIGHT`, `MID`, `TRIM`, `INSTR`, `REPLACE`, `SPLIT`, `JOIN` и родственные функции. |
-| Числовые функции | Покрыто | `INT`, `VAL`, `STR`, `RND`, модуль, знак, минимум/максимум, округление, степени, логарифмы и тригонометрия. |
-| Регулярные выражения | Покрыто | Скалярные и массивные regex-функции, режимы `i`, `m`, `s`, `x`, замены, счётчики и разбиение. |
-| Дата и время | Покрыто | `DATE`, `TIME`, `NOW`, UTC-варианты, часовые пояса, разбор, сборка, части даты, добавление, разница, начало/конец месяца и года. |
-| Файлы и пути | Покрыто | Функции файловой системы, сведения о файлах и папках, чтение/запись целых файлов, операции с путями, рабочий каталог, диски, временные пути, `OPEN`/`CLOSE` и функции открытого `FILE`. |
-| Конвейер запуска | Покрыто | Явный `Bytecode` запускает VM или отдаёт backend-ошибку; `Auto` выбирает VM для поддержанной программы и откатывается только при явной границе покрытия. |
-| Проверка байткодного формата | Покрыто | Валидатор проверяет таблицы, индексы, стек, типы, вызовы, захваты, переходы, файловые и массивные инструкции до запуска VM. |
+## Общие источники подтверждения
 
-## Что ещё не считать закрытым
+- Поведенческие тесты интерпретатора: `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- Поведенческие тесты VM: `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- Сквозной запуск через `BytecodeVm`: `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- Acceptance-примеры: `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- Общая отрицательная проверка паритета диагностики: `NegativeRuntimeAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter(...)` в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
 
-1. Формальное решение о VM-first:
-   - сейчас `Auto` уже выбирает `BytecodeVm` для поддержанной программы;
-   - нужно отдельно решить, считаем ли текущую публичную поверхность языка достаточно покрытой, чтобы документально назвать `Auto` VM-first.
+## Операторы и языковые формы
 
-2. Центральная проверка всех приёмочных примеров:
-   - отдельные группы уже закреплены явным `Bytecode`;
-   - полезный следующий шаг - единый список положительных `.axm`-примеров, которые обязаны идти через `BytecodeVm`, с явным перечнем исключений.
+| Сущность | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Арифметика и логика выражений: `+`, `-`, `*`, `/`, `\`, `MOD`, `^`, `AND`, `OR`, `XOR`, `NOT`, `EQV`, `IMP`, `<<`, `>>`, сравнения | да | да | да | да | да | частично | не приоритет | Покрыто acceptance-группами `samples/expressions/` и `samples/operators/` |
+| Объявления и присваивание: `DIM`, `CONST`, `=` | да | да | да | да | да | частично | не приоритет | Включая скалярные и массивные формы |
+| Массивные объявления и изменение формы: `REDIM`, `ERASE`, индексирование, частичное индексирование | да | да | да | да | да | частично | не приоритет | Многомерные массивы доведены до VM и manual |
+| Вывод: `PRINT` | да | да | да | да | да | частично | не приоритет | Есть отдельные acceptance-примеры по формам списка и разделителям |
+| Форматированный вывод: `PRINT USING` | да | да | да | да | да | частично | не приоритет | Сквозной тест есть, semantics не менялись |
+| Ввод: `INPUT` | да | да | да | да | да | частично | не приоритет | Есть формы с одной, несколькими переменными и подсказкой |
+| Файловые операторы: `OPEN`, `CLOSE` | да | да | да | да | да | частично | не приоритет | Подтверждено отдельными VM-прогонами и manual-разделами по open files |
+| Ветвление: `IF ... ELSE ... END IF`, `SELECT CASE` | да | да | да | да | да | частично | не приоритет | Покрыто control-flow acceptance-набором |
+| Циклы: `FOR/NEXT`, `WHILE`, `DO/LOOP`, `EXIT FOR`, `EXIT DO` | да | да | да | да | да | частично | горячо пройдено | Для `FOR/NEXT` есть ещё и отдельный профильный след по ускорению opcode |
+| Процедуры и функции: `SUB`, `FUNCTION`, `RETURN` | да | да | да | да | да | частично | не приоритет | Включая локальные функции, вложенность и возврат значений |
+| Замыкания и захват внешних локалей | да | да | да | да | да | частично | не приоритет | Сквозные тесты на VM есть, но реестр стоит дальше держать под отдельным наблюдением |
+| Пользовательские типы: `TYPE`, доступ к полям, массивные поля | да | да | да | да | да | частично | не приоритет | Покрыты отдельными acceptance и execution-тестами |
 
-3. Сериализация байткода:
-   - текущий байткодный путь работает в памяти процесса;
-   - запись байткодного артефакта в отдельный файл пока не является реализованной частью продукта.
+## Встроенные функции массивов
 
-4. Полная отладка на байткоде:
-   - отладочная основа и карты исходных инструкций есть;
-   - полноценные точки останова, пошаговое исполнение и пользовательский отладчик не закрыты этой волной.
+| Функции | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `LBOUND`, `UBOUND`, `ARRAYLENGTH`, `ARRAYISALLOCATED`, `ARRAYRANK`, `ARRAYBOUNDS` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_ArrayMetadataBuiltinsReportRankAndVisibleBounds()`, `Execute_ArrayBoundsReportsUnallocatedArrayState()`, `Execute_CompiledArrayShapeBuiltinsSupportExplicitDimensionForMultidimensionalArrays()`, `Run_WithBytecodeMode_UsesBytecodeVmForArrayMetadataBuiltins()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-multidimensional.html`, `docs/manual/arrays-diagnostics.html`; sample: `samples/functions/lbound|ubound|arraylength|arrayisallocated|arrayrank|arraybounds/` |
+| `ARRAYCLONE`, `ARRAYSLICE`, `ARRAYCONCAT`, `ARRAYTAKE`, `ARRAYSKIP` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_ArrayCloneCopiesBoundsAndElementsIntoIndependentArray()`, `Execute_ArraySliceReturnsCompactIndependentSlice()`, `Execute_ArrayConcatReturnsCompactIndependentArray()`, `Execute_CompiledArrayCloneCopiesMultidimensionalVisibleShape()`, `Execute_CompiledArrayShapeBuiltinsSupportExplicitDimensionForMultidimensionalArrays()`, `Run_WithBytecodeMode_UsesBytecodeVmForPureArrayBuiltins()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-slices.html`, `docs/manual/arrays-diagnostics.html`; sample: `samples/functions/arrayclone|arrayslice|arrayconcat|arraytake|arrayskip/` |
+| `ARRAYTOREVERSED`, `ARRAYREVERSE`, `ARRAYDISTINCT`, `ARRAYFLATTEN`, `ARRAYRESHAPE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_ArrayToReversedReturnsCompactIndependentArray()`, `Execute_CompiledArrayToReversedSupportsMultidimensionalDimension()`, `Execute_CompiledArrayReverseSupportsMultidimensionalDimension()`, `Execute_CompiledArrayFlattenAndReshape()`, `Execute_CompiledArrayReshapeReportsMismatchedVisibleElementCount()`, `Run_WithBytecodeMode_UsesBytecodeVmForArrayFlattenAndReshape()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-slices.html`, `docs/manual/arrays-multidimensional.html`; sample: `samples/functions/arraytoreversed|arrayreverse|arraydistinct|arrayflatten|arrayreshape/` |
+| `ARRAYCONTAINS`, `ARRAYINDEXOF`, `ARRAYLASTINDEXOF`, `ARRAYCOUNT`, `ARRAYFINDALL`, `ARRAYBINARYSEARCH` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_CompiledArraySearchBuiltins()`, `Execute_CompiledMultidimensionalArrayBinarySearchBuiltinReturnsCoordinateVectorOrEmptyArray()`, `Execute_CompiledArrayCoordinateSearchBuiltinsReturnCoordinateVectorsAndTables()`, `Execute_CompiledArrayContainsAndCountScanMultidimensionalVisibleElements()`, `Run_WithBytecodeMode_UsesBytecodeVmForArraySearchBuiltins()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-multidimensional.html`, `docs/manual/arrays-diagnostics.html`; sample: `samples/functions/arraycontains|arrayindexof|arraylastindexof|arraycount|arrayfindall|arraybinarysearch/` |
+| `ARRAYFILL`, `ARRAYSORT`, `ARRAYTOSORTED` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_CompiledMutatingArrayBuiltins()`, `Execute_CompiledArrayFillMutatesMultidimensionalVisibleElements()`, `Execute_CompiledArraySearchBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForMutatingArrayBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForArraySearchBuiltins()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-diagnostics.html`; sample: `samples/functions/arrayfill|arraysort|arraytosorted/` |
+| `ARRAYPUSH`, `ARRAYPOP`, `ARRAYINSERT`, `ARRAYREMOVE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_CompiledMutatingArrayBuiltins()`, `Execute_CompiledMultidimensionalDynamicArrayBuiltinsWorkAlongExplicitDimension()`, `Execute_CompiledMultidimensionalArrayInsertReportsIncompatibleValueShape()`, `Execute_CompiledMutatingArrayBuiltinsReportEmptyPop()`, `Execute_CompiledMutatingArrayBuiltinsReportInvalidInsertIndex()`, `Run_WithBytecodeMode_UsesBytecodeVmForMutatingArrayBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalDynamicArrayBuiltins()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-diagnostics.html`, `docs/manual/arrays-multidimensional.html`; sample: `samples/functions/arraypush|arraypop|arrayinsert|arrayremove/` |
+| `ARRAYEVERY`, `ARRAYSOME`, `ARRAYFILTER`, `ARRAYMAP`, `ARRAYREDUCE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_CompiledArrayCallbackBuiltinsUseFunctionValuesAndClosures()`, `Execute_CompiledArrayCallbackBuiltinsTraverseMultidimensionalVisibleElementsAndPreserveMappedShape()`, `Execute_CompiledArrayFilterTraversesMultidimensionalVisibleElementsIntoCompactResult()`, `Execute_CompiledArrayMapPreservesMultidimensionalEmptyVisibleShape()`, `Execute_CompiledArrayCallbackBuiltinsUseBuiltinFunctionValues()`, `Run_WithBytecodeMode_UsesBytecodeVmForArrayCallbackBuiltins()`; manual: `docs/manual/arrays-functions.html`, `docs/manual/arrays-multidimensional.html`; sample: `samples/functions/arrayevery|arraysome|arrayfilter|arraymap|arrayreduce/` |
 
-5. Сравнение производительности:
-   - функциональное покрытие и корректность продвинуты сильно;
-   - отдельный устойчивый отчёт по производительности интерпретатора и VM ещё стоит сделать позже.
+## Встроенные строковые функции
 
-## Следующий рабочий шаг
+| Функции | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `LEN`, `LEFT`, `RIGHT`, `MID` | да | да | да | да | да | частично | горячо пройдено | Тесты: `Execute_CompiledStringSliceAndTrimBuiltins()`, `Run_SupportsStringBuiltinsOnBytecodeVm()`; manual: `docs/manual/string-functions-slices-and-length.html`; sample: `samples/functions/len|left|right|mid/` |
+| `TRIM`, `LTRIM`, `RTRIM`, `LCASE`, `UCASE`, `REVERSE` | да | да | да | да | да | частично | горячо пройдено | Тесты: `Execute_BuiltinTrimVariants()`, `Execute_CompiledStringSliceAndTrimBuiltins()`; manual: `docs/manual/string-functions-trim-and-case.html`; sample: `samples/functions/trim|ltrim|rtrim|lcase|ucase|reverse/`; `TRIM` недавно чинился по корректности |
+| `CONTAINS`, `STARTSWITH`, `ENDSWITH`, `INSTR`, `INSTRREV`, `SUBSTRCOUNT` | да | да | да | да | да | частично | горячо пройдено | Тесты: `Execute_CompiledStringSearchBuiltins()`, `Run_SupportsStringBuiltinsOnBytecodeVm()`; manual: `docs/manual/string-functions-search-and-replace.html`; sample: `samples/functions/contains|startswith|endswith|instr|instrrev|substrcount/` |
+| `REPLACE`, `INSERT`, `REMOVE` | да | да | да | да | да | частично | горячо пройдено | Тесты: `Execute_CompiledStringSearchBuiltins()`, `Execute_CompiledStringFillAndEditBuiltins()`, `Run_SupportsStringBuiltinsOnBytecodeVm()`; manual: `docs/manual/string-functions-search-and-replace.html`, `docs/manual/string-functions-build-and-split.html`; sample: `samples/functions/replace|insert|remove/` |
+| `REPEAT`, `SPACE`, `STRING`, `PADLEFT`, `PADRIGHT`, `CENTER` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_BuiltinStringUsesFirstFillCharacter()`, `Execute_BuiltinStringReportsEmptyFill()`, `Execute_CompiledStringFillAndEditBuiltins()`; manual: `docs/manual/string-functions-build-and-split.html`; sample: `samples/functions/repeat|space|string|padleft|padright|center/` |
+| `ASC`, `CHR` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_CompiledStringCharBuiltins()`, `Run_SupportsStringBuiltinsOnBytecodeVm()`; manual: `docs/manual/string-functions-build-and-split.html`; sample: `samples/functions/asc|chr/` |
+| `SPLIT`, `JOIN` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_CompiledStringArrayBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForStringArrayBuiltins()`; manual: `docs/manual/string-functions-build-and-split.html`; sample: `samples/functions/split|join/` |
 
-Не добавлять новые дублирующие тесты для уже покрытых групп. Следующий полезный шаг - сделать централизованный no-fallback-аудит положительных приёмочных `.axm`-примеров: какие из них обязаны запускаться в `ExecutionMode.Bytecode` через `ExecutionEngineKind.BytecodeVm`, какие временно исключены и почему.
-## Обновление 2026-04-25 - проверка положительных примеров без отката
+## Встроенные функции регулярных выражений
 
-Добавлен единый автоматический аудит положительных `.axm`-примеров. Правило принято жёстким: каждый положительный пример программы из `samples/` обязан запускаться в `ExecutionMode.Bytecode` через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор.
+| Функции | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `REGEXISMATCH`, `REGEXMATCH`, `REGEXEXTRACT`, `REGEXCOUNT` | да | да | да | да | да | частично | не приоритет | Скаляры покрыты execution- и acceptance-тестами |
+| `REGEXMATCHES`, `REGEXEXTRACTALL`, `REGEXSPLIT` | да | да | да | да | да | частично | не приоритет | Массивные формы отдельно закрыты на VM |
+| `REGEXREPLACE` | да | да | да | да | да | частично | горячо пройдено | Тесты: `Run_WithBytecodeMode_UsesBytecodeVmForRegexScalarBuiltins()` и адресные проверки в `InterpreterTests`/`BytecodeVmTests`; manual: `docs/manual/regex-functions-replace-and-count.html`; sample: `samples/functions/regexreplace/`; есть недавние no-op-оптимизации и контрольные замеры по `RegexReplaceModes` |
 
-## Обновление 2026-04-25 - статус Auto
+## Встроенные числовые функции
 
-Проектное решение изменено: `Auto` не переводится в статус первичного VM-режима, а удаляется как переходный режим. Карта покрытия теперь должна читаться через явный режим `ExecutionMode.Bytecode`: покрытые положительные `.axm`-примеры обязаны выполняться через `ExecutionEngineKind.BytecodeVm`, а непокрытый срез должен давать диагностированную ошибку байткодного слоя вместо скрытого перехода на интерпретатор.
+| Функции | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `INT`, `STR`, `VAL` | да | да | да | да | да | частично | не приоритет | Базовые преобразования закрыты acceptance- и execution-путём |
+| `RND`, `ABS`, `SGN`, `MIN`, `MAX`, `CLAMP`, `SETSIGN` | да | да | да | да | да | частично | не приоритет | Явная VM-поддержка есть |
+| `SIN`, `COS`, `TAN`, `ATN`, `ATN2`, `ASIN`, `ACOS`, `ASINH`, `ACOSH`, `ATANH`, `SINH`, `COSH`, `TANH` | да | да | да | да | да | частично | не приоритет | Тригонометрическая группа закрыта сквозным тестом и sample-набором |
+| `SQR`, `CBRT`, `EXP`, `LOG`, `LOG10`, `LOG2`, `POW`, `FLOOR`, `CEIL`, `ROUND`, `FIX` | да | да | да | да | да | частично | не приоритет | Отдельного горячего статуса пока нет |
 
-Для сравнения поведения остаётся явный `ExecutionMode.Interpreter`. Временных исключений для положительных приёмочных примеров нет.
+## Встроенные функции даты и времени
 
-Временных исключений для положительных примеров нет. Если новый положительный пример не проходит через `BytecodeVm`, это считается пробелом байткодного пути или ошибкой самого примера и должно исправляться в коде, примере или тестовой обвязке, а не скрываться отдельным списком исключений.
+| Функции | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `DATE`, `TIME`, `NOW`, `UTCDATE`, `UTCTIME`, `UTCNOW`, `TIMER` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_DateTimeBuiltinsReturnCurrentValues()`, `Execute_TimerReturnsNonNegativeNumber()`, `Execute_CompiledDateTimeCurrentBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForCurrentDateTimeBuiltins()`; manual: `docs/manual/date-time-functions-current.html`, `docs/manual/date-time-functions.html`; sample: `samples/functions/date|time|now|utcdate|utctime|utcnow|timer/` |
+| `DATESERIAL`, `TIMESERIAL`, `YEAR`, `MONTH`, `MONTHNAME`, `DAY`, `HOUR`, `MINUTE`, `SECOND`, `WEEKDAY`, `WEEKDAYNAME` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_DateTimeSerialAndPartsBuiltins()`, `Execute_DateTimePartsRejectNonCanonicalDates()`, `Execute_CompiledDateTimePartsAndArithmeticBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForDateTimePartsAndArithmeticBuiltins()`; manual: `docs/manual/date-time-functions-parts-and-serial.html`, `docs/manual/date-time-functions.html`; sample: `samples/functions/dateserial|timeserial|year|month|monthname|day|hour|minute|second|weekday|weekdayname/` |
+| `DATEADD`, `DATEDIFF`, `DATEPART`, `DATEVALUE`, `TIMEVALUE`, `ISDATE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_DateTimeArithmeticAndValidationBuiltins()`, `Execute_DateTimeArithmeticRejectsUnsupportedInterval()`, `Execute_TimeValueRejectsNonCanonicalInput()`, `Execute_CompiledDateTimePartsAndArithmeticBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForDateTimePartsAndArithmeticBuiltins()`; manual: `docs/manual/date-time-functions-arithmetic-and-validation.html`, `docs/manual/date-time-functions.html`; sample: `samples/functions/dateadd|datediff|datepart|datevalue|timevalue|isdate/` |
+| `UTCOFFSET`, `TOUTC`, `FROMUTC`, `ISLEAPYEAR`, `DAYSINMONTH`, `STARTOFMONTH`, `ENDOFMONTH`, `STARTOFYEAR`, `ENDOFYEAR` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_DateTimeUtcBuiltins()`, `Execute_DateTimeUtcBuiltinsSupportNamedTimeZones()`, `Execute_DateTimeUtcBuiltinsSupportSeasonalNamedTimeZones()`, `Execute_DateTimeCalendarHelpers()`, `Execute_CompiledDateTimeCurrentBuiltins()`, `Execute_CompiledDateTimeUtcBuiltinsSupportNamedTimeZones()`, `Run_WithBytecodeMode_UsesBytecodeVmForCurrentDateTimeBuiltins()`, `Run_WithBytecodeMode_UsesBytecodeVmForDateTimePartsAndArithmeticBuiltins()`; manual: `docs/manual/date-time-functions-time-zones.html`, `docs/manual/date-time-functions-parts-and-serial.html`, `docs/manual/date-time-functions.html`; sample: `samples/functions/utcoffset|toutc|fromutc|isleapyear|daysinmonth|startofmonth|endofmonth|startofyear|endofyear/` |
 
-Границы аудита:
-- включаются все `.axm` из `samples/`, кроме программ, которые по смыслу являются отрицательными проверками ожидаемых ошибок;
-- отрицательные программы определяются по каталогу `samples/acceptance/negative/`, именам файлов с `_error` и специальному smoke-примеру `samples/smoke/nested_runtime_diagnostic.axm`;
-- положительные примеры с вводом получают тестовые строки ввода через общий поставщик ввода;
-- примеры запускаются с рабочим каталогом корня репозитория, чтобы относительные пути вида `samples\...` совпадали с ручным запуском из проектной рабочей папки.
+## Встроенные функции файловой системы и файлового ввода-вывода
 
-Подтверждение: `PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback` прошёл для 309 положительных примеров: успешное выполнение, фактический движок `BytecodeVm`, `UsedInterpreterFallback = false`.
+| Функции | VM | Автотесты | Sample | Manual | Сквозной VM | Негативный паритет | Профиль | Примечание |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `ISOPEN`, `FILEPATH`, `FILEMODE`, `FILEPOS`, `FILELENGTH`, `LINENUMBER`, `EOF` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_FileStateBuiltins()`, `Execute_FilePositionAndLengthForInput()`, `Execute_OpenReadLineAndEof()`, `Execute_CompiledOpenInputFileProgram()`, `Run_WithBytecodeMode_UsesBytecodeVmForOpenTextFile()`; manual: `docs/manual/file-system-functions-open-files.html`, `docs/manual/open.html`, `docs/manual/data-types-strings-and-files.html`; sample: `samples/functions/isopen|filepath|filemode|filepos|filelength|linenumber|eof/` |
+| `READTOEND`, `READTEXT`, `READLINE`, `READLINES`, `SKIPLINE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_ReadToEndReturnsRemainingText()`, `Execute_ReadTextCountsCharactersWhilePositionStaysByteBased()`, `Execute_ReadLinesReadsUpToCountAndAdvancesPosition()`, `Execute_ReadLinesReturnsEmptyArrayForZeroCountAndEndOfFile()`, `Execute_CompiledOpenInputFileProgram()`, `Run_WithBytecodeMode_UsesBytecodeVmForOpenTextFile()`; manual: `docs/manual/file-system-functions-open-files.html`, `docs/manual/open.html`; sample: `samples/functions/readtoend|readtext|readline|readlines|skipline/` |
+| `WRITE`, `WRITELINE`, `NEWLINE`, `FLUSH`, `SEEKFILE`, `REWIND` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_FilePositionAndSeekForOutput()`, `Execute_RewindMovesFileBackToBeginning()`, `Execute_CompiledOpenOutputAndAppendFileProgram()`, `Execute_SeekFileReportsAppendMode()`, `Execute_RewindReportsAppendMode()`, `Run_WithBytecodeMode_UsesBytecodeVmForOpenTextFile()`; manual: `docs/manual/file-system-functions-open-files.html`, `docs/manual/open.html`, `docs/manual/close.html`; sample: `samples/functions/write|writeline|newline|flush|seekfile|rewind/` |
+| `FILEEXISTS`, `DIREXISTS`, `PATHEXISTS`, `READFILE`, `READALLLINES`, `WRITEFILE`, `APPENDFILE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_BuiltinFileSystemReadsWritesAndChecksPaths()`, `Execute_BuiltinReadFileFallsBackToWindows1251WhenUtf8IsInvalid()`, `Execute_BuiltinFileSystemReadsAllLines()`, `Execute_BuiltinFileSystemReadsAllLinesFromEmptyFile()`, `Execute_CompiledFileSystemBuiltinsProgram()`, `Run_WithBytecodeMode_UsesBytecodeVmForFileSystemBuiltins()`; manual: `docs/manual/file-system-functions-text.html`, `docs/manual/file-system-functions.html`; sample: `samples/functions/fileexists|direxists|pathexists|readfile|readalllines|writefile|appendfile/` |
+| `FILESIZE`, `FILEDATE`, `FILECREATEDATE`, `FILEACCESSEDDATE`, `DIRDATE` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_BuiltinFileSystemReadsWritesAndChecksPaths()`, `Execute_BuiltinFileSystemReturnsExtendedDatesAndAttributes()`, `Execute_CompiledFileSystemBuiltinsProgram()`, `Execute_CompiledFileSystemBuiltinReportsMissingFile()`; manual: `docs/manual/file-system-functions-paths.html`; sample: `samples/functions/filesize|filedate|filecreatedate|fileaccesseddate|dirdate/` |
+| `GETFILES`, `GETDIRS`, `COMBINEPATH`, `FILENAME`, `DIRNAME`, `EXTNAME`, `FULLPATH`, `PATHROOT`, `ISABSOLUTEPATH` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_BuiltinFileSystemPathHelpersReturnExpectedValues()`, `Execute_BuiltinFileSystemEnumeratesFilesAndDirectories()`, `Execute_BuiltinFileSystemReturnsExtendedPathAndDriveInfo()`, `Execute_CompiledFileSystemBuiltinsProgram()`, `Run_WithBytecodeMode_UsesBytecodeVmForFileSystemBuiltins()`; manual: `docs/manual/file-system-functions-paths.html`, `docs/manual/file-system-functions.html`; sample: `samples/functions/getfiles|getdirs|combinepath|filename|dirname|extname|fullpath|pathroot|isabsolutepath/` |
+| `MAKEDIR`, `DELETEFILE`, `COPYFILE`, `MOVEFILE`, `RENAMEFILE`, `DELETEDIR`, `DELETEDIRRECURSIVE`, `COPYDIR`, `MOVEDIR`, `RENAMEDIR` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_BuiltinFileSystemCopiesMovesRenamesAndDeletesFiles()`, `Execute_BuiltinFileSystemCopiesMovesRenamesAndDeletesDirectories()`, `Execute_BuiltinFileSystemReportsCopyFileMissingSource()`, `Execute_BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively()`, `Execute_CompiledFileSystemBuiltinsProgram()`, `Run_WithBytecodeMode_UsesBytecodeVmForFileSystemBuiltins()`; manual: `docs/manual/file-system-functions-management.html`, `docs/manual/file-system-functions.html`; sample: `samples/functions/makedir|deletefile|copyfile|movefile|renamefile|deletedir|deletedirrecursive|copydir|movedir|renamedir/` |
+| `CHANGEDIR`, `CURRENTDIR`, `DIRSIZE`, `FREESPACE`, `TOTALFREESPACE`, `TOTALSPACE`, `ISREADONLY`, `ISHIDDEN`, `DRIVENAME`, `DRIVEFORMAT`, `DRIVETYPE`, `MAKETEMPFILE`, `MAKETEMPDIR` | да | да | да | да | да | частично | не приоритет | Тесты: `Execute_BuiltinFileSystemReturnsCurrentDirectorySizeAndFreeSpace()`, `Execute_BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively()`, `Execute_BuiltinFileSystemCreatesTemporaryFileAndDirectory()`, `Execute_BuiltinFileSystemReturnsExtendedDatesAndAttributes()`, `Execute_BuiltinFileSystemReturnsExtendedPathAndDriveInfo()`, `Run_WithBytecodeMode_UsesBytecodeVmForFileSystemBuiltins()`; manual: `docs/manual/file-system-functions-management.html`, `docs/manual/file-system-functions-paths.html`, `docs/manual/file-system-functions.html`; sample: `samples/functions/changedir|currentdir|dirsize|freespace|totalfreespace|totalspace|isreadonly|ishidden|drivename|driveformat|drivetype|maketempfile|maketempdir/` |
 
-## Обновление 2026-04-25 - отрицательные сценарии и паритет диагностик
+## Что ещё нужно довести сверх текущих галочек
 
-Добавлен отдельный аудит выбранных отрицательных сценариев времени выполнения: `division_by_zero`, `for_step_zero`, переполнение `LONG` и `DECIMAL`, а также ошибки области допустимых значений в `SQR`, `LOG`, `CLAMP` и `POW`.
+Это уже не про реализацию самих функций, а про качество сопровождения покрытия.
 
-Для этих сценариев `ExecutionMode.Bytecode` и `ExecutionMode.Interpreter` должны совпадать по статусу `RuntimeFailure`, выводу до ошибки и коду единственной пользовательской диагностики. `Bytecode` обязан выполняться через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор.
+1. Нужна точечная досверка строк `Негативный паритет`.
+   Сейчас для многих групп стоит `частично`, потому что есть общий отрицательный набор и стабильная паритетная проверка диагностики, но не всегда есть явная адресная привязка к каждой отдельной функции или оператору.
 
-Точная колонка и текст сообщения пока не считаются полным критерием паритета: интерпретатор иногда сообщает позицию конкретного аргумента, а VM - позицию инструкции вызова. Это зафиксированное допустимое расхождение, пока байткодный формат не хранит отдельные позиции всех аргументов вызова.
+2. Нужна точечная досверка строк `Manual` и `Sample` на уровне отдельных имён.
+   По крупным группам покрытие очевидно, но для рабочего реестра полезно дойти до режима, где каждая строка ссылается на конкретную страницу manual и конкретную папку в `samples/`.
 
-Подтверждение: `NegativeRuntimeAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter` прошёл для 8 отрицательных примеров.
+3. Нужен полуавтоматический аудит на рассинхронизацию.
+   Следующий полезный шаг после появления этого реестра — сделать небольшой служебный сценарий, который сравнивает:
+   - список visible built-in из `src/Axiom.Semantics/Symbols/Builtins/`,
+   - наличие VM-диспетчеризации,
+   - наличие sample-папок,
+   - наличие manual-страниц или упоминаний в индексе.
+
+4. Нужно поддерживать столбец `Профиль` в живом состоянии.
+   Не все функции надо ускорять, но после каждой оптимизационной задачи надо явно переносить сюда новый статус: `горячо`, `не приоритет`, `не мерили`, `закрыто`.
+
+5. Нужно постепенно разукрупнять слишком широкие строки.
+   Этот первый выпуск реестра нарочно группирует близкие функции, чтобы быстро получить рабочую картину. По мере работы полезно делить самые крупные строки на более точные, когда именно они становятся предметом отдельной задачи.

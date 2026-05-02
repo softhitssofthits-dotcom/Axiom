@@ -23,88 +23,101 @@ public sealed partial class BytecodeVm
 
         return builtin.CanonicalId switch
         {
-            BuiltinFunctionId.Len => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromInteger(value.AsString().Length)),
+            BuiltinFunctionId.Len => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromInteger(GetStringUnchecked(value).Length)),
             BuiltinFunctionId.Left => BuiltinExecution.Binary(static (vm, text, count, location) => RuntimeValue.FromString(
                 BytecodeVm.EvaluateLeft(
-                    text.AsString(),
-                    vm.RequirePositiveCount("LEFT", "count", count.AsInteger(), location)))),
-            BuiltinFunctionId.Right => BuiltinExecution.Binary(static (vm, text, count, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateRight(
-                    text.AsString(),
-                    vm.RequirePositiveCount("RIGHT", "count", count.AsInteger(), location)))),
+                    GetStringUnchecked(text),
+                    vm.RequirePositiveCount("LEFT", "count", GetIntegerUnchecked(count), location)))),
+            BuiltinFunctionId.Right => BuiltinExecution.Binary(static (vm, text, count, location) =>
+                BytecodeVm.EvaluateRightBuiltin(
+                    text,
+                    vm.RequirePositiveCount("RIGHT", "count", GetIntegerUnchecked(count), location))),
             BuiltinFunctionId.Mid => BuiltinExecution.Ternary(static (vm, text, start, count, location) => RuntimeValue.FromString(
                 BytecodeVm.EvaluateMid(
-                    text.AsString(),
-                    vm.RequirePositiveStart("MID", start.AsInteger(), location),
-                    vm.RequirePositiveCount("MID", "count", count.AsInteger(), location)))),
-            BuiltinFunctionId.TrimWhitespace => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(BytecodeVm.EvaluateTrimWhitespace(value.AsString()))),
-            BuiltinFunctionId.TrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateTrimCharacters(value.AsString(), chars.AsString()))),
-            BuiltinFunctionId.LTrimWhitespace => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(BytecodeVm.EvaluateLeftTrimWhitespace(value.AsString()))),
-            BuiltinFunctionId.LTrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateLeftTrimCharacters(value.AsString(), chars.AsString()))),
-            BuiltinFunctionId.RTrimWhitespace => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(BytecodeVm.EvaluateRightTrimWhitespace(value.AsString()))),
-            BuiltinFunctionId.RTrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateRightTrimCharacters(value.AsString(), chars.AsString()))),
-            BuiltinFunctionId.Reverse => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(BytecodeVm.EvaluateReverse(value.AsString()))),
-            BuiltinFunctionId.Contains => BuiltinExecution.Binary(static (vm, left, right, _) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateContains(left.AsString(), right.AsString()))),
-            BuiltinFunctionId.StartsWith => BuiltinExecution.Binary(static (vm, left, right, _) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateStartsWith(left.AsString(), right.AsString()))),
-            BuiltinFunctionId.EndsWith => BuiltinExecution.Binary(static (vm, left, right, _) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateEndsWith(left.AsString(), right.AsString()))),
-            BuiltinFunctionId.Replace => BuiltinExecution.Ternary(static (vm, text, oldValue, newValue, location) => RuntimeValue.FromString(
-                vm.EvaluateReplace(text.AsString(), oldValue.AsString(), newValue.AsString(), location))),
-            BuiltinFunctionId.InStr => BuiltinExecution.Binary(static (vm, text, value, _) => RuntimeValue.FromInteger(BytecodeVm.EvaluateInStr(1, text.AsString(), value.AsString()))),
+                    GetStringUnchecked(text),
+                    vm.RequirePositiveStart("MID", GetIntegerUnchecked(start), location),
+                    vm.RequirePositiveCount("MID", "count", GetIntegerUnchecked(count), location)))),
+            BuiltinFunctionId.TrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateTrimWhitespaceBuiltin(value)),
+            BuiltinFunctionId.TrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
+            BuiltinFunctionId.LTrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateLeftTrimWhitespaceBuiltin(value)),
+            BuiltinFunctionId.LTrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateLeftTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
+            BuiltinFunctionId.RTrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateRightTrimWhitespaceBuiltin(value)),
+            BuiltinFunctionId.RTrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateRightTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
+            BuiltinFunctionId.Reverse => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromString(BytecodeVm.EvaluateReverse(GetStringUnchecked(value)))),
+            BuiltinFunctionId.Contains => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateContains(GetStringUnchecked(left), GetStringUnchecked(right)))),
+            BuiltinFunctionId.StartsWith => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateStartsWith(GetStringUnchecked(left), GetStringUnchecked(right)))),
+            BuiltinFunctionId.EndsWith => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateEndsWith(GetStringUnchecked(left), GetStringUnchecked(right)))),
+            BuiltinFunctionId.Replace => BuiltinExecution.Ternary(static (vm, text, oldValue, newValue, location) =>
+                vm.EvaluateReplaceBuiltin(text, oldValue, newValue, location)),
+            BuiltinFunctionId.InStr => BuiltinExecution.Binary(static (vm, text, value, _) => RuntimeValue.FromInteger(BytecodeVm.EvaluateInStr(1, GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.InStrFrom => BuiltinExecution.Ternary(static (vm, start, text, value, location) => RuntimeValue.FromInteger(
-                BytecodeVm.EvaluateInStr(vm.RequirePositiveStart("INSTR", start.AsInteger(), location), text.AsString(), value.AsString()))),
+                BytecodeVm.EvaluateInStr(vm.RequirePositiveStart("INSTR", GetIntegerUnchecked(start), location), GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.InStrRev => BuiltinExecution.Binary(static (vm, text, value, _) => RuntimeValue.FromInteger(
-                BytecodeVm.EvaluateInStrRev(text.AsString().Length, text.AsString(), value.AsString()))),
+                BytecodeVm.EvaluateInStrRev(GetStringUnchecked(text).Length, GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.InStrRevFrom => BuiltinExecution.Ternary(static (vm, start, text, value, location) => RuntimeValue.FromInteger(
-                BytecodeVm.EvaluateInStrRev(vm.RequirePositiveStart("INSTRREV", start.AsInteger(), location), text.AsString(), value.AsString()))),
-            BuiltinFunctionId.SubStrCount => BuiltinExecution.Binary(static (vm, text, value, location) => RuntimeValue.FromInteger(vm.EvaluateSubStrCount(text.AsString(), value.AsString(), location))),
+                BytecodeVm.EvaluateInStrRev(vm.RequirePositiveStart("INSTRREV", GetIntegerUnchecked(start), location), GetStringUnchecked(text), GetStringUnchecked(value)))),
+            BuiltinFunctionId.SubStrCount => BuiltinExecution.Binary(static (vm, text, value, location) => RuntimeValue.FromInteger(vm.EvaluateSubStrCount(GetStringUnchecked(text), GetStringUnchecked(value), location))),
             BuiltinFunctionId.Repeat => BuiltinExecution.Binary(static (vm, value, count, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateRepeat(value.AsString(), vm.RequireNonNegativeCount("REPEAT", "count", count.AsInteger(), location)))),
+                BytecodeVm.EvaluateRepeat(GetStringUnchecked(value), vm.RequireNonNegativeCount("REPEAT", "count", GetIntegerUnchecked(count), location)))),
             BuiltinFunctionId.Space => BuiltinExecution.Unary(static (vm, count, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateSpace(vm.RequireNonNegativeCount("SPACE", "count", count.AsInteger(), location)))),
+                BytecodeVm.EvaluateSpace(vm.RequireNonNegativeCount("SPACE", "count", GetIntegerUnchecked(count), location)))),
             BuiltinFunctionId.StringFill => BuiltinExecution.Binary(static (vm, count, fill, location) => RuntimeValue.FromString(
                 vm.EvaluateStringFill(
-                    vm.RequireNonNegativeCount("STRING", "count", count.AsInteger(), location),
-                    fill.AsString(),
+                    vm.RequireNonNegativeCount("STRING", "count", GetIntegerUnchecked(count), location),
+                    GetStringUnchecked(fill),
                     location))),
             BuiltinFunctionId.PadLeft => BuiltinExecution.Binary(static (vm, value, width, location) => RuntimeValue.FromString(
-                value.AsString().PadLeft(vm.RequireNonNegativeCount("PADLEFT", "width", width.AsInteger(), location)))),
+                GetStringUnchecked(value).PadLeft(vm.RequireNonNegativeCount("PADLEFT", "width", GetIntegerUnchecked(width), location)))),
             BuiltinFunctionId.PadLeftFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) => RuntimeValue.FromString(
-                vm.EvaluatePadLeft(value.AsString(), vm.RequireNonNegativeCount("PADLEFT", "width", width.AsInteger(), location), fill.AsString(), location))),
+                vm.EvaluatePadLeft(GetStringUnchecked(value), vm.RequireNonNegativeCount("PADLEFT", "width", GetIntegerUnchecked(width), location), GetStringUnchecked(fill), location))),
             BuiltinFunctionId.PadRight => BuiltinExecution.Binary(static (vm, value, width, location) => RuntimeValue.FromString(
-                value.AsString().PadRight(vm.RequireNonNegativeCount("PADRIGHT", "width", width.AsInteger(), location)))),
+                GetStringUnchecked(value).PadRight(vm.RequireNonNegativeCount("PADRIGHT", "width", GetIntegerUnchecked(width), location)))),
             BuiltinFunctionId.PadRightFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) => RuntimeValue.FromString(
-                vm.EvaluatePadRight(value.AsString(), vm.RequireNonNegativeCount("PADRIGHT", "width", width.AsInteger(), location), fill.AsString(), location))),
+                vm.EvaluatePadRight(GetStringUnchecked(value), vm.RequireNonNegativeCount("PADRIGHT", "width", GetIntegerUnchecked(width), location), GetStringUnchecked(fill), location))),
             BuiltinFunctionId.Center => BuiltinExecution.Binary(static (vm, value, width, location) => RuntimeValue.FromString(
-                vm.EvaluateCenter(value.AsString(), vm.RequireNonNegativeCount("CENTER", "width", width.AsInteger(), location), " ", location))),
+                vm.EvaluateCenter(GetStringUnchecked(value), vm.RequireNonNegativeCount("CENTER", "width", GetIntegerUnchecked(width), location), " ", location))),
             BuiltinFunctionId.CenterFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) => RuntimeValue.FromString(
-                vm.EvaluateCenter(value.AsString(), vm.RequireNonNegativeCount("CENTER", "width", width.AsInteger(), location), fill.AsString(), location))),
-            BuiltinFunctionId.Insert => BuiltinExecution.Ternary(static (vm, value, start, insertText, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateInsert(value.AsString(), vm.RequirePositiveStart("INSERT", start.AsInteger(), location), insertText.AsString()))),
+                vm.EvaluateCenter(GetStringUnchecked(value), vm.RequireNonNegativeCount("CENTER", "width", GetIntegerUnchecked(width), location), GetStringUnchecked(fill), location))),
+            BuiltinFunctionId.Insert => BuiltinExecution.Ternary(static (vm, value, start, insertText, location) =>
+                BytecodeVm.EvaluateInsertBuiltin(
+                    value,
+                    vm.RequirePositiveStart("INSERT", GetIntegerUnchecked(start), location),
+                    insertText)),
             BuiltinFunctionId.Remove => BuiltinExecution.Ternary(static (vm, value, start, count, location) => RuntimeValue.FromString(
                 BytecodeVm.EvaluateRemove(
-                    value.AsString(),
-                    vm.RequirePositiveStart("REMOVE", start.AsInteger(), location),
-                    vm.RequireNonNegativeCount("REMOVE", "count", count.AsInteger(), location)))),
-            BuiltinFunctionId.Asc => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateAsc(value.AsString(), location))),
+                    GetStringUnchecked(value),
+                    vm.RequirePositiveStart("REMOVE", GetIntegerUnchecked(start), location),
+                    vm.RequireNonNegativeCount("REMOVE", "count", GetIntegerUnchecked(count), location)))),
+            BuiltinFunctionId.Asc => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateAsc(GetStringUnchecked(value), location))),
             BuiltinFunctionId.Chr => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateChr(vm.RequireValidUnicodeCodePoint("CHR", "code", value.AsInteger(), location)))),
-            BuiltinFunctionId.Split => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSplitBuiltin(value.AsString(), ",", location)),
-            BuiltinFunctionId.SplitSeparator => BuiltinExecution.Binary(static (vm, value, separator, location) => vm.EvaluateSplitBuiltin(value.AsString(), separator.AsString(), location)),
+                BytecodeVm.EvaluateChr(vm.RequireValidUnicodeCodePoint("CHR", "code", GetIntegerUnchecked(value), location)))),
+            BuiltinFunctionId.Split => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSplitBuiltin(GetStringUnchecked(value), ",", location)),
+            BuiltinFunctionId.SplitSeparator => BuiltinExecution.Binary(static (vm, value, separator, location) => vm.EvaluateSplitBuiltin(GetStringUnchecked(value), GetStringUnchecked(separator), location)),
             BuiltinFunctionId.Join => BuiltinExecution.Unary(static (vm, value, _) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), ",")),
-            BuiltinFunctionId.JoinSeparator => BuiltinExecution.Binary(static (vm, value, separator, _) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), separator.AsString())),
-            BuiltinFunctionId.RegexIsMatch => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexIsMatchBuiltin(text.AsString(), pattern.AsString(), "", location)),
-            BuiltinFunctionId.RegexMatch => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexMatchBuiltin(text.AsString(), pattern.AsString(), "", location)),
-            BuiltinFunctionId.RegexMatches => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexMatchesBuiltin(text.AsString(), pattern.AsString(), "", location)),
-            BuiltinFunctionId.RegexSplit => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexSplitBuiltin(text.AsString(), pattern.AsString(), "", location)),
-            BuiltinFunctionId.RegexCount => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexCountBuiltin(text.AsString(), pattern.AsString(), "", location)),
-            BuiltinFunctionId.RegexExtract => BuiltinExecution.Ternary(static (vm, text, pattern, groupIndex, location) => vm.EvaluateRegexExtractBuiltin(text.AsString(), pattern.AsString(), groupIndex.AsInteger(), "", location)),
-            BuiltinFunctionId.RegexExtractAll => BuiltinExecution.Ternary(static (vm, text, pattern, groupIndex, location) => vm.EvaluateRegexExtractAllBuiltin(text.AsString(), pattern.AsString(), groupIndex.AsInteger(), "", location)),
-            BuiltinFunctionId.RegexReplace => BuiltinExecution.Ternary(static (vm, text, pattern, replacement, location) => vm.EvaluateRegexReplaceBuiltin(text.AsString(), pattern.AsString(), replacement.AsString(), "", count: null, location)),
+            BuiltinFunctionId.JoinSeparator => BuiltinExecution.Binary(static (vm, value, separator, _) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), GetStringUnchecked(separator))),
+            BuiltinFunctionId.RegexIsMatch => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexIsMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
+            BuiltinFunctionId.RegexIsMatchModes => BuiltinExecution.Ternary(static (vm, text, pattern, modes, location) => vm.EvaluateRegexIsMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetStringUnchecked(modes), location)),
+            BuiltinFunctionId.RegexMatch => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
+            BuiltinFunctionId.RegexMatchModes => BuiltinExecution.Ternary(static (vm, text, pattern, modes, location) => vm.EvaluateRegexMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetStringUnchecked(modes), location)),
+            BuiltinFunctionId.RegexMatches => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexMatchesBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
+            BuiltinFunctionId.RegexMatchesModes => BuiltinExecution.Ternary(static (vm, text, pattern, modes, location) => vm.EvaluateRegexMatchesBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetStringUnchecked(modes), location)),
+            BuiltinFunctionId.RegexSplit => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexSplitBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
+            BuiltinFunctionId.RegexSplitModes => BuiltinExecution.Ternary(static (vm, text, pattern, modes, location) => vm.EvaluateRegexSplitBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetStringUnchecked(modes), location)),
+            BuiltinFunctionId.RegexCount => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexCountBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
+            BuiltinFunctionId.RegexCountModes => BuiltinExecution.Ternary(static (vm, text, pattern, modes, location) => vm.EvaluateRegexCountBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetStringUnchecked(modes), location)),
+            BuiltinFunctionId.RegexExtract => BuiltinExecution.Ternary(static (vm, text, pattern, groupIndex, location) => vm.EvaluateRegexExtractBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetIntegerUnchecked(groupIndex), "", location)),
+            BuiltinFunctionId.RegexExtractModes => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateRegexExtractBuiltin(GetStringUnchecked(arguments[0]), GetStringUnchecked(arguments[1]), GetIntegerUnchecked(arguments[2]), GetStringUnchecked(arguments[3]), location)),
+            BuiltinFunctionId.RegexExtractAll => BuiltinExecution.Ternary(static (vm, text, pattern, groupIndex, location) => vm.EvaluateRegexExtractAllBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetIntegerUnchecked(groupIndex), "", location)),
+            BuiltinFunctionId.RegexExtractAllModes => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateRegexExtractAllBuiltin(GetStringUnchecked(arguments[0]), GetStringUnchecked(arguments[1]), GetIntegerUnchecked(arguments[2]), GetStringUnchecked(arguments[3]), location)),
+            BuiltinFunctionId.RegexReplace => BuiltinExecution.Ternary(static (vm, text, pattern, replacement, location) => vm.EvaluateRegexReplaceBuiltin(text, pattern, replacement, "", count: null, location)),
+            BuiltinFunctionId.RegexReplaceModes => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], GetStringUnchecked(arguments[3]), count: null, location)),
+            BuiltinFunctionId.RegexReplaceCount => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], "", GetIntegerUnchecked(arguments[3]), location)),
+            BuiltinFunctionId.RegexReplaceModesCount => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], GetStringUnchecked(arguments[3]), GetIntegerUnchecked(arguments[4]), location)),
             BuiltinFunctionId.Int => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateIntBuiltin(value, location))),
-            BuiltinFunctionId.Str => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(value.ToDisplayString())),
-            BuiltinFunctionId.Val => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromDouble(ParseVal(value.AsString()))),
-            BuiltinFunctionId.LCase => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(value.AsString().ToLowerInvariant())),
-            BuiltinFunctionId.UCase => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(value.AsString().ToUpperInvariant())),
+            BuiltinFunctionId.Str => BuiltinExecution.UnaryNoLocation(static (vm, value) => value.ToDisplayRuntimeValue()),
+            BuiltinFunctionId.Val => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromDouble(ParseVal(GetStringUnchecked(value)))),
+            BuiltinFunctionId.LCase => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(GetStringUnchecked(value).ToLowerInvariant())),
+            BuiltinFunctionId.UCase => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(GetStringUnchecked(value).ToUpperInvariant())),
             BuiltinFunctionId.Rnd => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateRndBuiltin()),
             BuiltinFunctionId.Abs => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateAbsBuiltin(value, location)),
             BuiltinFunctionId.Sgn => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateSgnBuiltin(value, location))),
@@ -136,9 +149,9 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.Cosh => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDoubleMathBuiltin("COSH", "value", value, Math.Cosh, location)),
             BuiltinFunctionId.Tanh => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDoubleMathBuiltin("TANH", "value", value, Math.Tanh, location)),
             BuiltinFunctionId.SetSign => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateSetSignBuiltin(left, right, location)),
-            BuiltinFunctionId.ArrayLength => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromInteger(BytecodeVm.EvaluateArrayLengthBuiltin(value))),
-            BuiltinFunctionId.ArrayIsAllocated => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromBoolean(value.AsArray().IsAllocated)),
-            BuiltinFunctionId.ArrayRank => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromInteger(BytecodeVm.EvaluateArrayRankBuiltin(value))),
+            BuiltinFunctionId.ArrayLength => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromInteger(BytecodeVm.EvaluateArrayLengthBuiltin(value))),
+            BuiltinFunctionId.ArrayIsAllocated => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromBoolean(value.AsArray().IsAllocated)),
+            BuiltinFunctionId.ArrayRank => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromInteger(BytecodeVm.EvaluateArrayRankBuiltin(value))),
             BuiltinFunctionId.ArrayBounds => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateArrayBoundsBuiltin(value, location)),
             BuiltinFunctionId.ArrayClone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateArrayCloneBuiltin(value, location)),
             BuiltinFunctionId.ArrayFlatten => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateArrayFlattenBuiltin(value, location)),
@@ -156,45 +169,45 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ArrayMap => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateArrayMapBuiltin(left, right, location)),
             BuiltinFunctionId.ArrayReduce => BuiltinExecution.Ternary(static (vm, array, reducer, seed, location) => vm.EvaluateArrayReduceBuiltin(array, reducer, seed, location)),
             BuiltinFunctionId.Date => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateDateBuiltin()),
-            BuiltinFunctionId.DateInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateBuiltin(value.AsString(), location)),
+            BuiltinFunctionId.DateInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.Time => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateTimeBuiltin()),
-            BuiltinFunctionId.TimeInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeBuiltin(value.AsString(), location)),
+            BuiltinFunctionId.TimeInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.Now => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateNowBuiltin()),
-            BuiltinFunctionId.NowInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateNowBuiltin(value.AsString(), location)),
+            BuiltinFunctionId.NowInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateNowBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.UtcDate => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcDateBuiltin()),
             BuiltinFunctionId.UtcTime => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcTimeBuiltin()),
             BuiltinFunctionId.UtcNow => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcNowBuiltin()),
             BuiltinFunctionId.Timer => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateTimerBuiltin()),
-            BuiltinFunctionId.DateSerial => BuiltinExecution.Ternary(static (vm, year, month, day, location) => vm.EvaluateDateSerialBuiltin(year.AsInteger(), month.AsInteger(), day.AsInteger(), location)),
-            BuiltinFunctionId.TimeSerial => BuiltinExecution.Ternary(static (vm, hour, minute, second, location) => vm.EvaluateTimeSerialBuiltin(hour.AsInteger(), minute.AsInteger(), second.AsInteger(), location)),
-            BuiltinFunctionId.Year => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateYearBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.Month => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMonthBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.MonthName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMonthNameBuiltin(value.AsInteger(), location)),
-            BuiltinFunctionId.Day => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDayBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.Hour => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateHourBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.Minute => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMinuteBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.Second => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSecondBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.Weekday => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateWeekdayBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.WeekdayName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateWeekdayNameBuiltin(value.AsInteger(), location)),
-            BuiltinFunctionId.DateAdd => BuiltinExecution.Ternary(static (vm, interval, value, dateText, location) => vm.EvaluateDateAddBuiltin(interval.AsString(), value.AsInteger(), dateText.AsString(), location)),
-            BuiltinFunctionId.DateDiff => BuiltinExecution.Ternary(static (vm, interval, left, right, location) => vm.EvaluateDateDiffBuiltin(interval.AsString(), left.AsString(), right.AsString(), location)),
-            BuiltinFunctionId.DatePart => BuiltinExecution.Binary(static (vm, interval, dateText, location) => vm.EvaluateDatePartBuiltin(interval.AsString(), dateText.AsString(), location)),
-            BuiltinFunctionId.DateValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateValueBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.TimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeValueBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.IsDate => BuiltinExecution.Unary(static (vm, value, _) => vm.EvaluateIsDateBuiltin(value.AsString())),
+            BuiltinFunctionId.DateSerial => BuiltinExecution.Ternary(static (vm, year, month, day, location) => vm.EvaluateDateSerialBuiltin(GetIntegerUnchecked(year), GetIntegerUnchecked(month), GetIntegerUnchecked(day), location)),
+            BuiltinFunctionId.TimeSerial => BuiltinExecution.Ternary(static (vm, hour, minute, second, location) => vm.EvaluateTimeSerialBuiltin(GetIntegerUnchecked(hour), GetIntegerUnchecked(minute), GetIntegerUnchecked(second), location)),
+            BuiltinFunctionId.Year => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateYearBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.Month => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMonthBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.MonthName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMonthNameBuiltin(GetIntegerUnchecked(value), location)),
+            BuiltinFunctionId.Day => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDayBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.Hour => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateHourBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.Minute => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMinuteBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.Second => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSecondBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.Weekday => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateWeekdayBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.WeekdayName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateWeekdayNameBuiltin(GetIntegerUnchecked(value), location)),
+            BuiltinFunctionId.DateAdd => BuiltinExecution.Ternary(static (vm, interval, value, dateText, location) => vm.EvaluateDateAddBuiltin(GetStringUnchecked(interval), GetIntegerUnchecked(value), GetStringUnchecked(dateText), location)),
+            BuiltinFunctionId.DateDiff => BuiltinExecution.Ternary(static (vm, interval, left, right, location) => vm.EvaluateDateDiffBuiltin(GetStringUnchecked(interval), GetStringUnchecked(left), GetStringUnchecked(right), location)),
+            BuiltinFunctionId.DatePart => BuiltinExecution.Binary(static (vm, interval, dateText, location) => vm.EvaluateDatePartBuiltin(GetStringUnchecked(interval), GetStringUnchecked(dateText), location)),
+            BuiltinFunctionId.DateValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateValueBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.TimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeValueBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.IsDate => BuiltinExecution.Unary(static (vm, value, _) => vm.EvaluateIsDateBuiltin(GetStringUnchecked(value))),
             BuiltinFunctionId.UtcOffset => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcOffsetBuiltin()),
-            BuiltinFunctionId.UtcOffsetValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateUtcOffsetBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.UtcOffsetValueZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateUtcOffsetBuiltin(value.AsString(), zone.AsString(), location)),
-            BuiltinFunctionId.ToUtc => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateToUtcBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.ToUtcZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateToUtcBuiltin(value.AsString(), zone.AsString(), location)),
-            BuiltinFunctionId.FromUtc => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFromUtcBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.FromUtcZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateFromUtcBuiltin(value.AsString(), zone.AsString(), location)),
-            BuiltinFunctionId.IsLeapYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsLeapYearBuiltin(value.AsInteger(), location)),
-            BuiltinFunctionId.DaysInMonth => BuiltinExecution.Binary(static (vm, year, month, location) => vm.EvaluateDaysInMonthBuiltin(year.AsInteger(), month.AsInteger(), location)),
-            BuiltinFunctionId.StartOfMonth => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateStartOfMonthBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.EndOfMonth => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateEndOfMonthBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.StartOfYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateStartOfYearBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.EndOfYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateEndOfYearBuiltin(value.AsString(), location)),
+            BuiltinFunctionId.UtcOffsetValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateUtcOffsetBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.UtcOffsetValueZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateUtcOffsetBuiltin(GetStringUnchecked(value), GetStringUnchecked(zone), location)),
+            BuiltinFunctionId.ToUtc => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateToUtcBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.ToUtcZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateToUtcBuiltin(GetStringUnchecked(value), GetStringUnchecked(zone), location)),
+            BuiltinFunctionId.FromUtc => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFromUtcBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.FromUtcZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateFromUtcBuiltin(GetStringUnchecked(value), GetStringUnchecked(zone), location)),
+            BuiltinFunctionId.IsLeapYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsLeapYearBuiltin(GetIntegerUnchecked(value), location)),
+            BuiltinFunctionId.DaysInMonth => BuiltinExecution.Binary(static (vm, year, month, location) => vm.EvaluateDaysInMonthBuiltin(GetIntegerUnchecked(year), GetIntegerUnchecked(month), location)),
+            BuiltinFunctionId.StartOfMonth => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateStartOfMonthBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.EndOfMonth => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateEndOfMonthBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.StartOfYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateStartOfYearBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.EndOfYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateEndOfYearBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.IsOpen => BuiltinExecution.Unary(static (vm, value, _) => vm.EvaluateIsOpenBuiltin(value)),
             BuiltinFunctionId.FilePath => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFilePathBuiltin(value, location)),
             BuiltinFunctionId.FileMode => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileModeBuiltin(value, location)),
@@ -205,81 +218,71 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ReadToEnd => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadToEndBuiltin(value, location)),
             BuiltinFunctionId.ReadText => BuiltinExecution.Binary(static (vm, value, count, location) => vm.EvaluateReadTextBuiltin(
                 value,
-                vm.RequireNonNegativeCount("READTEXT", "count", count.AsInteger(), location),
+                vm.RequireNonNegativeCount("READTEXT", "count", GetIntegerUnchecked(count), location),
                 location)),
             BuiltinFunctionId.ReadLine => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadLineBuiltin(value, location)),
             BuiltinFunctionId.ReadLines => BuiltinExecution.Binary(static (vm, value, count, location) => vm.EvaluateReadLinesBuiltin(
                 value,
-                vm.RequireNonNegativeCount("READLINES", "count", count.AsInteger(), location),
+                vm.RequireNonNegativeCount("READLINES", "count", GetIntegerUnchecked(count), location),
                 location)),
             BuiltinFunctionId.SkipLine => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSkipLineBuiltin(value, location)),
-            BuiltinFunctionId.Write => BuiltinExecution.Binary(static (vm, handle, text, location) => vm.EvaluateWriteBuiltin(handle, text.AsString(), appendLineBreak: false, location)),
-            BuiltinFunctionId.WriteLine => BuiltinExecution.Binary(static (vm, handle, text, location) => vm.EvaluateWriteBuiltin(handle, text.AsString(), appendLineBreak: true, location)),
+            BuiltinFunctionId.Write => BuiltinExecution.Binary(static (vm, handle, text, location) => vm.EvaluateWriteBuiltin(handle, GetStringUnchecked(text), appendLineBreak: false, location)),
+            BuiltinFunctionId.WriteLine => BuiltinExecution.Binary(static (vm, handle, text, location) => vm.EvaluateWriteBuiltin(handle, GetStringUnchecked(text), appendLineBreak: true, location)),
             BuiltinFunctionId.NewLine => BuiltinExecution.Unary(static (vm, handle, location) => vm.EvaluateNewLineBuiltin(handle, location)),
             BuiltinFunctionId.Flush => BuiltinExecution.Unary(static (vm, handle, location) => vm.EvaluateFlushBuiltin(handle, location)),
             BuiltinFunctionId.SeekFile => BuiltinExecution.Binary(static (vm, handle, position, location) => vm.EvaluateSeekFileBuiltin(handle, position, location)),
             BuiltinFunctionId.Rewind => BuiltinExecution.Unary(static (vm, handle, location) => vm.EvaluateRewindBuiltin(handle, location)),
-            BuiltinFunctionId.FileExists => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileExistsBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DirExists => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirExistsBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.PathExists => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluatePathExistsBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.ReadFile => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadFileBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.ReadAllLines => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadAllLinesBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.WriteFile => BuiltinExecution.Binary(static (vm, path, text, location) => vm.EvaluateWriteFileBuiltin(path.AsString(), text.AsString(), location)),
-            BuiltinFunctionId.AppendFile => BuiltinExecution.Binary(static (vm, path, text, location) => vm.EvaluateAppendFileBuiltin(path.AsString(), text.AsString(), location)),
-            BuiltinFunctionId.FileSize => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileSizeBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.FileDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileDateBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.FileCreateDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileCreateDateBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.FileAccessDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileAccessDateBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DirDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirDateBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.GetFiles => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateGetFilesBuiltin(value.AsString(), "*", -1, location)),
-            BuiltinFunctionId.GetFilesPattern => BuiltinExecution.Binary(static (vm, path, pattern, location) => vm.EvaluateGetFilesBuiltin(path.AsString(), pattern.AsString(), 1, location)),
-            BuiltinFunctionId.GetDirs => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateGetDirsBuiltin(value.AsString(), "*", -1, location)),
-            BuiltinFunctionId.GetDirsPattern => BuiltinExecution.Binary(static (vm, path, pattern, location) => vm.EvaluateGetDirsBuiltin(path.AsString(), pattern.AsString(), 1, location)),
-            BuiltinFunctionId.CombinePath => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateCombinePathBuiltin(left.AsString(), right.AsString(), location)),
-            BuiltinFunctionId.FileName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileNameBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DirName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirNameBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.ExtName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateExtNameBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.FullPath => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFullPathBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.PathRoot => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluatePathRootBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.IsAbsolutePath => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsAbsolutePathBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.MakeDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMakeDirBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DeleteFile => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDeleteFileBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.CopyFile => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateCopyFileBuiltin(source.AsString(), target.AsString(), overwrite: false, location)),
-            BuiltinFunctionId.CopyFileOverwrite => BuiltinExecution.Ternary(static (vm, source, target, overwrite, location) => vm.EvaluateCopyFileBuiltin(source.AsString(), target.AsString(), overwrite.AsBoolean(), location)),
-            BuiltinFunctionId.MoveFile => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateMoveFileBuiltin(source.AsString(), target.AsString(), overwrite: false, location)),
-            BuiltinFunctionId.MoveFileOverwrite => BuiltinExecution.Ternary(static (vm, source, target, overwrite, location) => vm.EvaluateMoveFileBuiltin(source.AsString(), target.AsString(), overwrite.AsBoolean(), location)),
-            BuiltinFunctionId.RenameFile => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateRenameFileBuiltin(source.AsString(), target.AsString(), location)),
-            BuiltinFunctionId.DeleteDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDeleteDirBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DeleteDirRecursive => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDeleteDirRecursiveBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.CopyDir => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateCopyDirBuiltin(source.AsString(), target.AsString(), overwrite: false, location)),
-            BuiltinFunctionId.CopyDirOverwrite => BuiltinExecution.Ternary(static (vm, source, target, overwrite, location) => vm.EvaluateCopyDirBuiltin(source.AsString(), target.AsString(), overwrite.AsBoolean(), location)),
-            BuiltinFunctionId.MoveDir => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateMoveDirBuiltin(source.AsString(), target.AsString(), location)),
-            BuiltinFunctionId.RenameDir => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateRenameDirBuiltin(source.AsString(), target.AsString(), location)),
+            BuiltinFunctionId.FileExists => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileExistsBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DirExists => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirExistsBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.PathExists => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluatePathExistsBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.ReadFile => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadFileBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.ReadAllLines => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadAllLinesBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.WriteFile => BuiltinExecution.Binary(static (vm, path, text, location) => vm.EvaluateWriteFileBuiltin(GetStringUnchecked(path), GetStringUnchecked(text), location)),
+            BuiltinFunctionId.AppendFile => BuiltinExecution.Binary(static (vm, path, text, location) => vm.EvaluateAppendFileBuiltin(GetStringUnchecked(path), GetStringUnchecked(text), location)),
+            BuiltinFunctionId.FileSize => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileSizeBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.FileDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileDateBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.FileCreateDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileCreateDateBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.FileAccessDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileAccessDateBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DirDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirDateBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.GetFiles => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateGetFilesBuiltin(GetStringUnchecked(value), "*", -1, location)),
+            BuiltinFunctionId.GetFilesPattern => BuiltinExecution.Binary(static (vm, path, pattern, location) => vm.EvaluateGetFilesBuiltin(GetStringUnchecked(path), GetStringUnchecked(pattern), 1, location)),
+            BuiltinFunctionId.GetDirs => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateGetDirsBuiltin(GetStringUnchecked(value), "*", -1, location)),
+            BuiltinFunctionId.GetDirsPattern => BuiltinExecution.Binary(static (vm, path, pattern, location) => vm.EvaluateGetDirsBuiltin(GetStringUnchecked(path), GetStringUnchecked(pattern), 1, location)),
+            BuiltinFunctionId.CombinePath => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateCombinePathBuiltin(GetStringUnchecked(left), GetStringUnchecked(right), location)),
+            BuiltinFunctionId.FileName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileNameBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DirName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirNameBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.ExtName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateExtNameBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.FullPath => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFullPathBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.PathRoot => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluatePathRootBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.IsAbsolutePath => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsAbsolutePathBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.MakeDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMakeDirBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DeleteFile => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDeleteFileBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.CopyFile => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateCopyFileBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), overwrite: false, location)),
+            BuiltinFunctionId.CopyFileOverwrite => BuiltinExecution.Ternary(static (vm, source, target, overwrite, location) => vm.EvaluateCopyFileBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), GetBooleanUnchecked(overwrite), location)),
+            BuiltinFunctionId.MoveFile => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateMoveFileBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), overwrite: false, location)),
+            BuiltinFunctionId.MoveFileOverwrite => BuiltinExecution.Ternary(static (vm, source, target, overwrite, location) => vm.EvaluateMoveFileBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), GetBooleanUnchecked(overwrite), location)),
+            BuiltinFunctionId.RenameFile => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateRenameFileBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), location)),
+            BuiltinFunctionId.DeleteDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDeleteDirBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DeleteDirRecursive => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDeleteDirRecursiveBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.CopyDir => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateCopyDirBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), overwrite: false, location)),
+            BuiltinFunctionId.CopyDirOverwrite => BuiltinExecution.Ternary(static (vm, source, target, overwrite, location) => vm.EvaluateCopyDirBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), GetBooleanUnchecked(overwrite), location)),
+            BuiltinFunctionId.MoveDir => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateMoveDirBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), location)),
+            BuiltinFunctionId.RenameDir => BuiltinExecution.Binary(static (vm, source, target, location) => vm.EvaluateRenameDirBuiltin(GetStringUnchecked(source), GetStringUnchecked(target), location)),
             BuiltinFunctionId.CurrentDir => BuiltinExecution.Nullary(static (vm, location) => vm.EvaluateCurrentDirBuiltin(location)),
-            BuiltinFunctionId.ChangeDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateChangeDirBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DirSize => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirSizeBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.FreeSpace => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFreeSpaceBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.TotalFreeSpace => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTotalFreeSpaceBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.TotalSpace => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTotalSpaceBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.IsReadOnly => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsReadOnlyBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.IsHidden => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsHiddenBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DriveName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDriveNameBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DriveFormat => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDriveFormatBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.DriveType => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDriveTypeBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.MakeTempFile => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMakeTempFileBuiltin(value.AsString(), location)),
-            BuiltinFunctionId.MakeTempDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMakeTempDirBuiltin(value.AsString(), location)),
+            BuiltinFunctionId.ChangeDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateChangeDirBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DirSize => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDirSizeBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.FreeSpace => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFreeSpaceBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.TotalFreeSpace => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTotalFreeSpaceBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.TotalSpace => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTotalSpaceBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.IsReadOnly => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsReadOnlyBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.IsHidden => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateIsHiddenBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DriveName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDriveNameBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DriveFormat => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDriveFormatBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.DriveType => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDriveTypeBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.MakeTempFile => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMakeTempFileBuiltin(GetStringUnchecked(value), location)),
+            BuiltinFunctionId.MakeTempDir => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateMakeTempDirBuiltin(GetStringUnchecked(value), location)),
 
-            BuiltinFunctionId.RegexIsMatchModes
-            or BuiltinFunctionId.RegexMatchModes
-            or BuiltinFunctionId.RegexExtractModes
-            or BuiltinFunctionId.RegexMatchesModes
-            or BuiltinFunctionId.RegexExtractAllModes
-            or BuiltinFunctionId.RegexSplitModes
-            or BuiltinFunctionId.RegexReplaceModes
-            or BuiltinFunctionId.RegexReplaceCount
-            or BuiltinFunctionId.RegexReplaceModesCount
-            or BuiltinFunctionId.RegexCountModes
-            or BuiltinFunctionId.LBound
+            BuiltinFunctionId.LBound
             or BuiltinFunctionId.UBound
             or BuiltinFunctionId.ArraySlice
             or BuiltinFunctionId.ArrayToSorted
@@ -294,7 +297,7 @@ public sealed partial class BytecodeVm
             or BuiltinFunctionId.ArrayInsert
             or BuiltinFunctionId.ArrayRemove
             or BuiltinFunctionId.ArrayBinarySearch
-                => BuiltinExecution.Variadic((vm, arguments, location) => vm.ExecuteBuiltin(builtin, arguments.ToArray(), location)),
+                => BuiltinExecution.Variadic((vm, arguments, location) => vm.ExecuteBuiltin(builtin, arguments, location)),
 
             _ => null
         };
@@ -314,11 +317,16 @@ public sealed partial class BytecodeVm
     private delegate RuntimeValue BuiltinExecution2(BytecodeVm vm, RuntimeValue first, RuntimeValue second, TextLocation location);
     private delegate RuntimeValue BuiltinExecution3(BytecodeVm vm, RuntimeValue first, RuntimeValue second, RuntimeValue third, TextLocation location);
     private delegate RuntimeValue BuiltinExecutionMany(BytecodeVm vm, ReadOnlySpan<RuntimeValue> arguments, TextLocation location);
+    private delegate RuntimeValue BuiltinExecution0NoLocation(BytecodeVm vm);
+    private delegate RuntimeValue BuiltinExecution1NoLocation(BytecodeVm vm, RuntimeValue first);
+    private delegate RuntimeValue BuiltinExecution2NoLocation(BytecodeVm vm, RuntimeValue first, RuntimeValue second);
+    private delegate RuntimeValue BuiltinExecution3NoLocation(BytecodeVm vm, RuntimeValue first, RuntimeValue second, RuntimeValue third);
 
     private sealed class BuiltinExecution
     {
         private BuiltinExecution(
             BuiltinExecutionArity arity,
+            bool requiresLocation,
             BuiltinExecution0? zero,
             BuiltinExecution1? one,
             BuiltinExecution2? two,
@@ -326,6 +334,7 @@ public sealed partial class BytecodeVm
             BuiltinExecutionMany? many)
         {
             Arity = arity;
+            RequiresLocation = requiresLocation;
             Zero = zero;
             One = one;
             Two = two;
@@ -334,6 +343,8 @@ public sealed partial class BytecodeVm
         }
 
         public BuiltinExecutionArity Arity { get; }
+
+        public bool RequiresLocation { get; }
 
         public BuiltinExecution0? Zero { get; }
 
@@ -345,14 +356,50 @@ public sealed partial class BytecodeVm
 
         public BuiltinExecutionMany? Many { get; }
 
-        public static BuiltinExecution Nullary(BuiltinExecution0 execution) => new(BuiltinExecutionArity.Nullary, execution, null, null, null, null);
+        public static BuiltinExecution Nullary(BuiltinExecution0 execution) => new(BuiltinExecutionArity.Nullary, true, execution, null, null, null, null);
 
-        public static BuiltinExecution Unary(BuiltinExecution1 execution) => new(BuiltinExecutionArity.Unary, null, execution, null, null, null);
+        public static BuiltinExecution NullaryNoLocation(BuiltinExecution0NoLocation execution) => new(
+            BuiltinExecutionArity.Nullary,
+            false,
+            (vm, _) => execution(vm),
+            null,
+            null,
+            null,
+            null);
 
-        public static BuiltinExecution Binary(BuiltinExecution2 execution) => new(BuiltinExecutionArity.Binary, null, null, execution, null, null);
+        public static BuiltinExecution Unary(BuiltinExecution1 execution) => new(BuiltinExecutionArity.Unary, true, null, execution, null, null, null);
 
-        public static BuiltinExecution Ternary(BuiltinExecution3 execution) => new(BuiltinExecutionArity.Ternary, null, null, null, execution, null);
+        public static BuiltinExecution UnaryNoLocation(BuiltinExecution1NoLocation execution) => new(
+            BuiltinExecutionArity.Unary,
+            false,
+            null,
+            (vm, first, _) => execution(vm, first),
+            null,
+            null,
+            null);
 
-        public static BuiltinExecution Variadic(BuiltinExecutionMany execution) => new(BuiltinExecutionArity.Variadic, null, null, null, null, execution);
+        public static BuiltinExecution Binary(BuiltinExecution2 execution) => new(BuiltinExecutionArity.Binary, true, null, null, execution, null, null);
+
+        public static BuiltinExecution BinaryNoLocation(BuiltinExecution2NoLocation execution) => new(
+            BuiltinExecutionArity.Binary,
+            false,
+            null,
+            null,
+            (vm, first, second, _) => execution(vm, first, second),
+            null,
+            null);
+
+        public static BuiltinExecution Ternary(BuiltinExecution3 execution) => new(BuiltinExecutionArity.Ternary, true, null, null, null, execution, null);
+
+        public static BuiltinExecution TernaryNoLocation(BuiltinExecution3NoLocation execution) => new(
+            BuiltinExecutionArity.Ternary,
+            false,
+            null,
+            null,
+            null,
+            (vm, first, second, third, _) => execution(vm, first, second, third),
+            null);
+
+        public static BuiltinExecution Variadic(BuiltinExecutionMany execution) => new(BuiltinExecutionArity.Variadic, true, null, null, null, null, execution);
     }
 }

@@ -35,7 +35,8 @@ public sealed class BytecodeCompilerTests
                 LoweredInstruction.PrintLine(Location(4)),
                 LoweredInstruction.Return(Location(5))
             ],
-            isEntryPoint: true);
+            isEntryPoint: true,
+            localVariables: [global]);
 
         var incrementRoutine = new LoweredRoutine(
             id: 1,
@@ -66,9 +67,7 @@ public sealed class BytecodeCompilerTests
         var module = result.Module!;
         Assert.Equal(0, module.EntryPointRoutineId);
         Assert.Equal(2, module.Routines.Count);
-        var compiledGlobal = Assert.Single(module.Globals);
-        Assert.Equal("counter", compiledGlobal.Name);
-        Assert.Equal(GlobalInitializationStrategy.Deferred, compiledGlobal.InitializationStrategy);
+        Assert.Empty(module.Globals);
         var builtin = Assert.Single(module.Builtins);
         Assert.Equal("LEN", builtin.Name);
 
@@ -84,12 +83,12 @@ public sealed class BytecodeCompilerTests
             },
             instruction =>
             {
-                Assert.Equal(Opcode.StoreGlobal, instruction.Opcode);
+                Assert.Equal(Opcode.StoreLocal, instruction.Opcode);
                 Assert.Equal(0, instruction.GetOperand(0));
             },
             instruction =>
             {
-                Assert.Equal(Opcode.LoadGlobal, instruction.Opcode);
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
                 Assert.Equal(0, instruction.GetOperand(0));
             },
             instruction => Assert.Equal(Opcode.PrintValue, instruction.Opcode),
@@ -117,7 +116,7 @@ public sealed class BytecodeCompilerTests
                 Assert.Equal(Opcode.LoadArgument, instruction.Opcode);
                 Assert.Equal(0, instruction.GetOperand(0));
             },
-            instruction => Assert.Equal(Opcode.PushConst, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.PushIntegerOne, instruction.Opcode),
             instruction => Assert.Equal(Opcode.Add, instruction.Opcode),
             instruction =>
             {
@@ -136,6 +135,61 @@ public sealed class BytecodeCompilerTests
         Assert.Equal(2, module.DebugInfo!.Routines.Count);
         Assert.Contains(module.DebugInfo.InstructionMap, map => map.RoutineId == 0 && map.InstructionIndex == 0 && map.Location.Line == 2);
         Assert.Contains(module.DebugInfo.InstructionMap, map => map.RoutineId == 1 && map.InstructionIndex == 0 && map.Location.Line == 11);
+    }
+
+    [Fact]
+    public void Compile_GlobalUsedByNestedRoutine_RemainsGlobal()
+    {
+        var global = new VariableSymbol("counter", TypeSymbol.Integer, isReadOnly: false, isGlobal: true);
+        var readCounter = new FunctionSymbol("ReadCounter", [], TypeSymbol.Integer);
+
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadLiteral(Location(2), 42, TypeSymbol.Integer),
+                LoweredInstruction.StoreVariable(Location(2), global),
+                LoweredInstruction.CallFunction(Location(3), readCounter),
+                LoweredInstruction.PrintValue(Location(3)),
+                LoweredInstruction.PrintLine(Location(3)),
+                LoweredInstruction.Return(Location(4))
+            ],
+            isEntryPoint: true,
+            localVariables: [global]);
+
+        var nestedRoutine = new LoweredRoutine(
+            id: 1,
+            name: readCounter.Name,
+            location: Location(10),
+            resultType: TypeSymbol.Integer,
+            instructions:
+            [
+                LoweredInstruction.LoadVariable(Location(11), global),
+                LoweredInstruction.Return(Location(11))
+            ],
+            symbol: readCounter);
+
+        var loweredProgram = new LoweredProgram(Location(1), entryPoint, [nestedRoutine]);
+
+        var result = new BytecodeCompiler().Compile(loweredProgram);
+
+        Assert.True(
+            result.Succeeded,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}")));
+
+        var module = result.Module!;
+        var compiledGlobal = Assert.Single(module.Globals);
+        Assert.Equal("counter", compiledGlobal.Name);
+        Assert.Equal(GlobalInitializationStrategy.Deferred, compiledGlobal.InitializationStrategy);
+
+        var entryInstructions = module.Routines.Single(static routine => routine.Id == 0).Instructions;
+        Assert.Equal(Opcode.StoreGlobal, entryInstructions[1].Opcode);
+
+        var nestedInstructions = module.Routines.Single(static routine => routine.Id == 1).Instructions;
+        Assert.Equal(Opcode.LoadGlobal, nestedInstructions[0].Opcode);
     }
 
     [Fact]
@@ -260,7 +314,7 @@ public sealed class BytecodeCompilerTests
         var instructions = result.Module!.Routines.Single().Instructions;
         Assert.Collection(
             instructions,
-            instruction => Assert.Equal(Opcode.PushConst, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.PushIntegerOne, instruction.Opcode),
             instruction => Assert.Equal(Opcode.ValidateForStep, instruction.Opcode),
             instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
     }
@@ -417,7 +471,7 @@ public sealed class BytecodeCompilerTests
 
         Assert.Collection(
             result.Module!.Routines.Single().Instructions,
-            instruction => Assert.Equal(Opcode.PushConst, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.PushIntegerOne, instruction.Opcode),
             instruction =>
             {
                 Assert.Equal(Opcode.Convert, instruction.Opcode);
@@ -504,6 +558,59 @@ public sealed class BytecodeCompilerTests
     }
 
     [Fact]
+    public void Compile_CompareEqualThenJumpIfTrue_CollapsesToJumpIfEqual()
+    {
+        var left = new VariableSymbol("left", TypeSymbol.String, isReadOnly: false, isGlobal: false);
+        var right = new VariableSymbol("right", TypeSymbol.String, isReadOnly: false, isGlobal: false);
+
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadVariable(Location(2), left),
+                LoweredInstruction.LoadVariable(Location(2), right),
+                LoweredInstruction.BinaryOperation(Location(2), SyntaxKind.EqualsToken),
+                LoweredInstruction.JumpIfTrue(Location(2), "L_MATCH"),
+                LoweredInstruction.LoadLiteral(Location(3), 1, TypeSymbol.Integer),
+                LoweredInstruction.Pop(Location(3)),
+                LoweredInstruction.LabelMarker(Location(4), "L_MATCH"),
+                LoweredInstruction.Return(Location(4))
+            ],
+            isEntryPoint: true,
+            localVariables: [left, right]);
+
+        var loweredProgram = new LoweredProgram(Location(1), entryPoint, []);
+
+        var result = new BytecodeCompiler().Compile(loweredProgram);
+
+        Assert.True(result.Succeeded);
+
+        Assert.Collection(
+            result.Module!.Routines.Single().Instructions,
+            instruction =>
+            {
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
+                Assert.Equal(0, instruction.GetOperand(0));
+            },
+            instruction =>
+            {
+                Assert.Equal(Opcode.LoadLocal, instruction.Opcode);
+                Assert.Equal(1, instruction.GetOperand(0));
+            },
+            instruction =>
+            {
+                Assert.Equal(Opcode.JumpIfEqual, instruction.Opcode);
+                Assert.Equal(5, instruction.GetOperand(0));
+            },
+            instruction => Assert.Equal(Opcode.PushIntegerOne, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Pop, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
+    }
+
+    [Fact]
     public void Compile_CompareGreaterThenJumpIfFalse_CollapsesToJumpIfLessOrEqual()
     {
         var left = new VariableSymbol("left", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
@@ -551,8 +658,99 @@ public sealed class BytecodeCompilerTests
                 Assert.Equal(Opcode.JumpIfLessOrEqual, instruction.Opcode);
                 Assert.Equal(5, instruction.GetOperand(0));
             },
-            instruction => Assert.Equal(Opcode.PushConst, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.PushIntegerOne, instruction.Opcode),
             instruction => Assert.Equal(Opcode.Pop, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
+    }
+
+    [Fact]
+    public void Compile_LocalForLoopCheck_CollapsesToJumpIfForDoneLocal()
+    {
+        var loopVariable = new VariableSymbol("i", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+        var endVariable = new VariableSymbol("$for_end_0", TypeSymbol.Integer, isReadOnly: true, isGlobal: false);
+        var stepVariable = new VariableSymbol("$for_step_0", TypeSymbol.Integer, isReadOnly: true, isGlobal: false);
+
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadVariable(Location(2), stepVariable),
+                LoweredInstruction.LoadLiteral(Location(2), 0, TypeSymbol.Integer),
+                LoweredInstruction.BinaryOperation(Location(2), SyntaxKind.GreaterToken),
+                LoweredInstruction.JumpIfFalse(Location(2), "L_NEG"),
+                LoweredInstruction.LoadVariable(Location(3), loopVariable),
+                LoweredInstruction.LoadVariable(Location(3), endVariable),
+                LoweredInstruction.BinaryOperation(Location(3), SyntaxKind.GreaterToken),
+                LoweredInstruction.JumpIfTrue(Location(3), "L_END"),
+                LoweredInstruction.Jump(Location(3), "L_BODY"),
+                LoweredInstruction.LabelMarker(Location(4), "L_NEG"),
+                LoweredInstruction.LoadVariable(Location(4), loopVariable),
+                LoweredInstruction.LoadVariable(Location(4), endVariable),
+                LoweredInstruction.BinaryOperation(Location(4), SyntaxKind.LessToken),
+                LoweredInstruction.JumpIfTrue(Location(4), "L_END"),
+                LoweredInstruction.LabelMarker(Location(5), "L_BODY"),
+                LoweredInstruction.LoadLiteral(Location(5), 1, TypeSymbol.Integer),
+                LoweredInstruction.Pop(Location(5)),
+                LoweredInstruction.LabelMarker(Location(6), "L_END"),
+                LoweredInstruction.Return(Location(6))
+            ],
+            isEntryPoint: true,
+            localVariables: [loopVariable, endVariable, stepVariable]);
+
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+
+        Assert.True(result.Succeeded);
+        Assert.Collection(
+            result.Module!.Routines.Single().Instructions,
+            instruction =>
+            {
+                Assert.Equal(Opcode.JumpIfForDoneLocal, instruction.Opcode);
+                Assert.Equal(0, instruction.GetOperand(0));
+                Assert.Equal(1, instruction.GetOperand(1));
+                Assert.Equal(2, instruction.GetOperand(2));
+                Assert.Equal(3, instruction.GetOperand(3));
+            },
+            instruction => Assert.Equal(Opcode.PushIntegerOne, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Pop, instruction.Opcode),
+            instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
+    }
+
+    [Fact]
+    public void Compile_LocalForLoopAdvance_CollapsesToAdvanceForLoopLocal()
+    {
+        var loopVariable = new VariableSymbol("i", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+        var stepVariable = new VariableSymbol("$for_step_0", TypeSymbol.Integer, isReadOnly: true, isGlobal: false);
+
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadVariable(Location(2), loopVariable),
+                LoweredInstruction.LoadVariable(Location(2), stepVariable),
+                LoweredInstruction.BinaryOperation(Location(2), SyntaxKind.PlusToken),
+                LoweredInstruction.StoreVariable(Location(2), loopVariable),
+                LoweredInstruction.Return(Location(3))
+            ],
+            isEntryPoint: true,
+            localVariables: [loopVariable, stepVariable]);
+
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+
+        Assert.True(result.Succeeded);
+        Assert.Collection(
+            result.Module!.Routines.Single().Instructions,
+            instruction =>
+            {
+                Assert.Equal(Opcode.AdvanceForLoopLocal, instruction.Opcode);
+                Assert.Equal(0, instruction.GetOperand(0));
+                Assert.Equal(1, instruction.GetOperand(1));
+            },
             instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
     }
 
@@ -594,6 +792,52 @@ public sealed class BytecodeCompilerTests
         Assert.Equal(BuiltinFunctionId.UCase, builtin.CanonicalId);
         Assert.Same(ucaseBuiltin, builtin.Function);
         Assert.Equal(builtin.Id, instruction.GetOperand(0));
+    }
+
+    [Fact]
+    public void Compile_IntegerLiteralZero_UsesPushIntegerZero()
+    {
+        var value = new VariableSymbol("value", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadLiteral(Location(2), 0, TypeSymbol.Integer),
+                LoweredInstruction.StoreVariable(Location(2), value),
+                LoweredInstruction.Return(Location(3))
+            ],
+            isEntryPoint: true,
+            localVariables: [value]);
+
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+        var routine = Assert.Single(result.Module!.Routines);
+        Assert.Contains(routine.Instructions, static instruction => instruction.Opcode == Opcode.PushIntegerZero);
+    }
+
+    [Fact]
+    public void Compile_IntegerLiteralOne_UsesPushIntegerOne()
+    {
+        var value = new VariableSymbol("value", TypeSymbol.Integer, isReadOnly: false, isGlobal: false);
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadLiteral(Location(2), 1, TypeSymbol.Integer),
+                LoweredInstruction.StoreVariable(Location(2), value),
+                LoweredInstruction.Return(Location(3))
+            ],
+            isEntryPoint: true,
+            localVariables: [value]);
+
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+        var routine = Assert.Single(result.Module!.Routines);
+        Assert.Contains(routine.Instructions, static instruction => instruction.Opcode == Opcode.PushIntegerOne);
     }
 
     [Fact]

@@ -3410,3 +3410,1302 @@
 - после удаления дублирования в `ExecuteDirectLoadElement(...)` повторно пройдены `dotnet build`, `Axiom.Bytecode.Tests`, `Axiom.Runtime.Tests` и `Axiom.Execution.Tests`;
 - финальный целевой `compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` прошёл успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-154918.txt`, runtime ratio `1.228x`, total ratio `1.188x`;
 - финальный профиль `.artifacts/repro-bytecode` снова подтвердил `Instructions: 451914` и тот же набор горячих opcode.
+
+## Session 587 - 2026-04-30 17:32 - локальный FOR/NEXT получил сжатые opcode и вывел байткод вперёд
+
+Контекст:
+- продолжен разгон `BytecodeVm` на опорном сценарии `samples/smoke/engine-compare/array_cube_rollup.axm`;
+- после Session 586 профиль всё ещё оставался `Instructions: 451914`, а в плане следующим кандидатом были типовой `FOR/NEXT` или оставшиеся массовые `LoadLocal` и `PushConst`;
+- пользователь отдельно подсветил гипотезу, что байткодному режиму важно продолжать отделять обычный запуск от любой лишней отладочной нагрузки.
+
+Что изменено:
+- в `src/Axiom.Bytecode/Model/Opcode.cs` и `src/Axiom.Bytecode/Model/BytecodeRoutine.cs` добавлены внутренние opcode `JumpIfForDoneLocal` и `AdvanceForLoopLocal` вместе с их стековым контрактом;
+- в `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` добавлено распознавание типового локального шаблона `FOR/NEXT`: проверка завершения и шаг счётчика теперь сжимаются при эмиссии в отдельные команды, если цикл работает по локальным слотам;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` новый путь выполняет проверку завершения цикла и инкремент напрямую по слотам кадра с быстрыми типовыми ветками и с сохранением fallback-пути для общей арифметики и сравнения;
+- в `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` добавлена валидация операндов и типов для новых opcode, а в `tests/Axiom.Bytecode.Tests` добавлены проверки на сжатие и на типовые ошибки валидатора.
+
+Проверки:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - успешно;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - успешно, 191 тест;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - успешно, 521 тест;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - успешно, 666 тестов;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-172907.txt`, runtime ratio `0.765x`, total ratio `0.767x`;
+- повторный `compare-engines` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-172939.txt`, runtime ratio `0.921x`, total ratio `0.920x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - успешно, профиль `Instructions: 285800`, среди лидеров `LoadLocal`, `LoadGlobal`, `PushConst`, `JumpIfForDoneLocal`, `AdvanceForLoopLocal`, `Jump`, `LoadElement`, `StoreElement`, `Add`.
+
+Решения:
+- считать шаг внутренней оптимизацией VM и эмиттера без изменения языка, справочника и runnable `.axm`-примеров;
+- считать подтверждённым, что именно структурное сжатие типового локального цикла способно перевести байткодный режим из состояния «почти паритет» в состояние «уже быстрее интерпретатора» на контрольном сценарии.
+
+Что остаётся:
+- после сжатия цикла главными кандидатами на следующий выигрыш остаются `LoadLocal`, `LoadGlobal`, `PushConst`, `LoadElement`, `StoreElement` и обычный `Add`;
+- нужно отдельно удержать новое преимущество в следующих сериях замеров и не спутать его с шумом конкретного прогона.
+
+Точный следующий шаг:
+- продолжить разгон по оставшимся лидерам профиля, начиная с `LoadLocal`/`PushConst` и прямых чтений локалей, затем повторять те же `compare-engines` и opcode-профиль для подтверждения устойчивости выигрыша.
+## Session 588 - 2026-04-30 17:40 - доступ к операндам инструкции и горячим слотам VM упрощён без смены байткода
+
+Контекст:
+- после Session 587 байткодный движок уже вышел вперёд на `array_cube_rollup.axm`, но профиль команд оставался прежним лидером по массовым операциям `LoadLocal`, `LoadGlobal` и `PushConst`;
+- следующий шаг был выбран как узкая внутренняя оптимизация без новой формы opcode: снять лишнюю стоимость доступа к операндам инструкции и к самым частым чтениям кадра.
+
+Что изменено:
+- в `src/Axiom.Bytecode/Model/BytecodeInstruction.cs` инструкция переведена на внутреннее хранение операндов в `int[]`, а `GetOperand(...)` теперь читает их напрямую;
+- в `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` методы `LoadLocalValue(...)` и `StoreLocalValue(...)` помечены как `AggressiveInlining`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` тем же образом помечены `ReadConstantUnchecked(...)`, `LoadGlobalUnchecked(...)` и `StoreGlobalUnchecked(...)`, чтобы упростить частые проходы через основной цикл исполнения.
+
+Проверки:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - успешно;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - успешно, 191 тест;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - успешно, 521 тест;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - успешно, 666 тестов;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-174010.txt`, runtime ratio `0.861x`, total ratio `0.868x`;
+- повторный `compare-engines` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-174027.txt`, runtime ratio `0.853x`, total ratio `0.853x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - успешно, профиль остался `Instructions: 285800`.
+
+Решения:
+- считать шаг чистым удешевлением горячего чтения данных VM и инструкции без изменения формы байткода и без изменения поведения языка;
+- считать подтверждённым, что даже после структурного сжатия `FOR/NEXT` в системе остаётся измеримый выигрыш от локального упрощения модели инструкции и прямых служебных чтений.
+
+Что остаётся:
+- главные лидеры профиля всё ещё `LoadLocal`, `LoadGlobal`, `PushConst`, `LoadElement`, `StoreElement` и `Add`;
+- следующий выигрыш уже, скорее всего, потребует более прицельного упрощения массовых веток исполнения, а не только общей инлайн-разметки.
+
+Точный следующий шаг:
+- продолжить с узкой проверки `LoadLocal` и `PushConst` в основном switch VM, затем снова прогонять `compare-engines` и профиль, чтобы увидеть, даёт ли это следующий измеримый слой выигрыша.
+
+## Session 589 - 2026-04-30 18:21 - ������� ���������� ������ ������ �� �������� ����� ������ ��� �������������
+
+��������:
+- ����� Session 588 ���������� ������ ��� ��������� ��������� � ��������������, �� ���������������� �������� � ������ ���� ������� � ���������� ������ � ������� ������� ���������� ���� �������������;
+- ������� `array_cube_rollup.axm` ����� ���������� ����� �������� �� `Instructions: 285800`, ��� ��� ��������� ��� ������� ���� ������ �� � ����� ��������, � � ����� ����������� ����� ����������.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` �������� `ExecuteCurrentInstruction()` ������� �� ��� ������: ������� ���� ��� �������� ������� � ������ ���� ��� ������� � �������������;
+- ���� � ������� ��� ����������� ����������, ������� ���������, ����� ��������, ���������� ��������� ������������ � ������� �������, VM ������ �� ��������� `NeedsExecutionSnapshot()`, �� ������ `BytecodeVmExecutionSnapshot`, �� ������ reversible-state-������ � �� �������� `ShouldStopBefore(...)`;
+- ��� `switch` ���������� ������� � ��������� ���������� �����, ����� ��� ������ ������������ ���� � ��� �� ��� ���������� opcode ��� ������������ ���������.
+
+��������:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 191 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-182024.txt`, runtime ratio `0.824x`, total ratio `0.831x`;
+- ��������� `compare-engines` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-182040.txt`, runtime ratio `0.846x`, total ratio `0.843x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`.
+
+�������:
+- ������� �������� � ���� ������ ���������� ������� � ������� ���������� ������� �������������;
+- ������� ��� ���������� ������������� ����������� �������� ���������� � ������� ��� ��������� �����, ����������� � runnable `.axm`-��������.
+
+��� �������:
+- ����� ��������� ������� � ������ ��������� ������� ������ ������� �� ��� `LoadLocal`, `LoadGlobal`, `PushConst`, `LoadElement`, `StoreElement` � `Add`;
+- ��������� ������� ������ ��� ����� ��������� ���� ������ � ����� �������� opcode, � �� � ����� �������� ����� ����������.
+
+������ ��������� ���:
+- ���������� � ����������� ��������� `LoadLocal` � `PushConst` ������ ��� ����������� �������� ���� VM, ����� ��������� �� �� ������������� ������� � �������.
+
+## Session 590 - 2026-04-30 18:25 - ������� ������ VM ���������� �� ������ ���� ��� shared-slot ��������
+
+��������:
+- ����� Session 589 ������� ���������� ������ ��� �� ������ ����� �� ������ � ���������� �������, �� ������� ������� ������� ��������� `LoadLocal`;
+- � ������� �������� `array_cube_rollup.axm` ������ �� ������� ��������� ������������, ������� ��������� ����� ���� ��� ������ ������ � `BytecodeCallFrame`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` �������� ���� ������� shared-�������;
+- `LoadLocalValue(...)` � `StoreLocalValue(...)` ������ ���� �������� ����� `_locals`, ���� � ����� �� ������ �� ���� shared-slot;
+- ��� ������ `GetOrCreateLocalSlot(...)` ������������� ������������� shared-slot, ���� ������������ � �������� �������������� ���� � ����������� ���� ��������� �������� � �������� �������������.
+
+��������:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 191 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-182500.txt`, runtime ratio `0.801x`, total ratio `0.803x`;
+- ��������� `compare-engines` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-182518.txt`, runtime ratio `0.764x`, total ratio `0.769x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`.
+
+�������:
+- ������� ��� ���������� ������������ �������� ���������� ������� ��� ��������� ����� �������� � ��� ��������� ��������� shared-�������;
+- ������� �������������, ��� ���� ����� ��������� ������� � ������� � ������� ������� ���������� �������� ���� ������������� ����� shared-slot.
+
+��� �������:
+- ������� ������ ������� �� ��� `LoadLocal`, `LoadGlobal`, `PushConst`, `LoadElement`, `StoreElement` � `Add`;
+- ��������� ������� �������� ����� ������ � `PushConst` � � ���������� ��������� ������ �������� ������ ������� �� ������ ��������� switch VM.
+
+������ ��������� ���:
+- ���������� � `PushConst` � ��������� �������� �������� ������/��������, ����� ��������� �� �� ������������� ������� � �������.
+
+## Session 591 - 2026-04-30 19:31 - �������� 0 � 1 �������� ��������� ���������� opcode
+
+��������:
+- ����� Session 590 ������� ���������� ���� ��� ������� ������� �������������, �� � ������� `array_cube_rollup.axm` ����� ������� ��������� `PushConst`;
+- ��������� ���������� �������� ���� �� � ���������� �����, � � ����������� ����� ������ ������������� ��������� `0` � `1` ������ ������������� ��������.
+
+��� ��������:
+- � `src/Axiom.Bytecode/Model/Opcode.cs` � `src/Axiom.Bytecode/Model/BytecodeRoutine.cs` ��������� ���������� opcode `PushIntegerZero` � `PushIntegerOne` � ��� �� �������� ����������, ��� � � `PushConst`;
+- � `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` `EmitLoadLiteral(...)` ������ �������������� ������������� �������� `0` � `1` � ��� opcode, �� ����� ���������������� ��������� �����;
+- � `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` � `src/Axiom.Runtime/Execution/BytecodeVm.cs` ��������� �� ��������� � ������ ���������� ��� ��������� � ���� ��������;
+- � `tests/Axiom.Bytecode.Tests` � `tests/Axiom.Runtime.Tests` ��������� �������� ����� �������� � ������� ���������� ��� ����� ���������� �����.
+
+��������:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj` - �������, 194 �����;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-193057.txt`, runtime ratio `0.719x`, total ratio `0.722x`;
+- ��������� `compare-engines` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-193112.txt`, runtime ratio `0.782x`, total ratio `0.785x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`, ��� ���� `PushConst` �������� �� `18065`, � `PushIntegerOne` �������� � �������� `1522`.
+
+�������:
+- ������� `PushIntegerZero` � `PushIntegerOne` ���������� ������������ ������� ���������, � �� ����� ���������������� ������������ �����;
+- ������� �������������, ��� ����� ���� `PushConst` ������������� ������ � ������������ ����� ������ ����� ����� ��������.
+
+��� �������:
+- ������� ������� ������� �� ��� ������� `LoadLocal`, ����� ���� `LoadGlobal`, `PushConst`, `JumpIfForDoneLocal`, `AdvanceForLoopLocal`, `LoadElement`, `Add` � `StoreElement`;
+- ��������� ������� ��� �������� ������ ���� � ���������� ������ `PushConst`, ���� � `LoadGlobal`, � �� ��������� ��� ��������� ������������� `0` � `1`.
+
+������ ��������� ���:
+- ����������, ����� ������ �������� �������� � `PushConst` ����� ������ `0` � `1`, � ������, �������� �� ������� ��������� ��� ��������� ������ ����� ����� ���� ���������� � ���������� ��������� `LoadGlobal`.
+
+## Session 592 - 2026-04-30 21:50 - ����� top-level �������� ���������� �� ��������� ����� entry routine
+
+��������:
+- ����� Session 591 ����� ����, ��� ���������� ������������� `PushConst` �� ����� ����� `2`, `-1` � `10` ������� ������������ � �������� ��� ���� benchmark;
+- ������������ �������� ����������, ��� ��������� ��� ����� ����� �� �� ������� ���������, � �� ������ ��������� `LoadGlobal`, ������� ��������� ������� ������� �������.
+
+��� ��������:
+- � `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` �������� ���������� ������ lowered-���������, ������� ������� top-level �������, ������������ ������ � `LoweredProgram.EntryPoint`;
+- ����� ������� ������ �������� ��������� ����� entry routine � ��������� ��� `LoadLocal`/`StoreLocal`, � �� ��� `LoadGlobal`/`StoreGlobal`;
+- ���� ������� ������������ ���� �� � ����� ������ ���������, optimization �� ����������� � ������� ��������� ������� ���������� ����;
+- ��� metadata ��������� ������ �������� ���������� ������������ ������� ����������, ����� �� ������ �������� ���������� bytecode-������;
+- � `tests/Axiom.Bytecode.Tests/BytecodeCompilerTests.cs` ��������� �������� �� ��� ����: ����� lift �������� � ����� ������� ������� �������� ����������.
+
+��������� �����:
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `tests/Axiom.Bytecode.Tests/BytecodeCompilerTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-214947.txt`, runtime ratio `0.752x`, total ratio `0.754x`;
+- ��������� `compare-engines` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-214958.txt`, runtime ratio `0.625x`, total ratio `0.632x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ���������� �� `Instructions: 285800`, � `LoadGlobal` ����� �� �������� opcode-������.
+
+�������:
+- ������� �������� �� `LoadGlobal` �������� �� ������������������� ����� ����������, � ����� ����� ������� ������ ���������� ������ ��� top-level ��������;
+- ������� ��� ������ ���������� ������������ backend/VM ��� ��������� ���������������� ��������� �����, ����������� � runnable `.axm`-��������;
+- ��������� ��������� ��������� ����� �������� ������ ����� ���� ������� � `.artifacts/git-backups/`.
+
+��� �������:
+- ����� ������ `LoadGlobal` ������� ����������� ������� ������� ���� `LoadLocal`, � ���������� ��������� ����������� �������� `PushConst`, `LoadElement`, `Add` � `StoreElement`;
+- ������ ���������� �������� �������� ������ ��� �� � ��������, � � ��������� � ��������� ������� ����.
+
+������ ��������� ���:
+- ��������� ���������, ����� �� ��� ��������� ��������� `LoadLocal` � ������� ���� VM ��� ��������� ����� ��������;
+- ���� ������� ��� �������� �����, ������������� �� `LoadElement` ��� �� ��������� ������� ����� �������� �������.
+
+## Session 593 - 2026-04-30 22:08 - ������� 3D-����� LoadElement ��������� � ��������� ��� ��������������
+
+��������:
+- ����� Session 592 ��������� ������� ���������� ������� ��������� `LoadElement`, � ������� benchmark `samples/smoke/engine-compare/array_cube_rollup.axm` ��������� ������ ��������� ������ � �������;
+- ������� ���� ��������� �������� � ����� ������� ������� ���� ��� ��� ����������� ��������� ������� ����� `3`, ����� ������, ����� �� ������������ ���� � ����� ������� ������ ������ ��������.
+
+��� ��������:
+- � ���� ���� ������� � ��������� ����� ������� 3D-����� ��� `LoadElement`/`StoreElement`, �� ����� ����� ������� ��� �� �������� ����������� ������ ��������;
+- �� ������ ��������� ��� ����� ��������� �������� � � ������� ������ �� ���������;
+- ������� ���� ������� � ��������� Session 592 ���� ��� ������������ ��������� ����������� `LoadLocal` �� ������� ������.
+
+��������:
+- `dotnet build C:\Axiom\Axiom.sln --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- �� ����� �������� �������� ���� ����� ������ `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-220449.txt`, `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-220450.txt` � `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-220517.txt`;
+- ������ ��������� ������� � �� ����������� ����������� ������ ����, ������� ����������� �� �������.
+
+�������:
+- ������� �������� � �������� �������� �� ���������� �������� ���� ��� ��������� 3D-������� ���������������;
+- �� ��������� `BytecodeVm` ����� ������� ������ ����� ������� ��� ����������� ������� �� ����������� ��������;
+- ������������ ���� ��������� ��� ������������� �������� � �������� ���������� ����� ������ � ��������� ����� ��������� ��������������.
+
+��� �������:
+- `LoadElement` � `StoreElement` �� ��� �������� ��������� opcode � ������� �������;
+- ������� �������� �������� ��� �� ��� ���������� ��������� �������� �����, � ��� ���� ������ �������� �� �����, `ToArrayBound(...)` � ����� ��������� �������.
+
+������ ��������� ���:
+- ��������� ���� `LoadElement` �� �������������� �������� � ���������� ������ � �������, ����� ���������, ����� �� ��������� ��������� `ToArrayBound(...)` � �������� `StoreElement` ��� ����� �������� �������������;
+- ���� ���� ���� ���� �� ���� ���������� ��������, ���������� � ���������� ������ ��������� �������, � �� ���������� ������� ������� ����� �� 2D/3D-�������.
+
+## Session 594 - 2026-04-30 22:13 - �������� ����� integer-���� �������� �������
+
+��������:
+- ����� Session 593 ����� ����, ��� ����� ������� 3D-����� �� ��� ���������� ��������� �������� � ���������� ����� ���� ����� � ����� ��������� ����;
+- ��������� �������� ���� ���������� �� �� ����� ������������� �������������, � �� ��������� �������������� �������� ������� � `ToArrayBound(...)` � �� �������� helper-������ `RuntimeArrayValue`, ������� ������� ���������� �� `LoadElement` � `StoreElement`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs` `ToArrayBound(...)` ������� ����� ������� ������� ���� ��� ������ ������� `INTEGER`, `LONG`, `DOUBLE` � `DECIMAL`, ����� �������� ��� ����� � ���������� ��������� `Int32`;
+- � `src/Axiom.Runtime/Values/RuntimeArrayValue.cs` �� �������� ������ `TryGetValue(...)`, `TryGetValue1(...)`, `TryGetValue3(...)`, `TrySetValue(...)`, `TrySetValue1(...)`, `TrySetValue3(...)`, `TryGetLinearIndex(...)`, `TryGetLinearIndex1(...)` � `TryGetLinearIndex3(...)` �������� `AggressiveInlining`;
+- ������ ��������� ������� ���������������� ��������� �������� � �� ������ ����� opcode ��� ����� ������ ��� 2D/3D-��������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs`
+- `src/Axiom.Runtime/Values/RuntimeArrayValue.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-221210.txt`, runtime ratio `0.580x`, total ratio `0.589x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 12 --warmup 3 --filter "array_cube_rollup.axm"` - �������, ������ `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-221211.txt` � `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-221243.txt`, runtime ratio `0.792x` � `0.757x`, total ratio `0.797x` � `0.761x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`, ������ �� ������� �� ����������;
+- ������ `dotnet build C:\Axiom\Axiom.sln --no-restore` � ���� ������ �������� � �������� ��� ��� ����������� `Axiom.Ide.exe`, ������� ������ `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Axiom.Runtime.dll`.
+
+�������:
+- ������� ������ ������������� ����� ������������ integer-�������� �������, � �� ����� ������� ������������ ������ ��� 3D benchmark;
+- ������� ����� �������� ���������� ���������� ����� � ����� ��������� � �������������� ������� ����, � �� � ����������� ��������� ����� ��� 2D/3D-�����;
+- ������� ���������� ������� solution-build ������� ���������� ���������� WPF-��������, � �� ��������� �������� ���������.
+
+��� �������:
+- `LoadElement` � `StoreElement` �� ��� �������� � �������� ������� �� ����� ����������;
+- ������� ���� ����������, ��� �� ��������� ���� ������ ��������, �� ��� �� ����� ���� ����� ��������� � ��������.
+
+������ ��������� ���:
+- ���������� � ����� ���������� `LoadElement` � `StoreElement`: �������� ��������� ������ �������� �� ����� � �������� �������� �������������� ���� ������ �������;
+- ���� ��������� ��������� ��� �� ����� ������ ������������ ��������, ������������� �� `Add` � ������ ������ �������������� opcode ��� �� ��������� ����� ����� ��������� VM.
+
+## Session 595 - 2026-04-30 22:18 - � ������� opcode ���� ������ ���������� Push
+
+��������:
+- ����� Session 594 ����� �����, ��� ����� ��������� ���� ������� ��� ������� �������, � ��������� ��� � `LoadElement`/`StoreElement` ��� �� ������ �������� ������������ ��� �������� ��������;
+- ��������� �������� ���� ���������� �� ��� ���� ����� ���� �������� ������: ���������� `EvaluationStack.Push(...)` ��������� ���������� � ���� ����� ������ opcode, ���� ��� VM ��� ���� ������ ���������� ��������� `RuntimeValue`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` ������� ����� `PushConst`, `PushIntegerZero`, `PushIntegerOne`, `ExecuteAddInstruction(...)`, `ExecuteAddLongIntegerInstruction(...)`, `ExecuteMultiplyInstruction(...)` � `ExecuteCompareGreaterInstruction(...)` ���������� �� `PushUnchecked(...)`;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs` �� `PushUnchecked(...)` ���������� ������ �������� ����� `LoadElement` � �������� ������������� �������, ��� �������� ��� �������������� ��������� ������������ ������ VM;
+- ������ �� ������ ��������� ��������, �� ������ ����� opcode � �� ��������� � ����� ����� ������� ��� ������ benchmark.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 666 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ������ `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-221741.txt` � `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-221805.txt`, runtime ratio `0.735x` � `0.827x`, total ratio `0.739x` � `0.827x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`, � �������� ������ �� opcode �� ����������.
+
+�������:
+- ������� ������ ���������� ����� ������������ ��������� �������� ���� � ���������� VM, ������ ��� ��� ������� ������ �������� �������� ���, ��� �������� ��� ��������� ����� VM;
+- �� ������� ���� ��� ������� ��������������� ��������� ������������������: ������� ����, �� �� ������� ������ � ��������� �� ������� ��������;
+- ������� ��������� ��������� ����� ������ ��� �� � ��������� �������, � � �������� ���������� � ����������� �����.
+
+��� �������:
+- �� opcode-������� �������� �� ��� �������� `LoadLocal`, `JumpIfForDoneLocal`, `PushConst`, `AdvanceForLoopLocal`, `LoadElement`, `Add`, `StoreElement`, `Multiply` � `AddLongInteger`;
+- ��������� ���� ��� ������� ��������, �� ������ ������ �� ���������� ���������������� ��� �������� ����, ��� � ���������� ��������������� ����.
+
+������ ��������� ���:
+- ������� � ���������� ������ ��������� ������� � ���������, ����� �� ��� ��������� `Add`, `AddLongInteger`, `Multiply` � ��������� ������ `FOR`-����� ������ `AdvanceForLoopLocal` � `JumpIfForDoneLocal` ��� ���������� ����� ��������;
+- ��������� ��� �� ������� `compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` � ������ opcode-������� ����� ������� ������ ������ ����.
+
+## Session 596 - 2026-04-30 22:26 - ������� ����� ����� ver1 � ������ ���� ver2
+
+��������:
+- ������������ ������� `docs/���� ���������� ������� Bytecode VM ver1.txt` � �������� ������� ��� � ����������� ���������� ���������� �����;
+- � ����� ������� � `PLANS3` � `WORKLOG4` ��� ��� ������� ����� ����� ����������� VM, �� �� ���� ���������� ����������� �������� ���������, ������� �� ������ ������� �������� ������ ������� ����� �� ���, ��� �� ��� �������� ���������.
+
+��� �������:
+- `docs/���� ���������� ������� Bytecode VM ver1.txt` ��������� � ����������� � ����������� �������� `docs/PLANS3.md`, `docs/WORKLOG4.md` � ������� ����������� `BytecodeVm`;
+- �������� ������������ built-in ���� VM: ������������ ������� �������������� ����������� `BuiltinExecution` � �������� ������ �� �������, �� ����� �������������, ��� � ������ ���� ������ built-in ��� �������� ������� �� ��� ���� fallback-�������� ����� �� `_builtins.Values`;
+- ���� ������ ������ ������ `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1`, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-222638.txt`, ����� ��������� �� ���� `array_cube_rollup.axm`, � ���� ���������� ��������� �����;
+- �� ��������� ����� ������ ������ ����� �������� `docs/���� ���������� ������� Bytecode VM ver2.txt`.
+
+������ �� ver1:
+- �������: ���������� ����������� ������, �������� ������������� ����������� built-in, ������� ���� �������� ��������� �������� VM � ������ ����� ������ �� ��������/������� ������;
+- �������� �������: ������� ������������� �������� �� ����� ������, ������ ��������� built-in fallback-����� � ��������� ���� ������� ������;
+- �� �������: ��������� ���� ��������� ���������������� �������/������ VM � ������� �������� ver1 ��� ��������� ������� �������� �� ��� ������� ������.
+
+��� ������� ������ ������ ������:
+- ������� ��� ������� �������������� �� `document_batch_repair.axm` � `array_cube_rollup.axm`;
+- ������ � �������� �� `regex_modes_pipeline.axm`;
+- �� ��� ����������� �� `file_batch_roundtrip.axm`, `regex_log_analysis.axm`, `array_transform_chain.axm` � `high_rank_metadata.axm` �� runtime ��� total;
+- ������ ver1 ������ ������ ��������� ��������� �����������, �� ����� ������� ��� ������������ �������� ������ ������, �� �������� ����������� ��������� ver2.
+
+��������� �����:
+- `docs/���� ���������� ������� Bytecode VM ver2.txt`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-222638.txt`.
+
+�������:
+- ������� `docs/���� ���������� ������� Bytecode VM ver1.txt` ����������� ��������, �� ��� ������������� ��� ������� �������� ���������� �����;
+- ������� ���������� ������� �� `docs/���� ���������� ������� Bytecode VM ver2.txt`, ��� ������ ��� ������������ ������ ������������ ������� ���������� ������, ��������� built-in fallback-����� � ������� ����������/�����;
+- �� ��������� �������� �������� �� ��������� �������������� �� ������� ������ ����������� �� ��� ���, ���� ��� �� ���������� ������ ������ `compare-engines`, � �� ���� ������� benchmark.
+
+��� �������:
+- ������ ������ fallback-���� built-in � ��������� ������ ��������� � variadic built-in;
+- �������� �� `Add`, `AddLongInteger`, `Multiply`, `JumpIfForDoneLocal` � `AdvanceForLoopLocal` ��� ��� �� ���������� ������ ������ �������;
+- ����� ������� ������ ���� ������� ������������ � ������� `--filter`, � ������ `compare-engines`.
+
+������ ��������� ���:
+- ������� `docs/���� ���������� ������� Bytecode VM ver2.txt` ��� ������� ������� �����;
+- ������ ����������� ����� ver2 ��������� � ������� ���������� built-in fallback-�����, ����� ���������� � ���������� � ������� `FOR/NEXT`.
+
+## Session 597 - 2026-04-30 22:32 - ��������� ����� �������� ��������� ��������� ��������� � ����� � ��������
+
+��������:
+- ������������ �������� ��������� benchmark-����� �� ������ ��������� ���������, �� � ����������, � ����� ������������� ������ ����� �����, � �� ���� `FOR/NEXT`;
+- ����� ������������ �������� �������, ��� � �������� ����� �������� � ������ ����-�������, ������ ����� ���� ����� ������� � ����������� ���������.
+
+��� ��������:
+- � `samples/smoke/engine-compare/string_array_loop_pipeline.axm` �������� ����� ���������� �������� `compare-engines`;
+- �������� ������ ��������� �������, ��������� ��������� ������ � ��������� �������� ������ ����-�������, ���������� `DATESERIAL`, `DATEADD`, `TIMESERIAL`, `MONTHNAME`, `WEEKDAYNAME`, � ����� ��������� ������ ����� `ARRAYCONCAT`, `ARRAYCLONE`, `ARRAYINSERT`, `ARRAYPUSH`, `ARRAYREMOVE`, `ARRAYPOP`, `ARRAYTAKE`, `ARRAYSKIP` � ����� `ARRAYCONCAT`;
+- ������ ���� �� �������� ������������� `FOR`, `WHILE`, `DO`, `DO WHILE`, `DO UNTIL` � `EXIT DO`, ����� ����� benchmark �������� �� ���� ����, � ����� ��������� ���� ����������;
+- � `src/Axiom.ManualChecks/Program.cs` �������� �������� � ����� ����� `GetBenchmarkCases()` ��� `��������� �������: ����� � ����-�����`.
+
+����������� ����������:
+- ������� ������� ������ ����� �� ��������� ������� � ���������� ����������, ������� ����� ������ ��������� �������� ������ �������� � ������ digest ���� ���������� �� helper-������� � �������� �������� ��� ��������� ������ ��������;
+- ��� ����-������� ������������ ������ ����������������� built-in, ����� benchmark �� ������� �� ������� ����� � ��������� ��������� ��� �������� ��������� �������.
+
+��������� �����:
+- `samples/smoke/engine-compare/string_array_loop_pipeline.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "string_array_loop_pipeline.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-223215.txt`, runtime ratio `0.638x`, total ratio `0.703x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-223244.txt`, ����� ����� `8` ��������� �������� ���������.
+
+��� ������� ������ ������ ����� ���������� ������:
+- ����� ��������� �������� ��� ������������ ��� ��������;
+- ����������� �������� � `array_cube_rollup.axm` ����� �������� � ���� �������� ��������;
+- `regex_log_analysis.axm` �� ��� ��������� � ������� ������ ��������� ������������� ��� ver2;
+- ��� ������ ��������� ����� ������� ��������: ������ �� ��������� �� ������ �������� ��������� hot path, �� � ��������� �������, ����� ���������� ���� � ����������������� built-in ����-�������.
+
+�������:
+- ������� ���������� benchmark-������ �������� ��������� �����, � �� ������������� ����������� ��� ������ �������;
+- ������� ����� �������� ���������� ������ `compare-engines`, �� ������� ����� ������� ���������� �����������;
+- �� ������������ `NOW()`, `TIME()` � ������ ������� �������� ������� � benchmark-��������� ��������� �������, ���� �� ����� �������� ������������������ �������������.
+
+��� �������:
+- ������������ ��� ����������� ����� ��� ������������ ��������� ������ ��� ver2;
+- �������� ��������� ���������� �������� �� `regex_log_analysis.axm` � ��������� ����������-�������� ���� VM;
+- �� ������������ � ������ ��������� benchmark-only �������� ���, ��� ����� ����� ��� ���������� ����� ������� �������.
+
+������ ��������� ���:
+- ���������� ver2 ��� �� ������������ ������ � ������ ����� ��������� ���������� built-in fallback-����, � ����� `Add`, `AddLongInteger`, `Multiply`, `JumpIfForDoneLocal` � `AdvanceForLoopLocal`, ������ ��� �������� � �� ������� ��������, � �� ������� `compare-engines`.
+
+## Session 598 - 2026-04-30 22:36 - ����� �������� fallback built-in �� CanonicalId � VM
+
+��������:
+- �� ����� ver2 ����� ���������� ���������� ������ ��������� ���������� ����� ���� ������ ���������� fallback-���� built-in, ������ ��� ���������� � ���������� �������� ����������-��������� ����;
+- �������� ���� ��������, ��� �������� built-in-���������� � VM ��� ����� ���������� ������ ������� � `BuiltinExecution`, �� � ������ ���� ������ built-in ��� �������� ������� �� ��� ��������� fallback-�������� ����� �� `_builtins.Values`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` �������� ������� `_builtinsByCanonicalId` ���� `BuiltinFunctionId -> BuiltinBinding`;
+- � `InvokeBytecodeFunction(...)` �������� fallback `FirstOrDefault(candidate => candidate.CanonicalId == builtinId)` ������ �� ������ ������ �� `_builtinsByCanonicalId`;
+- �������� ����� `builtin id -> BuiltinExecution` � ������ ������ built-in �� ������� �� ��������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 667 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-223646.txt`, ������ ����� �� 8 ��������� �������� �������.
+
+��� ������� ���������:
+- ��� �� ��� ���������� �������� ���������� ��������, ��� �������� ��� ������� function-value ���� built-in;
+- ���� �� ��������� ������ ������������� ����� ver2: ������ � ������� built-in-�����, � ������ built-in ��� �������� ������� ��������� �� ������ �������, � �� �� �������� �����.
+
+�������:
+- ������� �������� fallback built-in �� `CanonicalId` �������� ��� ����������� ���� ������� �����;
+- �� ������������� ���� ��� �� ��������: ��� �������� ������������� � ����������������, � �� � ���� ���������������� �������� �������� �� ����� benchmark;
+- ������� ��������� ��������� ������� ��� �� built-in ����, � ���������� � ������ �����.
+
+��� �������:
+- �� ������� ������ ����� ����� ��������� ���������� �������� �� ��� �������� `regex_log_analysis.axm`;
+- �� ����������� hot path VM ���������� ����������� �������� `Add`, `AddLongInteger`, `Multiply`, `JumpIfForDoneLocal` � `AdvanceForLoopLocal`.
+
+������ ��������� ���:
+- ���������� � ���������� ������ �������� ���� ver2 � ��������� ��������� ���������� � ����, �� ����� ��� ���� �� ���� ������ `compare-engines` � ����������� `regex_log_analysis.axm`.
+
+## Session 599 - 2026-04-30 22:48 - � ������� helper-������ VM ����� ��������� As-��������
+
+��������:
+- ����� Session 598 �� ����� ver2 ��������� ������� ���������� ���������� � ������ `FOR`-�����;
+- ������ ������� �� `array_cube_rollup.axm` ��-�������� ������ � �������� `LoadLocal`, `JumpIfForDoneLocal`, `AdvanceForLoopLocal`, `Add`, `Multiply` � `AddLongInteger`, ������� ��������� ��� ���� ������� ������ �� ����� ����� ������� opcode-�����, � ����� ����������� ��� �������������� �������� ������.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` ��������� ��������� `GetIntegerUnchecked(...)`, `GetLongUnchecked(...)`, `GetDoubleUnchecked(...)`, `GetDecimalUnchecked(...)`, `GetStringUnchecked(...)`, `GetBooleanUnchecked(...)` � `AggressiveInlining`;
+- �� ��� ���������� ������� helper-����� `TryEvaluateHotAdd(...)`, `TryEvaluateHotMultiply(...)`, `TryEvaluateHotCompareGreater(...)`, `TryShouldTerminateLocalForLoop(...)`, `TryAdvanceLocalForLoop(...)` � ����� ������ �������� ��������� ����;
+- � `ExecuteAddLongIntegerInstruction(...)` ������������ ������ ��������� ���������� `ResolveLocation(...)`, � ������ `LONG + INTEGER` ���� ���� �������� �� ��� ����������� ���������� ��������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 667 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-224736.txt`, ������ ����� �� 8 ��������� �������� �������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-224752.txt`, runtime ratio `0.670x`, total ratio `0.675x`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`, � ������ �� ������� �� ��������.
+
+��� ������� ���������:
+- ��� �������������� ��� ����������� ��������� �������� ���� ��� ��������� ����� ��������: ������� `array_cube_rollup.axm` ������� ������� ������������ �������� ��� ���������������;
+- ������� ����������, ��� ��������� �������� �� � ��������� ������, � � ���� ��� ������������ ������ ��������, ������ ����� `LoadLocal` � ������� `FOR`-�����;
+- ������ `compare-engines` ������� ���������: ��������� � �������� �������� ��������� ���� ������, �� regex-����� �� ��� ������� ������ ��������� ������������� ver2.
+
+�������:
+- ������� ������� �������� ������������� � �� ���������� ������ ��� ������ ����������������;
+- �� ���������� � ����� ����� �������������� ��������� ��� ����������� ������� ������ ���� ���������� ��������;
+- ������� � �������� ���������� ������ ��������� `LoadLocal`/`StoreLocal` ����� � `JumpIfForDoneLocal` � `AdvanceForLoopLocal`, � �� ������ ���������� � ������ �� �����.
+
+��� �������:
+- �� ������� `array_cube_rollup.axm` ������� ������� `LoadLocal`, � ������ `FOR`-����� �� ��� �������� ����� �������� ���� ������;
+- �� ������� ���������� ������ regex-�������� ��-�������� �� ��������� ������� ver2 ������� � ����������.
+
+������ ��������� ���:
+- ���������, ����� �� ��� ��������� ��������� `LoadLocal`/`StoreLocal` � ��������� ���� `FOR` ��� ��������� ��������� � ��� ���������� ������ opcode;
+- ����� ���������� ���� ����� ��������� � ������� `array_cube_rollup.axm`, � ������ `compare-engines`, ����� �� ���������� ��������� ������� �� ������� ������ �������.
+
+## Session 600 - 2026-04-30 22:55 - FOR-������ ������� � ������������������ ��������� �����
+
+��������:
+- ����� Session 599 ������������ �������� �������, ��� ������� ������� ������ ������ ������� ������ `FOR`, � ��������� ����� ���������� �� �������� �����������;
+- �� ������� `array_cube_rollup.axm` ����� ����������� ���� �� ��� ������� `LoadLocal`, `JumpIfForDoneLocal` � `AdvanceForLoopLocal`, ������� ���� ������� �� ������� ��������� �����, � ��������� ������ ��������� ������ `FOR`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` ��������� ������ `LoadForLoopLocalValues(...)`, `LoadForLoopAdvanceValues(...)` � `StoreNumericLocalValueUnchecked(...)`;
+- `ExecuteJumpIfForDoneLocalInstruction(...)` � `ExecuteAdvanceForLoopLocalInstruction(...)` � `src/Axiom.Runtime/Execution/BytecodeVm.cs` ���������� �� ��� ������������������ �������� �����;
+- �� ���� ����� � ������� `FOR`-���� ��������� ��������� �������� `_hasSharedLocals`, ����������� ����� ��������� ��������� � ������� � ��������� ������ ������ ����� ����� ������������ �������� ��� ��� �������������� ��������� �������� �����.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 667 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "array_cube_rollup.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-225428.txt`, runtime ratio `0.707x`, total ratio `0.713x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-225503.txt`, ������ ����� �� 8 ��������� �������� �������;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\array_cube_rollup.axm` - �������, ������� ������� `Instructions: 285800`, � ������ �� ������� �� ��������.
+
+��� ������� ���������:
+- ��� ��������� ���������� ��������� ������ `FOR`, �� ��������� ������ �������� ����� ������, ��� ���������� ������ helper-����������;
+- ��� ���� ����� ������ �� ��������: ������ ����� ����� ��������, � ��������� �������� ��������� ��������� ������������ �������� ��� ���������������;
+- ������� ����� ������ ��� �����: ���� ����� ������� FOR-������������� �������� �������� opcode ������� `LoadLocal`, ������ ��������� �������� ������� ����� ��� � ����� ������ �������.
+
+�������:
+- �������� ������ � ������ ��� ���������� ��������� ����������� `FOR`, � �� ���������� � ������ ��-�� ������ ��������� �������� �������;
+- �� ����������� �� ������ �����, ���� ������ `FOR` � �������� `LoadLocal` ���������� ������ �������� �������;
+- ������� ��������� ��������� ������� ��� ����� ���� `LoadLocal`, � �� ��� ���� ������������������ ������ `JumpIfForDoneLocal`.
+
+��� �������:
+- `LoadLocal` ��-�������� ���������� opcode � ������� `array_cube_rollup.axm`;
+- regex-�������� ������� ������ �� ��� �� ���� ������� ver2 ������� � ����������, ���� ���� ��������� `FOR` ��� ������ �������.
+
+������ ��������� ���:
+- ���������, ����� �� ��� ��������� ��������� ����� ���� `LoadLocal` ��� ���������� ��������� shared-������� � ��� �������� � ����������� ����������;
+- ����� ���������� ���� ����� ��������� ������� `array_cube_rollup.axm`, ������ `compare-engines` � ����������� opcode-�������.
+
+## Session 601 - 2026-04-30 23:04 - �������� ������ ��������� benchmark �� ��������, regex, ����� � SELECT CASE
+
+��������:
+- ������������ �������, ��� ������ �� ������ ����� ��������� ������, � ������ ����� ���� ����� `.axm`-��������, ��� � ����� ��������� ����� �����, �������, regex, ������, ����-����� � ������ ����������� ��������;
+- �������� ���� ����� �� ������ `SELECT CASE`, ����� �������������� benchmark �������� �� ������ ������� � �����, �� � �������� ��������� �� ��������� �����.
+
+��� ��������:
+- � `samples/smoke/engine-compare/mixed_workload_pipeline.axm` �������� ����� ������ ��������� ��������;
+- �������� �������� �������� � ��������� �������, `FOR`, `WHILE`, `DO`, `DO WHILE`, `DO UNTIL`, `ARRAYCONCAT`, `ARRAYCLONE`, `ARRAYINSERT`, `ARRAYPUSH`, `ARRAYREMOVE`, `ARRAYPOP`, `ARRAYTAKE`, `ARRAYSKIP`, ��������� �������, `REGEXREPLACE`, `REGEXMATCHES`, `REGEXEXTRACTALL`, `REGEXSPLIT`, ������� ����-������� � ��������� `SELECT CASE` � ���������������� ������;
+- � `src/Axiom.ManualChecks/Program.cs` ����� ���� �������� � `GetBenchmarkCases()` ��� `��������� ��������: �����, ������, regex, ���� � SELECT CASE`.
+
+��������� �����:
+- `samples/smoke/engine-compare/mixed_workload_pipeline.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1 --filter "mixed_workload_pipeline.axm"` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-230404.txt`, runtime ratio `0.766x`, total ratio `0.811x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-230415.txt`, ������ ����� �� 9 ��������� �������� �������.
+
+��� ������� ���������:
+- ����� �������� ������������� ��������� ���� ��������������� ���������� benchmark-�, � �� ��� ������ ������ �����: � �� ������������ �������� �����, �������, ������, regex, ����-����� � `SELECT CASE`;
+- �������� ������ ����������, ��� ������� ��� ����� ���� �� �� �������, �� ������ �������� ������ ��� ��������� �������� �� runtime, ��� ������ �������� �������� �������� ��� ������� ����������� ������;
+- ������ �������� ������ ����� ����� � �������� ���� ������������: ���� � ��������������� ��������� �����, � ���� ����� ��������� ������� ��������.
+
+�������:
+- ������� `mixed_workload_pipeline.axm` ���������� ������ `compare-engines`, � �� ��������� �������������;
+- �� �������� �� ������������������ ��������, ������ ��� ��� �� ��� ����� ��� ����������� ��������� � ���������;
+- ������������ ����� ��������� benchmark ��� ������ �� �������� VM ��� ���� ��������� `FOR`-������.
+
+��� �������:
+- �� ������� ������ �� ��� ������� ��������, ��� ������� �����������, ������ ����� `regex_log_analysis.axm`, `file_batch_roundtrip.axm` � ������ ����� ��������� �������������� ������;
+- ��� ������� ��������� ����� �� ��� ����������� ��������� `LoadLocal` � ������� regex- � ���������� ������ ��������� ��������.
+
+������ ��������� ���:
+- ���������, ����� ������ ������� � regex- � ��������� ������ ������� ����� ����� ���� `regex_log_analysis.axm` � `mixed_workload_pipeline.axm`;
+- ����� ���������� ���� ����������� ��������� � �������� ������ ������ `mixed_workload_pipeline.axm`, � ������ `compare-engines`, ����� �������������� �������� ����� ���������, ���������� �� �������� ����� ����.
+
+## Session 602 - 2026-04-30 23:09 - � Bytecode VM �������� ��� regex-�������� �� ����� ����������
+
+��������:
+- ����� ���������� `mixed_workload_pipeline.axm` ����� �����, ��� ��������� ������� ����� ��� �� � ��������� ������� �� `LoadLocal`, � � regex- � ��������� ������, ������� ����� � `regex_log_analysis.axm`, � ����� ��������� �������������� ��������;
+- �������� ���� ��������, ��� regex built-in � ���������� VM ������ ��� ������ ������� `Regex`, ���� ���� � ����� � ��� �� ��������� ����� � ����� ������������ �� �� `pattern` � `modes`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Regex.cs` �������� �������-��� `Regex` ������ ���������� `BytecodeVm`;
+- `CreateRegex(...)` ������ ������� ���� ��� ��������� ������ �� ����� `pattern + RegexOptions`, � ������ ��� ������� ������ ����� `Regex` � ����� ��� � ���;
+- ��� ���� ������ � �������� ������ ������� VM, ������� �� ������ ������� �������� ���������� � �� ��������� ��������� ����� �����������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Regex.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "regex_log_analysis.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-230901-regex.txt` - �������, runtime ratio `0.851x`, total ratio `0.842x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-230901-mixed.txt` - �������, runtime ratio `0.838x`, total ratio `0.876x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-230939.txt`, ������ ����� �� 9 ��������� �������� �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 668 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������.
+
+��� ������� ���������:
+- �������� �������������: ��������� ������ ���������� regex-�������� ������������� ���� ����� ����� ����������� ������, � �� ���������� ������ benchmark-�����;
+- �������� ������� �������� �������� � ������ regex-��������, � ����� ��������� �������������� benchmark;
+- ������ �������� `compare-engines` ������� ������ � ��������� �� ��������� regex- � ��������� ���������, �� ����� ������ ����� ���� �� ��������, � ��������, ��������� � ��������� ������ �������� � ������� ���������.
+
+�������:
+- �������� regex-��� ��� ��������� ����������� VM, � �� ��� ��������� ���������� ��� ���������� benchmark;
+- ������� ��������� ����� ��� �� � ��������� ������ `Regex`, � � ��������� ���������� ��������� �������� � ����������� regex built-in ������ ���������� VM;
+- �� ������������ � `LoadLocal` ��� ����� ������ ��������, ������ ��� ������� ��� ��� ��� ����� ������� ����� ������ �� ��������� ��������.
+
+��� �������:
+- ������ ����� �� ��� ���������� ����������� ������� �� ����� regex- � ��������� ���������;
+- ����� �������������� `mixed_workload_pipeline.axm` ������� ������ ��������, ������ ��� �� ��������� regex � �������, ��������, ��������� � `SELECT CASE` � ����� ���������.
+
+������ ��������� ���:
+- ��������� ��������� ���������� �������� ����� � ��������� ���������� ������ � `REGEXMATCHES`, `REGEXEXTRACTALL`, `REGEXSPLIT` � ������� built-in;
+- ����� ���������� ���� ����� ��������� �������� `regex_log_analysis.axm` � `mixed_workload_pipeline.axm`, � ����� ������ `compare-engines`.
+
+## Session 603 - 2026-04-30 23:14 - ���������� 1D-������� VM ���������� �� ������ ������
+
+��������:
+- ����� Session 602 ����� �����, ��� ��������� ������ `Regex` ��� �� ������������ ���� regex-������: ����� � ��� ������� ��������� ���������� ��������� �������� ��� `REGEXMATCHES`, `REGEXEXTRACTALL`, `REGEXSPLIT` � �������� built-in;
+- �������� helper-���� ��������, ��� ���������� ���������� ������� � ���������� VM ��������� ����� `Allocate(...)` � ����������� ���� `SetValue(...)`, �� ���� � ������ �������, bounds-������� � ����� ������������� �������� ���� ���, ��� �������� ��� ������������ ����� built-in.
+
+��� ��������:
+- � `src/Axiom.Runtime/Values/RuntimeArrayValue.cs` ��������� ������� `CreateCompactOneDimensional(...)`, ������� �������� ����� ����� ����������� ������� � ����� ��������� `_elements`;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs` helper `CreateCompactArrayValue(...)` �������� �� ��� �������;
+- �� ���� ����� regex-, ���������, �������� � ������ built-in, ������������ ���������� ���������� �������, ������ �� ������ �� ������ ���� ����� `Allocate(...)` + `SetValue(...)` �� ������ �������.
+
+��������� �����:
+- `src/Axiom.Runtime/Values/RuntimeArrayValue.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 668 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "regex_log_analysis.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-231450-regex.txt` - �������, runtime ratio `0.850x`, total ratio `0.836x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-231450-mixed.txt` - �������, runtime ratio `0.791x`, total ratio `0.853x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-231440.txt`, ������ ����� �� 9 ��������� �������� �������.
+
+��� ������� ���������:
+- ��� ������������ ��� ����� ������� �� regex- � ���������� built-in-����, � �� ��� ������� ���������� ��� ���� ��������;
+- ����� ��������� �������������� benchmark ���� � ���� ������������ �������� ���� �� ������ �������� �������;
+- `regex_log_analysis.axm` ������ �� �������� ����� ��������� ��������: �� runtime �� ����������� �� �������� ���� � ������ ������, � �� �������� ��������� ������� ��� ������� � ������ ��������.
+
+�������:
+- ������� ���� ���������� ��������� �������� ������ ������ ������� �����, � �� �������������� ������������� ����������;
+- �������, ��� ������� ����� ����� ����� Session 603 ��� ������� ����� �������� ��������� �������� ���������� VM, ��� �� ������ ������ ver2;
+- ��������� ����� �������� ��� �� ���������� ������������� ������� ������, � �� �� ������ ������� ������ `FOR` � `LoadLocal`.
+
+��� �������:
+- `high_rank_metadata.axm` ������� ����� ��������� � ������ ���������, ��� ������������� ������������ ����������������, �� ��� �� ��� ����� ������� ��� �����������;
+- �� ��������� ��������� ������� ������� ����� runtime � total, ������ ����� ������� ����� ������ �� � ����� ���������� VM, � � �������� ������ ����������/���������.
+
+������ ��������� ���:
+- ���������� ��������� ���������� ����������� ������� ������ ��� ����� Session 603 � ���� � ���� �� ����������, � �� �� ������� ������ hot-path �������;
+- ���� ��������������� �� ������� �������, ��������� ���������� ������� ����� ���� `high_rank_metadata.axm` ��� ����������� ����� ������, ���� ��������� ������ ����� runtime � total ���, ��� VM ��� �������, �� �������� ����� ��� �����.
+
+## Session 604 - 2026-04-30 23:19 - ARRAYBOUNDS �������� �� ������ 2D-������, high-rank �������� ������� ������
+
+��������:
+- ����� Session 603 ��������� ���������� ����������� ���������� �������� `high_rank_metadata.axm`, �� ���� ������, ���� �� ��� �������� �������� ����� ��� ��� ��� ��� �������������;
+- ������ built-in �������, ��� `ARRAYBOUNDS` �� ��� ������ ��������� ��������� integer-������ ����� ����� ����, ���� �� ������ ��� ���������� ��������� ��������� ������������� �����.
+
+��� ��������:
+- � `src/Axiom.Runtime/Values/RuntimeArrayValue.cs` ��������� ������� `CreateCompactTwoDimensional(...)`;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs` `EvaluateArrayBoundsBuiltin(...)` �������� �� ������ ������ ���������� `ARRAYBOUNDS` ����� ��� �������;
+- ��� ������� ������ ����� ���� ��� ���������� ���������� ���������� ��� ��������� ���������������� ���������.
+
+��������� �����:
+- `src/Axiom.Runtime/Values/RuntimeArrayValue.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 668 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter "high_rank_metadata.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-232015-highrank.txt` - �������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-231932.txt`, ������ ����� �� 9 ��������� �������� �������.
+
+��� ������� ���������:
+- ������ ���� `ARRAYBOUNDS` ��� �� ���� ���������, �� `high_rank_metadata.axm` ������� ������� ��������� ���������, ����� �� ���� ������ �������� ��������� �������������� ���;
+- ��� �������� ������������� �����: ������ ���� ����� �������������, ��� ��������� ��������� ����� ����� �� �� high-rank metadata, � �� ����� ���������� ��������� ������� ������;
+- �� ������ ������ ��-�������� ������ regex-, ��������� � ��������� ������ ���� ������ �������, ��� tiny high-rank benchmark.
+
+�������:
+- �������� ������ 2D-������ `ARRAYBOUNDS` � ������ ��� ���������� ��������� ���������;
+- �� ������������ `high_rank_metadata.axm` ��� ������� �������� ��� ������������� ��������� �����������;
+- ������� ���� �������� ������������� smoke-���������, � �� ������� benchmark-��������.
+
+��� �������:
+- � ������ ������ �� ��� ���� ��������� ���������� �� ����� regex- � ��������� ���������;
+- ����� ��������� benchmark ������� ������ ������������ ���������� ����� ���������� `array_cube_rollup.axm`.
+
+������ ��������� ���:
+- ��������� � ���������� ��������� ������� ������ � ������� ��������� ����� �� ���, � �� �� `high_rank_metadata.axm`;
+- ����������� ������� � ������ `mixed_workload_pipeline.axm`, `regex_log_analysis.axm` � `string_array_loop_pipeline.axm` ��� �������� �������������� ���������� ������ �������� ���������� VM.
+
+## Session 605 - 2026-04-30 23:23 - ����� ���� Convert � ��������� � VM �������� �� ������ ������
+
+��������:
+- ������� `mixed_workload_pipeline.axm` ����� Session 604 ������� ��� ������ �������� �������� ����: ������ ����� `Convert`, `CompareEqual`, `JumpIfTrue`, `Contains`, `Replace`, `Str` � �������� ��������-���������� ����, � �� ������ ��������� `FOR`-���������;
+- ��� ������ �������� ��������� ��� �� � ��������� ����������� built-in-�����, � � ����� ���� VM, ��� `Convert` � ��������� ��������� �� ��� ������ ����� ����������� accessor-�.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` `ExecuteConvert(...)`, `ConvertValue(...)`, `IsZero(...)`, `ValuesEqual(...)` � `Compare(...)` ���������� �� ��� ����������� ���������� �������� ����� `GetIntegerUnchecked(...)`, `GetLongUnchecked(...)`, `GetDoubleUnchecked(...)`, `GetDecimalUnchecked(...)`, `GetStringUnchecked(...)`, `GetBooleanUnchecked(...)`;
+- ��������� `Convert` ������ ������� � ���� ����� `PushUnchecked(...)`;
+- ��������� �������������� � ��������� �� ��������, ��������� ������ ���������� ���� ����������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 668 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-233000-mixed.txt` - �������, runtime ratio `0.715x`, total ratio `0.845x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-233000-string.txt` - �������, runtime ratio `0.702x`, total ratio `0.848x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 4 --warmup 1 --filter "regex_log_analysis.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-233000-regex.txt` - �������, runtime ratio `0.815x`, total ratio `0.823x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 2 --warmup 1` - �������, ����� `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-232355.txt`, ������ ����� �� 9 ��������� �������� �������.
+
+��� ������� ���������:
+- ����� ���� `Convert` � ��������� ������������� ��� �������������� ���������� ��� ��������� ��������;
+- �������� ������� ������� ���������� �� ��� �������� ������ ���������: regex, ��������� ��������� � ����� ��������������;
+- ������ �������� ����� �� ��� ������� ������ �� ����� ���������, �� ����� Session 605 ������� �� ������� ������ � ����� �������� ��� ����������� ����� ��������, ��� � ������ ver2.
+
+�������:
+- �������� ������ ��� ����� ��� �� ����������� ������ VM, � �� ��� ������� ����������� ��� ���� `.axm`;
+- ������� ��������� ����������� ��� �� �������������� accessor-���� VM, � ������� built-in-������������������ ���������� ��������������� ��������;
+- ������������ `mixed_workload_pipeline.axm` ��� �������� ������������ �������� ���������� �����, � �� ������ ��� �������������� benchmark.
+
+��� �������:
+- � ������ �������� ������� `regex_log_analysis.axm` � `mixed_workload_pipeline.axm` �� ��� ����� ������� ������� �������� ��������;
+- ������ ��������� ������� ��������� ����� ��� � ������ ���������� ��������� built-in � ������� �������, � �� � ������� opcode VM.
+
+������ ��������� ���:
+- ����� ������ ������� `mixed_workload_pipeline.axm` ����� Session 605 � ���� � ��� �������� built-in/Opcode-������;
+- �������� ��������� ���� `Contains`, `Replace`, `Str`, `CompareEqual`, `JumpIfTrue` � �������� �������� ��������, ������� ��������� �������� ��������� ��������� ��������.
+
+## Session 606 - 2026-04-30 23:35 - ������� ����� ���������� built-in � �������� `CallBuiltin`
+
+��������:
+- ����� Session 605 �������� ��������������� ������� `mixed_workload_pipeline.axm` ���������� �������: `LoadLocal`, `PushConst`, `StoreLocal`, `Add`, `CallBuiltin`, `Convert`, `CompareEqual`, `JumpIfTrue`;
+- �� built-in-����� ���� �����, ��� ������������ ���� ���������, regex-, �������� � date/time built-in ��� ����� ����� ������� `Get*Unchecked(...)`, �� � ����� dispatch-������� ��� ��������� ������� ����� �������������� ������� � `AsString()` / `AsInteger()` / `AsBoolean()`;
+- ��� ������ ��������� �������� ����� �� ����� ������� ����������� ��� ���� benchmark, � ��������� ������ ������ ���������� built-in � �������� �� `CallBuiltin`.
+
+��� ��������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` `ExecuteBuiltinCall(...)` ������ ����� ��������� built-in � ���� ����� `PushUnchecked(...)`;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` ���������� �������������� string/integer/boolean built-in ���������� � `AsString()` / `AsInteger()` / `AsBoolean()` �� `GetStringUnchecked(...)` / `GetIntegerUnchecked(...)` / `GetBooleanUnchecked(...)`;
+- ������ ������� ������ (`VAL`, `LCASE`, `UCASE`, `WRITE`, `WRITEFILE` � ��.), ����-����� � ������� ����� (`DATESERIAL`, `TIMESERIAL`, `DATEADD`, `WEEKDAY`, `MONTHNAME`, `TOUTC`, `FROMUTC` � ��.), � ����� �������-������� ���� (`FILEEXISTS`, `READFILE`, `GETFILES`, `COPYFILE`, `CHANGEDIR` � ��.).
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 668 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 195 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-234600-mixed.txt` - �������, runtime ratio `0.721x`, total ratio `0.853x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-234600-string.txt` - �������, runtime ratio `0.624x`, total ratio `0.770x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "regex_log_analysis.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-234600-regex.txt` - �������, runtime ratio `0.818x`, total ratio `0.822x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 2 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260430-234600-full.txt` - �������, ������ ����� �� 9 ��������� ��������;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - �������, ��������� �������� ������� �� ����������: `LoadLocal`, `PushConst`, `StoreLocal`, `Add`, `CallBuiltin`, `Convert`, `CompareEqual`, `JumpIfTrue`.
+
+��� ������� ���������:
+- ����� built-in-����� ������������� ������ ���������: �������� ������� ������� �� `mixed`, `string` � `regex` ���������� ������� � �������� ���������� ����;
+- ��� ���� ������� `mixed_workload_pipeline.axm` �� �������� ����� �� ���������, �� ���� �� ��������� ������������ �����, � �� ������� ����� ��������;
+- ������ �������� ����� �� ��� ������������, ��� `regex_log_analysis.axm` ������� ������ ��������� ����� ��������, �� ��� ��� ������ ���������� ������� VM.
+
+�������:
+- �������� ������ ��� ����� ���������������� ��� ��� built-in-���� VM, � �� ��� ������� ��������� ��� ���� benchmark;
+- ������� ���� ��������� checked-accessor-�� � built-in dispatch � �������� ��������;
+- �� ������������ � `LoadLocal` ��� `FOR` ��� ����� ����� ��������, ������ ��� ��� ������ ��� ������������ �����������.
+
+��� �������:
+- �������� ��������������� ������� `mixed_workload_pipeline.axm` ��-�������� ���������� � `LoadLocal`, `PushConst`, `StoreLocal`, `Add`, `CallBuiltin`, `Convert`, `CompareEqual`, `JumpIfTrue`;
+- �� built-in-������� ��-�������� ������� `Contains`, `Str`, `Replace`, `Right`, `Insert`, `RegexReplaceModes`, `TrimWhitespace`, � �� date/time ���� - `DateAdd`, `DateSerial`, `TimeSerial`, `Weekday`, `WeekdayName`, `Month`, `MonthName`, `Day`;
+- ������ ��������� ��� ����� ����� ���� �� ������ `PushConst`, ���� �� �������� ��������� ������ ��������� � ���������, �� ��� �� ������ ��������� ��������.
+
+������ ��������� ���:
+- ��������� ������� � ��������� `PushConst` �� `mixed_workload_pipeline.axm` ����� Session 606 � ���������, ���� �� ��� ��� ���� ��-���������� ����� �������� ������ `0`/`1`, � �� �������� ��� ���� ��������;
+- ���� ������������� �������� �������� �������, ������������� �� ������ `CompareEqual` + `JumpIfTrue` + �������� ��������� built-in (`Contains`, `Replace`, `TrimWhitespace`) ��� �� ��������� ����� ���� �������������� ��������.
+
+## Session 607 - 2026-05-01 21:39 - ��������� � ��������� ���������� ������� ����� � ������ opcode
+
+��������:
+- ������������ �������� �������� �� ������������ � `PushConst` � ������� ��������� �� ����������, �� ������ �� �� ��� � ��������-���������� �������� ������� `mixed_workload_pipeline.axm`;
+- ������ `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������, ��� �� ��� ������� �������� ����: ����� `Convert`/`CompareEqual` ����� `Get*Unchecked(...)`, ����� built-in-dispatch � ����� ������ ������ `Compare... + JumpIfTrue/JumpIfFalse` ������ ��� ��������� ������� � �������� ��������;
+- �� ���������� ��������� ���� ������ �� ��������� `=` / `<>` � �������������� ��������-���������� ������� ��� �� ����, ������� ���� ����� ��������� ������ ��������.
+
+��� ��������:
+- � `src/Axiom.Bytecode/Model/Opcode.cs` ��������� ���������� opcode `JumpIfEqual` � `JumpIfNotEqual`;
+- � `src/Axiom.Bytecode/Model/BytecodeRoutine.cs` �� ����� �������� ������ ������� comparison-��������� (`-2`);
+- � `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` peephole-������ lowered-��� `Compare... + JumpIfTrue/JumpIfFalse` ��������� �� `SyntaxKind.EqualsToken` � `SyntaxKind.NotEqualsToken`, ��� ��� `=` � `<>` ������ ���� ����� ���������� � ������ ��������� ��� �������������� ������ ����������;
+- � `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` ����� opcode ���������� � ��������� operand count, jump target, stack-flow � compatibility-��������� ����� ����� ��� �� �������, ��� � � ������� �������� ���������;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` ����� ����� ����������� ����� ��� ������������ `ExecuteComparisonJumpInstruction(...)`, ����������� �� `Equal` � `NotEqual`, � ������� `JumpIfTrue`/`JumpIfFalse` ������ ���������� �� `GetBooleanUnchecked(...)` ������ `AsBoolean()`;
+- � `tests/Axiom.Bytecode.Tests\BytecodeCompilerTests.cs` �������� ���� �� ������ `CompareEqual` + `JumpIfTrue` � `JumpIfEqual`, � � `tests/Axiom.Bytecode.Tests\BytecodeModuleValidatorTests.cs` - �������� ���������� � ������������ ��������� `JumpIfEqual`.
+
+��������� �����:
+- `src/Axiom.Bytecode/Model/Opcode.cs`
+- `src/Axiom.Bytecode/Model/BytecodeRoutine.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `tests/Axiom.Bytecode.Tests/BytecodeCompilerTests.cs`
+- `tests/Axiom.Bytecode.Tests/BytecodeModuleValidatorTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj` - �������, 198 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - �������, 668 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-001500-mixed.txt` - �������, runtime ratio `0.741x`, total ratio `0.895x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-001500-string.txt` - �������, runtime ratio `0.576x`, total ratio `0.760x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 2 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-001500-full.txt` - �������, ������ ����� �� 9 ��������� ��������;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - �������, `Instructions: 47080`, �������� �������� � `CompareEqual`/`JumpIfTrue` �� `JumpIfEqual`/`JumpIfNotEqual`.
+
+��� ������� ���������:
+- ��� ��� �� ������������� ����������������, � ������ ����������� ������ ��������������� string/branch-����: `mixed_workload_pipeline.axm` ������ ��������� �������� `CompareEqual` � ����� ������ �������� ���������;
+- �� ������� �������� ������ �������� ���: `LoadLocal`, `PushConst`, `StoreLocal`, `Add`, `CallBuiltin`, `Jump`, `Convert`, `LoadArgument`, `JumpIfEqual`, `Modulo`, � �� built-in-������� �� ��� ����� `Contains`, `Str`, `Replace`, `Right`, `Insert`, `RegexReplaceModes`, `TrimWhitespace`;
+- ������ �������� ����� ������� ������ �� regex-��������, �� �� ���������� � ���������� �������� �������� VM ���������� ��������� ������������.
+
+�������:
+- ������� ���� `CompareEqual` + ������������ ��������� �������� ��������� ������;
+- �� ������������ � `PushConst`, ������ ��� �� ��� ������������ ���������� � ������������ �������� �������� ��� ������ �� ������� ��� ����� �������������� �������;
+- ��������� ��� ����� ��� �� �� ��������������� equality-path, � �� ���������� ��������� built-in, ������� ������ ��� ���� ����� ����� ������ ���������� `CompareEqual`.
+
+��� �������:
+- � �������������� ������� `mixed_workload_pipeline.axm` ����������� built-in ��-�������� �������� `Contains: 650`, `Str: 376`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`;
+- ����� ����� opcode �� ��� ���������� � `LoadLocal`, `PushConst`, `StoreLocal`, `Add`, `CallBuiltin`, `Jump`, `Convert`, �� ���� built-in-���� ������ ��� �������� ��� ��������� ��������, ��� ����� ������ ��������� � ���������.
+
+������ ��������� ���:
+- ����� ��� �� opcode-, � ���������� ������ �� ��������� built-in `Contains`, `Replace`, `TrimWhitespace` � `Str` � `mixed_workload_pipeline.axm`, ����� ������, ��� �� ��� ����� �� ������ �������, � �������� ���������;
+- ����� ����� ���� ��������� ����� ��� ������ � ���� ������ � ��������� ��� �� ����� ��������: �������� `mixed`, �������� `string`, ������ �������� `compare-engines` � ������ �������.
+
+## Session 608 - 2026-05-01 21:48 - ��������� built-in ��������� ������ ��� ����������� ��� ������� ��������
+
+��������:
+- ����� Session 607 ��������� ���� `CompareEqual` � ������������ ��������� ��� ��� ����, � � �������� `mixed_workload_pipeline.axm` ����� built-in �������� ��������� ���������� `Contains`, `Str`, `Replace` � `TrimWhitespace`;
+- ������ `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������, ��� � ���� ���� �� ��� �� ������ � ��������� ��� ��������� �������� ����������: �� ��� �������� ������ � ���������� � dispatch built-in, �� �� ������� ������ �������� ������ `RuntimeValue`, ����� ��������� built-in ���������� ���������� ��� ������� ��������;
+- ���� ��������� �������� ������������ ���������������� ����� ��������: � `mixed_workload_pipeline.axm` � `string_array_loop_pipeline.axm` ���� ����� � `REPLACE(..., "  ", " ")`, `TRIM(...)` � �������������� `STR(...)`, ��� ������� ���� ������� ���� �� ������ ������, ���� ����������� ��� ��������� �����.
+
+��� ��������:
+- � `src/Axiom.Runtime/Values/RuntimeValue.cs` ���������:
+  - ������������ ��������� `RuntimeValue` ��� ����� `INTEGER` � `LONG` � ��� �� ���������, ��� � �������� ����;
+  - ��������� ������� ��������� �������� ��� `""`, `"TRUE"` � `"FALSE"`;
+  - ���������� ����� `ToDisplayRuntimeValue()`, ������� ��� ������ ���������� ������� `RuntimeValue`, ��� ����� ����� � ������ ���������� ����, � ��� ��������� ����� ������ ����� � ������� ��������� �������������;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` ��������� ������� built-in-������ `EvaluateTrimWhitespaceBuiltin(...)`, `EvaluateLeftTrimWhitespaceBuiltin(...)`, `EvaluateRightTrimWhitespaceBuiltin(...)` � `EvaluateReplaceBuiltin(...)`, ������� ���������� �������� `RuntimeValue`, ���� ��������� �������� �� ���������;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` `TRIM`, `LTRIM`, `RTRIM`, `REPLACE` � `STR` ���������� �� ��� ������� ����.
+
+��������� �����:
+- `src/Axiom.Runtime/Values/RuntimeValue.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - �������;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - �������;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - �������, 521 ����;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - �������, 668 ������;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - �������, 198 ������;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-220700-mixed.txt` - �������, runtime ratio `0.606x`, total ratio `0.815x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-220700-string.txt` - �������, runtime ratio `0.653x`, total ratio `0.864x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 2 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-220700-full.txt` - �������, ���� ����� �� 9 ��������� ��������;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - �������, �������� opcode � built-in �� ��������� �� ��������;
+- ����������� ������ `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-221000-mixed.txt` - �������, runtime ratio `0.640x`, total ratio `0.767x`;
+- ����������� ������ `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-221000-string.txt` - �������, runtime ratio `0.674x`, total ratio `0.788x`.
+
+��� ������� ���������:
+- �� ������� �������������� ������� `mixed_workload_pipeline.axm` ��� �������������� ������: ��� ������� ������� ������� ����� ���������� ����������� ����� (`0.741x` runtime � Session 607 ������ `0.606x` � `0.640x` ������);
+- �� `string_array_loop_pipeline.axm` ������ ����� �����������: ������� ������� �������� ������� ��������������, �� ������� �� �������� ����� �� ������� � ����������, ��� �� `mixed`, ������� ����� ������� �������� �� ����� ������� ���� ���������, � �� � ����� �� ������ ������;
+- ������ ������� `mixed_workload_pipeline.axm` ������� ����� ��� �� �� ����� (`LoadLocal`, `PushConst`, `StoreLocal`, `Add`, `CallBuiltin`, `Jump`, `Convert`, `LoadArgument`, `JumpIfEqual`), � ����� built-in ��-�������� �������� `Contains`, `Str`, `Replace`, `Right`, `Insert`, `RegexReplaceModes`, `TrimWhitespace`, ��� ������������: ��� �������� ������������ ��������� �����, � �� ������ ��� ���������.
+
+�������:
+- �������� ������ ��� ����� ��� �� ���������� ������ �������� ����������� ��������� built-in � `STR`, � �� ��� ������� ���������� ��� ���� benchmark;
+- ������� ����� ���� ���������� �������� `RuntimeValue` ��� `STR`/`TRIM`/`REPLACE` � �������� ��������;
+- �� ������������ � `PushConst` ��� ��� ���������� ���� `CompareEqual`, ������ ��� ������� �������� ��������������� ������� ������ ����� ��������� ���� �� `Contains`, ���� �� ����� �������� ������ `CallBuiltin`.
+
+��� �������:
+- ���������� built-in � `mixed_workload_pipeline.axm` ������� `Contains: 650`, �� ��� ���� `Str: 376`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`;
+- ������ �������� `compare-engines` �� ��� ����� �� `regex_log_analysis.axm` � �� ����� ��������� ����� `high_rank_metadata.axm`, ������� ��� ������ ���������� ���� ��-�������� ������ ������� �������� �������, ��� �������� ����� ����� ��� �� ����.
+
+������ ��������� ���:
+- ��������� ��������� ������� ���� ����� Session 608: ���� ��� `Contains`, ���� ����� ������ `CallBuiltin` ��� ������ �������� string-built-in;
+- ��������� ��������� ��� � ������ ������� �� `mixed_workload_pipeline.axm`, � ����� ������������ ��� �� `string_array_loop_pipeline.axm` � ������ �������� `compare-engines`.
+
+## Session 609 - 2026-05-01 22:02 - облегчён общий каркас CallBuiltin
+
+Контекст:
+- после Session 608 в `mixed_workload_pipeline.axm` крупнейшими built-in оставались `Contains`, `Str`, `Replace`, `Right`, `Insert`, `RegexReplaceModes`, `TrimWhitespace`;
+- перед правкой было подтверждено, что `ExecuteBuiltinCall(...)` всё ещё использовал безусловное `ResolveLocation(...)`.
+
+Что изменено:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` добавлены `NullaryNoLocation`, `UnaryNoLocation`, `BinaryNoLocation`, `TernaryNoLocation` и признак `RequiresLocation`;
+- на эти варианты переведены `LEN`, `TRIM`, `LTRIM`, `RTRIM`, `REVERSE`, `CONTAINS`, `STARTSWITH`, `ENDSWITH`, `STR`, `ARRAYLENGTH`, `ARRAYISALLOCATED`, `ARRAYRANK`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен `BuiltinExecutionInfo[]`, а `ExecuteBuiltinCall(...)` и `ExecuteBuiltinFromArguments(...)` теперь вычисляют местоположение только при необходимости.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build C:\Axiom\src\Axiom.Runtime\Axiom.Runtime.csproj --no-restore` - успешно;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-build` - успешно, 521 тест;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-build` - успешно, 668 тестов;
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-build` - успешно, 198 тестов;
+- `...compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm"` - отчёты `220139` и `220225`, runtime ratio `0.740x` и `0.699x`;
+- `...compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm"` - отчёт `220145`, runtime ratio `0.504x`;
+- `...compare-engines --iterations 8 --warmup 2 --filter "regex_log_analysis.axm"` - отчёт `220233`, runtime ratio `0.884x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines` - успешно, полный набор из 9 сценариев проходит;
+- `...repro-bytecode... mixed_workload_pipeline.axm` - `Instructions: 47080`, `CallBuiltin: 2925`.
+
+Что показал результат:
+- шаг дал честное удешевление общего built-in-диспетчера;
+- на `mixed_workload_pipeline.axm` эффект получился умеренным и шумным, без нового крупного перелома;
+- по профилю следующий потолок сидит уже не в каркасе вызова, а в `Contains`, `Replace`, `Right`, `Insert`, `TrimWhitespace`, `RegexReplaceModes`.
+
+Решения:
+- оставить правку как общее удешевление `CallBuiltin`;
+- не возвращаться в `PushConst`, `LoadLocal` и уже разобранный equality-слой без новой узкой гипотезы.
+
+Точный следующий шаг:
+- разобрать `Contains` как следующий предметный кандидат и затем, если понадобится, идти в `Replace`, `Right`, `Insert`, `TrimWhitespace`, `RegexReplaceModes`.
+
+## Session 610 - 2026-05-01 22:24 - `Contains` получил быстрые ветки для коротких строковых случаев
+
+Контекст:
+- после Session 609 в `docs/PLANS3.md` следующим предметным кандидатом был зафиксирован именно `Contains`, потому что общий каркас `CallBuiltin` уже был облегчён, а в профиле `mixed_workload_pipeline.axm` `Contains` всё ещё оставался самым частым строковым built-in;
+- перед правкой было подтверждено, что `CONTAINS` в `BytecodeVm` уже не требует `TextLocation`, но внутри всё ещё безусловно идёт в общий `string.Contains(fragment, StringComparison.Ordinal)`.
+
+Что изменено:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` `EvaluateContains(...)` получил быстрые ветки для пустого фрагмента, пустого текста, случая `fragment.Length > text.Length`, совпадения по ссылке, равной длины и односимвольного поиска;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` расширен тест поисковых built-in новыми граничными случаями `CONTAINS("", "x")`, `CONTAINS("Hello", "Hello")`, `CONTAINS("Hello", "Hello!")`, `CONTAINS("Hello", "o")`;
+- в `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` теми же случаями расширен compiled-тест, чтобы интерпретатор и байткодный путь продолжали совпадать по поведению.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 521 тест;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-2224-mixed.txt` - успешно, runtime ratio `0.646x`, total ratio `0.830x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-2224-string.txt` - успешно, runtime ratio `0.510x`, total ratio `0.730x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 2 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-2224-full.txt` - успешно, полный набор из 9 сценариев проходит, но `mixed_workload_pipeline.axm` в короткой серии всё ещё шумит около паритета;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - успешно, `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`.
+
+Что показал результат:
+- шаг оказался не просто логическим упрощением: на длинных адресных прогонах `mixed` и `string` виден заметный выигрыш байткода;
+- при этом форма профиля почти не меняется, значит эффект действительно сидит в удешевлении самого `Contains`, а не в побочном сдвиге структуры нагрузки;
+- короткий полный набор по-прежнему полезен как регрессия, но для выбора следующего шага всё ещё хуже длинных адресных прогонов из-за шума на `mixed` и малых сценариях.
+
+Решения:
+- считать узкий слой `Contains` исследованным и не возвращаться к нему без новой отдельной гипотезы;
+- не обновлять manual и runnable `.axm`-примеры, потому что пользовательское поведение языка не менялось.
+
+Что остаётся:
+- следующий содержательный кандидат теперь уже не `Contains`, а соседняя строковая группа `Replace`, `Right`, `Insert`, `TrimWhitespace`, `RegexReplaceModes`;
+- при следующем шаге по-прежнему держать главным барьером `mixed_workload_pipeline.axm`, а `string_array_loop_pipeline.axm` использовать как соседний контрольный сценарий.
+
+Точный следующий шаг:
+- снять следующую узкую гипотезу уже по одному из built-in `Replace`, `Right`, `Insert`, `TrimWhitespace`, `RegexReplaceModes` и повторить тот же набор проверок: `Runtime.Tests`, `Execution.Tests`, адресный `mixed`, адресный `string`, короткий полный `compare-engines` и свежий профиль `mixed`.
+## Session 611 - 2026-05-01 22:36 - `Replace` получил быстрые no-op-ветки и был измерен отдельно
+
+Контекст:
+- после Session 610 слой `Contains` уже считался исследованным, а в профиле `mixed_workload_pipeline.axm` следующими заметными строковыми built-in оставались `Replace`, `Right`, `Insert`, `TrimWhitespace`, `RegexReplaceModes`;
+- просмотр самих smoke-сценариев показал, что `Replace` особенно правдоподобен как следующий кандидат: в `mixed_workload_pipeline.axm` и `string_array_loop_pipeline.axm` есть повторные циклы уплотнения `"  " -> " "`, где часть вызовов уже должна быстро завершаться без фактической замены.
+
+Что изменено:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` `EvaluateReplaceBuiltin(...)` больше не уходит безусловно в общий `text.Replace(...)`:
+  - пустой `oldText` по-прежнему даёт ту же runtime-диагностику `MB3007`;
+  - если `oldText` и `newText` совпадают, сразу возвращается исходный `RuntimeValue`;
+  - если исходный текст пуст, `oldText` длиннее текста или `IndexOf(oldText)` не находит совпадений, тоже сразу возвращается исходный `RuntimeValue`;
+  - для односимвольной замены используется `string.Replace(char, char)`;
+  - если замене подлежит вся строка целиком, результат берётся напрямую как `newText` без общего прохода по `Replace(string, string, Ordinal)`;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` расширен тест `Execute_BuiltinReplaceUsesOrdinalCaseSensitiveRules()` случаями `REPLACE("hello", "he", "he")`, `REPLACE("hello", "hello", "done")`, `REPLACE("abba", "b", "c")`;
+- в `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` теми же случаями расширен compiled-тест для `REPLACE`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 522 теста;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "mixed_workload_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-2234-mixed.txt` - успешно, runtime ratio `0.678x`, total ratio `0.916x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 8 --warmup 2 --filter "string_array_loop_pipeline.axm" --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-2234-string.txt` - успешно, runtime ratio `0.535x`, total ratio `0.722x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-build -- compare-engines --iterations 2 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-2234-full.txt` - успешно, весь набор из 9 сценариев проходит;
+- первая попытка `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` упёрлась в конфликт записи в `C:\Axiom\.artifacts\obj\Axiom.Runtime\...` из-за параллельных .NET-команд;
+- после этого профиль повторён последовательно той же командой и проходит успешно: `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`, `Replace: 376`.
+
+Что показал результат:
+- шаг подтверждается как полезное локальное удешевление `Replace`, особенно на адресных длинных прогонах;
+- по `mixed_workload_pipeline.axm` эффект есть, но он более умеренный, чем у предыдущего шага по `Contains`, поэтому `Replace` лучше считать хорошим локальным улучшением, а не новым крупным переломом;
+- короткий полный набор на этот раз тоже выглядит здоровее, чем после некоторых прежних шагов: `mixed_workload_pipeline.axm` уже ниже паритета и по runtime, и по total;
+- форма профиля не меняется, значит этот шаг не меняет структуру исполнения, а только цену уже существующих вызовов `Replace`.
+
+Решения:
+- считать узкий слой `Replace` разобранным и не возвращаться к нему без новой отдельной гипотезы;
+- отдельно зафиксировать вывод по процессу: .NET-прогоны для этого репозитория нельзя гонять параллельно, если они пишут в общий `obj`, иначе возникают конфликты записи.
+
+Что остаётся:
+- следующими содержательными кандидатами остаются `Right`, `Insert`, `TrimWhitespace`, `RegexReplaceModes`;
+- для выбора следующего шага по-прежнему главнее длинные адресные прогоны `mixed` и `string`, чем короткий полный набор сам по себе.
+
+Точный следующий шаг:
+- взять одну следующую узкую гипотезу уже по `Right`, `Insert`, `TrimWhitespace` или `RegexReplaceModes` и повторить тот же набор проверок, но уже строго последовательными .NET-командами.
+## Session 612 - 2026-05-01 22:42 - `Insert` получил быстрые ветки для префикса, суффикса и пустого фрагмента
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.Edit.cs` и `src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Edit.cs` `EvaluateInsert(...)` переписан на короткие ветки для пустого `fragment`, пустого `text`, вставки в начало и вставки в конец;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` сценарий `Execute_BuiltinInsertAndRemove()` расширен случаями `INSERT("", 5, "seed")` и `INSERT("abcd", 2, "")`;
+- в `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` `Execute_CompiledStringFillAndEditBuiltins()` расширен теми же граничными случаями, чтобы интерпретатор и байткодный путь оставались в одном контракте.
+
+Какие проверки выполнены:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 522 теста;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'mixed_workload_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-224112.txt`, runtime ratio `0.683x`, total ratio `0.827x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'string_array_loop_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-224123.txt`, runtime ratio `0.605x`, total ratio `0.783x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 1 --warmup 1` - успешно, весь набор из 9 сценариев проходит, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-224134.txt`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - успешно, профиль остаётся той же формы: `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`.
+
+Что показал результат:
+- шаг дал полезное локальное удешевление на строковых сценариях и хорошо выглядит на длинных адресных прогонах;
+- при этом форма профиля не изменилась, так что это именно уменьшение цены вызова `INSERT`, а не структурный сдвиг нагрузки;
+- короткий полный `compare-engines` по-прежнему слишком шумный по `mixed_workload_pipeline.axm`, поэтому для выбора следующего шага важнее длинные адресные прогоны.
+
+Что остаётся:
+- следующими кандидатами на такой же узкий разбор остаются `Right`, `TrimWhitespace` и `RegexReplaceModes`.
+
+Точный следующий шаг:
+- взять одну следующую узкую гипотезу уже по `Right`, `TrimWhitespace` или `RegexReplaceModes`, снова прогнать последовательные `dotnet`-проверки и подтвердить эффект теми же адресными сценариями `mixed` и `string`.
+## Session 613 - 2026-05-01 22:58 - `Right` перестал создавать новый `RuntimeValue` для полного возврата строки
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` добавлен `EvaluateRightBuiltin(RuntimeValue value, int count)`, который возвращает исходный `RuntimeValue`, если `count` покрывает всю строку, и создаёт новый только для реального хвостового среза;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` ветка `BuiltinFunctionId.Right` переключена на новый helper;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` добавлен сценарий `Execute_BuiltinRightHandlesExactLengthAndSingleCharacterSuffix()`;
+- в `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` `Execute_CompiledStringSliceAndTrimBuiltins()` расширен случаями `RIGHT("Hello", 5)` и `RIGHT("Hello", 1)`.
+
+Какие проверки выполнены:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 523 теста;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'mixed_workload_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-225727.txt`, runtime ratio `0.631x`, total ratio `0.813x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'string_array_loop_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-225745.txt`, runtime ratio `0.594x`, total ratio `0.782x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 1 --warmup 1` - успешно, весь набор из 9 сценариев проходит, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-225755.txt`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - успешно, профиль остаётся той же формы: `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`.
+
+Что показал результат:
+- шаг дал полезное локальное удешевление именно на байткодном built-in `RIGHT` без изменения пользовательского поведения;
+- длинные адресные прогоны выглядят лучше, чем после шага по `Insert`: особенно `mixed_workload_pipeline.axm` вернулся в более сильную выигрышную зону;
+- форма opcode- и built-in-профиля не изменилась, значит это именно снижение цены существующего вызова, а не новая структурная оптимизация.
+
+Что остаётся:
+- следующими кандидатами на такой же узкий разбор остаются `TrimWhitespace` и `RegexReplaceModes`.
+
+Точный следующий шаг:
+- взять одну отдельную гипотезу уже по `TrimWhitespace` или `RegexReplaceModes` и повторить тот же последовательный набор проверок с подтверждением на `mixed` и `string`.
+## Session 614 - 2026-05-01 23:06 - пакетно удешевлены trim-ветки, `INSERT`, `STARTSWITH`/`ENDSWITH` и разбор regex-режимов
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` `EvaluateTrimWhitespaceBuiltin`, `EvaluateLeftTrimWhitespaceBuiltin` и `EvaluateRightTrimWhitespaceBuiltin` переведены на собственный быстрый поиск границ пробельной обрезки, чтобы не создавать новую строку и не вызывать `Trim*()` там, где результат уже равен исходной строке;
+- там же `EvaluateTrimWhitespace`, `EvaluateLeftTrimWhitespace`, `EvaluateRightTrimWhitespace` переписаны на тот же расчёт границ, а `EvaluateStartsWith` и `EvaluateEndsWith` получили короткие ветки для пустого фрагмента, слишком длинного фрагмента, совпадения по ссылке и случая равной длины;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.Edit.cs` добавлен `EvaluateInsertBuiltin(RuntimeValue textValue, int start, RuntimeValue fragmentValue)`, чтобы на пустом фрагменте вернуть исходный `RuntimeValue`, а при пустом тексте вернуть уже готовый `fragmentValue`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` ветка `BuiltinFunctionId.Insert` переведена на новый helper;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Regex.cs` добавлен `_regexModesCache`, чтобы повторные режимы вроде `"i"` не разбирать заново на каждом вызове, а `EvaluateRegexReplaceBuiltin(...)` теперь сразу возвращает исходный `RuntimeValue`, если `count == 0`;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` и `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` расширены сценарии trim-вариантов и строкового поиска: добавлены неизменяющиеся строки, полностью пробельный `TRIM`, а также пустые, точные и слишком длинные фрагменты для `STARTSWITH`/`ENDSWITH`.
+
+Какие проверки выполнены:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 523 теста;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'mixed_workload_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-230539.txt`, runtime ratio `0.696x`, total ratio `0.840x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'string_array_loop_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-230551.txt`, runtime ratio `0.576x`, total ratio `0.763x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 1 --warmup 1` - успешно, весь набор из 9 сценариев проходит, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-230601.txt`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - успешно, профиль остаётся той же формы: `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`.
+
+Что показал результат:
+- пакет дал хороший общий выигрыш на `string_array_loop_pipeline.axm` и не ломает полный сравнительный прогон;
+- при этом на длинном адресном `mixed_workload_pipeline.axm` результат получился не лучше недавнего изолированного шага по `RIGHT`, то есть широкий пакет полезен как накопительное удешевление, но не как новый явный перелом по главному интегральному барьеру;
+- профиль подтверждает, что структура нагрузки не меняется и основные горячие built-in остаются теми же.
+
+Что остаётся:
+- следующими наиболее предметными кандидатами остаются `RegexReplaceModes` и `TrimWhitespace`, уже как отдельные узкие шаги по главному сценарию `mixed`.
+
+Точный следующий шаг:
+- из оставшейся горячей пары взять сначала один наиболее частый и проверяемый тракт — `RegexReplaceModes` или `TrimWhitespace` — и повторить те же последовательные проверки с обязательным сравнением против текущих отчётов `...230539.txt` и `...230551.txt`.
+## Session 615 - 2026-05-01 23:16 - `RegexReplaceModes` получил раннее определение no-op-замен
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Regex.cs` `EvaluateRegexReplaceBuiltin(RuntimeValue ...)` переведён на путь, который после валидации `count` и создания `Regex` может вернуть исходный `RuntimeValue`, если литеральная замена без ссылок на группы фактически ничего не меняет;
+- в том же файле `EvaluateRegexReplaceCore(...)` и вспомогательные пути `EvaluateRegexReplaceWithCachedRegex(...)` разделены так, чтобы `Regex` не создавался повторно и no-op-проверка выполнялась до тяжёлого `regex.Replace(...)`;
+- добавлены helper’ы `ValidateRegexReplaceCount(...)`, `IsRegexReplaceGuaranteedNoOp(...)` и `ReplacementDependsOnMatch(...)`;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` и `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` расширены regex-тесты двумя no-op-сценариями: отсутствие совпадений и совпадение, уже равное строке замены.
+
+Какие проверки выполнены:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 523 теста;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'mixed_workload_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-231535.txt`, runtime ratio `0.659x`, total ratio `0.785x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'string_array_loop_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-231549.txt`, runtime ratio `0.528x`, total ratio `0.717x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 1 --warmup 1` - успешно, весь набор из 9 сценариев проходит, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-231558.txt`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - успешно, профиль остаётся той же формы: `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`.
+
+Что показал результат:
+- шаг заметно лучше предыдущего широкого пакета по главному сценарию `mixed_workload_pipeline.axm` и одновременно улучшает соседний строковый сценарий;
+- особенно полезно, что `regex_modes_pipeline.axm` в коротком полном прогоне уже оказывается ниже паритета, то есть шаг удешевляет не только смешанный сценарий, но и профильный regex-конвейер;
+- при этом структура нагрузки не меняется: это именно снижение цены вызова `RegexReplaceModes`, а не новый байткодный шаблон.
+
+Что остаётся:
+- следующим узким кандидатом остаётся `TrimWhitespace`.
+
+Точный следующий шаг:
+- взять `TrimWhitespace` как отдельный следующий разгон, снова прогнать последовательные проверки и сравнить результат прежде всего с текущими отчётами `...231535.txt` и `...231549.txt`.
+## Session 616 - 2026-05-01 23:22 - `TRIM` восстановил правильную обработку хвостовых пробелов и получил новые контрольные замеры
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` исправлен ранний возврат в `EvaluateTrimWhitespace(...)` и `EvaluateTrimWhitespaceBuiltin(...)`: строка больше не считается неизменной только потому, что у неё нет ведущих пробелов;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` и `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` добавлены отдельные сценарии `TRIM("hello   ")` и `TRIM("   hello")`, чтобы покрыть оба односторонних пробельных случая;
+- обновлён runnable-пример `samples/functions/trim/basic_usage.axm`;
+- обновлена страница `docs/manual/string-functions-trim-and-case.html`: в секцию `TRIM` добавлен прямой пример с правой обрезкой, левой обрезкой и полностью пробельной строкой.
+
+Какие проверки выполнены:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` - успешно, 523 теста;
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` - успешно, 668 тестов;
+- `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj --no-restore` - успешно;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'mixed_workload_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-232113.txt`, runtime ratio `0.796x`, total ratio `0.883x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 8 --warmup 2 --filter 'string_array_loop_pipeline.axm'` - успешно, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-232127.txt`, runtime ratio `0.572x`, total ratio `0.764x`;
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --iterations 1 --warmup 1` - успешно, весь набор из 9 сценариев проходит, отчёт `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260501-232138.txt`;
+- `dotnet run --project C:\Axiom\.artifacts\repro-bytecode\repro-bytecode.csproj -- profile 0 0 samples\smoke\engine-compare\mixed_workload_pipeline.axm` - успешно, профиль остаётся той же формы: `Instructions: 47080`, `CallBuiltin: 2925`, `Contains: 650`, `Replace: 376`, `Right: 192`, `Insert: 188`, `RegexReplaceModes: 188`, `TrimWhitespace: 188`.
+
+Что показал результат:
+- шаг в первую очередь восстановил правильное пользовательское поведение `TRIM`, которое было испорчено прошлой внутренней оптимизацией;
+- по скорости `string_array_loop_pipeline.axm` остаётся в хорошей выигрышной зоне, а `mixed_workload_pipeline.axm` после исправления контракта выглядит более шумным и умеренным, чем после шага по `RegexReplaceModes`;
+- это полезно зафиксировать явно: корректность здесь важнее красивой локальной цифры, и новые замеры надо сравнивать уже с учётом восстановленного поведения `TRIM`.
+
+Что остаётся:
+- следующий шаг лучше выбирать уже не инерционно по старой верхушке, а по новому измерению `mixed_workload_pipeline.axm` после восстановления `TRIM`.
+
+Точный следующий шаг:
+- снять свежий ориентир по главным горячим built-in и opcode в `mixed_workload_pipeline.axm`, затем выбрать следующий узкий предметный кандидат уже по этим обновлённым цифрам.
+
+## Session 617 - 2026-05-02 07:24 - введён постоянный реестр покрытия Bytecode VM
+
+Что сделано:
+- заново прочитан обязательный активный контекст проекта: AGENTS.md, PROJECT.md, README.md, docs/SPECIFICATION3.md, docs/ARCHITECTURE.md, docs/PLANS3.md, docs/WORKLOG4.md;
+- собран и зафиксирован новый постоянный реестр docs/BYTECODE_COVERAGE.md для покрытия BytecodeVm по пользовательским операторам, встроенным функциям и связанным проверкам;
+- в реестр внесены текущие укрупнённые строки по операторам, массивным built-in, строковым built-in, regex-группе, числовым built-in, дате/времени и файловым built-in;
+- в реестр сразу добавлены дополнительные рабочие столбцы, которых не хватало в простом списке реализовано / тесты / sample / manual / паритет: сквозной запуск через VM без fallback, отрицательный паритет диагностики и профильный статус;
+- AGENTS.md обновлён так, чтобы docs/BYTECODE_COVERAGE.md входил в обязательный стартовый контекст и в критерии готовности задач, которые меняют покрытие байткода, sample/manual-покрытие, паритет или профильный статус.
+
+Изменённые файлы:
+- AGENTS.md
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- сборка и тесты не запускались, потому что в этой сессии изменены только процессные и учётные документы без правок исполняемого кода.
+
+Решение:
+- считать docs/BYTECODE_COVERAGE.md обязательным рабочим реестром проекта для всех следующих задач по BytecodeVm и пользовательскому языковому покрытию;
+- больше не держать состояние покрытия VM только в разрозненных записях PLANS3 и WORKLOG4.
+
+Следующий шаг:
+- при каждом следующем шаге по языку и BytecodeVm обновлять docs/BYTECODE_COVERAGE.md в той же задаче;
+- постепенно разукрупнять широкие строки реестра и доводить столбцы Негативный паритет, Manual и Sample от группового статуса частично до адресных подтверждений.
+
+## Session 618 - 2026-05-02 08:00 - строковая группа в реестре получила адресные подтверждения
+
+Что сделано:
+- продолжена работа уже не по оптимизации кода, а по доведению нового реестра `docs/BYTECODE_COVERAGE.md` до практического рабочего состояния;
+- для строковых built-in в реестре уточнены строки `LEN`/`LEFT`/`RIGHT`/`MID`, trim/case, `CONTAINS`/`STARTSWITH`/`ENDSWITH`/`INSTR`/`INSTRREV`/`SUBSTRCOUNT`, `REPLACE`/`INSERT`/`REMOVE`, `REPEAT`/`SPACE`/`STRING`/`PADLEFT`/`PADRIGHT`/`CENTER`, `ASC`/`CHR`, `SPLIT`/`JOIN` и `REGEXREPLACE`;
+- вместо общих пометок туда добавлены ссылки на конкретные тестовые точки: `Execute_BuiltinTrimVariants()`, `Execute_BuiltinStringUsesFirstFillCharacter()`, `Execute_BuiltinStringReportsEmptyFill()`, `Execute_CompiledStringSliceAndTrimBuiltins()`, `Execute_CompiledStringSearchBuiltins()`, `Execute_CompiledStringFillAndEditBuiltins()`, `Execute_CompiledStringCharBuiltins()`, `Execute_CompiledStringArrayBuiltins()`, `Run_SupportsStringBuiltinsOnBytecodeVm()`, `Run_WithBytecodeMode_UsesBytecodeVmForStringArrayBuiltins()` и `Run_WithBytecodeMode_UsesBytecodeVmForRegexScalarBuiltins()`;
+- в тех же строках реестра добавлены конкретные manual-страницы `docs/manual/string-functions-slices-and-length.html`, `docs/manual/string-functions-trim-and-case.html`, `docs/manual/string-functions-search-and-replace.html`, `docs/manual/string-functions-build-and-split.html`, `docs/manual/regex-functions-replace-and-count.html` и тематические папки `samples/functions/`.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- сборка и тесты не запускались, потому что в этом шаге менялись только рабочие документы и реестр покрытия без правок исполняемого кода.
+
+Решение:
+- считать строковую группу первым доведённым примером того, как `docs/BYTECODE_COVERAGE.md` должен выглядеть в рабочем режиме: не только статусы, но и конкретные адреса подтверждения;
+- при следующих задачах в реестре придерживаться той же плотности привязки, а не возвращаться к чисто обзорным формулировкам.
+
+Следующий шаг:
+- продолжить разукрупнение следующей крупной группы в `docs/BYTECODE_COVERAGE.md`, где пока ещё преобладают широкие укрупнённые строки со статусом `частично`;
+- наиболее полезными кандидатами на следующий проход держать массивные built-in или файловые built-in.
+
+## Session 619 - 2026-05-02 08:07 - массивные built-in в реестре получили адресные подтверждения
+
+Что сделано:
+- продолжено доведение `docs/BYTECODE_COVERAGE.md` до рабочего адресного формата уже по массивной группе;
+- для metadata-подгруппы добавлены явные ссылки на тесты `Execute_ArrayMetadataBuiltinsReportRankAndVisibleBounds()`, `Execute_ArrayBoundsReportsUnallocatedArrayState()`, `Execute_CompiledArrayShapeBuiltinsSupportExplicitDimensionForMultidimensionalArrays()` и `Run_WithBytecodeMode_UsesBytecodeVmForArrayMetadataBuiltins()`;
+- для pure- и slice-подгруппы добавлены конкретные тесты по `ARRAYCLONE`, `ARRAYSLICE`, `ARRAYCONCAT`, `ARRAYTAKE`, `ARRAYSKIP`, включая многомерные формы и execution-путь `Run_WithBytecodeMode_UsesBytecodeVmForPureArrayBuiltins()`;
+- для групп `ARRAYTOREVERSED`/`ARRAYREVERSE`/`ARRAYDISTINCT`/`ARRAYFLATTEN`/`ARRAYRESHAPE`, поисковых built-in, `ARRAYFILL`/`ARRAYSORT`/`ARRAYTOSORTED`, `ARRAYPUSH`/`ARRAYPOP`/`ARRAYINSERT`/`ARRAYREMOVE` и callback-built-in добавлены адресные ссылки на VM-тесты, execution-тесты, central manual-страницы и соответствующие папки `samples/functions/`;
+- в качестве manual-опор для массивной группы в реестре теперь прямо указаны `docs/manual/arrays-functions.html`, `docs/manual/arrays-slices.html`, `docs/manual/arrays-diagnostics.html` и `docs/manual/arrays-multidimensional.html`.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- сборка и тесты не запускались, потому что в этом шаге менялись только рабочие документы и реестр покрытия без правок исполняемого кода.
+
+Решение:
+- считать массивную группу вторым доведённым образцом адресного реестра после строковой;
+- дальше придерживаться того же стандарта: широкие строки допустимы, но в примечании у них должны быть конкретные точки подтверждения, а не только общий комментарий.
+
+Следующий шаг:
+- продолжить тот же формат уточнения для следующей крупной группы в `docs/BYTECODE_COVERAGE.md`;
+- наиболее полезным следующим кандидатом держать файловые built-in, потому что там ещё остаётся много укрупнённых строк без такой же плотной адресной привязки.
+
+## Session 620 - 2026-05-02 08:09 - файловые built-in в реестре получили адресные подтверждения и возвращён `DELETEDIRRECURSIVE`
+
+Что сделано:
+- продолжено адресное уточнение `docs/BYTECODE_COVERAGE.md` уже по файловой группе;
+- для open-file built-in добавлены конкретные ссылки на тесты `Execute_FileStateBuiltins()`, `Execute_FilePositionAndLengthForInput()`, `Execute_OpenReadLineAndEof()`, `Execute_CompiledOpenInputFileProgram()`, `Execute_CompiledOpenOutputAndAppendFileProgram()` и execution-путь `Run_WithBytecodeMode_UsesBytecodeVmForOpenTextFile()`;
+- для whole-file built-in, path/info built-in, перечислений файлов и папок, а также системной drive/path-группы добавлены адресные ссылки на интерпретаторные и VM-тесты вроде `Execute_BuiltinFileSystemReadsWritesAndChecksPaths()`, `Execute_BuiltinFileSystemEnumeratesFilesAndDirectories()`, `Execute_BuiltinFileSystemReturnsExtendedPathAndDriveInfo()`, `Execute_CompiledFileSystemBuiltinsProgram()` и `Run_WithBytecodeMode_UsesBytecodeVmForFileSystemBuiltins()`;
+- в управленческую строку файловых операций в реестре возвращён `DELETEDIRRECURSIVE`: выяснилось, что он уже поддержан в manual, поисковом индексе и `samples/functions/deletedirrecursive/`, но отсутствовал в самом реестре покрытия;
+- для всех файловых строк в реестре теперь указаны точные manual-страницы `docs/manual/file-system-functions-open-files.html`, `docs/manual/file-system-functions-text.html`, `docs/manual/file-system-functions-paths.html`, `docs/manual/file-system-functions-management.html`, `docs/manual/file-system-functions.html` и соответствующие папки `samples/functions/`.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- сборка и тесты не запускались, потому что в этом шаге менялись только рабочие документы и реестр покрытия без правок исполняемого кода.
+
+Решение:
+- считать файловую группу третьим доведённым адресным блоком реестра после строк и массивов;
+- считать явное возвращение `DELETEDIRRECURSIVE` в реестр обязательной синхронизацией источников правды, а не побочной косметической правкой.
+
+Следующий шаг:
+- продолжить тот же формат уточнения для ещё одной укрупнённой функциональной группы в `docs/BYTECODE_COVERAGE.md`;
+- наиболее полезными следующими кандидатами держать date/time built-in или числовые built-in.
+
+## Session 621 - 2026-05-02 08:35 - date/time built-in в реестре получили адресные подтверждения
+
+Что сделано:
+- продолжено адресное уточнение `docs/BYTECODE_COVERAGE.md` по дато-временной группе;
+- для подгруппы текущих значений добавлены ссылки на тесты `Execute_DateTimeBuiltinsReturnCurrentValues()`, `Execute_TimerReturnsNonNegativeNumber()`, `Execute_CompiledDateTimeCurrentBuiltins()` и execution-путь `Run_WithBytecodeMode_UsesBytecodeVmForCurrentDateTimeBuiltins()`;
+- для serial/parts- и arithmetic/validation-подгрупп добавлены конкретные ссылки на `Execute_DateTimeSerialAndPartsBuiltins()`, `Execute_DateTimePartsRejectNonCanonicalDates()`, `Execute_DateTimeArithmeticAndValidationBuiltins()`, `Execute_DateTimeArithmeticRejectsUnsupportedInterval()`, `Execute_TimeValueRejectsNonCanonicalInput()`, `Execute_CompiledDateTimePartsAndArithmeticBuiltins()` и `Run_WithBytecodeMode_UsesBytecodeVmForDateTimePartsAndArithmeticBuiltins()`;
+- для UTC/timezone- и calendar-helper-подгруппы добавлены адресные опоры на `Execute_DateTimeUtcBuiltins()`, `Execute_DateTimeUtcBuiltinsSupportNamedTimeZones()`, `Execute_DateTimeUtcBuiltinsSupportSeasonalNamedTimeZones()`, `Execute_DateTimeCalendarHelpers()`, а также на соответствующие VM- и execution-тесты;
+- в реестр для всех date/time-строк добавлены точные manual-страницы `docs/manual/date-time-functions-current.html`, `docs/manual/date-time-functions-parts-and-serial.html`, `docs/manual/date-time-functions-arithmetic-and-validation.html`, `docs/manual/date-time-functions-time-zones.html` и тематические папки `samples/functions/`.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- сборка и тесты не запускались, потому что в этом шаге менялись только рабочие документы и реестр покрытия без правок исполняемого кода.
+
+Решение:
+- считать date/time-группу четвёртым доведённым адресным блоком реестра после строк, массивов и файловой системы;
+- продолжать придерживаться того же стандарта: укрупнённые строки допустимы, если в примечании есть явные подтверждающие тесты, manual и sample-пути.
+
+Следующий шаг:
+- продолжить тот же подход по ещё одной укрупнённой функциональной группе в `docs/BYTECODE_COVERAGE.md`;
+- наиболее полезным следующим кандидатом держать числовые built-in.

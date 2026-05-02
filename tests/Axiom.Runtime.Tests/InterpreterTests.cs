@@ -4376,8 +4376,14 @@ PRINT missing(1)
         const string text = """
 PRINT TRIM("  hello  ")
 PRINT TRIM("--hello--", "-")
+PRINT TRIM("hello")
+PRINT "[" + TRIM("hello   ") + "]"
+PRINT "[" + TRIM("   hello") + "]"
+PRINT "[" + TRIM("   ") + "]"
 PRINT LTRIM("  hello  ")
+PRINT LTRIM("hello")
 PRINT RTRIM("  hello  ")
+PRINT RTRIM("hello")
 PRINT LTRIM("xyxyhello", "xy")
 PRINT RTRIM("helloxyxy", "xy")
 """;
@@ -4385,7 +4391,7 @@ PRINT RTRIM("helloxyxy", "xy")
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["hello", "hello", "hello  ", "  hello", "hello", "hello"], host.Output);
+        Assert.Equal(["hello", "hello", "hello", "[hello]", "[hello]", "[]", "hello  ", "hello", "  hello", "hello", "hello", "hello"], host.Output);
     }
 
     [Fact]
@@ -4446,6 +4452,8 @@ PRINT PADRIGHT("word", 2, ".")
 PRINT INSERT("abcd", 1, "<")
 PRINT INSERT("abcd", 3, "-")
 PRINT INSERT("abcd", 99, "!")
+PRINT INSERT("", 5, "seed")
+PRINT INSERT("abcd", 2, "")
 PRINT REMOVE("abcdef", 2, 3)
 PRINT REMOVE("abcdef", 6, 10)
 PRINT REMOVE("abcdef", 99, 2)
@@ -4455,7 +4463,7 @@ PRINT REMOVE("abcdef", 3, 0)
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["<abcd", "ab-cd", "abcd!", "aef", "abcde", "abcdef", "abcdef"], host.Output);
+        Assert.Equal(["<abcd", "ab-cd", "abcd!", "seed", "abcd", "aef", "abcde", "abcdef", "abcdef"], host.Output);
     }
 
     [Fact]
@@ -4526,13 +4534,23 @@ PRINT CONTAINS("Hello", "ell")
 PRINT CONTAINS("Hello", "ELL")
 PRINT STARTSWITH("Hello", "He")
 PRINT ENDSWITH("Hello", "lo")
+PRINT STARTSWITH("Hello", "")
+PRINT ENDSWITH("Hello", "")
+PRINT STARTSWITH("Hello", "Hello")
+PRINT ENDSWITH("Hello", "Hello")
+PRINT STARTSWITH("Hello", "Hello!")
+PRINT ENDSWITH("Hello", "Hello!")
 PRINT CONTAINS("Hello", "")
+PRINT CONTAINS("", "x")
+PRINT CONTAINS("Hello", "Hello")
+PRINT CONTAINS("Hello", "Hello!")
+PRINT CONTAINS("Hello", "o")
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "FALSE", "TRUE", "TRUE", "TRUE"], host.Output);
+        Assert.Equal(["TRUE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "TRUE", "FALSE", "TRUE", "FALSE", "TRUE"], host.Output);
     }
 
     [Fact]
@@ -4542,12 +4560,15 @@ PRINT CONTAINS("Hello", "")
 PRINT REPLACE("one two two", "two", "three")
 PRINT REPLACE("One one", "one", "two")
 PRINT REPLACE("abc", "x", "y")
+PRINT REPLACE("hello", "he", "he")
+PRINT REPLACE("hello", "hello", "done")
+PRINT REPLACE("abba", "b", "c")
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["one three three", "One two", "abc"], host.Output);
+        Assert.Equal(["one three three", "One two", "abc", "hello", "done", "acca"], host.Output);
     }
 
     [Fact]
@@ -4785,12 +4806,14 @@ PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
 PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
 PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")
 PRINT REGEXREPLACE("a12 b34", "[a-z]\d+", "#", "i", 1)
+PRINT REGEXREPLACE("payload 42", "payload\s+", "payload ", "i")
+PRINT REGEXREPLACE("abc", "x", "y", "i")
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["one # two #", "one # two 34", "A-12 B-34", "# b34"], host.Output);
+        Assert.Equal(["one # two #", "one # two 34", "A-12 B-34", "# b34", "payload 42", "abc"], host.Output);
     }
 
     [Fact]
@@ -5923,6 +5946,20 @@ PRINT value < 1
 
         Assert.True(result.Succeeded);
         Assert.Equal(["Hello"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_BuiltinRightHandlesExactLengthAndSingleCharacterSuffix()
+    {
+        const string text = """
+PRINT RIGHT("Hello", 5)
+PRINT RIGHT("Hello", 1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Hello", "o"], host.Output);
     }
 
     [Fact]

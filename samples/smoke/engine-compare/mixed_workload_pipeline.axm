@@ -1,0 +1,235 @@
+' Сравнительный сценарий: один смешанный конвейер с циклами, массивами,
+' строками, регулярными выражениями, датой-временем и SELECT CASE.
+
+DIM numericValues(1 TO 160) AS INTEGER
+DIM eventLines(1 TO 160) AS STRING
+DIM scheduleLines(1 TO 28) AS STRING
+DIM combined() AS STRING
+DIM working() AS STRING
+DIM headSlice() AS STRING
+DIM tailSlice() AS STRING
+DIM merged() AS STRING
+DIM removedLine AS STRING
+DIM poppedLine AS STRING
+DIM reportText AS STRING
+DIM normalizedText AS STRING
+DIM warnMatches() AS STRING
+DIM userGroups() AS STRING
+DIM reportParts() AS STRING
+DIM severityScore AS INTEGER
+DIM digest AS STRING
+
+FOR valueIndex = 1 TO ARRAYLENGTH(numericValues)
+    numericValues(valueIndex) = (valueIndex MOD 9) * (valueIndex MOD 5) + valueIndex
+NEXT
+
+FOR lineIndex = 1 TO ARRAYLENGTH(eventLines)
+    eventLines(lineIndex) = BuildEventLine(lineIndex, numericValues(lineIndex))
+NEXT
+
+FOR slotIndex = 1 TO ARRAYLENGTH(scheduleLines)
+    scheduleLines(slotIndex) = BuildScheduleLine(slotIndex)
+NEXT
+
+combined = ARRAYCONCAT(eventLines, scheduleLines)
+working = ARRAYCLONE(combined)
+
+ARRAYINSERT(working, 1, "section=header level=INFO user=SYS00 token=hdr000 route=/summary text=header ready")
+ARRAYPUSH(working, "section=footer level=INFO user=SYS99 token=ftr999 route=/summary text=footer ready")
+
+removedLine = ARRAYREMOVE(working, 3)
+poppedLine = ARRAYPOP(working)
+
+DIM normalizeIndex AS INTEGER = 1
+
+WHILE normalizeIndex <= ARRAYLENGTH(working)
+    working(normalizeIndex) = NormalizeMixedLine(working(normalizeIndex), normalizeIndex)
+    normalizeIndex = normalizeIndex + 1
+END WHILE
+
+headSlice = ARRAYTAKE(working, 126)
+tailSlice = ARRAYSKIP(working, 54)
+merged = ARRAYCONCAT(headSlice, tailSlice)
+
+reportText = JOIN(merged, CHR(10))
+normalizedText = REGEXREPLACE(reportText, "token=[a-z]{3}\d{3}", "token=#", "i", 1)
+warnMatches = REGEXMATCHES(reportText, "WARN-\d{3}", "i")
+userGroups = REGEXEXTRACTALL(reportText, "user=([A-Z]{2}\d{2}|SYS\d{2})", 1, "i")
+reportParts = REGEXSPLIT(normalizedText, "\r?\n", "i")
+
+severityScore = 0
+DIM scoreIndex AS INTEGER = 1
+
+DO WHILE scoreIndex <= ARRAYLENGTH(merged)
+    SELECT CASE SeverityBucket(scoreIndex, merged(scoreIndex))
+        CASE 3
+            severityScore = severityScore + 3
+        CASE 2
+            severityScore = severityScore + 2
+        CASE 1
+            severityScore = severityScore + 1
+        CASE ELSE
+            severityScore = severityScore + 0
+    END SELECT
+
+    scoreIndex = scoreIndex + 1
+LOOP
+
+digest = ""
+DIM digestIndex AS INTEGER = 1
+
+DO
+    digest = digest + LEFT(merged(digestIndex), 12)
+
+    IF digestIndex = 4 THEN
+        EXIT DO
+    END IF
+
+    digest = digest + " | "
+    digestIndex = digestIndex + 1
+LOOP
+
+DIM tailIndex AS INTEGER = ARRAYLENGTH(merged) - 2
+
+DO UNTIL tailIndex > ARRAYLENGTH(merged)
+    digest = digest + " // " + RIGHT(merged(tailIndex), 12)
+    tailIndex = tailIndex + 1
+LOOP
+
+PRINT ARRAYLENGTH(combined)
+PRINT ARRAYLENGTH(working)
+PRINT ARRAYLENGTH(merged)
+PRINT REGEXCOUNT(reportText, "ERROR-\d{3}", "i")
+PRINT ARRAYLENGTH(warnMatches)
+PRINT ARRAYLENGTH(userGroups)
+PRINT ARRAYLENGTH(reportParts)
+PRINT LEN(removedLine) + LEN(poppedLine)
+PRINT severityScore
+PRINT LEFT(digest, 56)
+PRINT RIGHT(digest, 56)
+
+FUNCTION BuildEventLine(lineIndex AS INTEGER, numericValue AS INTEGER) AS STRING
+    DIM levelText AS STRING
+    DIM routeText AS STRING
+    DIM userText AS STRING
+    DIM tokenText AS STRING
+
+    SELECT CASE lineIndex MOD 4
+        CASE 0
+            levelText = "ERROR-" + RIGHT("00" + STR((lineIndex MOD 7) + 101), 3)
+            routeText = "/runtime/vm"
+        CASE 1
+            levelText = "WARN-" + RIGHT("00" + STR((lineIndex MOD 5) + 201), 3)
+            routeText = "/docs/manual"
+        CASE 2
+            levelText = "INFO-" + RIGHT("00" + STR((lineIndex MOD 6) + 301), 3)
+            routeText = "/samples/strings"
+        CASE ELSE
+            levelText = "WARN-" + RIGHT("00" + STR((lineIndex MOD 8) + 401), 3)
+            routeText = "/regex/pipeline"
+    END SELECT
+
+    userText = BuildUserId(lineIndex MOD 6)
+    tokenText = BuildToken(lineIndex MOD 7)
+
+    RETURN "section=event level=" + levelText + " user=" + userText + " token=" + tokenText + " route=" + routeText + " text=payload " + STR(numericValue)
+END FUNCTION
+
+FUNCTION BuildScheduleLine(slotIndex AS INTEGER) AS STRING
+    DIM dayText AS STRING = DATEADD("d", slotIndex - 1, DATESERIAL(2026, 5, 1))
+    DIM timeText AS STRING = DATEADD("n", slotIndex * 11, TIMESERIAL(8, 0, 0))
+    DIM zoneText AS STRING
+
+    SELECT CASE slotIndex MOD 3
+        CASE 0
+            zoneText = "north"
+        CASE 1
+            zoneText = "central"
+        CASE ELSE
+            zoneText = "south"
+    END SELECT
+
+    RETURN "section=schedule level=INFO user=PL" + RIGHT("0" + STR(slotIndex MOD 10), 2) + " token=sch111 route=/calendar/" + zoneText + " text=" + WEEKDAYNAME(WEEKDAY(dayText)) + " " + MONTHNAME(MONTH(dayText)) + " " + STR(DAY(dayText)) + " " + LEFT(timeText, 5)
+END FUNCTION
+
+FUNCTION NormalizeMixedLine(inputText AS STRING, lineIndex AS INTEGER) AS STRING
+    DIM resultText AS STRING = inputText
+    DIM compactText AS STRING
+
+    IF lineIndex MOD 2 = 0 THEN
+        resultText = INSERT(resultText, 1, "item ")
+    ELSE
+        resultText = INSERT(resultText, 1, "row ")
+    END IF
+
+    resultText = REGEXREPLACE(resultText, "payload\s+", "payload ", "i")
+    resultText = REPLACE(resultText, "  ", " ")
+
+    DO
+        compactText = REPLACE(resultText, "  ", " ")
+
+        IF compactText = resultText THEN
+            EXIT DO
+        END IF
+
+        resultText = compactText
+    LOOP
+
+    IF CONTAINS(resultText, "route=/regex") THEN
+        resultText = resultText + " regex-hot"
+    END IF
+
+    RETURN TRIM(resultText)
+END FUNCTION
+
+FUNCTION SeverityBucket(lineIndex AS INTEGER, lineText AS STRING) AS INTEGER
+    IF CONTAINS(lineText, "ERROR-") THEN
+        RETURN 3
+    END IF
+
+    IF CONTAINS(lineText, "WARN-") THEN
+        RETURN 2
+    END IF
+
+    IF lineIndex MOD 5 = 0 THEN
+        RETURN 1
+    END IF
+
+    RETURN 0
+END FUNCTION
+
+FUNCTION BuildUserId(selector AS INTEGER) AS STRING
+    SELECT CASE selector
+        CASE 0
+            RETURN "AB12"
+        CASE 1
+            RETURN "CD34"
+        CASE 2
+            RETURN "EF56"
+        CASE 3
+            RETURN "GH78"
+        CASE 4
+            RETURN "IJ90"
+        CASE ELSE
+            RETURN "KL11"
+    END SELECT
+END FUNCTION
+
+FUNCTION BuildToken(selector AS INTEGER) AS STRING
+    SELECT CASE selector
+        CASE 0
+            RETURN "abc123"
+        CASE 1
+            RETURN "def456"
+        CASE 2
+            RETURN "ghi789"
+        CASE 3
+            RETURN "jkl321"
+        CASE 4
+            RETURN "mno654"
+        CASE 5
+            RETURN "pqr987"
+        CASE ELSE
+            RETURN "stu111"
+    END SELECT
+END FUNCTION

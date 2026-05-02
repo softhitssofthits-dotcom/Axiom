@@ -33,13 +33,16 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYBOUNDS", location);
         var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2);
-        return CreateVisibleShapeArrayValue(
+        return RuntimeValue.FromArray(
             resultType,
-            lowerBounds: [1, 1],
-            upperBounds: [array.Rank, 2],
-            indices => indices[1] == 1
-                ? RuntimeValue.FromInteger(array.GetLowerBound(indices[0]))
-                : RuntimeValue.FromInteger(array.GetUpperBound(indices[0])));
+            RuntimeArrayValue.CreateCompactTwoDimensional(
+                TypeSymbol.Integer,
+                fixedStringLength: null,
+                array.Rank,
+                secondLength: 2,
+                (dimension, column) => column == 1
+                    ? RuntimeValue.FromInteger(array.GetLowerBound(dimension))
+                    : RuntimeValue.FromInteger(array.GetUpperBound(dimension))));
     }
 
     private RuntimeValue EvaluateArrayCloneBuiltin(RuntimeValue argument, TextLocation location)
@@ -1272,11 +1275,12 @@ public sealed partial class BytecodeVm
         ArgumentNullException.ThrowIfNull(arrayType);
         ArgumentNullException.ThrowIfNull(values);
 
-        return CreateArrayValue(
+        return RuntimeValue.FromArray(
             arrayType,
-            lowerBound: 1,
-            upperBound: values.Count == 0 ? 0 : values.Count,
-            index => values[index - 1]);
+            RuntimeArrayValue.CreateCompactOneDimensional(
+                arrayType.ElementType,
+                fixedStringLength: null,
+                values));
     }
 
     private static RuntimeValue CreateVisibleShapeArrayValue(

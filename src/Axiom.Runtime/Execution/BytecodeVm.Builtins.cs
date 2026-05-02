@@ -7,6 +7,11 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    private RuntimeValue ExecuteBuiltin(BuiltinBinding builtin, ReadOnlySpan<RuntimeValue> arguments, TextLocation location)
+    {
+        return ExecuteBuiltin(builtin, (IReadOnlyList<RuntimeValue>)arguments.ToArray(), location);
+    }
+
     private RuntimeValue ExecuteBuiltin(BuiltinBinding builtin, IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
         return builtin.CanonicalId switch
@@ -126,10 +131,10 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.RegexExtractAllModes => EvaluateRegexExtractAllBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsInteger(), arguments[3].AsString(), location),
             BuiltinFunctionId.RegexSplit => EvaluateRegexSplitBuiltin(arguments[0].AsString(), arguments[1].AsString(), modes: "", location),
             BuiltinFunctionId.RegexSplitModes => EvaluateRegexSplitBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString(), location),
-            BuiltinFunctionId.RegexReplace => EvaluateRegexReplaceBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString(), modes: "", count: null, location),
-            BuiltinFunctionId.RegexReplaceModes => EvaluateRegexReplaceBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString(), arguments[3].AsString(), count: null, location),
-            BuiltinFunctionId.RegexReplaceCount => EvaluateRegexReplaceBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString(), modes: "", arguments[3].AsInteger(), location),
-            BuiltinFunctionId.RegexReplaceModesCount => EvaluateRegexReplaceBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString(), arguments[3].AsString(), arguments[4].AsInteger(), location),
+            BuiltinFunctionId.RegexReplace => EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], modes: "", count: null, location),
+            BuiltinFunctionId.RegexReplaceModes => EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], GetStringUnchecked(arguments[3]), count: null, location),
+            BuiltinFunctionId.RegexReplaceCount => EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], modes: "", GetIntegerUnchecked(arguments[3]), location),
+            BuiltinFunctionId.RegexReplaceModesCount => EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], GetStringUnchecked(arguments[3]), GetIntegerUnchecked(arguments[4]), location),
             BuiltinFunctionId.RegexCount => EvaluateRegexCountBuiltin(arguments[0].AsString(), arguments[1].AsString(), modes: "", location),
             BuiltinFunctionId.RegexCountModes => EvaluateRegexCountBuiltin(arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString(), location),
             BuiltinFunctionId.Int => RuntimeValue.FromInteger(EvaluateIntBuiltin(arguments[0], location)),

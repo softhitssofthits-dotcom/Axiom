@@ -23,6 +23,12 @@ internal sealed class BytecodeEvaluationStack
     {
         ArgumentNullException.ThrowIfNull(value);
 
+        PushUnchecked(value);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushUnchecked(RuntimeValue value)
+    {
         if ((uint)Count >= (uint)_items.Length)
         {
             Grow();

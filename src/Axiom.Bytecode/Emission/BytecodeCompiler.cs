@@ -11,6 +11,7 @@ public sealed class BytecodeCompiler
     private readonly List<BytecodeConstant> _constants = [];
     private readonly Dictionary<VariableSymbol, int> _globalSlots = [];
     private readonly List<BytecodeGlobal> _globals = [];
+    private readonly HashSet<VariableSymbol> _liftedEntryGlobals = [];
     private readonly Dictionary<BuiltinBindingKey, int> _builtinIndices = [];
     private readonly List<BuiltinBinding> _builtins = [];
     private readonly Dictionary<FunctionSymbol, int> _routineIds = [];
@@ -24,6 +25,7 @@ public sealed class BytecodeCompiler
         Reset();
 
         var loweredRoutines = program.AllRoutines.ToArray();
+        CollectLiftedEntryGlobals(program, _liftedEntryGlobals);
         RegisterRoutineIds(loweredRoutines);
 
         var routines = new List<BytecodeRoutine>(loweredRoutines.Length);
@@ -76,6 +78,7 @@ public sealed class BytecodeCompiler
         _constants.Clear();
         _globalSlots.Clear();
         _globals.Clear();
+        _liftedEntryGlobals.Clear();
         _builtinIndices.Clear();
         _builtins.Clear();
         _routineIds.Clear();
@@ -101,9 +104,9 @@ public sealed class BytecodeCompiler
     private BytecodeRoutine? CompileRoutine(LoweredRoutine routine)
     {
         var parameterSlots = CreateParameterSlotMap(routine);
-        var localSlots = CreateLocalSlotMap(routine, parameterSlots);
+        var localSlots = CreateLocalSlotMap(routine, parameterSlots, _liftedEntryGlobals);
         var captureSlots = CreateCaptureSlotMap(routine, parameterSlots, localSlots);
-        var labelTargets = ResolveLabelTargets(routine);
+        var labelTargets = ResolveLabelTargets(routine, parameterSlots, localSlots, captureSlots);
         var instructions = new List<BytecodeInstruction>(routine.Instructions.Count);
 
         for (var loweredIndex = 0; loweredIndex < routine.Instructions.Count; loweredIndex++)
@@ -119,11 +122,19 @@ public sealed class BytecodeCompiler
             if (TryEmitCollapsedInstruction(
                     routine,
                     loweredIndex,
+                    parameterSlots,
+                    localSlots,
+                    captureSlots,
                     labelTargets,
                     out bytecodeInstruction,
                     out sourceLocation))
             {
-                loweredIndex++;
+                loweredIndex += GetCollapsedInstructionWidth(
+                    routine.Instructions,
+                    loweredIndex,
+                    parameterSlots,
+                    localSlots,
+                    captureSlots) - 1;
             }
             else
             {
@@ -152,10 +163,13 @@ public sealed class BytecodeCompiler
             return null;
         }
 
+        var localVariables = CreateRoutineLocalVariables(localSlots);
+
         _routineDebugInfo.Add(new BytecodeRoutineDebugInfo(
             routine.Id,
             parameterSlots.ToDictionary(static pair => pair.Value, static pair => pair.Key.Name),
-            localSlots.ToDictionary(static pair => pair.Value, static pair => pair.Key.Name),
+            localVariables.Select((variable, index) => new KeyValuePair<int, string>(index, variable.Name))
+                .ToDictionary(static pair => pair.Key, static pair => pair.Value),
             [new BytecodeBlockDebugRange("body", 0, instructions.Count)]));
 
         return new BytecodeRoutine(
@@ -169,7 +183,7 @@ public sealed class BytecodeCompiler
             routine.IsEntryPoint,
             routine.Symbol,
             parameterSlots.OrderBy(static pair => pair.Value).Select(static pair => (VariableSymbol)pair.Key).ToArray(),
-            localSlots.OrderBy(static pair => pair.Value).Select(static pair => pair.Key).ToArray(),
+            localVariables,
             captureSlots.OrderBy(static pair => pair.Value).Select(static pair => pair.Key).ToArray());
     }
 
@@ -191,13 +205,20 @@ public sealed class BytecodeCompiler
 
     private static Dictionary<VariableSymbol, int> CreateLocalSlotMap(
         LoweredRoutine routine,
-        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots)
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlySet<VariableSymbol> liftedEntryGlobals)
     {
         var slots = new Dictionary<VariableSymbol, int>();
 
         foreach (var variable in routine.LocalVariables)
         {
-            if (variable.IsGlobal || variable is ParameterSymbol)
+            if (variable is ParameterSymbol)
+            {
+                continue;
+            }
+
+            if (variable.IsGlobal
+                && (!routine.IsEntryPoint || !liftedEntryGlobals.Contains(variable)))
             {
                 continue;
             }
@@ -209,6 +230,57 @@ public sealed class BytecodeCompiler
         }
 
         return slots;
+    }
+
+    private static void CollectLiftedEntryGlobals(LoweredProgram program, HashSet<VariableSymbol> liftedEntryGlobals)
+    {
+        liftedEntryGlobals.Clear();
+        CollectRoutineGlobals(program.EntryPoint, liftedEntryGlobals);
+
+        if (liftedEntryGlobals.Count == 0)
+        {
+            return;
+        }
+
+        var sharedGlobals = new HashSet<VariableSymbol>();
+        foreach (var routine in program.Routines)
+        {
+            CollectRoutineGlobals(routine, sharedGlobals);
+        }
+
+        liftedEntryGlobals.ExceptWith(sharedGlobals);
+    }
+
+    private static void CollectRoutineGlobals(LoweredRoutine routine, HashSet<VariableSymbol> globals)
+    {
+        foreach (var instruction in routine.Instructions)
+        {
+            if (instruction.Variable is { IsGlobal: true } variable)
+            {
+                globals.Add(variable);
+            }
+
+            foreach (var candidate in instruction.Variables)
+            {
+                if (candidate.IsGlobal)
+                {
+                    globals.Add(candidate);
+                }
+            }
+        }
+    }
+
+    private static VariableSymbol[] CreateRoutineLocalVariables(IReadOnlyDictionary<VariableSymbol, int> localSlots)
+    {
+        var variables = new VariableSymbol[localSlots.Count];
+        foreach (var (variable, slot) in localSlots)
+        {
+            variables[slot] = variable.IsGlobal
+                ? new VariableSymbol(variable.Name, variable.Type, variable.IsReadOnly, isGlobal: false, variable.FixedStringLength)
+                : variable;
+        }
+
+        return variables;
     }
 
     private static Dictionary<VariableSymbol, int> CreateCaptureSlotMap(
@@ -257,7 +329,11 @@ public sealed class BytecodeCompiler
         }
     }
 
-    private Dictionary<string, int> ResolveLabelTargets(LoweredRoutine routine)
+    private Dictionary<string, int> ResolveLabelTargets(
+        LoweredRoutine routine,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots)
     {
         var targets = new Dictionary<string, int>(StringComparer.Ordinal);
         var instructionIndex = 0;
@@ -278,7 +354,7 @@ public sealed class BytecodeCompiler
                 continue;
             }
 
-            if (TryGetCollapsedInstructionWidth(routine.Instructions, loweredIndex, out var width))
+            if (TryGetCollapsedInstructionWidth(routine.Instructions, loweredIndex, parameterSlots, localSlots, captureSlots, out var width))
             {
                 instructionIndex++;
                 loweredIndex += width - 1;
@@ -304,9 +380,39 @@ public sealed class BytecodeCompiler
         };
     }
 
-    private static bool TryGetCollapsedInstructionWidth(IReadOnlyList<LoweredInstruction> instructions, int index, out int width)
+    private int GetCollapsedInstructionWidth(
+        IReadOnlyList<LoweredInstruction> instructions,
+        int index,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots)
+    {
+        return TryGetCollapsedInstructionWidth(instructions, index, parameterSlots, localSlots, captureSlots, out var width)
+            ? width
+            : 0;
+    }
+
+    private bool TryGetCollapsedInstructionWidth(
+        IReadOnlyList<LoweredInstruction> instructions,
+        int index,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        out int width)
     {
         width = 0;
+        if (TryMatchCollapsedLocalForLoopCheck(instructions, index, parameterSlots, localSlots, captureSlots, out _))
+        {
+            width = 15;
+            return true;
+        }
+
+        if (TryMatchCollapsedAdvanceForLoopLocal(instructions, index, parameterSlots, localSlots, captureSlots, out _, out _))
+        {
+            width = 4;
+            return true;
+        }
+
         if (index + 1 >= instructions.Count)
         {
             return false;
@@ -335,6 +441,9 @@ public sealed class BytecodeCompiler
     private bool TryEmitCollapsedInstruction(
         LoweredRoutine routine,
         int loweredIndex,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
         IReadOnlyDictionary<string, int> labelTargets,
         out BytecodeInstruction? instruction,
         out TextLocation sourceLocation)
@@ -365,7 +474,50 @@ public sealed class BytecodeCompiler
             return true;
         }
 
-        if (!TryGetCollapsedInstructionWidth(routine.Instructions, loweredIndex, out _))
+        if (TryMatchCollapsedLocalForLoopCheck(
+                routine.Instructions,
+                loweredIndex,
+                parameterSlots,
+                localSlots,
+                captureSlots,
+                out var collapsedForLoopCheck))
+        {
+            if (!labelTargets.TryGetValue(collapsedForLoopCheck.EndLabel, out var endTargetInstruction))
+            {
+                Report(
+                    "BC5012",
+                    $"РЭмиттер байткода не нашёл метку '{collapsedForLoopCheck.EndLabel}' в процедуре '{routine.Name}'.",
+                    collapsedForLoopCheck.Location);
+                return true;
+            }
+
+            instruction = new BytecodeInstruction(
+                Opcode.JumpIfForDoneLocal,
+                [
+                    collapsedForLoopCheck.CurrentSlot,
+                    collapsedForLoopCheck.EndSlot,
+                    collapsedForLoopCheck.StepSlot,
+                    endTargetInstruction
+                ]);
+            sourceLocation = collapsedForLoopCheck.Location;
+            return true;
+        }
+
+        if (TryMatchCollapsedAdvanceForLoopLocal(
+                routine.Instructions,
+                loweredIndex,
+                parameterSlots,
+                localSlots,
+                captureSlots,
+                out var currentSlot,
+                out var stepSlot))
+        {
+            instruction = new BytecodeInstruction(Opcode.AdvanceForLoopLocal, [currentSlot, stepSlot]);
+            sourceLocation = routine.Instructions[loweredIndex + 3].Location;
+            return true;
+        }
+
+        if (!TryGetCollapsedInstructionWidth(routine.Instructions, loweredIndex, parameterSlots, localSlots, captureSlots, out _))
         {
             return false;
         }
@@ -373,6 +525,184 @@ public sealed class BytecodeCompiler
         instruction = new BytecodeInstruction(Opcode.AddLongInteger);
         sourceLocation = next.Location;
         return true;
+    }
+
+    private bool TryMatchCollapsedLocalForLoopCheck(
+        IReadOnlyList<LoweredInstruction> instructions,
+        int index,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        out CollapsedLocalForLoopCheck collapsed)
+    {
+        collapsed = default;
+        if (index + 14 >= instructions.Count)
+        {
+            return false;
+        }
+
+        var stepLoadForSign = instructions[index];
+        var zeroLiteral = instructions[index + 1];
+        var compareStepToZero = instructions[index + 2];
+        var jumpToNegative = instructions[index + 3];
+        var currentLoadPositive = instructions[index + 4];
+        var endLoadPositive = instructions[index + 5];
+        var comparePositive = instructions[index + 6];
+        var jumpPositiveEnd = instructions[index + 7];
+        var jumpToBody = instructions[index + 8];
+        var negativeLabel = instructions[index + 9];
+        var currentLoadNegative = instructions[index + 10];
+        var endLoadNegative = instructions[index + 11];
+        var compareNegative = instructions[index + 12];
+        var jumpNegativeEnd = instructions[index + 13];
+        var bodyLabel = instructions[index + 14];
+
+        if (!TryResolveVariableSlotForCollapse(stepLoadForSign, parameterSlots, localSlots, captureSlots, out var stepLoadOpcode, out var stepSlot)
+            || stepLoadOpcode != Opcode.LoadLocal)
+        {
+            return false;
+        }
+
+        if (zeroLiteral.Kind != LoweredInstructionKind.LoadLiteral
+            || zeroLiteral.ValueType != stepLoadForSign.Variable?.Type
+            || !Equals(zeroLiteral.LiteralValue, CreateZeroLiteral(stepLoadForSign.Variable!.Type)))
+        {
+            return false;
+        }
+
+        if (compareStepToZero.Kind != LoweredInstructionKind.BinaryOperation
+            || compareStepToZero.OperatorKind != SyntaxKind.GreaterToken
+            || jumpToNegative.Kind != LoweredInstructionKind.JumpIfFalse
+            || string.IsNullOrWhiteSpace(jumpToNegative.Label)
+            || negativeLabel.Kind != LoweredInstructionKind.Label
+            || negativeLabel.Label != jumpToNegative.Label
+            || jumpToBody.Kind != LoweredInstructionKind.Jump
+            || string.IsNullOrWhiteSpace(jumpToBody.Label)
+            || bodyLabel.Kind != LoweredInstructionKind.Label
+            || bodyLabel.Label != jumpToBody.Label)
+        {
+            return false;
+        }
+
+        if (!TryResolveVariableSlotForCollapse(currentLoadPositive, parameterSlots, localSlots, captureSlots, out var currentPositiveOpcode, out var currentSlot)
+            || currentPositiveOpcode != Opcode.LoadLocal
+            || !TryResolveVariableSlotForCollapse(endLoadPositive, parameterSlots, localSlots, captureSlots, out var endPositiveOpcode, out var endSlot)
+            || endPositiveOpcode != Opcode.LoadLocal
+            || comparePositive.Kind != LoweredInstructionKind.BinaryOperation
+            || comparePositive.OperatorKind != SyntaxKind.GreaterToken
+            || jumpPositiveEnd.Kind != LoweredInstructionKind.JumpIfTrue
+            || string.IsNullOrWhiteSpace(jumpPositiveEnd.Label))
+        {
+            return false;
+        }
+
+        if (!TryResolveVariableSlotForCollapse(currentLoadNegative, parameterSlots, localSlots, captureSlots, out var currentNegativeOpcode, out var currentNegativeSlot)
+            || currentNegativeOpcode != Opcode.LoadLocal
+            || currentNegativeSlot != currentSlot
+            || !TryResolveVariableSlotForCollapse(endLoadNegative, parameterSlots, localSlots, captureSlots, out var endNegativeOpcode, out var endNegativeSlot)
+            || endNegativeOpcode != Opcode.LoadLocal
+            || endNegativeSlot != endSlot
+            || compareNegative.Kind != LoweredInstructionKind.BinaryOperation
+            || compareNegative.OperatorKind != SyntaxKind.LessToken
+            || jumpNegativeEnd.Kind != LoweredInstructionKind.JumpIfTrue
+            || jumpNegativeEnd.Label != jumpPositiveEnd.Label)
+        {
+            return false;
+        }
+
+        collapsed = new CollapsedLocalForLoopCheck(currentSlot, endSlot, stepSlot, jumpPositiveEnd.Label!, jumpPositiveEnd.Location);
+        return true;
+    }
+
+    private bool TryMatchCollapsedAdvanceForLoopLocal(
+        IReadOnlyList<LoweredInstruction> instructions,
+        int index,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        out int currentSlot,
+        out int stepSlot)
+    {
+        currentSlot = default;
+        stepSlot = default;
+        if (index + 3 >= instructions.Count)
+        {
+            return false;
+        }
+
+        var currentLoad = instructions[index];
+        var stepLoad = instructions[index + 1];
+        var addInstruction = instructions[index + 2];
+        var currentStore = instructions[index + 3];
+
+        if (!TryResolveVariableSlotForCollapse(currentLoad, parameterSlots, localSlots, captureSlots, out var currentLoadOpcode, out currentSlot)
+            || currentLoadOpcode != Opcode.LoadLocal
+            || !TryResolveVariableSlotForCollapse(stepLoad, parameterSlots, localSlots, captureSlots, out var stepLoadOpcode, out stepSlot)
+            || stepLoadOpcode != Opcode.LoadLocal
+            || addInstruction.Kind != LoweredInstructionKind.BinaryOperation
+            || addInstruction.OperatorKind != SyntaxKind.PlusToken
+            || !TryResolveVariableSlotForCollapse(currentStore, parameterSlots, localSlots, captureSlots, out var currentStoreOpcode, out var currentStoreSlot)
+            || currentStoreOpcode != Opcode.StoreLocal
+            || currentStoreSlot != currentSlot)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryResolveVariableSlotForCollapse(
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        out Opcode opcode,
+        out int slot)
+    {
+        opcode = default;
+        slot = default;
+
+        if (instruction.Variable is null)
+        {
+            return false;
+        }
+
+        if (instruction.Variable is ParameterSymbol parameter)
+        {
+            if (parameterSlots.TryGetValue(parameter, out slot))
+            {
+                opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreArgument : Opcode.LoadArgument;
+                return true;
+            }
+
+            if (captureSlots.TryGetValue(parameter, out slot))
+            {
+                opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreCapture : Opcode.LoadCapture;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (instruction.Variable.IsGlobal)
+        {
+            opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreGlobal : Opcode.LoadGlobal;
+            return true;
+        }
+
+        if (localSlots.TryGetValue(instruction.Variable, out slot))
+        {
+            opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreLocal : Opcode.LoadLocal;
+            return true;
+        }
+
+        if (captureSlots.TryGetValue(instruction.Variable, out slot))
+        {
+            opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreCapture : Opcode.LoadCapture;
+            return true;
+        }
+
+        return false;
     }
 
     private static bool TryGetCollapsedComparisonJumpOpcode(
@@ -394,6 +724,8 @@ public sealed class BytecodeCompiler
         var jumpIfTrue = jumpInstruction.Kind == LoweredInstructionKind.JumpIfTrue;
         opcode = compareInstruction.OperatorKind switch
         {
+            SyntaxKind.EqualsToken => jumpIfTrue ? Opcode.JumpIfEqual : Opcode.JumpIfNotEqual,
+            SyntaxKind.NotEqualsToken => jumpIfTrue ? Opcode.JumpIfNotEqual : Opcode.JumpIfEqual,
             SyntaxKind.LessToken => jumpIfTrue ? Opcode.JumpIfLess : Opcode.JumpIfGreaterOrEqual,
             SyntaxKind.LessOrEqualsToken => jumpIfTrue ? Opcode.JumpIfLessOrEqual : Opcode.JumpIfGreater,
             SyntaxKind.GreaterToken => jumpIfTrue ? Opcode.JumpIfGreater : Opcode.JumpIfLessOrEqual,
@@ -401,7 +733,9 @@ public sealed class BytecodeCompiler
             _ => default
         };
 
-        return opcode is Opcode.JumpIfLess
+        return opcode is Opcode.JumpIfEqual
+            or Opcode.JumpIfNotEqual
+            or Opcode.JumpIfLess
             or Opcode.JumpIfLessOrEqual
             or Opcode.JumpIfGreater
             or Opcode.JumpIfGreaterOrEqual;
@@ -452,6 +786,19 @@ public sealed class BytecodeCompiler
 
     private BytecodeInstruction EmitLoadLiteral(LoweredInstruction instruction)
     {
+        if (instruction.ValueType == TypeSymbol.Integer && instruction.LiteralValue is int integerLiteral)
+        {
+            if (integerLiteral == 0)
+            {
+                return new BytecodeInstruction(Opcode.PushIntegerZero);
+            }
+
+            if (integerLiteral == 1)
+            {
+                return new BytecodeInstruction(Opcode.PushIntegerOne);
+            }
+        }
+
         var constantKind = TryGetConstantKind(instruction.ValueType, out var kind)
             ? kind
             : BytecodeConstantKind.Null;
@@ -571,16 +918,16 @@ public sealed class BytecodeCompiler
             return false;
         }
 
+        if (localSlots.TryGetValue(instruction.Variable, out slot))
+        {
+            opcode = isStore ? Opcode.StoreLocal : Opcode.LoadLocal;
+            return true;
+        }
+
         if (instruction.Variable.IsGlobal)
         {
             opcode = isStore ? Opcode.StoreGlobal : Opcode.LoadGlobal;
             slot = RegisterGlobal(instruction.Variable);
-            return true;
-        }
-
-        if (localSlots.TryGetValue(instruction.Variable, out slot))
-        {
-            opcode = isStore ? Opcode.StoreLocal : Opcode.LoadLocal;
             return true;
         }
 
@@ -1024,12 +1371,39 @@ public sealed class BytecodeCompiler
         return false;
     }
 
+    private static object CreateZeroLiteral(TypeSymbol type)
+    {
+        if (type == TypeSymbol.Double)
+        {
+            return 0d;
+        }
+
+        if (type == TypeSymbol.Long)
+        {
+            return 0L;
+        }
+
+        if (type == TypeSymbol.Decimal)
+        {
+            return 0m;
+        }
+
+        return 0;
+    }
+
     private void Report(string code, string message, TextLocation location)
     {
         _diagnostics.Add(new BytecodeDiagnostic(code, message, location));
     }
 
     private readonly record struct ConstantKey(BytecodeConstantKind Kind, object? Value);
+
+    private readonly record struct CollapsedLocalForLoopCheck(
+        int CurrentSlot,
+        int EndSlot,
+        int StepSlot,
+        string EndLabel,
+        TextLocation Location);
 
     private readonly record struct BuiltinBindingKey(BuiltinFunctionId Id, string Signature)
     {

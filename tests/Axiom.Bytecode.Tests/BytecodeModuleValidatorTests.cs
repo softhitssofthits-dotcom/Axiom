@@ -67,6 +67,130 @@ public sealed class BytecodeModuleValidatorTests
     }
 
     [Fact]
+    public void Validate_JumpIfForDoneLocalWithLocalIntegerSlots_Succeeds()
+    {
+        var routine = new BytecodeRoutine(
+            id: 0,
+            name: "Main",
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            parameterCount: 0,
+            localSlotCount: 3,
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.JumpIfForDoneLocal, [0, 1, 2, 1]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            isEntryPoint: true,
+            localVariables:
+            [
+                new VariableSymbol("i", TypeSymbol.Integer, isReadOnly: false, isGlobal: false),
+                new VariableSymbol("endValue", TypeSymbol.Integer, isReadOnly: false, isGlobal: false),
+                new VariableSymbol("stepValue", TypeSymbol.Integer, isReadOnly: false, isGlobal: false)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine)));
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_AdvanceForLoopLocalWithMismatchedLocalTypes_ReturnsDiagnostic()
+    {
+        var routine = new BytecodeRoutine(
+            id: 0,
+            name: "Main",
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            parameterCount: 0,
+            localSlotCount: 2,
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.AdvanceForLoopLocal, [0, 1]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            isEntryPoint: true,
+            localVariables:
+            [
+                new VariableSymbol("i", TypeSymbol.Integer, isReadOnly: false, isGlobal: false),
+                new VariableSymbol("stepValue", TypeSymbol.Long, isReadOnly: false, isGlobal: false)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine)));
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code is "BC3024" or "BC3070");
+    }
+
+    [Fact]
+    public void Validate_PushIntegerZeroWithoutOperands_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushIntegerZero),
+                new BytecodeInstruction(Opcode.Pop),
+                new BytecodeInstruction(Opcode.Return)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_JumpIfEqualWithComparableOperands_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.JumpIfEqual, [4]),
+                new BytecodeInstruction(Opcode.Return),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.String, "left"),
+                new BytecodeConstant(BytecodeConstantKind.String, "right"),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_JumpIfEqualWithIncompatibleOperands_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.JumpIfEqual, [4]),
+                new BytecodeInstruction(Opcode.Return),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1),
+                new BytecodeConstant(BytecodeConstantKind.Boolean, true),
+                new BytecodeConstant(BytecodeConstantKind.String, "value")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "BC4116");
+    }
+
+    [Fact]
     public void Validate_JumpIfLessOrEqualWithComparableOperands_Succeeds()
     {
         var module = CreateValidModule(

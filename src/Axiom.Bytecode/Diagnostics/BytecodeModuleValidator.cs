@@ -552,6 +552,11 @@ public sealed class BytecodeModuleValidator
                     ValidatePushConstant(module, routine, instructionIndex, instruction);
                     break;
 
+                case Opcode.PushIntegerZero:
+                case Opcode.PushIntegerOne:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
                 case Opcode.LoadFunction:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidateRoutineReference(module, routine, instructionIndex, instruction, routinesById);
@@ -587,6 +592,8 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.Jump:
+                case Opcode.JumpIfEqual:
+                case Opcode.JumpIfNotEqual:
                 case Opcode.JumpIfLess:
                 case Opcode.JumpIfLessOrEqual:
                 case Opcode.JumpIfGreater:
@@ -595,6 +602,14 @@ public sealed class BytecodeModuleValidator
                 case Opcode.JumpIfFalse:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidateJumpTarget(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.JumpIfForDoneLocal:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 4);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 0);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 1);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 2);
+                    ValidateJumpTarget(module, routine, instructionIndex, instruction, operandIndex: 3);
                     break;
 
                 case Opcode.Call:
@@ -693,6 +708,12 @@ public sealed class BytecodeModuleValidator
                 case Opcode.PrintLine:
                 case Opcode.CloseFile:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.AdvanceForLoopLocal:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 0);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 1);
                     break;
 
                 default:
@@ -997,6 +1018,11 @@ public sealed class BytecodeModuleValidator
                 Push(GetConstantType(module.ConstantPool[instruction.GetOperand(0)]));
                 break;
 
+            case Opcode.PushIntegerZero:
+            case Opcode.PushIntegerOne:
+                Push(TypeSymbol.Integer);
+                break;
+
             case Opcode.LoadFunction:
                 Push(routinesById.TryGetValue(instruction.GetOperand(0), out var functionRoutine) && functionRoutine.Symbol is not null
                     ? FunctionTypeSymbol.FromFunction(functionRoutine.Symbol)
@@ -1024,6 +1050,27 @@ public sealed class BytecodeModuleValidator
             case Opcode.LoadCapture:
                 Push(GetRoutineCaptureType(routine, instruction.GetOperand(0)));
                 break;
+
+            case Opcode.JumpIfForDoneLocal:
+            {
+                var currentType = GetRoutineLocalType(routine, instruction.GetOperand(0));
+                var endType = GetRoutineLocalType(routine, instruction.GetOperand(1));
+                var stepType = GetRoutineLocalType(routine, instruction.GetOperand(2));
+                ValidateBinaryOperationStackTypes(module, routine, instructionIndex, Opcode.CompareGreater, currentType, endType);
+                ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, stepType, "шаг локального цикла FOR");
+
+                if (currentType is not null && stepType is not null && currentType != stepType)
+                {
+                    Report(
+                        "BC3069",
+                        $"Инструкция '{instruction.Opcode}' ожидает одинаковые типы счётчика и шага, но получила {currentType.Name} и {stepType.Name}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                break;
+            }
 
             case Opcode.StoreGlobal:
             {
@@ -1115,6 +1162,25 @@ public sealed class BytecodeModuleValidator
             {
                 var stepType = Pop();
                 ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, stepType, "шаг цикла FOR");
+                break;
+            }
+
+            case Opcode.AdvanceForLoopLocal:
+            {
+                var currentType = GetRoutineLocalType(routine, instruction.GetOperand(0));
+                var stepType = GetRoutineLocalType(routine, instruction.GetOperand(1));
+                ValidateBinaryOperationStackTypes(module, routine, instructionIndex, Opcode.Add, currentType, stepType);
+
+                if (currentType is not null && stepType is not null && currentType != stepType)
+                {
+                    Report(
+                        "BC3070",
+                        $"Инструкция '{instruction.Opcode}' ожидает одинаковые типы счётчика и шага, но получила {currentType.Name} и {stepType.Name}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
                 break;
             }
 
@@ -1318,6 +1384,15 @@ public sealed class BytecodeModuleValidator
             {
                 var conditionType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, conditionType, TypeSymbol.Boolean, "логическое условие");
+                break;
+            }
+
+            case Opcode.JumpIfEqual:
+            case Opcode.JumpIfNotEqual:
+            {
+                var rightType = Pop();
+                var leftType = Pop();
+                ValidateBinaryOperationStackTypes(module, routine, instructionIndex, MapBranchComparisonOpcode(instruction.Opcode), leftType, rightType);
                 break;
             }
 
@@ -2108,6 +2183,8 @@ public sealed class BytecodeModuleValidator
     {
         return opcode switch
         {
+            Opcode.JumpIfEqual => Opcode.CompareEqual,
+            Opcode.JumpIfNotEqual => Opcode.CompareNotEqual,
             Opcode.JumpIfLess => Opcode.CompareLess,
             Opcode.JumpIfLessOrEqual => Opcode.CompareLessOrEqual,
             Opcode.JumpIfGreater => Opcode.CompareGreater,
@@ -2259,6 +2336,8 @@ public sealed class BytecodeModuleValidator
         switch (instruction.Opcode)
         {
             case Opcode.PushConst:
+            case Opcode.PushIntegerZero:
+            case Opcode.PushIntegerOne:
             case Opcode.LoadFunction:
             case Opcode.LoadBuiltinFunction:
             case Opcode.LoadGlobal:
@@ -2266,6 +2345,10 @@ public sealed class BytecodeModuleValidator
             case Opcode.LoadArgument:
             case Opcode.LoadCapture:
                 pushCount = 1;
+                return true;
+
+            case Opcode.JumpIfForDoneLocal:
+            case Opcode.AdvanceForLoopLocal:
                 return true;
 
             case Opcode.StoreGlobal:
@@ -2376,6 +2459,8 @@ public sealed class BytecodeModuleValidator
                 popCount = 1;
                 return true;
 
+            case Opcode.JumpIfEqual:
+            case Opcode.JumpIfNotEqual:
             case Opcode.JumpIfLess:
             case Opcode.JumpIfLessOrEqual:
             case Opcode.JumpIfGreater:
@@ -2417,6 +2502,8 @@ public sealed class BytecodeModuleValidator
             case Opcode.JumpIfLessOrEqual:
             case Opcode.JumpIfGreater:
             case Opcode.JumpIfGreaterOrEqual:
+            case Opcode.JumpIfEqual:
+            case Opcode.JumpIfNotEqual:
             case Opcode.JumpIfTrue:
             case Opcode.JumpIfFalse:
                 if (instruction.OperandCount >= 1)
@@ -3082,14 +3169,14 @@ public sealed class BytecodeModuleValidator
         }
     }
 
-    private void ValidateLocalSlot(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction)
+    private void ValidateLocalSlot(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction, int operandIndex = 0)
     {
-        if (instruction.OperandCount == 0)
+        if (instruction.OperandCount <= operandIndex)
         {
             return;
         }
 
-        var slot = instruction.GetOperand(0);
+        var slot = instruction.GetOperand(operandIndex);
         if (slot < 0)
         {
             Report(
@@ -3172,14 +3259,14 @@ public sealed class BytecodeModuleValidator
         }
     }
 
-    private void ValidateJumpTarget(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction)
+    private void ValidateJumpTarget(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction, int operandIndex = 0)
     {
-        if (instruction.OperandCount == 0)
+        if (instruction.OperandCount <= operandIndex)
         {
             return;
         }
 
-        var target = instruction.GetOperand(0);
+        var target = instruction.GetOperand(operandIndex);
         if (target < 0)
         {
             Report(

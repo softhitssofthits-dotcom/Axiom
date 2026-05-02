@@ -3,5 +3,11 @@
 ' Ожидаемый вывод:
 ' hello
 ' hello
+' hello
+' hello
+' 
 PRINT TRIM("  hello  ")
 PRINT TRIM("--hello--", "-")
+PRINT TRIM("hello   ")
+PRINT TRIM("   hello")
+PRINT TRIM("   ")
