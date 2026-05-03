@@ -75,7 +75,6 @@ public sealed partial class BytecodeVm
 
     private void ExecuteLoadElement(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var dimensionCount = instruction.GetOperand(1);
         var rangeMask = instruction.OperandCount >= 3 ? instruction.GetOperand(2) : 0;
 
@@ -83,29 +82,38 @@ public sealed partial class BytecodeVm
         {
             if (dimensionCount == 1)
             {
-                ExecuteDirectLoadElement1(frame, instruction, instructionIndex, location);
+                if (TryExecuteFastLoadElement1(frame))
+                {
+                    return;
+                }
+
+                var slowLocation = ResolveLocation(frame.Routine.Id, instructionIndex);
+                ExecuteDirectLoadElement1(frame, instruction, instructionIndex, slowLocation);
                 return;
             }
 
+            var directLocation = ResolveLocation(frame.Routine.Id, instructionIndex);
+
             if (dimensionCount == 3)
             {
-                ExecuteDirectLoadElement3(frame, instruction, instructionIndex, location);
+                ExecuteDirectLoadElement3(frame, instruction, instructionIndex, directLocation);
                 return;
             }
 
             if (dimensionCount <= 8)
             {
                 Span<int> stackIndices = stackalloc int[dimensionCount];
-                PopulateArrayIndices(frame, instructionIndex, location, stackIndices);
-                ExecuteDirectLoadElement(frame, instruction, instructionIndex, location, stackIndices, rentedIndices: null);
+                PopulateArrayIndices(frame, instructionIndex, directLocation, stackIndices);
+                ExecuteDirectLoadElement(frame, instruction, instructionIndex, directLocation, stackIndices, rentedIndices: null);
                 return;
             }
 
-            using var indicesBuffer = RentArrayIndices(frame, instructionIndex, location, dimensionCount);
-            ExecuteDirectLoadElement(frame, instruction, instructionIndex, location, indicesBuffer.Span, indicesBuffer.Buffer);
+            using var indicesBuffer = RentArrayIndices(frame, instructionIndex, directLocation, dimensionCount);
+            ExecuteDirectLoadElement(frame, instruction, instructionIndex, directLocation, indicesBuffer.Span, indicesBuffer.Buffer);
             return;
         }
 
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var slices = PopArrayIndexSlices(frame, instruction, instructionIndex, location);
         var arrayValue = PopValue(frame, instructionIndex);
         var displayName = ReadDebugName(instruction.GetOperand(0));
@@ -131,13 +139,20 @@ public sealed partial class BytecodeVm
 
     private void ExecuteStoreElement(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var dimensionCount = instruction.GetOperand(1);
         if (dimensionCount == 1)
         {
-            ExecuteDirectStoreElement1(frame, instruction, instructionIndex, location);
+            if (TryExecuteFastStoreElement1(frame))
+            {
+                return;
+            }
+
+            var slowLocation = ResolveLocation(frame.Routine.Id, instructionIndex);
+            ExecuteDirectStoreElement1(frame, instruction, instructionIndex, slowLocation);
             return;
         }
+
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
 
         if (dimensionCount == 3)
         {
@@ -155,6 +170,69 @@ public sealed partial class BytecodeVm
 
         using var indicesBuffer = RentArrayIndices(frame, instructionIndex, location, dimensionCount);
         ExecuteDirectStoreElement(frame, instruction, instructionIndex, location, indicesBuffer.Span, indicesBuffer.Buffer);
+    }
+
+    private bool TryExecuteFastLoadElement1(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        var indexValue = stack.Pop();
+
+        if (indexValue.Type != TypeSymbol.Integer)
+        {
+            stack.PushUnchecked(indexValue);
+            return false;
+        }
+
+        var arrayValue = stack.Pop();
+        if (arrayValue.Type is not ArrayTypeSymbol || arrayValue.Value is not RuntimeArrayValue array || !array.IsAllocated || array.Rank != 1)
+        {
+            stack.PushUnchecked(arrayValue);
+            stack.PushUnchecked(indexValue);
+            return false;
+        }
+
+        if (!array.TryGetValue1(GetIntegerUnchecked(indexValue), out var directValue))
+        {
+            stack.PushUnchecked(arrayValue);
+            stack.PushUnchecked(indexValue);
+            return false;
+        }
+
+        stack.PushUnchecked(directValue);
+        return true;
+    }
+
+    private bool TryExecuteFastStoreElement1(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        var indexValue = stack.Pop();
+
+        if (indexValue.Type != TypeSymbol.Integer)
+        {
+            stack.PushUnchecked(indexValue);
+            return false;
+        }
+
+        var arrayValue = stack.Pop();
+        var value = stack.Pop();
+
+        if (arrayValue.Type is not ArrayTypeSymbol || arrayValue.Value is not RuntimeArrayValue array || !array.IsAllocated || array.Rank != 1)
+        {
+            stack.PushUnchecked(value);
+            stack.PushUnchecked(arrayValue);
+            stack.PushUnchecked(indexValue);
+            return false;
+        }
+
+        if (!array.TrySetValue1(GetIntegerUnchecked(indexValue), value))
+        {
+            stack.PushUnchecked(value);
+            stack.PushUnchecked(arrayValue);
+            stack.PushUnchecked(indexValue);
+            return false;
+        }
+
+        return true;
     }
 
     private int[] PopArrayIndices(

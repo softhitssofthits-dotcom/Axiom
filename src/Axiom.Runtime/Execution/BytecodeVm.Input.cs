@@ -10,38 +10,25 @@ public sealed partial class BytecodeVm
     private void ExecuteInput(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        var valueCount = instruction.GetOperand(0);
-        var promptText = ReadInputPrompt(instruction.GetOperand(1));
-        var targets = new InputTarget[valueCount];
+        var plan = GetInputInstructionPlan(frame.Routine, instruction, instructionIndex);
 
-        for (var index = 0; index < valueCount; index++)
+        if (plan.ArrayTargetName is not null)
         {
-            var operandOffset = 2 + index * 2;
-            targets[index] = ResolveInputTarget(
-                frame,
-                instruction.GetOperand(operandOffset),
-                instruction.GetOperand(operandOffset + 1),
-                instructionIndex);
-        }
-
-        if (targets.Any(static target => target.IsArray))
-        {
-            var arrayTarget = targets.First(static target => target.IsArray);
-            ReportInvalidRuntimeState($"INPUT does not support array '{arrayTarget.Name}'.", location);
+            ReportInvalidRuntimeState($"INPUT does not support array '{plan.ArrayTargetName}'.", location);
             throw new RuntimeFailureException();
         }
 
-        var text = _host.ReadInput(new InputRequest(promptText, valueCount));
+        var text = _host.ReadInput(new InputRequest(plan.PromptText, plan.Targets.Length));
         InvalidateReverseExecutionHistory();
 
-        if (!TryParseInputValues(targets, text, location, out var values))
+        if (!TryParseInputValues(plan.Targets, text, location, out var values))
         {
             throw new RuntimeFailureException();
         }
 
-        for (var index = 0; index < targets.Length; index++)
+        for (var index = 0; index < plan.Targets.Length; index++)
         {
-            StoreInputValue(frame, targets[index], values[index], instructionIndex);
+            StoreInputValue(frame, plan.Targets[index], values[index], instructionIndex);
         }
     }
 
@@ -55,17 +42,51 @@ public sealed partial class BytecodeVm
         return ReadConstant(promptOperand - 1).AsString();
     }
 
-    private InputTarget ResolveInputTarget(BytecodeCallFrame frame, int targetKind, int slot, int instructionIndex)
+    private InputInstructionPlan GetInputInstructionPlan(BytecodeRoutine routine, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var key = (routine.Id, instructionIndex);
+        if (_inputInstructionCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var valueCount = instruction.GetOperand(0);
+        var promptText = ReadInputPrompt(instruction.GetOperand(1));
+        var targets = new InputTarget[valueCount];
+        string? arrayTargetName = null;
+
+        for (var index = 0; index < valueCount; index++)
+        {
+            var operandOffset = 2 + index * 2;
+            var target = ResolveInputTarget(
+                routine,
+                instruction.GetOperand(operandOffset),
+                instruction.GetOperand(operandOffset + 1),
+                instructionIndex);
+            targets[index] = target;
+
+            if (arrayTargetName is null && target.IsArray)
+            {
+                arrayTargetName = target.Name;
+            }
+        }
+
+        var plan = new InputInstructionPlan(promptText, targets, arrayTargetName);
+        _inputInstructionCache[key] = plan;
+        return plan;
+    }
+
+    private InputTarget ResolveInputTarget(BytecodeRoutine routine, int targetKind, int slot, int instructionIndex)
     {
         return targetKind switch
         {
             0 => ResolveGlobalInputTarget(slot, instructionIndex),
-            1 => ResolveLocalInputTarget(frame, slot, instructionIndex),
-            2 => ResolveArgumentInputTarget(frame, slot, instructionIndex),
-            3 => ResolveCaptureInputTarget(frame, slot, instructionIndex),
+            1 => ResolveLocalInputTarget(routine, slot, instructionIndex),
+            2 => ResolveArgumentInputTarget(routine, slot, instructionIndex),
+            3 => ResolveCaptureInputTarget(routine, slot, instructionIndex),
             _ => ReportInvalidRuntimeState<InputTarget>(
                 $"Bytecode VM получила неизвестный вид цели INPUT {targetKind}.",
-                ResolveLocation(frame.Routine.Id, instructionIndex))
+                ResolveLocation(routine.Id, instructionIndex))
         };
     }
 
@@ -80,37 +101,43 @@ public sealed partial class BytecodeVm
         return new InputTarget(0, slot, global.Name, global.Type, global.FixedStringLength);
     }
 
-    private static InputTarget ResolveLocalInputTarget(BytecodeCallFrame frame, int slot, int instructionIndex)
+    private static InputTarget ResolveLocalInputTarget(BytecodeRoutine routine, int slot, int instructionIndex)
     {
-        if (slot < 0 || slot >= frame.LocalCount || slot >= frame.Routine.LocalVariables.Count)
+        if (slot < 0 || slot >= routine.LocalVariables.Count)
         {
-            throw CreateInvalidSlotException(frame, "локальный", slot, instructionIndex);
+            throw CreateInvalidSlotException(routine, "локальный", slot, instructionIndex);
         }
 
-        var variable = frame.Routine.LocalVariables[slot];
+        var variable = routine.LocalVariables[slot];
         return new InputTarget(1, slot, variable.Name, variable.Type, variable.FixedStringLength);
     }
 
-    private static InputTarget ResolveArgumentInputTarget(BytecodeCallFrame frame, int slot, int instructionIndex)
+    private static InputTarget ResolveArgumentInputTarget(BytecodeRoutine routine, int slot, int instructionIndex)
     {
-        if (slot < 0 || slot >= frame.Arguments.Length || slot >= frame.Routine.ParameterVariables.Count)
+        if (slot < 0 || slot >= routine.ParameterVariables.Count)
         {
-            throw CreateInvalidSlotException(frame, "аргументный", slot, instructionIndex);
+            throw CreateInvalidSlotException(routine, "аргументный", slot, instructionIndex);
         }
 
-        var variable = frame.Routine.ParameterVariables[slot];
+        var variable = routine.ParameterVariables[slot];
         return new InputTarget(2, slot, variable.Name, variable.Type, variable.FixedStringLength);
     }
 
-    private static InputTarget ResolveCaptureInputTarget(BytecodeCallFrame frame, int slot, int instructionIndex)
+    private static InputTarget ResolveCaptureInputTarget(BytecodeRoutine routine, int slot, int instructionIndex)
     {
-        if (slot < 0 || slot >= frame.Captures.Length || slot >= frame.Routine.CapturedVariables.Count)
+        if (slot < 0 || slot >= routine.CapturedVariables.Count)
         {
-            throw CreateInvalidSlotException(frame, "захваченный", slot, instructionIndex);
+            throw CreateInvalidSlotException(routine, "захваченный", slot, instructionIndex);
         }
 
-        var variable = frame.Routine.CapturedVariables[slot];
+        var variable = routine.CapturedVariables[slot];
         return new InputTarget(3, slot, variable.Name, variable.Type, variable.FixedStringLength);
+    }
+
+    private static InvalidOperationException CreateInvalidSlotException(BytecodeRoutine routine, string kind, int slot, int instructionIndex)
+    {
+        return new InvalidOperationException(
+            $"Routine '{routine.Name}' имеет неверный {kind} слот {slot} в инструкции #{instructionIndex}.");
     }
 
     private void StoreInputValue(BytecodeCallFrame frame, InputTarget target, RuntimeValue value, int instructionIndex)
@@ -139,7 +166,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private RuntimeValue? TryParseInput(TypeSymbol type, string text, TextLocation location)
+    private RuntimeValue? TryParseInput(TypeSymbol type, ReadOnlySpan<char> text, TextLocation location)
     {
         if (type == TypeSymbol.Integer)
         {
@@ -172,17 +199,17 @@ public sealed partial class BytecodeVm
 
         if (type == TypeSymbol.String)
         {
-            return RuntimeValue.FromString(text);
+            return RuntimeValue.FromString(text.ToString());
         }
 
         if (type == TypeSymbol.Boolean)
         {
-            if (string.Equals(text, "TRUE", StringComparison.OrdinalIgnoreCase))
+            if (text.Equals("TRUE".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return RuntimeValue.FromBoolean(true);
             }
 
-            if (string.Equals(text, "FALSE", StringComparison.OrdinalIgnoreCase))
+            if (text.Equals("FALSE".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return RuntimeValue.FromBoolean(false);
             }
@@ -208,27 +235,55 @@ public sealed partial class BytecodeVm
             return true;
         }
 
-        var fields = targets.Count == 1
-            ? [text]
-            : text.Split(',');
-
-        if (fields.Length != targets.Count)
+        if (targets.Count == 1)
         {
-            ReportInputValueCountFailure(targets.Count, fields.Length, location);
+            var parsedValue = TryParseInput(targets[0].Type, text.AsSpan(), location);
+            if (parsedValue is null)
+            {
+                ReportInputConversionFailure(targets[0].Type, text, location);
+                return false;
+            }
+
+            values = [parsedValue];
+            return true;
+        }
+
+        var actualCount = CountInputFields(text);
+        if (actualCount != targets.Count)
+        {
+            ReportInputValueCountFailure(targets.Count, actualCount, location);
             return false;
         }
 
         var parsedValues = new RuntimeValue[targets.Count];
+        var span = text.AsSpan();
+        var start = 0;
 
         for (var index = 0; index < targets.Count; index++)
         {
             var target = targets[index];
-            var field = NormalizeInputField(fields[index], targets.Count > 1);
+            var remaining = span[start..];
+            ReadOnlySpan<char> field;
+
+            if (index == targets.Count - 1)
+            {
+                field = remaining;
+            }
+            else
+            {
+                var separatorIndex = remaining.IndexOf(',');
+                field = separatorIndex >= 0
+                    ? remaining[..separatorIndex]
+                    : remaining;
+                start += separatorIndex + 1;
+            }
+
+            field = NormalizeInputField(field, targets.Count > 1);
             var parsedValue = TryParseInput(target.Type, field, location);
 
             if (parsedValue is null)
             {
-                ReportInputConversionFailure(target.Type, field, location);
+                ReportInputConversionFailure(target.Type, field.ToString(), location);
                 return false;
             }
 
@@ -239,9 +294,44 @@ public sealed partial class BytecodeVm
         return true;
     }
 
-    private static string NormalizeInputField(string text, bool trim)
+    private static int CountInputFields(string text)
     {
-        return trim ? text.Trim() : text;
+        var count = 1;
+
+        foreach (var ch in text)
+        {
+            if (ch == ',')
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static ReadOnlySpan<char> NormalizeInputField(ReadOnlySpan<char> text, bool trim)
+    {
+        if (!trim)
+        {
+            return text;
+        }
+
+        var start = 0;
+        var end = text.Length - 1;
+
+        while (start <= end && char.IsWhiteSpace(text[start]))
+        {
+            start++;
+        }
+
+        while (end >= start && char.IsWhiteSpace(text[end]))
+        {
+            end--;
+        }
+
+        return start > end
+            ? ReadOnlySpan<char>.Empty
+            : text.Slice(start, end - start + 1);
     }
 
     private void ReportInputConversionFailure(TypeSymbol type, string text, TextLocation location)
@@ -269,4 +359,9 @@ public sealed partial class BytecodeVm
     {
         public bool IsArray => Type is ArrayTypeSymbol;
     }
+
+    private readonly record struct InputInstructionPlan(
+        string? PromptText,
+        InputTarget[] Targets,
+        string? ArrayTargetName);
 }

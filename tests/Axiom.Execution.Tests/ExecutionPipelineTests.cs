@@ -1021,6 +1021,57 @@ PRINT ISDATE(UTCNOW())
     }
 
     [Fact]
+    public void Run_UsesProvidedRuntimeClockForCurrentDateTimeBuiltins()
+    {
+        const string text = """
+PRINT DATE()
+PRINT TIME()
+PRINT NOW()
+PRINT UTCDATE()
+PRINT UTCTIME()
+PRINT UTCNOW()
+PRINT DATE("UTC")
+PRINT TIME("UTC")
+PRINT NOW("UTC")
+PRINT FIX(TIMER())
+""";
+
+        var localTimeZone = TimeZoneInfo.CreateCustomTimeZone(
+            "Axiom Execution Tests East",
+            TimeSpan.FromHours(3),
+            "Axiom Execution Tests East",
+            "Axiom Execution Tests East");
+        var runtimeClock = new FixedRuntimeClock(
+            new DateTimeOffset(2026, 04, 20, 14, 05, 06, TimeSpan.FromHours(3)),
+            localTimeZone,
+            new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Axiom Execution Tests East"] = localTimeZone,
+                ["UTC"] = TimeZoneInfo.Utc
+            });
+
+        var result = Run(text, runtimeClock: runtimeClock);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "2026-04-20",
+                "14:05:06",
+                "2026-04-20 14:05:06",
+                "2026-04-20",
+                "11:05:06",
+                "2026-04-20 11:05:06",
+                "2026-04-20",
+                "11:05:06",
+                "2026-04-20 11:05:06",
+                "50706"
+            ],
+            result.Output);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_ReportsDateTimeBuiltinArgumentError()
     {
         const string text = """
@@ -2246,6 +2297,30 @@ PRINT value + 1
     }
 
     [Fact]
+    public void Run_UsesProvidedRuntimeRandomForRndBuiltin()
+    {
+        const string text = """
+PRINT INT(RND() * 1000)
+PRINT INT(RND() * 1000)
+PRINT INT(RND() * 1000)
+""";
+
+        var interpreterResult = Run(
+            text,
+            runtimeRandom: new FixedRuntimeRandom(0.125, 0.5, 0.875),
+            mode: ExecutionMode.Interpreter);
+        var bytecodeResult = Run(
+            text,
+            runtimeRandom: new FixedRuntimeRandom(0.125, 0.5, 0.875),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, interpreterResult.Status);
+        Assert.Equal(ExecutionStatus.Success, bytecodeResult.Status);
+        Assert.Equal(["125", "500", "875"], interpreterResult.Output);
+        Assert.Equal(interpreterResult.Output, bytecodeResult.Output);
+    }
+
+    [Fact]
     public void Run_ReportsInvalidMultiInputHandling()
     {
         const string text = """
@@ -2310,9 +2385,12 @@ INPUT value
         string sourceText,
         IInputProvider? inputProvider = null,
         IOutputWriter? outputWriter = null,
-        IDiagnosticSink? diagnosticSink = null)
+        IDiagnosticSink? diagnosticSink = null,
+        IRuntimeClock? runtimeClock = null,
+        IRuntimeRandom? runtimeRandom = null,
+        ExecutionMode mode = ExecutionMode.Bytecode)
     {
-        var request = new ExecutionRequest(sourceText, inputProvider, outputWriter, diagnosticSink);
+        var request = new ExecutionRequest(sourceText, inputProvider, outputWriter, diagnosticSink, runtimeClock, runtimeRandom, mode: mode);
         var pipeline = new AxiomExecutionPipeline();
         return pipeline.Run(request);
     }
@@ -2366,6 +2444,56 @@ INPUT value
             Requests.Add(request);
             return _values.Count > 0 ? _values.Dequeue() : string.Empty;
         }
+    }
+
+    private sealed class FixedRuntimeClock : IRuntimeClock
+    {
+        private readonly DateTimeOffset _localNow;
+        private readonly TimeZoneInfo _localTimeZone;
+        private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
+
+        public FixedRuntimeClock(
+            DateTimeOffset localNow,
+            TimeZoneInfo localTimeZone,
+            IReadOnlyDictionary<string, TimeZoneInfo>? namedTimeZones = null)
+        {
+            _localNow = localNow;
+            _localTimeZone = localTimeZone;
+            _namedTimeZones = namedTimeZones ?? new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public DateTimeOffset GetLocalNow() => _localNow;
+
+        public TimeZoneInfo GetLocalTimeZone() => _localTimeZone;
+
+        public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
+        {
+            if (string.Equals(id, "LOCAL", StringComparison.OrdinalIgnoreCase))
+            {
+                timeZone = _localTimeZone;
+                return true;
+            }
+
+            if (string.Equals(id, "UTC", StringComparison.OrdinalIgnoreCase))
+            {
+                timeZone = TimeZoneInfo.Utc;
+                return true;
+            }
+
+            return _namedTimeZones.TryGetValue(id, out timeZone!);
+        }
+    }
+
+    private sealed class FixedRuntimeRandom : IRuntimeRandom
+    {
+        private readonly Queue<double> _values;
+
+        public FixedRuntimeRandom(params double[] values)
+        {
+            _values = new Queue<double>(values);
+        }
+
+        public double NextRandomDouble() => _values.Count > 0 ? _values.Dequeue() : 0.0;
     }
 
     private sealed class CollectingOutputWriter : IOutputWriter

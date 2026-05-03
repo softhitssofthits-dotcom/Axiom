@@ -8,9 +8,10 @@ namespace Axiom.Runtime;
 internal sealed class BytecodeCallFrame
 {
     private IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot>? _visibleVariables;
+    private Dictionary<int, RuntimeValue>? _cachedFunctionValuesByRoutineId;
     private readonly RuntimeValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
-    private readonly BytecodeVariableSlot?[] _sharedLocals;
+    private BytecodeVariableSlot?[]? _sharedLocals;
     private bool _hasSharedLocals;
 
     public BytecodeCallFrame(
@@ -32,7 +33,7 @@ internal sealed class BytecodeCallFrame
         Arguments = arguments;
         _locals = locals;
         _localFixedStringLengths = localFixedStringLengths;
-        _sharedLocals = new BytecodeVariableSlot?[locals.Length];
+        _sharedLocals = locals.Length == 0 ? null : new BytecodeVariableSlot?[locals.Length];
         Captures = captures;
         CallSiteLocation = callSiteLocation;
         EvaluationStack = new BytecodeEvaluationStack(evaluationStackCapacity);
@@ -42,9 +43,9 @@ internal sealed class BytecodeCallFrame
 
     public BytecodeVariableSlot[] Arguments { get; }
 
-    public BytecodeVariableSlot[] Captures { get; }
+    public BytecodeVariableSlot[] Captures { get; private set; }
 
-    public TextLocation CallSiteLocation { get; }
+    public TextLocation CallSiteLocation { get; private set; }
 
     public BytecodeEvaluationStack EvaluationStack { get; }
 
@@ -54,6 +55,27 @@ internal sealed class BytecodeCallFrame
         _visibleVariables ??= CreateVisibleVariables(this);
 
     public int InstructionPointer { get; set; }
+
+    public void ResetNoLocals(
+        ReadOnlySpan<RuntimeValue> arguments,
+        BytecodeVariableSlot[] captures,
+        TextLocation callSiteLocation)
+    {
+        Captures = captures;
+        CallSiteLocation = callSiteLocation;
+        InstructionPointer = 0;
+        _visibleVariables = null;
+        _cachedFunctionValuesByRoutineId?.Clear();
+        _hasSharedLocals = false;
+        EvaluationStack.Clear();
+
+        for (var index = 0; index < Arguments.Length; index++)
+        {
+            Arguments[index].Value = index < arguments.Length
+                ? BytecodeVariableSlot.NormalizeForStorage(arguments[index], Arguments[index].FixedStringLength)
+                : RuntimeValue.Void;
+        }
+    }
 
     public bool TryResolveVisibleVariable(VariableSymbol variable, out BytecodeVariableSlot slot)
     {
@@ -69,7 +91,8 @@ internal sealed class BytecodeCallFrame
             return _locals[slot];
         }
 
-        return _sharedLocals[slot]?.Value ?? _locals[slot];
+        var sharedLocals = _sharedLocals!;
+        return sharedLocals[slot]?.Value ?? _locals[slot];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,7 +104,8 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        EvaluationStack.PushUnchecked(_sharedLocals[slot]?.Value ?? _locals[slot]);
+        var sharedLocals = _sharedLocals!;
+        EvaluationStack.PushUnchecked(sharedLocals[slot]?.Value ?? _locals[slot]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,7 +117,8 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        var sharedSlot = _sharedLocals[slot];
+        var sharedLocals = _sharedLocals!;
+        var sharedSlot = sharedLocals[slot];
         if (sharedSlot is not null)
         {
             sharedSlot.Store(value);
@@ -115,9 +140,10 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        current = _sharedLocals[currentSlot]?.Value ?? _locals[currentSlot];
-        end = _sharedLocals[endSlot]?.Value ?? _locals[endSlot];
-        step = _sharedLocals[stepSlot]?.Value ?? _locals[stepSlot];
+        var sharedLocals = _sharedLocals!;
+        current = sharedLocals[currentSlot]?.Value ?? _locals[currentSlot];
+        end = sharedLocals[endSlot]?.Value ?? _locals[endSlot];
+        step = sharedLocals[stepSlot]?.Value ?? _locals[stepSlot];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -131,8 +157,9 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        current = _sharedLocals[currentSlot]?.Value ?? _locals[currentSlot];
-        step = _sharedLocals[stepSlot]?.Value ?? _locals[stepSlot];
+        var sharedLocals = _sharedLocals!;
+        current = sharedLocals[currentSlot]?.Value ?? _locals[currentSlot];
+        step = sharedLocals[stepSlot]?.Value ?? _locals[stepSlot];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,7 +171,8 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        var sharedSlot = _sharedLocals[slot];
+        var sharedLocals = _sharedLocals!;
+        var sharedSlot = sharedLocals[slot];
         if (sharedSlot is not null)
         {
             sharedSlot.Value = value;
@@ -156,6 +184,8 @@ internal sealed class BytecodeCallFrame
 
     public BytecodeVariableSlot GetOrCreateLocalSlot(int slot)
     {
+        _sharedLocals ??= new BytecodeVariableSlot?[_locals.Length];
+
         var sharedSlot = _sharedLocals[slot];
         if (sharedSlot is not null)
         {
@@ -171,6 +201,24 @@ internal sealed class BytecodeCallFrame
     public int? GetLocalFixedStringLength(int slot)
     {
         return _localFixedStringLengths[slot];
+    }
+
+    public bool TryGetCachedFunctionValue(int routineId, out RuntimeValue value)
+    {
+        if (_cachedFunctionValuesByRoutineId is not null
+            && _cachedFunctionValuesByRoutineId.TryGetValue(routineId, out value!))
+        {
+            return true;
+        }
+
+        value = RuntimeValue.Void;
+        return false;
+    }
+
+    public void CacheFunctionValue(int routineId, RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        (_cachedFunctionValuesByRoutineId ??= []).TryAdd(routineId, value);
     }
 
     private static Dictionary<VariableSymbol, BytecodeVariableSlot> CreateVisibleVariables(BytecodeCallFrame frame)

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Axiom.Bytecode;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -190,6 +191,14 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         ArgumentNullException.ThrowIfNull(function);
         ArgumentNullException.ThrowIfNull(capturedSlots);
         return new RuntimeValue(FunctionTypeSymbol.FromFunction(function), new RuntimeFunctionValue(function, capturedSlots));
+    }
+
+    internal static RuntimeValue FromBytecodeFunction(BytecodeRoutine routine, BytecodeVariableSlot[] capturedSlots)
+    {
+        ArgumentNullException.ThrowIfNull(routine);
+        ArgumentNullException.ThrowIfNull(routine.Symbol);
+        ArgumentNullException.ThrowIfNull(capturedSlots);
+        return new RuntimeValue(FunctionTypeSymbol.FromFunction(routine.Symbol), new RuntimeFunctionValue(routine, capturedSlots));
     }
 
     internal static RuntimeValue FromBytecodeBuiltinFunction(FunctionSymbol function, int builtinBindingId)

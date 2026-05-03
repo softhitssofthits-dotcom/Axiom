@@ -1,0 +1,47 @@
+' Сравнительный сценарий: current-time built-in на фиксированных часах.
+' compare-engines подаёт сюда контролируемое локальное время и пояс,
+' поэтому DATE/TIME/NOW и UTC-варианты дают один и тот же вывод.
+
+DIM dateChecksum AS LONG = 0
+DIM timeChecksum AS LONG = 0
+DIM utcChecksum AS LONG = 0
+DIM timerChecksum AS DOUBLE = 0
+DIM digest AS STRING = ""
+
+FOR roundIndex = 1 TO 220
+    DIM localDateText AS STRING = DATE()
+    DIM localTimeText AS STRING = TIME()
+    DIM localNowText AS STRING = NOW()
+    DIM utcDateText AS STRING = UTCDATE()
+    DIM utcTimeText AS STRING = UTCTIME()
+    DIM utcNowText AS STRING = UTCNOW()
+    DIM zoneDateText AS STRING = DATE("UTC")
+    DIM zoneTimeText AS STRING = TIME("UTC")
+    DIM zoneNowText AS STRING = NOW("UTC")
+
+    dateChecksum = dateChecksum + YEAR(localDateText) + MONTH(localDateText) + DAY(localDateText)
+    dateChecksum = dateChecksum + YEAR(utcDateText) + MONTH(utcDateText) + DAY(utcDateText)
+    dateChecksum = dateChecksum + YEAR(zoneDateText) + MONTH(zoneDateText) + DAY(zoneDateText)
+
+    timeChecksum = timeChecksum + HOUR(localTimeText) + MINUTE(localTimeText) + SECOND(localTimeText)
+    timeChecksum = timeChecksum + HOUR(localNowText) + MINUTE(localNowText) + SECOND(localNowText)
+
+    utcChecksum = utcChecksum + HOUR(utcTimeText) + MINUTE(utcTimeText) + SECOND(utcTimeText)
+    utcChecksum = utcChecksum + HOUR(utcNowText) + MINUTE(utcNowText) + SECOND(utcNowText)
+    utcChecksum = utcChecksum + HOUR(zoneTimeText) + MINUTE(zoneTimeText) + SECOND(zoneTimeText)
+    utcChecksum = utcChecksum + HOUR(zoneNowText) + MINUTE(zoneNowText) + SECOND(zoneNowText)
+    utcChecksum = utcChecksum + UTCOFFSET() + UTCOFFSET(localNowText) + UTCOFFSET(localNowText, "UTC")
+
+    timerChecksum = timerChecksum + FIX(TIMER())
+
+    IF roundIndex <= 3 THEN
+        digest = digest + LEFT(localNowText, 10) + RIGHT(utcNowText, 8)
+    END IF
+NEXT
+
+PRINT dateChecksum
+PRINT timeChecksum
+PRINT utcChecksum
+PRINT timerChecksum
+PRINT LEFT(digest, 24)
+PRINT RIGHT(digest, 24)

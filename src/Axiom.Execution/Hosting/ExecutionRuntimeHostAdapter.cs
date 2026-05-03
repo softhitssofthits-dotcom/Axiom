@@ -7,14 +7,20 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     private readonly List<string> _output = [];
     private readonly IInputProvider _inputProvider;
     private readonly IOutputWriter _outputWriter;
+    private readonly IRuntimeClock _runtimeClock;
+    private readonly IRuntimeRandom _runtimeRandom;
 
-    public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter)
+    public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter, IRuntimeClock runtimeClock, IRuntimeRandom runtimeRandom)
     {
         ArgumentNullException.ThrowIfNull(inputProvider);
         ArgumentNullException.ThrowIfNull(outputWriter);
+        ArgumentNullException.ThrowIfNull(runtimeClock);
+        ArgumentNullException.ThrowIfNull(runtimeRandom);
 
         _inputProvider = inputProvider;
         _outputWriter = outputWriter;
+        _runtimeClock = runtimeClock;
+        _runtimeRandom = runtimeRandom;
     }
 
     public IReadOnlyList<string> Output => _output;
@@ -49,37 +55,11 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         }
     }
 
-    public DateTimeOffset GetLocalNow() => DateTimeOffset.Now;
+    public DateTimeOffset GetLocalNow() => _runtimeClock.GetLocalNow();
 
-    public TimeZoneInfo GetLocalTimeZone() => TimeZoneInfo.Local;
+    public TimeZoneInfo GetLocalTimeZone() => _runtimeClock.GetLocalTimeZone();
 
-    public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
-    {
-        if (string.Equals(id, "LOCAL", StringComparison.OrdinalIgnoreCase))
-        {
-            timeZone = TimeZoneInfo.Local;
-            return true;
-        }
+    public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone) => _runtimeClock.TryResolveTimeZone(id, out timeZone);
 
-        if (string.Equals(id, "UTC", StringComparison.OrdinalIgnoreCase))
-        {
-            timeZone = TimeZoneInfo.Utc;
-            return true;
-        }
-
-        try
-        {
-            timeZone = TimeZoneInfo.FindSystemTimeZoneById(id);
-            return true;
-        }
-        catch (TimeZoneNotFoundException)
-        {
-        }
-        catch (InvalidTimeZoneException)
-        {
-        }
-
-        timeZone = TimeZoneInfo.Utc;
-        return false;
-    }
+    public double NextRandomDouble() => _runtimeRandom.NextRandomDouble();
 }

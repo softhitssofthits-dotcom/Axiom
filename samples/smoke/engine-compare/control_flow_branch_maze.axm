@@ -1,0 +1,131 @@
+' Сравнительный сценарий: адресная нагрузка на ветвления и циклы.
+' Намеренно держит built-in-слой минимальным, чтобы compare-engines
+' мерил прежде всего FOR/WHILE/DO ... LOOP, IF/ELSEIF и SELECT CASE.
+
+DIM total AS LONG = 0
+DIM branchChecksum AS LONG = 0
+DIM loopChecksum AS LONG = 0
+DIM guardChecksum AS LONG = 0
+
+FOR outerIndex = 1 TO 220
+    SELECT CASE outerIndex MOD 4
+        CASE 0
+            FOR innerIndex = 1 TO 18
+                IF innerIndex MOD 6 = 0 THEN
+                    total = total + outerIndex + innerIndex
+                    branchChecksum = branchChecksum + 6
+                ELSEIF innerIndex MOD 3 = 0 THEN
+                    total = total + outerIndex - innerIndex
+                    branchChecksum = branchChecksum + 3
+                ELSEIF innerIndex MOD 2 = 0 THEN
+                    total = total + innerIndex
+                    branchChecksum = branchChecksum + 2
+                ELSE
+                    total = total - 1
+                    branchChecksum = branchChecksum + 1
+                END IF
+
+                loopChecksum = loopChecksum + (innerIndex MOD 5)
+            NEXT
+
+        CASE 1
+            DIM whileIndex AS INTEGER = 1
+
+            WHILE whileIndex <= 16
+                SELECT CASE (outerIndex + whileIndex) MOD 5
+                    CASE 0
+                        total = total + whileIndex * 2
+                    CASE 1
+                        total = total + whileIndex + outerIndex
+                    CASE 2
+                        total = total - whileIndex
+                    CASE 3
+                        total = total + outerIndex MOD 7
+                    CASE ELSE
+                        total = total + 1
+                END SELECT
+
+                loopChecksum = loopChecksum + whileIndex
+                whileIndex = whileIndex + 1
+            END WHILE
+
+        CASE 2
+            DIM doWhileIndex AS INTEGER = 1
+
+            DO WHILE doWhileIndex <= 15
+                IF (outerIndex + doWhileIndex) MOD 4 = 0 THEN
+                    guardChecksum = guardChecksum + 4
+                ELSEIF doWhileIndex > 10 THEN
+                    guardChecksum = guardChecksum + 2
+                ELSE
+                    guardChecksum = guardChecksum + 1
+                END IF
+
+                total = total + doWhileIndex + (outerIndex MOD 3)
+                doWhileIndex = doWhileIndex + 1
+            LOOP
+
+        CASE ELSE
+            DIM doUntilIndex AS INTEGER = 1
+
+            DO UNTIL doUntilIndex > 17
+                SELECT CASE doUntilIndex MOD 4
+                    CASE 0
+                        total = total + outerIndex
+                    CASE 1
+                        total = total + doUntilIndex
+                    CASE 2
+                        total = total - (outerIndex MOD 5)
+                    CASE ELSE
+                        total = total + 2
+                END SELECT
+
+                IF doUntilIndex MOD 5 = 0 THEN
+                    branchChecksum = branchChecksum + outerIndex MOD 9
+                END IF
+
+                doUntilIndex = doUntilIndex + 1
+            LOOP
+    END SELECT
+
+    IF outerIndex MOD 9 = 0 THEN
+        guardChecksum = guardChecksum + 9
+    ELSEIF outerIndex MOD 7 = 0 THEN
+        guardChecksum = guardChecksum + 7
+    ELSEIF outerIndex MOD 5 = 0 THEN
+        guardChecksum = guardChecksum + 5
+    ELSE
+        guardChecksum = guardChecksum + 1
+    END IF
+NEXT
+
+DIM settleIndex AS INTEGER = 1
+
+DO
+    total = total + settleIndex
+    loopChecksum = loopChecksum + (settleIndex MOD 3)
+
+    IF settleIndex = 12 THEN
+        EXIT DO
+    END IF
+
+    settleIndex = settleIndex + 1
+LOOP
+
+DIM tailIndex AS INTEGER = 1
+
+DO UNTIL tailIndex > 20
+    IF tailIndex MOD 4 = 0 THEN
+        total = total - 2
+    ELSE
+        total = total + 3
+    END IF
+
+    guardChecksum = guardChecksum + tailIndex MOD 6
+    tailIndex = tailIndex + 1
+LOOP
+
+PRINT total
+PRINT branchChecksum
+PRINT loopChecksum
+PRINT guardChecksum

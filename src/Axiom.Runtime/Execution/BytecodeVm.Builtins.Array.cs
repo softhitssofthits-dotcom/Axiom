@@ -290,9 +290,19 @@ public sealed partial class BytecodeVm
 
         if (left.Rank == 1)
         {
-            var values = new List<RuntimeValue>(left.Length + right.Length);
-            ForEachArrayIndexAscending(left, index => values.Add(left.GetValue(index)));
-            ForEachArrayIndexAscending(right, index => values.Add(right.GetValue(index)));
+            if (left.Length == 0)
+            {
+                return CloneArrayValue(arrayType, right);
+            }
+
+            if (right.Length == 0)
+            {
+                return CloneArrayValue(arrayType, left);
+            }
+
+            var values = new RuntimeValue[left.Length + right.Length];
+            CopyOneDimensionalArrayRange(left, left.LowerBound, left.Length, values, destinationIndex: 0);
+            CopyOneDimensionalArrayRange(right, right.LowerBound, right.Length, values, destinationIndex: left.Length);
             return CreateCompactArrayValue(arrayType, values);
         }
 
@@ -362,10 +372,7 @@ public sealed partial class BytecodeVm
         }
 
         var values = new RuntimeValue[count];
-        for (var index = 0; index < count; index++)
-        {
-            values[index] = array.GetValue(start + index);
-        }
+        CopyOneDimensionalArrayRange(array, start, count, values, destinationIndex: 0);
 
         return CreateCompactArrayValue(arrayType, values);
     }
@@ -379,11 +386,7 @@ public sealed partial class BytecodeVm
 
         var takeCount = Math.Min(count, array.Length);
         var values = new RuntimeValue[takeCount];
-
-        for (var index = 0; index < takeCount; index++)
-        {
-            values[index] = array.GetValue(array.LowerBound + index);
-        }
+        CopyOneDimensionalArrayRange(array, array.LowerBound, takeCount, values, destinationIndex: 0);
 
         return CreateCompactArrayValue(arrayType, values);
     }
@@ -397,11 +400,7 @@ public sealed partial class BytecodeVm
 
         var remainingCount = array.Length - count;
         var values = new RuntimeValue[remainingCount];
-
-        for (var index = 0; index < remainingCount; index++)
-        {
-            values[index] = array.GetValue(array.LowerBound + count + index);
-        }
+        CopyOneDimensionalArrayRange(array, array.LowerBound + count, remainingCount, values, destinationIndex: 0);
 
         return CreateCompactArrayValue(arrayType, values);
     }
@@ -474,9 +473,13 @@ public sealed partial class BytecodeVm
 
         if (array.Rank == 1)
         {
-            var newUpperBound = GetExpandedArrayUpperBound("ARRAYPUSH", array, dimension: 1, location);
-            array.AllocatePreserving(array.LowerBound, newUpperBound);
-            array.SetValue(newUpperBound, arguments[1]);
+            if (!array.TryAppendOneDimensional(arguments[1]))
+            {
+                var newUpperBound = GetExpandedArrayUpperBound("ARRAYPUSH", array, dimension: 1, location);
+                array.AllocatePreserving(array.LowerBound, newUpperBound);
+                array.SetValue(newUpperBound, arguments[1]);
+            }
+
             return RuntimeValue.Void;
         }
 
@@ -516,7 +519,12 @@ public sealed partial class BytecodeVm
                 throw new RuntimeFailureException();
             }
 
-            var poppedValue = array.GetValue(array.UpperBound);
+            if (array.TryPopOneDimensional(out var poppedValue))
+            {
+                return poppedValue;
+            }
+
+            poppedValue = array.GetValue(array.UpperBound);
 
             if (array.Length == 1)
             {
@@ -557,9 +565,15 @@ public sealed partial class BytecodeVm
 
             array.AllocatePreserving(array.LowerBound, newUpperBound);
 
-            for (var currentIndex = previousUpperBound; currentIndex >= insertionIndex; currentIndex--)
+            if (!array.TryMoveOneDimensionalRange(
+                sourceIndex: insertionIndex,
+                destinationIndex: insertionIndex + 1,
+                count: previousUpperBound - insertionIndex + 1))
             {
-                array.SetValue(currentIndex + 1, array.GetValue(currentIndex));
+                for (var currentIndex = previousUpperBound; currentIndex >= insertionIndex; currentIndex--)
+                {
+                    array.SetValue(currentIndex + 1, array.GetValue(currentIndex));
+                }
             }
 
             array.SetValue(insertionIndex, arguments[2]);
@@ -612,9 +626,15 @@ public sealed partial class BytecodeVm
                 return removedValue;
             }
 
-            for (var currentIndex = removalIndex; currentIndex < array.UpperBound; currentIndex++)
+            if (!array.TryMoveOneDimensionalRange(
+                sourceIndex: removalIndex + 1,
+                destinationIndex: removalIndex,
+                count: array.UpperBound - removalIndex))
             {
-                array.SetValue(currentIndex, array.GetValue(currentIndex + 1));
+                for (var currentIndex = removalIndex; currentIndex < array.UpperBound; currentIndex++)
+                {
+                    array.SetValue(currentIndex, array.GetValue(currentIndex + 1));
+                }
             }
 
             array.AllocatePreserving(array.LowerBound, array.UpperBound - 1);
@@ -794,6 +814,12 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYEVERY", location);
         var predicate = RequireFunctionArgument(predicateArgument, location);
+
+        if (array.Rank == 1)
+        {
+            return EvaluateOneDimensionalArrayEveryBuiltin(array, predicate, location);
+        }
+
         var every = true;
 
         ForEachArrayIndexSetAscending(array, indices =>
@@ -811,6 +837,12 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYSOME", location);
         var predicate = RequireFunctionArgument(predicateArgument, location);
+
+        if (array.Rank == 1)
+        {
+            return EvaluateOneDimensionalArraySomeBuiltin(array, predicate, location);
+        }
+
         var any = false;
 
         ForEachArrayIndexSetAscending(array, indices =>
@@ -830,6 +862,12 @@ public sealed partial class BytecodeVm
         var sourceArrayType = (ArrayTypeSymbol)argument.Type;
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var predicate = RequireFunctionArgument(predicateArgument, location);
+
+        if (array.Rank == 1)
+        {
+            return EvaluateOneDimensionalArrayFilterBuiltin(array, resultArrayType, predicate, location);
+        }
+
         var values = new List<RuntimeValue>(array.Length);
 
         ForEachArrayIndexSetAscending(array, indices =>
@@ -849,10 +887,16 @@ public sealed partial class BytecodeVm
         var array = RequireAllocatedArrayArgument(argument, "ARRAYMAP", location);
         var selector = RequireFunctionArgument(selectorArgument, location);
         var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(selector.Function.ReturnType, array.Rank);
+
+        if (array.Rank == 1)
+        {
+            return EvaluateOneDimensionalArrayMapBuiltin(array, resultType, selector, location);
+        }
+
         return CreateVisibleShapeArrayValue(
             resultType,
             array,
-            indices => InvokeArrayCallback(selector, location, array.GetValue(indices)));
+            indices => InvokeArrayCallback(selector, array.GetValue(indices), location));
     }
 
     private RuntimeValue EvaluateArrayReduceBuiltin(
@@ -863,10 +907,124 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYREDUCE", location);
         var reducer = RequireFunctionArgument(reducerArgument, location);
+
+        if (array.Rank == 1)
+        {
+            return EvaluateOneDimensionalArrayReduceBuiltin(array, seed, reducer, location);
+        }
+
         var accumulator = seed;
 
         ForEachArrayIndexSetAscending(array, indices =>
-            accumulator = InvokeArrayCallback(reducer, location, accumulator, array.GetValue(indices)));
+            accumulator = InvokeArrayCallback(reducer, accumulator, array.GetValue(indices), location));
+
+        return accumulator;
+    }
+
+    private bool EvaluateOneDimensionalArrayEveryBuiltin(
+        RuntimeArrayValue array,
+        RuntimeFunctionValue predicate,
+        TextLocation location)
+    {
+        var index = array.LowerBound;
+        var upperBound = array.UpperBound;
+
+        while (index <= upperBound)
+        {
+            if (!InvokeArrayPredicate(predicate, array.GetValue(index), location))
+            {
+                return false;
+            }
+
+            index++;
+        }
+
+        return true;
+    }
+
+    private bool EvaluateOneDimensionalArraySomeBuiltin(
+        RuntimeArrayValue array,
+        RuntimeFunctionValue predicate,
+        TextLocation location)
+    {
+        var index = array.LowerBound;
+        var upperBound = array.UpperBound;
+
+        while (index <= upperBound)
+        {
+            if (InvokeArrayPredicate(predicate, array.GetValue(index), location))
+            {
+                return true;
+            }
+
+            index++;
+        }
+
+        return false;
+    }
+
+    private RuntimeValue EvaluateOneDimensionalArrayFilterBuiltin(
+        RuntimeArrayValue array,
+        ArrayTypeSymbol resultArrayType,
+        RuntimeFunctionValue predicate,
+        TextLocation location)
+    {
+        var values = new List<RuntimeValue>(array.Length);
+        var index = array.LowerBound;
+        var upperBound = array.UpperBound;
+
+        while (index <= upperBound)
+        {
+            var value = array.GetValue(index);
+            if (InvokeArrayPredicate(predicate, value, location))
+            {
+                values.Add(value);
+            }
+
+            index++;
+        }
+
+        return CreateCompactArrayValue(resultArrayType, values);
+    }
+
+    private RuntimeValue EvaluateOneDimensionalArrayMapBuiltin(
+        RuntimeArrayValue array,
+        ArrayTypeSymbol resultType,
+        RuntimeFunctionValue selector,
+        TextLocation location)
+    {
+        var result = RuntimeArrayValue.CreateVisibleShape(
+            resultType.ElementType,
+            fixedStringLength: null,
+            array.LowerBounds,
+            array.UpperBounds);
+        var index = array.LowerBound;
+        var upperBound = array.UpperBound;
+
+        while (index <= upperBound)
+        {
+            result.SetValue(index, InvokeArrayCallback(selector, array.GetValue(index), location));
+            index++;
+        }
+
+        return RuntimeValue.FromArray(resultType, result);
+    }
+
+    private RuntimeValue EvaluateOneDimensionalArrayReduceBuiltin(
+        RuntimeArrayValue array,
+        RuntimeValue seed,
+        RuntimeFunctionValue reducer,
+        TextLocation location)
+    {
+        var accumulator = seed;
+        var index = array.LowerBound;
+        var upperBound = array.UpperBound;
+
+        while (index <= upperBound)
+        {
+            accumulator = InvokeArrayCallback(reducer, accumulator, array.GetValue(index), location);
+            index++;
+        }
 
         return accumulator;
     }
@@ -897,11 +1055,22 @@ public sealed partial class BytecodeVm
 
     private bool InvokeArrayPredicate(RuntimeFunctionValue predicate, RuntimeValue value, TextLocation location)
     {
-        return InvokeArrayCallback(predicate, location, value).AsBoolean();
+        return InvokeArrayCallback(predicate, value, location).AsBoolean();
     }
 
-    private RuntimeValue InvokeArrayCallback(RuntimeFunctionValue callback, TextLocation location, params RuntimeValue[] arguments)
+    private RuntimeValue InvokeArrayCallback(RuntimeFunctionValue callback, RuntimeValue value, TextLocation location)
     {
+        ReadOnlySpan<RuntimeValue> arguments = [value];
+        return InvokeBytecodeFunction(callback, arguments, location);
+    }
+
+    private RuntimeValue InvokeArrayCallback(
+        RuntimeFunctionValue callback,
+        RuntimeValue first,
+        RuntimeValue second,
+        TextLocation location)
+    {
+        ReadOnlySpan<RuntimeValue> arguments = [first, second];
         return InvokeBytecodeFunction(callback, arguments, location);
     }
 
@@ -1323,12 +1492,30 @@ public sealed partial class BytecodeVm
             return CreateUnallocatedArrayValue(arrayType);
         }
 
-        if (source.Rank != 1)
+        return RuntimeValue.FromArray(arrayType, source.Clone());
+    }
+
+    private static void CopyOneDimensionalArrayRange(
+        RuntimeArrayValue source,
+        int sourceIndex,
+        int count,
+        RuntimeValue[] destination,
+        int destinationIndex)
+    {
+        if (count <= 0)
         {
-            return RuntimeValue.FromArray(arrayType, source.Clone());
+            return;
         }
 
-        return CreateArrayValue(arrayType, source.LowerBound, source.UpperBound, source.GetValue);
+        if (source.TryCopyOneDimensionalRangeTo(sourceIndex, count, destination, destinationIndex))
+        {
+            return;
+        }
+
+        for (var index = 0; index < count; index++)
+        {
+            destination[destinationIndex + index] = source.GetValue(sourceIndex + index);
+        }
     }
 
     private int ResolveArrayInfoDimension(

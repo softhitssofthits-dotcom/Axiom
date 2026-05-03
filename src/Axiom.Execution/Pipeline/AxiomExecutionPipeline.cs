@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Axiom.Bytecode;
 using Axiom.Core;
 using Axiom.Parsing;
@@ -478,7 +478,7 @@ public sealed class AxiomExecutionPipeline
         {
             diagnostic = new Diagnostic(
                 "MB4003",
-                $"Не удалось записать JSON-снимок байткода '{path}': {exception.Message}",
+                $"�� ������� �������� JSON-������ �������� '{path}': {exception.Message}",
                 default);
             return false;
         }
@@ -544,7 +544,7 @@ public sealed class AxiomExecutionPipeline
         bool usedInterpreterFallback,
         string? interpreterFallbackReason)
     {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter);
+        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom);
         var executionStopwatch = Stopwatch.StartNew();
         var runtimeResult = Interpreter.Execute(compiledProgram.BoundProgram, runtimeHost);
         executionStopwatch.Stop();
@@ -564,7 +564,7 @@ public sealed class AxiomExecutionPipeline
 
     private static ExecutionResult RunThroughBytecodeVm(BytecodeModule module, ExecutionRequest request)
     {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter);
+        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom);
         var executionStopwatch = Stopwatch.StartNew();
         var breakpoints = request.SourceBreakpointLines.Count == 0
             ? null
@@ -679,7 +679,7 @@ public sealed class AxiomExecutionPipeline
                 {
                     diagnostic = new Diagnostic(
                         "MB4002",
-                        $"Р‘Р°Р№С‚-РєРѕРґРЅС‹Р№ РїСѓС‚СЊ РїРѕРєР° РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ Р»РѕРєР°Р»СЊРЅСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ РёР»Рё С„СѓРЅРєС†РёСЋ '{routine.Symbol.Name}', Р·Р°С…РІР°С‚С‹РІР°СЋС‰СѓСЋ РІРЅРµС€РЅСЋСЋ РїРµСЂРµРјРµРЅРЅСѓСЋ '{capturedVariable.Name}'.",
+                        $"Байт-кодный путь пока не поддерживает локальную процедуру или функцию '{routine.Symbol.Name}', захватывающую внешнюю переменную '{capturedVariable.Name}'.",
                         location);
                     return true;
                 }
@@ -1134,7 +1134,7 @@ public sealed class AxiomExecutionPipeline
     {
         return new Diagnostic(
             "MB4001",
-            "Р‘Р°Р№С‚-РєРѕРґРЅС‹Р№ СЂРµР¶РёРј Р·Р°РїСѓСЃРєР° РїРѕРєР° РЅРµ РїРѕРєСЂС‹РІР°РµС‚ С‚РµРєСѓС‰СѓСЋ РїСЂРѕРіСЂР°РјРјСѓ.",
+            "Байт-кодный режим запуска пока не покрывает текущую программу.",
             location);
     }
 

@@ -31,15 +31,16 @@ public sealed partial class BytecodeVm
     private readonly BuiltinExecutionInfo[] _builtinExecutionInfosById;
     private readonly Dictionary<int, BytecodeGlobal> _globalMetadata;
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TextLocation> _sourceLocationCache = [];
+    private readonly Dictionary<(int RoutineId, int InstructionIndex), InputInstructionPlan> _inputInstructionCache = [];
     private readonly RuntimeValue?[] _constantValues;
     private readonly Dictionary<int, RuntimeValue> _globals = [];
     private readonly RuntimeValue?[] _globalsBySlot;
     private readonly int?[] _globalFixedStringLengths;
     private readonly bool[] _hasGlobalSlot;
     private readonly Stack<BytecodeCallFrame> _callStack = new();
+    private readonly Dictionary<int, BytecodeCallFrame> _cachedNoLocalFrames = [];
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
-    private readonly Random _random = new();
     private readonly IRuntimeHost _host;
     private readonly BytecodeModule _module;
     private readonly Action<BytecodeVmExecutionSnapshot>? _instructionObserver;
@@ -336,6 +337,13 @@ public sealed partial class BytecodeVm
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation)
     {
+        if (routine.LocalSlotCount == 0
+            && _cachedNoLocalFrames.Remove(routine.Id, out var cachedFrame))
+        {
+            cachedFrame.ResetNoLocals(arguments, captures, callSiteLocation);
+            return cachedFrame;
+        }
+
         var argumentSlots = new BytecodeVariableSlot[routine.ParameterCount];
         for (var index = 0; index < argumentSlots.Length; index++)
         {
@@ -343,16 +351,28 @@ public sealed partial class BytecodeVm
             argumentSlots[index] = new BytecodeVariableSlot(value);
         }
 
-        var locals = new RuntimeValue[routine.LocalSlotCount];
-        var localFixedStringLengths = new int?[routine.LocalSlotCount];
-        for (var index = 0; index < locals.Length; index++)
+        RuntimeValue[] locals;
+        int?[] localFixedStringLengths;
+
+        if (routine.LocalSlotCount == 0)
         {
-            var variable = index < routine.LocalVariables.Count ? routine.LocalVariables[index] : null;
-            var initialValue = variable is null
-                ? RuntimeValue.Void
-                : RuntimeValue.Default(variable.Type, variable.FixedStringLength);
-            locals[index] = initialValue;
-            localFixedStringLengths[index] = variable?.FixedStringLength;
+            locals = Array.Empty<RuntimeValue>();
+            localFixedStringLengths = Array.Empty<int?>();
+        }
+        else
+        {
+            locals = new RuntimeValue[routine.LocalSlotCount];
+            localFixedStringLengths = new int?[routine.LocalSlotCount];
+
+            for (var index = 0; index < locals.Length; index++)
+            {
+                var variable = index < routine.LocalVariables.Count ? routine.LocalVariables[index] : null;
+                var initialValue = variable is null
+                    ? RuntimeValue.Void
+                    : RuntimeValue.Default(variable.Type, variable.FixedStringLength);
+                locals[index] = initialValue;
+                localFixedStringLengths[index] = variable?.FixedStringLength;
+            }
         }
 
         return new BytecodeCallFrame(
@@ -551,19 +571,11 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.JumpIfTrue:
-                if (GetBooleanUnchecked(PopValue(frame, instructionIndex)))
-                {
-                    frame.InstructionPointer = instruction.GetOperand(0);
-                }
-
+                ExecuteJumpIfBooleanInstruction(frame, instruction, invertCondition: false);
                 break;
 
             case Opcode.JumpIfFalse:
-                if (!GetBooleanUnchecked(PopValue(frame, instructionIndex)))
-                {
-                    frame.InstructionPointer = instruction.GetOperand(0);
-                }
-
+                ExecuteJumpIfBooleanInstruction(frame, instruction, invertCondition: true);
                 break;
 
             case Opcode.Call:
@@ -761,9 +773,9 @@ public sealed partial class BytecodeVm
             _ => throw new InvalidOperationException($"Unsupported comparison branch kind '{branchKind}'.")
         };
 
-        if (TryEvaluateFastComparison(comparisonOpcode, left, right, out var result))
+        if (TryEvaluateFastComparisonCondition(comparisonOpcode, left, right, out var fastShouldJump))
         {
-            if (GetBooleanUnchecked(result))
+            if (fastShouldJump)
             {
                 frame.InstructionPointer = instruction.GetOperand(0);
             }
@@ -782,6 +794,24 @@ public sealed partial class BytecodeVm
             ComparisonBranchKind.GreaterOrEqual => comparison >= 0,
             _ => false
         };
+
+        if (shouldJump)
+        {
+            frame.InstructionPointer = instruction.GetOperand(0);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ExecuteJumpIfBooleanInstruction(
+        BytecodeCallFrame frame,
+        BytecodeInstruction instruction,
+        bool invertCondition)
+    {
+        var shouldJump = GetBooleanUnchecked(frame.EvaluationStack.Pop());
+        if (invertCondition)
+        {
+            shouldJump = !shouldJump;
+        }
 
         if (shouldJump)
         {
@@ -855,9 +885,9 @@ public sealed partial class BytecodeVm
         var right = stack.Pop();
         var left = stack.Pop();
 
-        if (TryEvaluateHotCompareGreater(left, right, out var result))
+        if (TryEvaluateFastComparisonCondition(Opcode.CompareGreater, left, right, out var isGreater))
         {
-            stack.PushUnchecked(result);
+            stack.PushUnchecked(RuntimeValue.FromBoolean(isGreater));
             return;
         }
 
@@ -1050,29 +1080,6 @@ public sealed partial class BytecodeVm
         }
 
         return false;
-    }
-
-    private static bool TryEvaluateHotCompareGreater(RuntimeValue left, RuntimeValue right, out RuntimeValue result)
-    {
-        result = RuntimeValue.Void;
-
-        if (left.Type != right.Type)
-        {
-            return false;
-        }
-
-        result = left.Type switch
-        {
-            var type when type == TypeSymbol.Integer => RuntimeValue.FromBoolean(GetIntegerUnchecked(left) > GetIntegerUnchecked(right)),
-            var type when type == TypeSymbol.Long => RuntimeValue.FromBoolean(GetLongUnchecked(left) > GetLongUnchecked(right)),
-            var type when type == TypeSymbol.Double => RuntimeValue.FromBoolean(GetDoubleUnchecked(left) > GetDoubleUnchecked(right)),
-            var type when type == TypeSymbol.Decimal => RuntimeValue.FromBoolean(GetDecimalUnchecked(left) > GetDecimalUnchecked(right)),
-            var type when type == TypeSymbol.String => RuntimeValue.FromBoolean(
-                string.Compare(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal) > 0),
-            _ => RuntimeValue.Void
-        };
-
-        return result != RuntimeValue.Void;
     }
 
     private static bool TryShouldTerminateLocalForLoop(RuntimeValue current, RuntimeValue end, RuntimeValue step, out bool shouldTerminate)
@@ -1286,18 +1293,49 @@ public sealed partial class BytecodeVm
     {
         result = RuntimeValue.Void;
 
-        if (opcode is not (Opcode.CompareLess or Opcode.CompareLessOrEqual or Opcode.CompareGreater or Opcode.CompareGreaterOrEqual))
+        if (!TryEvaluateFastComparisonCondition(opcode, left, right, out var comparisonResult))
         {
             return false;
         }
 
-        var comparison = left.Type switch
+        result = RuntimeValue.FromBoolean(comparisonResult);
+        return true;
+    }
+
+    private static bool TryEvaluateFastComparisonCondition(
+        Opcode opcode,
+        RuntimeValue left,
+        RuntimeValue right,
+        out bool result)
+    {
+        result = false;
+
+        if (left.Type != right.Type)
         {
-            var type when type == TypeSymbol.Integer => left.AsInteger().CompareTo(right.AsInteger()),
-            var type when type == TypeSymbol.Long => left.AsLong().CompareTo(right.AsLong()),
-            var type when type == TypeSymbol.Double => left.AsDouble().CompareTo(right.AsDouble()),
-            var type when type == TypeSymbol.Decimal => left.AsDecimal().CompareTo(right.AsDecimal()),
-            var type when type == TypeSymbol.String => string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal),
+            return false;
+        }
+
+        if (opcode is Opcode.CompareEqual or Opcode.CompareNotEqual)
+        {
+            var equal = ValuesEqual(left, right);
+            result = opcode == Opcode.CompareEqual ? equal : !equal;
+            return true;
+        }
+
+        var comparison = opcode switch
+        {
+            Opcode.CompareLess
+            or Opcode.CompareLessOrEqual
+            or Opcode.CompareGreater
+            or Opcode.CompareGreaterOrEqual => left.Type switch
+            {
+                var type when type == TypeSymbol.Integer => GetIntegerUnchecked(left).CompareTo(GetIntegerUnchecked(right)),
+                var type when type == TypeSymbol.Long => GetLongUnchecked(left).CompareTo(GetLongUnchecked(right)),
+                var type when type == TypeSymbol.Double => GetDoubleUnchecked(left).CompareTo(GetDoubleUnchecked(right)),
+                var type when type == TypeSymbol.Decimal => GetDecimalUnchecked(left).CompareTo(GetDecimalUnchecked(right)),
+                var type when type == TypeSymbol.String => string.Compare(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal),
+                _ => (int?)null
+            },
             _ => (int?)null
         };
 
@@ -1306,14 +1344,14 @@ public sealed partial class BytecodeVm
             return false;
         }
 
-        result = RuntimeValue.FromBoolean(opcode switch
+        result = opcode switch
         {
             Opcode.CompareLess => comparison < 0,
             Opcode.CompareLessOrEqual => comparison <= 0,
             Opcode.CompareGreater => comparison > 0,
             Opcode.CompareGreaterOrEqual => comparison >= 0,
-            _ => throw new InvalidOperationException($"Unsupported comparison opcode '{opcode}'.")
-        });
+            _ => false
+        };
         return true;
     }
 
@@ -1402,6 +1440,11 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue LoadFunctionValue(BytecodeCallFrame frame, int routineId, int instructionIndex)
     {
+        if (frame.TryGetCachedFunctionValue(routineId, out var cachedFunctionValue))
+        {
+            return cachedFunctionValue;
+        }
+
         if (!_routines.TryGetValue(routineId, out var routine) || routine.Symbol is null)
         {
             ReportInvalidRuntimeState(
@@ -1411,9 +1454,10 @@ public sealed partial class BytecodeVm
         }
 
         var captures = ResolveCapturedSlots(frame, routine, instructionIndex);
-        return RuntimeValue.FromBytecodeFunction(routine.Symbol, captures);
+        var functionValue = RuntimeValue.FromBytecodeFunction(routine, captures);
+        frame.CacheFunctionValue(routineId, functionValue);
+        return functionValue;
     }
-
     private RuntimeValue LoadBuiltinFunctionValue(BytecodeCallFrame frame, int builtinId, int instructionIndex)
     {
         if (!_builtins.TryGetValue(builtinId, out var builtin) || builtin.Function is null)
@@ -1643,8 +1687,14 @@ public sealed partial class BytecodeVm
             case BuiltinExecutionArity.Nullary:
                 return execution.Zero!(this, location);
 
+            case BuiltinExecutionArity.NullaryNoLocation:
+                return execution.ZeroNoLocation!(this);
+
             case BuiltinExecutionArity.Unary:
                 return execution.One!(this, PopValue(frame, instructionIndex), location);
+
+            case BuiltinExecutionArity.UnaryNoLocation:
+                return execution.OneNoLocation!(this, PopValue(frame, instructionIndex));
 
             case BuiltinExecutionArity.Binary:
             {
@@ -1653,12 +1703,27 @@ public sealed partial class BytecodeVm
                 return execution.Two!(this, left, right, location);
             }
 
+            case BuiltinExecutionArity.BinaryNoLocation:
+            {
+                var right = PopValue(frame, instructionIndex);
+                var left = PopValue(frame, instructionIndex);
+                return execution.TwoNoLocation!(this, left, right);
+            }
+
             case BuiltinExecutionArity.Ternary:
             {
                 var third = PopValue(frame, instructionIndex);
                 var second = PopValue(frame, instructionIndex);
                 var first = PopValue(frame, instructionIndex);
                 return execution.Three!(this, first, second, third, location);
+            }
+
+            case BuiltinExecutionArity.TernaryNoLocation:
+            {
+                var third = PopValue(frame, instructionIndex);
+                var second = PopValue(frame, instructionIndex);
+                var first = PopValue(frame, instructionIndex);
+                return execution.ThreeNoLocation!(this, first, second, third);
             }
 
             default:
@@ -1700,7 +1765,8 @@ public sealed partial class BytecodeVm
             return ExecuteBuiltinFromArguments(builtin, arguments, callSiteLocation);
         }
 
-        if (!_routinesBySymbol.TryGetValue(function, out var routine))
+        var routine = functionValue.BytecodeRoutine;
+        if (routine is null && !_routinesBySymbol.TryGetValue(function, out routine))
         {
             return ReportInvalidRuntimeState<RuntimeValue>(
                 $"Для вызова '{function.Name}' отсутствует байткодная процедура.",
@@ -1753,14 +1819,17 @@ public sealed partial class BytecodeVm
                 location);
         }
 
-        var effectiveLocation = execution.RequiresLocation ? location : FallbackRuntimeLocation;
         return execution.Arity switch
         {
-            BuiltinExecutionArity.Nullary => execution.Zero!(this, effectiveLocation),
-            BuiltinExecutionArity.Unary => execution.One!(this, arguments[0], effectiveLocation),
-            BuiltinExecutionArity.Binary => execution.Two!(this, arguments[0], arguments[1], effectiveLocation),
-            BuiltinExecutionArity.Ternary => execution.Three!(this, arguments[0], arguments[1], arguments[2], effectiveLocation),
-            _ => execution.Many!(this, arguments, effectiveLocation)
+            BuiltinExecutionArity.Nullary => execution.Zero!(this, location),
+            BuiltinExecutionArity.Unary => execution.One!(this, arguments[0], location),
+            BuiltinExecutionArity.Binary => execution.Two!(this, arguments[0], arguments[1], location),
+            BuiltinExecutionArity.Ternary => execution.Three!(this, arguments[0], arguments[1], arguments[2], location),
+            BuiltinExecutionArity.NullaryNoLocation => execution.ZeroNoLocation!(this),
+            BuiltinExecutionArity.UnaryNoLocation => execution.OneNoLocation!(this, arguments[0]),
+            BuiltinExecutionArity.BinaryNoLocation => execution.TwoNoLocation!(this, arguments[0], arguments[1]),
+            BuiltinExecutionArity.TernaryNoLocation => execution.ThreeNoLocation!(this, arguments[0], arguments[1], arguments[2]),
+            _ => execution.Many!(this, arguments, location)
         };
     }
 
@@ -1946,6 +2015,7 @@ public sealed partial class BytecodeVm
         }
 
         _callStack.Pop();
+        CacheReusableFrame(frame);
 
         if (_callStack.Count == 0)
         {
@@ -1956,6 +2026,16 @@ public sealed partial class BytecodeVm
         {
             CurrentFrame.EvaluationStack.Push(returnValue);
         }
+    }
+
+    private void CacheReusableFrame(BytecodeCallFrame frame)
+    {
+        if (frame.Routine.LocalSlotCount != 0)
+        {
+            return;
+        }
+
+        _cachedNoLocalFrames.TryAdd(frame.Routine.Id, frame);
     }
 
     private TextLocation ResolveCurrentLocation(int instructionIndex)
@@ -3145,3 +3225,5 @@ public sealed partial class BytecodeVm
         Out
     }
 }
+
+

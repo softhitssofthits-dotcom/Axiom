@@ -1,0 +1,68 @@
+' Сравнительный сценарий: callback-builtins массивов + захват внешнего состояния.
+' Нагружает ARRAYMAP, ARRAYFILTER, ARRAYREDUCE, ARRAYEVERY и ARRAYSOME
+' в нескольких проходах по одному и тому же плотному массиву.
+
+DIM source(1 TO 240) AS INTEGER
+DIM mapped() AS INTEGER
+DIM filtered() AS INTEGER
+DIM checksum AS LONG = 0
+DIM flags AS INTEGER = 0
+
+DIM scale AS INTEGER
+DIM threshold AS INTEGER
+DIM divisor AS INTEGER
+DIM highWatermark AS INTEGER
+DIM bias AS INTEGER
+
+FOR itemIndex = 1 TO ARRAYLENGTH(source)
+    source(itemIndex) = (itemIndex MOD 19) * 11 + itemIndex
+NEXT
+
+FOR roundIndex = 1 TO 24
+    scale = (roundIndex MOD 4) + 2
+    threshold = 120 + roundIndex * 3
+    divisor = (roundIndex MOD 5) + 2
+    highWatermark = 500 + roundIndex * 20
+    bias = roundIndex * 7
+
+    mapped = ARRAYMAP(source, TransformValue)
+    filtered = ARRAYFILTER(mapped, KeepTransformedValue)
+
+    checksum = checksum + ARRAYREDUCE(filtered, roundIndex, FoldFilteredValue)
+
+    IF ARRAYEVERY(filtered, IsStrictlyPositive) THEN
+        flags = flags + 1
+    END IF
+
+    IF ARRAYSOME(filtered, IsAboveHighWatermark) THEN
+        flags = flags + 10
+    END IF
+NEXT
+
+PRINT ARRAYLENGTH(source)
+PRINT ARRAYLENGTH(mapped)
+PRINT ARRAYLENGTH(filtered)
+PRINT checksum
+PRINT flags
+PRINT mapped(1) + mapped(ARRAYLENGTH(mapped))
+PRINT filtered(1) + filtered(ARRAYLENGTH(filtered))
+
+FUNCTION TransformValue(value AS INTEGER) AS INTEGER
+    RETURN value * scale + bias
+END FUNCTION
+
+FUNCTION KeepTransformedValue(value AS INTEGER) AS BOOLEAN
+    RETURN value > threshold AND value MOD divisor <> 0
+END FUNCTION
+
+FUNCTION FoldFilteredValue(acc AS LONG, value AS INTEGER) AS LONG
+    RETURN acc + value + bias
+END FUNCTION
+
+FUNCTION IsStrictlyPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value > 0
+END FUNCTION
+
+FUNCTION IsAboveHighWatermark(value AS INTEGER) AS BOOLEAN
+    RETURN value > highWatermark
+END FUNCTION

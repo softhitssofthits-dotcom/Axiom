@@ -108,6 +108,10 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 ## Проверочные примеры
 
 В репозитории есть два связанных слоя проверочных примеров:
+- `samples/functions/`, `samples/operators/`, `samples/control-flow/`, `samples/expressions/` держат короткие runnable `.axm`-примеры для поведения языка;
+- `samples/smoke/engine-compare/` держит нагрузочные сценарии для сравнения `Interpreter` и `BytecodeVm`;
+- `docs/BYTECODE_COVERAGE.md` фиксирует функциональное покрытие байткодного пути;
+- `docs/BYTECODE_PERF_MATRIX.md` фиксирует, какие семейства языка уже представлены в нагрузочных сценариях и какие ещё остаются без адресного benchmark.
 - текущий слой регрессионной проверки в `samples/acceptance/` с историческим сквозным примером и отрицательными программами;
 - обязательная постоянная структура для всех новых запускаемых примеров поведения языка:
   - `samples/operators/<operator-name>/`

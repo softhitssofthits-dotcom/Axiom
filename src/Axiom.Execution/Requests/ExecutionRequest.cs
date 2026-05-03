@@ -9,6 +9,8 @@ public sealed class ExecutionRequest
         IInputProvider? inputProvider = null,
         IOutputWriter? outputWriter = null,
         IDiagnosticSink? diagnosticSink = null,
+        IRuntimeClock? runtimeClock = null,
+        IRuntimeRandom? runtimeRandom = null,
         ExecutionMode mode = ExecutionMode.Bytecode,
         string? bytecodeSnapshotPath = null,
         IEnumerable<int>? sourceBreakpointLines = null,
@@ -20,6 +22,8 @@ public sealed class ExecutionRequest
         InputProvider = inputProvider ?? NullRuntimeHost.Instance;
         OutputWriter = outputWriter ?? NullRuntimeHost.Instance;
         DiagnosticSink = diagnosticSink ?? NullDiagnosticSink.Instance;
+        RuntimeClock = runtimeClock ?? NullRuntimeHost.Instance;
+        RuntimeRandom = runtimeRandom ?? NullRuntimeHost.Instance;
         Mode = mode;
         BytecodeSnapshotPath = bytecodeSnapshotPath;
         SourceBreakpointLines = NormalizeSourceBreakpointLines(sourceBreakpointLines);
@@ -33,6 +37,10 @@ public sealed class ExecutionRequest
     public IOutputWriter OutputWriter { get; }
 
     public IDiagnosticSink DiagnosticSink { get; }
+
+    public IRuntimeClock RuntimeClock { get; }
+
+    public IRuntimeRandom RuntimeRandom { get; }
 
     public ExecutionMode Mode { get; }
 

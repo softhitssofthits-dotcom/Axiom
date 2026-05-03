@@ -1219,7 +1219,28 @@ public sealed class AcceptanceProgramTests
             return new QueueInputProvider("Ника, 7");
         }
 
+        if (relativePath.Equals("samples/smoke/engine-compare/input_record_intake.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueInputProvider(CreateInputRecordIntakeLines());
+        }
+
         return new QueueInputProvider("Ника", "7", "TRUE");
+    }
+
+    private static string[] CreateInputRecordIntakeLines()
+    {
+        var lines = new string[180];
+
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var personNumber = index + 1;
+            var name = $"USER{personNumber:000}";
+            var age = 20 + (personNumber % 37);
+            var score = 45 + ((personNumber * 7) % 51);
+            lines[index] = $"{name}, {age}, {score}";
+        }
+
+        return lines;
     }
 
     private static ExecutionResult Run(

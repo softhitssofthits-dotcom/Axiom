@@ -33,6 +33,7 @@ At the beginning of every session, do this in order:
    - `docs/PLANS3.md`
    - `docs/WORKLOG4.md`
    - `docs/BYTECODE_COVERAGE.md`
+   - `docs/BYTECODE_PERF_MATRIX.md`
    - `docs/SPECIFICATION2.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
 
 Then:
@@ -193,6 +194,13 @@ Active registry of bytecode coverage:
 - whether bytecode/interpreter parity is explicitly checked;
 - whether the area is performance-hot or only functionally covered.
 
+### `docs/BYTECODE_PERF_MATRIX.md`
+Active registry of performance scenarios:
+- which language families already have dedicated `samples/smoke/engine-compare/` scenarios;
+- which families are covered only indirectly through mixed scenarios;
+- which families still have no meaningful performance scenario;
+- which gaps are blocked by current harness limits such as interactive input.
+
 ---
 
 ## Core working rules
@@ -304,6 +312,9 @@ If the next steps change, update `docs/PLANS3.md`.
 
 ### 8.1. Bytecode coverage registry must stay current
 If a task changes bytecode coverage, parity, acceptance samples, manual coverage, or profiling status for a user-visible language form, update `docs/BYTECODE_COVERAGE.md` in the same task.
+
+### 8.2. Bytecode performance matrix must stay current
+If a task adds, removes, or materially changes a benchmark family, an `engine-compare` scenario, or the performance-scenario status of a language family, update `docs/BYTECODE_PERF_MATRIX.md` in the same task.
 
 ### 9. Architecture changes must be recorded
 If technical structure changes materially, update `docs/ARCHITECTURE.md`.

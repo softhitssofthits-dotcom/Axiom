@@ -1,13 +1,16 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Axiom.Core;
 using Axiom.Execution;
+using Axiom.Runtime;
 
 var root = FindRepositoryRoot();
 
 return args.Length > 0 && string.Equals(args[0], "compare-engines", StringComparison.OrdinalIgnoreCase)
     ? RunEngineComparison(root, args[1..])
-    : RunMathManualChecks(root, args);
+    : args.Length > 0 && string.Equals(args[0], "audit-bytecode-coverage", StringComparison.OrdinalIgnoreCase)
+        ? RunBytecodeCoverageAudit(root, args[1..])
+        : RunMathManualChecks(root, args);
 
 static int RunMathManualChecks(string root, string[] args)
 {
@@ -221,13 +224,19 @@ static int RunEngineComparison(string root, string[] args)
     return failed == 0 ? 0 : 1;
 }
 
+static int RunBytecodeCoverageAudit(string root, string[] args)
+{
+    var outputPath = ResolveOutputPath(root, args, "axiom-bytecode-coverage-audit");
+    return BytecodeCoverageAudit.Run(root, outputPath);
+}
+
 static BenchmarkOutcome RunBenchmarkCase(string root, BenchmarkCase benchmark, BenchmarkOptions options)
 {
     var sourcePath = Path.Combine(root, benchmark.RelativePath);
     var sourceText = File.ReadAllText(sourcePath, Encoding.UTF8);
 
-    WarmUpBenchmarkRuns(sourceText, ExecutionMode.Interpreter, options.WarmupIterations);
-    WarmUpBenchmarkRuns(sourceText, ExecutionMode.Bytecode, options.WarmupIterations);
+    WarmUpBenchmarkRuns(sourceText, benchmark, ExecutionMode.Interpreter, options.WarmupIterations);
+    WarmUpBenchmarkRuns(sourceText, benchmark, ExecutionMode.Bytecode, options.WarmupIterations);
 
     ExecutionResult? interpreterBaseline = null;
     ExecutionResult? bytecodeBaseline = null;
@@ -243,14 +252,14 @@ static BenchmarkOutcome RunBenchmarkCase(string root, BenchmarkCase benchmark, B
         if (iteration % 2 == 0)
         {
             AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, ExecutionMode.Interpreter),
+                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Interpreter),
                 "Interpreter",
                 ref interpreterBaseline,
                 interpreterRuntimeSamples,
                 interpreterTotalSamples,
                 ref interpreterStabilityIssue);
             AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, ExecutionMode.Bytecode),
+                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Bytecode),
                 "Bytecode",
                 ref bytecodeBaseline,
                 bytecodeRuntimeSamples,
@@ -260,14 +269,14 @@ static BenchmarkOutcome RunBenchmarkCase(string root, BenchmarkCase benchmark, B
         else
         {
             AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, ExecutionMode.Bytecode),
+                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Bytecode),
                 "Bytecode",
                 ref bytecodeBaseline,
                 bytecodeRuntimeSamples,
                 bytecodeTotalSamples,
                 ref bytecodeStabilityIssue);
             AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, ExecutionMode.Interpreter),
+                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Interpreter),
                 "Interpreter",
                 ref interpreterBaseline,
                 interpreterRuntimeSamples,
@@ -333,18 +342,22 @@ static BenchmarkOutcome RunBenchmarkCase(string root, BenchmarkCase benchmark, B
         issues);
 }
 
-static void WarmUpBenchmarkRuns(string sourceText, ExecutionMode mode, int warmupIterations)
+static void WarmUpBenchmarkRuns(string sourceText, BenchmarkCase benchmark, ExecutionMode mode, int warmupIterations)
 {
     for (var iteration = 0; iteration < warmupIterations; iteration++)
     {
-        _ = ExecuteBenchmarkRun(sourceText, mode);
+        _ = ExecuteBenchmarkRun(sourceText, benchmark, mode);
     }
 }
 
-static ExecutionResult ExecuteBenchmarkRun(string sourceText, ExecutionMode mode)
+static ExecutionResult ExecuteBenchmarkRun(string sourceText, BenchmarkCase benchmark, ExecutionMode mode)
 {
     var pipeline = new AxiomExecutionPipeline();
-    return pipeline.Run(new ExecutionRequest(sourceText, mode: mode));
+    var inputProvider = benchmark.InputLines.Count == 0
+        ? null
+        : new QueueInputProvider(benchmark.InputLines);
+    var runtimeRandom = benchmark.RuntimeRandomFactory?.Invoke();
+    return pipeline.Run(new ExecutionRequest(sourceText, inputProvider: inputProvider, runtimeClock: benchmark.RuntimeClock, runtimeRandom: runtimeRandom, mode: mode));
 }
 
 static void AddBenchmarkSample(
@@ -521,10 +534,52 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("Регекс: режимы и цепочка замен", @"samples/smoke/engine-compare/regex_modes_pipeline.axm"),
         new BenchmarkCase("Массивы и циклы: 3D сводка", @"samples/smoke/engine-compare/array_cube_rollup.axm"),
         new BenchmarkCase("Массивы: цепочка преобразований", @"samples/smoke/engine-compare/array_transform_chain.axm"),
+        new BenchmarkCase("Массивы: callback-конвейер", @"samples/smoke/engine-compare/array_callback_pipeline.axm"),
         new BenchmarkCase("Строковые массивы: циклы и дата-время", @"samples/smoke/engine-compare/string_array_loop_pipeline.axm"),
         new BenchmarkCase("Смешанная нагрузка: циклы, строки, regex, дата и SELECT CASE", @"samples/smoke/engine-compare/mixed_workload_pipeline.axm"),
-        new BenchmarkCase("Многомерный ранг: metadata-проверка", @"samples/smoke/engine-compare/high_rank_metadata.axm")
+        new BenchmarkCase("Числовые built-in: плотный проход", @"samples/smoke/engine-compare/numeric_function_sweep.axm"),
+        new BenchmarkCase("RND: deterministic stream", @"samples/smoke/engine-compare/random_stream_snapshot.axm", Array.Empty<string>(), null, static () => new SeededRuntimeRandom(24681357)),
+        new BenchmarkCase("Дата и время: календарный конвейер", @"samples/smoke/engine-compare/date_time_calendar_pipeline.axm"),
+        new BenchmarkCase("Дата и время: current-time снимок", @"samples/smoke/engine-compare/current_time_snapshot.axm", Array.Empty<string>(), CreateCurrentTimeBenchmarkClock()),
+        new BenchmarkCase("PRINT / PRINT USING: output gallery", @"samples/smoke/engine-compare/print_output_gallery.axm"),
+        new BenchmarkCase("Управляющий слой: ветвления и циклы", @"samples/smoke/engine-compare/control_flow_branch_maze.axm"),
+        new BenchmarkCase("Многомерный ранг: metadata-проверка", @"samples/smoke/engine-compare/high_rank_metadata.axm"),
+        new BenchmarkCase("Р’РІРѕРґ: РїР°РєРµС‚РЅС‹Р№ РїСЂРёС‘Рј Р°РЅРєРµС‚", @"samples/smoke/engine-compare/input_record_intake.axm", BuildInputRecordIntakeLines())
     ];
+}
+
+static string[] BuildInputRecordIntakeLines()
+{
+    var lines = new string[180];
+
+    for (var index = 0; index < lines.Length; index++)
+    {
+        var personNumber = index + 1;
+        var name = $"USER{personNumber:000}";
+        var age = 20 + (personNumber % 37);
+        var score = 45 + ((personNumber * 7) % 51);
+        lines[index] = $"{name}, {age}, {score}";
+    }
+
+    return lines;
+}
+
+static IRuntimeClock CreateCurrentTimeBenchmarkClock()
+{
+    var localTimeZone = TimeZoneInfo.CreateCustomTimeZone(
+        "Axiom Benchmark East",
+        TimeSpan.FromHours(3),
+        "Axiom Benchmark East",
+        "Axiom Benchmark East");
+    var namedTimeZones = new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Axiom Benchmark East"] = localTimeZone,
+        ["UTC"] = TimeZoneInfo.Utc
+    };
+    return new FixedRuntimeClock(
+        new DateTimeOffset(2026, 04, 20, 14, 05, 06, TimeSpan.FromHours(3)),
+        localTimeZone,
+        namedTimeZones);
 }
 
 static string FindRepositoryRoot()
@@ -648,9 +703,91 @@ sealed record NegativeCase(
         => new(name, null, sourceText, expectedStatus, expectedDiagnosticCode);
 }
 
-sealed record BenchmarkCase(string Name, string RelativePath)
+sealed record BenchmarkCase(
+    string Name,
+    string RelativePath,
+    IReadOnlyList<string> InputLines,
+    IRuntimeClock? RuntimeClock,
+    Func<IRuntimeRandom>? RuntimeRandomFactory)
 {
+    public BenchmarkCase(string name, string relativePath)
+        : this(name, relativePath, Array.Empty<string>(), null, null)
+    {
+    }
+
+    public BenchmarkCase(string name, string relativePath, IReadOnlyList<string> inputLines)
+        : this(name, relativePath, inputLines, null, null)
+    {
+    }
+
+    public BenchmarkCase(string name, string relativePath, IReadOnlyList<string> inputLines, IRuntimeClock? runtimeClock)
+        : this(name, relativePath, inputLines, runtimeClock, null)
+    {
+    }
+
     public string Category => Name.Split(':', 2)[0].Trim();
+}
+
+sealed class QueueInputProvider : IInputProvider
+{
+    private readonly Queue<string> _values;
+
+    public QueueInputProvider(IEnumerable<string> values)
+    {
+        _values = new Queue<string>(values);
+    }
+
+    public string ReadInput(InputRequest request) => _values.Count > 0 ? _values.Dequeue() : string.Empty;
+}
+
+sealed class FixedRuntimeClock : IRuntimeClock
+{
+    private readonly DateTimeOffset _localNow;
+    private readonly TimeZoneInfo _localTimeZone;
+    private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
+
+    public FixedRuntimeClock(
+        DateTimeOffset localNow,
+        TimeZoneInfo localTimeZone,
+        IReadOnlyDictionary<string, TimeZoneInfo>? namedTimeZones = null)
+    {
+        _localNow = localNow;
+        _localTimeZone = localTimeZone;
+        _namedTimeZones = namedTimeZones ?? new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public DateTimeOffset GetLocalNow() => _localNow;
+
+    public TimeZoneInfo GetLocalTimeZone() => _localTimeZone;
+
+    public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
+    {
+        if (string.Equals(id, "LOCAL", StringComparison.OrdinalIgnoreCase))
+        {
+            timeZone = _localTimeZone;
+            return true;
+        }
+
+        if (string.Equals(id, "UTC", StringComparison.OrdinalIgnoreCase))
+        {
+            timeZone = TimeZoneInfo.Utc;
+            return true;
+        }
+
+        return _namedTimeZones.TryGetValue(id, out timeZone!);
+    }
+}
+
+sealed class SeededRuntimeRandom : IRuntimeRandom
+{
+    private readonly Random _random;
+
+    public SeededRuntimeRandom(int seed)
+    {
+        _random = new Random(seed);
+    }
+
+    public double NextRandomDouble() => _random.NextDouble();
 }
 
 sealed record BenchmarkOptions(string OutputPath, int Iterations, int WarmupIterations, string? Filter);

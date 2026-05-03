@@ -2,6 +2,8 @@ namespace Axiom.Runtime;
 
 public sealed class NullRuntimeHost : IRuntimeHost, IReversibleOutputWriter
 {
+    private readonly Random _random = new();
+
     public static NullRuntimeHost Instance { get; } = new();
 
     private NullRuntimeHost()
@@ -57,4 +59,6 @@ public sealed class NullRuntimeHost : IRuntimeHost, IReversibleOutputWriter
         timeZone = TimeZoneInfo.Utc;
         return false;
     }
+
+    public double NextRandomDouble() => _random.NextDouble();
 }

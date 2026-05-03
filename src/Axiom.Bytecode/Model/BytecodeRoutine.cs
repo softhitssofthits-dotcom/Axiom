@@ -83,7 +83,7 @@ public sealed class BytecodeRoutine
             }
         }
 
-        return Math.Max(16, maxDepth);
+        return Math.Max(1, maxDepth);
     }
 
     private static int GetStackDelta(BytecodeInstruction instruction)

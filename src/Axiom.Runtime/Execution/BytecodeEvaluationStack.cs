@@ -63,6 +63,17 @@ internal sealed class BytecodeEvaluationStack
         return copy;
     }
 
+    public void Clear()
+    {
+        if (Count == 0)
+        {
+            return;
+        }
+
+        Array.Clear(_items, 0, Count);
+        Count = 0;
+    }
+
     private void Grow()
     {
         var newCapacity = _items.Length < 1024

@@ -38,21 +38,21 @@ public sealed partial class BytecodeVm
                     vm.RequirePositiveStart("MID", GetIntegerUnchecked(start), location),
                     vm.RequirePositiveCount("MID", "count", GetIntegerUnchecked(count), location)))),
             BuiltinFunctionId.TrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateTrimWhitespaceBuiltin(value)),
-            BuiltinFunctionId.TrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
+            BuiltinFunctionId.TrimCharacters => BuiltinExecution.BinaryNoLocation(static (vm, value, chars) => RuntimeValue.FromString(BytecodeVm.EvaluateTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
             BuiltinFunctionId.LTrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateLeftTrimWhitespaceBuiltin(value)),
-            BuiltinFunctionId.LTrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateLeftTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
+            BuiltinFunctionId.LTrimCharacters => BuiltinExecution.BinaryNoLocation(static (vm, value, chars) => RuntimeValue.FromString(BytecodeVm.EvaluateLeftTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
             BuiltinFunctionId.RTrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateRightTrimWhitespaceBuiltin(value)),
-            BuiltinFunctionId.RTrimCharacters => BuiltinExecution.Binary(static (vm, value, chars, _) => RuntimeValue.FromString(BytecodeVm.EvaluateRightTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
-            BuiltinFunctionId.Reverse => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromString(BytecodeVm.EvaluateReverse(GetStringUnchecked(value)))),
+            BuiltinFunctionId.RTrimCharacters => BuiltinExecution.BinaryNoLocation(static (vm, value, chars) => RuntimeValue.FromString(BytecodeVm.EvaluateRightTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
+            BuiltinFunctionId.Reverse => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateReverseBuiltin(value)),
             BuiltinFunctionId.Contains => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateContains(GetStringUnchecked(left), GetStringUnchecked(right)))),
             BuiltinFunctionId.StartsWith => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateStartsWith(GetStringUnchecked(left), GetStringUnchecked(right)))),
             BuiltinFunctionId.EndsWith => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateEndsWith(GetStringUnchecked(left), GetStringUnchecked(right)))),
             BuiltinFunctionId.Replace => BuiltinExecution.Ternary(static (vm, text, oldValue, newValue, location) =>
                 vm.EvaluateReplaceBuiltin(text, oldValue, newValue, location)),
-            BuiltinFunctionId.InStr => BuiltinExecution.Binary(static (vm, text, value, _) => RuntimeValue.FromInteger(BytecodeVm.EvaluateInStr(1, GetStringUnchecked(text), GetStringUnchecked(value)))),
+            BuiltinFunctionId.InStr => BuiltinExecution.BinaryNoLocation(static (vm, text, value) => RuntimeValue.FromInteger(BytecodeVm.EvaluateInStr(1, GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.InStrFrom => BuiltinExecution.Ternary(static (vm, start, text, value, location) => RuntimeValue.FromInteger(
                 BytecodeVm.EvaluateInStr(vm.RequirePositiveStart("INSTR", GetIntegerUnchecked(start), location), GetStringUnchecked(text), GetStringUnchecked(value)))),
-            BuiltinFunctionId.InStrRev => BuiltinExecution.Binary(static (vm, text, value, _) => RuntimeValue.FromInteger(
+            BuiltinFunctionId.InStrRev => BuiltinExecution.BinaryNoLocation(static (vm, text, value) => RuntimeValue.FromInteger(
                 BytecodeVm.EvaluateInStrRev(GetStringUnchecked(text).Length, GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.InStrRevFrom => BuiltinExecution.Ternary(static (vm, start, text, value, location) => RuntimeValue.FromInteger(
                 BytecodeVm.EvaluateInStrRev(vm.RequirePositiveStart("INSTRREV", GetIntegerUnchecked(start), location), GetStringUnchecked(text), GetStringUnchecked(value)))),
@@ -66,18 +66,36 @@ public sealed partial class BytecodeVm
                     vm.RequireNonNegativeCount("STRING", "count", GetIntegerUnchecked(count), location),
                     GetStringUnchecked(fill),
                     location))),
-            BuiltinFunctionId.PadLeft => BuiltinExecution.Binary(static (vm, value, width, location) => RuntimeValue.FromString(
-                GetStringUnchecked(value).PadLeft(vm.RequireNonNegativeCount("PADLEFT", "width", GetIntegerUnchecked(width), location)))),
-            BuiltinFunctionId.PadLeftFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) => RuntimeValue.FromString(
-                vm.EvaluatePadLeft(GetStringUnchecked(value), vm.RequireNonNegativeCount("PADLEFT", "width", GetIntegerUnchecked(width), location), GetStringUnchecked(fill), location))),
-            BuiltinFunctionId.PadRight => BuiltinExecution.Binary(static (vm, value, width, location) => RuntimeValue.FromString(
-                GetStringUnchecked(value).PadRight(vm.RequireNonNegativeCount("PADRIGHT", "width", GetIntegerUnchecked(width), location)))),
-            BuiltinFunctionId.PadRightFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) => RuntimeValue.FromString(
-                vm.EvaluatePadRight(GetStringUnchecked(value), vm.RequireNonNegativeCount("PADRIGHT", "width", GetIntegerUnchecked(width), location), GetStringUnchecked(fill), location))),
-            BuiltinFunctionId.Center => BuiltinExecution.Binary(static (vm, value, width, location) => RuntimeValue.FromString(
-                vm.EvaluateCenter(GetStringUnchecked(value), vm.RequireNonNegativeCount("CENTER", "width", GetIntegerUnchecked(width), location), " ", location))),
-            BuiltinFunctionId.CenterFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) => RuntimeValue.FromString(
-                vm.EvaluateCenter(GetStringUnchecked(value), vm.RequireNonNegativeCount("CENTER", "width", GetIntegerUnchecked(width), location), GetStringUnchecked(fill), location))),
+            BuiltinFunctionId.PadLeft => BuiltinExecution.Binary(static (vm, value, width, location) =>
+                EvaluatePadLeftBuiltin(
+                    value,
+                    vm.RequireNonNegativeCount("PADLEFT", "width", GetIntegerUnchecked(width), location))),
+            BuiltinFunctionId.PadLeftFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) =>
+                vm.EvaluatePadLeftFillBuiltin(
+                    value,
+                    vm.RequireNonNegativeCount("PADLEFT", "width", GetIntegerUnchecked(width), location),
+                    GetStringUnchecked(fill),
+                    location)),
+            BuiltinFunctionId.PadRight => BuiltinExecution.Binary(static (vm, value, width, location) =>
+                EvaluatePadRightBuiltin(
+                    value,
+                    vm.RequireNonNegativeCount("PADRIGHT", "width", GetIntegerUnchecked(width), location))),
+            BuiltinFunctionId.PadRightFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) =>
+                vm.EvaluatePadRightFillBuiltin(
+                    value,
+                    vm.RequireNonNegativeCount("PADRIGHT", "width", GetIntegerUnchecked(width), location),
+                    GetStringUnchecked(fill),
+                    location)),
+            BuiltinFunctionId.Center => BuiltinExecution.Binary(static (vm, value, width, location) =>
+                EvaluateCenterBuiltin(
+                    value,
+                    vm.RequireNonNegativeCount("CENTER", "width", GetIntegerUnchecked(width), location))),
+            BuiltinFunctionId.CenterFill => BuiltinExecution.Ternary(static (vm, value, width, fill, location) =>
+                vm.EvaluateCenterFillBuiltin(
+                    value,
+                    vm.RequireNonNegativeCount("CENTER", "width", GetIntegerUnchecked(width), location),
+                    GetStringUnchecked(fill),
+                    location)),
             BuiltinFunctionId.Insert => BuiltinExecution.Ternary(static (vm, value, start, insertText, location) =>
                 BytecodeVm.EvaluateInsertBuiltin(
                     value,
@@ -93,8 +111,8 @@ public sealed partial class BytecodeVm
                 BytecodeVm.EvaluateChr(vm.RequireValidUnicodeCodePoint("CHR", "code", GetIntegerUnchecked(value), location)))),
             BuiltinFunctionId.Split => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSplitBuiltin(GetStringUnchecked(value), ",", location)),
             BuiltinFunctionId.SplitSeparator => BuiltinExecution.Binary(static (vm, value, separator, location) => vm.EvaluateSplitBuiltin(GetStringUnchecked(value), GetStringUnchecked(separator), location)),
-            BuiltinFunctionId.Join => BuiltinExecution.Unary(static (vm, value, _) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), ",")),
-            BuiltinFunctionId.JoinSeparator => BuiltinExecution.Binary(static (vm, value, separator, _) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), GetStringUnchecked(separator))),
+            BuiltinFunctionId.Join => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), ",")),
+            BuiltinFunctionId.JoinSeparator => BuiltinExecution.BinaryNoLocation(static (vm, value, separator) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), GetStringUnchecked(separator))),
             BuiltinFunctionId.RegexIsMatch => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexIsMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
             BuiltinFunctionId.RegexIsMatchModes => BuiltinExecution.Ternary(static (vm, text, pattern, modes, location) => vm.EvaluateRegexIsMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), GetStringUnchecked(modes), location)),
             BuiltinFunctionId.RegexMatch => BuiltinExecution.Binary(static (vm, text, pattern, location) => vm.EvaluateRegexMatchBuiltin(GetStringUnchecked(text), GetStringUnchecked(pattern), "", location)),
@@ -115,10 +133,10 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.RegexReplaceModesCount => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateRegexReplaceBuiltin(arguments[0], arguments[1], arguments[2], GetStringUnchecked(arguments[3]), GetIntegerUnchecked(arguments[4]), location)),
             BuiltinFunctionId.Int => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateIntBuiltin(value, location))),
             BuiltinFunctionId.Str => BuiltinExecution.UnaryNoLocation(static (vm, value) => value.ToDisplayRuntimeValue()),
-            BuiltinFunctionId.Val => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromDouble(ParseVal(GetStringUnchecked(value)))),
-            BuiltinFunctionId.LCase => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(GetStringUnchecked(value).ToLowerInvariant())),
-            BuiltinFunctionId.UCase => BuiltinExecution.Unary(static (vm, value, _) => RuntimeValue.FromString(GetStringUnchecked(value).ToUpperInvariant())),
-            BuiltinFunctionId.Rnd => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateRndBuiltin()),
+            BuiltinFunctionId.Val => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromDouble(ParseVal(GetStringUnchecked(value)))),
+            BuiltinFunctionId.LCase => BuiltinExecution.UnaryNoLocation(static (vm, value) => EvaluateLowerCaseBuiltin(value)),
+            BuiltinFunctionId.UCase => BuiltinExecution.UnaryNoLocation(static (vm, value) => EvaluateUpperCaseBuiltin(value)),
+            BuiltinFunctionId.Rnd => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateRndBuiltin()),
             BuiltinFunctionId.Abs => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateAbsBuiltin(value, location)),
             BuiltinFunctionId.Sgn => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateSgnBuiltin(value, location))),
             BuiltinFunctionId.Min => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateMinBuiltin(left, right, location)),
@@ -168,16 +186,16 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ArrayFilter => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateArrayFilterBuiltin(left, right, location)),
             BuiltinFunctionId.ArrayMap => BuiltinExecution.Binary(static (vm, left, right, location) => vm.EvaluateArrayMapBuiltin(left, right, location)),
             BuiltinFunctionId.ArrayReduce => BuiltinExecution.Ternary(static (vm, array, reducer, seed, location) => vm.EvaluateArrayReduceBuiltin(array, reducer, seed, location)),
-            BuiltinFunctionId.Date => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateDateBuiltin()),
+            BuiltinFunctionId.Date => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateDateBuiltin()),
             BuiltinFunctionId.DateInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateBuiltin(GetStringUnchecked(value), location)),
-            BuiltinFunctionId.Time => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateTimeBuiltin()),
+            BuiltinFunctionId.Time => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateTimeBuiltin()),
             BuiltinFunctionId.TimeInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeBuiltin(GetStringUnchecked(value), location)),
-            BuiltinFunctionId.Now => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateNowBuiltin()),
+            BuiltinFunctionId.Now => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateNowBuiltin()),
             BuiltinFunctionId.NowInZone => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateNowBuiltin(GetStringUnchecked(value), location)),
-            BuiltinFunctionId.UtcDate => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcDateBuiltin()),
-            BuiltinFunctionId.UtcTime => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcTimeBuiltin()),
-            BuiltinFunctionId.UtcNow => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcNowBuiltin()),
-            BuiltinFunctionId.Timer => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateTimerBuiltin()),
+            BuiltinFunctionId.UtcDate => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateUtcDateBuiltin()),
+            BuiltinFunctionId.UtcTime => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateUtcTimeBuiltin()),
+            BuiltinFunctionId.UtcNow => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateUtcNowBuiltin()),
+            BuiltinFunctionId.Timer => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateTimerBuiltin()),
             BuiltinFunctionId.DateSerial => BuiltinExecution.Ternary(static (vm, year, month, day, location) => vm.EvaluateDateSerialBuiltin(GetIntegerUnchecked(year), GetIntegerUnchecked(month), GetIntegerUnchecked(day), location)),
             BuiltinFunctionId.TimeSerial => BuiltinExecution.Ternary(static (vm, hour, minute, second, location) => vm.EvaluateTimeSerialBuiltin(GetIntegerUnchecked(hour), GetIntegerUnchecked(minute), GetIntegerUnchecked(second), location)),
             BuiltinFunctionId.Year => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateYearBuiltin(GetStringUnchecked(value), location)),
@@ -194,8 +212,8 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.DatePart => BuiltinExecution.Binary(static (vm, interval, dateText, location) => vm.EvaluateDatePartBuiltin(GetStringUnchecked(interval), GetStringUnchecked(dateText), location)),
             BuiltinFunctionId.DateValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.TimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeValueBuiltin(GetStringUnchecked(value), location)),
-            BuiltinFunctionId.IsDate => BuiltinExecution.Unary(static (vm, value, _) => vm.EvaluateIsDateBuiltin(GetStringUnchecked(value))),
-            BuiltinFunctionId.UtcOffset => BuiltinExecution.Nullary(static (vm, _) => vm.EvaluateUtcOffsetBuiltin()),
+            BuiltinFunctionId.IsDate => BuiltinExecution.UnaryNoLocation(static (vm, value) => vm.EvaluateIsDateBuiltin(GetStringUnchecked(value))),
+            BuiltinFunctionId.UtcOffset => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateUtcOffsetBuiltin()),
             BuiltinFunctionId.UtcOffsetValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateUtcOffsetBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.UtcOffsetValueZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateUtcOffsetBuiltin(GetStringUnchecked(value), GetStringUnchecked(zone), location)),
             BuiltinFunctionId.ToUtc => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateToUtcBuiltin(GetStringUnchecked(value), location)),
@@ -208,7 +226,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.EndOfMonth => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateEndOfMonthBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.StartOfYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateStartOfYearBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.EndOfYear => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateEndOfYearBuiltin(GetStringUnchecked(value), location)),
-            BuiltinFunctionId.IsOpen => BuiltinExecution.Unary(static (vm, value, _) => vm.EvaluateIsOpenBuiltin(value)),
+            BuiltinFunctionId.IsOpen => BuiltinExecution.UnaryNoLocation(static (vm, value) => vm.EvaluateIsOpenBuiltin(value)),
             BuiltinFunctionId.FilePath => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFilePathBuiltin(value, location)),
             BuiltinFunctionId.FileMode => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileModeBuiltin(value, location)),
             BuiltinFunctionId.FilePos => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFilePosBuiltin(value, location)),
@@ -309,7 +327,11 @@ public sealed partial class BytecodeVm
         Unary,
         Binary,
         Ternary,
-        Variadic
+        Variadic,
+        NullaryNoLocation,
+        UnaryNoLocation,
+        BinaryNoLocation,
+        TernaryNoLocation
     }
 
     private delegate RuntimeValue BuiltinExecution0(BytecodeVm vm, TextLocation location);
@@ -326,25 +348,34 @@ public sealed partial class BytecodeVm
     {
         private BuiltinExecution(
             BuiltinExecutionArity arity,
-            bool requiresLocation,
             BuiltinExecution0? zero,
             BuiltinExecution1? one,
             BuiltinExecution2? two,
             BuiltinExecution3? three,
-            BuiltinExecutionMany? many)
+            BuiltinExecutionMany? many,
+            BuiltinExecution0NoLocation? zeroNoLocation,
+            BuiltinExecution1NoLocation? oneNoLocation,
+            BuiltinExecution2NoLocation? twoNoLocation,
+            BuiltinExecution3NoLocation? threeNoLocation)
         {
             Arity = arity;
-            RequiresLocation = requiresLocation;
             Zero = zero;
             One = one;
             Two = two;
             Three = three;
             Many = many;
+            ZeroNoLocation = zeroNoLocation;
+            OneNoLocation = oneNoLocation;
+            TwoNoLocation = twoNoLocation;
+            ThreeNoLocation = threeNoLocation;
         }
 
         public BuiltinExecutionArity Arity { get; }
 
-        public bool RequiresLocation { get; }
+        public bool RequiresLocation => Arity is not BuiltinExecutionArity.NullaryNoLocation
+            and not BuiltinExecutionArity.UnaryNoLocation
+            and not BuiltinExecutionArity.BinaryNoLocation
+            and not BuiltinExecutionArity.TernaryNoLocation;
 
         public BuiltinExecution0? Zero { get; }
 
@@ -356,50 +387,120 @@ public sealed partial class BytecodeVm
 
         public BuiltinExecutionMany? Many { get; }
 
-        public static BuiltinExecution Nullary(BuiltinExecution0 execution) => new(BuiltinExecutionArity.Nullary, true, execution, null, null, null, null);
+        public BuiltinExecution0NoLocation? ZeroNoLocation { get; }
+
+        public BuiltinExecution1NoLocation? OneNoLocation { get; }
+
+        public BuiltinExecution2NoLocation? TwoNoLocation { get; }
+
+        public BuiltinExecution3NoLocation? ThreeNoLocation { get; }
+
+        public static BuiltinExecution Nullary(BuiltinExecution0 execution) => new(
+            BuiltinExecutionArity.Nullary,
+            execution,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
 
         public static BuiltinExecution NullaryNoLocation(BuiltinExecution0NoLocation execution) => new(
-            BuiltinExecutionArity.Nullary,
-            false,
+            BuiltinExecutionArity.NullaryNoLocation,
             (vm, _) => execution(vm),
             null,
             null,
             null,
+            null,
+            execution,
+            null,
+            null,
             null);
 
-        public static BuiltinExecution Unary(BuiltinExecution1 execution) => new(BuiltinExecutionArity.Unary, true, null, execution, null, null, null);
+        public static BuiltinExecution Unary(BuiltinExecution1 execution) => new(
+            BuiltinExecutionArity.Unary,
+            null,
+            execution,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
 
         public static BuiltinExecution UnaryNoLocation(BuiltinExecution1NoLocation execution) => new(
-            BuiltinExecutionArity.Unary,
-            false,
+            BuiltinExecutionArity.UnaryNoLocation,
             null,
             (vm, first, _) => execution(vm, first),
             null,
             null,
+            null,
+            null,
+            execution,
+            null,
             null);
 
-        public static BuiltinExecution Binary(BuiltinExecution2 execution) => new(BuiltinExecutionArity.Binary, true, null, null, execution, null, null);
+        public static BuiltinExecution Binary(BuiltinExecution2 execution) => new(
+            BuiltinExecutionArity.Binary,
+            null,
+            null,
+            execution,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
 
         public static BuiltinExecution BinaryNoLocation(BuiltinExecution2NoLocation execution) => new(
-            BuiltinExecutionArity.Binary,
-            false,
+            BuiltinExecutionArity.BinaryNoLocation,
             null,
             null,
             (vm, first, second, _) => execution(vm, first, second),
             null,
+            null,
+            null,
+            null,
+            execution,
             null);
 
-        public static BuiltinExecution Ternary(BuiltinExecution3 execution) => new(BuiltinExecutionArity.Ternary, true, null, null, null, execution, null);
+        public static BuiltinExecution Ternary(BuiltinExecution3 execution) => new(
+            BuiltinExecutionArity.Ternary,
+            null,
+            null,
+            null,
+            execution,
+            null,
+            null,
+            null,
+            null,
+            null);
 
         public static BuiltinExecution TernaryNoLocation(BuiltinExecution3NoLocation execution) => new(
-            BuiltinExecutionArity.Ternary,
-            false,
+            BuiltinExecutionArity.TernaryNoLocation,
             null,
             null,
             null,
             (vm, first, second, third, _) => execution(vm, first, second, third),
-            null);
+            null,
+            null,
+            null,
+            null,
+            execution);
 
-        public static BuiltinExecution Variadic(BuiltinExecutionMany execution) => new(BuiltinExecutionArity.Variadic, true, null, null, null, null, execution);
+        public static BuiltinExecution Variadic(BuiltinExecutionMany execution) => new(
+            BuiltinExecutionArity.Variadic,
+            null,
+            null,
+            null,
+            null,
+            execution,
+            null,
+            null,
+            null,
+            null);
     }
 }

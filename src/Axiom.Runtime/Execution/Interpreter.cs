@@ -23,7 +23,6 @@ public sealed partial class Interpreter
     private readonly Stack<RuntimeScope> _scopeStack = new();
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
-    private readonly Random _random = new();
     private bool _hasPendingOutput;
     private readonly IRuntimeHost _host;
 

@@ -1075,9 +1075,11 @@ PRINT REGEXREPLACE("abc", "a", "x", -1)
 DIM parts() AS STRING
 DIM emptyParts() AS STRING
 DIM missing() AS STRING
+DIM single(5 TO 5) AS STRING
 
 parts = SPLIT("red,green,,blue", ",")
 emptyParts = SPLIT("", ",")
+single(5) = "solo"
 
 PRINT ARRAYISALLOCATED(parts)
 PRINT LBOUND(parts)
@@ -1092,6 +1094,8 @@ PRINT LBOUND(emptyParts)
 PRINT UBOUND(emptyParts)
 PRINT "[" + JOIN(emptyParts) + "]"
 PRINT "[" + JOIN(missing) + "]"
+PRINT JOIN(single)
+PRINT JOIN(single, "/")
 """;
 
         var (_, host, result) = ExecuteProgram(text);
@@ -1099,7 +1103,7 @@ PRINT "[" + JOIN(missing) + "]"
         Assert.True(
             result.Succeeded,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
-        Assert.Equal(["TRUE", "1", "4", "4", "red", "", "blue", "red/green//blue", "0", "1", "0", "[]", "[]"], host.Output);
+        Assert.Equal(["TRUE", "1", "4", "4", "red", "", "blue", "red/green//blue", "0", "1", "0", "[]", "[]", "solo", "solo"], host.Output);
     }
 
     [Fact]
@@ -2607,18 +2611,24 @@ PRINT REPEAT("ha", 3)
 PRINT "[" + SPACE(4) + "]"
 PRINT STRING(5, "ab")
 PRINT "[" + PADLEFT("7", 3) + "]"
+PRINT PADLEFT("word", 4)
 PRINT PADRIGHT("7", 3, ".")
+PRINT PADRIGHT("word", 4, ".")
 PRINT "[" + CENTER("A", 4, ".") + "]"
+PRINT "[" + CENTER("Hello", 5, ".") + "]"
 PRINT INSERT("abcd", 3, "-")
 PRINT INSERT("", 5, "seed")
 PRINT INSERT("abcd", 2, "")
 PRINT REMOVE("abcdef", 2, 3)
+PRINT REVERSE("A")
+PRINT LCASE("hello")
+PRINT UCASE("HELLO")
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["hahaha", "[    ]", "aaaaa", "[  7]", "7..", "[.A..]", "ab-cd", "seed", "abcd", "aef"], host.Output);
+        Assert.Equal(["hahaha", "[    ]", "aaaaa", "[  7]", "word", "7..", "word", "[.A..]", "[Hello]", "ab-cd", "seed", "abcd", "aef", "A", "hello", "HELLO"], host.Output);
     }
 
     [Fact]
@@ -3436,6 +3446,7 @@ Outer(3)
     private sealed class TestRuntimeHost : IRuntimeHost, IReversibleOutputWriter
     {
         private readonly Queue<string> _inputs;
+        private readonly Random _random = new();
         private readonly DateTimeOffset _localNow;
         private readonly TimeZoneInfo _localTimeZone;
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
@@ -3482,6 +3493,8 @@ Outer(3)
         public DateTimeOffset GetLocalNow() => _localNow;
 
         public TimeZoneInfo GetLocalTimeZone() => _localTimeZone;
+
+        public double NextRandomDouble() => _random.NextDouble();
 
         public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
         {

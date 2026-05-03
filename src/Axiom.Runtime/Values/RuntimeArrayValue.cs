@@ -482,6 +482,136 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryCopyOneDimensionalRangeTo(int sourceIndex, int count, RuntimeValue[] destination, int destinationIndex)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        EnsureAllocated();
+
+        if (Rank != 1 || count < 0 || destinationIndex < 0 || destinationIndex + count > destination.Length)
+        {
+            return false;
+        }
+
+        if (count == 0)
+        {
+            return true;
+        }
+
+        if (!TryGetLinearIndex1(sourceIndex, out var sourceLinearIndex)
+            || !TryGetLinearIndex1(sourceIndex + count - 1, out var endLinearIndex)
+            || endLinearIndex - sourceLinearIndex + 1 != count)
+        {
+            return false;
+        }
+
+        Array.Copy(_elements!, sourceLinearIndex, destination, destinationIndex, count);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryMoveOneDimensionalRange(int sourceIndex, int destinationIndex, int count)
+    {
+        EnsureAllocated();
+
+        if (Rank != 1 || count < 0)
+        {
+            return false;
+        }
+
+        if (count == 0)
+        {
+            return true;
+        }
+
+        if (!TryGetLinearIndex1(sourceIndex, out var sourceLinearIndex)
+            || !TryGetLinearIndex1(sourceIndex + count - 1, out var sourceEndLinearIndex)
+            || !TryGetLinearIndex1(destinationIndex, out var destinationLinearIndex)
+            || !TryGetLinearIndex1(destinationIndex + count - 1, out var destinationEndLinearIndex)
+            || sourceEndLinearIndex - sourceLinearIndex + 1 != count
+            || destinationEndLinearIndex - destinationLinearIndex + 1 != count)
+        {
+            return false;
+        }
+
+        Array.Copy(_elements!, sourceLinearIndex, _elements!, destinationLinearIndex, count);
+        return true;
+    }
+
+    internal bool TryAppendOneDimensional(RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView)
+        {
+            return false;
+        }
+
+        var nextLowerBound = LowerBound;
+        var nextUpperBound = Length == 0
+            ? nextLowerBound
+            : checked(UpperBound + 1);
+        var nextElements = new RuntimeValue[Length + 1];
+
+        if (Length > 0)
+        {
+            Array.Copy(_elements!, 0, nextElements, 0, Length);
+        }
+
+        nextElements[^1] = value.CopyForStorage(FixedStringLength);
+        _lowerBounds = [nextLowerBound];
+        _upperBounds = [nextUpperBound];
+        _storageLowerBounds = _lowerBounds;
+        _storageUpperBounds = _upperBounds;
+        _fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
+        _visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
+        _isView = false;
+        _elements = nextElements;
+        RefreshShapeMetadata();
+        return true;
+    }
+
+    internal bool TryPopOneDimensional(out RuntimeValue value)
+    {
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView || Length == 0)
+        {
+            value = RuntimeValue.Void;
+            return false;
+        }
+
+        value = _elements![^1];
+
+        if (Length == 1)
+        {
+            _lowerBounds = [1];
+            _upperBounds = [0];
+            _storageLowerBounds = _lowerBounds;
+            _storageUpperBounds = _upperBounds;
+            _fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
+            _visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
+            _isView = false;
+            _elements = [];
+            RefreshShapeMetadata();
+            return true;
+        }
+
+        var nextElements = new RuntimeValue[Length - 1];
+        Array.Copy(_elements, 0, nextElements, 0, nextElements.Length);
+        _upperBounds = [UpperBound - 1];
+        _storageUpperBounds = _upperBounds;
+        _fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
+        _visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
+        _isView = false;
+        _elements = nextElements;
+        RefreshShapeMetadata();
+        return true;
+    }
+
     public void Allocate(int lowerBound, int upperBound)
     {
         EnsureOneDimensional();
@@ -570,7 +700,12 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         clone._visibleStorageDimensions = CreateIdentityStorageDimensions(clone.Rank);
         clone._elements = clone.CreateDefaultElements(clone._storageLowerBounds, clone._storageUpperBounds);
         clone.RefreshShapeMetadata();
-        clone.CopyVisibleValuesFrom(this);
+
+        if (!TryCopyVisibleValuesToClone(clone))
+        {
+            clone.CopyVisibleValuesFrom(this);
+        }
+
         return clone;
     }
 
@@ -627,6 +762,20 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         source.ForEachVisibleIndexSetAscending(indices => SetValue(indices, source.GetValue(indices)));
     }
 
+    private bool TryCopyVisibleValuesToClone(RuntimeArrayValue clone)
+    {
+        if (Rank != 1
+            || !IsAllocated
+            || !clone.IsAllocated
+            || Length == 0
+            || clone.Length != Length)
+        {
+            return false;
+        }
+
+        return TryCopyOneDimensionalRangeTo(LowerBound, Length, clone._elements!, destinationIndex: 0);
+    }
+
     private void CopyIntersection(
         RuntimeValue[] sourceElements,
         IReadOnlyList<int> sourceLowerBounds,
@@ -637,6 +786,23 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
     {
         if (sourceElements.Length == 0 || targetElements.Length == 0)
         {
+            return;
+        }
+
+        if (Rank == 1)
+        {
+            var copyLowerBound = Math.Max(sourceLowerBounds[0], targetLowerBounds[0]);
+            var copyUpperBound = Math.Min(sourceUpperBounds[0], targetUpperBounds[0]);
+
+            if (copyUpperBound < copyLowerBound)
+            {
+                return;
+            }
+
+            var copyCount = copyUpperBound - copyLowerBound + 1;
+            var sourceOffset = copyLowerBound - sourceLowerBounds[0];
+            var targetOffset = copyLowerBound - targetLowerBounds[0];
+            Array.Copy(sourceElements, sourceOffset, targetElements, targetOffset, copyCount);
             return;
         }
 

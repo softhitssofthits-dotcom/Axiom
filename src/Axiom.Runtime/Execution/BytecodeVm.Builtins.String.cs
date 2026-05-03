@@ -125,6 +125,19 @@ public sealed partial class BytecodeVm
         return new string(buffer);
     }
 
+    private static RuntimeValue EvaluateReverseBuiltin(RuntimeValue value)
+    {
+        var text = GetStringUnchecked(value);
+        if (text.Length <= 1)
+        {
+            return value;
+        }
+
+        var buffer = text.ToCharArray();
+        Array.Reverse(buffer);
+        return RuntimeValue.FromString(new string(buffer));
+    }
+
     private static bool EvaluateContains(string text, string fragment)
     {
         if (fragment.Length == 0)
@@ -387,6 +400,11 @@ public sealed partial class BytecodeVm
             return RuntimeValue.FromString(string.Empty);
         }
 
+        if (array.Length == 1)
+        {
+            return array.GetValue(array.LowerBound);
+        }
+
         var values = new string[array.Length];
 
         for (var index = 0; index < array.Length; index++)
@@ -395,5 +413,23 @@ public sealed partial class BytecodeVm
         }
 
         return RuntimeValue.FromString(string.Join(separator, values));
+    }
+
+    private static RuntimeValue EvaluateLowerCaseBuiltin(RuntimeValue value)
+    {
+        var text = GetStringUnchecked(value);
+        var lowered = text.ToLowerInvariant();
+        return string.Equals(lowered, text, StringComparison.Ordinal)
+            ? value
+            : RuntimeValue.FromString(lowered);
+    }
+
+    private static RuntimeValue EvaluateUpperCaseBuiltin(RuntimeValue value)
+    {
+        var text = GetStringUnchecked(value);
+        var uppered = text.ToUpperInvariant();
+        return string.Equals(uppered, text, StringComparison.Ordinal)
+            ? value
+            : RuntimeValue.FromString(uppered);
     }
 }

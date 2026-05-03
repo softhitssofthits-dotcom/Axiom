@@ -1,4 +1,4 @@
-# Журнал работ 4
+﻿# Журнал работ 4
 
 Этот файл является активным журналом работ проекта начиная с Session 481.
 
@@ -4709,3 +4709,790 @@
 Следующий шаг:
 - продолжить тот же подход по ещё одной укрупнённой функциональной группе в `docs/BYTECODE_COVERAGE.md`;
 - наиболее полезным следующим кандидатом держать числовые built-in.
+
+## Session 622 - 2026-05-02 08:39 - числовые built-in в реестре получили адресные подтверждения
+
+Что сделано:
+- продолжено адресное уточнение `docs/BYTECODE_COVERAGE.md` по числовой группе;
+- для conversion/legacy-подгруппы добавлены ссылки на `Execute_BuiltinStrAndVal()`, `Execute_BuiltinValReturnsZeroForInvalidText()`, `Execute_BuiltinIntReportsOverflowAfterFloor()`, `Execute_CompiledNumericConversionAndRoundingBuiltins()` и execution-путь `Run_WithBytecodeMode_UsesBytecodeVmForAutomaticNumericConversions()`;
+- для core-подгруппы добавлены адресные опоры на `Execute_BuiltinRndReturnsDoubleInUnitInterval()`, `Execute_MathBuiltinsReturnExpectedOutput(...)`, `Execute_BuiltinSetSignPreservesDecimalType()`, `Execute_CompiledRndReturnsValueInHalfOpenRange()` и `Execute_CompiledNumericMathBuiltins()`;
+- для тригонометрической и roots/rounding-групп добавлены конкретные ссылки на доменные ошибки, переполнения и VM/Execution-проверки: `Execute_MathBuiltinsReportDomainErrors(...)`, `Execute_HyperbolicMathBuiltinsReportDoubleOverflow()`, `Execute_MathBuiltinsReportDoubleOverflow()`, `Execute_BuiltinFixDiffersFromIntForNegativeFraction()`, `Execute_CompiledNumericBuiltinsReportArgumentErrors()` и `Run_WithBytecodeMode_ReportsNumericBuiltinArgumentError()`;
+- для всех числовых строк в реестре добавлены точные manual-страницы `docs/manual/numeric-functions-conversion-and-legacy.html`, `docs/manual/numeric-functions-core.html`, `docs/manual/numeric-functions-trigonometry.html`, `docs/manual/numeric-functions-roots-rounding.html`, `docs/manual/numeric-functions.html` и тематические папки `samples/functions/`.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- сборка и тесты не запускались, потому что в этом шаге менялись только рабочие документы и реестр покрытия без правок исполняемого кода.
+
+Решение:
+- считать числовую группу пятым доведённым адресным блоком реестра после строк, массивов, файловой системы и date/time;
+- считать крупную стадию разукрупнения реестра по основным функциональным разделам в целом завершённой.
+
+Следующий шаг:
+- перейти от разукрупнения больших групп к точечной досверке строк, где всё ещё стоит `частично` прежде всего по столбцу `Негативный паритет`;
+- в отдельной служебной задаче рассмотреть полуавтоматический аудит на рассинхронизацию между built-in-списком, VM-диспетчеризацией, `samples/functions/` и manual-индексом.
+
+## Session 623 - 2026-05-02 08:47 - добавлен аудит покрытого байткодом набора built-in и найден дрейф manual-индекса по ARRAY-группе
+
+Что сделано:
+- в `src/Axiom.ManualChecks/Program.cs` добавлена новая команда `audit-bytecode-coverage`, а в `src/Axiom.ManualChecks/BytecodeCoverageAudit.cs` вынесена логика полуавтоматического аудита покрытого байткодом набора built-in;
+- аудит собирает объявленные built-in-семейства из семантических дескрипторов, проверяет для каждого варианта поддержку через `BytecodeVm.SupportsBuiltin(...)`, сверяет наличие каталога в `samples/functions/` и наличие function-entry в `docs/manual/scripts/search-index.js`;
+- для manual-индекса добавлен отдельный построчный разбор `search-index.js`, чтобы отчёт не путал разделы и функции и давал именно список отсутствующих function-entry;
+- первый рабочий отчёт записан в `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-coverage-audit-20260502-084637.txt`;
+- отчёт подтвердил, что у `BytecodeVm` нет дыр по объявленным вариантам built-in, а `samples/functions/` полностью синхронизированы с семантическим списком;
+- тем же отчётом зафиксирован реальный дрейф по discoverability manual: в `docs/manual/scripts/search-index.js` пока отсутствуют function-entry для части ARRAY-группы, в том числе `ARRAYCLONE`, `ARRAYCONCAT`, `ARRAYFLATTEN`, `ARRAYRESHAPE`, `ARRAYFILL`, `ARRAYEVERY`, `ARRAYSOME`, `ARRAYFILTER`, `ARRAYMAP`, `ARRAYREDUCE`, `ARRAYREVERSE`, `ARRAYSORT`, `ARRAYTOSORTED`, `ARRAYTOREVERSED`, `ARRAYTAKE`, `ARRAYSKIP`, `ARRAYDISTINCT`, `ARRAYBINARYSEARCH`, `ARRAYCONTAINS`, `ARRAYCOUNT`, `ARRAYFINDALL`, `ARRAYINDEXOF`, `ARRAYLASTINDEXOF`.
+
+Изменённые файлы:
+- src/Axiom.ManualChecks/Program.cs
+- src/Axiom.ManualChecks/BytecodeCoverageAudit.cs
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнена последовательная сборка `dotnet build C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj`;
+- выполнен рабочий прогон `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- audit-bytecode-coverage`;
+- итоговый отчёт сохранён в `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-coverage-audit-20260502-084637.txt`.
+
+Решение:
+- считать полуавтоматический аудит встроенным служебным инструментом проекта для дальнейшей синхронизации списка built-in, VM-покрытия, sample-слоя и manual-индекса;
+- считать следующий обнаруженный долг не байткодным, а справочно-навигационным: нужно закрыть отсутствующие ARRAY-entry в `docs/manual/scripts/search-index.js` и отдельно решить, какие ссылки временно вести на старую обзорную страницу `docs/manual/arrays-and-builtins.html`, а какие уже переносить в текущие страницы массива.
+
+Следующий шаг:
+- обновить `docs/manual/scripts/search-index.js` по недостающим ARRAY built-in и затем повторно прогнать `audit-bytecode-coverage`;
+- после этого использовать новый аудит как обязательную служебную проверку при следующих задачах по built-in, Bytecode VM и покрытию реестра.
+
+## Session 624 - 2026-05-02 08:50 - ARRAY-группа добавлена в manual-индекс и аудит built-in-покрытия стал зелёным
+
+Что сделано:
+- в `docs/manual/scripts/search-index.js` добавлены недостающие function-entry для ARRAY-группы: `ARRAYSLICE`, `ARRAYCLONE`, `ARRAYCONCAT`, `ARRAYFLATTEN`, `ARRAYRESHAPE`, `ARRAYFILL`, callback-подгруппа, search-подгруппа, а также `ARRAYREVERSE`, `ARRAYSORT`, `ARRAYTOSORTED`, `ARRAYTOREVERSED`, `ARRAYTAKE`, `ARRAYSKIP` и `ARRAYDISTINCT`;
+- для `ARRAYSLICE` индекс теперь указывает на актуальный адрес `arrays-functions.html#arrayslice`, а для функций, которые пока ещё фактически описаны через старую обзорную страницу `docs/manual/arrays-and-builtins.html`, поиск теперь хотя бы честно выдаёт функцию и ведёт на существующий справочный материал;
+- повторно запущен `audit-bytecode-coverage`, и новый отчёт в `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-coverage-audit-20260502-085012.txt` завершился полным `PASS`;
+- итоговый зелёный отчёт подтвердил синхронизацию всех четырёх слоёв: семантического списка built-in, поддержки `BytecodeVm`, `samples/functions/` и function-entry manual-индекса.
+
+Изменённые файлы:
+- docs/manual/scripts/search-index.js
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнён повторный прогон `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- audit-bytecode-coverage`;
+- итоговый отчёт сохранён в `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-coverage-audit-20260502-085012.txt` и завершился статусом `PASS`.
+
+Решение:
+- считать discoverability-слой manual по built-in-составу синхронизированным с текущим языком, sample-слоем и байткодным исполнением;
+- считать следующий оставшийся долг по ARRAY-теме уже не синхронизационным, а редакционным: часть функций всё ещё опирается на старую обзорную страницу `docs/manual/arrays-and-builtins.html`, и это нужно разбирать отдельно от задач по покрытию Bytecode VM.
+
+Следующий шаг:
+- вернуться к точечной досверке строк `docs/BYTECODE_COVERAGE.md`, где по-прежнему стоит `частично`, прежде всего по столбцу `Негативный паритет`;
+- отдельной задачей позднее решить, как структурно разнести ARRAY-функции со старой обзорной страницы по текущим страницам manual и навигации.
+
+## Session 625 - 2026-05-02 09:36 - отрицательный паритет built-in-групп в реестре переведён с частичного на адресно подтверждённый
+
+Что сделано:
+- в `docs/BYTECODE_COVERAGE.md` пересмотрен столбец `Негативный паритет` для built-in-групп, и там, где ранее стояло `частично` только из-за неявной групповой уверенности, статус переведён в `да` на основании уже существующих адресных тестов;
+- по массивным built-in в примечания добавлены явные отрицательные VM- и execution-опоры: `Execute_CompiledPureArrayBuiltinsReportArgumentErrors()`, `Execute_CompiledPureArrayBuiltinsReportUnallocatedSource()`, `Execute_CompiledMutatingArrayBuiltinsReportUnallocatedSource()`, `Execute_CompiledMutatingArrayBuiltinsReportEmptyPop()`, `Execute_CompiledMutatingArrayBuiltinsReportInvalidInsertIndex()`, `Execute_CompiledArraySearchBuiltinsReportUnallocatedSource()`, `Execute_CompiledArrayCallbackBuiltinsReportEmptyFunctionValue()`, а также `Run_WithBytecodeMode_ReportsPureArrayBuiltinArgumentError()`, `Run_WithBytecodeMode_ReportsMutatingArrayBuiltinArgumentError()` и `Run_WithBytecodeMode_ReportsArraySearchBuiltinRuntimeError()`;
+- по строковым и regex-группам добавлены явные отрицательные опоры `Execute_CompiledStringBuiltinsReportArgumentErrors()`, `Execute_CompiledChrReportsInvalidCode()`, `Execute_CompiledStringArrayBuiltinReportsEmptySeparator()`, `Execute_CompiledRegexScalarBuiltinReportsInvalidArgument()`, `Execute_CompiledRegexArrayBuiltinReportsInvalidMode()`, а также execution-тесты `Run_WithBytecodeMode_ReportsStringBuiltinArgumentError()`, `Run_WithBytecodeMode_ReportsStringArrayBuiltinArgumentError()`, `Run_WithBytecodeMode_ReportsRegexScalarBuiltinArgumentError()` и `Run_WithBytecodeMode_ReportsRegexArrayBuiltinArgumentError()`;
+- по числовым, date/time- и файловым built-in-группам добавлены такие же адресные опоры через `Execute_CompiledNumericBuiltinsReportArgumentErrors()`, `Execute_CompiledDateTimeBuiltinsReportArgumentErrors()`, `Execute_CompiledFileSystemBuiltinReportsMissingFile()`, `Execute_CompiledOpenFileReportsClosedFileRead()` и соответствующие execution-проверки `Run_WithBytecodeMode_ReportsNumericBuiltinArgumentError()`, `Run_WithBytecodeMode_ReportsDateTimeBuiltinArgumentError()`, `Run_WithBytecodeMode_ReportsFileSystemRuntimeFailureFromVm()` и `Run_WithBytecodeMode_ReportsOpenTextFileRuntimeFailureFromVm()`.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- дополнительные сборка и тесты не запускались, потому что этот шаг был документным и опирался на уже существующие адресные автотесты в `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` и `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`.
+
+Решение:
+- считать built-in-слой реестра по отрицательному паритету в основном доведённым до адресного состояния;
+- считать следующий рабочий остаток по столбцу `Негативный паритет` уже в первую очередь операторным и языкоформенным, а не built-in-слоем.
+
+Следующий шаг:
+- пройти следующим крупным блоком по языковым формам и операторам, где `Негативный паритет` всё ещё стоит как `частично`: выражения, объявления, ввод-вывод, файловые операторы, ветвления, циклы, процедуры, замыкания и пользовательские типы;
+- отдельно не забывать про будущую редакционную консолидацию `docs/manual/arrays-and-builtins.html`, но держать её вне задач по покрытию отрицательного паритета.
+
+## Session 626 - 2026-05-02 09:41 - операторный слой coverage-реестра доведён до адресного состояния, кроме отдельного хвоста по замыканиям
+
+Что сделано:
+- в `docs/BYTECODE_COVERAGE.md` пересмотрены верхние строки по операторам и языковым формам, и там, где раньше стояло широкое `частично`, теперь добавлены конкретные отрицательные опоры и выставлен статус `да`;
+- по выражениям добавлены адресные опоры на `Execute_ReportsDivisionByZero()`, `Execute_ReportsDivisionByZeroForIntegralOperators(...)`, `Execute_ReportsIntegerArithmeticOverflow()`, `Execute_ReportsLongArithmeticOverflow()`, `Execute_ReportsDoubleArithmeticOverflow()`, `Execute_CompiledProgramReportsDivisionByZeroWithSourceLocation()`, `Execute_CompiledIntegralDivisionReportsDivisionByZero()`, `Run_ReturnsRuntimeFailure()`, `Run_ReturnsRuntimeFailureForNumericOverflow(...)` и `Run_ReturnsSemanticFailureForBooleanOrderedComparison()`;
+- по `DIM`/`CONST` и массивному объявлению добавлены адресные semantic- и runtime-опоры через `Run_ReturnsSemanticFailureAndDoesNotExecute()`, acceptance-ошибки `undeclared_variable`, `dim_requires_type_or_initializer`, `fixed_string_error`, а также interpreter/VM-тесты `Execute_RedimOnArrayViewReportsBuiltinArgumentDiagnostic()`, `Execute_EraseOnArrayViewReportsBuiltinArgumentDiagnostic()`, `Execute_RedimRejectsNonCanonicalEmptyRange()`, `Execute_DimRejectsMinimumIntegerLowerBound()`, `Execute_CompiledRedimOnArrayViewReportsBuiltinArgumentDiagnostic()`, `Execute_CompiledEraseOnArrayViewReportsBuiltinArgumentDiagnostic()` и `Execute_CompiledUnallocatedArrayAccessReportsRuntimeState()`;
+- по `PRINT USING`, `INPUT`, `OPEN`/`CLOSE`, ветвлениям, циклам, процедурам/функциям и `TYPE` в реестр добавлены соответствующие адресные отрицательные тесты из `InterpreterTests`, `BytecodeVmTests`, `ExecutionPipelineTests` и `AcceptanceProgramTests`;
+- единственным осознанно оставленным `частично` в верхнем слое осталась строка по замыканиям и захвату внешних локалей: позитивное покрытие и VM-путь есть, но отдельная адресная отрицательная проверка именно по этой сущности пока не выделена.
+
+Изменённые файлы:
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- дополнительные сборка и тесты не запускались, потому что шаг был документным и опирался на уже существующие адресные тесты в `tests/Axiom.Runtime.Tests/InterpreterTests.cs`, `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`, `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` и `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`.
+
+Решение:
+- считать отдельную фазу приведения `docs/BYTECODE_COVERAGE.md` в актуальное рабочее состояние по сути завершённой;
+- дальше обновлять реестр только вместе с реальными задачами по коду, а не продолжать самостоятельные проходы по документу.
+
+Следующий шаг:
+- вернуться к ускорению `BytecodeVm` и снова брать следующий горячий участок по свежим профилям `mixed_workload_pipeline.axm` и `string_array_loop_pipeline.axm`;
+- отдельно в хвосте оставить только два не-блокирующих остатка: редакционную консолидацию `docs/manual/arrays-and-builtins.html` и адресную отрицательную проверку по замыканиям.
+
+## Session 627 - 2026-05-02 09:52 - пакетное ускорение no-location built-in и строковых identity-путей в BytecodeVm
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.cs` переработан внутренний слой диспетчеризации built-in: для `Nullary/Unary/Binary/TernaryNoLocation` VM теперь использует отдельные arity-варианты и прямые no-location делегаты без фиктивного `TextLocation` и без лишней переходной обвязки;
+- на этот путь переведены несколько частых scalar built-in без использования location: `TRIM`-варианты по символам, `REVERSE`, `INSTR`, `INSTRREV`, `JOIN`, `VAL`, `LCASE`, `UCASE` и смежные no-location-вызовы;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.Fill.cs` добавлены быстрые возвраты исходного `RuntimeValue` для `PADLEFT`, `PADRIGHT` и `CENTER`, когда ширина не требует изменения строки, при сохранении прежней валидации `fill`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs` добавлены быстрые built-in-пути для `REVERSE`, `LCASE`, `UCASE` и `JOIN` с возвратом исходного значения в no-op-случаях и одноэлементном массиве;
+- в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` и `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` расширены проверки на no-op-случаи `PADLEFT`/`PADRIGHT`/`CENTER` и на одноэлементный `JOIN`.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs
+- src/Axiom.Runtime/Execution/BytecodeVm.cs
+- src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs
+- src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.Fill.cs
+- tests/Axiom.Runtime.Tests/InterpreterTests.cs
+- tests/Axiom.Runtime.Tests/BytecodeVmTests.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 3 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-1.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 3 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-1.txt`
+  - повторный контроль `mixed`: `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-2.txt`
+
+Результат замеров:
+- `string_array_loop_pipeline.axm`: `0.514x` runtime и `0.718x` total в `axiom-engine-compare-string-20260502-1.txt`;
+- `mixed_workload_pipeline.axm`: на коротком прогоне `0.793x` runtime и `0.896x` total, на повторном прогоне из 5 итераций `0.700x` runtime и `0.891x` total в `axiom-engine-compare-mixed-20260502-2.txt`;
+- профиль эффекта получился честно смешанным: строковый сценарий заметно выиграл, а `mixed` улучшился не так резко и остаётся шумным, хотя всё ещё устойчиво быстрее интерпретатора.
+
+Решение:
+- считать шаг удачным как системное снижение накладных расходов `CallBuiltin` и как полезное усиление строкового горячего пути;
+- считать, что следующий прирост уже логичнее искать не в очередной одиночной строковой функции, а в следующем общем слое частых scalar built-in или в другой горячей группе `mixed`.
+
+Следующий шаг:
+- продолжить ускорение `BytecodeVm` следующим пакетным шагом по общему пути built-in, а не возвращаться к документным проходам;
+- отдельно проверить, какие ещё частые built-in можно безопасно перевести на прямой no-location-вызов, и не сместился ли главный остаточный узкий участок `mixed` в массивные callback-builtins или ветвления.
+
+## Session 628 - 2026-05-02 09:57 - no-location-путь расширен на текущие date/time built-in и простые предикаты
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs` на `NullaryNoLocation` переведены `RND`, `DATE`, `TIME`, `NOW`, `UTCDATE`, `UTCTIME`, `UTCNOW`, `TIMER`, `UTCOFFSET`;
+- там же на `UnaryNoLocation` переведены `ISDATE` и `ISOPEN`;
+- обновлены рабочие документы `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`, чтобы зафиксировать новый охват и контрольные замеры.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-3.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-2.txt`
+
+Результат замеров:
+- `mixed_workload_pipeline.axm`: `0.703x` runtime и `0.882x` total в `axiom-engine-compare-mixed-20260502-3.txt`;
+- `string_array_loop_pipeline.axm`: `0.599x` runtime и `0.798x` total в `axiom-engine-compare-string-20260502-2.txt`;
+- шаг оказался скорее стабилизирующим и системным: сильного нового скачка нет, но общий путь built-in ещё немного облегчается без потери корректности.
+
+Решение:
+- считать пакет полезным продолжением общей стратегии снятия накладных расходов `CallBuiltin`;
+- считать, что следующий заметный прирост уже может лежать либо в следующем остатке scalar built-in, либо за пределами built-in-диспетчеризации как таковой.
+
+Следующий шаг:
+- продолжить анализ оставшихся scalar built-in, где `location` пока ещё протаскивается формально;
+- если эффект на `mixed` перестанет меняться, переключиться на другой общий участок `BytecodeVm`, а не продолжать бесконечную микроразметку строкового слоя.
+
+## Session 629 - 2026-05-02 10:03 - быстрые сравнения и условные переходы упрощены для смешанного сценария
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` быстрый путь сравнительных переходов переведён на прямой булев helper: `ExecuteComparisonJumpInstruction(...)` больше не создаёт промежуточный `RuntimeValue(Boolean)` и не извлекает его обратно через `GetBooleanUnchecked(...)`;
+- на тот же helper переведён `ExecuteCompareGreaterInstruction(...)`;
+- helper быстрых сравнений унифицирован: добавлена явная проверка совпадения типов и переход на unchecked-доступоры (`GetIntegerUnchecked`, `GetLongUnchecked`, `GetDoubleUnchecked`, `GetDecimalUnchecked`, `GetStringUnchecked`) вместо более тяжёлых `As...()` в самом горячем пути;
+- старый `TryEvaluateHotCompareGreater(...)` после этого удалён как лишний.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-4.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-3.txt`
+
+Результат замеров:
+- `mixed_workload_pipeline.axm`: `0.711x` runtime и `0.834x` total в `axiom-engine-compare-mixed-20260502-4.txt`;
+- `string_array_loop_pipeline.axm`: `0.617x` runtime и `0.809x` total в `axiom-engine-compare-string-20260502-3.txt`;
+- шаг хорошо попал именно в общий управляющий слой `mixed`: runtime меняется умеренно, зато total-отношение стало заметно лучше относительно предыдущего замера `0.882x`.
+
+Решение:
+- считать это первым осмысленным выходом за пределы built-in-диспетчеризации в сторону общего пути ветвлений и сравнений;
+- считать, что следующий заметный выигрыш вероятнее искать либо в оставшемся jump/comparison-слое, либо в плотных массивных цепочках `ARRAY...`, а не снова в одиночных строковых built-in.
+
+Следующий шаг:
+- посмотреть на `JumpIfTrue`/`JumpIfFalse` и соседние ветки общего управляющего пути, не осталось ли там такой же лишней обвязки;
+- альтернативно, если нужен следующий более крупный пакет по данным сценариям, брать массивные callback- и mutating-builtins, которые в `mixed` и `string_array_loop` вызываются очень часто.
+
+## Session 630 - 2026-05-02 14:31 - соседние JumpIfTrue и JumpIfFalse переведены на прямой стековый путь
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` `Opcode.JumpIfTrue` и `Opcode.JumpIfFalse` больше не идут через общий `PopValue(...)`, а вынесены в отдельный `ExecuteJumpIfBooleanInstruction(...)` с прямым `frame.EvaluationStack.Pop()` и прямой булевой проверкой;
+- это добирает соседний jump-слой рядом с уже упрощёнными сравнительными переходами и выравнивает его по стоимости с другими горячими стековыми инструкциями, которые в VM давно работают без общей проверочной обвязки;
+- обновлены `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`, чтобы зафиксировать новый статус управляющего пути и следующий сдвиг фокуса на массивные цепочки.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-5.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-4.txt`
+
+Результат замеров:
+- `mixed_workload_pipeline.axm`: `0.714x` runtime и `0.851x` total в `axiom-engine-compare-mixed-20260502-5.txt`;
+- `string_array_loop_pipeline.axm`: `0.523x` runtime и `0.738x` total в `axiom-engine-compare-string-20260502-4.txt`;
+- шаг подтверждает, что соседний jump-слой уже в основном дочищен: локальный выигрыш есть, но следующий крупный прирост вероятнее искать уже в плотных массивных цепочках, а не в дальнейшем дроблении одиночных булевых переходов.
+
+Решение:
+- считать локальную расчистку общего jump/comparison-пути завершённой до разумной глубины;
+- следующий крупный пакет ускорения переносить в массивный слой `ARRAY...`, а не продолжать выжимать мелкие проценты из одиночных булевых переходов.
+
+Следующий шаг:
+- перейти к короткому профилирующему обзору плотных `ARRAY...`-цепочек в `mixed_workload_pipeline.axm` и `string_array_loop_pipeline.axm`;
+- после этого брать следующий пакетный разгон уже по часто повторяющейся массивной группе, а не по одному opcode.
+
+## Session 631 - 2026-05-02 15:14 - 1D-массивный пакет переведён на прямые копирования и сдвиги
+
+Что сделано:
+- в `src/Axiom.Runtime/Values/RuntimeArrayValue.cs` добавлены прямые 1D-пути `TryCopyOneDimensionalRangeTo(...)` и `TryMoveOneDimensionalRange(...)`, а также удешевлены `Clone()` и `AllocatePreserving(...)` для плотного одномерного случая;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs` на эти пути переведены `ARRAYCLONE`, `ARRAYCONCAT`, `ARRAYTAKE`, `ARRAYSKIP`, а также 1D-сдвиги для `ARRAYINSERT` и `ARRAYREMOVE`;
+- обновлены `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`, чтобы зафиксировать новый профиль горячей массивной группы и следующий шаг.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs
+- src/Axiom.Runtime/Values/RuntimeArrayValue.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- по ходу проверки был один неудачный параллельный запуск `dotnet test` и один неудачный параллельный запуск `compare-engines`, оба упёрлись в общий `.artifacts\obj`; после этого проверки и замеры повторены строго последовательно, как требует репозиторий;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-5.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-6.txt`
+
+Результат замеров:
+- `mixed_workload_pipeline.axm`: `0.680x` runtime и `0.826x` total в `axiom-engine-compare-mixed-20260502-6.txt`;
+- `string_array_loop_pipeline.axm`: `0.593x` runtime и `0.736x` total в `axiom-engine-compare-string-20260502-5.txt`;
+- пакет попал именно в тот слой, который нужен: после локальной расчистки jump/comparison-пути следующий заметный выигрыш снова пришёл из плотной 1D-цепочки `ARRAY...`.
+
+Решение:
+- считать пакет удачным крупным шагом по массивному слою `BytecodeVm`, а не локальной микроправкой одной функции;
+- дальше продолжать ускорение уже внутри оставшихся горячих массивных цепочек, а не возвращаться к строкам или к исчерпанному jump-слою.
+
+Следующий шаг:
+- посмотреть, какой из соседних массивных пакетов теперь даёт следующий измеримый эффект: `ARRAYPUSH`/`ARRAYPOP`, остаточные copy-heavy куски 1D-мутаторов или callback-массивные built-in;
+- после выбора кандидата делать следующий пакет снова крупно и подтверждать его теми же двумя сценариями `mixed_workload_pipeline.axm` и `string_array_loop_pipeline.axm`.
+
+## Session 632 - 2026-05-02 16:18 - `ARRAYPUSH` и `ARRAYPOP` добраны прямым append/remove-last путём
+
+Что сделано:
+- в `src/Axiom.Runtime/Values/RuntimeArrayValue.cs` добавлены `TryAppendOneDimensional(...)` и `TryPopOneDimensional(...)` для корневого одномерного массива без перехода через общий путь переразмещения;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs` 1D-ветки `ARRAYPUSH` и `ARRAYPOP` переведены на эти быстрые пути с сохранением отката к общему механизму на случай неподходящей формы массива;
+- обновлены `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`, чтобы зафиксировать честный эффект этого шага и следующую точку приложения усилий.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs
+- src/Axiom.Runtime/Values/RuntimeArrayValue.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-6.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-7.txt`
+
+Результат замеров:
+- `string_array_loop_pipeline.axm`: `0.560x` runtime и `0.758x` total в `axiom-engine-compare-string-20260502-6.txt`;
+- `mixed_workload_pipeline.axm`: `0.694x` runtime и `0.828x` total в `axiom-engine-compare-mixed-20260502-7.txt`;
+- шаг полезен как локальное удешевление конца mutating-цепочки, но уже не даёт такого же сильного интегрального скачка, как предыдущий пакет по прямому копированию диапазонов и сдвигам.
+
+Решение:
+- считать `ARRAYPUSH`/`ARRAYPOP`-пакет завершённым и не дробить его дальше на ещё более мелкие оптимизации;
+- основной следующий выигрыш искать уже в соседнем массивном слое, а не возвращаться к строкам или к доработке jump-пути.
+
+Следующий шаг:
+- определить следующий остаточный горячий массивный пакет для `mixed_workload_pipeline.axm`: callback-builtins или другой copy-heavy участок `ARRAY...`;
+- после выбора снова делать крупный пакет и проверять его теми же двумя адресными сценариями.
+
+## Session 633 - 2026-05-02 16:23 - 1D-индексирование массива переведено на быстрый успешный путь
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs` для `LoadElement` и `StoreElement` добавлен быстрый 1D-путь, который в успешном случае работает без `ResolveLocation`, `ReadDebugName` и общего диагностического слоя;
+- если быстрый путь не подходит по типу индекса, форме массива или фактическому обращению, VM восстанавливает стек и откатывается в прежний медленный путь, так что пользовательское поведение и диагностика остаются прежними;
+- обновлены `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`, чтобы отразить новый горячий слой и его свежие замеры.
+
+Изменённые файлы:
+- src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs
+- docs/BYTECODE_COVERAGE.md
+- docs/PLANS3.md
+- docs/WORKLOG4.md
+
+Проверка:
+- первый прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` временно упал на компиляторной ошибке `CS0136` из-за пересечения локальных имён после рефакторинга; ошибка сразу исправлена;
+- после исправления выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` — 524 теста зелёные;
+- выполнен последовательный прогон `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` — 668 тестов зелёные;
+- выполнены контрольные замеры:
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_array_loop_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-20260502-7.txt`
+  - `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-8.txt`
+
+Результат замеров:
+- `string_array_loop_pipeline.axm`: `0.581x` runtime и `0.839x` total в `axiom-engine-compare-string-20260502-7.txt`;
+- `mixed_workload_pipeline.axm`: `0.653x` runtime и `0.818x` total в `axiom-engine-compare-mixed-20260502-8.txt`;
+- шаг хорошо попал именно в смешанный сценарий: после удешевления built-in-цепочки следующий заметный выигрыш пришёл из частого индексирования одномерных массивов внутри циклов.
+
+Решение:
+- считать успешный 1D-доступ к элементу новым разобранным горячим слоем VM;
+- дальше искать следующий прирост уже за пределами дочищенных массивных мутаций и базового индексирования.
+
+Следующий шаг:
+- определить следующий остаточный горячий путь после built-in-цепочки и индексирования: строковая сборка массива, callback-массивные built-in или другой повторяющийся VM-слой в `mixed_workload_pipeline.axm`;
+- после выбора снова делать пакетный шаг и подтверждать его теми же двумя адресными сценариями.
+
+## Session 634 - 2026-05-02 16:42 - систематизированы производительные сценарии и добавлены новые benchmark-семейства
+
+Что сделано:
+- добавлен новый постоянный реестр `docs/BYTECODE_PERF_MATRIX.md`, который разводит функциональное покрытие `BytecodeVm` и покрытие производительных сценариев;
+- `AGENTS.md` обновлён так, чтобы `docs/BYTECODE_PERF_MATRIX.md` входил в обязательный стартовый контекст и поддерживался в актуальном состоянии при изменении benchmark-семейств;
+- в `samples/smoke/engine-compare/` добавлены два новых адресных сценария: `array_callback_pipeline.axm` для callback-builtins массивов и `numeric_function_sweep.axm` для числовой группы built-in;
+- `src/Axiom.ManualChecks/Program.cs` обновлён: оба новых сценария включены в `compare-engines`;
+- `README.md` дополнен кратким описанием различия между обычными runnable sample, `engine-compare`-сценариями, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md`.
+
+Изменённые файлы:
+- `AGENTS.md`
+- `README.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `samples/smoke/engine-compare/array_callback_pipeline.axm`
+- `samples/smoke/engine-compare/numeric_function_sweep.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- ожидается последовательный прогон `Axiom.Runtime.Tests` и `Axiom.Execution.Tests`;
+- ожидаются адресные прогоны `compare-engines` для `array_callback_pipeline.axm` и `numeric_function_sweep.axm`.
+
+Решение:
+- считать `docs/BYTECODE_COVERAGE.md` реестром функциональной готовности байткодного пути, а `docs/BYTECODE_PERF_MATRIX.md` отдельным реестром производительных семейств и нагрузочных сценариев;
+- дальше возвращаться к ускорению VM уже по расширенной матрице сценариев, а не только по прежним строково-массивным нагрузкам.
+
+Следующий шаг:
+- прогнать новые benchmark-сценарии, зафиксировать их результаты в `.artifacts/manual-checks/` и после этого выбрать следующий кодовый слой оптимизации уже по более широкой матрице.
+
+## Session 635 - 2026-05-02 17:08 - ������������� ���������� ����� benchmark-��������� � ������ ��������� ��������� ��������� VM
+
+��� �������:
+- �������� ����� �������� benchmark-�������� `array_callback_pipeline.axm` � `numeric_function_sweep.axm` ����� `compare-engines`;
+- `docs/BYTECODE_COVERAGE.md` �������: callback-������� ���������� �� `�� ���������` � `������ ��������`, � �������� built-in �������� ����� �� ���������� ������ � ��������� � ���������� ��������;
+- `docs/BYTECODE_PERF_MATRIX.md` �������� ������������ ������������ ����� �������;
+- `docs/PLANS3.md` ������� ���, ����� ��������� ������� ��� ��� ����� �� � ��������� callback-��������.
+
+��������� �����:
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_callback_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-array-callback-20260502-1.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter numeric_function_sweep.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-numeric-20260502-1.txt`
+
+�������:
+- ������� �������� ���� ������������ ������� ��� ������� VM;
+- ������� callback-builtins �������� ��������� �������� ����� ������, ������ ��� �� ��������� �������� ��� ���� ���� ��������������.
+
+��������� ���:
+- ������� � ���� `BytecodeVm`, ����� ��������� ������� callback-�������� � ������� ������ �������� ��� �� ����������� ������ callback-������� � ������ ���������.
+
+## Session 636 - 2026-05-02 17:15 - callback-builtins �������� ������ 1D-�����, �� ��������� ����� ���� �������� � ������ �������
+
+��� �������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs` ��� `ARRAYEVERY`, `ARRAYSOME`, `ARRAYFILTER`, `ARRAYMAP`, `ARRAYREDUCE` ��������� ������ 1D-����� ��� ������ ������ ������� ��������;
+- callback-������ ������ ���� built-in ���������� � `params RuntimeValue[]` �� ������ ����- � ��������������� `ReadOnlySpan<RuntimeValue>`-����;
+- `docs/BYTECODE_COVERAGE.md` � `docs/BYTECODE_PERF_MATRIX.md` ��������� �� ����������� ����������� ����.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_callback_pipeline.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-array-callback-20260502-4.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-10.txt`
+
+�������:
+- ������� ����� �� 1D-������ � ������ `params` �������� ��� ������ ���������� ��������;
+- �� ������� ��� ����������� ��� callback-builtins ��� ���������� ���������, ������ ��� �������� benchmark �� ��� ���� ��������������;
+- ��������� ���� ������ � ��������� `InvokeBytecodeFunction` � �������� `BytecodeCallFrame` �� ������ ��������� callback-��������.
+
+��������� ���:
+- ������� � `BytecodeVm.cs` � `BytecodeCallFrame.cs`, ����� ������������� ��������� � ������������� �� ������ callback-����� � ����� ��������� ����� ��������� ��� ���.
+
+## Session 637 - 2026-05-02 17:18 - callback-������� �������� ���� �������� �� ���� ����������������� ������ ��� �������
+
+��� �������:
+- � `src/Axiom.Bytecode/Model/BytecodeRoutine.cs` ����������� ������ ������� ����� ������� � ������� `16` �� �������� ������ ������� `1`, ����� ��������� callback-������� �� �������� �������� �������� ���� ����������;
+- � `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs` �������� `Clear()` ��� ����������� ����������������� �����;
+- � `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` �������� ������� `shared locals` � `ResetNoLocals(...)` ��� ������ ��� �������;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` ��������� ����������� � ��������� ������������� ������ ��� ������� �� `routine.Id`;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������� �� ����� ����������� ������.
+
+��������� �����:
+- `src/Axiom.Bytecode/Model/BytecodeRoutine.cs`
+- `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs`
+- `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_callback_pipeline.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-array-callback-20260502-5.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-12.txt`
+
+�������:
+- ������� callback-builtins �������� ������������ � ���������� ����: ����� `0.901x` runtime / `0.903x` total �� �������� ��������;
+- ������� ��������� ������ ��� ����� �����: ������ ����������, �������� �������� ������� � ��������� ���� ������ ��������� �������.
+
+��������� ���:
+- ���� ���������� ����������� � ����� ���� ������� � ��������, ���� ����� ��������� benchmark-��������� �� `docs/BYTECODE_PERF_MATRIX.md`, ��� ������� VM ��� �� ����� ���������.
+
+## Session 638 - 2026-05-02 17:21 - callback-������ �������� ����� ����������� ������ ������ �� bytecode-���������
+
+��� �������:
+- � `src/Axiom.Runtime/Values/RuntimeFunctionValue.cs` ��������� ��������� ������ ������ �� `BytecodeRoutine` ������ �������� �������;
+- � `src/Axiom.Runtime/Values/RuntimeValue.cs` �������� overload `FromBytecodeFunction(BytecodeRoutine, BytecodeVariableSlot[])`;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` `LoadFunctionValue(...)` ������ ������ function-value � ������ ������� �� `BytecodeRoutine`, � `InvokeBytecodeFunction(...)` ������� ���������� � � ������ �����, ��� �������������, ������������ � `_routinesBySymbol`;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������� �� ����� ����������� ������.
+
+��������� �����:
+- `src/Axiom.Runtime/Values/RuntimeFunctionValue.cs`
+- `src/Axiom.Runtime/Values/RuntimeValue.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_callback_pipeline.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-array-callback-20260502-7.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-14.txt`
+
+�������:
+- ������� ����� callback-���� ��� ������� �����������: �������� callback-benchmark ������ ����� `0.876x` runtime / `0.883x` total;
+- ������� ������� callback-���� ��� ������ ����������� � ������ ��������, ���������� �� ����������� � ������� ����������, ��� ������������� �� ��������� benchmark-���������.
+
+��������� ���:
+- ���� ���� � ��������� ���������� ����������� ������ � �������� �������� �������, ���� ����� ��������� ��������� �� `docs/BYTECODE_PERF_MATRIX.md`, ��� ��� ��� ������ ���������� �������� VM.
+
+## Session 639 - 2026-05-02 17:30 - ��������� �������� callback-function-value ����� ����� �� ������� �����
+
+��� �������:
+- � `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` �������� ��� ����������� �������� ������� �� `routineId`;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` `LoadFunctionValue(...)` ������ ������� ���������� ���� ��� � ������ ����� �������� ��������� ����������� ����� � ������ ����� �������� �������;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������� �� ����� �������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_callback_pipeline.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-array-callback-20260502-8.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-15.txt`
+
+�������:
+- ������� ��������� ���������� ����������� ������ � ��������� �������� callback-function-value � ����� � ��� �� ������� ����� ����������� ������ ��� ��������� ���������;
+- ������� callback-���� ��� ������ �����������: �������� benchmark ������ ����� `0.821x` runtime / `0.824x` total.
+
+��������� ���:
+- ���� ����������� ��� ������ � ������������ ��������� � built-in function-value, ���� ������������� �� ������ benchmark-��������� �� `docs/BYTECODE_PERF_MATRIX.md`.
+## Session 640 - 2026-05-02 19:13 - closure formation ��������, ��������� ���� � ������� �������� � ��������� benchmark
+
+��� �������:
+- � `src/Axiom.ManualChecks/Program.cs` �������� ����� �������� �������� `samples/smoke/engine-compare/date_time_calendar_pipeline.axm` ��� ����������������� built-in ���� � �������;
+- � ����� `date_time_calendar_pipeline.axm` ����� ������� ������� ���������� �������� ��������� `DAYSINMONTH(year, month)` � `ISLEAPYEAR(year)`, ����� benchmark ������� ������� ����, � �� ������ � �������������� ��������;
+- �������� �������� ���� ������������ callback-��������� � `BytecodeVm`: user function-value ��� ���������� �� ������� �����, ������� ��������� ���������� ����������� ������ � �������� �����, � built-in function-value ���� ������� ��������� �������������� ���� ��� ������������ �����������.
+
+��������� �����:
+- `src/Axiom.ManualChecks/Program.cs`
+- `samples/smoke/engine-compare/date_time_calendar_pipeline.axm`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter date_time_calendar_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-date-time-20260502-1.txt`
+
+�������:
+- ������� closure formation ��� callback-���� ��� � �������� �����������: �������� ������ ��� ���� ���������� ����� user function-value �� ������� �����;
+- ������� ����������������� ��������� ���� � ������� ����������� � ��������� ���������� ���� � ����������� ����� `0.651x` runtime / `0.656x` total;
+- built-in function-value �������� ��� ��������������� ���������� �� ��������� ���������� ����������� �������.
+
+��������� ���:
+- ������������� �� ��������� benchmark-��������� �� `docs/BYTECODE_PERF_MATRIX.md`, ��� ���� ��� ������ �� ���������� ���������� ��������� ��� �������� VM;
+- ������ ���������� ������� ����������� ���� � ����������� � �������.
+## Session 641 - 2026-05-02 19:19 - ����������� ���� ������� � ��������� benchmark � ������� ���������� ��������
+
+��� �������:
+- � `samples/smoke/engine-compare/control_flow_branch_maze.axm` �������� �������� ����������������� �������� ��� `FOR`, `WHILE`, `DO ... LOOP`, `IF/ELSEIF` � `SELECT CASE` � ����������� ������������ �� ������ built-in;
+- � `src/Axiom.ManualChecks/Program.cs` `compare-engines` ��������������� ����� �������� ��� ��������� benchmark-��������� ������������ ����;
+- `docs/BYTECODE_PERF_MATRIX.md` � `docs/BYTECODE_COVERAGE.md` ��������� ���, ����� ��������� � ����� ������ �� ��������� ������ �������� ���������� �����.
+
+��������� �����:
+- `src/Axiom.ManualChecks/Program.cs`
+- `samples/smoke/engine-compare/control_flow_branch_maze.axm`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter control_flow_branch_maze.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-control-flow-20260502-1.txt`
+
+�������:
+- ������� ����������� ���� ����������� � ��������� ���������� ���������;
+- ������� ��� ��������� ������ ���������� �� ������� �����������, ������ ��� �������� benchmark ������� ����� `1.042x` runtime / `1.043x` total, �� ���� VM ����� ���� ������� ���� ��������������.
+
+��������� ���:
+- ���� � ��� `BytecodeVm` � ��������� ��������� �������� ���������, �������� jump-����� � �������� ������� ������� ��������;
+- ����� ������� ������ ����� �������� `control_flow_branch_maze.axm`, � ����� `mixed_workload_pipeline.axm`.
+## Session 642 - 2026-05-02 19:22 - equality-������ ��������, ����������� � metadata-���� ������� ��������� ��������
+
+��� �������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` fast-path ������������� ��������� �������� �� `CompareEqual` � `CompareNotEqual`, ������� `JumpIfEqual` � `JumpIfNotEqual` ������ �� ������ � ����� `Compare(...)` ��� ���������� ��������;
+- `samples/smoke/engine-compare/control_flow_branch_maze.axm` �������� ������� ����� ���� ������ � ������� ������� ������������ ���� ���� ��������;
+- `samples/smoke/engine-compare/high_rank_metadata.axm` ������ �� ������� �������� smoke-�������� �� �������������� metadata-benchmark, ����� ���� ����������� metadata-���� ���� ������� ������� ��������� �����;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ���������������� � ������ ��������� ��������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `samples/smoke/engine-compare/control_flow_branch_maze.axm`
+- `samples/smoke/engine-compare/high_rank_metadata.axm`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter control_flow_branch_maze.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-control-flow-20260502-2.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter mixed_workload_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-mixed-20260502-16.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter high_rank_metadata.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-high-rank-20260502-2.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+�������:
+- ������� ����������� ���� �������� �� �������� ������: ����� fast-path ��� equality-������� �� �������� ����� `0.894x` runtime / `0.913x` total;
+- ������� ����������� metadata-���� ���� �������� �� ���������� ��������: ��������� `high_rank_metadata.axm` �������� ����� `0.540x` runtime / `0.563x` total;
+- ������� ��������� ���������������� ������� ��� �� ����� ��������� fast-path � VM, � ���������� benchmark-harness ��� ��� ��������, ������� ���� ���������� ������������� ��� ������.
+
+��������� ���:
+- ���� ���������� ����� benchmark-��������, ���� � `compare-engines` � ��������� ��������� scripted input ��� ��������������� �������� �������;
+- ������ ��� ����� ���������� ������� ������������ � built-in function-value ��� ������� ��� ��������� VM-����.
+## Session 643 - 2026-05-02 19:32 - scripted input �������� � compare-engines, ��������� INPUT ������� �������� ��������
+
+��� �������:
+- � `src/Axiom.ManualChecks/Program.cs` benchmark-harness ������� ��������� scripted input ����� `BenchmarkCase.InputLines` � ��������� `QueueInputProvider`;
+- �������� �������� �������� `samples/smoke/engine-compare/input_record_intake.axm`, ������� ��������� `INPUT`, ������ ���������� ��������, �������������� `INTEGER`, `IF/ELSEIF` � `SELECT CASE` ����� ������ ������;
+- � `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` acceptance-������ ������� ��� �� ����� ������� ����� ��� ������ sample, ����� �������������� �������� `samples/` �� ��������;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������� �� ������ benchmark-���������.
+
+��������� �����:
+- `src/Axiom.ManualChecks/Program.cs`
+- `samples/smoke/engine-compare/input_record_intake.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter input_record_intake.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-input-20260502-1.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+�������:
+- ������� ����������� harness �� `INPUT` ������: scripted input ������ ��������� ����� � `compare-engines`;
+- ������� `INPUT` ����� ��������� benchmark-���������� � ������� ����������� ����� `1.116x` runtime / `1.062x` total, �� ���� ��� ��� �� ������ ����, � �������� �������� �� ���������� ���������.
+
+��������� ���:
+- ���� ���� � VM-���� `INPUT` � ���������� ������ multi-input � �������������� ��������;
+- ���� ��������� harness ��� ���, ��� ��� ��������������� �������� �������, ����� �������� `DATE` / `TIME` / `NOW` ����� �� �������� ���������.
+## Session 644 - 2026-05-02 21:26 - compare-engines ������� ����������� ����, current-time benchmark ������ ������ �������
+
+��� �������:
+- � `src/Axiom.Execution/Requests/ExecutionRequest.cs` �������� �������������� `IRuntimeClock`, � `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs` � `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs` ������ ����������� ��� � ���������� ����� �������;
+- � `src/Axiom.ManualChecks/Program.cs` benchmark-harness ������� `BenchmarkCase.RuntimeClock`, ��������� ���������� `FixedRuntimeClock` � ����������� ������ �������� `samples/smoke/engine-compare/current_time_snapshot.axm` � �������������� ������ � �������������� ������� ������;
+- � `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` ��������� �������� `Run_UsesProvidedRuntimeClockForCurrentDateTimeBuiltins()`, ����� `DATE`, `TIME`, `NOW`, `UTCDATE`, `UTCTIME`, `UTCNOW` � `TIMER` ������������ ���������� ���� ����������������;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ���������������� � ����� current-time benchmark.
+
+��������� �����:
+- `src/Axiom.Execution/Requests/ExecutionRequest.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs`
+- `src/Axiom.ManualChecks/Program.cs`
+- `samples/smoke/engine-compare/current_time_snapshot.axm`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter current_time_snapshot.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-current-time-20260502-1.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+�������:
+- ������� ����������� harness �� built-in �������� ������� ������: `compare-engines` ������ ����� ��������������� ��������� ���� � ������� ����;
+- ������� ������������ `DATE` / `TIME` / `NOW` �������� ��������� �������� ���������: `current_time_snapshot.axm` �������� ����� `0.497x` runtime / `0.569x` total � �� ������� ����������� VM-�����������.
+
+��������� ���:
+- ���� ���������� ����� ������������������, ������������ ��� �� � harness, � � VM-���� `INPUT`, ��� ����� ��������� ��������� �������� �� ��� ����� ��������� ����� ������������ ��������������;
+- ����� ���������� harness ������ ������ ��� ��������� ���������� ������� ���������������� benchmark-���������.
+## Session 645 - 2026-05-03 07:42 - INPUT � BytecodeVm ��������� � ����� ���� ��������
+
+��� �������:
+- � `src/Axiom.Runtime/Execution/BytecodeVm.cs` �������� ��� `INPUT`-���������� �� ���� `(routine-id, instruction-index)`, ����� ��������� �������� ���� �� ����������� ������ �� �� ���� � prompt;
+- � `src/Axiom.Runtime/Execution/BytecodeVm.Input.cs` �������� ������ `INPUT` �������� � `Split(',')` �� ������ �� `ReadOnlySpan<char>` � ����������� ������ ��������� ������������ ����� � ��� �������������� ������� �����;
+- ����� �������� ��������� �� ����������� `INPUT` ������ �������� ������ ������������� � �������� ��������� acceptance-�������;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������� ��� ����� ���������.
+
+��������� �����:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Input.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter input_record_intake.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-input-20260503-1.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter input_record_intake.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-input-20260503-2.txt`
+
+�������:
+- ������� ������ ���������������� ���� �� `INPUT` ��������: ��������� �������� ������ �������� ����� `0.892x` runtime / `0.928x` total;
+- ������� ��������� ������� ��� �� ���������� ����������� �����, � ���������� ������� �� ��� ��������� ���������, ���� �� �������� ����� ���������� ������.
+
+��������� ���:
+- ���� ���������� �� benchmark-�����, �������� ��������� �������� ��� `PRINT` / `PRINT USING` ��� ������ ���� �������� �������� ����;
+- ��������� VM-������ ����� ������ ������ ����� ������ ������� ������ ��� ������� �������.
+## Session 646 - 2026-05-03 07:52 - PRINT � PRINT USING �������� �������� benchmark � ������� ��� ���� ��������� ���� �������
+
+��� �������:
+- � `samples/smoke/engine-compare/` �������� �������� `print_output_gallery.axm`, ������� ��������� ������� `PRINT`, ������ ������ � `;` � `,`, � ����� ��������� � �������� ����� `PRINT USING`;
+- � `src/Axiom.ManualChecks/Program.cs` ����� �������� ��������������� � `compare-engines`, ��� ��� ����� ������ �������� ��������, � �� ������ ��� �������� ����� `mixed` � ��������� ���������;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` � `docs/WORKLOG4.md` ��������� ��� ����� �������� benchmark ������.
+
+��������� �����:
+- `samples/smoke/engine-compare/print_output_gallery.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+��������:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter print_output_gallery.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-print-20260503-1.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+
+�������:
+- ������� ��������� `PRINT` / `PRINT USING` �������� ��������� benchmark-���������: ������ ������ �������� ����� `0.941x` runtime / `0.955x` total;
+- �������, ��� �� ���� ���� ����� ������� ������� �� ������: ����� ��� ���� �������� � �� ������� ����������� VM-�����������.
+
+��������� ���:
+- ���� ���������� benchmark-�����, ������ ��������� ������� ������������ ��������� ��� ���������� � ���������� ������������� ��������;
+- ������� ����������� ����� ������ ������ ����� ������ ������� ������� �� benchmark ��� �������.
+## Session 647 - 2026-05-03 08:11 - Harness получил детерминированный RND, а вероятностный benchmark закрыт напрямую
+
+Что сделано:
+- добавлен контракт `IRuntimeRandom`, а `IRuntimeHost`, `NullRuntimeHost`, `ExecutionRequest`, `ExecutionRuntimeHostAdapter`, `AxiomExecutionPipeline`, интерпретатор и `BytecodeVm` переведены на общий абстрактный источник `RND` вместо локальных `Random` внутри движков;
+- в `src/Axiom.ManualChecks/Program.cs` `compare-engines` получил фабрику `RuntimeRandomFactory`, а в `samples/smoke/engine-compare/` добавлен новый сценарий `random_stream_snapshot.axm` с фиксированным зерном `24681357`;
+- в `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` добавлена детерминированная проверка `Run_UsesProvidedRuntimeRandomForRndBuiltin()`, а тестовые runtime-host реализаций в `InterpreterTests` и `BytecodeVmTests` доведены до нового контракта;
+- отдельным прогоном подтверждено, что `audit-bytecode-coverage` остаётся зелёным и после расширения benchmark-harness.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Host/IRuntimeRandom.cs`
+- `src/Axiom.Runtime/Host/IRuntimeHost.cs`
+- `src/Axiom.Runtime/Host/NullRuntimeHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.Numeric.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Numeric.cs`
+- `src/Axiom.Execution/Requests/ExecutionRequest.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs`
+- `src/Axiom.ManualChecks/Program.cs`
+- `samples/smoke/engine-compare/random_stream_snapshot.axm`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter random_stream_snapshot.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-rnd-20260503-1.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- audit-bytecode-coverage --out C:\Axiom\.artifacts\manual-checks\axiom-bytecode-coverage-audit-20260503-1.txt`
+
+Решение:
+- считать ограничение harness по `RND` снятым: теперь вероятностный слой измеряется честно и держится около `0.818x` runtime / `0.800x` total;
+- считать прямой числовой слой полностью закрытым отдельными сценариями, включая `RND`, без новой локальной просадки в VM.
+
+Следующий шаг:
+- если продолжать benchmark-линию, искать следующее новое семейство для адресного сценария или переходить к более широкому профильному аудиту реальных программ;
+- инфраструктурные расширения harness делать уже только при появлении новой детерминизационной дыры, а не заранее.

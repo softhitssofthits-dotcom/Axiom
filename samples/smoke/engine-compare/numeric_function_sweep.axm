@@ -1,0 +1,56 @@
+' Сравнительный сценарий: плотный проход по числовым built-in.
+' Нагружает тригонометрию, логарифмы, корни, округление и базовые числовые функции.
+
+DIM values(1 TO 360) AS DOUBLE
+DIM mainSum AS DOUBLE = 0
+DIM growthSum AS DOUBLE = 0
+DIM shapeSum AS DOUBLE = 0
+DIM hyperSum AS DOUBLE = 0
+
+FOR itemIndex = 1 TO ARRAYLENGTH(values)
+    values(itemIndex) = itemIndex / 7.0
+NEXT
+
+FOR roundIndex = 1 TO 24
+    FOR itemIndex = 1 TO ARRAYLENGTH(values)
+        DIM angle AS DOUBLE = (itemIndex MOD 89) / 100.0
+        DIM baseValue AS DOUBLE = values(itemIndex) + roundIndex / 10.0
+
+        mainSum = mainSum + ABS(SIN(angle))
+        mainSum = mainSum + ABS(COS(angle))
+        mainSum = mainSum + TAN(angle / 5.0)
+        mainSum = mainSum + ATN(angle)
+        mainSum = mainSum + ATN2(angle + 0.5, 1.5)
+        mainSum = mainSum + ASIN(angle)
+        mainSum = mainSum + ACOS(angle)
+
+        growthSum = growthSum + LOG(baseValue + 1.0)
+        growthSum = growthSum + LOG10(baseValue + 1.0)
+        growthSum = growthSum + LOG2(baseValue + 1.0)
+        growthSum = growthSum + SQR(baseValue + 2.0)
+        growthSum = growthSum + CBRT(baseValue + 2.0)
+        growthSum = growthSum + EXP(angle / 4.0)
+        growthSum = growthSum + POW(baseValue + 1.0, 0.5)
+
+        shapeSum = shapeSum + FLOOR(baseValue)
+        shapeSum = shapeSum + CEIL(baseValue / 2.0)
+        shapeSum = shapeSum + ROUND(baseValue / 3.0)
+        shapeSum = shapeSum + FIX(baseValue / 4.0)
+        shapeSum = shapeSum + MIN(baseValue, 25.0)
+        shapeSum = shapeSum + MAX(baseValue, 8.0)
+        shapeSum = shapeSum + CLAMP(baseValue, 5.0, 40.0)
+        shapeSum = shapeSum + SGN(SETSIGN(baseValue, -1.0))
+
+        hyperSum = hyperSum + ASINH(baseValue / 20.0)
+        hyperSum = hyperSum + ACOSH(baseValue / 20.0 + 1.0)
+        hyperSum = hyperSum + ATANH(angle / 2.0)
+        hyperSum = hyperSum + SINH(angle / 3.0)
+        hyperSum = hyperSum + COSH(angle / 3.0)
+        hyperSum = hyperSum + TANH(angle / 3.0)
+    NEXT
+NEXT
+
+PRINT INT(mainSum)
+PRINT INT(growthSum)
+PRINT INT(shapeSum)
+PRINT INT(hyperSum)

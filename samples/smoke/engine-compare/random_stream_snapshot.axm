@@ -1,0 +1,23 @@
+' deterministic benchmark for RND()
+' exercises repeated random generation while keeping identical output across engines
+
+DIM sumScaled AS LONG = 0
+DIM bucketChecksum AS LONG = 0
+DIM zigzag AS LONG = 0
+
+FOR i = 1 TO 240
+    DIM sample AS DOUBLE = RND()
+    DIM scaled AS LONG = INT(sample * 1000000)
+    sumScaled = sumScaled + scaled
+    bucketChecksum = bucketChecksum + INT(sample * 10)
+
+    IF i MOD 2 = 0 THEN
+        zigzag = zigzag + INT(sample * 1000)
+    ELSE
+        zigzag = zigzag - INT(sample * 1000)
+    END IF
+NEXT
+
+PRINT sumScaled
+PRINT bucketChecksum
+PRINT zigzag

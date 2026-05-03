@@ -7,7 +7,7 @@ public sealed partial class Interpreter
 {
     private RuntimeValue EvaluateRndBuiltin()
     {
-        return RuntimeValue.FromDouble(_random.NextDouble());
+        return RuntimeValue.FromDouble(_host.NextRandomDouble());
     }
 
     private RuntimeValue EvaluateAbsBuiltin(BoundCallExpression expression, RuntimeValue value)

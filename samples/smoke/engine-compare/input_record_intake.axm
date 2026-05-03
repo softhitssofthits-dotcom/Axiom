@@ -1,0 +1,52 @@
+' Сравнительный сценарий: пакетный ввод анкет через INPUT.
+' Сценарий опирается на scripted input compare-engines и
+' нагружает разбор строк ввода, преобразование INTEGER и
+' типичный управляющий слой после чтения записи.
+
+DIM totalAge AS LONG = 0
+DIM scoreChecksum AS LONG = 0
+DIM highScoreCount AS LONG = 0
+DIM adultCount AS LONG = 0
+DIM digest AS STRING = ""
+
+FOR rowIndex = 1 TO 180
+    DIM personName AS STRING
+    DIM personAge AS INTEGER
+    DIM personScore AS INTEGER
+
+    IF rowIndex MOD 3 = 0 THEN
+        INPUT "record"; personName, personAge, personScore
+    ELSE
+        INPUT personName, personAge, personScore
+    END IF
+
+    totalAge = totalAge + personAge
+
+    IF personAge >= 40 THEN
+        adultCount = adultCount + 2
+    ELSEIF personAge >= 30 THEN
+        adultCount = adultCount + 1
+    END IF
+
+    SELECT CASE personScore \ 10
+        CASE 9, 8
+            scoreChecksum = scoreChecksum + personScore + 3
+            highScoreCount = highScoreCount + 1
+        CASE 7, 6
+            scoreChecksum = scoreChecksum + personScore + 2
+        CASE 5
+            scoreChecksum = scoreChecksum + personScore + 1
+        CASE ELSE
+            scoreChecksum = scoreChecksum + personScore
+    END SELECT
+
+    IF rowIndex <= 4 THEN
+        digest = digest + LEFT(personName, 5)
+    END IF
+NEXT
+
+PRINT totalAge
+PRINT scoreChecksum
+PRINT highScoreCount
+PRINT adultCount
+PRINT digest

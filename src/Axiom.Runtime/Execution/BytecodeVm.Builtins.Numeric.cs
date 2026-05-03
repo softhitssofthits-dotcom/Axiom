@@ -7,7 +7,7 @@ public sealed partial class BytecodeVm
 {
     private RuntimeValue EvaluateRndBuiltin()
     {
-        return RuntimeValue.FromDouble(_random.NextDouble());
+        return RuntimeValue.FromDouble(_host.NextRandomDouble());
     }
 
     private int EvaluateIntBuiltin(RuntimeValue value, TextLocation location)

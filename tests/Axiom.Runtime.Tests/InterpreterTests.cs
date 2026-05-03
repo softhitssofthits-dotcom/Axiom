@@ -3706,6 +3706,22 @@ PRINT JOIN(second)
     }
 
     [Fact]
+    public void Execute_JoinSingleElementReturnsThatElement()
+    {
+        const string text = """
+DIM parts(5 TO 5) AS STRING
+parts(5) = "solo"
+PRINT JOIN(parts)
+PRINT JOIN(parts, "/")
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["solo", "solo"], host.Output);
+    }
+
+    [Fact]
     public void Execute_DecimalDeclarationAndArithmetic()
     {
         const string text = """
@@ -4434,15 +4450,17 @@ PRINT REPEAT("x", 0)
 PRINT "[" + PADLEFT("7", 3) + "]"
 PRINT PADLEFT("7", 3, "0")
 PRINT PADLEFT("word", 2, ".")
+PRINT PADLEFT("word", 4)
 PRINT "[" + PADRIGHT("7", 3) + "]"
 PRINT PADRIGHT("7", 3, ".")
 PRINT PADRIGHT("word", 2, ".")
+PRINT PADRIGHT("word", 4, ".")
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["[  7]", "007", "word", "[7  ]", "7..", "word"], host.Output);
+        Assert.Equal(["[  7]", "007", "word", "word", "[7  ]", "7..", "word", "word"], host.Output);
     }
 
     [Fact]
@@ -4664,12 +4682,13 @@ PRINT "[" + CENTER("A", 3) + "]"
 PRINT "[" + CENTER("A", 4, ".") + "]"
 PRINT "[" + CENTER("AB", 5, ".") + "]"
 PRINT "[" + CENTER("Hello", 3, ".") + "]"
+PRINT "[" + CENTER("Hello", 5, ".") + "]"
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["[ A ]", "[.A..]", "[.AB..]", "[Hello]"], host.Output);
+        Assert.Equal(["[ A ]", "[.A..]", "[.AB..]", "[Hello]", "[Hello]"], host.Output);
     }
 
     [Fact]
@@ -7455,6 +7474,7 @@ PRINT second.Flags(2)
     private sealed class TestRuntimeHost : IRuntimeHost
     {
         private readonly Queue<string> _inputs;
+        private readonly Random _random = new();
         private readonly DateTimeOffset _localNow;
         private readonly TimeZoneInfo _localTimeZone;
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
@@ -7489,6 +7509,8 @@ PRINT second.Flags(2)
         public DateTimeOffset GetLocalNow() => _localNow;
 
         public TimeZoneInfo GetLocalTimeZone() => _localTimeZone;
+
+        public double NextRandomDouble() => _random.NextDouble();
 
         public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
         {

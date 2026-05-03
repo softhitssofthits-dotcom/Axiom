@@ -1,0 +1,63 @@
+' Сравнительный сценарий: детерминированные built-in даты и времени.
+' Нагружает serial/parts/arithmetic/validation/time-zone ветки без current-time функций,
+' чтобы compare-engines мог честно сравнивать одинаковый вывод двух движков.
+
+DIM stamps(1 TO 96) AS STRING
+DIM dateChecksum AS LONG = 0
+DIM timeChecksum AS LONG = 0
+DIM calendarChecksum AS LONG = 0
+DIM nameDigest AS STRING = ""
+
+FOR itemIndex = 1 TO ARRAYLENGTH(stamps)
+    DIM dayText AS STRING = DATEADD("d", itemIndex - 1, DATESERIAL(2026, 1, 15))
+    DIM timeText AS STRING = DATEADD("n", itemIndex * 13, TIMESERIAL(6, 0, 0))
+    stamps(itemIndex) = dayText + " " + LEFT(timeText, 8)
+NEXT
+
+FOR roundIndex = 1 TO 18
+    FOR itemIndex = 1 TO ARRAYLENGTH(stamps)
+        DIM shifted AS STRING = DATEADD("m", roundIndex MOD 3, stamps(itemIndex))
+        shifted = DATEADD("d", itemIndex MOD 7, shifted)
+        shifted = DATEADD("h", roundIndex MOD 5, shifted)
+
+        dateChecksum = dateChecksum + YEAR(shifted) + MONTH(shifted) + DAY(shifted)
+        dateChecksum = dateChecksum + DATEDIFF("d", stamps(itemIndex), shifted)
+        dateChecksum = dateChecksum + DATEPART("y", shifted) + DATEPART("q", shifted)
+
+        timeChecksum = timeChecksum + HOUR(shifted) + MINUTE(shifted) + SECOND(shifted)
+        timeChecksum = timeChecksum + DATEPART("w", shifted) + WEEKDAY(shifted)
+
+        calendarChecksum = calendarChecksum + DAY(STARTOFMONTH(shifted))
+        calendarChecksum = calendarChecksum + DAY(ENDOFMONTH(shifted))
+        calendarChecksum = calendarChecksum + MONTH(STARTOFYEAR(shifted))
+        calendarChecksum = calendarChecksum + MONTH(ENDOFYEAR(shifted))
+        calendarChecksum = calendarChecksum + DAYSINMONTH(YEAR(shifted), MONTH(shifted))
+        calendarChecksum = calendarChecksum + UTCOFFSET(shifted, "UTC")
+
+        IF ISLEAPYEAR(YEAR(shifted)) THEN
+            calendarChecksum = calendarChecksum + 2
+        ELSE
+            calendarChecksum = calendarChecksum + 1
+        END IF
+
+        DIM utcText AS STRING = TOUTC(shifted, "UTC")
+        DIM localText AS STRING = FROMUTC(utcText, "UTC")
+
+        calendarChecksum = calendarChecksum + DAY(DATEVALUE(localText))
+        timeChecksum = timeChecksum + HOUR(TIMEVALUE(localText))
+
+        IF ISDATE(localText) THEN
+            calendarChecksum = calendarChecksum + 1
+        END IF
+
+        IF itemIndex MOD 24 = 0 THEN
+            nameDigest = nameDigest + LEFT(MONTHNAME(MONTH(shifted)), 1) + LEFT(WEEKDAYNAME(WEEKDAY(shifted)), 1)
+        END IF
+    NEXT
+NEXT
+
+PRINT dateChecksum
+PRINT timeChecksum
+PRINT calendarChecksum
+PRINT LEFT(nameDigest, 24)
+PRINT RIGHT(nameDigest, 24)
