@@ -234,6 +234,30 @@ public sealed partial class Binder
         _diagnostics.Report(InvalidFieldAccessCode, $"Доступ к полям через точку возможен только для TYPE, получен {type.Name}.", location);
     }
 
+    private void ReportNamedArgumentsOnlySupportedForTypeLiterals(TextLocation location)
+    {
+        _diagnostics.Report(
+            WrongArgumentCountCode,
+            "Форма `name := value` сейчас поддержана только в именованных литералах TYPE.",
+            location);
+    }
+
+    private void ReportTypeLiteralRequiresNamedFields(string typeName, TextLocation location)
+    {
+        _diagnostics.Report(
+            WrongArgumentCountCode,
+            $"Литерал TYPE '{typeName}' принимает только именованные поля в форме `Name := value`.",
+            location);
+    }
+
+    private void ReportDuplicateTypeLiteralField(string typeName, string fieldName, TextLocation location)
+    {
+        _diagnostics.Report(
+            DuplicateDeclarationCode,
+            $"Литерал TYPE '{typeName}' повторно задаёт поле '{fieldName}'.",
+            location);
+    }
+
     private void ReportFixedTypeArrayFieldOperation(string keyword, string displayName, TextLocation location)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(keyword);

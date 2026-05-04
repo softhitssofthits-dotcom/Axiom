@@ -1,4 +1,4 @@
-п»їusing System.Globalization;
+using System.Globalization;
 using System.Text;
 using Axiom.Core;
 using Axiom.Execution;
@@ -528,23 +528,35 @@ static BenchmarkCase[] GetBenchmarkCases()
 {
     return
     [
-        new BenchmarkCase("Р”РѕРєСѓРјРµРЅС‚: СЃС‚СЂРѕРєРё Рё С„Р°Р№Р»С‹", @"samples/smoke/engine-compare/document_batch_repair.axm"),
-        new BenchmarkCase("Р¤Р°Р№Р»С‹: РїР°РєРµС‚РЅС‹Р№ РѕР±С…РѕРґ РєР°С‚Р°Р»РѕРіР°", @"samples/smoke/engine-compare/file_batch_roundtrip.axm"),
-        new BenchmarkCase("Р РµРіСѓР»СЏСЂРЅС‹Рµ РІС‹СЂР°Р¶РµРЅРёСЏ: Р¶СѓСЂРЅР°Р»", @"samples/smoke/engine-compare/regex_log_analysis.axm"),
-        new BenchmarkCase("Р РµРіРµРєСЃ: СЂРµР¶РёРјС‹ Рё С†РµРїРѕС‡РєР° Р·Р°РјРµРЅ", @"samples/smoke/engine-compare/regex_modes_pipeline.axm"),
-        new BenchmarkCase("РњР°СЃСЃРёРІС‹ Рё С†РёРєР»С‹: 3D СЃРІРѕРґРєР°", @"samples/smoke/engine-compare/array_cube_rollup.axm"),
-        new BenchmarkCase("РњР°СЃСЃРёРІС‹: С†РµРїРѕС‡РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёР№", @"samples/smoke/engine-compare/array_transform_chain.axm"),
-        new BenchmarkCase("РњР°СЃСЃРёРІС‹: callback-РєРѕРЅРІРµР№РµСЂ", @"samples/smoke/engine-compare/array_callback_pipeline.axm"),
-        new BenchmarkCase("РЎС‚СЂРѕРєРѕРІС‹Рµ РјР°СЃСЃРёРІС‹: С†РёРєР»С‹ Рё РґР°С‚Р°-РІСЂРµРјСЏ", @"samples/smoke/engine-compare/string_array_loop_pipeline.axm"),
-        new BenchmarkCase("РЎРјРµС€Р°РЅРЅР°СЏ РЅР°РіСЂСѓР·РєР°: С†РёРєР»С‹, СЃС‚СЂРѕРєРё, regex, РґР°С‚Р° Рё SELECT CASE", @"samples/smoke/engine-compare/mixed_workload_pipeline.axm"),
-        new BenchmarkCase("Р§РёСЃР»РѕРІС‹Рµ built-in: РїР»РѕС‚РЅС‹Р№ РїСЂРѕС…РѕРґ", @"samples/smoke/engine-compare/numeric_function_sweep.axm"),
+        new BenchmarkCase("Документ: строки и файлы", @"samples/smoke/engine-compare/document_batch_repair.axm"),
+        new BenchmarkCase("Файлы: пакетный обход каталога", @"samples/smoke/engine-compare/file_batch_roundtrip.axm"),
+        new BenchmarkCase("Файлы: открытые потоки", @"samples/smoke/engine-compare/open_file_stream_cycle.axm"),
+        new BenchmarkCase("Файлы: path/info sweep", @"samples/smoke/engine-compare/file_path_metadata_sweep.axm"),
+        new BenchmarkCase("Файлы: управление и roundtrip", @"samples/smoke/engine-compare/file_management_roundtrip.axm"),
+        new BenchmarkCase("Файлы: диск и temp sweep", @"samples/smoke/engine-compare/drive_temp_storage_sweep.axm"),
+        new BenchmarkCase("Регулярные выражения: журнал", @"samples/smoke/engine-compare/regex_log_analysis.axm"),
+        new BenchmarkCase("Регекс: режимы и цепочка замен", @"samples/smoke/engine-compare/regex_modes_pipeline.axm"),
+        new BenchmarkCase("Регекс: массивные результаты", @"samples/smoke/engine-compare/regex_array_result_mesh.axm"),
+        new BenchmarkCase("Строки: низкоуровневые примитивы", @"samples/smoke/engine-compare/string_primitive_scan.axm"),
+        new BenchmarkCase("Скалярное ядро: побитовые операции", @"samples/smoke/engine-compare/bitwise_shift_mesh.axm"),
+        new BenchmarkCase("Массивы и циклы: 3D сводка", @"samples/smoke/engine-compare/array_cube_rollup.axm"),
+        new BenchmarkCase("Массивы: цепочка преобразований", @"samples/smoke/engine-compare/array_transform_chain.axm"),
+        new BenchmarkCase("Массивы: shape-преобразования", @"samples/smoke/engine-compare/array_shape_transform_mesh.axm"),
+        new BenchmarkCase("Массивы: callback-конвейер", @"samples/smoke/engine-compare/array_callback_pipeline.axm"),
+        new BenchmarkCase("Массивы: поисковые built-in", @"samples/smoke/engine-compare/array_search_probe.axm"),
+        new BenchmarkCase("Строковые массивы: циклы и дата-время", @"samples/smoke/engine-compare/string_array_loop_pipeline.axm"),
+        new BenchmarkCase("Смешанная нагрузка: циклы, строки, regex, дата и SELECT CASE", @"samples/smoke/engine-compare/mixed_workload_pipeline.axm"),
+        new BenchmarkCase("Скалярные выражения и присваивания: expression mesh", @"samples/smoke/engine-compare/scalar_assignment_expression_mesh.axm"),
+        new BenchmarkCase("Числовые built-in: плотный проход", @"samples/smoke/engine-compare/numeric_function_sweep.axm"),
         new BenchmarkCase("RND: deterministic stream", @"samples/smoke/engine-compare/random_stream_snapshot.axm", Array.Empty<string>(), null, static () => new SeededRuntimeRandom(24681357)),
-        new BenchmarkCase("Р”Р°С‚Р° Рё РІСЂРµРјСЏ: РєР°Р»РµРЅРґР°СЂРЅС‹Р№ РєРѕРЅРІРµР№РµСЂ", @"samples/smoke/engine-compare/date_time_calendar_pipeline.axm"),
-        new BenchmarkCase("Р”Р°С‚Р° Рё РІСЂРµРјСЏ: current-time СЃРЅРёРјРѕРє", @"samples/smoke/engine-compare/current_time_snapshot.axm", Array.Empty<string>(), CreateCurrentTimeBenchmarkClock()),
+        new BenchmarkCase("Дата и время: календарный конвейер", @"samples/smoke/engine-compare/date_time_calendar_pipeline.axm"),
+        new BenchmarkCase("Дата и время: current-time снимок", @"samples/smoke/engine-compare/current_time_snapshot.axm", Array.Empty<string>(), CreateCurrentTimeBenchmarkClock()),
         new BenchmarkCase("PRINT / PRINT USING: output gallery", @"samples/smoke/engine-compare/print_output_gallery.axm"),
-        new BenchmarkCase("РЈРїСЂР°РІР»СЏСЋС‰РёР№ СЃР»РѕР№: РІРµС‚РІР»РµРЅРёСЏ Рё С†РёРєР»С‹", @"samples/smoke/engine-compare/control_flow_branch_maze.axm"),
-        new BenchmarkCase("РњРЅРѕРіРѕРјРµСЂРЅС‹Р№ СЂР°РЅРі: metadata-РїСЂРѕРІРµСЂРєР°", @"samples/smoke/engine-compare/high_rank_metadata.axm"),
-        new BenchmarkCase("Р вЂ™Р Р†Р С•Р Т‘: Р С—Р В°Р С”Р ВµРЎвЂљР Р…РЎвЂ№Р в„– Р С—РЎР‚Р С‘РЎвЂР С Р В°Р Р…Р С”Р ВµРЎвЂљ", @"samples/smoke/engine-compare/input_record_intake.axm", BuildInputRecordIntakeLines())
+        new BenchmarkCase("Управляющий слой: ветвления и циклы", @"samples/smoke/engine-compare/control_flow_branch_maze.axm"),
+        new BenchmarkCase("Процедуры и замыкания: routine pipeline", @"samples/smoke/engine-compare/routine_closure_pipeline.axm"),
+        new BenchmarkCase("Многомерный ранг: metadata-проверка", @"samples/smoke/engine-compare/high_rank_metadata.axm"),
+        new BenchmarkCase("Пользовательские TYPE: records и поля", @"samples/smoke/engine-compare/type_record_roundtrip.axm"),
+        new BenchmarkCase("Р’РІРѕРґ: РїР°РєРµС‚РЅС‹Р№ РїСЂРёС‘Рј Р°РЅРєРµС‚", @"samples/smoke/engine-compare/input_record_intake.axm", BuildInputRecordIntakeLines())
     ];
 }
 
@@ -811,3 +823,4 @@ sealed record BenchmarkOutcome(
 {
     public bool IsOk => Issues.Count == 0;
 }
+

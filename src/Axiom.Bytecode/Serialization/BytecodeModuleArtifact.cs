@@ -85,8 +85,8 @@ public sealed record BytecodeTypeFieldArtifact(
     string Name,
     string Type,
     int? FixedStringLength,
-    int? FixedArrayLowerBound,
-    int? FixedArrayUpperBound);
+    IReadOnlyList<int>? FixedArrayLowerBounds,
+    IReadOnlyList<int>? FixedArrayUpperBounds);
 
 public sealed record BytecodeDebugInfoArtifact(
     IReadOnlyList<SourceInstructionMapArtifact> InstructionMap,

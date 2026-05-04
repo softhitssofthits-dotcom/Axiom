@@ -755,11 +755,13 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.LoadFunction => EmitLoadFunction(routine, instruction),
             LoweredInstructionKind.LoadVariable => EmitLoadVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.StoreVariable => EmitStoreVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
+            LoweredInstructionKind.Dup => new BytecodeInstruction(Opcode.Dup),
             LoweredInstructionKind.UnaryOperation => EmitUnaryOperation(routine, instruction),
             LoweredInstructionKind.BinaryOperation => EmitBinaryOperation(routine, instruction),
             LoweredInstructionKind.Convert => EmitConversion(routine, instruction),
             LoweredInstructionKind.CallFunction => EmitCall(routine, instruction),
             LoweredInstructionKind.CallValue => EmitCallValue(instruction),
+            LoweredInstructionKind.CreateRecord => EmitCreateRecord(instruction),
             LoweredInstructionKind.RedimArray => EmitRedimArray(instruction),
             LoweredInstructionKind.EraseArray => new BytecodeInstruction(Opcode.EraseArray),
             LoweredInstructionKind.LoadElement => EmitArrayElementInstruction(instruction, Opcode.LoadElement),
@@ -1132,6 +1134,11 @@ public sealed class BytecodeCompiler
     private BytecodeInstruction EmitFieldInstruction(LoweredInstruction instruction, Opcode opcode)
     {
         return new BytecodeInstruction(opcode, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+    }
+
+    private BytecodeInstruction EmitCreateRecord(LoweredInstruction instruction)
+    {
+        return new BytecodeInstruction(Opcode.CreateRecord, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
     }
 
     private BytecodeInstruction EmitOpenFile(LoweredInstruction instruction)

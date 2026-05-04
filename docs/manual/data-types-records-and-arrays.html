@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -19,7 +19,7 @@
             <div class="sidebar__inner">
                 <div class="sidebar__head">
                     <p class="sidebar__title">Типы данных</p>
-                    <p class="sidebar__subtitle">TYPE, группы объявлений и массивы поверх типа элемента.</p>
+                    <p class="sidebar__subtitle">TYPE, групповые объявления и массивы поверх типа элемента.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -33,21 +33,22 @@
                 <h2>Пользовательские записи TYPE</h2>
                 <p><code>TYPE ... END TYPE</code> объявляет новый тип записи с именованными полями. Переменная такого типа объявляется через <code>DIM name AS TypeName</code>, а поля читаются и записываются через точку: <code>name.Field</code>.</p>
                 <p>Внутри <code>TYPE</code> не пишутся обычные операторы программы. Тело записи состоит только из объявлений полей и их типов.</p>
+                <p>Запись можно создать и как именованный литерал. Форма <code>Person(Name := "Ada", Age := 36)</code> заполняет указанные поля, а остальные берёт из значений по умолчанию. Пустая форма <code>Person()</code> даёт запись, где все поля остались в своих значениях по умолчанию.</p>
+                <p>Поле записи может быть не только скаляром или вложенным <code>TYPE</code>, но и массивом. Для массивных полей работает тот же договор ранга, что и для обычных переменных: допустимы динамические формы <code>Scores()</code>, <code>Grid(,)</code>, <code>Cube(,,)</code> и фиксированные формы с диапазонами в каждом измерении.</p>
                 <pre><code class="language-basic">TYPE Person
     Name AS STRING
     Age AS INTEGER
 END TYPE
 
 DIM user AS Person
-user.Name = "Алиса"
-user.Age = 30</code></pre>
-                <p>Подробнее синтаксис и ограничения описаны на странице <a href="type.html">Оператор TYPE</a>.</p>
+user = Person(Name := "Ada", Age := 36)</code></pre>
+                <p>Подробный синтаксис и ограничения описаны на странице <a href="type.html">Оператор TYPE</a>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Групповые объявления</h2>
                 <ul>
-                    <li><code>AS &lt;тип&gt;</code> относится ко всей ближайшей группе имён слева до начала оператора <code>DIM</code> или до предыдущего разделителя групп.</li>
+                    <li><code>AS &lt;тип&gt;</code> относится ко всей ближайшей группе имён слева до начала оператора <code>DIM</code> или до предыдущего разделителя группы.</li>
                     <li>Форма <code>DIM left, right AS BOOLEAN</code> объявляет обе переменные как <code>BOOLEAN</code>.</li>
                     <li>Форма <code>DIM total = 10</code> выводит тип как <code>INTEGER</code>, а <code>DIM price = 1.5</code> выводит тип как <code>DOUBLE</code>.</li>
                 </ul>
@@ -65,7 +66,11 @@ DIM board(1 TO 3, 1 TO 3) AS BOOLEAN</code></pre>
                 <h2>Ручная проверка</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: групповые объявления с общим типом</a></li>
+                    <li><a href="../../samples/operators/type/named_literals.axm">TYPE: именованные литералы через :=</a></li>
                     <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: строковые поля фиксированной длины</a></li>
+                    <li><a href="../../samples/operators/type/array_field_views.axm">TYPE: подмассивы и диапазонные представления через поле</a></li>
+                    <li><a href="../../samples/operators/type/multidimensional_array_fields.axm">TYPE: многомерные динамические массивные поля</a></li>
+                    <li><a href="../../samples/operators/type/fixed_multidimensional_array_fields.axm">TYPE: многомерные фиксированные массивные поля</a></li>
                     <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Многомерные массивы: двумерная сетка</a></li>
                 </ul>
             </section>

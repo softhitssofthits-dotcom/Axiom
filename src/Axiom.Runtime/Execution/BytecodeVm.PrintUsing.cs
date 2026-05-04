@@ -7,9 +7,9 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private string FormatUsing(
+    private void AppendFormattedUsing(
         string format,
-        IReadOnlyList<(RuntimeValue Value, TextLocation Location)> values,
+        ReadOnlySpan<RuntimeValue> values,
         TextLocation statementLocation)
     {
         if (format.Length > 2048)
@@ -18,35 +18,45 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var tokens = ParsePrintUsingFormat(format);
-        var builder = new StringBuilder();
+        var tokens = GetOrParsePrintUsingFormat(format);
         var argumentIndex = 0;
+        _hasPendingOutput = true;
 
         foreach (var token in tokens)
         {
             switch (token)
             {
                 case PrintUsingLiteralToken literalToken:
-                    builder.Append(literalToken.Text);
+                    _pendingOutput.Append(literalToken.Text);
                     break;
 
                 case PrintUsingStringFieldToken stringFieldToken:
                 {
                     var valueText = GetNextStringFormatValue(stringFieldToken, values, ref argumentIndex, statementLocation);
-                    builder.Append(FormatStringField(stringFieldToken, valueText));
+                    AppendStringField(stringFieldToken, valueText);
                     break;
                 }
 
                 case PrintUsingNumericFieldToken numericFieldToken:
                 {
                     var value = GetNextNumericFormatValue(values, ref argumentIndex, statementLocation);
-                    builder.Append(FormatNumericField(numericFieldToken, value));
+                    AppendNumericField(numericFieldToken, value);
                     break;
                 }
             }
         }
+    }
 
-        return builder.ToString();
+    private List<PrintUsingFormatToken> GetOrParsePrintUsingFormat(string format)
+    {
+        if (_printUsingFormatCache.TryGetValue(format, out var cachedTokens))
+        {
+            return cachedTokens;
+        }
+
+        var parsedTokens = ParsePrintUsingFormat(format);
+        _printUsingFormatCache[format] = parsedTokens;
+        return parsedTokens;
     }
 
     private static List<PrintUsingFormatToken> ParsePrintUsingFormat(string format)
@@ -151,153 +161,281 @@ public sealed partial class BytecodeVm
 
     private string GetNextStringFormatValue(
         PrintUsingStringFieldToken field,
-        IReadOnlyList<(RuntimeValue Value, TextLocation Location)> values,
+        ReadOnlySpan<RuntimeValue> values,
         ref int index,
         TextLocation statementLocation)
     {
-        if (index >= values.Count)
+        if (index >= values.Length)
         {
             return field.Kind == PrintUsingStringFieldKind.Backslash
                 ? new string(' ', field.Width)
                 : string.Empty;
         }
 
-        var (value, location) = values[index++];
+        var value = values[index++];
 
         if (value.Type != TypeSymbol.String)
         {
             ReportPrintUsingError(
                 $"СЃС‚СЂРѕРєРѕРІРѕРµ РїРѕР»Рµ С‚СЂРµР±СѓРµС‚ Р·РЅР°С‡РµРЅРёРµ С‚РёРїР° STRING, РЅРѕ РїРѕР»СѓС‡РµРЅ {value.Type.Name}.",
-                location);
+                statementLocation);
             throw new RuntimeFailureException();
         }
 
         return value.AsString();
     }
 
-    private (RuntimeValue Value, TextLocation Location) GetNextNumericFormatValue(
-        IReadOnlyList<(RuntimeValue Value, TextLocation Location)> values,
+    private RuntimeValue GetNextNumericFormatValue(
+        ReadOnlySpan<RuntimeValue> values,
         ref int index,
         TextLocation statementLocation)
     {
-        if (index >= values.Count)
+        if (index >= values.Length)
         {
             ReportPrintUsingError("РґР»СЏ С‡РёСЃР»РѕРІРѕРіРѕ РїРѕР»СЏ РЅРµ С…РІР°С‚РёР»Рѕ Р·РЅР°С‡РµРЅРёСЏ.", statementLocation);
             throw new RuntimeFailureException();
         }
 
-        var entry = values[index++];
+        var value = values[index++];
 
-        if (!IsNumericType(entry.Value.Type))
+        if (!IsNumericType(value.Type))
         {
             ReportPrintUsingError(
-                $"С‡РёСЃР»РѕРІРѕРµ РїРѕР»Рµ С‚СЂРµР±СѓРµС‚ С‡РёСЃР»РѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ, РЅРѕ РїРѕР»СѓС‡РµРЅ {entry.Value.Type.Name}.",
-                entry.Location);
+                $"С‡РёСЃР»РѕРІРѕРµ РїРѕР»Рµ С‚СЂРµР±СѓРµС‚ С‡РёСЃР»РѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ, РЅРѕ РїРѕР»СѓС‡РµРЅ {value.Type.Name}.",
+                statementLocation);
             throw new RuntimeFailureException();
         }
 
-        return entry;
+        return value;
     }
 
-    private static string FormatStringField(PrintUsingStringFieldToken field, string value)
+    private void AppendStringField(PrintUsingStringFieldToken field, string value)
     {
-        return field.Kind switch
+        switch (field.Kind)
         {
-            PrintUsingStringFieldKind.Bang => value.Length == 0 ? string.Empty : value[..1],
-            PrintUsingStringFieldKind.Ampersand => value,
-            PrintUsingStringFieldKind.Backslash when value.Length == field.Width => value,
-            PrintUsingStringFieldKind.Backslash when value.Length < field.Width => value.PadRight(field.Width, ' '),
-            PrintUsingStringFieldKind.Backslash => value[..field.Width],
-            _ => value
-        };
+            case PrintUsingStringFieldKind.Bang:
+                if (value.Length > 0)
+                {
+                    _pendingOutput.Append(value.AsSpan(0, 1));
+                }
+
+                return;
+
+            case PrintUsingStringFieldKind.Ampersand:
+                _pendingOutput.Append(value);
+                return;
+
+            case PrintUsingStringFieldKind.Backslash:
+                if (value.Length >= field.Width)
+                {
+                    _pendingOutput.Append(value.AsSpan(0, field.Width));
+                    return;
+                }
+
+                _pendingOutput.Append(value);
+                _pendingOutput.Append(' ', field.Width - value.Length);
+                return;
+
+            default:
+                _pendingOutput.Append(value);
+                return;
+        }
     }
 
-    private string FormatNumericField(PrintUsingNumericFieldToken field, (RuntimeValue Value, TextLocation Location) entry)
+    private void AppendNumericField(PrintUsingNumericFieldToken field, RuntimeValue value)
     {
         var info = field.Info;
 
         if (!info.HasDollar && !info.HasStarFill && !info.HasThousands && !info.HasExponent)
         {
-            return FormatNumericBasic(field.Mask, info, entry);
+            AppendNumericBasic(field.Mask, info, value);
+            return;
         }
 
-        return FormatNumericExtended(field.Mask, info, entry);
+        AppendNumericExtended(field.Mask, info, value);
     }
 
-    private string FormatNumericBasic(
+    private void AppendNumericBasic(
         string mask,
         PrintUsingNumericFormatInfo info,
-        (RuntimeValue Value, TextLocation Location) entry)
+        RuntimeValue value)
     {
-        var negative = IsNegative(entry.Value);
-        var fullInvariant = entry.Value.ToDisplayString();
-        var formattedNumber = FormatAbsoluteNumericValue(entry.Value, info.FractionDigits);
-        SplitNumericParts(formattedNumber, out var integerPart, out var fractionPart);
+        var negative = IsNegative(value);
 
-        if (integerPart.Length > info.IntegerDigits)
+        Span<char> formattedBuffer = stackalloc char[64];
+        if (TryFormatAbsoluteNumericValue(value, info.FractionDigits, formattedBuffer, out var written))
         {
-            return "%" + fullInvariant;
+            var formattedSpan = formattedBuffer[..written];
+            var dotIndex = formattedSpan.IndexOf('.');
+            var integerPart = dotIndex >= 0 ? formattedSpan[..dotIndex] : formattedSpan;
+            var fractionPart = dotIndex >= 0 ? formattedSpan[(dotIndex + 1)..] : ReadOnlySpan<char>.Empty;
+
+            if (integerPart.Length > info.IntegerDigits)
+            {
+                _pendingOutput.Append('%');
+                _pendingOutput.Append(value.ToDisplayString());
+                return;
+            }
+
+            var signLength = info.ForceSign || (info.NegativeSignOnly && negative) ? 1 : 0;
+            var fractionLength = info.FractionDigits > 0 ? 1 + info.FractionDigits : 0;
+            var totalLength = signLength + info.IntegerDigits + fractionLength;
+            if (totalLength < info.TotalWidth)
+            {
+                _pendingOutput.Append(' ', info.TotalWidth - totalLength);
+            }
+
+            if (info.ForceSign)
+            {
+                _pendingOutput.Append(negative ? '-' : '+');
+            }
+            else if (info.NegativeSignOnly && negative)
+            {
+                _pendingOutput.Append('-');
+            }
+
+            _pendingOutput.Append(' ', info.IntegerDigits - integerPart.Length);
+            _pendingOutput.Append(integerPart);
+
+            if (info.FractionDigits > 0)
+            {
+                _pendingOutput.Append('.');
+                _pendingOutput.Append(fractionPart);
+                if (fractionPart.Length < info.FractionDigits)
+                {
+                    _pendingOutput.Append('0', info.FractionDigits - fractionPart.Length);
+                }
+            }
+
+            return;
         }
 
-        var builder = new StringBuilder();
+        var formattedNumber = FormatAbsoluteNumericValue(value, info.FractionDigits);
+        SplitNumericParts(formattedNumber, out var integerPartString, out var fractionPartString);
+
+        var integerPartText = integerPartString;
+        var fractionPartText = fractionPartString;
+        if (integerPartText.Length > info.IntegerDigits)
+        {
+            _pendingOutput.Append('%');
+            _pendingOutput.Append(value.ToDisplayString());
+            return;
+        }
+
+        var fallbackSignLength = info.ForceSign || (info.NegativeSignOnly && negative) ? 1 : 0;
+        var fallbackFractionLength = info.FractionDigits > 0 ? 1 + info.FractionDigits : 0;
+        var fallbackTotalLength = fallbackSignLength + info.IntegerDigits + fallbackFractionLength;
+        if (fallbackTotalLength < info.TotalWidth)
+        {
+            _pendingOutput.Append(' ', info.TotalWidth - fallbackTotalLength);
+        }
 
         if (info.ForceSign)
         {
-            builder.Append(negative ? '-' : '+');
+            _pendingOutput.Append(negative ? '-' : '+');
         }
         else if (info.NegativeSignOnly && negative)
         {
-            builder.Append('-');
+            _pendingOutput.Append('-');
         }
 
-        builder.Append(integerPart.PadLeft(info.IntegerDigits, ' '));
+        _pendingOutput.Append(' ', info.IntegerDigits - integerPartText.Length);
+        _pendingOutput.Append(integerPartText);
 
         if (info.FractionDigits > 0)
         {
-            builder.Append('.');
-            builder.Append(fractionPart.PadRight(info.FractionDigits, '0'));
+            _pendingOutput.Append('.');
+            _pendingOutput.Append(fractionPartText);
+            if (fractionPartText.Length < info.FractionDigits)
+            {
+                _pendingOutput.Append('0', info.FractionDigits - fractionPartText.Length);
+            }
         }
-
-        if (builder.Length < info.TotalWidth)
-        {
-            builder.Insert(0, new string(' ', info.TotalWidth - builder.Length));
-        }
-
-        return builder.Length > info.TotalWidth
-            ? "%" + fullInvariant
-            : builder.ToString();
     }
 
-    private string FormatNumericExtended(
+    private void AppendNumericExtended(
         string mask,
         PrintUsingNumericFormatInfo info,
-        (RuntimeValue Value, TextLocation Location) entry)
+        RuntimeValue value)
     {
-        var negative = IsNegative(entry.Value);
-        var fullInvariant = entry.Value.ToDisplayString();
+        var negative = IsNegative(value);
 
         if (info.HasExponent)
         {
-            var exponentText = FormatExponentValue(entry.Value, info.FractionDigits);
+            var exponentText = FormatExponentValue(value, info.FractionDigits);
             var core = info.ForceSign
                 ? (negative ? "-" : "+") + exponentText
                 : negative
                     ? "-" + exponentText
                     : " " + exponentText;
 
-            return core.Length > info.TotalWidth
-                ? "%" + fullInvariant
-                : core.PadLeft(info.TotalWidth, ' ');
+            if (core.Length > info.TotalWidth)
+            {
+                _pendingOutput.Append('%');
+                _pendingOutput.Append(value.ToDisplayString());
+                return;
+            }
+
+            _pendingOutput.Append(' ', info.TotalWidth - core.Length);
+            _pendingOutput.Append(core);
+            return;
         }
 
-        var formattedNumber = FormatAbsoluteNumericValue(entry.Value, info.FractionDigits);
-        SplitNumericParts(formattedNumber, out var integerPart, out var fractionPart);
-
-        if (info.HasThousands)
+        Span<char> formattedBuffer = stackalloc char[64];
+        if (TryFormatAbsoluteNumericValue(value, info.FractionDigits, formattedBuffer, out var written))
         {
-            integerPart = InsertThousandsSeparators(integerPart);
+            var formattedSpan = formattedBuffer[..written];
+            var dotIndex = formattedSpan.IndexOf('.');
+            var integerPart = dotIndex >= 0 ? formattedSpan[..dotIndex] : formattedSpan;
+            var fractionPart = dotIndex >= 0 ? formattedSpan[(dotIndex + 1)..] : ReadOnlySpan<char>.Empty;
+
+            if (info.HasDollar && !info.HasStarFill && !info.HasThousands)
+            {
+                var signLength = info.ForceSign || negative ? 1 : 0;
+                var fractionLength = info.FractionDigits > 0 ? 1 + fractionPart.Length : 0;
+                var totalLength = signLength + 1 + integerPart.Length + fractionLength;
+
+                if (totalLength > info.TotalWidth)
+                {
+                    _pendingOutput.Append('%');
+                    _pendingOutput.Append(value.ToDisplayString());
+                    return;
+                }
+
+                _pendingOutput.Append(' ', info.TotalWidth - totalLength);
+
+                if (info.ForceSign)
+                {
+                    _pendingOutput.Append(negative ? '-' : '+');
+                }
+                else if (negative)
+                {
+                    _pendingOutput.Append('-');
+                }
+
+                _pendingOutput.Append('$');
+                _pendingOutput.Append(integerPart);
+
+                if (info.FractionDigits > 0)
+                {
+                    _pendingOutput.Append('.');
+                    _pendingOutput.Append(fractionPart);
+                    if (fractionPart.Length < info.FractionDigits)
+                    {
+                        _pendingOutput.Append('0', info.FractionDigits - fractionPart.Length);
+                    }
+                }
+
+                return;
+            }
         }
 
+        var formattedNumber = FormatAbsoluteNumericValue(value, info.FractionDigits);
+        SplitNumericParts(formattedNumber, out var integerPartString, out var fractionPartString);
+        var integerPartText = info.HasThousands
+            ? InsertThousandsSeparators(integerPartString)
+            : integerPartString;
+        var fractionPartText = fractionPartString;
         var signText = info.ForceSign
             ? negative ? "-" : "+"
             : negative
@@ -305,37 +443,64 @@ public sealed partial class BytecodeVm
                 : string.Empty;
 
         var fractionText = info.FractionDigits > 0
-            ? "." + fractionPart.PadRight(info.FractionDigits, '0')
+            ? "." + fractionPartText.PadRight(info.FractionDigits, '0')
             : string.Empty;
 
         if (info.HasDollar && info.HasStarFill)
         {
-            var full = signText + "$" + integerPart + fractionText;
-            return full.Length > info.TotalWidth
-                ? "%" + fullInvariant
-                : new string('*', info.TotalWidth - full.Length) + full;
+            var full = signText + "$" + integerPartText + fractionText;
+            if (full.Length > info.TotalWidth)
+            {
+                _pendingOutput.Append('%');
+                _pendingOutput.Append(value.ToDisplayString());
+                return;
+            }
+
+            _pendingOutput.Append('*', info.TotalWidth - full.Length);
+            _pendingOutput.Append(full);
+            return;
         }
 
         if (info.HasStarFill)
         {
-            var full = signText + integerPart + fractionText;
-            return full.Length > info.TotalWidth
-                ? "%" + fullInvariant
-                : new string('*', info.TotalWidth - full.Length) + full;
+            var full = signText + integerPartText + fractionText;
+            if (full.Length > info.TotalWidth)
+            {
+                _pendingOutput.Append('%');
+                _pendingOutput.Append(value.ToDisplayString());
+                return;
+            }
+
+            _pendingOutput.Append('*', info.TotalWidth - full.Length);
+            _pendingOutput.Append(full);
+            return;
         }
 
         if (info.HasDollar)
         {
-            var full = signText + "$" + integerPart + fractionText;
-            return full.Length > info.TotalWidth
-                ? "%" + fullInvariant
-                : full.PadLeft(info.TotalWidth, ' ');
+            var full = signText + "$" + integerPartText + fractionText;
+            if (full.Length > info.TotalWidth)
+            {
+                _pendingOutput.Append('%');
+                _pendingOutput.Append(value.ToDisplayString());
+                return;
+            }
+
+            _pendingOutput.Append(' ', info.TotalWidth - full.Length);
+            _pendingOutput.Append(full);
+            return;
         }
 
-        var result = signText + integerPart + fractionText;
-        return result.Length > info.TotalWidth
-            ? "%" + fullInvariant
-            : result.PadLeft(info.TotalWidth, ' ');
+        var result = signText + integerPartText + fractionText;
+        if (result.Length > info.TotalWidth)
+        {
+            _pendingOutput.Append('%');
+            _pendingOutput.Append(value.ToDisplayString());
+            return;
+        }
+
+        _pendingOutput.Append(' ', info.TotalWidth - result.Length);
+        _pendingOutput.Append(result);
     }
 
     private static PrintUsingNumericFormatInfo ParseNumericMask(string mask)
@@ -386,6 +551,34 @@ public sealed partial class BytecodeVm
         var absoluteDouble = Math.Abs(value.AsDouble());
         var roundedDouble = Math.Round(absoluteDouble, fractionDigits, MidpointRounding.AwayFromZero);
         return roundedDouble.ToString(fractionDigits > 0 ? $"F{fractionDigits}" : "F0", CultureInfo.InvariantCulture);
+    }
+
+    private static bool TryFormatAbsoluteNumericValue(
+        RuntimeValue value,
+        int fractionDigits,
+        Span<char> destination,
+        out int written)
+    {
+        Span<char> formatBuffer = stackalloc char[8];
+        formatBuffer[0] = 'F';
+        if (!fractionDigits.TryFormat(formatBuffer[1..], out var digitsWritten, provider: CultureInfo.InvariantCulture))
+        {
+            written = 0;
+            return false;
+        }
+
+        var format = formatBuffer[..(digitsWritten + 1)];
+
+        if (TryGetDecimal(value, out var decimalValue))
+        {
+            var absoluteValue = Math.Abs(decimalValue);
+            var rounded = Math.Round(absoluteValue, fractionDigits, MidpointRounding.AwayFromZero);
+            return rounded.TryFormat(destination, out written, format, CultureInfo.InvariantCulture);
+        }
+
+        var absoluteDouble = Math.Abs(value.AsDouble());
+        var roundedDouble = Math.Round(absoluteDouble, fractionDigits, MidpointRounding.AwayFromZero);
+        return roundedDouble.TryFormat(destination, out written, format, CultureInfo.InvariantCulture);
     }
 
     private static string FormatExponentValue(RuntimeValue value, int fractionDigits)
@@ -448,6 +641,21 @@ public sealed partial class BytecodeVm
 
         integerPart = text;
         fractionPart = string.Empty;
+    }
+
+    private static void SplitNumericParts(ReadOnlySpan<char> text, out ReadOnlySpan<char> integerPart, out ReadOnlySpan<char> fractionPart)
+    {
+        var dotIndex = text.IndexOf('.');
+
+        if (dotIndex >= 0)
+        {
+            integerPart = text[..dotIndex];
+            fractionPart = text[(dotIndex + 1)..];
+            return;
+        }
+
+        integerPart = text;
+        fractionPart = ReadOnlySpan<char>.Empty;
     }
 
     private static bool IsNegative(RuntimeValue value)

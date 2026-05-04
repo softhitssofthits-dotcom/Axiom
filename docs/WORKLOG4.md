@@ -5496,3 +5496,752 @@
 Следующий шаг:
 - если продолжать benchmark-линию, искать следующее новое семейство для адресного сценария или переходить к более широкому профильному аудиту реальных программ;
 - инфраструктурные расширения harness делать уже только при появлении новой детерминизационной дыры, а не заранее.
+## Session 648 - 2026-05-03 08:20 - Пользовательские TYPE получили отдельный benchmark и закрыли ещё одну дыру матрицы
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый сценарий `type_record_roundtrip.axm`, который нагружает пользовательские `TYPE`, вложенные поля, фиксированные строковые поля, фиксированные массивные поля и копирование записи целиком;
+- в `src/Axiom.ManualChecks/Program.cs` новый сценарий зарегистрирован в `compare-engines`, так что record-слой теперь меряется отдельно, а не только через unit- и acceptance-примеры;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый адресный benchmark пользовательских типов.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/type_record_roundtrip.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter type_record_roundtrip.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-type-20260503-1.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter type_record_roundtrip.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-type-20260503-2.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать пользовательские `TYPE` и доступ к полям закрытым отдельным benchmark-сценарием: устойчивый длинный прогон держится около `0.969x` runtime / `0.965x` total;
+- считать, что новый адресный сценарий не выявил нового горячего долга VM: record-слой уже слегка ниже паритета и сейчас скорее закрывает слепую зону матрицы, чем требует срочной оптимизации.
+
+Следующий шаг:
+- если продолжать benchmark-линию, выбирать следующее самостоятельное семейство, прежде всего процедуры/функции или замыкания как отдельный сценарий;
+- кодовые оптимизации снова делать только после нового прямого сигнала от benchmark или профиля.
+## Session 649 - 2026-05-03 08:43 - Шкала разгона переведена на цель 0.900x, а TYPE выведен в целевой диапазон
+
+Что сделано:
+- в `RuntimeRecordValue` словарь полей заменён на ordinal-хранилище `RuntimeValue[]`, а `TypeFieldSymbol` получил порядковый номер поля, который назначается в `UserDefinedTypeSymbol`;
+- в `BytecodeVm` добавлен кэш record-полей по `(routine, instruction)`, а успешные `LoadField` / `StoreField` больше не тянут `ResolveLocation`, если диагностика не нужна;
+- `docs/BYTECODE_PERF_MATRIX.md` и `docs/BYTECODE_COVERAGE.md` переведены на новую рабочую шкалу: целевой диапазон `<= 0.900x`, рабочий паритет `0.900x .. 1.000x`, прямой долг `> 1.000x`.
+
+Изменённые файлы:
+- `src/Axiom.Semantics/Symbols/Symbols.cs`
+- `src/Axiom.Runtime/Values/RuntimeRecordValue.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Records.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- адресный benchmark `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-type-20260503-4.txt`
+
+Решение:
+- считать record-путь `TYPE` больше не «слегка ниже интерпретатора», а выведенным в целевой диапазон: `type_record_roundtrip.axm` держится около `0.891x` runtime и `0.888x` total;
+- считать новую шкалу `0.900x` официальным рабочим ориентиром для дальнейшего разгона VM и отделять ею целевые семейства от серой зоны.
+
+Следующий шаг:
+- идти в ближайшее семейство серой зоны, прежде всего в `PRINT` / `PRINT USING`, где адресный сценарий всё ещё держится около `0.941x` runtime и `0.955x` total;
+- в `TYPE` без нового профильного сигнала не возвращаться, потому что этот слой уже закрыт по новой целевой шкале.
+## Session 650 - 2026-05-03 09:26 - PRINT USING получил кэш формата и безаллоцирующий набор аргументов
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен кэш `PRINT USING`-форматов и обновлён путь `ExecutePrintUsing(...)`: значения теперь собираются через `ArrayPool<RuntimeValue>` и передаются форматтеру как `ReadOnlySpan<RuntimeValue>`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.PrintUsing.cs` парсинг формата переведён на кэш `GetOrParsePrintUsingFormat(...)`, а обработка аргументов перестроена на `ReadOnlySpan<RuntimeValue>` без массива кортежей `RuntimeValue + TextLocation`;
+- обновлены `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md` и `docs/PLANS3.md` с новым состоянием слоя вывода и свежими числами benchmark.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.PrintUsing.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter print_output_gallery.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-print-20260503-2.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter print_output_gallery.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-print-20260503-3.txt`
+
+Решение:
+- считать путь вывода `PRINT` / `PRINT USING` после этой оптимизации выровненным до почти чистого паритета: длинный прогон держится около `0.998x` runtime и `1.002x` total;
+- считать, что прямого профильного долга в выводе уже нет, но до целевого диапазона `<= 0.900x` это семейство всё ещё не доведено.
+
+Следующий шаг:
+- перейти к следующему осмысленному профилю разгона, где возможен заметный запас под новую шкалу, прежде всего к отдельному benchmark-срезу процедур/функций и замыканий;
+- в `PRINT` / `PRINT USING` возвращаться только при новом сигнале из профиля или регрессии.
+## Session 651 - 2026-05-03 09:48 - вывод PRINT и PRINT USING доведён до целевого runtime-диапазона
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` путь `Opcode.PrintValue` переведён с `ToDisplayString()` на прямую запись частых скалярных типов в `_pendingOutput` через `TryFormat` и типовые fast-path;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.PrintUsing.cs` `PRINT USING` перестроен на прямую запись токенов в pending-output без промежуточной итоговой строки;
+- строковые поля `PRINT USING` (`!`, `&`, `\   \`) переведены на прямой путь без временных строк;
+- частый числовой путь `PRINT USING` для фиксированных масок переведён на форматирование в стековый буфер через `TryFormat`, чтобы не создавать промежуточные строки `F0/F2` на каждом выводе;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новые цифры слоя вывода.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.PrintUsing.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter print_output_gallery.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-print-20260503-8.txt`
+
+Решение:
+- считать слой `PRINT` / `PRINT USING` по чистому исполнению выведенным в целевой диапазон: `print_output_gallery.axm` держится около `0.884x` runtime;
+- считать, что по метрике `total` этот слой ещё не дошёл до строгой границы `<= 0.900x` и сейчас находится около `0.918x`, то есть остаётся в рабочей серой зоне.
+
+Следующий шаг:
+- если нужно добивать именно `total`, искать следующий резерв уже не только в VM-исполнении вывода, а и в цене подготовки/понижения для этого семейства;
+- если главным критерием считать runtime VM, переключаться на следующий адресный benchmark для процедур/функций и замыканий.
+## Session 652 - 2026-05-03 09:54 - процедуры и замыкания выделены в отдельный benchmark-срез
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен адресный сценарий `routine_closure_pipeline.axm`, который отдельно нагружает прямые вызовы `SUB`/`FUNCTION`, вызовы через function-value, returned closure, shared-state closure и nested `SUB` с захватом внешнего локаля;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как новое benchmark-семейство;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый профильный слой и его цифры.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/routine_closure_pipeline.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter routine_closure_pipeline.axm --iterations 5 --warmup 1 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-routines-20260503-2.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter routine_closure_pipeline.axm --iterations 10 --warmup 2 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-routines-20260503-3.txt`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать процедуры, функции и замыкания теперь отдельным измеряемым семейством в матрице производительности;
+- считать, что новый слой не показал прямого долга VM: `routine_closure_pipeline.axm` держится около `0.928x` runtime и `0.932x` total, то есть уже в рабочем паритете, но ещё выше целевого диапазона `<= 0.900x`.
+
+Следующий шаг:
+- если продолжать расширять benchmark-матрицу, выбирать следующее ещё невыделенное семейство;
+- если продолжать точечный разгон по серой зоне `0.900x .. 1.000x`, можно уже отдельно профилировать именно процедурно-замыкательный путь.
+## Session 653 - 2026-05-03 10:12 - процедурно-замыкательный путь выведен в целевой диапазон
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен кэш привязки захватов `caller routine -> target routine`, чтобы повторные вызовы локальных процедур и создание closure больше не шли через общий словарь `VisibleVariables`;
+- в `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлены покадровый кэш capture-slot массивов, шаблоны локалов по `BytecodeRoutine` и повторное использование `BytecodeCallFrame` после `RETURN`;
+- benchmark-сценарий `samples/smoke/engine-compare/routine_closure_pipeline.axm` оставлен в исходной форме, а итоговая фиксация сделана более длинным прогоном, потому что короткие серии для этого семейства оказались шумными;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый статус слоя процедур и замыканий.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs`
+- `samples/smoke/engine-compare/routine_closure_pipeline.axm`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter routine_closure_pipeline.axm --iterations 20 --warmup 3 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-routines-20260503-10.txt`
+
+Решение:
+- считать процедурно-замыкательный путь выведенным в целевой диапазон по обеим метрикам;
+- итоговый длинный прогон `routine_closure_pipeline.axm` держится около `0.861x` runtime и `0.874x` total, поэтому возвращаться к этому слою как к срочному долгу больше не нужно.
+
+Следующий шаг:
+- если продолжать разгон уже измеренных семейств, идти в `PRINT`, `INPUT` или управляющий слой как в оставшуюся серую зону;
+- если продолжать расширять benchmark-матрицу, выбирать следующее ещё невыделенное адресное семейство.
+## Session 654 - 2026-05-03 10:27 - управляющий слой выведен в целевой диапазон
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs` стек VM переведён с зануления слота на каждом `Pop()` на отложенную очистку при `Clear()`, чтобы снять лишнюю запись из горячего пути ветвлений, циклов и арифметики;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` comparison-jump инструкции (`JumpIfEqual`, `JumpIfNotEqual`, `JumpIfLess`, `JumpIfLessOrEqual`, `JumpIfGreater`, `JumpIfGreaterOrEqual`) переведены с общего диспетчера на специализированные прямые методы;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый статус управляющего слоя.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter control_flow_branch_maze.axm --iterations 20 --warmup 3 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-control-20260503-3.txt`
+
+Решение:
+- считать управляющий слой `IF` / `SELECT CASE` / циклы выведенным в целевой диапазон по обеим метрикам;
+- итоговый длинный прогон `control_flow_branch_maze.axm` держится около `0.826x` runtime и `0.814x` total, поэтому возвращаться к этому слою как к срочному долгу больше не нужно.
+
+Следующий шаг:
+- если продолжать разгон уже измеренных семейств, идти в `PRINT` или `INPUT` как в оставшуюся серую зону;
+- если продолжать расширять benchmark-матрицу, выбирать следующее ещё невыделенное адресное семейство.
+## Session 655 - 2026-05-03 10:32 - `INPUT` добит, а `PRINT` подтверждён в целевом диапазоне длинными прогонами
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Input.cs` добавлен быстрый путь для `INPUT` на 1/2/3 целей без промежуточного массива результатов и без общего двухшагового разбора на самом частом пакетном сценарии;
+- длинными контрольными прогонами перепроверены `PRINT` / `PRINT USING` и `INPUT`, чтобы снять влияние шума коротких серий и зафиксировать новые числа уже после общих ускорений VM;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый статус слоёв ввода и вывода.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Input.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter print_output_gallery.axm --iterations 20 --warmup 3 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-print-20260503-9.txt`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter input_record_intake.axm --iterations 40 --warmup 5 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-input-20260503-3.txt`
+
+Решение:
+- считать `PRINT` / `PRINT USING` подтверждённо выведенными в целевой диапазон: около `0.860x` runtime и `0.877x` total;
+- считать `INPUT` выведенным в целевой диапазон: около `0.879x` runtime и `0.889x` total;
+- считать, что по текущей матрице адресных benchmark-семейств явной серой зоны больше не осталось.
+
+Следующий шаг:
+- если продолжать benchmark-линию, искать новое ещё невыделенное адресное семейство или новую реальную программу для профильного сигнала;
+- если продолжать разгон VM, сначала нужен новый подтверждённый долг, а не повторный возврат в уже закрытые слои.
+## Session 656 - 2026-05-03 12:20 - выделено scalar-core семейство, и оно сразу показало новый прямой долг VM
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `scalar_assignment_expression_mesh.axm`, который отдельно нагружает скалярные выражения, присваивания, побитовые операции, сдвиги и сравнения без заметной зависимости от built-in-слоя;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как новое benchmark-семейство;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый профильный слой и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/scalar_assignment_expression_mesh.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter scalar_assignment_expression_mesh.axm --iterations 20 --warmup 3 --out C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-scalar-20260503-2.txt`
+
+Решение:
+- считать scalar-core выражений и присваиваний новым выделенным benchmark-семейством;
+- считать, что это семейство сразу показало новый прямой долг VM: около `1.072x` runtime и `1.070x` total.
+
+Следующий шаг:
+- если продолжать разгон VM, идти уже прямо в scalar-core как в ближайший подтверждённый долг;
+- если продолжать только расширять матрицу, тогда искать следующее ещё невыделенное семейство уже как отдельную задачу, а не вместо этого долга.
+## Session 657 - 2026-05-03 12:38 - scalar-core частично ускорен, но всё ещё остаётся прямым долгом
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` убрана лишняя синхронизация `_globals` из горячего пути `StoreGlobal`, добавлен кэшируемый флаг быстрого режима исполнения и горячие pop-пути переведены на `PopUnchecked()`;
+- в `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs` добавлен `PopUnchecked()` для безопасного использования из проверенного байткодного hot path;
+- в `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` и `src/Axiom.Runtime/Execution/BytecodeVariableSlot.cs` уплощён путь хранения обычных скаляров без фиксированной строки и без `TYPE`, чтобы массовые присваивания не проходили через лишнюю общую нормализацию;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый промежуточный статус scalar-core.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs`
+- `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVariableSlot.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter scalar_assignment_expression_mesh.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-scalar-20260503-6.txt`
+
+Решение:
+- считать, что scalar-core после первых профильных правок ускорен, но ещё не выведен даже в рабочий паритет;
+- фиксировать новый промежуточный уровень около `1.059x` runtime и `1.058x` total вместо исходных `1.072x` / `1.070x`.
+
+Следующий шаг:
+- продолжать разгон именно scalar-core, а не возвращаться к уже закрытым benchmark-семействам;
+- если понадобится более чистый сигнал, выделить внутри scalar-core ещё более узкий адресный под-сценарий для арифметического dispatch и присваиваний.
+## Session 658 - 2026-05-03 12:42 - scalar-core почти доведён до паритета через специализацию dispatch
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` `Subtract` выведен в отдельный горячий путь по образцу `Add` и `Multiply`;
+- там же частые scalar-сравнения `CompareEqual`, `CompareNotEqual`, `CompareLess`, `CompareLessOrEqual`, `CompareGreaterOrEqual` переведены с общего бинарного диспетчера на прямые специализированные методы;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый промежуточный статус scalar-core.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter scalar_assignment_expression_mesh.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-scalar-20260503-7.txt`
+
+Решение:
+- считать, что scalar-core после специализации dispatch почти доведён до паритета;
+- фиксировать новый промежуточный уровень около `1.033x` runtime и `1.033x` total вместо прежних `1.059x` / `1.058x`.
+
+Следующий шаг:
+- продолжать точечный разгон именно scalar dispatch до паритета и ниже;
+- если понадобится точнее локализовать остаток долга, выделить внутри scalar-core ещё более узкий benchmark на арифметический путь.
+## Session 659 - 2026-05-03 13:07 - scalar-core выведен ниже единицы и переведён в рабочий паритет
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` из общего бинарного диспетчера дополнительно выведены `MOD`, `AND`, `OR`, `XOR`, `<<` и `>>`;
+- для этих операций добавлены прямые быстрые пути по частым типам `INTEGER`, `LONG` и `BOOLEAN`, чтобы основной scalar benchmark меньше ходил в общий `ExecuteBinaryInstruction`;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый статус scalar-core.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter scalar_assignment_expression_mesh.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-scalar-20260503-8.txt`
+
+Решение:
+- считать scalar-core больше не прямым долгом VM;
+- фиксировать новый уровень около `0.948x` runtime и `0.949x` total, то есть слой уже выведен в рабочий паритет, хотя ещё не дотянут до целевого `<= 0.900x`.
+
+Следующий шаг:
+- если продолжать разгон именно этого слоя, сначала выделить внутри scalar-core более узкий адресный benchmark на чистый арифметический dispatch;
+- если переключаться на другой профильный слой, брать уже новый сигнал, а не возвращаться к ранее закрытым прямым долгам.
+## Session 660 - 2026-05-03 14:24 - scalar-core добит до целевого диапазона через отдельный fast-path деления
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` `Divide` выведен из общего бинарного диспетчера в отдельный горячий путь;
+- для частых `DOUBLE`- и `DECIMAL`-делений добавлен прямой fast-path без общего `Opcode`-маршрута;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый статус scalar-core.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter scalar_assignment_expression_mesh.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-scalar-20260503-9.txt`
+
+Решение:
+- считать scalar-core выведенным в целевой диапазон;
+- фиксировать новый уровень около `0.853x` runtime и `0.860x` total, то есть и по чистому исполнению, и по полной метрике слой уже быстрее интерпретатора с хорошим запасом.
+
+Следующий шаг:
+- искать новое ещё невыделенное benchmark-семейство или новый профильный сигнал;
+- к scalar-core как к срочному долгу больше не возвращаться.
+## Session 661 - 2026-05-03 14:32 - выделен файловый path/info benchmark, и он сразу оказался в целевом диапазоне
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `file_path_metadata_sweep.axm` для `FILEEXISTS`, `PATHEXISTS`, `FILESIZE`, `FILEDATE`, `COMBINEPATH`, `FILENAME`, `DIRNAME`, `FULLPATH`, `ISABSOLUTEPATH` и `GETFILES`;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный файловый path/info benchmark;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый профильный слой и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/file_path_metadata_sweep.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter file_path_metadata_sweep.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-file-path-20260503-1.txt`
+
+Решение:
+- считать файловый path/info слой отдельным benchmark-семейством;
+- фиксировать, что он сразу показал хороший запас: около `0.768x` runtime и `0.773x` total.
+
+Следующий шаг:
+- искать следующее ещё невыделенное benchmark-семейство или реальный новый профильный сигнал;
+- к файловым path/info built-in как к срочному кандидату на ускорение не возвращаться.
+## Session 662 - 2026-05-03 14:55 - выделен benchmark файлового управления и подтверждён рабочий паритет
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `file_management_roundtrip.axm` для `MAKEDIR`, `COPYFILE`, `MOVEFILE`, `RENAMEFILE`, `DELETEFILE`, `COPYDIR`, `MOVEDIR`, `RENAMEDIR`, `DELETEDIRRECURSIVE`, `CHANGEDIR` и `CURRENTDIR`;
+- сценарий сделан идемпотентным между прогонами: в начале он очищает только свой каталог `.artifacts/manual-checks/file-management-roundtrip`, чтобы длинные замеры не ломались на уже существующих целевых файлах и каталогах;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark файлового управления;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый файловый management-срез и его результат.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/file_management_roundtrip.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter file_management_roundtrip.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-file-management-20260503-1.txt`
+
+Решение:
+- считать файловое управление файлами и каталогами отдельным benchmark-семейством;
+- фиксировать, что оно не выявило нового прямого долга: около `0.985x` runtime и `0.987x` total, то есть это рабочий паритет, но не целевой диапазон.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство или реальный новый профильный сигнал;
+- к этому файловому management-срезу не возвращаться как к срочному кандидату на ускорение.
+## Session 663 - 2026-05-03 14:59 - выделен benchmark для drive/temp built-in и подтверждён рабочий паритет
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `drive_temp_storage_sweep.axm` для `DIRSIZE`, `FREESPACE`, `TOTALFREESPACE`, `TOTALSPACE`, `DRIVENAME`, `DRIVEFORMAT`, `DRIVETYPE`, `MAKETEMPFILE` и `MAKETEMPDIR`;
+- первый вариант сценария показал нестабильный вывод из-за включения живых значений свободного места в итоговый `checksum`; сценарий сразу скорректирован так, чтобы проверять для `FREESPACE` и родственных built-in только контракт `> 0`, а не сами меняющиеся числа;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark файлового drive/temp слоя;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый профильный слой и его результат.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/drive_temp_storage_sweep.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter drive_temp_storage_sweep.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-drive-temp-20260503-1.txt`
+
+Решение:
+- считать файловые built-in диска, размера каталога и временных путей отдельным benchmark-семейством;
+- фиксировать, что и этот слой не выявил нового прямого долга: около `0.992x` runtime и `0.994x` total, то есть это рабочий паритет, но не целевой диапазон.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство или реальный новый профильный сигнал;
+- к drive/temp built-in не возвращаться как к срочному кандидату на ускорение.
+## Session 664 - 2026-05-03 15:04 - выделен benchmark открытых файловых потоков, и он сразу оказался в целевом диапазоне
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `open_file_stream_cycle.axm` для `OPEN`/`CLOSE`, `READLINE`, `READTEXT`, `READTOEND`, `WRITE`, `WRITELINE`, `NEWLINE`, `FLUSH`, `SEEKFILE`, `REWIND`, `FILEPOS`, `FILEMODE`, `FILELENGTH`, `EOF` и `ISOPEN`;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark открытых файловых потоков;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый файловый потоковый слой и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/open_file_stream_cycle.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter open_file_stream_cycle.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-open-stream-20260503-1.txt`
+
+Решение:
+- считать открытые файловые потоки отдельным benchmark-семейством;
+- фиксировать, что новый слой сразу показал хороший запас: около `0.813x` runtime и `0.834x` total.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство уже вне файлового домена;
+- к открытому файловому потоковому слою как к срочному кандидату на ускорение не возвращаться.
+## Session 665 - 2026-05-03 15:15 - выделен benchmark низкоуровневых строковых примитивов, и он сразу показал большой запас
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `string_primitive_scan.axm` для `ASC`, `CHR`, `LEN`, `SPACE`, `STRING`, `INSTR`, `INSTRREV` и `SUBSTRCOUNT`;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark строковых примитивов;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый строковый primitive-срез и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/string_primitive_scan.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter string_primitive_scan.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-string-primitives-20260503-1.txt`
+
+Решение:
+- считать низкоуровневые строковые примитивы отдельным benchmark-семейством;
+- фиксировать, что новый слой сразу показал очень хороший запас: около `0.398x` runtime и `0.476x` total.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство уже вне низкоуровневого строкового и файлового доменов;
+- к строковым примитивам как к кандидату на ускорение не возвращаться.
+## Session 666 - 2026-05-03 15:20 - побитовые операции и сдвиги выделены в отдельный benchmark
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `bitwise_shift_mesh.axm` для `AND`, `OR`, `XOR`, `NOT`, `<<` и `>>` на `INTEGER`, `LONG` и `BOOLEAN`;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark побитового scalar-подслоя;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый bitwise/shift-срез и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/bitwise_shift_mesh.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter bitwise_shift_mesh.axm --iterations 20 --warmup 3 | Tee-Object -FilePath C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-bitwise-20260503-1.txt`
+
+Решение:
+- считать побитовые операции и сдвиги отдельным benchmark-семейством;
+- фиксировать, что новый слой уже быстрее интерпретатора, но пока не целевой: около `0.968x` runtime и `0.968x` total, то есть это рабочий паритет, а не прямой долг.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство;
+- к побитовому подслою возвращаться только если появится желание адресно дожать рабочий паритет ближе к `0.900x`.
+## Session 667 - 2026-05-03 18:29 - поисковые ARRAY-builtins выделены в отдельный benchmark
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `array_search_probe.axm` для `ARRAYCONTAINS`, `ARRAYINDEXOF`, `ARRAYLASTINDEXOF`, `ARRAYCOUNT`, `ARRAYFINDALL` и `ARRAYBINARYSEARCH` на 1D и 2D-массивах без callback-слоя;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark поискового массивного подслоя;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый array-search-срез и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/array_search_probe.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_search_probe.axm --iterations 20 --warmup 3`
+
+Решение:
+- считать поисковые built-in массивов отдельным benchmark-семейством;
+- фиксировать, что новый слой сразу показал целевой результат: около `0.852x` runtime и `0.857x` total.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство;
+- к поисковому массивному подслою как к кандидату на ускорение не возвращаться.
+## Session 668 - 2026-05-03 18:36 - shape-преобразования массивов выделены в отдельный benchmark
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлен новый адресный сценарий `array_shape_transform_mesh.axm` для `ARRAYDISTINCT`, `ARRAYTOREVERSED`, `ARRAYREVERSE`, `ARRAYFLATTEN` и `ARRAYRESHAPE` на одном и том же 2D-массиве;
+- в `src/Axiom.ManualChecks/Program.cs` сценарий зарегистрирован в `compare-engines` как отдельный benchmark shape-подслоя массивов;
+- `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены под новый array-shape-срез и его числа.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/array_shape_transform_mesh.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter array_shape_transform_mesh.axm --iterations 20 --warmup 3`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать shape-преобразования массивов отдельным benchmark-семейством;
+- фиксировать, что новый слой сразу показал целевой результат: около `0.817x` runtime и `0.824x` total.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство;
+- к shape-подслою массивов как к кандидату на ускорение не возвращаться.
+## Session 669 - 2026-05-03 18:43 - массивные regex-результаты выделены в отдельный benchmark
+
+Что сделано:
+- добавлен адресный сценарий `samples/smoke/engine-compare/regex_array_result_mesh.axm` для `REGEXMATCHES`, `REGEXEXTRACTALL` и `REGEXSPLIT` без `REGEXREPLACE` и без широкого смешанного regex-сценария;
+- сценарий зарегистрирован в `src/Axiom.ManualChecks/Program.cs` как отдельный случай `compare-engines`;
+- обновлены `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md` и `docs/PLANS3.md`, чтобы regex-подслой массивных результатов больше не числился только внутри широких mixed/log-профилей.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/regex_array_result_mesh.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- compare-engines --filter regex_array_result_mesh.axm --iterations 20 --warmup 3`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать `REGEXMATCHES` / `REGEXEXTRACTALL` / `REGEXSPLIT` отдельным benchmark-семейством;
+- фиксировать, что новый regex-подслой сразу показал целевой результат: около `0.673x` runtime и `0.695x` total.
+
+Следующий шаг:
+- продолжать искать следующее ещё невыделенное benchmark-семейство;
+- если оставаться рядом с regex, то уже выделять отдельно только скалярный подслой без массивных результатов.
+## Session 670 - 2026-05-03 18:47 - повторный аудит built-in-реестров подтвердил полную синхронизацию
+
+Что сделано:
+- выполнен повторный запуск `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- audit-bytecode-coverage`;
+- подтверждено, что служебный аудит по четырём слоям (`BuiltinFunctions`, `BytecodeVm.SupportsBuiltin(...)`, `samples/functions/`, `docs/manual/scripts/search-index.js`) по-прежнему проходит без замечаний;
+- обновлён `docs/PLANS3.md`, чтобы built-in-реестры больше не считались отдельным незакрытым направлением работ.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet run --project C:\Axiom\src\Axiom.ManualChecks\Axiom.ManualChecks.csproj -- audit-bytecode-coverage`
+
+Решение:
+- считать built-in-слой реестров синхронизированным на текущий момент;
+- не возвращаться к отдельному ручному аудиту этих четырёх слоёв без нового языкового изменения или нового сигнала о рассинхронизации.
+
+Следующий шаг:
+- либо закрывать текущий цикл по байткодной оптимизации;
+- либо, если нужен ещё один документный штрих, точечно дочистить остаточные `частично` в `docs/BYTECODE_COVERAGE.md`.
+## Session 671 - 2026-05-03 19:33 - TYPE получил многомерные массивные поля
+
+Что сделано:
+- снято старое ограничение binder, из-за которого массивные поля внутри `TYPE` принимали только ранг `1`;
+- `TypeFieldSymbol` переведён с одиночных fixed-bound полей на хранение списков нижних и верхних границ по всем измерениям, а сериализация байткодного модуля научена сохранять и восстанавливать такие поля;
+- `RuntimeRecordValue` теперь создаёт и копирует фиксированные массивные поля записи любого поддержанного ранга;
+- добавлены автоматические проверки binder/runtime/bytecode/execution для динамических и фиксированных многомерных полей записи;
+- добавлены acceptance-примеры `samples/operators/type/multidimensional_array_fields.axm` и `samples/operators/type/fixed_multidimensional_array_fields.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/type.html`, `docs/manual/data-types-records-and-arrays.html` и `docs/BYTECODE_COVERAGE.md`, чтобы пользовательский договор и реестр покрытия больше не содержали старое 1D-ограничение для полей `TYPE`.
+
+Изменённые файлы:
+- `src/Axiom.Semantics/Symbols/Symbols.cs`
+- `src/Axiom.Semantics/Binding/Binder.Declarations.cs`
+- `src/Axiom.Runtime/Values/RuntimeRecordValue.cs`
+- `src/Axiom.Bytecode/Serialization/BytecodeModuleArtifact.cs`
+- `src/Axiom.Bytecode/Serialization/BytecodeModuleSerializer.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Bytecode.Tests/BytecodeModuleSerializerTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/type/multidimensional_array_fields.axm`
+- `samples/operators/type/fixed_multidimensional_array_fields.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/type.html`
+- `docs/manual/data-types-records-and-arrays.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать многомерные динамические и фиксированные массивные поля внутри `TYPE` полноценной частью текущего языкового договора;
+- считать этот пласт закрытым одновременно по interpreter, bytecode VM, acceptance-сценариям и manual.
+
+Следующий шаг:
+- если продолжать расширение `TYPE`, искать уже не ранговый пробел, а следующую реальную асимметрию между записью и массивом;
+- иначе возвращаться к этому месту только при новом пользовательском сигнале или новом документном требовании.
+## Session 672 - 2026-05-03 21:22 - подмассивы и диапазонные представления через поля TYPE закреплены как отдельный контракт
+
+Что сделано:
+- проверено, что общий механизм частичного индексирования и диапазонных представлений массива уже распространяется и на путь `record.Field(...)`, если поле записи само имеет массивный тип;
+- добавлены отдельные parser- и binder-проверки для форм `lineView = board.Cells(2)` и `window = board.Cells(2 TO 3, 3 TO 4)`;
+- добавлены отдельные runtime- и bytecode-проверки, подтверждающие, что такие выражения возвращают именно представление на то же хранилище, а изменение через него видно в исходном поле записи;
+- добавлен acceptance-пример `samples/operators/type/array_field_views.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/type.html`, `docs/manual/data-types-records-and-arrays.html` и `docs/BYTECODE_COVERAGE.md`, чтобы этот путь был зафиксирован не только в общем массивном разделе, но и прямо в пользовательском договоре `TYPE`.
+
+Изменённые файлы:
+- `samples/operators/type/array_field_views.axm`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/type.html`
+- `docs/manual/data-types-records-and-arrays.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать подмассивы и диапазонные представления через массивные поля `TYPE` не скрытым побочным эффектом общего массива, а отдельной публичной частью пользовательского договора;
+- не планировать для этого места новую реализацию, пока не появится более глубокая асимметрия или новый продуктовый запрос.
+
+Следующий шаг:
+- если продолжать расширение `TYPE`, искать только новый реальный пользовательский пробел, а не повторно документировать уже существующие общие массивные правила;
+- без нового сигнала ветку `TYPE` можно считать закрытой и не трогать дальше.
+## Session 673 - 2026-05-03 22:16 - TYPE получил именованные литералы через :=
+
+Что сделано:
+- добавлен новый синтаксис `:=` для именованных элементов литерала записи в форме `TypeName(Field := expression, ...)`, включая пустую форму `TypeName()` и вложенные литералы пользовательских типов;
+- parser научен разбирать именованные элементы вызова, binder отличает литерал `TYPE(...)` от обычного вызова и запрещает использовать `:=` как общий синтаксис именованных аргументов вне литерала записи;
+- interpreter, lowering, сериализация байткодного модуля и `BytecodeVm` теперь выполняют именованные литералы записи без fallback, а lowering использует скрытый временный локал для последовательной сборки записи;
+- добавлены parser/binder/runtime/bytecode/execution-проверки и acceptance-пример `samples/operators/type/named_literals.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/type.html`, `docs/manual/data-types-records-and-arrays.html` и `docs/BYTECODE_COVERAGE.md`, чтобы новый пользовательский контракт был зафиксирован в спецификации, manual и реестре покрытия.
+
+Изменённые файлы:
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Syntax/Expressions.cs`
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Expressions.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundNodeKind.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundExpressions.cs`
+- `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs`
+- `src/Axiom.Semantics/Binding/Binder.Expressions.cs`
+- `src/Axiom.Semantics/Binding/Binder.InvocationExpressions.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Expressions.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Records.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/type/named_literals.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/type.html`
+- `docs/manual/data-types-records-and-arrays.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+
+Решение:
+- считать именованные литералы `TYPE(...)` через `:=` полноценной частью текущего пользовательского договора записей;
+- считать синтаксис `:=` в этом шаге локальным только для литералов записи, а не общим механизмом именованных аргументов языка.
+
+Следующий шаг:
+- если развивать `TYPE` дальше, выбирать отдельный следующий пользовательский контракт и не расширять `:=` без нового проектного решения;
+- в качестве ближайших кандидатов можно рассматривать инициализацию полей по объявлению или структурное сравнение записей.

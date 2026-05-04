@@ -178,7 +178,7 @@ public sealed class BoundProgramLowerer
                 break;
 
             default:
-                ReportUnsupported(statement, "РѕРїРµСЂР°С‚РѕСЂ");
+                ReportUnsupported(statement, "оператор");
                 break;
         }
     }
@@ -193,7 +193,7 @@ public sealed class BoundProgramLowerer
 
         if (declaration.LowerBound is not null || declaration.UpperBound is not null)
         {
-            ReportUnsupported(declaration, "РѕР±СЉСЏРІР»РµРЅРёРµ РјР°СЃСЃРёРІР°");
+            ReportUnsupported(declaration, "объявление массива");
             return;
         }
 
@@ -206,7 +206,7 @@ public sealed class BoundProgramLowerer
                     return;
                 }
 
-                ReportUnsupported(declaration, "РѕР±СЉСЏРІР»РµРЅРёРµ РїРµСЂРµРјРµРЅРЅРѕР№ Р±РµР· РёРЅРёС†РёР°Р»РёР·Р°С‚РѕСЂР° СЌС‚РѕРіРѕ С‚РёРїР°");
+                ReportUnsupported(declaration, "объявление переменной без инициализатора этого типа");
                 return;
             }
 
@@ -251,7 +251,7 @@ public sealed class BoundProgramLowerer
 
         if (assignment.Target is not BoundVariableExpression variable)
         {
-            ReportUnsupported(assignment, "С†РµР»СЊ РїСЂРёСЃРІР°РёРІР°РЅРёСЏ");
+            ReportUnsupported(assignment, "цель присваивания");
             return;
         }
 
@@ -263,7 +263,7 @@ public sealed class BoundProgramLowerer
     {
         if (declaration.Initializer is not null)
         {
-            ReportUnsupported(declaration, "РёРЅРёС†РёР°Р»РёР·Р°С‚РѕСЂ РјР°СЃСЃРёРІР°");
+            ReportUnsupported(declaration, "инициализатор массива");
             return;
         }
 
@@ -467,7 +467,7 @@ public sealed class BoundProgramLowerer
                 break;
 
             default:
-                ReportUnsupportedSelector(selector, "СЃРµР»РµРєС‚РѕСЂ SELECT CASE");
+                ReportUnsupportedSelector(selector, "селектор SELECT CASE");
                 break;
         }
     }
@@ -558,7 +558,7 @@ public sealed class BoundProgramLowerer
         {
             if (doLoopStatement.Condition is not null)
             {
-                ReportUnsupported(doLoopStatement, "РЎвЂћР С•РЎР‚Р СР В° DO ... LOOP");
+                ReportUnsupported(doLoopStatement, "форма DO ... LOOP");
                 return;
             }
 
@@ -569,7 +569,7 @@ public sealed class BoundProgramLowerer
         if (doLoopStatement.Condition is null
             || doLoopStatement.ConditionKind is not (BoundDoLoopConditionKind.While or BoundDoLoopConditionKind.Until))
         {
-            ReportUnsupported(doLoopStatement, "С„РѕСЂРјР° DO ... LOOP");
+            ReportUnsupported(doLoopStatement, "форма DO ... LOOP");
             return;
         }
 
@@ -587,7 +587,7 @@ public sealed class BoundProgramLowerer
     {
         if (doLoopStatement.Condition is not { } condition)
         {
-            ReportUnsupported(doLoopStatement, "С„РѕСЂРјР° DO ... LOOP");
+            ReportUnsupported(doLoopStatement, "форма DO ... LOOP");
             return;
         }
 
@@ -646,7 +646,7 @@ public sealed class BoundProgramLowerer
         if (doLoopStatement.Condition is not { } condition
             || doLoopStatement.ConditionKind is not (BoundDoLoopConditionKind.While or BoundDoLoopConditionKind.Until))
         {
-            ReportUnsupported(doLoopStatement, "С„РѕСЂРјР° DO ... LOOP");
+            ReportUnsupported(doLoopStatement, "форма DO ... LOOP");
             return;
         }
 
@@ -732,6 +732,19 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.LoadField(fieldAccess.Location, fieldAccess.Field.Name));
                 break;
 
+            case BoundRecordLiteralExpression recordLiteral:
+                var recordTemporary = CreateRecordLiteralTemporary(recordLiteral);
+                instructions.Add(LoweredInstruction.CreateRecord(recordLiteral.Location, recordLiteral.RecordType));
+                instructions.Add(LoweredInstruction.StoreVariable(recordLiteral.Location, recordTemporary));
+                foreach (var initializer in recordLiteral.Initializers)
+                {
+                    LowerExpression(initializer.Expression, instructions);
+                    instructions.Add(LoweredInstruction.LoadVariable(recordLiteral.Location, recordTemporary));
+                    instructions.Add(LoweredInstruction.StoreField(recordLiteral.Location, initializer.Field.Name));
+                }
+                instructions.Add(LoweredInstruction.LoadVariable(recordLiteral.Location, recordTemporary));
+                break;
+
             case BoundUnaryExpression unary:
                 LowerExpression(unary.Operand, instructions);
                 instructions.Add(LoweredInstruction.UnaryOperation(unary.Location, unary.OperatorKind));
@@ -753,7 +766,7 @@ public sealed class BoundProgramLowerer
                 break;
 
             default:
-                ReportUnsupported(expression, "РІС‹СЂР°Р¶РµРЅРёРµ");
+                ReportUnsupported(expression, "выражение");
                 break;
         }
     }
@@ -838,6 +851,18 @@ public sealed class BoundProgramLowerer
         return variable;
     }
 
+    private VariableSymbol CreateRecordLiteralTemporary(BoundRecordLiteralExpression recordLiteral)
+    {
+        var variable = new VariableSymbol(
+            FormattableString.Invariant($"__record_literal_{_currentRoutineLocals.Count}_{recordLiteral.RecordType.Name}"),
+            recordLiteral.RecordType,
+            isReadOnly: false,
+            isGlobal: false);
+
+        _currentRoutineLocals.Add(variable);
+        return variable;
+    }
+
     private static object CreateZeroLiteral(TypeSymbol type)
     {
         if (type == TypeSymbol.Double)
@@ -904,7 +929,7 @@ public sealed class BoundProgramLowerer
     {
         _diagnostics.Add(new BytecodeDiagnostic(
             "BC3001",
-            $"РџРѕРЅРёР¶РµРЅРёРµ РїРѕРєР° РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ {category}: {node.Kind}.",
+            $"Понижение пока не поддерживает {category}: {node.Kind}.",
             node.Location));
     }
 
@@ -912,7 +937,7 @@ public sealed class BoundProgramLowerer
     {
         _diagnostics.Add(new BytecodeDiagnostic(
             "BC3001",
-            $"РџРѕРЅРёР¶РµРЅРёРµ РїРѕРєР° РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ {category}: {selector.GetType().Name}.",
+            $"Понижение пока не поддерживает {category}: {selector.GetType().Name}.",
             selector.Location));
     }
 

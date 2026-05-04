@@ -415,6 +415,16 @@ public sealed class Lexer
             case '\\':
                 _position++;
                 return CreateToken(TokenKind.BackslashToken, start, 1);
+            case ':':
+                if (Peek(1) == '=')
+                {
+                    _position += 2;
+                    return CreateToken(TokenKind.ColonEqualsToken, start, 2);
+                }
+
+                _position++;
+                ReportDiagnostic(start, 1, InvalidCharacterCode, $"РќРµРґРѕРїСѓСЃС‚РёРјС‹Р№ СЃРёРјРІРѕР»: '{_text[start]}'.");
+                return CreateToken(TokenKind.BadToken, start, 1);
             case '=':
                 _position++;
                 return CreateToken(TokenKind.EqualsToken, start, 1);

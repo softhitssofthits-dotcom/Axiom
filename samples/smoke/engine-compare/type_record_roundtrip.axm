@@ -1,0 +1,47 @@
+' адресный benchmark для пользовательских TYPE:
+' вложенные поля, фиксированные строковые поля, фиксированные массивные поля и копирование записи целиком
+
+TYPE Address
+    CityCode AS INTEGER
+    RegionCode AS INTEGER
+END TYPE
+
+TYPE Person
+    Name AS STRING * 8
+    Scores(1 TO 3) AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM people(1 TO 20) AS Person
+DIM scratch AS Person
+DIM total AS LONG = 0
+DIM digest AS LONG = 0
+
+FOR pass = 1 TO 220
+    FOR i = 1 TO 20
+        people(i).Name = "P" + STR((pass + i) MOD 1000)
+        people(i).Scores(1) = pass + i
+        people(i).Scores(2) = pass + i * 2
+        people(i).Scores(3) = pass + i * 3
+        people(i).Home.CityCode = 100 + (i MOD 7)
+        people(i).Home.RegionCode = pass MOD 11
+    NEXT
+
+    FOR i = 1 TO 20
+        scratch = people(i)
+        total = total + scratch.Scores(1) + scratch.Scores(2) + scratch.Scores(3)
+        digest = digest + scratch.Home.CityCode * scratch.Home.RegionCode + LEN(scratch.Name)
+
+        IF i MOD 4 = 0 THEN
+            scratch.Scores(2) = scratch.Scores(2) + scratch.Home.CityCode
+            people(i) = scratch
+            total = total + people(i).Scores(2)
+        END IF
+    NEXT
+NEXT
+
+PRINT total
+PRINT digest
+PRINT people(20).Scores(2)
+PRINT people(20).Home.RegionCode
+PRINT LEN(people(20).Name)

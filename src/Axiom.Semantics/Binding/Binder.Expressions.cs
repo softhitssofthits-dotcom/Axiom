@@ -16,6 +16,7 @@ public sealed partial class Binder
             BinaryExpressionSyntax binaryExpression => BindBinaryExpression(binaryExpression),
             RangeExpressionSyntax rangeExpression => BindRangeExpression(rangeExpression, reportInvalidStandaloneUse: true),
             ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression),
+            NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             ArrayAccessExpressionSyntax arrayAccessExpression => BindArrayAccessExpression(arrayAccessExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),

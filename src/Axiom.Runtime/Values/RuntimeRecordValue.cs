@@ -4,12 +4,13 @@ namespace Axiom.Runtime;
 
 public sealed class RuntimeRecordValue : IRuntimeStoredValue
 {
-    private readonly Dictionary<string, RuntimeValue> _fields = new(StringComparer.OrdinalIgnoreCase);
+    private readonly RuntimeValue[] _fields;
 
     private RuntimeRecordValue(UserDefinedTypeSymbol type)
     {
         ArgumentNullException.ThrowIfNull(type);
         Type = type;
+        _fields = new RuntimeValue[type.Fields.Count];
     }
 
     public UserDefinedTypeSymbol Type { get; }
@@ -30,7 +31,7 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
 
         foreach (var field in type.Fields)
         {
-            record._fields[field.Name] = CreateDefaultFieldValue(field, activeTypes);
+            record._fields[field.Ordinal] = CreateDefaultFieldValue(field, activeTypes);
         }
 
         activeTypes.Remove(type);
@@ -40,14 +41,14 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
     public RuntimeValue GetField(TypeFieldSymbol field)
     {
         ArgumentNullException.ThrowIfNull(field);
-        return _fields[field.Name];
+        return _fields[field.Ordinal];
     }
 
     public void SetField(TypeFieldSymbol field, RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(field);
         ArgumentNullException.ThrowIfNull(value);
-        _fields[field.Name] = CloneFieldValue(field, value);
+        _fields[field.Ordinal] = CloneFieldValue(field, value);
     }
 
     public RuntimeRecordValue Clone()
@@ -56,7 +57,7 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
 
         foreach (var field in Type.Fields)
         {
-            clone._fields[field.Name] = CloneFieldValue(field, _fields[field.Name]);
+            clone._fields[field.Ordinal] = CloneFieldValue(field, _fields[field.Ordinal]);
         }
 
         return clone;
@@ -76,11 +77,13 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
             {
                 IsFixedArray: true,
                 Type: ArrayTypeSymbol arrayType,
-                FixedArrayLowerBound: { } lowerBound,
-                FixedArrayUpperBound: { } upperBound
+                FixedArrayLowerBounds: { } lowerBounds,
+                FixedArrayUpperBounds: { } upperBounds
             })
         {
-            return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, field.FixedStringLength, [lowerBound], [upperBound]));
+            return RuntimeValue.FromArray(
+                arrayType,
+                new RuntimeArrayValue(arrayType.ElementType, field.FixedStringLength, lowerBounds, upperBounds));
         }
 
         return RuntimeValue.Default(field.Type, field.FixedStringLength);

@@ -167,12 +167,6 @@ public sealed partial class Binder
             return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
         }
 
-        if (declarator.ArrayBounds.Rank != 1)
-        {
-            ReportTypeFieldMultidimensionalArrayNotSupported(declarator.Identifier.Text, declarator.ArrayBounds.OpenParenToken.Location);
-            return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
-        }
-
         var arrayType = ArrayTypeSymbol.Create(fieldType, declarator.ArrayBounds.Rank);
 
         if (declarator.ArrayBounds.IsDynamic)
@@ -180,70 +174,93 @@ public sealed partial class Binder
             return new TypeFieldSymbol(declarator.Identifier.Text, arrayType, fixedStringLength);
         }
 
-        if (!TryEvaluateFixedTypeArrayBounds(declarator, out var lowerBound, out var upperBound))
+        if (!TryEvaluateFixedTypeArrayBounds(declarator, out var lowerBounds, out var upperBounds))
         {
             return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
         }
 
-        return new TypeFieldSymbol(declarator.Identifier.Text, arrayType, fixedStringLength, lowerBound, upperBound);
+        return new TypeFieldSymbol(declarator.Identifier.Text, arrayType, fixedStringLength, lowerBounds, upperBounds);
     }
 
-    private bool TryEvaluateFixedTypeArrayBounds(VariableDeclaratorSyntax declarator, out int lowerBound, out int upperBound)
+    private bool TryEvaluateFixedTypeArrayBounds(
+        VariableDeclaratorSyntax declarator,
+        out IReadOnlyList<int> lowerBounds,
+        out IReadOnlyList<int> upperBounds)
     {
         ArgumentNullException.ThrowIfNull(declarator);
 
-        lowerBound = 0;
-        upperBound = 0;
+        lowerBounds = Array.Empty<int>();
+        upperBounds = Array.Empty<int>();
 
         if (declarator.ArrayBounds is null
-            || declarator.ArrayBounds.IsDynamic
-            || declarator.ArrayBounds.Rank != 1
-            || declarator.ArrayBounds.StartExpression is null
-            || declarator.ArrayBounds.EndExpression is null)
+            || declarator.ArrayBounds.IsDynamic)
         {
             ReportInvalidFixedTypeArrayBounds(
                 declarator.Identifier.Text,
                 declarator.Identifier.Location,
-                "Фиксированное поле-массив в TYPE требует обе константные границы.");
+                "Фиксированное поле-массив в TYPE требует константные границы по каждому измерению.");
             return false;
         }
 
-        if (!TryEvaluateGlobalIntegralConstantExpression(declarator.ArrayBounds.StartExpression, out lowerBound))
+        var evaluatedLowerBounds = new int[declarator.ArrayBounds.Dimensions.Count];
+        var evaluatedUpperBounds = new int[declarator.ArrayBounds.Dimensions.Count];
+
+        for (var dimensionIndex = 0; dimensionIndex < declarator.ArrayBounds.Dimensions.Count; dimensionIndex++)
         {
-            ReportInvalidFixedTypeArrayBounds(
-                declarator.Identifier.Text,
-                GetLocation(declarator.ArrayBounds.StartExpression),
-                "Нижняя граница фиксированного поля-массива в TYPE должна быть целочисленной константой.");
-            return false;
+            var dimension = declarator.ArrayBounds.Dimensions[dimensionIndex];
+            var detailSuffix = declarator.ArrayBounds.Dimensions.Count == 1
+                ? string.Empty
+                : $" измерения {dimensionIndex + 1}";
+
+            if (dimension.StartExpression is null || dimension.EndExpression is null)
+            {
+                ReportInvalidFixedTypeArrayBounds(
+                    declarator.Identifier.Text,
+                    declarator.ArrayBounds.OpenParenToken.Location,
+                    $"Фиксированное поле-массив в TYPE требует константные границы{detailSuffix}.");
+                return false;
+            }
+
+            if (!TryEvaluateGlobalIntegralConstantExpression(dimension.StartExpression, out evaluatedLowerBounds[dimensionIndex]))
+            {
+                ReportInvalidFixedTypeArrayBounds(
+                    declarator.Identifier.Text,
+                    GetLocation(dimension.StartExpression),
+                    $"Нижняя граница фиксированного поля-массива в TYPE{detailSuffix} должна быть целочисленной константой.");
+                return false;
+            }
+
+            if (!TryEvaluateGlobalIntegralConstantExpression(dimension.EndExpression, out evaluatedUpperBounds[dimensionIndex]))
+            {
+                ReportInvalidFixedTypeArrayBounds(
+                    declarator.Identifier.Text,
+                    GetLocation(dimension.EndExpression),
+                    $"Верхняя граница фиксированного поля-массива в TYPE{detailSuffix} должна быть целочисленной константой.");
+                return false;
+            }
+
+            if (evaluatedLowerBounds[dimensionIndex] == int.MinValue)
+            {
+                ReportInvalidFixedTypeArrayBounds(
+                    declarator.Identifier.Text,
+                    GetLocation(dimension.StartExpression),
+                    $"Нижняя граница фиксированного поля-массива в TYPE{detailSuffix} не может быть равна {int.MinValue}.");
+                return false;
+            }
+
+            if (evaluatedUpperBounds[dimensionIndex] < evaluatedLowerBounds[dimensionIndex]
+                && !(evaluatedLowerBounds[dimensionIndex] == 1 && evaluatedUpperBounds[dimensionIndex] == 0))
+            {
+                ReportInvalidFixedTypeArrayBounds(
+                    declarator.Identifier.Text,
+                    declarator.ArrayBounds.OpenParenToken.Location,
+                    $"У фиксированного поля-массива в TYPE верхняя граница не может быть меньше нижней{detailSuffix}, кроме формы 1 TO 0.");
+                return false;
+            }
         }
 
-        if (!TryEvaluateGlobalIntegralConstantExpression(declarator.ArrayBounds.EndExpression, out upperBound))
-        {
-            ReportInvalidFixedTypeArrayBounds(
-                declarator.Identifier.Text,
-                GetLocation(declarator.ArrayBounds.EndExpression),
-                "Верхняя граница фиксированного поля-массива в TYPE должна быть целочисленной константой.");
-            return false;
-        }
-
-        if (lowerBound == int.MinValue)
-        {
-            ReportInvalidFixedTypeArrayBounds(
-                declarator.Identifier.Text,
-                GetLocation(declarator.ArrayBounds.StartExpression),
-                $"Нижняя граница фиксированного поля-массива в TYPE не может быть равна {int.MinValue}.");
-            return false;
-        }
-
-        if (upperBound < lowerBound && !(lowerBound == 1 && upperBound == 0))
-        {
-            ReportInvalidFixedTypeArrayBounds(
-                declarator.Identifier.Text,
-                declarator.ArrayBounds.OpenParenToken.Location,
-                "У фиксированного поля-массива в TYPE верхняя граница не может быть меньше нижней, кроме формы 1 TO 0.");
-            return false;
-        }
-
+        lowerBounds = evaluatedLowerBounds;
+        upperBounds = evaluatedUpperBounds;
         return true;
     }
 

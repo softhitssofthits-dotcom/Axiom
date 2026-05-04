@@ -268,6 +268,75 @@ public sealed class BytecodeModuleSerializerTests
             string.Join(" | ", validationResult.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}")));
     }
 
+    [Fact]
+    public void DeserializeModuleFromJson_RestoresMultidimensionalFixedArrayTypeField()
+    {
+        var pointType = new UserDefinedTypeSymbol("Point");
+        pointType.Complete(
+        [
+            new TypeFieldSymbol(
+                "grid",
+                ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2),
+                fixedStringLength: null,
+                fixedArrayLowerBounds: [1, 4],
+                fixedArrayUpperBounds: [2, 5])
+        ]);
+        var point = new VariableSymbol("point", pointType, isReadOnly: false, isGlobal: false);
+        var routine = new BytecodeRoutine(
+            id: 0,
+            name: "Main",
+            location: Location(1, 1),
+            resultType: TypeSymbol.Void,
+            parameterCount: 0,
+            localSlotCount: 1,
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.LoadLocal, [0]),
+                new BytecodeInstruction(Opcode.Pop),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            isEntryPoint: true,
+            symbol: new FunctionSymbol("Main", [], TypeSymbol.Void),
+            parameterVariables: [],
+            localVariables: [point],
+            capturedVariables: []);
+        var module = new BytecodeModule(
+            new BytecodeHeader(
+                BytecodeFormatVersion.V1,
+                "Axiom",
+                BytecodeModuleFlags.None,
+                "axiom-bytecode-v1"),
+            new ConstantPool([]),
+            [routine],
+            [],
+            [],
+            debugInfo: null,
+            entryPointRoutineId: 0);
+
+        var artifact = BytecodeModuleSerializer.ToArtifact(module);
+        var typeDefinition = Assert.Single(artifact.TypeDefinitions);
+        var fieldArtifact = Assert.Single(typeDefinition.Fields);
+        Assert.Equal("grid", fieldArtifact.Name);
+        Assert.Equal("INTEGER(,)", fieldArtifact.Type);
+        Assert.Equal([1, 4], fieldArtifact.FixedArrayLowerBounds);
+        Assert.Equal([2, 5], fieldArtifact.FixedArrayUpperBounds);
+
+        var restoredModule = BytecodeModuleSerializer.DeserializeModuleFromJson(
+            BytecodeModuleSerializer.SerializeToJson(module));
+        var restoredLocal = Assert.Single(Assert.Single(restoredModule.Routines).LocalVariables);
+        var restoredType = Assert.IsType<UserDefinedTypeSymbol>(restoredLocal.Type);
+        Assert.True(restoredType.TryGetField("grid", out var restoredField));
+        var restoredArrayType = Assert.IsType<ArrayTypeSymbol>(restoredField!.Type);
+        Assert.Equal(2, restoredArrayType.Rank);
+        Assert.Equal([1, 4], restoredField.FixedArrayLowerBounds);
+        Assert.Equal([2, 5], restoredField.FixedArrayUpperBounds);
+
+        var validationResult = new BytecodeModuleValidator().Validate(restoredModule);
+        Assert.True(
+            validationResult.Succeeded,
+            string.Join(" | ", validationResult.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}")));
+    }
+
     private static BytecodeModule CreateModule()
     {
         var local = new VariableSymbol("temp", TypeSymbol.String, isReadOnly: false, isGlobal: false, fixedStringLength: 8);

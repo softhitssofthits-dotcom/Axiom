@@ -14,6 +14,7 @@ public sealed partial class Interpreter
             BoundVariableExpression variable => EvaluateVariableExpression(variable),
             BoundArrayAccessExpression arrayAccess => EvaluateArrayAccessExpression(arrayAccess),
             BoundFieldAccessExpression fieldAccess => EvaluateFieldAccessExpression(fieldAccess),
+            BoundRecordLiteralExpression recordLiteral => EvaluateRecordLiteralExpression(recordLiteral),
             BoundUnaryExpression unary => EvaluateUnaryExpression(unary),
             BoundBinaryExpression binary => EvaluateBinaryExpression(binary),
             BoundCallExpression call => EvaluateCallExpression(call),
@@ -73,6 +74,18 @@ public sealed partial class Interpreter
     {
         var target = EvaluateExpression(expression.Target);
         return target.AsRecord().GetField(expression.Field);
+    }
+
+    private RuntimeValue EvaluateRecordLiteralExpression(BoundRecordLiteralExpression expression)
+    {
+        var record = RuntimeRecordValue.CreateDefault(expression.RecordType);
+
+        foreach (var initializer in expression.Initializers)
+        {
+            record.SetField(initializer.Field, EvaluateExpression(initializer.Expression));
+        }
+
+        return RuntimeValue.FromRecord(expression.RecordType, record);
     }
 
     private RuntimeValue EvaluateUnaryExpression(BoundUnaryExpression expression)

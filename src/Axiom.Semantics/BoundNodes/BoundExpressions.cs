@@ -113,6 +113,44 @@ public sealed class BoundFieldAccessExpression : BoundExpression
     public TypeFieldSymbol Field { get; }
 }
 
+public sealed class BoundRecordLiteralFieldInitializer
+{
+    public BoundRecordLiteralFieldInitializer(TypeFieldSymbol field, BoundExpression expression)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        ArgumentNullException.ThrowIfNull(expression);
+
+        Field = field;
+        Expression = expression;
+    }
+
+    public TypeFieldSymbol Field { get; }
+
+    public BoundExpression Expression { get; }
+}
+
+public sealed class BoundRecordLiteralExpression : BoundExpression
+{
+    public BoundRecordLiteralExpression(
+        TextLocation location,
+        UserDefinedTypeSymbol type,
+        IReadOnlyList<BoundRecordLiteralFieldInitializer> initializers)
+        : base(location, type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(initializers);
+
+        RecordType = type;
+        Initializers = initializers;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.RecordLiteralExpression;
+
+    public UserDefinedTypeSymbol RecordType { get; }
+
+    public IReadOnlyList<BoundRecordLiteralFieldInitializer> Initializers { get; }
+}
+
 public sealed class BoundUnaryExpression : BoundExpression
 {
     public BoundUnaryExpression(TextLocation location, SyntaxKind operatorKind, BoundExpression operand, TypeSymbol type)

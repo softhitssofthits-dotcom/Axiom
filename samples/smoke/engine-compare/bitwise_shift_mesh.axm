@@ -1,0 +1,45 @@
+' Сравнительный сценарий: побитовые операции и сдвиги.
+' Нагружает AND, OR, XOR, NOT, << и >> на INTEGER, LONG и BOOLEAN.
+
+DIM intChecksum AS LONG = 0
+DIM longChecksum AS LONG = 0
+DIM boolChecksum AS LONG = 0
+
+FOR outerIndex = 1 TO 520
+    DIM localInt AS INTEGER = (outerIndex * 37) XOR 255
+    DIM localLong AS LONG = (outerIndex * 100003) XOR 65535
+    DIM localFlag AS BOOLEAN = outerIndex MOD 2 = 0
+
+    FOR innerIndex = 1 TO 24
+        DIM shiftBits AS INTEGER = innerIndex AND 3
+
+        localInt = (localInt XOR (outerIndex AND 255)) + innerIndex
+        localInt = localInt AND 32767
+        localInt = localInt OR ((innerIndex AND 15) << shiftBits)
+        localInt = localInt XOR ((outerIndex AND 7) << 2)
+        localInt = localInt << 1
+        localInt = localInt >> 1
+        localInt = localInt AND 32767
+
+        localLong = localLong XOR ((outerIndex AND 1023) << shiftBits)
+        localLong = localLong OR (innerIndex << 5)
+        localLong = localLong AND 2147483647
+        localLong = localLong << 1
+        localLong = localLong >> 1
+
+        localFlag = (localFlag AND (innerIndex MOD 2 = 0)) OR ((NOT localFlag) AND (innerIndex MOD 3 = 0))
+
+        IF NOT localFlag THEN
+            boolChecksum = boolChecksum + 1
+        ELSE
+            boolChecksum = boolChecksum + 2
+        END IF
+    NEXT
+
+    intChecksum = intChecksum + localInt
+    longChecksum = longChecksum + localLong
+NEXT
+
+PRINT intChecksum
+PRINT longChecksum
+PRINT boolChecksum

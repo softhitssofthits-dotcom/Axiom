@@ -229,6 +229,7 @@ public sealed partial class Parser
             TokenKind.CaretToken => SyntaxKind.CaretToken,
             TokenKind.SlashToken => SyntaxKind.SlashToken,
             TokenKind.BackslashToken => SyntaxKind.BackslashToken,
+            TokenKind.ColonEqualsToken => SyntaxKind.ColonEqualsToken,
             TokenKind.EqualsToken => SyntaxKind.EqualsToken,
             TokenKind.NotEqualsToken => SyntaxKind.NotEqualsToken,
             TokenKind.LessToken => SyntaxKind.LessToken,

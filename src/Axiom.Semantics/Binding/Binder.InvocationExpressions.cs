@@ -9,8 +9,18 @@ public sealed partial class Binder
     {
         if (expression.Target is NameExpressionSyntax nameExpression)
         {
+            if (_declaredTypes.TryGetValue(nameExpression.IdentifierToken.Text, out var recordType))
+            {
+                return BindRecordLiteralExpression(recordType, expression);
+            }
+
             if (_scope.TryLookupVariable(nameExpression.IdentifierToken.Text, out var variable) && variable is not null)
             {
+                if (TryReportUnsupportedNamedArguments(expression))
+                {
+                    return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
+                }
+
                 if (variable.IsArray)
                 {
                     var arrayType = (ArrayTypeSymbol)variable.Type;
@@ -43,6 +53,11 @@ public sealed partial class Binder
 
             if (_scope.TryLookupFunction(nameExpression.IdentifierToken.Text, out var function) && function is not null)
             {
+                if (TryReportUnsupportedNamedArguments(expression))
+                {
+                    return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
+                }
+
                 return BindInvocationExpression(
                     new BoundFunctionExpression(nameExpression.IdentifierToken.Location, function),
                     expression,
@@ -61,6 +76,11 @@ public sealed partial class Binder
         }
 
         var target = BindExpression(expression.Target);
+
+        if (TryReportUnsupportedNamedArguments(expression))
+        {
+            return new BoundErrorExpression(GetLocation(expression.Target));
+        }
 
         if (target.Type is ArrayTypeSymbol)
         {
@@ -117,6 +137,50 @@ public sealed partial class Binder
         }
 
         return new BoundFieldAccessExpression(expression.Identifier.Location, target, field);
+    }
+
+    private BoundExpression BindRecordLiteralExpression(UserDefinedTypeSymbol recordType, CallExpressionSyntax expression)
+    {
+        ArgumentNullException.ThrowIfNull(recordType);
+        ArgumentNullException.ThrowIfNull(expression);
+
+        var initializers = new List<BoundRecordLiteralFieldInitializer>(expression.Arguments.Count);
+        var seenFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var hasErrors = false;
+
+        foreach (var argument in expression.Arguments)
+        {
+            if (argument is not NamedArgumentExpressionSyntax namedArgument)
+            {
+                ReportTypeLiteralRequiresNamedFields(recordType.Name, GetLocation(argument));
+                BindExpression(argument);
+                hasErrors = true;
+                continue;
+            }
+
+            if (!recordType.TryGetField(namedArgument.IdentifierToken.Text, out var field) || field is null)
+            {
+                ReportUnknownField(recordType, namedArgument.IdentifierToken.Text, namedArgument.IdentifierToken.Location);
+                BindExpression(namedArgument.Expression);
+                hasErrors = true;
+                continue;
+            }
+
+            if (!seenFields.Add(field.Name))
+            {
+                ReportDuplicateTypeLiteralField(recordType.Name, field.Name, namedArgument.IdentifierToken.Location);
+                BindExpression(namedArgument.Expression, field.Type);
+                hasErrors = true;
+                continue;
+            }
+
+            var value = BindExpression(namedArgument.Expression, field.Type);
+            initializers.Add(new BoundRecordLiteralFieldInitializer(field, value));
+        }
+
+        return hasErrors
+            ? new BoundErrorExpression(GetLocation(expression))
+            : new BoundRecordLiteralExpression(GetLocation(expression), recordType, initializers);
     }
 
     private BoundExpression BindAssignableTarget(ExpressionSyntax target)
@@ -178,6 +242,39 @@ public sealed partial class Binder
         }
 
         return BindDeclaredInvocation(target, expression, functionType, location);
+    }
+
+    private bool TryReportUnsupportedNamedArguments(CallExpressionSyntax expression)
+    {
+        foreach (var argument in expression.Arguments)
+        {
+            if (argument is not NamedArgumentExpressionSyntax namedArgument)
+            {
+                continue;
+            }
+
+            ReportNamedArgumentsOnlySupportedForTypeLiterals(namedArgument.ColonEqualsToken.Location);
+
+            foreach (var nestedArgument in expression.Arguments)
+            {
+                BindCallArgumentForDiagnostics(nestedArgument);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void BindCallArgumentForDiagnostics(ExpressionSyntax argument)
+    {
+        if (argument is NamedArgumentExpressionSyntax namedArgument)
+        {
+            BindExpression(namedArgument.Expression);
+            return;
+        }
+
+        BindExpression(argument);
     }
 
     private BoundExpression BindDeclaredInvocation(

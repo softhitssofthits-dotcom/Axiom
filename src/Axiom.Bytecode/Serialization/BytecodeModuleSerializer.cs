@@ -248,8 +248,8 @@ public static class BytecodeModuleSerializer
             field.Name,
             field.Type.Name,
             field.FixedStringLength,
-            field.FixedArrayLowerBound,
-            field.FixedArrayUpperBound);
+            field.FixedArrayLowerBounds,
+            field.FixedArrayUpperBounds);
     }
 
     private static BytecodeConstantArtifact ToArtifact(BytecodeConstant constant, int index)
@@ -614,8 +614,8 @@ public static class BytecodeModuleSerializer
                     field.Name,
                     ResolveType(field.Type, types),
                     field.FixedStringLength,
-                    field.FixedArrayLowerBound,
-                    field.FixedArrayUpperBound))
+                    field.FixedArrayLowerBounds,
+                    field.FixedArrayUpperBounds))
                 .ToArray());
         }
 
@@ -626,6 +626,11 @@ public static class BytecodeModuleSerializer
         string name,
         IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
     {
+        if (TryResolveArrayType(name, userDefinedTypes, out var arrayType))
+        {
+            return arrayType;
+        }
+
         return name switch
         {
             "INTEGER" => TypeSymbol.Integer,
@@ -638,10 +643,35 @@ public static class BytecodeModuleSerializer
             "VOID" => TypeSymbol.Void,
             "<error>" => TypeSymbol.Error,
             _ when userDefinedTypes.TryGetValue(name, out var userDefinedType) => userDefinedType,
-            _ when name.EndsWith("()", StringComparison.Ordinal) => ArrayTypeSymbol.Create(ResolveType(name[..^2], userDefinedTypes)),
             _ when name.StartsWith("FUNCTION(", StringComparison.Ordinal) => ResolveFunctionType(name, userDefinedTypes),
             _ => new UserDefinedTypeSymbol(name)
         };
+    }
+
+    private static bool TryResolveArrayType(
+        string name,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes,
+        out TypeSymbol type)
+    {
+        var openParenIndex = name.LastIndexOf('(');
+        if (openParenIndex <= 0 || !name.EndsWith(")", StringComparison.Ordinal))
+        {
+            type = TypeSymbol.Error;
+            return false;
+        }
+
+        var rankToken = name[(openParenIndex + 1)..^1];
+        if (rankToken.Any(static ch => ch != ','))
+        {
+            type = TypeSymbol.Error;
+            return false;
+        }
+
+        var elementTypeName = name[..openParenIndex];
+        var elementType = ResolveType(elementTypeName, userDefinedTypes);
+        var rank = rankToken.Length + 1;
+        type = ArrayTypeSymbol.Create(elementType, rank);
+        return true;
     }
 
     private static TypeSymbol ResolveFunctionType(

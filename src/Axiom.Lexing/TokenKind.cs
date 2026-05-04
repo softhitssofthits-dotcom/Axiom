@@ -18,6 +18,7 @@ public enum TokenKind
     CaretToken,
     SlashToken,
     BackslashToken,
+    ColonEqualsToken,
     EqualsToken,
     NotEqualsToken,
     LessToken,

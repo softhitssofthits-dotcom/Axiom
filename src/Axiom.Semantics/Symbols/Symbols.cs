@@ -148,18 +148,41 @@ public sealed class TypeFieldSymbol : Symbol
         int? fixedStringLength = null,
         int? fixedArrayLowerBound = null,
         int? fixedArrayUpperBound = null)
+        : this(
+            name,
+            type,
+            fixedStringLength,
+            fixedArrayLowerBound is null ? null : [fixedArrayLowerBound.Value],
+            fixedArrayUpperBound is null ? null : [fixedArrayUpperBound.Value])
+    {
+    }
+
+    public TypeFieldSymbol(
+        string name,
+        TypeSymbol type,
+        int? fixedStringLength,
+        IReadOnlyList<int>? fixedArrayLowerBounds,
+        IReadOnlyList<int>? fixedArrayUpperBounds)
         : base(name)
     {
         ArgumentNullException.ThrowIfNull(type);
 
-        if ((fixedArrayLowerBound is null) != (fixedArrayUpperBound is null))
+        if ((fixedArrayLowerBounds is null) != (fixedArrayUpperBounds is null))
         {
             throw new ArgumentException("Fixed array bounds must be provided together.");
         }
 
-        if (fixedArrayLowerBound is not null && type is not ArrayTypeSymbol)
+        if (fixedArrayLowerBounds is not null && type is not ArrayTypeSymbol)
         {
             throw new ArgumentException("Fixed array bounds are only valid for array-typed fields.", nameof(type));
+        }
+
+        if (fixedArrayLowerBounds is not null
+            && type is ArrayTypeSymbol fixedArrayType
+            && (fixedArrayLowerBounds.Count != fixedArrayUpperBounds!.Count
+                || fixedArrayLowerBounds.Count != fixedArrayType.Rank))
+        {
+            throw new ArgumentException("Fixed array bounds count must match the array rank.", nameof(fixedArrayLowerBounds));
         }
 
         if (fixedStringLength is not null && !SupportsFixedString(type))
@@ -169,8 +192,8 @@ public sealed class TypeFieldSymbol : Symbol
 
         Type = type;
         FixedStringLength = fixedStringLength;
-        FixedArrayLowerBound = fixedArrayLowerBound;
-        FixedArrayUpperBound = fixedArrayUpperBound;
+        FixedArrayLowerBounds = fixedArrayLowerBounds?.ToArray();
+        FixedArrayUpperBounds = fixedArrayUpperBounds?.ToArray();
     }
 
     public TypeSymbol Type { get; }
@@ -181,13 +204,23 @@ public sealed class TypeFieldSymbol : Symbol
 
     public bool IsArray => Type is ArrayTypeSymbol;
 
-    public bool IsFixedArray => FixedArrayLowerBound is not null;
+    public bool IsFixedArray => FixedArrayLowerBounds is not null;
 
     public bool IsDynamicArray => IsArray && !IsFixedArray;
 
-    public int? FixedArrayLowerBound { get; }
+    public IReadOnlyList<int>? FixedArrayLowerBounds { get; }
 
-    public int? FixedArrayUpperBound { get; }
+    public IReadOnlyList<int>? FixedArrayUpperBounds { get; }
+
+    public int? FixedArrayLowerBound => FixedArrayLowerBounds is { Count: 1 }
+        ? FixedArrayLowerBounds[0]
+        : null;
+
+    public int? FixedArrayUpperBound => FixedArrayUpperBounds is { Count: 1 }
+        ? FixedArrayUpperBounds[0]
+        : null;
+
+    public int Ordinal { get; internal set; }
 
     private static bool SupportsFixedString(TypeSymbol type)
     {
@@ -221,8 +254,10 @@ public sealed class UserDefinedTypeSymbol : TypeSymbol
 
         _fields = fields;
 
-        foreach (var field in fields)
+        for (var index = 0; index < fields.Count; index++)
         {
+            var field = fields[index];
+            field.Ordinal = index;
             _fieldsByName[field.Name] = field;
         }
 

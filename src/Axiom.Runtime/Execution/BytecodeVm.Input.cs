@@ -21,14 +21,9 @@ public sealed partial class BytecodeVm
         var text = _host.ReadInput(new InputRequest(plan.PromptText, plan.Targets.Length));
         InvalidateReverseExecutionHistory();
 
-        if (!TryParseInputValues(plan.Targets, text, location, out var values))
+        if (!TryParseAndStoreInputValues(frame, plan.Targets, text, location, instructionIndex))
         {
             throw new RuntimeFailureException();
-        }
-
-        for (var index = 0; index < plan.Targets.Length; index++)
-        {
-            StoreInputValue(frame, plan.Targets[index], values[index], instructionIndex);
         }
     }
 
@@ -291,6 +286,160 @@ public sealed partial class BytecodeVm
         }
 
         values = parsedValues;
+        return true;
+    }
+
+    private bool TryParseAndStoreInputValues(
+        BytecodeCallFrame frame,
+        InputTarget[] targets,
+        string text,
+        TextLocation location,
+        int instructionIndex)
+    {
+        switch (targets.Length)
+        {
+            case 0:
+                return true;
+
+            case 1:
+            {
+                var parsedValue = TryParseInput(targets[0].Type, text.AsSpan(), location);
+                if (parsedValue is null)
+                {
+                    ReportInputConversionFailure(targets[0].Type, text, location);
+                    return false;
+                }
+
+                StoreInputValue(frame, targets[0], parsedValue, instructionIndex);
+                return true;
+            }
+
+            case 2:
+                return TryParseAndStoreTwoInputValues(frame, targets, text, location, instructionIndex);
+
+            case 3:
+                return TryParseAndStoreThreeInputValues(frame, targets, text, location, instructionIndex);
+
+            default:
+            {
+                if (!TryParseInputValues(targets, text, location, out var values))
+                {
+                    return false;
+                }
+
+                for (var index = 0; index < targets.Length; index++)
+                {
+                    StoreInputValue(frame, targets[index], values[index], instructionIndex);
+                }
+
+                return true;
+            }
+        }
+    }
+
+    private bool TryParseAndStoreTwoInputValues(
+        BytecodeCallFrame frame,
+        InputTarget[] targets,
+        string text,
+        TextLocation location,
+        int instructionIndex)
+    {
+        var span = text.AsSpan();
+        var firstSeparator = span.IndexOf(',');
+
+        if (firstSeparator < 0)
+        {
+            ReportInputValueCountFailure(expectedCount: 2, actualCount: 1, location);
+            return false;
+        }
+
+        var secondField = span[(firstSeparator + 1)..];
+        if (secondField.IndexOf(',') >= 0)
+        {
+            ReportInputValueCountFailure(expectedCount: 2, actualCount: CountInputFields(text), location);
+            return false;
+        }
+
+        var firstValue = TryParseInput(targets[0].Type, NormalizeInputField(span[..firstSeparator], trim: true), location);
+        if (firstValue is null)
+        {
+            ReportInputConversionFailure(targets[0].Type, NormalizeInputField(span[..firstSeparator], trim: true).ToString(), location);
+            return false;
+        }
+
+        var normalizedSecondField = NormalizeInputField(secondField, trim: true);
+        var parsedSecondValue = TryParseInput(targets[1].Type, normalizedSecondField, location);
+        if (parsedSecondValue is null)
+        {
+            ReportInputConversionFailure(targets[1].Type, normalizedSecondField.ToString(), location);
+            return false;
+        }
+
+        StoreInputValue(frame, targets[0], firstValue, instructionIndex);
+        StoreInputValue(frame, targets[1], parsedSecondValue, instructionIndex);
+        return true;
+    }
+
+    private bool TryParseAndStoreThreeInputValues(
+        BytecodeCallFrame frame,
+        InputTarget[] targets,
+        string text,
+        TextLocation location,
+        int instructionIndex)
+    {
+        var span = text.AsSpan();
+        var firstSeparator = span.IndexOf(',');
+
+        if (firstSeparator < 0)
+        {
+            ReportInputValueCountFailure(expectedCount: 3, actualCount: 1, location);
+            return false;
+        }
+
+        var remaining = span[(firstSeparator + 1)..];
+        var secondSeparatorRelative = remaining.IndexOf(',');
+        if (secondSeparatorRelative < 0)
+        {
+            ReportInputValueCountFailure(expectedCount: 3, actualCount: 2, location);
+            return false;
+        }
+
+        var secondSeparator = firstSeparator + 1 + secondSeparatorRelative;
+        var thirdField = span[(secondSeparator + 1)..];
+        if (thirdField.IndexOf(',') >= 0)
+        {
+            ReportInputValueCountFailure(expectedCount: 3, actualCount: CountInputFields(text), location);
+            return false;
+        }
+
+        var firstField = NormalizeInputField(span[..firstSeparator], trim: true);
+        var secondField = NormalizeInputField(span[(firstSeparator + 1)..secondSeparator], trim: true);
+        thirdField = NormalizeInputField(thirdField, trim: true);
+
+        var firstValue = TryParseInput(targets[0].Type, firstField, location);
+        if (firstValue is null)
+        {
+            ReportInputConversionFailure(targets[0].Type, firstField.ToString(), location);
+            return false;
+        }
+
+        var secondValue = TryParseInput(targets[1].Type, secondField, location);
+        if (secondValue is null)
+        {
+            ReportInputConversionFailure(targets[1].Type, secondField.ToString(), location);
+            return false;
+        }
+
+        var thirdValue = TryParseInput(targets[2].Type, thirdField, location);
+        if (thirdValue is null)
+        {
+            ReportInputConversionFailure(targets[2].Type, thirdField.ToString(), location);
+            return false;
+        }
+
+        StoreInputValue(frame, targets[0], firstValue, instructionIndex);
+        StoreInputValue(frame, targets[1], secondValue, instructionIndex);
+        StoreInputValue(frame, targets[2], thirdValue, instructionIndex);
         return true;
     }
 

@@ -118,14 +118,7 @@ public sealed partial class Parser
         {
             while (true)
             {
-                var expression = ParseExpression();
-
-                if (Current.Kind == SyntaxKind.ToKeyword)
-                {
-                    var toKeyword = NextToken();
-                    var upperBound = ParseExpression();
-                    expression = new RangeExpressionSyntax(expression, toKeyword, upperBound);
-                }
+                var expression = ParseCallArgumentExpression();
 
                 items.Add(expression);
 
@@ -141,6 +134,32 @@ public sealed partial class Parser
         closingToken = Match(closingKind, closingDisplayName);
         expressions = items;
         commaTokens = commas;
+    }
+
+    private ExpressionSyntax ParseCallArgumentExpression()
+    {
+        if (Current.Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.ColonEqualsToken)
+        {
+            var identifierToken = NextToken();
+            var colonEqualsToken = NextToken();
+            return new NamedArgumentExpressionSyntax(identifierToken, colonEqualsToken, ParseArgumentValueExpression());
+        }
+
+        return ParseArgumentValueExpression();
+    }
+
+    private ExpressionSyntax ParseArgumentValueExpression()
+    {
+        var expression = ParseExpression();
+
+        if (Current.Kind == SyntaxKind.ToKeyword)
+        {
+            var toKeyword = NextToken();
+            var upperBound = ParseExpression();
+            expression = new RangeExpressionSyntax(expression, toKeyword, upperBound);
+        }
+
+        return expression;
     }
 
     private static int GetUnaryOperatorPrecedence(SyntaxKind kind)

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -19,7 +19,7 @@
             <div class="sidebar__inner">
                 <div class="sidebar__head">
                     <p class="sidebar__title">Тип TYPE</p>
-                    <p class="sidebar__subtitle">Описание пользовательского типа записи и доступ к его полям.</p>
+                    <p class="sidebar__subtitle">Пользовательские записи, поля, массивные поля и литералы записи.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -34,11 +34,11 @@
             </nav>
             <p class="eyebrow">Данные и объявления</p>
             <h1 class="page-title">Тип TYPE</h1>
-            <p class="lead"><code>TYPE ... END TYPE</code> объявляет пользовательский тип записи: набор именованных полей, к которым программа обращается через точку.</p>
+            <p class="lead"><code>TYPE ... END TYPE</code> объявляет пользовательский тип записи: набор именованных полей, к которым программа обращается через точку. Запись можно хранить в переменной, передавать в процедуры и функции, помещать в массив и создавать через именованный литерал.</p>
 
             <section class="article-section" id="summary">
                 <h2>Сводка</h2>
-                <p><code>TYPE</code> задаёт новый тип данных, который затем можно использовать в <code>DIM</code>, параметрах <code>SUB</code> и <code>FUNCTION</code>, а также в типах результата <code>FUNCTION</code>.</p>
+                <p><code>TYPE</code> нужен, когда несколько связанных значений должны жить под одним именем. Вместо набора отдельных переменных вы объявляете запись один раз и затем используете её как самостоятельный тип данных.</p>
             </section>
 
             <section class="article-section" id="syntax">
@@ -53,16 +53,19 @@ PRINT variableName.fieldName</code></pre>
                 <pre><code class="language-basic">DIM arrayName(lowerBound TO upperBound) AS typeName
 arrayName(index).fieldName = expression
 PRINT arrayName(index).fieldName</code></pre>
+                <pre><code class="language-basic">DIM user AS Person
+user = Person(Name := "Ada", Age := 36)
+DIM emptyUser AS Person
+emptyUser = Person()</code></pre>
             </section>
 
             <section class="article-section" id="parts">
                 <h2>Части синтаксиса</h2>
                 <ul>
                     <li><code>typeName</code> — имя пользовательского типа. Оно объявляется после <code>TYPE</code>, а затем используется после <code>AS</code>.</li>
-                    <li><code>fieldDeclaration</code> — объявление поля внутри записи. Обычно оно записывается в форме <code>fieldName AS fieldType</code>, но поддерживаются и групповые объявления с общим <code>AS</code>.</li>
-                    <li><code>fieldName</code> — имя поля внутри записи. В одном <code>TYPE</code> имена полей не должны повторяться.</li>
-                    <li><code>variableName.fieldName</code> — доступ к полю переменной пользовательского типа через точку.</li>
-                    <li><code>arrayName(index).fieldName</code> — доступ к полю записи, которая хранится в элементе массива.</li>
+                    <li><code>fieldDeclaration</code> — объявление поля внутри записи. Базовая форма: <code>fieldName AS fieldType</code>.</li>
+                    <li><code>variableName.fieldName</code> — доступ к полю записи через точку.</li>
+                    <li><code>TypeName(Field := value)</code> — именованный литерал записи. Каждое имя слева от <code>:=</code> должно совпадать с полем объявленного <code>TYPE</code>.</li>
                 </ul>
             </section>
 
@@ -70,48 +73,49 @@ PRINT arrayName(index).fieldName</code></pre>
                 <h2>Замечания</h2>
                 <ul>
                     <li><code>TYPE ... END TYPE</code> объявляется на верхнем уровне программы, а не внутри <code>SUB</code>, <code>FUNCTION</code>, <code>IF</code>, циклов или другого <code>TYPE</code>.</li>
-                    <li>Внутри <code>TYPE</code> не используются обычные операторы программы вроде <code>DIM</code>, <code>PRINT</code> или <code>IF</code>. Тело <code>TYPE</code> состоит только из объявлений полей.</li>
+                    <li>Тело <code>TYPE</code> состоит только из объявлений полей. Обычные операторы программы внутри него не используются.</li>
                     <li>Поле получает значение по умолчанию своего типа: <code>0</code> для чисел, пустую строку для <code>STRING</code> и <code>FALSE</code> для <code>BOOLEAN</code>.</li>
                     <li>Поле может иметь другой пользовательский тип, поэтому допустимы цепочки вида <code>person.Home.City</code>.</li>
-                    <li>Обычное присваивание записи целиком создаёт независимую копию значения. После <code>second = first</code> изменение <code>first.Name</code> не меняет <code>second.Name</code>.</li>
-                    <li>Пользовательский тип можно использовать как тип элемента одномерного массива: <code>DIM people(1 TO 10) AS Person</code>.</li>
-                    <li>Присваивание записи в элемент массива целиком тоже сохраняет копию значения. После <code>people(1) = first</code> изменение <code>first.Name</code> не меняет <code>people(1).Name</code>.</li>
-                    <li>В текущей реализации внутри <code>TYPE</code> поддерживаются скалярные поля, вложенные пользовательские типы, динамические массивные поля вида <code>fieldName() AS TYPE</code>, фиксированные массивные поля вида <code>fieldName(lower TO upper) AS TYPE</code> и групповые объявления с общим <code>AS</code>.</li>
-                    <li>Групповое объявление позволяет задать несколько полей одной строкой, например <code>Name, Alias AS STRING</code> или <code>Scores(), Flags(1 TO 2) AS INTEGER</code>. Скобки диапазона или динамической формы относятся к каждому имени отдельно.</li>
-                    <li>Фиксированное массивное поле получает выделенный диапазон сразу при создании записи, хранит значения по умолчанию для элементов и копируется вместе с записью как часть её значения.</li>
-                    <li>Строковое поле можно объявить в форме <code>FieldName AS STRING * N</code>. Такое поле по-прежнему остаётся строковым, но пустое значение создаётся как строка из пробелов длины <code>N</code>, короткие присваивания дополняются пробелами справа, а длинные — обрезаются.</li>
-                    <li>Для динамического массивного поля работают <code>REDIM</code>, <code>REDIM PRESERVE</code> и <code>ERASE</code>. Для фиксированного массивного поля эти операторы не допускаются: его диапазон задаётся прямо в объявлении <code>TYPE</code>.</li>
-                    <li>Границы фиксированного массивного поля в <code>TYPE</code> должны быть целочисленными константами. Можно использовать литералы, простые целочисленные константные выражения и имена верхнеуровневых <code>CONST</code>. Порядок объявления <code>CONST</code> и <code>TYPE</code> в файле для этой формы не важен. Специальная пустая форма <code>1 TO 0</code> допустима и создаёт уже выделенный, но пустой массив.</li>
+                    <li>Присваивание записи целиком копирует значение. После <code>second = first</code> изменение <code>first.Name</code> не меняет <code>second.Name</code>.</li>
+                    <li>Пользовательский тип можно использовать как тип элемента массива: <code>DIM people(1 TO 10) AS Person</code>.</li>
+                    <li>Внутри <code>TYPE</code> поддерживаются скалярные поля, вложенные пользовательские типы, динамические массивные поля любого ранга, фиксированные массивные поля любого ранга, фиксированные строковые поля и групповые объявления с общим <code>AS</code>.</li>
+                    <li>Частичное индексирование и диапазоны у массивного поля записи работают по тем же правилам, что и у обычного массива. Выражения вида <code>lineView = board.Cells(2)</code> и <code>window = board.Cells(2 TO 3, 3 TO 4)</code> возвращают представление на то же хранилище, а не скрытую копию.</li>
+                    <li>Именованный литерал записи в форме <code>Person(Name := "Ada", Age := 36)</code> использует <code>:=</code> только внутри <code>TypeName(...)</code>. В этом шаге <code>:=</code> не становится общим синтаксисом именованных аргументов для обычных вызовов <code>SUB</code>, <code>FUNCTION</code> и встроенных функций.</li>
+                    <li>Пустая форма <code>Person()</code> создаёт запись, где все поля остаются в значениях по умолчанию.</li>
+                    <li>Если поле имеет другой пользовательский тип, допустим вложенный литерал такого же вида, например <code>Person(Home := Address(City := "Paris"))</code>.</li>
                     <li>Пользовательские типы не могут образовывать прямой или косвенный цикл вложенности.</li>
                 </ul>
             </section>
 
             <section class="article-section" id="arrays">
-                <h2>Массивы записей</h2>
-                <p>Если нужно хранить несколько записей одного вида, объявите одномерный массив пользовательского типа. После выбора элемента через индекс можно читать и менять его поля через точку.</p>
-                <pre><code class="language-basic">' Простая запись с двумя полями
-' Ожидаемый вывод: Ada
-TYPE Person
-    Name AS STRING
-    Age AS INTEGER
+                <h2>Массивы записей и массивные поля</h2>
+                <p>Если нужно хранить несколько записей одного вида, объявите массив пользовательского типа. Если же массив относится только к одной записи, объявите массивное поле прямо внутри <code>TYPE</code>. Оба случая подчиняются одному и тому же общему массивному договору Axiom.</p>
+                <pre><code class="language-basic">TYPE Board
+    Cells(,) AS INTEGER
 END TYPE
 
-DIM people(1 TO 2) AS Person
+DIM board AS Board
+DIM lineView() AS INTEGER
 
-people(1).Name = "Ada"
-people(1).Age = 36
+REDIM board.Cells(1 TO 3, 1 TO 4)
+board.Cells(2, 3) = 23
+lineView = board.Cells(2)
+lineView(4) = 24
 
-PRINT people(1).Name</code></pre>
-                <p>Для такого массива работают обычные границы и информационные функции массива, например <code>LBOUND</code>, <code>UBOUND</code>, <code>ARRAYLENGTH</code> и <code>ARRAYISALLOCATED</code>. Массив остаётся ссылочным значением, но каждая запись внутри элемента хранится по правилам значения.</p>
+PRINT board.Cells(2, 4)</code></pre>
             </section>
 
             <section class="article-section" id="manual-check">
                 <h2>Ручная проверка</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/type/field_access.axm">TYPE: поля, вложенный TYPE и копирование записи</a></li>
+                    <li><a href="../../samples/operators/type/named_literals.axm">TYPE: именованные литералы через :=</a></li>
                     <li><a href="../../samples/operators/type/array_elements.axm">TYPE: массив записей и поля элементов</a></li>
                     <li><a href="../../samples/operators/type/array_fields.axm">TYPE: динамические массивные поля</a></li>
+                    <li><a href="../../samples/operators/type/array_field_views.axm">TYPE: подмассивы и диапазонные представления через поле</a></li>
+                    <li><a href="../../samples/operators/type/multidimensional_array_fields.axm">TYPE: многомерные динамические массивные поля</a></li>
                     <li><a href="../../samples/operators/type/fixed_array_fields.axm">TYPE: фиксированные массивные поля</a></li>
+                    <li><a href="../../samples/operators/type/fixed_multidimensional_array_fields.axm">TYPE: многомерные фиксированные массивные поля</a></li>
                     <li><a href="../../samples/operators/type/const_fixed_array_fields.axm">TYPE: границы поля через CONST</a></li>
                     <li><a href="../../samples/operators/type/const_fixed_array_fields_forward.axm">TYPE: границы через CONST при объявлении ниже</a></li>
                     <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
@@ -132,19 +136,39 @@ user.Age = 36
 
 PRINT user.Name
 PRINT user.Age</code></pre>
-                <pre><code class="language-basic">' Вложенная запись позволяет обращаться к полю через цепочку
-' Ожидаемый вывод: London
-TYPE Address
+                <pre><code class="language-basic">TYPE Address
     City AS STRING
 END TYPE
 
 TYPE Person
+    Name AS STRING
+    Age AS INTEGER
     Home AS Address
 END TYPE
 
 DIM user AS Person
-user.Home.City = "London"
-PRINT user.Home.City</code></pre>
+DIM blank AS Person
+
+user = Person(Name := "Ada", Age := 36, Home := Address(City := "Paris"))
+blank = Person()
+
+PRINT user.Name
+PRINT user.Age
+PRINT user.Home.City
+PRINT LEN(blank.Name)
+PRINT blank.Age
+PRINT blank.Home.City = ""</code></pre>
+                <pre><code class="language-basic">TYPE Board
+    Scores(,) AS INTEGER
+END TYPE
+
+DIM board AS Board
+REDIM board.Scores(1 TO 2, 1 TO 3)
+board.Scores(1, 2) = 10
+board.Scores(2, 3) = 20
+
+PRINT board.Scores(1, 2)
+PRINT board.Scores(2, 3)</code></pre>
             </section>
 
             <section class="article-section" id="diagnostics">
@@ -156,7 +180,7 @@ PRINT user.Home.City</code></pre>
                     <li><code>MB2023</code> — указанное поле отсутствует в пользовательском типе.</li>
                     <li><code>MB2024</code> — доступ через точку применён к значению, которое не имеет пользовательского типа.</li>
                     <li><code>MB2025</code> — <code>REDIM</code> или <code>ERASE</code> применены к фиксированному массивному полю записи.</li>
-                    <li><code>MB2026</code> — длина фиксированной строки в объявлении <code>STRING * N</code> не сводится к целочисленной константе диапазона 1..65535.</li>
+                    <li>Использование <code>:=</code> вне литерала <code>TYPE(...)</code> приводит к семантической ошибке: именованные аргументы для обычных вызовов в этом шаге не поддерживаются.</li>
                 </ul>
             </section>
 
@@ -164,7 +188,8 @@ PRINT user.Home.City</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="data-types.html">Типы данных</a>
-                    <a href="arrays.html">Одномерные массивы</a>
+                    <a href="arrays.html">Массивы</a>
+                    <a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a>
                     <a href="variables-and-constants.html">Переменные и константы</a>
                     <a href="function.html">Функция FUNCTION</a>
                     <a href="sub.html">Процедура SUB</a>

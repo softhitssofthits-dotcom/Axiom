@@ -1055,6 +1055,39 @@ PRINT people(2).Name
     }
 
     [Fact]
+    public void Parse_TypeArrayFieldViewAccess()
+    {
+        const string text = """
+TYPE Board
+    Cells(,) AS INTEGER
+END TYPE
+
+DIM board AS Board
+DIM lineView() AS INTEGER
+lineView = board.Cells(2)
+PRINT board.Cells(2 TO 3, 3 TO 4)
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var assignment = Assert.IsType<AssignmentStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
+        var assignmentValue = Assert.IsType<CallExpressionSyntax>(assignment.Expression);
+        var assignmentFieldTarget = Assert.IsType<FieldAccessExpressionSyntax>(assignmentValue.Target);
+        Assert.Equal("Cells", assignmentFieldTarget.Identifier.Text);
+        Assert.Equal("board", Assert.IsType<NameExpressionSyntax>(assignmentFieldTarget.Target).IdentifierToken.Text);
+        Assert.Single(assignmentValue.Arguments);
+
+        var print = Assert.IsType<PrintStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[4]).Statement);
+        var printValue = Assert.IsType<CallExpressionSyntax>(AssertSinglePrintExpression(print));
+        var printFieldTarget = Assert.IsType<FieldAccessExpressionSyntax>(printValue.Target);
+        Assert.Equal("Cells", printFieldTarget.Identifier.Text);
+        Assert.Equal(2, printValue.Arguments.Count);
+        Assert.All(printValue.Arguments, static argument => Assert.IsType<RangeExpressionSyntax>(argument));
+    }
+
+    [Fact]
     public void Parse_TypeDeclarationWithDynamicArrayField()
     {
         const string text = """
@@ -1160,6 +1193,40 @@ END TYPE
                 Assert.Equal("Flags", second.Identifier.Text);
                 Assert.False(second.ArrayBounds?.IsDynamic ?? true);
                 Assert.Equal(SyntaxKind.ToKeyword, second.ArrayBounds?.ToKeyword?.Kind);
+            });
+    }
+
+    [Fact]
+    public void Parse_TypeNamedLiteral()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+PRINT Person(Name := "Ada", Age := 36)
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var print = Assert.IsType<PrintStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        var call = Assert.IsType<CallExpressionSyntax>(AssertSinglePrintExpression(print));
+        Assert.Equal("Person", Assert.IsType<NameExpressionSyntax>(call.Target).IdentifierToken.Text);
+        Assert.Collection(
+            call.Arguments,
+            first =>
+            {
+                var named = Assert.IsType<NamedArgumentExpressionSyntax>(first);
+                Assert.Equal("Name", named.IdentifierToken.Text);
+                Assert.Equal(SyntaxKind.ColonEqualsToken, named.ColonEqualsToken.Kind);
+            },
+            second =>
+            {
+                var named = Assert.IsType<NamedArgumentExpressionSyntax>(second);
+                Assert.Equal("Age", named.IdentifierToken.Text);
+                Assert.Equal(SyntaxKind.ColonEqualsToken, named.ColonEqualsToken.Kind);
             });
     }
 

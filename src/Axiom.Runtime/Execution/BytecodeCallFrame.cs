@@ -9,6 +9,7 @@ internal sealed class BytecodeCallFrame
 {
     private IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot>? _visibleVariables;
     private Dictionary<int, RuntimeValue>? _cachedFunctionValuesByRoutineId;
+    private Dictionary<int, BytecodeVariableSlot[]>? _cachedCapturedSlotsByRoutineId;
     private readonly RuntimeValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
     private BytecodeVariableSlot?[]? _sharedLocals;
@@ -56,18 +57,31 @@ internal sealed class BytecodeCallFrame
 
     public int InstructionPointer { get; set; }
 
-    public void ResetNoLocals(
+    public void Reset(
         ReadOnlySpan<RuntimeValue> arguments,
         BytecodeVariableSlot[] captures,
-        TextLocation callSiteLocation)
+        TextLocation callSiteLocation,
+        RuntimeValue[] defaultLocals)
     {
         Captures = captures;
         CallSiteLocation = callSiteLocation;
         InstructionPointer = 0;
         _visibleVariables = null;
         _cachedFunctionValuesByRoutineId?.Clear();
-        _hasSharedLocals = false;
+        _cachedCapturedSlotsByRoutineId?.Clear();
         EvaluationStack.Clear();
+
+        if (_locals.Length > 0)
+        {
+            Array.Copy(defaultLocals, _locals, _locals.Length);
+
+            if (_hasSharedLocals && _sharedLocals is not null)
+            {
+                Array.Clear(_sharedLocals, 0, _sharedLocals.Length);
+            }
+        }
+
+        _hasSharedLocals = false;
 
         for (var index = 0; index < Arguments.Length; index++)
         {
@@ -113,7 +127,10 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            _locals[slot] = BytecodeVariableSlot.NormalizeForStorage(value, _localFixedStringLengths[slot]);
+            var fixedStringLength = _localFixedStringLengths[slot];
+            _locals[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+                ? value
+                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
             return;
         }
 
@@ -125,7 +142,10 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        _locals[slot] = BytecodeVariableSlot.NormalizeForStorage(value, _localFixedStringLengths[slot]);
+        var localFixedStringLength = _localFixedStringLengths[slot];
+        _locals[slot] = localFixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+            ? value
+            : BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -219,6 +239,24 @@ internal sealed class BytecodeCallFrame
     {
         ArgumentNullException.ThrowIfNull(value);
         (_cachedFunctionValuesByRoutineId ??= []).TryAdd(routineId, value);
+    }
+
+    public bool TryGetCachedCapturedSlots(int routineId, out BytecodeVariableSlot[] captures)
+    {
+        if (_cachedCapturedSlotsByRoutineId is not null
+            && _cachedCapturedSlotsByRoutineId.TryGetValue(routineId, out captures!))
+        {
+            return true;
+        }
+
+        captures = Array.Empty<BytecodeVariableSlot>();
+        return false;
+    }
+
+    public void CacheCapturedSlots(int routineId, BytecodeVariableSlot[] captures)
+    {
+        ArgumentNullException.ThrowIfNull(captures);
+        (_cachedCapturedSlotsByRoutineId ??= []).TryAdd(routineId, captures);
     }
 
     private static Dictionary<VariableSymbol, BytecodeVariableSlot> CreateVisibleVariables(BytecodeCallFrame frame)

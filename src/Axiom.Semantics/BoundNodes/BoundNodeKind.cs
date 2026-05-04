@@ -29,6 +29,7 @@ public enum BoundNodeKind
     ArrayAccessExpression,
     ArrayRangeExpression,
     FieldAccessExpression,
+    RecordLiteralExpression,
     UnaryExpression,
     BinaryExpression,
     CallExpression,

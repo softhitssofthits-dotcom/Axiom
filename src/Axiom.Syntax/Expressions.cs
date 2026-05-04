@@ -110,6 +110,28 @@ public sealed class ParenthesizedExpressionSyntax : ExpressionSyntax
     public SyntaxToken CloseParenToken { get; }
 }
 
+public sealed class NamedArgumentExpressionSyntax : ExpressionSyntax
+{
+    public NamedArgumentExpressionSyntax(SyntaxToken identifierToken, SyntaxToken colonEqualsToken, ExpressionSyntax expression)
+    {
+        ArgumentNullException.ThrowIfNull(identifierToken);
+        ArgumentNullException.ThrowIfNull(colonEqualsToken);
+        ArgumentNullException.ThrowIfNull(expression);
+
+        IdentifierToken = identifierToken;
+        ColonEqualsToken = colonEqualsToken;
+        Expression = expression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.NamedArgumentExpression;
+
+    public SyntaxToken IdentifierToken { get; }
+
+    public SyntaxToken ColonEqualsToken { get; }
+
+    public ExpressionSyntax Expression { get; }
+}
+
 public sealed class CallExpressionSyntax : ExpressionSyntax
 {
     public CallExpressionSyntax(

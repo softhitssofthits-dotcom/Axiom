@@ -1,0 +1,64 @@
+' Сравнительный сценарий: диск, размеры каталогов и временные пути.
+' Нагружает DIRSIZE, FREESPACE, TOTALFREESPACE, TOTALSPACE,
+' DRIVENAME, DRIVEFORMAT, DRIVETYPE, MAKETEMPFILE и MAKETEMPDIR.
+
+DIM driveTarget AS STRING = CURRENTDIR()
+DIM checksum AS LONG = 0
+
+FOR passIndex = 1 TO 60
+    DIM tempFile AS STRING = MAKETEMPFILE("drive-temp-file_")
+    DIM tempDir AS STRING = MAKETEMPDIR("drive-temp-dir_")
+    DIM nestedDir AS STRING = COMBINEPATH(tempDir, "nested")
+    DIM rootFile AS STRING = COMBINEPATH(tempDir, "root.txt")
+    DIM nestedFile AS STRING = COMBINEPATH(nestedDir, "nested.txt")
+
+    IF MAKEDIR(nestedDir) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF WRITEFILE(tempFile, BuildPayload(passIndex)) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF WRITEFILE(rootFile, BuildPayload(passIndex + 100)) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF WRITEFILE(nestedFile, BuildPayload(passIndex + 200)) THEN
+        checksum = checksum + 1
+    END IF
+
+    checksum = checksum + FILESIZE(tempFile)
+    checksum = checksum + DIRSIZE(tempDir)
+
+    IF FREESPACE(driveTarget) > 0 THEN
+        checksum = checksum + 1
+    END IF
+
+    IF TOTALFREESPACE(driveTarget) > 0 THEN
+        checksum = checksum + 1
+    END IF
+
+    IF TOTALSPACE(driveTarget) > 0 THEN
+        checksum = checksum + 1
+    END IF
+
+    checksum = checksum + LEN(DRIVENAME(driveTarget))
+    checksum = checksum + LEN(DRIVEFORMAT(driveTarget))
+    checksum = checksum + LEN(DRIVETYPE(driveTarget))
+    checksum = checksum + LEN(PATHROOT(tempDir))
+
+    IF DELETEFILE(tempFile) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF DELETEDIRRECURSIVE(tempDir) THEN
+        checksum = checksum + 1
+    END IF
+NEXT
+
+PRINT checksum
+
+FUNCTION BuildPayload(seed AS INTEGER) AS STRING
+    RETURN "payload-" + TRIM(STR(seed)) + CHR(13) + CHR(10) + "drive-temp-" + TRIM(STR(seed * 37))
+END FUNCTION

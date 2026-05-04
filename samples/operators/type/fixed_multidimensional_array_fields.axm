@@ -1,0 +1,33 @@
+' Эта программа показывает фиксированные многомерные массивные поля внутри TYPE.
+' Ожидаемый вывод:
+' 0
+' 10
+' 30
+' 4
+' 10
+' 20
+
+TYPE Person
+    Grid(1 TO 2, 4 TO 5) AS INTEGER
+END TYPE
+
+DIM first AS Person
+DIM second AS Person
+DIM people(1 TO 1) AS Person
+
+PRINT first.Grid(1, 4)
+
+first.Grid(1, 4) = 10
+first.Grid(2, 5) = 30
+
+second = first
+first.Grid(1, 4) = 99
+
+people(1) = second
+people(1).Grid(1, 5) = 20
+
+PRINT second.Grid(1, 4)
+PRINT second.Grid(2, 5)
+PRINT ARRAYLENGTH(people(1).Grid)
+PRINT people(1).Grid(1, 4)
+PRINT people(1).Grid(1, 5)

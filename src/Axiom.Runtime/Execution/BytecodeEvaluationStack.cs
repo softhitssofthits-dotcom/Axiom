@@ -5,6 +5,7 @@ namespace Axiom.Runtime;
 internal sealed class BytecodeEvaluationStack
 {
     private RuntimeValue[] _items;
+    private int _highWaterMark;
 
     public BytecodeEvaluationStack(int initialCapacity = 16)
     {
@@ -35,6 +36,10 @@ internal sealed class BytecodeEvaluationStack
         }
 
         _items[Count++] = value;
+        if (Count > _highWaterMark)
+        {
+            _highWaterMark = Count;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,10 +50,13 @@ internal sealed class BytecodeEvaluationStack
             throw new InvalidOperationException("Evaluation stack is empty.");
         }
 
-        var index = --Count;
-        var value = _items[index];
-        _items[index] = null!;
-        return value;
+        return PopUnchecked();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RuntimeValue PopUnchecked()
+    {
+        return _items[--Count];
     }
 
     public RuntimeValue[] ToBottomToTopArray()
@@ -65,13 +73,14 @@ internal sealed class BytecodeEvaluationStack
 
     public void Clear()
     {
-        if (Count == 0)
+        if (_highWaterMark == 0)
         {
             return;
         }
 
-        Array.Clear(_items, 0, Count);
+        Array.Clear(_items, 0, _highWaterMark);
         Count = 0;
+        _highWaterMark = 0;
     }
 
     private void Grow()

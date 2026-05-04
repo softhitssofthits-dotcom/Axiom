@@ -1,0 +1,30 @@
+' Expected output:
+' Ada
+' 36
+' Paris
+' 0
+' 0
+' TRUE
+
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+DIM blank AS Person
+
+user = Person(Name := "Ada", Age := 36, Home := Address(City := "Paris"))
+blank = Person()
+
+PRINT user.Name
+PRINT user.Age
+PRINT user.Home.City
+PRINT LEN(blank.Name)
+PRINT blank.Age
+PRINT blank.Home.City = ""

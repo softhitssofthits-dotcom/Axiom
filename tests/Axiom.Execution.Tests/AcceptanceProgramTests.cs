@@ -876,6 +876,45 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void TypeMultidimensionalArrayFieldsAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/multidimensional_array_fields.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["10", "20", "4", "FALSE", "9", "0"], result.Output);
+    }
+
+    [Fact]
+    public void TypeArrayFieldViewsAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/array_field_views.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["23", "24", "2", "4", "4", "99"], result.Output);
+    }
+
+    [Fact]
+    public void TypeNamedLiteralsAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/named_literals.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
+    }
+
+    [Fact]
     public void TypeFixedArrayFieldsAcceptanceSample_RunsSuccessfully()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/fixed_array_fields.axm");
@@ -888,10 +927,24 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(["0", "10", "30", "10", "20", "3"], result.Output);
     }
 
+    [Fact]
+    public void TypeFixedMultidimensionalArrayFieldsAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/fixed_multidimensional_array_fields.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["0", "10", "30", "4", "10", "20"], result.Output);
+    }
+
     [Theory]
     [InlineData("samples/operators/type/fixed_array_fields.axm", new[] { "0", "10", "30", "10", "20", "3" })]
     [InlineData("samples/operators/type/const_fixed_array_fields.axm", new[] { "0", "3", "30" })]
     [InlineData("samples/operators/type/const_fixed_array_fields_forward.axm", new[] { "0", "3", "30" })]
+    [InlineData("samples/operators/type/fixed_multidimensional_array_fields.axm", new[] { "0", "10", "30", "4", "10", "20" })]
     public void TypeFixedArrayFieldAcceptanceSamples_RunOnBytecodeVm(string relativePath, string[] expectedOutput)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -904,6 +957,51 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
+    }
+
+    [Fact]
+    public void TypeMultidimensionalArrayFieldsAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/multidimensional_array_fields.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["10", "20", "4", "FALSE", "9", "0"], result.Output);
+    }
+
+    [Fact]
+    public void TypeArrayFieldViewsAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/array_field_views.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["23", "24", "2", "4", "4", "99"], result.Output);
+    }
+
+    [Fact]
+    public void TypeNamedLiteralsAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/named_literals.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
     }
 
     [Fact]

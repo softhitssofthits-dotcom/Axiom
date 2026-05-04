@@ -633,7 +633,13 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.AddLongInteger:
+                case Opcode.Dup:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.CreateRecord:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя TYPE");
                     break;
 
                 case Opcode.RedimArray:
@@ -1346,6 +1352,20 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
+            case Opcode.Dup:
+            {
+                var duplicatedType = Pop();
+                Push(duplicatedType);
+                Push(duplicatedType);
+                break;
+            }
+
+            case Opcode.CreateRecord:
+            {
+                Push(ResolveCreatedRecordType(module, routine, instructionIndex, instruction));
+                break;
+            }
+
             case Opcode.LoadField:
             {
                 var recordType = Pop();
@@ -1620,6 +1640,32 @@ public sealed class BytecodeModuleValidator
             BytecodeScalarTypeCode.Decimal => TypeSymbol.Decimal,
             _ => null
         };
+    }
+
+    private TypeSymbol? ResolveCreatedRecordType(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        var typeName = TryGetStringConstantValue(module, instruction.GetOperand(0));
+        if (string.IsNullOrWhiteSpace(typeName))
+        {
+            return null;
+        }
+
+        if (TryResolveKnownUserDefinedType(module, typeName) is { } recordType)
+        {
+            return recordType;
+        }
+
+        Report(
+            "BC4117",
+            $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' ссылается на неизвестный TYPE '{typeName}'.",
+            module,
+            routine.Id,
+            instructionIndex);
+        return null;
     }
 
     private void ValidateExpectedStackType(
@@ -2323,6 +2369,90 @@ public sealed class BytecodeModuleValidator
             : null;
     }
 
+    private static UserDefinedTypeSymbol? TryResolveKnownUserDefinedType(BytecodeModule module, string typeName)
+    {
+        ArgumentNullException.ThrowIfNull(module);
+        ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
+
+        var visited = new HashSet<TypeSymbol>();
+
+        foreach (var global in module.Globals)
+        {
+            if (TryResolveFromType(global.Type, typeName, visited) is { } globalType)
+            {
+                return globalType;
+            }
+        }
+
+        foreach (var routine in module.Routines)
+        {
+            if (TryResolveFromType(routine.ResultType, typeName, visited) is { } resultType)
+            {
+                return resultType;
+            }
+
+            foreach (var variable in routine.ParameterVariables)
+            {
+                if (TryResolveFromType(variable.Type, typeName, visited) is { } parameterType)
+                {
+                    return parameterType;
+                }
+            }
+
+            foreach (var variable in routine.LocalVariables)
+            {
+                if (TryResolveFromType(variable.Type, typeName, visited) is { } localType)
+                {
+                    return localType;
+                }
+            }
+
+            foreach (var variable in routine.CapturedVariables)
+            {
+                if (TryResolveFromType(variable.Type, typeName, visited) is { } capturedType)
+                {
+                    return capturedType;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static UserDefinedTypeSymbol? TryResolveFromType(TypeSymbol type, string typeName, HashSet<TypeSymbol> visited)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
+        ArgumentNullException.ThrowIfNull(visited);
+
+        if (!visited.Add(type))
+        {
+            return null;
+        }
+
+        if (type is UserDefinedTypeSymbol userType)
+        {
+            if (string.Equals(userType.Name, typeName, StringComparison.OrdinalIgnoreCase))
+            {
+                return userType;
+            }
+
+            foreach (var field in userType.Fields)
+            {
+                if (TryResolveFromType(field.Type, typeName, visited) is { } nestedType)
+                {
+                    return nestedType;
+                }
+            }
+
+            return null;
+        }
+
+        return type is ArrayTypeSymbol arrayType
+            ? TryResolveFromType(arrayType.ElementType, typeName, visited)
+            : null;
+    }
+
     private static bool TryGetStackEffect(
         BytecodeInstruction instruction,
         IReadOnlyDictionary<int, BytecodeRoutine> routinesById,
@@ -2344,11 +2474,17 @@ public sealed class BytecodeModuleValidator
             case Opcode.LoadLocal:
             case Opcode.LoadArgument:
             case Opcode.LoadCapture:
+            case Opcode.CreateRecord:
                 pushCount = 1;
                 return true;
 
             case Opcode.JumpIfForDoneLocal:
             case Opcode.AdvanceForLoopLocal:
+                return true;
+
+            case Opcode.Dup:
+                popCount = 1;
+                pushCount = 2;
                 return true;
 
             case Opcode.StoreGlobal:

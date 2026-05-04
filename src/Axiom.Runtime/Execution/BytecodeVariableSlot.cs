@@ -9,7 +9,9 @@ internal sealed class BytecodeVariableSlot
     {
         ArgumentNullException.ThrowIfNull(value);
         FixedStringLength = fixedStringLength;
-        Value = NormalizeForStorage(value, fixedStringLength);
+        Value = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+            ? value
+            : NormalizeForStorage(value, fixedStringLength);
     }
 
     public int? FixedStringLength { get; }
@@ -20,7 +22,9 @@ internal sealed class BytecodeVariableSlot
     public void Store(RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        Value = NormalizeForStorage(value, FixedStringLength);
+        Value = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+            ? value
+            : NormalizeForStorage(value, FixedStringLength);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

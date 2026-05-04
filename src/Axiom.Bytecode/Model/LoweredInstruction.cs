@@ -104,6 +104,11 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.StoreVariable, location, variable: variable);
     }
 
+    public static LoweredInstruction Dup(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Dup, location);
+    }
+
     public static LoweredInstruction UnaryOperation(TextLocation location, SyntaxKind operatorKind)
     {
         return new LoweredInstruction(LoweredInstructionKind.UnaryOperation, location, operatorKind: operatorKind);
@@ -131,6 +136,12 @@ public sealed class LoweredInstruction
         ArgumentOutOfRangeException.ThrowIfNegative(argumentCount);
         ArgumentNullException.ThrowIfNull(returnType);
         return new LoweredInstruction(LoweredInstructionKind.CallValue, location, valueType: returnType, valueCount: argumentCount);
+    }
+
+    public static LoweredInstruction CreateRecord(TextLocation location, UserDefinedTypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return new LoweredInstruction(LoweredInstructionKind.CreateRecord, location, valueType: type, displayName: type.Name);
     }
 
     public static LoweredInstruction RedimArray(TextLocation location, string displayName, bool preserve, int dimensionCount)

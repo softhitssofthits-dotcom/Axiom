@@ -1,0 +1,22 @@
+' Сравнительный сценарий: низкоуровневые строковые примитивы.
+' Нагружает ASC, CHR, LEN, SPACE, STRING, INSTR, INSTRREV и SUBSTRCOUNT.
+
+DIM checksum AS LONG = 0
+DIM source AS STRING = "alpha-beta-gamma-delta-beta-alpha"
+
+FOR passIndex = 1 TO 180
+    DIM marker AS STRING = CHR(64 + (passIndex MOD 26) + 1)
+    DIM padded AS STRING = marker + SPACE(2) + STRING(3, marker) + source
+
+    checksum = checksum + ASC(marker)
+    checksum = checksum + LEN(padded)
+    checksum = checksum + LEN(SPACE(passIndex MOD 5))
+    checksum = checksum + LEN(STRING((passIndex MOD 4) + 2, marker))
+    checksum = checksum + INSTR(source, "beta")
+    checksum = checksum + INSTR(8, source, "beta")
+    checksum = checksum + INSTRREV(source, "alpha")
+    checksum = checksum + SUBSTRCOUNT(source, "a")
+    checksum = checksum + SUBSTRCOUNT(padded, marker)
+NEXT
+
+PRINT checksum

@@ -2503,6 +2503,106 @@ PRINT people(1).Flags(2)
     }
 
     [Fact]
+    public void Execute_CompiledTypeMultidimensionalArrayFields()
+    {
+        const string text = """
+TYPE Person
+    Scores(,) AS INTEGER
+    Grid(1 TO 2, 4 TO 5) AS INTEGER
+END TYPE
+
+DIM user AS Person
+DIM copy AS Person
+
+REDIM user.Scores(1 TO 2, 3 TO 4)
+user.Scores(1, 3) = 10
+user.Scores(2, 4) = 20
+user.Grid(1, 4) = 7
+user.Grid(2, 5) = 9
+copy = user
+user.Scores(1, 3) = 99
+user.Grid(1, 4) = 42
+
+PRINT copy.Scores(1, 3)
+PRINT copy.Scores(2, 4)
+PRINT copy.Grid(1, 4)
+PRINT copy.Grid(2, 5)
+PRINT ARRAYLENGTH(copy.Grid)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["99", "20", "7", "9", "4"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledTypeArrayFieldViews()
+    {
+        const string text = """
+TYPE Board
+    Cells(,) AS INTEGER
+END TYPE
+
+DIM board AS Board
+DIM lineView() AS INTEGER
+DIM window(,) AS INTEGER
+
+REDIM board.Cells(1 TO 3, 1 TO 4)
+board.Cells(2, 3) = 23
+
+lineView = board.Cells(2)
+PRINT lineView(3)
+lineView(4) = 24
+PRINT board.Cells(2, 4)
+
+window = board.Cells(2 TO 3, 3 TO 4)
+PRINT LBOUND(window, 1)
+PRINT UBOUND(window, 2)
+PRINT ARRAYLENGTH(window)
+window(3, 3) = 99
+PRINT board.Cells(3, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["23", "24", "2", "4", "4", "99"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledTypeNamedLiteral()
+    {
+        const string text = """
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+DIM blank AS Person
+user = Person(Name := "Ada", Age := 36, Home := Address(City := "Paris"))
+blank = Person()
+PRINT user.Name
+PRINT user.Age
+PRINT user.Home.City
+PRINT LEN(blank.Name)
+PRINT blank.Age
+PRINT blank.Home.City = ""
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledTypeLocalDefaultCanBeCaptured()
     {
         const string text = """

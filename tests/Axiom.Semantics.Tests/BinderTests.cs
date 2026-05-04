@@ -4008,6 +4008,51 @@ PRINT people(1).Scores(2)
     }
 
     [Fact]
+    public void Bind_TypeDynamicMultidimensionalArrayField()
+    {
+        const string text = """
+TYPE Person
+    Scores(,) AS INTEGER
+END TYPE
+
+DIM user AS Person
+REDIM user.Scores(1 TO 2, 3 TO 4)
+user.Scores(1, 3) = 10
+PRINT user.Scores(2, 4)
+ERASE user.Scores
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var userType = Assert.IsType<UserDefinedTypeSymbol>(declaration.Variable.Type);
+        var field = Assert.Single(userType.Fields);
+        var fieldArrayType = Assert.IsType<ArrayTypeSymbol>(field.Type);
+        Assert.Equal(2, fieldArrayType.Rank);
+        Assert.True(field.IsDynamicArray);
+
+        var redim = Assert.IsType<BoundRedimStatement>(program.GlobalStatements[1]);
+        var redimTarget = Assert.IsType<BoundFieldAccessExpression>(redim.Target);
+        Assert.Equal(field, redimTarget.Field);
+        Assert.Equal(fieldArrayType, redimTarget.Type);
+        Assert.Equal(2, redim.ArrayBounds.Count);
+
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[2]);
+        var assignmentTarget = Assert.IsType<BoundArrayAccessExpression>(assignment.Target);
+        Assert.Equal(2, assignmentTarget.Indices.Count);
+        Assert.Equal(field, Assert.IsType<BoundFieldAccessExpression>(assignmentTarget.Target).Field);
+
+        var printExpression = AssertSinglePrintExpression(program.GlobalStatements[3]);
+        var printArrayAccess = Assert.IsType<BoundArrayAccessExpression>(printExpression);
+        Assert.Equal(2, printArrayAccess.Indices.Count);
+
+        var erase = Assert.IsType<BoundEraseStatement>(program.GlobalStatements[4]);
+        Assert.IsType<BoundFieldAccessExpression>(erase.Target);
+    }
+
+    [Fact]
     public void Bind_TypeFixedArrayField()
     {
         const string text = """
@@ -4044,6 +4089,43 @@ PRINT user.Scores(3)
         var printTarget = Assert.IsType<BoundArrayAccessExpression>(printExpression);
         var printFieldTarget = Assert.IsType<BoundFieldAccessExpression>(printTarget.Target);
         Assert.Equal(field, printFieldTarget.Field);
+    }
+
+    [Fact]
+    public void Bind_TypeFixedMultidimensionalArrayField()
+    {
+        const string text = """
+TYPE Person
+    Scores(1 TO 2, 4 TO 5) AS INTEGER
+END TYPE
+
+DIM user AS Person
+user.Scores(1, 4) = 10
+PRINT user.Scores(2, 5)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var userType = Assert.IsType<UserDefinedTypeSymbol>(declaration.Variable.Type);
+        var field = Assert.Single(userType.Fields);
+        var fieldArrayType = Assert.IsType<ArrayTypeSymbol>(field.Type);
+        Assert.True(field.IsFixedArray);
+        Assert.False(field.IsDynamicArray);
+        Assert.Equal(2, fieldArrayType.Rank);
+        Assert.Equal([1, 4], field.FixedArrayLowerBounds);
+        Assert.Equal([2, 5], field.FixedArrayUpperBounds);
+
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
+        var assignmentTarget = Assert.IsType<BoundArrayAccessExpression>(assignment.Target);
+        Assert.Equal(2, assignmentTarget.Indices.Count);
+        Assert.Equal(field, Assert.IsType<BoundFieldAccessExpression>(assignmentTarget.Target).Field);
+
+        var printExpression = AssertSinglePrintExpression(program.GlobalStatements[2]);
+        var printTarget = Assert.IsType<BoundArrayAccessExpression>(printExpression);
+        Assert.Equal(field, Assert.IsType<BoundFieldAccessExpression>(printTarget.Target).Field);
     }
 
     [Fact]
@@ -4102,6 +4184,35 @@ PRINT user.Scores(3)
         Assert.True(field.IsFixedArray);
         Assert.Equal(1, field.FixedArrayLowerBound);
         Assert.Equal(3, field.FixedArrayUpperBound);
+    }
+
+    [Fact]
+    public void Bind_TypeFixedMultidimensionalArrayFieldWithConstBounds()
+    {
+        const string text = """
+CONST MinRow AS INTEGER = 1
+CONST MaxRow AS INTEGER = 2
+CONST MinColumn AS INTEGER = 4
+CONST MaxColumn AS INTEGER = MinColumn + 1
+
+TYPE Person
+    Scores(MinRow TO MaxRow, MinColumn TO MaxColumn) AS INTEGER
+END TYPE
+
+DIM user AS Person
+PRINT user.Scores(2, 5)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[4]);
+        var userType = Assert.IsType<UserDefinedTypeSymbol>(declaration.Variable.Type);
+        var field = Assert.Single(userType.Fields);
+        Assert.True(field.IsFixedArray);
+        Assert.Equal([1, 4], field.FixedArrayLowerBounds);
+        Assert.Equal([2, 5], field.FixedArrayUpperBounds);
     }
 
     [Fact]
@@ -4264,6 +4375,96 @@ PRINT user.Flags(2)
         var secondPrintExpression = AssertSinglePrintExpression(program.GlobalStatements[5]);
         var secondPrintTarget = Assert.IsType<BoundArrayAccessExpression>(secondPrintExpression);
         Assert.Equal(flagsField, Assert.IsType<BoundFieldAccessExpression>(secondPrintTarget.Target).Field);
+    }
+
+    [Fact]
+    public void Bind_TypeArrayFieldViewAccess()
+    {
+        const string text = """
+TYPE Board
+    Cells(,) AS INTEGER
+END TYPE
+
+DIM board AS Board
+DIM lineView() AS INTEGER
+DIM window(,) AS INTEGER
+lineView = board.Cells(2)
+window = board.Cells(2 TO 3, 3 TO 4)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var boardDeclaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var boardType = Assert.IsType<UserDefinedTypeSymbol>(boardDeclaration.Variable.Type);
+        var cellsField = Assert.Single(boardType.Fields);
+        var cellsArrayType = Assert.IsType<ArrayTypeSymbol>(cellsField.Type);
+        Assert.Equal(2, cellsArrayType.Rank);
+
+        var rowAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[3]);
+        var rowView = Assert.IsType<BoundArrayAccessExpression>(rowAssignment.Expression);
+        Assert.Equal(1, Assert.IsType<ArrayTypeSymbol>(rowView.Type).Rank);
+        Assert.Equal(cellsField, Assert.IsType<BoundFieldAccessExpression>(rowView.Target).Field);
+        Assert.Single(rowView.Indices);
+
+        var windowAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[4]);
+        var windowView = Assert.IsType<BoundArrayAccessExpression>(windowAssignment.Expression);
+        Assert.Equal(2, Assert.IsType<ArrayTypeSymbol>(windowView.Type).Rank);
+        Assert.Equal(cellsField, Assert.IsType<BoundFieldAccessExpression>(windowView.Target).Field);
+        Assert.Equal(2, windowView.Indices.Count);
+        Assert.All(windowView.Indices, static index => Assert.IsType<BoundArrayRangeExpression>(index));
+    }
+
+    [Fact]
+    public void Bind_TypeNamedLiteral()
+    {
+        const string text = """
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+user = Person(Name := "Ada", Age := 36, Home := Address(City := "Paris"))
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
+        var literal = Assert.IsType<BoundRecordLiteralExpression>(assignment.Expression);
+        Assert.Equal("Person", literal.RecordType.Name);
+        Assert.Equal(3, literal.Initializers.Count);
+        Assert.Equal(["Name", "Age", "Home"], literal.Initializers.Select(static initializer => initializer.Field.Name));
+
+        var nestedLiteral = Assert.IsType<BoundRecordLiteralExpression>(literal.Initializers[2].Expression);
+        Assert.Equal("Address", nestedLiteral.RecordType.Name);
+        Assert.Single(nestedLiteral.Initializers);
+        Assert.Equal("City", nestedLiteral.Initializers[0].Field.Name);
+    }
+
+    [Fact]
+    public void Bind_ReportsNamedArgumentsOutsideTypeLiteral()
+    {
+        const string text = """
+FUNCTION Add(x AS INTEGER, y AS INTEGER) AS INTEGER
+    RETURN x + y
+END FUNCTION
+
+PRINT Add(x := 1, y := 2)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains(":=", diagnostic.Message, StringComparison.Ordinal);
     }
 
     [Fact]

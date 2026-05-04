@@ -7141,6 +7141,105 @@ PRINT people(1).Scores(4)
     }
 
     [Fact]
+    public void Execute_TypeDynamicMultidimensionalArrayField()
+    {
+        const string text = """
+TYPE Person
+    Scores(,) AS INTEGER
+END TYPE
+
+DIM user AS Person
+REDIM user.Scores(1 TO 2, 3 TO 4)
+user.Scores(1, 3) = 10
+user.Scores(2, 4) = 20
+PRINT user.Scores(1, 3)
+PRINT user.Scores(2, 4)
+PRINT ARRAYLENGTH(user.Scores)
+ERASE user.Scores
+PRINT ARRAYISALLOCATED(user.Scores)
+
+DIM people(1 TO 1) AS Person
+REDIM people(1).Scores(2 TO 3, 5 TO 6)
+people(1).Scores(2, 5) = 7
+people(1).Scores(3, 6) = 9
+REDIM PRESERVE people(1).Scores(3 TO 4, 6 TO 7)
+PRINT people(1).Scores(3, 6)
+PRINT people(1).Scores(4, 7)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["10", "20", "4", "FALSE", "9", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeArrayFieldViews()
+    {
+        const string text = """
+TYPE Board
+    Cells(,) AS INTEGER
+END TYPE
+
+DIM board AS Board
+DIM lineView() AS INTEGER
+DIM window(,) AS INTEGER
+
+REDIM board.Cells(1 TO 3, 1 TO 4)
+board.Cells(2, 3) = 23
+
+lineView = board.Cells(2)
+PRINT lineView(3)
+lineView(4) = 24
+PRINT board.Cells(2, 4)
+
+window = board.Cells(2 TO 3, 3 TO 4)
+PRINT LBOUND(window, 1)
+PRINT UBOUND(window, 2)
+PRINT ARRAYLENGTH(window)
+window(3, 3) = 99
+PRINT board.Cells(3, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["23", "24", "2", "4", "4", "99"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeNamedLiteral()
+    {
+        const string text = """
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+DIM blank AS Person
+user = Person(Name := "Ada", Age := 36, Home := Address(City := "Paris"))
+blank = Person()
+PRINT user.Name
+PRINT user.Age
+PRINT user.Home.City
+PRINT LEN(blank.Name)
+PRINT blank.Age
+PRINT blank.Home.City = ""
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], host.Output);
+    }
+
+    [Fact]
     public void Execute_TypeFixedArrayField()
     {
         const string text = """
@@ -7169,6 +7268,39 @@ PRINT ARRAYLENGTH(people(1).Scores)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["0", "10", "30", "10", "20", "3"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeFixedMultidimensionalArrayField()
+    {
+        const string text = """
+TYPE Person
+    Grid(1 TO 2, 4 TO 5) AS INTEGER
+END TYPE
+
+DIM first AS Person
+DIM second AS Person
+DIM people(1 TO 1) AS Person
+
+PRINT first.Grid(1, 4)
+first.Grid(1, 4) = 10
+first.Grid(2, 5) = 30
+second = first
+first.Grid(1, 4) = 99
+people(1) = second
+people(1).Grid(1, 5) = 20
+
+PRINT second.Grid(1, 4)
+PRINT second.Grid(2, 5)
+PRINT ARRAYLENGTH(people(1).Grid)
+PRINT people(1).Grid(1, 4)
+PRINT people(1).Grid(1, 5)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["0", "10", "30", "4", "10", "20"], host.Output);
     }
 
     [Fact]
