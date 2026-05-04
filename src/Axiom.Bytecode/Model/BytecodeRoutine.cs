@@ -139,6 +139,7 @@ public sealed class BytecodeRoutine
             Opcode.JumpIfTrue => -1,
             Opcode.JumpIfFalse => -1,
             Opcode.Call => 0,
+            Opcode.CallByRef => 0,
             Opcode.CallValue => 0,
             Opcode.Return => 0,
             Opcode.CreateArray => 1,

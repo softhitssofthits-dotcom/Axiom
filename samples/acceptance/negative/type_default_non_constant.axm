@@ -1,0 +1,3 @@
+TYPE Person
+    Name AS STRING = STR(1)
+END TYPE

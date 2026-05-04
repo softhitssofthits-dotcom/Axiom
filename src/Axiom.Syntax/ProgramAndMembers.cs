@@ -43,6 +43,7 @@ public sealed class FunctionTypeSyntax : TypeSyntax
     public FunctionTypeSyntax(
         SyntaxToken functionKeyword,
         SyntaxToken openParenToken,
+        IReadOnlyList<SyntaxToken?> parameterPassingKeywords,
         IReadOnlyList<TypeSyntax> parameterTypes,
         IReadOnlyList<SyntaxToken> commaTokens,
         SyntaxToken closeParenToken,
@@ -51,6 +52,7 @@ public sealed class FunctionTypeSyntax : TypeSyntax
     {
         ArgumentNullException.ThrowIfNull(functionKeyword);
         ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(parameterPassingKeywords);
         ArgumentNullException.ThrowIfNull(parameterTypes);
         ArgumentNullException.ThrowIfNull(commaTokens);
         ArgumentNullException.ThrowIfNull(closeParenToken);
@@ -59,6 +61,7 @@ public sealed class FunctionTypeSyntax : TypeSyntax
 
         FunctionKeyword = functionKeyword;
         OpenParenToken = openParenToken;
+        ParameterPassingKeywords = parameterPassingKeywords;
         ParameterTypes = parameterTypes;
         CommaTokens = commaTokens;
         CloseParenToken = closeParenToken;
@@ -71,6 +74,8 @@ public sealed class FunctionTypeSyntax : TypeSyntax
     public SyntaxToken FunctionKeyword { get; }
 
     public SyntaxToken OpenParenToken { get; }
+
+    public IReadOnlyList<SyntaxToken?> ParameterPassingKeywords { get; }
 
     public IReadOnlyList<TypeSyntax> ParameterTypes { get; }
 
@@ -166,16 +171,19 @@ public sealed class TypeClauseSyntax : SyntaxNode
 
 public sealed class ParameterSyntax : SyntaxNode
 {
-    public ParameterSyntax(SyntaxToken identifier, TypeClauseSyntax typeClause)
+    public ParameterSyntax(SyntaxToken? passingKeyword, SyntaxToken identifier, TypeClauseSyntax typeClause)
     {
         ArgumentNullException.ThrowIfNull(identifier);
         ArgumentNullException.ThrowIfNull(typeClause);
 
+        PassingKeyword = passingKeyword;
         Identifier = identifier;
         TypeClause = typeClause;
     }
 
     public override SyntaxKind Kind => SyntaxKind.Parameter;
+
+    public SyntaxToken? PassingKeyword { get; }
 
     public SyntaxToken Identifier { get; }
 
@@ -187,7 +195,9 @@ public sealed class TypeFieldSyntax : SyntaxNode
     public TypeFieldSyntax(
         IReadOnlyList<VariableDeclaratorSyntax> declarators,
         IReadOnlyList<SyntaxToken> commaTokens,
-        TypeClauseSyntax typeClause)
+        TypeClauseSyntax typeClause,
+        SyntaxToken? equalsToken,
+        ExpressionSyntax? initializer)
     {
         ArgumentNullException.ThrowIfNull(declarators);
         ArgumentNullException.ThrowIfNull(commaTokens);
@@ -196,6 +206,8 @@ public sealed class TypeFieldSyntax : SyntaxNode
         Declarators = declarators;
         CommaTokens = commaTokens;
         TypeClause = typeClause;
+        EqualsToken = equalsToken;
+        Initializer = initializer;
     }
 
     public override SyntaxKind Kind => SyntaxKind.TypeField;
@@ -205,6 +217,10 @@ public sealed class TypeFieldSyntax : SyntaxNode
     public IReadOnlyList<SyntaxToken> CommaTokens { get; }
 
     public TypeClauseSyntax TypeClause { get; }
+
+    public SyntaxToken? EqualsToken { get; }
+
+    public ExpressionSyntax? Initializer { get; }
 }
 
 public sealed class TypeDeclarationSyntax : MemberSyntax

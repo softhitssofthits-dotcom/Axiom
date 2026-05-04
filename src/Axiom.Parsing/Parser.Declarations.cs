@@ -53,7 +53,16 @@ public sealed partial class Parser
         }
 
         var typeClause = ParseTypeClause();
-        return new TypeFieldSyntax(declarators, commaTokens, typeClause);
+        SyntaxToken? equalsToken = null;
+        ExpressionSyntax? initializer = null;
+
+        if (Current.Kind == SyntaxKind.EqualsToken)
+        {
+            equalsToken = NextToken();
+            initializer = ParseExpression();
+        }
+
+        return new TypeFieldSyntax(declarators, commaTokens, typeClause, equalsToken, initializer);
     }
 
     private SubDeclarationSyntax ParseSubDeclaration()
@@ -152,13 +161,14 @@ public sealed partial class Parser
     {
         var functionKeyword = Match(SyntaxKind.FunctionKeyword, "FUNCTION");
         var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
-        ParseSeparatedTypes(out var parameterTypes, out var commaTokens, out var closeParenToken);
+        ParseSeparatedFunctionTypeParameters(out var parameterPassingKeywords, out var parameterTypes, out var commaTokens, out var closeParenToken);
         var asKeyword = Match(SyntaxKind.AsKeyword, "AS");
         var returnType = ParseTypeSyntax();
 
         return new FunctionTypeSyntax(
             functionKeyword,
             openParenToken,
+            parameterPassingKeywords,
             parameterTypes,
             commaTokens,
             closeParenToken,
@@ -249,11 +259,13 @@ public sealed partial class Parser
         commaTokens = commas;
     }
 
-    private void ParseSeparatedTypes(
+    private void ParseSeparatedFunctionTypeParameters(
+        out IReadOnlyList<SyntaxToken?> parameterPassingKeywords,
         out IReadOnlyList<TypeSyntax> types,
         out IReadOnlyList<SyntaxToken> commaTokens,
         out SyntaxToken closeParenToken)
     {
+        var passingKeywords = new List<SyntaxToken?>();
         var typeList = new List<TypeSyntax>();
         var commas = new List<SyntaxToken>();
 
@@ -261,6 +273,7 @@ public sealed partial class Parser
         {
             while (true)
             {
+                passingKeywords.Add(ParseOptionalPassingKeyword());
                 typeList.Add(ParseTypeSyntax());
 
                 if (Current.Kind != SyntaxKind.CommaToken)
@@ -273,14 +286,26 @@ public sealed partial class Parser
         }
 
         closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+        parameterPassingKeywords = passingKeywords;
         types = typeList;
         commaTokens = commas;
     }
 
     private ParameterSyntax ParseParameter()
     {
+        var passingKeyword = ParseOptionalPassingKeyword();
         var identifier = MatchIdentifier();
         var typeClause = ParseTypeClause();
-        return new ParameterSyntax(identifier, typeClause);
+        return new ParameterSyntax(passingKeyword, identifier, typeClause);
+    }
+
+    private SyntaxToken? ParseOptionalPassingKeyword()
+    {
+        return Current.Kind switch
+        {
+            SyntaxKind.ByRefKeyword => NextToken(),
+            SyntaxKind.ByValKeyword => NextToken(),
+            _ => null
+        };
     }
 }

@@ -337,7 +337,7 @@ public sealed partial class Interpreter
             return InvokeBuiltIn(expression, functionValue.Function, arguments);
         }
 
-        return InvokeUserRoutine(functionValue, arguments, expression.Location);
+        return InvokeUserRoutine(functionValue, arguments, expression.Location, expression.Arguments);
     }
 
     private RuntimeValue EvaluateConversionExpression(BoundConversionExpression expression)
@@ -416,6 +416,11 @@ public sealed partial class Interpreter
             return left.AsBoolean() == right.AsBoolean();
         }
 
+        if (left.Type is UserDefinedTypeSymbol)
+        {
+            return RecordsEqual(left.AsRecord(), right.AsRecord());
+        }
+
         return false;
     }
 
@@ -453,5 +458,26 @@ public sealed partial class Interpreter
     {
         throw new InvalidOperationException(
             $"Comparison is not supported for runtime types {leftType.Name} and {rightType.Name}.");
+    }
+
+    private static bool RecordsEqual(RuntimeRecordValue left, RuntimeRecordValue right)
+    {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+
+        if (!ReferenceEquals(left.Type, right.Type))
+        {
+            return false;
+        }
+
+        foreach (var field in left.Type.Fields)
+        {
+            if (!ValuesEqual(left.GetField(field), right.GetField(field)))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

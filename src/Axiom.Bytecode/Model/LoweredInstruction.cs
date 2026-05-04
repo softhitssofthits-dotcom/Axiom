@@ -17,6 +17,7 @@ public sealed class LoweredInstruction
         PrintSeparatorKind? separatorKind = null,
         BoundFileOpenMode? fileOpenMode = null,
         IReadOnlyList<VariableSymbol>? variables = null,
+        IReadOnlyList<int>? integerOperands = null,
         string? label = null,
         string? displayName = null,
         string? promptText = null,
@@ -34,6 +35,7 @@ public sealed class LoweredInstruction
         SeparatorKind = separatorKind;
         FileOpenMode = fileOpenMode;
         Variables = variables ?? Array.Empty<VariableSymbol>();
+        IntegerOperands = integerOperands ?? Array.Empty<int>();
         Label = label;
         DisplayName = displayName;
         PromptText = promptText;
@@ -61,6 +63,8 @@ public sealed class LoweredInstruction
     public BoundFileOpenMode? FileOpenMode { get; }
 
     public IReadOnlyList<VariableSymbol> Variables { get; }
+
+    public IReadOnlyList<int> IntegerOperands { get; }
 
     public string? Label { get; }
 
@@ -129,6 +133,25 @@ public sealed class LoweredInstruction
     {
         ArgumentNullException.ThrowIfNull(function);
         return new LoweredInstruction(LoweredInstructionKind.CallFunction, location, function: function);
+    }
+
+    public static LoweredInstruction CallFunctionByRef(
+        TextLocation location,
+        FunctionSymbol function,
+        int byValArgumentCount,
+        IReadOnlyList<int> argumentIndices,
+        IReadOnlyList<VariableSymbol> byRefVariables)
+    {
+        ArgumentNullException.ThrowIfNull(function);
+        ArgumentNullException.ThrowIfNull(argumentIndices);
+        ArgumentNullException.ThrowIfNull(byRefVariables);
+        return new LoweredInstruction(
+            LoweredInstructionKind.CallFunctionByRef,
+            location,
+            function: function,
+            variables: byRefVariables,
+            integerOperands: argumentIndices,
+            valueCount: byValArgumentCount);
     }
 
     public static LoweredInstruction CallValue(TextLocation location, int argumentCount, TypeSymbol returnType)

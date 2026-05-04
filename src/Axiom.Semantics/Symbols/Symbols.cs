@@ -61,7 +61,8 @@ public class TypeSymbol : Symbol
             FixedLengthStringTypeSyntax => String,
             FunctionTypeSyntax functionType => FunctionTypeSymbol.Create(
                 functionType.ParameterTypes.Select(FromTypeSyntax).ToArray(),
-                FromTypeSyntax(functionType.ReturnType)),
+                FromTypeSyntax(functionType.ReturnType),
+                functionType.ParameterPassingKeywords.Select(ParameterPassingModes.FromKeyword).ToArray()),
             ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(FromTypeSyntax(arrayType.ElementType), arrayType.Rank),
             _ => Error
         };
@@ -147,13 +148,17 @@ public sealed class TypeFieldSymbol : Symbol
         TypeSymbol type,
         int? fixedStringLength = null,
         int? fixedArrayLowerBound = null,
-        int? fixedArrayUpperBound = null)
+        int? fixedArrayUpperBound = null,
+        bool hasDefaultValue = false,
+        object? defaultValue = null)
         : this(
             name,
             type,
             fixedStringLength,
             fixedArrayLowerBound is null ? null : [fixedArrayLowerBound.Value],
-            fixedArrayUpperBound is null ? null : [fixedArrayUpperBound.Value])
+            fixedArrayUpperBound is null ? null : [fixedArrayUpperBound.Value],
+            hasDefaultValue,
+            defaultValue)
     {
     }
 
@@ -162,7 +167,9 @@ public sealed class TypeFieldSymbol : Symbol
         TypeSymbol type,
         int? fixedStringLength,
         IReadOnlyList<int>? fixedArrayLowerBounds,
-        IReadOnlyList<int>? fixedArrayUpperBounds)
+        IReadOnlyList<int>? fixedArrayUpperBounds,
+        bool hasDefaultValue = false,
+        object? defaultValue = null)
         : base(name)
     {
         ArgumentNullException.ThrowIfNull(type);
@@ -194,6 +201,8 @@ public sealed class TypeFieldSymbol : Symbol
         FixedStringLength = fixedStringLength;
         FixedArrayLowerBounds = fixedArrayLowerBounds?.ToArray();
         FixedArrayUpperBounds = fixedArrayUpperBounds?.ToArray();
+        HasDefaultValue = hasDefaultValue;
+        DefaultValue = defaultValue;
     }
 
     public TypeSymbol Type { get; }
@@ -211,6 +220,10 @@ public sealed class TypeFieldSymbol : Symbol
     public IReadOnlyList<int>? FixedArrayLowerBounds { get; }
 
     public IReadOnlyList<int>? FixedArrayUpperBounds { get; }
+
+    public bool HasDefaultValue { get; }
+
+    public object? DefaultValue { get; }
 
     public int? FixedArrayLowerBound => FixedArrayLowerBounds is { Count: 1 }
         ? FixedArrayLowerBounds[0]
@@ -272,28 +285,47 @@ public sealed class UserDefinedTypeSymbol : TypeSymbol
 
 public sealed class FunctionTypeSymbol : TypeSymbol
 {
-    private FunctionTypeSymbol(IReadOnlyList<TypeSymbol> parameterTypes, TypeSymbol returnType)
-        : base(CreateName(parameterTypes, returnType))
+    private FunctionTypeSymbol(
+        IReadOnlyList<TypeSymbol> parameterTypes,
+        TypeSymbol returnType,
+        IReadOnlyList<ParameterPassingMode> parameterPassingModes)
+        : base(CreateName(parameterTypes, returnType, parameterPassingModes))
     {
         ParameterTypes = parameterTypes;
         ReturnType = returnType;
+        ParameterPassingModes = parameterPassingModes;
     }
 
     public IReadOnlyList<TypeSymbol> ParameterTypes { get; }
 
     public TypeSymbol ReturnType { get; }
 
-    public static FunctionTypeSymbol Create(IReadOnlyList<TypeSymbol> parameterTypes, TypeSymbol returnType)
+    public IReadOnlyList<ParameterPassingMode> ParameterPassingModes { get; }
+
+    public static FunctionTypeSymbol Create(
+        IReadOnlyList<TypeSymbol> parameterTypes,
+        TypeSymbol returnType,
+        IReadOnlyList<ParameterPassingMode>? parameterPassingModes = null)
     {
         ArgumentNullException.ThrowIfNull(parameterTypes);
         ArgumentNullException.ThrowIfNull(returnType);
-        return new FunctionTypeSymbol(parameterTypes, returnType);
+        parameterPassingModes ??= Enumerable.Repeat(ParameterPassingMode.ByVal, parameterTypes.Count).ToArray();
+
+        if (parameterPassingModes.Count != parameterTypes.Count)
+        {
+            throw new ArgumentException("Parameter passing mode count must match parameter type count.", nameof(parameterPassingModes));
+        }
+
+        return new FunctionTypeSymbol(parameterTypes, returnType, parameterPassingModes);
     }
 
     public static FunctionTypeSymbol FromFunction(FunctionSymbol function)
     {
         ArgumentNullException.ThrowIfNull(function);
-        return Create(function.Parameters.Select(static parameter => parameter.Type).ToArray(), function.ReturnType);
+        return Create(
+            function.Parameters.Select(static parameter => parameter.Type).ToArray(),
+            function.ReturnType,
+            function.Parameters.Select(static parameter => parameter.PassingMode).ToArray());
     }
 
     public override bool Equals(object? obj)
@@ -310,7 +342,8 @@ public sealed class FunctionTypeSymbol : TypeSymbol
 
         for (var index = 0; index < ParameterTypes.Count; index++)
         {
-            if (ParameterTypes[index] != other.ParameterTypes[index])
+            if (ParameterTypes[index] != other.ParameterTypes[index]
+                || ParameterPassingModes[index] != other.ParameterPassingModes[index])
             {
                 return false;
             }
@@ -329,13 +362,46 @@ public sealed class FunctionTypeSymbol : TypeSymbol
             hash.Add(parameterType);
         }
 
+        foreach (var parameterPassingMode in ParameterPassingModes)
+        {
+            hash.Add(parameterPassingMode);
+        }
+
         return hash.ToHashCode();
     }
 
-    private static string CreateName(IReadOnlyList<TypeSymbol> parameterTypes, TypeSymbol returnType)
+    private static string CreateName(
+        IReadOnlyList<TypeSymbol> parameterTypes,
+        TypeSymbol returnType,
+        IReadOnlyList<ParameterPassingMode> parameterPassingModes)
     {
-        var parameterList = string.Join(", ", parameterTypes.Select(static parameterType => parameterType.Name));
+        var parameterList = string.Join(
+            ", ",
+            parameterTypes.Select((parameterType, index) => parameterPassingModes[index] == ParameterPassingMode.ByRef
+                ? $"BYREF {parameterType.Name}"
+                : parameterType.Name));
         return $"FUNCTION({parameterList}) AS {returnType.Name}";
+    }
+}
+
+public enum ParameterPassingMode
+{
+    ByVal,
+    ByRef
+}
+
+public static class ParameterPassingModeExtensions
+{
+    public static bool IsByRef(this ParameterPassingMode mode) => mode == ParameterPassingMode.ByRef;
+}
+
+public static class ParameterPassingModes
+{
+    public static Axiom.Semantics.ParameterPassingMode FromKeyword(SyntaxToken? keyword)
+    {
+        return keyword?.Kind == SyntaxKind.ByRefKeyword
+            ? Axiom.Semantics.ParameterPassingMode.ByRef
+            : Axiom.Semantics.ParameterPassingMode.ByVal;
     }
 }
 
@@ -378,7 +444,7 @@ public class VariableSymbol : Symbol
 
 public sealed class ParameterSymbol : VariableSymbol
 {
-    public ParameterSymbol(string name, TypeSymbol type, int ordinal)
+    public ParameterSymbol(string name, TypeSymbol type, int ordinal, Axiom.Semantics.ParameterPassingMode passingMode = Axiom.Semantics.ParameterPassingMode.ByVal)
         : base(name, type, isReadOnly: false, isGlobal: false)
     {
         if (ordinal < 0)
@@ -387,9 +453,14 @@ public sealed class ParameterSymbol : VariableSymbol
         }
 
         Ordinal = ordinal;
+        PassingMode = passingMode;
     }
 
     public int Ordinal { get; }
+
+    public Axiom.Semantics.ParameterPassingMode PassingMode { get; }
+
+    public bool IsByRef => PassingMode == Axiom.Semantics.ParameterPassingMode.ByRef;
 }
 
 public sealed class FunctionSymbol : Symbol

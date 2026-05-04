@@ -1,0 +1,20 @@
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING = "Ada"
+    Age AS INTEGER = 36
+    Home AS Address
+END TYPE
+
+DIM left AS Person
+DIM right AS Person
+DIM changed AS Person
+left.Home.City = "Paris"
+right.Home.City = "Paris"
+changed.Home.City = "Rome"
+PRINT left = right
+PRINT left <> right
+PRINT left = changed
+PRINT left <> changed

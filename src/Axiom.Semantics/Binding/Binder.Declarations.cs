@@ -70,7 +70,7 @@ public sealed partial class Binder
                                 continue;
                             }
 
-                            fields.Add(BindTypeField(declarator, fieldType, fixedStringLength));
+                            fields.Add(BindTypeField(fieldDeclaration, declarator, fieldType, fixedStringLength));
                         }
                     }
 
@@ -146,9 +146,20 @@ public sealed partial class Binder
         return true;
     }
 
-    private TypeFieldSymbol BindTypeField(VariableDeclaratorSyntax declarator, TypeSymbol fieldType, int? fixedStringLength)
+    private TypeFieldSymbol BindTypeField(
+        TypeFieldSyntax fieldDeclaration,
+        VariableDeclaratorSyntax declarator,
+        TypeSymbol fieldType,
+        int? fixedStringLength)
     {
+        ArgumentNullException.ThrowIfNull(fieldDeclaration);
         ArgumentNullException.ThrowIfNull(declarator);
+
+        var (hasDefaultValue, defaultValue) = BindTypeFieldDefaultValue(
+            fieldDeclaration,
+            declarator,
+            fieldType,
+            fixedStringLength);
 
         if (declarator.ArrayBounds is null)
         {
@@ -156,9 +167,16 @@ public sealed partial class Binder
             {
                 ReportInvalidTypeMember(declarator.Identifier.Text, declarator.Identifier.Location);
                 fieldType = TypeSymbol.Error;
+                hasDefaultValue = false;
+                defaultValue = null;
             }
 
-            return new TypeFieldSymbol(declarator.Identifier.Text, fieldType, fixedStringLength);
+            return new TypeFieldSymbol(
+                declarator.Identifier.Text,
+                fieldType,
+                fixedStringLength,
+                hasDefaultValue: hasDefaultValue,
+                defaultValue: defaultValue);
         }
 
         if (fieldType is ArrayTypeSymbol or FunctionTypeSymbol || fieldType == TypeSymbol.File)
@@ -171,7 +189,12 @@ public sealed partial class Binder
 
         if (declarator.ArrayBounds.IsDynamic)
         {
-            return new TypeFieldSymbol(declarator.Identifier.Text, arrayType, fixedStringLength);
+            return new TypeFieldSymbol(
+                declarator.Identifier.Text,
+                arrayType,
+                fixedStringLength,
+                hasDefaultValue: hasDefaultValue,
+                defaultValue: defaultValue);
         }
 
         if (!TryEvaluateFixedTypeArrayBounds(declarator, out var lowerBounds, out var upperBounds))
@@ -179,7 +202,66 @@ public sealed partial class Binder
             return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
         }
 
-        return new TypeFieldSymbol(declarator.Identifier.Text, arrayType, fixedStringLength, lowerBounds, upperBounds);
+        return new TypeFieldSymbol(
+            declarator.Identifier.Text,
+            arrayType,
+            fixedStringLength,
+            lowerBounds,
+            upperBounds,
+            hasDefaultValue,
+            defaultValue);
+    }
+
+    private (bool HasDefaultValue, object? DefaultValue) BindTypeFieldDefaultValue(
+        TypeFieldSyntax fieldDeclaration,
+        VariableDeclaratorSyntax declarator,
+        TypeSymbol fieldType,
+        int? fixedStringLength)
+    {
+        ArgumentNullException.ThrowIfNull(fieldDeclaration);
+        ArgumentNullException.ThrowIfNull(declarator);
+
+        if (fieldDeclaration.Initializer is null)
+        {
+            return (false, null);
+        }
+
+        if (declarator.ArrayBounds is not null)
+        {
+            ReportInvalidTypeFieldDefaultValue(
+                declarator.Identifier.Text,
+                fieldDeclaration.EqualsToken?.Location ?? declarator.Identifier.Location,
+                "Значение по умолчанию пока поддерживается только для скалярных и строковых полей TYPE.");
+            BindExpression(fieldDeclaration.Initializer);
+            return (false, null);
+        }
+
+        if (fieldType is UserDefinedTypeSymbol or ArrayTypeSymbol)
+        {
+            ReportInvalidTypeFieldDefaultValue(
+                declarator.Identifier.Text,
+                fieldDeclaration.EqualsToken?.Location ?? declarator.Identifier.Location,
+                "Значение по умолчанию пока поддерживается только для скалярных и строковых полей TYPE.");
+            BindExpression(fieldDeclaration.Initializer);
+            return (false, null);
+        }
+
+        var initializer = BindExpression(fieldDeclaration.Initializer, fieldType);
+        if (initializer.Type == TypeSymbol.Error)
+        {
+            return (false, null);
+        }
+
+        if (initializer is not BoundLiteralExpression literal)
+        {
+            ReportInvalidTypeFieldDefaultValue(
+                declarator.Identifier.Text,
+                GetLocation(fieldDeclaration.Initializer),
+                "Используйте константный литерал без обращения к переменным, вызовам и полям.");
+            return (false, null);
+        }
+
+        return (true, literal.Value);
     }
 
     private bool TryEvaluateFixedTypeArrayBounds(
@@ -450,7 +532,11 @@ public sealed partial class Binder
             var parameterType = ReportUnsupportedFixedStringType(parameter.TypeClause, parameter.Identifier.Text)
                 ? TypeSymbol.Error
                 : ResolveType(parameter.TypeClause);
-            parameterSymbols.Add(new ParameterSymbol(parameter.Identifier.Text, parameterType, index));
+            parameterSymbols.Add(new ParameterSymbol(
+                parameter.Identifier.Text,
+                parameterType,
+                index,
+                ParameterPassingModes.FromKeyword(parameter.PassingKeyword)));
         }
 
         return new FunctionSymbol(name, parameterSymbols, returnType, containingRoutine);

@@ -21,7 +21,8 @@ public sealed partial class Binder
             FixedLengthStringTypeSyntax => TypeSymbol.String,
             FunctionTypeSyntax functionType => FunctionTypeSymbol.Create(
                 functionType.ParameterTypes.Select(ResolveType).ToArray(),
-                ResolveType(functionType.ReturnType)),
+                ResolveType(functionType.ReturnType),
+                functionType.ParameterPassingKeywords.Select(ParameterPassingModes.FromKeyword).ToArray()),
             ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(ResolveType(arrayType.ElementType), arrayType.Rank),
             _ => TypeSymbol.Error
         };

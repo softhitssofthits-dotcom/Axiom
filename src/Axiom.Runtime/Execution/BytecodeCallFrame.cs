@@ -58,7 +58,7 @@ internal sealed class BytecodeCallFrame
     public int InstructionPointer { get; set; }
 
     public void Reset(
-        ReadOnlySpan<RuntimeValue> arguments,
+        BytecodeVariableSlot[] arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
         RuntimeValue[] defaultLocals)
@@ -85,9 +85,7 @@ internal sealed class BytecodeCallFrame
 
         for (var index = 0; index < Arguments.Length; index++)
         {
-            Arguments[index].Value = index < arguments.Length
-                ? BytecodeVariableSlot.NormalizeForStorage(arguments[index], Arguments[index].FixedStringLength)
-                : RuntimeValue.Void;
+            Arguments[index] = arguments[index];
         }
     }
 

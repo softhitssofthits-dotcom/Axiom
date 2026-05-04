@@ -27,6 +27,21 @@ public sealed partial class Binder
         return IsNumeric(type) || type == TypeSymbol.String;
     }
 
+    private static bool SupportsStructuralEquality(TypeSymbol type)
+    {
+        return type switch
+        {
+            var scalar when scalar == TypeSymbol.Integer
+                || scalar == TypeSymbol.Long
+                || scalar == TypeSymbol.Double
+                || scalar == TypeSymbol.Decimal
+                || scalar == TypeSymbol.String
+                || scalar == TypeSymbol.Boolean => true,
+            UserDefinedTypeSymbol userDefinedType => userDefinedType.Fields.All(static field => SupportsStructuralEquality(field.Type)),
+            _ => false
+        };
+    }
+
     private static TypeSymbol PromoteNumericType(TypeSymbol leftType, TypeSymbol rightType, bool forceDouble = false)
     {
         if (forceDouble || leftType == TypeSymbol.Double || rightType == TypeSymbol.Double)

@@ -31,6 +31,9 @@ public sealed partial class Binder
     private const string InvalidFieldAccessCode = "MB2024";
     private const string FixedTypeArrayFieldOperationCode = "MB2025";
     private const string InvalidFixedStringDeclarationCode = "MB2026";
+    private const string InvalidTypeFieldDefaultValueCode = "MB2027";
+    private const string InvalidByRefArgumentCode = "MB2028";
+    private const string UnsupportedByRefCallableValueCode = "MB2029";
 
     // Human-facing block labels stay centralized so every future block scope
     // can reuse the same MB2016 template without inventing a new diagnostic.

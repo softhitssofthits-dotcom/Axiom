@@ -4451,6 +4451,118 @@ user = Person(Name := "Ada", Age := 36, Home := Address(City := "Paris"))
     }
 
     [Fact]
+    public void Bind_TypeFieldDefaultValues()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Ada"
+    Age AS INTEGER = 36
+END TYPE
+
+DIM user AS Person
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var userType = Assert.IsType<UserDefinedTypeSymbol>(declaration.Variable.Type);
+
+        Assert.Collection(
+            userType.Fields,
+            nameField =>
+            {
+                Assert.True(nameField.HasDefaultValue);
+                Assert.Equal("Ada", Assert.IsType<string>(nameField.DefaultValue));
+            },
+            ageField =>
+            {
+                Assert.True(ageField.HasDefaultValue);
+                Assert.Equal(36, Assert.IsType<int>(ageField.DefaultValue));
+            });
+    }
+
+    [Fact]
+    public void Bind_ReportsNonConstantTypeFieldDefaultValue()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = STR(1)
+END TYPE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2027");
+        Assert.Contains("Name", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsArrayTypeFieldDefaultValue()
+    {
+        const string text = """
+TYPE Person
+    Scores() AS INTEGER = 1
+END TYPE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2027");
+        Assert.Contains("Scores", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TypeStructuralEquality()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+DIM left AS Person
+DIM right AS Person
+PRINT left = right
+PRINT left <> right
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var equalsPrint = Assert.IsType<BoundPrintStatement>(program.GlobalStatements[2]);
+        var equalsExpression = Assert.IsType<BoundBinaryExpression>(Assert.Single(equalsPrint.Items).Expression);
+        Assert.Equal(SyntaxKind.EqualsToken, equalsExpression.OperatorKind);
+        Assert.Equal(TypeSymbol.Boolean, equalsExpression.Type);
+
+        var notEqualsPrint = Assert.IsType<BoundPrintStatement>(program.GlobalStatements[3]);
+        var notEqualsExpression = Assert.IsType<BoundBinaryExpression>(Assert.Single(notEqualsPrint.Items).Expression);
+        Assert.Equal(SyntaxKind.NotEqualsToken, notEqualsExpression.OperatorKind);
+        Assert.Equal(TypeSymbol.Boolean, notEqualsExpression.Type);
+    }
+
+    [Fact]
+    public void Bind_ReportsTypeStructuralEqualityForArrayField()
+    {
+        const string text = """
+TYPE Person
+    Scores() AS INTEGER
+END TYPE
+
+DIM left AS Person
+DIM right AS Person
+PRINT left = right
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("=", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Bind_ReportsNamedArgumentsOutsideTypeLiteral()
     {
         const string text = """
@@ -4530,6 +4642,24 @@ PRINT user.Age
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2023");
         Assert.Contains("Age", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsNonVariableByRefArgument()
+    {
+        const string text = """
+SUB Touch(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+DIM number AS INTEGER = 10
+Touch(number + 1)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2028");
+        Assert.Contains("BYREF", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

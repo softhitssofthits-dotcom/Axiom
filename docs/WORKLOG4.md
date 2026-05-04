@@ -6245,3 +6245,101 @@
 Следующий шаг:
 - если развивать `TYPE` дальше, выбирать отдельный следующий пользовательский контракт и не расширять `:=` без нового проектного решения;
 - в качестве ближайших кандидатов можно рассматривать инициализацию полей по объявлению или структурное сравнение записей.
+## Session 674 - 2026-05-04 08:19 - TYPE получил значения полей по умолчанию и структурное сравнение
+
+Что сделано:
+- внутри `TYPE` разрешены объявления полей с собственным значением по умолчанию в форме `FieldName AS FieldType = expression`;
+- binder теперь принимает только константные scalar/string-инициализаторы полей, сохраняет их в `TypeFieldSymbol` и сообщает `MB2027` для неконстантных, массивных и пользовательских полей;
+- `RuntimeRecordValue`, interpreter, сериализация байткодного модуля, validator и `BytecodeVm` научены одинаково применять значения полей по умолчанию при `DIM`, `TypeName()` и частичном литерале `TypeName(Field := ...)`;
+- для двух значений одного и того же `TYPE` включено структурное сравнение через `=` и `<>`, включая рекурсивное сравнение вложенных записей;
+- для записей с массивными полями структурное сравнение в этом шаге осознанно не включалось: binder оставляет такой случай семантической ошибкой;
+- добавлены parser/binder/runtime/bytecode/execution-проверки и acceptance-сценарии `samples/operators/type/default_field_values.axm`, `samples/operators/type/partial_named_literal_defaults.axm`, `samples/operators/type/structural_equality.axm`, а также отрицательный сценарий `samples/acceptance/negative/type_default_non_constant.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/type.html`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`, чтобы новый value-oriented контракт `TYPE` был зафиксирован не только в коде, но и в пользовательских документах и рабочих реестрах.
+
+Изменённые файлы:
+- `src/Axiom.Syntax/ProgramAndMembers.cs`
+- `src/Axiom.Parsing/Parser.Declarations.cs`
+- `src/Axiom.Semantics/Symbols/Symbols.cs`
+- `src/Axiom.Semantics/Binding/Binder.cs`
+- `src/Axiom.Semantics/Binding/Binder.Declarations.cs`
+- `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs`
+- `src/Axiom.Semantics/Binding/Binder.Helpers.cs`
+- `src/Axiom.Semantics/Binding/Binder.Expressions.cs`
+- `src/Axiom.Runtime/Values/RuntimeRecordValue.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Expressions.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Bytecode/Serialization/BytecodeModuleArtifact.cs`
+- `src/Axiom.Bytecode/Serialization/BytecodeModuleSerializer.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Bytecode.Tests/BytecodeModuleValidatorTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/type/default_field_values.axm`
+- `samples/operators/type/partial_named_literal_defaults.axm`
+- `samples/operators/type/structural_equality.axm`
+- `samples/acceptance/negative/type_default_non_constant.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/type.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test C:\Axiom\tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj`
+- `dotnet test C:\Axiom\tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj`
+
+Решение:
+- считать значения полей по умолчанию полноценной частью текущего пользовательского договора `TYPE`, но пока только для скалярных и строковых полей;
+- считать структурное сравнение `TYPE` полноценной частью value-oriented договора записей, но без автоматического глубокого сравнения массивных полей;
+- не смешивать этот шаг с `BYREF` / `BYVAL`, методами и конструктором, чтобы следующий контракт ветки `TYPE` оставался отдельным и проверяемым.
+
+Следующий шаг:
+- закрепить явный договор передачи и возврата записей через общий механизм `BYREF` / `BYVAL`;
+- после этого переходить к методам внутри `TYPE`, `SELF` и конструктору уже на зафиксированной модели передачи значений.
+
+## Session 675 - 2026-05-04 08:55 - договор BYREF / BYVAL закреплён для значений TYPE
+
+Что сделано:
+- в lexer, syntax и parser добавлены ключевые слова `BYREF` и `BYVAL`, а сигнатуры пользовательских `SUB` / `FUNCTION` и типов `FUNCTION(...) AS ...` научены хранить режим передачи каждого параметра;
+- в semantics и binder введён явный режим передачи параметра, добавлены диагностики `MB2028` и `MB2029`, а `BYREF` на первом шаге ограничен простыми переменными при прямом вызове именованных процедур и функций;
+- в interpreter, lowering, bytecode compiler, serializer, validator и `BytecodeVm` проведён общий путь передачи `BYREF`, чтобы изменения аргумента были согласованы между interpreter и байткодным исполнением;
+- обновлены ручные acceptance-примеры `samples/operators/sub/byref_record_argument.axm`, `samples/operators/sub/byval_record_copy.axm`, отрицательный сценарий `samples/acceptance/negative/byref_requires_variable.axm`, а также manual-страницы по процедурам и функциям.
+
+Какие файлы менялись:
+- `src/Axiom.Lexing/*`
+- `src/Axiom.Syntax/*`
+- `src/Axiom.Parsing/*`
+- `src/Axiom.Semantics/*`
+- `src/Axiom.Bytecode/*`
+- `src/Axiom.Runtime/*`
+- `tests/Axiom.Lexing.Tests/LexerTests.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/sub/byref_record_argument.axm`
+- `samples/operators/sub/byval_record_copy.axm`
+- `samples/acceptance/negative/byref_requires_variable.axm`
+- `docs/manual/sub.html`, `docs/manual/function.html`, `docs/manual/procedures-and-functions.html`, `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`, `docs/PLANS3.md`, `docs/BYTECODE_COVERAGE.md`, `docs/WORKLOG4.md`, `docs/ARCHITECTURE.md`
+
+Ограничения шага:
+- `BYREF` пока работает только для простых переменных при прямом вызове именованных пользовательских `SUB` и `FUNCTION`;
+- составные цели `BYREF` и callback-вызовы через function-value с `BYREF` сознательно не поддержаны в этом шаге.
+
+Проверка:
+- полноценный прогон `dotnet test C:\Axiom\Axiom.sln -p:UseSharedCompilation=false` в текущей среде снова упирается в слой restore/инициализации `dotnet`, поэтому завершить надёжную компиляционную валидацию из этого сеанса не удалось;
+- дополнительно выполнена ручная перечитка критических узлов `binder`, lowering, `BytecodeCompiler`, `BytecodeModuleValidator` и `BytecodeVm` после внесения маршрута `CallByRef`.
+
+Что осталось:
+- вернуть рабочий restore/сборку и прогнать целевые тестовые наборы по parser/semantics/runtime/execution;
+- перейти к пользовательским методам внутри `TYPE` и модели `SELF`.
+
+Следующий точный шаг: спроектировать пользовательские методы `TYPE` и модель `SELF` уже поверх зафиксированного договора передачи `BYREF` / `BYVAL`.

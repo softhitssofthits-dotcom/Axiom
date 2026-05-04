@@ -150,7 +150,11 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        _callStack.Push(CreateFrame(entryPoint, Array.Empty<RuntimeValue>(), Array.Empty<BytecodeVariableSlot>(), callSiteLocation: entryPoint.Location));
+        _callStack.Push(CreateFrame(
+            entryPoint,
+            Array.Empty<RuntimeValue>(),
+            Array.Empty<BytecodeVariableSlot>(),
+            callSiteLocation: entryPoint.Location));
 
         while (_callStack.Count > 0 && _stopState is null)
         {
@@ -345,20 +349,15 @@ public sealed partial class BytecodeVm
         BytecodeRoutine routine,
         ReadOnlySpan<RuntimeValue> arguments,
         BytecodeVariableSlot[] captures,
-        TextLocation callSiteLocation)
+        TextLocation callSiteLocation,
+        BytecodeVariableSlot[]? byRefArgumentSlots = null)
     {
         var template = _frameTemplatesByRoutineId[routine.Id];
+        var argumentSlots = CreateArgumentSlots(routine, arguments, byRefArgumentSlots);
         if (_cachedFrames.Remove(routine.Id, out var cachedFrame))
         {
-            cachedFrame.Reset(arguments, captures, callSiteLocation, template.DefaultLocals);
+            cachedFrame.Reset(argumentSlots, captures, callSiteLocation, template.DefaultLocals);
             return cachedFrame;
-        }
-
-        var argumentSlots = new BytecodeVariableSlot[routine.ParameterCount];
-        for (var index = 0; index < argumentSlots.Length; index++)
-        {
-            var value = index < arguments.Length ? arguments[index].CopyForStorage() : RuntimeValue.Void;
-            argumentSlots[index] = new BytecodeVariableSlot(value);
         }
 
         RuntimeValue[] locals;
@@ -383,6 +382,33 @@ public sealed partial class BytecodeVm
             captures,
             callSiteLocation,
             routine.MaxEvaluationStackDepth);
+    }
+
+    private static BytecodeVariableSlot[] CreateArgumentSlots(
+        BytecodeRoutine routine,
+        ReadOnlySpan<RuntimeValue> arguments,
+        BytecodeVariableSlot[]? byRefArgumentSlots)
+    {
+        var argumentSlots = new BytecodeVariableSlot[routine.ParameterCount];
+        var byValIndex = 0;
+
+        for (var index = 0; index < argumentSlots.Length; index++)
+        {
+            if (byRefArgumentSlots is not null
+                && index < byRefArgumentSlots.Length
+                && byRefArgumentSlots[index] is not null
+                && routine.ParameterVariables[index] is ParameterSymbol { IsByRef: true })
+            {
+                argumentSlots[index] = byRefArgumentSlots[index];
+                continue;
+            }
+
+            var value = byValIndex < arguments.Length ? arguments[byValIndex].CopyForStorage() : RuntimeValue.Void;
+            argumentSlots[index] = new BytecodeVariableSlot(value);
+            byValIndex++;
+        }
+
+        return argumentSlots;
     }
 
     private void ExecuteCurrentInstruction()
@@ -618,6 +644,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.Call:
+            case Opcode.CallByRef:
                 ExecuteRoutineCall(frame, instruction, instructionIndex);
                 break;
 
@@ -2194,6 +2221,7 @@ public sealed partial class BytecodeVm
     {
         var targetRoutineId = instruction.GetOperand(0);
         var argumentCount = instruction.GetOperand(1);
+        var byValArgumentCount = instruction.Opcode == Opcode.CallByRef ? instruction.GetOperand(2) : argumentCount;
 
         if (!_routines.TryGetValue(targetRoutineId, out var targetRoutine))
         {
@@ -2203,9 +2231,45 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        using var arguments = RentArguments(callerFrame, argumentCount, instructionIndex);
+        using var arguments = RentArguments(callerFrame, byValArgumentCount, instructionIndex);
         var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
-        _callStack.Push(CreateFrame(targetRoutine, arguments.Span, captures, ResolveLocation(callerFrame.Routine.Id, instructionIndex)));
+        var byRefArgumentSlots = instruction.Opcode == Opcode.CallByRef
+            ? ResolveByRefArgumentSlots(callerFrame, instruction)
+            : null;
+        _callStack.Push(CreateFrame(
+            targetRoutine,
+            arguments.Span,
+            captures,
+            ResolveLocation(callerFrame.Routine.Id, instructionIndex),
+            byRefArgumentSlots));
+    }
+
+    private BytecodeVariableSlot[] ResolveByRefArgumentSlots(BytecodeCallFrame callerFrame, BytecodeInstruction instruction)
+    {
+        var slots = new BytecodeVariableSlot[instruction.GetOperand(1)];
+        var byRefCount = instruction.GetOperand(3);
+        var operandIndex = 4;
+
+        for (var index = 0; index < byRefCount; index++)
+        {
+            var argumentIndex = instruction.GetOperand(operandIndex++);
+            var sourceKind = instruction.GetOperand(operandIndex++);
+            var sourceSlot = instruction.GetOperand(operandIndex++);
+
+            slots[argumentIndex] = sourceKind switch
+            {
+                0 => new BytecodeVariableSlot(
+                    () => LoadGlobalValue(sourceSlot),
+                    value => StoreGlobalValue(sourceSlot, value),
+                    GetGlobalFixedStringLength(sourceSlot)),
+                1 => callerFrame.Arguments[sourceSlot],
+                2 => callerFrame.GetOrCreateLocalSlot(sourceSlot),
+                3 => callerFrame.Captures[sourceSlot],
+                _ => throw new InvalidOperationException($"Unsupported BYREF source kind '{sourceKind}'.")
+            };
+        }
+
+        return slots;
     }
 
     private void ExecuteFunctionValueCall(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -2475,7 +2539,7 @@ public sealed partial class BytecodeVm
         var callerStackDepth = callerFrame.EvaluationStack.Count;
         var callStackDepth = _callStack.Count;
 
-        _callStack.Push(CreateFrame(routine, arguments, captures, callSiteLocation));
+        _callStack.Push(CreateFrame(routine, arguments, captures, callSiteLocation: callSiteLocation));
 
         while (_callStack.Count > callStackDepth)
         {
@@ -3825,6 +3889,11 @@ public sealed partial class BytecodeVm
             return GetBooleanUnchecked(left) == GetBooleanUnchecked(right);
         }
 
+        if (left.Type is UserDefinedTypeSymbol)
+        {
+            return RecordsEqual(left.AsRecord(), right.AsRecord());
+        }
+
         return false;
     }
 
@@ -3860,6 +3929,26 @@ public sealed partial class BytecodeVm
             location);
     }
 
+    private static bool RecordsEqual(RuntimeRecordValue left, RuntimeRecordValue right)
+    {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+
+        if (!ReferenceEquals(left.Type, right.Type))
+        {
+            return false;
+        }
+
+        foreach (var field in left.Type.Fields)
+        {
+            if (!ValuesEqual(left.GetField(field), right.GetField(field)))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
     private RuntimeValue EvaluateCheckedIntegerOperation(Func<int> operation, string detail, TextLocation location)
     {
         try
@@ -3997,5 +4086,3 @@ public sealed partial class BytecodeVm
         Out
     }
 }
-
-

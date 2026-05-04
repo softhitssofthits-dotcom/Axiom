@@ -51,6 +51,7 @@ public enum Opcode
     JumpIfTrue,
     JumpIfFalse,
     Call,
+    CallByRef,
     CallValue,
     Return,
     CreateArray,

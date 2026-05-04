@@ -3,20 +3,53 @@ using Axiom.Semantics;
 
 namespace Axiom.Runtime;
 
-internal sealed class BytecodeVariableSlot
+internal class BytecodeVariableSlot
 {
+    private RuntimeValue _value;
+    private readonly Func<RuntimeValue>? _getter;
+    private readonly Action<RuntimeValue>? _setter;
+
     public BytecodeVariableSlot(RuntimeValue value, int? fixedStringLength = null)
     {
         ArgumentNullException.ThrowIfNull(value);
         FixedStringLength = fixedStringLength;
-        Value = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+        _value = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
             ? value
             : NormalizeForStorage(value, fixedStringLength);
     }
 
+    public BytecodeVariableSlot(Func<RuntimeValue> getter, Action<RuntimeValue> setter, int? fixedStringLength = null)
+    {
+        ArgumentNullException.ThrowIfNull(getter);
+        ArgumentNullException.ThrowIfNull(setter);
+        FixedStringLength = fixedStringLength;
+        _getter = getter;
+        _setter = setter;
+        _value = RuntimeValue.Void;
+    }
+
     public int? FixedStringLength { get; }
 
-    public RuntimeValue Value { get; set; }
+    public virtual RuntimeValue Value
+    {
+        get => _getter is null ? _value : _getter();
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+
+            var normalizedValue = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+                ? value
+                : NormalizeForStorage(value, FixedStringLength);
+
+            if (_setter is null)
+            {
+                _value = normalizedValue;
+                return;
+            }
+
+            _setter(normalizedValue);
+        }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Store(RuntimeValue value)

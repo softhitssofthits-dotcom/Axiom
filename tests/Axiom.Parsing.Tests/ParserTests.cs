@@ -256,6 +256,22 @@ END FUNCTION
     }
 
     [Fact]
+    public void Parse_SubDeclarationWithExplicitByRefAndByValParameters()
+    {
+        const string text = """
+SUB Update(BYREF user AS INTEGER, BYVAL copy AS INTEGER)
+END SUB
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var sub = Assert.IsType<SubDeclarationSyntax>(Assert.Single(program.Members));
+        Assert.Equal(SyntaxKind.ByRefKeyword, sub.Parameters[0].PassingKeyword?.Kind);
+        Assert.Equal(SyntaxKind.ByValKeyword, sub.Parameters[1].PassingKeyword?.Kind);
+    }
+
+    [Fact]
     public void Parse_FunctionDeclarationWithArrayTypedParameterAndReturnType()
     {
         const string text = """
@@ -1150,6 +1166,37 @@ END TYPE
 
         Assert.Equal("Name", Assert.Single(field.Declarators).Identifier.Text);
         Assert.Equal(20, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(fixedStringType.LengthExpression).LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_TypeDeclarationWithFieldDefaultValue()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Ada"
+    Age AS INTEGER = 36
+END TYPE
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var typeDeclaration = Assert.IsType<TypeDeclarationSyntax>(program.Members[0]);
+
+        Assert.Collection(
+            typeDeclaration.Fields,
+            nameField =>
+            {
+                Assert.NotNull(nameField.EqualsToken);
+                var initializer = Assert.IsType<LiteralExpressionSyntax>(nameField.Initializer);
+                Assert.Equal("Ada", Assert.IsType<string>(initializer.LiteralToken.Value));
+            },
+            ageField =>
+            {
+                Assert.NotNull(ageField.EqualsToken);
+                var initializer = Assert.IsType<LiteralExpressionSyntax>(ageField.Initializer);
+                Assert.Equal(36, Assert.IsType<int>(initializer.LiteralToken.Value));
+            });
     }
 
     [Fact]

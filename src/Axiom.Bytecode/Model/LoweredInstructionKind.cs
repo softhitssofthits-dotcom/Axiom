@@ -12,6 +12,7 @@ public enum LoweredInstructionKind
     BinaryOperation,
     Convert,
     CallFunction,
+    CallFunctionByRef,
     CallValue,
     CreateRecord,
     RedimArray,

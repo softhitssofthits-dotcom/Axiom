@@ -1,0 +1,14 @@
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+SUB Birthday(BYREF user AS Person)
+    user.Age = user.Age + 1
+END SUB
+
+DIM user AS Person
+user.Name = "Ada"
+user.Age = 36
+Birthday(user)
+PRINT user.Age

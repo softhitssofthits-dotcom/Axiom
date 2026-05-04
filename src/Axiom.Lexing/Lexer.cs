@@ -16,6 +16,8 @@ public sealed class Lexer
         ["AS"] = TokenKind.AsKeyword,
         ["APPEND"] = TokenKind.AppendKeyword,
         ["BOOLEAN"] = TokenKind.BooleanKeyword,
+        ["BYREF"] = TokenKind.ByRefKeyword,
+        ["BYVAL"] = TokenKind.ByValKeyword,
         ["CASE"] = TokenKind.CaseKeyword,
         ["CLOSE"] = TokenKind.CloseKeyword,
         ["CONST"] = TokenKind.ConstKeyword,

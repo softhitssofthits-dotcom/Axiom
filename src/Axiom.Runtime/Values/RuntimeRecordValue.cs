@@ -68,6 +68,11 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
         ArgumentNullException.ThrowIfNull(field);
         ArgumentNullException.ThrowIfNull(activeTypes);
 
+        if (field.HasDefaultValue)
+        {
+            return CreateConfiguredDefaultFieldValue(field);
+        }
+
         if (field.Type is UserDefinedTypeSymbol nestedType)
         {
             return RuntimeValue.FromRecord(nestedType, CreateDefault(nestedType, activeTypes));
@@ -87,6 +92,47 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
         }
 
         return RuntimeValue.Default(field.Type, field.FixedStringLength);
+    }
+
+    private static RuntimeValue CreateConfiguredDefaultFieldValue(TypeFieldSymbol field)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+
+        if (field.Type == TypeSymbol.Integer)
+        {
+            return RuntimeValue.FromInteger((int)field.DefaultValue!);
+        }
+
+        if (field.Type == TypeSymbol.Long)
+        {
+            return RuntimeValue.FromLong((long)field.DefaultValue!);
+        }
+
+        if (field.Type == TypeSymbol.Double)
+        {
+            return RuntimeValue.FromDouble((double)field.DefaultValue!);
+        }
+
+        if (field.Type == TypeSymbol.Decimal)
+        {
+            return RuntimeValue.FromDecimal((decimal)field.DefaultValue!);
+        }
+
+        if (field.Type == TypeSymbol.String)
+        {
+            var text = (string)field.DefaultValue!;
+            return RuntimeValue.FromString(
+                field.FixedStringLength is { } length
+                    ? RuntimeValue.NormalizeFixedString(text, length)
+                    : text);
+        }
+
+        if (field.Type == TypeSymbol.Boolean)
+        {
+            return RuntimeValue.FromBoolean((bool)field.DefaultValue!);
+        }
+
+        throw new InvalidOperationException($"TYPE field '{field.Name}' has unsupported default value type '{field.Type.Name}'.");
     }
 
     private static RuntimeValue CloneFieldValue(TypeFieldSymbol field, RuntimeValue value)

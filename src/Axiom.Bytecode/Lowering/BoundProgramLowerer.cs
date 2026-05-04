@@ -775,12 +775,36 @@ public sealed class BoundProgramLowerer
     {
         if (call.Target is BoundFunctionExpression function)
         {
-            foreach (var argument in call.Arguments)
+            var byRefArgumentIndices = new List<int>();
+            var byRefVariables = new List<VariableSymbol>();
+            var byValArgumentCount = 0;
+
+            for (var index = 0; index < call.Arguments.Count; index++)
             {
+                var argument = call.Arguments[index];
+                var parameter = index < function.Function.Parameters.Count
+                    ? function.Function.Parameters[index]
+                    : null;
+
+                if (parameter?.IsByRef == true && argument is BoundVariableExpression variableArgument)
+                {
+                    byRefArgumentIndices.Add(index);
+                    byRefVariables.Add(variableArgument.Variable);
+                    continue;
+                }
+
                 LowerExpression(argument, instructions);
+                byValArgumentCount++;
             }
 
-            instructions.Add(LoweredInstruction.CallFunction(call.Location, function.Function));
+            instructions.Add(byRefVariables.Count == 0
+                ? LoweredInstruction.CallFunction(call.Location, function.Function)
+                : LoweredInstruction.CallFunctionByRef(
+                    call.Location,
+                    function.Function,
+                    byValArgumentCount,
+                    byRefArgumentIndices,
+                    byRefVariables));
             return;
         }
 

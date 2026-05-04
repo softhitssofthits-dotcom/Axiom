@@ -1,0 +1,16 @@
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+SUB Rewrite(user AS Person)
+    user.Name = "Changed"
+    user.Age = 99
+END SUB
+
+DIM user AS Person
+user.Name = "Ada"
+user.Age = 36
+Rewrite(user)
+PRINT user.Name
+PRINT user.Age

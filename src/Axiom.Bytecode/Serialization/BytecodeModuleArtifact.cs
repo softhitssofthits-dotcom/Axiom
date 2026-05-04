@@ -75,7 +75,8 @@ public sealed record BytecodeVariableSymbolArtifact(
     string Type,
     bool IsReadOnly,
     bool IsGlobal,
-    int? FixedStringLength);
+    int? FixedStringLength,
+    string? PassingMode = null);
 
 public sealed record BytecodeTypeDefinitionArtifact(
     string Name,
@@ -86,7 +87,9 @@ public sealed record BytecodeTypeFieldArtifact(
     string Type,
     int? FixedStringLength,
     IReadOnlyList<int>? FixedArrayLowerBounds,
-    IReadOnlyList<int>? FixedArrayUpperBounds);
+    IReadOnlyList<int>? FixedArrayUpperBounds,
+    bool HasDefaultValue,
+    object? DefaultValue);
 
 public sealed record BytecodeDebugInfoArtifact(
     IReadOnlyList<SourceInstructionMapArtifact> InstructionMap,

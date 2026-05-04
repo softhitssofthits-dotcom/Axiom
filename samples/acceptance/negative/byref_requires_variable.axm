@@ -1,0 +1,6 @@
+SUB Touch(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+DIM number AS INTEGER = 10
+Touch(number + 1)

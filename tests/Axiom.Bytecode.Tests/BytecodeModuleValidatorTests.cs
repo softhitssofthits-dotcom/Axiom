@@ -1722,6 +1722,44 @@ public sealed class BytecodeModuleValidatorTests
     }
 
     [Fact]
+    public void Validate_TypeStructuralEquality_Succeeds()
+    {
+        var recordType = new UserDefinedTypeSymbol("Point");
+        recordType.Complete(
+        [
+            new TypeFieldSymbol("X", TypeSymbol.Integer),
+            new TypeFieldSymbol("Name", TypeSymbol.String)
+        ]);
+
+        var routine = new BytecodeRoutine(
+            0,
+            "Main",
+            Location(10),
+            TypeSymbol.Void,
+            parameterCount: 0,
+            localSlotCount: 2,
+            [
+                new BytecodeInstruction(Opcode.LoadLocal, [0]),
+                new BytecodeInstruction(Opcode.LoadLocal, [1]),
+                new BytecodeInstruction(Opcode.CompareEqual),
+                new BytecodeInstruction(Opcode.Pop),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            isEntryPoint: true,
+            localVariables:
+            [
+                new VariableSymbol("left", recordType, isReadOnly: false, isGlobal: false),
+                new VariableSymbol("right", recordType, isReadOnly: false, isGlobal: false)
+            ]);
+        var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
     public void Validate_LoadFieldWithMissingKnownField_ReturnsDiagnostic()
     {
         var recordType = new UserDefinedTypeSymbol("Point");
@@ -2457,6 +2495,41 @@ public sealed class BytecodeModuleValidatorTests
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("BC4019", diagnostic.Code);
         Assert.Equal(10, diagnostic.Location.Line);
+    }
+
+    [Fact]
+    public void Validate_CallByRefWithByValStackArgumentsAndFunctionResult_Succeeds()
+    {
+        var byRefParameter = new ParameterSymbol("value", TypeSymbol.Integer, 0, ParameterPassingMode.ByRef);
+        var byValParameter = new ParameterSymbol("delta", TypeSymbol.Integer, 1);
+        var callee = new BytecodeRoutine(
+            1,
+            "Adjust",
+            Location(20),
+            TypeSymbol.Integer,
+            parameterCount: 2,
+            localSlotCount: 0,
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.LoadArgument, [1]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            parameterVariables: [byRefParameter, byValParameter]);
+        var entryPoint = CreateEntryPoint(
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.CallByRef, [1, 2, 1, 1, 0, 2, 0]),
+                new BytecodeInstruction(Opcode.Pop),
+                new BytecodeInstruction(Opcode.Return)
+            ]);
+        var module = CreateValidModule(
+            routines: [entryPoint, callee],
+            debugInfo: CreateDebugInfo(entryPoint, callee));
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
     }
 
     [Fact]

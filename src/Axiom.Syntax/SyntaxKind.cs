@@ -36,6 +36,8 @@ public enum SyntaxKind
     AsKeyword,
     AppendKeyword,
     BooleanKeyword,
+    ByRefKeyword,
+    ByValKeyword,
     CaseKeyword,
     CloseKeyword,
     ConstKeyword,

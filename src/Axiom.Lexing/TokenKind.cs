@@ -36,6 +36,8 @@ public enum TokenKind
     AsKeyword,
     AppendKeyword,
     BooleanKeyword,
+    ByRefKeyword,
+    ByValKeyword,
     CaseKeyword,
     CloseKeyword,
     ConstKeyword,

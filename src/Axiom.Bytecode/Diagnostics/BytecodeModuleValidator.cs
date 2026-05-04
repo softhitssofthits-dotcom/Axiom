@@ -617,6 +617,10 @@ public sealed class BytecodeModuleValidator
                     ValidateRoutineCall(module, routine, instructionIndex, instruction, routinesById);
                     break;
 
+                case Opcode.CallByRef:
+                    ValidateRoutineCall(module, routine, instructionIndex, instruction, routinesById);
+                    break;
+
                 case Opcode.CallValue:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     ValidateFunctionValueCall(module, routine, instructionIndex, instruction);
@@ -1428,25 +1432,34 @@ public sealed class BytecodeModuleValidator
             }
 
             case Opcode.Call:
+            case Opcode.CallByRef:
             {
-                var argumentCount = instruction.GetOperand(1);
+                var argumentCount = instruction.Opcode == Opcode.CallByRef ? instruction.GetOperand(2) : instruction.GetOperand(1);
                 var argumentTypes = new TypeSymbol?[argumentCount];
                 for (var index = argumentCount - 1; index >= 0; index--)
                 {
                     argumentTypes[index] = Pop();
                 }
 
-                if (routinesById.TryGetValue(instruction.GetOperand(0), out var targetRoutine)
-                    && targetRoutine.ParameterVariables.Count == argumentCount)
+                routinesById.TryGetValue(instruction.GetOperand(0), out var targetRoutine);
+
+                if (targetRoutine is not null)
                 {
-                    ValidateCallArgumentStackTypes(
-                        module,
-                        routine,
-                        instructionIndex,
-                        instruction.Opcode,
-                        argumentTypes,
-                        targetRoutine.ParameterVariables,
-                        targetRoutine.Name);
+                    var stackParameters = instruction.Opcode == Opcode.CallByRef
+                        ? targetRoutine.ParameterVariables.Where(static parameter => parameter is not ParameterSymbol { IsByRef: true }).ToArray()
+                        : targetRoutine.ParameterVariables;
+
+                    if (stackParameters.Count == argumentCount)
+                    {
+                        ValidateCallArgumentStackTypes(
+                            module,
+                            routine,
+                            instructionIndex,
+                            instruction.Opcode,
+                            argumentTypes,
+                            stackParameters,
+                            targetRoutine.Name);
+                    }
                 }
 
                 if (targetRoutine is not null && targetRoutine.ResultType != TypeSymbol.Void)
@@ -2279,6 +2292,13 @@ public sealed class BytecodeModuleValidator
 
     private static bool IsEqualityOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
     {
+        if (leftType == rightType
+            && leftType is UserDefinedTypeSymbol userDefinedType
+            && SupportsStructuralEquality(userDefinedType))
+        {
+            return true;
+        }
+
         if (leftType == TypeSymbol.String || leftType == TypeSymbol.Boolean)
         {
             return rightType == leftType;
@@ -2301,6 +2321,21 @@ public sealed class BytecodeModuleValidator
 
         return leftType == TypeSymbol.Decimal
             && (rightType == TypeSymbol.Integer || rightType == TypeSymbol.Long || rightType == TypeSymbol.Decimal);
+    }
+
+    private static bool SupportsStructuralEquality(TypeSymbol type)
+    {
+        return type switch
+        {
+            var scalar when scalar == TypeSymbol.Integer
+                || scalar == TypeSymbol.Long
+                || scalar == TypeSymbol.Double
+                || scalar == TypeSymbol.Decimal
+                || scalar == TypeSymbol.String
+                || scalar == TypeSymbol.Boolean => true,
+            UserDefinedTypeSymbol userDefinedType => userDefinedType.Fields.All(static field => SupportsStructuralEquality(field.Type)),
+            _ => false
+        };
     }
 
     private static bool IsConversionCompatible(TypeSymbol sourceType, TypeSymbol targetType)
@@ -2548,12 +2583,13 @@ public sealed class BytecodeModuleValidator
                 return true;
 
             case Opcode.Call:
+            case Opcode.CallByRef:
                 if (instruction.OperandCount < 2 || !routinesById.TryGetValue(instruction.GetOperand(0), out var targetRoutine))
                 {
                     return false;
                 }
 
-                popCount = instruction.GetOperand(1);
+                popCount = instruction.Opcode == Opcode.CallByRef ? instruction.GetOperand(2) : instruction.GetOperand(1);
                 pushCount = targetRoutine.ResultType == TypeSymbol.Void ? 0 : 1;
                 return true;
 
@@ -3439,48 +3475,46 @@ public sealed class BytecodeModuleValidator
 
         var targetRoutineId = instruction.GetOperand(0);
         var argumentCount = instruction.GetOperand(1);
+        var isByRefCall = instruction.Opcode == Opcode.CallByRef;
+        var byValArgumentCount = isByRefCall && instruction.OperandCount >= 4 ? instruction.GetOperand(2) : argumentCount;
+        var byRefCount = isByRefCall && instruction.OperandCount >= 4 ? instruction.GetOperand(3) : 0;
 
         if (targetRoutineId < 0)
         {
-            Report(
-                "BC4104",
-                $"Инструкция Call в процедуре '{routine.Name}' ссылается на отрицательный routine-id {targetRoutineId}.",
-                module,
-                routine.Id,
-                instructionIndex);
+            Report("BC4104", $"Инструкция {instruction.Opcode} в процедуре '{routine.Name}' ссылается на отрицательный routine-id {targetRoutineId}.", module, routine.Id, instructionIndex);
             return;
         }
 
         if (argumentCount < 0)
         {
-            Report(
-                "BC4105",
-                $"Инструкция Call в процедуре '{routine.Name}' содержит отрицательное число аргументов {argumentCount}.",
-                module,
-                routine.Id,
-                instructionIndex);
+            Report("BC4105", $"Инструкция {instruction.Opcode} в процедуре '{routine.Name}' содержит отрицательное число аргументов {argumentCount}.", module, routine.Id, instructionIndex);
             return;
         }
 
         if (!routinesById.TryGetValue(targetRoutineId, out var targetRoutine))
         {
-            Report(
-                "BC4018",
-                $"Инструкция Call в процедуре '{routine.Name}' ссылается на неизвестную процедуру {targetRoutineId}.",
-                module,
-                routine.Id,
-                instructionIndex);
+            Report("BC4018", $"Инструкция {instruction.Opcode} в процедуре '{routine.Name}' ссылается на неизвестную процедуру {targetRoutineId}.", module, routine.Id, instructionIndex);
             return;
         }
 
         if (argumentCount != targetRoutine.ParameterCount)
         {
-            Report(
-                "BC4019",
-                $"Инструкция Call в процедуре '{routine.Name}' передаёт {argumentCount} аргумент(а/ов) в '{targetRoutine.Name}', но сигнатура требует {targetRoutine.ParameterCount}.",
-                module,
-                routine.Id,
-                instructionIndex);
+            Report("BC4019", $"Инструкция {instruction.Opcode} в процедуре '{routine.Name}' передаёт {argumentCount} аргумент(а/ов) в '{targetRoutine.Name}', но сигнатура требует {targetRoutine.ParameterCount}.", module, routine.Id, instructionIndex);
+        }
+
+        if (isByRefCall)
+        {
+            var expectedOperandCount = 4 + (byRefCount * 3);
+            if (instruction.OperandCount != expectedOperandCount)
+            {
+                Report("BC4119", $"Инструкция CallByRef в процедуре '{routine.Name}' содержит {instruction.OperandCount} операнд(а/ов), но по заголовку требуется {expectedOperandCount}.", module, routine.Id, instructionIndex);
+                return;
+            }
+
+            if (byValArgumentCount < 0 || byValArgumentCount + byRefCount != argumentCount)
+            {
+                Report("BC4121", $"Инструкция CallByRef в процедуре '{routine.Name}' содержит несовместимую раскладку BYVAL/BYREF для арности {argumentCount}.", module, routine.Id, instructionIndex);
+            }
         }
 
         ValidateTargetCapturesVisible(module, routine, instructionIndex, instruction.Opcode, targetRoutine);

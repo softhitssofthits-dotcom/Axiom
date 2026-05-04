@@ -1,0 +1,10 @@
+TYPE Person
+    Name AS STRING = "Ada"
+    Age AS INTEGER = 36
+    Active AS BOOLEAN = TRUE
+END TYPE
+
+DIM user AS Person
+PRINT user.Name
+PRINT user.Age
+PRINT user.Active

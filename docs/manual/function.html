@@ -28,12 +28,13 @@ END FUNCTION</code></pre>
 <pre><code class="language-basic">name([argument[, anotherArgument] ...])</code></pre>
 <pre><code class="language-basic">DIM variable AS FUNCTION([parameterType[, anotherParameterType] ...]) AS resultType
 variable = name</code></pre>
+<pre><code class="language-basic">parameterDeclaration := [[BYVAL] | BYREF] parameterName AS parameterType</code></pre>
 </section>
 
 <section class="article-section">
 <h2>Части записи</h2>
 <p><code>name</code> задаёт имя функции.</p>
-<p><code>parameterDeclaration</code> обозначает объявление параметра вида <code>parameterName AS parameterType</code>.</p>
+<p><code>parameterDeclaration</code> обозначает объявление параметра вида <code>[[BYVAL] | BYREF] parameterName AS parameterType</code>.</p>
 <p><code>resultType</code> задаёт тип возвращаемого значения.</p>
 <p><code>statements</code> обозначает любые допустимые инструкции внутри функции.</p>
 <p><code>expression</code> задаёт значение, которое возвращается оператором <code>RETURN</code>.</p>
@@ -47,7 +48,10 @@ variable = name</code></pre>
 <li>После списка параметров функция обязана объявить тип результата через <code>AS</code>.</li>
 <li>В рабочей ветви выполнения функция должна завершаться формой <code>RETURN expression</code>.</li>
 <li>Если выполнение дошло до конца функции без возвращаемого значения, возникает ошибка времени выполнения.</li>
-<li>Параметры функции в текущей реализации передаются по значению.</li>
+<li>Если модификатор не указан, параметр функции передаётся как <code>BYVAL</code>.</li>
+<li><code>BYREF</code> позволяет функции менять переменную вызывающего кода, а <code>BYVAL</code> сохраняет обычную value-oriented передачу.</li>
+<li>Для записей <code>TYPE</code> это важно явно: <code>BYVAL</code> даёт функции отдельную копию записи, а <code>BYREF</code> работает с исходной переменной.</li>
+<li>Функции, в сигнатуре которых есть <code>BYREF</code>, в текущем шаге нельзя использовать как значение, callback или переменную функционального типа.</li>
 <li>Функцию можно использовать как значение, если ожидается совместимый функциональный тип.</li>
 <li>Типом параметра или результата может быть обычный тип, массивный тип вида <code>INTEGER()</code>, <code>STRING()</code> и так далее, а также функциональный тип.</li>
 <li>Форма <code>STRING * N</code> в параметрах, в типе результата и внутри функциональных типов сейчас не поддерживается.</li>

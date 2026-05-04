@@ -83,6 +83,12 @@ public sealed partial class Binder
                 return new BoundErrorExpression(expression.IdentifierToken.Location);
             }
 
+            if (function.Parameters.Any(static parameter => parameter.IsByRef))
+            {
+                ReportUnsupportedByRefCallableValue(function.Name, expression.IdentifierToken.Location);
+                return new BoundErrorExpression(expression.IdentifierToken.Location);
+            }
+
             return new BoundFunctionExpression(expression.IdentifierToken.Location, function);
         }
 
@@ -298,6 +304,18 @@ public sealed partial class Binder
 
         if (left.Type == right.Type && left.Type == TypeSymbol.Boolean && isEqualityOnly)
         {
+            return new BoundBinaryExpression(syntax.OperatorToken.Location, left, syntax.OperatorToken.Kind, right, TypeSymbol.Boolean);
+        }
+
+        if (left.Type == right.Type
+            && left.Type is UserDefinedTypeSymbol userDefinedType
+            && isEqualityOnly)
+        {
+            if (!SupportsStructuralEquality(userDefinedType))
+            {
+                return ReportInvalidBinaryOperator(syntax.OperatorToken.Kind, left.Type, right.Type, syntax.OperatorToken.Location);
+            }
+
             return new BoundBinaryExpression(syntax.OperatorToken.Location, left, syntax.OperatorToken.Kind, right, TypeSymbol.Boolean);
         }
 

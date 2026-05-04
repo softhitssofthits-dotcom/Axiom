@@ -34,7 +34,7 @@
             </nav>
             <p class="eyebrow">Данные и объявления</p>
             <h1 class="page-title">Тип TYPE</h1>
-            <p class="lead"><code>TYPE ... END TYPE</code> объявляет пользовательский тип записи: набор именованных полей, к которым программа обращается через точку. Запись можно хранить в переменной, передавать в процедуры и функции, помещать в массив и создавать через именованный литерал.</p>
+            <p class="lead"><code>TYPE ... END TYPE</code> объявляет пользовательский тип записи: набор именованных полей, к которым программа обращается через точку. Запись можно хранить в переменной, передавать в процедуры и функции, помещать в массив, создавать через именованный литерал и сравнивать по значениям полей, если поля сами поддерживают такое сравнение.</p>
 
             <section class="article-section" id="summary">
                 <h2>Сводка</h2>
@@ -47,6 +47,9 @@
     fieldDeclaration
     [anotherFieldDeclaration]
 END TYPE</code></pre>
+                <pre><code class="language-basic">TYPE typeName
+    fieldName AS fieldType = constantExpression
+END TYPE</code></pre>
                 <pre><code class="language-basic">DIM variableName AS typeName
 variableName.fieldName = expression
 PRINT variableName.fieldName</code></pre>
@@ -57,6 +60,13 @@ PRINT arrayName(index).fieldName</code></pre>
 user = Person(Name := "Ada", Age := 36)
 DIM emptyUser AS Person
 emptyUser = Person()</code></pre>
+                <pre><code class="language-basic">IF left = right THEN
+    PRINT "equal"
+END IF
+
+IF left <> right THEN
+    PRINT "different"
+END IF</code></pre>
             </section>
 
             <section class="article-section" id="parts">
@@ -64,6 +74,7 @@ emptyUser = Person()</code></pre>
                 <ul>
                     <li><code>typeName</code> — имя пользовательского типа. Оно объявляется после <code>TYPE</code>, а затем используется после <code>AS</code>.</li>
                     <li><code>fieldDeclaration</code> — объявление поля внутри записи. Базовая форма: <code>fieldName AS fieldType</code>.</li>
+                    <li><code>= constantExpression</code> — необязательное значение поля по умолчанию. В текущем шаге оно поддерживается только для скалярных и строковых полей.</li>
                     <li><code>variableName.fieldName</code> — доступ к полю записи через точку.</li>
                     <li><code>TypeName(Field := value)</code> — именованный литерал записи. Каждое имя слева от <code>:=</code> должно совпадать с полем объявленного <code>TYPE</code>.</li>
                 </ul>
@@ -74,9 +85,13 @@ emptyUser = Person()</code></pre>
                 <ul>
                     <li><code>TYPE ... END TYPE</code> объявляется на верхнем уровне программы, а не внутри <code>SUB</code>, <code>FUNCTION</code>, <code>IF</code>, циклов или другого <code>TYPE</code>.</li>
                     <li>Тело <code>TYPE</code> состоит только из объявлений полей. Обычные операторы программы внутри него не используются.</li>
-                    <li>Поле получает значение по умолчанию своего типа: <code>0</code> для чисел, пустую строку для <code>STRING</code> и <code>FALSE</code> для <code>BOOLEAN</code>.</li>
+                    <li>Если инициализатор поля не указан, поле получает значение по умолчанию своего типа: <code>0</code> для чисел, пустую строку для <code>STRING</code> и <code>FALSE</code> для <code>BOOLEAN</code>.</li>
+                    <li>Поле можно объявить с собственным значением по умолчанию, например <code>Age AS INTEGER = 18</code> или <code>Name AS STRING = "Unknown"</code>. Такие значения используются и при <code>DIM user AS Person</code>, и при <code>Person()</code>, и при частичном литерале вроде <code>Person(Name := "Ada")</code>.</li>
+                    <li>В текущем шаге значения по умолчанию в объявлении поля поддерживаются только для скалярных и строковых полей. Для массивных полей и вложенных полей пользовательского типа такой инициализатор пока не используется.</li>
                     <li>Поле может иметь другой пользовательский тип, поэтому допустимы цепочки вида <code>person.Home.City</code>.</li>
                     <li>Присваивание записи целиком копирует значение. После <code>second = first</code> изменение <code>first.Name</code> не меняет <code>second.Name</code>.</li>
+                    <li>Операции <code>=</code> и <code>&lt;&gt;</code> сравнивают две записи одного и того же <code>TYPE</code> по значениям полей. Вложенные записи сравниваются рекурсивно.</li>
+                    <li>Структурное сравнение сейчас не поддерживается для записей, в которых есть массивные поля. Такой случай остаётся семантической ошибкой.</li>
                     <li>Пользовательский тип можно использовать как тип элемента массива: <code>DIM people(1 TO 10) AS Person</code>.</li>
                     <li>Внутри <code>TYPE</code> поддерживаются скалярные поля, вложенные пользовательские типы, динамические массивные поля любого ранга, фиксированные массивные поля любого ранга, фиксированные строковые поля и групповые объявления с общим <code>AS</code>.</li>
                     <li>Частичное индексирование и диапазоны у массивного поля записи работают по тем же правилам, что и у обычного массива. Выражения вида <code>lineView = board.Cells(2)</code> и <code>window = board.Cells(2 TO 3, 3 TO 4)</code> возвращают представление на то же хранилище, а не скрытую копию.</li>
@@ -120,6 +135,9 @@ PRINT board.Cells(2, 4)</code></pre>
                     <li><a href="../../samples/operators/type/const_fixed_array_fields_forward.axm">TYPE: границы через CONST при объявлении ниже</a></li>
                     <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
                     <li><a href="../../samples/operators/type/grouped_fields.axm">TYPE: групповые объявления полей</a></li>
+                    <li><a href="../../samples/operators/type/default_field_values.axm">TYPE: значения полей по умолчанию</a></li>
+                    <li><a href="../../samples/operators/type/partial_named_literal_defaults.axm">TYPE: частичный литерал с добором значений по умолчанию</a></li>
+                    <li><a href="../../samples/operators/type/structural_equality.axm">TYPE: структурное сравнение записей</a></li>
                 </ul>
             </section>
 
@@ -158,6 +176,24 @@ PRINT user.Home.City
 PRINT LEN(blank.Name)
 PRINT blank.Age
 PRINT blank.Home.City = ""</code></pre>
+                <pre><code class="language-basic">TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 18
+    Active AS BOOLEAN = TRUE
+END TYPE
+
+DIM first AS Person
+DIM second AS Person
+DIM third AS Person
+
+first = Person(Name := "Ada")
+second = Person(Name := "Ada")
+third = Person(Name := "Grace")
+
+PRINT first.Age
+PRINT first.Active
+PRINT first = second
+PRINT first <> third</code></pre>
                 <pre><code class="language-basic">TYPE Board
     Scores(,) AS INTEGER
 END TYPE
@@ -180,7 +216,9 @@ PRINT board.Scores(2, 3)</code></pre>
                     <li><code>MB2023</code> — указанное поле отсутствует в пользовательском типе.</li>
                     <li><code>MB2024</code> — доступ через точку применён к значению, которое не имеет пользовательского типа.</li>
                     <li><code>MB2025</code> — <code>REDIM</code> или <code>ERASE</code> применены к фиксированному массивному полю записи.</li>
+                    <li><code>MB2027</code> — значение поля по умолчанию в объявлении <code>TYPE</code> недопустимо, например выражение не является константным или поле не поддерживает такой инициализатор.</li>
                     <li>Использование <code>:=</code> вне литерала <code>TYPE(...)</code> приводит к семантической ошибке: именованные аргументы для обычных вызовов в этом шаге не поддерживаются.</li>
+                    <li>Сравнение записей разных пользовательских типов или записей с неподдерживаемыми полями остаётся семантической ошибкой.</li>
                 </ul>
             </section>
 

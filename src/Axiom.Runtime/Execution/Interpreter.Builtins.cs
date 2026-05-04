@@ -368,7 +368,8 @@ public sealed partial class Interpreter
     private RuntimeValue InvokeUserRoutine(
         RuntimeFunctionValue routineValue,
         IReadOnlyList<RuntimeValue> arguments,
-        TextLocation callSiteLocation)
+        TextLocation callSiteLocation,
+        IReadOnlyList<BoundExpression>? boundArguments = null)
     {
         var function = routineValue.Function;
 
@@ -385,7 +386,9 @@ public sealed partial class Interpreter
         {
             var parameter = function.Parameters[index];
             var argument = arguments[index];
-            IRuntimeStoredValue storedArgument = parameter.IsArray ? argument.AsArray() : argument.CopyForStorage();
+            IRuntimeStoredValue storedArgument = parameter.IsByRef && boundArguments is not null
+                ? ResolveByRefStoredArgument(boundArguments[index], callSiteLocation)
+                : parameter.IsArray ? argument.AsArray() : argument.CopyForStorage();
             scope.Define(parameter, storedArgument);
         }
 
@@ -422,6 +425,20 @@ public sealed partial class Interpreter
             _scopeStack.Pop();
             _callStack.Pop();
         }
+    }
+
+    private IRuntimeStoredValue ResolveByRefStoredArgument(BoundExpression argument, TextLocation callSiteLocation)
+    {
+        if (argument is BoundVariableExpression variableExpression
+            && CurrentScope.TryLookup(variableExpression.Variable, out var storedValue)
+            && storedValue is not null)
+        {
+            return storedValue;
+        }
+
+        return ReportInvalidRuntimeState<IRuntimeStoredValue>(
+            "Для параметра BYREF не удалось разрешить хранилище вызывающей переменной.",
+            callSiteLocation);
     }
 
     private int RequirePositiveCount(

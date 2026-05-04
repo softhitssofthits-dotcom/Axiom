@@ -7240,6 +7240,66 @@ PRINT blank.Home.City = ""
     }
 
     [Fact]
+    public void Execute_TypeFieldDefaultValues()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Ada"
+    Age AS INTEGER = 36
+    Active AS BOOLEAN = TRUE
+END TYPE
+
+DIM user AS Person
+DIM partial AS Person
+user = Person()
+partial = Person(Name := "Grace")
+PRINT user.Name
+PRINT user.Age
+PRINT user.Active
+PRINT partial.Name
+PRINT partial.Age
+PRINT partial.Active
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "36", "TRUE", "Grace", "36", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeStructuralEquality()
+    {
+        const string text = """
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING = "Ada"
+    Age AS INTEGER = 36
+    Home AS Address
+END TYPE
+
+DIM left AS Person
+DIM right AS Person
+DIM changed AS Person
+left.Home.City = "Paris"
+right.Home.City = "Paris"
+changed.Home.City = "Rome"
+PRINT left = right
+PRINT left <> right
+PRINT left = changed
+PRINT left <> changed
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE", "FALSE", "TRUE"], host.Output);
+    }
+
+    [Fact]
     public void Execute_TypeFixedArrayField()
     {
         const string text = """
@@ -7435,6 +7495,60 @@ PRINT second.Flags(2)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["", "", "0", "Ada", "Analyst", "99", "20", "7"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ByRefRecordParameterMutatesCallerVariable()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+SUB Birthday(BYREF user AS Person)
+    user.Age = user.Age + 1
+END SUB
+
+DIM user AS Person
+user.Name = "Ada"
+user.Age = 36
+Birthday(user)
+PRINT user.Age
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["37"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ByValRecordParameterKeepsCallerVariableIndependent()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+SUB Rewrite(user AS Person)
+    user.Name = "Changed"
+    user.Age = 99
+END SUB
+
+DIM user AS Person
+user.Name = "Ada"
+user.Age = 36
+Rewrite(user)
+PRINT user.Name
+PRINT user.Age
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "36"], host.Output);
     }
 
     private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(string text, params string[] inputs)

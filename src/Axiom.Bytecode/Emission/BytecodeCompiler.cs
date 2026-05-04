@@ -760,6 +760,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.BinaryOperation => EmitBinaryOperation(routine, instruction),
             LoweredInstructionKind.Convert => EmitConversion(routine, instruction),
             LoweredInstructionKind.CallFunction => EmitCall(routine, instruction),
+            LoweredInstructionKind.CallFunctionByRef => EmitCallByRef(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.CallValue => EmitCallValue(instruction),
             LoweredInstructionKind.CreateRecord => EmitCreateRecord(instruction),
             LoweredInstructionKind.RedimArray => EmitRedimArray(instruction),
@@ -1102,6 +1103,70 @@ public sealed class BytecodeCompiler
         }
 
         return new BytecodeInstruction(Opcode.Call, [routineId, instruction.Function.Parameters.Count]);
+    }
+
+    private BytecodeInstruction? EmitCallByRef(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots)
+    {
+        var baseInstruction = EmitCall(routine, instruction);
+        if (baseInstruction is null)
+        {
+            return null;
+        }
+
+        var operands = new List<int>
+        {
+            baseInstruction.GetOperand(0),
+            baseInstruction.GetOperand(1),
+            instruction.ValueCount,
+            instruction.Variables.Count
+        };
+
+        for (var index = 0; index < instruction.Variables.Count; index++)
+        {
+            var variable = instruction.Variables[index];
+            operands.Add(instruction.IntegerOperands[index]);
+
+            if (variable.IsGlobal)
+            {
+                operands.Add(0);
+                operands.Add(RegisterGlobal(variable));
+                continue;
+            }
+
+            if (variable is ParameterSymbol parameter && parameterSlots.TryGetValue(parameter, out var parameterSlot))
+            {
+                operands.Add(1);
+                operands.Add(parameterSlot);
+                continue;
+            }
+
+            if (localSlots.TryGetValue(variable, out var localSlot))
+            {
+                operands.Add(2);
+                operands.Add(localSlot);
+                continue;
+            }
+
+            if (captureSlots.TryGetValue(variable, out var captureSlot))
+            {
+                operands.Add(3);
+                operands.Add(captureSlot);
+                continue;
+            }
+
+            Report(
+                "BC5012",
+                $"Эмиттер байткода не смог разрешить источник BYREF-аргумента '{variable.Name}' в процедуре '{routine.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        return new BytecodeInstruction(Opcode.CallByRef, operands.ToArray());
     }
 
     private static BytecodeInstruction EmitCallValue(LoweredInstruction instruction)

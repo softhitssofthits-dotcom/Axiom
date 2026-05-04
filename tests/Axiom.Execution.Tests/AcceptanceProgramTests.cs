@@ -45,6 +45,8 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/operators/const/fixed_string_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
     [InlineData("samples/operators/function/fixed_string_parameter_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
     [InlineData("samples/operators/function/fixed_string_return_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
+    [InlineData("samples/acceptance/negative/type_default_non_constant.axm", ExecutionStatus.SemanticFailure, "MB2027")]
+    [InlineData("samples/acceptance/negative/byref_requires_variable.axm", ExecutionStatus.SemanticFailure, "MB2028")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -915,6 +917,45 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void TypeDefaultFieldValuesAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/default_field_values.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["Ada", "36", "TRUE"], result.Output);
+    }
+
+    [Fact]
+    public void TypePartialNamedLiteralDefaultsAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/partial_named_literal_defaults.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["Grace", "36", "TRUE"], result.Output);
+    }
+
+    [Fact]
+    public void TypeStructuralEqualityAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/structural_equality.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["TRUE", "FALSE", "FALSE", "TRUE"], result.Output);
+    }
+
+    [Fact]
     public void TypeFixedArrayFieldsAcceptanceSample_RunsSuccessfully()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/fixed_array_fields.axm");
@@ -1002,6 +1043,26 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
+    }
+
+    [Theory]
+    [InlineData("samples/operators/type/default_field_values.axm", new[] { "Ada", "36", "TRUE" })]
+    [InlineData("samples/operators/type/partial_named_literal_defaults.axm", new[] { "Grace", "36", "TRUE" })]
+    [InlineData("samples/operators/type/structural_equality.axm", new[] { "TRUE", "FALSE", "FALSE", "TRUE" })]
+    [InlineData("samples/operators/sub/byref_record_argument.axm", new[] { "37" })]
+    [InlineData("samples/operators/sub/byval_record_copy.axm", new[] { "Ada", "36" })]
+    public void TypeDefaultAndEqualityAcceptanceSamples_RunOnBytecodeVm(string relativePath, string[] expectedOutput)
+    {
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(expectedOutput, result.Output);
     }
 
     [Fact]

@@ -236,6 +236,19 @@ public sealed partial class Binder
             return BindBuiltInInvocation(functionExpression, expression, descriptors, location, callableName);
         }
 
+        if (target is not BoundFunctionExpression && functionType.ParameterPassingModes.Any(static mode => mode.IsByRef()))
+        {
+            ReportUnsupportedByRefCallableValue(callableName, location);
+
+            var invalidArguments = expression.Arguments
+                .Select((argument, index) => index < functionType.ParameterTypes.Count
+                    ? BindExpression(argument, functionType.ParameterTypes[index])
+                    : BindExpression(argument))
+                .ToArray();
+
+            return new BoundCallExpression(location, target, invalidArguments, functionType.ReturnType);
+        }
+
         if (expression.Arguments.Count != functionType.ParameterTypes.Count)
         {
             ReportWrongArgumentCount(callableName, functionType.ParameterTypes.Count, expression.Arguments.Count, location);
@@ -288,10 +301,13 @@ public sealed partial class Binder
         for (var index = 0; index < expression.Arguments.Count; index++)
         {
             var argument = expression.Arguments[index];
+            var expectsByRef = index < functionType.ParameterPassingModes.Count && functionType.ParameterPassingModes[index].IsByRef();
 
             if (index < functionType.ParameterTypes.Count)
             {
-                arguments.Add(BindExpression(argument, functionType.ParameterTypes[index]));
+                arguments.Add(expectsByRef
+                    ? BindByRefArgument(argument, functionType.ParameterTypes[index])
+                    : BindExpression(argument, functionType.ParameterTypes[index]));
             }
             else
             {
@@ -300,6 +316,29 @@ public sealed partial class Binder
         }
 
         return new BoundCallExpression(location, target, arguments, functionType.ReturnType);
+    }
+
+    private BoundExpression BindByRefArgument(ExpressionSyntax argument, TypeSymbol expectedType)
+    {
+        var boundArgument = BindAssignableTarget(argument);
+
+        if (boundArgument is not BoundVariableExpression variableExpression)
+        {
+            if (boundArgument.Type != TypeSymbol.Error)
+            {
+                ReportInvalidByRefArgument(GetLocation(argument));
+            }
+
+            return new BoundErrorExpression(GetLocation(argument));
+        }
+
+        if (variableExpression.Type != expectedType)
+        {
+            ReportTypeMismatch(variableExpression.Type, expectedType, GetLocation(argument));
+            return new BoundErrorExpression(GetLocation(argument));
+        }
+
+        return variableExpression;
     }
 
     private BoundExpression BindBuiltInInvocation(

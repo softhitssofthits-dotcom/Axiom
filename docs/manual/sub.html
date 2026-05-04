@@ -26,12 +26,13 @@
     [RETURN]
 END SUB</code></pre>
 <pre><code class="language-basic">name([argument[, anotherArgument] ...])</code></pre>
+<pre><code class="language-basic">parameterDeclaration := [[BYVAL] | BYREF] parameterName AS parameterType</code></pre>
 </section>
 
 <section class="article-section">
 <h2>Части записи</h2>
 <p><code>name</code> задаёт имя процедуры.</p>
-<p><code>parameterDeclaration</code> обозначает объявление параметра вида <code>parameterName AS parameterType</code>.</p>
+<p><code>parameterDeclaration</code> обозначает объявление параметра вида <code>[[BYVAL] | BYREF] parameterName AS parameterType</code>.</p>
 <p><code>statements</code> обозначает любые допустимые инструкции внутри процедуры.</p>
 <p><code>RETURN</code> без значения завершает процедуру досрочно.</p>
 <p><code>argument</code> обозначает значение, которое передаётся при вызове процедуры. Если параметров несколько, аргументы перечисляются в том же порядке через запятую.</p>
@@ -43,7 +44,10 @@ END SUB</code></pre>
 <ul>
 <li>Процедуры объявляются блоком <code>SUB ... END SUB</code>.</li>
 <li>Вызов процедуры оформляется как отдельная инструкция.</li>
-<li>Параметры <code>SUB</code> в текущей реализации передаются по значению.</li>
+<li>Если модификатор не указан, параметр передаётся по значению, то есть как <code>BYVAL</code>.</li>
+<li><code>BYREF</code> передаёт саму переменную вызывающего кода, поэтому присваивание внутри <code>SUB</code> меняет исходную переменную.</li>
+<li><code>BYVAL</code> оставляет значение независимой копией. Для <code>TYPE</code> это означает, что процедура получает отдельную запись-значение.</li>
+<li>В текущем шаге <code>BYREF</code> требует простой переменной в аргументе вызова. Формы вроде <code>total + 1</code>, <code>user.Name</code> или <code>items(1)</code> для такого параметра не принимаются.</li>
 <li>Параметры и локальные объявления внутри <code>SUB</code> принадлежат области видимости этой процедуры.</li>
 <li>Внутри <code>SUB</code> допустим <code>RETURN</code> без значения для досрочного выхода.</li>
 <li><code>SUB</code> не является значением: процедуру нельзя присваивать переменной, передавать как значение или возвращать из функции.</li>
@@ -61,11 +65,25 @@ SUB ShowBanner(text AS STRING)
 END SUB
 
 ShowBanner("Axiom")</code></pre>
+<pre><code class="language-basic">' BYREF меняет исходную переменную
+' Ожидаемый вывод: 37
+TYPE Person
+    Age AS INTEGER
+END TYPE
+
+SUB Birthday(BYREF user AS Person)
+    user.Age = user.Age + 1
+END SUB
+
+DIM user AS Person
+user.Age = 36
+Birthday(user)
+PRINT user.Age</code></pre>
 </section>
 
 <section class="article-section">
 <h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов процедуры</a></li><li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li><li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li><li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li></ul>
+<ul class="resource-list"><li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов процедуры</a></li><li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li><li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li><li><a href="../../samples/operators/sub/byref_record_argument.axm">SUB: BYREF для записи TYPE</a></li><li><a href="../../samples/operators/sub/byval_record_copy.axm">SUB: BYVAL и независимая копия записи</a></li><li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li></ul>
 </section>
 
 <section class="article-section">

@@ -229,6 +229,22 @@ public sealed partial class Binder
         _diagnostics.Report(UnknownFieldCode, $"Тип {type.Name} не содержит поле '{fieldName}'.", location);
     }
 
+    private void ReportInvalidByRefArgument(TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidByRefArgumentCode,
+            "Аргумент параметра BYREF должен быть простой переменной того же типа без промежуточного преобразования.",
+            location);
+    }
+
+    private void ReportUnsupportedByRefCallableValue(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            UnsupportedByRefCallableValueCode,
+            $"Функцию '{name}' с параметрами BYREF пока нельзя использовать как значение, callback или переменную FUNCTION.",
+            location);
+    }
+
     private void ReportInvalidFieldAccess(TypeSymbol type, TextLocation location)
     {
         _diagnostics.Report(InvalidFieldAccessCode, $"Доступ к полям через точку возможен только для TYPE, получен {type.Name}.", location);
@@ -280,6 +296,16 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportInvalidTypeFieldDefaultValue(string name, TextLocation location, string details)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(details);
+
+        _diagnostics.Report(
+            InvalidTypeFieldDefaultValueCode,
+            $"Поле '{name}' в TYPE использует недопустимое значение по умолчанию. {details}",
+            location);
+    }
     private void ReportInvalidArrayAccess(string name, TextLocation location)
     {
         _diagnostics.Report(InvalidArrayAccessCode, $"Имя '{name}' не является массивом.", location);

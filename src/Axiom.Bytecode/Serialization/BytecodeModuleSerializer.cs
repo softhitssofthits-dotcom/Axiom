@@ -7,7 +7,7 @@ namespace Axiom.Bytecode;
 
 public static class BytecodeModuleSerializer
 {
-    public const int CurrentArtifactSchemaVersion = 1;
+    public const int CurrentArtifactSchemaVersion = 2;
 
     private const string SupportedCompatibilityToken = "axiom-bytecode-v1";
 
@@ -249,7 +249,9 @@ public static class BytecodeModuleSerializer
             field.Type.Name,
             field.FixedStringLength,
             field.FixedArrayLowerBounds,
-            field.FixedArrayUpperBounds);
+            field.FixedArrayUpperBounds,
+            field.HasDefaultValue,
+            NormalizeTypeFieldDefaultValue(field));
     }
 
     private static BytecodeConstantArtifact ToArtifact(BytecodeConstant constant, int index)
@@ -332,7 +334,8 @@ public static class BytecodeModuleSerializer
             Type: variable.Type.Name,
             IsReadOnly: variable.IsReadOnly,
             IsGlobal: variable.IsGlobal,
-            FixedStringLength: variable.FixedStringLength);
+            FixedStringLength: variable.FixedStringLength,
+            PassingMode: variable is ParameterSymbol parameter ? parameter.PassingMode.ToString() : null);
     }
 
     private static BytecodeDebugInfoArtifact ToArtifact(BytecodeDebugInfo debugInfo)
@@ -478,10 +481,18 @@ public static class BytecodeModuleSerializer
                 return parameterSymbol;
             }
 
-            return new ParameterSymbol(parameter.Name, ResolveType(parameter.Type, userDefinedTypes), ordinal);
+            return new ParameterSymbol(
+                parameter.Name,
+                ResolveType(parameter.Type, userDefinedTypes),
+                ordinal,
+                ParseParameterPassingMode(parameter.PassingMode));
         }
 
-        var symbol = new ParameterSymbol(parameter.Name, ResolveType(parameter.Type, userDefinedTypes), ordinal);
+        var symbol = new ParameterSymbol(
+            parameter.Name,
+            ResolveType(parameter.Type, userDefinedTypes),
+            ordinal,
+            ParseParameterPassingMode(parameter.PassingMode));
         variableSymbols[key] = symbol;
         return symbol;
     }
@@ -511,7 +522,7 @@ public static class BytecodeModuleSerializer
     {
         return variable.SymbolId is int symbolId
             ? $"id:{symbolId.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
-            : $"{variable.IsGlobal}:{variable.Name}:{variable.Type}:{variable.IsReadOnly}:{variable.FixedStringLength?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "<null>"}";
+            : $"{variable.IsGlobal}:{variable.Name}:{variable.Type}:{variable.IsReadOnly}:{variable.FixedStringLength?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "<null>"}:{variable.PassingMode ?? "<null>"}";
     }
 
     private static string CreateFunctionKey(BytecodeFunctionSymbolArtifact function)
@@ -615,7 +626,9 @@ public static class BytecodeModuleSerializer
                     ResolveType(field.Type, types),
                     field.FixedStringLength,
                     field.FixedArrayLowerBounds,
-                    field.FixedArrayUpperBounds))
+                    field.FixedArrayUpperBounds,
+                    field.HasDefaultValue,
+                    RestoreTypeFieldDefaultValue(field, types)))
                 .ToArray());
         }
 
@@ -689,10 +702,90 @@ public static class BytecodeModuleSerializer
 
         var parameterText = name[prefix.Length..separatorIndex];
         var returnText = name[(separatorIndex + separator.Length)..];
-        var parameters = string.IsNullOrWhiteSpace(parameterText)
-            ? Array.Empty<TypeSymbol>()
-            : parameterText.Split(',', StringSplitOptions.TrimEntries).Select(parameter => ResolveType(parameter, userDefinedTypes)).ToArray();
+        var parameterSegments = string.IsNullOrWhiteSpace(parameterText)
+            ? Array.Empty<string>()
+            : parameterText.Split(',', StringSplitOptions.TrimEntries);
+        var parameters = new List<TypeSymbol>(parameterSegments.Length);
+        var passingModes = new List<ParameterPassingMode>(parameterSegments.Length);
 
-        return FunctionTypeSymbol.Create(parameters, ResolveType(returnText, userDefinedTypes));
+        foreach (var segment in parameterSegments)
+        {
+            if (segment.StartsWith("BYREF ", StringComparison.Ordinal))
+            {
+                passingModes.Add(ParameterPassingMode.ByRef);
+                parameters.Add(ResolveType(segment["BYREF ".Length..], userDefinedTypes));
+            }
+            else
+            {
+                passingModes.Add(ParameterPassingMode.ByVal);
+                parameters.Add(ResolveType(segment, userDefinedTypes));
+            }
+        }
+
+        return FunctionTypeSymbol.Create(parameters, ResolveType(returnText, userDefinedTypes), passingModes);
+    }
+
+    private static ParameterPassingMode ParseParameterPassingMode(string? value)
+    {
+        return Enum.TryParse<ParameterPassingMode>(value, ignoreCase: true, out var mode)
+            ? mode
+            : ParameterPassingMode.ByVal;
+    }
+
+    private static object? NormalizeTypeFieldDefaultValue(TypeFieldSymbol field)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+
+        if (!field.HasDefaultValue)
+        {
+            return null;
+        }
+
+        if (field.Type == TypeSymbol.Decimal && field.DefaultValue is decimal decimalValue)
+        {
+            return decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return field.DefaultValue;
+    }
+
+    private static object? RestoreTypeFieldDefaultValue(
+        BytecodeTypeFieldArtifact field,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+
+        if (!field.HasDefaultValue)
+        {
+            return null;
+        }
+
+        var fieldType = ResolveType(field.Type, userDefinedTypes);
+        var value = field.DefaultValue;
+
+        if (value is JsonElement json)
+        {
+            value = fieldType switch
+            {
+                var type when type == TypeSymbol.Integer => json.GetInt32(),
+                var type when type == TypeSymbol.Long => json.GetInt64(),
+                var type when type == TypeSymbol.Double => json.GetDouble(),
+                var type when type == TypeSymbol.Decimal => decimal.Parse(json.GetString() ?? "0", System.Globalization.CultureInfo.InvariantCulture),
+                var type when type == TypeSymbol.String => json.GetString() ?? string.Empty,
+                var type when type == TypeSymbol.Boolean => json.GetBoolean(),
+                _ => json.ToString()
+            };
+        }
+
+        return fieldType switch
+        {
+            var type when type == TypeSymbol.Integer => Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.Long => Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.Double => Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.Decimal => Convert.ToDecimal(value, System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.String => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+            var type when type == TypeSymbol.Boolean => Convert.ToBoolean(value, System.Globalization.CultureInfo.InvariantCulture),
+            _ => value
+        };
     }
 }
