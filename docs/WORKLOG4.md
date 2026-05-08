@@ -7076,3 +7076,16 @@
 
 Следующий точный шаг после закрытия окна IDE:
 - повторить `dotnet build Axiom.sln -p:UseSharedCompilation=false`, чтобы подтвердить полный solution-build без файловой блокировки.
+
+Дополнение после закрытия IDE:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок;
+- `dotnet test tests\Axiom.Lexing.Tests\Axiom.Lexing.Tests.csproj -p:UseSharedCompilation=false` проходит, 18 тестов;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj -p:UseSharedCompilation=false` проходит, 84 теста;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false` проходит, 289 тестов;
+- `dotnet test tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj -p:UseSharedCompilation=false` проходит, 199 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false` проходит, 564 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит, 751 тест;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false` проходит, 290 тестов.
+
+Итог:
+- базовая система обработки ошибок с `TRY/CATCH/FINALLY`, `ERROR code`, `ERROR code, message`, `ERROR err`, VM-путём, IDE-поддержкой, manual и samples подтверждена автоматическими проверками.

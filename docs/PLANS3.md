@@ -2904,3 +2904,15 @@
 
 Следующий точный шаг:
 - закрыть `Axiom.Ide` и повторить `dotnet build Axiom.sln -p:UseSharedCompilation=false`; если сборка проходит, базовую обработку ошибок можно считать закрытой полностью.
+
+## Обновление плана - 2026-05-08 - базовая обработка ошибок подтверждена проверками
+
+Сделано:
+- после закрытия `Axiom.Ide` полный `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок;
+- полные тесты `Axiom.Lexing.Tests`, `Axiom.Parsing.Tests`, `Axiom.Semantics.Tests`, `Axiom.Bytecode.Tests`, `Axiom.Runtime.Tests`, `Axiom.Execution.Tests` и `Axiom.Ide.Tests` проходят последовательно.
+
+Итог:
+- базовый срез обработки ошибок закрыт: синтаксис, связывание, интерпретатор, `BytecodeVm`, IDE, samples, manual и проектные документы согласованы.
+
+Следующий точный шаг:
+- перейти к следующей языковой теме либо подготовить отдельный коммит по завершённой обработке ошибок.
