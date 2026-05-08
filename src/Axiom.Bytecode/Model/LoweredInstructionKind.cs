@@ -23,6 +23,7 @@ public enum LoweredInstructionKind
     StoreField,
     OpenFile,
     CloseFile,
+    ValidateTypeInvariant,
     ValidateForStep,
     PrintValue,
     PrintUsing,

@@ -1,0 +1,14 @@
+TYPE Counter
+    Value AS DOUBLE
+
+    SUB Set(value AS LONG)
+        SELF.Value = value
+    END SUB
+
+    SUB Set(value AS DOUBLE)
+        SELF.Value = value
+    END SUB
+END TYPE
+
+DIM counter AS Counter
+counter.Set(1)

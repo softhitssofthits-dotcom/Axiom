@@ -25,6 +25,7 @@ public sealed partial class Interpreter
     private readonly StringBuilder _pendingOutput = new();
     private bool _hasPendingOutput;
     private readonly IRuntimeHost _host;
+    private Diagnostic? _lastRuntimeFailureDiagnostic;
 
     private Interpreter(BoundProgram program, IRuntimeHost host)
     {

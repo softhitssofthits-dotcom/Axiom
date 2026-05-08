@@ -41,6 +41,8 @@ public class TypeSymbol : Symbol
 
     public static TypeSymbol File { get; } = new("FILE");
 
+    public static RuntimeErrorTypeSymbol RuntimeError { get; } = new();
+
     public static TypeSymbol Void { get; } = new("VOID");
 
     public static TypeSymbol Error { get; } = new("<error>");
@@ -95,6 +97,37 @@ public class TypeSymbol : Symbol
     public override int GetHashCode()
     {
         return RuntimeHelpers.GetHashCode(this);
+    }
+}
+
+public sealed class RuntimeErrorTypeSymbol : TypeSymbol
+{
+    private readonly Dictionary<string, TypeFieldSymbol> _fieldsByName = new(StringComparer.OrdinalIgnoreCase);
+
+    internal RuntimeErrorTypeSymbol()
+        : base("ERROR")
+    {
+        Fields =
+        [
+            new TypeFieldSymbol("Code", TypeSymbol.Integer),
+            new TypeFieldSymbol("Message", TypeSymbol.String),
+            new TypeFieldSymbol("Line", TypeSymbol.Integer),
+            new TypeFieldSymbol("Column", TypeSymbol.Integer)
+        ];
+
+        for (var index = 0; index < Fields.Count; index++)
+        {
+            var field = Fields[index];
+            field.Ordinal = index;
+            _fieldsByName[field.Name] = field;
+        }
+    }
+
+    public IReadOnlyList<TypeFieldSymbol> Fields { get; }
+
+    public bool TryGetField(string name, out TypeFieldSymbol? field)
+    {
+        return _fieldsByName.TryGetValue(name, out field);
     }
 }
 
@@ -245,7 +278,12 @@ public sealed class TypeFieldSymbol : Symbol
 public sealed class UserDefinedTypeSymbol : TypeSymbol
 {
     private readonly Dictionary<string, TypeFieldSymbol> _fieldsByName = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<FunctionSymbol>> _methodsByName = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<int, List<FunctionSymbol>> _constructorsByArity = new();
     private IReadOnlyList<TypeFieldSymbol> _fields = Array.Empty<TypeFieldSymbol>();
+    private IReadOnlyList<FunctionSymbol> _methods = Array.Empty<FunctionSymbol>();
+    private IReadOnlyList<FunctionSymbol> _constructors = Array.Empty<FunctionSymbol>();
+    private FunctionSymbol? _invariant;
 
     public UserDefinedTypeSymbol(string name)
         : base(name)
@@ -254,7 +292,15 @@ public sealed class UserDefinedTypeSymbol : TypeSymbol
 
     public IReadOnlyList<TypeFieldSymbol> Fields => _fields;
 
+    public IReadOnlyList<FunctionSymbol> Methods => _methods;
+
+    public IReadOnlyList<FunctionSymbol> Constructors => _constructors;
+
+    public FunctionSymbol? Invariant => _invariant;
+
     public bool IsCompleted { get; private set; }
+
+    public bool MethodsCompleted { get; private set; }
 
     public void Complete(IReadOnlyList<TypeFieldSymbol> fields)
     {
@@ -277,9 +323,125 @@ public sealed class UserDefinedTypeSymbol : TypeSymbol
         IsCompleted = true;
     }
 
+    public void CompleteMethods(
+        IReadOnlyList<FunctionSymbol> methods,
+        IReadOnlyList<FunctionSymbol>? constructors = null,
+        FunctionSymbol? invariant = null)
+    {
+        ArgumentNullException.ThrowIfNull(methods);
+
+        if (MethodsCompleted)
+        {
+            throw new InvalidOperationException($"User-defined type '{Name}' already has completed methods.");
+        }
+
+        _methods = methods;
+        _constructors = constructors ?? Array.Empty<FunctionSymbol>();
+        _invariant = invariant;
+
+        foreach (var method in methods)
+        {
+            if (!_methodsByName.TryGetValue(method.ShortName, out var overloads))
+            {
+                overloads = [];
+                _methodsByName.Add(method.ShortName, overloads);
+            }
+
+            overloads.Add(method);
+        }
+
+        foreach (var constructor in _constructors)
+        {
+            var arity = GetConstructorArity(constructor);
+            if (!_constructorsByArity.TryGetValue(arity, out var constructorsForArity))
+            {
+                constructorsForArity = [];
+                _constructorsByArity.Add(arity, constructorsForArity);
+            }
+
+            constructorsForArity.Add(constructor);
+        }
+
+        MethodsCompleted = true;
+    }
+
     public bool TryGetField(string name, out TypeFieldSymbol? field)
     {
         return _fieldsByName.TryGetValue(name, out field);
+    }
+
+    public bool TryGetMethods(string name, out IReadOnlyList<FunctionSymbol>? methods)
+    {
+        if (_methodsByName.TryGetValue(name, out var overloads))
+        {
+            methods = overloads;
+            return true;
+        }
+
+        methods = null;
+        return false;
+    }
+
+    public IReadOnlyList<FunctionSymbol> GetMethods(string name, int visibleArgumentCount)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        if (!_methodsByName.TryGetValue(name, out var overloads))
+        {
+            return Array.Empty<FunctionSymbol>();
+        }
+
+        return overloads
+            .Where(method => GetVisibleMethodArity(method) == visibleArgumentCount)
+            .ToArray();
+    }
+
+    public IReadOnlyList<int> GetMethodArities(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        if (!_methodsByName.TryGetValue(name, out var overloads))
+        {
+            return Array.Empty<int>();
+        }
+
+        return overloads
+            .Select(GetVisibleMethodArity)
+            .Distinct()
+            .OrderBy(static value => value)
+            .ToArray();
+    }
+
+    public IReadOnlyList<FunctionSymbol> GetConstructors(int visibleArgumentCount)
+    {
+        return _constructorsByArity.TryGetValue(visibleArgumentCount, out var constructors)
+            ? constructors
+            : Array.Empty<FunctionSymbol>();
+    }
+
+    public IReadOnlyList<int> GetConstructorArities()
+    {
+        return _constructorsByArity.Keys
+            .OrderBy(static value => value)
+            .ToArray();
+    }
+
+    public bool TryGetInvariant(out FunctionSymbol? invariant)
+    {
+        invariant = _invariant;
+        return invariant is not null;
+    }
+
+    private static int GetConstructorArity(FunctionSymbol constructor)
+    {
+        ArgumentNullException.ThrowIfNull(constructor);
+        return Math.Max(0, constructor.Parameters.Count - 1);
+    }
+
+    private static int GetVisibleMethodArity(FunctionSymbol method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        return Math.Max(0, method.Parameters.Count - 1);
     }
 }
 
@@ -467,6 +629,7 @@ public sealed class FunctionSymbol : Symbol
 {
     public FunctionSymbol(
         string name,
+        string? shortName,
         IReadOnlyList<ParameterSymbol> parameters,
         TypeSymbol returnType,
         FunctionSymbol? containingRoutine = null,
@@ -487,6 +650,7 @@ public sealed class FunctionSymbol : Symbol
             throw new ArgumentException("Only built-in functions can provide a built-in id.", nameof(builtInId));
         }
 
+        ShortName = string.IsNullOrWhiteSpace(shortName) ? name : shortName;
         Parameters = parameters;
         ReturnType = returnType;
         ContainingRoutine = containingRoutine;
@@ -494,7 +658,20 @@ public sealed class FunctionSymbol : Symbol
         BuiltinId = builtInId;
     }
 
+    public FunctionSymbol(
+        string name,
+        IReadOnlyList<ParameterSymbol> parameters,
+        TypeSymbol returnType,
+        FunctionSymbol? containingRoutine = null,
+        bool isBuiltIn = false,
+        BuiltinFunctionId? builtInId = null)
+        : this(name, shortName: name, parameters, returnType, containingRoutine, isBuiltIn, builtInId)
+    {
+    }
+
     public IReadOnlyList<ParameterSymbol> Parameters { get; }
+
+    public string ShortName { get; }
 
     public TypeSymbol ReturnType { get; }
 

@@ -1,0 +1,28 @@
+' TYPE-методы используют неявный SELF и могут менять исходную запись.
+' Ожидаемый вывод:
+' 5
+' 5
+' 8
+' 8
+
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+DIM counter AS Counter
+counter.Increment(2)
+counter.Increment(3)
+PRINT counter.Current()
+PRINT counter.Value
+
+counter.Value = counter.Current() + 3
+PRINT counter.Current()
+PRINT counter.Value

@@ -229,18 +229,21 @@ public sealed class TypeDeclarationSyntax : MemberSyntax
         SyntaxToken typeKeyword,
         SyntaxToken identifier,
         IReadOnlyList<TypeFieldSyntax> fields,
+        IReadOnlyList<MemberSyntax> methods,
         SyntaxToken endKeyword,
         SyntaxToken endTypeKeyword)
     {
         ArgumentNullException.ThrowIfNull(typeKeyword);
         ArgumentNullException.ThrowIfNull(identifier);
         ArgumentNullException.ThrowIfNull(fields);
+        ArgumentNullException.ThrowIfNull(methods);
         ArgumentNullException.ThrowIfNull(endKeyword);
         ArgumentNullException.ThrowIfNull(endTypeKeyword);
 
         TypeKeyword = typeKeyword;
         Identifier = identifier;
         Fields = fields;
+        Methods = methods;
         EndKeyword = endKeyword;
         EndTypeKeyword = endTypeKeyword;
     }
@@ -252,6 +255,8 @@ public sealed class TypeDeclarationSyntax : MemberSyntax
     public SyntaxToken Identifier { get; }
 
     public IReadOnlyList<TypeFieldSyntax> Fields { get; }
+
+    public IReadOnlyList<MemberSyntax> Methods { get; }
 
     public SyntaxToken EndKeyword { get; }
 

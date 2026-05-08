@@ -1,0 +1,14 @@
+' TRY/CATCH перехватывает ошибку времени выполнения, а FINALLY выполняется после обработки.
+TRY
+    PRINT "before"
+    PRINT 10 \ 0
+    PRINT "unreachable"
+CATCH err
+    PRINT "caught"
+    PRINT err.Code
+    PRINT err.Line
+FINALLY
+    PRINT "cleanup"
+END TRY
+
+PRINT "after"

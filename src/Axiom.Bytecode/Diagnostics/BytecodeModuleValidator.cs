@@ -642,6 +642,7 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.CreateRecord:
+                case Opcode.ValidateTypeInvariant:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя TYPE");
                     break;
@@ -1172,6 +1173,13 @@ public sealed class BytecodeModuleValidator
             {
                 var stepType = Pop();
                 ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, stepType, "шаг цикла FOR");
+                break;
+            }
+
+            case Opcode.ValidateTypeInvariant:
+            {
+                var invariantType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, invariantType, TypeSymbol.Boolean, "TYPE invariant value");
                 break;
             }
 
@@ -2530,6 +2538,7 @@ public sealed class BytecodeModuleValidator
             case Opcode.Negate:
             case Opcode.Not:
             case Opcode.Convert:
+            case Opcode.ValidateTypeInvariant:
             case Opcode.ValidateForStep:
             case Opcode.PrintValue:
             case Opcode.EraseArray:
@@ -3777,3 +3786,6 @@ public sealed class BytecodeModuleValidator
         return UnknownLocation;
     }
 }
+
+
+

@@ -94,6 +94,54 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportAmbiguousTypeConstructorCall(string typeName, IReadOnlyList<FunctionSymbol> constructors, TextLocation location)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
+        ArgumentNullException.ThrowIfNull(constructors);
+
+        var constructorList = string.Join(
+            ", ",
+            constructors.Select(static constructor =>
+            {
+                var parameters = constructor.Parameters
+                    .Skip(1)
+                    .Select(static parameter => parameter.IsByRef
+                        ? $"BYREF {parameter.Type.Name}"
+                        : parameter.Type.Name);
+                return $"SUB New({string.Join(", ", parameters)})";
+            }));
+
+        _diagnostics.Report(
+            AmbiguousTypeConstructorCode,
+            $"Вызов '{typeName}(...)' неоднозначен: подходят несколько конструкторов: {constructorList}.",
+            location);
+    }
+
+    private void ReportAmbiguousTypeMethodCall(string typeName, string methodName, IReadOnlyList<FunctionSymbol> methods, TextLocation location)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(methodName);
+        ArgumentNullException.ThrowIfNull(methods);
+
+        var methodList = string.Join(
+            ", ",
+            methods.Select(static method =>
+            {
+                var parameters = method.Parameters
+                    .Skip(1)
+                    .Select(static parameter => parameter.IsByRef
+                        ? $"BYREF {parameter.Type.Name}"
+                        : parameter.Type.Name);
+                var prefix = method.IsSub ? "SUB" : "FUNCTION";
+                return $"{prefix} {method.ShortName}({string.Join(", ", parameters)})";
+            }));
+
+        _diagnostics.Report(
+            AmbiguousTypeConstructorCode,
+            $"Р’С‹Р·РѕРІ '{typeName}.{methodName}(...)' РЅРµРѕРґРЅРѕР·РЅР°С‡РµРЅ: РїРѕРґС…РѕРґСЏС‚ РЅРµСЃРєРѕР»СЊРєРѕ РїРµСЂРµРіСЂСѓР¶РµРЅРЅС‹С… РјРµС‚РѕРґРѕРІ: {methodList}.",
+            location);
+    }
+
     private void ReportExpectedArrayType(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(TypeMismatchCode, $"Несовместимые типы: ожидался массив, получен {actualType.Name}.", location);
@@ -224,6 +272,22 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportInvalidTypeConstructorDeclaration(TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidTypeMemberCode,
+            "Конструктор TYPE должен объявляться только в форме `SUB New(...) ... END SUB` без типа результата.",
+            location);
+    }
+
+    private void ReportInvalidTypeInvariantDeclaration(TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidTypeMemberCode,
+            "Инвариант TYPE должен объявляться только в форме `FUNCTION IsValid() AS BOOLEAN ... END FUNCTION` без пользовательских параметров.",
+            location);
+    }
+
     private void ReportUnknownField(TypeSymbol type, string fieldName, TextLocation location)
     {
         _diagnostics.Report(UnknownFieldCode, $"Тип {type.Name} не содержит поле '{fieldName}'.", location);
@@ -271,6 +335,22 @@ public sealed partial class Binder
         _diagnostics.Report(
             DuplicateDeclarationCode,
             $"Литерал TYPE '{typeName}' повторно задаёт поле '{fieldName}'.",
+            location);
+    }
+
+    private void ReportMixedTypeLiteralInitialization(string typeName, TextLocation location)
+    {
+        _diagnostics.Report(
+            MixedTypeLiteralInitializationCode,
+            $"Литерал TYPE '{typeName}' не допускает смешивания позиционных и именованных аргументов в одном вызове `TypeName(...)`.",
+            location);
+    }
+
+    private void ReportTypeLiteralPositionalArity(string typeName, int expectedCount, int actualCount, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeLiteralPositionalArityCode,
+            $"Позиционная форма TYPE '{typeName}' требует {expectedCount} аргумент(а/ов) по числу полей, получено {actualCount}.",
             location);
     }
 
@@ -354,5 +434,12 @@ public sealed partial class Binder
     {
         _diagnostics.Report(TypeMismatchCode, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типам {leftType.Name} и {rightType.Name}.", location);
         return new BoundErrorExpression(location);
+    }
+    private void ReportInvalidTypeMethodReceiver(string methodName, TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidTypeMethodReceiverCode,
+            $"В текущем шаге метод '{methodName}' можно вызывать только у устойчивого получателя TYPE: переменной, поля записи или элемента массива. Временные значения и результаты выражений пока не поддерживаются.",
+            location);
     }
 }

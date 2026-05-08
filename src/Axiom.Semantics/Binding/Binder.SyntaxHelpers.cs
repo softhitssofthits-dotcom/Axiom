@@ -71,6 +71,7 @@ public sealed partial class Binder
             EraseStatementSyntax eraseStatement => eraseStatement.EraseKeyword.Location,
             RedimStatementSyntax redimStatement => redimStatement.RedimKeyword.Location,
             IfStatementSyntax ifStatement => ifStatement.IfKeyword.Location,
+            TryStatementSyntax tryStatement => tryStatement.TryKeyword.Location,
             SelectCaseStatementSyntax selectCaseStatement => selectCaseStatement.SelectKeyword.Location,
             ForStatementSyntax forStatement => forStatement.ForKeyword.Location,
             DoLoopStatementSyntax doLoopStatement => doLoopStatement.DoKeyword.Location,

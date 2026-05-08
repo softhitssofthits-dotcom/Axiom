@@ -1,0 +1,31 @@
+' TYPE: перегрузка обычных методов по сигнатуре.
+
+TYPE Counter
+    Value AS INTEGER
+    Label AS STRING
+
+    SUB Set(value AS INTEGER)
+        SELF.Value = value
+    END SUB
+
+    SUB Set(label AS STRING)
+        SELF.Label = label
+    END SUB
+
+    SUB Set(value AS INTEGER, label AS STRING)
+        SELF.Value = value
+        SELF.Label = label
+    END SUB
+END TYPE
+
+DIM counter AS Counter
+
+counter.Set(2)
+PRINT counter.Value
+
+counter.Set("Alpha")
+PRINT counter.Label
+
+counter.Set(7, "Beta")
+PRINT counter.Value
+PRINT counter.Label

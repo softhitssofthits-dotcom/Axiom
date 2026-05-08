@@ -75,6 +75,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return Void;
         }
 
+        if (type == TypeSymbol.RuntimeError)
+        {
+            return FromRuntimeError(new RuntimeErrorValue(0, string.Empty, 0, 0));
+        }
+
         if (type is FunctionTypeSymbol functionType)
         {
             return FromFunction(functionType, value: null);
@@ -114,6 +119,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     public static RuntimeValue FromBoolean(bool value) => value ? TrueValue : FalseValue;
 
     public static RuntimeValue FromFile(RuntimeTextFile? value) => new(TypeSymbol.File, value);
+
+    public static RuntimeValue FromRuntimeError(RuntimeErrorValue value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return new RuntimeValue(TypeSymbol.RuntimeError, value);
+    }
 
     public static RuntimeValue FromFunction(FunctionTypeSymbol type, RuntimeFunctionValue? value) => new(type, value);
 
@@ -295,6 +306,16 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (RuntimeArrayValue)Value!;
     }
 
+    public RuntimeErrorValue AsRuntimeError()
+    {
+        if (Type != TypeSymbol.RuntimeError)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not ERROR.");
+        }
+
+        return (RuntimeErrorValue)Value!;
+    }
+
     public RuntimeRecordValue AsRecord()
     {
         if (Type is not UserDefinedTypeSymbol)
@@ -327,6 +348,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (Type is UserDefinedTypeSymbol userType)
         {
             return FromRecord(userType, AsRecord().Clone());
+        }
+
+        if (Type == TypeSymbol.RuntimeError)
+        {
+            return this;
         }
 
         return this;
@@ -410,6 +436,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (Type is UserDefinedTypeSymbol userType)
         {
             return $"<TYPE {userType.Name}>";
+        }
+
+        if (Type == TypeSymbol.RuntimeError)
+        {
+            return $"<ERROR {AsRuntimeError().Code}>";
         }
 
         return string.Empty;

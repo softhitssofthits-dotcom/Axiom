@@ -16,6 +16,7 @@
         { id: "data-types-scalars", href: "data-types-scalars.html", label: "Скалярные типы" },
         { id: "data-types-strings-and-files", href: "data-types-strings-and-files.html", label: "STRING и FILE" },
         { id: "data-types-records-and-arrays", href: "data-types-records-and-arrays.html", label: "TYPE и массивы" },
+        { id: "type", href: "type.html", label: "Тип TYPE" },
         { id: "data-types-conversions", href: "data-types-conversions.html", label: "Преобразования типов" },
         { id: "variables-constants", href: "variables-and-constants.html", label: "Переменные и константы" },
         { id: "arithmetic-logic", href: "arithmetic-and-logic.html", label: "Арифметика и логика" }
@@ -34,7 +35,8 @@
       title: "Управление выполнением",
       items: [
         { id: "if", href: "if.html", label: "Оператор IF" },
-        { id: "select-case", href: "select-case.html", label: "Оператор SELECT CASE" }
+        { id: "select-case", href: "select-case.html", label: "Оператор SELECT CASE" },
+        { id: "try", href: "try.html", label: "Оператор TRY" }
       ]
     },
     {

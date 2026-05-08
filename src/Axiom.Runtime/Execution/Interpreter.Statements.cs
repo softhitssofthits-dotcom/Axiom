@@ -36,6 +36,7 @@ public sealed partial class Interpreter
             BoundOpenStatement open => ExecuteOpen(open),
             BoundCloseStatement close => ExecuteClose(close),
             BoundIfStatement ifStatement => ExecuteIf(ifStatement),
+            BoundTryStatement tryStatement => ExecuteTry(tryStatement),
             BoundSelectCaseStatement selectCaseStatement => ExecuteSelectCase(selectCaseStatement),
             BoundDoLoopStatement doLoopStatement => ExecuteDoLoop(doLoopStatement),
             BoundWhileStatement whileStatement => ExecuteWhile(whileStatement),
@@ -311,6 +312,76 @@ public sealed partial class Interpreter
         return condition
             ? ExecuteStatementsInChildScope(statement.Statements)
             : ExecuteStatementsInChildScope(statement.ElseStatements);
+    }
+
+    private ExecutionSignal ExecuteTry(BoundTryStatement statement)
+    {
+        ExecutionSignal signal = ExecutionSignal.None;
+        RuntimeFailureException? unhandledFailure = null;
+
+        try
+        {
+            signal = ExecuteStatementsInChildScope(statement.Statements);
+        }
+        catch (RuntimeFailureException failure)
+        {
+            if (statement.CatchVariable is null)
+            {
+                unhandledFailure = failure;
+            }
+            else
+            {
+                var error = ConsumeLastRuntimeError();
+                var catchScope = new RuntimeScope(CurrentScope);
+                catchScope.Define(statement.CatchVariable, error);
+                signal = ExecuteStatementsInScope(catchScope, statement.CatchStatements);
+            }
+        }
+
+        var finallySignal = ExecuteFinally(statement);
+
+        if (finallySignal.HasReturn || finallySignal.HasExitFor || finallySignal.HasExitDo)
+        {
+            return finallySignal;
+        }
+
+        if (unhandledFailure is not null)
+        {
+            throw unhandledFailure;
+        }
+
+        return signal;
+    }
+
+    private ExecutionSignal ExecuteFinally(BoundTryStatement statement)
+    {
+        return statement.FinallyStatements.Count == 0
+            ? ExecutionSignal.None
+            : ExecuteStatementsInChildScope(statement.FinallyStatements);
+    }
+
+    private RuntimeValue ConsumeLastRuntimeError()
+    {
+        var diagnostic = _lastRuntimeFailureDiagnostic;
+        _lastRuntimeFailureDiagnostic = null;
+
+        if (diagnostic is null)
+        {
+            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(3005, "Runtime failure.", 0, 0));
+        }
+
+        _diagnostics.Remove(diagnostic);
+        return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(
+            ParseRuntimeErrorCode(diagnostic.Code),
+            diagnostic.Message,
+            diagnostic.Location.Line,
+            diagnostic.Location.Column));
+    }
+
+    private static int ParseRuntimeErrorCode(string code)
+    {
+        var digits = new string(code.Where(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var numericCode) ? numericCode : 0;
     }
 
     private ExecutionSignal ExecuteWhile(BoundWhileStatement statement)

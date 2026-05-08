@@ -151,6 +151,33 @@ public sealed class BoundRecordLiteralExpression : BoundExpression
     public IReadOnlyList<BoundRecordLiteralFieldInitializer> Initializers { get; }
 }
 
+public sealed class BoundTypeConstructorExpression : BoundExpression
+{
+    public BoundTypeConstructorExpression(
+        TextLocation location,
+        UserDefinedTypeSymbol recordType,
+        FunctionSymbol constructor,
+        IReadOnlyList<BoundExpression> arguments)
+        : base(location, recordType)
+    {
+        ArgumentNullException.ThrowIfNull(recordType);
+        ArgumentNullException.ThrowIfNull(constructor);
+        ArgumentNullException.ThrowIfNull(arguments);
+
+        RecordType = recordType;
+        Constructor = constructor;
+        Arguments = arguments;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.TypeConstructorExpression;
+
+    public UserDefinedTypeSymbol RecordType { get; }
+
+    public FunctionSymbol Constructor { get; }
+
+    public IReadOnlyList<BoundExpression> Arguments { get; }
+}
+
 public sealed class BoundUnaryExpression : BoundExpression
 {
     public BoundUnaryExpression(TextLocation location, SyntaxKind operatorKind, BoundExpression operand, TypeSymbol type)

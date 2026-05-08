@@ -1,0 +1,7 @@
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+DIM user AS Person
+user = Person("Ada", Age := 36)

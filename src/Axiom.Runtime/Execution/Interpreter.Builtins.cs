@@ -427,6 +427,142 @@ public sealed partial class Interpreter
         }
     }
 
+    private RuntimeValue InvokeTypeConstructor(
+        BoundTypeConstructorExpression expression,
+        RuntimeValue selfValue,
+        IReadOnlyList<RuntimeValue> arguments)
+    {
+        ArgumentNullException.ThrowIfNull(expression);
+        ArgumentNullException.ThrowIfNull(selfValue);
+        ArgumentNullException.ThrowIfNull(arguments);
+
+        var constructor = expression.Constructor;
+
+        if (!_routines.TryGetValue(constructor, out var routine))
+        {
+            return ReportInvalidRuntimeState<RuntimeValue>(
+                $"Для вызова конструктора '{constructor.Name}' отсутствует связанная процедура.",
+                expression.Location);
+        }
+
+        var scope = new RuntimeScope(CurrentScope, constructor);
+        var currentSelf = selfValue.CopyForStorage();
+        scope.Define(
+            constructor.Parameters[0],
+            new RuntimeReferenceStoredValue(
+                () => currentSelf,
+                value => currentSelf = value.CopyForStorage()));
+
+        for (var index = 1; index < constructor.Parameters.Count; index++)
+        {
+            var parameter = constructor.Parameters[index];
+            var argument = arguments[index - 1];
+            IRuntimeStoredValue storedArgument = parameter.IsByRef
+                ? ResolveByRefStoredArgument(expression.Arguments[index - 1], expression.Location)
+                : parameter.IsArray ? argument.AsArray() : argument.CopyForStorage();
+            scope.Define(parameter, storedArgument);
+        }
+
+        _callStack.Push(new CallFrame(constructor, scope, expression.Location));
+        _scopeStack.Push(scope);
+
+        try
+        {
+            var signal = ExecuteStatements(routine.Statements);
+
+            if (signal.HasExitFor)
+            {
+                ReportInvalidRuntimeState(
+                    "EXIT FOR вышел за пределы конструктора TYPE без окружающего цикла FOR.",
+                    routine.Location);
+                throw new RuntimeFailureException();
+            }
+
+            if (signal.HasReturn)
+            {
+                ReportInvalidRuntimeState(
+                    "Конструктор TYPE не должен завершаться оператором RETURN.",
+                    routine.Location);
+                throw new RuntimeFailureException();
+            }
+
+            if (expression.RecordType.TryGetInvariant(out var invariant) && invariant is not null)
+            {
+                var invariantResult = InvokeTypeInvariant(expression.RecordType, invariant, currentSelf, expression.Location);
+                if (!invariantResult)
+                {
+                    ReportInvalidRuntimeState(
+                        $"Инвариант TYPE '{expression.RecordType.Name}' вернул FALSE после завершения конструктора.",
+                        expression.Location);
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            return currentSelf.CopyForStorage();
+        }
+        finally
+        {
+            _scopeStack.Pop();
+            _callStack.Pop();
+        }
+    }
+
+    private bool InvokeTypeInvariant(
+        UserDefinedTypeSymbol recordType,
+        FunctionSymbol invariant,
+        RuntimeValue selfValue,
+        TextLocation callSiteLocation)
+    {
+        ArgumentNullException.ThrowIfNull(recordType);
+        ArgumentNullException.ThrowIfNull(invariant);
+        ArgumentNullException.ThrowIfNull(selfValue);
+
+        if (!_routines.TryGetValue(invariant, out var routine))
+        {
+            ReportInvalidRuntimeState(
+                $"Для вызова инварианта TYPE '{recordType.Name}' отсутствует связанная функция.",
+                callSiteLocation);
+            throw new RuntimeFailureException();
+        }
+
+        var scope = new RuntimeScope(CurrentScope, invariant);
+        var currentSelf = selfValue.CopyForStorage();
+        scope.Define(
+            invariant.Parameters[0],
+            new RuntimeReferenceStoredValue(
+                () => currentSelf,
+                value => currentSelf = value.CopyForStorage()));
+
+        _callStack.Push(new CallFrame(invariant, scope, callSiteLocation));
+        _scopeStack.Push(scope);
+
+        try
+        {
+            var signal = ExecuteStatements(routine.Statements);
+
+            if (signal.HasExitFor)
+            {
+                ReportInvalidRuntimeState(
+                    "EXIT FOR вышел за пределы инварианта TYPE без окружающего цикла FOR.",
+                    routine.Location);
+                throw new RuntimeFailureException();
+            }
+
+            if (!signal.HasReturn || signal.Value is null || signal.Value.Type != TypeSymbol.Boolean)
+            {
+                ReportMissingReturnValue(invariant.Name, routine.Location);
+                throw new RuntimeFailureException();
+            }
+
+            return signal.Value.AsBoolean();
+        }
+        finally
+        {
+            _scopeStack.Pop();
+            _callStack.Pop();
+        }
+    }
+
     private IRuntimeStoredValue ResolveByRefStoredArgument(BoundExpression argument, TextLocation callSiteLocation)
     {
         if (argument is BoundVariableExpression variableExpression
@@ -436,9 +572,34 @@ public sealed partial class Interpreter
             return storedValue;
         }
 
-        return ReportInvalidRuntimeState<IRuntimeStoredValue>(
-            "Для параметра BYREF не удалось разрешить хранилище вызывающей переменной.",
-            callSiteLocation);
+        if (argument is BoundFieldAccessExpression fieldAccess)
+        {
+            var record = EvaluateExpression(fieldAccess.Target).AsRecord();
+            return new RuntimeReferenceStoredValue(
+                () => record.GetField(fieldAccess.Field),
+                value => record.SetField(fieldAccess.Field, value));
+        }
+
+        if (argument is BoundArrayAccessExpression arrayAccess)
+        {
+            var array = GetAllocatedArray(EvaluateExpression(arrayAccess.Target), arrayAccess.DisplayName, callSiteLocation);
+            var indices = EvaluateArrayIndices(arrayAccess.Indices, "Значение индекса массива");
+
+            if (!array.ContainsIndices(indices))
+            {
+                ReportArrayIndicesOutOfBounds(arrayAccess.DisplayName, indices, array, callSiteLocation);
+                throw new RuntimeFailureException();
+            }
+
+            return new RuntimeReferenceStoredValue(
+                () => array.GetValue(indices),
+                value => array.SetValue(indices, value));
+        }
+
+        var temporaryValue = EvaluateExpression(argument).CopyForStorage();
+        return new RuntimeReferenceStoredValue(
+            () => temporaryValue,
+            value => temporaryValue = value.CopyForStorage());
     }
 
     private int RequirePositiveCount(

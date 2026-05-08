@@ -51,6 +51,43 @@ public sealed partial class Binder
         return new BoundWhileStatement(GetLocation(statement), condition, statements);
     }
 
+    private BoundStatement BindTryStatement(TryStatementSyntax statement)
+    {
+        var statements = BindStatementsInChildScope(statement.Statements, DeclarationContexts.TryBlock);
+        var (catchVariable, catchStatements) = BindCatchClause(statement.CatchClause);
+        var finallyStatements = statement.FinallyClause is null
+            ? Array.Empty<BoundStatement>()
+            : BindStatementsInChildScope(statement.FinallyClause.Statements, DeclarationContexts.FinallyBlock);
+
+        return new BoundTryStatement(GetLocation(statement), statements, catchVariable, catchStatements, finallyStatements);
+    }
+
+    private (VariableSymbol? variable, IReadOnlyList<BoundStatement> statements) BindCatchClause(CatchClauseSyntax? clause)
+    {
+        if (clause is null)
+        {
+            return (null, Array.Empty<BoundStatement>());
+        }
+
+        EnterScope(DeclarationContexts.CatchBlock);
+
+        try
+        {
+            var variable = new VariableSymbol(
+                clause.Identifier.Text,
+                TypeSymbol.RuntimeError,
+                isReadOnly: true,
+                isGlobal: false);
+
+            TryDeclareScopedVariable(variable, clause.Identifier.Location);
+            return (variable, BindStatements(clause.Statements));
+        }
+        finally
+        {
+            LeaveScope();
+        }
+    }
+
     private BoundStatement BindDoLoopStatement(DoLoopStatementSyntax statement)
     {
         var leadingCondition = BindDoLoopCondition(statement.LeadingCondition);

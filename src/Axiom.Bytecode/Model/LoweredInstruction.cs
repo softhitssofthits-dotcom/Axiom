@@ -231,6 +231,12 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.CloseFile, location);
     }
 
+    public static LoweredInstruction ValidateTypeInvariant(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.ValidateTypeInvariant, location, displayName: displayName);
+    }
+
     public static LoweredInstruction ValidateForStep(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.ValidateForStep, location);

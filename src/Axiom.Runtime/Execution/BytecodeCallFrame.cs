@@ -10,6 +10,7 @@ internal sealed class BytecodeCallFrame
     private IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot>? _visibleVariables;
     private Dictionary<int, RuntimeValue>? _cachedFunctionValuesByRoutineId;
     private Dictionary<int, BytecodeVariableSlot[]>? _cachedCapturedSlotsByRoutineId;
+    private BytecodeVariableSlot[]? _byRefArgumentTargets;
     private readonly RuntimeValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
     private BytecodeVariableSlot?[]? _sharedLocals;
@@ -22,6 +23,7 @@ internal sealed class BytecodeCallFrame
         int?[] localFixedStringLengths,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
+        BytecodeVariableSlot[]? byRefArgumentTargets = null,
         int evaluationStackCapacity = 16)
     {
         ArgumentNullException.ThrowIfNull(routine);
@@ -37,6 +39,7 @@ internal sealed class BytecodeCallFrame
         _sharedLocals = locals.Length == 0 ? null : new BytecodeVariableSlot?[locals.Length];
         Captures = captures;
         CallSiteLocation = callSiteLocation;
+        _byRefArgumentTargets = byRefArgumentTargets;
         EvaluationStack = new BytecodeEvaluationStack(evaluationStackCapacity);
     }
 
@@ -47,6 +50,8 @@ internal sealed class BytecodeCallFrame
     public BytecodeVariableSlot[] Captures { get; private set; }
 
     public TextLocation CallSiteLocation { get; private set; }
+
+    public BytecodeVariableSlot[]? ByRefArgumentTargets => _byRefArgumentTargets;
 
     public BytecodeEvaluationStack EvaluationStack { get; }
 
@@ -61,10 +66,12 @@ internal sealed class BytecodeCallFrame
         BytecodeVariableSlot[] arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
+        BytecodeVariableSlot[]? byRefArgumentTargets,
         RuntimeValue[] defaultLocals)
     {
         Captures = captures;
         CallSiteLocation = callSiteLocation;
+        _byRefArgumentTargets = byRefArgumentTargets;
         InstructionPointer = 0;
         _visibleVariables = null;
         _cachedFunctionValuesByRoutineId?.Clear();

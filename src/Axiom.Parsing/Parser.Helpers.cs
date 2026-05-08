@@ -47,6 +47,11 @@ public sealed partial class Parser
         return CreateMissingToken(SyntaxKind.IdentifierToken);
     }
 
+    private bool IsExpressionNameToken(SyntaxKind kind)
+    {
+        return kind is SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword;
+    }
+
     private SyntaxToken MatchNamedTypeToken()
     {
         if (Current.Kind is SyntaxKind.IntegerKeyword
@@ -109,6 +114,10 @@ public sealed partial class Parser
 
     private bool IsElseClauseStart() => Current.Kind == SyntaxKind.ElseKeyword;
 
+    private bool IsCatchClauseStart() => Current.Kind == SyntaxKind.CatchKeyword;
+
+    private bool IsFinallyClauseStart() => Current.Kind == SyntaxKind.FinallyKeyword;
+
     private bool IsCaseClauseStart() => Current.Kind == SyntaxKind.CaseKeyword;
 
     private bool IsCaseElseClauseStart() => Current.Kind == SyntaxKind.CaseKeyword && Peek(1).Kind == SyntaxKind.ElseKeyword;
@@ -123,6 +132,8 @@ public sealed partial class Parser
 
     private bool IsEndWhile() => Current.Kind == SyntaxKind.EndKeyword && Peek(1).Kind == SyntaxKind.WhileKeyword;
 
+    private bool IsEndTry() => Current.Kind == SyntaxKind.EndKeyword && Peek(1).Kind == SyntaxKind.TryKeyword;
+
     private bool IsEndSub() => Current.Kind == SyntaxKind.EndKeyword && Peek(1).Kind == SyntaxKind.SubKeyword;
 
     private bool IsEndFunction() => Current.Kind == SyntaxKind.EndKeyword && Peek(1).Kind == SyntaxKind.FunctionKeyword;
@@ -134,6 +145,8 @@ public sealed partial class Parser
         return Current.Kind == SyntaxKind.ElseIfKeyword
             || Current.Kind == SyntaxKind.ElseKeyword
             || Current.Kind == SyntaxKind.CaseKeyword
+            || Current.Kind == SyntaxKind.CatchKeyword
+            || Current.Kind == SyntaxKind.FinallyKeyword
             || Current.Kind == SyntaxKind.LoopKeyword
             || Current.Kind == SyntaxKind.NextKeyword
             || Current.Kind == SyntaxKind.EndKeyword;
@@ -180,6 +193,8 @@ public sealed partial class Parser
             or SyntaxKind.ElseIfKeyword
             or SyntaxKind.ElseKeyword
             or SyntaxKind.CaseKeyword
+            or SyntaxKind.CatchKeyword
+            or SyntaxKind.FinallyKeyword
             or SyntaxKind.LoopKeyword
             or SyntaxKind.NextKeyword
             or SyntaxKind.EndKeyword;
@@ -199,6 +214,8 @@ public sealed partial class Parser
             or SyntaxKind.ElseIfKeyword
             or SyntaxKind.ElseKeyword
             or SyntaxKind.CaseKeyword
+            or SyntaxKind.CatchKeyword
+            or SyntaxKind.FinallyKeyword
             or SyntaxKind.LoopKeyword
             or SyntaxKind.NextKeyword
             or SyntaxKind.EndKeyword;
@@ -247,7 +264,10 @@ public sealed partial class Parser
             TokenKind.AsKeyword => SyntaxKind.AsKeyword,
             TokenKind.AppendKeyword => SyntaxKind.AppendKeyword,
             TokenKind.BooleanKeyword => SyntaxKind.BooleanKeyword,
+            TokenKind.ByRefKeyword => SyntaxKind.ByRefKeyword,
+            TokenKind.ByValKeyword => SyntaxKind.ByValKeyword,
             TokenKind.CaseKeyword => SyntaxKind.CaseKeyword,
+            TokenKind.CatchKeyword => SyntaxKind.CatchKeyword,
             TokenKind.CloseKeyword => SyntaxKind.CloseKeyword,
             TokenKind.ConstKeyword => SyntaxKind.ConstKeyword,
             TokenKind.DecimalKeyword => SyntaxKind.DecimalKeyword,
@@ -261,6 +281,7 @@ public sealed partial class Parser
             TokenKind.EqvKeyword => SyntaxKind.EqvKeyword,
             TokenKind.ExitKeyword => SyntaxKind.ExitKeyword,
             TokenKind.FileKeyword => SyntaxKind.FileKeyword,
+            TokenKind.FinallyKeyword => SyntaxKind.FinallyKeyword,
             TokenKind.ForKeyword => SyntaxKind.ForKeyword,
             TokenKind.FunctionKeyword => SyntaxKind.FunctionKeyword,
             TokenKind.IfKeyword => SyntaxKind.IfKeyword,
@@ -280,12 +301,14 @@ public sealed partial class Parser
             TokenKind.PrintKeyword => SyntaxKind.PrintKeyword,
             TokenKind.RedimKeyword => SyntaxKind.RedimKeyword,
             TokenKind.ReturnKeyword => SyntaxKind.ReturnKeyword,
+            TokenKind.SelfKeyword => SyntaxKind.SelfKeyword,
             TokenKind.SelectKeyword => SyntaxKind.SelectKeyword,
             TokenKind.StepKeyword => SyntaxKind.StepKeyword,
             TokenKind.StringKeyword => SyntaxKind.StringKeyword,
             TokenKind.SubKeyword => SyntaxKind.SubKeyword,
             TokenKind.ThenKeyword => SyntaxKind.ThenKeyword,
             TokenKind.ToKeyword => SyntaxKind.ToKeyword,
+            TokenKind.TryKeyword => SyntaxKind.TryKeyword,
             TokenKind.TypeKeyword => SyntaxKind.TypeKeyword,
             TokenKind.UsingKeyword => SyntaxKind.UsingKeyword,
             TokenKind.UntilKeyword => SyntaxKind.UntilKeyword,

@@ -1,0 +1,29 @@
+' Позиционная форма сопоставляет аргументы полям по порядку объявления TYPE.
+
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+TYPE Contact
+    Person AS Person
+    Active AS BOOLEAN
+END TYPE
+
+DIM user AS Person
+DIM card AS Contact
+
+user = Person("Ada", 36, Address("Paris"))
+card = Contact(Person("Grace", 40, Address("Rome")), TRUE)
+
+PRINT user.Name
+PRINT user.Age
+PRINT user.Home.City
+PRINT card.Person.Name
+PRINT card.Person.Age
+PRINT card.Active

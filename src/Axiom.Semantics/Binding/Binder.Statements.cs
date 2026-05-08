@@ -31,6 +31,7 @@ public sealed partial class Binder
             OpenStatementSyntax openStatement => BindOpenStatement(openStatement),
             CloseStatementSyntax closeStatement => BindCloseStatement(closeStatement),
             IfStatementSyntax ifStatement => BindIfStatement(ifStatement),
+            TryStatementSyntax tryStatement => BindTryStatement(tryStatement),
             SelectCaseStatementSyntax selectCaseStatement => BindSelectCaseStatement(selectCaseStatement),
             DoLoopStatementSyntax doLoopStatement => BindDoLoopStatement(doLoopStatement),
             WhileStatementSyntax whileStatement => BindWhileStatement(whileStatement),

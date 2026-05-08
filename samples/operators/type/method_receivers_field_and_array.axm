@@ -1,0 +1,37 @@
+' TYPE-методы можно вызывать у поля записи и у элемента массива.
+' Ожидаемый вывод:
+' 5
+' 7
+' 8
+' 9
+
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+TYPE Holder
+    Item AS Counter
+END TYPE
+
+DIM holder AS Holder
+DIM counters(1 TO 2) AS Counter
+
+holder.Item.Increment(5)
+PRINT holder.Item.Current()
+
+counters(1).Increment(7)
+PRINT counters(1).Current()
+
+holder.Item.Value = holder.Item.Current() + 3
+PRINT holder.Item.Current()
+
+counters(1).Increment(2)
+PRINT counters(1).Value

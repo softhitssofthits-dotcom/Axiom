@@ -34,6 +34,10 @@ public sealed partial class Binder
     private const string InvalidTypeFieldDefaultValueCode = "MB2027";
     private const string InvalidByRefArgumentCode = "MB2028";
     private const string UnsupportedByRefCallableValueCode = "MB2029";
+    private const string InvalidTypeMethodReceiverCode = "MB2030";
+    private const string MixedTypeLiteralInitializationCode = "MB2031";
+    private const string TypeLiteralPositionalArityCode = "MB2032";
+    private const string AmbiguousTypeConstructorCode = "MB2033";
 
     // Human-facing block labels stay centralized so every future block scope
     // can reuse the same MB2016 template without inventing a new diagnostic.
@@ -43,6 +47,9 @@ public sealed partial class Binder
         public const string IfBlock = "блоке IF";
         public const string ElseIfBranch = "ветви ELSEIF";
         public const string ElseBranch = "ветви ELSE";
+        public const string TryBlock = "блоке TRY";
+        public const string CatchBlock = "блоке CATCH";
+        public const string FinallyBlock = "блоке FINALLY";
         public const string WhileBlock = "блоке WHILE";
         public const string DoBlock = "блоке DO";
         public const string ForLoop = "цикле FOR";
@@ -52,6 +59,7 @@ public sealed partial class Binder
 
     private readonly DiagnosticBag _diagnostics = new();
     private readonly Dictionary<MemberSyntax, FunctionSymbol> _declaredFunctions = [];
+    private readonly Dictionary<MemberSyntax, UserDefinedTypeSymbol> _declaredMethodOwners = [];
     private readonly Dictionary<string, UserDefinedTypeSymbol> _declaredTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, ConstStatementSyntax> _globalIntegralConstantDeclarations = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, long> _globalIntegralConstants = new(StringComparer.OrdinalIgnoreCase);
@@ -93,12 +101,14 @@ public sealed partial class Binder
         DeclareTypeNames(program.Members);
         PrepareTypeDeclarations(program.Members);
         DeclareFunctions(program.Members);
+        DeclareTypeMethods(program.Members);
 
         foreach (var member in program.Members)
         {
             switch (member)
             {
                 case TypeDeclarationSyntax:
+                    BindTypeMethods((TypeDeclarationSyntax)member);
                     break;
 
                 case GlobalStatementSyntax globalStatement:

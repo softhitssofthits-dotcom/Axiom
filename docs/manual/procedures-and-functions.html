@@ -91,6 +91,7 @@ ShowBanner("Axiom")
 PRINT Square(5)</code></pre>
                 <p><code>SUB</code> выполняет действия, а <code>FUNCTION</code> вычисляет и возвращает значение. Оператор <code>RETURN</code> в <code>FUNCTION</code> обязателен для возврата результата, а в <code>SUB</code> используется только для досрочного выхода.</p>
                 <p>Параметры процедур и функций по умолчанию передаются как <code>BYVAL</code>. Для явного изменения вызывающей переменной можно отметить параметр как <code>BYREF</code>; это особенно важно на границе работы с пользовательскими записями <code>TYPE</code>, где <code>BYVAL</code> сохраняет копию значения, а <code>BYREF</code> работает с исходной переменной.</p>
+                <p>Те же формы <code>SUB</code> и <code>FUNCTION</code> можно объявлять и внутри <code>TYPE</code> как методы записи. В таком случае вызов идёт через точку, например <code>counter.Increment(2)</code>, а текущая запись внутри метода доступна как <code>SELF</code>.</p>
                 <p>Axiom также поддерживает локальные <code>SUB</code> и <code>FUNCTION</code> внутри другой процедуры или функции. Локальная функция может захватывать внешние данные, а если она возвращается наружу, то сохраняет их и после завершения внешней функции.</p>
                 <p>Функции можно хранить в переменных функционального типа, передавать в параметры и возвращать как результат. Процедуры <code>SUB</code> в этой роли не используются, поэтому выбирать между ними стоит не по вкусу, а по реальной модели вызова.</p>
             </section>
@@ -102,6 +103,7 @@ PRINT Square(5)</code></pre>
                     <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов</a></li>
                     <li><a href="../../samples/operators/sub/byref_record_argument.axm">SUB: BYREF для записи TYPE</a></li>
                     <li><a href="../../samples/operators/sub/byval_record_copy.axm">SUB: BYVAL и копия записи</a></li>
+                    <li><a href="../../samples/operators/type/methods_self.axm">TYPE: методы и SELF</a></li>
                     <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li>
                     <li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li>
                     <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление</a></li>

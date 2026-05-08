@@ -480,6 +480,118 @@ public sealed partial class Binder
         }
     }
 
+    private void DeclareTypeMethods(IEnumerable<MemberSyntax> members)
+    {
+        foreach (var typeDeclaration in members.OfType<TypeDeclarationSyntax>())
+        {
+            if (!_declaredTypes.TryGetValue(typeDeclaration.Identifier.Text, out var type))
+            {
+                continue;
+            }
+
+            var methods = new List<FunctionSymbol>(typeDeclaration.Methods.Count);
+            var constructors = new List<FunctionSymbol>();
+            FunctionSymbol? invariant = null;
+            var seenMethodSignatures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenConstructorSignatures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var methodDeclaration in typeDeclaration.Methods)
+            {
+                var methodName = methodDeclaration switch
+                {
+                    SubDeclarationSyntax subDeclaration => subDeclaration.Identifier.Text,
+                    FunctionDeclarationSyntax functionDeclaration => functionDeclaration.Identifier.Text,
+                    _ => throw new ArgumentOutOfRangeException(nameof(methodDeclaration), methodDeclaration, "Unsupported TYPE method declaration.")
+                };
+
+                var location = methodDeclaration switch
+                {
+                    SubDeclarationSyntax subDeclaration => subDeclaration.Identifier.Location,
+                    FunctionDeclarationSyntax functionDeclaration => functionDeclaration.Identifier.Location,
+                    _ => throw new ArgumentOutOfRangeException(nameof(methodDeclaration), methodDeclaration, "Unsupported TYPE method declaration.")
+                };
+
+                var isConstructor = string.Equals(methodName, "New", StringComparison.OrdinalIgnoreCase);
+                var isInvariant = string.Equals(methodName, "IsValid", StringComparison.OrdinalIgnoreCase);
+
+                if (type.TryGetField(methodName, out _))
+                {
+                    ReportDuplicateDeclaration(methodName, location);
+                    continue;
+                }
+
+                if (isConstructor)
+                {
+                    if (methodDeclaration is not SubDeclarationSyntax)
+                    {
+                        ReportInvalidTypeConstructorDeclaration(location);
+                        continue;
+                    }
+
+                    var constructor = CreateTypeMethodSymbol(type, methodName, GetCallableParameters(methodDeclaration), TypeSymbol.Void);
+                    var constructorSignature = GetTypeConstructorSignatureKey(constructor);
+                    if (!seenConstructorSignatures.Add(constructorSignature))
+                    {
+                        ReportDuplicateDeclaration($"{type.Name}.{constructorSignature}", location);
+                        continue;
+                    }
+
+                    constructors.Add(constructor);
+                    _declaredFunctions[methodDeclaration] = constructor;
+                    _declaredMethodOwners[methodDeclaration] = type;
+                    continue;
+                }
+
+                if (isInvariant)
+                {
+                    if (methodDeclaration is not FunctionDeclarationSyntax functionDeclaration)
+                    {
+                        ReportInvalidTypeInvariantDeclaration(location);
+                        continue;
+                    }
+
+                    if (invariant is not null)
+                    {
+                        ReportDuplicateDeclaration($"{type.Name}.IsValid()", location);
+                        continue;
+                    }
+
+                    var parameters = GetCallableParameters(methodDeclaration);
+                    var invariantReturnType = ResolveFunctionReturnType(functionDeclaration);
+                    var invariantSymbol = CreateTypeMethodSymbol(type, methodName, parameters, invariantReturnType);
+
+                    if (parameters.Count != 0 || invariantReturnType != TypeSymbol.Boolean)
+                    {
+                        ReportInvalidTypeInvariantDeclaration(location);
+                        continue;
+                    }
+
+                    invariant = invariantSymbol;
+                    _declaredFunctions[methodDeclaration] = invariantSymbol;
+                    _declaredMethodOwners[methodDeclaration] = type;
+                    continue;
+                }
+
+                var returnType = methodDeclaration is FunctionDeclarationSyntax function
+                    ? ResolveFunctionReturnType(function)
+                    : TypeSymbol.Void;
+                var symbol = CreateTypeMethodSymbol(type, methodName, GetCallableParameters(methodDeclaration), returnType);
+                var methodSignature = GetTypeMethodSignatureKey(symbol);
+                if (!seenMethodSignatures.Add(methodSignature))
+                {
+                    ReportDuplicateDeclaration($"{type.Name}.{methodSignature}", location);
+                    continue;
+                }
+
+                _declaredFunctions[methodDeclaration] = symbol;
+                _declaredMethodOwners[methodDeclaration] = type;
+                methods.Add(symbol);
+            }
+
+            type.CompleteMethods(methods, constructors, invariant);
+        }
+    }
+
     private void DeclareFunction(MemberSyntax declaration, TypeSymbol returnType)
     {
         var symbol = declaration switch
@@ -518,6 +630,37 @@ public sealed partial class Binder
         }
     }
 
+    private FunctionSymbol CreateTypeMethodSymbol(
+        UserDefinedTypeSymbol ownerType,
+        string methodName,
+        IReadOnlyList<ParameterSyntax> parameters,
+        TypeSymbol returnType)
+    {
+        ArgumentNullException.ThrowIfNull(ownerType);
+        ArgumentException.ThrowIfNullOrWhiteSpace(methodName);
+        ArgumentNullException.ThrowIfNull(parameters);
+
+        var parameterSymbols = new List<ParameterSymbol>(parameters.Count + 1)
+        {
+            new("SELF", ownerType, 0, ParameterPassingMode.ByRef)
+        };
+
+        for (var index = 0; index < parameters.Count; index++)
+        {
+            var parameter = parameters[index];
+            var parameterType = ReportUnsupportedFixedStringType(parameter.TypeClause, parameter.Identifier.Text)
+                ? TypeSymbol.Error
+                : ResolveType(parameter.TypeClause);
+            parameterSymbols.Add(new ParameterSymbol(
+                parameter.Identifier.Text,
+                parameterType,
+                index + 1,
+                ParameterPassingModes.FromKeyword(parameter.PassingKeyword)));
+        }
+
+        return new FunctionSymbol($"{ownerType.Name}.{methodName}", methodName, parameterSymbols, returnType);
+    }
+
     private FunctionSymbol CreateFunctionSymbol(
         string name,
         IReadOnlyList<ParameterSyntax> parameters,
@@ -540,6 +683,42 @@ public sealed partial class Binder
         }
 
         return new FunctionSymbol(name, parameterSymbols, returnType, containingRoutine);
+    }
+
+    private static string GetTypeConstructorSignatureKey(FunctionSymbol constructor)
+    {
+        ArgumentNullException.ThrowIfNull(constructor);
+
+        var signature = constructor.Parameters
+            .Skip(1)
+            .Select(static parameter => parameter.IsByRef
+                ? $"BYREF {parameter.Type.Name}"
+                : parameter.Type.Name);
+
+        return $"New({string.Join(", ", signature)})";
+    }
+
+    private static string GetTypeMethodSignatureKey(FunctionSymbol method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+
+        var signature = method.Parameters
+            .Skip(1)
+            .Select(static parameter => parameter.IsByRef
+                ? $"BYREF {parameter.Type.Name}"
+                : parameter.Type.Name);
+
+        return $"{method.ShortName}({string.Join(", ", signature)})";
+    }
+
+    private static IReadOnlyList<ParameterSyntax> GetCallableParameters(MemberSyntax declaration)
+    {
+        return declaration switch
+        {
+            SubDeclarationSyntax subDeclaration => subDeclaration.Parameters,
+            FunctionDeclarationSyntax functionDeclaration => functionDeclaration.Parameters,
+            _ => throw new ArgumentOutOfRangeException(nameof(declaration), declaration, "Unsupported callable declaration.")
+        };
     }
 
     private TypeSymbol ResolveFunctionReturnType(FunctionDeclarationSyntax declaration)

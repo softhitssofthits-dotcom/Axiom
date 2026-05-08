@@ -63,6 +63,7 @@ public enum Opcode
     LoadField,
     StoreField,
     CallBuiltin,
+    ValidateTypeInvariant,
     ValidateForStep,
     AdvanceForLoopLocal,
     PrintValue,

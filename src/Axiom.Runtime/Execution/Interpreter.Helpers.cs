@@ -13,6 +13,11 @@ public sealed partial class Interpreter
     {
         var storedValue = LookupStorage(variable);
 
+        if (storedValue is RuntimeReferenceStoredValue reference)
+        {
+            return reference.Value;
+        }
+
         if (storedValue is RuntimeValue scalar)
         {
             return scalar;
@@ -83,7 +88,20 @@ public sealed partial class Interpreter
 
     private void AssignVariable(VariableSymbol variable, RuntimeValue value)
     {
-        if (CurrentScope.TryLookup(variable, out var storedValue) && storedValue is RuntimeArrayValue)
+        if (!CurrentScope.TryLookup(variable, out var storedValue) || storedValue is null)
+        {
+            ReportInvalidRuntimeState(
+                $"Не удалось присвоить значение имени '{variable.Name}'.");
+            throw new RuntimeFailureException();
+        }
+
+        if (storedValue is RuntimeReferenceStoredValue reference)
+        {
+            reference.Value = value;
+            return;
+        }
+
+        if (storedValue is RuntimeArrayValue)
         {
             if (value.Type is ArrayTypeSymbol)
             {
@@ -567,7 +585,9 @@ public sealed partial class Interpreter
 
     private void ReportRuntimeDiagnostic(string code, string message, TextLocation location)
     {
-        _diagnostics.Report(code, AppendCallChain(message), location);
+        var diagnostic = new Diagnostic(code, AppendCallChain(message), location);
+        _diagnostics.Report(diagnostic);
+        _lastRuntimeFailureDiagnostic = diagnostic;
     }
 
     private string AppendCallChain(string message)

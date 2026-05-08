@@ -100,6 +100,22 @@ public sealed class EditorFeatureTests
     }
 
     [Fact]
+    public void Highlighting_KeywordResourceContainsTryCatchFinally()
+    {
+        const string resourceName = "Axiom.Ide.Editor.Highlighting.Axiom.xshd";
+        using var stream = typeof(AxiomHighlighting).Assembly.GetManifestResourceStream(resourceName);
+
+        Assert.NotNull(stream);
+
+        using var reader = new StreamReader(stream!, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        var xshd = reader.ReadToEnd();
+
+        Assert.Contains("<Word>TRY</Word>", xshd, StringComparison.Ordinal);
+        Assert.Contains("<Word>CATCH</Word>", xshd, StringComparison.Ordinal);
+        Assert.Contains("<Word>FINALLY</Word>", xshd, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Highlighting_KeywordResourceContainsLogicalOperators()
     {
         const string resourceName = "Axiom.Ide.Editor.Highlighting.Axiom.xshd";

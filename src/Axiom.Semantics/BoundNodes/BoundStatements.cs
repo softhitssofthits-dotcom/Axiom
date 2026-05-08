@@ -279,6 +279,37 @@ public sealed class BoundIfStatement : BoundStatement
     public IReadOnlyList<BoundStatement> ElseStatements { get; }
 }
 
+public sealed class BoundTryStatement : BoundStatement
+{
+    public BoundTryStatement(
+        TextLocation location,
+        IReadOnlyList<BoundStatement> statements,
+        VariableSymbol? catchVariable,
+        IReadOnlyList<BoundStatement> catchStatements,
+        IReadOnlyList<BoundStatement> finallyStatements)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(statements);
+        ArgumentNullException.ThrowIfNull(catchStatements);
+        ArgumentNullException.ThrowIfNull(finallyStatements);
+
+        Statements = statements;
+        CatchVariable = catchVariable;
+        CatchStatements = catchStatements;
+        FinallyStatements = finallyStatements;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.TryStatement;
+
+    public IReadOnlyList<BoundStatement> Statements { get; }
+
+    public VariableSymbol? CatchVariable { get; }
+
+    public IReadOnlyList<BoundStatement> CatchStatements { get; }
+
+    public IReadOnlyList<BoundStatement> FinallyStatements { get; }
+}
+
 public sealed class BoundWhileStatement : BoundStatement
 {
     public BoundWhileStatement(TextLocation location, BoundExpression condition, IReadOnlyList<BoundStatement> statements)

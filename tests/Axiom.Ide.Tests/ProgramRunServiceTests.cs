@@ -101,6 +101,36 @@ PRINT op(4)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_FallsBackToInterpreterForUnsupportedTryBlock()
+    {
+        var service = CreateService();
+
+        const string sourceText = """
+TRY
+    PRINT "before"
+    PRINT 10 \ 0
+CATCH err
+    PRINT "caught"
+    PRINT err.Code
+FINALLY
+    PRINT "cleanup"
+END TRY
+PRINT "after"
+""";
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionMode.Bytecode, result.RequestedExecutionMode);
+        Assert.Equal(ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.True(result.UsedInterpreterFallback);
+        Assert.Equal(
+            string.Join(Environment.NewLine, "before", "caught", "3001", "cleanup", "after"),
+            result.OutputText);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
     public void Run_WithSourceBreakpointLines_ReturnsStoppedResult()
     {
         var service = CreateService();

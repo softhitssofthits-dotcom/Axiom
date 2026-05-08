@@ -1,0 +1,13 @@
+TYPE Person
+    Age AS INTEGER
+
+    SUB New(age AS INTEGER)
+        SELF.Age = age
+    END SUB
+
+    FUNCTION IsValid() AS BOOLEAN
+        RETURN SELF.Age >= 0
+    END FUNCTION
+END TYPE
+
+PRINT Person(-1).Age

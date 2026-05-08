@@ -171,6 +171,17 @@ public sealed class ProgramRunService : IProgramRunService
                     mode: mode,
                     sourceBreakpointLines: sourceBreakpointLines,
                     stopBeforeFirstInstruction: stopBeforeFirstInstruction));
+            if (ShouldFallbackToInterpreter(executionResult, mode, sourceBreakpointLines, stopBeforeFirstInstruction))
+            {
+                executionResult = _pipeline.RunCompiled(
+                    compiledProgram,
+                    new ExecutionRequest(
+                        sourceText,
+                        inputProvider: inputProvider,
+                        outputWriter: _consoleService,
+                        mode: ExecutionMode.Interpreter));
+            }
+
             var diagnostics = executionResult.Diagnostics
                 .Select(ProgramDiagnosticItem.FromDiagnostic)
                 .ToArray();
@@ -210,10 +221,13 @@ public sealed class ProgramRunService : IProgramRunService
                 preparationDuration: preparationDuration,
                 executionDuration: executionDuration,
                 usedCompiledCache: usesCompiledCache,
-                requestedExecutionMode: executionResult.RequestedMode,
+                requestedExecutionMode: mode,
                 actualEngine: executionResult.ActualEngine,
-                usedInterpreterFallback: executionResult.UsedInterpreterFallback,
-                interpreterFallbackReason: executionResult.InterpreterFallbackReason,
+                usedInterpreterFallback: executionResult.UsedInterpreterFallback || mode == ExecutionMode.Bytecode && executionResult.ActualEngine == ExecutionEngineKind.Interpreter,
+                interpreterFallbackReason: executionResult.InterpreterFallbackReason
+                    ?? (mode == ExecutionMode.Bytecode && executionResult.ActualEngine == ExecutionEngineKind.Interpreter
+                        ? "Bytecode VM does not yet cover this program."
+                        : null),
                 loweringDuration: executionResult.LoweringDuration,
                 bytecodeEmissionDuration: executionResult.BytecodeEmissionDuration,
                 usedLoweredCache: executionResult.UsedLoweredCache,
@@ -244,6 +258,24 @@ public sealed class ProgramRunService : IProgramRunService
 
             return new ProgramRunResult(ProgramRunStatus.InfrastructureFailure, diagnostics, string.Empty);
         }
+    }
+
+    private static bool ShouldFallbackToInterpreter(
+        ExecutionResult executionResult,
+        ExecutionMode mode,
+        IEnumerable<int>? sourceBreakpointLines,
+        bool stopBeforeFirstInstruction)
+    {
+        if (mode != ExecutionMode.Bytecode ||
+            stopBeforeFirstInstruction ||
+            sourceBreakpointLines?.Any() == true ||
+            executionResult.Status != ExecutionStatus.BackendFailure)
+        {
+            return false;
+        }
+
+        return executionResult.Diagnostics.Count == 1 &&
+            string.Equals(executionResult.Diagnostics[0].Code, "MB4001", StringComparison.Ordinal);
     }
 
     public ProgramRunResult Continue(BytecodeVmStopState stopState)

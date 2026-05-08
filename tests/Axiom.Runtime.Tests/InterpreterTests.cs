@@ -7240,6 +7240,33 @@ PRINT blank.Home.City = ""
     }
 
     [Fact]
+    public void Execute_TypePositionalLiteral()
+    {
+        const string text = """
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+user = Person("Ada", 36, Address("Paris"))
+PRINT user.Name
+PRINT user.Age
+PRINT user.Home.City
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "36", "Paris"], host.Output);
+    }
+
+    [Fact]
     public void Execute_TypeFieldDefaultValues()
     {
         const string text = """
@@ -7549,6 +7576,349 @@ PRINT user.Age
 
         Assert.True(result.Succeeded);
         Assert.Equal(["Ada", "36"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeMethodsMutateSelfAndReturnValues()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+DIM counter AS Counter
+counter.Increment(2)
+counter.Increment(3)
+PRINT counter.Current()
+PRINT counter.Value
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["5", "5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeMethodsAcceptFieldAndArrayElementReceivers()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+TYPE Holder
+    Item AS Counter
+END TYPE
+
+DIM holder AS Holder
+DIM counters(1 TO 2) AS Counter
+holder.Item.Increment(5)
+PRINT holder.Item.Current()
+counters(1).Increment(7)
+PRINT counters(1).Current()
+holder.Item.Value = holder.Item.Current() + 3
+PRINT holder.Item.Current()
+counters(1).Increment(2)
+PRINT counters(1).Value
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["5", "7", "8", "9"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeMethodsAcceptTemporaryReceivers()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+FUNCTION MakeCounter(value AS INTEGER) AS Counter
+    RETURN Counter(value)
+END FUNCTION
+
+PRINT Counter(1).Current()
+PRINT MakeCounter(2).Current()
+PRINT Counter(3).Current()
+Counter(4).Increment(5)
+PRINT Counter(4).Current()
+PRINT MakeCounter(6).Current()
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "3", "4", "6"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeMethodsSupportOverloadsBySignature()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+    Label AS STRING
+
+    SUB Set(value AS INTEGER)
+        SELF.Value = value
+    END SUB
+
+    SUB Set(label AS STRING)
+        SELF.Label = label
+    END SUB
+
+    SUB Set(value AS INTEGER, label AS STRING)
+        SELF.Value = value
+        SELF.Label = label
+    END SUB
+END TYPE
+
+DIM counter AS Counter
+counter.Set(2)
+PRINT counter.Value
+counter.Set("Alpha")
+PRINT counter.Label
+counter.Set(7, "Beta")
+PRINT counter.Value
+PRINT counter.Label
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["2", "Alpha", "7", "Beta"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeConstructorSupportsOverloadsAndZeroFormWhileNamedLiteralStaysLiteral()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 18
+
+    SUB New()
+        SELF.Name = "Zero"
+    END SUB
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+        SELF.Age = SELF.Age + 1
+    END SUB
+
+    SUB New(name AS STRING, age AS INTEGER)
+        SELF.Name = name
+        SELF.Age = age
+    END SUB
+END TYPE
+
+FUNCTION BuildPerson(name AS STRING) AS Person
+    RETURN Person(name)
+END FUNCTION
+
+DIM zeroUser AS Person = Person()
+DIM user AS Person = Person("Ada")
+PRINT zeroUser.Name
+PRINT zeroUser.Age
+PRINT user.Name
+PRINT user.Age
+PRINT Person("Lin", 20).Age
+PRINT Person(Name := "Grace").Name
+PRINT Person(Name := "Grace").Age
+PRINT BuildPerson("Lin").Age
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Zero", "18", "Ada", "19", "20", "Grace", "18", "19"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeConstructorSupportsSameArityWithDifferentTypes()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = -1
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+    END SUB
+
+    SUB New(age AS INTEGER)
+        SELF.Age = age
+    END SUB
+END TYPE
+
+PRINT Person("Ada").Name
+PRINT Person(20).Age
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "20"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeConstructorRunsInvariantAfterConstruction()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 0
+
+    SUB New(name AS STRING, age AS INTEGER)
+        SELF.Name = name
+        SELF.Age = age
+    END SUB
+
+    FUNCTION IsValid() AS BOOLEAN
+        RETURN SELF.Name <> "" AND SELF.Age >= 0
+    END FUNCTION
+END TYPE
+
+PRINT Person("Ada", 20).Name
+PRINT Person("Ada", 20).Age
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada", "20"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TypeConstructorReportsRuntimeFailureWhenInvariantReturnsFalse()
+    {
+        const string text = """
+TYPE Person
+    Age AS INTEGER
+
+    SUB New(age AS INTEGER)
+        SELF.Age = age
+    END SUB
+
+    FUNCTION IsValid() AS BOOLEAN
+        RETURN SELF.Age >= 0
+    END FUNCTION
+END TYPE
+
+PRINT Person(-1).Age
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3005", diagnostic.Code);
+        Assert.Contains("инвариант", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_TryCatchHandlesRuntimeFailureAndExposesErrorFields()
+    {
+        const string text = """
+TRY
+    PRINT 10 \ 0
+    PRINT "unreachable"
+CATCH err
+    PRINT err.Code
+    PRINT err.Line
+    PRINT err.Column
+END TRY
+
+PRINT "after"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3001", "2", "14", "after"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TryFinallyRunsAfterNormalBody()
+    {
+        const string text = """
+TRY
+    PRINT "body"
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["body", "cleanup"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TryCatchFinallyRunsFinallyAfterHandledFailure()
+    {
+        const string text = """
+TRY
+    PRINT 10 \ 0
+CATCH err
+    PRINT "caught"
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["caught", "cleanup"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TryFinallyRunsBeforeUnhandledFailureEscapes()
+    {
+        const string text = """
+TRY
+    PRINT 10 \ 0
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(["cleanup"], host.Output);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3001");
+        Assert.Equal(2, diagnostic.Location.Line);
     }
 
     private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(string text, params string[] inputs)

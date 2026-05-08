@@ -356,7 +356,7 @@ public sealed partial class BytecodeVm
         var argumentSlots = CreateArgumentSlots(routine, arguments, byRefArgumentSlots);
         if (_cachedFrames.Remove(routine.Id, out var cachedFrame))
         {
-            cachedFrame.Reset(argumentSlots, captures, callSiteLocation, template.DefaultLocals);
+            cachedFrame.Reset(argumentSlots, captures, callSiteLocation, byRefArgumentSlots, template.DefaultLocals);
             return cachedFrame;
         }
 
@@ -381,6 +381,7 @@ public sealed partial class BytecodeVm
             localFixedStringLengths,
             captures,
             callSiteLocation,
+            byRefArgumentSlots,
             routine.MaxEvaluationStackDepth);
     }
 
@@ -396,8 +397,7 @@ public sealed partial class BytecodeVm
         {
             if (byRefArgumentSlots is not null
                 && index < byRefArgumentSlots.Length
-                && byRefArgumentSlots[index] is not null
-                && routine.ParameterVariables[index] is ParameterSymbol { IsByRef: true })
+                && byRefArgumentSlots[index] is not null)
             {
                 argumentSlots[index] = byRefArgumentSlots[index];
                 continue;
@@ -690,6 +690,10 @@ public sealed partial class BytecodeVm
 
             case Opcode.StoreField:
                 ExecuteStoreField(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.ValidateTypeInvariant:
+                ValidateTypeInvariant(frame, instruction, instructionIndex);
                 break;
 
             case Opcode.ValidateForStep:
@@ -2259,8 +2263,8 @@ public sealed partial class BytecodeVm
             slots[argumentIndex] = sourceKind switch
             {
                 0 => new BytecodeVariableSlot(
-                    () => LoadGlobalValue(sourceSlot),
-                    value => StoreGlobalValue(sourceSlot, value),
+                    () => LoadGlobalUnchecked(sourceSlot),
+                    value => StoreGlobalUnchecked(sourceSlot, value),
                     GetGlobalFixedStringLength(sourceSlot)),
                 1 => callerFrame.Arguments[sourceSlot],
                 2 => callerFrame.GetOrCreateLocalSlot(sourceSlot),
@@ -2762,6 +2766,29 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
+    private void ValidateTypeInvariant(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var result = PopValue(frame, instructionIndex);
+        if (result.Type != TypeSymbol.Boolean)
+        {
+            ReportInvalidRuntimeState(
+                "Проверка инварианта TYPE ожидала значение BOOLEAN.",
+                ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+
+        if (result.AsBoolean())
+        {
+            return;
+        }
+
+        var typeName = ReadConstantUnchecked(instruction.GetOperand(0)).AsString();
+        ReportInvalidRuntimeState(
+            $"Инвариант TYPE '{typeName}' вернул FALSE после завершения конструктора.",
+            ResolveLocation(frame.Routine.Id, instructionIndex));
+        throw new RuntimeFailureException();
+    }
+
     private void ExecuteReturn(BytecodeCallFrame frame, int instructionIndex)
     {
         RuntimeValue returnValue = RuntimeValue.Void;
@@ -2780,6 +2807,7 @@ public sealed partial class BytecodeVm
             returnValue = frame.EvaluationStack.Pop().CopyForStorage();
         }
 
+        CopyBackByRefArguments(frame);
         _callStack.Pop();
         CacheReusableFrame(frame);
 
@@ -2791,6 +2819,27 @@ public sealed partial class BytecodeVm
         if (frame.Routine.ResultType != TypeSymbol.Void)
         {
             CurrentFrame.EvaluationStack.Push(returnValue);
+        }
+    }
+
+    private static void CopyBackByRefArguments(BytecodeCallFrame frame)
+    {
+        var targets = frame.ByRefArgumentTargets;
+        if (targets is null || targets.Length == 0)
+        {
+            return;
+        }
+
+        var count = Math.Min(frame.Arguments.Length, targets.Length);
+        for (var index = 0; index < count; index++)
+        {
+            var target = targets[index];
+            if (target is null)
+            {
+                continue;
+            }
+
+            target.Store(frame.Arguments[index].Value);
         }
     }
 
@@ -3120,6 +3169,7 @@ public sealed partial class BytecodeVm
                 localFixedStringLengths,
                 captures,
                 frameSnapshot.CallSiteLocation,
+                byRefArgumentTargets: null,
                 frameSnapshot.Routine.MaxEvaluationStackDepth)
             {
                 InstructionPointer = frameSnapshot.InstructionPointer

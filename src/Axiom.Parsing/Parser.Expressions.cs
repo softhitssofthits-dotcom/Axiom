@@ -44,6 +44,7 @@ public sealed partial class Parser
             SyntaxKind.OpenParenToken => ParseParenthesizedExpression(),
             SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken or SyntaxKind.StringLiteralToken or SyntaxKind.BooleanLiteralToken => new LiteralExpressionSyntax(NextToken()),
             SyntaxKind.IdentifierToken
+                or SyntaxKind.SelfKeyword
                 or SyntaxKind.IntegerKeyword
                 or SyntaxKind.LongKeyword
                 or SyntaxKind.DoubleKeyword
@@ -138,7 +139,7 @@ public sealed partial class Parser
 
     private ExpressionSyntax ParseCallArgumentExpression()
     {
-        if (Current.Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.ColonEqualsToken)
+        if (IsExpressionNameToken(Current.Kind) && Peek(1).Kind == SyntaxKind.ColonEqualsToken)
         {
             var identifierToken = NextToken();
             var colonEqualsToken = NextToken();

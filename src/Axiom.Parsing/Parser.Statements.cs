@@ -36,9 +36,10 @@ public sealed partial class Parser
             SyntaxKind.ForKeyword => ParseForStatement(),
             SyntaxKind.DoKeyword => ParseDoLoopStatement(),
             SyntaxKind.WhileKeyword => ParseWhileStatement(),
+            SyntaxKind.TryKeyword => ParseTryStatement(),
             SyntaxKind.ExitKeyword => ParseExitStatement(),
             SyntaxKind.ReturnKeyword => ParseReturnStatement(),
-            SyntaxKind.IdentifierToken => ParseIdentifierLeadingStatement(),
+            SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword => ParseIdentifierLeadingStatement(),
             _ => new ExpressionStatementSyntax(ParseExpression())
         };
     }
@@ -515,6 +516,47 @@ public sealed partial class Parser
         return new DoLoopStatementSyntax(doKeyword, leadingCondition, statements, loopKeyword, trailingCondition);
     }
 
+    private TryStatementSyntax ParseTryStatement()
+    {
+        var tryKeyword = Match(SyntaxKind.TryKeyword, "TRY");
+        SkipNewLines();
+
+        var statements = ParseStatementsUntil(static parser =>
+            parser.IsCatchClauseStart() || parser.IsFinallyClauseStart() || parser.IsEndTry());
+
+        CatchClauseSyntax? catchClause = null;
+        FinallyClauseSyntax? finallyClause = null;
+
+        if (IsCatchClauseStart())
+        {
+            var catchKeyword = NextToken();
+            var identifier = MatchIdentifier();
+            SkipNewLines();
+
+            var catchStatements = ParseStatementsUntil(static parser =>
+                parser.IsFinallyClauseStart() || parser.IsEndTry());
+
+            catchClause = new CatchClauseSyntax(catchKeyword, identifier, catchStatements);
+        }
+
+        if (IsFinallyClauseStart())
+        {
+            var finallyKeyword = NextToken();
+            SkipNewLines();
+
+            var finallyStatements = ParseStatementsUntil(static parser => parser.IsEndTry());
+            finallyClause = new FinallyClauseSyntax(finallyKeyword, finallyStatements);
+        }
+
+        if (catchClause is null && finallyClause is null)
+        {
+            ReportExpectedToken("CATCH РёР»Рё FINALLY");
+        }
+
+        var (endKeyword, endTryKeyword) = MatchEndPair(SyntaxKind.TryKeyword, "END TRY");
+        return new TryStatementSyntax(tryKeyword, statements, catchClause, finallyClause, endKeyword, endTryKeyword);
+    }
+
     private DoLoopConditionClauseSyntax? ParseOptionalDoLoopConditionClause()
     {
         if (!IsDoLoopConditionKeyword())
@@ -548,7 +590,9 @@ public sealed partial class Parser
 
     private StatementSyntax ParseIdentifierLeadingStatement()
     {
-        var identifier = MatchIdentifier();
+        var identifier = Current.Kind == SyntaxKind.SelfKeyword
+            ? NextToken()
+            : MatchIdentifier();
         var target = ParsePostfixExpression(new NameExpressionSyntax(identifier));
 
         if (Current.Kind == SyntaxKind.EqualsToken)

@@ -193,6 +193,46 @@ public sealed class ElseIfClauseSyntax : SyntaxNode
     public IReadOnlyList<StatementSyntax> Statements { get; }
 }
 
+public sealed class CatchClauseSyntax : SyntaxNode
+{
+    public CatchClauseSyntax(SyntaxToken catchKeyword, SyntaxToken identifier, IReadOnlyList<StatementSyntax> statements)
+    {
+        ArgumentNullException.ThrowIfNull(catchKeyword);
+        ArgumentNullException.ThrowIfNull(identifier);
+        ArgumentNullException.ThrowIfNull(statements);
+
+        CatchKeyword = catchKeyword;
+        Identifier = identifier;
+        Statements = statements;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.CatchClause;
+
+    public SyntaxToken CatchKeyword { get; }
+
+    public SyntaxToken Identifier { get; }
+
+    public IReadOnlyList<StatementSyntax> Statements { get; }
+}
+
+public sealed class FinallyClauseSyntax : SyntaxNode
+{
+    public FinallyClauseSyntax(SyntaxToken finallyKeyword, IReadOnlyList<StatementSyntax> statements)
+    {
+        ArgumentNullException.ThrowIfNull(finallyKeyword);
+        ArgumentNullException.ThrowIfNull(statements);
+
+        FinallyKeyword = finallyKeyword;
+        Statements = statements;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.FinallyClause;
+
+    public SyntaxToken FinallyKeyword { get; }
+
+    public IReadOnlyList<StatementSyntax> Statements { get; }
+}
+
 public sealed class StepClauseSyntax : SyntaxNode
 {
     public StepClauseSyntax(SyntaxToken stepKeyword, ExpressionSyntax expression)
@@ -499,6 +539,44 @@ public sealed class DoLoopStatementSyntax : StatementSyntax
     public SyntaxToken LoopKeyword { get; }
 
     public DoLoopConditionClauseSyntax? TrailingCondition { get; }
+}
+
+public sealed class TryStatementSyntax : StatementSyntax
+{
+    public TryStatementSyntax(
+        SyntaxToken tryKeyword,
+        IReadOnlyList<StatementSyntax> statements,
+        CatchClauseSyntax? catchClause,
+        FinallyClauseSyntax? finallyClause,
+        SyntaxToken endKeyword,
+        SyntaxToken endTryKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(tryKeyword);
+        ArgumentNullException.ThrowIfNull(statements);
+        ArgumentNullException.ThrowIfNull(endKeyword);
+        ArgumentNullException.ThrowIfNull(endTryKeyword);
+
+        TryKeyword = tryKeyword;
+        Statements = statements;
+        CatchClause = catchClause;
+        FinallyClause = finallyClause;
+        EndKeyword = endKeyword;
+        EndTryKeyword = endTryKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.TryStatement;
+
+    public SyntaxToken TryKeyword { get; }
+
+    public IReadOnlyList<StatementSyntax> Statements { get; }
+
+    public CatchClauseSyntax? CatchClause { get; }
+
+    public FinallyClauseSyntax? FinallyClause { get; }
+
+    public SyntaxToken EndKeyword { get; }
+
+    public SyntaxToken EndTryKeyword { get; }
 }
 
 public sealed class ExitForStatementSyntax : StatementSyntax

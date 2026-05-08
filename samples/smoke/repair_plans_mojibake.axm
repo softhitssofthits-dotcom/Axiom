@@ -22,8 +22,8 @@
 '   части и чинит только те, которые действительно похожи на типичную поломку
 '   UTF-8 -> ошибочное чтение как Windows-1251.
 
-DIM sourcePath AS STRING = "C:\Axiom\src\Axiom.Bytecode\Lowering\BoundProgramLowerer.cs" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
-DIM workPath AS STRING = "C:\Axiom\src\Axiom.Bytecode\Lowering\BoundProgramLowerer_copy.cs" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
+DIM sourcePath AS STRING = "C:\Axiom\docs\PLANS3.md" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
+DIM workPath AS STRING = "C:\Axiom\docs\PLANS3_copy.md" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
 Dim sourceText As String ' Здесь будет весь текст рабочей копии до исправления.
 Dim repairedText As String ' Здесь будет весь текст рабочей копии после исправления.
 

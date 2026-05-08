@@ -1,0 +1,16 @@
+TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 0
+
+    SUB New(name AS STRING, age AS INTEGER)
+        SELF.Name = name
+        SELF.Age = age
+    END SUB
+
+    FUNCTION IsValid() AS BOOLEAN
+        RETURN SELF.Name <> "" AND SELF.Age >= 0
+    END FUNCTION
+END TYPE
+
+PRINT Person("Ada", 20).Name
+PRINT Person("Ada", 20).Age

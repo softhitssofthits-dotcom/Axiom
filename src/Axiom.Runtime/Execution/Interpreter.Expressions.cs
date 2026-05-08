@@ -15,6 +15,7 @@ public sealed partial class Interpreter
             BoundArrayAccessExpression arrayAccess => EvaluateArrayAccessExpression(arrayAccess),
             BoundFieldAccessExpression fieldAccess => EvaluateFieldAccessExpression(fieldAccess),
             BoundRecordLiteralExpression recordLiteral => EvaluateRecordLiteralExpression(recordLiteral),
+            BoundTypeConstructorExpression typeConstructor => EvaluateTypeConstructorExpression(typeConstructor),
             BoundUnaryExpression unary => EvaluateUnaryExpression(unary),
             BoundBinaryExpression binary => EvaluateBinaryExpression(binary),
             BoundCallExpression call => EvaluateCallExpression(call),
@@ -73,6 +74,12 @@ public sealed partial class Interpreter
     private RuntimeValue EvaluateFieldAccessExpression(BoundFieldAccessExpression expression)
     {
         var target = EvaluateExpression(expression.Target);
+
+        if (target.Type == TypeSymbol.RuntimeError)
+        {
+            return target.AsRuntimeError().GetField(expression.Field);
+        }
+
         return target.AsRecord().GetField(expression.Field);
     }
 
@@ -86,6 +93,16 @@ public sealed partial class Interpreter
         }
 
         return RuntimeValue.FromRecord(expression.RecordType, record);
+    }
+
+    private RuntimeValue EvaluateTypeConstructorExpression(BoundTypeConstructorExpression expression)
+    {
+        var selfValue = RuntimeValue.FromRecord(expression.RecordType, RuntimeRecordValue.CreateDefault(expression.RecordType));
+        var arguments = expression.Arguments
+            .Select(EvaluateExpression)
+            .ToArray();
+
+        return InvokeTypeConstructor(expression, selfValue, arguments);
     }
 
     private RuntimeValue EvaluateUnaryExpression(BoundUnaryExpression expression)

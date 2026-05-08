@@ -47,6 +47,10 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/operators/function/fixed_string_return_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
     [InlineData("samples/acceptance/negative/type_default_non_constant.axm", ExecutionStatus.SemanticFailure, "MB2027")]
     [InlineData("samples/acceptance/negative/byref_requires_variable.axm", ExecutionStatus.SemanticFailure, "MB2028")]
+    [InlineData("samples/acceptance/negative/type_literal_mixed_modes.axm", ExecutionStatus.SemanticFailure, "MB2031")]
+    [InlineData("samples/acceptance/negative/type_literal_positional_arity.axm", ExecutionStatus.SemanticFailure, "MB2032")]
+    [InlineData("samples/acceptance/negative/type_method_overload_ambiguous.axm", ExecutionStatus.SemanticFailure, "MB2033")]
+    [InlineData("samples/acceptance/negative/type_constructor_invariant_false.axm", ExecutionStatus.RuntimeFailure, "MB3005")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -917,6 +921,58 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void TypePositionalLiteralAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/positional_constructor.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["Ada", "36", "Paris", "Grace", "40", "TRUE"], result.Output);
+    }
+
+    [Fact]
+    public void TypeMethodsAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/methods_self.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["5", "5", "8", "8"], result.Output);
+    }
+
+    [Fact]
+    public void TypeMethodReceiversFieldAndArrayAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/method_receivers_field_and_array.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["5", "7", "8", "9"], result.Output);
+    }
+
+    [Fact]
+    public void TypeConstructorNewAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/constructor_new.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["Zero", "18", "Ada", "19", "20", "RUS", "Grace", "18", "19"], result.Output);
+    }
+
+    [Fact]
     public void TypeDefaultFieldValuesAcceptanceSample_RunsSuccessfully()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/default_field_values.axm");
@@ -1045,7 +1101,29 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
     }
 
+    [Fact]
+    public void TypePositionalLiteralAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/positional_constructor.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["Ada", "36", "Paris", "Grace", "40", "TRUE"], result.Output);
+    }
+
     [Theory]
+    [InlineData("samples/operators/type/methods_self.axm", new[] { "5", "5", "8", "8" })]
+    [InlineData("samples/operators/type/method_receivers_field_and_array.axm", new[] { "5", "7", "8", "9" })]
+    [InlineData("samples/operators/type/method_receivers_temporary.axm", new[] { "1", "2", "3", "4", "6" })]
+    [InlineData("samples/operators/type/method_overloads.axm", new[] { "2", "Alpha", "7", "Beta" })]
+    [InlineData("samples/operators/type/constructor_new.axm", new[] { "Zero", "18", "Ada", "19", "20", "RUS", "Grace", "18", "19" })]
+    [InlineData("samples/operators/type/constructor_invariant.axm", new[] { "Ada", "20" })]
+    [InlineData("samples/operators/type/positional_constructor.axm", new[] { "Ada", "36", "Paris", "Grace", "40", "TRUE" })]
     [InlineData("samples/operators/type/default_field_values.axm", new[] { "Ada", "36", "TRUE" })]
     [InlineData("samples/operators/type/partial_named_literal_defaults.axm", new[] { "Grace", "36", "TRUE" })]
     [InlineData("samples/operators/type/structural_equality.axm", new[] { "TRUE", "FALSE", "FALSE", "TRUE" })]
@@ -1164,6 +1242,20 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["", "", "0", "Ada", "Analyst", "99", "20", "7"], result.Output);
+    }
+
+    [Fact]
+    public void TryCatchAcceptanceSample_RunsOnInterpreter()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/try/handled_runtime_error.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Interpreter);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(["before", "caught", "3001", "4", "cleanup", "after"], result.Output);
     }
 
     [Fact]
@@ -1330,6 +1422,11 @@ public sealed class AcceptanceProgramTests
         }
 
         if (relativePath.Equals("samples/smoke/repair_plans_mojibake.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (relativePath.StartsWith("samples/operators/try/", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

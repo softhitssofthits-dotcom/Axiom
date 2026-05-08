@@ -151,6 +151,7 @@ public sealed class BytecodeRoutine
             Opcode.LoadField => 0,
             Opcode.StoreField => -2,
             Opcode.CallBuiltin => 0,
+            Opcode.ValidateTypeInvariant => -1,
             Opcode.ValidateForStep => -1,
             Opcode.AdvanceForLoopLocal => 0,
             Opcode.PrintValue => -1,

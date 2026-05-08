@@ -867,6 +867,92 @@ LOOP
     }
 
     [Fact]
+    public void Parse_TryCatchStatement()
+    {
+        const string text = """
+TRY
+    PRINT 1
+CATCH err
+    PRINT err.Code
+END TRY
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<TryStatementSyntax>(program);
+        Assert.Equal(SyntaxKind.TryKeyword, statement.TryKeyword.Kind);
+        Assert.Single(statement.Statements);
+        Assert.NotNull(statement.CatchClause);
+        Assert.Equal("err", statement.CatchClause!.Identifier.Text);
+        Assert.Single(statement.CatchClause.Statements);
+        Assert.Null(statement.FinallyClause);
+        Assert.Equal(SyntaxKind.EndKeyword, statement.EndKeyword.Kind);
+        Assert.Equal(SyntaxKind.TryKeyword, statement.EndTryKeyword.Kind);
+    }
+
+    [Fact]
+    public void Parse_TryFinallyStatement()
+    {
+        const string text = """
+TRY
+    PRINT 1
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<TryStatementSyntax>(program);
+        Assert.Single(statement.Statements);
+        Assert.Null(statement.CatchClause);
+        Assert.NotNull(statement.FinallyClause);
+        Assert.Single(statement.FinallyClause!.Statements);
+    }
+
+    [Fact]
+    public void Parse_TryCatchFinallyStatement()
+    {
+        const string text = """
+TRY
+    PRINT 1
+CATCH err
+    PRINT err.Message
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<TryStatementSyntax>(program);
+        Assert.Single(statement.Statements);
+        Assert.NotNull(statement.CatchClause);
+        Assert.Single(statement.CatchClause!.Statements);
+        Assert.NotNull(statement.FinallyClause);
+        Assert.Single(statement.FinallyClause!.Statements);
+    }
+
+    [Fact]
+    public void Parse_ReportsTryWithoutCatchOrFinally()
+    {
+        const string text = """
+TRY
+    PRINT 1
+END TRY
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB1001");
+        Assert.Contains("CATCH", diagnostic.Message);
+        Assert.Contains("FINALLY", diagnostic.Message);
+    }
+
+    [Fact]
     public void Parse_ExitForStatement()
     {
         var program = ParseProgram("EXIT FOR", out var diagnostics);
@@ -1275,6 +1361,89 @@ PRINT Person(Name := "Ada", Age := 36)
                 Assert.Equal("Age", named.IdentifierToken.Text);
                 Assert.Equal(SyntaxKind.ColonEqualsToken, named.ColonEqualsToken.Kind);
             });
+    }
+
+    [Fact]
+    public void Parse_TypePositionalLiteral()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+PRINT Person("Ada", 36)
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var print = Assert.IsType<PrintStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        var call = Assert.IsType<CallExpressionSyntax>(AssertSinglePrintExpression(print));
+        Assert.Equal("Person", Assert.IsType<NameExpressionSyntax>(call.Target).IdentifierToken.Text);
+        Assert.Collection(
+            call.Arguments,
+            first => Assert.Equal("Ada", Assert.IsType<LiteralExpressionSyntax>(first).LiteralToken.Value),
+            second => Assert.Equal(36, Assert.IsType<LiteralExpressionSyntax>(second).LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_TypeDeclarationWithMethodsAndSelfAssignments()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var typeDeclaration = Assert.IsType<TypeDeclarationSyntax>(Assert.Single(program.Members));
+        Assert.Single(typeDeclaration.Fields);
+        Assert.Equal(2, typeDeclaration.Methods.Count);
+
+        var subDeclaration = Assert.IsType<SubDeclarationSyntax>(typeDeclaration.Methods[0]);
+        var assignment = Assert.IsType<AssignmentStatementSyntax>(Assert.Single(subDeclaration.Statements));
+        var assignmentTarget = Assert.IsType<FieldAccessExpressionSyntax>(assignment.Target);
+        Assert.Equal(SyntaxKind.SelfKeyword, Assert.IsType<NameExpressionSyntax>(assignmentTarget.Target).IdentifierToken.Kind);
+
+        var functionDeclaration = Assert.IsType<FunctionDeclarationSyntax>(typeDeclaration.Methods[1]);
+        var returnStatement = Assert.IsType<ReturnStatementSyntax>(Assert.Single(functionDeclaration.Statements));
+        var returnTarget = Assert.IsType<FieldAccessExpressionSyntax>(returnStatement.Expression);
+        Assert.Equal(SyntaxKind.SelfKeyword, Assert.IsType<NameExpressionSyntax>(returnTarget.Target).IdentifierToken.Kind);
+    }
+
+    [Fact]
+    public void Parse_TypeDeclarationWithConstructor()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+    END SUB
+END TYPE
+""";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var typeDeclaration = Assert.IsType<TypeDeclarationSyntax>(Assert.Single(program.Members));
+        var constructor = Assert.IsType<SubDeclarationSyntax>(Assert.Single(typeDeclaration.Methods));
+        Assert.Equal("New", constructor.Identifier.Text);
+        var assignment = Assert.IsType<AssignmentStatementSyntax>(Assert.Single(constructor.Statements));
+        var assignmentTarget = Assert.IsType<FieldAccessExpressionSyntax>(assignment.Target);
+        Assert.Equal(SyntaxKind.SelfKeyword, Assert.IsType<NameExpressionSyntax>(assignmentTarget.Target).IdentifierToken.Kind);
     }
 
     [Fact]

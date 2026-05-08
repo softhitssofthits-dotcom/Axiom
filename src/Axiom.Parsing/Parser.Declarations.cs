@@ -22,6 +22,7 @@ public sealed partial class Parser
         SkipNewLines();
 
         var fields = new List<TypeFieldSyntax>();
+        var methods = new List<MemberSyntax>();
 
         while (Current.Kind != SyntaxKind.EndOfFileToken && !IsEndType())
         {
@@ -33,12 +34,26 @@ public sealed partial class Parser
                 continue;
             }
 
-            fields.Add(ParseTypeField());
+            switch (Current.Kind)
+            {
+                case SyntaxKind.SubKeyword:
+                    methods.Add(ParseSubDeclaration());
+                    break;
+
+                case SyntaxKind.FunctionKeyword:
+                    methods.Add(ParseFunctionDeclaration());
+                    break;
+
+                default:
+                    fields.Add(ParseTypeField());
+                    break;
+            }
+
             SkipNewLines();
         }
 
         var (endKeyword, endTypeKeyword) = MatchEndPair(SyntaxKind.TypeKeyword, "END TYPE");
-        return new TypeDeclarationSyntax(typeKeyword, identifier, fields, endKeyword, endTypeKeyword);
+        return new TypeDeclarationSyntax(typeKeyword, identifier, fields, methods, endKeyword, endTypeKeyword);
     }
 
     private TypeFieldSyntax ParseTypeField()

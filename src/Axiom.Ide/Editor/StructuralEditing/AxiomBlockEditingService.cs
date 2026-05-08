@@ -20,6 +20,9 @@ public sealed class AxiomBlockEditingService
     private static readonly Regex SubHeaderRegex = new(@"^SUB\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex FunctionHeaderRegex = new(@"^FUNCTION\b.+\bAS\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex TypeHeaderRegex = new(@"^TYPE\s+[\p{L}_][\p{L}\p{Nd}_]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex TryHeaderRegex = new(@"^TRY$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex CatchHeaderRegex = new(@"^CATCH\s+[\p{L}_][\p{L}\p{Nd}_]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex FinallyHeaderRegex = new(@"^FINALLY$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex CaseElseHeaderRegex = new(@"^CASE\s+ELSE$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex CaseHeaderRegex = new(@"^CASE\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
@@ -31,6 +34,7 @@ public sealed class AxiomBlockEditingService
     private static readonly Regex EndSubRegex = new(@"^END\s+SUB$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex EndFunctionRegex = new(@"^END\s+FUNCTION$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex EndTypeRegex = new(@"^END\s+TYPE$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex EndTryRegex = new(@"^END\s+TRY$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private readonly ICodeFormattingService _formattingService;
 
@@ -183,6 +187,8 @@ public sealed class AxiomBlockEditingService
             BranchLineKind.Else => BlockOpeningKind.If,
             BranchLineKind.Case => BlockOpeningKind.SelectCase,
             BranchLineKind.CaseElse => BlockOpeningKind.SelectCase,
+            BranchLineKind.Catch => BlockOpeningKind.Try,
+            BranchLineKind.Finally => BlockOpeningKind.Try,
             _ => throw new ArgumentOutOfRangeException(nameof(branchKind))
         };
 
@@ -293,6 +299,7 @@ public sealed class AxiomBlockEditingService
             BlockOpeningKind.Sub => "END SUB",
             BlockOpeningKind.Function => "END FUNCTION",
             BlockOpeningKind.Type => "END TYPE",
+            BlockOpeningKind.Try => "END TRY",
             _ => throw new ArgumentOutOfRangeException(nameof(openingKind))
         };
 
@@ -310,6 +317,7 @@ public sealed class AxiomBlockEditingService
             BlockOpeningKind.Sub => BlockClosingKind.EndSub,
             BlockOpeningKind.Function => BlockClosingKind.EndFunction,
             BlockOpeningKind.Type => BlockClosingKind.EndType,
+            BlockOpeningKind.Try => BlockClosingKind.EndTry,
             _ => throw new ArgumentOutOfRangeException(nameof(openingKind))
         };
 
@@ -400,6 +408,16 @@ public sealed class AxiomBlockEditingService
             return new LineAnalysis(indentation, BranchKind: BranchLineKind.Case, IncreasesIndentNextLine: true);
         }
 
+        if (CatchHeaderRegex.IsMatch(body))
+        {
+            return new LineAnalysis(indentation, BranchKind: BranchLineKind.Catch, IncreasesIndentNextLine: true);
+        }
+
+        if (FinallyHeaderRegex.IsMatch(body))
+        {
+            return new LineAnalysis(indentation, BranchKind: BranchLineKind.Finally, IncreasesIndentNextLine: true);
+        }
+
         if (IfHeaderRegex.IsMatch(body))
         {
             return new LineAnalysis(indentation, BlockOpeningKind.If, IncreasesIndentNextLine: true);
@@ -435,6 +453,11 @@ public sealed class AxiomBlockEditingService
             return new LineAnalysis(indentation, BlockOpeningKind.Type, IncreasesIndentNextLine: true);
         }
 
+        if (TryHeaderRegex.IsMatch(body))
+        {
+            return new LineAnalysis(indentation, BlockOpeningKind.Try, IncreasesIndentNextLine: true);
+        }
+
         if (SubHeaderRegex.IsMatch(body))
         {
             return new LineAnalysis(indentation, BlockOpeningKind.Sub, IncreasesIndentNextLine: true);
@@ -468,6 +491,11 @@ public sealed class AxiomBlockEditingService
         if (EndTypeRegex.IsMatch(body))
         {
             return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndType);
+        }
+
+        if (EndTryRegex.IsMatch(body))
+        {
+            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndTry);
         }
 
         if (NextRegex.IsMatch(body))
@@ -564,7 +592,8 @@ public sealed class AxiomBlockEditingService
         Do,
         Sub,
         Function,
-        Type
+        Type,
+        Try
     }
 
     private enum BlockClosingKind
@@ -576,7 +605,8 @@ public sealed class AxiomBlockEditingService
         Loop,
         EndSub,
         EndFunction,
-        EndType
+        EndType,
+        EndTry
     }
 
     private enum BranchLineKind
@@ -584,6 +614,8 @@ public sealed class AxiomBlockEditingService
         ElseIf,
         Else,
         Case,
-        CaseElse
+        CaseElse,
+        Catch,
+        Finally
     }
 }

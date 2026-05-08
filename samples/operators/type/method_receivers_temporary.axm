@@ -1,0 +1,32 @@
+' TYPE-методы можно вызывать у временных получателей записи.
+' Мутации внутри вызова работают через скрытую временную копию
+' и не сохраняются после конца выражения.
+' Ожидаемый вывод:
+' 1
+' 2
+' 3
+' 4
+' 6
+
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+FUNCTION MakeCounter(value AS INTEGER) AS Counter
+    RETURN Counter(value)
+END FUNCTION
+
+PRINT Counter(1).Current()
+PRINT MakeCounter(2).Current()
+PRINT Counter(3).Current()
+Counter(4).Increment(5)
+PRINT Counter(4).Current()
+PRINT MakeCounter(6).Current()

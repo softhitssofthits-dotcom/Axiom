@@ -771,6 +771,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.StoreField => EmitFieldInstruction(instruction, Opcode.StoreField),
             LoweredInstructionKind.OpenFile => EmitOpenFile(instruction),
             LoweredInstructionKind.CloseFile => new BytecodeInstruction(Opcode.CloseFile),
+            LoweredInstructionKind.ValidateTypeInvariant => EmitValidateTypeInvariant(instruction),
             LoweredInstructionKind.ValidateForStep => new BytecodeInstruction(Opcode.ValidateForStep),
             LoweredInstructionKind.PrintValue => new BytecodeInstruction(Opcode.PrintValue),
             LoweredInstructionKind.PrintUsing => EmitPrintUsing(instruction),
@@ -1131,13 +1132,6 @@ public sealed class BytecodeCompiler
             var variable = instruction.Variables[index];
             operands.Add(instruction.IntegerOperands[index]);
 
-            if (variable.IsGlobal)
-            {
-                operands.Add(0);
-                operands.Add(RegisterGlobal(variable));
-                continue;
-            }
-
             if (variable is ParameterSymbol parameter && parameterSlots.TryGetValue(parameter, out var parameterSlot))
             {
                 operands.Add(1);
@@ -1156,6 +1150,13 @@ public sealed class BytecodeCompiler
             {
                 operands.Add(3);
                 operands.Add(captureSlot);
+                continue;
+            }
+
+            if (variable.IsGlobal)
+            {
+                operands.Add(0);
+                operands.Add(RegisterGlobal(variable));
                 continue;
             }
 
@@ -1204,6 +1205,11 @@ public sealed class BytecodeCompiler
     private BytecodeInstruction EmitCreateRecord(LoweredInstruction instruction)
     {
         return new BytecodeInstruction(Opcode.CreateRecord, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+    }
+
+    private BytecodeInstruction EmitValidateTypeInvariant(LoweredInstruction instruction)
+    {
+        return new BytecodeInstruction(Opcode.ValidateTypeInvariant, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
     }
 
     private BytecodeInstruction EmitOpenFile(LoweredInstruction instruction)

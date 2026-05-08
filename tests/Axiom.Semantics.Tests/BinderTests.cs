@@ -4580,6 +4580,79 @@ PRINT Add(x := 1, y := 2)
     }
 
     [Fact]
+    public void Bind_TypePositionalLiteralBindsFieldsInDeclarationOrder()
+    {
+        const string text = """
+TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+user = Person("Ada", 36, Address("Paris"))
+PRINT user.Home.City
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
+        var literal = Assert.IsType<BoundRecordLiteralExpression>(assignment.Expression);
+        Assert.Collection(
+            literal.Initializers,
+            first => Assert.Equal("Name", first.Field.Name),
+            second => Assert.Equal("Age", second.Field.Name),
+            third => Assert.Equal("Home", third.Field.Name));
+
+        var nestedLiteral = Assert.IsType<BoundRecordLiteralExpression>(literal.Initializers[2].Expression);
+        var nestedInitializer = Assert.Single(nestedLiteral.Initializers);
+        Assert.Equal("City", nestedInitializer.Field.Name);
+    }
+
+    [Fact]
+    public void Bind_ReportsMixedTypeLiteralInitializationModes()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+DIM user AS Person
+user = Person("Ada", Age := 36)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2031");
+        Assert.Contains("Person", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsTypeLiteralPositionalArityMismatch()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
+
+DIM user AS Person
+user = Person("Ada")
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2032");
+        Assert.Contains("Person", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_ReportsRedimAndEraseForFixedTypeArrayField()
     {
         const string text = """
@@ -4660,6 +4733,499 @@ Touch(number + 1)
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2028");
         Assert.Contains("BYREF", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TypeMethodCallsInjectSelfArgument()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+DIM counter AS Counter
+counter.Increment(2)
+PRINT counter.Current()
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.Equal(["Counter.Increment", "Counter.Current"], program.Routines.Select(static routine => routine.Symbol.Name));
+        Assert.All(program.Routines, static routine =>
+        {
+            Assert.Equal("SELF", routine.Symbol.Parameters[0].Name);
+            Assert.True(routine.Symbol.Parameters[0].IsByRef);
+        });
+
+        var callStatement = Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[1]);
+        var call = Assert.IsType<BoundCallExpression>(callStatement.Expression);
+        Assert.Equal("Counter.Increment", AssertCalledFunction(call).Name);
+        Assert.Equal(2, call.Arguments.Count);
+        Assert.Equal("counter", Assert.IsType<BoundVariableExpression>(call.Arguments[0]).Variable.Name);
+
+        var printExpression = AssertSinglePrintExpression(program.GlobalStatements[2]);
+        var printCall = Assert.IsType<BoundCallExpression>(printExpression);
+        Assert.Equal("Counter.Current", AssertCalledFunction(printCall).Name);
+        Assert.Single(printCall.Arguments);
+        Assert.Equal("counter", Assert.IsType<BoundVariableExpression>(printCall.Arguments[0]).Variable.Name);
+    }
+
+    [Fact]
+    public void Bind_TypeMethodCallsAcceptFieldAndArrayElementReceivers()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+END TYPE
+
+TYPE Holder
+    Item AS Counter
+END TYPE
+
+DIM holder AS Holder
+DIM counters(1 TO 2) AS Counter
+holder.Item.Increment(2)
+counters(1).Increment(3)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var fieldCallStatement = Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[2]);
+        var fieldCall = Assert.IsType<BoundCallExpression>(fieldCallStatement.Expression);
+        Assert.IsType<BoundFieldAccessExpression>(fieldCall.Arguments[0]);
+
+        var arrayCallStatement = Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[3]);
+        var arrayCall = Assert.IsType<BoundCallExpression>(arrayCallStatement.Expression);
+        Assert.IsType<BoundArrayAccessExpression>(arrayCall.Arguments[0]);
+    }
+
+    [Fact]
+    public void Bind_TypeMethodCallsAcceptTemporaryReceivers()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+
+    FUNCTION Current() AS INTEGER
+        RETURN SELF.Value
+    END FUNCTION
+END TYPE
+
+FUNCTION MakeCounter(value AS INTEGER) AS Counter
+    RETURN Counter(value)
+END FUNCTION
+
+PRINT Counter(Value := 1).Current()
+PRINT MakeCounter(2).Current()
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var firstPrint = Assert.IsType<BoundCallExpression>(AssertSinglePrintExpression(program.GlobalStatements[0]));
+        Assert.IsType<BoundRecordLiteralExpression>(firstPrint.Arguments[0]);
+
+        var secondPrint = Assert.IsType<BoundCallExpression>(AssertSinglePrintExpression(program.GlobalStatements[1]));
+        var receiverCall = Assert.IsType<BoundCallExpression>(secondPrint.Arguments[0]);
+        Assert.Equal("MakeCounter", AssertCalledFunction(receiverCall).Name);
+    }
+
+    [Fact]
+    public void Bind_TypeMethodsSupportOverloadsBySignature()
+    {
+        const string text = """
+TYPE Counter
+    Value AS INTEGER
+    Label AS STRING
+
+    SUB Set(value AS INTEGER)
+        SELF.Value = value
+    END SUB
+
+    SUB Set(label AS STRING)
+        SELF.Label = label
+    END SUB
+
+    SUB Set(value AS INTEGER, label AS STRING)
+        SELF.Value = value
+        SELF.Label = label
+    END SUB
+END TYPE
+
+DIM counter AS Counter
+counter.Set(2)
+counter.Set("A")
+counter.Set(3, "B")
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var integerCall = Assert.IsType<BoundCallExpression>(Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[1]).Expression);
+        Assert.Equal(TypeSymbol.Integer, AssertCalledFunction(integerCall).Parameters[1].Type);
+
+        var stringCall = Assert.IsType<BoundCallExpression>(Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[2]).Expression);
+        Assert.Equal(TypeSymbol.String, AssertCalledFunction(stringCall).Parameters[1].Type);
+
+        var mixedCall = Assert.IsType<BoundCallExpression>(Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[3]).Expression);
+        Assert.Equal(TypeSymbol.Integer, AssertCalledFunction(mixedCall).Parameters[1].Type);
+        Assert.Equal(TypeSymbol.String, AssertCalledFunction(mixedCall).Parameters[2].Type);
+    }
+
+    [Fact]
+    public void Bind_ReportsDuplicateTypeMethodSignature()
+    {
+        const string text = """
+TYPE Counter
+    SUB Set(value AS INTEGER)
+    END SUB
+
+    FUNCTION Set(value AS INTEGER) AS INTEGER
+        RETURN value
+    END FUNCTION
+END TYPE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2002");
+        Assert.Contains("Set(INTEGER)", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsAmbiguousTypeMethodCall()
+    {
+        const string text = """
+TYPE Counter
+    Value AS DOUBLE
+
+    SUB Set(value AS LONG)
+        SELF.Value = value
+    END SUB
+
+    SUB Set(value AS DOUBLE)
+        SELF.Value = value
+    END SUB
+END TYPE
+
+DIM counter AS Counter
+counter.Set(1)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2033");
+        Assert.Contains("Set", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TypeConstructorSupportsOverloadsAndNamedLiteralRemainsAvailable()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 18
+
+    SUB New()
+        SELF.Name = "Zero"
+    END SUB
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+        SELF.Age = SELF.Age + 1
+    END SUB
+
+    SUB New(name AS STRING, age AS INTEGER)
+        SELF.Name = name
+        SELF.Age = age
+    END SUB
+END TYPE
+
+PRINT Person()
+PRINT Person("Ada")
+PRINT Person("Lin", 20)
+PRINT Person(Name := "Grace")
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.Equal(3, program.Routines.Count);
+        Assert.All(program.Routines, routine => Assert.Equal("Person.New", routine.Symbol.Name));
+        Assert.All(program.Routines, routine => Assert.Equal("SELF", routine.Symbol.Parameters[0].Name));
+
+        var zeroConstructorPrint = Assert.IsType<BoundTypeConstructorExpression>(AssertSinglePrintExpression(program.GlobalStatements[0]));
+        Assert.Empty(zeroConstructorPrint.Arguments);
+
+        var oneArgumentConstructorPrint = Assert.IsType<BoundTypeConstructorExpression>(AssertSinglePrintExpression(program.GlobalStatements[1]));
+        Assert.Single(oneArgumentConstructorPrint.Arguments);
+
+        var twoArgumentConstructorPrint = Assert.IsType<BoundTypeConstructorExpression>(AssertSinglePrintExpression(program.GlobalStatements[2]));
+        Assert.Equal(2, twoArgumentConstructorPrint.Arguments.Count);
+
+        var literalPrint = Assert.IsType<BoundRecordLiteralExpression>(AssertSinglePrintExpression(program.GlobalStatements[3]));
+        Assert.Single(literalPrint.Initializers);
+    }
+
+    [Fact]
+    public void Bind_TypeConstructorSupportsSameArityWithDifferentTypes()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+    END SUB
+
+    SUB New(age AS INTEGER)
+        SELF.Age = age
+    END SUB
+END TYPE
+
+PRINT Person("Ada")
+PRINT Person(20)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var stringConstructorPrint = Assert.IsType<BoundTypeConstructorExpression>(AssertSinglePrintExpression(program.GlobalStatements[0]));
+        Assert.Equal(TypeSymbol.String, stringConstructorPrint.Constructor.Parameters[1].Type);
+
+        var integerConstructorPrint = Assert.IsType<BoundTypeConstructorExpression>(AssertSinglePrintExpression(program.GlobalStatements[1]));
+        Assert.Equal(TypeSymbol.Integer, integerConstructorPrint.Constructor.Parameters[1].Type);
+    }
+
+    [Fact]
+    public void Bind_ReportsFunctionNewInsideType()
+    {
+        const string text = """
+TYPE Person
+    FUNCTION New() AS INTEGER
+        RETURN 1
+    END FUNCTION
+END TYPE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2022");
+        Assert.Contains("SUB New", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsDuplicateTypeConstructorArity()
+    {
+        const string text = """
+TYPE Person
+    SUB New(name AS STRING)
+    END SUB
+
+    SUB New(title AS STRING)
+    END SUB
+END TYPE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2002");
+        Assert.Contains("New(STRING)", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsAmbiguousTypeConstructorCall()
+    {
+        const string text = """
+TYPE Person
+    Value AS DOUBLE
+
+    SUB New(value AS LONG)
+        SELF.Value = value
+    END SUB
+
+    SUB New(value AS DOUBLE)
+        SELF.Value = value
+    END SUB
+END TYPE
+
+PRINT Person(1)
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2033");
+        Assert.Contains("SUB New(LONG)", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TypeInvariantUsesSpecialIsValidFunction()
+    {
+        const string text = """
+TYPE Person
+    Name AS STRING
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+    END SUB
+
+    FUNCTION IsValid() AS BOOLEAN
+        RETURN SELF.Name <> ""
+    END FUNCTION
+END TYPE
+
+PRINT Person("Ada")
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.Equal(2, program.Routines.Count);
+        Assert.Contains(program.Routines, routine => routine.Symbol.Name == "Person.New");
+        Assert.Contains(program.Routines, routine => routine.Symbol.Name == "Person.IsValid");
+
+        var type = Assert.IsType<UserDefinedTypeSymbol>(AssertSinglePrintExpression(program.GlobalStatements[0]).Type);
+        Assert.True(type.TryGetInvariant(out var invariant));
+        Assert.Equal("Person.IsValid", invariant!.Name);
+    }
+
+    [Fact]
+    public void Bind_ReportsInvalidTypeInvariantDeclaration()
+    {
+        const string text = """
+TYPE Person
+    FUNCTION IsValid(name AS STRING) AS BOOLEAN
+        RETURN TRUE
+    END FUNCTION
+END TYPE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2022");
+        Assert.Contains("IsValid", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TryCatchStatementDeclaresRuntimeErrorVariable()
+    {
+        const string text = """
+TRY
+    PRINT 1
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+    PRINT err.Line
+    PRINT err.Column
+END TRY
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var tryStatement = Assert.IsType<BoundTryStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(TypeSymbol.RuntimeError, tryStatement.CatchVariable!.Type);
+        Assert.Equal("err", tryStatement.CatchVariable.Name);
+        Assert.Single(tryStatement.Statements);
+        Assert.Equal(4, tryStatement.CatchStatements.Count);
+
+        Assert.Equal(TypeSymbol.Integer, AssertSinglePrintExpression(tryStatement.CatchStatements[0]).Type);
+        Assert.Equal(TypeSymbol.String, AssertSinglePrintExpression(tryStatement.CatchStatements[1]).Type);
+        Assert.Equal(TypeSymbol.Integer, AssertSinglePrintExpression(tryStatement.CatchStatements[2]).Type);
+        Assert.Equal(TypeSymbol.Integer, AssertSinglePrintExpression(tryStatement.CatchStatements[3]).Type);
+    }
+
+    [Fact]
+    public void Bind_TryFinallyStatementBindsFinallyBranch()
+    {
+        const string text = """
+TRY
+    PRINT 1
+FINALLY
+    PRINT 2
+END TRY
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var tryStatement = Assert.IsType<BoundTryStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Null(tryStatement.CatchVariable);
+        Assert.Empty(tryStatement.CatchStatements);
+        Assert.Single(tryStatement.FinallyStatements);
+    }
+
+    [Fact]
+    public void Bind_TryCatchVariableDoesNotLeakOutsideCatch()
+    {
+        const string text = """
+TRY
+    PRINT 1
+CATCH err
+    PRINT err.Message
+END TRY
+
+PRINT err.Message
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2001");
+        Assert.Contains("err", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TryCatchVariableReportsOuterNameConflict()
+    {
+        const string text = """
+DIM err AS INTEGER
+TRY
+    PRINT 1
+CATCH err
+    PRINT err.Code
+END TRY
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2016");
+        Assert.Contains("err", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TryCatchVariableReportsUnknownRuntimeErrorField()
+    {
+        const string text = """
+TRY
+    PRINT 1
+CATCH err
+    PRINT err.Detail
+END TRY
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2023");
+        Assert.Contains("Detail", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

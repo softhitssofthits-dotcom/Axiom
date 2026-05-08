@@ -1,0 +1,40 @@
+﻿' Ожидаемый вывод: Zero, 18, Ada, 19, 20, RUS, Grace, 18, 19
+TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 18
+    Country AS STRING = "?"
+
+    SUB New()
+        SELF.Name = "Zero"
+    END SUB
+
+    SUB New(name AS STRING)
+        SELF.Name = name
+        SELF.Age = SELF.Age + 1
+    END SUB
+
+    SUB New(name AS STRING, age AS INTEGER)
+        SELF.Name = name
+        SELF.Age = age
+    END SUB
+
+    SUB New(countryCode AS STRING, isCountryCode AS BOOLEAN)
+        SELF.Country = countryCode
+    END SUB
+END TYPE
+
+FUNCTION BuildPerson(name AS STRING) AS Person
+    RETURN Person(name)
+END FUNCTION
+
+DIM zeroUser AS Person = Person()
+DIM user AS Person = Person("Ada")
+PRINT zeroUser.Name
+PRINT zeroUser.Age
+PRINT user.Name
+PRINT user.Age
+PRINT Person("Lin", 20).Age
+PRINT Person("RUS", TRUE).Country
+PRINT Person(Name := "Grace").Name
+PRINT Person(Name := "Grace").Age
+PRINT BuildPerson("Lin").Age

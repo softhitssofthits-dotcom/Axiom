@@ -11,6 +11,116 @@ public sealed class BoundProgramLowerer
     private HashSet<VariableSymbol> _currentRoutineLocals = [];
     private int _nextLabelId;
 
+    private abstract class ByRefStoragePlan
+    {
+        public abstract void EmitLoadValue(List<LoweredInstruction> instructions);
+
+        public abstract void EmitStoreValue(List<LoweredInstruction> instructions);
+    }
+
+    private sealed class VariableByRefStoragePlan : ByRefStoragePlan
+    {
+        private readonly VariableSymbol _variable;
+        private readonly Axiom.Core.TextLocation _location;
+
+        public VariableByRefStoragePlan(VariableSymbol variable, Axiom.Core.TextLocation location)
+        {
+            _variable = variable;
+            _location = location;
+        }
+
+        public override void EmitLoadValue(List<LoweredInstruction> instructions)
+        {
+            instructions.Add(LoweredInstruction.LoadVariable(_location, _variable));
+        }
+
+        public override void EmitStoreValue(List<LoweredInstruction> instructions)
+        {
+            instructions.Add(LoweredInstruction.StoreVariable(_location, _variable));
+        }
+    }
+
+    private sealed class FieldByRefStoragePlan : ByRefStoragePlan
+    {
+        private readonly ByRefStoragePlan _parent;
+        private readonly string _fieldName;
+        private readonly Axiom.Core.TextLocation _location;
+
+        public FieldByRefStoragePlan(ByRefStoragePlan parent, string fieldName, Axiom.Core.TextLocation location)
+        {
+            _parent = parent;
+            _fieldName = fieldName;
+            _location = location;
+        }
+
+        public override void EmitLoadValue(List<LoweredInstruction> instructions)
+        {
+            _parent.EmitLoadValue(instructions);
+            instructions.Add(LoweredInstruction.LoadField(_location, _fieldName));
+        }
+
+        public override void EmitStoreValue(List<LoweredInstruction> instructions)
+        {
+            _parent.EmitLoadValue(instructions);
+            instructions.Add(LoweredInstruction.StoreField(_location, _fieldName));
+        }
+    }
+
+    private sealed class ArrayElementByRefStoragePlan : ByRefStoragePlan
+    {
+        private readonly VariableSymbol _arrayTemporary;
+        private readonly VariableSymbol[] _indexTemporaries;
+        private readonly string _displayName;
+        private readonly Axiom.Core.TextLocation _location;
+
+        public ArrayElementByRefStoragePlan(
+            VariableSymbol arrayTemporary,
+            VariableSymbol[] indexTemporaries,
+            string displayName,
+            Axiom.Core.TextLocation location)
+        {
+            _arrayTemporary = arrayTemporary;
+            _indexTemporaries = indexTemporaries;
+            _displayName = displayName;
+            _location = location;
+        }
+
+        public override void EmitLoadValue(List<LoweredInstruction> instructions)
+        {
+            instructions.Add(LoweredInstruction.LoadVariable(_location, _arrayTemporary));
+            foreach (var indexTemporary in _indexTemporaries)
+            {
+                instructions.Add(LoweredInstruction.LoadVariable(_location, indexTemporary));
+            }
+
+            instructions.Add(LoweredInstruction.LoadElement(_location, _displayName, _indexTemporaries.Length));
+        }
+
+        public override void EmitStoreValue(List<LoweredInstruction> instructions)
+        {
+            instructions.Add(LoweredInstruction.LoadVariable(_location, _arrayTemporary));
+            foreach (var indexTemporary in _indexTemporaries)
+            {
+                instructions.Add(LoweredInstruction.LoadVariable(_location, indexTemporary));
+            }
+
+            instructions.Add(LoweredInstruction.StoreElement(_location, _displayName, _indexTemporaries.Length));
+        }
+    }
+
+    private sealed class ByRefCopyBackPlan
+    {
+        public ByRefCopyBackPlan(VariableSymbol tempVariable, Action<List<LoweredInstruction>> emitCopyBack)
+        {
+            TempVariable = tempVariable;
+            EmitCopyBack = emitCopyBack;
+        }
+
+        public VariableSymbol TempVariable { get; }
+
+        public Action<List<LoweredInstruction>> EmitCopyBack { get; }
+    }
+
     public LoweringResult Lower(BoundProgram program)
     {
         ArgumentNullException.ThrowIfNull(program);
@@ -745,6 +855,40 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.LoadVariable(recordLiteral.Location, recordTemporary));
                 break;
 
+            case BoundTypeConstructorExpression typeConstructor:
+                var constructorTemporary = CreateTypeConstructorTemporary(typeConstructor);
+                instructions.Add(LoweredInstruction.CreateRecord(typeConstructor.Location, typeConstructor.RecordType));
+                instructions.Add(LoweredInstruction.StoreVariable(typeConstructor.Location, constructorTemporary));
+
+                var constructorArguments = new List<BoundExpression>(typeConstructor.Arguments.Count + 1)
+                {
+                    new BoundVariableExpression(typeConstructor.Location, constructorTemporary)
+                };
+                constructorArguments.AddRange(typeConstructor.Arguments);
+
+                LowerCall(
+                    new BoundCallExpression(
+                        typeConstructor.Location,
+                        new BoundFunctionExpression(typeConstructor.Location, typeConstructor.Constructor),
+                        constructorArguments,
+                        TypeSymbol.Void),
+                    instructions);
+
+                if (typeConstructor.RecordType.TryGetInvariant(out var invariant) && invariant is not null)
+                {
+                    LowerCall(
+                        new BoundCallExpression(
+                            typeConstructor.Location,
+                            new BoundFunctionExpression(typeConstructor.Location, invariant),
+                            [new BoundVariableExpression(typeConstructor.Location, constructorTemporary)],
+                            TypeSymbol.Boolean),
+                        instructions);
+                    instructions.Add(LoweredInstruction.ValidateTypeInvariant(typeConstructor.Location, typeConstructor.RecordType.Name));
+                }
+
+                instructions.Add(LoweredInstruction.LoadVariable(typeConstructor.Location, constructorTemporary));
+                break;
+
             case BoundUnaryExpression unary:
                 LowerExpression(unary.Operand, instructions);
                 instructions.Add(LoweredInstruction.UnaryOperation(unary.Location, unary.OperatorKind));
@@ -777,6 +921,7 @@ public sealed class BoundProgramLowerer
         {
             var byRefArgumentIndices = new List<int>();
             var byRefVariables = new List<VariableSymbol>();
+            var byRefCopyBackPlans = new List<ByRefCopyBackPlan>();
             var byValArgumentCount = 0;
 
             for (var index = 0; index < call.Arguments.Count; index++)
@@ -793,6 +938,27 @@ public sealed class BoundProgramLowerer
                     continue;
                 }
 
+                if (argument is not (BoundVariableExpression or BoundFieldAccessExpression or BoundArrayAccessExpression)
+                    && IsTemporaryTypeMethodSelfArgument(function.Function, parameter, index))
+                {
+                    var receiverTemporary = CreateInternalTemporary(argument.Type, "__type_method_self");
+                    LowerExpression(argument, instructions);
+                    instructions.Add(LoweredInstruction.StoreVariable(argument.Location, receiverTemporary));
+                    byRefArgumentIndices.Add(index);
+                    byRefVariables.Add(receiverTemporary);
+                    continue;
+                }
+
+                if (parameter?.IsByRef == true
+                    && argument is not BoundVariableExpression
+                    && TryLowerByRefCopyBackArgument(argument, instructions, out var copyBackPlan))
+                {
+                    byRefArgumentIndices.Add(index);
+                    byRefVariables.Add(copyBackPlan.TempVariable);
+                    byRefCopyBackPlans.Add(copyBackPlan);
+                    continue;
+                }
+
                 LowerExpression(argument, instructions);
                 byValArgumentCount++;
             }
@@ -805,6 +971,11 @@ public sealed class BoundProgramLowerer
                     byValArgumentCount,
                     byRefArgumentIndices,
                     byRefVariables));
+
+            foreach (var copyBackPlan in byRefCopyBackPlans)
+            {
+                copyBackPlan.EmitCopyBack(instructions);
+            }
             return;
         }
 
@@ -816,6 +987,97 @@ public sealed class BoundProgramLowerer
         }
 
         instructions.Add(LoweredInstruction.CallValue(call.Location, call.Arguments.Count, call.Type));
+    }
+
+    private static bool IsTemporaryTypeMethodSelfArgument(
+        FunctionSymbol function,
+        ParameterSymbol? parameter,
+        int argumentIndex)
+    {
+        ArgumentNullException.ThrowIfNull(function);
+
+        return argumentIndex == 0
+            && parameter?.IsByRef == true
+            && parameter.Type is UserDefinedTypeSymbol
+            && string.Equals(parameter.Name, "SELF", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(function.Name, function.ShortName, StringComparison.Ordinal);
+    }
+
+    private bool TryLowerByRefCopyBackArgument(
+        BoundExpression argument,
+        List<LoweredInstruction> instructions,
+        out ByRefCopyBackPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(argument);
+        ArgumentNullException.ThrowIfNull(instructions);
+
+        if (!TryCreateByRefStoragePlan(argument, instructions, out var storagePlan))
+        {
+            plan = null!;
+            return false;
+        }
+
+        var receiverTemporary = CreateInternalTemporary(argument.Type, "__byref_value");
+        storagePlan.EmitLoadValue(instructions);
+        instructions.Add(LoweredInstruction.StoreVariable(argument.Location, receiverTemporary));
+
+        plan = new ByRefCopyBackPlan(
+            receiverTemporary,
+            copyBackInstructions =>
+            {
+                copyBackInstructions.Add(LoweredInstruction.LoadVariable(argument.Location, receiverTemporary));
+                storagePlan.EmitStoreValue(copyBackInstructions);
+            });
+        return true;
+    }
+
+    private bool TryCreateByRefStoragePlan(
+        BoundExpression argument,
+        List<LoweredInstruction> instructions,
+        out ByRefStoragePlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(argument);
+        ArgumentNullException.ThrowIfNull(instructions);
+
+        switch (argument)
+        {
+            case BoundVariableExpression variableExpression:
+                plan = new VariableByRefStoragePlan(variableExpression.Variable, variableExpression.Location);
+                return true;
+
+            case BoundFieldAccessExpression fieldAccess when TryCreateByRefStoragePlan(fieldAccess.Target, instructions, out var parentPlan):
+                plan = new FieldByRefStoragePlan(parentPlan, fieldAccess.Field.Name, fieldAccess.Location);
+                return true;
+
+            case BoundArrayAccessExpression arrayAccess:
+            {
+                var arrayTemporary = CreateInternalTemporary(arrayAccess.Target.Type, "__byref_array");
+                var indexTemporaries = new VariableSymbol[arrayAccess.Indices.Count];
+
+                LowerExpression(arrayAccess.Target, instructions);
+                instructions.Add(LoweredInstruction.StoreVariable(arrayAccess.Location, arrayTemporary));
+
+                for (var index = 0; index < arrayAccess.Indices.Count; index++)
+                {
+                    var indexExpression = arrayAccess.Indices[index];
+                    var indexTemporary = CreateInternalTemporary(indexExpression.Type, $"__byref_index_{index}");
+                    indexTemporaries[index] = indexTemporary;
+                    LowerExpression(indexExpression, instructions);
+                    instructions.Add(LoweredInstruction.StoreVariable(indexExpression.Location, indexTemporary));
+                }
+
+                plan = new ArrayElementByRefStoragePlan(
+                    arrayTemporary,
+                    indexTemporaries,
+                    arrayAccess.DisplayName,
+                    arrayAccess.Location);
+                return true;
+            }
+
+            default:
+                plan = null!;
+                return false;
+        }
     }
 
     private void LowerArrayIndex(BoundExpression index, List<LoweredInstruction> instructions)
@@ -880,6 +1142,33 @@ public sealed class BoundProgramLowerer
         var variable = new VariableSymbol(
             FormattableString.Invariant($"__record_literal_{_currentRoutineLocals.Count}_{recordLiteral.RecordType.Name}"),
             recordLiteral.RecordType,
+            isReadOnly: false,
+            isGlobal: false);
+
+        _currentRoutineLocals.Add(variable);
+        return variable;
+    }
+
+    private VariableSymbol CreateTypeConstructorTemporary(BoundTypeConstructorExpression typeConstructor)
+    {
+        var variable = new VariableSymbol(
+            FormattableString.Invariant($"__type_constructor_{_currentRoutineLocals.Count}_{typeConstructor.RecordType.Name}"),
+            typeConstructor.RecordType,
+            isReadOnly: false,
+            isGlobal: false);
+
+        _currentRoutineLocals.Add(variable);
+        return variable;
+    }
+
+    private VariableSymbol CreateInternalTemporary(TypeSymbol type, string stem)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentException.ThrowIfNullOrWhiteSpace(stem);
+
+        var variable = new VariableSymbol(
+            FormattableString.Invariant($"{stem}_{_currentRoutineLocals.Count}"),
+            type,
             isReadOnly: false,
             isGlobal: false);
 

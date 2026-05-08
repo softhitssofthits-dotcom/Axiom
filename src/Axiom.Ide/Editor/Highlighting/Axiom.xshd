@@ -26,7 +26,10 @@
             <Word>AND</Word>
             <Word>APPEND</Word>
             <Word>AS</Word>
+            <Word>BYREF</Word>
+            <Word>BYVAL</Word>
             <Word>CASE</Word>
+            <Word>CATCH</Word>
             <Word>CLOSE</Word>
             <Word>CONST</Word>
             <Word>DIM</Word>
@@ -38,6 +41,7 @@
             <Word>ERASE</Word>
             <Word>EXIT</Word>
             <Word>FALSE</Word>
+            <Word>FINALLY</Word>
             <Word>FOR</Word>
             <Word>FUNCTION</Word>
             <Word>IF</Word>
@@ -55,11 +59,13 @@
             <Word>PRINT</Word>
             <Word>REDIM</Word>
             <Word>RETURN</Word>
+            <Word>SELF</Word>
             <Word>SELECT</Word>
             <Word>STEP</Word>
             <Word>SUB</Word>
             <Word>THEN</Word>
             <Word>TO</Word>
+            <Word>TRY</Word>
             <Word>TRUE</Word>
             <Word>TYPE</Word>
             <Word>UNTIL</Word>

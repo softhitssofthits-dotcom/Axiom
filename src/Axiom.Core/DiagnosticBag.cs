@@ -29,6 +29,12 @@ public sealed class DiagnosticBag : IReadOnlyCollection<Diagnostic>
         }
     }
 
+    public bool Remove(Diagnostic diagnostic)
+    {
+        ArgumentNullException.ThrowIfNull(diagnostic);
+        return _diagnostics.Remove(diagnostic);
+    }
+
     public IEnumerator<Diagnostic> GetEnumerator() => _diagnostics.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

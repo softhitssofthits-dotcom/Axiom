@@ -79,6 +79,42 @@ public sealed class BlockEditingServiceTests
     }
 
     [Fact]
+    public void TryHandleLineTransition_EnterAfterTryHeader_InsertsEndTry()
+    {
+        var document = new TextDocument("TRY\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 1, 2, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Equal("TRY\r\n    \r\nEND TRY", document.Text);
+        Assert.Equal(document.GetLineByNumber(2).Offset + 4, newCaretOffset);
+    }
+
+    [Fact]
+    public void TryHandleLineTransition_IndentedCatch_DedentsToTryLevelAndIndentsBranchBody()
+    {
+        var document = new TextDocument("TRY\r\n    PRINT 10 / 0\r\n    CATCH err\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 3, 4, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Equal("TRY\r\n    PRINT 10 / 0\r\nCATCH err\r\n    ", document.Text);
+        Assert.Equal(document.GetLineByNumber(4).Offset + 4, newCaretOffset);
+    }
+
+    [Fact]
+    public void TryHandleLineTransition_IndentedFinally_DedentsToTryLevelAndIndentsBranchBody()
+    {
+        var document = new TextDocument("TRY\r\n    PRINT 1\r\n    FINALLY\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 3, 4, document.TextLength, CodeFormattingStyle.Modern, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Equal("TRY\r\n    PRINT 1\r\nFINALLY\r\n    ", document.Text);
+        Assert.Equal(document.GetLineByNumber(4).Offset + 4, newCaretOffset);
+    }
+
+    [Fact]
     public void TryHandleLineTransition_EnterInsideNestedBody_PreservesCurrentIndent()
     {
         var document = new TextDocument("IF a THEN\r\n    IF b THEN\r\n        PRINT 1\r\n");

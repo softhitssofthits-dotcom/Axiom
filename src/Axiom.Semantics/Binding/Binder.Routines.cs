@@ -1,3 +1,4 @@
+using Axiom.Core;
 using Axiom.Syntax;
 
 namespace Axiom.Semantics;
@@ -25,7 +26,7 @@ public sealed partial class Binder
         {
             if (!TryDeclareScopedVariable(
                 parameter,
-                GetParameterLocation(declaration, parameter.Ordinal),
+                GetDeclaredParameterLocation(declaration, parameter.Ordinal),
                 DeclarationContexts.RoutineParameters))
             {
                 continue;
@@ -40,6 +41,19 @@ public sealed partial class Binder
         _currentFunction = parentFunction;
 
         return new BoundRoutine(GetLocation(declaration), symbol, statements);
+    }
+
+    private void BindTypeMethods(TypeDeclarationSyntax declaration)
+    {
+        foreach (var methodDeclaration in declaration.Methods)
+        {
+            if (!_declaredFunctions.TryGetValue(methodDeclaration, out var symbol))
+            {
+                continue;
+            }
+
+            _routines.Add(BindRoutine(methodDeclaration, symbol));
+        }
     }
 
     private void DeclareLocalFunctions(IReadOnlyList<StatementSyntax> statements)
@@ -122,5 +136,24 @@ public sealed partial class Binder
             FunctionDeclarationSyntax functionDeclaration => functionDeclaration.Statements,
             _ => throw new ArgumentOutOfRangeException(nameof(declaration), declaration, "Unsupported callable declaration.")
         };
+    }
+
+    private TextLocation GetDeclaredParameterLocation(MemberSyntax declaration, int ordinal)
+    {
+        if (_declaredMethodOwners.ContainsKey(declaration))
+        {
+            return declaration switch
+            {
+                SubDeclarationSyntax subDeclaration => ordinal == 0
+                    ? subDeclaration.Identifier.Location
+                    : subDeclaration.Parameters[ordinal - 1].Identifier.Location,
+                FunctionDeclarationSyntax functionDeclaration => ordinal == 0
+                    ? functionDeclaration.Identifier.Location
+                    : functionDeclaration.Parameters[ordinal - 1].Identifier.Location,
+                _ => throw new ArgumentOutOfRangeException(nameof(declaration), declaration, "Unsupported callable declaration.")
+            };
+        }
+
+        return GetParameterLocation(declaration, ordinal);
     }
 }

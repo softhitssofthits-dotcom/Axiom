@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор TRY ... CATCH ... FINALLY</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="try">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Управляемая обработка ошибок</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор TRY ... CATCH ... FINALLY</p><p class="sidebar__subtitle">Перехват ошибки времени выполнения и обязательная очистка.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Управление выполнением</p>
+<h1 class="page-title">Оператор TRY ... CATCH ... FINALLY</h1>
+<p class="lead"><code>TRY</code> выделяет участок программы, где может возникнуть ошибка времени выполнения. <code>CATCH</code> получает управление, если ошибка произошла и её нужно обработать без остановки программы. <code>FINALLY</code> используют для действий, которые должны выполниться при выходе из блока: после обычного выполнения, после обработанной ошибки или перед передачей необработанной ошибки наружу.</p>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p>В Axiom эта форма заменяет старую идею <code>ON ERROR GOTO</code> без перехода по метке. Обработчик расположен рядом с опасным участком кода, а переменная <code>CATCH</code> содержит структурированное значение ошибки.</p>
+<p>Текущий срез поддерживается интерпретатором. Байткодная машина пока не выполняет <code>TRY</code>, поэтому в режиме принудительного байткода такие программы остаются временным ограничением.</p>
+</section>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">TRY
+    [tryStatements]
+CATCH errorVariable
+    [catchStatements]
+FINALLY
+    [finallyStatements]
+END TRY</code></pre>
+<p>Должна быть указана хотя бы одна часть: <code>CATCH</code> или <code>FINALLY</code>. Если обработка ошибки не нужна, можно оставить только <code>FINALLY</code>. Если отдельная очистка не нужна, можно оставить только <code>CATCH</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Части записи</h2>
+<p><code>tryStatements</code> — инструкции, при выполнении которых может возникнуть ошибка времени выполнения.</p>
+<p><code>errorVariable</code> — локальная переменная только для чтения. Она доступна только внутри блока <code>CATCH</code> и имеет встроенный тип <code>ERROR</code>.</p>
+<p><code>catchStatements</code> — инструкции обработки. Если ошибка обработана, выполнение продолжается после <code>END TRY</code>, если только обработчик сам не завершился новой ошибкой или ранним выходом.</p>
+<p><code>finallyStatements</code> — инструкции завершения. Они выполняются при обычном выходе, после <code>CATCH</code> и перед выходом с необработанной ошибкой.</p>
+</section>
+
+<section class="article-section">
+<h2>Значение ERROR</h2>
+<p>Переменная <code>CATCH</code> содержит сведения о перехваченной ошибке:</p>
+<table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody>
+<tr><td><code>Code</code></td><td><code>INTEGER</code></td><td>Числовая часть диагностического кода, например <code>3001</code> для <code>MB3001</code>.</td></tr>
+<tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения времени выполнения.</td></tr>
+<tr><td><code>Line</code></td><td><code>INTEGER</code></td><td>Строка исходного кода, где возникла ошибка.</td></tr>
+<tr><td><code>Column</code></td><td><code>INTEGER</code></td><td>Колонка исходного кода, где возникла ошибка.</td></tr>
+</tbody></table>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">TRY
+    PRINT "before"
+    PRINT 10 \ 0
+CATCH err
+    PRINT "caught"
+    PRINT err.Code
+    PRINT err.Line
+FINALLY
+    PRINT "cleanup"
+END TRY
+
+PRINT "after"</code></pre>
+<p>Деление на ноль не завершает программу: управление переходит в <code>CATCH</code>, затем выполняется <code>FINALLY</code>, после чего программа продолжает работу после <code>END TRY</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Правила и ограничения</h2>
+<ul>
+<li><code>CATCH</code> в текущем срезе не фильтрует ошибки по типу: он перехватывает любую ошибку времени выполнения из соответствующего <code>TRY</code>.</li>
+<li>Поддерживается не более одного <code>CATCH</code> в одном блоке <code>TRY</code>.</li>
+<li>Пользовательского оператора выброса ошибки пока нет.</li>
+<li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
+<li>Тело <code>TRY</code>, <code>CATCH</code> и <code>FINALLY</code> образуют отдельные блочные области видимости.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="diagnostics.html">Диагностика</a><a href="if.html">IF</a><a href="select-case.html">SELECT CASE</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
