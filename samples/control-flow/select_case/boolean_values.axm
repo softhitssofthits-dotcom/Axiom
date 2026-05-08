@@ -1,0 +1,9 @@
+' SELECT CASE с BOOLEAN выбирает точное логическое значение.
+DIM enabled AS BOOLEAN = TRUE
+
+SELECT CASE enabled
+    CASE TRUE
+        PRINT "enabled"
+    CASE FALSE
+        PRINT "disabled"
+END SELECT

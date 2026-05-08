@@ -1,0 +1,11 @@
+' SELECT CASE выполняет только первую подошедшую ветвь.
+DIM value AS INTEGER = 5
+
+SELECT CASE value
+    CASE 5
+        PRINT "first"
+    CASE 5
+        PRINT "second"
+    CASE ELSE
+        PRINT "else"
+END SELECT

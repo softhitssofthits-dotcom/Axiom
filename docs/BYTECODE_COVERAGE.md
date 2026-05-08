@@ -238,3 +238,10 @@
 - `Профиль`: не приоритет.
 
 Примечание: `ERROR err` сохраняет исходные `Code`, `Message`, `Line` и `Column`, поэтому внешний `CATCH` видит место первоначальной ошибки, а не строку повторного проброса.
+## Обновление реестра - 2026-05-08 - SELECT CASE граничные samples
+
+Дополнение к строке `IF ... ELSE ... END IF`, `SELECT CASE`:
+- `Sample`: добавлены `samples/control-flow/select_case/boolean_values.axm`, `samples/control-flow/select_case/first_match.axm`, `samples/control-flow/select_case/no_match_no_else.axm` и negative sample `samples/acceptance/negative/select_case_invalid_types.axm`;
+- `Автотесты`: добавлены parser-проверки пустого `CASE`, позднего `CASE` после `CASE ELSE`, `CASE IS` без оператора; binder-проверка boolean-селекторов; execution-проверки первой подошедшей ветви и отсутствия совпадения без `CASE ELSE`; acceptance-проверки новых samples;
+- `Сквозной VM`: положительные samples входят в `ExecutionMode.Bytecode` без interpreter fallback;
+- `Manual`: обновлены ссылки в `docs/manual/select-case.html` и `docs/manual/examples.html`.

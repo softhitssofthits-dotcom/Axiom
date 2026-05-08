@@ -51,6 +51,7 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/type_literal_positional_arity.axm", ExecutionStatus.SemanticFailure, "MB2032")]
     [InlineData("samples/acceptance/negative/type_method_overload_ambiguous.axm", ExecutionStatus.SemanticFailure, "MB2033")]
     [InlineData("samples/acceptance/negative/type_constructor_invariant_false.axm", ExecutionStatus.RuntimeFailure, "MB3005")]
+    [InlineData("samples/acceptance/negative/select_case_invalid_types.axm", ExecutionStatus.SemanticFailure, "MB2003")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -140,6 +141,9 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/control-flow/select_case/string_values.axm")]
     [InlineData("samples/control-flow/select_case/mixed_selectors.axm")]
     [InlineData("samples/control-flow/select_case/string_ranges.axm")]
+    [InlineData("samples/control-flow/select_case/boolean_values.axm")]
+    [InlineData("samples/control-flow/select_case/first_match.axm")]
+    [InlineData("samples/control-flow/select_case/no_match_no_else.axm")]
     public void SelectCaseAcceptanceSamples_RunSuccessfully(string relativePath)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -170,6 +174,9 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/control-flow/select_case/string_values.axm", new[] { "save" })]
     [InlineData("samples/control-flow/select_case/mixed_selectors.axm", new[] { "matched" })]
     [InlineData("samples/control-flow/select_case/string_ranges.axm", new[] { "after", "first" })]
+    [InlineData("samples/control-flow/select_case/boolean_values.axm", new[] { "enabled" })]
+    [InlineData("samples/control-flow/select_case/first_match.axm", new[] { "first" })]
+    [InlineData("samples/control-flow/select_case/no_match_no_else.axm", new[] { "after" })]
     [InlineData("samples/control-flow/return/function_value.axm", new[] { "42" })]
     [InlineData("samples/control-flow/return/sub_early_exit.axm", new[] { "before return", "after if" })]
     public void ControlFlowAcceptanceSamples_RunOnBytecodeVm(string relativePath, string[] expectedOutput)

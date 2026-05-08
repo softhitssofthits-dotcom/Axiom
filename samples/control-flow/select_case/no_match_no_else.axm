@@ -1,0 +1,11 @@
+' Если ни один CASE не подошёл и CASE ELSE нет, выполнение продолжается после END SELECT.
+DIM value AS INTEGER = 10
+
+SELECT CASE value
+    CASE 1
+        PRINT "one"
+    CASE 2
+        PRINT "two"
+END SELECT
+
+PRINT "after"

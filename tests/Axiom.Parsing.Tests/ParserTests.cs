@@ -742,6 +742,53 @@ END SELECT
     }
 
     [Fact]
+    public void Parse_SelectCaseReportsEmptyCaseSelector()
+    {
+        const string text = """
+SELECT CASE score
+    CASE
+        PRINT "missing selector"
+END SELECT
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static diagnostic => diagnostic.Code == "MB1003");
+    }
+
+    [Fact]
+    public void Parse_SelectCaseReportsCaseElseBeforeLaterCase()
+    {
+        const string text = """
+SELECT CASE score
+    CASE ELSE
+        PRINT "fallback"
+    CASE 1
+        PRINT "late"
+END SELECT
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static diagnostic => diagnostic.Code == "MB1004");
+    }
+
+    [Fact]
+    public void Parse_SelectCaseReportsMissingCaseIsOperator()
+    {
+        const string text = """
+SELECT CASE score
+    CASE IS
+        PRINT "missing operator"
+END SELECT
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static diagnostic => diagnostic.Code == "MB1001");
+    }
+
+    [Fact]
     public void Parse_ForNextStatement()
     {
         const string text = """

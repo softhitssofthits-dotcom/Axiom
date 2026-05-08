@@ -1,0 +1,7 @@
+' SELECT CASE не сравнивает числовое выражение со строковым CASE.
+DIM score AS INTEGER = 1
+
+SELECT CASE score
+    CASE "one"
+        PRINT "bad"
+END SELECT

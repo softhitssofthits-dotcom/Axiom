@@ -7089,3 +7089,30 @@
 
 Итог:
 - базовая система обработки ошибок с `TRY/CATCH/FINALLY`, `ERROR code`, `ERROR code, message`, `ERROR err`, VM-путём, IDE-поддержкой, manual и samples подтверждена автоматическими проверками.
+
+## Session 705 - 2026-05-08 13:46 - закреплены граничные samples SELECT CASE
+
+Сделано:
+- добавлены положительные samples `samples/control-flow/select_case/boolean_values.axm`, `samples/control-flow/select_case/first_match.axm`, `samples/control-flow/select_case/no_match_no_else.axm`;
+- добавлен negative sample `samples/acceptance/negative/select_case_invalid_types.axm`;
+- обновлены `AcceptanceProgramTests`, `ParserTests`, `BinderTests`, `ExecutionPipelineTests`;
+- обновлены ссылки в `docs/manual/select-case.html` и `docs/manual/examples.html`;
+- обновлены `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md`.
+
+Проверки на момент записи:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --filter "SelectCase" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --filter "SelectCase" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "SelectCase|NegativeAcceptanceProgram" -p:UseSharedCompilation=false` проходит.
+
+Следующий точный шаг:
+- выполнить полные релевантные тесты и проверить IDE-слой блочного редактирования `SELECT CASE`.
+
+Дополнение проверки:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj -p:UseSharedCompilation=false` проходит, 87 тестов;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false` проходит, 290 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит, 763 теста;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false` проходит, 290 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Следующий точный шаг:
+- решить, нужен ли ручной IDE-smoke для новых `SELECT CASE` samples или можно перейти к следующему небольшому срезу: улучшению diagnostics/manual вокруг `CASE ELSE` и пустого `CASE`.

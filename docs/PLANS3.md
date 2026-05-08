@@ -2916,3 +2916,30 @@
 
 Следующий точный шаг:
 - перейти к следующей языковой теме либо подготовить отдельный коммит по завершённой обработке ошибок.
+
+## Обновление плана - 2026-05-08 - SELECT CASE закрепляется граничными примерами
+
+Сделано:
+- добавлены runnable samples `boolean_values.axm`, `first_match.axm`, `no_match_no_else.axm` для положительных граничных сценариев `SELECT CASE`;
+- добавлен negative sample `samples/acceptance/negative/select_case_invalid_types.axm` для несовместимого типа селектора;
+- добавлены адресные parser/binder/execution/acceptance проверки для пустого `CASE`, позднего `CASE` после `CASE ELSE`, `CASE IS` без оператора, boolean-ветвления, первой подошедшей ветви и продолжения без совпадения;
+- `docs/manual/select-case.html` и `docs/manual/examples.html` получили ссылки на новые примеры.
+
+Что остаётся открытым:
+- выполнить полные релевантные тесты и при необходимости ручной IDE-smoke для автодобавления `END SELECT` и выравнивания `CASE`/`CASE ELSE`.
+
+Следующий точный шаг:
+- прогнать `Axiom.Parsing.Tests`, `Axiom.Semantics.Tests`, `Axiom.Execution.Tests`, затем `Axiom.Ide.Tests` по блочному редактированию `SELECT CASE`.
+
+## Обновление плана - 2026-05-08 - граничные проверки SELECT CASE проходят
+
+Сделано:
+- полные `Axiom.Parsing.Tests`, `Axiom.Semantics.Tests`, `Axiom.Execution.Tests` и `Axiom.Ide.Tests` проходят после добавления граничных samples;
+- полный `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Что остаётся открытым:
+- можно вручную открыть новые samples в `Axiom.Ide`, если нужен именно пользовательский smoke редактора;
+- более глубокая оптимизация lowering для `SELECT CASE` по целочисленным константам остаётся отдельной производительной задачей, не блокирующей семантическое закрытие.
+
+Следующий точный шаг:
+- либо выполнить ручной IDE-smoke новых `SELECT CASE` samples, либо перейти к следующему языковому срезу.

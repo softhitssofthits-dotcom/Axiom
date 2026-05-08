@@ -449,6 +449,54 @@ END SELECT
     }
 
     [Fact]
+    public void Run_SelectCaseExecutesOnlyFirstMatchingBranch()
+    {
+        const string text = """
+DIM value AS INTEGER = 5
+
+SELECT CASE value
+    CASE 5
+        PRINT "first"
+    CASE 5
+        PRINT "second"
+    CASE ELSE
+        PRINT "else"
+END SELECT
+""";
+
+        var result = Run(text, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["first"], result.Output);
+    }
+
+    [Fact]
+    public void Run_SelectCaseWithoutMatchAndElseContinuesAfterEndSelect()
+    {
+        const string text = """
+DIM value AS INTEGER = 10
+
+SELECT CASE value
+    CASE 1
+        PRINT "one"
+    CASE 2
+        PRINT "two"
+END SELECT
+
+PRINT "after"
+""";
+
+        var result = Run(text, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["after"], result.Output);
+    }
+
+    [Fact]
     public void Run_SupportsGroupedDimDeclarations()
     {
         const string text = """

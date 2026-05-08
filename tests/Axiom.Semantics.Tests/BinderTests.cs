@@ -3055,6 +3055,32 @@ END SELECT
     }
 
     [Fact]
+    public void Bind_SelectCaseBooleanExactValues()
+    {
+        const string text = """
+DIM enabled AS BOOLEAN = TRUE
+SELECT CASE enabled
+    CASE TRUE
+        PRINT "enabled"
+    CASE FALSE
+        PRINT "disabled"
+END SELECT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundSelectCaseStatement>(program.GlobalStatements[1]);
+        Assert.Equal(TypeSymbol.Boolean, statement.TestExpression.Type);
+        Assert.Equal(2, statement.Clauses.Count);
+        Assert.All(statement.Clauses, clause =>
+        {
+            var selector = Assert.IsType<BoundCaseValueSelector>(Assert.Single(clause.Selectors));
+            Assert.Equal(TypeSymbol.Boolean, selector.Expression.Type);
+        });
+    }
+
+    [Fact]
     public void Bind_StringOrderedComparison()
     {
         const string text = """
