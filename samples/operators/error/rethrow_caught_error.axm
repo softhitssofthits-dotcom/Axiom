@@ -1,0 +1,13 @@
+' ERROR err повторно поднимает пойманную ошибку без потери исходных сведений.
+TRY
+    TRY
+        ERROR "APP003", "Original failure"
+    CATCH err
+        PRINT "inner"
+        ERROR err
+    END TRY
+CATCH outerErr
+    PRINT outerErr.Code
+    PRINT outerErr.Message
+    PRINT outerErr.Line
+END TRY

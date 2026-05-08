@@ -16,6 +16,13 @@ public sealed partial class BytecodeVm
     private void ExecuteLoadField(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var recordValue = PopValue(frame, instructionIndex);
+        if (recordValue.Type == TypeSymbol.RuntimeError)
+        {
+            var errorField = ResolveRuntimeErrorField(frame.Routine.Id, instructionIndex, ReadDebugName(instruction.GetOperand(0)));
+            frame.EvaluationStack.Push(recordValue.AsRuntimeError().GetField(errorField));
+            return;
+        }
+
         var field = ResolveRecordField(frame.Routine.Id, instructionIndex, recordValue, ReadDebugName(instruction.GetOperand(0)));
 
         frame.EvaluationStack.Push(recordValue.AsRecord().GetField(field));
@@ -53,6 +60,17 @@ public sealed partial class BytecodeVm
 
         return ReportInvalidRuntimeState<TypeFieldSymbol>(
             $"TYPE '{recordType.Name}' не содержит поле '{fieldName}'.",
+            ResolveLocation(routineId, instructionIndex));
+    }
+    private TypeFieldSymbol ResolveRuntimeErrorField(int routineId, int instructionIndex, string fieldName)
+    {
+        if (TypeSymbol.RuntimeError.TryGetField(fieldName, out var field) && field is not null)
+        {
+            return field;
+        }
+
+        return ReportInvalidRuntimeState<TypeFieldSymbol>(
+            $"ERROR не содержит поле '{fieldName}'.",
             ResolveLocation(routineId, instructionIndex));
     }
 

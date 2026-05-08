@@ -317,6 +317,34 @@ public sealed class AssignmentStatementSyntax : StatementSyntax
     public ExpressionSyntax Expression { get; }
 }
 
+public sealed class ErrorStatementSyntax : StatementSyntax
+{
+    public ErrorStatementSyntax(
+        SyntaxToken errorKeyword,
+        ExpressionSyntax codeExpression,
+        SyntaxToken? commaToken,
+        ExpressionSyntax? messageExpression)
+    {
+        ArgumentNullException.ThrowIfNull(errorKeyword);
+        ArgumentNullException.ThrowIfNull(codeExpression);
+
+        ErrorKeyword = errorKeyword;
+        CodeExpression = codeExpression;
+        CommaToken = commaToken;
+        MessageExpression = messageExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ErrorStatement;
+
+    public SyntaxToken ErrorKeyword { get; }
+
+    public ExpressionSyntax CodeExpression { get; }
+
+    public SyntaxToken? CommaToken { get; }
+
+    public ExpressionSyntax? MessageExpression { get; }
+}
+
 public sealed class EraseStatementSyntax : StatementSyntax
 {
     public EraseStatementSyntax(SyntaxToken eraseKeyword, ExpressionSyntax target)

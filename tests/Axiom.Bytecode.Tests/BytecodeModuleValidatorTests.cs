@@ -2310,9 +2310,7 @@ public sealed class BytecodeModuleValidatorTests
     }
 
     [Theory]
-    [InlineData(Opcode.Dup)]
     [InlineData(Opcode.CreateArray)]
-    [InlineData(Opcode.CreateRecord)]
     [InlineData(Opcode.BeginInput)]
     [InlineData(Opcode.EndInput)]
     public void Validate_UnsupportedReservedOpcode_ReturnsDiagnostic(Opcode opcode)

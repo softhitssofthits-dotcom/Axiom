@@ -252,6 +252,33 @@ public sealed class BoundCloseStatement : BoundStatement
     public VariableSymbol FileVariable { get; }
 }
 
+public sealed class BoundErrorStatement : BoundStatement
+{
+    public BoundErrorStatement(TextLocation location, BoundExpression expression, BoundExpression? messageExpression, BoundErrorStatementMode mode)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(expression);
+
+        Expression = expression;
+        MessageExpression = messageExpression;
+        Mode = mode;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ErrorStatement;
+
+    public BoundExpression Expression { get; }
+
+    public BoundExpression? MessageExpression { get; }
+
+    public BoundErrorStatementMode Mode { get; }
+}
+
+public enum BoundErrorStatementMode
+{
+    UserCode,
+    ExistingError
+}
+
 public sealed class BoundIfStatement : BoundStatement
 {
     public BoundIfStatement(

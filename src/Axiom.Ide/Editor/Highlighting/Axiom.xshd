@@ -37,6 +37,7 @@
             <Word>ELSE</Word>
             <Word>ELSEIF</Word>
             <Word>END</Word>
+            <Word>ERROR</Word>
             <Word>EQV</Word>
             <Word>ERASE</Word>
             <Word>EXIT</Word>

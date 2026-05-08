@@ -1245,17 +1245,45 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
-    public void TryCatchAcceptanceSample_RunsOnInterpreter()
+    public void TryCatchAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/try/handled_runtime_error.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Interpreter);
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.Empty(result.Diagnostics);
-        Assert.Equal(ExecutionEngineKind.Interpreter, result.ActualEngine);
-        Assert.Equal(["before", "caught", "3001", "4", "cleanup", "after"], result.Output);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["before", "caught", "MB3001", "4", "Деление на ноль.", "cleanup", "after"], result.Output);
+    }
+
+    [Fact]
+    public void ErrorAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/error/user_code_catch.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["APP001", "Manual failure", "after"], result.Output);
+    }
+
+    [Fact]
+    public void ErrorRethrowAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/error/rethrow_caught_error.axm");
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["inner", "APP003", "Original failure", "4"], result.Output);
     }
 
     [Fact]
@@ -1422,11 +1450,6 @@ public sealed class AcceptanceProgramTests
         }
 
         if (relativePath.Equals("samples/smoke/repair_plans_mojibake.axm", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        if (relativePath.StartsWith("samples/operators/try/", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

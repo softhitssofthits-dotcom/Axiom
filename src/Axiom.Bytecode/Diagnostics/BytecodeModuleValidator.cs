@@ -684,11 +684,34 @@ public sealed class BytecodeModuleValidator
                     ValidateInputInstruction(module, routine, instructionIndex, instruction, globalsBySlot);
                     break;
 
+                case Opcode.PushErrorHandler:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 5);
+                    ValidateOptionalJumpTarget(module, routine, instructionIndex, instruction, operandIndex: 0);
+                    ValidateOptionalJumpTarget(module, routine, instructionIndex, instruction, operandIndex: 1);
+                    ValidateJumpTarget(module, routine, instructionIndex, instruction, operandIndex: 2);
+                    ValidateErrorHandlerTarget(module, routine, instructionIndex, instruction, globalsBySlot);
+                    break;
+
+                case Opcode.RaiseError:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.GetOperand(0) is not (0 or 1 or 2))
+                    {
+                        Report(
+                            "BC4120",
+                            $"Инструкция RaiseError в процедуре '{routine.Name}' содержит некорректный флаг сообщения {instruction.GetOperand(0)}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                    break;
+
                 case Opcode.OpenFile:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     ValidateOpenFileInstruction(module, routine, instructionIndex, instruction);
                     break;
 
+                case Opcode.PopErrorHandler:
+                case Opcode.EndFinally:
                 case Opcode.Pop:
                 case Opcode.Negate:
                 case Opcode.Add:
@@ -1772,6 +1795,24 @@ public sealed class BytecodeModuleValidator
         }
 
         var fieldName = TryGetStringConstantValue(module, instruction.GetOperand(0));
+        if (actualType == TypeSymbol.RuntimeError)
+        {
+            if (fieldName is not null
+                && TypeSymbol.RuntimeError.TryGetField(fieldName, out var errorField)
+                && errorField is not null)
+            {
+                return errorField.Type;
+            }
+
+            Report(
+                "BC4115",
+                $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' ссылается на отсутствующее поле '{fieldName ?? "<field>"}' типа ERROR.",
+                module,
+                routine.Id,
+                instructionIndex);
+            return null;
+        }
+
         if (actualType is not UserDefinedTypeSymbol recordType)
         {
             Report(
@@ -2653,11 +2694,18 @@ public sealed class BytecodeModuleValidator
             case Opcode.PrintSeparator:
             case Opcode.PrintLine:
             case Opcode.Input:
+            case Opcode.PushErrorHandler:
+            case Opcode.PopErrorHandler:
+            case Opcode.EndFinally:
                 return true;
 
             case Opcode.CloseFile:
                 popCount = 1;
                 pushCount = 1;
+                return true;
+
+            case Opcode.RaiseError:
+                popCount = instruction.GetOperand(0) == 1 ? 2 : 1;
                 return true;
 
             default:
@@ -2755,6 +2803,64 @@ public sealed class BytecodeModuleValidator
                 module,
                 routine.Id,
                 instructionIndex);
+        }
+    }
+
+    private void ValidateOptionalJumpTarget(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction,
+        int operandIndex)
+    {
+        if (instruction.GetOperand(operandIndex) < 0)
+        {
+            return;
+        }
+
+        ValidateJumpTarget(module, routine, instructionIndex, instruction, operandIndex);
+    }
+
+    private void ValidateErrorHandlerTarget(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction,
+        IReadOnlyDictionary<int, BytecodeGlobal> globalsBySlot)
+    {
+        var targetKind = instruction.GetOperand(3);
+        var slot = instruction.GetOperand(4);
+        if (targetKind == -1 && slot == -1)
+        {
+            return;
+        }
+
+        switch (targetKind)
+        {
+            case 0:
+                ValidateGlobalSlot(module, routine, instructionIndex, instruction, globalsBySlot, operandIndex: 4);
+                break;
+
+            case 1:
+                ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 4);
+                break;
+
+            case 2:
+                ValidateArgumentSlot(module, routine, instructionIndex, instruction, operandIndex: 4);
+                break;
+
+            case 3:
+                ValidateCaptureSlot(module, routine, instructionIndex, instruction, operandIndex: 4);
+                break;
+
+            default:
+                Report(
+                    "BC4121",
+                    $"Инструкция PushErrorHandler в процедуре '{routine.Name}' содержит некорректный вид цели CATCH {targetKind}.",
+                    module,
+                    routine.Id,
+                    instructionIndex);
+                break;
         }
     }
 
@@ -3320,14 +3426,15 @@ public sealed class BytecodeModuleValidator
         BytecodeRoutine routine,
         int instructionIndex,
         BytecodeInstruction instruction,
-        IReadOnlyDictionary<int, BytecodeGlobal> globalsBySlot)
+        IReadOnlyDictionary<int, BytecodeGlobal> globalsBySlot,
+        int operandIndex = 0)
     {
-        if (instruction.OperandCount == 0)
+        if (instruction.OperandCount <= operandIndex)
         {
             return;
         }
 
-        var slot = instruction.GetOperand(0);
+        var slot = instruction.GetOperand(operandIndex);
         if (slot < 0)
         {
             Report(
@@ -3380,14 +3487,14 @@ public sealed class BytecodeModuleValidator
         }
     }
 
-    private void ValidateArgumentSlot(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction)
+    private void ValidateArgumentSlot(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction, int operandIndex = 0)
     {
-        if (instruction.OperandCount == 0)
+        if (instruction.OperandCount <= operandIndex)
         {
             return;
         }
 
-        var slot = instruction.GetOperand(0);
+        var slot = instruction.GetOperand(operandIndex);
         if (slot < 0)
         {
             Report(
@@ -3410,14 +3517,14 @@ public sealed class BytecodeModuleValidator
         }
     }
 
-    private void ValidateCaptureSlot(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction)
+    private void ValidateCaptureSlot(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction, int operandIndex = 0)
     {
-        if (instruction.OperandCount == 0)
+        if (instruction.OperandCount <= operandIndex)
         {
             return;
         }
 
-        var slot = instruction.GetOperand(0);
+        var slot = instruction.GetOperand(operandIndex);
         if (slot < 0)
         {
             Report(

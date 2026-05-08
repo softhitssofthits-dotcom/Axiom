@@ -1,0 +1,9 @@
+' ERROR создает пользовательскую ошибку времени выполнения, которую можно перехватить CATCH.
+TRY
+    ERROR "APP001", "Manual failure"
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+
+PRINT "after"

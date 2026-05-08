@@ -1447,6 +1447,21 @@ END TYPE
     }
 
     [Fact]
+    public void Parse_ErrorStatementWithCodeAndMessage()
+    {
+        const string text = "ERROR \"APP001\", \"Manual failure\"";
+
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<ErrorStatementSyntax>(program);
+        Assert.Equal(SyntaxKind.ErrorKeyword, statement.ErrorKeyword.Kind);
+        Assert.IsType<LiteralExpressionSyntax>(statement.CodeExpression);
+        Assert.NotNull(statement.CommaToken);
+        Assert.IsType<LiteralExpressionSyntax>(statement.MessageExpression);
+    }
+
+    [Fact]
     public void Parse_ReportsMissingThen()
     {
         const string text = """

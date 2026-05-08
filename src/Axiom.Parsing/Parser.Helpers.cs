@@ -277,6 +277,7 @@ public sealed partial class Parser
             TokenKind.ElseKeyword => SyntaxKind.ElseKeyword,
             TokenKind.ElseIfKeyword => SyntaxKind.ElseIfKeyword,
             TokenKind.EndKeyword => SyntaxKind.EndKeyword,
+            TokenKind.ErrorKeyword => SyntaxKind.ErrorKeyword,
             TokenKind.EraseKeyword => SyntaxKind.EraseKeyword,
             TokenKind.EqvKeyword => SyntaxKind.EqvKeyword,
             TokenKind.ExitKeyword => SyntaxKind.ExitKeyword,

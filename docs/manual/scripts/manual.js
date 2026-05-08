@@ -36,6 +36,8 @@
       items: [
         { id: "if", href: "if.html", label: "Оператор IF" },
         { id: "select-case", href: "select-case.html", label: "Оператор SELECT CASE" },
+        { id: "error-handling", href: "error-handling.html", label: "Обработка ошибок" },
+        { id: "error", href: "error.html", label: "Оператор ERROR" },
         { id: "try", href: "try.html", label: "Оператор TRY" }
       ]
     },

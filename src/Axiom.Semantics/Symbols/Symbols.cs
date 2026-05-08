@@ -109,7 +109,7 @@ public sealed class RuntimeErrorTypeSymbol : TypeSymbol
     {
         Fields =
         [
-            new TypeFieldSymbol("Code", TypeSymbol.Integer),
+            new TypeFieldSymbol("Code", TypeSymbol.String),
             new TypeFieldSymbol("Message", TypeSymbol.String),
             new TypeFieldSymbol("Line", TypeSymbol.Integer),
             new TypeFieldSymbol("Column", TypeSymbol.Integer)

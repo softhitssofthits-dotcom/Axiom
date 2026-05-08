@@ -4,8 +4,9 @@ namespace Axiom.Runtime;
 
 public sealed class RuntimeErrorValue
 {
-    public RuntimeErrorValue(int code, string message, int line, int column)
+    public RuntimeErrorValue(string code, string message, int line, int column)
     {
+        ArgumentNullException.ThrowIfNull(code);
         ArgumentNullException.ThrowIfNull(message);
 
         Code = code;
@@ -14,7 +15,7 @@ public sealed class RuntimeErrorValue
         Column = column;
     }
 
-    public int Code { get; }
+    public string Code { get; }
 
     public string Message { get; }
 
@@ -28,7 +29,7 @@ public sealed class RuntimeErrorValue
 
         return field.Name.ToUpperInvariant() switch
         {
-            "CODE" => RuntimeValue.FromInteger(Code),
+            "CODE" => RuntimeValue.FromString(Code),
             "MESSAGE" => RuntimeValue.FromString(Message),
             "LINE" => RuntimeValue.FromInteger(Line),
             "COLUMN" => RuntimeValue.FromInteger(Column),

@@ -30,6 +30,7 @@ public sealed partial class Binder
             InputStatementSyntax inputStatement => BindInputStatement(inputStatement),
             OpenStatementSyntax openStatement => BindOpenStatement(openStatement),
             CloseStatementSyntax closeStatement => BindCloseStatement(closeStatement),
+            ErrorStatementSyntax errorStatement => BindErrorStatement(errorStatement),
             IfStatementSyntax ifStatement => BindIfStatement(ifStatement),
             TryStatementSyntax tryStatement => BindTryStatement(tryStatement),
             SelectCaseStatementSyntax selectCaseStatement => BindSelectCaseStatement(selectCaseStatement),

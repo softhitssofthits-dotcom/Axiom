@@ -67,6 +67,7 @@ public sealed partial class Binder
                 : inputStatement.InputKeyword.Location,
             OpenStatementSyntax openStatement => openStatement.OpenKeyword.Location,
             CloseStatementSyntax closeStatement => closeStatement.CloseKeyword.Location,
+            ErrorStatementSyntax errorStatement => errorStatement.ErrorKeyword.Location,
             AssignmentStatementSyntax assignmentStatement => GetLocation(assignmentStatement.Target),
             EraseStatementSyntax eraseStatement => eraseStatement.EraseKeyword.Location,
             RedimStatementSyntax redimStatement => redimStatement.RedimKeyword.Location,

@@ -172,3 +172,69 @@
 Примечание: первый исполняемый срез реализован только в интерпретаторе. Он проверяет перехват runtime-ошибки, поля `ERROR.Code`, `ERROR.Line`, `ERROR.Column`, выполнение `FINALLY` после обычного тела, после обработанной ошибки и перед необработанной ошибкой. `BytecodeVm` и сквозной паритет остаются следующим этапом.
 
 ���������� 2026-05-07: IDE �������� ��������� ���������������� ����� ��� �������� �������. ���� ������ ����� `Bytecode`, �� ���������� ��������������� ������ �� `MB4001`, �������� ��������� ������ ����� ������������� � �������� ��������� ��� interpreter fallback. ��� �� �������� VM-���������: � ������ `TRY/CATCH/FINALLY` ��-�������� �������� `VM: ���` � `�������� VM: ���`, � ������ ���������� ����������� ���� ������� ��������.
+## ���������� ������� - 2026-05-08 - ERROR
+
+������ ����������������� ��������� `ERROR`:
+- `VM`: ���;
+- `���������`: ��, lexer/parser/binder/runtime/execution/IDE �������� ��������� ��� ���������;
+- `Sample`: ��, `samples/operators/error/user_code_catch.axm`;
+- `Manual`: ��, `docs/manual/error.html` � `docs/manual/error-handling.html`;
+- `�������� VM`: ���;
+- `���������� �������`: ���;
+- `�������`: �� ���������.
+
+����������: `ERROR` ���������� � �������������� � ���������� ��� �� ���� ����������� ������� ����������, ��� ��������� ������. � ������� ���������� ���� `ERROR` � `TRY/CATCH/FINALLY` �������� ��������������� � �� ��������� ��������� `BytecodeVm`. Acceptance-����� �������� ��������� `samples/operators/error/` �� ���������� VM-���������.
+## Обновление реестра - 2026-05-08 - VM-поддержка TRY/CATCH/FINALLY и ERROR
+
+Статус форм `TRY ... CATCH ... FINALLY ... END TRY` и `ERROR` после байткодного среза:
+- `VM`: да;
+- `Автотесты`: да, обновлены acceptance-проверки `TryCatchAcceptanceSample_RunsOnBytecodeVm`, `ErrorAcceptanceSample_RunsOnBytecodeVm` и общий положительный bytecode-аудит samples;
+- `Sample`: да, `samples/operators/try/handled_runtime_error.axm` и `samples/operators/error/user_code_catch.axm`;
+- `Manual`: да, `docs/manual/try.html`, `docs/manual/error.html`, `docs/manual/error-handling.html`;
+- `Сквозной VM`: да, оба sample теперь обязаны проходить через `ExecutionMode.Bytecode` без interpreter fallback;
+- `Негативный паритет`: частично, базовая runtime-ошибка и пользовательская ошибка проверяются, ранние выходы через `FINALLY` требуют отдельной досверки;
+- `Профиль`: не приоритет.
+
+Примечание: VM-путь использует служебный стек обработчиков внутри `BytecodeCallFrame`. Обработанная диагностика удаляется из итогового результата и превращается в значение встроенного типа `ERROR`, поэтому контракт `err.Code AS STRING`, `err.Message AS STRING`, `err.Line AS INTEGER`, `err.Column AS INTEGER` совпадает с интерпретатором.
+
+## Обновление реестра - 2026-05-08 - RETURN через FINALLY в VM
+
+Дополнение к строке `TRY/CATCH/FINALLY`:
+- `RETURN` из `TRY`/`CATCH` теперь выполняет `FINALLY` в `BytecodeVm` перед фактическим выходом из процедуры;
+- автоматическая проверка: `Run_WithBytecodeMode_RunsFinallyBeforeFunctionReturn`;
+- оставшийся отрицательный зазор: `EXIT FOR` и `EXIT DO` через `FINALLY` ещё требуют отдельного lowering-пути.
+
+## Обновление реестра - 2026-05-08 - EXIT FOR/EXIT DO через FINALLY в VM
+
+Дополнение к строке `TRY/CATCH/FINALLY`:
+- `EXIT FOR` и `EXIT DO` теперь не обходят `FINALLY`, когда переход покидает активный `TRY`/`CATCH`;
+- автоматические проверки: `Run_WithBytecodeMode_RunsFinallyBeforeExitForLeavesTry`, `Run_WithBytecodeMode_DoesNotRunFinallyBeforeExitForInsideSameTry`, `Run_WithBytecodeMode_RunsFinallyBeforeExitDoLeavesTry`;
+- статус отрицательного паритета для ранних выходов через `FINALLY`: базово закрыт для `RETURN`, `EXIT FOR`, `EXIT DO`; остаётся отдельная досверка вложенных обработчиков и ошибок внутри `FINALLY`.
+
+## Обновление реестра - 2026-05-08 - вложенные FINALLY и IDE fallback
+
+Дополнение к строке `TRY/CATCH/FINALLY`:
+- вложенные `FINALLY` проверены на порядок выполнения изнутри наружу;
+- ошибка внутри `FINALLY` проверена на перехват внешним `CATCH`;
+- временный IDE fallback по `MB4001` снят, поэтому обычный запуск `TRY`/`ERROR` в режиме `Bytecode` должен оставаться на `BytecodeVm`;
+- автоматические проверки: `Run_WithBytecodeMode_RunsNestedFinallyBlocksInsideOut`, `Run_WithBytecodeMode_AllowsOuterCatchToHandleErrorFromFinally`, `Run_WithBytecodeMode_RunsTryBlockOnBytecodeVm`.
+
+## Обновление реестра - 2026-05-08 - ручной IDE-smoke TRY/ERROR
+
+Дополнение к строкам `TRY/CATCH/FINALLY` и `ERROR`:
+- `samples/operators/error/user_code_catch.axm` вручную открыт и выполнен в `Axiom.Ide`; ожидаемый вывод `APP001`, `Manual failure`, `after` подтверждён;
+- `samples/operators/try/handled_runtime_error.axm` вручную открыт и выполнен в `Axiom.Ide`; ожидаемый вывод с `MB3001`, строкой `4`, сообщением `Деление на ноль.`, `cleanup` и `after` подтверждён;
+- IDE-smoke статус: подтверждён вручную 2026-05-08.
+
+## Обновление реестра - 2026-05-08 - ERROR err
+
+Дополнение к строке `ERROR`:
+- `VM`: да, форма `ERROR err` понижается в режим `RaiseError` для существующего значения `ERROR`;
+- `Автотесты`: да, добавлены `Bind_ErrorStatementAcceptsCaughtRuntimeError`, `Execute_ErrorStatementRethrowsCaughtRuntimeError`, `Run_WithBytecodeMode_RethrowsCaughtRuntimeError`, `ErrorRethrowAcceptanceSample_RunsOnBytecodeVm`;
+- `Sample`: да, `samples/operators/error/rethrow_caught_error.axm`;
+- `Manual`: да, обновлены `docs/manual/error.html`, `docs/manual/error-handling.html`, `docs/manual/try.html` и поисковый индекс;
+- `Сквозной VM`: да, acceptance sample обязан выполняться через `ExecutionMode.Bytecode` без interpreter fallback;
+- `Негативный паритет`: частично, типовое правило `ERROR 10` остаётся проверенным, а `ERROR err, message` сознательно не вводится как отдельная форма;
+- `Профиль`: не приоритет.
+
+Примечание: `ERROR err` сохраняет исходные `Code`, `Message`, `Line` и `Column`, поэтому внешний `CATCH` видит место первоначальной ошибки, а не строку повторного проброса.

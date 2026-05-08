@@ -62,6 +62,31 @@ public sealed partial class Binder
         return new BoundTryStatement(GetLocation(statement), statements, catchVariable, catchStatements, finallyStatements);
     }
 
+    private BoundStatement BindErrorStatement(ErrorStatementSyntax statement)
+    {
+        if (statement.MessageExpression is null)
+        {
+            var expression = BindExpression(statement.CodeExpression);
+            if (expression.Type == TypeSymbol.RuntimeError)
+            {
+                return new BoundErrorStatement(GetLocation(statement), expression, messageExpression: null, BoundErrorStatementMode.ExistingError);
+            }
+
+            if (expression.Type != TypeSymbol.String && expression.Type != TypeSymbol.Error)
+            {
+                ReportTypeMismatch(expression.Type, TypeSymbol.String, GetLocation(statement.CodeExpression));
+                return new BoundErrorStatement(GetLocation(statement), new BoundErrorExpression(GetLocation(statement.CodeExpression)), messageExpression: null, BoundErrorStatementMode.UserCode);
+            }
+
+            return new BoundErrorStatement(GetLocation(statement), expression, messageExpression: null, BoundErrorStatementMode.UserCode);
+        }
+
+        var codeExpression = BindExpression(statement.CodeExpression, TypeSymbol.String);
+        var messageExpression = BindExpression(statement.MessageExpression, TypeSymbol.String);
+
+        return new BoundErrorStatement(GetLocation(statement), codeExpression, messageExpression, BoundErrorStatementMode.UserCode);
+    }
+
     private (VariableSymbol? variable, IReadOnlyList<BoundStatement> statements) BindCatchClause(CatchClauseSyntax? clause)
     {
         if (clause is null)

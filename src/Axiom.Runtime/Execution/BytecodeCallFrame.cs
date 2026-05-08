@@ -11,6 +11,7 @@ internal sealed class BytecodeCallFrame
     private Dictionary<int, RuntimeValue>? _cachedFunctionValuesByRoutineId;
     private Dictionary<int, BytecodeVariableSlot[]>? _cachedCapturedSlotsByRoutineId;
     private BytecodeVariableSlot[]? _byRefArgumentTargets;
+    private readonly List<BytecodeErrorHandlerFrame> _errorHandlers = [];
     private readonly RuntimeValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
     private BytecodeVariableSlot?[]? _sharedLocals;
@@ -62,6 +63,8 @@ internal sealed class BytecodeCallFrame
 
     public int InstructionPointer { get; set; }
 
+    public int ErrorHandlerCount => _errorHandlers.Count;
+
     public void Reset(
         BytecodeVariableSlot[] arguments,
         BytecodeVariableSlot[] captures,
@@ -77,6 +80,7 @@ internal sealed class BytecodeCallFrame
         _cachedFunctionValuesByRoutineId?.Clear();
         _cachedCapturedSlotsByRoutineId?.Clear();
         EvaluationStack.Clear();
+        _errorHandlers.Clear();
 
         if (_locals.Length > 0)
         {
@@ -95,6 +99,32 @@ internal sealed class BytecodeCallFrame
             Arguments[index] = arguments[index];
         }
     }
+
+    public void PushErrorHandler(BytecodeErrorHandlerFrame handler)
+    {
+        _errorHandlers.Add(handler);
+    }
+
+    public BytecodeErrorHandlerFrame? PeekErrorHandler()
+    {
+        return _errorHandlers.Count == 0 ? null : _errorHandlers[^1];
+    }
+
+    public bool TryPopErrorHandler(out BytecodeErrorHandlerFrame handler)
+    {
+        if (_errorHandlers.Count == 0)
+        {
+            handler = null!;
+            return false;
+        }
+
+        var index = _errorHandlers.Count - 1;
+        handler = _errorHandlers[index];
+        _errorHandlers.RemoveAt(index);
+        return true;
+    }
+
+    public IReadOnlyList<BytecodeErrorHandlerFrame> ErrorHandlers => _errorHandlers;
 
     public bool TryResolveVisibleVariable(VariableSymbol variable, out BytecodeVariableSlot slot)
     {

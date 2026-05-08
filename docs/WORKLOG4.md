@@ -6899,3 +6899,180 @@
 
 Следующий точный шаг:
 - реализовать `TRY/CATCH/FINALLY` в lowering и `BytecodeVm`, затем убрать долг по `MB4001` для этой формы и обновить реестр покрытия.
+
+## Session 698 - 2026-05-08 07:16 - реализован пользовательский оператор ERROR
+
+Что изменено:
+- `ERROR` добавлен в lexer, parser, syntax tree, binder и подсветку IDE;
+- добавлен bound-узел `BoundErrorStatement`;
+- интерпретатор исполняет `ERROR code` и `ERROR code, message`;
+- код пользовательской ошибки хранится как `STRING`, а `err.Code` возвращает полный строковый код;
+- `ERROR` внутри `TRY` перехватывается через обычный `CATCH`;
+- пустой код ошибки выдаёт диагностику аргумента времени выполнения;
+- `Axiom.Execution` явно считает `ERROR` и `TRY` неподдержанными для строгого VM-покрытия;
+- добавлен sample `samples/operators/error/user_code_catch.axm`;
+- добавлены страницы manual `docs/manual/error-handling.html` и `docs/manual/error.html`, обновлены `try.html`, `manual.js` и `search-index.js`;
+- `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md` синхронизированы с новым статусом.
+
+Проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Lexing.Tests/Axiom.Lexing.Tests.csproj -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false`.
+
+Решения:
+- для пользовательского создания ошибки используется имя `ERROR`, а не `RAISE` или `THROW`, потому что это ближе к BASIC-линии и не вводит чужую модель исключений;
+- `Code` остаётся строкой, чтобы системные коды вроде `MB3001` и пользовательские коды вроде `APP001` имели один контракт;
+- VM-поддержка не имитируется: interpreter fallback IDE остаётся временной оболочечной мерой, а реестр байткода сохраняет `VM: нет`.
+
+Следующий точный шаг:
+- реализовать `TRY/CATCH/FINALLY` и `ERROR` в lowering и `BytecodeVm`, затем вернуть `samples/operators/try/` и `samples/operators/error/` в общий положительный bytecode-аудит.
+
+## Session 699 - 2026-05-08 07:41 - реализован байткодный путь TRY/CATCH/FINALLY и ERROR
+
+Что изменено:
+- добавлены bytecode-opcode `PushErrorHandler`, `PopErrorHandler`, `RaiseError`, `EndFinally` и соответствующие lowered-инструкции;
+- `BoundProgramLowerer` понижает `TRY/CATCH/FINALLY` в явный поток управления с обработчиком, `CATCH` и `FINALLY`;
+- `BytecodeCompiler` эмитит новые инструкции и кодирует слот переменной `CATCH`;
+- `BytecodeModuleValidator` знает форму новых инструкций, их стековый эффект и доступ к полям значения `ERROR`;
+- `BytecodeVm` хранит стек обработчиков, перехватывает `RuntimeFailureException`, удаляет обработанную диагностику, создаёт `RuntimeErrorValue` и запускает `FINALLY` перед необработанной ошибкой;
+- байткодный `LoadField` поддерживает поля встроенного значения `ERROR`;
+- строгий execution-путь больше не считает `TRY` и `ERROR` неподдержанными VM-семантиками;
+- acceptance-тесты `TRY` и `ERROR` переведены на `ExecutionMode.Bytecode`, а `samples/operators/try/` и `samples/operators/error/` возвращены в общий положительный bytecode-аудит;
+- `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md` обновлены под новый статус.
+
+Проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "TryCatchAcceptanceSample_RunsOnBytecodeVm|ErrorAcceptanceSample_RunsOnBytecodeVm|PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback" -p:UseSharedCompilation=false` проходит.
+
+Решения:
+- первый VM-срез сделан через служебные инструкции обработчика, а не через неявный fallback на интерпретатор;
+- обработанная VM-диагностика удаляется тем же образом, что в интерпретаторе, чтобы `CATCH err` не оставлял ошибку в итоговом результате;
+- ранние выходы `RETURN`/`EXIT` через `FINALLY` выделены как отдельная досверка, чтобы не раздувать первый байткодный перенос.
+
+Следующий точный шаг:
+- добавить адресные VM/parity-тесты для ранних выходов и вложенных обработчиков `TRY`, затем проверить и при необходимости убрать устаревший IDE fallback для `MB4001` на этой форме.
+
+Дополнение к проверкам Session 699:
+- `dotnet test tests/Axiom.Bytecode.Tests/Axiom.Bytecode.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- повторный `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит.
+
+## Session 700 - 2026-05-08 07:47 - закрыт RETURN через FINALLY в BytecodeVm
+
+Что изменено:
+- `BytecodeErrorHandlerFrame` хранит pending-значение `RETURN`;
+- `BytecodeVm.ExecuteReturn` при активном `FINALLY` не завершает процедуру сразу, а переводит обработчик в режим выполнения `FINALLY`;
+- `EndFinally` после такого пути завершает процедуру сохранённым значением возврата;
+- добавлен execution-тест `Run_WithBytecodeMode_RunsFinallyBeforeFunctionReturn`;
+- `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md` обновлены.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "Run_WithBytecodeMode_RunsFinallyBeforeFunctionReturn" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит.
+
+Решение:
+- `RETURN` закрыт на уровне VM, потому что это отдельная инструкция, а не переход по метке;
+- `EXIT FOR` и `EXIT DO` оставлены следующим шагом, потому что для них нужна правка lowering переходов через активные `FINALLY`.
+
+Следующий точный шаг:
+- реализовать контекстное понижение `EXIT FOR`/`EXIT DO` через `FINALLY`, затем добавить parity-тесты на эти формы.
+
+## Session 701 - 2026-05-08 08:02 - закрыты EXIT FOR/EXIT DO через FINALLY в BytecodeVm
+
+Что изменено:
+- `BoundProgramLowerer` получил стек активных `FINALLY` и фиксирует глубину этого стека при входе в `FOR`/`DO`;
+- `EXIT FOR` и `EXIT DO` теперь вставляют `PopErrorHandler` и операторы покидаемых `FINALLY` перед переходом к метке выхода, если выход реально покидает `TRY`;
+- если цикл находится внутри того же `TRY`, `EXIT FOR` не запускает `FINALLY` досрочно;
+- добавлены execution-тесты `Run_WithBytecodeMode_RunsFinallyBeforeExitForLeavesTry`, `Run_WithBytecodeMode_DoesNotRunFinallyBeforeExitForInsideSameTry`, `Run_WithBytecodeMode_RunsFinallyBeforeExitDoLeavesTry`;
+- `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md` обновлены.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "Run_WithBytecodeMode_RunsFinallyBeforeExitForLeavesTry|Run_WithBytecodeMode_DoesNotRunFinallyBeforeExitForInsideSameTry|Run_WithBytecodeMode_RunsFinallyBeforeExitDoLeavesTry" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Bytecode.Tests/Axiom.Bytecode.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит.
+
+Решение:
+- для `EXIT FOR`/`EXIT DO` выбран lowering-путь, а не новая VM-инструкция, потому что эти формы уже представлены как переходы к меткам и корректность зависит от того, какие `FINALLY` реально покидаются.
+
+Следующий точный шаг:
+- добавить проверки вложенных обработчиков и ошибок внутри `FINALLY`, затем убрать устаревший IDE fallback по `MB4001`, если он больше не нужен для `TRY`/`ERROR`.
+
+## Session 702 - 2026-05-08 12:00 - досверены вложенные FINALLY и снят IDE fallback
+
+Что изменено:
+- добавлены execution-тесты `Run_WithBytecodeMode_RunsNestedFinallyBlocksInsideOut` и `Run_WithBytecodeMode_AllowsOuterCatchToHandleErrorFromFinally`;
+- подтверждено, что вложенные `FINALLY` в `BytecodeVm` выполняются изнутри наружу, а ошибка из `FINALLY` может быть перехвачена внешним `CATCH`;
+- из `ProgramRunService` удалён временный повторный запуск через интерпретатор при единственной backend-диагностике `MB4001`;
+- IDE-тест `Run_WithBytecodeMode_RunsTryBlockOnBytecodeVm` теперь ожидает `ExecutionEngineKind.BytecodeVm` и отсутствие fallback;
+- `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md` обновлены.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "Run_WithBytecodeMode_RunsNestedFinallyBlocksInsideOut|Run_WithBytecodeMode_AllowsOuterCatchToHandleErrorFromFinally" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --filter "Run_WithBytecodeMode_RunsTryBlockOnBytecodeVm" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит.
+
+Решение:
+- после появления VM-пути для `TRY`/`ERROR` IDE больше не должна скрывать backend-непокрытие автоматическим interpreter fallback; неподдержанные будущие формы должны оставаться явными диагностическими долгами.
+
+Следующий точный шаг:
+- выполнить ручной IDE-smoke для `samples/operators/try/handled_runtime_error.axm` и `samples/operators/error/user_code_catch.axm` либо добавить автоматический smoke-harness сценарий для запуска этих samples из IDE-слоя.
+
+## Session 703 - 2026-05-08 12:21 - подтверждён ручной IDE-smoke TRY/ERROR
+
+Что проверено вручную:
+- `samples/operators/error/user_code_catch.axm` открыт и выполнен в `Axiom.Ide`; вывод: `APP001`, `Manual failure`, `after`;
+- `samples/operators/try/handled_runtime_error.axm` открыт и выполнен в `Axiom.Ide`; вывод: `before`, `caught`, `MB3001`, `4`, `Деление на ноль.`, `cleanup`, `after`;
+- оба запуска завершились успешно в IDE.
+
+Изменённые документы:
+- `docs/PLANS3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать первый полный срез обработки ошибок закрытым: синтаксис, binder, интерпретатор, `BytecodeVm`, IDE, samples, manual и ручная IDE-проверка подтверждены.
+
+Следующий точный шаг:
+- по решению пользователя перейти к следующей языковой теме либо подготовить изменения обработки ошибок к коммиту.
+
+## Session 704 - 2026-05-08 12:34 - реализован проброс ERROR err
+
+Сделано:
+- добавлена семантическая форма `ERROR err`, где выражение имеет встроенный тип `ERROR`;
+- интерпретатор и `BytecodeVm` повторно поднимают пойманную ошибку с сохранением исходных `Code`, `Message`, `Line` и `Column`;
+- lowerer и VM-инструкция `RaiseError` получили отдельный режим для существующего значения `ERROR`;
+- добавлены проверки `Bind_ErrorStatementAcceptsCaughtRuntimeError`, `Execute_ErrorStatementRethrowsCaughtRuntimeError`, `Run_WithBytecodeMode_RethrowsCaughtRuntimeError`, `ErrorRethrowAcceptanceSample_RunsOnBytecodeVm`;
+- добавлен sample `samples/operators/error/rethrow_caught_error.axm`;
+- обновлены страницы справочника `docs/manual/error.html`, `docs/manual/error-handling.html`, `docs/manual/try.html` и поисковый индекс.
+
+Проверки:
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --filter "Bind_ErrorStatement" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "Execute_ErrorStatement" -p:UseSharedCompilation=false` проходит;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "Rethrow|ErrorAcceptance" -p:UseSharedCompilation=false` проходит.
+
+Что остаётся:
+- выполнить полную последовательную сборку и профильные тесты по затронутым проектам.
+
+Следующий точный шаг:
+- прогнать `dotnet build Axiom.sln -p:UseSharedCompilation=false` и полный набор релевантных тестов без параллельных MSBuild-запусков.
+
+Дополнение проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` не завершился из-за внешней блокировки файлов запущенным процессом `Axiom.Ide (5864)`, который держит DLL в `.artifacts\bin\Axiom.Ide\Debug\net10.0-windows`;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false` проходит, 289 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false` проходит, 564 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false` проходит, 751 тест.
+- `dotnet test tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj -p:UseSharedCompilation=false` проходит, 199 тестов.
+- дополнительная попытка собрать solution в отдельный `OutputPath` с `-m:1` не является корректной проверкой для WPF-проекта: временный проект `Axiom.Ide_*_wpftmp` ожидал зависимости в своём каталоге вывода и получил ошибки `CS0006`.
+
+Следующий точный шаг после закрытия окна IDE:
+- повторить `dotnet build Axiom.sln -p:UseSharedCompilation=false`, чтобы подтвердить полный solution-build без файловой блокировки.

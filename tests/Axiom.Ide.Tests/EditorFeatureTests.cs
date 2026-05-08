@@ -113,6 +113,7 @@ public sealed class EditorFeatureTests
         Assert.Contains("<Word>TRY</Word>", xshd, StringComparison.Ordinal);
         Assert.Contains("<Word>CATCH</Word>", xshd, StringComparison.Ordinal);
         Assert.Contains("<Word>FINALLY</Word>", xshd, StringComparison.Ordinal);
+        Assert.Contains("<Word>ERROR</Word>", xshd, StringComparison.Ordinal);
     }
 
     [Fact]

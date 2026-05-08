@@ -29,6 +29,7 @@ public sealed partial class Parser
             SyntaxKind.InputKeyword => ParseInputStatement(),
             SyntaxKind.OpenKeyword => ParseOpenStatement(),
             SyntaxKind.CloseKeyword => ParseCloseStatement(),
+            SyntaxKind.ErrorKeyword => ParseErrorStatement(),
             SyntaxKind.EraseKeyword => ParseEraseStatement(),
             SyntaxKind.RedimKeyword => ParseRedimStatement(),
             SyntaxKind.IfKeyword => ParseIfStatement(),
@@ -194,6 +195,22 @@ public sealed partial class Parser
         var closeKeyword = Match(SyntaxKind.CloseKeyword, "CLOSE");
         var fileIdentifier = MatchIdentifier();
         return new CloseStatementSyntax(closeKeyword, fileIdentifier);
+    }
+
+    private ErrorStatementSyntax ParseErrorStatement()
+    {
+        var errorKeyword = Match(SyntaxKind.ErrorKeyword, "ERROR");
+        var codeExpression = ParseExpression();
+        SyntaxToken? commaToken = null;
+        ExpressionSyntax? messageExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            commaToken = NextToken();
+            messageExpression = ParseExpression();
+        }
+
+        return new ErrorStatementSyntax(errorKeyword, codeExpression, commaToken, messageExpression);
     }
 
     private EraseStatementSyntax ParseEraseStatement()

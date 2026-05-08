@@ -8,7 +8,7 @@ public sealed class LexerTests
     [Fact]
     public void Lex_RecognizesKeywordsCaseInsensitively()
     {
-        var tokens = Lex("dIm value aS integer\r\nDiM bigger As LoNg\r\nDIM amount AS DeCiMaL\r\nDo UnTiL TRUE\r\nLoOp WhIlE FALSE\r\nSeLeCt CaSe value\r\nCaSe Is >= 10\r\nPrInT TRUE\r\nEnD SeLeCt\r\nIf FALSE tHeN\r\nElSeIf TRUE tHeN\r\nTry\r\nCatch err\r\nFinally\r\nEnd Try\r\nExIt FoR\r\nByReF ByVaL\r\nMoD\r\nEnD If", out var diagnostics);
+        var tokens = Lex("dIm value aS integer\r\nDiM bigger As LoNg\r\nDIM amount AS DeCiMaL\r\nDo UnTiL TRUE\r\nLoOp WhIlE FALSE\r\nSeLeCt CaSe value\r\nCaSe Is >= 10\r\nPrInT TRUE\r\nEnD SeLeCt\r\nIf FALSE tHeN\r\nElSeIf TRUE tHeN\r\nTry\r\nError \"APP001\"\r\nCatch err\r\nFinally\r\nEnd Try\r\nExIt FoR\r\nByReF ByVaL\r\nMoD\r\nEnD If", out var diagnostics);
 
         Assert.Empty(diagnostics);
         AssertTokenKinds(
@@ -60,6 +60,9 @@ public sealed class LexerTests
             TokenKind.ThenKeyword,
             TokenKind.NewLineToken,
             TokenKind.TryKeyword,
+            TokenKind.NewLineToken,
+            TokenKind.ErrorKeyword,
+            TokenKind.StringLiteralToken,
             TokenKind.NewLineToken,
             TokenKind.CatchKeyword,
             TokenKind.IdentifierToken,

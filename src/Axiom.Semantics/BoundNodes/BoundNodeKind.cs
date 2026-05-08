@@ -14,6 +14,7 @@ public enum BoundNodeKind
     InputStatement,
     OpenStatement,
     CloseStatement,
+    ErrorStatement,
     IfStatement,
     TryStatement,
     SelectCaseStatement,

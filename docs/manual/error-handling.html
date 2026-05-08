@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Обработка пользовательских ошибок</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="error-handling">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Обработка ошибок</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Обработка пользовательских ошибок</p><p class="sidebar__subtitle">Создание и перехват ошибок времени выполнения.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Управление выполнением</p>
+<h1 class="page-title">Обработка пользовательских ошибок</h1>
+<p class="lead">В Axiom обработка ошибок строится вокруг блока <code>TRY ... CATCH ... FINALLY ... END TRY</code> и оператора <code>ERROR</code>. Код, который может завершиться ошибкой, помещают в <code>TRY</code>; обработчик <code>CATCH</code> получает значение встроенного типа <code>ERROR</code>; часть <code>FINALLY</code> выполняет завершающие действия при выходе из блока.</p>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p><code>ERROR</code> создаёт пользовательскую ошибку времени выполнения или повторно поднимает уже пойманное значение ошибки. Если оператор находится внутри подходящего блока <code>TRY</code>, управление переходит в <code>CATCH</code>. Если обработчика нет, программа завершается диагностикой времени выполнения с указанным кодом и сообщением.</p>
+<p>Имя <code>ERROR</code> выбрано по линии BASIC: оно ближе к традиционной форме создания ошибки времени выполнения, чем заимствованные <code>RAISE</code> или <code>THROW</code>. При этом Axiom не повторяет старую модель <code>ON ERROR GOTO</code> и не использует переходы по меткам.</p>
+</section>
+
+<section class="article-section">
+<h2>Основные формы</h2>
+<pre><code class="language-basic">ERROR код
+ERROR код, сообщение
+ERROR ошибка</code></pre>
+<p><code>код</code> и <code>сообщение</code> являются выражениями типа <code>STRING</code>. Код может быть проектным кодом вроде <code>"APP001"</code>. Если сообщение не указано, Axiom формирует сообщение по умолчанию. <code>ошибка</code> должна иметь тип <code>ERROR</code> и обычно берётся из <code>CATCH err</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Перехват</h2>
+<pre><code class="language-basic">TRY
+    ERROR "APP001", "Manual failure"
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+
+PRINT "after"</code></pre>
+<p>После выполнения <code>ERROR</code> строки внутри <code>TRY</code> ниже этого оператора не выполняются. В <code>CATCH</code> переменная <code>err</code> доступна только для чтения и содержит сведения о перехваченной ошибке.</p>
+</section>
+
+<section class="article-section">
+<h2>Передача ошибки дальше</h2>
+<pre><code class="language-basic">TRY
+    TRY
+        ERROR "APP003", "Original failure"
+    CATCH err
+        PRINT "local cleanup"
+        ERROR err
+    END TRY
+CATCH outerErr
+    PRINT outerErr.Code
+    PRINT outerErr.Message
+    PRINT outerErr.Line
+END TRY</code></pre>
+<p><code>ERROR err</code> повторно поднимает уже пойманное значение <code>ERROR</code>. Внешний обработчик видит исходные <code>Code</code>, <code>Message</code>, <code>Line</code> и <code>Column</code>, поэтому такая форма подходит для локальной очистки, журналирования или преобразования управления без скрытия места первоначальной ошибки.</p>
+</section>
+
+<section class="article-section">
+<h2>Значение ERROR</h2>
+<table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Смысл</th></tr></thead><tbody>
+<tr><td><code>Code</code></td><td><code>STRING</code></td><td>Полный код ошибки. Для системных ошибок времени выполнения это код вроде <code>MB3001</code>, для пользовательских ошибок - строка, переданная в <code>ERROR</code>.</td></tr>
+<tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения об ошибке.</td></tr>
+<tr><td><code>Line</code></td><td><code>INTEGER</code></td><td>Строка исходного текста, где возникла ошибка, или <code>0</code>, если место неизвестно.</td></tr>
+<tr><td><code>Column</code></td><td><code>INTEGER</code></td><td>Колонка исходного текста, где возникла ошибка, или <code>0</code>, если место неизвестно.</td></tr>
+</tbody></table>
+</section>
+
+<section class="article-section">
+<h2>Ограничения</h2>
+<ul>
+<li><code>CATCH</code> пока не фильтрует ошибки по коду или типу.</li>
+<li>В одном блоке <code>TRY</code> поддерживается не более одного <code>CATCH</code>.</li>
+<li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
+<li><code>TRY/CATCH/FINALLY</code>, <code>ERROR код</code>, <code>ERROR код, сообщение</code> и <code>ERROR err</code> поддерживаются интерпретатором и <code>BytecodeVm</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват системной ошибки времени выполнения и FINALLY</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="error.html">Оператор ERROR</a><a href="try.html">Оператор TRY</a><a href="diagnostics.html">Диагностика</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

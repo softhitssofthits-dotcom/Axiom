@@ -1197,6 +1197,198 @@ END FUNCTION
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_RunsFinallyBeforeFunctionReturn()
+    {
+        const string text = """
+PRINT Compute()
+
+FUNCTION Compute() AS INTEGER
+    TRY
+        RETURN 42
+    FINALLY
+        PRINT "cleanup"
+    END TRY
+END FUNCTION
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["cleanup", "42"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_RunsFinallyBeforeExitForLeavesTry()
+    {
+        const string text = """
+FOR i = 1 TO 1
+    TRY
+        PRINT "before"
+        EXIT FOR
+    FINALLY
+        PRINT "cleanup"
+    END TRY
+
+    PRINT "unreachable"
+NEXT
+
+PRINT "after"
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["before", "cleanup", "after"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_DoesNotRunFinallyBeforeExitForInsideSameTry()
+    {
+        const string text = """
+TRY
+    FOR i = 1 TO 1
+        EXIT FOR
+    NEXT
+
+    PRINT "inside"
+FINALLY
+    PRINT "cleanup"
+END TRY
+
+PRINT "after"
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["inside", "cleanup", "after"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_RunsFinallyBeforeExitDoLeavesTry()
+    {
+        const string text = """
+DO
+    TRY
+        PRINT "before"
+        EXIT DO
+    FINALLY
+        PRINT "cleanup"
+    END TRY
+
+    PRINT "unreachable"
+LOOP
+
+PRINT "after"
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["before", "cleanup", "after"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_RunsNestedFinallyBlocksInsideOut()
+    {
+        const string text = """
+TRY
+    TRY
+        ERROR "INNER", "inner failure"
+    FINALLY
+        PRINT "inner cleanup"
+    END TRY
+FINALLY
+    PRINT "outer cleanup"
+END TRY
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["inner cleanup", "outer cleanup"], result.Output);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("INNER", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_AllowsOuterCatchToHandleErrorFromFinally()
+    {
+        const string text = """
+TRY
+    TRY
+        ERROR "INNER", "inner failure"
+    CATCH err
+        PRINT err.Code
+    FINALLY
+        ERROR "CLEANUP", "cleanup failure"
+    END TRY
+CATCH outerErr
+    PRINT outerErr.Code
+    PRINT outerErr.Message
+END TRY
+
+PRINT "after"
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["INNER", "CLEANUP", "cleanup failure", "after"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_RethrowsCaughtRuntimeError()
+    {
+        const string text = """
+TRY
+    TRY
+        ERROR "APP003", "Original failure"
+    CATCH err
+        PRINT "inner"
+        ERROR err
+    END TRY
+CATCH outerErr
+    PRINT outerErr.Code
+    PRINT outerErr.Message
+    PRINT outerErr.Line
+END TRY
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["inner", "APP003", "Original failure", "3"], result.Output);
+    }
+
+    [Fact]
     public void Run_SupportsLocalSubWithoutCaptureOnBytecodeVm()
     {
         const string text = """

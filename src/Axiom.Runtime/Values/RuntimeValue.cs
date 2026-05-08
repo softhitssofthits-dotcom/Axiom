@@ -77,7 +77,7 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
         if (type == TypeSymbol.RuntimeError)
         {
-            return FromRuntimeError(new RuntimeErrorValue(0, string.Empty, 0, 0));
+            return FromRuntimeError(new RuntimeErrorValue(string.Empty, string.Empty, 0, 0));
         }
 
         if (type is FunctionTypeSymbol functionType)

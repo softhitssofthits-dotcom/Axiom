@@ -6,8 +6,9 @@ namespace Axiom.Bytecode;
 public sealed class BoundProgramLowerer
 {
     private readonly List<BytecodeDiagnostic> _diagnostics = [];
-    private readonly Stack<string> _doLoopExitLabels = [];
-    private readonly Stack<string> _forExitLabels = [];
+    private readonly Stack<LoopExitContext> _doLoopExitLabels = [];
+    private readonly Stack<LoopExitContext> _forExitLabels = [];
+    private readonly List<FinallyContext> _activeFinallyContexts = [];
     private HashSet<VariableSymbol> _currentRoutineLocals = [];
     private int _nextLabelId;
 
@@ -121,6 +122,21 @@ public sealed class BoundProgramLowerer
         public Action<List<LoweredInstruction>> EmitCopyBack { get; }
     }
 
+    private readonly record struct LoopExitContext(string Label, int FinallyDepth);
+
+    private sealed class FinallyContext
+    {
+        public FinallyContext(Axiom.Core.TextLocation location, IReadOnlyList<BoundStatement> statements)
+        {
+            Location = location;
+            Statements = statements;
+        }
+
+        public Axiom.Core.TextLocation Location { get; }
+
+        public IReadOnlyList<BoundStatement> Statements { get; }
+    }
+
     public LoweringResult Lower(BoundProgram program)
     {
         ArgumentNullException.ThrowIfNull(program);
@@ -128,6 +144,7 @@ public sealed class BoundProgramLowerer
         _diagnostics.Clear();
         _doLoopExitLabels.Clear();
         _forExitLabels.Clear();
+        _activeFinallyContexts.Clear();
         _nextLabelId = 0;
 
         var entryPoint = LowerRoutine(
@@ -250,8 +267,16 @@ public sealed class BoundProgramLowerer
                 LowerClose(close, instructions);
                 break;
 
+            case BoundErrorStatement error:
+                LowerError(error, instructions);
+                break;
+
             case BoundIfStatement ifStatement:
                 LowerIf(ifStatement, instructions);
+                break;
+
+            case BoundTryStatement tryStatement:
+                LowerTry(tryStatement, instructions);
                 break;
 
             case BoundSelectCaseStatement selectCaseStatement:
@@ -477,6 +502,101 @@ public sealed class BoundProgramLowerer
         instructions.Add(LoweredInstruction.StoreVariable(close.Location, close.FileVariable));
     }
 
+    private void LowerError(BoundErrorStatement error, List<LoweredInstruction> instructions)
+    {
+        LowerExpression(error.Expression, instructions);
+        if (error.MessageExpression is not null)
+        {
+            LowerExpression(error.MessageExpression, instructions);
+        }
+
+        instructions.Add(error.Mode == BoundErrorStatementMode.ExistingError
+            ? LoweredInstruction.RaiseExistingError(error.Location)
+            : LoweredInstruction.RaiseError(error.Location, error.MessageExpression is not null));
+    }
+
+    private void LowerTry(BoundTryStatement tryStatement, List<LoweredInstruction> instructions)
+    {
+        var catchLabel = tryStatement.CatchVariable is null ? null : CreateLabel();
+        var finallyLabel = tryStatement.FinallyStatements.Count == 0 ? null : CreateLabel();
+        var endLabel = CreateLabel();
+
+        instructions.Add(LoweredInstruction.PushErrorHandler(
+            tryStatement.Location,
+            catchLabel,
+            finallyLabel,
+            endLabel,
+            tryStatement.CatchVariable));
+
+        var finallyContext = tryStatement.FinallyStatements.Count == 0
+            ? null
+            : new FinallyContext(tryStatement.Location, tryStatement.FinallyStatements);
+
+        if (finallyContext is not null)
+        {
+            _activeFinallyContexts.Add(finallyContext);
+        }
+
+        try
+        {
+            foreach (var statement in tryStatement.Statements)
+            {
+                LowerStatement(statement, instructions);
+            }
+        }
+        finally
+        {
+            if (finallyContext is not null)
+            {
+                _activeFinallyContexts.RemoveAt(_activeFinallyContexts.Count - 1);
+            }
+        }
+
+        instructions.Add(LoweredInstruction.PopErrorHandler(tryStatement.Location));
+        instructions.Add(LoweredInstruction.Jump(tryStatement.Location, finallyLabel ?? endLabel));
+
+        if (catchLabel is not null)
+        {
+            instructions.Add(LoweredInstruction.LabelMarker(tryStatement.Location, catchLabel));
+
+            if (finallyContext is not null)
+            {
+                _activeFinallyContexts.Add(finallyContext);
+            }
+
+            try
+            {
+                foreach (var statement in tryStatement.CatchStatements)
+                {
+                    LowerStatement(statement, instructions);
+                }
+            }
+            finally
+            {
+                if (finallyContext is not null)
+                {
+                    _activeFinallyContexts.RemoveAt(_activeFinallyContexts.Count - 1);
+                }
+            }
+
+            instructions.Add(LoweredInstruction.PopErrorHandler(tryStatement.Location));
+            instructions.Add(LoweredInstruction.Jump(tryStatement.Location, finallyLabel ?? endLabel));
+        }
+
+        if (finallyLabel is not null)
+        {
+            instructions.Add(LoweredInstruction.LabelMarker(tryStatement.Location, finallyLabel));
+            foreach (var statement in tryStatement.FinallyStatements)
+            {
+                LowerStatement(statement, instructions);
+            }
+
+            instructions.Add(LoweredInstruction.EndFinally(tryStatement.Location));
+        }
+
+        instructions.Add(LoweredInstruction.LabelMarker(tryStatement.Location, endLabel));
+    }
+
     private void LowerIf(BoundIfStatement ifStatement, List<LoweredInstruction> instructions)
     {
         var elseLabel = CreateLabel();
@@ -641,7 +761,7 @@ public sealed class BoundProgramLowerer
 
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, bodyLabel));
 
-        _forExitLabels.Push(endLabel);
+        _forExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in forStatement.Statements)
@@ -710,7 +830,7 @@ public sealed class BoundProgramLowerer
             ? LoweredInstruction.JumpIfFalse(condition.Location, endLabel)
             : LoweredInstruction.JumpIfTrue(condition.Location, endLabel));
 
-        _doLoopExitLabels.Push(endLabel);
+        _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -734,7 +854,7 @@ public sealed class BoundProgramLowerer
 
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, startLabel));
 
-        _doLoopExitLabels.Push(endLabel);
+        _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -765,7 +885,7 @@ public sealed class BoundProgramLowerer
 
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, startLabel));
 
-        _doLoopExitLabels.Push(endLabel);
+        _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -793,7 +913,7 @@ public sealed class BoundProgramLowerer
             return;
         }
 
-        instructions.Add(LoweredInstruction.Jump(exitDoStatement.Location, _doLoopExitLabels.Peek()));
+        LowerExitJump(exitDoStatement.Location, _doLoopExitLabels.Peek(), instructions);
     }
 
     private void LowerExitFor(BoundExitForStatement exitForStatement, List<LoweredInstruction> instructions)
@@ -804,7 +924,22 @@ public sealed class BoundProgramLowerer
             return;
         }
 
-        instructions.Add(LoweredInstruction.Jump(exitForStatement.Location, _forExitLabels.Peek()));
+        LowerExitJump(exitForStatement.Location, _forExitLabels.Peek(), instructions);
+    }
+
+    private void LowerExitJump(Axiom.Core.TextLocation location, LoopExitContext exitContext, List<LoweredInstruction> instructions)
+    {
+        for (var index = _activeFinallyContexts.Count - 1; index >= exitContext.FinallyDepth; index--)
+        {
+            var context = _activeFinallyContexts[index];
+            instructions.Add(LoweredInstruction.PopErrorHandler(location));
+            foreach (var statement in context.Statements)
+            {
+                LowerStatement(statement, instructions);
+            }
+        }
+
+        instructions.Add(LoweredInstruction.Jump(location, exitContext.Label));
     }
 
     private void LowerExpression(BoundExpression expression, List<LoweredInstruction> instructions)
@@ -1287,6 +1422,17 @@ public sealed class BoundProgramLowerer
             case BoundIfStatement ifStatement:
                 CollectDeclaredVariables(ifStatement.Statements, variables);
                 CollectDeclaredVariables(ifStatement.ElseStatements, variables);
+                break;
+
+            case BoundTryStatement tryStatement:
+                if (tryStatement.CatchVariable is not null)
+                {
+                    variables.Add(tryStatement.CatchVariable);
+                }
+
+                CollectDeclaredVariables(tryStatement.Statements, variables);
+                CollectDeclaredVariables(tryStatement.CatchStatements, variables);
+                CollectDeclaredVariables(tryStatement.FinallyStatements, variables);
                 break;
 
             case BoundWhileStatement whileStatement:

@@ -171,16 +171,6 @@ public sealed class ProgramRunService : IProgramRunService
                     mode: mode,
                     sourceBreakpointLines: sourceBreakpointLines,
                     stopBeforeFirstInstruction: stopBeforeFirstInstruction));
-            if (ShouldFallbackToInterpreter(executionResult, mode, sourceBreakpointLines, stopBeforeFirstInstruction))
-            {
-                executionResult = _pipeline.RunCompiled(
-                    compiledProgram,
-                    new ExecutionRequest(
-                        sourceText,
-                        inputProvider: inputProvider,
-                        outputWriter: _consoleService,
-                        mode: ExecutionMode.Interpreter));
-            }
 
             var diagnostics = executionResult.Diagnostics
                 .Select(ProgramDiagnosticItem.FromDiagnostic)
@@ -258,24 +248,6 @@ public sealed class ProgramRunService : IProgramRunService
 
             return new ProgramRunResult(ProgramRunStatus.InfrastructureFailure, diagnostics, string.Empty);
         }
-    }
-
-    private static bool ShouldFallbackToInterpreter(
-        ExecutionResult executionResult,
-        ExecutionMode mode,
-        IEnumerable<int>? sourceBreakpointLines,
-        bool stopBeforeFirstInstruction)
-    {
-        if (mode != ExecutionMode.Bytecode ||
-            stopBeforeFirstInstruction ||
-            sourceBreakpointLines?.Any() == true ||
-            executionResult.Status != ExecutionStatus.BackendFailure)
-        {
-            return false;
-        }
-
-        return executionResult.Diagnostics.Count == 1 &&
-            string.Equals(executionResult.Diagnostics[0].Code, "MB4001", StringComparison.Ordinal);
     }
 
     public ProgramRunResult Continue(BytecodeVmStopState stopState)

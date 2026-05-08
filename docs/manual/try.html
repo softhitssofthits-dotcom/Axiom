@@ -44,7 +44,7 @@ END TRY</code></pre>
 <h2>Значение ERROR</h2>
 <p>Переменная <code>CATCH</code> содержит сведения о перехваченной ошибке:</p>
 <table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody>
-<tr><td><code>Code</code></td><td><code>INTEGER</code></td><td>Числовая часть диагностического кода, например <code>3001</code> для <code>MB3001</code>.</td></tr>
+<tr><td><code>Code</code></td><td><code>STRING</code></td><td>Полный диагностический код, например <code>MB3001</code>.</td></tr>
 <tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения времени выполнения.</td></tr>
 <tr><td><code>Line</code></td><td><code>INTEGER</code></td><td>Строка исходного кода, где возникла ошибка.</td></tr>
 <tr><td><code>Column</code></td><td><code>INTEGER</code></td><td>Колонка исходного кода, где возникла ошибка.</td></tr>
@@ -73,7 +73,7 @@ PRINT "after"</code></pre>
 <ul>
 <li><code>CATCH</code> в текущем срезе не фильтрует ошибки по типу: он перехватывает любую ошибку времени выполнения из соответствующего <code>TRY</code>.</li>
 <li>Поддерживается не более одного <code>CATCH</code> в одном блоке <code>TRY</code>.</li>
-<li>Пользовательского оператора выброса ошибки пока нет.</li>
+<li>Пользовательскую runtime-ошибку можно создать оператором <code>ERROR</code>; пойманную ошибку можно передать дальше формой <code>ERROR err</code>.</li>
 <li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
 <li>Тело <code>TRY</code>, <code>CATCH</code> и <code>FINALLY</code> образуют отдельные блочные области видимости.</li>
 </ul>
@@ -81,12 +81,12 @@ PRINT "after"</code></pre>
 
 <section class="article-section">
 <h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li></ul>
+<ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li></ul>
 </section>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="diagnostics.html">Диагностика</a><a href="if.html">IF</a><a href="select-case.html">SELECT CASE</a></div>
+<div class="link-list"><a href="error-handling.html">Обработка ошибок</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="if.html">IF</a><a href="select-case.html">SELECT CASE</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

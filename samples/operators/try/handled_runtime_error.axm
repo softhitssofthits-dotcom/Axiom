@@ -1,4 +1,4 @@
-' TRY/CATCH перехватывает ошибку времени выполнения, а FINALLY выполняется после обработки.
+﻿' TRY/CATCH перехватывает ошибку времени выполнения, а FINALLY выполняется после обработки.
 TRY
     PRINT "before"
     PRINT 10 \ 0
@@ -7,6 +7,7 @@ CATCH err
     PRINT "caught"
     PRINT err.Code
     PRINT err.Line
+    PRINT err.Message
 FINALLY
     PRINT "cleanup"
 END TRY

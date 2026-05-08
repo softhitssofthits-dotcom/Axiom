@@ -35,6 +35,7 @@ public sealed partial class Interpreter
             BoundInputStatement input => ExecuteInput(input),
             BoundOpenStatement open => ExecuteOpen(open),
             BoundCloseStatement close => ExecuteClose(close),
+            BoundErrorStatement error => ExecuteError(error),
             BoundIfStatement ifStatement => ExecuteIf(ifStatement),
             BoundTryStatement tryStatement => ExecuteTry(tryStatement),
             BoundSelectCaseStatement selectCaseStatement => ExecuteSelectCase(selectCaseStatement),
@@ -306,6 +307,37 @@ public sealed partial class Interpreter
         return ExecutionSignal.None;
     }
 
+    private ExecutionSignal ExecuteError(BoundErrorStatement statement)
+    {
+        if (statement.Mode == BoundErrorStatementMode.ExistingError)
+        {
+            var error = EvaluateExpression(statement.Expression).AsRuntimeError();
+            ReportRuntimeDiagnostic(
+                error.Code,
+                error.Message,
+                new TextLocation(new TextSpan(0, 0), error.Line, error.Column));
+            throw new RuntimeFailureException();
+        }
+
+        var code = EvaluateExpression(statement.Expression).AsString();
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            ReportRuntimeDiagnostic(
+                BuiltinArgumentCode,
+                "ERROR: код пользовательской ошибки не должен быть пустым.",
+                statement.Expression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        var message = statement.MessageExpression is null
+            ? $"Пользовательская ошибка {code}."
+            : EvaluateExpression(statement.MessageExpression).AsString();
+
+        ReportRuntimeDiagnostic(code, message, statement.Location);
+        throw new RuntimeFailureException();
+    }
+
     private ExecutionSignal ExecuteIf(BoundIfStatement statement)
     {
         var condition = EvaluateExpression(statement.Condition).AsBoolean();
@@ -367,21 +399,15 @@ public sealed partial class Interpreter
 
         if (diagnostic is null)
         {
-            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(3005, "Runtime failure.", 0, 0));
+            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue("MB3005", "Runtime failure.", 0, 0));
         }
 
         _diagnostics.Remove(diagnostic);
         return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(
-            ParseRuntimeErrorCode(diagnostic.Code),
+            diagnostic.Code,
             diagnostic.Message,
             diagnostic.Location.Line,
             diagnostic.Location.Column));
-    }
-
-    private static int ParseRuntimeErrorCode(string code)
-    {
-        var digits = new string(code.Where(char.IsDigit).ToArray());
-        return int.TryParse(digits, out var numericCode) ? numericCode : 0;
     }
 
     private ExecutionSignal ExecuteWhile(BoundWhileStatement statement)

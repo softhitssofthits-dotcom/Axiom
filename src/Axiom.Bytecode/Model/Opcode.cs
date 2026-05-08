@@ -75,5 +75,9 @@ public enum Opcode
     EndInput,
     OpenFile,
     CloseFile,
-    Convert
+    Convert,
+    PushErrorHandler,
+    PopErrorHandler,
+    RaiseError,
+    EndFinally
 }

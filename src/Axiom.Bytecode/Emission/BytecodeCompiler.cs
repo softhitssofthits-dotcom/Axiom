@@ -778,6 +778,10 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.PrintSeparator => EmitPrintSeparator(instruction),
             LoweredInstructionKind.PrintLine => new BytecodeInstruction(Opcode.PrintLine),
             LoweredInstructionKind.Input => EmitInput(routine, instruction, parameterSlots, localSlots, captureSlots),
+            LoweredInstructionKind.PushErrorHandler => EmitPushErrorHandler(routine, instruction, parameterSlots, localSlots, captureSlots, labelTargets),
+            LoweredInstructionKind.PopErrorHandler => new BytecodeInstruction(Opcode.PopErrorHandler),
+            LoweredInstructionKind.RaiseError => new BytecodeInstruction(Opcode.RaiseError, [instruction.ValueCount]),
+            LoweredInstructionKind.EndFinally => new BytecodeInstruction(Opcode.EndFinally),
             LoweredInstructionKind.Jump => EmitJump(routine, instruction, labelTargets, Opcode.Jump),
             LoweredInstructionKind.JumpIfTrue => EmitJump(routine, instruction, labelTargets, Opcode.JumpIfTrue),
             LoweredInstructionKind.JumpIfFalse => EmitJump(routine, instruction, labelTargets, Opcode.JumpIfFalse),
@@ -1297,6 +1301,102 @@ public sealed class BytecodeCompiler
         }
 
         return new BytecodeInstruction(Opcode.Input, operands);
+    }
+
+    private BytecodeInstruction? EmitPushErrorHandler(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        IReadOnlyDictionary<string, int> labelTargets)
+    {
+        if (!TryResolveOptionalLabel(routine, instruction, labelTargets, instruction.CatchLabel, out var catchTarget)
+            || !TryResolveOptionalLabel(routine, instruction, labelTargets, instruction.FinallyLabel, out var finallyTarget)
+            || instruction.EndLabel is null
+            || !labelTargets.TryGetValue(instruction.EndLabel, out var endTarget))
+        {
+            Report(
+                "BC5012",
+                $"Эмиттер байткода не нашёл метки обработчика TRY в процедуре '{routine.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        var targetKind = -1;
+        var targetSlot = -1;
+        if (instruction.Variable is not null)
+        {
+            var targetInstruction = LoweredInstruction.StoreVariable(instruction.Location, instruction.Variable);
+            if (!TryResolveVariableSlot(routine, targetInstruction, parameterSlots, localSlots, captureSlots, out var storeOpcode, out targetSlot, isStore: true))
+            {
+                return null;
+            }
+
+            if (!TryMapErrorTargetKind(storeOpcode, out targetKind))
+            {
+                Report(
+                    "BC5019",
+                    $"Эмиттер байткода не смог представить переменную CATCH '{instruction.Variable.Name}' в процедуре '{routine.Name}'.",
+                    instruction.Location);
+                return null;
+            }
+        }
+
+        return new BytecodeInstruction(
+            Opcode.PushErrorHandler,
+            [catchTarget, finallyTarget, endTarget, targetKind, targetSlot]);
+    }
+
+    private bool TryResolveOptionalLabel(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<string, int> labelTargets,
+        string? label,
+        out int target)
+    {
+        target = -1;
+        if (label is null)
+        {
+            return true;
+        }
+
+        if (labelTargets.TryGetValue(label, out target))
+        {
+            return true;
+        }
+
+        Report(
+            "BC5012",
+            $"Эмиттер байткода не нашёл метку '{label}' в процедуре '{routine.Name}'.",
+            instruction.Location);
+        return false;
+    }
+
+    private static bool TryMapErrorTargetKind(Opcode storeOpcode, out int targetKind)
+    {
+        switch (storeOpcode)
+        {
+            case Opcode.StoreGlobal:
+                targetKind = 0;
+                return true;
+
+            case Opcode.StoreLocal:
+                targetKind = 1;
+                return true;
+
+            case Opcode.StoreArgument:
+                targetKind = 2;
+                return true;
+
+            case Opcode.StoreCapture:
+                targetKind = 3;
+                return true;
+
+            default:
+                targetKind = default;
+                return false;
+        }
     }
 
     private static bool TryMapInputTargetKind(Opcode storeOpcode, out int targetKind)

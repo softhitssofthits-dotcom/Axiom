@@ -1107,9 +1107,13 @@ public sealed class AxiomExecutionPipeline
 
             case BoundVariableDeclarationStatement declaration:
                 return false;
-
             case BoundForStatement forStatement:
                 return forStatement.Statements.Any(statement => HasUnsupportedVmSemantics(statement, insideNestedBlock: true));
+
+            case BoundTryStatement tryStatement:
+                return tryStatement.Statements.Any(statement => HasUnsupportedVmSemantics(statement, insideNestedBlock: true))
+                    || tryStatement.CatchStatements.Any(statement => HasUnsupportedVmSemantics(statement, insideNestedBlock: true))
+                    || tryStatement.FinallyStatements.Any(statement => HasUnsupportedVmSemantics(statement, insideNestedBlock: true));
 
             case BoundIfStatement ifStatement:
                 return ifStatement.Statements.Any(statement => HasUnsupportedVmSemantics(statement, insideNestedBlock: true))

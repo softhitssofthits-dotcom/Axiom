@@ -19,6 +19,9 @@ public sealed class LoweredInstruction
         IReadOnlyList<VariableSymbol>? variables = null,
         IReadOnlyList<int>? integerOperands = null,
         string? label = null,
+        string? catchLabel = null,
+        string? finallyLabel = null,
+        string? endLabel = null,
         string? displayName = null,
         string? promptText = null,
         int valueCount = 0,
@@ -37,6 +40,9 @@ public sealed class LoweredInstruction
         Variables = variables ?? Array.Empty<VariableSymbol>();
         IntegerOperands = integerOperands ?? Array.Empty<int>();
         Label = label;
+        CatchLabel = catchLabel;
+        FinallyLabel = finallyLabel;
+        EndLabel = endLabel;
         DisplayName = displayName;
         PromptText = promptText;
         ValueCount = valueCount;
@@ -67,6 +73,12 @@ public sealed class LoweredInstruction
     public IReadOnlyList<int> IntegerOperands { get; }
 
     public string? Label { get; }
+
+    public string? CatchLabel { get; }
+
+    public string? FinallyLabel { get; }
+
+    public string? EndLabel { get; }
 
     public string? DisplayName { get; }
 
@@ -272,6 +284,43 @@ public sealed class LoweredInstruction
             variables: variables,
             promptText: promptText,
             valueCount: variables.Count);
+    }
+
+    public static LoweredInstruction PushErrorHandler(
+        TextLocation location,
+        string? catchLabel,
+        string? finallyLabel,
+        string endLabel,
+        VariableSymbol? catchVariable)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(endLabel);
+        return new LoweredInstruction(
+            LoweredInstructionKind.PushErrorHandler,
+            location,
+            variable: catchVariable,
+            catchLabel: catchLabel,
+            finallyLabel: finallyLabel,
+            endLabel: endLabel);
+    }
+
+    public static LoweredInstruction PopErrorHandler(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.PopErrorHandler, location);
+    }
+
+    public static LoweredInstruction RaiseError(TextLocation location, bool hasMessage)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.RaiseError, location, valueCount: hasMessage ? 1 : 0);
+    }
+
+    public static LoweredInstruction RaiseExistingError(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.RaiseError, location, valueCount: 2);
+    }
+
+    public static LoweredInstruction EndFinally(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.EndFinally, location);
     }
 
     public static LoweredInstruction Jump(TextLocation location, string label)

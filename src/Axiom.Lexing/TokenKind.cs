@@ -49,6 +49,7 @@ public enum TokenKind
     ElseKeyword,
     ElseIfKeyword,
     EndKeyword,
+    ErrorKeyword,
     EraseKeyword,
     EqvKeyword,
     ExitKeyword,

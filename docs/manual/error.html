@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор ERROR</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="error">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Пользовательская ошибка времени выполнения</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор ERROR</p><p class="sidebar__subtitle">Создаёт или повторно поднимает ошибку времени выполнения.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Управление выполнением</p>
+<h1 class="page-title">Оператор ERROR</h1>
+<p class="lead"><code>ERROR</code> принудительно создаёт ошибку времени выполнения или повторно поднимает уже пойманное значение <code>ERROR</code>. Его используют, когда программа сама обнаружила недопустимое состояние либо обработчик должен передать ошибку внешнему <code>CATCH</code> без потери исходных сведений.</p>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">ERROR код
+ERROR код, сообщение
+ERROR ошибка</code></pre>
+<p><code>код</code> должен иметь тип <code>STRING</code>. <code>сообщение</code> тоже имеет тип <code>STRING</code> и является необязательным. <code>ошибка</code> должна иметь встроенный тип <code>ERROR</code>, например переменная из <code>CATCH err</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Части записи</h2>
+<p><code>код</code> - строковый идентификатор ошибки. Для пользовательских ошибок удобно применять короткие проектные коды, например <code>"APP001"</code> или <code>"FILEMODE"</code>.</p>
+<p><code>сообщение</code> - текст, который попадёт в <code>err.Message</code> и в диагностику времени выполнения, если ошибка не будет обработана. Если сообщение не указано, Axiom использует сообщение по умолчанию: <code>Пользовательская ошибка &lt;код&gt;.</code></p>
+<p><code>ошибка</code> - существующее значение <code>ERROR</code>. Форма <code>ERROR err</code> повторно поднимает его с теми же <code>Code</code>, <code>Message</code>, <code>Line</code> и <code>Column</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">TRY
+    ERROR "APP001", "Manual failure"
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+
+PRINT "after"</code></pre>
+<p>Пример выводит код <code>APP001</code>, сообщение <code>Manual failure</code>, затем продолжает выполнение после <code>END TRY</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Повторный проброс</h2>
+<pre><code class="language-basic">TRY
+    TRY
+        ERROR "APP003", "Original failure"
+    CATCH err
+        ERROR err
+    END TRY
+CATCH outerErr
+    PRINT outerErr.Code
+    PRINT outerErr.Message
+    PRINT outerErr.Line
+END TRY</code></pre>
+<p>Форма <code>ERROR err</code> нужна, когда внутренний обработчик не исправляет проблему, а только выполняет локальные действия и передаёт ошибку дальше. Внешний обработчик получает исходный код, сообщение и строку первоначального возникновения ошибки.</p>
+</section>
+
+<section class="article-section">
+<h2>Правила</h2>
+<ul>
+<li>Пустой или состоящий только из пробелов код считается ошибкой аргумента времени выполнения.</li>
+<li>Ошибку, созданную <code>ERROR</code>, можно перехватить тем же <code>TRY/CATCH</code>, что и системную ошибку времени выполнения.</li>
+<li><code>ERROR err</code> принимает только значение встроенного типа <code>ERROR</code>; строковый код и сообщение в этой форме не задаются заново.</li>
+<li>Если обработчика нет, выполнение программы завершается.</li>
+<li><code>ERROR</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="error-handling.html">Обработка пользовательских ошибок</a><a href="try.html">Оператор TRY</a><a href="diagnostics.html">Диагностика</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

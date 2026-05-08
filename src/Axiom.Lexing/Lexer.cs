@@ -29,6 +29,7 @@ public sealed class Lexer
         ["ELSE"] = TokenKind.ElseKeyword,
         ["ELSEIF"] = TokenKind.ElseIfKeyword,
         ["END"] = TokenKind.EndKeyword,
+        ["ERROR"] = TokenKind.ErrorKeyword,
         ["ERASE"] = TokenKind.EraseKeyword,
         ["EQV"] = TokenKind.EqvKeyword,
         ["EXIT"] = TokenKind.ExitKeyword,

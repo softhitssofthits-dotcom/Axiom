@@ -101,7 +101,7 @@ PRINT op(4)
     }
 
     [Fact]
-    public void Run_WithBytecodeMode_FallsBackToInterpreterForUnsupportedTryBlock()
+    public void Run_WithBytecodeMode_RunsTryBlockOnBytecodeVm()
     {
         var service = CreateService();
 
@@ -122,10 +122,10 @@ PRINT "after"
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.Equal(ExecutionMode.Bytecode, result.RequestedExecutionMode);
-        Assert.Equal(ExecutionEngineKind.Interpreter, result.ActualEngine);
-        Assert.True(result.UsedInterpreterFallback);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
-            string.Join(Environment.NewLine, "before", "caught", "3001", "cleanup", "after"),
+            string.Join(Environment.NewLine, "before", "caught", "MB3001", "cleanup", "after"),
             result.OutputText);
         Assert.Empty(result.Diagnostics);
     }

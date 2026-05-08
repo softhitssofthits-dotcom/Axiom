@@ -7863,7 +7863,7 @@ PRINT "after"
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["3001", "2", "14", "after"], host.Output);
+        Assert.Equal(["MB3001", "2", "14", "after"], host.Output);
     }
 
     [Fact]
@@ -7900,6 +7900,70 @@ END TRY
 
         Assert.True(result.Succeeded);
         Assert.Equal(["caught", "cleanup"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ErrorStatementCanBeCaughtByTryCatch()
+    {
+        const string text = """
+TRY
+    ERROR "APP001", "Manual failure"
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+    PRINT err.Line
+FINALLY
+    PRINT "cleanup"
+END TRY
+
+PRINT "after"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["APP001", "Manual failure", "2", "cleanup", "after"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ErrorStatementUsesDefaultMessage()
+    {
+        const string text = """
+TRY
+    ERROR "APP002"
+CATCH err
+    PRINT err.Message
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Пользовательская ошибка APP002."], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ErrorStatementRethrowsCaughtRuntimeError()
+    {
+        const string text = """
+TRY
+    TRY
+        ERROR "APP003", "Original failure"
+    CATCH err
+        PRINT "inner"
+        ERROR err
+    END TRY
+CATCH outerErr
+    PRINT outerErr.Code
+    PRINT outerErr.Message
+    PRINT outerErr.Line
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["inner", "APP003", "Original failure", "3"], host.Output);
     }
 
     [Fact]

@@ -53,6 +53,7 @@ public sealed partial class BytecodeVm
     private BytecodeVmStopState? _stopState;
     private BytecodeVmExecutionSnapshot? _skipStopOnceAt;
     private BytecodeVmStateSnapshot? _previousReversibleStateSnapshot;
+    private Diagnostic? _lastRuntimeFailureDiagnostic;
     private int? _suppressLineBreakpointsUntilDifferentLine;
     private DebugStepBoundary? _debugStepBoundary;
     private bool _canUseFastInstructionPath;
@@ -428,7 +429,13 @@ public sealed partial class BytecodeVm
         if (CanUseFastInstructionPath())
         {
             frame.InstructionPointer++;
-            ExecuteInstruction(frame, instruction, instructionIndex);
+            try
+            {
+                ExecuteInstruction(frame, instruction, instructionIndex);
+            }
+            catch (RuntimeFailureException) when (TryHandleRuntimeFailure())
+            {
+            }
             return;
         }
 
@@ -453,7 +460,13 @@ public sealed partial class BytecodeVm
 
         _previousReversibleStateSnapshot = stateBeforeInstruction;
         frame.InstructionPointer++;
-        ExecuteInstruction(frame, instruction, instructionIndex);
+        try
+        {
+            ExecuteInstruction(frame, instruction, instructionIndex);
+        }
+        catch (RuntimeFailureException) when (TryHandleRuntimeFailure())
+        {
+        }
     }
 
     private void ExecuteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -724,6 +737,22 @@ public sealed partial class BytecodeVm
                 ExecuteInput(frame, instruction, instructionIndex);
                 break;
 
+            case Opcode.PushErrorHandler:
+                ExecutePushErrorHandler(frame, instruction);
+                break;
+
+            case Opcode.PopErrorHandler:
+                _ = frame.TryPopErrorHandler(out _);
+                break;
+
+            case Opcode.RaiseError:
+                ExecuteRaiseError(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.EndFinally:
+                ExecuteEndFinally(frame);
+                break;
+
             case Opcode.Return:
                 ExecuteReturn(frame, instructionIndex);
                 break;
@@ -733,6 +762,150 @@ public sealed partial class BytecodeVm
                     $"Bytecode VM пока не поддерживает opcode '{instruction.Opcode}'.",
                     ResolveLocation(frame.Routine.Id, instructionIndex));
                 throw new RuntimeFailureException();
+        }
+    }
+
+    private void ExecutePushErrorHandler(BytecodeCallFrame frame, BytecodeInstruction instruction)
+    {
+        frame.PushErrorHandler(new BytecodeErrorHandlerFrame(
+            instruction.GetOperand(0),
+            instruction.GetOperand(1),
+            instruction.GetOperand(2),
+            instruction.GetOperand(3),
+            instruction.GetOperand(4)));
+    }
+
+    private void ExecuteRaiseError(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var mode = instruction.GetOperand(0);
+        if (mode == 2)
+        {
+            var existingError = PopValue(frame, instructionIndex).AsRuntimeError();
+            ReportRuntimeDiagnostic(
+                existingError.Code,
+                existingError.Message,
+                new TextLocation(new TextSpan(0, 0), existingError.Line, existingError.Column));
+            throw new RuntimeFailureException();
+        }
+
+        var hasMessage = mode != 0;
+        var message = hasMessage ? PopValue(frame, instructionIndex).AsString() : null;
+        var code = PopValue(frame, instructionIndex).AsString();
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            ReportRuntimeDiagnostic(
+                BuiltinArgumentCode,
+                "ERROR: код пользовательской ошибки не должен быть пустым.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        ReportRuntimeDiagnostic(code, message ?? $"Пользовательская ошибка {code}.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ExecuteEndFinally(BytecodeCallFrame frame)
+    {
+        var handler = frame.PeekErrorHandler();
+        if (handler is null || handler.State != BytecodeErrorHandlerState.ExecutingFinally)
+        {
+            return;
+        }
+
+        if (handler.HasPendingReturn)
+        {
+            var returnValue = handler.PendingReturnValue ?? RuntimeValue.Void;
+            _ = frame.TryPopErrorHandler(out _);
+            CompleteReturn(frame, returnValue);
+            return;
+        }
+
+        if (!handler.HasPendingUnhandledFailure)
+        {
+            return;
+        }
+
+        _ = frame.TryPopErrorHandler(out _);
+        throw new RuntimeFailureException();
+    }
+
+    private bool TryHandleRuntimeFailure()
+    {
+        while (_callStack.Count > 0)
+        {
+            var frame = CurrentFrame;
+            while (frame.PeekErrorHandler() is { } handler)
+            {
+                switch (handler.State)
+                {
+                    case BytecodeErrorHandlerState.Active when handler.CatchTarget >= 0:
+                        var error = ConsumeLastRuntimeError();
+                        frame.EvaluationStack.Clear();
+                        StoreErrorHandlerCatchValue(frame, handler, error);
+                        handler.State = BytecodeErrorHandlerState.ExecutingCatch;
+                        frame.InstructionPointer = handler.CatchTarget;
+                        return true;
+
+                    case BytecodeErrorHandlerState.Active when handler.FinallyTarget >= 0:
+                    case BytecodeErrorHandlerState.ExecutingCatch when handler.FinallyTarget >= 0:
+                        frame.EvaluationStack.Clear();
+                        handler.State = BytecodeErrorHandlerState.ExecutingFinally;
+                        handler.HasPendingUnhandledFailure = true;
+                        frame.InstructionPointer = handler.FinallyTarget;
+                        return true;
+
+                    default:
+                        _ = frame.TryPopErrorHandler(out _);
+                        break;
+                }
+            }
+
+            _callStack.Pop();
+            CacheReusableFrame(frame);
+        }
+
+        return false;
+    }
+
+    private RuntimeValue ConsumeLastRuntimeError()
+    {
+        var diagnostic = _lastRuntimeFailureDiagnostic;
+        _lastRuntimeFailureDiagnostic = null;
+
+        if (diagnostic is null)
+        {
+            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(InvalidRuntimeStateCode, "Runtime failure.", 0, 0));
+        }
+
+        _diagnostics.Remove(diagnostic);
+        return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(
+            diagnostic.Code,
+            diagnostic.Message,
+            diagnostic.Location.Line,
+            diagnostic.Location.Column));
+    }
+
+    private void StoreErrorHandlerCatchValue(BytecodeCallFrame frame, BytecodeErrorHandlerFrame handler, RuntimeValue value)
+    {
+        switch (handler.CatchTargetKind)
+        {
+            case 0:
+                StoreGlobalUnchecked(handler.CatchTargetSlot, value);
+                break;
+
+            case 1:
+                frame.StoreLocalValue(handler.CatchTargetSlot, value);
+                break;
+
+            case 2:
+                frame.Arguments[handler.CatchTargetSlot].Store(value);
+                break;
+
+            case 3:
+                frame.Captures[handler.CatchTargetSlot].Store(value);
+                break;
         }
     }
 
@@ -2807,6 +2980,34 @@ public sealed partial class BytecodeVm
             returnValue = frame.EvaluationStack.Pop().CopyForStorage();
         }
 
+        if (TryEnterFinallyForReturn(frame, returnValue))
+        {
+            return;
+        }
+
+        CompleteReturn(frame, returnValue);
+    }
+
+    private bool TryEnterFinallyForReturn(BytecodeCallFrame frame, RuntimeValue returnValue)
+    {
+        var handler = frame.PeekErrorHandler();
+        if (handler is null
+            || handler.FinallyTarget < 0
+            || handler.State == BytecodeErrorHandlerState.ExecutingFinally)
+        {
+            return false;
+        }
+
+        frame.EvaluationStack.Clear();
+        handler.State = BytecodeErrorHandlerState.ExecutingFinally;
+        handler.HasPendingReturn = true;
+        handler.PendingReturnValue = returnValue;
+        frame.InstructionPointer = handler.FinallyTarget;
+        return true;
+    }
+
+    private void CompleteReturn(BytecodeCallFrame frame, RuntimeValue returnValue)
+    {
         CopyBackByRefArguments(frame);
         _callStack.Pop();
         CacheReusableFrame(frame);
@@ -4088,7 +4289,9 @@ public sealed partial class BytecodeVm
 
     private void ReportRuntimeDiagnostic(string code, string message, TextLocation location)
     {
-        _diagnostics.Report(code, AppendCallChain(message), location);
+        var diagnostic = new Diagnostic(code, AppendCallChain(message), location);
+        _diagnostics.Report(diagnostic);
+        _lastRuntimeFailureDiagnostic = diagnostic;
     }
 
     private string AppendCallChain(string message)

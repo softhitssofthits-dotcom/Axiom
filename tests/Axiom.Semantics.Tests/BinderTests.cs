@@ -5148,7 +5148,7 @@ END TRY
         Assert.Single(tryStatement.Statements);
         Assert.Equal(4, tryStatement.CatchStatements.Count);
 
-        Assert.Equal(TypeSymbol.Integer, AssertSinglePrintExpression(tryStatement.CatchStatements[0]).Type);
+        Assert.Equal(TypeSymbol.String, AssertSinglePrintExpression(tryStatement.CatchStatements[0]).Type);
         Assert.Equal(TypeSymbol.String, AssertSinglePrintExpression(tryStatement.CatchStatements[1]).Type);
         Assert.Equal(TypeSymbol.Integer, AssertSinglePrintExpression(tryStatement.CatchStatements[2]).Type);
         Assert.Equal(TypeSymbol.Integer, AssertSinglePrintExpression(tryStatement.CatchStatements[3]).Type);
@@ -5172,6 +5172,51 @@ END TRY
         Assert.Null(tryStatement.CatchVariable);
         Assert.Empty(tryStatement.CatchStatements);
         Assert.Single(tryStatement.FinallyStatements);
+    }
+
+    [Fact]
+    public void Bind_ErrorStatementRequiresStringCodeAndMessage()
+    {
+        const string text = "ERROR \"APP001\", \"Manual failure\"";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundErrorStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(BoundErrorStatementMode.UserCode, statement.Mode);
+        Assert.Equal(TypeSymbol.String, statement.Expression.Type);
+        Assert.Equal(TypeSymbol.String, statement.MessageExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_ErrorStatementAcceptsCaughtRuntimeErrorValue()
+    {
+        const string text = """
+TRY
+    ERROR "APP001", "Manual failure"
+CATCH err
+    ERROR err
+END TRY
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var tryStatement = Assert.IsType<BoundTryStatement>(Assert.Single(program.GlobalStatements));
+        var statement = Assert.IsType<BoundErrorStatement>(Assert.Single(tryStatement.CatchStatements));
+        Assert.Equal(BoundErrorStatementMode.ExistingError, statement.Mode);
+        Assert.Equal(TypeSymbol.RuntimeError, statement.Expression.Type);
+        Assert.Null(statement.MessageExpression);
+    }
+
+    [Fact]
+    public void Bind_ErrorStatementReportsNonStringCode()
+    {
+        const string text = "ERROR 10";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == "MB2003");
     }
 
     [Fact]
