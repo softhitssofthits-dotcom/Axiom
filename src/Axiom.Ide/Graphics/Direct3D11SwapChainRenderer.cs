@@ -8,6 +8,8 @@ namespace Axiom.Ide.Graphics;
 
 internal sealed class Direct3D11SwapChainRenderer : IDisposable
 {
+    private const int PresentSyncInterval = 1;
+
     private readonly ID3D11Device _device;
     private readonly ID3D11DeviceContext _context;
     private readonly IDXGISwapChain _swapChain;
@@ -97,7 +99,7 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
         }
 
         _context.ClearRenderTargetView(_renderTargetView, color);
-        _swapChain.Present(1, PresentFlags.None);
+        _swapChain.Present(PresentSyncInterval, PresentFlags.None);
     }
 
     public void PresentFrame(ScreenFramebufferSnapshot frame)
@@ -126,7 +128,7 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
             (uint)(frame.Width * sizeof(uint)),
             0,
             null);
-        _swapChain.Present(1, PresentFlags.None);
+        _swapChain.Present(PresentSyncInterval, PresentFlags.None);
     }
 
     public void Dispose()

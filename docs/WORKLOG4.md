@@ -8008,3 +8008,56 @@
 
 Р§С‚Рѕ РѕСЃС‚Р°С‘С‚СЃСЏ:
 - СЂСѓС‡РЅР°СЏ РїСЂРѕРІРµСЂРєР° native `SCREEN`-РѕРєРЅР° РЅР° РіСЂР°С„РёС‡РµСЃРєРёС… РїСЂРёРјРµСЂР°С… Рё РѕС‚РґРµР»СЊРЅРѕРµ РїСЂРѕРµРєС‚РёСЂРѕРІР°РЅРёРµ РїРѕР»РЅРѕСЌРєСЂР°РЅРЅРѕРіРѕ СЂРµР¶РёРјР° Р±РµР· РЅРµРѕР¶РёРґР°РЅРЅС‹С… topmost-РІСЃРїР»С‹С‚РёР№.
+
+## Session 743 - 2026-05-10 17:20 - сглажена публикация кадров native SCREEN
+
+Что сделано:
+- перечитаны обязательные документы продолжения: `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`;
+- в `ProgramConsoleService` добавлена отложенная публикация графического кадра через одноразовый `DispatcherTimer` с интервалом около 16 мс;
+- framebuffer по-прежнему обновляется синхронно внутри графических команд, но `PresentFrame` для последовательности `LINE`/`CIRCLE` теперь получает уже собранный кадр, а не промежуточное состояние после стирания старого мяча или платформы;
+- добавлена отмена запланированной публикации при `SCREEN`, `SCREEN 0`, `CLS` и сбросе сеанса;
+- повторно проверено, что в `src/Axiom.Ide` не осталось старых WPF-графических моделей `GraphicsPixels`, `GraphicsFills`, `GraphicsPixelSnapshot` и `GraphicsFillSnapshot`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|NativeGraphics|ProgramConsoleService|Framebuffer|WriteGraphicsText|ScreenInput"` проходит: 26 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Решение:
+- считать причиной стробоскопического эффекта прежнюю публикацию промежуточных кадров между командами стирания и повторного рисования;
+- не менять пользовательский договор языка и не вводить новую команду кадра до отдельного решения.
+
+Следующий шаг:
+- вручную проверить `samples/graphics/game/paddle_ball.axm` в IDE; если визуальный эффект сохранится, переходить к явному управлению частотой показа кадра в native host.
+## Session 744 - 2026-05-10 17:28 - native SCREEN привязан к Present/vsync
+
+Что сделано:
+- в `Direct3D11SwapChainRenderer` введён `PresentSyncInterval = 1`, и оба вызова `IDXGISwapChain.Present` теперь используют именованный sync interval;
+- из `ProgramConsoleService` удалён `DispatcherTimer` с фиксированными 16 мс;
+- пакетная публикация графического кадра теперь выполняется через `DispatcherPriority.ContextIdle`: сервис собирает последовательные команды рисования в один снимок, а реальную синхронизацию показа выполняет swap chain;
+- обновлены IDE-тесты, которые фиксируют использование sync interval и отсутствие `DispatcherTimer` в host-слое `SCREEN`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Graphics/Direct3D11SwapChainRenderer.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- обычный первый запуск `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|NativeGraphics|ProgramConsoleService|Framebuffer|WriteGraphicsText|ScreenInput"` не смог перезаписать `Axiom.Ide.exe`, потому что запущенный процесс `Axiom.Ide (7884)` держал файл;
+- повторный запуск в изолированный каталог `.artifacts/validation/ide-tests/` проходит: 26 тестов;
+- `dotnet build Axiom.sln --no-restore -p:UseAppHost=false -p:OutDir=C:\Axiom\.artifacts\validation\sln-build\` проходит без предупреждений и ошибок.
+
+Решение:
+- считать 16 мс больше не частью архитектуры `SCREEN`; это было рабочее сглаживание, заменённое на более правильную модель coalescing + `Present(1)`;
+- если `Present(1)` начнёт заметно блокировать ввод, следующим техническим шагом будет отдельный render-loop native-окна с передачей последнего готового framebuffer-снимка.
+
+Следующий шаг:
+- проверить игровой sample вручную после пересборки IDE и следить не только за мерцанием, но и за отзывчивостью клавиш.

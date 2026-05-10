@@ -20,7 +20,8 @@ public sealed class EditorFeatureTests
         Assert.Contains("Vortice.Direct3D11", project, StringComparison.Ordinal);
         Assert.Contains("D3D11CreateDeviceAndSwapChain", renderer, StringComparison.Ordinal);
         Assert.Contains("IDXGISwapChain", renderer, StringComparison.Ordinal);
-        Assert.Contains("Present(1, PresentFlags.None)", renderer, StringComparison.Ordinal);
+        Assert.Contains("PresentSyncInterval", renderer, StringComparison.Ordinal);
+        Assert.Contains("Present(PresentSyncInterval, PresentFlags.None)", renderer, StringComparison.Ordinal);
         Assert.Contains("UpdateSubresource", renderer, StringComparison.Ordinal);
         Assert.Contains("PresentFrame(ScreenFramebufferSnapshot", renderer, StringComparison.Ordinal);
     }
@@ -39,6 +40,8 @@ public sealed class EditorFeatureTests
         Assert.Contains("Direct3D11SwapChainRenderer", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("NativeGraphicsScreenWindow", service, StringComparison.Ordinal);
         Assert.DoesNotContain("new GraphicsScreenWindow", service, StringComparison.Ordinal);
+        Assert.Contains("GraphicsFrameCoalescingInterval", service, StringComparison.Ordinal);
+        Assert.Contains("DispatcherTimer", service, StringComparison.Ordinal);
     }
 
     [Fact]

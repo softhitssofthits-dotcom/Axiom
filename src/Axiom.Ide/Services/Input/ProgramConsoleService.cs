@@ -10,6 +10,8 @@ namespace Axiom.Ide.Services.Input;
 
 public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleService
 {
+    private static readonly TimeSpan GraphicsFrameCoalescingInterval = TimeSpan.FromMilliseconds(16);
+
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
     private DispatcherFrame? _pendingFrame;
@@ -37,6 +39,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private ScreenFramebuffer? _framebuffer;
     private ScreenFramebufferSnapshot? _graphicsFrame;
     private bool _graphicsVisualRefreshPending;
+    private DispatcherTimer? _graphicsVisualRefreshTimer;
     private NativeGraphicsScreenWindow? _graphicsWindow;
 
     public ProgramConsoleService(
@@ -265,7 +268,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenHeight = height;
             _framebuffer = new ScreenFramebuffer(width, height);
             GraphicsText = string.Empty;
-            _graphicsVisualRefreshPending = false;
+            CancelScheduledGraphicsVisualRefresh();
             _graphicsForeground = 15;
             _graphicsBackground = null;
             _graphicsRow = 1;
@@ -296,7 +299,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _framebuffer = null;
             GraphicsFrame = null;
             GraphicsText = string.Empty;
-            _graphicsVisualRefreshPending = false;
+            CancelScheduledGraphicsVisualRefresh();
             OnPropertyChanged(nameof(IsScreenActive));
             OnPropertyChanged(nameof(ScreenMode));
             OnPropertyChanged(nameof(ScreenWidth));
@@ -315,7 +318,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             GraphicsText = string.Empty;
             _framebuffer?.Clear();
             PublishGraphicsFrame();
-            _graphicsVisualRefreshPending = false;
+            CancelScheduledGraphicsVisualRefresh();
             _graphicsRow = 1;
             _graphicsColumn = 1;
         });
@@ -741,7 +744,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _framebuffer = null;
         GraphicsFrame = null;
         GraphicsText = string.Empty;
-        _graphicsVisualRefreshPending = false;
+        CancelScheduledGraphicsVisualRefresh();
         OutputText = string.Empty;
         ResetInputState();
         OnPropertyChanged(nameof(IsScreenActive));
@@ -1065,11 +1068,26 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _graphicsVisualRefreshPending = true;
         var dispatcher = Application.Current.Dispatcher;
-        dispatcher.BeginInvoke(() =>
+        _graphicsVisualRefreshTimer?.Stop();
+        _graphicsVisualRefreshTimer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
         {
+            Interval = GraphicsFrameCoalescingInterval
+        };
+        _graphicsVisualRefreshTimer.Tick += (_, _) =>
+        {
+            _graphicsVisualRefreshTimer?.Stop();
+            _graphicsVisualRefreshTimer = null;
             _graphicsVisualRefreshPending = false;
             RefreshGraphicsVisuals();
-        }, DispatcherPriority.Render);
+        };
+        _graphicsVisualRefreshTimer.Start();
+    }
+
+    private void CancelScheduledGraphicsVisualRefresh()
+    {
+        _graphicsVisualRefreshTimer?.Stop();
+        _graphicsVisualRefreshTimer = null;
+        _graphicsVisualRefreshPending = false;
     }
 
     private void AddFillCore(long left, long top, long right, long bottom, int color)
