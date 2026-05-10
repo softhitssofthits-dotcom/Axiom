@@ -1,4 +1,4 @@
-﻿# План работ
+# План работ
 
 Этот файл является активным планом проекта начиная с 2026-04-27.
 
@@ -3251,3 +3251,220 @@
 
 Следующий точный шаг:
 - отдельно проектировать договор координат, фокуса и активной поверхности будущего `SCREEN`; не смешивать его с уже закрытой очередью событий `Output`.
+
+## Обновление плана - 2026-05-10 - первый сквозной SCREEN
+
+Сделано:
+- добавлен первый сквозной `SCREEN` в lexer/parser/binder/interpreter/`BytecodeVm`;
+- `PRINT`, `PRINT USING` и `INPUT` маршрутизируются в графический текстовый слой при активном `SCREEN`;
+- мышиные функции и `ON MOUSE` теперь требуют активный `SCREEN` и без него дают runtime-диагностику `MB3010`;
+- добавлены пиксельные команды `PSET`, `PRESET`, `LINE`, `CIRCLE`, функция `POINT` и информационные функции `SCREEN...`;
+- добавлены runnable samples в `samples/graphics/`.
+
+Следующий точный шаг:
+- развить визуальный WPF-слой IDE: отрисовывать `GraphicsText` и пиксельный backbuffer как отдельную видимую поверхность, подключить фокус клавиатуры и мыши именно к ней, а не только к runtime-договору.
+
+## Обновление плана - 2026-05-10 - остановка на полноэкранном SCREEN
+
+Сделано в текущем незавершённом срезе:
+- подтверждено пользовательское решение: графический режим не должен жить во вкладке `Output`; `SCREEN mode` должен открывать отдельное полноэкранное графическое окно в духе классического BASIC;
+- добавлен черновой WPF-слой `src/Axiom.Ide/Graphics/GraphicsScreenWindow.xaml` и code-behind для полноэкранного чёрного окна с текстовым слоем, пикселями, клавиатурой, мышью и строкой `INPUT`;
+- `ProgramConsoleService` начал открывать это окно при `ActivateScreen()` и закрывать при `DeactivateScreen()` / окончании запуска;
+- пиксельный слой IDE усилен: `LINE`, `LINE ..., B`, `LINE ..., BF` и `CIRCLE` теперь растеризуются в словаре пикселей, а не отмечают только опорные точки;
+- старые mouse-samples и execution-тесты начали переводиться на новый договор: мышь доступна только после `SCREEN`, а проверочные значения выводятся после `SCREEN 0`.
+
+Проверки, которые уже проходили после части правок:
+- `dotnet build Axiom.sln --no-restore` проходил без предупреждений и ошибок после добавления окна `GraphicsScreenWindow`;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore --filter "Screen|Graphics|ColorLocate"` проходил: 3 теста;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "Screen|Graphics|Mouse"` проходил: 15 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "Mouse|Screen|Print|Graphics"` проходил: 41 тест;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Screen|Graphics|ProgramConsoleService|ProgramMouseInputRouter|ProgramKeyboardInputRouter"` проходил: 28 тестов;
+- широкий execution-прогон сначала завис из-за слишком широкого фильтра, затем после остановки `testhost` точный прогон `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse|Screen"` прошёл: 11 тестов.
+
+Важное состояние на паузе:
+- задача не завершена полностью и не готова к финальному отчёту как поставка;
+- нужно заново выполнить итоговый `dotnet build Axiom.sln --no-restore`, потому что после части последних правок финальная сборка ещё не повторялась;
+- нужно проверить, что `GraphicsScreenWindow` не блокирует закрытие при штатном `SCREEN 0` и завершении программы: сейчас окно отменяет пользовательское закрытие, если `IsScreenActive = true`, что соответствует договору, но требует ручной проверки в IDE;
+- нужно решить следующий отдельный продуктовый срез: обычный режим без `SCREEN` тоже должен стать не вкладкой-логом, а отдельным консольным окном программы в стиле `cmd`/PowerShell.
+
+Следующий точный шаг:
+- продолжить с проверки полноэкранного `SCREEN`: итоговая сборка, точечные IDE/Execution тесты, ручной запуск `samples/graphics/screen/mode_info.axm` и `samples/graphics/primitives/pset_line_circle.axm` в `Axiom.Ide`; затем обновить manual/spec/architecture так, чтобы они прямо говорили про отдельное полноэкранное окно, а не про вкладку `Output`.
+
+## Обновление плана - 2026-05-10 - полноэкранный SCREEN доведён до проверяемого состояния
+
+Сделано:
+- отдельное WPF-окно `GraphicsScreenWindow` стало целевым видимым host-слоем для `SCREEN`, а не временной областью во вкладке `Output`;
+- `ProgramConsoleService` открывает окно при `SCREEN`, закрывает при `SCREEN 0` и завершении запуска, хранит графический текстовый слой и пиксельный backbuffer;
+- `BytecodeVm.SupportsBuiltin(...)` расширен на `SCREENISACTIVE`, `SCREENMODE`, `SCREENWIDTH`, `SCREENHEIGHT` и `POINT`, поэтому графические samples больше не отсекаются `MB4001`;
+- добавлены acceptance-проверки для `samples/graphics/screen/`, `samples/graphics/text/`, `samples/graphics/input/`, `samples/graphics/mouse/` и `samples/graphics/primitives/`, которые запускают программы через `ExecutionMode.Bytecode` без отката на интерпретатор;
+- manual, спецификация, архитектура и bytecode-реестр обновлены под договор отдельного полноэкранного окна.
+
+Итог:
+- первый продуктовый `SCREEN` закрывает язык, runtime, `BytecodeVm`, IDE-host, samples и документацию на уровне текущего договора;
+- ручные примеры можно открывать в `Axiom.Ide` из `samples/graphics/`; интерактивные примеры завершаются через `ESC` или `SCREEN 0`.
+
+Следующий точный шаг:
+- отдельно спроектировать обычное консольное окно программы для режима без `SCREEN`, чтобы `PRINT`/`INPUT` вне графического режима тоже работали в пользовательском окне программы, а не в служебной вкладке `Output`;
+- после этого вернуться к улучшению `SCREEN 10` как настоящего best-fit по доступной области монитора.
+
+## Обновление плана - 2026-05-10 - исправлена ручная проверка SCREEN input
+
+Сделано:
+- по журналу IDE подтверждено, что `mode_info.axm` не падал, а штатно сразу выполнял `SCREEN 0`, из-за чего полноэкранное окно только мелькало;
+- `samples/graphics/screen/mode_info.axm` переведён на ручное ожидание `ESC` перед `SCREEN 0`;
+- `GraphicsScreenWindow` перестал отправлять клавиши из `InputTextBox` в общий `ProgramKeyboardInputRouter`, пока активен графический `INPUT`, поэтому вводимый текст снова остаётся видимым в строке ввода;
+- acceptance-тест для `mode_info.axm` обновлён под завершение через `ESC`.
+
+Следующий точный шаг:
+- вручную повторить запуск `samples/graphics/screen/mode_info.axm` и `samples/graphics/input/input_on_screen.axm` в `Axiom.Ide`;
+- затем продолжать следующий продуктовый срез: отдельное консольное окно программы для режима без `SCREEN`.
+
+## Обновление плана - 2026-05-10 - уточнены логи графического SCREEN
+
+Сделано:
+- по свежему журналу IDE `ide-session-20260510-120419.log` подтверждено, что `mode_info.axm` зависал после `console.begin`: в журнале не было `run.pipeline` и `run.result`;
+- причина уточнена на стороне WPF-окна: фокус отдавался самому `Window`, а обработчики `PreviewKeyDown` висели на внутренней графической поверхности, поэтому `ESC` мог не попадать в общий `ProgramKeyboardInputRouter`;
+- `GraphicsScreenWindow` теперь фокусирует именованную поверхность `ScreenFrame`, на которой подключены клавиатурные обработчики;
+- `ProgramConsoleService` пишет графические события в trace и структурный журнал IDE: `screen.activated`, `screen.deactivated`, `screen.key.enqueued`, `screen.key.read`;
+- добавлены IDE-тесты, фиксирующие фокус графической поверхности и наличие графических событий в журналах.
+
+Следующий точный шаг:
+- повторить ручной запуск `samples/graphics/screen/mode_info.axm` в `Axiom.Ide`: после открытия `SCREEN` нажать `ESC` и убедиться, что в новом журнале есть `screen.key.enqueued`, `screen.key.read`, `run.pipeline` и `run.result`;
+- затем проверить `samples/graphics/input/input_on_screen.axm` и продолжать следующий продуктовый срез: отдельное консольное окно программы для режима без `SCREEN`.
+
+## Обновление плана - 2026-05-10 - выравнивание SCREEN и словари IDE
+
+Сделано:
+- пользователь подтвердил, что `samples/graphics/screen/mode_info.axm` теперь штатно выходит по `ESC`;
+- для `samples/graphics/input/input_on_screen.axm` acceptance-проверка обновлена под ручное ожидание `ESC`, добавленное в пример;
+- смещение текста в `SCREEN 2` объяснено центрированием логической поверхности `640x480` внутри широкого окна; `GraphicsScreenWindow` теперь привязывает `Viewbox` к левому верхнему углу, чтобы первый символ графического текстового слоя начинался у левого края окна;
+- словари подсветки `Axiom.xshd` и `Axiom.Dark.xshd` дополнены графическими ключевыми словами `SCREEN`, `CLS`, `COLOR`, `LOCATE`, `PSET`, `PRESET`, `LINE`, `CIRCLE` и built-in `SCREENISACTIVE`, `SCREENMODE`, `SCREENWIDTH`, `SCREENHEIGHT`, `POINT`;
+- форматирование регистра IDE теперь распознаёт эти слова через общий словарь подсветки.
+
+Следующий точный шаг:
+- вручную повторить `samples/graphics/input/input_on_screen.axm` в `Axiom.Ide` и убедиться, что `Hello, ...` печатается у левого края окна и что графические слова подсвечиваются/нормализуются;
+- затем продолжать следующий продуктовый срез: отдельное консольное окно программы для режима без `SCREEN`.
+
+## Обновление плана - 2026-05-10 - мышь в пустом SCREEN-цикле
+
+Сделано:
+- по ручной проверке `samples/graphics/mouse/mouse_events.axm` выявлено, что пустой цикл ожидания `DO WHILE NOT KEYPRESS("ESC") : LOOP` не давал `ON MOUSE` обработать накопленные события до выхода по `ESC`;
+- interpreter и `BytecodeVm` теперь обрабатывают очереди `ON KEY` и `ON MOUSE` на каждой итерации `WHILE`, `FOR` и `DO ... LOOP`, включая циклы с пустым телом;
+- `ProgramConsoleService` пишет в графический журнал события `screen.mouse.enqueued` и `screen.mouse.read`;
+- пример `samples/graphics/mouse/mouse_events.axm` очищает экран перед обновлением координат, чтобы строка не дописывалась вправо и не обрезалась у края окна.
+
+Следующий точный шаг:
+- вручную повторить `samples/graphics/mouse/mouse_events.axm` в `Axiom.Ide`: движение, левый клик и колесо должны отображаться без предварительного нажатия `ESC`; затем продолжать отдельное консольное окно программы для режима без `SCREEN`.
+
+## Обновление плана - 2026-05-10 - убрано мерцание mouse sample
+
+Сделано:
+- подтверждено ручной проверкой пользователя, что `samples/graphics/mouse/mouse_events.axm` получает `120` / `-120` для колеса и `1` для левой кнопки;
+- неприятное мерцание определено как следствие `CLS` на каждое событие перемещения мыши;
+- графический текстовый слой IDE теперь перезаписывает символы после `LOCATE`, а не вставляет текст внутрь существующей строки;
+- `samples/graphics/mouse/mouse_events.axm` больше не очищает весь экран в обработчике мыши, а обновляет только строку координат с запасом пробелов для стирания старого хвоста.
+
+Следующий точный шаг:
+- вручную повторить `samples/graphics/mouse/mouse_events.axm` в `Axiom.Ide` и проверить, что движение мыши обновляет строку без стробоскопического эффекта; затем продолжать отдельное консольное окно программы для режима без `SCREEN`.
+
+## Обновление плана - 2026-05-10 - залитые прямоугольники SCREEN без зависания IDE
+
+Сделано:
+- по пользовательскому скриншоту и свежему IDE-журналу подтверждено, что после изменения `LINE ..., BF` на координату `Y=660` программа не завершилась штатно: второй запуск дошёл до `screen.activated`, но не записал `run.result`;
+- причина определена как перегрузка WPF: залитый прямоугольник `LINE ..., BF` растеризовался в десятки тысяч отдельных `Rectangle`-элементов;
+- IDE-host теперь хранит залитые прямоугольники отдельным списком `GraphicsFills` и отрисовывает их одной WPF-фигурой с отсечением по границам активного `SCREEN`;
+- `POINT(x, y)` в host-слое учитывает залитые прямоугольники, поэтому пользовательская семантика `LINE ..., BF` сохраняется.
+
+Следующий точный шаг:
+- повторить изменённый `samples/graphics/primitives/pset_line_circle.axm` в `Axiom.Ide`: заливка с координатой за нижней границей должна отрисоваться с отсечением, окно должно реагировать на `ESC`.
+## Обновление плана - 2026-05-10 - игровой SCREEN sample для клавиатуры и графики
+
+Сделано:
+- добавлен ручной проверочный пример `samples/graphics/game/paddle_ball.axm`;
+- пример использует `SCREEN 3`, `LINE ..., BF`, `CIRCLE`, `LOCATE`, `PRINT`, `KEYDOWN("LEFT")`, `KEYDOWN("RIGHT")`, `KEYPRESS("SPACE")` и `KEYPRESS("ESC")`;
+- пробел работает как переключатель паузы: первое событие `SPACE` ставит игру на паузу, следующее событие `SPACE` продолжает игру;
+- автоматическая acceptance-проверка запускает пример через `ExecutionMode.Bytecode` и завершает его через `ESC`;
+- итоговая сборка `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий точный шаг:
+- вручную открыть `samples/graphics/game/paddle_ball.axm` в `Axiom.Ide`, проверить движение платформы стрелками, переключение паузы пробелом и выход через `ESC`; затем продолжать отдельное консольное окно программы для режима без `SCREEN`.
+
+## Обновление плана - 2026-05-10 - исправлена плавность игрового SCREEN sample
+
+Сделано:
+- `SPACE` добавлен в маршрут специальных клавиш IDE для `KEYPRESS("SPACE")`, поэтому пауза в графическом окне больше не зависит от текстового ввода;
+- видимый слой `SCREEN` в `ProgramConsoleService` теперь откладывает публикацию `GraphicsPixels` и `GraphicsFills` до ближайшего WPF-кадра, чтобы окно не показывало промежуточные операции стирания и рисования;
+- чёрное стирание пикселей и залитых прямоугольников больше не накапливает невидимые WPF-фигуры, когда под ними нет цветного слоя;
+- `samples/graphics/game/paddle_ball.axm` ускорен: мяч стартует быстрее, задержка короче, скорость понемногу увеличивается во время игры.
+
+Следующий точный шаг:
+- вручную повторить `samples/graphics/game/paddle_ball.axm` в `Axiom.Ide`: пробел должен переключать паузу, стрелки должны двигать платформу, мяч и платформа не должны моргать как покадровая анимация.
+## Обновление плана - 2026-05-10 - начат целевой DirectX/SwapChain host
+
+Сделано:
+- направление `SCREEN` уточнено: WPF-элементная отрисовка считается временным совместимым слоем, целевой host должен выводить кадры через DirectX/SwapChain;
+- в `src/Axiom.Ide/Axiom.Ide.csproj` добавлен пакет `Vortice.Direct3D11`;
+- добавлен `src/Axiom.Ide/Graphics/Direct3D11SwapChainRenderer.cs` с созданием D3D11 device, swap chain, render target view, resize и `Present`;
+- добавлен IDE-тест `ScreenRenderer_UsesDirect3D11SwapChainDependency`, который фиксирует, что целевой renderer действительно использует D3D11/DXGI swap chain.
+
+Следующий точный шаг:
+- добавить `HwndHost`-поверхность для `GraphicsScreenWindow`, подключить к ней `Direct3D11SwapChainRenderer` и начать передавать туда framebuffer `SCREEN` вместо WPF `ItemsControl`-слоёв.
+## Обновление плана - 2026-05-10 - добавлен child HWND для DirectX-поверхности SCREEN
+
+Сделано:
+- добавлен `Direct3D11ScreenHost` как WPF `HwndHost`, создающий дочернее Win32-окно для DirectX/SwapChain;
+- `Direct3D11ScreenHost` подключает `Direct3D11SwapChainRenderer`, очищает backbuffer в чёрный цвет, обновляет размер swap chain и освобождает ресурсы при уничтожении окна;
+- `GraphicsScreenWindow.xaml` получил точку подключения `Direct3D11ScreenHost`, при этом временный WPF-вывод оставлен рабочим до переноса framebuffer;
+- добавлен IDE-тест, фиксирующий наличие `HwndHost`, child HWND и связи с `Direct3D11SwapChainRenderer`.
+
+Следующий точный шаг:
+- добавить модель `ScreenFramebuffer` для активного `SCREEN`, перевести `PSET`, `PRESET`, `LINE`, `CIRCLE`, `CLS` и текстовый слой на запись в единый кадровый буфер, затем передавать этот буфер в `Direct3D11SwapChainRenderer` вместо WPF `ItemsControl`-слоёв.
+
+## Обновление плана - 2026-05-10 - SCREEN получил кадровый буфер для DirectX-пути
+
+Сделано:
+- добавлен `ScreenFramebuffer` с плотным массивом цветовых индексов активной графической поверхности;
+- `ProgramConsoleService` создаёт framebuffer при `SCREEN`, очищает его при `CLS` / `SCREEN 0` и обновляет при `PSET`, `PRESET`, `LINE`, `LINE ..., B`, `LINE ..., BF` и `CIRCLE`;
+- `POINT(x, y)` на стороне IDE-host теперь читает текущий цвет из framebuffer;
+- добавлен `ScreenFramebufferSnapshot` в формате BGRA и свойство `GraphicsFrame` для передачи кадров из `ProgramConsoleService` в видимый host;
+- `Direct3D11SwapChainRenderer` получил `PresentFrame(...)` и загружает кадр в backbuffer через `UpdateSubresource` перед `Present`;
+- `GraphicsScreenWindow` передаёт новые `GraphicsFrame` в `Direct3D11ScreenHost`.
+
+Следующий точный шаг:
+- перенести графический текстовый слой `PRINT` / `LOCATE` / `COLOR` и строку `INPUT` в framebuffer или отдельный DirectX-совместимый слой, после чего можно включить `Direct3D11ScreenHost` как видимый основной вывод и убрать WPF `ItemsControl`-слои из целевого `SCREEN`.
+
+## Обновление плана - 2026-05-10 - DirectX-поверхность SCREEN включена как видимый слой
+
+Сделано:
+- добавлен `ScreenTextRasterizer`, который композирует графический текст в BGRA-кадр без WPF `TextBlock`;
+- `ScreenFramebuffer.CreateSnapshot(...)` теперь умеет накладывать `GraphicsText` и строку графического `INPUT` поверх пиксельного буфера;
+- `ProgramConsoleService` публикует новый `GraphicsFrame` после `PRINT`, `COLOR`, изменения `CurrentInputText`, показа/скрытия ввода и графических примитивов;
+- `Direct3D11ScreenHost` включён как видимый child HWND в `GraphicsScreenWindow`;
+- добавлены IDE-тесты, подтверждающие, что `PRINT` и графический `INPUT` обновляют framebuffer.
+
+Следующий точный шаг:
+- вручную проверить `samples/graphics/screen/mode_info.axm`, `samples/graphics/input/input_on_screen.axm`, `samples/graphics/mouse/mouse_events.axm` и `samples/graphics/game/paddle_ball.axm` в `Axiom.Ide` уже с видимым DirectX-слоем; по результату исправить масштабирование child HWND, фокус ввода или качество растрового текста.
+
+## Обновление плана - 2026-05-10 - SCREEN переведён на native Win32/DirectX host
+
+Сделано:
+- удалены WPF-файлы графического окна `GraphicsScreenWindow.xaml` и `GraphicsScreenWindow.xaml.cs`;
+- удалён промежуточный `Direct3D11ScreenHost` на базе `HwndHost`;
+- добавлен `NativeGraphicsScreenWindow`, который создаёт отдельное Win32-окно, принимает клавиатуру и мышь через window messages и выводит кадр через `Direct3D11SwapChainRenderer`;
+- `ProgramConsoleService` теперь создаёт `NativeGraphicsScreenWindow` при `SCREEN` и передаёт туда `GraphicsFrame` напрямую;
+- графический `INPUT` переведён с WPF `TextBox` на `WM_CHAR`: вводимые символы и backspace меняют `CurrentInputText`, Enter завершает ввод;
+- удалены старые `GraphicsPixels`, `GraphicsFills`, `GraphicsPixelSnapshot` и `GraphicsFillSnapshot` из IDE-host модели;
+- `PRINT`, `INPUT`, пиксельные команды и `POINT` работают через `ScreenFramebuffer` / `ScreenFramebufferSnapshot`.
+
+Следующий точный шаг:
+- вручную проверить `samples/graphics/game/paddle_ball.axm`, `samples/graphics/input/input_on_screen.axm`, `samples/graphics/mouse/mouse_events.axm` и `samples/graphics/primitives/pset_line_circle.axm` уже в native `SCREEN`-окне; по результату исправить масштабирование окна, координаты мыши, удержание клавиш и качество raster text.
+
+## Обновление плана - 2026-05-10 - native SCREEN сделан неагрессивным окном
+
+Сделано:
+- по отчёту пользователя о мерцании и кратком появлении кадра игры убран агрессивный режим показа native `SCREEN`;
+- `NativeGraphicsScreenWindow` больше не использует `WS_POPUP`, `HWND_TOPMOST` и `ShowWindow(...Maximized)`;
+- окно `SCREEN` остаётся Win32/DirectX-окном, но теперь создаётся как обычное окно, пока отдельный полноэкранный режим не будет спроектирован явно.
+
+Следующий точный шаг:
+- вручную проверить запуск графических samples и убедиться, что `SCREEN` не моргает поверх рабочего стола неожиданно, а затем отдельно проектировать управляемый полноэкранный режим.

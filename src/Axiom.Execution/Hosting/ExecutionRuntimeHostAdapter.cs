@@ -62,6 +62,96 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
             ? mouseInputProvider.ReadMouseEvent()
             : default;
 
+    public bool IsScreenActive =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsScreenActive;
+
+    public int ScreenMode =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ScreenMode : 0;
+
+    public int ScreenWidth =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ScreenWidth : 0;
+
+    public int ScreenHeight =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ScreenHeight : 0;
+
+    public void ActivateScreen(int mode)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ActivateScreen(mode);
+        }
+    }
+
+    public void DeactivateScreen()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DeactivateScreen();
+        }
+    }
+
+    public void ClearGraphics()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ClearGraphics();
+        }
+    }
+
+    public void SetTextColor(int foreground, int? background)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetTextColor(foreground, background);
+        }
+    }
+
+    public void LocateText(int row, int column)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.LocateText(row, column);
+        }
+    }
+
+    public void WriteGraphicsText(string text, bool newLine)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.WriteGraphicsText(text, newLine);
+        }
+    }
+
+    public string ReadGraphicsInput(InputRequest request) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ReadGraphicsInput(request) : string.Empty;
+
+    public void SetPixel(long x, long y, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetPixel(x, y, color);
+        }
+    }
+
+    public int GetPixel(long x, long y) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
+
+    public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawLine(x1, y1, x2, y2, color, kind);
+        }
+    }
+
+    public void DrawCircle(long x, long y, long radius, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawCircle(x, y, radius, color);
+        }
+    }
+
     public void WriteOutput(string text)
     {
         _output.Add(text);

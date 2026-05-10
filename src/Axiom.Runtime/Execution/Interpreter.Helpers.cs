@@ -271,15 +271,27 @@ public sealed partial class Interpreter
         {
             if (forceEmptyLine)
             {
-                _host.WriteOutput(string.Empty);
+                WriteTextLine(string.Empty);
             }
 
             return;
         }
 
-        _host.WriteOutput(_pendingOutput.ToString());
+        WriteTextLine(_pendingOutput.ToString());
         _pendingOutput.Clear();
         _hasPendingOutput = false;
+    }
+
+    private void WriteTextLine(string text)
+    {
+        if (_host.IsScreenActive)
+        {
+            _host.WriteGraphicsText(text, newLine: true);
+        }
+        else
+        {
+            _host.WriteOutput(text);
+        }
     }
 
     private bool TryParseInputValues(

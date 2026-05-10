@@ -299,6 +299,58 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_ScreenStatement()
+    {
+        var program = ParseProgram("SCREEN 10", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<ScreenStatementSyntax>(program);
+        var mode = Assert.IsType<LiteralExpressionSyntax>(statement.ModeExpression);
+        Assert.Equal(10, Assert.IsType<int>(mode.LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_ColorLocateAndClsStatements()
+    {
+        var program = ParseProgram("""
+            COLOR 14, 1
+            LOCATE 3, 5
+            CLS
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var color = Assert.IsType<ColorStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[0]).Statement);
+        var locate = Assert.IsType<LocateStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+
+        Assert.NotNull(color.BackgroundExpression);
+        Assert.IsType<ClsStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
+        Assert.Equal(3, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(locate.RowExpression).LiteralToken.Value));
+        Assert.Equal(5, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(locate.ColumnExpression).LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_GraphicsPrimitiveStatements()
+    {
+        var program = ParseProgram("""
+            PSET (1, 2), 12
+            PRESET (3, 4), 0
+            LINE (0, 0)-(10, 10), 14, BF
+            CIRCLE (20, 20), 5, 11
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var pset = Assert.IsType<PSetStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[0]).Statement);
+        var preset = Assert.IsType<PSetStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        var line = Assert.IsType<LineStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
+        var circle = Assert.IsType<CircleStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
+
+        Assert.False(pset.Reset);
+        Assert.True(preset.Reset);
+        Assert.Equal(LineBoxKind.Filled, line.BoxKind);
+        Assert.NotNull(circle.ColorExpression);
+    }
+
+    [Fact]
     public void Parse_FunctionDeclarationWithFunctionTypedParameterAndReturnType()
     {
         const string text = """

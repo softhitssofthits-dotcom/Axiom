@@ -41,6 +41,12 @@
       ]
     },
     {
+      title: "Графика",
+      items: [
+        { id: "screen", href: "screen.html", label: "SCREEN и графика" }
+      ]
+    },
+    {
       title: "Управление выполнением",
       items: [
         { id: "if", href: "if.html", label: "Оператор IF" },

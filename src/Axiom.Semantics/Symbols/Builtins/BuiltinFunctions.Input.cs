@@ -12,7 +12,12 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.MouseX, "MOUSEX", TypeSymbol.Long, []),
             CreateDefault(BuiltinFunctionId.MouseY, "MOUSEY", TypeSymbol.Long, []),
             CreateDefault(BuiltinFunctionId.MouseButton, "MOUSEBUTTON", TypeSymbol.Boolean, [Parameter("buttonNumber", TypeSymbol.Integer)]),
-            CreateDefault(BuiltinFunctionId.MousePress, "MOUSEPRESS", TypeSymbol.Boolean, [Parameter("buttonNumber", TypeSymbol.Integer)])
+            CreateDefault(BuiltinFunctionId.MousePress, "MOUSEPRESS", TypeSymbol.Boolean, [Parameter("buttonNumber", TypeSymbol.Integer)]),
+            CreateDefault(BuiltinFunctionId.ScreenIsActive, "SCREENISACTIVE", TypeSymbol.Boolean, []),
+            CreateDefault(BuiltinFunctionId.ScreenMode, "SCREENMODE", TypeSymbol.Integer, []),
+            CreateDefault(BuiltinFunctionId.ScreenWidth, "SCREENWIDTH", TypeSymbol.Integer, []),
+            CreateDefault(BuiltinFunctionId.ScreenHeight, "SCREENHEIGHT", TypeSymbol.Integer, []),
+            CreateDefault(BuiltinFunctionId.Point, "POINT", TypeSymbol.Integer, [Parameter("x", TypeSymbol.Long), Parameter("y", TypeSymbol.Long)])
         ];
     }
 }

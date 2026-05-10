@@ -261,7 +261,7 @@ PRINT MOUSEBUTTON(99)
     }
 
     [Fact]
-    public void Execute_MouseFunctionsReturnDefaultValuesWithoutMouseProviderState()
+    public void Execute_MouseFunctionsWithoutScreenReportRuntimeDiagnostic()
     {
         const string text = """
 PRINT MOUSEX()
@@ -271,8 +271,8 @@ PRINT MOUSEBUTTON(1)
 
         var (_, host, result) = ExecuteProgramWithMouseState(text);
 
-        Assert.True(result.Succeeded);
-        Assert.Equal(["-1", "-1", "FALSE"], host.Output);
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3010");
     }
 
     [Fact]
@@ -8713,6 +8713,7 @@ END TRY
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
         private readonly long _mouseX;
         private readonly long _mouseY;
+        private bool _isScreenActive;
 
         public TestRuntimeHost(
             IEnumerable<string> inputs,
@@ -8740,6 +8741,7 @@ END TRY
             _namedTimeZones = namedTimeZones ?? new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase);
             _mouseX = mouseX;
             _mouseY = mouseY;
+            _isScreenActive = mouseX >= 0 || mouseY >= 0 || _pressedMouseButtons.Count > 0 || _mouseEvents.Count > 0 || _mousePresses.Count > 0;
         }
 
         public List<InputRequest> InputRequests { get; } = [];
@@ -8765,6 +8767,20 @@ END TRY
         public int ReadMouseButtonPress() => _mousePresses.Count > 0 ? _mousePresses.Dequeue() : 0;
 
         public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
+
+        public bool IsScreenActive => _isScreenActive;
+
+        public int ScreenMode => _isScreenActive ? 1 : 0;
+
+        public int ScreenWidth => _isScreenActive ? 320 : 0;
+
+        public int ScreenHeight => _isScreenActive ? 200 : 0;
+
+        public void ActivateScreen(int mode) => _isScreenActive = mode != 0;
+
+        public void DeactivateScreen() => _isScreenActive = false;
+
+        public void WriteGraphicsText(string text, bool newLine) => Output.Add(text);
 
         public void WriteOutput(string text)
         {

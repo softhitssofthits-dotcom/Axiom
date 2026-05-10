@@ -744,6 +744,39 @@ public sealed partial class BytecodeVm
                 ExecuteInput(frame, instruction, instructionIndex);
                 break;
 
+            case Opcode.Screen:
+                ExecuteScreenInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.Cls:
+                ExecuteClsInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.Color:
+                ExecuteColorInstruction(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.Locate:
+                ExecuteLocateInstruction(frame, instructionIndex);
+                break;
+
+            case Opcode.PSet:
+                ExecutePSetInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.Line:
+                ExecuteLineInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.Circle:
+                ExecuteCircleInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.StatementBoundary:
                 ExecuteStatementBoundary(instructionIndex);
                 InvalidateReverseExecutionHistory();
@@ -3327,17 +3360,29 @@ public sealed partial class BytecodeVm
         {
             if (forceEmptyLine)
             {
-                _host.WriteOutput(string.Empty);
+                WriteTextLine(string.Empty);
                 InvalidateReverseExecutionHistoryIfOutputIsNotReversible();
             }
 
             return;
         }
 
-        _host.WriteOutput(_pendingOutput.ToString());
+        WriteTextLine(_pendingOutput.ToString());
         _pendingOutput.Clear();
         _hasPendingOutput = false;
         InvalidateReverseExecutionHistoryIfOutputIsNotReversible();
+    }
+
+    private void WriteTextLine(string text)
+    {
+        if (_host.IsScreenActive)
+        {
+            _host.WriteGraphicsText(text, newLine: true);
+        }
+        else
+        {
+            _host.WriteOutput(text);
+        }
     }
 
     private BytecodeVmStateSnapshot? TryCreateReversibleStateSnapshot(BytecodeVmExecutionSnapshot executionSnapshot)

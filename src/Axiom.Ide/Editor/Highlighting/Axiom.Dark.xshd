@@ -30,7 +30,10 @@
             <Word>BYVAL</Word>
             <Word>CASE</Word>
             <Word>CATCH</Word>
+            <Word>CIRCLE</Word>
             <Word>CLOSE</Word>
+            <Word>CLS</Word>
+            <Word>COLOR</Word>
             <Word>CONST</Word>
             <Word>DIM</Word>
             <Word>DO</Word>
@@ -50,6 +53,8 @@
             <Word>INPUT</Word>
             <Word>IS</Word>
             <Word>KEY</Word>
+            <Word>LINE</Word>
+            <Word>LOCATE</Word>
             <Word>LOOP</Word>
             <Word>MOD</Word>
             <Word>MOUSE</Word>
@@ -62,8 +67,11 @@
             <Word>OUTPUT</Word>
             <Word>PRESERVE</Word>
             <Word>PRINT</Word>
+            <Word>PRESET</Word>
+            <Word>PSET</Word>
             <Word>REDIM</Word>
             <Word>RETURN</Word>
+            <Word>SCREEN</Word>
             <Word>SELF</Word>
             <Word>SELECT</Word>
             <Word>STEP</Word>
@@ -234,6 +242,7 @@
             <Word>PATHEXISTS</Word>
             <Word>PATHROOT</Word>
             <Word>POW</Word>
+            <Word>POINT</Word>
             <Word>READALLLINES</Word>
             <Word>READFILE</Word>
             <Word>READLINE</Word>
@@ -263,6 +272,10 @@
             <Word>SEEKFILE</Word>
             <Word>SETSIGN</Word>
             <Word>SGN</Word>
+            <Word>SCREENHEIGHT</Word>
+            <Word>SCREENISACTIVE</Word>
+            <Word>SCREENMODE</Word>
+            <Word>SCREENWIDTH</Word>
             <Word>SIN</Word>
             <Word>SINH</Word>
             <Word>SKIPLINE</Word>

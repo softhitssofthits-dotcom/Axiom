@@ -1,5 +1,10 @@
-' Нажмите левую кнопку мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC.
-PRINT "Нажмите левую кнопку мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC."
+' Manual check: click inside the full-screen SCREEN window, then press ESC.
+SCREEN 1
+PRINT "Click left mouse button inside SCREEN. Press ESC to finish."
+DIM seen AS BOOLEAN = FALSE
+DIM seenButton AS INTEGER = 0
+DIM seenX AS LONG = 0
+DIM seenY AS LONG = 0
 ON MOUSE(1), HandleMouse
 DIM marker AS INTEGER = 0
 
@@ -7,11 +12,16 @@ DO WHILE NOT KEYPRESS("ESC")
     marker = marker + 1
 LOOP
 
-PRINT "готово"
+SCREEN 0
+PRINT seen
+PRINT seenButton
+PRINT seenX
+PRINT seenY
+PRINT "done"
 
 SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
-    PRINT "мышь"
-    PRINT button
-    PRINT x
-    PRINT y
+    seen = TRUE
+    seenButton = button
+    seenX = x
+    seenY = y
 END SUB

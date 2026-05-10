@@ -51,6 +51,7 @@ internal static class KeyboardInputNameMapper
             Key.Enter or Key.Return => "ENTER",
             Key.Back => "BACKSPACE",
             Key.Tab => "TAB",
+            Key.Space => "SPACE",
             Key.Delete => "DELETE",
             Key.Insert => "INSERT",
             Key.Home => "HOME",

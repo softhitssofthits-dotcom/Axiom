@@ -684,6 +684,13 @@ public sealed class BytecodeModuleValidator
                     ValidateInputInstruction(module, routine, instructionIndex, instruction, globalsBySlot);
                     break;
 
+                case Opcode.Color:
+                case Opcode.PSet:
+                case Opcode.Line:
+                case Opcode.Circle:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, instruction.Opcode == Opcode.Color || instruction.Opcode == Opcode.Circle ? 1 : 2);
+                    break;
+
                 case Opcode.StatementBoundary:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
@@ -767,6 +774,9 @@ public sealed class BytecodeModuleValidator
                 case Opcode.EraseArray:
                 case Opcode.PrintValue:
                 case Opcode.PrintLine:
+                case Opcode.Screen:
+                case Opcode.Cls:
+                case Opcode.Locate:
                 case Opcode.CloseFile:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
@@ -1177,6 +1187,89 @@ public sealed class BytecodeModuleValidator
             case Opcode.PrintValue:
                 _ = Pop();
                 break;
+
+            case Opcode.Screen:
+            {
+                var modeType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, modeType, TypeSymbol.Integer, "режим SCREEN");
+                break;
+            }
+
+            case Opcode.Cls:
+                break;
+
+            case Opcode.Color:
+            {
+                if (instruction.GetOperand(0) == 2)
+                {
+                    var backgroundType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, backgroundType, TypeSymbol.Integer, "цвет фона");
+                }
+
+                var foregroundType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, foregroundType, TypeSymbol.Integer, "цвет текста");
+                break;
+            }
+
+            case Opcode.Locate:
+            {
+                var columnType = Pop();
+                var rowType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, rowType, TypeSymbol.Integer, "строка LOCATE");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, columnType, TypeSymbol.Integer, "столбец LOCATE");
+                break;
+            }
+
+            case Opcode.PSet:
+            {
+                if (instruction.GetOperand(1) == 3)
+                {
+                    var colorType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет пикселя");
+                }
+
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                break;
+            }
+
+            case Opcode.Line:
+            {
+                if (instruction.GetOperand(1) == 5)
+                {
+                    var colorType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет линии");
+                }
+
+                var y2Type = Pop();
+                var x2Type = Pop();
+                var y1Type = Pop();
+                var x1Type = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, TypeSymbol.Long, "координата X1");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, TypeSymbol.Long, "координата Y1");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, TypeSymbol.Long, "координата X2");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, TypeSymbol.Long, "координата Y2");
+                break;
+            }
+
+            case Opcode.Circle:
+            {
+                if (instruction.GetOperand(0) == 4)
+                {
+                    var colorType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет окружности");
+                }
+
+                var radiusType = Pop();
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, TypeSymbol.Long, "радиус");
+                break;
+            }
 
             case Opcode.Negate:
             case Opcode.Not:

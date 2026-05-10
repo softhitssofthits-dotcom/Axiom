@@ -177,6 +177,10 @@ public sealed class ProgramRunService : IProgramRunService
                 .ToArray();
             var outputText = BuildOutputText(executionResult.Output, executionResult.PendingOutput);
             var executionDuration = executionResult.RuntimeExecutionDuration;
+            if (!executionResult.Stopped && _consoleService.IsScreenActive)
+            {
+                _consoleService.DeactivateScreen();
+            }
 
             _traceService.Write(
                 "run.pipeline",
@@ -226,6 +230,11 @@ public sealed class ProgramRunService : IProgramRunService
         }
         catch (Exception exception)
         {
+            if (_consoleService.IsScreenActive)
+            {
+                _consoleService.DeactivateScreen();
+            }
+
             _traceService.WriteException("run.exception", exception, "Unexpected ProgramRunService failure.");
             _eventLogService.Write(new IdeEventLogEntry
             {
@@ -320,6 +329,10 @@ public sealed class ProgramRunService : IProgramRunService
             var diagnostics = runtimeResult.Diagnostics
                 .Select(ProgramDiagnosticItem.FromDiagnostic)
                 .ToArray();
+            if (!runtimeResult.Stopped && _consoleService.IsScreenActive)
+            {
+                _consoleService.DeactivateScreen();
+            }
 
             _traceService.Write(
                 traceName,
@@ -355,6 +368,11 @@ public sealed class ProgramRunService : IProgramRunService
         catch (Exception exception)
         {
             executionStopwatch.Stop();
+            if (_consoleService.IsScreenActive)
+            {
+                _consoleService.DeactivateScreen();
+            }
+
             _traceService.WriteException(exceptionTraceName, exception, exceptionTraceMessage);
             _eventLogService.Write(new IdeEventLogEntry
             {

@@ -316,6 +316,41 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.PrintValue, location);
     }
 
+    public static LoweredInstruction Screen(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Screen, location);
+    }
+
+    public static LoweredInstruction Cls(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Cls, location);
+    }
+
+    public static LoweredInstruction Color(TextLocation location, bool hasBackground)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Color, location, valueCount: hasBackground ? 2 : 1);
+    }
+
+    public static LoweredInstruction Locate(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Locate, location);
+    }
+
+    public static LoweredInstruction PSet(TextLocation location, bool reset, bool hasColor)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.PSet, location, valueCount: hasColor ? 3 : 2, preserve: reset);
+    }
+
+    public static LoweredInstruction Line(TextLocation location, BoundLineBoxKind boxKind, bool hasColor)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Line, location, valueCount: hasColor ? 5 : 4, mouseEventKind: (int)boxKind);
+    }
+
+    public static LoweredInstruction Circle(TextLocation location, bool hasColor)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Circle, location, valueCount: hasColor ? 4 : 3);
+    }
+
     public static LoweredInstruction PrintUsing(TextLocation location, int valueCount, PrintSeparatorKind? separatorKind)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(valueCount);

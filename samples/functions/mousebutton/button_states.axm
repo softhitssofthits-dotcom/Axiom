@@ -1,7 +1,13 @@
-' Удерживайте левую и среднюю кнопки мыши перед запуском.
-PRINT "Удерживайте левую и среднюю кнопки мыши перед запуском."
-PRINT MOUSEBUTTON(1)
-PRINT MOUSEBUTTON(2)
-PRINT MOUSEBUTTON(3)
-PRINT MOUSEBUTTON(99)
-PRINT "готово"
+' Manual check: hold mouse buttons inside the SCREEN window.
+SCREEN 1
+PRINT "Hold left and middle mouse buttons inside SCREEN."
+DIM leftDown AS BOOLEAN = MOUSEBUTTON(1)
+DIM rightDown AS BOOLEAN = MOUSEBUTTON(2)
+DIM middleDown AS BOOLEAN = MOUSEBUTTON(3)
+DIM unknownDown AS BOOLEAN = MOUSEBUTTON(99)
+SCREEN 0
+PRINT leftDown
+PRINT rightDown
+PRINT middleDown
+PRINT unknownDown
+PRINT "done"

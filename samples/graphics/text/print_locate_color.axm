@@ -1,0 +1,10 @@
+' Expected: text appears on the SCREEN text layer, not in Output, until SCREEN 0.
+SCREEN 3
+COLOR 14, 1
+LOCATE 2, 4
+PRINT "Axiom SCREEN text"
+PRINT USING "width #### height ####"; SCREENWIDTH(); SCREENHEIGHT()
+CLS
+PRINT "CLS cleared the graphics text layer"
+SCREEN 0
+PRINT "Back to Output"

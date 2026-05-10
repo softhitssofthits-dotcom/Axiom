@@ -1,0 +1,17 @@
+' Move or click over the active program surface, press ESC to finish.
+SCREEN 3
+ON MOUSE("MOVE"), HandleMouse
+ON MOUSE(1), HandleMouse
+ON MOUSE("WHEEL"), HandleMouse
+PRINT "Move, click, wheel. ESC exits."
+DO WHILE NOT KEYPRESS("ESC")
+LOOP
+SCREEN 0
+PRINT "Mouse sample finished"
+
+SUB HandleMouse(value AS INTEGER, x AS LONG, y AS LONG)
+    LOCATE 1, 1
+    PRINT "Move, click, wheel. ESC exits."
+    LOCATE 3, 1
+    PRINT "event="; value; " x="; x; " y="; y; "                    "
+END SUB

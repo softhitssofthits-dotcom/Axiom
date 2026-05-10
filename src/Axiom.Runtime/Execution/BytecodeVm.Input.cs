@@ -18,7 +18,8 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var text = _host.ReadInput(new InputRequest(plan.PromptText, plan.Targets.Length));
+        var request = new InputRequest(plan.PromptText, plan.Targets.Length);
+        var text = _host.IsScreenActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
         InvalidateReverseExecutionHistory();
 
         if (!TryParseAndStoreInputValues(frame, plan.Targets, text, location, instructionIndex))

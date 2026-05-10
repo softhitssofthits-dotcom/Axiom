@@ -804,10 +804,16 @@ PRINT INKEY()
     public void Run_WithBytecodeMode_UsesBytecodeVmForMouseFunctions()
     {
         const string text = """
-PRINT MOUSEX()
-PRINT MOUSEY()
-PRINT MOUSEBUTTON(1)
-PRINT MOUSEBUTTON(2)
+SCREEN 1
+DIM x AS LONG = MOUSEX()
+DIM y AS LONG = MOUSEY()
+DIM leftDown AS BOOLEAN = MOUSEBUTTON(1)
+DIM rightDown AS BOOLEAN = MOUSEBUTTON(2)
+SCREEN 0
+PRINT x
+PRINT y
+PRINT leftDown
+PRINT rightDown
 """;
 
         var result = Run(
@@ -822,7 +828,7 @@ PRINT MOUSEBUTTON(2)
     }
 
     [Fact]
-    public void Run_MouseFunctionsWithoutMouseProviderReturnDefaults()
+    public void Run_MouseFunctionsWithoutActiveScreenReturnDiagnostic()
     {
         var result = Run(
             """
@@ -833,19 +839,24 @@ PRINT MOUSEBUTTON(1)
             inputProvider: new QueueInputProvider(),
             mode: ExecutionMode.Bytecode);
 
-        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["-1", "-1", "FALSE"], result.Output);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
     }
 
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForMousePress()
     {
         const string text = """
-PRINT MOUSEPRESS(1)
-PRINT MOUSEPRESS(1)
-PRINT MOUSEPRESS(3)
+SCREEN 1
+DIM firstLeft AS BOOLEAN = MOUSEPRESS(1)
+DIM secondLeft AS BOOLEAN = MOUSEPRESS(1)
+DIM middle AS BOOLEAN = MOUSEPRESS(3)
+SCREEN 0
+PRINT firstLeft
+PRINT secondLeft
+PRINT middle
 """;
 
         var result = Run(
@@ -888,16 +899,26 @@ END SUB
     public void Run_WithBytecodeMode_UsesBytecodeVmForOnMouse()
     {
         const string text = """
-PRINT "ready"
+SCREEN 1
+DIM handled AS BOOLEAN = FALSE
+DIM handledButton AS INTEGER = 0
+DIM handledX AS LONG = 0
+DIM handledY AS LONG = 0
 ON MOUSE(1), HandleMouse
 DIM marker AS INTEGER = 1
-PRINT MOUSEPRESS(1)
+DIM consumed AS BOOLEAN = MOUSEPRESS(1)
+SCREEN 0
+PRINT handled
+PRINT handledButton
+PRINT handledX
+PRINT handledY
+PRINT consumed
 
 SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
-    PRINT "mouse"
-    PRINT button
-    PRINT x
-    PRINT y
+    handled = TRUE
+    handledButton = button
+    handledX = x
+    handledY = y
 END SUB
 """;
 
@@ -909,22 +930,31 @@ END SUB
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["ready", "mouse", "1", "320", "240", "FALSE"], result.Output);
+        Assert.Equal(["TRUE", "1", "320", "240", "FALSE"], result.Output);
     }
 
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForOnMouseWheel()
     {
         const string text = """
-PRINT "ready"
+SCREEN 1
+DIM handled AS BOOLEAN = FALSE
+DIM handledDelta AS INTEGER = 0
+DIM handledX AS LONG = 0
+DIM handledY AS LONG = 0
 ON MOUSE("WHEEL"), HandleMouse
 DIM marker AS INTEGER = 1
+SCREEN 0
+PRINT handled
+PRINT handledDelta
+PRINT handledX
+PRINT handledY
 
 SUB HandleMouse(delta AS INTEGER, x AS LONG, y AS LONG)
-    PRINT "wheel"
-    PRINT delta
-    PRINT x
-    PRINT y
+    handled = TRUE
+    handledDelta = delta
+    handledX = x
+    handledY = y
 END SUB
 """;
 
@@ -941,7 +971,7 @@ END SUB
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["ready", "wheel", "-120", "320", "240"], result.Output);
+        Assert.Equal(["TRUE", "-120", "320", "240"], result.Output);
     }
 
     [Fact]
@@ -2906,7 +2936,7 @@ INPUT value
         }
     }
 
-    private sealed class QueueKeyboardInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider
+    private sealed class QueueKeyboardInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider, IGraphicsHost
     {
         private readonly Queue<string> _keys;
         private readonly Queue<MouseInputEvent> _mouseEvents;
@@ -2914,6 +2944,11 @@ INPUT value
         private readonly HashSet<int> _pressedMouseButtons;
         private readonly long _mouseX;
         private readonly long _mouseY;
+        private readonly Dictionary<(long X, long Y), int> _pixels = [];
+        private bool _isScreenActive;
+        private int _screenMode;
+        private int _screenWidth;
+        private int _screenHeight;
 
         public QueueKeyboardInputProvider(params string[] keys)
             : this(keys, pressedKeys: null)
@@ -2977,6 +3012,35 @@ INPUT value
         }
 
         public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
+
+        public bool IsScreenActive => _isScreenActive;
+
+        public int ScreenMode => _screenMode;
+
+        public int ScreenWidth => _screenWidth;
+
+        public int ScreenHeight => _screenHeight;
+
+        public void ActivateScreen(int mode)
+        {
+            _isScreenActive = true;
+            _screenMode = mode;
+            (_screenWidth, _screenHeight) = mode == 1 ? (320, 200) : (1280, 720);
+            _pixels.Clear();
+        }
+
+        public void DeactivateScreen()
+        {
+            _isScreenActive = false;
+            _screenMode = 0;
+            _screenWidth = 0;
+            _screenHeight = 0;
+            _pixels.Clear();
+        }
+
+        public void SetPixel(long x, long y, int color) => _pixels[(x, y)] = color;
+
+        public int GetPixel(long x, long y) => _pixels.TryGetValue((x, y), out var color) ? color : 0;
     }
 
     private sealed class FixedRuntimeClock : IRuntimeClock

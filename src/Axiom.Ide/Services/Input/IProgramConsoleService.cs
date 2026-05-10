@@ -2,7 +2,7 @@ using Axiom.Runtime;
 
 namespace Axiom.Ide.Services.Input;
 
-public interface IProgramConsoleService : IProgramInputPromptService, IKeyboardInputProvider, IMouseInputProvider, IReversibleOutputWriter
+public interface IProgramConsoleService : IProgramInputPromptService, IKeyboardInputProvider, IMouseInputProvider, IReversibleOutputWriter, IGraphicsHost
 {
     void BeginSession();
 

@@ -65,6 +65,13 @@ public sealed partial class Binder
             InputStatementSyntax inputStatement => inputStatement.Identifiers.Count > 0
                 ? inputStatement.Identifiers[0].Location
                 : inputStatement.InputKeyword.Location,
+            ScreenStatementSyntax screenStatement => screenStatement.ScreenKeyword.Location,
+            ClsStatementSyntax clsStatement => clsStatement.ClsKeyword.Location,
+            ColorStatementSyntax colorStatement => colorStatement.ColorKeyword.Location,
+            LocateStatementSyntax locateStatement => locateStatement.LocateKeyword.Location,
+            PSetStatementSyntax psetStatement => psetStatement.Keyword.Location,
+            LineStatementSyntax lineStatement => lineStatement.LineKeyword.Location,
+            CircleStatementSyntax circleStatement => circleStatement.CircleKeyword.Location,
             OnKeyStatementSyntax onKeyStatement => onKeyStatement.OnKeyword.Location,
             OnMouseStatementSyntax onMouseStatement => onMouseStatement.OnKeyword.Location,
             OpenStatementSyntax openStatement => openStatement.OpenKeyword.Location,

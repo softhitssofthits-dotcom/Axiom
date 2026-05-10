@@ -1,18 +1,40 @@
-' В нижней вкладке Output подвигайте мышью, затем нажмите и отпустите левую кнопку. Для выхода нажмите ESC.
-PRINT "В нижней вкладке Output подвигайте мышью, затем нажмите и отпустите левую кнопку. Для выхода нажмите ESC."
-ON MOUSE("MOVE"), HandleMouse
-ON MOUSE(1, "UP"), HandleMouse
+' Manual check: move the pointer and release the left button inside SCREEN, then press ESC.
+SCREEN 1
+PRINT "Move mouse, release left button inside SCREEN. Press ESC to finish."
+DIM moveSeen AS BOOLEAN = FALSE
+DIM moveX AS LONG = 0
+DIM moveY AS LONG = 0
+DIM upSeen AS BOOLEAN = FALSE
+DIM upButton AS INTEGER = 0
+DIM upX AS LONG = 0
+DIM upY AS LONG = 0
+ON MOUSE("MOVE"), HandleMove
+ON MOUSE(1, "UP"), HandleUp
 DIM marker AS INTEGER = 0
 
 DO WHILE NOT KEYPRESS("ESC")
     marker = marker + 1
 LOOP
 
-PRINT "готово"
+SCREEN 0
+PRINT moveSeen
+PRINT moveX
+PRINT moveY
+PRINT upSeen
+PRINT upButton
+PRINT upX
+PRINT upY
+PRINT "done"
 
-SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
-    PRINT "мышь"
-    PRINT button
-    PRINT x
-    PRINT y
+SUB HandleMove(button AS INTEGER, x AS LONG, y AS LONG)
+    moveSeen = TRUE
+    moveX = x
+    moveY = y
+END SUB
+
+SUB HandleUp(button AS INTEGER, x AS LONG, y AS LONG)
+    upSeen = TRUE
+    upButton = button
+    upX = x
+    upY = y
 END SUB

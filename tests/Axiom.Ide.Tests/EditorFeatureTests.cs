@@ -12,6 +12,36 @@ namespace Axiom.Ide.Tests;
 public sealed class EditorFeatureTests
 {
     [Fact]
+    public void ScreenRenderer_UsesDirect3D11SwapChainDependency()
+    {
+        var project = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Axiom.Ide.csproj"));
+        var renderer = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Graphics\Direct3D11SwapChainRenderer.cs"));
+
+        Assert.Contains("Vortice.Direct3D11", project, StringComparison.Ordinal);
+        Assert.Contains("D3D11CreateDeviceAndSwapChain", renderer, StringComparison.Ordinal);
+        Assert.Contains("IDXGISwapChain", renderer, StringComparison.Ordinal);
+        Assert.Contains("Present(1, PresentFlags.None)", renderer, StringComparison.Ordinal);
+        Assert.Contains("UpdateSubresource", renderer, StringComparison.Ordinal);
+        Assert.Contains("PresentFrame(ScreenFramebufferSnapshot", renderer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ScreenRenderer_UsesNativeWin32Direct3DWindow()
+    {
+        var nativeWindow = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Graphics\NativeGraphicsScreenWindow.cs"), Encoding.UTF8);
+        var service = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Services\Input\ProgramConsoleService.cs"), Encoding.UTF8);
+
+        Assert.Contains("CreateWindowEx", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("WndProc", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("WmKeyDown", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("WmChar", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("WmMouseMove", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("Direct3D11SwapChainRenderer", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("NativeGraphicsScreenWindow", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("new GraphicsScreenWindow", service, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Highlighting_DefinitionLoadsCentralizedNamedColors()
     {
         var definition = AxiomHighlighting.Definition;

@@ -1,0 +1,10 @@
+' Expected: graphics screen reports active mode and dimensions.
+SCREEN 5
+PRINT "active="; SCREENISACTIVE()
+PRINT "mode="; SCREENMODE()
+PRINT "size="; SCREENWIDTH(); "x"; SCREENHEIGHT()
+PRINT "Press ESC to close SCREEN"
+DO WHILE NOT KEYPRESS("ESC")
+LOOP
+SCREEN 0
+PRINT "console again"

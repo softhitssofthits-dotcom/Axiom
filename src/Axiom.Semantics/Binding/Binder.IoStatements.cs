@@ -49,6 +49,64 @@ public sealed partial class Binder
         return new BoundInputStatement(GetLocation(statement), variables, promptText);
     }
 
+    private BoundStatement BindScreenStatement(ScreenStatementSyntax statement)
+    {
+        return new BoundScreenStatement(GetLocation(statement), BindExpression(statement.ModeExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindColorStatement(ColorStatementSyntax statement)
+    {
+        return new BoundColorStatement(
+            GetLocation(statement),
+            BindExpression(statement.ForegroundExpression, TypeSymbol.Integer),
+            statement.BackgroundExpression is null ? null : BindExpression(statement.BackgroundExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindLocateStatement(LocateStatementSyntax statement)
+    {
+        return new BoundLocateStatement(
+            GetLocation(statement),
+            BindExpression(statement.RowExpression, TypeSymbol.Integer),
+            BindExpression(statement.ColumnExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindPSetStatement(PSetStatementSyntax statement)
+    {
+        return new BoundPSetStatement(
+            GetLocation(statement),
+            BindExpression(statement.Point.XExpression, TypeSymbol.Long),
+            BindExpression(statement.Point.YExpression, TypeSymbol.Long),
+            statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer),
+            statement.Reset);
+    }
+
+    private BoundStatement BindLineStatement(LineStatementSyntax statement)
+    {
+        return new BoundLineStatement(
+            GetLocation(statement),
+            BindExpression(statement.StartPoint.XExpression, TypeSymbol.Long),
+            BindExpression(statement.StartPoint.YExpression, TypeSymbol.Long),
+            BindExpression(statement.EndPoint.XExpression, TypeSymbol.Long),
+            BindExpression(statement.EndPoint.YExpression, TypeSymbol.Long),
+            statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer),
+            statement.BoxKind switch
+            {
+                LineBoxKind.Border => BoundLineBoxKind.Border,
+                LineBoxKind.Filled => BoundLineBoxKind.Filled,
+                _ => BoundLineBoxKind.None
+            });
+    }
+
+    private BoundStatement BindCircleStatement(CircleStatementSyntax statement)
+    {
+        return new BoundCircleStatement(
+            GetLocation(statement),
+            BindExpression(statement.CenterPoint.XExpression, TypeSymbol.Long),
+            BindExpression(statement.CenterPoint.YExpression, TypeSymbol.Long),
+            BindExpression(statement.RadiusExpression, TypeSymbol.Long),
+            statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
     private BoundStatement BindOnKeyStatement(OnKeyStatementSyntax statement)
     {
         var keyExpression = BindExpression(statement.KeyExpression, TypeSymbol.String);

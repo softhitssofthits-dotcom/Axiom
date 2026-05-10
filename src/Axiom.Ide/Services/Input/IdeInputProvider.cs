@@ -2,7 +2,7 @@ using Axiom.Runtime;
 
 namespace Axiom.Ide.Services.Input;
 
-internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider
+internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider, IGraphicsHost
 {
     private readonly IProgramInputPromptService _promptService;
     private int _requestCount;
@@ -48,4 +48,99 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         _promptService is IMouseInputProvider mouseInputProvider
             ? mouseInputProvider.ReadMouseButtonPress()
             : 0;
+
+    public MouseInputEvent ReadMouseEvent() =>
+        _promptService is IMouseInputProvider mouseInputProvider
+            ? mouseInputProvider.ReadMouseEvent()
+            : default;
+
+    public bool IsScreenActive =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.IsScreenActive;
+
+    public int ScreenMode =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ScreenMode : 0;
+
+    public int ScreenWidth =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ScreenWidth : 0;
+
+    public int ScreenHeight =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ScreenHeight : 0;
+
+    public void ActivateScreen(int mode)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ActivateScreen(mode);
+        }
+    }
+
+    public void DeactivateScreen()
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DeactivateScreen();
+        }
+    }
+
+    public void ClearGraphics()
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ClearGraphics();
+        }
+    }
+
+    public void SetTextColor(int foreground, int? background)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetTextColor(foreground, background);
+        }
+    }
+
+    public void LocateText(int row, int column)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.LocateText(row, column);
+        }
+    }
+
+    public void WriteGraphicsText(string text, bool newLine)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.WriteGraphicsText(text, newLine);
+        }
+    }
+
+    public string ReadGraphicsInput(InputRequest request) =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ReadGraphicsInput(request) : string.Empty;
+
+    public void SetPixel(long x, long y, int color)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetPixel(x, y, color);
+        }
+    }
+
+    public int GetPixel(long x, long y) =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
+
+    public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawLine(x1, y1, x2, y2, color, kind);
+        }
+    }
+
+    public void DrawCircle(long x, long y, long radius, int color)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawCircle(x, y, radius, color);
+        }
+    }
 }

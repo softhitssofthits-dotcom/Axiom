@@ -10,8 +10,7 @@ public sealed partial class Interpreter
     {
         foreach (var statement in statements)
         {
-            DispatchKeyboardHandlers(statement.Location);
-            DispatchMouseHandlers(statement.Location);
+            DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatement(statement);
 
             if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
@@ -35,6 +34,13 @@ public sealed partial class Interpreter
             BoundPrintStatement print => ExecutePrint(print),
             BoundPrintUsingStatement printUsing => ExecutePrintUsing(printUsing),
             BoundInputStatement input => ExecuteInput(input),
+            BoundScreenStatement screen => ExecuteScreen(screen),
+            BoundClsStatement cls => ExecuteCls(cls),
+            BoundColorStatement color => ExecuteColor(color),
+            BoundLocateStatement locate => ExecuteLocate(locate),
+            BoundPSetStatement pset => ExecutePSet(pset),
+            BoundLineStatement line => ExecuteLine(line),
+            BoundCircleStatement circle => ExecuteCircle(circle),
             BoundOnKeyStatement onKey => ExecuteOnKey(onKey),
             BoundOnMouseStatement onMouse => ExecuteOnMouse(onMouse),
             BoundOpenStatement open => ExecuteOpen(open),
@@ -146,6 +152,12 @@ public sealed partial class Interpreter
 
         array.Deallocate();
         return ExecutionSignal.None;
+    }
+
+    private void DispatchInputHandlers(TextLocation location)
+    {
+        DispatchKeyboardHandlers(location);
+        DispatchMouseHandlers(location);
     }
 
     private ExecutionSignal ExecuteRedim(BoundRedimStatement statement)
@@ -296,7 +308,8 @@ public sealed partial class Interpreter
             return ReportInvalidRuntimeState<ExecutionSignal>($"INPUT does not support array '{arrayVariable.Name}'.", statement.Location);
         }
 
-        var text = _host.ReadInput(new InputRequest(statement.PromptText, statement.Variables.Count));
+        var request = new InputRequest(statement.PromptText, statement.Variables.Count);
+        var text = _host.IsScreenActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
 
         if (!TryParseInputValues(statement.Variables, text, statement.Location, out var values))
         {
@@ -495,6 +508,7 @@ public sealed partial class Interpreter
     {
         while (EvaluateExpression(statement.Condition).AsBoolean())
         {
+            DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
             if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
@@ -577,6 +591,7 @@ public sealed partial class Interpreter
 
         while (true)
         {
+            DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
             if (signal.HasReturn)
@@ -684,6 +699,7 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            DispatchInputHandlers(statement.Location);
             var current = GetVariableValue(statement.Variable).AsInteger();
 
             if (stepValue > 0)
@@ -725,6 +741,7 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            DispatchInputHandlers(statement.Location);
             var current = GetVariableValue(statement.Variable).AsLong();
 
             if (stepValue > 0L)
@@ -766,6 +783,7 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            DispatchInputHandlers(statement.Location);
             var current = GetVariableValue(statement.Variable).AsDouble();
 
             if (stepValue > 0d)

@@ -1,6 +1,11 @@
-' Нажмите левую кнопку один раз и среднюю кнопку один раз до завершения программы.
-PRINT "Нажмите левую кнопку один раз и среднюю кнопку один раз до завершения программы."
-PRINT MOUSEPRESS(1)
-PRINT MOUSEPRESS(1)
-PRINT MOUSEPRESS(3)
-PRINT "готово"
+' Manual check: click inside the SCREEN window before the program finishes.
+SCREEN 1
+PRINT "Click left once and middle once inside SCREEN."
+DIM firstLeft AS BOOLEAN = MOUSEPRESS(1)
+DIM secondLeft AS BOOLEAN = MOUSEPRESS(1)
+DIM middlePress AS BOOLEAN = MOUSEPRESS(3)
+SCREEN 0
+PRINT firstLeft
+PRINT secondLeft
+PRINT middlePress
+PRINT "done"

@@ -1,4 +1,5 @@
 using System.Windows.Threading;
+using Axiom.Ide.Graphics;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.Services.Input;
@@ -193,6 +194,130 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void ActivateScreen_UsesGraphicsStateSeparateFromOutput()
+    {
+        var service = new ProgramConsoleService();
+
+        service.WriteOutput("before");
+        service.ActivateScreen(10);
+        service.WriteGraphicsText("hello", newLine: true);
+
+        Assert.True(service.IsScreenActive);
+        Assert.Equal(10, service.ScreenMode);
+        Assert.Equal(1280, service.ScreenWidth);
+        Assert.Equal(720, service.ScreenHeight);
+        Assert.Equal("before", service.OutputText);
+        Assert.Equal($"hello{Environment.NewLine}", service.GraphicsText);
+    }
+
+    [Fact]
+    public void WriteGraphicsText_OverwritesAtLocatedCursor()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.WriteGraphicsText("event=120 x=300 y=200", newLine: true);
+        service.LocateText(1, 1);
+        service.WriteGraphicsText("event=1 x=7 y=9      ", newLine: true);
+
+        Assert.Equal($"event=1 x=7 y=9      {Environment.NewLine}", service.GraphicsText);
+    }
+
+    [Fact]
+    public void WriteGraphicsText_UpdatesFramebufferTextLayer()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.WriteGraphicsText("A", newLine: false);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Contains(frame.BgraPixels, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+    }
+
+    [Fact]
+    public void ScreenInput_UpdatesFramebufferInputLine()
+    {
+        var service = new ProgramConsoleService();
+        var dispatcher = Dispatcher.CurrentDispatcher;
+
+        service.ActivateScreen(1);
+        dispatcher.BeginInvoke(() =>
+        {
+            Assert.True(service.IsWaitingForInput);
+            service.CurrentInputText = "Ada";
+
+            var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+            var inputRowStart = (frame.Height - ScreenTextRasterizer.CellHeight) * frame.Width;
+            var inputRowPixels = frame.BgraPixels.Skip(inputRowStart).Take(ScreenTextRasterizer.CellHeight * frame.Width);
+            Assert.Contains(inputRowPixels, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+
+            service.SubmitInput();
+        });
+
+        var result = service.ReadGraphicsInput(new InputRequest("Name", 1));
+
+        Assert.Equal("Ada", result);
+    }
+
+    [Fact]
+    public void DrawLine_RasterizesIntermediatePixels()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(1, 1, 4, 1, 12, GraphicsLineKind.Normal);
+
+        Assert.Equal(12, service.GetPixel(1, 1));
+        Assert.Equal(12, service.GetPixel(2, 1));
+        Assert.Equal(12, service.GetPixel(3, 1));
+        Assert.Equal(12, service.GetPixel(4, 1));
+    }
+
+    [Fact]
+    public void DrawLine_UpdatesFramebufferSnapshot()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(1, 1, 4, 1, 12, GraphicsLineKind.Normal);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(320, frame.Width);
+        Assert.Equal(200, frame.Height);
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(12), frame.BgraPixels[(1 * frame.Width) + 1]);
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(12), frame.BgraPixels[(1 * frame.Width) + 4]);
+    }
+
+    [Fact]
+    public void DrawLine_FilledBoxUsesSingleClippedFill()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(220, 100, 360, 660, 11, GraphicsLineKind.FilledBox);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(11), frame.BgraPixels[(150 * frame.Width) + 250]);
+        Assert.Equal(11, service.GetPixel(250, 150));
+        Assert.Equal(0, service.GetPixel(10, 10));
+    }
+
+    [Fact]
+    public void DrawCircle_RasterizesCirclePoints()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawCircle(10, 10, 3, 14);
+
+        Assert.Equal(14, service.GetPixel(13, 10));
+        Assert.Equal(14, service.GetPixel(7, 10));
+        Assert.Equal(14, service.GetPixel(10, 13));
+        Assert.Equal(14, service.GetPixel(10, 7));
+    }
+
+    [Fact]
     public void ClearOutput_ClearsTranscriptWithoutResettingPendingInput()
     {
         var service = new ProgramConsoleService();
@@ -275,6 +400,35 @@ public sealed class ProgramConsoleServiceTests
             eventLogService.Entries,
             static entry => entry.EventName == "input.submitted"
                 && entry.TextPreview == "Ada");
+    }
+
+    [Fact]
+    public void ScreenActions_WriteGraphicsTraceAndEventLogEntries()
+    {
+        var traceService = new FakeIdeTraceService();
+        var eventLogService = new FakeIdeEventLogService();
+        var service = new ProgramConsoleService(traceService, eventLogService);
+
+        service.ActivateScreen(5);
+        service.EnqueueKey("ESC");
+        Assert.Equal("ESC", service.ReadKey());
+        service.EnqueueMouseMove();
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Move, 0), service.ReadMouseEvent());
+        service.DeactivateScreen();
+
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.activated" && entry.Message.Contains("mode=5", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.key.enqueued" && entry.Message.Contains("ESC", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.key.read" && entry.Message.Contains("ESC", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.mouse.enqueued" && entry.Message.Contains("Move", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.mouse.read" && entry.Message.Contains("Move", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.deactivated" && entry.Message.Contains("mode=5", StringComparison.Ordinal));
+
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.activated");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.key.enqueued");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.key.read");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.mouse.enqueued");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.mouse.read");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.deactivated");
     }
 
     private sealed class FakeIdeTraceService : IIdeTraceService

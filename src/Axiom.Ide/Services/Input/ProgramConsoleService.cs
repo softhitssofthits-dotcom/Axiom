@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Threading;
+using Axiom.Ide.Graphics;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.ViewModels;
@@ -23,6 +24,20 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private string _submittedText = string.Empty;
     private long _mouseX = -1;
     private long _mouseY = -1;
+    private bool _isScreenActive;
+    private int _screenMode;
+    private int _screenWidth;
+    private int _screenHeight;
+    private string _graphicsText = string.Empty;
+    private int _graphicsForeground = 15;
+    private int? _graphicsBackground;
+    private int _graphicsRow = 1;
+    private int _graphicsColumn = 1;
+    private int _graphicsInputRequestCount;
+    private ScreenFramebuffer? _framebuffer;
+    private ScreenFramebufferSnapshot? _graphicsFrame;
+    private bool _graphicsVisualRefreshPending;
+    private NativeGraphicsScreenWindow? _graphicsWindow;
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
@@ -35,25 +50,95 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     public string CurrentInputText
     {
         get => _currentInputText;
-        set => SetProperty(ref _currentInputText, value);
+        set
+        {
+            if (SetProperty(ref _currentInputText, value) && _isScreenActive && _isWaitingForInput)
+            {
+                PublishGraphicsFrame();
+            }
+        }
     }
 
     public string CurrentPromptText
     {
         get => _currentPromptText;
-        private set => SetProperty(ref _currentPromptText, value);
+        private set
+        {
+            if (SetProperty(ref _currentPromptText, value) && _isScreenActive)
+            {
+                PublishGraphicsFrame();
+            }
+        }
     }
 
     public bool IsWaitingForInput
     {
         get => _isWaitingForInput;
-        private set => SetProperty(ref _isWaitingForInput, value);
+        private set
+        {
+            if (SetProperty(ref _isWaitingForInput, value) && _isScreenActive)
+            {
+                PublishGraphicsFrame();
+            }
+        }
     }
 
     public string OutputText
     {
         get => _outputText;
         private set => SetProperty(ref _outputText, value);
+    }
+
+    public string GraphicsText
+    {
+        get => _graphicsText;
+        private set => SetProperty(ref _graphicsText, value);
+    }
+
+    public ScreenFramebufferSnapshot? GraphicsFrame
+    {
+        get => _graphicsFrame;
+        private set => SetProperty(ref _graphicsFrame, value);
+    }
+
+    public bool IsScreenActive
+    {
+        get
+        {
+            var value = false;
+            InvokeOnDispatcher(() => value = _isScreenActive, DispatcherPriority.Background);
+            return value;
+        }
+    }
+
+    public int ScreenMode
+    {
+        get
+        {
+            var value = 0;
+            InvokeOnDispatcher(() => value = _screenMode, DispatcherPriority.Background);
+            return value;
+        }
+    }
+
+    public int ScreenWidth
+    {
+        get
+        {
+            var value = 0;
+            InvokeOnDispatcher(() => value = _screenWidth, DispatcherPriority.Background);
+            return value;
+        }
+    }
+
+    public int ScreenHeight
+    {
+        get
+        {
+            var value = 0;
+            InvokeOnDispatcher(() => value = _screenHeight, DispatcherPriority.Background);
+            return value;
+        }
     }
 
     public int OutputCheckpoint =>
@@ -137,10 +222,187 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(SubmitInputCore);
     }
 
+    public void AppendInputCharacter(char character)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isWaitingForInput || char.IsControl(character))
+            {
+                return;
+            }
+
+            CurrentInputText += character;
+        });
+    }
+
+    public void BackspaceInputCharacter()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isWaitingForInput || CurrentInputText.Length == 0)
+            {
+                return;
+            }
+
+            CurrentInputText = CurrentInputText[..^1];
+        });
+    }
+
     public void WriteOutput(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         InvokeOnDispatcher(() => AppendTranscriptLine(text));
+    }
+
+    public void ActivateScreen(int mode)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            var (width, height) = ResolveScreenSize(mode);
+            _isScreenActive = true;
+            _screenMode = mode;
+            _screenWidth = width;
+            _screenHeight = height;
+            _framebuffer = new ScreenFramebuffer(width, height);
+            GraphicsText = string.Empty;
+            _graphicsVisualRefreshPending = false;
+            _graphicsForeground = 15;
+            _graphicsBackground = null;
+            _graphicsRow = 1;
+            _graphicsColumn = 1;
+            PublishGraphicsFrame();
+            OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(ScreenMode));
+            OnPropertyChanged(nameof(ScreenWidth));
+            OnPropertyChanged(nameof(ScreenHeight));
+            EnsureGraphicsWindow();
+            WriteGraphicsEvent(
+                "screen.activated",
+                $"mode={mode} | size={width}x{height}");
+        });
+    }
+
+    public void DeactivateScreen()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            var previousMode = _screenMode;
+            var previousWidth = _screenWidth;
+            var previousHeight = _screenHeight;
+            _isScreenActive = false;
+            _screenMode = 0;
+            _screenWidth = 0;
+            _screenHeight = 0;
+            _framebuffer = null;
+            GraphicsFrame = null;
+            GraphicsText = string.Empty;
+            _graphicsVisualRefreshPending = false;
+            OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(ScreenMode));
+            OnPropertyChanged(nameof(ScreenWidth));
+            OnPropertyChanged(nameof(ScreenHeight));
+            CloseGraphicsWindow();
+            WriteGraphicsEvent(
+                "screen.deactivated",
+                $"mode={previousMode} | size={previousWidth}x{previousHeight}");
+        });
+    }
+
+    public void ClearGraphics()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            GraphicsText = string.Empty;
+            _framebuffer?.Clear();
+            PublishGraphicsFrame();
+            _graphicsVisualRefreshPending = false;
+            _graphicsRow = 1;
+            _graphicsColumn = 1;
+        });
+    }
+
+    public void SetTextColor(int foreground, int? background)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _graphicsForeground = foreground;
+            _graphicsBackground = background;
+            PublishGraphicsFrame();
+        });
+    }
+
+    public void LocateText(int row, int column)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _graphicsRow = Math.Max(1, row);
+            _graphicsColumn = Math.Max(1, column);
+        });
+    }
+
+    public void WriteGraphicsText(string text, bool newLine)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        InvokeOnDispatcher(() =>
+        {
+            WriteGraphicsTextCore(text, newLine);
+            PublishGraphicsFrame();
+        });
+    }
+
+    public string ReadGraphicsInput(InputRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        _graphicsInputRequestCount++;
+        return RequestInput(new ProgramInputRequest(_graphicsInputRequestCount, request.PromptText, request.ValueCount));
+    }
+
+    public void SetPixel(long x, long y, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            SetPixelCore(x, y, color);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public int GetPixel(long x, long y)
+    {
+        var color = 0;
+        InvokeOnDispatcher(() => color = GetPixelCore(x, y), DispatcherPriority.Background);
+        return color;
+    }
+
+    public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            switch (kind)
+            {
+                case GraphicsLineKind.Box:
+                    DrawBoxCore(x1, y1, x2, y2, color, filled: false);
+                    break;
+
+                case GraphicsLineKind.FilledBox:
+                    DrawBoxCore(x1, y1, x2, y2, color, filled: true);
+                    break;
+
+                default:
+                    DrawLineCore(x1, y1, x2, y2, color);
+                    break;
+            }
+
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawCircle(long x, long y, long radius, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            DrawCircleCore(x, y, radius, color);
+            ScheduleGraphicsVisualRefresh();
+        });
     }
 
     public void EnqueueKey(string keyText)
@@ -150,7 +412,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pendingKeys.Enqueue(keyText));
+        InvokeOnDispatcher(() =>
+        {
+            _pendingKeys.Enqueue(keyText);
+            if (_isScreenActive)
+            {
+                WriteGraphicsEvent(
+                    "screen.key.enqueued",
+                    $"key=\"{SanitizeForLog(keyText)}\" | pendingKeys={_pendingKeys.Count}");
+            }
+        });
     }
 
     public void SetKeyDown(string keyText)
@@ -179,6 +450,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             keyText = _pendingKeys.Count > 0 ? _pendingKeys.Dequeue() : string.Empty;
+            if (_isScreenActive && !string.IsNullOrEmpty(keyText))
+            {
+                WriteGraphicsEvent(
+                    "screen.key.read",
+                    $"key=\"{SanitizeForLog(keyText)}\" | pendingKeys={_pendingKeys.Count}");
+            }
         }, DispatcherPriority.Background);
 
         return keyText;
@@ -228,7 +505,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
+        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
     }
 
     public void EnqueueMouseButtonRelease(int buttonNumber)
@@ -238,12 +515,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber)));
+        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber)));
     }
 
     public void EnqueueMouseMove()
     {
-        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Move, 0)));
+        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Move, 0)));
     }
 
     public void EnqueueMouseWheel(int delta)
@@ -253,7 +530,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Wheel, delta)));
+        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Wheel, delta)));
     }
 
     public void SetMouseButtonUp(int buttonNumber)
@@ -326,6 +603,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             mouseEvent = _pendingMouseEvents.Count > 0 ? _pendingMouseEvents.Dequeue() : default;
+            if (_isScreenActive && mouseEvent != default)
+            {
+                WriteGraphicsEvent(
+                    "screen.mouse.read",
+                    $"{FormatMouseEvent(mouseEvent)} | pendingMouseEvents={_pendingMouseEvents.Count}");
+            }
         }, DispatcherPriority.Background);
 
         return mouseEvent;
@@ -451,8 +734,21 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _pressedMouseButtons.Clear();
         _mouseX = -1;
         _mouseY = -1;
+        _isScreenActive = false;
+        _screenMode = 0;
+        _screenWidth = 0;
+        _screenHeight = 0;
+        _framebuffer = null;
+        GraphicsFrame = null;
+        GraphicsText = string.Empty;
+        _graphicsVisualRefreshPending = false;
         OutputText = string.Empty;
         ResetInputState();
+        OnPropertyChanged(nameof(IsScreenActive));
+        OnPropertyChanged(nameof(ScreenMode));
+        OnPropertyChanged(nameof(ScreenWidth));
+        OnPropertyChanged(nameof(ScreenHeight));
+        CloseGraphicsWindow();
     }
 
     private void ClearOutputCore()
@@ -510,5 +806,304 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             .Trim();
     }
 
+    private void EnqueueMouseEventCore(MouseInputEvent mouseEvent)
+    {
+        _pendingMouseEvents.Enqueue(mouseEvent);
+        if (_isScreenActive)
+        {
+            WriteGraphicsEvent(
+                "screen.mouse.enqueued",
+                $"{FormatMouseEvent(mouseEvent)} | pendingMouseEvents={_pendingMouseEvents.Count}");
+        }
+    }
+
+    private static string FormatMouseEvent(MouseInputEvent mouseEvent) =>
+        $"kind={mouseEvent.Kind} | value={mouseEvent.ButtonNumber}";
+
+    private void WriteGraphicsEvent(string eventName, string message)
+    {
+        _traceService.Write(eventName, message);
+        _eventLogService.Write(new IdeEventLogEntry
+        {
+            Level = IdeEventLevel.Info,
+            Category = "graphics",
+            EventName = eventName,
+            Source = nameof(ProgramConsoleService),
+            TextPreview = message
+        });
+    }
+
     private static bool IsSupportedMouseButton(int buttonNumber) => buttonNumber is >= 1 and <= 3;
+
+    private void EnsureGraphicsWindow()
+    {
+        if (_graphicsWindow is not null)
+        {
+            _graphicsWindow.Activate();
+            return;
+        }
+
+        _graphicsWindow = new NativeGraphicsScreenWindow(this, _screenWidth, _screenHeight);
+        _graphicsWindow.Closed += OnGraphicsWindowClosed;
+        _graphicsWindow.Show();
+        _graphicsWindow.PresentFrame(GraphicsFrame);
+    }
+
+    private void CloseGraphicsWindow()
+    {
+        if (_graphicsWindow is null)
+        {
+            return;
+        }
+
+        var window = _graphicsWindow;
+        _graphicsWindow = null;
+        window.Closed -= OnGraphicsWindowClosed;
+        window.Close();
+    }
+
+    private void OnGraphicsWindowClosed(object? sender, EventArgs e)
+    {
+        if (_graphicsWindow is null)
+        {
+            return;
+        }
+
+        _graphicsWindow.Closed -= OnGraphicsWindowClosed;
+        _graphicsWindow = null;
+    }
+
+    private void WriteGraphicsTextCore(string text, bool newLine)
+    {
+        var lines = GraphicsText.Length == 0
+            ? new List<string>()
+            : GraphicsText.Split(Environment.NewLine).ToList();
+
+        EnsureGraphicsLine(lines, _graphicsRow);
+        var lineIndex = _graphicsRow - 1;
+        var columnIndex = Math.Max(0, _graphicsColumn - 1);
+        var line = lines[lineIndex];
+
+        lines[lineIndex] = OverwriteText(line, columnIndex, text);
+
+        if (newLine)
+        {
+            _graphicsRow++;
+            _graphicsColumn = 1;
+            EnsureGraphicsLine(lines, _graphicsRow);
+        }
+        else
+        {
+            _graphicsColumn += text.Length;
+        }
+
+        GraphicsText = string.Join(Environment.NewLine, lines);
+    }
+
+    private static void EnsureGraphicsLine(List<string> lines, int row)
+    {
+        while (lines.Count < row)
+        {
+            lines.Add(string.Empty);
+        }
+    }
+
+    private static string OverwriteText(string line, int columnIndex, string text)
+    {
+        if (line.Length < columnIndex)
+        {
+            line = line.PadRight(columnIndex);
+        }
+
+        var prefix = line[..columnIndex];
+        var suffixStart = columnIndex + text.Length;
+        var suffix = suffixStart < line.Length ? line[suffixStart..] : string.Empty;
+        return prefix + text + suffix;
+    }
+
+    private void SetPixelCore(long x, long y, int color)
+    {
+        if (!IsInsideScreen(x, y))
+        {
+            return;
+        }
+
+        _framebuffer?.SetPixel(x, y, color);
+    }
+
+    private int GetPixelCore(long x, long y)
+    {
+        return _framebuffer?.GetPixel(x, y) ?? 0;
+    }
+
+    private bool IsInsideScreen(long x, long y) =>
+        _isScreenActive &&
+        x >= 0 &&
+        y >= 0 &&
+        x < _screenWidth &&
+        y < _screenHeight;
+
+    private void DrawLineCore(long x1, long y1, long x2, long y2, int color)
+    {
+        var dx = Math.Abs(x2 - x1);
+        var sx = x1 < x2 ? 1 : -1;
+        var dy = -Math.Abs(y2 - y1);
+        var sy = y1 < y2 ? 1 : -1;
+        var error = dx + dy;
+
+        while (true)
+        {
+            SetPixelCore(x1, y1, color);
+            if (x1 == x2 && y1 == y2)
+            {
+                break;
+            }
+
+            var doubledError = 2 * error;
+            if (doubledError >= dy)
+            {
+                error += dy;
+                x1 += sx;
+            }
+
+            if (doubledError <= dx)
+            {
+                error += dx;
+                y1 += sy;
+            }
+        }
+    }
+
+    private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
+    {
+        var left = Math.Min(x1, x2);
+        var right = Math.Max(x1, x2);
+        var top = Math.Min(y1, y2);
+        var bottom = Math.Max(y1, y2);
+
+        if (filled)
+        {
+            AddFillCore(left, top, right, bottom, color);
+
+            return;
+        }
+
+        DrawLineCore(left, top, right, top, color);
+        DrawLineCore(right, top, right, bottom, color);
+        DrawLineCore(right, bottom, left, bottom, color);
+        DrawLineCore(left, bottom, left, top, color);
+    }
+
+    private void DrawCircleCore(long centerX, long centerY, long radius, int color)
+    {
+        if (radius < 0)
+        {
+            return;
+        }
+
+        var x = radius;
+        var y = 0L;
+        var error = 1 - x;
+
+        while (x >= y)
+        {
+            PlotCircleOctants(centerX, centerY, x, y, color);
+            y++;
+
+            if (error < 0)
+            {
+                error += 2 * y + 1;
+            }
+            else
+            {
+                x--;
+                error += 2 * (y - x) + 1;
+            }
+        }
+    }
+
+    private void PlotCircleOctants(long centerX, long centerY, long x, long y, int color)
+    {
+        SetPixelCore(centerX + x, centerY + y, color);
+        SetPixelCore(centerX + y, centerY + x, color);
+        SetPixelCore(centerX - y, centerY + x, color);
+        SetPixelCore(centerX - x, centerY + y, color);
+        SetPixelCore(centerX - x, centerY - y, color);
+        SetPixelCore(centerX - y, centerY - x, color);
+        SetPixelCore(centerX + y, centerY - x, color);
+        SetPixelCore(centerX + x, centerY - y, color);
+    }
+
+    private void RefreshGraphicsVisuals()
+    {
+        PublishGraphicsFrame();
+    }
+
+    private void PublishGraphicsFrame()
+    {
+        var frame = _framebuffer?.CreateSnapshot(
+            GraphicsText,
+            _graphicsForeground,
+            _graphicsBackground,
+            _isWaitingForInput ? CurrentPromptText + CurrentInputText : null);
+        GraphicsFrame = frame;
+        _graphicsWindow?.PresentFrame(frame);
+    }
+
+    private void ScheduleGraphicsVisualRefresh()
+    {
+        if (Application.Current is null)
+        {
+            RefreshGraphicsVisuals();
+            return;
+        }
+
+        if (_graphicsVisualRefreshPending)
+        {
+            return;
+        }
+
+        _graphicsVisualRefreshPending = true;
+        var dispatcher = Application.Current.Dispatcher;
+        dispatcher.BeginInvoke(() =>
+        {
+            _graphicsVisualRefreshPending = false;
+            RefreshGraphicsVisuals();
+        }, DispatcherPriority.Render);
+    }
+
+    private void AddFillCore(long left, long top, long right, long bottom, int color)
+    {
+        if (!_isScreenActive)
+        {
+            return;
+        }
+
+        var clippedLeft = Math.Max(0, left);
+        var clippedTop = Math.Max(0, top);
+        var clippedRight = Math.Min(_screenWidth - 1L, right);
+        var clippedBottom = Math.Min(_screenHeight - 1L, bottom);
+
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        _framebuffer?.FillRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
+    }
+
+    private static (int Width, int Height) ResolveScreenSize(int mode) => mode switch
+    {
+        1 => (320, 200),
+        2 => (640, 480),
+        3 => (800, 600),
+        4 => (1024, 768),
+        5 => (1280, 720),
+        6 => (1366, 768),
+        7 => (1600, 900),
+        8 => (1920, 1080),
+        9 => (2560, 1440),
+        10 => (1280, 720),
+        _ => (0, 0)
+    };
 }

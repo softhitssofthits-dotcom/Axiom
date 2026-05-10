@@ -1,0 +1,125 @@
+﻿' Paddle-ball SCREEN smoke test.
+' LEFT and RIGHT move the paddle, SPACE toggles pause, ESC exits.
+SCREEN 3
+
+DIM paddleW AS INTEGER = 90
+DIM paddleH AS INTEGER = 12
+DIM paddleX AS INTEGER = (SCREENWIDTH() - paddleW) \ 2
+DIM paddleY AS INTEGER = SCREENHEIGHT() - 42
+DIM ballR AS INTEGER = 8
+DIM ballX AS INTEGER = SCREENWIDTH() \ 2
+DIM ballY AS INTEGER = SCREENHEIGHT() \ 2
+DIM dx AS INTEGER = 4
+DIM dy AS INTEGER = 3
+DIM oldPaddleX AS INTEGER = paddleX
+DIM oldBallX AS INTEGER = ballX
+DIM oldBallY AS INTEGER = ballY
+DIM frame AS INTEGER = 0
+DIM running AS BOOLEAN = TRUE
+DIM paused AS BOOLEAN = FALSE
+DIM status AS STRING = "running"
+
+COLOR 15, 0
+LOCATE 1, 1
+PRINT "LEFT/RIGHT move, SPACE pauses/resumes, ESC exits"
+
+DO WHILE running AND frame < 900
+    oldPaddleX = paddleX
+    oldBallX = ballX
+    oldBallY = ballY
+
+    IF KEYPRESS("SPACE") THEN
+        paused = NOT paused
+    END IF
+
+    IF KEYPRESS("ESC") THEN
+        status = "esc"
+        running = FALSE
+    ELSE
+        IF NOT paused THEN
+            IF KEYDOWN("LEFT") THEN
+                paddleX = paddleX - 8
+            END IF
+
+            IF KEYDOWN("RIGHT") THEN
+                paddleX = paddleX + 8
+            END IF
+
+            IF paddleX < 0 THEN
+                paddleX = 0
+            END IF
+
+            IF paddleX + paddleW > SCREENWIDTH() THEN
+                paddleX = SCREENWIDTH() - paddleW
+            END IF
+
+            ballX = ballX + dx
+            ballY = ballY + dy
+
+            IF ballX - ballR <= 0 THEN
+                ballX = ballR
+                dx = -dx
+            END IF
+
+            IF ballX + ballR >= SCREENWIDTH() THEN
+                ballX = SCREENWIDTH() - ballR
+                dx = -dx
+            END IF
+
+            IF ballY - ballR <= 24 THEN
+                ballY = 24 + ballR
+                dy = -dy
+            END IF
+
+            IF ballY + ballR >= paddleY AND ballY + ballR <= paddleY + paddleH THEN
+                IF ballX >= paddleX AND ballX <= paddleX + paddleW THEN
+                    dy = -ABS(dy)
+                    ballY = paddleY - ballR - 1
+                END IF
+            END IF
+
+            IF ballY - ballR > SCREENHEIGHT() THEN
+                status = "miss"
+                running = FALSE
+            END IF
+
+            IF frame > 0 AND frame MOD 80 = 0 THEN
+                IF dx > 0 THEN
+                    dx = dx + 1
+                ELSE
+                    dx = dx - 1
+                END IF
+
+                IF dy > 0 THEN
+                    dy = dy + 1
+                ELSE
+                    dy = dy - 1
+                END IF
+            END IF
+        END IF
+    END IF
+
+    LINE (oldPaddleX, paddleY)-(oldPaddleX + paddleW, paddleY + paddleH), 0, BF
+    CIRCLE (oldBallX, oldBallY), ballR, 0
+    LINE (paddleX, paddleY)-(paddleX + paddleW, paddleY + paddleH), 11, BF
+    CIRCLE (ballX, ballY), ballR, 14
+
+    LOCATE 3, 1
+    IF paused THEN
+        PRINT "PAUSED frame="; frame; " ball="; ballX; ","; ballY; "                    "
+    ELSE
+        PRINT "frame="; frame; " ball="; ballX; ","; ballY; "                    "
+    END IF
+
+    FOR delay = 1 TO 250
+    NEXT
+
+    frame = frame + 1
+LOOP
+
+IF status = "running" THEN
+    status = "timeout"
+END IF
+
+SCREEN 0
+PRINT "Paddle ball sample finished: "; status

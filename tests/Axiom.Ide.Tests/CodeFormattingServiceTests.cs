@@ -99,6 +99,18 @@ public sealed class CodeFormattingServiceTests
     }
 
     [Fact]
+    public void FormatLine_Classic_FormatsScreenKeywordsAndBuiltIns()
+    {
+        var screenStatement = _service.FormatLine("screen 5", CodeFormattingStyle.Classic);
+        var graphicsStatement = _service.FormatLine("pset 10,20,color", CodeFormattingStyle.Classic);
+        var builtInCall = _service.FormatLine("print screenmode(),screenwidth(),screenheight()", CodeFormattingStyle.Classic);
+
+        Assert.Equal("SCREEN 5", screenStatement);
+        Assert.Equal("PSET 10, 20, COLOR", graphicsStatement);
+        Assert.Equal("PRINT SCREENMODE(), SCREENWIDTH(), SCREENHEIGHT()", builtInCall);
+    }
+
+    [Fact]
     public void FormatLine_Classic_FormatsShiftPowerAndIntegerDivisionOperators()
     {
         var result = _service.FormatLine("print(a<<2)+(b>>1)+2^3+7\\2", CodeFormattingStyle.Classic);

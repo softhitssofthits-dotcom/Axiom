@@ -1,5 +1,9 @@
-' Переместите указатель над выводом программы перед запуском.
-PRINT "Переместите указатель над выводом программы перед запуском."
-PRINT MOUSEY()
-PRINT MOUSEX()
-PRINT "готово"
+' Manual check: SCREEN opens the graphics window; the final values are printed after SCREEN 0.
+SCREEN 1
+PRINT "Move the pointer inside the SCREEN window."
+DIM my AS LONG = MOUSEY()
+DIM mx AS LONG = MOUSEX()
+SCREEN 0
+PRINT my
+PRINT mx
+PRINT "done"

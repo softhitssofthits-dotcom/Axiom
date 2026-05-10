@@ -1,4 +1,4 @@
-﻿# Журнал работ 4
+# Журнал работ 4
 
 Этот файл является активным журналом работ проекта начиная с Session 481.
 
@@ -7651,3 +7651,360 @@
 
 Следующий точный шаг:
 - отдельно проектировать будущий `SCREEN`: договор координат, фокуса и активной поверхности, подключённой к уже существующему маршруту ввода.
+
+## Session 725 - 2026-05-10 10:36 - первый сквозной SCREEN
+
+Что сделано:
+- после обязательного чтения `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` начат графический режим `SCREEN`;
+- добавлены ключевые слова и синтаксис `SCREEN`, `CLS`, `COLOR`, `LOCATE`, `PSET`, `PRESET`, `LINE`, `CIRCLE`;
+- binder, interpreter и `BytecodeVm` получили сквозные bound-узлы, lowering, opcodes и выполнение графических команд;
+- добавлен `IGraphicsHost`, маршрутизация `PRINT` / `PRINT USING` / `INPUT` в графический текстовый слой и диагностика `MB3010` для мыши без активного `SCREEN`;
+- `ExecutionRuntimeHostAdapter`, `IdeInputProvider` и `ProgramConsoleService` протягивают графический host-договор;
+- добавлены runnable samples в `samples/graphics/`;
+- добавлена страница manual `docs/manual/screen.html`, обновлены навигация manual, поисковый индекс, спецификация, архитектура, план и bytecode-реестр.
+
+Редакционная сверка manual:
+- для страницы `SCREEN` использованы текущие официальные страницы Microsoft Learn по жанру справки Visual Basic о графических и процедурных элементах как редакционный ориентир; синтаксис и семантика взяты только из Axiom.
+
+Проверки:
+- `dotnet build Axiom.sln` проходит после восстановления пакетов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "Mouse|Screen|Print"` проходит: 41 тест.
+
+Итог:
+- первый runtime- и bytecode-договор `SCREEN` реализован, а `PRINT` после `SCREEN` больше не направляется в обычный `Output`;
+- видимый WPF-слой графической поверхности пока минимален и остаётся следующим обязательным улучшением.
+
+Следующий точный шаг:
+- развить IDE-поверхность `SCREEN`: отдельная видимая WPF-область для текстового слоя и пикселей, фокус ввода и mouse-route именно на ней.
+
+## Session 726 - 2026-05-10 10:59 - пауза на полноэкранном SCREEN
+
+Что сделано:
+- работа остановлена по просьбе пользователя с фиксацией точки продолжения в документах;
+- пользователь уточнил целевой договор: `SCREEN 10` должен при запуске программы сразу открывать полноценный полноэкранный графический режим с чёрным экраном и белым текстом, как в классическом BASIC; выйти из него можно только при завершении программы или явном `SCREEN 0`;
+- промежуточная идея с графикой внутри вкладки `Output` отменена; добавлен отдельный черновой WPF-экран `src/Axiom.Ide/Graphics/GraphicsScreenWindow.xaml` и `src/Axiom.Ide/Graphics/GraphicsScreenWindow.xaml.cs`;
+- `ProgramConsoleService` начал открывать графическое окно при `SCREEN`, закрывать его при деактивации экрана и хранить наблюдаемый список пикселей `GraphicsPixels` для WPF-отрисовки;
+- `LINE` и `CIRCLE` в IDE-host больше не ограничиваются конечными точками: добавлена растеризация линии, прямоугольника, залитого прямоугольника и окружности;
+- execution- и acceptance-проверки мыши частично переведены на новый договор: мышь требует активный `SCREEN`, а старые примеры больше не должны говорить про нижнюю вкладку `Output`.
+
+Проверки:
+- после добавления окна `GraphicsScreenWindow` проходил `dotnet build Axiom.sln --no-restore`;
+- проходили точечные проверки parsing, semantics, runtime, execution и IDE, перечисленные в `docs/PLANS3.md` в записи этой остановки;
+- финальная общая сборка после самых последних правок ещё не повторялась.
+
+Что осталось:
+- повторить итоговую сборку и целевые тесты;
+- вручную проверить полноэкранное окно в `Axiom.Ide` на образцах `samples/graphics/`;
+- обновить manual/spec/architecture под окончательный визуальный договор: отдельное полноэкранное окно `SCREEN`, не вкладка `Output`;
+- после закрытия `SCREEN` отдельно спроектировать обычное консольное окно программы для режима без `SCREEN`, чтобы `Output` больше не выглядел как служебная вкладка-лог.
+
+Следующий точный шаг:
+- начать новую сессию с `AGENTS.md`, затем открыть эту запись и запись в `docs/PLANS3.md`; первым делом выполнить `dotnet build Axiom.sln --no-restore`, затем прогнать `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse|Screen"` и `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Screen|Graphics|ProgramConsoleService"`.
+
+## Session 727 - 2026-05-10 11:41 - полноэкранный SCREEN доведён до проверки
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и продолжена работа с точки остановки по полноэкранному `SCREEN`;
+- подтверждено, что `GraphicsScreenWindow` является отдельным полноэкранным WPF-окном, а не частью вкладки `Output`;
+- `BytecodeVm.BuiltinDispatch` расширен на `SCREENISACTIVE`, `SCREENMODE`, `SCREENWIDTH`, `SCREENHEIGHT` и `POINT`, чтобы `ExecutionMode.Bytecode` больше не отсеивал графические программы с этими built-in диагностикой `MB4001`;
+- добавлены acceptance-тесты `ScreenModeInfoAcceptanceSample_RunsOnBytecodeVm`, `ScreenTextAcceptanceSample_RunsOnBytecodeVm`, `ScreenInputAcceptanceSample_RunsOnBytecodeVm`, `ScreenPrimitivesAcceptanceSample_RunsOnBytecodeVm` и `ScreenMouseAcceptanceSample_RunsOnBytecodeVm`;
+- тестовый графический host в `AcceptanceProgramTests` теперь сохраняет текст `SCREEN`, читает графический `INPUT` и позволяет проверять, что `PRINT` после `SCREEN` не попадает в обычный `Output`;
+- `docs/manual/screen.html`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md` обновлены под договор отдельного полноэкранного окна;
+- временные заметки `screen.md` и `docs/Графический режим SCREEN для Axiom.txt` перенесены в `.artifacts/screen-notes/`.
+
+Проверки:
+- `dotnet restore Axiom.sln` прошёл после первичного сбоя `dotnet build --no-restore` на отсутствующей fallback-папке NuGet;
+- `dotnet build Axiom.sln --no-restore` проходил перед добавлением финального тестового довеска;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore --filter "Screen|Graphics|ColorLocate"` проходит: 3 теста;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "Screen|Graphics|Mouse"` проходит: 15 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "Mouse|Screen|Print|Graphics"` проходит: 41 тест;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenModeInfoAcceptanceSample|ScreenTextAcceptanceSample|ScreenInputAcceptanceSample|ScreenPrimitivesAcceptanceSample|ScreenMouseAcceptanceSample"` проходит: 5 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse|Screen"` проходил до финального довеска: 11 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Screen|Graphics|ProgramConsoleService"` проходил до финального довеска: 18 тестов.
+
+Решение:
+- считать текущий `SCREEN` доведённым до первого проверяемого продуктового состояния: язык, runtime, `BytecodeVm`, IDE-host, manual, samples и bytecode-реестр согласованы;
+- оставить настоящую адаптацию `SCREEN 10` под доступный монитор как отдельное улучшение, потому что текущий host пока фиксирует безопасный размер `1280x720`.
+
+Следующий шаг:
+- повторить итоговые целевые тесты и финальный `dotnet build Axiom.sln --no-restore` после этой записи;
+- следующим продуктовым срезом проектировать обычное консольное окно программы для режима без `SCREEN`, чтобы пользовательский `PRINT`/`INPUT` не зависел от служебной вкладки `Output`.
+
+Дополнение по итоговым проверкам:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse|Screen"` проходит: 16 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Screen|Graphics|ProgramConsoleService"` проходит: 18 тестов;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore --filter "Screen|Graphics|ColorLocate"` проходит: 3 теста;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "Screen|Graphics|Mouse"` проходит: 15 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "Mouse|Screen|Print|Graphics"` проходит: 41 тест;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+## Session 728 - 2026-05-10 12:02 - исправлена ручная проверка SCREEN input
+
+Что сделано:
+- проверен свежий IDE trace `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Logs\ide-session-20260510-115454.log`;
+- подтверждено, что `samples/graphics/screen/mode_info.axm` выполнялся успешно и без диагностик, но сразу доходил до `SCREEN 0`, поэтому полноэкранное окно закрывалось почти мгновенно;
+- `samples/graphics/screen/mode_info.axm` дополнен ожиданием `ESC` перед `SCREEN 0`;
+- исправлен `GraphicsScreenWindow`: во время активного графического `INPUT` события из `InputTextBox` больше не передаются в общий `ProgramKeyboardInputRouter`, поэтому печатные клавиши не перехватываются до обработки обычным WPF `TextBox`;
+- acceptance-тест `ScreenModeInfoAcceptanceSample_RunsOnBytecodeVm` обновлён под завершение через `ESC`.
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenModeInfoAcceptanceSample|ScreenInputAcceptanceSample"` проходит: 2 теста;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Screen|Graphics|ProgramConsoleService"` проходит: 18 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Решение:
+- считать мелькание `mode_info.axm` проблемой самого ручного примера, а не падением `SCREEN`;
+- считать невидимый ввод `input_on_screen.axm` ошибкой маршрутизации клавиатуры графического окна.
+
+Следующий шаг:
+- вручную повторить оба сценария в `Axiom.Ide`;
+- затем продолжать проектирование отдельного консольного окна программы для режима без `SCREEN`.
+
+## Session 729 - 2026-05-10 12:10 - фокус и логи GRAPHICS SCREEN
+
+Что сделано:
+- по свежему IDE trace `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Logs\ide-session-20260510-120419.log` проверен новый пользовательский запуск `samples/graphics/screen/mode_info.axm`;
+- журнал содержит `run.request` и `console.begin`, но не содержит `run.pipeline` и `run.result`, поэтому подтверждено зависание программы в ожидании клавиши после открытия `SCREEN`;
+- уточнена причина: `GraphicsScreenWindow` фокусировал сам `Window`, а обработчики `PreviewKeyDown` были подключены к внутреннему `Grid`; из-за этого `ESC` мог не попадать в `ProgramKeyboardInputRouter`;
+- графическая поверхность получила имя `ScreenFrame`, а `FocusScreenSurface()` теперь передаёт клавиатурный фокус именно ей;
+- добавлены графические события в trace и структурный журнал IDE: `screen.activated`, `screen.deactivated`, `screen.key.enqueued`, `screen.key.read`;
+- добавлены тесты `GraphicsScreenWindow_FocusesKeyboardInputSurface` и `ScreenActions_WriteGraphicsTraceAndEventLogEntries`.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenActions|GraphicsScreenWindow|ProgramKeyboardInputRouter|Screen|Graphics|ProgramConsoleService"` проходит: 25 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenModeInfoAcceptanceSample|ScreenInputAcceptanceSample|ScreenTextAcceptanceSample|ScreenPrimitivesAcceptanceSample|ScreenMouseAcceptanceSample"` проходит: 5 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- вручную запустить `samples/graphics/screen/mode_info.axm` в `Axiom.Ide`, нажать `ESC` и проверить, что новый журнал содержит `screen.key.enqueued`, `screen.key.read`, `run.pipeline` и `run.result`.
+
+## Session 730 - 2026-05-10 12:34 - выравнивание SCREEN и словари IDE
+
+Что сделано:
+- учтено ручное подтверждение пользователя: `samples/graphics/screen/mode_info.axm` теперь работает нормально и выходит по `ESC`;
+- `ScreenInputAcceptanceSample_RunsOnBytecodeVm` обновлён под изменённый пользователем `samples/graphics/input/input_on_screen.axm`, который теперь ждёт `ESC` перед `SCREEN 0`;
+- причина смещения `Hello, ...` в `SCREEN 2` определена как центрирование логической поверхности `640x480` внутри широкого полноэкранного окна;
+- `GraphicsScreenWindow.xaml` теперь привязывает `Viewbox` к левому верхнему углу через `HorizontalAlignment="Left"` и `VerticalAlignment="Top"`;
+- светлый и тёмный словари подсветки дополнены графическими ключевыми словами `SCREEN`, `CLS`, `COLOR`, `LOCATE`, `PSET`, `PRESET`, `LINE`, `CIRCLE` и built-in `SCREENISACTIVE`, `SCREENMODE`, `SCREENWIDTH`, `SCREENHEIGHT`, `POINT`;
+- добавлен тест форматирования `FormatLine_Classic_FormatsScreenKeywordsAndBuiltIns`, а тест фокуса графического окна теперь проверяет привязку `Viewbox` к левому верхнему углу.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes|Highlighting_VocabularyCoversAllBuiltInFunctions|FormatLine_Classic_FormatsScreenKeywordsAndBuiltIns|GraphicsScreenWindow_FocusesKeyboardInputSurface"` проходит: 4 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenInputAcceptanceSample"` проходит: 1 тест;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenActions|GraphicsScreenWindow|ProgramKeyboardInputRouter|Screen|Graphics|ProgramConsoleService|Highlighting|FormatLine_Classic_FormatsScreenKeywordsAndBuiltIns"` проходит: 39 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- вручную повторить `samples/graphics/input/input_on_screen.axm` в `Axiom.Ide` и проверить визуально левое выравнивание и подсветку/нормализацию графических слов;
+- затем продолжать проектирование отдельного консольного окна программы для режима без `SCREEN`.
+
+## Session 731 - 2026-05-10 12:36 - контрольная проверка SCREEN input
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и восстановлена точка остановки по графическому `SCREEN`;
+- сверено рабочее дерево: `samples/graphics/input/input_on_screen.axm` уже ждёт `ESC` перед `SCREEN 0`, `GraphicsScreenWindow` закрепляет логическую поверхность в левом верхнем углу, а светлый и тёмный словари подсветки содержат графические слова `SCREEN`, `SCREENMODE`, `PSET`, `POINT` и соседние формы;
+- новых изменений поведения языка не вносилось.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenActions|GraphicsScreenWindow|ProgramKeyboardInputRouter|Screen|Graphics|ProgramConsoleService|Highlighting|FormatLine_Classic_FormatsScreenKeywordsAndBuiltIns"` проходит: 39 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenInputAcceptanceSample"` проходит: 1 тест;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- вручную повторить `samples/graphics/input/input_on_screen.axm` в `Axiom.Ide` и проверить визуально левое выравнивание результата `Hello, ...`, затем переходить к отдельному консольному окну программы для режима без `SCREEN`.
+
+## Session 732 - 2026-05-10 12:57 - мышь в пустом SCREEN-цикле
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и продолжена проверка графического `SCREEN` по свежему пользовательскому отчёту о `samples/graphics/mouse/mouse_events.axm`;
+- причина задержки mouse-событий определена как пустой цикл ожидания `DO WHILE NOT KEYPRESS("ESC") : LOOP`: обработчики `ON MOUSE` получали очередь только после выхода из цикла;
+- interpreter теперь вызывает общий маршрут обработки клавиатурных и мышиных обработчиков на каждой итерации `WHILE`, `FOR` и `DO ... LOOP`;
+- `BytecodeVm` получает `StatementBoundary` на входе в каждую итерацию `WHILE`, `FOR` и `DO ... LOOP`, поэтому `ON MOUSE` и `ON KEY` работают даже в пустом цикле ожидания;
+- `ProgramConsoleService` добавил графические события журнала `screen.mouse.enqueued` и `screen.mouse.read`, чтобы следующие проблемы мышиного ввода были видны в trace и журнале IDE;
+- `samples/graphics/mouse/mouse_events.axm` теперь очищает экран и заново печатает две строки, поэтому координаты не дописываются вправо и не обрезаются у края окна;
+- обновлены `docs/SPECIFICATION3.md`, `docs/PLANS3.md`, `docs/BYTECODE_COVERAGE.md` и `docs/manual/on-mouse.html`.
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "OnMouseRunsDuringEmptyDoLoop|OnMouse|Mouse"` проходит: 20 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenActions|ProgramConsoleService|ProgramMouseInputRouter|GraphicsScreenWindow"` проходит: 25 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenMouseAcceptanceSample|OnMouse|Mouse"` проходит: 12 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Итог:
+- `samples/graphics/mouse/mouse_events.axm` должен показывать движение, левый клик и колесо сразу, без предварительного нажатия `ESC`;
+- строка координат больше не должна накапливаться горизонтально и обрезаться у правого края.
+
+Следующий шаг:
+- вручную повторить `samples/graphics/mouse/mouse_events.axm` в `Axiom.Ide`; затем продолжать отдельное консольное окно программы для режима без `SCREEN`.
+
+## Session 733 - 2026-05-10 13:20 - убрано мерцание mouse sample
+
+Что сделано:
+- учтена ручная проверка пользователя: `samples/graphics/mouse/mouse_events.axm` корректно получает `120` / `-120` от колеса и `1` от левой кнопки;
+- причина визуального мерцания определена как `CLS` на каждое событие перемещения мыши;
+- `ProgramConsoleService` теперь перезаписывает символы графического текстового слоя после `LOCATE`, а не вставляет новый текст внутрь существующей строки;
+- добавлен IDE-тест `WriteGraphicsText_OverwritesAtLocatedCursor`;
+- `samples/graphics/mouse/mouse_events.axm` больше не вызывает `CLS` в обработчике мыши и обновляет только строку координат;
+- уточнены `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/manual/screen.html`.
+
+Редакционная сверка manual:
+- для уточнения поведения графического текстового вывода использовалась официальная страница Microsoft Learn `Print Statement` как жанровый ориентир по справке оператора вывода; синтаксис и семантика Axiom взяты из текущей реализации и спецификации.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "WriteGraphicsText_OverwritesAtLocatedCursor|ScreenActions|ProgramConsoleService|GraphicsScreenWindow"` проходит: 21 тест;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenMouseAcceptanceSample|ScreenTextAcceptanceSample|ScreenInputAcceptanceSample"` проходит: 3 теста;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- вручную повторить `samples/graphics/mouse/mouse_events.axm` в `Axiom.Ide` и проверить, что движение мыши обновляет строку координат без стробоскопического эффекта; затем продолжать отдельное консольное окно программы для режима без `SCREEN`.
+
+## Session 734 - 2026-05-10 13:29 - залитые прямоугольники SCREEN без зависания IDE
+
+Что сделано:
+- проверен текущий `samples/graphics/primitives/pset_line_circle.axm`: пользователь изменил залитую команду на `LINE (220, 100) - (360, 660), 11, BF`;
+- по свежему журналу `ide-session-20260510-132153.log` подтверждено, что первый запуск завершился штатно после `ESC`, а второй запуск дошёл до `screen.activated` и дальше не записал `run.result`;
+- причина определена как перегрузка видимого WPF-слоя: `LINE ..., BF` растеризовался в десятки тысяч отдельных пиксельных `Rectangle`, что при координате за нижней границей экрана приводило к зависанию окна;
+- `ProgramConsoleService` теперь хранит залитые прямоугольники отдельно в `GraphicsFills`, отсекает их по границам активного `SCREEN` и отдаёт WPF одну прямоугольную фигуру вместо набора пикселей;
+- `GraphicsScreenWindow.xaml` добавил отдельный слой отрисовки `GraphicsFills` под пиксельным слоем;
+- `POINT(x, y)` в host-слое учитывает как отдельные пиксели, так и залитые прямоугольники;
+- добавлен тест `DrawLine_FilledBoxUsesSingleClippedFill`;
+- обновлены `docs/ARCHITECTURE.md` и `docs/PLANS3.md`.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "DrawLine_FilledBoxUsesSingleClippedFill|DrawLine_RasterizesIntermediatePixels|ProgramConsoleService|GraphicsScreenWindow"` проходит: 22 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenPrimitivesAcceptanceSample"` проходит: 1 тест;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- вручную повторить изменённый `samples/graphics/primitives/pset_line_circle.axm` в `Axiom.Ide`; заливка должна отсечься по нижней границе `SCREEN`, а окно должно реагировать на `ESC`.
+## Session 735 - 2026-05-10 15:00 - игровой SCREEN sample с переключаемой паузой
+
+Что сделано:
+- после обязательного чтения активных документов проекта продолжена ветка ручных проверок графического `SCREEN`;
+- добавлен пример `samples/graphics/game/paddle_ball.axm`: платформа внизу экрана, мяч отскакивает от стен и платформы, падение вниз завершает игру;
+- управление сделано через клавиатуру: `KEYDOWN("LEFT")` и `KEYDOWN("RIGHT")` двигают платформу, `KEYPRESS("ESC")` завершает пример;
+- пауза сделана именно переключателем по событию `KEYPRESS("SPACE")`: первое нажатие ставит игру на паузу, второе продолжает, удержание пробела не должно постоянно менять состояние;
+- добавлен acceptance-тест `ScreenGameAcceptanceSample_RunsOnBytecodeVm`.
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenGameAcceptanceSample|ScreenMouseAcceptanceSample|ScreenPrimitivesAcceptanceSample"` проходит: 3 теста;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок;
+- широкий аудит `PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback` был запущен, но не уложился в 3 минуты и был остановлен; отдельная точечная проверка нового примера прошла.
+
+Следующий шаг:
+- вручную открыть `samples/graphics/game/paddle_ball.axm` в `Axiom.Ide` и проверить стрелки, переключение паузы пробелом и выход через `ESC`.
+
+## Session 736 - 2026-05-10 15:20 - исправлена плавность игрового SCREEN sample
+
+Что сделано:
+- по ручному отчёту пользователя подтверждено, что первый игровой пример запускался, но `SPACE` не ставил игру на паузу, `LEFT`/`RIGHT` не давали видимого движения платформы, а мяч и платформа моргали из-за показа промежуточных операций стирания и рисования;
+- исправлен маршрут IDE: `KeyboardInputNameMapper.MapSpecialKey(...)` теперь возвращает `SPACE` для обычного пробела, поэтому `KEYPRESS("SPACE")` получает одноразовое событие в графическом окне;
+- `ProgramConsoleService` теперь откладывает публикацию `GraphicsPixels` и `GraphicsFills` до ближайшего WPF-кадра через `DispatcherPriority.Render`, что объединяет стирание старого положения и рисование нового положения в один видимый кадр;
+- стирание цветом `0` оптимизировано: если под чёрным пикселем или залитым прямоугольником нет цветного слоя, host удаляет старую фигуру вместо накопления невидимых чёрных WPF-элементов;
+- `samples/graphics/game/paddle_ball.axm` ускорен: стартовые скорости стали `dx=7`, `dy=6`, задержка уменьшена до `250`, а каждые 80 кадров скорость увеличивается на 1 по текущему направлению.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "MapSpecialKey|DrawLine_FilledBoxUsesSingleClippedFill|DrawLine_RasterizesIntermediatePixels|DrawCircle_RasterizesCirclePoints|ProgramConsoleService"` проходит: 34 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "ScreenGameAcceptanceSample|ScreenMouseAcceptanceSample|ScreenPrimitivesAcceptanceSample"` проходит: 3 теста;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- вручную проверить `samples/graphics/game/paddle_ball.axm` в `Axiom.Ide` на реальном графическом окне: `SPACE` должен переключать паузу, стрелки должны двигать платформу, мяч должен идти быстрее и постепенно ускоряться.
+## Session 737 - 2026-05-10 15:30 - начат DirectX/SwapChain host для SCREEN
+
+Что сделано:
+- зафиксировано изменение целевого направления: `SCREEN` должен идти к отдельной графической подсистеме с backbuffer и DirectX/SwapChain, а не оставаться WPF-псевдографикой;
+- в `Axiom.Ide` добавлен пакет `Vortice.Direct3D11`, который подтягивает D3D11/DXGI-обёртки для .NET;
+- добавлен `Direct3D11SwapChainRenderer`: он принимает `HWND`, создаёт D3D11 device/context, `IDXGISwapChain`, render target view, поддерживает `Resize`, `ClearAndPresent` и освобождение COM-ресурсов;
+- текущий WPF renderer пока не заменён, чтобы не сломать работающие samples до подключения child HWND и framebuffer;
+- добавлен тест `ScreenRenderer_UsesDirect3D11SwapChainDependency`.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer_UsesDirect3D11SwapChainDependency|MapSpecialKey|ProgramConsoleService"` проходит: 35 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Следующий шаг:
+- реализовать `HwndHost` для `GraphicsScreenWindow`, создать child HWND под swap chain и начать выводить туда содержимое framebuffer вместо WPF `ItemsControl`-пикселей.
+## Session 738 - 2026-05-10 15:38 - child HWND для DirectX-поверхности SCREEN
+
+Что сделано:
+- продолжена миграция `SCREEN` от WPF-псевдографики к отдельной графической подсистеме с DirectX/SwapChain;
+- добавлен `src/Axiom.Ide/Graphics/Direct3D11ScreenHost.cs`: WPF `HwndHost`, который создаёт дочернее Win32-окно через `CreateWindowEx`, создаёт `Direct3D11SwapChainRenderer`, очищает backbuffer, меняет размер swap chain и освобождает HWND/Direct3D-ресурсы;
+- `src/Axiom.Ide/Graphics/GraphicsScreenWindow.xaml` получил точку подключения `Direct3D11ScreenHost`; временный WPF-слой оставлен рабочим, чтобы не ломать текущие графические примеры до переноса framebuffer;
+- добавлен тест `GraphicsScreenWindow_HasDirect3D11HwndHostSurface` в `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`;
+- обновлены `docs/ARCHITECTURE.md` и `docs/PLANS3.md`.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|GraphicsScreenWindow|Direct3D|ProgramConsoleService"` проходит: 24 теста.
+
+Что остаётся:
+- реализовать единый `ScreenFramebuffer` и путь загрузки кадра в Direct3D-текстуру, чтобы полностью убрать WPF `ItemsControl`-отрисовку пикселей и заливок из целевого `SCREEN`.
+
+## Session 739 - 2026-05-10 16:26 - кадровый буфер SCREEN для DirectX-пути
+
+Что сделано:
+- продолжена миграция `SCREEN` к отдельной графической подсистеме с DirectX/SwapChain;
+- добавлен `src/Axiom.Ide/Graphics/ScreenFramebuffer.cs`: плотный кадровый буфер логической поверхности, преобразование BASIC-цветов в BGRA и снимок `ScreenFramebufferSnapshot`;
+- `ProgramConsoleService` теперь создаёт framebuffer при `SCREEN`, очищает его при `CLS` / `SCREEN 0`, пишет в него пиксели, линии, рамки, залитые прямоугольники и окружности, а `GetPixel` читает цвет из framebuffer;
+- добавлено свойство `GraphicsFrame`, которое публикует BGRA-снимок кадра для видимого host-слоя;
+- `Direct3D11SwapChainRenderer` получил `PresentFrame(...)`, хранит ссылку на backbuffer и загружает кадр через `UpdateSubresource` перед `Present`;
+- `Direct3D11ScreenHost` получил метод `PresentFrame(...)`, а `GraphicsScreenWindow` передаёт ему новые кадры при изменении `GraphicsFrame`;
+- добавлен тест `DrawLine_UpdatesFramebufferSnapshot`, а IDE-тесты DirectX-пути расширены проверкой `UpdateSubresource` и `PresentFrame`.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|GraphicsScreenWindow|Direct3D|ProgramConsoleService|Framebuffer"` проходит: 25 тестов.
+
+Что остаётся:
+- перенести графический текстовый слой и строку графического `INPUT` в DirectX-совместимый вывод, затем включить child HWND как основной видимый слой `SCREEN` вместо WPF `ItemsControl`.
+
+## Session 740 - 2026-05-10 16:46 - текстовый слой SCREEN в DirectX-кадре
+
+Что сделано:
+- добавлен `src/Axiom.Ide/Graphics/ScreenTextRasterizer.cs`: минимальный моноширинный растровый шрифт для вывода текста прямо в BGRA-кадр;
+- `ScreenFramebuffer` получил `CreateSnapshot(...)` с наложением графического текста и строки графического `INPUT`;
+- `ProgramConsoleService` теперь обновляет `GraphicsFrame` после `PRINT`, `COLOR`, изменения `CurrentInputText`, показа/скрытия ввода и прежних графических операций;
+- строка графического `INPUT` рисуется в нижней строке кадра, чтобы вводимый текст оставался видимым при активном child HWND;
+- `Direct3D11ScreenHost` включён как видимый слой `GraphicsScreenWindow` вместо скрытой технической поверхности;
+- добавлены тесты `WriteGraphicsText_UpdatesFramebufferTextLayer` и `ScreenInput_UpdatesFramebufferInputLine`, а тест `GraphicsScreenWindow_HasDirect3D11HwndHostSurface` теперь проверяет, что DirectX-host не скрыт.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|GraphicsScreenWindow|Direct3D|ProgramConsoleService|Framebuffer|WriteGraphicsText|ScreenInput"` проходит: 27 тестов.
+
+Что остаётся:
+- вручную проверить основные `samples/graphics/` в IDE с видимым DirectX-слоем и по фактическому поведению доработать масштабирование, фокус, caret и качество растрового текста.
+
+## Session 741 - 2026-05-10 17:11 - SCREEN переведён на native Win32/DirectX host
+
+Что сделано:
+- принято и реализовано направление: `SCREEN` больше не должен быть WPF-графикой и не должен использовать WPF `Window`, `TextBox`, `TextBlock`, `ItemsControl`, `Viewbox` или `HwndHost` как графическое представление;
+- удалены `src/Axiom.Ide/Graphics/GraphicsScreenWindow.xaml`, `src/Axiom.Ide/Graphics/GraphicsScreenWindow.xaml.cs` и `src/Axiom.Ide/Graphics/Direct3D11ScreenHost.cs`;
+- добавлен `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`: отдельное Win32-окно с собственным `HWND`, `WndProc`, обработкой `WM_KEYDOWN`, `WM_KEYUP`, `WM_CHAR`, `WM_MOUSEMOVE`, событий кнопок мыши и `WM_MOUSEWHEEL`;
+- `ProgramConsoleService` теперь создаёт `NativeGraphicsScreenWindow`, передаёт ему `GraphicsFrame` напрямую и больше не хранит старые WPF-снимки `GraphicsPixels` / `GraphicsFills`;
+- графический `INPUT` переведён на native-ввод: `WM_CHAR` добавляет символы в `CurrentInputText`, backspace удаляет символ, Enter вызывает `SubmitInput`; видимая строка ввода по-прежнему рисуется в framebuffer;
+- тесты обновлены под native host и отсутствие старого WPF-окна;
+- обновлены `docs/ARCHITECTURE.md` и `docs/PLANS3.md`.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|NativeGraphics|ProgramConsoleService|Framebuffer|WriteGraphicsText|ScreenInput"` проходит: 26 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок;
+- поиск по `src` больше не находит `GraphicsPixels`, `GraphicsFills`, `GraphicsPixelSnapshot`, `GraphicsFillSnapshot`, `Direct3D11ScreenHost` или `HwndHost` в графическом `SCREEN`-пути.
+
+Что остаётся:
+- ручная проверка native `SCREEN`-окна на реальных примерах, особенно `paddle_ball.axm`, `input_on_screen.axm`, `mouse_events.axm` и `pset_line_circle.axm`.
+
+## Session 742 - 2026-05-10 17:13 - native SCREEN больше не topmost/fullscreen по умолчанию
+
+Что сделано:
+- учтён пользовательский отчёт: во время работы без явно запущенной IDE монитор мигнул, а на экран кратко попал кадр мячика из графического примера;
+- причина определена как слишком агрессивный режим показа нового native `SCREEN`-окна: `WS_POPUP`, `HWND_TOPMOST` и принудительный maximized-показ могли вывести окно поверх рабочего стола;
+- `NativeGraphicsScreenWindow` переведён на обычный `WS_OVERLAPPEDWINDOW | WS_VISIBLE`;
+- убраны `SetWindowPos(... HWND_TOPMOST ...)` и `ShowWindow(...Maximized)`;
+- DirectX/SwapChain остаётся единственным графическим выводом `SCREEN`, WPF-графика не возвращалась.
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "ScreenRenderer|NativeGraphics|ProgramConsoleService|Framebuffer|WriteGraphicsText|ScreenInput"` проходит: 26 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Что остаётся:
+- ручная проверка native `SCREEN`-окна на графических примерах и отдельное проектирование полноэкранного режима без неожиданных topmost-всплытий.

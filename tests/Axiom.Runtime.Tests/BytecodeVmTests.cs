@@ -183,8 +183,8 @@ PRINT MOUSEBUTTON(1)
         var host = new TestRuntimeHost();
         var (_, _, result) = ExecuteProgram(text, host);
 
-        Assert.True(result.Succeeded);
-        Assert.Equal(["-1", "-1", "FALSE"], host.Output);
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3010");
     }
 
     [Fact]
@@ -312,6 +312,37 @@ END SUB
 
         Assert.True(result.Succeeded);
         Assert.Equal(["120", "50", "60", "ready"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMouseRunsDuringEmptyDoLoop()
+    {
+        const string text = """
+SCREEN 3
+DIM handled AS INTEGER = 0
+ON MOUSE("MOVE"), HandleMouse
+DO WHILE handled = 0
+LOOP
+PRINT handled
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    handled = 1
+END SUB
+""";
+
+        var host = new TestRuntimeHost(
+            mouseX: 10,
+            mouseY: 20,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0)],
+            skippedMouseEventReads: 3);
+        var instructionCount = 0;
+        var (_, _, result) = ExecuteProgram(
+            text,
+            host,
+            shouldStopBeforeInstruction: _ => ++instructionCount > 500);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1"], host.Output);
     }
 
     [Fact]
@@ -4446,6 +4477,9 @@ PRINT Person(-1).Age
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
         private readonly long _mouseX;
         private readonly long _mouseY;
+        private readonly int _skippedMouseEventReads;
+        private int _mouseEventReads;
+        private bool _isScreenActive;
 
         public TestRuntimeHost(
             DateTimeOffset? localNow = null,
@@ -4458,7 +4492,8 @@ PRINT Person(-1).Age
             long mouseY = -1,
             IEnumerable<int>? pressedMouseButtons = null,
             IEnumerable<int>? mousePresses = null,
-            IEnumerable<MouseInputEvent>? mouseEvents = null)
+            IEnumerable<MouseInputEvent>? mouseEvents = null,
+            int skippedMouseEventReads = 0)
         {
             _inputs = new Queue<string>(inputs ?? []);
             _keys = new Queue<string>(keys ?? []);
@@ -4473,6 +4508,8 @@ PRINT Person(-1).Age
             _namedTimeZones = namedTimeZones ?? new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase);
             _mouseX = mouseX;
             _mouseY = mouseY;
+            _skippedMouseEventReads = skippedMouseEventReads;
+            _isScreenActive = mouseX >= 0 || mouseY >= 0 || _pressedMouseButtons.Count > 0 || _mouseEvents.Count > 0 || _mousePresses.Count > 0;
         }
 
         public List<string> Output { get; } = [];
@@ -4499,7 +4536,29 @@ PRINT Person(-1).Age
 
         public int ReadMouseButtonPress() => _mousePresses.Count > 0 ? _mousePresses.Dequeue() : 0;
 
-        public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
+        public MouseInputEvent ReadMouseEvent()
+        {
+            if (_mouseEventReads++ < _skippedMouseEventReads)
+            {
+                return default;
+            }
+
+            return _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
+        }
+
+        public bool IsScreenActive => _isScreenActive;
+
+        public int ScreenMode => _isScreenActive ? 1 : 0;
+
+        public int ScreenWidth => _isScreenActive ? 320 : 0;
+
+        public int ScreenHeight => _isScreenActive ? 200 : 0;
+
+        public void ActivateScreen(int mode) => _isScreenActive = mode != 0;
+
+        public void DeactivateScreen() => _isScreenActive = false;
+
+        public void WriteGraphicsText(string text, bool newLine) => Output.Add(text);
 
         public void WriteOutput(string text)
         {

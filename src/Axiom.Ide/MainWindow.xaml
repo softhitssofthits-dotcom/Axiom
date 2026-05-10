@@ -1627,6 +1627,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem>
+
             </TabControl>
         </Grid>
 

@@ -265,6 +265,56 @@ public sealed class BoundProgramLowerer
             case BoundInputStatement input:
                 LowerInput(input, instructions);
                 break;
+            case BoundScreenStatement screen:
+                LowerExpression(screen.ModeExpression, instructions);
+                instructions.Add(LoweredInstruction.Screen(screen.Location));
+                break;
+            case BoundClsStatement cls:
+                instructions.Add(LoweredInstruction.Cls(cls.Location));
+                break;
+            case BoundColorStatement color:
+                LowerExpression(color.ForegroundExpression, instructions);
+                if (color.BackgroundExpression is not null)
+                {
+                    LowerExpression(color.BackgroundExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.Color(color.Location, color.BackgroundExpression is not null));
+                break;
+            case BoundLocateStatement locate:
+                LowerExpression(locate.RowExpression, instructions);
+                LowerExpression(locate.ColumnExpression, instructions);
+                instructions.Add(LoweredInstruction.Locate(locate.Location));
+                break;
+            case BoundPSetStatement pset:
+                LowerExpression(pset.XExpression, instructions);
+                LowerExpression(pset.YExpression, instructions);
+                if (pset.ColorExpression is not null)
+                {
+                    LowerExpression(pset.ColorExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.PSet(pset.Location, pset.Reset, pset.ColorExpression is not null));
+                break;
+            case BoundLineStatement line:
+                LowerExpression(line.X1Expression, instructions);
+                LowerExpression(line.Y1Expression, instructions);
+                LowerExpression(line.X2Expression, instructions);
+                LowerExpression(line.Y2Expression, instructions);
+                if (line.ColorExpression is not null)
+                {
+                    LowerExpression(line.ColorExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.Line(line.Location, line.BoxKind, line.ColorExpression is not null));
+                break;
+            case BoundCircleStatement circle:
+                LowerExpression(circle.XExpression, instructions);
+                LowerExpression(circle.YExpression, instructions);
+                LowerExpression(circle.RadiusExpression, instructions);
+                if (circle.ColorExpression is not null)
+                {
+                    LowerExpression(circle.ColorExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.Circle(circle.Location, circle.ColorExpression is not null));
+                break;
 
             case BoundOnKeyStatement onKey:
                 LowerOnKey(onKey, instructions);
@@ -801,6 +851,7 @@ public sealed class BoundProgramLowerer
         var endLabel = CreateLabel();
 
         instructions.Add(LoweredInstruction.LabelMarker(whileStatement.Location, startLabel));
+        EmitLoopIterationBoundary(whileStatement.Location, instructions);
         LowerExpression(whileStatement.Condition, instructions);
         instructions.Add(LoweredInstruction.JumpIfFalse(whileStatement.Condition.Location, endLabel));
 
@@ -834,6 +885,7 @@ public sealed class BoundProgramLowerer
         instructions.Add(LoweredInstruction.ValidateForStep(forStatement.StepExpression.Location));
 
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, checkLabel));
+        EmitLoopIterationBoundary(forStatement.Location, instructions);
 
         instructions.Add(LoweredInstruction.LoadVariable(forStatement.StepExpression.Location, stepVariable));
         instructions.Add(LoweredInstruction.LoadLiteral(forStatement.StepExpression.Location, CreateZeroLiteral(forStatement.Variable.Type), forStatement.Variable.Type));
@@ -918,6 +970,7 @@ public sealed class BoundProgramLowerer
         var endLabel = CreateLabel();
 
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, startLabel));
+        EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
         LowerExpression(condition, instructions);
         instructions.Add(doLoopStatement.ConditionKind == BoundDoLoopConditionKind.While
             ? LoweredInstruction.JumpIfFalse(condition.Location, endLabel)
@@ -946,6 +999,7 @@ public sealed class BoundProgramLowerer
         var endLabel = CreateLabel();
 
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, startLabel));
+        EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         try
@@ -977,6 +1031,7 @@ public sealed class BoundProgramLowerer
         var endLabel = CreateLabel();
 
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, startLabel));
+        EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         try
@@ -996,6 +1051,14 @@ public sealed class BoundProgramLowerer
             ? LoweredInstruction.JumpIfTrue(condition.Location, startLabel)
             : LoweredInstruction.JumpIfFalse(condition.Location, startLabel));
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, endLabel));
+    }
+
+    private void EmitLoopIterationBoundary(Axiom.Core.TextLocation location, List<LoweredInstruction> instructions)
+    {
+        if (_emitStatementBoundaries)
+        {
+            instructions.Add(LoweredInstruction.StatementBoundary(location));
+        }
     }
 
     private void LowerExitDo(BoundExitDoStatement exitDoStatement, List<LoweredInstruction> instructions)

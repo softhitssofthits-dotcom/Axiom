@@ -8,14 +8,31 @@ public sealed partial class Interpreter
     private readonly Queue<MouseInputEvent> _bufferedMouseEvents = [];
     private int _mouseHandlerDepth;
 
-    private long ReadMouseX() => _host.GetMouseX();
+    private long ReadMouseX()
+    {
+        RequireScreenActive("MOUSEX", FallbackRuntimeLocation);
+        return _host.GetMouseX();
+    }
 
-    private long ReadMouseY() => _host.GetMouseY();
+    private long ReadMouseY()
+    {
+        RequireScreenActive("MOUSEY", FallbackRuntimeLocation);
+        return _host.GetMouseY();
+    }
 
-    private bool IsMouseButtonDown(int buttonNumber) => _host.IsMouseButtonDown(buttonNumber);
+    private bool IsMouseButtonDown(int buttonNumber)
+    {
+        RequireScreenActive("MOUSEBUTTON", FallbackRuntimeLocation);
+        return _host.IsMouseButtonDown(buttonNumber);
+    }
 
     private void DispatchMouseHandlers(TextLocation callSiteLocation)
     {
+        if (!_host.IsScreenActive)
+        {
+            return;
+        }
+
         if (_mouseHandlerDepth > 0)
         {
             return;
@@ -83,6 +100,8 @@ public sealed partial class Interpreter
 
     private bool ConsumeMouseButtonPress(int buttonNumber)
     {
+        RequireScreenActive("MOUSEPRESS", FallbackRuntimeLocation);
+
         if (!IsSupportedMouseButton(buttonNumber))
         {
             return false;

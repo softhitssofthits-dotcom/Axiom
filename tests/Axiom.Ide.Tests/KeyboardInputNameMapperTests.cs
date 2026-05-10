@@ -13,6 +13,7 @@ public sealed class KeyboardInputNameMapperTests
     [InlineData(Key.Escape, "ESC")]
     [InlineData(Key.Enter, "ENTER")]
     [InlineData(Key.Back, "BACKSPACE")]
+    [InlineData(Key.Space, "SPACE")]
     [InlineData(Key.F1, "F1")]
     [InlineData(Key.F12, "F12")]
     public void MapSpecialKey_ReturnsStableInKeyName(Key key, string expected)
