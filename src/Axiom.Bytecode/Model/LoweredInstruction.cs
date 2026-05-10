@@ -26,6 +26,8 @@ public sealed class LoweredInstruction
         string? promptText = null,
         int valueCount = 0,
         bool preserve = false,
+        bool handlerReceivesKeyText = false,
+        int mouseEventKind = 0,
         int indexRangeMask = 0)
     {
         Kind = kind;
@@ -47,6 +49,8 @@ public sealed class LoweredInstruction
         PromptText = promptText;
         ValueCount = valueCount;
         Preserve = preserve;
+        HandlerReceivesKeyText = handlerReceivesKeyText;
+        MouseEventKind = mouseEventKind;
         IndexRangeMask = indexRangeMask;
     }
 
@@ -87,6 +91,10 @@ public sealed class LoweredInstruction
     public int ValueCount { get; }
 
     public bool Preserve { get; }
+
+    public bool HandlerReceivesKeyText { get; }
+
+    public int MouseEventKind { get; }
 
     public int IndexRangeMask { get; }
 
@@ -252,6 +260,55 @@ public sealed class LoweredInstruction
     public static LoweredInstruction ValidateForStep(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.ValidateForStep, location);
+    }
+
+    public static LoweredInstruction StatementBoundary(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.StatementBoundary, location);
+    }
+
+    public static LoweredInstruction RegisterKeyHandler(TextLocation location, bool handlerReceivesKeyText)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.RegisterKeyHandler, location, handlerReceivesKeyText: handlerReceivesKeyText);
+    }
+
+    public static LoweredInstruction UnregisterKeyHandler(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.UnregisterKeyHandler, location);
+    }
+
+    public static LoweredInstruction PauseKeyHandler(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.PauseKeyHandler, location);
+    }
+
+    public static LoweredInstruction ResumeKeyHandler(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.ResumeKeyHandler, location);
+    }
+
+    public static LoweredInstruction RegisterMouseHandler(TextLocation location, bool handlerReceivesEvent, BoundMouseEventKind eventKind)
+    {
+        return new LoweredInstruction(
+            LoweredInstructionKind.RegisterMouseHandler,
+            location,
+            handlerReceivesKeyText: handlerReceivesEvent,
+            mouseEventKind: (int)eventKind);
+    }
+
+    public static LoweredInstruction UnregisterMouseHandler(TextLocation location, BoundMouseEventKind eventKind)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.UnregisterMouseHandler, location, mouseEventKind: (int)eventKind);
+    }
+
+    public static LoweredInstruction PauseMouseHandler(TextLocation location, BoundMouseEventKind eventKind)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.PauseMouseHandler, location, mouseEventKind: (int)eventKind);
+    }
+
+    public static LoweredInstruction ResumeMouseHandler(TextLocation location, BoundMouseEventKind eventKind)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.ResumeMouseHandler, location, mouseEventKind: (int)eventKind);
     }
 
     public static LoweredInstruction PrintValue(TextLocation location)

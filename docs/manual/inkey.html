@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функция INKEY</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="inkey">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Неблокирующее чтение клавиатуры</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция INKEY</p><p class="sidebar__subtitle">Чтение одной клавиши без остановки программы.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Ввод и вывод</p>
+<h1 class="page-title">Функция INKEY</h1>
+<p class="lead"><code>INKEY()</code> читает одну клавишу из очереди клавиатуры и сразу возвращает управление программе. Если клавиши пока нет, функция возвращает пустую строку, поэтому её удобно использовать в циклах опроса, а не в блокирующем пользовательском вводе.</p>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p><code>INKEY()</code> не показывает приглашение и не ждёт подтверждения Enter. Обычная печатная клавиша возвращается как символ, а специальная клавиша возвращается как строковое имя, например <code>"LEFT"</code> или <code>"ESC"</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">INKEY()</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Возвращаемое значение</h2>
+<p>Тип результата: <code>STRING</code>.</p>
+<ul>
+<li>Если в очереди есть обычная клавиша, возвращается её символ, например <code>"A"</code>.</li>
+<li>Если клавиши нет, возвращается пустая строка <code>""</code>.</li>
+<li>Для специальных клавиш возвращаются имена вроде <code>"LEFT"</code>, <code>"RIGHT"</code>, <code>"UP"</code>, <code>"DOWN"</code>, <code>"F1"</code>, <code>"ESC"</code>, <code>"ENTER"</code>, <code>"BACKSPACE"</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Замечания</h2>
+<ul>
+<li><code>INKEY()</code> не принимает аргументы.</li>
+<li>Имя функции записывается без суффикса <code>$</code>; алиасы для этой функции не поддерживаются.</li>
+<li>Функция поддерживается и в интерпретаторе, и в режиме байткода.</li>
+<li>Для специальных клавиш <code>INKEY()</code> возвращает канонические имена из <a href="keydown.html#key-names">общей таблицы имён клавиш</a>; алиасы нужны при сравнении с пользовательским текстом в <code>KEYDOWN()</code> и <code>ON KEY</code>.</li>
+<li>Если для клавиши зарегистрирован обработчик через <a href="on-key.html"><code>ON KEY</code></a>, совпавшая клавиша может быть перехвачена обработчиком раньше, чем до неё дойдёт вызов <code>INKEY()</code>.</li>
+<li>Если среда выполнения не предоставляет источник клавиатуры, функция не блокирует программу и возвращает <code>""</code>.</li>
+<li><code>INKEY()</code> не даёт состояния удержания клавиш, модификаторов и мышиных событий.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">DIM pressedKey AS STRING
+
+pressedKey = INKEY()
+IF pressedKey = "" THEN
+    PRINT "NO KEY"
+ELSE
+    PRINT pressedKey
+END IF</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Диагностика <code>MB2004</code> возникает, если передать аргументы в <code>INKEY()</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="keydown.html">Функция KEYDOWN</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="print.html">Оператор PRINT</a><a href="data-and-input.html">Ввод и вывод</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

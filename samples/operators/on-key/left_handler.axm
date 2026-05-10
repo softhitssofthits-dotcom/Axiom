@@ -1,0 +1,20 @@
+' Ожидаемое поведение:
+' 1. Откройте программу в Axiom.Ide.
+' 2. Запустите, нажмите LEFT в панели вывода, затем нажмите ESC.
+' 3. Обработчик напечатает строку "обработчик LEFT", затем программа завершится строкой "готово".
+
+PRINT "Щёлкните по панели вывода, нажмите LEFT, затем нажмите ESC."
+ON KEY("LEFT"), HandleLeft
+
+DIM marker AS INTEGER = 0
+
+DO WHILE NOT KEYPRESS("ESC")
+    marker = marker + 1
+LOOP
+
+ON KEY("LEFT"), OFF
+PRINT "готово"
+
+SUB HandleLeft()
+    PRINT "обработчик LEFT"
+END SUB

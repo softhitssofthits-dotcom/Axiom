@@ -1,0 +1,18 @@
+' ON KEY("ANY") обрабатывает первую доступную клавишу без точного обработчика.
+PRINT "Нажмите любую клавишу, затем нажмите ESC."
+
+ON KEY("ANY"), HandleAny
+
+DIM marker AS INTEGER = 0
+
+DO WHILE NOT KEYPRESS("ESC")
+    marker = marker + 1
+LOOP
+
+ON KEY("ANY"), OFF
+PRINT "готово"
+
+SUB HandleAny()
+    ON KEY("ANY"), OFF
+    PRINT "любая клавиша"
+END SUB

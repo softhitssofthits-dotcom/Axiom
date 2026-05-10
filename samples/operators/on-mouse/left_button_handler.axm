@@ -1,0 +1,17 @@
+' Нажмите левую кнопку мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC.
+PRINT "Нажмите левую кнопку мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC."
+ON MOUSE(1), HandleMouse
+DIM marker AS INTEGER = 0
+
+DO WHILE NOT KEYPRESS("ESC")
+    marker = marker + 1
+LOOP
+
+PRINT "готово"
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    PRINT "мышь"
+    PRINT button
+    PRINT x
+    PRINT y
+END SUB

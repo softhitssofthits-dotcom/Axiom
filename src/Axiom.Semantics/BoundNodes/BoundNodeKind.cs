@@ -12,6 +12,8 @@ public enum BoundNodeKind
     PrintStatement,
     PrintUsingStatement,
     InputStatement,
+    OnKeyStatement,
+    OnMouseStatement,
     OpenStatement,
     CloseStatement,
     ErrorStatement,

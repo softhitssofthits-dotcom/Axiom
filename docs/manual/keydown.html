@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функция KEYDOWN</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="keydown">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Проверка удержания клавиши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция KEYDOWN</p><p class="sidebar__subtitle">Текущее состояние клавиши или модификатора.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Ввод и вывод</p>
+<h1 class="page-title">Функция KEYDOWN</h1>
+<p class="lead"><code>KEYDOWN()</code> проверяет, удерживается ли указанная клавиша прямо сейчас. В отличие от <code>INKEY()</code>, функция не читает очередь клавиш и не удаляет событие ввода, поэтому подходит для циклов управления, проверки стрелок и сочетаний вроде <code>CTRL</code> вместе с другой клавишей.</p>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p><code>KEYDOWN()</code> возвращает логическое значение. Если среда выполнения знает, что указанная клавиша сейчас нажата, результатом будет <code>TRUE</code>; иначе возвращается <code>FALSE</code>. В средах без источника состояния клавиатуры функция также возвращает <code>FALSE</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">KEYDOWN(keyText)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Параметры</h2>
+<table>
+<thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+<tbody>
+<tr><td><code>keyText</code></td><td><code>STRING</code></td><td>Имя клавиши. Обычные буквенно-цифровые клавиши можно указывать как <code>"A"</code> или <code>"1"</code>; специальные клавиши задаются именами вроде <code>"LEFT"</code>, <code>"ESC"</code>, <code>"F5"</code>.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="article-section">
+<h2>Возвращаемое значение</h2>
+<p>Тип результата: <code>BOOLEAN</code>.</p>
+<ul>
+<li><code>TRUE</code>, если указанная клавиша сейчас удерживается.</li>
+<li><code>FALSE</code>, если клавиша не удерживается, имя пустое или среда выполнения не предоставляет состояние клавиатуры.</li>
+</ul>
+</section>
+
+<section class="article-section" id="key-names">
+<h2>Имена клавиш</h2>
+<p>Имена специальных клавиш общие для <code>INKEY()</code>, <code>KEYDOWN()</code>, <code>KEYPRESS()</code> и <code>ON KEY</code>. <code>INKEY()</code> возвращает каноническое имя, а остальные формы принимают как каноническое имя, так и алиасы из таблицы. Регистр букв не важен; пробелы, дефисы и подчёркивания в алиасах не меняют смысл. Для <code>ON KEY</code> дополнительно зарезервировано псевдоимя <code>"ANY"</code>, которое означает обработчик любой клавиши, а не физическую клавишу.</p>
+<table>
+<thead><tr><th>Каноническое имя</th><th>Допустимые алиасы</th></tr></thead>
+<tbody>
+<tr><td><code>"LEFT"</code></td><td><code>"LEFTARROW"</code>, <code>"ARROWLEFT"</code></td></tr>
+<tr><td><code>"RIGHT"</code></td><td><code>"RIGHTARROW"</code>, <code>"ARROWRIGHT"</code></td></tr>
+<tr><td><code>"UP"</code></td><td><code>"UPARROW"</code>, <code>"ARROWUP"</code></td></tr>
+<tr><td><code>"DOWN"</code></td><td><code>"DOWNARROW"</code>, <code>"ARROWDOWN"</code></td></tr>
+<tr><td><code>"ESC"</code></td><td><code>"ESCAPE"</code></td></tr>
+<tr><td><code>"ENTER"</code></td><td><code>"RETURN"</code></td></tr>
+<tr><td><code>"BACKSPACE"</code></td><td><code>"BACK"</code>, <code>"BKSP"</code></td></tr>
+<tr><td><code>"TAB"</code></td><td>-</td></tr>
+<tr><td><code>"DELETE"</code></td><td><code>"DEL"</code></td></tr>
+<tr><td><code>"INSERT"</code></td><td><code>"INS"</code></td></tr>
+<tr><td><code>"HOME"</code></td><td>-</td></tr>
+<tr><td><code>"END"</code></td><td>-</td></tr>
+<tr><td><code>"PAGEUP"</code></td><td><code>"PAGE UP"</code>, <code>"PAGE-UP"</code>, <code>"PGUP"</code>, <code>"PRIOR"</code></td></tr>
+<tr><td><code>"PAGEDOWN"</code></td><td><code>"PAGE DOWN"</code>, <code>"PAGE-DOWN"</code>, <code>"PGDN"</code>, <code>"PGDOWN"</code>, <code>"NEXT"</code></td></tr>
+<tr><td><code>"SPACE"</code></td><td><code>"SPACEBAR"</code>, <code>"SPACE BAR"</code>, <code>"SPACE-BAR"</code></td></tr>
+<tr><td><code>"SHIFT"</code></td><td><code>"SHIFTKEY"</code>, <code>"SHIFT KEY"</code>, <code>"SHIFT-KEY"</code></td></tr>
+<tr><td><code>"CTRL"</code></td><td><code>"CONTROL"</code>, <code>"CONTROLKEY"</code>, <code>"CONTROL KEY"</code>, <code>"CONTROL-KEY"</code>, <code>"CTL"</code></td></tr>
+<tr><td><code>"ALT"</code></td><td><code>"ALTKEY"</code>, <code>"ALT KEY"</code>, <code>"ALT-KEY"</code>, <code>"MENU"</code></td></tr>
+<tr><td><code>"F1"</code> ... <code>"F12"</code></td><td>-</td></tr>
+</tbody>
+</table>
+<p>Обычные печатные клавиши задаются как односимвольные строки, например <code>"A"</code>, <code>"a"</code> или <code>"1"</code>. Такие строки не становятся ключевыми словами языка и не конфликтуют с функциями вроде <code>LEFT()</code> и <code>RIGHT()</code>, потому что имена клавиш передаются как строковые значения.</p>
+</section>
+
+<section class="article-section">
+<h2>Сочетания клавиш</h2>
+<p><code>KEYDOWN()</code> умеет проверять строковый аккорд клавиш через знак <code>+</code>. В отличие от <code>KEYPRESS()</code>, здесь все части строки равноправны: каждая перечисленная клавиша должна быть удержана прямо сейчас.</p>
+<p>Проще говоря, <code>KEYDOWN("CTRL+ALT+DELETE")</code> значит: <code>CTRL</code>, <code>ALT</code> и <code>DELETE</code> сейчас нажаты одновременно. Очередь событий при этом не читается и не расходуется.</p>
+<pre><code class="language-basic">IF KEYDOWN("CTRL+LEFT") THEN
+    PRINT "CTRL+LEFT"
+END IF</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">FOR i = 1 TO 20000
+    IF KEYDOWN("SHIFT+A") THEN
+        PRINT "SHIFT+A"
+        EXIT FOR
+    END IF
+NEXT</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификатора и стрелки</a></li><li><a href="../../samples/functions/keydown/canonical_aliases.axm">KEYDOWN: канонические имена и алиасы клавиш</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>Диагностика</h2>
+<p><code>MB2004</code> возникает, если вызвать <code>KEYDOWN()</code> без аргумента или с лишними аргументами. <code>MB2003</code> возникает, если аргумент нельзя связать как строку.</p>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="inkey.html">Функция INKEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="data-and-input.html">Ввод и вывод</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

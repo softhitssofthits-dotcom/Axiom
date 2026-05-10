@@ -1,0 +1,17 @@
+' ON KEY может передать нормализованное имя клавиши в обработчик с одним параметром.
+PRINT "Нажмите любую клавишу, затем нажмите ESC."
+ON KEY("ANY"), HandleKey
+
+DIM marker AS INTEGER = 0
+
+DO WHILE NOT KEYPRESS("ESC")
+    marker = marker + 1
+LOOP
+
+ON KEY("ANY"), OFF
+PRINT "готово"
+
+SUB HandleKey(keyName AS STRING)
+    ON KEY("ANY"), OFF
+    PRINT keyName
+END SUB

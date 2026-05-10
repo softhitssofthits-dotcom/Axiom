@@ -125,6 +125,493 @@ PRINT mask >> 4
     }
 
     [Fact]
+    public void Execute_InKeyReadsQueuedKeysWithoutBlocking()
+    {
+        const string text = """
+PRINT INKEY()
+PRINT INKEY()
+PRINT INKEY()
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "A", "LEFT");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["A", "LEFT", ""], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyDownReadsHeldKeyStateWithoutConsumingQueuedKeys()
+    {
+        const string text = """
+PRINT KEYDOWN("LEFT")
+PRINT KEYDOWN("CTRL") AND KEYDOWN("LEFT")
+PRINT INKEY()
+""";
+
+        var (_, host, result) = ExecuteProgramWithPressedKeys(text, "LEFT", "CTRL");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", ""], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyDownAcceptsCanonicalAliases()
+    {
+        const string text = """
+PRINT KEYDOWN("CONTROL")
+PRINT KEYDOWN("PAGE UP")
+PRINT KEYDOWN("ESCAPE")
+""";
+
+        var (_, host, result) = ExecuteProgramWithPressedKeys(text, "CTRL", "PAGEUP", "ESC");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyPressConsumesMatchingQueuedKeyOnce()
+    {
+        const string text = """
+PRINT KEYPRESS("LEFT")
+PRINT KEYPRESS("LEFT")
+PRINT INKEY()
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "LEFT", "A");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE", "A"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyPressPreservesUnmatchedQueuedKeys()
+    {
+        const string text = """
+PRINT KEYPRESS("LEFT")
+PRINT INKEY()
+PRINT KEYPRESS("ESCAPE")
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "RIGHT", "ESC");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["FALSE", "RIGHT", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyPressAcceptsCanonicalAliases()
+    {
+        const string text = """
+PRINT KEYPRESS("ESCAPE")
+PRINT KEYPRESS("PAGE UP")
+PRINT KEYPRESS("CONTROL")
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "ESC", "PAGEUP", "CTRL");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyPressAcceptsChordSyntax()
+    {
+        const string text = """
+PRINT KEYPRESS("CTRL+ALT+DELETE")
+PRINT KEYPRESS("CTRL+ALT+DELETE")
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeysAndPressedKeys(text, ["DELETE"], ["CTRL", "ALT"]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_KeyDownAcceptsChordSyntax()
+    {
+        const string text = """
+PRINT KEYDOWN("CTRL+F+A+X")
+PRINT KEYDOWN("CTRL+F+A+Z")
+""";
+
+        var (_, host, result) = ExecuteProgramWithPressedKeys(text, "CTRL", "F", "A", "X");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MouseFunctionsReadCoordinatesAndButtons()
+    {
+        const string text = """
+PRINT MOUSEX()
+PRINT MOUSEY()
+PRINT MOUSEBUTTON(1)
+PRINT MOUSEBUTTON(2)
+PRINT MOUSEBUTTON(3)
+PRINT MOUSEBUTTON(99)
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text, mouseX: 320, mouseY: 240, pressedMouseButtons: [1, 3]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["320", "240", "TRUE", "FALSE", "TRUE", "FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MouseFunctionsReturnDefaultValuesWithoutMouseProviderState()
+    {
+        const string text = """
+PRINT MOUSEX()
+PRINT MOUSEY()
+PRINT MOUSEBUTTON(1)
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["-1", "-1", "FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MousePressConsumesMatchingButtonOnce()
+    {
+        const string text = """
+PRINT MOUSEPRESS(1)
+PRINT MOUSEPRESS(1)
+PRINT MOUSEPRESS(3)
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text, mousePresses: [1, 3]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MousePressPreservesUnmatchedButtons()
+    {
+        const string text = """
+PRINT MOUSEPRESS(1)
+PRINT MOUSEPRESS(3)
+PRINT MOUSEPRESS(2)
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text, mousePresses: [2, 3]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["FALSE", "TRUE", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMouseConsumesMatchingButtonBeforeMousePress()
+    {
+        const string text = """
+PRINT "ready"
+ON MOUSE(1), HandleMouse
+DIM marker AS INTEGER = 1
+PRINT MOUSEPRESS(1)
+
+SUB HandleMouse()
+    PRINT "mouse"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text, mousePresses: [1]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["ready", "mouse", "FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMousePassesButtonAndCurrentCoordinates()
+    {
+        const string text = """
+ON MOUSE(3), HandleMouse
+DIM marker AS INTEGER = 1
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    PRINT button
+    PRINT x
+    PRINT y
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text, mouseX: 320, mouseY: 240, mousePresses: [3]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3", "320", "240"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMouseHandlesReleaseAndMoveEvents()
+    {
+        const string text = """
+ON MOUSE(1, "UP"), HandleMouse
+ON MOUSE("MOVE"), HandleMouse
+PRINT "ready"
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    PRINT button
+    PRINT x
+    PRINT y
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(
+            text,
+            mouseX: 42,
+            mouseY: 24,
+            mouseEvents:
+            [
+                new MouseInputEvent(MouseInputEventKind.Release, 1),
+                new MouseInputEvent(MouseInputEventKind.Move, 0)
+            ]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "42", "24", "0", "42", "24", "ready"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMouseHandlesWheelEvents()
+    {
+        const string text = """
+ON MOUSE("WHEEL"), HandleMouse
+PRINT "ready"
+
+SUB HandleMouse(delta AS INTEGER, x AS LONG, y AS LONG)
+    PRINT delta
+    PRINT x
+    PRINT y
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(
+            text,
+            mouseX: 50,
+            mouseY: 60,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["-120", "50", "60", "ready"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_MousePressPreservesReleaseAndMoveEventsForOnMouse()
+    {
+        const string text = """
+ON MOUSE(1, "UP"), HandleMouse
+ON MOUSE("MOVE"), HandleMouse
+PRINT MOUSEPRESS(1)
+PRINT "done"
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    PRINT "event"
+    PRINT button
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(
+            text,
+            mouseEvents:
+            [
+                new MouseInputEvent(MouseInputEventKind.Release, 1),
+                new MouseInputEvent(MouseInputEventKind.Move, 0),
+                new MouseInputEvent(MouseInputEventKind.Press, 1)
+            ]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["event", "1", "event", "0", "TRUE", "done"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMouseStopPausesAndOnResumesExistingHandler()
+    {
+        const string text = """
+ON MOUSE(1), HandleMouse
+ON MOUSE(1), STOP
+DIM paused AS INTEGER = 1
+PRINT MOUSEPRESS(1)
+ON MOUSE(1), ON
+DIM resumed AS INTEGER = 2
+
+SUB HandleMouse()
+    PRINT "mouse"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(text, mousePresses: [0, 0, 1, 1]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "mouse"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyConsumesMatchingKeyBeforeInKey()
+    {
+        const string text = """
+PRINT "ready"
+ON KEY("LEFT"), HandleLeft
+DIM marker AS INTEGER = 1
+PRINT INKEY()
+
+SUB HandleLeft()
+    PRINT "handler"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "LEFT", "A");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["ready", "handler", "A"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyMatchesCanonicalAliases()
+    {
+        const string text = """
+ON KEY("ESCAPE"), HandleEsc
+DIM marker AS INTEGER = 1
+
+SUB HandleEsc()
+    PRINT "escape"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "ESC");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["escape"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyAnyHandlesFirstUnmatchedKey()
+    {
+        const string text = """
+ON KEY("ANY"), HandleAny
+DIM marker AS INTEGER = 1
+PRINT INKEY()
+
+SUB HandleAny()
+    PRINT "any"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "", "RIGHT", "A");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["any", "any", ""], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyExactHandlerTakesPrecedenceOverAnyHandler()
+    {
+        const string text = """
+ON KEY("ANY"), HandleAny
+ON KEY("LEFT"), HandleLeft
+DIM marker AS INTEGER = 1
+PRINT INKEY()
+
+SUB HandleAny()
+    PRINT "any"
+END SUB
+
+SUB HandleLeft()
+    PRINT "left"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "", "", "LEFT", "RIGHT", "A");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["left", "any", "any", ""], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyPassesNormalizedKeyTextToStringParameter()
+    {
+        const string text = """
+ON KEY("ANY"), HandleKey
+DIM marker AS INTEGER = 1
+
+SUB HandleKey(keyName AS STRING)
+    PRINT keyName
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "esc", "Page Up");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["ESC", "PAGEUP"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyAcceptsChordSyntax()
+    {
+        const string text = """
+ON KEY("CTRL+LEFT"), HandleKey
+ON KEY("LEFT"), HandleLeft
+DIM marker AS INTEGER = 1
+
+SUB HandleKey(keyName AS STRING)
+    PRINT keyName
+END SUB
+
+SUB HandleLeft()
+    PRINT "left"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeysAndPressedKeys(text, ["LEFT"], ["CTRL", "LEFT"]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["CTRL+LEFT"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyStopPausesAndOnResumesExistingHandler()
+    {
+        const string text = """
+ON KEY("LEFT"), HandleLeft
+ON KEY("LEFT"), STOP
+DIM paused AS INTEGER = 1
+PRINT INKEY()
+ON KEY("LEFT"), ON
+DIM resumed AS INTEGER = 1
+
+SUB HandleLeft()
+    PRINT "left"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "", "", "LEFT", "LEFT");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["LEFT", "left"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnKeyLeavesUnmatchedKeyForInKey()
+    {
+        const string text = """
+ON KEY("LEFT"), HandleLeft
+DIM marker AS INTEGER = 1
+PRINT INKEY()
+
+SUB HandleLeft()
+    PRINT "handler"
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "RIGHT");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["RIGHT"], host.Output);
+    }
+
+    [Fact]
     public void Execute_PrintWithSemicolonSuppressesTrailingNewLine()
     {
         var (_, host, result) = ExecuteProgram("PRINT \"A\";");
@@ -7998,6 +8485,67 @@ END TRY
         return (program, host, result);
     }
 
+    private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgramWithKeys(string text, params string[] keys)
+    {
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var host = new TestRuntimeHost([], keys: keys);
+        var result = Interpreter.Execute(program, host);
+        return (program, host, result);
+    }
+
+    private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgramWithPressedKeys(string text, params string[] pressedKeys)
+    {
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var host = new TestRuntimeHost([], pressedKeys: pressedKeys);
+        var result = Interpreter.Execute(program, host);
+        return (program, host, result);
+    }
+
+    private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgramWithKeysAndPressedKeys(
+        string text,
+        IEnumerable<string> keys,
+        IEnumerable<string> pressedKeys)
+    {
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var host = new TestRuntimeHost([], keys: keys, pressedKeys: pressedKeys);
+        var result = Interpreter.Execute(program, host);
+        return (program, host, result);
+    }
+
+    private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgramWithMouseState(
+        string text,
+        long mouseX = -1,
+        long mouseY = -1,
+        IEnumerable<int>? pressedMouseButtons = null,
+        IEnumerable<int>? mousePresses = null,
+        IEnumerable<MouseInputEvent>? mouseEvents = null)
+    {
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var host = new TestRuntimeHost([], mouseX: mouseX, mouseY: mouseY, pressedMouseButtons: pressedMouseButtons, mousePresses: mousePresses, mouseEvents: mouseEvents);
+        var result = Interpreter.Execute(program, host);
+        return (program, host, result);
+    }
+
     private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgramAt(
         string text,
         DateTimeOffset localNow,
@@ -8154,21 +8702,44 @@ END TRY
     private sealed class TestRuntimeHost : IRuntimeHost
     {
         private readonly Queue<string> _inputs;
+        private readonly Queue<string> _keys;
+        private readonly Queue<int> _mousePresses;
+        private readonly Queue<MouseInputEvent> _mouseEvents;
+        private readonly HashSet<string> _pressedKeys;
+        private readonly HashSet<int> _pressedMouseButtons;
         private readonly Random _random = new();
         private readonly DateTimeOffset _localNow;
         private readonly TimeZoneInfo _localTimeZone;
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
+        private readonly long _mouseX;
+        private readonly long _mouseY;
 
         public TestRuntimeHost(
             IEnumerable<string> inputs,
             DateTimeOffset? localNow = null,
             TimeZoneInfo? localTimeZone = null,
-            IReadOnlyDictionary<string, TimeZoneInfo>? namedTimeZones = null)
+            IReadOnlyDictionary<string, TimeZoneInfo>? namedTimeZones = null,
+            IEnumerable<string>? keys = null,
+            IEnumerable<string>? pressedKeys = null,
+            long mouseX = -1,
+            long mouseY = -1,
+            IEnumerable<int>? pressedMouseButtons = null,
+            IEnumerable<int>? mousePresses = null,
+            IEnumerable<MouseInputEvent>? mouseEvents = null)
         {
             _inputs = new Queue<string>(inputs);
+            _keys = new Queue<string>(keys ?? []);
+            _mousePresses = new Queue<int>(mousePresses ?? []);
+            _mouseEvents = new Queue<MouseInputEvent>(mouseEvents ?? (mousePresses ?? []).Select(static buttonNumber => new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
+            _pressedKeys = new HashSet<string>(
+                (pressedKeys ?? []).Select(KeyboardInputNormalizer.Normalize),
+                StringComparer.Ordinal);
+            _pressedMouseButtons = new HashSet<int>(pressedMouseButtons ?? []);
             _localNow = localNow ?? DateTimeOffset.Now;
             _localTimeZone = localTimeZone ?? TimeZoneInfo.Local;
             _namedTimeZones = namedTimeZones ?? new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase);
+            _mouseX = mouseX;
+            _mouseY = mouseY;
         }
 
         public List<InputRequest> InputRequests { get; } = [];
@@ -8180,6 +8751,20 @@ END TRY
             InputRequests.Add(request);
             return _inputs.Count > 0 ? _inputs.Dequeue() : string.Empty;
         }
+
+        public string ReadKey() => _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
+
+        public bool IsKeyDown(string keyText) => _pressedKeys.Contains(KeyboardInputNormalizer.Normalize(keyText));
+
+        public long GetMouseX() => _mouseX;
+
+        public long GetMouseY() => _mouseY;
+
+        public bool IsMouseButtonDown(int buttonNumber) => _pressedMouseButtons.Contains(buttonNumber);
+
+        public int ReadMouseButtonPress() => _mousePresses.Count > 0 ? _mousePresses.Dequeue() : 0;
+
+        public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
 
         public void WriteOutput(string text)
         {

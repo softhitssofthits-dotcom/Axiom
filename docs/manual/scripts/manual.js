@@ -27,6 +27,15 @@
       items: [
         { id: "print", href: "print.html", label: "Оператор PRINT" },
         { id: "input", href: "input.html", label: "Оператор INPUT" },
+        { id: "inkey", href: "inkey.html", label: "Функция INKEY" },
+        { id: "keydown", href: "keydown.html", label: "Функция KEYDOWN" },
+        { id: "keypress", href: "keypress.html", label: "Функция KEYPRESS" },
+        { id: "mousex", href: "mousex.html", label: "Функция MOUSEX" },
+        { id: "mousey", href: "mousey.html", label: "Функция MOUSEY" },
+        { id: "mousebutton", href: "mousebutton.html", label: "Функция MOUSEBUTTON" },
+        { id: "mousepress", href: "mousepress.html", label: "Функция MOUSEPRESS" },
+        { id: "on-mouse", href: "on-mouse.html", label: "Оператор ON MOUSE" },
+        { id: "on-key", href: "on-key.html", label: "Оператор ON KEY" },
         { id: "open", href: "open.html", label: "Оператор OPEN" },
         { id: "close", href: "close.html", label: "Оператор CLOSE" }
       ]

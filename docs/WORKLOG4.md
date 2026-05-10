@@ -7116,3 +7116,538 @@
 
 Следующий точный шаг:
 - решить, нужен ли ручной IDE-smoke для новых `SELECT CASE` samples или можно перейти к следующему небольшому срезу: улучшению diagnostics/manual вокруг `CASE ELSE` и пустого `CASE`.
+
+## Session 706 - 2026-05-08 20:54 - реализован первый срез INKEY()
+
+Сделано:
+- добавлена runtime-абстракция `IKeyboardInputProvider` и неблокирующий fallback `""` при отсутствии клавиатурного источника;
+- добавлена встроенная функция `INKEY()` с результатом `STRING`;
+- `INKEY()` подключена к интерпретатору, `BytecodeVm`, bytecode-dispatch и execution pipeline без interpreter fallback;
+- `ProgramConsoleService` получил очередь клавиш, а область вывода IDE - обработчики обычных и специальных клавиш;
+- добавлены тесты для семантики, интерпретатора, байткода, execution pipeline и IDE-очереди;
+- добавлен sample `samples/functions/inkey/poll_keys.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/manual/`, `docs/PLANS3.md`.
+
+Проверки на момент записи:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Следующий точный шаг:
+- выполнить целевые тесты `INKEY()` и ручной IDE-smoke `samples/functions/inkey/poll_keys.axm`.
+Дополнение проверки:
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --filter "InKey" -p:UseSharedCompilation=false` проходит, 2 теста;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "InKey" -p:UseSharedCompilation=false` проходит, 2 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "InKey" -p:UseSharedCompilation=false` проходит, 2 теста;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "ReadKey|BeginSession_ClearsQueuedKeys" -p:UseSharedCompilation=false` проходит, 2 теста;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Следующий точный шаг:
+- вручную открыть `samples/functions/inkey/poll_keys.axm` в `Axiom.Ide`, нажать запуск, сфокусировать область вывода и нажать обычную или специальную клавишу.
+Дополнение IDE-проверки:
+- подтверждено, что `MainWindowViewModel` запускает выполнение через `Task.Run`, поэтому UI-поток может принимать клавиши во время работы программы;
+- нормализация специальных клавиш вынесена в `KeyboardInputNameMapper`;
+- добавлены `KeyboardInputNameMapperTests` для `LEFT`, `RIGHT`, `UP`, `DOWN`, `ESC`, `ENTER`, `BACKSPACE`, `F1`, `F12`, игнорирования командных модификаторов и обычных печатных клавиш;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "KeyboardInputNameMapper|ReadKey|BeginSession_ClearsQueuedKeys" -p:UseSharedCompilation=false` проходит, 13 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+Дополнение acceptance-проверки sample:
+- `samples/functions/inkey/poll_keys.axm` исправлен под правило `FOR`: счётчик цикла объявляется самим оператором, отдельный `DIM i AS INTEGER` удалён;
+- добавлен `InKeyAcceptanceSample_RunsOnBytecodeVm`, который запускает sample в `ExecutionMode.Bytecode` с подготовленной клавишей `LEFT` и проверяет отсутствие interpreter fallback;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "InKeyAcceptanceSample|InKey" -p:UseSharedCompilation=false` проходит, 3 теста.
+
+## Session 707 - 2026-05-08 22:07 - закрыт IDE-smoke для INKEY()
+
+Сделано:
+- в `src/Axiom.Ide.SmokeHarness/Program.cs` добавлен флаг `--inkey-only`;
+- в `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs` добавлен отдельный узкий сценарий `RunInKeyOnlySmoke(...)`;
+- сценарий подготавливает `poll_keys.axm` в рабочем каталоге smoke-harness, открывает его в IDE, запускает программу, переводит фокус в `OutputTextBox` и отправляет клавишу `LEFT`;
+- `README.md` дополнен отдельной командой запуска точечного smoke для `INKEY()`;
+- `docs/PLANS3.md` и `docs/WORKLOG4.md` обновлены по итогам закрытия среза.
+
+Проверки:
+- `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj -p:UseSharedCompilation=false` проходит;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj -- --inkey-only --keep-workspace` проходит;
+- отдельная попытка полного `Axiom.Ide.SmokeHarness` в той записи дошла до старого шага `File Manager context menu + file operations` и упёрлась в ожидание `TextInputDialog`; позже выяснилось, что этот частный результат нельзя было подавать как актуальный общий статус файловых операций.
+
+Решение:
+- считать первый срез `INKEY()` полностью закрытым: реальный ввод через окно IDE подтверждён без ручного вмешательства;
+- частный результат полного baseline не смешивается с языковой готовностью `INKEY()` и не трактуется как подтверждённый текущий статус файловых операций.
+
+Следующий точный шаг:
+- выбрать следующий срез ввода/оболочки без привязки к непроверенному выводу о состоянии файловых операций.
+
+## Session 708 - 2026-05-08 22:36 - закрыт первый событийный срез ON KEY
+
+Сделано:
+- в lexer/parser/syntax добавлены ключевые слова `ON`, `KEY`, `OFF` и новый оператор `ON KEY(keyText), HandlerName` / `ON KEY(keyText), OFF`;
+- binder получил `BoundOnKeyStatement`, правило обработчика `SUB` без параметров и диагностику `MB2034`;
+- интерпретатор и `BytecodeVm` переведены на общий клавиатурный буфер: совпавшая клавиша уходит в обработчик, несовпавшая остаётся доступной для `INKEY()`;
+- для байткода добавлены lowering- и VM-инструкции `StatementBoundary`, `RegisterKeyHandler`, `UnregisterKeyHandler`;
+- `INKEY()` в обоих движках теперь читает тот же буфер, что и `ON KEY`;
+- добавлены parser-, binder-, runtime-, execution-pipeline- и acceptance-проверки;
+- добавлен runnable sample `samples/operators/on-key/left_handler.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/manual/inkey.html`, новая страница `docs/manual/on-key.html`, а также навигация и поиск manual.
+
+Проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false`;
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj -p:UseSharedCompilation=false --filter "Parse_OnKeyStatement|Parse_OnKeyOffStatement"`;
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false --filter "Bind_OnKeyStatement_BindsZeroArgumentSubHandler|Bind_OnKeyStatement_RejectsFunctionHandler"`;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "Execute_OnKeyConsumesMatchingKeyBeforeInKey|Execute_OnKeyLeavesUnmatchedKeyForInKey"`;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "Run_WithBytecodeMode_UsesBytecodeVmForOnKey|OnKeyAcceptanceSample_RunsOnBytecodeVm"`.
+
+Решение:
+- считать `ON KEY` закрытым как следующий отдельный клавиатурный срез после `INKEY()`;
+- зафиксировать общий пользовательский договор клавиатурной очереди: `ON KEY` перехватывает совпавшую клавишу, а `INKEY()` читает только то, что не было обработано.
+
+Следующий точный шаг:
+- если продолжать клавиатурную ветку, выбрать следующий отдельный срез после `ON KEY`: удержание клавиш и модификаторы либо расширенный событийный контракт;
+- если переключаться на оболочку, выбрать соседнюю тему отдельно и без предположения о незакрытой проблеме файловых операций.
+
+## Session 709 - 2026-05-08 23:08 - вычищен устаревший хвост про baseline файловых операций
+
+Сделано:
+- перепроверены активные документы после замечания пользователя о том, что файловые операции в `File Manager` уже давно закрыты;
+- подтверждено, что утверждения о якобы текущей нестабильности полного WPF smoke baseline были подхвачены из устаревших формулировок в `docs/PLANS3.md` и не должны были подаваться как актуальный статус;
+- из активного плана удалены и переписаны формулировки, которые продолжали тянуть в текущий контекст старую развилку про отдельную стабилизацию baseline для файловых операций.
+
+Решение:
+- больше не считать тему `File Manager context menu + file operations` незакрытой по умолчанию;
+- не использовать старые хвосты из документов как утверждение о текущем состоянии без отдельной проверки;
+- дальнейшее планирование клавиатурной ветки вести без этой ложной привязки.
+
+Следующий точный шаг:
+- продолжать реализацию клавиатурной ветки от `ON KEY` к следующему отдельному пользовательскому срезу, не возвращая в активный план не подтверждённую проблему baseline.
+
+## Session 710 - 2026-05-09 15:11 - реализуется функция KEYDOWN()
+
+Сделано:
+- после `INKEY()` и `ON KEY` начат следующий клавиатурный срез: проверка текущего удержания клавиши через `KEYDOWN(keyText)`;
+- runtime-host расширен от чтения очереди клавиш до проверки состояния клавиши;
+- `ProgramConsoleService` теперь хранит не только очередь событий для `INKEY()` и `ON KEY`, но и множество удерживаемых клавиш для `KEYDOWN()`;
+- IDE начала передавать в сервис состояния `PreviewKeyDown` и `PreviewKeyUp` из области `Output`;
+- `KEYDOWN()` добавлена как встроенная функция с результатом `BOOLEAN`;
+- интерпретатор и `BytecodeVm` читают состояние клавиши без удаления событий из очереди;
+- добавлены проверки binder/runtime/execution/IDE и acceptance sample `samples/functions/keydown/held_modifiers.axm`;
+- исправлен sample `samples/functions/inkey/poll_keys.axm`: переменная `key` заменена на `pressedKey`, потому что `KEY` теперь является ключевым словом формы `ON KEY`.
+
+Проверки на момент записи:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок;
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false --filter "KeyDown|InKey|OnKey"` проходит;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "KeyDown|InKey|OnKey"` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "KeyDown|InKey|OnKey"` проходит после исправления sample `INKEY()`;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false --filter "KeyDown|KeyboardInputNameMapper|ReadKey|BeginSession_Clears"` проходит.
+
+Решение:
+- `KEYDOWN()` проверяет именно текущее состояние клавиши, а не событие нажатия;
+- сочетания клавиш записываются обычной логикой Axiom, например `KEYDOWN("CTRL") AND KEYDOWN("LEFT")`;
+- форма `KEYPRESSED` оставлена свободной для возможного будущего одноразового события нажатия.
+
+Следующий точный шаг:
+- дописать проектные документы и справочник по `KEYDOWN()`, затем выполнить финальную целевую проверку среза.
+
+Дополнение по завершению:
+- добавлен сброс состояния удержанных клавиш при потере фокуса областью `Output`, чтобы `KEYDOWN()` не оставался истинным после ухода фокуса без доставленного `KeyUp`;
+- добавлены `docs/manual/keydown.html`, ссылка в `docs/manual/data-and-input.html`, навигация `docs/manual/scripts/manual.js` и поисковый индекс `docs/manual/scripts/search-index.js`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`;
+- финальный `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит;
+- финальные адресные проверки `Axiom.Semantics.Tests`, `Axiom.Runtime.Tests`, `Axiom.Execution.Tests` и `Axiom.Ide.Tests` по `KeyDown|InKey|OnKey` проходят.
+
+Итог:
+- считать `KEYDOWN()` закрытым как третий клавиатурный срез после `INKEY()` и `ON KEY`.
+
+Следующий точный шаг:
+- выбрать следующий клавиатурный срез: расширенный событийный договор поверх `ON KEY` либо уточнение набора имён клавиш и дополнительных модификаторов.
+
+## Session 711 - 2026-05-09 15:25 - единая таблица имён клавиш и алиасов
+
+Сделано:
+- добавлен общий список канонических имён клавиш и алиасов в `KeyboardInputNormalizer`;
+- `KEYDOWN()` и `ON KEY` теперь принимают алиасы вроде `CONTROL`, `PAGE UP`, `ESCAPE`, `DEL`, `INS`, а `INKEY()` остаётся источником канонических имён;
+- одиночные печатные символы не превращаются в зарезервированные имена и не конфликтуют с идентификаторами языка;
+- добавлены runtime- и bytecode-проверки алиасов для `KEYDOWN()` и `ON KEY`;
+- добавлен runnable sample `samples/functions/keydown/canonical_aliases.axm`;
+- таблица канонических имён и алиасов размещена в `docs/manual/keydown.html#key-names`, а страницы `INKEY()` и `ON KEY` ссылаются на неё;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNormalizer|KeyDown|OnKey|InKey"` проходит: 28 тестов;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "KeyDown|OnKey|InKey|CanonicalAliases"` проходит: 8 тестов;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNameMapper|KeyDown|ReadKey|ClearKeyState|BeginSession_Clears"` проходит: 29 тестов.
+
+Решение:
+- не объявлять имена клавиш константами языка;
+- держать договор клавиатуры строковым, чтобы `LEFT` и `RIGHT` могли оставаться функциями работы со строками, а клавиши задавались как `"LEFT"` и `"RIGHT"`.
+
+Следующий точный шаг:
+- выполнить целевые проверки клавиатурной ветки и затем выбрать следующий срез: будущий `KEYPRESSED`, расширение `ON KEY` или мышиные события.
+
+## Session 712 - 2026-05-09 16:29 - реализуется функция KEYPRESS()
+
+Сделано:
+- начат следующий клавиатурный срез после `KEYDOWN()` и таблицы имён: одноразовая проверка события нажатия через `KEYPRESS(keyText)`;
+- добавлена встроенная функция `KEYPRESS()` с результатом `BOOLEAN`;
+- интерпретатор и `BytecodeVm` теперь умеют удалить из клавиатурной очереди первое подходящее событие, сохранив неподходящие клавиши в исходном порядке;
+- `KEYPRESS()` принимает канонические имена и алиасы через общий `KeyboardInputNormalizer`;
+- добавлены semantic-, runtime-, bytecode- и execution-проверки;
+- добавлен runnable sample `samples/functions/keypress/single_press.axm`;
+- добавлена страница `docs/manual/keypress.html`, навигация manual, поиск и ссылки из соседних страниц ввода.
+
+Решение:
+- оставить имя `KEYPRESS` как BASIC/VB-похожее и понятное для одноразового события;
+- явно документировать отличие от классического GUI-события Visual Basic: в Axiom функция работает и со специальными клавишами вроде `LEFT`, `ESCAPE`, `PAGE UP`.
+
+Проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок;
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false --filter "KeyPress|KeyDown|InKey|OnKey"` проходит: 8 тестов;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "KeyPress|KeyDown|InKey|OnKey"` проходит: 18 тестов;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "KeyPress|KeyDown|InKey|OnKey"` проходит: 10 тестов;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNameMapper|KeyDown|ReadKey|ClearKeyState|BeginSession_Clears"` проходит: 29 тестов.
+
+Следующий точный шаг:
+- отдельно решить, какой следующий срез `ON KEY` нужен первым: сочетания клавиш, передача события в обработчик, обработчик любой клавиши или режимы включения и паузы.
+
+## Session 713 - 2026-05-09 18:11 - запасной обработчик ON KEY("ANY")
+
+Что сделано:
+- перечитаны обязательные активные документы проекта: `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`;
+- для следующего малого среза `ON KEY` выбран запасной обработчик любой клавиши через строковое псевдоимя `"ANY"`;
+- `KeyboardInputNormalizer` получил общий псевдоним `ANY` и алиасы `ANYKEY`, `ANY KEY`, `ANY-KEY`;
+- интерпретатор и `BytecodeVm` теперь сначала ищут точный обработчик нормализованной клавиши, а затем запасной обработчик `"ANY"`;
+- добавлены runtime-проверки для интерпретатора и VM: обработка любой клавиши и приоритет точного обработчика над `"ANY"`;
+- добавлен runnable sample `samples/operators/on-key/any_key_handler.axm`;
+- добавлен сквозной acceptance-тест `OnKeyAnyAcceptanceSample_RunsOnBytecodeVm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md`, `docs/manual/on-key.html`, `docs/manual/keydown.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`.
+
+Редакционная сверка manual:
+- перед обновлением страницы `ON KEY` использована текущая официальная страница Microsoft Learn по жанру клавиатурного события: `KeyPress event`;
+- страница использовалась только как жанровый ориентир по объяснению клавиатурного события, а не как источник синтаксиса Axiom.
+
+Проверки:
+- первая попытка `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey|KeyboardInputNormalizer"` выявила неверные ожидания тестов для `"ANY"`: диспетчер `ON KEY` по существующей модели обрабатывает все доступные события на границе оператора;
+- после уточнения ожиданий `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey|KeyboardInputNormalizer"` проходит: 26 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "OnKeyAny|OnKey|KeyPress"` проходит: 5 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Решение:
+- `"ANY"` остаётся строковым псевдоименем только для `ON KEY`, а не физической клавишей и не новым ключевым словом;
+- `KEYDOWN("ANY")` и `KEYPRESS("ANY")` не получают специальной семантики в этом срезе;
+- при наличии точного обработчика и `"ANY"` точный обработчик имеет приоритет.
+
+Следующий точный шаг:
+- выбрать следующий отдельный срез `ON KEY`: сочетания клавиш, передача текста клавиши в обработчик или режимы включения и паузы обработчиков.
+
+## Session 714 - 2026-05-09 18:32 - параметр имени клавиши в ON KEY
+
+Что сделано:
+- продолжен следующий малый срез после `ON KEY("ANY")`: обработчик `ON KEY` может принимать один параметр `STRING` с нормализованным именем фактической клавиши;
+- обновлена семантическая проверка: допустимы `SUB Handler()` и `SUB Handler(keyName AS STRING)`, но не `FUNCTION`, не другой тип параметра и не `BYREF`;
+- интерпретатор и `BytecodeVm` теперь хранят регистрацию обработчика вместе с флагом передачи имени клавиши;
+- lowering, компилятор байткода и валидатор модуля передают и проверяют этот флаг для `RegisterKeyHandler`;
+- добавлены проверки binder/runtime/VM и runnable sample `samples/operators/on-key/handler_key_name.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md`, `docs/manual/on-key.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`.
+
+Редакционная сверка manual:
+- перед обновлением страницы `ON KEY` использована текущая официальная страница Microsoft Learn по жанру клавиатурного события: `KeyPress event`;
+- страница использовалась только как жанровый ориентир по объяснению обработчика события и параметра клавиши, а не как источник синтаксиса Axiom.
+
+Проверки:
+- ожидаются после финальной сборки текущего среза.
+
+Следующий точный шаг:
+- выполнить целевые проверки `OnKey` и общую сборку; после успешной проверки отдельно выбирать следующий срез `ON KEY`: сочетания клавиш либо режимы включения и паузы обработчиков.
+
+Дополнение по проверкам:
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey"` проходит: 4 теста;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey|KeyboardInputNormalizer"` проходит: 28 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey|KeyPress"` проходит: 6 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Итог:
+- срез передачи имени клавиши в обработчик `ON KEY` закрыт для интерпретатора, `BytecodeVm`, справочника, sample и проектных документов.
+
+Следующий точный шаг:
+- выбрать следующий отдельный срез `ON KEY`: сочетания клавиш либо режимы включения и паузы обработчиков.
+
+## Session 715 - 2026-05-09 18:54 - модифицированные клавиши без нового синтаксиса сочетаний
+
+Что сделано:
+- после обсуждения решено не вводить строковую форму сочетаний вроде `"CTRL+LEFT"`;
+- комбинации клавиш закреплены как обычное выражение языка: `KEYDOWN("CTRL") AND KEYPRESS("LEFT")`, `KEYDOWN("SHIFT") AND KEYPRESS("A")` и похожие формы;
+- IDE-слой начал доставлять `CTRL`/`ALT`-модифицированные специальные и печатные клавиши в очередь программы;
+- обработка клавиатуры вынесена в общий `ProgramKeyboardInputRouter`, чтобы текущий `Output` и будущий графический `SCREEN` могли использовать один маршрут ввода;
+- клавиша Windows оставлена вне очереди программы;
+- добавлен runnable sample `samples/functions/keypress/modified_keypress.axm`;
+- добавлены проверки `KeyboardInputNameMapper` и `ProgramKeyboardInputRouter`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md`, `docs/manual/keypress.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`.
+
+Редакционная сверка manual:
+- для описания модификаторов использована текущая официальная страница Microsoft Learn `KeyDown, KeyUp events`, где `SHIFT`, `CTRL` и `ALT` описаны как состояние клавиатуры при событии клавиши;
+- страница использовалась только как жанровый ориентир, а договор Axiom взят из текущей реализации `KEYDOWN()` и `KEYPRESS()`.
+
+Проверки:
+- ожидаются после сборки.
+
+Следующий точный шаг:
+- выполнить целевые проверки IDE, execution sample и общую сборку; после этого отдельно выбирать следующий срез `ON KEY`, вероятнее режимы включения и паузы обработчиков.
+
+Дополнение по проверкам:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNameMapper|ProgramKeyboardInputRouter"` проходит: 35 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "ModifiedKeyPress|KeyPress"` проходит: 3 теста;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Итог:
+- модифицированные клавиши доставляются без нового синтаксиса сочетаний: `CTRL`/`ALT` остаются состоянием для `KEYDOWN()`, а основная клавиша попадает в очередь для `KEYPRESS()`, `INKEY()` и `ON KEY`;
+- текущий `Output` подключён через общий маршрутизатор, пригодный для будущей графической поверхности `SCREEN`.
+
+Следующий точный шаг:
+- отдельно проектировать следующий срез `ON KEY`: режимы включения и паузы обработчиков либо будущую привязку графического `SCREEN` к общему маршруту клавиатурного ввода.
+
+## Session 716 - 2026-05-09 19:08 - строковый сахар аккордов клавиш
+
+Что сделано:
+- после уточнения пользовательского договора добавлена короткая строковая форма аккордов клавиш через `+`;
+- `KEYPRESS("CTRL+ALT+DELETE")` означает: `CTRL` и `ALT` удержаны, а последняя клавиша `DELETE` пришла как событие и расходуется;
+- `KEYDOWN("CTRL+ALT+DELETE")` означает: все перечисленные клавиши удержаны прямо сейчас, очередь событий не расходуется;
+- `ON KEY("CTRL+LEFT"), Handler` использует тот же событийный договор, что `KEYPRESS("CTRL+LEFT")`;
+- добавлен общий разбор `KeyboardInputNormalizer.NormalizeChord(...)`;
+- interpreter и `BytecodeVm` переведены на общий разбор аккордов для `KEYDOWN()`, `KEYPRESS()` и `ON KEY`;
+- добавлены runtime-тесты нормализации, interpreter- и VM-проверки аккордов;
+- sample `samples/functions/keypress/modified_keypress.axm` переведён на `KEYPRESS("CTRL+LEFT")`;
+- добавлен runnable sample `samples/operators/on-key/chord_handler.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md`, `docs/manual/keypress.html`, `docs/manual/keydown.html`, `docs/manual/on-key.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`.
+
+Редакционная сверка manual:
+- по-прежнему используется официальная страница Microsoft Learn `KeyDown, KeyUp events` как жанровый ориентир для объяснения модификаторов клавиатуры;
+- дополнительно в manual добавлено простое объяснение договора `KEYPRESS()` и `KEYDOWN()` без привязки к синтаксису Visual Basic.
+
+Проверки:
+- ожидаются после сборки.
+
+Следующий точный шаг:
+- выполнить целевые runtime-, execution-, IDE-проверки и общую сборку.
+
+Дополнение по проверкам:
+- первая попытка `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNormalizer|KeyPress|KeyDown|OnKey"` выявила неверное ожидание теста: одиночные печатные клавиши в Axiom сохраняют регистр, поэтому `"f"` не нормализуется в `"F"`;
+- после уточнения теста `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNormalizer|KeyPress|KeyDown|OnKey"` проходит: 46 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "ModifiedKeyPress|OnKeyChord|KeyPress|OnKey"` проходит: 8 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj -p:UseSharedCompilation=false --filter "KeyboardInputNameMapper|ProgramKeyboardInputRouter"` проходит: 35 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Итог:
+- строковый сахар аккордов клавиш закрыт для `KEYDOWN()`, `KEYPRESS()`, `ON KEY`, interpreter, `BytecodeVm`, IDE-доставки, samples, manual и проектных документов.
+
+Следующий точный шаг:
+- отдельно выбирать следующий срез: режимы включения и паузы обработчиков `ON KEY` либо проектирование будущего подключения `SCREEN` к маршруту ввода программы.
+
+## Session 717 - 2026-05-09 19:29 - режимы ON KEY ON / STOP / OFF
+
+Что сделано:
+- добавлены режимы управления обработчиком `ON KEY`: `ON`, `STOP`, `OFF`;
+- `ON KEY(keyText), HandlerName` регистрирует и включает обработчик;
+- `ON KEY(keyText), STOP` ставит существующую регистрацию на паузу без удаления обработчика;
+- `ON KEY(keyText), ON` возобновляет существующую регистрацию;
+- `ON KEY(keyText), OFF` сохраняет прежний смысл полного снятия регистрации;
+- лексер, parser, syntax и binder распознают `STOP` и режимные формы `ON KEY`;
+- interpreter и `BytecodeVm` хранят флаг активности обработчика и пропускают обработчики на паузе;
+- lowering, compiler и validator получили инструкции `PauseKeyHandler` и `ResumeKeyHandler`;
+- добавлен runnable sample `samples/operators/on-key/stop_resume_handler.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md`, `docs/manual/on-key.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`.
+
+Редакционная сверка manual:
+- для именования режимов учтена BASIC-линия `ON` / `OFF` / `STOP` для управления обработчиками;
+- ближайшие текущие страницы Microsoft Learn по жанру событий и включения/отключения обработчиков использованы только как редакционный ориентир, без переноса синтаксиса Visual Basic в Axiom.
+
+Проверки:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey"` проходит: 4 теста;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey"` проходит: 7 тестов;
+- первая попытка runtime-проверки выявила, что тестовая очередь отдавала клавишу до выполнения `STOP`; тест уточнён пустыми чтениями перед реальным нажатием;
+- после уточнения `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj -p:UseSharedCompilation=false --filter "OnKey|KeyboardInputNormalizer"` проходит: 34 теста.
+
+Следующий точный шаг:
+- выполнить execution-проверку sample и общую сборку.
+
+Дополнение по проверкам:
+- первая попытка `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "OnKeyStopResume|OnKey"` выявила, что acceptance provider отдавал тестовую клавишу до выполнения `STOP` из-за начального `PRINT`; тест уточнён дополнительным пустым чтением;
+- после уточнения `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj -p:UseSharedCompilation=false --filter "OnKeyStopResume|OnKey"` проходит: 6 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Итог:
+- режимы `ON KEY(...), ON`, `ON KEY(...), STOP` и прежний `ON KEY(...), OFF` закрыты для parser, binder, interpreter, `BytecodeVm`, sample, manual и проектных документов.
+
+Следующий точный шаг:
+- отдельно выбирать следующий срез: будущая клавиатурная интеграция `SCREEN`, низкоуровневые клавиши вроде `WIN` или переход к другой теме языка.
+
+## Session 718 - 2026-05-09 21:50 - первый опросный срез мыши
+
+Что сделано:
+- добавлен host-контракт `IMouseInputProvider` и протянут через `IRuntimeHost`, `NullRuntimeHost`, `ExecutionRuntimeHostAdapter`, `IdeInputProvider` и `IProgramConsoleService`;
+- `ProgramConsoleService` начал хранить текущее положение указателя и состояние кнопок мыши;
+- добавлен `ProgramMouseInputRouter`, а `MainWindow.xaml` / `MainWindow.xaml.cs` подключены к мышиным событиям `OutputTextBox` без поломки существующего поведения правой кнопки;
+- в язык добавлены встроенные функции `MOUSEX()`, `MOUSEY()` и `MOUSEBUTTON(buttonNumber)` для interpreter и `BytecodeVm`;
+- обновлена подсветка синтаксиса IDE для `KEY`, `ON`, `OFF`, `STOP`, `INKEY`, `KEYDOWN`, `KEYPRESS`, `MOUSEX`, `MOUSEY`, `MOUSEBUTTON`;
+- добавлены runnable samples `samples/functions/mousex/current_position.axm`, `samples/functions/mousey/current_position.axm`, `samples/functions/mousebutton/button_states.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/PLANS3.md`, `docs/manual/data-and-input.html`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js` и добавлены страницы manual `docs/manual/mousex.html`, `docs/manual/mousey.html`, `docs/manual/mousebutton.html`.
+
+Проверки:
+- `dotnet restore Axiom.sln` проходит;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore` проходит: 307 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore` проходит: 618 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "Mouse|Run_WithBytecodeMode_UsesBytecodeVmForMouseFunctions|Run_MouseFunctionsWithoutMouseProviderReturnDefaults"` проходит: 4 теста;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` проходит: 337 тестов;
+- полный `tests\Axiom.Execution.Tests` уже имел отдельный внешний сбой в `samples/smoke/engine-compare/file_management_roundtrip.axm` из-за отказа файловой системы в доступе к каталогу `.artifacts\manual-checks\file-management-roundtrip\copy_32`; этот сбой не связан с мышиным срезом.
+
+Следующий точный шаг:
+- отдельно решить следующий срез управления вводом: проектирование будущей поверхности `SCREEN` и её договора координат либо отдельную событийную ветку мыши поверх уже добавленного состояния.
+
+## Session 719 - 2026-05-09 22:09 - MOUSEPRESS и очередь нажатий мыши
+
+Что сделано:
+- добавлен host-договор очереди mouse-событий через `IMouseInputProvider.ReadMouseButtonPress()` и он протянут через `NullRuntimeHost`, `ExecutionRuntimeHostAdapter`, `IdeInputProvider` и `IProgramConsoleService`;
+- `ProgramConsoleService` начал хранить отдельную очередь нажатий кнопок мыши, а `ProgramMouseInputRouter` теперь на `PreviewMouseDown` не только обновляет удержание, но и кладёт номер кнопки в очередь;
+- в язык добавлена встроенная функция `MOUSEPRESS(buttonNumber)` для interpreter, `BytecodeVm` и bytecode-dispatch;
+- список поддерживаемых VM built-in в `AxiomExecutionPipeline` синхронизирован с фактической поддержкой клавиатурно-мышиных функций;
+- обновлена подсветка синтаксиса IDE для `MOUSEPRESS`;
+- добавлены runnable sample `samples/functions/mousepress/button_presses.axm` и manual-страница `docs/manual/mousepress.html`, а также обновлены `docs/manual/data-and-input.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`.
+
+Проверки:
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "Mouse"` проходит: 6 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "Mouse"` проходит: 8 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "Mouse"` проходит: 6 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Mouse|ProgramConsoleService|ProgramKeyboardInputRouter"` проходит: 23 теста;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Итог:
+- ветка управления мышью получила симметрию с клавиатурой: `MOUSEBUTTON()` даёт состояние, а `MOUSEPRESS()` даёт одноразовое событие нажатия;
+- договор по-прежнему остаётся узким и опросным, без раннего ввода `ON MOUSE` и без привязки к ещё не спроектированному `SCREEN`.
+
+Следующий точный шаг:
+- отдельно выбрать следующий мышиный или экранный срез: `ON MOUSE`, договор координат/поверхностей для будущего `SCREEN` либо колесо мыши.
+
+## Session 720 - 2026-05-09 23:08 - обработчик ON MOUSE
+
+Что сделано:
+- продолжен следующий срез после `MOUSEPRESS()`: добавлен оператор `ON MOUSE(buttonNumber), ...`;
+- parser, syntax и binder поддерживают формы регистрации, паузы, возобновления и снятия обработчика мыши;
+- допустимые обработчики: `SUB Handler()` и `SUB Handler(button AS INTEGER, x AS LONG, y AS LONG)`;
+- interpreter и `BytecodeVm` вызывают обработчик на границах операторов, расходуют совпавшее событие мыши и оставляют событие доступным для `MOUSEPRESS()`, если обработчик отсутствует или стоит на паузе;
+- lowering, bytecode compiler и validator получили инструкции `RegisterMouseHandler`, `UnregisterMouseHandler`, `PauseMouseHandler` и `ResumeMouseHandler`;
+- добавлен runnable sample `samples/operators/on-mouse/left_button_handler.axm`;
+- добавлена страница manual `docs/manual/on-mouse.html`, обновлены навигация manual и поисковый индекс;
+- обновлены `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md`.
+
+Редакционная сверка manual:
+- для страницы `ON MOUSE` использована текущая официальная страница Microsoft Learn `MouseDown, MouseUp events` как жанровый ориентир по объяснению мышиного события, номера кнопки и координат;
+- страница использовалась только как редакционный ориентир, а синтаксис и семантика Axiom взяты из текущей спецификации и реализации.
+
+Проверки:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore --filter "OnMouse"` проходит: 4 теста;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 12 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 14 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 8 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Mouse|ProgramConsoleService|ProgramMouseInputRouter"` проходит: 18 тестов;
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Итог:
+- первый событийный оператор мыши закрыт для interpreter, `BytecodeVm`, IDE-доставки ввода, manual, sample и проектных документов.
+
+Следующий точный шаг:
+- отдельно выбрать следующий срез: договор координат и активной поверхности для будущего `SCREEN`, колесо мыши либо более широкий `ON MOUSE` для отпускания кнопки и перемещения.
+
+## Session 721 - 2026-05-09 23:33 - ON MOUSE для отпускания и перемещения
+
+Что сделано:
+- расширен оператор `ON MOUSE` на события отпускания кнопки и перемещения указателя;
+- добавлены формы `ON MOUSE(buttonNumber, "UP"), HandlerName` и `ON MOUSE("MOVE"), HandlerName`, а также режимы `ON`, `STOP` и `OFF` для тех же целей;
+- `IMouseInputProvider` получил общий `ReadMouseEvent()` поверх `MouseInputEventKind.Press`, `Release` и `Move`, а `ReadMouseButtonPress()` сохранён для совместимости и `MOUSEPRESS()`;
+- `ProgramConsoleService` и `ProgramMouseInputRouter` переведены на единую очередь mouse-событий;
+- interpreter и `BytecodeVm` теперь хранят обработчики `ON MOUSE` по составному ключу события и кнопки;
+- lowering, bytecode compiler и validator передают и проверяют вид mouse-события в инструкциях обработчика;
+- добавлен runnable sample `samples/operators/on-mouse/release_move_handler.axm`;
+- обновлены `docs/manual/on-mouse.html`, `docs/manual/data-and-input.html`, `docs/manual/scripts/search-index.js`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md`.
+
+Редакционная сверка manual:
+- для страницы `ON MOUSE` сохранён жанровый ориентир Microsoft Learn `MouseDown, MouseUp events`: он использован только для стиля объяснения mouse-событий, кнопки и координат, без переноса синтаксиса Visual Basic в Axiom.
+
+Проверки:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore --filter "OnMouse"` проходит: 6 тестов;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 14 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 17 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "BytecodeVmTests.Execute_OnMouse|BytecodeVmTests.Execute_Mouse"` проходит: 8 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Mouse|ProgramConsoleService|ProgramMouseInputRouter"` проходит: 19 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 9 тестов.
+
+Итог:
+- минимальный событийный договор мыши теперь покрывает нажатие, отпускание и перемещение в interpreter, `BytecodeVm`, IDE-доставке, manual и runnable samples.
+
+Следующий точный шаг:
+- отдельно выбрать следующий срез: договор координат и фокуса будущего `SCREEN` либо колесо мыши.
+
+Дополнение по проверкам:
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+## Session 722 - 2026-05-09 23:45 - исправление запуска IDE после сбоя ресурса иконки
+
+Что сделано:
+- разобран сбой запуска IDE из журнала с причиной `System.IO.IOException: Не удается найти ресурс "assets/axiom.ico"`;
+- проверено, что файл `src/Axiom.Ide/Assets/axiom.ico` есть в рабочей копии и включён в `src/Axiom.Ide/Axiom.Ide.csproj` как WPF `Resource`;
+- в `src/Axiom.Ide/MainWindow.xaml` ссылка `Icon` переведена с относительной формы `Assets/axiom.ico` на явную форму `/Axiom.Ide;component/Assets/axiom.ico`;
+- это выровняло главное окно с уже существующей формой ссылки в `InformationDialog.xaml` и убрало хрупкое относительное разрешение ресурса при создании `MainWindow`.
+
+Проверки:
+- `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок;
+- `dotnet run --project src\Axiom.Ide.SmokeHarness\Axiom.Ide.SmokeHarness.csproj --no-restore -- --event-log-only` создаёт окно IDE и больше не падает на ресурсе `axiom.ico`, но затем завершается ошибкой поиска `ViewLanguageEnglishMenuItem`;
+- короткий прямой запуск `.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Axiom.Ide.exe` подтверждает, что процесс стартует и остаётся живым через 5 секунд после запуска.
+
+Итог:
+- причина пользовательского сбоя запуска IDE закрыта;
+- оставшийся сбой smoke harness относится к отдельному сценарию меню и не блокирует запуск окна.
+
+Следующий точный шаг:
+- после проверки пользователем продолжить следующий продуктовый срез: договор координат и фокуса будущего `SCREEN` либо колесо мыши.
+
+## Session 723 - 2026-05-09 23:52 - ручные ON MOUSE samples с завершением через ESC
+
+Что сделано:
+- уточнён ручной сценарий проверки `ON MOUSE`: фиксированный цикл ожидания заменён на явное завершение клавишей `ESC`;
+- `samples/operators/on-mouse/left_button_handler.axm` теперь ждёт в `DO WHILE NOT KEYPRESS("ESC")`, чтобы пользователь успел нажать левую кнопку мыши над `Output`;
+- `samples/operators/on-mouse/release_move_handler.axm` использует тот же договор для проверки `MOVE` и `UP`;
+- acceptance-тесты `OnMouseAcceptanceSample_RunsOnBytecodeVm` и `OnMouseReleaseMoveAcceptanceSample_RunsOnBytecodeVm` обновлены и подают `ESC` через тестовый provider.
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouseAcceptanceSample|OnMouseReleaseMoveAcceptanceSample"` проходит: 2 теста.
+
+Итог:
+- интерактивные mouse-примеры больше не завершаются мгновенно и подходят для ручной проверки в `Axiom.Ide`.
+
+Следующий точный шаг:
+- выполнить общую сборку и затем вернуться к следующему продуктовому срезу: договор координат и фокуса будущего `SCREEN` либо колесо мыши.
+
+## Session 724 - 2026-05-10 07:21 - ON MOUSE для колеса мыши
+
+Что сделано:
+- после обязательного чтения `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` продолжен следующий малый срез мышиного ввода;
+- добавлено событие `Wheel` в общий `MouseInputEventKind`;
+- `ON MOUSE("WHEEL"), HandlerName` и режимы `ON` / `STOP` / `OFF` теперь проходят через parser, binder, interpreter, `BytecodeVm`, lowering и bytecode-валидацию;
+- IDE доставляет `PreviewMouseWheel` из текущей поверхности `Output` в `ProgramConsoleService` как mouse-событие с величиной прокрутки;
+- обработчик с параметрами получает `delta AS INTEGER`, `x AS LONG`, `y AS LONG`; положительный `delta` означает прокрутку вверх, отрицательный - вниз;
+- `MOUSEPRESS()` не расширялся и по-прежнему читает только события нажатия кнопки;
+- добавлен runnable sample `samples/operators/on-mouse/wheel_handler.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/BYTECODE_COVERAGE.md`, `docs/manual/on-mouse.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`.
+
+Редакционная сверка manual:
+- для среза колеса мыши использована текущая официальная страница Microsoft Learn `Control.MouseWheel Event` как ближайший жанровый ориентир по объяснению события колеса и величины прокрутки;
+- страница использовалась только как редакционный ориентир, а синтаксис и семантика Axiom взяты из текущей спецификации и реализации.
+
+Проверки:
+- `dotnet build Axiom.sln --no-restore` перед началом кодового среза прошёл без предупреждений и ошибок;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore --filter "OnMouse"` проходит: 7 тестов;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 15 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 19 тестов;
+- первая попытка execution-проверки упёрлась в зависший `testhost`, который держал DLL; процесс освобождён, после этого `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "OnMouse|Mouse"` проходит: 11 тестов;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "Mouse|ProgramConsoleService|ProgramMouseInputRouter"` проходит: 20 тестов;
+- итоговый `dotnet build Axiom.sln --no-restore` проходит без предупреждений и ошибок.
+
+Итог:
+- мышиный событийный договор теперь покрывает нажатие, отпускание, перемещение и колесо мыши в interpreter, `BytecodeVm`, IDE-доставке, sample, manual и проектных документах.
+
+Следующий точный шаг:
+- отдельно проектировать будущий `SCREEN`: договор координат, фокуса и активной поверхности, подключённой к уже существующему маршруту ввода.

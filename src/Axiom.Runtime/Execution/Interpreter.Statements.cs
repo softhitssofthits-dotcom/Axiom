@@ -10,6 +10,8 @@ public sealed partial class Interpreter
     {
         foreach (var statement in statements)
         {
+            DispatchKeyboardHandlers(statement.Location);
+            DispatchMouseHandlers(statement.Location);
             var signal = ExecuteStatement(statement);
 
             if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
@@ -33,6 +35,8 @@ public sealed partial class Interpreter
             BoundPrintStatement print => ExecutePrint(print),
             BoundPrintUsingStatement printUsing => ExecutePrintUsing(printUsing),
             BoundInputStatement input => ExecuteInput(input),
+            BoundOnKeyStatement onKey => ExecuteOnKey(onKey),
+            BoundOnMouseStatement onMouse => ExecuteOnMouse(onMouse),
             BoundOpenStatement open => ExecuteOpen(open),
             BoundCloseStatement close => ExecuteClose(close),
             BoundErrorStatement error => ExecuteError(error),
@@ -306,6 +310,83 @@ public sealed partial class Interpreter
 
         return ExecutionSignal.None;
     }
+
+    private ExecutionSignal ExecuteOnKey(BoundOnKeyStatement statement)
+    {
+        var keyText = EvaluateExpression(statement.KeyExpression).AsString();
+
+        if (statement.DisablesHandler)
+        {
+            UnregisterKeyboardHandler(keyText);
+            return ExecutionSignal.None;
+        }
+
+        if (statement.PausesHandler)
+        {
+            PauseKeyboardHandler(keyText);
+            return ExecutionSignal.None;
+        }
+
+        if (statement.ResumesHandler)
+        {
+            ResumeKeyboardHandler(keyText);
+            return ExecutionSignal.None;
+        }
+
+        var handler = EvaluateExpression(statement.HandlerExpression!).AsFunction();
+        if (handler is null)
+        {
+            return ReportInvalidRuntimeState<ExecutionSignal>(
+                "ON KEY ожидает корректное значение процедуры-обработчика.",
+                statement.Location);
+        }
+
+        RegisterKeyboardHandler(keyText, handler, statement.HandlerReceivesKeyText);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteOnMouse(BoundOnMouseStatement statement)
+    {
+        var buttonNumber = EvaluateExpression(statement.ButtonExpression).AsInteger();
+        var eventKind = ToMouseInputEventKind(statement.EventKind);
+
+        if (statement.DisablesHandler)
+        {
+            UnregisterMouseHandler(buttonNumber, eventKind);
+            return ExecutionSignal.None;
+        }
+
+        if (statement.PausesHandler)
+        {
+            PauseMouseHandler(buttonNumber, eventKind);
+            return ExecutionSignal.None;
+        }
+
+        if (statement.ResumesHandler)
+        {
+            ResumeMouseHandler(buttonNumber, eventKind);
+            return ExecutionSignal.None;
+        }
+
+        var handler = EvaluateExpression(statement.HandlerExpression!).AsFunction();
+        if (handler is null)
+        {
+            return ReportInvalidRuntimeState<ExecutionSignal>(
+                "ON MOUSE ожидает корректное значение процедуры-обработчика.",
+                statement.Location);
+        }
+
+        RegisterMouseHandler(buttonNumber, eventKind, handler, statement.HandlerReceivesEvent);
+        return ExecutionSignal.None;
+    }
+
+    private static MouseInputEventKind ToMouseInputEventKind(BoundMouseEventKind eventKind) => eventKind switch
+    {
+        BoundMouseEventKind.Release => MouseInputEventKind.Release,
+        BoundMouseEventKind.Move => MouseInputEventKind.Move,
+        BoundMouseEventKind.Wheel => MouseInputEventKind.Wheel,
+        _ => MouseInputEventKind.Press
+    };
 
     private ExecutionSignal ExecuteError(BoundErrorStatement statement)
     {

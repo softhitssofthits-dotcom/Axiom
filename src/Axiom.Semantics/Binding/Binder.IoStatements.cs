@@ -49,6 +49,181 @@ public sealed partial class Binder
         return new BoundInputStatement(GetLocation(statement), variables, promptText);
     }
 
+    private BoundStatement BindOnKeyStatement(OnKeyStatementSyntax statement)
+    {
+        var keyExpression = BindExpression(statement.KeyExpression, TypeSymbol.String);
+
+        if (statement.DisablesHandler)
+        {
+            return new BoundOnKeyStatement(GetLocation(statement), keyExpression, handlerExpression: null, BoundOnKeyActionKind.Unregister);
+        }
+
+        if (statement.PausesHandler)
+        {
+            return new BoundOnKeyStatement(GetLocation(statement), keyExpression, handlerExpression: null, BoundOnKeyActionKind.Pause);
+        }
+
+        if (statement.ResumesHandler)
+        {
+            return new BoundOnKeyStatement(GetLocation(statement), keyExpression, handlerExpression: null, BoundOnKeyActionKind.Resume);
+        }
+
+        if (_scope.TryLookupFunction(statement.ActionToken.Text, out var function) && function is not null)
+        {
+            var handlerReceivesKeyText = FunctionAcceptsOnKeyEvent(function);
+            if (!function.IsSub || !handlerReceivesKeyText.HasValue)
+            {
+                ReportInvalidOnKeyHandler(statement.ActionToken.Text, statement.ActionToken.Location);
+                return new BoundOnKeyStatement(GetLocation(statement), keyExpression, handlerExpression: null, BoundOnKeyActionKind.Unregister);
+            }
+
+            return new BoundOnKeyStatement(
+                GetLocation(statement),
+                keyExpression,
+                new BoundFunctionExpression(statement.ActionToken.Location, function),
+                BoundOnKeyActionKind.Register,
+                handlerReceivesKeyText.Value);
+        }
+
+        ReportUnknownCallable(statement.ActionToken.Text, statement.ActionToken.Location);
+        return new BoundOnKeyStatement(GetLocation(statement), keyExpression, handlerExpression: null, BoundOnKeyActionKind.Unregister);
+    }
+
+    private static bool? FunctionAcceptsOnKeyEvent(FunctionSymbol function)
+    {
+        if (function.Parameters.Count == 0)
+        {
+            return false;
+        }
+
+        if (function.Parameters.Count == 1
+            && function.Parameters[0].Type == TypeSymbol.String
+            && !function.Parameters[0].IsByRef)
+        {
+            return true;
+        }
+
+        return null;
+    }
+
+    private BoundStatement BindOnMouseStatement(OnMouseStatementSyntax statement)
+    {
+        var (buttonExpression, eventKind) = BindOnMouseTarget(statement);
+
+        if (statement.DisablesHandler)
+        {
+            return new BoundOnMouseStatement(GetLocation(statement), buttonExpression, eventKind, handlerExpression: null, BoundOnMouseActionKind.Unregister);
+        }
+
+        if (statement.PausesHandler)
+        {
+            return new BoundOnMouseStatement(GetLocation(statement), buttonExpression, eventKind, handlerExpression: null, BoundOnMouseActionKind.Pause);
+        }
+
+        if (statement.ResumesHandler)
+        {
+            return new BoundOnMouseStatement(GetLocation(statement), buttonExpression, eventKind, handlerExpression: null, BoundOnMouseActionKind.Resume);
+        }
+
+        if (_scope.TryLookupFunction(statement.ActionToken.Text, out var function) && function is not null)
+        {
+            var handlerReceivesEvent = FunctionAcceptsOnMouseEvent(function);
+            if (!function.IsSub || !handlerReceivesEvent.HasValue)
+            {
+                ReportInvalidOnMouseHandler(statement.ActionToken.Text, statement.ActionToken.Location);
+                return new BoundOnMouseStatement(GetLocation(statement), buttonExpression, eventKind, handlerExpression: null, BoundOnMouseActionKind.Unregister);
+            }
+
+            return new BoundOnMouseStatement(
+                GetLocation(statement),
+                buttonExpression,
+                eventKind,
+                new BoundFunctionExpression(statement.ActionToken.Location, function),
+                BoundOnMouseActionKind.Register,
+                handlerReceivesEvent.Value);
+        }
+
+        ReportUnknownCallable(statement.ActionToken.Text, statement.ActionToken.Location);
+        return new BoundOnMouseStatement(GetLocation(statement), buttonExpression, eventKind, handlerExpression: null, BoundOnMouseActionKind.Unregister);
+    }
+
+    private (BoundExpression ButtonExpression, BoundMouseEventKind EventKind) BindOnMouseTarget(OnMouseStatementSyntax statement)
+    {
+        if (statement.EventExpression is null && TryGetStringLiteral(statement.ButtonExpression, out var singleEventName))
+        {
+            if (TryParseMouseEvent(singleEventName, out var singleEventKind)
+                && singleEventKind is BoundMouseEventKind.Move or BoundMouseEventKind.Wheel)
+            {
+                return (new BoundLiteralExpression(GetLocation(statement.ButtonExpression), 0, TypeSymbol.Integer), singleEventKind);
+            }
+
+            ReportInvalidOnMouseEvent(GetLocation(statement.ButtonExpression));
+            return (new BoundLiteralExpression(GetLocation(statement.ButtonExpression), 0, TypeSymbol.Integer), BoundMouseEventKind.Press);
+        }
+
+        var buttonExpression = BindExpression(statement.ButtonExpression, TypeSymbol.Integer);
+        var eventKind = BoundMouseEventKind.Press;
+
+        if (statement.EventExpression is not null)
+        {
+            if (!TryGetStringLiteral(statement.EventExpression, out var eventName)
+                || !TryParseMouseEvent(eventName, out eventKind)
+                || eventKind is BoundMouseEventKind.Move or BoundMouseEventKind.Wheel)
+            {
+                ReportInvalidOnMouseEvent(GetLocation(statement.EventExpression));
+                eventKind = BoundMouseEventKind.Press;
+            }
+        }
+
+        return (buttonExpression, eventKind);
+    }
+
+    private static bool TryGetStringLiteral(ExpressionSyntax expression, out string value)
+    {
+        if (expression is LiteralExpressionSyntax { LiteralToken.Value: string literalValue })
+        {
+            value = literalValue;
+            return true;
+        }
+
+        value = string.Empty;
+        return false;
+    }
+
+    private static bool TryParseMouseEvent(string text, out BoundMouseEventKind eventKind)
+    {
+        var normalized = text.Trim().Replace(" ", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal).ToUpperInvariant();
+        eventKind = normalized switch
+        {
+            "DOWN" or "PRESS" or "PRESSED" => BoundMouseEventKind.Press,
+            "UP" or "RELEASE" or "RELEASED" => BoundMouseEventKind.Release,
+            "MOVE" or "MOVED" or "MOUSEMOVE" => BoundMouseEventKind.Move,
+            "WHEEL" or "MOUSEWHEEL" or "SCROLL" or "SCROLLED" => BoundMouseEventKind.Wheel,
+            _ => BoundMouseEventKind.Press
+        };
+
+        return normalized is "DOWN" or "PRESS" or "PRESSED" or "UP" or "RELEASE" or "RELEASED" or "MOVE" or "MOVED" or "MOUSEMOVE" or "WHEEL" or "MOUSEWHEEL" or "SCROLL" or "SCROLLED";
+    }
+
+    private static bool? FunctionAcceptsOnMouseEvent(FunctionSymbol function)
+    {
+        if (function.Parameters.Count == 0)
+        {
+            return false;
+        }
+
+        if (function.Parameters.Count == 3
+            && function.Parameters[0].Type == TypeSymbol.Integer
+            && function.Parameters[1].Type == TypeSymbol.Long
+            && function.Parameters[2].Type == TypeSymbol.Long
+            && function.Parameters.All(static parameter => !parameter.IsByRef))
+        {
+            return true;
+        }
+
+        return null;
+    }
+
     private BoundStatement BindOpenStatement(OpenStatementSyntax statement)
     {
         var pathExpression = BindExpression(statement.PathExpression, TypeSymbol.String);

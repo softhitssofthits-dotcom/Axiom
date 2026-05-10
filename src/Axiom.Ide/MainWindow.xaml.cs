@@ -809,6 +809,13 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (ReferenceEquals(sender, OutputTextBox) &&
+            _consoleService is not null &&
+            _viewModel?.StatusBar.IsRunning == true)
+        {
+            ProgramMouseInputRouter.HandlePreviewMouseDown(_consoleService, e.GetPosition(OutputTextBox), e.ChangedButton);
+        }
+
         if (!ReferenceEquals(sender, OutputTextBox) || OutputTextBox.SelectionLength <= 0)
         {
             _preserveOutputSelectionOnRightClick = false;
@@ -824,6 +831,13 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
+        if (ReferenceEquals(sender, OutputTextBox) &&
+            _consoleService is not null &&
+            _viewModel?.StatusBar.IsRunning == true)
+        {
+            ProgramMouseInputRouter.HandlePreviewMouseUp(_consoleService, e.GetPosition(OutputTextBox), e.ChangedButton);
+        }
+
         if (!ReferenceEquals(sender, OutputTextBox) ||
             !_preserveOutputSelectionOnRightClick ||
             _outputSelectionLength <= 0)
@@ -832,6 +846,112 @@ public partial class MainWindow : Window
         }
 
         OutputTextBox.Select(_outputSelectionStart, _outputSelectionLength);
+    }
+
+    private void OnOutputTextBoxPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null ||
+            _viewModel?.StatusBar.IsRunning != true)
+        {
+            return;
+        }
+
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        e.Handled = ProgramKeyboardInputRouter.HandlePreviewKeyDown(_consoleService, key, Keyboard.Modifiers);
+    }
+
+    private void OnOutputTextBoxPreviewKeyUp(object sender, KeyEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null)
+        {
+            return;
+        }
+
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        ProgramKeyboardInputRouter.HandlePreviewKeyUp(_consoleService, key);
+    }
+
+    private void OnOutputTextBoxLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (ReferenceEquals(sender, OutputTextBox))
+        {
+            _consoleService?.ClearKeyState();
+        }
+    }
+
+    private void OnOutputTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null ||
+            _viewModel?.StatusBar.IsRunning != true ||
+            string.IsNullOrEmpty(e.Text))
+        {
+            return;
+        }
+
+        e.Handled = ProgramKeyboardInputRouter.HandlePreviewTextInput(_consoleService, e.Text, Keyboard.Modifiers);
+    }
+
+    private void OnOutputTextBoxPreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null ||
+            _viewModel?.StatusBar.IsRunning != true)
+        {
+            return;
+        }
+
+        ProgramMouseInputRouter.HandlePreviewMouseMove(_consoleService, e.GetPosition(OutputTextBox));
+    }
+
+    private void OnOutputTextBoxPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null ||
+            _viewModel?.StatusBar.IsRunning != true ||
+            e.ChangedButton == MouseButton.Right)
+        {
+            return;
+        }
+
+        ProgramMouseInputRouter.HandlePreviewMouseDown(_consoleService, e.GetPosition(OutputTextBox), e.ChangedButton);
+    }
+
+    private void OnOutputTextBoxPreviewMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null ||
+            _viewModel?.StatusBar.IsRunning != true ||
+            e.ChangedButton == MouseButton.Right)
+        {
+            return;
+        }
+
+        ProgramMouseInputRouter.HandlePreviewMouseUp(_consoleService, e.GetPosition(OutputTextBox), e.ChangedButton);
+    }
+
+    private void OnOutputTextBoxPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) ||
+            _consoleService is null ||
+            _viewModel?.StatusBar.IsRunning != true)
+        {
+            return;
+        }
+
+        ProgramMouseInputRouter.HandlePreviewMouseWheel(_consoleService, e.GetPosition(OutputTextBox), e.Delta);
+    }
+
+    private void OnOutputTextBoxMouseLeave(object sender, MouseEventArgs e)
+    {
+        if (!ReferenceEquals(sender, OutputTextBox) || _consoleService is null)
+        {
+            return;
+        }
+
+        ProgramMouseInputRouter.HandleMouseLeave(_consoleService);
     }
 
     private void OnOutputTextBoxContextMenuOpening(object sender, ContextMenuEventArgs e)

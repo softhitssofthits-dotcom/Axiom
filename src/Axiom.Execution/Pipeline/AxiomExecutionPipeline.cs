@@ -66,6 +66,13 @@ public sealed class AxiomExecutionPipeline
         BuiltinFunctionId.RegexReplaceModesCount,
         BuiltinFunctionId.RegexCount,
         BuiltinFunctionId.RegexCountModes,
+        BuiltinFunctionId.InKey,
+        BuiltinFunctionId.KeyDown,
+        BuiltinFunctionId.KeyPress,
+        BuiltinFunctionId.MouseX,
+        BuiltinFunctionId.MouseY,
+        BuiltinFunctionId.MouseButton,
+        BuiltinFunctionId.MousePress,
         BuiltinFunctionId.Int,
         BuiltinFunctionId.Str,
         BuiltinFunctionId.Val,
@@ -1187,3 +1194,4 @@ public sealed class AxiomExecutionPipeline
             pendingOutput);
     }
 }
+

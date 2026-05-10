@@ -16,7 +16,7 @@
         Height="800"
         MinWidth="900"
         MinHeight="600"
-        Icon="Assets/axiom.ico"
+        Icon="/Axiom.Ide;component/Assets/axiom.ico"
         AutomationProperties.AutomationId="MainWindow"
         Background="{DynamicResource WindowBackgroundBrush}">
 
@@ -1508,10 +1508,19 @@
 
                         <TextBox x:Name="OutputTextBox"
                                  Grid.Row="0"
-                                 Text="{Binding BottomPane.OutputText, Mode=OneWay}"
+                                 Text="{Binding InputConsole.OutputText, Mode=OneWay}"
                                  AutomationProperties.AutomationId="OutputTextBox"
                                  Style="{StaticResource OutputTextBoxStyle}"
                                  ContextMenuOpening="OnOutputTextBoxContextMenuOpening"
+                                 PreviewKeyDown="OnOutputTextBoxPreviewKeyDown"
+                                 PreviewKeyUp="OnOutputTextBoxPreviewKeyUp"
+                                 LostKeyboardFocus="OnOutputTextBoxLostKeyboardFocus"
+                                 PreviewTextInput="OnOutputTextBoxPreviewTextInput"
+                                 PreviewMouseMove="OnOutputTextBoxPreviewMouseMove"
+                                 PreviewMouseDown="OnOutputTextBoxPreviewMouseDown"
+                                 PreviewMouseUp="OnOutputTextBoxPreviewMouseUp"
+                                 PreviewMouseWheel="OnOutputTextBoxPreviewMouseWheel"
+                                 MouseLeave="OnOutputTextBoxMouseLeave"
                                  PreviewMouseRightButtonDown="OnOutputTextBoxPreviewMouseRightButtonDown"
                                  PreviewMouseRightButtonUp="OnOutputTextBoxPreviewMouseRightButtonUp">
                             <TextBox.ContextMenu>

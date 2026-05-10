@@ -1294,6 +1294,450 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void InKeyAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/inkey/poll_keys.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("LEFT"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Щёлкните по панели вывода и нажмите LEFT.",
+                "LEFT"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnKeyAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-key/left_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Щёлкните по панели вывода, нажмите LEFT, затем нажмите ESC.",
+                "обработчик LEFT",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnKeyAnyAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-key/any_key_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("RIGHT", "ESC"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Нажмите любую клавишу, затем нажмите ESC.",
+                "любая клавиша",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnKeyHandlerKeyNameAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-key/handler_key_name.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Нажмите любую клавишу, затем нажмите ESC.",
+                "LEFT",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnKeyChordAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-key/chord_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: ["LEFT", "ESC"], pressedKeys: ["CTRL", "LEFT"]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Удерживайте CTRL, нажмите LEFT, затем нажмите ESC.",
+                "CTRL+LEFT",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnKeyStopResumeAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-key/stop_resume_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "LEFT", "ESC"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Нажмите LEFT на паузе, затем LEFT после возобновления, затем ESC.",
+                "LEFT",
+                "обработчик LEFT",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void KeyDownAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/keydown/held_modifiers.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "LEFT"]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Удерживайте CTRL+LEFT.",
+                "CTRL+LEFT",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void KeyDownCanonicalAliasesAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/keydown/canonical_aliases.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "PAGEUP"]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Удерживайте CTRL+PAGEUP.",
+                "CONTROL+PAGE UP",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void KeyPressAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/keypress/single_press.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("LEFT"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Нажмите LEFT один раз.",
+                "LEFT нажата",
+                "FALSE",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void ModifiedKeyPressAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/keypress/modified_keypress.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: ["LEFT"], pressedKeys: ["CTRL", "LEFT"]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Удерживайте CTRL и нажмите LEFT.",
+                "CTRL+LEFT",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void MouseCoordinatesAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/mousex/current_position.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Переместите указатель над выводом программы перед запуском.",
+                "320",
+                "240",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void MouseButtonAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/mousebutton/button_states.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1, 3]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Удерживайте левую и среднюю кнопки мыши перед запуском.",
+                "TRUE",
+                "FALSE",
+                "TRUE",
+                "FALSE",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void MousePressAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/mousepress/button_presses.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Нажмите левую кнопку один раз и среднюю кнопку один раз до завершения программы.",
+                "TRUE",
+                "FALSE",
+                "TRUE",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnMouseAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/left_button_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Нажмите левую кнопку мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC.",
+                "мышь",
+                "1",
+                "320",
+                "240",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnMouseReleaseMoveAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/release_move_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(
+                keys: ["ESC"],
+                pressedKeys: [],
+                mouseX: 320,
+                mouseY: 240,
+                mouseEvents:
+                [
+                    new MouseInputEvent(MouseInputEventKind.Move, 0),
+                    new MouseInputEvent(MouseInputEventKind.Release, 1)
+                ]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "В нижней вкладке Output подвигайте мышью, затем нажмите и отпустите левую кнопку. Для выхода нажмите ESC.",
+                "мышь",
+                "0",
+                "320",
+                "240",
+                "мышь",
+                "1",
+                "320",
+                "240",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void OnMouseWheelAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/wheel_handler.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider(
+                keys: ["ESC"],
+                pressedKeys: [],
+                mouseX: 320,
+                mouseY: 240,
+                mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "колесо",
+                "-120",
+                "320",
+                "240",
+                "Прокрутите колесо мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC.",
+                "готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
     public void ReadAllLinesUtf8BomAcceptanceSample_RunsSuccessfully()
     {
         var sourceText = TestProgramLoader.LoadText("samples/functions/readalllines/utf8_bom.axm");
@@ -1565,6 +2009,58 @@ public sealed class AcceptanceProgramTests
         }
 
         public string ReadInput(InputRequest request) => _values.Count > 0 ? _values.Dequeue() : string.Empty;
+    }
+
+    private sealed class QueueKeyboardInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider
+    {
+        private readonly Queue<string> _keys;
+        private readonly Queue<int> _mousePresses;
+        private readonly Queue<MouseInputEvent> _mouseEvents;
+        private readonly HashSet<string> _pressedKeys;
+        private readonly HashSet<int> _pressedMouseButtons;
+        private readonly long _mouseX;
+        private readonly long _mouseY;
+
+        public QueueKeyboardInputProvider(params string[] keys)
+            : this(keys, pressedKeys: null)
+        {
+        }
+
+        public QueueKeyboardInputProvider(
+            IEnumerable<string>? keys,
+            IEnumerable<string>? pressedKeys,
+            long mouseX = -1,
+            long mouseY = -1,
+            IEnumerable<int>? pressedMouseButtons = null,
+            IEnumerable<int>? mousePresses = null,
+            IEnumerable<MouseInputEvent>? mouseEvents = null)
+        {
+            _keys = new Queue<string>(keys ?? []);
+            _mousePresses = new Queue<int>(mousePresses ?? []);
+            _mouseEvents = new Queue<MouseInputEvent>(mouseEvents ?? (mousePresses ?? []).Select(static buttonNumber => new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
+            _pressedKeys = new HashSet<string>(
+                (pressedKeys ?? []).Select(KeyboardInputNormalizer.Normalize),
+                StringComparer.Ordinal);
+            _mouseX = mouseX;
+            _mouseY = mouseY;
+            _pressedMouseButtons = new HashSet<int>(pressedMouseButtons ?? []);
+        }
+
+        public string ReadInput(InputRequest request) => string.Empty;
+
+        public string ReadKey() => _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
+
+        public bool IsKeyDown(string keyText) => _pressedKeys.Contains(KeyboardInputNormalizer.Normalize(keyText));
+
+        public long GetMouseX() => _mouseX;
+
+        public long GetMouseY() => _mouseY;
+
+        public bool IsMouseButtonDown(int buttonNumber) => _pressedMouseButtons.Contains(buttonNumber);
+
+        public int ReadMouseButtonPress() => _mousePresses.Count > 0 ? _mousePresses.Dequeue() : 0;
+
+        public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
     }
 }
 

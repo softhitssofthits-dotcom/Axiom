@@ -317,6 +317,116 @@ public sealed class AssignmentStatementSyntax : StatementSyntax
     public ExpressionSyntax Expression { get; }
 }
 
+public sealed class OnKeyStatementSyntax : StatementSyntax
+{
+    public OnKeyStatementSyntax(
+        SyntaxToken onKeyword,
+        SyntaxToken keyKeyword,
+        SyntaxToken openParenToken,
+        ExpressionSyntax keyExpression,
+        SyntaxToken closeParenToken,
+        SyntaxToken commaToken,
+        SyntaxToken actionToken)
+    {
+        ArgumentNullException.ThrowIfNull(onKeyword);
+        ArgumentNullException.ThrowIfNull(keyKeyword);
+        ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(keyExpression);
+        ArgumentNullException.ThrowIfNull(closeParenToken);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(actionToken);
+
+        OnKeyword = onKeyword;
+        KeyKeyword = keyKeyword;
+        OpenParenToken = openParenToken;
+        KeyExpression = keyExpression;
+        CloseParenToken = closeParenToken;
+        CommaToken = commaToken;
+        ActionToken = actionToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.OnKeyStatement;
+
+    public SyntaxToken OnKeyword { get; }
+
+    public SyntaxToken KeyKeyword { get; }
+
+    public SyntaxToken OpenParenToken { get; }
+
+    public ExpressionSyntax KeyExpression { get; }
+
+    public SyntaxToken CloseParenToken { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public SyntaxToken ActionToken { get; }
+
+    public bool DisablesHandler => ActionToken.Kind == SyntaxKind.OffKeyword;
+
+    public bool ResumesHandler => ActionToken.Kind == SyntaxKind.OnKeyword;
+
+    public bool PausesHandler => ActionToken.Kind == SyntaxKind.StopKeyword;
+}
+
+public sealed class OnMouseStatementSyntax : StatementSyntax
+{
+    public OnMouseStatementSyntax(
+        SyntaxToken onKeyword,
+        SyntaxToken mouseKeyword,
+        SyntaxToken openParenToken,
+        ExpressionSyntax buttonExpression,
+        SyntaxToken? targetCommaToken,
+        ExpressionSyntax? eventExpression,
+        SyntaxToken closeParenToken,
+        SyntaxToken commaToken,
+        SyntaxToken actionToken)
+    {
+        ArgumentNullException.ThrowIfNull(onKeyword);
+        ArgumentNullException.ThrowIfNull(mouseKeyword);
+        ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(buttonExpression);
+        ArgumentNullException.ThrowIfNull(closeParenToken);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(actionToken);
+
+        OnKeyword = onKeyword;
+        MouseKeyword = mouseKeyword;
+        OpenParenToken = openParenToken;
+        ButtonExpression = buttonExpression;
+        TargetCommaToken = targetCommaToken;
+        EventExpression = eventExpression;
+        CloseParenToken = closeParenToken;
+        CommaToken = commaToken;
+        ActionToken = actionToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.OnMouseStatement;
+
+    public SyntaxToken OnKeyword { get; }
+
+    public SyntaxToken MouseKeyword { get; }
+
+    public SyntaxToken OpenParenToken { get; }
+
+    public ExpressionSyntax ButtonExpression { get; }
+
+    public SyntaxToken? TargetCommaToken { get; }
+
+    public ExpressionSyntax? EventExpression { get; }
+
+    public SyntaxToken CloseParenToken { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public SyntaxToken ActionToken { get; }
+
+    public bool DisablesHandler => ActionToken.Kind == SyntaxKind.OffKeyword;
+
+    public bool ResumesHandler => ActionToken.Kind == SyntaxKind.OnKeyword;
+
+    public bool PausesHandler => ActionToken.Kind == SyntaxKind.StopKeyword;
+}
+
 public sealed class ErrorStatementSyntax : StatementSyntax
 {
     public ErrorStatementSyntax(

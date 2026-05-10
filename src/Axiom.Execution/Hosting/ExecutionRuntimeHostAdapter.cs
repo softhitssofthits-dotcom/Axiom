@@ -29,6 +29,39 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
 
     public string ReadInput(InputRequest request) => _inputProvider.ReadInput(request);
 
+    public string ReadKey() =>
+        _inputProvider is IKeyboardInputProvider keyboardInputProvider
+            ? keyboardInputProvider.ReadKey()
+            : string.Empty;
+
+    public bool IsKeyDown(string keyText) =>
+        _inputProvider is IKeyboardInputProvider keyboardInputProvider &&
+        keyboardInputProvider.IsKeyDown(keyText);
+
+    public long GetMouseX() =>
+        _inputProvider is IMouseInputProvider mouseInputProvider
+            ? mouseInputProvider.GetMouseX()
+            : -1;
+
+    public long GetMouseY() =>
+        _inputProvider is IMouseInputProvider mouseInputProvider
+            ? mouseInputProvider.GetMouseY()
+            : -1;
+
+    public bool IsMouseButtonDown(int buttonNumber) =>
+        _inputProvider is IMouseInputProvider mouseInputProvider &&
+        mouseInputProvider.IsMouseButtonDown(buttonNumber);
+
+    public int ReadMouseButtonPress() =>
+        _inputProvider is IMouseInputProvider mouseInputProvider
+            ? mouseInputProvider.ReadMouseButtonPress()
+            : 0;
+
+    public MouseInputEvent ReadMouseEvent() =>
+        _inputProvider is IMouseInputProvider mouseInputProvider
+            ? mouseInputProvider.ReadMouseEvent()
+            : default;
+
     public void WriteOutput(string text)
     {
         _output.Add(text);

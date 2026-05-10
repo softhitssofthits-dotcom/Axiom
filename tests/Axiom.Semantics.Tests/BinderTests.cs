@@ -77,6 +77,303 @@ public sealed class BinderTests
     }
 
     [Fact]
+    public void Bind_InKeyFunction_ReturnsString()
+    {
+        var program = BindProgram("PRINT INKEY()", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.String, BuiltinFunctionId.InKey);
+    }
+
+    [Fact]
+    public void Bind_InKeyFunction_RejectsArguments()
+    {
+        _ = BindProgram("PRINT INKEY(\"A\")", out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2004");
+        Assert.Contains("INKEY", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_KeyDownFunction_ReturnsBoolean()
+    {
+        var program = BindProgram("PRINT KEYDOWN(\"LEFT\")", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.Boolean, BuiltinFunctionId.KeyDown);
+    }
+
+    [Fact]
+    public void Bind_KeyDownFunction_RequiresOneStringArgument()
+    {
+        _ = BindProgram("PRINT KEYDOWN()", out var missingDiagnostics);
+        _ = BindProgram("PRINT KEYDOWN(1)", out var typeDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(missingDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(typeDiagnostics, static d => d.Code == "MB2003").Code);
+    }
+
+    [Fact]
+    public void Bind_KeyPressFunction_ReturnsBoolean()
+    {
+        var program = BindProgram("PRINT KEYPRESS(\"LEFT\")", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.Boolean, BuiltinFunctionId.KeyPress);
+    }
+
+    [Fact]
+    public void Bind_KeyPressFunction_RequiresOneStringArgument()
+    {
+        _ = BindProgram("PRINT KEYPRESS()", out var missingDiagnostics);
+        _ = BindProgram("PRINT KEYPRESS(1)", out var typeDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(missingDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(typeDiagnostics, static d => d.Code == "MB2003").Code);
+    }
+
+    [Fact]
+    public void Bind_MouseCoordinatesFunctions_ReturnLong()
+    {
+        var mouseXProgram = BindProgram("PRINT MOUSEX()", out var mouseXDiagnostics);
+        var mouseYProgram = BindProgram("PRINT MOUSEY()", out var mouseYDiagnostics);
+
+        Assert.Empty(mouseXDiagnostics);
+        Assert.Empty(mouseYDiagnostics);
+        AssertBuiltinCall(Assert.Single(mouseXProgram.GlobalStatements), TypeSymbol.Long, BuiltinFunctionId.MouseX);
+        AssertBuiltinCall(Assert.Single(mouseYProgram.GlobalStatements), TypeSymbol.Long, BuiltinFunctionId.MouseY);
+    }
+
+    [Fact]
+    public void Bind_MouseCoordinatesFunctions_RejectArguments()
+    {
+        _ = BindProgram("PRINT MOUSEX(1)", out var mouseXDiagnostics);
+        _ = BindProgram("PRINT MOUSEY(1)", out var mouseYDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(mouseXDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2004", Assert.Single(mouseYDiagnostics, static d => d.Code == "MB2004").Code);
+    }
+
+    [Fact]
+    public void Bind_MouseButtonFunction_ReturnsBoolean()
+    {
+        var program = BindProgram("PRINT MOUSEBUTTON(1)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.Boolean, BuiltinFunctionId.MouseButton);
+    }
+
+    [Fact]
+    public void Bind_MouseButtonFunction_RequiresOneIntegerArgument()
+    {
+        _ = BindProgram("PRINT MOUSEBUTTON()", out var missingDiagnostics);
+        _ = BindProgram("PRINT MOUSEBUTTON(\"LEFT\")", out var typeDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(missingDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(typeDiagnostics, static d => d.Code == "MB2003").Code);
+    }
+
+    [Fact]
+    public void Bind_MousePressFunction_ReturnsBoolean()
+    {
+        var program = BindProgram("PRINT MOUSEPRESS(1)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.Boolean, BuiltinFunctionId.MousePress);
+    }
+
+    [Fact]
+    public void Bind_MousePressFunction_RequiresOneIntegerArgument()
+    {
+        _ = BindProgram("PRINT MOUSEPRESS()", out var missingDiagnostics);
+        _ = BindProgram("PRINT MOUSEPRESS(\"LEFT\")", out var typeDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(missingDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(typeDiagnostics, static d => d.Code == "MB2003").Code);
+    }
+
+    [Fact]
+    public void Bind_OnKeyStatement_BindsZeroArgumentSubHandler()
+    {
+        const string text = """
+SUB HandleLeft()
+END SUB
+
+ON KEY("LEFT"), HandleLeft
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOnKeyStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(TypeSymbol.String, statement.KeyExpression.Type);
+        Assert.NotNull(statement.HandlerExpression);
+        var handler = statement.HandlerExpression!;
+        Assert.True(handler.Function.IsSub);
+        Assert.Empty(handler.Function.Parameters);
+        Assert.Equal("HandleLeft", handler.Function.Name);
+    }
+
+    [Fact]
+    public void Bind_OnKeyStatement_BindsSingleStringParameterSubHandler()
+    {
+        const string text = """
+SUB HandleKey(keyName AS STRING)
+END SUB
+
+ON KEY("ANY"), HandleKey
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOnKeyStatement>(Assert.Single(program.GlobalStatements));
+        Assert.True(statement.HandlerReceivesKeyText);
+        Assert.NotNull(statement.HandlerExpression);
+        var handler = statement.HandlerExpression!;
+        Assert.True(handler.Function.IsSub);
+        var parameter = Assert.Single(handler.Function.Parameters);
+        Assert.Equal(TypeSymbol.String, parameter.Type);
+    }
+
+    [Fact]
+    public void Bind_OnKeyStatement_RejectsFunctionHandler()
+    {
+        const string text = """
+FUNCTION HandleLeft() AS STRING
+    RETURN "LEFT"
+END FUNCTION
+
+ON KEY("LEFT"), HandleLeft
+""";
+
+        _ = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2034");
+        Assert.Contains("ON KEY", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_OnKeyStatement_RejectsNonStringParameterSubHandler()
+    {
+        const string text = """
+SUB HandleKey(keyCode AS INTEGER)
+END SUB
+
+ON KEY("ANY"), HandleKey
+""";
+
+        _ = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2034");
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("ON", BoundOnKeyActionKind.Resume)]
+    [InlineData("STOP", BoundOnKeyActionKind.Pause)]
+    [InlineData("OFF", BoundOnKeyActionKind.Unregister)]
+    public void Bind_OnKeyStatement_BindsModeActions(string actionText, BoundOnKeyActionKind expectedAction)
+    {
+        var program = BindProgram($"""ON KEY("LEFT"), {actionText}""", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOnKeyStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(expectedAction, statement.ActionKind);
+        Assert.Null(statement.HandlerExpression);
+    }
+
+    [Fact]
+    public void Bind_OnMouseStatement_BindsZeroArgumentSubHandler()
+    {
+        const string text = """
+SUB HandleMouse()
+END SUB
+
+ON MOUSE(1), HandleMouse
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOnMouseStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(TypeSymbol.Integer, statement.ButtonExpression.Type);
+        Assert.False(statement.HandlerReceivesEvent);
+        Assert.NotNull(statement.HandlerExpression);
+        Assert.True(statement.HandlerExpression!.Function.IsSub);
+        Assert.Empty(statement.HandlerExpression.Function.Parameters);
+    }
+
+    [Fact]
+    public void Bind_OnMouseStatement_BindsEventParameterSubHandler()
+    {
+        const string text = """
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+END SUB
+
+ON MOUSE(1), HandleMouse
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOnMouseStatement>(Assert.Single(program.GlobalStatements));
+        Assert.True(statement.HandlerReceivesEvent);
+        Assert.NotNull(statement.HandlerExpression);
+        Assert.Equal([TypeSymbol.Integer, TypeSymbol.Long, TypeSymbol.Long], statement.HandlerExpression!.Function.Parameters.Select(static p => p.Type));
+    }
+
+    [Theory]
+    [InlineData("ON MOUSE(1, \"UP\"), HandleMouse", BoundMouseEventKind.Release)]
+    [InlineData("ON MOUSE(\"MOVE\"), HandleMouse", BoundMouseEventKind.Move)]
+    [InlineData("ON MOUSE(\"WHEEL\"), HandleMouse", BoundMouseEventKind.Wheel)]
+    public void Bind_OnMouseStatement_BindsReleaseAndMoveTargets(string statementText, BoundMouseEventKind expectedEventKind)
+    {
+        var program = BindProgram($$"""
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+END SUB
+
+{{statementText}}
+""", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+
+        var statement = Assert.IsType<BoundOnMouseStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(expectedEventKind, statement.EventKind);
+        Assert.True(statement.HandlerReceivesEvent);
+    }
+
+    [Fact]
+    public void Bind_OnMouseStatement_RejectsInvalidHandlerSignature()
+    {
+        const string text = """
+SUB HandleMouse(button AS INTEGER)
+END SUB
+
+ON MOUSE(1), HandleMouse
+""";
+
+        _ = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2035");
+        Assert.Contains("ON MOUSE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("ON", BoundOnMouseActionKind.Resume)]
+    [InlineData("STOP", BoundOnMouseActionKind.Pause)]
+    [InlineData("OFF", BoundOnMouseActionKind.Unregister)]
+    public void Bind_OnMouseStatement_BindsModeActions(string actionText, BoundOnMouseActionKind expectedAction)
+    {
+        var program = BindProgram($"""ON MOUSE(1), {actionText}""", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOnMouseStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(expectedAction, statement.ActionKind);
+        Assert.Null(statement.HandlerExpression);
+    }
+
+    [Fact]
     public void Bind_AllowsExplicitIntegerDeclarationForMinIntegerLiteral()
     {
         var program = BindProgram("DIM value AS INTEGER = -2147483648", out var diagnostics);

@@ -1,0 +1,16 @@
+' Удерживайте CTRL, нажмите LEFT, затем нажмите ESC.
+PRINT "Удерживайте CTRL, нажмите LEFT, затем нажмите ESC."
+ON KEY("CTRL+LEFT"), HandleChord
+
+DIM marker AS INTEGER = 0
+
+DO WHILE NOT KEYPRESS("ESC")
+    marker = marker + 1
+LOOP
+
+ON KEY("CTRL+LEFT"), OFF
+PRINT "готово"
+
+SUB HandleChord(keyName AS STRING)
+    PRINT keyName
+END SUB

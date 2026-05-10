@@ -21,7 +21,7 @@ internal static class Program
     }
 }
 
-internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecutablePath, bool EventLogOnly)
+internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecutablePath, bool EventLogOnly, bool InKeyOnly, bool OnMouseOnly)
 {
     public static SmokeHarnessOptions Parse(string[] args)
     {
@@ -29,6 +29,10 @@ internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecut
             string.Equals(argument, "--keep-workspace", StringComparison.OrdinalIgnoreCase));
         var eventLogOnly = args.Any(static argument =>
             string.Equals(argument, "--event-log-only", StringComparison.OrdinalIgnoreCase));
+        var inKeyOnly = args.Any(static argument =>
+            string.Equals(argument, "--inkey-only", StringComparison.OrdinalIgnoreCase));
+        var onMouseOnly = args.Any(static argument =>
+            string.Equals(argument, "--on-mouse-only", StringComparison.OrdinalIgnoreCase));
         string? ideExecutablePath = null;
 
         for (var index = 0; index < args.Length; index++)
@@ -47,6 +51,6 @@ internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecut
             index++;
         }
 
-        return new SmokeHarnessOptions(keepWorkspace, ideExecutablePath, eventLogOnly);
+        return new SmokeHarnessOptions(keepWorkspace, ideExecutablePath, eventLogOnly, inKeyOnly, onMouseOnly);
     }
 }

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функция MOUSEX</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="mousex">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Текущая горизонтальная координата указателя</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEX</p><p class="sidebar__subtitle">Опрос текущей X-координаты указателя без событийной очереди.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Ввод и вывод</p>
+<h1 class="page-title">Функция MOUSEX</h1>
+<p class="lead"><code>MOUSEX()</code> возвращает текущую горизонтальную координату указателя мыши на активной поверхности программы. Функция подходит для опросного режима, когда программе достаточно знать текущее положение курсора, а не получать отдельные события перемещения.</p>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">MOUSEX()</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Возвращаемое значение</h2>
+<p>Тип результата: <code>LONG</code>.</p>
+<ul>
+<li>если среда выполнения знает положение указателя, возвращается текущая X-координата;</li>
+<li>если положение указателя недоступно, возвращается <code>-1</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Замечания</h2>
+<ul>
+<li><code>MOUSEX()</code> не принимает аргументов;</li>
+<li>функция не создаёт очередь мышиных событий и не хранит историю перемещений;</li>
+<li>в текущем срезе координата относится к активной поверхности выполнения программы в IDE;</li>
+<li>для вертикальной координаты используйте <a href="mousey.html"><code>MOUSEY()</code></a>, а для кнопок — <a href="mousebutton.html"><code>MOUSEBUTTON()</code></a>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">PRINT MOUSEX()
+PRINT MOUSEY()</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/functions/mousex/current_position.axm">MOUSEX: текущее положение указателя</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Диагностика <code>MB2004</code> возникает, если передать аргументы в <code>MOUSEX()</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="mousey.html">Функция MOUSEY</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="data-and-input.html">Ввод и вывод</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

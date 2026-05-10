@@ -1,0 +1,7 @@
+' Удерживайте левую и среднюю кнопки мыши перед запуском.
+PRINT "Удерживайте левую и среднюю кнопки мыши перед запуском."
+PRINT MOUSEBUTTON(1)
+PRINT MOUSEBUTTON(2)
+PRINT MOUSEBUTTON(3)
+PRINT MOUSEBUTTON(99)
+PRINT "готово"

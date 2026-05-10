@@ -84,6 +84,38 @@
                         <p>Чтение одного или нескольких значений, строка приглашения, преобразование типов и частые ошибки.</p>
                     </section>
                     <section class="card">
+                        <h3><a href="inkey.html">Функция INKEY</a></h3>
+                        <p>Неблокирующее чтение одной клавиши: символ, имя специальной клавиши или пустая строка.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="keydown.html">Функция KEYDOWN</a></h3>
+                        <p>Проверка текущего удержания клавиши или модификатора без чтения очереди клавиатуры.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="keypress.html">Функция KEYPRESS</a></h3>
+                        <p>Одноразовая проверка нажатия клавиши с удалением события из очереди.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="mousex.html">Функция MOUSEX</a></h3>
+                        <p>Текущая горизонтальная координата указателя мыши на активной поверхности программы.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="mousey.html">Функция MOUSEY</a></h3>
+                        <p>Текущая вертикальная координата указателя мыши на активной поверхности программы.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="mousebutton.html">Функция MOUSEBUTTON</a></h3>
+                        <p>Проверка удержания левой, правой или средней кнопки мыши по номеру.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="mousepress.html">Функция MOUSEPRESS</a></h3>
+                        <p>Одноразовая проверка нажатия кнопки мыши с удалением события из очереди.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="on-mouse.html">Оператор ON MOUSE</a></h3>
+                        <p>Обработчик нажатия, отпускания, перемещения и колеса мыши с режимами включения, паузы и отключения.</p>
+                    </section>
+                    <section class="card">
                         <h3><a href="print.html">Оператор PRINT</a></h3>
                         <p>Вывод строк, чисел, выражений и списков значений с разделителями <code>;</code> и <code>,</code>.</p>
                     </section>
@@ -96,7 +128,7 @@
                 <ol>
                     <li>Если важно понять, какие значения можно хранить в программе, начинайте со статьи о типах данных.</li>
                     <li>Если нужно объявить переменную или константу, переходите к статье о <code>DIM</code> и <code>CONST</code>.</li>
-                    <li>Если нужно считать данные с клавиатуры или вывести результат, открывайте статьи по <code>INPUT</code> и <code>PRINT</code>.</li>
+                    <li>Если нужно считать данные с клавиатуры, мыши или вывести результат, открывайте статьи по <code>INPUT</code>, <code>INKEY()</code>, <code>KEYDOWN()</code>, <code>KEYPRESS()</code>, <code>MOUSEX()</code>, <code>MOUSEY()</code>, <code>MOUSEBUTTON()</code>, <code>MOUSEPRESS()</code>, <code>ON MOUSE</code> и <code>PRINT</code>.</li>
                 </ol>
                 <pre><code class="language-basic">DIM name AS STRING
 DIM age AS INTEGER
@@ -117,6 +149,19 @@ PRINT "Возраст:"; age</code></pre>
                     <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
                     <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление</a></li>
                     <li><a href="../../samples/operators/input/multiple_variables.axm">INPUT: несколько переменных</a></li>
+                    <li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li>
+                    <li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификатора и стрелки</a></li>
+                    <li><a href="../../samples/functions/keydown/canonical_aliases.axm">KEYDOWN: канонические имена и алиасы клавиш</a></li>
+                    <li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие клавиши</a></li>
+                    <li><a href="../../samples/functions/keypress/modified_keypress.axm">KEYPRESS: нажатие с модификатором</a></li>
+                    <li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: одноразовые нажатия кнопок мыши</a></li>
+                    <li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши</a></li>
+                    <li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li>
+                    <li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li>
+                    <li><a href="../../samples/operators/on-key/any_key_handler.axm">ON KEY: обработчик любой клавиши</a></li>
+                    <li><a href="../../samples/operators/on-key/handler_key_name.axm">ON KEY: имя клавиши в обработчике</a></li>
+                    <li><a href="../../samples/operators/on-key/chord_handler.axm">ON KEY: аккорд клавиш</a></li>
+                    <li><a href="../../samples/operators/on-key/stop_resume_handler.axm">ON KEY: пауза и возобновление обработчика</a></li>
                     <li><a href="../../samples/operators/print/separator_semicolon.axm">PRINT: разделитель <code>;</code></a></li>
                 </ul>
             </section>

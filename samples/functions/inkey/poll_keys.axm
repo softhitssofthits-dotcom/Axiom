@@ -1,0 +1,10 @@
+' INKEY() не ждёт ввод. Цикл ниже ждёт конкретную клавишу LEFT.
+PRINT "Щёлкните по панели вывода и нажмите LEFT."
+
+DIM pressedKey AS STRING = ""
+
+DO WHILE pressedKey <> "LEFT"
+    pressedKey = INKEY()
+LOOP
+
+PRINT pressedKey

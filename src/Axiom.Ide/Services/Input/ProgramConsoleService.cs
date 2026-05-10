@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.ViewModels;
+using Axiom.Runtime;
 
 namespace Axiom.Ide.Services.Input;
 
@@ -11,11 +12,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
     private DispatcherFrame? _pendingFrame;
+    private readonly Queue<string> _pendingKeys = [];
+    private readonly Queue<MouseInputEvent> _pendingMouseEvents = [];
+    private readonly HashSet<string> _pressedKeys = new(StringComparer.Ordinal);
+    private readonly HashSet<int> _pressedMouseButtons = [];
     private string _currentInputText = string.Empty;
     private string _currentPromptText = string.Empty;
     private bool _isWaitingForInput;
     private string _outputText = string.Empty;
     private string _submittedText = string.Empty;
+    private long _mouseX = -1;
+    private long _mouseY = -1;
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
@@ -136,6 +143,205 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() => AppendTranscriptLine(text));
     }
 
+    public void EnqueueKey(string keyText)
+    {
+        if (string.IsNullOrEmpty(keyText))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pendingKeys.Enqueue(keyText));
+    }
+
+    public void SetKeyDown(string keyText)
+    {
+        if (string.IsNullOrEmpty(keyText))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pressedKeys.Add(KeyboardInputNormalizer.Normalize(keyText)));
+    }
+
+    public void SetKeyUp(string keyText)
+    {
+        if (string.IsNullOrEmpty(keyText))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pressedKeys.Remove(KeyboardInputNormalizer.Normalize(keyText)));
+    }
+
+    public string ReadKey()
+    {
+        var keyText = string.Empty;
+        InvokeOnDispatcher(() =>
+        {
+            keyText = _pendingKeys.Count > 0 ? _pendingKeys.Dequeue() : string.Empty;
+        }, DispatcherPriority.Background);
+
+        return keyText;
+    }
+
+    public bool IsKeyDown(string keyText)
+    {
+        if (string.IsNullOrEmpty(keyText))
+        {
+            return false;
+        }
+
+        var isDown = false;
+        var normalizedKey = KeyboardInputNormalizer.Normalize(keyText);
+        InvokeOnDispatcher(() => isDown = _pressedKeys.Contains(normalizedKey), DispatcherPriority.Background);
+        return isDown;
+    }
+
+    public void ClearKeyState()
+    {
+        InvokeOnDispatcher(_pressedKeys.Clear);
+    }
+
+    public void SetMousePosition(long x, long y)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _mouseX = x;
+            _mouseY = y;
+        });
+    }
+
+    public void SetMouseButtonDown(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pressedMouseButtons.Add(buttonNumber));
+    }
+
+    public void EnqueueMouseButtonPress(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
+    }
+
+    public void EnqueueMouseButtonRelease(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber)));
+    }
+
+    public void EnqueueMouseMove()
+    {
+        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Move, 0)));
+    }
+
+    public void EnqueueMouseWheel(int delta)
+    {
+        if (delta == 0)
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pendingMouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Wheel, delta)));
+    }
+
+    public void SetMouseButtonUp(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        InvokeOnDispatcher(() => _pressedMouseButtons.Remove(buttonNumber));
+    }
+
+    public long GetMouseX()
+    {
+        var mouseX = -1L;
+        InvokeOnDispatcher(() => mouseX = _mouseX, DispatcherPriority.Background);
+        return mouseX;
+    }
+
+    public long GetMouseY()
+    {
+        var mouseY = -1L;
+        InvokeOnDispatcher(() => mouseY = _mouseY, DispatcherPriority.Background);
+        return mouseY;
+    }
+
+    public bool IsMouseButtonDown(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return false;
+        }
+
+        var isDown = false;
+        InvokeOnDispatcher(() => isDown = _pressedMouseButtons.Contains(buttonNumber), DispatcherPriority.Background);
+        return isDown;
+    }
+
+    public int ReadMouseButtonPress()
+    {
+        var buttonNumber = 0;
+        InvokeOnDispatcher(() =>
+        {
+            var deferredEvents = new List<MouseInputEvent>();
+
+            while (_pendingMouseEvents.Count > 0)
+            {
+                var candidate = _pendingMouseEvents.Dequeue();
+                if (buttonNumber == 0 && candidate.Kind == MouseInputEventKind.Press)
+                {
+                    buttonNumber = candidate.ButtonNumber;
+                    continue;
+                }
+
+                deferredEvents.Add(candidate);
+            }
+
+            foreach (var deferredEvent in deferredEvents)
+            {
+                _pendingMouseEvents.Enqueue(deferredEvent);
+            }
+        }, DispatcherPriority.Background);
+
+        return buttonNumber;
+    }
+
+    public MouseInputEvent ReadMouseEvent()
+    {
+        var mouseEvent = default(MouseInputEvent);
+        InvokeOnDispatcher(() =>
+        {
+            mouseEvent = _pendingMouseEvents.Count > 0 ? _pendingMouseEvents.Dequeue() : default;
+        }, DispatcherPriority.Background);
+
+        return mouseEvent;
+    }
+
+    public void ClearMouseState()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _mouseX = -1;
+            _mouseY = -1;
+            _pendingMouseEvents.Clear();
+            _pressedMouseButtons.Clear();
+        });
+    }
+
     public void RestoreOutputCheckpoint(int checkpoint)
     {
         InvokeOnDispatcher(() => RestoreOutputCheckpointCore(checkpoint));
@@ -239,6 +445,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
 
         _submittedText = string.Empty;
+        _pendingKeys.Clear();
+        _pendingMouseEvents.Clear();
+        _pressedKeys.Clear();
+        _pressedMouseButtons.Clear();
+        _mouseX = -1;
+        _mouseY = -1;
         OutputText = string.Empty;
         ResetInputState();
     }
@@ -261,7 +473,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         });
     }
 
-    private void InvokeOnDispatcher(Action action)
+    private void InvokeOnDispatcher(Action action, DispatcherPriority priority = DispatcherPriority.Send)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -273,7 +485,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        dispatcher.Invoke(action);
+        dispatcher.Invoke(action, priority);
     }
 
     private static string CreateConsolePrompt(ProgramInputRequest request)
@@ -297,4 +509,6 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             .Replace("\n", "\\n", StringComparison.Ordinal)
             .Trim();
     }
+
+    private static bool IsSupportedMouseButton(int buttonNumber) => buttonNumber is >= 1 and <= 3;
 }

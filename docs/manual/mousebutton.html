@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функция MOUSEBUTTON</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="mousebutton">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Текущее состояние кнопок мыши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEBUTTON</p><p class="sidebar__subtitle">Проверка удержания кнопки мыши по номеру.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Ввод и вывод</p>
+<h1 class="page-title">Функция MOUSEBUTTON</h1>
+<p class="lead"><code>MOUSEBUTTON(buttonNumber)</code> возвращает текущее состояние указанной кнопки мыши. Эта функция, как и клавиатурная <code>KEYDOWN()</code>, смотрит только на текущее состояние и не расходует никаких событий.</p>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">MOUSEBUTTON(buttonNumber)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Аргументы</h2>
+<ul>
+<li><code>buttonNumber</code> — номер кнопки мыши типа <code>INTEGER</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Возвращаемое значение</h2>
+<p>Тип результата: <code>BOOLEAN</code>.</p>
+<ul>
+<li><code>1</code> — левая кнопка;</li>
+<li><code>2</code> — правая кнопка;</li>
+<li><code>3</code> — средняя кнопка;</li>
+<li>для неподдерживаемого номера функция возвращает <code>FALSE</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Замечания</h2>
+<ul>
+<li><code>MOUSEBUTTON()</code> не сообщает нажатие как событие и не различает момент нажатия и удержание;</li>
+<li>в текущем срезе нет отдельной очереди кликов, колеса мыши и захвата указателя;</li>
+<li>координаты мыши читаются через <a href="mousex.html"><code>MOUSEX()</code></a> и <a href="mousey.html"><code>MOUSEY()</code></a>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">IF MOUSEBUTTON(1) THEN
+    PRINT "LEFT"
+END IF</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/functions/mousebutton/button_states.axm">MOUSEBUTTON: состояние кнопок мыши</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>Диагностика</h2>
+<p>Диагностика <code>MB2004</code> возникает, если аргумент не передан, а <code>MB2003</code> — если передан аргумент неподходящего типа.</p>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="data-and-input.html">Ввод и вывод</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

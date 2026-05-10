@@ -1,0 +1,14 @@
+' KEYDOWN() принимает документированные алиасы имён клавиш.
+' В IDE щёлкните по Output и удерживайте CTRL+PAGEUP.
+PRINT "Удерживайте CTRL+PAGEUP."
+
+DIM matched AS BOOLEAN = FALSE
+
+DO WHILE NOT matched
+    IF KEYDOWN("CONTROL") AND KEYDOWN("PAGE UP") THEN
+        matched = TRUE
+        PRINT "CONTROL+PAGE UP"
+    END IF
+LOOP
+
+PRINT "готово"

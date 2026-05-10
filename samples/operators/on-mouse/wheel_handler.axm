@@ -1,0 +1,17 @@
+' Ожидаемый ручной сценарий: прокрутите колесо мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC.
+ON MOUSE("WHEEL"), HandleWheel
+
+PRINT "Прокрутите колесо мыши внутри нижней вкладки Output, где появляется этот текст. Затем нажмите ESC."
+
+DO WHILE NOT KEYPRESS("ESC")
+    DIM idle AS INTEGER = 1
+LOOP
+
+PRINT "готово"
+
+SUB HandleWheel(delta AS INTEGER, x AS LONG, y AS LONG)
+    PRINT "колесо"
+    PRINT delta
+    PRINT x
+    PRINT y
+END SUB

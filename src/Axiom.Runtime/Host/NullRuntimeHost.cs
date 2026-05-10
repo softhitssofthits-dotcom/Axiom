@@ -12,6 +12,18 @@ public sealed class NullRuntimeHost : IRuntimeHost, IReversibleOutputWriter
 
     public string ReadInput(InputRequest request) => string.Empty;
 
+    public string ReadKey() => string.Empty;
+
+    public bool IsKeyDown(string keyText) => false;
+
+    public long GetMouseX() => -1;
+
+    public long GetMouseY() => -1;
+
+    public bool IsMouseButtonDown(int buttonNumber) => false;
+
+    public int ReadMouseButtonPress() => 0;
+
     public int OutputCheckpoint => 0;
 
     public void WriteOutput(string text)

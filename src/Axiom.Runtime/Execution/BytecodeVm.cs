@@ -264,6 +264,13 @@ public sealed partial class BytecodeVm
     {
         return builtinId switch
         {
+            BuiltinFunctionId.InKey => false,
+            BuiltinFunctionId.KeyDown => false,
+            BuiltinFunctionId.KeyPress => false,
+            BuiltinFunctionId.MouseX => false,
+            BuiltinFunctionId.MouseY => false,
+            BuiltinFunctionId.MouseButton => false,
+            BuiltinFunctionId.MousePress => false,
             BuiltinFunctionId.Rnd => false,
             BuiltinFunctionId.Date => false,
             BuiltinFunctionId.DateInZone => false,
@@ -735,6 +742,51 @@ public sealed partial class BytecodeVm
 
             case Opcode.Input:
                 ExecuteInput(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.StatementBoundary:
+                ExecuteStatementBoundary(instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.RegisterKeyHandler:
+                ExecuteRegisterKeyHandler(frame, instructionIndex, instruction);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.UnregisterKeyHandler:
+                ExecuteUnregisterKeyHandler(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.PauseKeyHandler:
+                ExecutePauseKeyHandler(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.ResumeKeyHandler:
+                ExecuteResumeKeyHandler(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.RegisterMouseHandler:
+                ExecuteRegisterMouseHandler(frame, instructionIndex, instruction);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.UnregisterMouseHandler:
+                ExecuteUnregisterMouseHandler(frame, instructionIndex, instruction);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.PauseMouseHandler:
+                ExecutePauseMouseHandler(frame, instructionIndex, instruction);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.ResumeMouseHandler:
+                ExecuteResumeMouseHandler(frame, instructionIndex, instruction);
+                InvalidateReverseExecutionHistory();
                 break;
 
             case Opcode.PushErrorHandler:

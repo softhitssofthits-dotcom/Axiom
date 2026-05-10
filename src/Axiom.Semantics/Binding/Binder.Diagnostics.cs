@@ -197,6 +197,30 @@ public sealed partial class Binder
         _diagnostics.Report(ProcedureValueCode, $"Процедуру '{name}' нельзя использовать как значение.", location);
     }
 
+    private void ReportInvalidOnKeyHandler(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidOnKeyHandlerCode,
+            $"В ON KEY нужно указать имя процедуры SUB без параметров или с одним параметром STRING, а не '{name}'.",
+            location);
+    }
+
+    private void ReportInvalidOnMouseHandler(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidOnMouseHandlerCode,
+            $"В ON MOUSE нужно указать имя процедуры SUB без параметров или с параметрами INTEGER, LONG, LONG, а не '{name}'.",
+            location);
+    }
+
+    private void ReportInvalidOnMouseEvent(TextLocation location)
+    {
+        _diagnostics.Report(
+            InvalidOnMouseEventCode,
+            "Цель ON MOUSE должна быть номером кнопки, номером кнопки с событием \"UP\"/\"DOWN\" либо событием \"MOVE\" или \"WHEEL\".",
+            location);
+    }
+
     private void ReportValueIsNotCallable(TypeSymbol type, TextLocation location)
     {
         _diagnostics.Report(ValueNotCallableCode, $"Значение типа {type.Name} нельзя вызывать как функцию.", location);

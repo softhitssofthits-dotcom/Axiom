@@ -1,0 +1,14 @@
+' KEYDOWN() проверяет, удерживается ли клавиша сейчас.
+' В IDE щёлкните по Output и удерживайте CTRL+LEFT.
+PRINT "Удерживайте CTRL+LEFT."
+
+DIM matched AS BOOLEAN = FALSE
+
+DO WHILE NOT matched
+    IF KEYDOWN("CTRL") AND KEYDOWN("LEFT") THEN
+        matched = TRUE
+        PRINT "CTRL+LEFT"
+    END IF
+LOOP
+
+PRINT "готово"

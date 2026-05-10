@@ -725,6 +725,226 @@ PRINT REMOVE("abcdef", 2, 3)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForInKey()
+    {
+        const string text = """
+PRINT INKEY()
+PRINT INKEY()
+PRINT INKEY()
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider("A", "LEFT"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["A", "LEFT", ""], result.Output);
+    }
+
+    [Fact]
+    public void Run_InKeyWithoutKeyboardProviderReturnsEmptyString()
+    {
+        var result = Run(
+            "PRINT INKEY()",
+            inputProvider: new QueueInputProvider(),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal([""], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForKeyDown()
+    {
+        const string text = """
+PRINT KEYDOWN("LEFT")
+PRINT KEYDOWN("CTRL") AND KEYDOWN("LEFT")
+PRINT KEYDOWN("RIGHT")
+PRINT INKEY()
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["LEFT", "CTRL"]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["TRUE", "TRUE", "FALSE", ""], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForKeyPress()
+    {
+        const string text = """
+PRINT KEYPRESS("LEFT")
+PRINT KEYPRESS("LEFT")
+PRINT KEYPRESS("ESCAPE")
+PRINT INKEY()
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC", "A"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["TRUE", "FALSE", "TRUE", "A"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForMouseFunctions()
+    {
+        const string text = """
+PRINT MOUSEX()
+PRINT MOUSEY()
+PRINT MOUSEBUTTON(1)
+PRINT MOUSEBUTTON(2)
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["320", "240", "TRUE", "FALSE"], result.Output);
+    }
+
+    [Fact]
+    public void Run_MouseFunctionsWithoutMouseProviderReturnDefaults()
+    {
+        var result = Run(
+            """
+PRINT MOUSEX()
+PRINT MOUSEY()
+PRINT MOUSEBUTTON(1)
+""",
+            inputProvider: new QueueInputProvider(),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["-1", "-1", "FALSE"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForMousePress()
+    {
+        const string text = """
+PRINT MOUSEPRESS(1)
+PRINT MOUSEPRESS(1)
+PRINT MOUSEPRESS(3)
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["TRUE", "FALSE", "TRUE"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForOnKey()
+    {
+        const string text = """
+PRINT "ready"
+ON KEY("LEFT"), HandleLeft
+DIM marker AS INTEGER = 1
+PRINT INKEY()
+
+SUB HandleLeft()
+    PRINT "handler"
+END SUB
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "A"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["ready", "handler", "A"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForOnMouse()
+    {
+        const string text = """
+PRINT "ready"
+ON MOUSE(1), HandleMouse
+DIM marker AS INTEGER = 1
+PRINT MOUSEPRESS(1)
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    PRINT "mouse"
+    PRINT button
+    PRINT x
+    PRINT y
+END SUB
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["ready", "mouse", "1", "320", "240", "FALSE"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForOnMouseWheel()
+    {
+        const string text = """
+PRINT "ready"
+ON MOUSE("WHEEL"), HandleMouse
+DIM marker AS INTEGER = 1
+
+SUB HandleMouse(delta AS INTEGER, x AS LONG, y AS LONG)
+    PRINT "wheel"
+    PRINT delta
+    PRINT x
+    PRINT y
+END SUB
+""";
+
+        var result = Run(
+            text,
+            inputProvider: new QueueKeyboardInputProvider(
+                keys: [],
+                pressedKeys: [],
+                mouseX: 320,
+                mouseY: 240,
+                mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["ready", "wheel", "-120", "320", "240"], result.Output);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_ReportsStringBuiltinArgumentError()
     {
         const string text = """
@@ -2684,6 +2904,79 @@ INPUT value
             Requests.Add(request);
             return _values.Count > 0 ? _values.Dequeue() : string.Empty;
         }
+    }
+
+    private sealed class QueueKeyboardInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider
+    {
+        private readonly Queue<string> _keys;
+        private readonly Queue<MouseInputEvent> _mouseEvents;
+        private readonly HashSet<string> _pressedKeys;
+        private readonly HashSet<int> _pressedMouseButtons;
+        private readonly long _mouseX;
+        private readonly long _mouseY;
+
+        public QueueKeyboardInputProvider(params string[] keys)
+            : this(keys, pressedKeys: null)
+        {
+        }
+
+        public QueueKeyboardInputProvider(
+            IEnumerable<string>? keys,
+            IEnumerable<string>? pressedKeys,
+            long mouseX = -1,
+            long mouseY = -1,
+            IEnumerable<int>? pressedMouseButtons = null,
+            IEnumerable<int>? mousePresses = null,
+            IEnumerable<MouseInputEvent>? mouseEvents = null)
+        {
+            _keys = new Queue<string>(keys ?? []);
+            _mouseEvents = new Queue<MouseInputEvent>(mouseEvents ?? (mousePresses ?? []).Select(static buttonNumber => new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
+            _pressedKeys = new HashSet<string>(
+                (pressedKeys ?? []).Select(KeyboardInputNormalizer.Normalize),
+                StringComparer.Ordinal);
+            _mouseX = mouseX;
+            _mouseY = mouseY;
+            _pressedMouseButtons = new HashSet<int>(pressedMouseButtons ?? []);
+        }
+
+        public string ReadInput(InputRequest request) => string.Empty;
+
+        public string ReadKey() => _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
+
+        public bool IsKeyDown(string keyText) => _pressedKeys.Contains(KeyboardInputNormalizer.Normalize(keyText));
+
+        public long GetMouseX() => _mouseX;
+
+        public long GetMouseY() => _mouseY;
+
+        public bool IsMouseButtonDown(int buttonNumber) => _pressedMouseButtons.Contains(buttonNumber);
+
+        public int ReadMouseButtonPress()
+        {
+            var buttonNumber = 0;
+            var deferredEvents = new List<MouseInputEvent>();
+
+            while (_mouseEvents.Count > 0)
+            {
+                var candidate = _mouseEvents.Dequeue();
+                if (buttonNumber == 0 && candidate.Kind == MouseInputEventKind.Press)
+                {
+                    buttonNumber = candidate.ButtonNumber;
+                    continue;
+                }
+
+                deferredEvents.Add(candidate);
+            }
+
+            foreach (var deferredEvent in deferredEvents)
+            {
+                _mouseEvents.Enqueue(deferredEvent);
+            }
+
+            return buttonNumber;
+        }
+
+        public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
     }
 
     private sealed class FixedRuntimeClock : IRuntimeClock

@@ -38,6 +38,9 @@ public sealed partial class Binder
     private const string MixedTypeLiteralInitializationCode = "MB2031";
     private const string TypeLiteralPositionalArityCode = "MB2032";
     private const string AmbiguousTypeConstructorCode = "MB2033";
+    private const string InvalidOnKeyHandlerCode = "MB2034";
+    private const string InvalidOnMouseHandlerCode = "MB2035";
+    private const string InvalidOnMouseEventCode = "MB2036";
 
     // Human-facing block labels stay centralized so every future block scope
     // can reuse the same MB2016 template without inventing a new diagnostic.

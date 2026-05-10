@@ -1,0 +1,15 @@
+' KEYPRESS() возвращает TRUE один раз для одного события нажатия.
+' В IDE щёлкните по Output и один раз нажмите LEFT.
+PRINT "Нажмите LEFT один раз."
+
+DIM pressed AS BOOLEAN = FALSE
+
+DO WHILE NOT pressed
+    IF KEYPRESS("LEFT") THEN
+        pressed = TRUE
+        PRINT "LEFT нажата"
+    END IF
+LOOP
+
+PRINT KEYPRESS("LEFT")
+PRINT "готово"

@@ -209,6 +209,104 @@ public sealed class BoundInputStatement : BoundStatement
     public string? PromptText { get; }
 }
 
+public sealed class BoundOnKeyStatement : BoundStatement
+{
+    public BoundOnKeyStatement(
+        TextLocation location,
+        BoundExpression keyExpression,
+        BoundFunctionExpression? handlerExpression,
+        BoundOnKeyActionKind actionKind = BoundOnKeyActionKind.Register,
+        bool handlerReceivesKeyText = false)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(keyExpression);
+
+        KeyExpression = keyExpression;
+        HandlerExpression = handlerExpression;
+        ActionKind = actionKind;
+        HandlerReceivesKeyText = handlerReceivesKeyText;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.OnKeyStatement;
+
+    public BoundExpression KeyExpression { get; }
+
+    public BoundFunctionExpression? HandlerExpression { get; }
+
+    public BoundOnKeyActionKind ActionKind { get; }
+
+    public bool HandlerReceivesKeyText { get; }
+
+    public bool DisablesHandler => ActionKind == BoundOnKeyActionKind.Unregister;
+
+    public bool PausesHandler => ActionKind == BoundOnKeyActionKind.Pause;
+
+    public bool ResumesHandler => ActionKind == BoundOnKeyActionKind.Resume;
+}
+
+public enum BoundOnKeyActionKind
+{
+    Register,
+    Unregister,
+    Pause,
+    Resume
+}
+
+public sealed class BoundOnMouseStatement : BoundStatement
+{
+    public BoundOnMouseStatement(
+        TextLocation location,
+        BoundExpression buttonExpression,
+        BoundMouseEventKind eventKind,
+        BoundFunctionExpression? handlerExpression,
+        BoundOnMouseActionKind actionKind = BoundOnMouseActionKind.Register,
+        bool handlerReceivesEvent = false)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(buttonExpression);
+
+        ButtonExpression = buttonExpression;
+        EventKind = eventKind;
+        HandlerExpression = handlerExpression;
+        ActionKind = actionKind;
+        HandlerReceivesEvent = handlerReceivesEvent;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.OnMouseStatement;
+
+    public BoundExpression ButtonExpression { get; }
+
+    public BoundMouseEventKind EventKind { get; }
+
+    public BoundFunctionExpression? HandlerExpression { get; }
+
+    public BoundOnMouseActionKind ActionKind { get; }
+
+    public bool HandlerReceivesEvent { get; }
+
+    public bool DisablesHandler => ActionKind == BoundOnMouseActionKind.Unregister;
+
+    public bool PausesHandler => ActionKind == BoundOnMouseActionKind.Pause;
+
+    public bool ResumesHandler => ActionKind == BoundOnMouseActionKind.Resume;
+}
+
+public enum BoundOnMouseActionKind
+{
+    Register,
+    Unregister,
+    Pause,
+    Resume
+}
+
+public enum BoundMouseEventKind
+{
+    Press,
+    Release,
+    Move,
+    Wheel
+}
+
 public enum BoundFileOpenMode
 {
     Input,

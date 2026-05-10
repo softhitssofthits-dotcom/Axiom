@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функция KEYPRESS</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="keypress">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Одноразовая проверка нажатия клавиши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция KEYPRESS</p><p class="sidebar__subtitle">Событие нажатия, которое считывается один раз.</p></div><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<p class="eyebrow">Ввод и вывод</p>
+<h1 class="page-title">Функция KEYPRESS</h1>
+<p class="lead"><code>KEYPRESS()</code> проверяет, была ли указанная клавиша нажата и ещё не прочитана программой. В отличие от <a href="keydown.html"><code>KEYDOWN()</code></a>, функция не показывает текущее удержание клавиши: одно нажатие даёт один результат <code>TRUE</code>, после чего событие считается израсходованным.</p>
+
+<section class="article-section">
+<h2>Сводка</h2>
+<p>Функция удобна для действий, которые должны произойти один раз на одно нажатие: открыть меню, подтвердить выбор, переключить режим или обработать одиночную стрелку. Если нужна непрерывная реакция, пока клавиша удерживается, используйте <code>KEYDOWN()</code>. Если нужно получить саму следующую клавишу как строку, используйте <code>INKEY()</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">KEYPRESS(keyText)</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Параметры</h2>
+<table>
+<thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+<tbody>
+<tr><td><code>keyText</code></td><td><code>STRING</code></td><td>Имя клавиши. Поддерживаются те же канонические имена и алиасы, что у <a href="keydown.html#key-names"><code>KEYDOWN()</code></a> и <code>ON KEY</code>, например <code>"LEFT"</code>, <code>"ESCAPE"</code>, <code>"PAGE UP"</code>, <code>"A"</code>.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="article-section">
+<h2>Возвращаемое значение</h2>
+<p>Тип результата: <code>BOOLEAN</code>.</p>
+<ul>
+<li><code>TRUE</code>, если в очереди есть ещё не прочитанное нажатие указанной клавиши. Это нажатие удаляется из очереди.</li>
+<li><code>FALSE</code>, если такого нажатия сейчас нет, имя пустое или среда выполнения не предоставляет клавиатурную очередь.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Поведение очереди</h2>
+<p><code>KEYPRESS()</code> ищет первое подходящее нажатие в клавиатурной очереди и удаляет только его. Неподходящие клавиши сохраняют порядок и остаются доступными для последующего <code>INKEY()</code>, <code>KEYPRESS()</code> или <code>ON KEY</code>.</p>
+<pre><code class="language-basic">PRINT KEYPRESS("LEFT")
+PRINT KEYPRESS("LEFT")</code></pre>
+<p>Если пользователь нажал <code>LEFT</code> один раз, первый вызов напечатает <code>TRUE</code>, а второй - <code>FALSE</code>.</p>
+</section>
+
+<section class="article-section">
+<h2>Сравнение с KEYDOWN</h2>
+<table>
+<thead><tr><th>Функция</th><th>Что проверяет</th><th>Читает очередь</th></tr></thead>
+<tbody>
+<tr><td><code>KEYPRESS("LEFT")</code></td><td>Было ли отдельное нажатие <code>LEFT</code></td><td>Да, подходящее событие удаляется</td></tr>
+<tr><td><code>KEYDOWN("LEFT")</code></td><td>Удерживается ли <code>LEFT</code> прямо сейчас</td><td>Нет</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="article-section">
+<h2>Модификаторы</h2>
+<p><code>KEYPRESS()</code> умеет проверять строковый аккорд клавиш через знак <code>+</code>. Последняя часть строки считается основной клавишей события, а все предыдущие части должны быть удержаны.</p>
+<p>Проще говоря, <code>KEYPRESS("CTRL+ALT+DELETE")</code> значит: <code>CTRL</code> и <code>ALT</code> уже нажаты, а программа ждёт именно нажатие последней клавиши <code>DELETE</code>. Если оно пришло, событие <code>DELETE</code> расходуется.</p>
+<pre><code class="language-basic">IF KEYPRESS("CTRL+LEFT") THEN
+    PRINT "CTRL+LEFT"
+END IF
+
+IF KEYPRESS("CTRL+ALT+DELETE") THEN
+    PRINT "CTRL+ALT+DELETE"
+END IF</code></pre>
+<p>Форма <code>KEYPRESS("CTRL+F+A+X")</code> означает: <code>CTRL</code>, <code>F</code> и <code>A</code> удержаны, а событием пришла клавиша <code>X</code>. Если нужно проверить только удержание всех клавиш, используйте <code>KEYDOWN("CTRL+F+A+X")</code>.</p>
+<p>В <code>Axiom.Ide</code> модифицированные клавиши доставляются в очередь программы из активной поверхности ввода программы. Сейчас такой поверхностью является область <code>Output</code>; будущий графический режим должен подключаться к тому же маршруту ввода. Клавиша Windows не доставляется как часть пользовательского ввода программы.</p>
+</section>
+
+<section class="article-section">
+<h2>Пример</h2>
+<pre><code class="language-basic">FOR i = 1 TO 20000
+    IF KEYPRESS("ESCAPE") THEN
+        PRINT "ESC pressed once"
+        EXIT FOR
+    END IF
+NEXT</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие клавиши</a></li><li><a href="../../samples/functions/keypress/modified_keypress.axm">KEYPRESS: нажатие с модификатором</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>Диагностика</h2>
+<p><code>MB2004</code> возникает, если вызвать <code>KEYPRESS()</code> без аргумента или с лишними аргументами. <code>MB2003</code> возникает, если аргумент нельзя связать как строку.</p>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="inkey.html">Функция INKEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="on-key.html">Оператор ON KEY</a><a href="data-and-input.html">Ввод и вывод</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

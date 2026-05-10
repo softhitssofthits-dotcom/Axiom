@@ -10,6 +10,7 @@ public sealed class BoundProgramLowerer
     private readonly Stack<LoopExitContext> _forExitLabels = [];
     private readonly List<FinallyContext> _activeFinallyContexts = [];
     private HashSet<VariableSymbol> _currentRoutineLocals = [];
+    private bool _emitStatementBoundaries;
     private int _nextLabelId;
 
     private abstract class ByRefStoragePlan
@@ -145,6 +146,7 @@ public sealed class BoundProgramLowerer
         _doLoopExitLabels.Clear();
         _forExitLabels.Clear();
         _activeFinallyContexts.Clear();
+        _emitStatementBoundaries = ContainsInputHandlerStatement(program);
         _nextLabelId = 0;
 
         var entryPoint = LowerRoutine(
@@ -195,6 +197,11 @@ public sealed class BoundProgramLowerer
         {
             foreach (var statement in statements)
             {
+                if (_emitStatementBoundaries)
+                {
+                    instructions.Add(LoweredInstruction.StatementBoundary(statement.Location));
+                }
+
                 LowerStatement(statement, instructions);
             }
 
@@ -257,6 +264,14 @@ public sealed class BoundProgramLowerer
 
             case BoundInputStatement input:
                 LowerInput(input, instructions);
+                break;
+
+            case BoundOnKeyStatement onKey:
+                LowerOnKey(onKey, instructions);
+                break;
+
+            case BoundOnMouseStatement onMouse:
+                LowerOnMouse(onMouse, instructions);
                 break;
 
             case BoundOpenStatement open:
@@ -485,6 +500,84 @@ public sealed class BoundProgramLowerer
     private static void LowerInput(BoundInputStatement input, List<LoweredInstruction> instructions)
     {
         instructions.Add(LoweredInstruction.Input(input.Location, input.Variables, input.PromptText));
+    }
+
+    private void LowerOnKey(BoundOnKeyStatement onKey, List<LoweredInstruction> instructions)
+    {
+        LowerExpression(onKey.KeyExpression, instructions);
+
+        if (onKey.DisablesHandler)
+        {
+            instructions.Add(LoweredInstruction.UnregisterKeyHandler(onKey.Location));
+            return;
+        }
+
+        if (onKey.PausesHandler)
+        {
+            instructions.Add(LoweredInstruction.PauseKeyHandler(onKey.Location));
+            return;
+        }
+
+        if (onKey.ResumesHandler)
+        {
+            instructions.Add(LoweredInstruction.ResumeKeyHandler(onKey.Location));
+            return;
+        }
+
+        LowerExpression(onKey.HandlerExpression!, instructions);
+        instructions.Add(LoweredInstruction.RegisterKeyHandler(onKey.Location, onKey.HandlerReceivesKeyText));
+    }
+
+    private void LowerOnMouse(BoundOnMouseStatement onMouse, List<LoweredInstruction> instructions)
+    {
+        LowerExpression(onMouse.ButtonExpression, instructions);
+
+        if (onMouse.DisablesHandler)
+        {
+            instructions.Add(LoweredInstruction.UnregisterMouseHandler(onMouse.Location, onMouse.EventKind));
+            return;
+        }
+
+        if (onMouse.PausesHandler)
+        {
+            instructions.Add(LoweredInstruction.PauseMouseHandler(onMouse.Location, onMouse.EventKind));
+            return;
+        }
+
+        if (onMouse.ResumesHandler)
+        {
+            instructions.Add(LoweredInstruction.ResumeMouseHandler(onMouse.Location, onMouse.EventKind));
+            return;
+        }
+
+        LowerExpression(onMouse.HandlerExpression!, instructions);
+        instructions.Add(LoweredInstruction.RegisterMouseHandler(onMouse.Location, onMouse.HandlerReceivesEvent, onMouse.EventKind));
+    }
+
+    private static bool ContainsInputHandlerStatement(BoundProgram program)
+    {
+        return program.GlobalStatements.Any(ContainsInputHandlerStatement)
+            || program.Routines.Any(static routine => routine.Statements.Any(ContainsInputHandlerStatement));
+    }
+
+    private static bool ContainsInputHandlerStatement(BoundStatement statement)
+    {
+        return statement switch
+        {
+            BoundOnKeyStatement or BoundOnMouseStatement => true,
+            BoundVariableDeclarationsStatement declarations => declarations.Declarations.Any(ContainsInputHandlerStatement),
+            BoundIfStatement ifStatement => ifStatement.Statements.Any(ContainsInputHandlerStatement)
+                || ifStatement.ElseStatements.Any(ContainsInputHandlerStatement),
+            BoundTryStatement tryStatement => tryStatement.Statements.Any(ContainsInputHandlerStatement)
+                || tryStatement.CatchStatements.Any(ContainsInputHandlerStatement)
+                || tryStatement.FinallyStatements.Any(ContainsInputHandlerStatement),
+            BoundSelectCaseStatement selectCase => selectCase.Clauses.Any(static clause => clause.Statements.Any(ContainsInputHandlerStatement))
+                || selectCase.ElseStatements.Any(ContainsInputHandlerStatement),
+            BoundWhileStatement whileStatement => whileStatement.Statements.Any(ContainsInputHandlerStatement),
+            BoundDoLoopStatement doLoopStatement => doLoopStatement.Statements.Any(ContainsInputHandlerStatement),
+            BoundForStatement forStatement => forStatement.Statements.Any(ContainsInputHandlerStatement),
+            _ => false
+        };
     }
 
     private void LowerOpen(BoundOpenStatement open, List<LoweredInstruction> instructions)

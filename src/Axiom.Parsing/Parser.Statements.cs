@@ -27,6 +27,7 @@ public sealed partial class Parser
             SyntaxKind.ConstKeyword => ParseConstStatement(),
             SyntaxKind.PrintKeyword => ParsePrintStatement(),
             SyntaxKind.InputKeyword => ParseInputStatement(),
+            SyntaxKind.OnKeyword => ParseOnStatement(),
             SyntaxKind.OpenKeyword => ParseOpenStatement(),
             SyntaxKind.CloseKeyword => ParseCloseStatement(),
             SyntaxKind.ErrorKeyword => ParseErrorStatement(),
@@ -176,6 +177,72 @@ public sealed partial class Parser
         }
 
         return new InputStatementSyntax(inputKeyword, promptToken, promptSeparatorToken, identifiers, commaTokens);
+    }
+
+    private StatementSyntax ParseOnStatement()
+    {
+        return Peek(1).Kind switch
+        {
+            SyntaxKind.MouseKeyword => ParseOnMouseStatement(),
+            _ => ParseOnKeyStatement()
+        };
+    }
+
+    private OnKeyStatementSyntax ParseOnKeyStatement()
+    {
+        var onKeyword = Match(SyntaxKind.OnKeyword, "ON");
+        var keyKeyword = Match(SyntaxKind.KeyKeyword, "KEY");
+        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var keyExpression = ParseExpression();
+        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после ON KEY(...)");
+
+        var actionToken = Current.Kind is SyntaxKind.OnKeyword or SyntaxKind.OffKeyword or SyntaxKind.StopKeyword
+            ? NextToken()
+            : MatchIdentifier();
+
+        return new OnKeyStatementSyntax(
+            onKeyword,
+            keyKeyword,
+            openParenToken,
+            keyExpression,
+            closeParenToken,
+            commaToken,
+            actionToken);
+    }
+
+    private OnMouseStatementSyntax ParseOnMouseStatement()
+    {
+        var onKeyword = Match(SyntaxKind.OnKeyword, "ON");
+        var mouseKeyword = Match(SyntaxKind.MouseKeyword, "MOUSE");
+        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var buttonExpression = ParseExpression();
+        SyntaxToken? targetCommaToken = null;
+        ExpressionSyntax? eventExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            targetCommaToken = NextToken();
+            eventExpression = ParseExpression();
+        }
+
+        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после ON MOUSE(...)");
+
+        var actionToken = Current.Kind is SyntaxKind.OnKeyword or SyntaxKind.OffKeyword or SyntaxKind.StopKeyword
+            ? NextToken()
+            : MatchIdentifier();
+
+        return new OnMouseStatementSyntax(
+            onKeyword,
+            mouseKeyword,
+            openParenToken,
+            buttonExpression,
+            targetCommaToken,
+            eventExpression,
+            closeParenToken,
+            commaToken,
+            actionToken);
     }
 
     private OpenStatementSyntax ParseOpenStatement()

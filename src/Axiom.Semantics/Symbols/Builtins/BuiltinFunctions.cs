@@ -5,6 +5,7 @@ public static partial class BuiltinFunctions
     private static readonly IReadOnlyList<BuiltinFunctionDescriptor> AllDescriptors =
     [
         .. GetArrayDescriptors(),
+        .. GetInputDescriptors(),
         .. GetBasicStringDescriptors(),
         .. GetCharStringDescriptors(),
         .. GetTrimStringDescriptors(),

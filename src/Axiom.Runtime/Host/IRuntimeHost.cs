@@ -1,3 +1,3 @@
 namespace Axiom.Runtime;
 
-public interface IRuntimeHost : IInputProvider, IOutputWriter, IRuntimeClock, IRuntimeRandom;
+public interface IRuntimeHost : IInputProvider, IKeyboardInputProvider, IMouseInputProvider, IOutputWriter, IRuntimeClock, IRuntimeRandom;

@@ -28,6 +28,8 @@ public sealed partial class Binder
             PrintStatementSyntax printStatement => BindPrintStatement(printStatement),
             PrintUsingStatementSyntax printUsingStatement => BindPrintUsingStatement(printUsingStatement),
             InputStatementSyntax inputStatement => BindInputStatement(inputStatement),
+            OnKeyStatementSyntax onKeyStatement => BindOnKeyStatement(onKeyStatement),
+            OnMouseStatementSyntax onMouseStatement => BindOnMouseStatement(onMouseStatement),
             OpenStatementSyntax openStatement => BindOpenStatement(openStatement),
             CloseStatementSyntax closeStatement => BindCloseStatement(closeStatement),
             ErrorStatementSyntax errorStatement => BindErrorStatement(errorStatement),

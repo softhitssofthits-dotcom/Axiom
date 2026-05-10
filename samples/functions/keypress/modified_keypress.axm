@@ -1,0 +1,13 @@
+' Удерживайте CTRL и нажмите LEFT.
+PRINT "Удерживайте CTRL и нажмите LEFT."
+
+DIM pressed AS BOOLEAN = FALSE
+
+DO WHILE NOT pressed
+    IF KEYPRESS("CTRL+LEFT") THEN
+        pressed = TRUE
+        PRINT "CTRL+LEFT"
+    END IF
+LOOP
+
+PRINT "готово"

@@ -4,6 +4,7 @@ using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.Services.Execution;
 using Axiom.Ide.Services.Input;
+using Axiom.Runtime;
 
 namespace Axiom.Ide.Tests;
 
@@ -816,11 +817,73 @@ PRINT 1 + 2
             WrittenOutput.Clear();
         }
 
+        public void EnqueueKey(string keyText)
+        {
+        }
+
+        public void SetKeyDown(string keyText)
+        {
+        }
+
+        public void SetKeyUp(string keyText)
+        {
+        }
+
+        public void ClearKeyState()
+        {
+        }
+
+        public void ClearMouseState()
+        {
+        }
+
+        public string ReadKey() => string.Empty;
+
+        public bool IsKeyDown(string keyText) => false;
+
+        public long GetMouseX() => -1;
+
+        public long GetMouseY() => -1;
+
+        public bool IsMouseButtonDown(int buttonNumber) => false;
+
+        public int ReadMouseButtonPress() => 0;
+
+        public MouseInputEvent ReadMouseEvent() => default;
+
         public string RequestInput(ProgramInputRequest request) => _promptService.RequestInput(request);
 
         public void WriteOutput(string text)
         {
             WrittenOutput.Add(text);
+        }
+
+        public void SetMousePosition(long x, long y)
+        {
+        }
+
+        public void SetMouseButtonDown(int buttonNumber)
+        {
+        }
+
+        public void SetMouseButtonUp(int buttonNumber)
+        {
+        }
+
+        public void EnqueueMouseButtonPress(int buttonNumber)
+        {
+        }
+
+        public void EnqueueMouseButtonRelease(int buttonNumber)
+        {
+        }
+
+        public void EnqueueMouseMove()
+        {
+        }
+
+        public void EnqueueMouseWheel(int delta)
+        {
         }
 
         public void RestoreOutputCheckpoint(int checkpoint)
@@ -909,11 +972,73 @@ PRINT 1 + 2
         {
         }
 
+        public void EnqueueKey(string keyText)
+        {
+        }
+
+        public void SetKeyDown(string keyText)
+        {
+        }
+
+        public void SetKeyUp(string keyText)
+        {
+        }
+
+        public void ClearKeyState()
+        {
+        }
+
+        public void ClearMouseState()
+        {
+        }
+
+        public string ReadKey() => string.Empty;
+
+        public bool IsKeyDown(string keyText) => false;
+
+        public long GetMouseX() => -1;
+
+        public long GetMouseY() => -1;
+
+        public bool IsMouseButtonDown(int buttonNumber) => false;
+
+        public int ReadMouseButtonPress() => 0;
+
+        public MouseInputEvent ReadMouseEvent() => default;
+
         public int OutputCheckpoint => 0;
 
         public string RequestInput(ProgramInputRequest request) => string.Empty;
 
         public void WriteOutput(string text)
+        {
+        }
+
+        public void SetMousePosition(long x, long y)
+        {
+        }
+
+        public void SetMouseButtonDown(int buttonNumber)
+        {
+        }
+
+        public void SetMouseButtonUp(int buttonNumber)
+        {
+        }
+
+        public void EnqueueMouseButtonPress(int buttonNumber)
+        {
+        }
+
+        public void EnqueueMouseButtonRelease(int buttonNumber)
+        {
+        }
+
+        public void EnqueueMouseMove()
+        {
+        }
+
+        public void EnqueueMouseWheel(int delta)
         {
         }
 

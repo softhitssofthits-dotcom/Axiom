@@ -684,6 +684,33 @@ public sealed class BytecodeModuleValidator
                     ValidateInputInstruction(module, routine, instructionIndex, instruction, globalsBySlot);
                     break;
 
+                case Opcode.StatementBoundary:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.RegisterKeyHandler:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateRegisterKeyHandlerInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.RegisterMouseHandler:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateRegisterMouseHandlerInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.UnregisterKeyHandler:
+                case Opcode.PauseKeyHandler:
+                case Opcode.ResumeKeyHandler:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.UnregisterMouseHandler:
+                case Opcode.PauseMouseHandler:
+                case Opcode.ResumeMouseHandler:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateMouseEventKind(module, routine, instructionIndex, instruction, operandIndex: 0);
+                    break;
+
                 case Opcode.PushErrorHandler:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 5);
                     ValidateOptionalJumpTarget(module, routine, instructionIndex, instruction, operandIndex: 0);
@@ -1275,6 +1302,87 @@ public sealed class BytecodeModuleValidator
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, pathType, TypeSymbol.String, "путь файла");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, fileType, TypeSymbol.File, "файловую переменную");
                 Push(TypeSymbol.File);
+                break;
+            }
+
+            case Opcode.RegisterKeyHandler:
+            {
+                var handlerType = Pop();
+                var keyType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, keyType, TypeSymbol.String, "имя клавиши");
+                if (handlerType is FunctionTypeSymbol functionType)
+                {
+                    var passKeyText = instruction.OperandCount > 0 && instruction.GetOperand(0) != 0;
+                    var expectedParameterCount = passKeyText ? 1 : 0;
+                    var hasExpectedParameters = passKeyText
+                        ? functionType.ParameterTypes.Count == 1 && functionType.ParameterTypes[0] == TypeSymbol.String
+                        : functionType.ParameterTypes.Count == 0;
+
+                    if (functionType.ReturnType != TypeSymbol.Void || !hasExpectedParameters)
+                    {
+                        Report(
+                            "BC4122",
+                            $"Инструкция '{instruction.Opcode}' ожидает обработчик-процедуру с количеством параметров {expectedParameterCount}, но получила несовместимую сигнатуру.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                }
+                else if (handlerType is not null)
+                {
+                    ReportIncompatibleOperationStackType(module, routine, instructionIndex, instruction.Opcode, handlerType, "обработчик клавиши");
+                }
+                break;
+            }
+
+            case Opcode.UnregisterKeyHandler:
+            case Opcode.PauseKeyHandler:
+            case Opcode.ResumeKeyHandler:
+            {
+                var keyType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, keyType, TypeSymbol.String, "имя клавиши");
+                break;
+            }
+
+            case Opcode.RegisterMouseHandler:
+            {
+                var handlerType = Pop();
+                var buttonType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, buttonType, TypeSymbol.Integer, "номер кнопки мыши");
+                if (handlerType is FunctionTypeSymbol functionType)
+                {
+                    var passEvent = instruction.OperandCount > 0 && instruction.GetOperand(0) != 0;
+                    var expectedParameterCount = passEvent ? 3 : 0;
+                    var hasExpectedParameters = passEvent
+                        ? functionType.ParameterTypes.Count == 3
+                          && functionType.ParameterTypes[0] == TypeSymbol.Integer
+                          && functionType.ParameterTypes[1] == TypeSymbol.Long
+                          && functionType.ParameterTypes[2] == TypeSymbol.Long
+                        : functionType.ParameterTypes.Count == 0;
+
+                    if (functionType.ReturnType != TypeSymbol.Void || !hasExpectedParameters)
+                    {
+                        Report(
+                            "BC4124",
+                            $"Инструкция '{instruction.Opcode}' ожидает обработчик-процедуру с количеством параметров {expectedParameterCount}, но получила несовместимую сигнатуру.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                }
+                else if (handlerType is not null)
+                {
+                    ReportIncompatibleOperationStackType(module, routine, instructionIndex, instruction.Opcode, handlerType, "обработчик мыши");
+                }
+                break;
+            }
+
+            case Opcode.UnregisterMouseHandler:
+            case Opcode.PauseMouseHandler:
+            case Opcode.ResumeMouseHandler:
+            {
+                var buttonType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, buttonType, TypeSymbol.Integer, "номер кнопки мыши");
                 break;
             }
 
@@ -2576,6 +2684,12 @@ public sealed class BytecodeModuleValidator
             case Opcode.StoreArgument:
             case Opcode.StoreCapture:
             case Opcode.Pop:
+            case Opcode.UnregisterKeyHandler:
+            case Opcode.PauseKeyHandler:
+            case Opcode.ResumeKeyHandler:
+            case Opcode.UnregisterMouseHandler:
+            case Opcode.PauseMouseHandler:
+            case Opcode.ResumeMouseHandler:
             case Opcode.Negate:
             case Opcode.Not:
             case Opcode.Convert:
@@ -2612,6 +2726,11 @@ public sealed class BytecodeModuleValidator
             case Opcode.StoreField:
                 popCount = 2;
                 pushCount = instruction.Opcode is Opcode.StoreField ? 0 : 1;
+                return true;
+
+            case Opcode.RegisterKeyHandler:
+            case Opcode.RegisterMouseHandler:
+                popCount = 2;
                 return true;
 
             case Opcode.LoadElement:
@@ -2691,6 +2810,7 @@ public sealed class BytecodeModuleValidator
                 return true;
 
             case Opcode.Jump:
+            case Opcode.StatementBoundary:
             case Opcode.PrintSeparator:
             case Opcode.PrintLine:
             case Opcode.Input:
@@ -2940,6 +3060,78 @@ public sealed class BytecodeModuleValidator
             Report(
                 "BC4050",
                 $"Инструкция PrintSeparator в процедуре '{routine.Name}' содержит неизвестный разделитель {separator}.",
+                module,
+                routine.Id,
+                instructionIndex);
+        }
+    }
+
+    private void ValidateRegisterKeyHandlerInstruction(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        if (instruction.OperandCount < 1)
+        {
+            return;
+        }
+
+        var passKeyTextFlag = instruction.GetOperand(0);
+        if (passKeyTextFlag is < 0 or > 1)
+        {
+            Report(
+                "BC4123",
+                $"Инструкция RegisterKeyHandler в процедуре '{routine.Name}' содержит неизвестный флаг передачи имени клавиши {passKeyTextFlag}.",
+                module,
+                routine.Id,
+                instructionIndex);
+        }
+    }
+
+    private void ValidateRegisterMouseHandlerInstruction(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        if (instruction.OperandCount < 1)
+        {
+            return;
+        }
+
+        var passEventFlag = instruction.GetOperand(0);
+        if (passEventFlag is < 0 or > 1)
+        {
+            Report(
+                "BC4125",
+                $"Инструкция RegisterMouseHandler в процедуре '{routine.Name}' содержит неизвестный флаг передачи события мыши {passEventFlag}.",
+                module,
+                routine.Id,
+                instructionIndex);
+        }
+
+        if (instruction.OperandCount < 2)
+        {
+            return;
+        }
+
+        ValidateMouseEventKind(module, routine, instructionIndex, instruction, operandIndex: 1);
+    }
+
+    private void ValidateMouseEventKind(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction,
+        int operandIndex)
+    {
+        var eventKind = instruction.GetOperand(operandIndex);
+        if (eventKind is < 0 or > 3)
+        {
+            Report(
+                "BC4126",
+                $"Инструкция {instruction.Opcode} в процедуре '{routine.Name}' содержит неизвестный вид события мыши {eventKind}.",
                 module,
                 routine.Id,
                 instructionIndex);

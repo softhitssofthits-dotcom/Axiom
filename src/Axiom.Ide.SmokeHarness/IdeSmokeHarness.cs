@@ -24,8 +24,11 @@ internal sealed class IdeSmokeHarness
     private const uint MouseeventfLeftUp = 0x0004;
     private const uint MouseeventfRightDown = 0x0008;
     private const uint MouseeventfRightUp = 0x0010;
+    private const uint MouseeventfWheel = 0x0800;
     private const uint KeyeventfKeyUp = 0x0002;
+    private const byte VkLeft = 0x25;
     private const byte VkReturn = 0x0D;
+    private const byte VkEscape = 0x1B;
 
     private readonly SmokeHarnessOptions _options;
     private readonly string _repositoryRoot;
@@ -38,6 +41,8 @@ internal sealed class IdeSmokeHarness
     private readonly string _hiddenFilePath;
     private readonly string _successProgramPath;
     private readonly string _syntaxErrorProgramPath;
+    private readonly string _inKeyProgramPath;
+    private readonly string _onMouseProgramPath;
     private Process? _ideProcess;
     private byte[]? _originalStateBytes;
     private bool _stateFileExisted;
@@ -65,6 +70,8 @@ internal sealed class IdeSmokeHarness
         _hiddenFilePath = Path.Combine(_workspaceRootPath, "hidden-note.txt");
         _successProgramPath = Path.Combine(_workspaceRootPath, "success.axm");
         _syntaxErrorProgramPath = Path.Combine(_workspaceRootPath, "syntax_error.axm");
+        _inKeyProgramPath = Path.Combine(_workspaceRootPath, "poll_keys.axm");
+        _onMouseProgramPath = Path.Combine(_workspaceRootPath, "on_mouse.axm");
     }
 
     public void Run()
@@ -89,6 +96,22 @@ internal sealed class IdeSmokeHarness
                 RunEventLogOnlySmoke(mainWindow);
                 Console.WriteLine();
                 Console.WriteLine("Axiom IDE event log smoke completed successfully.");
+                return;
+            }
+
+            if (_options.InKeyOnly)
+            {
+                RunInKeyOnlySmoke(mainWindow);
+                Console.WriteLine();
+                Console.WriteLine("Axiom IDE INKEY smoke completed successfully.");
+                return;
+            }
+
+            if (_options.OnMouseOnly)
+            {
+                RunOnMouseOnlySmoke(mainWindow);
+                Console.WriteLine();
+                Console.WriteLine("Axiom IDE ON MOUSE smoke completed successfully.");
                 return;
             }
 
@@ -197,6 +220,18 @@ internal sealed class IdeSmokeHarness
         WaitForText("OutputTextBox", static text => text.Contains("42", StringComparison.Ordinal));
         ReportStepCompleted();
 
+        ReportStep("Run INKEY sample -> Output keyboard input");
+        OpenFileFromTree(mainWindow, Path.GetFileName(_inKeyProgramPath));
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+        WaitForText(
+            "OutputTextBox",
+            static text => text.Contains("Click the output pane and press a key while the loop runs.", StringComparison.Ordinal));
+        var outputTextBox = RequireElement(mainWindow, "OutputTextBox");
+        ClickElement(outputTextBox);
+        PressVirtualKey(outputTextBox, VkLeft);
+        WaitForText("OutputTextBox", static text => text.Contains("LEFT", StringComparison.Ordinal));
+        ReportStepCompleted();
+
         ReportStep("Run failure -> Diagnostics");
         OpenFileFromTree(mainWindow, Path.GetFileName(_syntaxErrorProgramPath));
         SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
@@ -220,6 +255,60 @@ internal sealed class IdeSmokeHarness
         AssertHidden(mainWindow, "ShellStatusBar");
         SendSmokeCommand(mainWindow, WmAppSmokeHarnessToggleStatusBar, "toggle status bar");
         RequireElement(mainWindow, "ShellStatusBar");
+        ReportStepCompleted();
+    }
+
+    private void RunInKeyOnlySmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Initial shell state");
+        RequireElement(mainWindow, "MainMenu");
+        RequireElement(mainWindow, "FilesTreeView");
+        RequireElement(mainWindow, "OutputTextBox");
+        ReportStepCompleted();
+
+        ReportStep("Run INKEY sample -> Output keyboard input");
+        OpenFileFromTree(mainWindow, Path.GetFileName(_inKeyProgramPath));
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+        WaitForText(
+            "OutputTextBox",
+            static text => text.Contains("Click the output pane and press a key while the loop runs.", StringComparison.Ordinal));
+        var outputTextBox = RequireElement(mainWindow, "OutputTextBox");
+        ClickElement(outputTextBox);
+        PressVirtualKey(outputTextBox, VkLeft);
+        WaitForText("OutputTextBox", static text => text.Contains("LEFT", StringComparison.Ordinal));
+        ReportStepCompleted();
+
+        ReportStep("Close IDE after INKEY smoke");
+        CloseWindow(mainWindow, expectProcessExit: true);
+        ReportStepCompleted();
+    }
+
+    private void RunOnMouseOnlySmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Initial shell state");
+        RequireElement(mainWindow, "MainMenu");
+        RequireElement(mainWindow, "FilesTreeView");
+        RequireElement(mainWindow, "OutputTextBox");
+        ReportStepCompleted();
+
+        ReportStep("Run ON MOUSE sample -> Output mouse input");
+        OpenFileFromTree(mainWindow, Path.GetFileName(_onMouseProgramPath));
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+        WaitForLatestIdeLogText(static text =>
+            text.Contains("console.output | Click inside Output, roll the mouse wheel, then press ESC.", StringComparison.Ordinal));
+        var outputTextBox = RequireElement(mainWindow, "OutputTextBox");
+        ClickElement(outputTextBox);
+        mouse_event(MouseeventfWheel, 0, 0, 120, UIntPtr.Zero);
+        WaitForLatestIdeLogText(static text =>
+            text.Contains("console.output | PRESS", StringComparison.Ordinal)
+            && text.Contains("console.output | UP", StringComparison.Ordinal)
+            && text.Contains("console.output | WHEEL", StringComparison.Ordinal));
+        PressVirtualKey(outputTextBox, VkEscape);
+        WaitForLatestIdeLogText(static text => text.Contains("console.output | DONE", StringComparison.Ordinal));
+        ReportStepCompleted();
+
+        ReportStep("Close IDE after ON MOUSE smoke");
+        CloseWindow(mainWindow, expectProcessExit: true);
         ReportStepCompleted();
     }
 
@@ -933,6 +1022,47 @@ internal sealed class IdeSmokeHarness
             $"Timed out waiting for text in '{automationId}'. Last value: '{lastText}'.");
     }
 
+    private void WaitForLatestIdeLogText(Func<string, bool> predicate)
+    {
+        var lastText = string.Empty;
+
+        WaitFor(
+            () =>
+            {
+                lastText = ReadLatestIdeLogText();
+                return predicate(lastText) ? true : (bool?)null;
+            },
+            "Timed out waiting for expected IDE log text.");
+    }
+
+    private string ReadLatestIdeLogText()
+    {
+        var logsDirectory = Path.Combine(Path.GetDirectoryName(_ideExecutablePath) ?? _repositoryRoot, "Logs");
+        if (!Directory.Exists(logsDirectory))
+        {
+            return string.Empty;
+        }
+
+        var latestLog = Directory.EnumerateFiles(logsDirectory, "*.log")
+            .Select(static path => new FileInfo(path))
+            .OrderByDescending(static file => file.LastWriteTimeUtc)
+            .FirstOrDefault();
+
+        if (latestLog is null)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return File.ReadAllText(latestLog.FullName, Encoding.UTF8);
+        }
+        catch (IOException)
+        {
+            return string.Empty;
+        }
+    }
+
     private void WaitForElementText(
         AutomationElement root,
         string automationId,
@@ -1225,6 +1355,56 @@ internal sealed class IdeSmokeHarness
             _syntaxErrorProgramPath,
             "PRINT LEN(" + Environment.NewLine,
             Encoding.UTF8);
+
+        File.WriteAllText(
+            _inKeyProgramPath,
+            """
+            PRINT "Click the output pane and press a key while the loop runs."
+
+            DIM keyName AS STRING
+
+            FOR i = 1 TO 200000
+                keyName = INKEY()
+                IF keyName <> "" THEN
+                    PRINT keyName
+                    EXIT FOR
+                END IF
+            NEXT
+
+            IF keyName = "" THEN
+                PRINT "NO KEY"
+            END IF
+            """ + Environment.NewLine,
+            Encoding.UTF8);
+
+        File.WriteAllText(
+            _onMouseProgramPath,
+            """
+            ON MOUSE(1), Pressed
+            ON MOUSE(1, "UP"), Released
+            ON MOUSE("WHEEL"), Wheeled
+
+            PRINT "Click inside Output, roll the mouse wheel, then press ESC."
+
+            DO WHILE NOT KEYPRESS("ESC")
+                DIM idle AS INTEGER = 1
+            LOOP
+
+            PRINT "DONE"
+
+            SUB Pressed(button AS INTEGER, x AS LONG, y AS LONG)
+                PRINT "PRESS"
+            END SUB
+
+            SUB Released(button AS INTEGER, x AS LONG, y AS LONG)
+                PRINT "UP"
+            END SUB
+
+            SUB Wheeled(delta AS INTEGER, x AS LONG, y AS LONG)
+                PRINT "WHEEL"
+            END SUB
+            """ + Environment.NewLine,
+            Encoding.UTF8);
     }
 
     private void BackupStateFile()
@@ -1270,6 +1450,7 @@ internal sealed class IdeSmokeHarness
             RecentFiles = new[]
             {
                 _successProgramPath,
+                _inKeyProgramPath,
                 _configFilePath,
                 _styleFilePath,
                 _syntaxErrorProgramPath

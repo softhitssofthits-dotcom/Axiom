@@ -49,10 +49,14 @@
             <Word>IMP</Word>
             <Word>INPUT</Word>
             <Word>IS</Word>
+            <Word>KEY</Word>
             <Word>LOOP</Word>
             <Word>MOD</Word>
+            <Word>MOUSE</Word>
             <Word>NEXT</Word>
             <Word>NOT</Word>
+            <Word>OFF</Word>
+            <Word>ON</Word>
             <Word>OPEN</Word>
             <Word>OR</Word>
             <Word>OUTPUT</Word>
@@ -63,6 +67,7 @@
             <Word>SELF</Word>
             <Word>SELECT</Word>
             <Word>STEP</Word>
+            <Word>STOP</Word>
             <Word>SUB</Word>
             <Word>THEN</Word>
             <Word>TO</Word>
@@ -184,6 +189,7 @@
             <Word>GETDIRS</Word>
             <Word>GETFILES</Word>
             <Word>HOUR</Word>
+            <Word>INKEY</Word>
             <Word>INSERT</Word>
             <Word>INSTR</Word>
             <Word>INSTRREV</Word>
@@ -194,6 +200,8 @@
             <Word>ISLEAPYEAR</Word>
             <Word>ISOPEN</Word>
             <Word>ISREADONLY</Word>
+            <Word>KEYDOWN</Word>
+            <Word>KEYPRESS</Word>
             <Word>JOIN</Word>
             <Word>LCASE</Word>
             <Word>LEFT</Word>
@@ -215,6 +223,10 @@
             <Word>MONTHNAME</Word>
             <Word>MOVEDIR</Word>
             <Word>MOVEFILE</Word>
+            <Word>MOUSEBUTTON</Word>
+            <Word>MOUSEPRESS</Word>
+            <Word>MOUSEX</Word>
+            <Word>MOUSEY</Word>
             <Word>NEWLINE</Word>
             <Word>NOW</Word>
             <Word>PADLEFT</Word>

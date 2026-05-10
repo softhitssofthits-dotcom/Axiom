@@ -230,6 +230,75 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_OnKeyStatement()
+    {
+        var program = ParseProgram("ON KEY(\"LEFT\"), HandleLeft", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<OnKeyStatementSyntax>(program);
+        Assert.Equal(SyntaxKind.OnKeyword, statement.OnKeyword.Kind);
+        Assert.Equal(SyntaxKind.KeyKeyword, statement.KeyKeyword.Kind);
+        Assert.Equal(SyntaxKind.IdentifierToken, statement.ActionToken.Kind);
+        Assert.Equal("HandleLeft", statement.ActionToken.Text);
+        var keyLiteral = Assert.IsType<LiteralExpressionSyntax>(statement.KeyExpression);
+        Assert.Equal("LEFT", Assert.IsType<string>(keyLiteral.LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_OnKeyOffStatement()
+    {
+        var program = ParseProgram("ON KEY(\"LEFT\"), OFF", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<OnKeyStatementSyntax>(program);
+        Assert.True(statement.DisablesHandler);
+        Assert.Equal(SyntaxKind.OffKeyword, statement.ActionToken.Kind);
+    }
+
+    [Theory]
+    [InlineData("ON KEY(\"LEFT\"), ON", SyntaxKind.OnKeyword)]
+    [InlineData("ON KEY(\"LEFT\"), STOP", SyntaxKind.StopKeyword)]
+    public void Parse_OnKeyModeStatement(string text, SyntaxKind expectedActionKind)
+    {
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<OnKeyStatementSyntax>(program);
+        Assert.Equal(expectedActionKind, statement.ActionToken.Kind);
+    }
+
+    [Fact]
+    public void Parse_OnMouseStatement()
+    {
+        var program = ParseProgram("ON MOUSE(1), HandleLeft", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<OnMouseStatementSyntax>(program);
+        Assert.Equal(SyntaxKind.OnKeyword, statement.OnKeyword.Kind);
+        Assert.Equal(SyntaxKind.MouseKeyword, statement.MouseKeyword.Kind);
+        Assert.Equal(SyntaxKind.IdentifierToken, statement.ActionToken.Kind);
+        Assert.Equal("HandleLeft", statement.ActionToken.Text);
+        var buttonLiteral = Assert.IsType<LiteralExpressionSyntax>(statement.ButtonExpression);
+        Assert.Equal(1, Assert.IsType<int>(buttonLiteral.LiteralToken.Value));
+    }
+
+    [Theory]
+    [InlineData("ON MOUSE(1), ON", SyntaxKind.OnKeyword)]
+    [InlineData("ON MOUSE(1), STOP", SyntaxKind.StopKeyword)]
+    [InlineData("ON MOUSE(1), OFF", SyntaxKind.OffKeyword)]
+    [InlineData("ON MOUSE(1, \"UP\"), OFF", SyntaxKind.OffKeyword)]
+    [InlineData("ON MOUSE(\"MOVE\"), STOP", SyntaxKind.StopKeyword)]
+    [InlineData("ON MOUSE(\"WHEEL\"), ON", SyntaxKind.OnKeyword)]
+    public void Parse_OnMouseModeStatement(string text, SyntaxKind expectedActionKind)
+    {
+        var program = ParseProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<OnMouseStatementSyntax>(program);
+        Assert.Equal(expectedActionKind, statement.ActionToken.Kind);
+    }
+
+    [Fact]
     public void Parse_FunctionDeclarationWithFunctionTypedParameterAndReturnType()
     {
         const string text = """

@@ -2,6 +2,7 @@ using System.Windows.Threading;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.Services.Input;
+using Axiom.Runtime;
 
 namespace Axiom.Ide.Tests;
 
@@ -51,6 +52,144 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(string.Empty, service.OutputText);
         Assert.False(service.IsWaitingForInput);
         Assert.Equal(string.Empty, service.CurrentInputText);
+    }
+
+    [Fact]
+    public void ReadKey_ReturnsQueuedKeyThenEmpty()
+    {
+        var service = new ProgramConsoleService();
+
+        service.EnqueueKey("LEFT");
+
+        Assert.Equal("LEFT", service.ReadKey());
+        Assert.Equal(string.Empty, service.ReadKey());
+    }
+
+    [Fact]
+    public void BeginSession_ClearsQueuedKeys()
+    {
+        var service = new ProgramConsoleService();
+
+        service.EnqueueKey("A");
+        service.BeginSession();
+
+        Assert.Equal(string.Empty, service.ReadKey());
+    }
+
+    [Fact]
+    public void IsKeyDown_TracksPressedKeysUntilReleased()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetKeyDown("LEFT");
+        service.SetKeyDown("ctrl");
+
+        Assert.True(service.IsKeyDown("LEFT"));
+        Assert.True(service.IsKeyDown("CTRL"));
+        Assert.False(service.IsKeyDown("RIGHT"));
+
+        service.SetKeyUp("LEFT");
+
+        Assert.False(service.IsKeyDown("LEFT"));
+        Assert.True(service.IsKeyDown("CTRL"));
+    }
+
+    [Fact]
+    public void BeginSession_ClearsPressedKeys()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetKeyDown("LEFT");
+        service.BeginSession();
+
+        Assert.False(service.IsKeyDown("LEFT"));
+    }
+
+    [Fact]
+    public void ClearKeyState_ClearsPressedKeysWithoutConsumingQueue()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetKeyDown("LEFT");
+        service.EnqueueKey("LEFT");
+        service.ClearKeyState();
+
+        Assert.False(service.IsKeyDown("LEFT"));
+        Assert.Equal("LEFT", service.ReadKey());
+    }
+
+    [Fact]
+    public void MouseState_TracksPositionAndButtons()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetMousePosition(128, 256);
+        service.EnqueueMouseButtonPress(1);
+        service.EnqueueMouseButtonPress(3);
+        service.SetMouseButtonDown(1);
+        service.SetMouseButtonDown(3);
+
+        Assert.Equal(128, service.GetMouseX());
+        Assert.Equal(256, service.GetMouseY());
+        Assert.True(service.IsMouseButtonDown(1));
+        Assert.False(service.IsMouseButtonDown(2));
+        Assert.True(service.IsMouseButtonDown(3));
+        Assert.Equal(1, service.ReadMouseButtonPress());
+        Assert.Equal(3, service.ReadMouseButtonPress());
+        Assert.Equal(0, service.ReadMouseButtonPress());
+
+        service.SetMouseButtonUp(1);
+
+        Assert.False(service.IsMouseButtonDown(1));
+        Assert.True(service.IsMouseButtonDown(3));
+    }
+
+    [Fact]
+    public void MouseState_QueuesReleaseAndMoveEvents()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetMousePosition(10, 20);
+        service.EnqueueMouseMove();
+        service.EnqueueMouseButtonRelease(1);
+        service.EnqueueMouseWheel(-120);
+
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Move, 0), service.ReadMouseEvent());
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Release, 1), service.ReadMouseEvent());
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Wheel, -120), service.ReadMouseEvent());
+        Assert.Equal(default, service.ReadMouseEvent());
+    }
+
+    [Fact]
+    public void BeginSession_ClearsMouseState()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetMousePosition(10, 20);
+        service.EnqueueMouseButtonPress(2);
+        service.SetMouseButtonDown(2);
+        service.BeginSession();
+
+        Assert.Equal(-1, service.GetMouseX());
+        Assert.Equal(-1, service.GetMouseY());
+        Assert.False(service.IsMouseButtonDown(2));
+        Assert.Equal(0, service.ReadMouseButtonPress());
+    }
+
+    [Fact]
+    public void ClearMouseState_ResetsPositionAndButtons()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetMousePosition(10, 20);
+        service.EnqueueMouseButtonPress(1);
+        service.SetMouseButtonDown(1);
+        service.ClearMouseState();
+
+        Assert.Equal(-1, service.GetMouseX());
+        Assert.Equal(-1, service.GetMouseY());
+        Assert.False(service.IsMouseButtonDown(1));
+        Assert.Equal(0, service.ReadMouseButtonPress());
     }
 
     [Fact]
