@@ -103,6 +103,23 @@ public sealed class InputStatementSyntax : StatementSyntax
     public IReadOnlyList<SyntaxToken> CommaTokens { get; }
 }
 
+public sealed class SleepStatementSyntax : StatementSyntax
+{
+    public SleepStatementSyntax(SyntaxToken sleepKeyword, ExpressionSyntax? durationExpression)
+    {
+        ArgumentNullException.ThrowIfNull(sleepKeyword);
+
+        SleepKeyword = sleepKeyword;
+        DurationExpression = durationExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.SleepStatement;
+
+    public SyntaxToken SleepKeyword { get; }
+
+    public ExpressionSyntax? DurationExpression { get; }
+}
+
 public sealed class OpenStatementSyntax : StatementSyntax
 {
     public OpenStatementSyntax(

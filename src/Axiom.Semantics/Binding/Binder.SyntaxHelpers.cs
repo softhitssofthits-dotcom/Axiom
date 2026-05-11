@@ -12,6 +12,7 @@ public sealed partial class Binder
     {
         return kind switch
         {
+            SyntaxKind.AmpersandToken => "&",
             SyntaxKind.PlusToken => "+",
             SyntaxKind.MinusToken => "-",
             SyntaxKind.StarToken => "*",
@@ -65,6 +66,7 @@ public sealed partial class Binder
             InputStatementSyntax inputStatement => inputStatement.Identifiers.Count > 0
                 ? inputStatement.Identifiers[0].Location
                 : inputStatement.InputKeyword.Location,
+            SleepStatementSyntax sleepStatement => sleepStatement.SleepKeyword.Location,
             ScreenStatementSyntax screenStatement => screenStatement.ScreenKeyword.Location,
             ClsStatementSyntax clsStatement => clsStatement.ClsKeyword.Location,
             ColorStatementSyntax colorStatement => colorStatement.ColorKeyword.Location,

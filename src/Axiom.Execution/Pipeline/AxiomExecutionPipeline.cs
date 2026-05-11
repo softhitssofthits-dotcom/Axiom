@@ -560,7 +560,9 @@ public sealed class AxiomExecutionPipeline
         var executionStopwatch = Stopwatch.StartNew();
         var runtimeResult = Interpreter.Execute(compiledProgram.BoundProgram, runtimeHost);
         executionStopwatch.Stop();
-        var status = runtimeResult.Succeeded ? ExecutionStatus.Success : ExecutionStatus.RuntimeFailure;
+        var status = runtimeResult.Cancelled
+            ? ExecutionStatus.Cancelled
+            : runtimeResult.Succeeded ? ExecutionStatus.Success : ExecutionStatus.RuntimeFailure;
 
         return CreateExecutionResult(
             status,
@@ -600,7 +602,9 @@ public sealed class AxiomExecutionPipeline
             shouldStopBeforeInstruction: stopBeforeFirstInstruction,
             breakpoints: breakpoints);
         executionStopwatch.Stop();
-        var status = runtimeResult.Succeeded ? ExecutionStatus.Success : ExecutionStatus.RuntimeFailure;
+        var status = runtimeResult.Cancelled
+            ? ExecutionStatus.Cancelled
+            : runtimeResult.Succeeded ? ExecutionStatus.Success : ExecutionStatus.RuntimeFailure;
 
         return CreateExecutionResult(
             status,

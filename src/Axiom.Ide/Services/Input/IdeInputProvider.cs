@@ -57,6 +57,9 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public bool IsScreenActive =>
         _promptService is IGraphicsHost graphicsHost && graphicsHost.IsScreenActive;
 
+    public bool IsScreenOutputActive =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.IsScreenOutputActive;
+
     public int ScreenMode =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.ScreenMode : 0;
 

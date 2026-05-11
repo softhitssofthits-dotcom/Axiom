@@ -27,6 +27,10 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
 
     public int OutputCheckpoint => _output.Count;
 
+    public bool IsCancellationRequested =>
+        _inputProvider is IRuntimeCancellationProvider inputHost && inputHost.IsCancellationRequested
+        || _outputWriter is IRuntimeCancellationProvider outputHost && outputHost.IsCancellationRequested;
+
     public string ReadInput(InputRequest request) => _inputProvider.ReadInput(request);
 
     public string ReadKey() =>
@@ -64,6 +68,9 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
 
     public bool IsScreenActive =>
         _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsScreenActive;
+
+    public bool IsScreenOutputActive =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsScreenOutputActive;
 
     public int ScreenMode =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ScreenMode : 0;

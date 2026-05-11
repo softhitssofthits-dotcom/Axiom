@@ -19,7 +19,7 @@ public sealed partial class BytecodeVm
         }
 
         var request = new InputRequest(plan.PromptText, plan.Targets.Length);
-        var text = _host.IsScreenActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
+        var text = _host.IsScreenOutputActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
         InvalidateReverseExecutionHistory();
 
         if (!TryParseAndStoreInputValues(frame, plan.Targets, text, location, instructionIndex))

@@ -12,6 +12,7 @@ public enum BoundNodeKind
     PrintStatement,
     PrintUsingStatement,
     InputStatement,
+    SleepStatement,
     ScreenStatement,
     ClsStatement,
     ColorStatement,

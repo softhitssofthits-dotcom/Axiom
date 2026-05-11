@@ -6,5 +6,6 @@ public enum ExecutionStatus
     SyntaxFailure,
     SemanticFailure,
     BackendFailure,
-    RuntimeFailure
+    RuntimeFailure,
+    Cancelled
 }

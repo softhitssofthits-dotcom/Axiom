@@ -1,0 +1,13 @@
+' Запустите пример в Axiom.Ide и закройте окно SCREEN крестиком вместо ESC.
+' Ожидается: выполнение прерывается, IDE разблокирует команды, строка "Все" не печатается.
+SCREEN 9
+
+FOR i = 1 TO 1000
+    CIRCLE (100 + i, 150 + i), 30 + (i + 20), i
+NEXT
+
+DO WHILE NOT KEYPRESS("ESC")
+LOOP
+
+SCREEN 0
+PRINT "Все"

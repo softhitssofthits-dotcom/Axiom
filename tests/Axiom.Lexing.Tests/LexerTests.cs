@@ -209,7 +209,7 @@ public sealed class LexerTests
     [Fact]
     public void Lex_RecognizesComparisonOperatorsAndPunctuation()
     {
-        var tokens = Lex("< <= <> > >= = + - * / \\ ( ) , ;", out var diagnostics);
+        var tokens = Lex("< <= <> > >= = & + - * / \\ ( ) , ;", out var diagnostics);
 
         Assert.Empty(diagnostics);
         AssertTokenKinds(
@@ -220,6 +220,7 @@ public sealed class LexerTests
             TokenKind.GreaterToken,
             TokenKind.GreaterOrEqualsToken,
             TokenKind.EqualsToken,
+            TokenKind.AmpersandToken,
             TokenKind.PlusToken,
             TokenKind.MinusToken,
             TokenKind.StarToken,

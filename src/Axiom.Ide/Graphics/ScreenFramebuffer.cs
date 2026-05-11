@@ -121,6 +121,53 @@ public sealed class ScreenFramebuffer
         return snapshot;
     }
 
+    public ScreenFramebufferSnapshot CreateSnapshot(
+        ScreenTextBuffer graphicsText,
+        int inputForeground,
+        string? inputText = null,
+        int inputRow = 1,
+        int inputColumn = 1)
+    {
+        ArgumentNullException.ThrowIfNull(graphicsText);
+
+        var snapshot = CreateSnapshot();
+
+        for (var row = 0; row < graphicsText.Lines.Count; row++)
+        {
+            var line = graphicsText.Lines[row];
+            for (var column = 0; column < line.Count; column++)
+            {
+                var cell = line[column];
+                ScreenTextRasterizer.DrawGlyph(
+                    snapshot.BgraPixels,
+                    snapshot.Width,
+                    snapshot.Height,
+                    column * ScreenTextRasterizer.CellWidth,
+                    row * ScreenTextRasterizer.CellHeight,
+                    cell.Character,
+                    MapColorToBgra(cell.Foreground),
+                    cell.Background.HasValue ? MapColorToBgra(cell.Background.Value) : null);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(inputText))
+        {
+            var inputX = Math.Max(0, inputColumn - 1) * ScreenTextRasterizer.CellWidth;
+            var inputY = Math.Max(0, inputRow - 1) * ScreenTextRasterizer.CellHeight;
+            ScreenTextRasterizer.DrawText(
+                snapshot.BgraPixels,
+                snapshot.Width,
+                snapshot.Height,
+                inputX,
+                inputY,
+                inputText,
+                MapColorToBgra(inputForeground),
+                MapColorToBgra(0));
+        }
+
+        return snapshot;
+    }
+
     private bool IsInside(long x, long y) =>
         x >= 0 &&
         y >= 0 &&
@@ -129,27 +176,51 @@ public sealed class ScreenFramebuffer
 
     private int GetOffset(int x, int y) => y * Width + x;
 
-    public static int NormalizeColorIndex(int color) => Math.Abs(color) % 16;
+    public static int NormalizeColorIndex(int color) => (int)(Math.Abs((long)color) % 256);
 
     public static uint MapColorToBgra(int color) => NormalizeColorIndex(color) switch
     {
         0 => 0xFF000000,
-        1 => 0xFFAA0000,
+        1 => 0xFF0000AA,
         2 => 0xFF00AA00,
-        3 => 0xFFAAAA00,
-        4 => 0xFF0000AA,
+        3 => 0xFF00AAAA,
+        4 => 0xFFAA0000,
         5 => 0xFFAA00AA,
-        6 => 0xFF0055AA,
+        6 => 0xFFAA5500,
         7 => 0xFFAAAAAA,
         8 => 0xFF555555,
-        9 => 0xFFFF5555,
+        9 => 0xFF5555FF,
         10 => 0xFF55FF55,
-        11 => 0xFFFFFF55,
-        12 => 0xFF5555FF,
+        11 => 0xFF55FFFF,
+        12 => 0xFFFF5555,
         13 => 0xFFFF55FF,
-        14 => 0xFF55FFFF,
-        _ => 0xFFFFFFFF
+        14 => 0xFFFFFF55,
+        15 => 0xFFFFFFFF,
+        var colorIndex and >= 16 and <= 231 => MapRgbCubeColorToBgra(colorIndex),
+        var colorIndex => MapGrayColorToBgra(colorIndex)
     };
+
+    private static uint MapRgbCubeColorToBgra(int colorIndex)
+    {
+        var cubeIndex = colorIndex - 16;
+        var red = cubeIndex / 36;
+        var green = cubeIndex / 6 % 6;
+        var blue = cubeIndex % 6;
+
+        return ToBgra(GetRgbCubeComponent(red), GetRgbCubeComponent(green), GetRgbCubeComponent(blue));
+    }
+
+    private static uint MapGrayColorToBgra(int colorIndex)
+    {
+        var component = 8 + ((colorIndex - 232) * 10);
+        return ToBgra(component, component, component);
+    }
+
+    private static int GetRgbCubeComponent(int component) =>
+        component == 0 ? 0 : 55 + (component * 40);
+
+    private static uint ToBgra(int red, int green, int blue) =>
+        0xFF000000u | ((uint)red << 16) | ((uint)green << 8) | (uint)blue;
 }
 
 public sealed record ScreenFramebufferSnapshot(int Width, int Height, uint[] BgraPixels);

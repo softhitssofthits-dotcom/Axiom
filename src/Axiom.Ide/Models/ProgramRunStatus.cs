@@ -7,5 +7,6 @@ public enum ProgramRunStatus
     SemanticFailure,
     BackendFailure,
     RuntimeFailure,
+    Cancelled,
     InfrastructureFailure
 }

@@ -58,6 +58,7 @@ public sealed partial class BytecodeVm
     private DebugStepBoundary? _debugStepBoundary;
     private bool _canUseFastInstructionPath;
     private bool _hasPendingOutput;
+    private bool _cancelled;
 
     private BytecodeVm(
         BytecodeModule module,
@@ -136,7 +137,7 @@ public sealed partial class BytecodeVm
             vm.FinishRun();
         }
 
-        return new RuntimeResult(vm._diagnostics, vm._stopState, vm.GetPendingOutputPreview());
+        return new RuntimeResult(vm._diagnostics, vm._stopState, vm.GetPendingOutputPreview(), vm._cancelled);
     }
 
     private BytecodeCallFrame CurrentFrame => _callStack.Peek();
@@ -159,6 +160,11 @@ public sealed partial class BytecodeVm
 
         while (_callStack.Count > 0 && _stopState is null)
         {
+            if (CheckCancellationRequested())
+            {
+                break;
+            }
+
             ExecuteCurrentInstruction();
         }
     }
@@ -233,6 +239,11 @@ public sealed partial class BytecodeVm
         {
             while (_callStack.Count > 0 && _stopState is null)
             {
+                if (CheckCancellationRequested())
+                {
+                    break;
+                }
+
                 ExecuteCurrentInstruction();
             }
         }
@@ -244,7 +255,20 @@ public sealed partial class BytecodeVm
             FinishRun();
         }
 
-        return new RuntimeResult(_diagnostics, _stopState, GetPendingOutputPreview());
+        return new RuntimeResult(_diagnostics, _stopState, GetPendingOutputPreview(), _cancelled);
+    }
+
+    private bool CheckCancellationRequested()
+    {
+        if (!_host.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        _cancelled = true;
+        _stopState = null;
+        _callStack.Clear();
+        return true;
     }
 
     private static BytecodeVmStateSnapshot? FindStepBackTargetSnapshot(
@@ -540,6 +564,10 @@ public sealed partial class BytecodeVm
                 frame.EvaluationStack.Push(EvaluateNegate(PopValue(frame, instructionIndex), ResolveLocation(frame.Routine.Id, instructionIndex)));
                 break;
 
+            case Opcode.Concat:
+                ExecuteBinaryInstruction(frame, instruction.Opcode, instructionIndex);
+                break;
+
             case Opcode.Add:
                 ExecuteAddInstruction(frame, instructionIndex);
                 break;
@@ -742,6 +770,11 @@ public sealed partial class BytecodeVm
 
             case Opcode.Input:
                 ExecuteInput(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.Sleep:
+                ExecuteSleepInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
                 break;
 
             case Opcode.Screen:
@@ -1028,6 +1061,7 @@ public sealed partial class BytecodeVm
         stack.Push(opcode switch
         {
             Opcode.Add => EvaluateAdd(left, right, location),
+            Opcode.Concat => RuntimeValue.FromString(left.ToDisplayString() + right.ToDisplayString()),
             Opcode.Subtract => EvaluateSubtract(left, right, location),
             Opcode.Multiply => EvaluateMultiply(left, right, location),
             Opcode.Power => EvaluatePower(left, right, location),
@@ -3375,7 +3409,7 @@ public sealed partial class BytecodeVm
 
     private void WriteTextLine(string text)
     {
-        if (_host.IsScreenActive)
+        if (_host.IsScreenOutputActive)
         {
             _host.WriteGraphicsText(text, newLine: true);
         }

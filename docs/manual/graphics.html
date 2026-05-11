@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Графика</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="graphics">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графический режим программы</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><span>Графика</span>
+            </nav>
+            <p class="eyebrow">Графика</p>
+            <h1 class="page-title">Графика</h1>
+            <p class="lead">Команда <code>SCREEN</code> открывает отдельное окно программы. <code>SCREEN 0</code> выбирает текстовое окно, а режимы <code>1..10</code> включают графическую поверхность, на которой программа выводит текст, рисует пиксели и примитивы, читает мышь и клавиатуру.</p>
+
+            <section class="article-section">
+                <h2>Состав раздела</h2>
+                <table>
+                    <thead>
+                        <tr><th>Тема</th><th>Что описывает</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Выбор текстового режима <code>0</code>, графических режимов <code>1..10</code> и логических размеров.</td></tr>
+                        <tr><td><a href="graphics-text.html">Текстовый слой</a></td><td><code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code>, цвета текста и перезапись строк после <code>LOCATE</code>.</td></tr>
+                        <tr><td><a href="graphics-primitives.html">Графические примитивы</a></td><td><code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code> и <code>POINT</code>.</td></tr>
+                        <tr><td><a href="screen-functions.html">Сведения о режиме</a></td><td><code>SCREENISACTIVE()</code>, <code>SCREENMODE()</code>, <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code>.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Координаты</h2>
+                <p>Пиксельная система координат начинается с левого верхнего угла. Координата <code>x</code> растёт вправо, координата <code>y</code> растёт вниз. Для активного экрана шириной <code>w</code> и высотой <code>h</code> видимая область пикселей имеет диапазоны <code>0..w-1</code> и <code>0..h-1</code>.</p>
+                <p>Текстовый слой использует строки и столбцы, начиная с <code>1</code>. Команда <code>LOCATE 1, 1</code> ставит текстовый курсор в начало первой строки.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Цвета</h2>
+                <p>Основная палитра содержит индексы <code>0..15</code>. Если команда получает другое целое значение цвета, текущая реализация приводит его к палитре по правилу <code>ABS(color) MOD 16</code>. Это относится к цветам текста, фона, пикселей, линий, прямоугольников и окружностей.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочные примеры</h2>
+                <p>Запускаемые примеры находятся в <code>samples/graphics/</code>: режимы экрана, текстовый слой, ввод на экране, мышь, примитивы и небольшой игровой пример. Открой нужный файл в <code>Axiom.Ide</code> и запусти его в режиме <code>Bytecode</code>.</p>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

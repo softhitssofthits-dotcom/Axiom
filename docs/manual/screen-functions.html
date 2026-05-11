@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Функции состояния SCREEN</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="screen-functions">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Состояние SCREEN</span>
+            </nav>
+            <p class="eyebrow">Функции</p>
+            <h1 class="page-title">Функции состояния SCREEN</h1>
+            <p class="lead">Функции состояния позволяют программе узнать, включён ли графический режим, какой режим выбран и каковы текущие логические размеры текущего окна <code>SCREEN</code>.</p>
+
+            <section class="article-section">
+                <h2 id="screenisactive">SCREENISACTIVE</h2>
+<pre><code>SCREENISACTIVE()</code></pre>
+                <p>Возвращает <code>TRUE</code>, если активен графический режим <code>SCREEN 1..10</code>. В текстовом режиме <code>SCREEN 0</code> результат равен <code>FALSE</code>, потому что пиксельные графические команды недоступны.</p>
+            </section>
+
+            <section class="article-section">
+                <h2 id="screenmode">SCREENMODE</h2>
+<pre><code>SCREENMODE()</code></pre>
+                <p>Возвращает номер текущего режима <code>SCREEN</code>. Для текстового режима результат равен <code>0</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2 id="screenwidth">SCREENWIDTH</h2>
+<pre><code>SCREENWIDTH()</code></pre>
+                <p>Возвращает ширину текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>640</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2 id="screenheight">SCREENHEIGHT</h2>
+<pre><code>SCREENHEIGHT()</code></pre>
+                <p>Возвращает высоту текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>300</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+<pre><code>PRINT SCREENISACTIVE()
+SCREEN 5
+PRINT SCREENISACTIVE()
+PRINT SCREENMODE()
+PRINT SCREENWIDTH(); "x"; SCREENHEIGHT()
+SCREEN 0
+PRINT SCREENMODE()</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <p><a href="screen.html">Оператор SCREEN</a>, <a href="graphics.html">графика</a>.</p>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+' Ожидаемый вывод:
+' Привет, Иван тебе 7 лет.
+' flag=TRUE score=12.5
+DIM name AS STRING = "Иван"
+DIM age AS INTEGER = 7
+DIM score AS DOUBLE = 12.5
+
+PRINT "Привет, " & name & " тебе " & age & " лет."
+PRINT "flag=" & TRUE & " score=" & score

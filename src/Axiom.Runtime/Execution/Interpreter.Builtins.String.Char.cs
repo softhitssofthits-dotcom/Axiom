@@ -19,13 +19,13 @@ public sealed partial class Interpreter
 
         using var enumerator = text.EnumerateRunes();
         enumerator.MoveNext();
-        return enumerator.Current.Value;
+        return RuntimeCharacterEncoding.Asc(enumerator.Current);
     }
 
     private static string EvaluateChr(BoundCallExpression expression, int code)
     {
         _ = expression;
-        return new Rune(code).ToString();
+        return RuntimeCharacterEncoding.Chr(code);
     }
 
     private int RequireValidUnicodeCodePoint(

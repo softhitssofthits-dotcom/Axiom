@@ -284,7 +284,7 @@ public sealed partial class Interpreter
 
     private void WriteTextLine(string text)
     {
-        if (_host.IsScreenActive)
+        if (_host.IsScreenOutputActive)
         {
             _host.WriteGraphicsText(text, newLine: true);
         }

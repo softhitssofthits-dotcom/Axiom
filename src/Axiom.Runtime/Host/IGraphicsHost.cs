@@ -11,6 +11,8 @@ public interface IGraphicsHost
 {
     bool IsScreenActive => false;
 
+    bool IsScreenOutputActive => IsScreenActive;
+
     int ScreenMode => 0;
 
     int ScreenWidth => 0;

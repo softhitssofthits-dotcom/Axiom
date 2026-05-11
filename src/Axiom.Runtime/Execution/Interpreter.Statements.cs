@@ -10,6 +10,11 @@ public sealed partial class Interpreter
     {
         foreach (var statement in statements)
         {
+            if (CheckCancellationRequested())
+            {
+                return ExecutionSignal.None;
+            }
+
             DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatement(statement);
 
@@ -34,6 +39,7 @@ public sealed partial class Interpreter
             BoundPrintStatement print => ExecutePrint(print),
             BoundPrintUsingStatement printUsing => ExecutePrintUsing(printUsing),
             BoundInputStatement input => ExecuteInput(input),
+            BoundSleepStatement sleep => ExecuteSleep(sleep),
             BoundScreenStatement screen => ExecuteScreen(screen),
             BoundClsStatement cls => ExecuteCls(cls),
             BoundColorStatement color => ExecuteColor(color),
@@ -158,6 +164,43 @@ public sealed partial class Interpreter
     {
         DispatchKeyboardHandlers(location);
         DispatchMouseHandlers(location);
+    }
+
+    private ExecutionSignal ExecuteSleep(BoundSleepStatement statement)
+    {
+        if (statement.DurationExpression is null)
+        {
+            WaitForAnyKey();
+            return ExecutionSignal.None;
+        }
+
+        var milliseconds = EvaluateExpression(statement.DurationExpression).AsLong();
+        SleepForMilliseconds(milliseconds, statement.Location);
+        return ExecutionSignal.None;
+    }
+
+    private void WaitForAnyKey()
+    {
+        while (!TryReadKeyboardKey(out _))
+        {
+            if (CheckCancellationRequested())
+            {
+                return;
+            }
+
+            System.Threading.Thread.Sleep(10);
+        }
+    }
+
+    private void SleepForMilliseconds(long milliseconds, TextLocation location)
+    {
+        if (milliseconds < 0 || milliseconds > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("SLEEP", "milliseconds", $"должен быть в диапазоне 0..{int.MaxValue}.", location);
+            throw new RuntimeFailureException();
+        }
+
+        System.Threading.Thread.Sleep((int)milliseconds);
     }
 
     private ExecutionSignal ExecuteRedim(BoundRedimStatement statement)
@@ -309,7 +352,7 @@ public sealed partial class Interpreter
         }
 
         var request = new InputRequest(statement.PromptText, statement.Variables.Count);
-        var text = _host.IsScreenActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
+        var text = _host.IsScreenOutputActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
 
         if (!TryParseInputValues(statement.Variables, text, statement.Location, out var values))
         {
@@ -591,6 +634,11 @@ public sealed partial class Interpreter
 
         while (true)
         {
+            if (CheckCancellationRequested())
+            {
+                return ExecutionSignal.None;
+            }
+
             DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
@@ -699,6 +747,11 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            if (CheckCancellationRequested())
+            {
+                return ExecutionSignal.None;
+            }
+
             DispatchInputHandlers(statement.Location);
             var current = GetVariableValue(statement.Variable).AsInteger();
 
@@ -741,6 +794,11 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            if (CheckCancellationRequested())
+            {
+                return ExecutionSignal.None;
+            }
+
             DispatchInputHandlers(statement.Location);
             var current = GetVariableValue(statement.Variable).AsLong();
 
@@ -783,6 +841,11 @@ public sealed partial class Interpreter
     {
         while (true)
         {
+            if (CheckCancellationRequested())
+            {
+                return ExecutionSignal.None;
+            }
+
             DispatchInputHandlers(statement.Location);
             var current = GetVariableValue(statement.Variable).AsDouble();
 

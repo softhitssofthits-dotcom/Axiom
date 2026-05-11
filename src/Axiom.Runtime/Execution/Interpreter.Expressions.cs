@@ -141,6 +141,8 @@ public sealed partial class Interpreter
 
         return expression.OperatorKind switch
         {
+            SyntaxKind.AmpersandToken
+                => RuntimeValue.FromString(left.ToDisplayString() + right.ToDisplayString()),
             SyntaxKind.PlusToken when expression.Type == TypeSymbol.String
                 => RuntimeValue.FromString(left.AsString() + right.AsString()),
             SyntaxKind.PlusToken when expression.Type == TypeSymbol.Integer

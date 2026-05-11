@@ -22,6 +22,16 @@ public sealed partial class Binder
         return type == TypeSymbol.Integer || type == TypeSymbol.Long;
     }
 
+    private static bool CanConcatenateAsString(TypeSymbol type)
+    {
+        return type == TypeSymbol.String
+            || type == TypeSymbol.Integer
+            || type == TypeSymbol.Long
+            || type == TypeSymbol.Double
+            || type == TypeSymbol.Decimal
+            || type == TypeSymbol.Boolean;
+    }
+
     private static bool SupportsOrderedComparison(TypeSymbol type)
     {
         return IsNumeric(type) || type == TypeSymbol.String;

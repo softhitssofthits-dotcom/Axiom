@@ -1,4 +1,4 @@
-' Expected: graphics screen reports active mode and dimensions.
+' Expected: graphics screen reports active mode and dimensions, then SCREEN 0 switches to text window.
 SCREEN 5
 PRINT "active="; SCREENISACTIVE()
 PRINT "mode="; SCREENMODE()
@@ -7,4 +7,4 @@ PRINT "Press ESC to close SCREEN"
 DO WHILE NOT KEYPRESS("ESC")
 LOOP
 SCREEN 0
-PRINT "console again"
+PRINT "text mode screen"

@@ -72,6 +72,19 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_AmpersandUsesAdditivePrecedence()
+    {
+        var program = ParseProgram("PRINT \"A\" & 1 + 2", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var expression = Assert.IsType<BinaryExpressionSyntax>(AssertSinglePrintExpression(AssertPrintStatement(program)));
+        Assert.Equal(SyntaxKind.PlusToken, expression.OperatorToken.Kind);
+
+        var left = Assert.IsType<BinaryExpressionSyntax>(expression.Left);
+        Assert.Equal(SyntaxKind.AmpersandToken, left.OperatorToken.Kind);
+    }
+
+    [Fact]
     public void Parse_UnaryOperatorsBindBetweenExponentiationAndMultiplicativeOperators()
     {
         var program = ParseProgram("PRINT 2 * -3 ^ 2", out var diagnostics);
@@ -307,6 +320,27 @@ public sealed class ParserTests
         var statement = AssertGlobalStatement<ScreenStatementSyntax>(program);
         var mode = Assert.IsType<LiteralExpressionSyntax>(statement.ModeExpression);
         Assert.Equal(10, Assert.IsType<int>(mode.LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_SleepStatementWithDuration()
+    {
+        var program = ParseProgram("SLEEP 500", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<SleepStatementSyntax>(program);
+        var duration = Assert.IsType<LiteralExpressionSyntax>(statement.DurationExpression);
+        Assert.Equal(500, Assert.IsType<int>(duration.LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_SleepStatementWithoutDuration()
+    {
+        var program = ParseProgram("SLEEP", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<SleepStatementSyntax>(program);
+        Assert.Null(statement.DurationExpression);
     }
 
     [Fact]

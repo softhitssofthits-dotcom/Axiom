@@ -135,6 +135,37 @@ public sealed partial class BytecodeVm
             : string.Empty;
     }
 
+    private void ExecuteSleepInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        if (instruction.GetOperand(0) == 0)
+        {
+            WaitForAnyKey();
+            return;
+        }
+
+        var milliseconds = PopValue(frame, instructionIndex).AsLong();
+        SleepForMilliseconds(milliseconds, ResolveLocation(frame.Routine.Id, instructionIndex));
+    }
+
+    private void WaitForAnyKey()
+    {
+        while (!TryReadKeyboardKey(out _))
+        {
+            System.Threading.Thread.Sleep(10);
+        }
+    }
+
+    private void SleepForMilliseconds(long milliseconds, TextLocation location)
+    {
+        if (milliseconds < 0 || milliseconds > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("SLEEP", "milliseconds", $"должен быть в диапазоне 0..{int.MaxValue}.", location);
+            throw new RuntimeFailureException();
+        }
+
+        System.Threading.Thread.Sleep((int)milliseconds);
+    }
+
     private bool IsKeyboardKeyDown(string keyText)
     {
         var chord = KeyboardInputNormalizer.NormalizeChord(keyText);

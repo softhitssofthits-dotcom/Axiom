@@ -378,6 +378,11 @@ public sealed class LoweredInstruction
             valueCount: variables.Count);
     }
 
+    public static LoweredInstruction Sleep(TextLocation location, bool hasDuration)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Sleep, location, valueCount: hasDuration ? 1 : 0);
+    }
+
     public static LoweredInstruction PushErrorHandler(
         TextLocation location,
         string? catchLabel,

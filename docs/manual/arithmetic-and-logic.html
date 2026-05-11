@@ -30,7 +30,7 @@
 
             <section class="article-section">
                 <h2>Сводка</h2>
-                <p>В арифметике доступны <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code> и <code>^</code>. Для целочисленных типов <code>INTEGER</code> и <code>LONG</code> дополнительно доступны побитовые <code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code>, <code>IMP</code> и сдвиги <code>&lt;&lt;</code>, <code>&gt;&gt;</code>. Литералы вида <code>&amp;HFF</code> задают шестнадцатеричные целые числа.</p>
+                <p>В арифметике доступны <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code> и <code>^</code>. Для целочисленных типов <code>INTEGER</code> и <code>LONG</code> дополнительно доступны побитовые <code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code>, <code>IMP</code> и сдвиги <code>&lt;&lt;</code>, <code>&gt;&gt;</code>. Для построения строк есть строгая строковая форма <code>+</code> и отдельный оператор <code>&amp;</code>, который превращает скалярные значения в текст и объединяет их. Литералы вида <code>&amp;HFF</code> задают шестнадцатеричные целые числа.</p>
             </section>
 
             <section class="article-section">
@@ -43,6 +43,7 @@
 &lt;целое выражение&gt; \ &lt;целое выражение&gt;
 &lt;целое выражение&gt; MOD &lt;целое выражение&gt;
 &lt;строковое выражение&gt; + &lt;строковое выражение&gt;
+&lt;скалярное выражение&gt; &amp; &lt;скалярное выражение&gt;
 
 &lt;выражение&gt; = &lt;выражение&gt;
 &lt;выражение&gt; &lt;&gt; &lt;выражение&gt;
@@ -75,6 +76,7 @@ NOT &lt;целое выражение&gt;
                     <li><code>&lt;числовое выражение&gt;</code> — выражение типов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>.</li>
                     <li><code>&lt;целое выражение&gt;</code> — выражение только типов <code>INTEGER</code> или <code>LONG</code>.</li>
                     <li><code>&lt;строковое выражение&gt;</code> — выражение типа <code>STRING</code>.</li>
+                    <li><code>&lt;скалярное выражение&gt;</code> — выражение типа <code>STRING</code>, <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> или <code>BOOLEAN</code>.</li>
                     <li><code>&lt;логическое выражение&gt;</code> — выражение типа <code>BOOLEAN</code>.</li>
                     <li><code>&lt;шестнадцатеричные цифры&gt;</code> — одна или больше цифр <code>0-9</code>, <code>A-F</code> или <code>a-f</code>.</li>
                 </ul>
@@ -98,7 +100,12 @@ NOT &lt;целое выражение&gt;
                 <p>Оператор <code>MOD</code> тоже работает только с типами <code>INTEGER</code> и <code>LONG</code>. Тип результата определяется так же, как у <code>\</code>. Знак остатка совпадает со знаком левого операнда, потому что операция следует правилу вычисления, принятому в C#.</p>
 
                 <h3 id="string-concatenation">Конкатенация строк</h3>
-                <p>Если оба операнда имеют тип <code>STRING</code>, оператор <code>+</code> объединяет их в одну строку.</p>
+                <p>Если оба операнда имеют тип <code>STRING</code>, оператор <code>+</code> объединяет их в одну строку. Эта форма остаётся строгой: выражение <code>"Возраст: " + age</code> не проходит семантическую проверку, если <code>age</code> имеет числовой тип.</p>
+                <p>Оператор <code>&amp;</code> предназначен для явного построения строки из скалярных значений. Он принимает <code>STRING</code>, <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> и <code>BOOLEAN</code>, переводит каждое значение в тот же текстовый вид, который использует <code>PRINT</code>, и возвращает <code>STRING</code>. Для массивов, записей <code>TYPE</code>, <code>FILE</code>, значений функций и ошибок такая конкатенация не определена.</p>
+                <pre><code class="language-basic">DIM name AS STRING = "Иван"
+DIM age AS INTEGER = 7
+
+PRINT "Привет, " & name & " тебе " & age & " лет."</code></pre>
             </section>
 
             <section class="article-section">
@@ -129,7 +136,7 @@ NOT &lt;целое выражение&gt;
                     <li><code>^</code>;</li>
                     <li>унарный <code>-</code> и <code>NOT</code>;</li>
                     <li><code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code>;</li>
-                    <li><code>+</code>, <code>-</code>;</li>
+                    <li><code>+</code>, <code>-</code>, <code>&amp;</code>;</li>
                     <li><code>&lt;&lt;</code>, <code>&gt;&gt;</code>;</li>
                     <li>сравнения;</li>
                     <li><code>AND</code>;</li>
@@ -150,6 +157,7 @@ PRINT 6 EQV 3
 PRINT 6 IMP 3
 PRINT 1 + 2 &lt;&lt; 1
 PRINT "A" + "B"
+PRINT "Age: " & 42
 PRINT 10 &gt; 3 AND NOT FALSE</code></pre>
                 <ul class="resource-list">
                     <li><a href="../../samples/expressions/arithmetic/basic_math.axm">Арифметика: базовые вычисления</a></li>
@@ -167,6 +175,7 @@ PRINT 10 &gt; 3 AND NOT FALSE</code></pre>
                     <li><a href="../../samples/operators/imp/basic_usage.axm">Оператор <code>IMP</code></a></li>
                     <li><a href="../../samples/operators/shift-left/basic_usage.axm">Оператор <code>&lt;&lt;</code></a></li>
                     <li><a href="../../samples/operators/shift-right/basic_usage.axm">Оператор <code>&gt;&gt;</code></a></li>
+                    <li><a href="../../samples/operators/ampersand/mixed_scalar_concat.axm">Оператор <code>&amp;</code>: конкатенация смешанных скалярных значений</a></li>
                     <li><a href="../../samples/expressions/comparisons/basic_compare.axm">Сравнения: базовые проверки</a></li>
                     <li><a href="../../samples/expressions/comparisons/string_order.axm">Сравнения строк</a></li>
                     <li><a href="../../samples/expressions/logical/basic_logic.axm">Логика: <code>NOT</code>, <code>AND</code>, <code>OR</code></a></li>
@@ -179,7 +188,7 @@ PRINT 10 &gt; 3 AND NOT FALSE</code></pre>
                 <ul>
                     <li><code>MB0003</code> — некорректный числовой литерал, например <code>&amp;H</code> без шестнадцатеричных цифр.</li>
                     <li><code>MB0004</code> — числовой литерал выходит за диапазон поддерживаемого типа, в том числе слишком большой шестнадцатеричный литерал.</li>
-                    <li><code>MB2003</code> — оператор применён к несовместимым типам, например <code>7.5 \ 2</code>, <code>TRUE MOD 2</code> или <code>TRUE EQV 1</code>.</li>
+                    <li><code>MB2003</code> — оператор применён к несовместимым типам, например <code>7.5 \ 2</code>, <code>TRUE MOD 2</code>, <code>TRUE EQV 1</code> или конкатенация <code>&amp;</code> со значением не скалярного типа.</li>
                     <li><code>MB3001</code> — деление на ноль в <code>/</code>, <code>\</code> или <code>MOD</code>.</li>
                     <li><code>MB3008</code> — арифметическое переполнение, в том числе в крайних случаях наподобие деления минимального <code>INTEGER</code> или <code>LONG</code> на <code>-1</code> и при недопустимом результате <code>^</code>.</li>
                 </ul>

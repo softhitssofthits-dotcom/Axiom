@@ -218,6 +218,7 @@ public sealed class AcceptanceProgramTests
 
     [Theory]
     [InlineData("samples/operators/and/bitwise_usage.axm", new[] { "2", "FALSE" })]
+    [InlineData("samples/operators/ampersand/mixed_scalar_concat.axm", new[] { "Привет, Иван тебе 7 лет.", "flag=TRUE score=12.5" })]
     [InlineData("samples/operators/eqv/basic_usage.axm", new[] { "TRUE", "FALSE", "-6" })]
     [InlineData("samples/operators/imp/basic_usage.axm", new[] { "FALSE", "TRUE", "-5" })]
     [InlineData("samples/operators/integer-division/basic_usage.axm", new[] { "3", "-3", "-3", "10737418239" })]
@@ -1319,6 +1320,32 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void SleepAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/sleep/delay_and_key_wait.axm");
+
+        var result = Run(
+            sourceText,
+            inputProvider: new QueueKeyboardInputProvider("SPACE"),
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "Пауза 500 мс...",
+                "Нажмите любую клавишу.",
+                "Готово"
+            ],
+            result.Output);
+    }
+
+    [Fact]
     public void OnKeyAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/on-key/left_handler.axm");
@@ -1742,22 +1769,15 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["console again"], result.Output);
-        Assert.Equal(
-            [
-                "active=TRUE",
-                "mode=5",
-                "size=1280x720",
-                "Press ESC to close SCREEN"
-            ],
-            inputProvider.GraphicsOutput);
+        Assert.Empty(result.Output);
+        Assert.Equal(["text mode screen"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
     public void ScreenTextAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/text/print_locate_color.axm");
-        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
@@ -1765,8 +1785,8 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Back to Output"], result.Output);
-        Assert.Equal(["CLS cleared the graphics text layer"], inputProvider.GraphicsOutput);
+        Assert.Empty(result.Output);
+        Assert.Empty(inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1781,8 +1801,24 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Input sample finished"], result.Output);
-        Assert.Equal(["Hello, Ada"], inputProvider.GraphicsOutput);
+        Assert.Empty(result.Output);
+        Assert.Equal(["Input sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void ScreenZeroTextInputAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/input/text_screen_input.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["Your name? Ada", "Hello, Ada"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1797,8 +1833,8 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Graphics primitives sample finished"], result.Output);
-        Assert.Contains("POINT(10,10)=12", inputProvider.GraphicsOutput);
+        Assert.Empty(result.Output);
+        Assert.Equal(["Graphics primitives sample finished"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1823,8 +1859,8 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Mouse sample finished"], result.Output);
-        Assert.Contains(inputProvider.GraphicsOutput, static line => line.Contains("event=", StringComparison.Ordinal));
+        Assert.Empty(result.Output);
+        Assert.Equal(["Mouse sample finished"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1839,10 +1875,8 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Paddle ball sample finished: esc"], result.Output);
-        Assert.Contains(
-            inputProvider.GraphicsOutput,
-            static line => line.Contains("SPACE pauses/resumes", StringComparison.Ordinal));
+        Assert.Empty(result.Output);
+        Assert.Equal(["Paddle ball sample finished: esc"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2136,6 +2170,7 @@ public sealed class AcceptanceProgramTests
         private readonly long _mouseY;
         private readonly Dictionary<(long X, long Y), int> _pixels = [];
         private bool _isScreenActive;
+        private bool _isScreenOutputActive;
         private int _screenMode;
         private int _screenWidth;
         private int _screenHeight;
@@ -2188,6 +2223,8 @@ public sealed class AcceptanceProgramTests
 
         public bool IsScreenActive => _isScreenActive;
 
+        public bool IsScreenOutputActive => _isScreenOutputActive;
+
         public int ScreenMode => _screenMode;
 
         public int ScreenWidth => _screenWidth;
@@ -2196,15 +2233,24 @@ public sealed class AcceptanceProgramTests
 
         public void ActivateScreen(int mode)
         {
-            _isScreenActive = true;
+            _isScreenActive = mode != 0;
+            _isScreenOutputActive = true;
             _screenMode = mode;
-            (_screenWidth, _screenHeight) = mode == 1 ? (320, 200) : (1280, 720);
+            (_screenWidth, _screenHeight) = mode switch
+            {
+                0 => (640, 300),
+                1 => (320, 200),
+                _ => (1280, 720)
+            };
             _pixels.Clear();
+            GraphicsOutput.Clear();
+            _pendingGraphicsLine = string.Empty;
         }
 
         public void DeactivateScreen()
         {
             _isScreenActive = false;
+            _isScreenOutputActive = false;
             _screenMode = 0;
             _screenWidth = 0;
             _screenHeight = 0;
@@ -2239,7 +2285,25 @@ public sealed class AcceptanceProgramTests
             _pendingGraphicsLine = string.Empty;
         }
 
-        public string ReadGraphicsInput(InputRequest request) => ReadInput(request);
+        public string ReadGraphicsInput(InputRequest request)
+        {
+            var text = ReadInput(request);
+            WriteGraphicsText(CreateGraphicsPrompt(request) + text, newLine: true);
+            return text;
+        }
+
+        private static string CreateGraphicsPrompt(InputRequest request)
+        {
+            var promptText = request.PromptText?.TrimEnd();
+            if (string.IsNullOrWhiteSpace(promptText))
+            {
+                return "? ";
+            }
+
+            return promptText.EndsWith('?') || promptText.EndsWith(':')
+                ? $"{promptText} "
+                : $"{promptText}? ";
+        }
 
         public void SetPixel(long x, long y, int color) => _pixels[(x, y)] = color;
 

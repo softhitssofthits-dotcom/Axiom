@@ -631,6 +631,25 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public void ScreenInputWait_DoesNotExposeBottomPaneConsoleInput()
+    {
+        var consoleService = new ProgramConsoleService();
+        var viewModel = CreateViewModel(consoleService: consoleService);
+
+        consoleService.ActivateScreen(0);
+        SetProgramConsoleProperty(consoleService, nameof(ProgramConsoleService.IsWaitingForInput), true);
+        SetProgramConsoleProperty(consoleService, nameof(ProgramConsoleService.CurrentPromptText), "Name? ");
+
+        Assert.False(viewModel.BottomPane.IsWaitingForInput);
+        Assert.Equal(string.Empty, viewModel.BottomPane.CurrentPromptText);
+        Assert.False(viewModel.SubmitInputCommand.CanExecute(null));
+
+        viewModel.BottomPane.CurrentInputText = "Иван";
+
+        Assert.Equal(string.Empty, consoleService.CurrentInputText);
+    }
+
+    [Fact]
     public void SubmitInput_UsesBottomPaneCurrentInputText()
     {
         var consoleService = new ProgramConsoleService();

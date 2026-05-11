@@ -265,6 +265,14 @@ public sealed class BoundProgramLowerer
             case BoundInputStatement input:
                 LowerInput(input, instructions);
                 break;
+            case BoundSleepStatement sleep:
+                if (sleep.DurationExpression is not null)
+                {
+                    LowerExpression(sleep.DurationExpression, instructions);
+                }
+
+                instructions.Add(LoweredInstruction.Sleep(sleep.Location, sleep.DurationExpression is not null));
+                break;
             case BoundScreenStatement screen:
                 LowerExpression(screen.ModeExpression, instructions);
                 instructions.Add(LoweredInstruction.Screen(screen.Location));

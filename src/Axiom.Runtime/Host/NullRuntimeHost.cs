@@ -73,4 +73,6 @@ public sealed class NullRuntimeHost : IRuntimeHost, IReversibleOutputWriter
     }
 
     public double NextRandomDouble() => _random.NextDouble();
+
+    public bool IsCancellationRequested => false;
 }

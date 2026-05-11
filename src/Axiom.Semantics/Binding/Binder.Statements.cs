@@ -28,6 +28,7 @@ public sealed partial class Binder
             PrintStatementSyntax printStatement => BindPrintStatement(printStatement),
             PrintUsingStatementSyntax printUsingStatement => BindPrintUsingStatement(printUsingStatement),
             InputStatementSyntax inputStatement => BindInputStatement(inputStatement),
+            SleepStatementSyntax sleepStatement => BindSleepStatement(sleepStatement),
             ScreenStatementSyntax screenStatement => BindScreenStatement(screenStatement),
             ClsStatementSyntax clsStatement => new BoundClsStatement(GetLocation(clsStatement)),
             ColorStatementSyntax colorStatement => BindColorStatement(colorStatement),

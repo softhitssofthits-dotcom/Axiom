@@ -209,6 +209,19 @@ public sealed class BoundInputStatement : BoundStatement
     public string? PromptText { get; }
 }
 
+public sealed class BoundSleepStatement : BoundStatement
+{
+    public BoundSleepStatement(TextLocation location, BoundExpression? durationExpression)
+        : base(location)
+    {
+        DurationExpression = durationExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.SleepStatement;
+
+    public BoundExpression? DurationExpression { get; }
+}
+
 public sealed class BoundScreenStatement : BoundStatement
 {
     public BoundScreenStatement(TextLocation location, BoundExpression modeExpression)

@@ -103,10 +103,12 @@ public sealed class CodeFormattingServiceTests
     {
         var screenStatement = _service.FormatLine("screen 5", CodeFormattingStyle.Classic);
         var graphicsStatement = _service.FormatLine("pset 10,20,color", CodeFormattingStyle.Classic);
+        var sleepStatement = _service.FormatLine("sleep 500", CodeFormattingStyle.Classic);
         var builtInCall = _service.FormatLine("print screenmode(),screenwidth(),screenheight()", CodeFormattingStyle.Classic);
 
         Assert.Equal("SCREEN 5", screenStatement);
         Assert.Equal("PSET 10, 20, COLOR", graphicsStatement);
+        Assert.Equal("SLEEP 500", sleepStatement);
         Assert.Equal("PRINT SCREENMODE(), SCREENWIDTH(), SCREENHEIGHT()", builtInCall);
     }
 

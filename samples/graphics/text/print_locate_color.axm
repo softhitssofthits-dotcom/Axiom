@@ -1,10 +1,29 @@
-' Expected: text appears on the SCREEN text layer, not in Output, until SCREEN 0.
-SCREEN 3
+﻿' Expected: text appears on the SCREEN text layer, not in Output, until SCREEN 0.
+SCREEN 10
 COLOR 14, 1
-LOCATE 2, 4
+PRINT "yellow text on blue background"
+PRINT "Нажмите любую клавишу для продолжения"
+SLEEP ' Ждем нажатия любой клавиши
+COLOR 15
+PRINT "white text, previous background"
+COLOR 46
+PRINT
+PRINT "Русский текст в графическом режиме"
+PRINT "Расширенная палитра 16..255 через CHR(219)"
+DIM r AS INTEGER
+DIM c AS INTEGER
+FOR i = 16 TO 255
+    r = ((i - 16) \ 16) + 6
+    c = (((i - 16) MOD 16) * 2) + 1
+    LOCATE r + 1, c
+    COLOR i, 0
+    PRINT CHR(219)
+NEXT
+COLOR 15, 0
+LOCATE 22, 4
 PRINT "Axiom SCREEN text"
 PRINT USING "width #### height ####"; SCREENWIDTH(); SCREENHEIGHT()
+PRINT "Нажмите любую кнопку для выхода"
+SLEEP ' Ждем нажатия любой клавиши
 CLS
-PRINT "CLS cleared the graphics text layer"
 SCREEN 0
-PRINT "Back to Output"

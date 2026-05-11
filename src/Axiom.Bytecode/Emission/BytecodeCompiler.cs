@@ -798,6 +798,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.PrintSeparator => EmitPrintSeparator(instruction),
             LoweredInstructionKind.PrintLine => new BytecodeInstruction(Opcode.PrintLine),
             LoweredInstructionKind.Input => EmitInput(routine, instruction, parameterSlots, localSlots, captureSlots),
+            LoweredInstructionKind.Sleep => new BytecodeInstruction(Opcode.Sleep, [instruction.ValueCount]),
             LoweredInstructionKind.PushErrorHandler => EmitPushErrorHandler(routine, instruction, parameterSlots, localSlots, captureSlots, labelTargets),
             LoweredInstructionKind.PopErrorHandler => new BytecodeInstruction(Opcode.PopErrorHandler),
             LoweredInstructionKind.RaiseError => new BytecodeInstruction(Opcode.RaiseError, [instruction.ValueCount]),
@@ -1002,6 +1003,7 @@ public sealed class BytecodeCompiler
     {
         var opcode = instruction.OperatorKind switch
         {
+            SyntaxKind.AmpersandToken => Opcode.Concat,
             SyntaxKind.PlusToken => Opcode.Add,
             SyntaxKind.MinusToken => Opcode.Subtract,
             SyntaxKind.StarToken => Opcode.Multiply,

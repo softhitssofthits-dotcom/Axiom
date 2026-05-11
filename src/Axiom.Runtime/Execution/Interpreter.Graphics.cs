@@ -11,7 +11,7 @@ public sealed partial class Interpreter
         if (mode == 0)
         {
             FlushPendingOutput(forceEmptyLine: false);
-            _host.DeactivateScreen();
+            _host.ActivateScreen(mode);
             return ExecutionSignal.None;
         }
 
@@ -28,7 +28,7 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecuteCls(BoundClsStatement statement)
     {
-        if (_host.IsScreenActive)
+        if (_host.IsScreenOutputActive)
         {
             _host.ClearGraphics();
         }

@@ -45,10 +45,16 @@ result = REMOVE(text, start, count)</code></pre>
 
 <section class="article-section" id="codes">
 <h2>ASC и CHR</h2>
-<p><code>ASC</code> возвращает код первого символа Unicode, а <code>CHR</code> строит строку из одного символа по его коду.</p>
+<p><code>ASC</code> возвращает код первого символа строки. <code>CHR</code> строит строку из одного символа: коды <code>0..255</code> берутся из таблицы ASCII/IBM CP866, а коды выше <code>255</code> трактуются как Unicode-коды. Полная таблица находится на странице <a href="characters.html">Символы CHR и ASC</a>.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">code = ASC(text)
 charText = CHR(code)</code></pre>
+<h3>Пример</h3>
+<pre><code class="language-basic">PRINT CHR(159)
+PRINT CHR(219)
+PRINT ASC("Я")
+PRINT ASC("█")
+PRINT CHR(128512)</code></pre>
 </section>
 
 <section class="article-section" id="split">

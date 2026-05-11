@@ -140,6 +140,45 @@ PRINT INKEY()
     }
 
     [Fact]
+    public void Execute_SleepZeroContinues()
+    {
+        const string text = """
+PRINT "before"
+SLEEP 0
+PRINT "after"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["before", "after"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_SleepWithoutDurationConsumesQueuedKey()
+    {
+        const string text = """
+SLEEP
+PRINT INKEY()
+""";
+
+        var (_, host, result) = ExecuteProgramWithKeys(text, "A", "B");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["B"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_SleepReportsNegativeDuration()
+    {
+        var (_, _, result) = ExecuteProgram("SLEEP -1");
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("SLEEP", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Execute_KeyDownReadsHeldKeyStateWithoutConsumingQueuedKeys()
     {
         const string text = """
@@ -663,6 +702,22 @@ END SUB
 
         Assert.True(result.Succeeded);
         Assert.Equal(["AB"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_AmpersandConcatenatesMixedScalarValues()
+    {
+        const string text = """
+DIM name AS STRING = "Иван"
+DIM age AS INTEGER = 7
+PRINT "Привет, " & name & " тебе " & age & " лет."
+PRINT "flag=" & TRUE
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Привет, Иван тебе 7 лет.", "flag=TRUE"], host.Output);
     }
 
     [Fact]
@@ -5146,11 +5201,15 @@ PRINT INSTRREV(100, "banana", "")
     }
 
     [Fact]
-    public void Execute_BuiltinAscAndChrUseUnicodeCodePoints()
+    public void Execute_BuiltinAscAndChrUseCp866ForByteCodesAndUnicodeAbove255()
     {
         const string text = """
 PRINT ASC("A")
 PRINT CHR(65)
+PRINT ASC("Я")
+PRINT CHR(159)
+PRINT ASC("█")
+PRINT CHR(219)
 PRINT ASC(CHR(1071))
 PRINT ASC(CHR(128512))
 """;
@@ -5158,7 +5217,7 @@ PRINT ASC(CHR(128512))
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["65", "A", "1071", "128512"], host.Output);
+        Assert.Equal(["65", "A", "159", "Я", "219", "█", "159", "128512"], host.Output);
     }
 
     [Fact]

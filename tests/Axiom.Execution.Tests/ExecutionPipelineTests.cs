@@ -693,6 +693,7 @@ PRINT REPLACE("one two", "two", "three")
 PRINT INSTR("banana", "na")
 PRINT "[" + CENTER("A", 4, ".") + "]"
 PRINT ASC(CHR(1071))
+PRINT CHR(219)
 """;
 
         var result = Run(text);
@@ -700,7 +701,7 @@ PRINT ASC(CHR(1071))
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Hel", "llo", "ello", "hello", "one three", "3", "[.A..]", "1071"], result.Output);
+        Assert.Equal(["Hel", "llo", "ello", "hello", "one three", "3", "[.A..]", "159", "█"], result.Output);
     }
 
     [Fact]
@@ -816,15 +817,17 @@ PRINT leftDown
 PRINT rightDown
 """;
 
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1]);
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["320", "240", "TRUE", "FALSE"], result.Output);
+        Assert.Empty(result.Output);
+        Assert.Equal(["320", "240", "TRUE", "FALSE"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -859,15 +862,17 @@ PRINT secondLeft
 PRINT middle
 """;
 
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]);
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["TRUE", "FALSE", "TRUE"], result.Output);
+        Assert.Empty(result.Output);
+        Assert.Equal(["TRUE", "FALSE", "TRUE"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -922,15 +927,17 @@ SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
 END SUB
 """;
 
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]);
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["TRUE", "1", "320", "240", "FALSE"], result.Output);
+        Assert.Empty(result.Output);
+        Assert.Equal(["TRUE", "1", "320", "240", "FALSE"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -958,20 +965,22 @@ SUB HandleMouse(delta AS INTEGER, x AS LONG, y AS LONG)
 END SUB
 """;
 
+        var inputProvider = new QueueKeyboardInputProvider(
+            keys: [],
+            pressedKeys: [],
+            mouseX: 320,
+            mouseY: 240,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]);
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider(
-                keys: [],
-                pressedKeys: [],
-                mouseX: 320,
-                mouseY: 240,
-                mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["TRUE", "-120", "320", "240"], result.Output);
+        Assert.Empty(result.Output);
+        Assert.Equal(["TRUE", "-120", "320", "240"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2946,9 +2955,11 @@ INPUT value
         private readonly long _mouseY;
         private readonly Dictionary<(long X, long Y), int> _pixels = [];
         private bool _isScreenActive;
+        private bool _isScreenOutputActive;
         private int _screenMode;
         private int _screenWidth;
         private int _screenHeight;
+        private string _pendingGraphicsLine = string.Empty;
 
         public QueueKeyboardInputProvider(params string[] keys)
             : this(keys, pressedKeys: null)
@@ -2973,6 +2984,8 @@ INPUT value
             _mouseY = mouseY;
             _pressedMouseButtons = new HashSet<int>(pressedMouseButtons ?? []);
         }
+
+        public List<string> GraphicsOutput { get; } = [];
 
         public string ReadInput(InputRequest request) => string.Empty;
 
@@ -3015,6 +3028,8 @@ INPUT value
 
         public bool IsScreenActive => _isScreenActive;
 
+        public bool IsScreenOutputActive => _isScreenOutputActive;
+
         public int ScreenMode => _screenMode;
 
         public int ScreenWidth => _screenWidth;
@@ -3023,19 +3038,41 @@ INPUT value
 
         public void ActivateScreen(int mode)
         {
-            _isScreenActive = true;
+            _isScreenActive = mode != 0;
+            _isScreenOutputActive = true;
             _screenMode = mode;
-            (_screenWidth, _screenHeight) = mode == 1 ? (320, 200) : (1280, 720);
+            (_screenWidth, _screenHeight) = mode switch
+            {
+                0 => (640, 300),
+                1 => (320, 200),
+                _ => (1280, 720)
+            };
             _pixels.Clear();
+            GraphicsOutput.Clear();
+            _pendingGraphicsLine = string.Empty;
         }
 
         public void DeactivateScreen()
         {
             _isScreenActive = false;
+            _isScreenOutputActive = false;
             _screenMode = 0;
             _screenWidth = 0;
             _screenHeight = 0;
             _pixels.Clear();
+        }
+
+        public void WriteGraphicsText(string text, bool newLine)
+        {
+            _pendingGraphicsLine += text;
+
+            if (!newLine)
+            {
+                return;
+            }
+
+            GraphicsOutput.Add(_pendingGraphicsLine);
+            _pendingGraphicsLine = string.Empty;
         }
 
         public void SetPixel(long x, long y, int color) => _pixels[(x, y)] = color;

@@ -556,6 +556,31 @@ PRINT 2
         Assert.Equal(string.Empty, result.OutputText);
     }
 
+    [Theory]
+    [InlineData(ExecutionMode.Bytecode)]
+    [InlineData(ExecutionMode.Interpreter)]
+    public void Run_WhenHostCancellationIsRequested_ReturnsCancelled(ExecutionMode mode)
+    {
+        var consoleService = new FakeProgramConsoleService(new FakeProgramInputPromptService())
+        {
+            IsCancellationRequested = true
+        };
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        var result = service.Run(
+            """
+            DO WHILE TRUE
+            LOOP
+            PRINT "after"
+            """,
+            mode);
+
+        Assert.Equal(ProgramRunStatus.Cancelled, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain("after", result.OutputText, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void Run_MapsRuntimeDiagnosticLocationsToUiModel()
     {
@@ -786,7 +811,7 @@ PRINT 1 + 2
         }
     }
 
-    private sealed class FakeProgramConsoleService : IProgramConsoleService
+    private sealed class FakeProgramConsoleService : IProgramConsoleService, IRuntimeCancellationProvider
     {
         private readonly IProgramInputPromptService _promptService;
 
@@ -800,6 +825,8 @@ PRINT 1 + 2
         public int OutputCheckpoint => WrittenOutput.Count;
 
         public bool SessionStarted { get; private set; }
+
+        public bool IsCancellationRequested { get; init; }
 
         public void BeginSession()
         {

@@ -13,7 +13,7 @@ public sealed partial class BytecodeVm
         if (mode == 0)
         {
             FlushPendingOutput(forceEmptyLine: false);
-            _host.DeactivateScreen();
+            _host.ActivateScreen(mode);
             return;
         }
 
@@ -29,7 +29,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteClsInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        if (_host.IsScreenActive)
+        if (_host.IsScreenOutputActive)
         {
             _host.ClearGraphics();
         }

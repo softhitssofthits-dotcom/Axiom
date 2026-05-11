@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - SCREEN и графика</title>
+    <title>Справочник Axiom - Оператор SCREEN</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="screen">
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графический режим программы</div>
+            <div class="topbar__meta">Графика</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -18,58 +18,85 @@
         <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
         <main class="content">
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><span>SCREEN и графика</span>
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>SCREEN</span>
             </nav>
-            <p class="eyebrow">Графика</p>
-            <h1 class="page-title">SCREEN и графические команды</h1>
-            <p class="lead"><code>SCREEN</code> переводит программу из обычного консольного вывода в отдельное полноэкранное графическое окно. После этого <code>PRINT</code>, <code>PRINT USING</code>, <code>INPUT</code>, <code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code>, мышь и пиксельные команды работают с активной графической поверхностью.</p>
+            <p class="eyebrow">Оператор</p>
+            <h1 class="page-title">SCREEN</h1>
+            <p class="lead"><code>SCREEN</code> выбирает экранный режим программы. Режимы <code>1..10</code> открывают графическую поверхность, а <code>SCREEN 0</code> открывает отдельное текстовое окно программы, похожее на консоль. Пока экранный режим выбран явно, <code>PRINT</code>, <code>PRINT USING</code>, <code>INPUT</code> и клавиатурный ввод работают в окне <code>SCREEN</code>, а не во вкладке <code>Output</code>.</p>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
 <pre><code>SCREEN mode
-SCREEN 0
-CLS
-COLOR foreground[, background]
-LOCATE row, column
-PSET (x, y)[, color]
-PRESET (x, y)[, color]
-LINE (x1, y1)-(x2, y2)[, color][, B|BF]
-CIRCLE (x, y), radius[, color]
-POINT(x, y)
-SCREENISACTIVE()
-SCREENMODE()
-SCREENWIDTH()
-SCREENHEIGHT()</code></pre>
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Параметры</h2>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>mode</code></td><td>Целое значение от <code>0</code> до <code>10</code>. Значение <code>0</code> выбирает текстовое окно, значения <code>1..10</code> выбирают логический размер графической поверхности.</td></tr>
+                        <tr><td><code>0</code></td><td>Текстовый режим окна <code>SCREEN</code>. Графические команды в нём недоступны, но обычный текстовый вывод и <code>INPUT</code> идут в это окно.</td></tr>
+                    </tbody>
+                </table>
             </section>
 
             <section class="article-section">
                 <h2>Режимы</h2>
-                <p><code>SCREEN 0</code> выключает графику, закрывает полноэкранное окно и возвращает последующий <code>PRINT</code> в обычный <code>Output</code>. Режимы <code>1..9</code> задают фиксированные логические размеры от <code>320x200</code> до <code>2560x1440</code>, а <code>10</code> выбирает режим <code>1280x720</code> как текущий безопасный полноэкранный вариант.</p>
+                <table>
+                    <thead>
+                        <tr><th>Команда</th><th>Логический размер</th><th>Назначение</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td>Текстовое окно <code>80 x 25</code> ячеек без графических команд.</td></tr>
+                        <tr><td><code>SCREEN 1</code></td><td><code>320 x 200</code></td><td>Малый режим для простых проверок и быстрых примеров.</td></tr>
+                        <tr><td><code>SCREEN 2</code></td><td><code>640 x 480</code></td><td>Классический режим с соотношением сторон 4:3.</td></tr>
+                        <tr><td><code>SCREEN 3</code></td><td><code>800 x 600</code></td><td>Увеличенный режим 4:3 для учебных примеров.</td></tr>
+                        <tr><td><code>SCREEN 4</code></td><td><code>1024 x 768</code></td><td>Крупный режим 4:3.</td></tr>
+                        <tr><td><code>SCREEN 5</code></td><td><code>1280 x 720</code></td><td>Широкий режим 16:9.</td></tr>
+                        <tr><td><code>SCREEN 6</code></td><td><code>1366 x 768</code></td><td>Широкий режим для распространённого размера ноутбуков.</td></tr>
+                        <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td>Широкий режим 16:9.</td></tr>
+                        <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td>Режим Full HD.</td></tr>
+                        <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td>Режим QHD.</td></tr>
+                        <tr><td><code>SCREEN 10</code></td><td><code>1280 x 720</code></td><td>Текущий безопасный вариант будущего адаптивного режима.</td></tr>
+                    </tbody>
+                </table>
             </section>
 
             <section class="article-section">
-                <h2>Ввод, вывод и мышь</h2>
-                <p>В активном <code>SCREEN</code> текстовый слой имеет моноширинный курсор. <code>LOCATE</code> задаёт строку и столбец, <code>COLOR</code> задаёт текущие цвета текста, а <code>CLS</code> очищает текстовый и пиксельный слой. Клавиатура, строка <code>INPUT</code> и мышь принимаются из полноэкранного окна, поэтому <code>MOUSEX()</code>, <code>MOUSEY()</code>, <code>MOUSEBUTTON()</code>, <code>MOUSEPRESS()</code> и <code>ON MOUSE</code> требуют активный <code>SCREEN</code>; без него выполнение получает диагностику <code>MB3010</code>.</p>
+                <h2>Замечания</h2>
+                <p>Значения режима меньше <code>0</code> или больше <code>10</code> дают ошибку времени выполнения. В <code>SCREEN 0</code> функция <code>SCREENISACTIVE()</code> возвращает <code>FALSE</code>, потому что активной графической поверхности нет; <code>SCREENMODE()</code> возвращает <code>0</code>, а <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> отражают размер текстового окна.</p>
+                <p>В текущей IDE окно <code>SCREEN</code> создаётся как отдельное обычное Win32/DirectX-окно. Ввод клавиатуры, строковый <code>INPUT</code> и, для графических режимов, события мыши поступают из этого окна. Вкладка <code>Output</code> используется только программами, которые не выбирали <code>SCREEN</code> явно. При <code>SCREEN 0</code> приглашение <code>INPUT</code> появляется в текущей текстовой позиции окна, начиная с первой строки, а нижняя консоль IDE не принимает параллельный ввод. Окно можно закрыть системной кнопкой закрытия; следующий запуск или сброс сеанса также закрывает старое окно.</p>
+                <p>Если пользователь закрывает окно <code>SCREEN</code> системной кнопкой закрытия во время выполнения программы, IDE считает это запросом на прерывание текущего запуска. Выполнение останавливается кооперативно между инструкциями, следующие операторы программы не выполняются, а команды IDE снова становятся доступными.</p>
             </section>
 
             <section class="article-section">
                 <h2>Пример</h2>
-                <p><code>PRINT</code> в графическом текстовом слое перезаписывает символы начиная с текущей позиции <code>LOCATE</code>. Это позволяет обновлять строку состояния без <code>CLS</code> и без заметного мерцания всего окна.</p>
-<pre><code>SCREEN 3
-COLOR 14, 1
-LOCATE 2, 4
-PRINT "Axiom SCREEN"
-LINE (20, 40)-(200, 120), 10, B
-CIRCLE (320, 180), 60, 12
-PRINT "width="; SCREENWIDTH()
+<pre><code>SCREEN 5
+PRINT "active="; SCREENISACTIVE()
+PRINT "mode="; SCREENMODE()
+PRINT "size="; SCREENWIDTH(); "x"; SCREENHEIGHT()
+
+DO WHILE NOT KEYPRESS("ESC")
+LOOP
+
 SCREEN 0
-PRINT "Back to Output"</code></pre>
+PRINT "text mode screen"</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Проверочные примеры</h2>
-                <p>Ручные примеры находятся в <code>samples/graphics/screen/</code>, <code>samples/graphics/text/</code>, <code>samples/graphics/input/</code>, <code>samples/graphics/mouse/</code> и <code>samples/graphics/primitives/</code>.</p>
+                <h2>Проверочный пример</h2>
+                <p>Ручные примеры: <code>samples/graphics/screen/mode_info.axm</code>, <code>samples/graphics/screen/close_window_stops_run.axm</code> и <code>samples/graphics/input/text_screen_input.axm</code>.</p>
             </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <p><a href="graphics.html">Графика</a>, <a href="graphics-text.html">текстовый слой</a>, <a href="graphics-primitives.html">графические примитивы</a>, <a href="screen-functions.html">функции состояния экрана</a>.</p>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
         </main>
     </div>
     <script src="scripts/manual.js"></script>

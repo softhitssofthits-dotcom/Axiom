@@ -132,6 +132,7 @@ public sealed partial class Binder
 
         return expression.OperatorToken.Kind switch
         {
+            SyntaxKind.AmpersandToken => BindStringConcatenationExpression(left, right, expression),
             SyntaxKind.PlusToken => BindPlusExpression(left, right, expression),
             SyntaxKind.MinusToken or SyntaxKind.StarToken => BindNumericBinaryExpression(left, right, expression, useFloatingPointResult: false),
             SyntaxKind.SlashToken => BindDivisionExpression(left, right, expression),
@@ -202,6 +203,16 @@ public sealed partial class Binder
         }
 
         return BindNumericBinaryExpression(left, right, syntax, useFloatingPointResult: false);
+    }
+
+    private BoundExpression BindStringConcatenationExpression(BoundExpression left, BoundExpression right, BinaryExpressionSyntax syntax)
+    {
+        if (!CanConcatenateAsString(left.Type) || !CanConcatenateAsString(right.Type))
+        {
+            return ReportInvalidBinaryOperator(syntax.OperatorToken.Kind, left.Type, right.Type, syntax.OperatorToken.Location);
+        }
+
+        return new BoundBinaryExpression(syntax.OperatorToken.Location, left, syntax.OperatorToken.Kind, right, TypeSymbol.String);
     }
 
     private BoundExpression BindNumericBinaryExpression(

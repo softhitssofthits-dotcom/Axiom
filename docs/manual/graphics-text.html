@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Текстовый слой SCREEN</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="graphics-text">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Текстовый слой</span>
+            </nav>
+            <p class="eyebrow">Операторы</p>
+            <h1 class="page-title">CLS, COLOR и LOCATE</h1>
+            <p class="lead">Текстовый слой <code>SCREEN</code> позволяет выводить обычный текст в отдельном окне программы. В <code>SCREEN 0</code> это консольный текстовый режим без графических команд; в режимах <code>1..10</code> тот же текстовый слой рисуется поверх пиксельной поверхности.</p>
+
+            <section class="article-section">
+                <h2 id="cls">Оператор CLS</h2>
+<pre><code>CLS</code></pre>
+                <p>В активном экранном выводе оператор <code>CLS</code> очищает текстовый слой, пиксельный слой при наличии графического режима и возвращает текстовый курсор в позицию <code>1, 1</code>. Без явного <code>SCREEN</code> он очищает обычный вывод пустой строкой.</p>
+<pre><code>SCREEN 3
+PRINT "old text"
+PSET (10, 10), 12
+CLS
+PRINT "screen cleared"
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2 id="color">Оператор COLOR</h2>
+<pre><code>COLOR foreground[, background]</code></pre>
+                <p><code>COLOR</code> задаёт текущий цвет текста и, если указан второй аргумент, цвет фона ячейки текста. Команда требует активный графический <code>SCREEN</code>; в текстовом <code>SCREEN 0</code> этот графический договор цвета пока недоступен.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>foreground</code></td><td>Цвет символов.</td></tr>
+                        <tr><td><code>background</code></td><td>Необязательный цвет фона за символами. Если не указан, текущий фон не меняется.</td></tr>
+                    </tbody>
+                </table>
+<pre><code>SCREEN 3
+COLOR 14, 1
+PRINT "yellow text on blue background"
+COLOR 15
+PRINT "white text, previous background"
+COLOR 46
+PRINT "Русский текст в графическом режиме"
+COLOR 226
+PRINT "256-color palette sample"
+SCREEN 0</code></pre>
+                <p>Для текстовых цветовых образцов можно использовать блочные псевдосимволы. Функция <code>CHR()</code> для кодов <code>0..255</code> использует таблицу IBM CP866, поэтому <code>CHR(219)</code>, <code>CHR(178)</code>, <code>CHR(177)</code> и <code>CHR(176)</code> возвращают <code>█</code>, <code>▓</code>, <code>▒</code> и <code>░</code>. Эти символы работают и в <code>SCREEN</code>, и в обычном выводе.</p>
+<pre><code>SCREEN 10
+DIM r AS INTEGER
+DIM c AS INTEGER
+FOR i = 16 TO 255
+    r = ((i - 16) \ 16) + 1
+    c = (((i - 16) MOD 16) * 2) + 1
+    LOCATE r, c
+    COLOR i, 0
+    PRINT CHR(219)
+NEXT
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2 id="locate">Оператор LOCATE</h2>
+<pre><code>LOCATE row, column</code></pre>
+                <p>В графическом режиме <code>LOCATE</code> работает не с пикселями, а с текстовой сеткой поверх пиксельного экрана. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей: столбец задаёт горизонтальную позицию ячейки, строка задаёт вертикальную позицию ячейки.</p>
+                <p><code>LOCATE</code> ставит курсор текстового слоя в указанную строку и столбец. Строки и столбцы считаются с <code>1</code>. Значения меньше <code>1</code> приводятся к <code>1</code>.</p>
+                <p>Количество видимых позиций зависит только от логического размера выбранного <code>SCREEN</code>:</p>
+<pre><code>columns = SCREENWIDTH() \ 8
+rows = SCREENHEIGHT() \ 12</code></pre>
+                <p>Если ширина или высота режима не делится на размер ячейки без остатка, оставшиеся пиксели справа или снизу не образуют отдельную текстовую позицию. Значения строки или столбца больше видимой сетки сейчас не сообщают ошибку: следующий текст записывается за пределами видимой области и не отображается.</p>
+                <table>
+                    <thead>
+                        <tr><th>Режим</th><th>Размер</th><th>Столбцы <code>LOCATE</code></th><th>Строки <code>LOCATE</code></th><th>Остаток</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td><code>80</code></td><td><code>25</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 1</code></td><td><code>320 x 200</code></td><td><code>40</code></td><td><code>16</code></td><td><code>8</code> пикселей снизу.</td></tr>
+                        <tr><td><code>SCREEN 2</code></td><td><code>640 x 480</code></td><td><code>80</code></td><td><code>40</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 3</code></td><td><code>800 x 600</code></td><td><code>100</code></td><td><code>50</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 4</code></td><td><code>1024 x 768</code></td><td><code>128</code></td><td><code>64</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 5</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 6</code></td><td><code>1366 x 768</code></td><td><code>170</code></td><td><code>64</code></td><td><code>6</code> пикселей справа.</td></tr>
+                        <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td><code>200</code></td><td><code>75</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td><code>240</code></td><td><code>90</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td><code>320</code></td><td><code>120</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 10</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td><td>Нет.</td></tr>
+                    </tbody>
+                </table>
+                <p>Последующий <code>PRINT</code> перезаписывает символы с этой позиции, а не вставляет их в строку. Если новый текст короче старого, хвост старой строки остаётся на экране.</p>
+<pre><code>SCREEN 3
+LOCATE 2, 4
+PRINT "score=120"
+LOCATE 2, 4
+PRINT "score=9  "
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Палитра</h2>
+                <p>Цвета имеют индексы <code>0..255</code>. Индексы <code>0..15</code> сохраняют классическую BASIC-палитру, <code>16..231</code> образуют RGB-куб 6x6x6, а <code>232..255</code> дают серую шкалу. Значения вне диапазона приводятся к палитре по правилу <code>ABS(color) MOD 256</code>.</p>
+                <table>
+                    <thead>
+                        <tr><th>Индекс</th><th>Цвет</th><th>Типичное назначение</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>0</code></td><td>чёрный</td><td>фон и очистка пикселей.</td></tr>
+                        <tr><td><code>1</code></td><td>тёмно-синий</td><td>тёмный фон.</td></tr>
+                        <tr><td><code>2</code></td><td>тёмно-зелёный</td><td>зелёные элементы.</td></tr>
+                        <tr><td><code>3</code></td><td>тёмно-голубой</td><td>служебные линии.</td></tr>
+                        <tr><td><code>4</code></td><td>тёмно-красный</td><td>красные элементы.</td></tr>
+                        <tr><td><code>5</code></td><td>тёмно-пурпурный</td><td>акцент.</td></tr>
+                        <tr><td><code>6</code></td><td>коричневый</td><td>тёплый тёмный цвет.</td></tr>
+                        <tr><td><code>7</code></td><td>светло-серый</td><td>обычный текст.</td></tr>
+                        <tr><td><code>8</code></td><td>тёмно-серый</td><td>приглушённый текст.</td></tr>
+                        <tr><td><code>9</code></td><td>светло-синий</td><td>яркий синий.</td></tr>
+                        <tr><td><code>10</code></td><td>светло-зелёный</td><td>яркий зелёный.</td></tr>
+                        <tr><td><code>11</code></td><td>светло-голубой</td><td>яркий голубой.</td></tr>
+                        <tr><td><code>12</code></td><td>светло-красный</td><td>яркий красный.</td></tr>
+                        <tr><td><code>13</code></td><td>светло-пурпурный</td><td>яркий пурпурный.</td></tr>
+                        <tr><td><code>14</code></td><td>жёлтый</td><td>выделение.</td></tr>
+                        <tr><td><code>15</code></td><td>белый</td><td>цвет по умолчанию для текста и линий.</td></tr>
+                        <tr><td><code>16..231</code></td><td>RGB-куб</td><td>расширенные цвета для современных графических режимов.</td></tr>
+                        <tr><td><code>232..255</code></td><td>серая шкала</td><td>дополнительные оттенки серого.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+            <section class="article-section">
+                <h2>Экранные символы</h2>
+                <p><code>CHR()</code> и <code>ASC()</code> используют общий строковый договор Axiom: коды <code>0..255</code> соответствуют ASCII/IBM CP866, а коды выше <code>255</code> остаются Unicode-кодами. Поэтому русские буквы, рамки и блочные символы работают одинаково в обычном выводе и в активном <code>SCREEN</code>.</p>
+                <p>Полная таблица кодов вынесена на отдельную страницу <a href="characters.html">Символы CHR и ASC</a>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочный пример</h2>
+                <p>Ручной пример: <code>samples/graphics/text/print_locate_color.axm</code>.</p>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

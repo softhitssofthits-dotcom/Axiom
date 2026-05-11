@@ -262,7 +262,9 @@ public partial class MainWindow : Window
 
     private void OnConsoleServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ProgramConsoleService.IsWaitingForInput) && _consoleService?.IsWaitingForInput == true)
+        if (e.PropertyName == nameof(ProgramConsoleService.IsWaitingForInput)
+            && _consoleService?.IsWaitingForInput == true
+            && !_consoleService.IsScreenOutputActive)
         {
             Dispatcher.BeginInvoke(() =>
             {

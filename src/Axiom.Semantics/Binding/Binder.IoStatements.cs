@@ -49,6 +49,13 @@ public sealed partial class Binder
         return new BoundInputStatement(GetLocation(statement), variables, promptText);
     }
 
+    private BoundStatement BindSleepStatement(SleepStatementSyntax statement)
+    {
+        return new BoundSleepStatement(
+            GetLocation(statement),
+            statement.DurationExpression is null ? null : BindExpression(statement.DurationExpression, TypeSymbol.Long));
+    }
+
     private BoundStatement BindScreenStatement(ScreenStatementSyntax statement)
     {
         return new BoundScreenStatement(GetLocation(statement), BindExpression(statement.ModeExpression, TypeSymbol.Integer));

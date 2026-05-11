@@ -8,6 +8,22 @@ namespace Axiom.Runtime.Tests;
 public sealed class BytecodeVmTests
 {
     [Fact]
+    public void Execute_CompiledAmpersandConcatenatesMixedScalarValues()
+    {
+        const string text = """
+DIM name AS STRING = "Иван"
+DIM age AS INTEGER = 7
+PRINT "Привет, " & name & " тебе " & age & " лет."
+PRINT "flag=" & TRUE
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Привет, Иван тебе 7 лет.", "flag=TRUE"], host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledScalarProgramWithRoutineAndBuiltin()
     {
         const string text = """
@@ -40,6 +56,46 @@ PRINT INKEY()
 
         Assert.True(result.Succeeded);
         Assert.Equal(["A", "LEFT", ""], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledSleepZeroContinues()
+    {
+        const string text = """
+PRINT "before"
+SLEEP 0
+PRINT "after"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["before", "after"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledSleepWithoutDurationConsumesQueuedKey()
+    {
+        const string text = """
+SLEEP
+PRINT INKEY()
+""";
+
+        var host = new TestRuntimeHost(keys: ["A", "B"]);
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["B"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledSleepReportsNegativeDuration()
+    {
+        var (_, _, result) = ExecuteProgram("SLEEP -1");
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("SLEEP", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -3355,6 +3411,10 @@ PRINT REPLACE("abba", "b", "c")
         const string text = """
 PRINT ASC("A")
 PRINT CHR(65)
+PRINT ASC("Я")
+PRINT CHR(159)
+PRINT ASC("█")
+PRINT CHR(219)
 PRINT ASC(CHR(1071))
 PRINT ASC(CHR(128512))
 """;
@@ -3362,7 +3422,7 @@ PRINT ASC(CHR(128512))
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["65", "A", "1071", "128512"], host.Output);
+        Assert.Equal(["65", "A", "159", "Я", "219", "█", "159", "128512"], host.Output);
     }
 
     [Fact]

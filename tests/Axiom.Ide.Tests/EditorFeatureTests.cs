@@ -24,6 +24,7 @@ public sealed class EditorFeatureTests
         Assert.Contains("Present(PresentSyncInterval, PresentFlags.None)", renderer, StringComparison.Ordinal);
         Assert.Contains("UpdateSubresource", renderer, StringComparison.Ordinal);
         Assert.Contains("PresentFrame(ScreenFramebufferSnapshot", renderer, StringComparison.Ordinal);
+        Assert.Contains("ScaleFramePixels", renderer, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -36,12 +37,22 @@ public sealed class EditorFeatureTests
         Assert.Contains("WndProc", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("WmKeyDown", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("WmChar", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("WmSize", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("WmPaint", nativeWindow, StringComparison.Ordinal);
+        Assert.Contains("HandleResize", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("WmMouseMove", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("Direct3D11SwapChainRenderer", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("NativeGraphicsScreenWindow", service, StringComparison.Ordinal);
         Assert.DoesNotContain("new GraphicsScreenWindow", service, StringComparison.Ordinal);
         Assert.Contains("GraphicsFrameCoalescingInterval", service, StringComparison.Ordinal);
         Assert.Contains("DispatcherTimer", service, StringComparison.Ordinal);
+        Assert.Contains("GraphicsFrameSummaryInterval", service, StringComparison.Ordinal);
+        Assert.Contains("screen.frame.summary", service, StringComparison.Ordinal);
+        Assert.Contains("screen.input.summary", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.key.enqueued", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.key.read", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.mouse.enqueued", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.mouse.read", service, StringComparison.Ordinal);
     }
 
     [Fact]

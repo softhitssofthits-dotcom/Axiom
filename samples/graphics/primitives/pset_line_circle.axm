@@ -1,10 +1,10 @@
 ﻿' Expected: primitives draw on the SCREEN pixel layer.
-SCREEN 3
+SCREEN 8
 PSET (10, 10), 12
 PRESET (11, 10), 0
-LINE (20, 20)-(220, 80), 10
-LINE (30, 100)-(180, 160), 11, B
-LINE (220, 100)-(360, 660), 11, BF
+LINE (20, 20) - (220, 80), 10
+LINE (30, 100) - (180, 160), 11, b
+LINE (220, 100) - (360, 660), 11, BF
 CIRCLE (420, 160), 50, 14
 PRINT "POINT(10,10)="; POINT(10, 10)
 PRINT "Press ESC to return to Output"

@@ -47,6 +47,21 @@ public sealed partial class Parser
         return CreateMissingToken(SyntaxKind.IdentifierToken);
     }
 
+    private SyntaxToken MatchFieldIdentifier()
+    {
+        if (Current.Kind is SyntaxKind.IdentifierToken or SyntaxKind.LineKeyword)
+        {
+            return NextToken();
+        }
+
+        Diagnostics.Report(
+            ExpectedIdentifierCode,
+            "Ожидался идентификатор.",
+            CreateDiagnosticLocation(Current.Location));
+
+        return CreateMissingToken(SyntaxKind.IdentifierToken);
+    }
+
     private bool IsExpressionNameToken(SyntaxKind kind)
     {
         return kind is SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword;
@@ -240,6 +255,7 @@ public sealed partial class Parser
             TokenKind.DoubleLiteralToken => SyntaxKind.DoubleLiteralToken,
             TokenKind.StringLiteralToken => SyntaxKind.StringLiteralToken,
             TokenKind.BooleanLiteralToken => SyntaxKind.BooleanLiteralToken,
+            TokenKind.AmpersandToken => SyntaxKind.AmpersandToken,
             TokenKind.PlusToken => SyntaxKind.PlusToken,
             TokenKind.MinusToken => SyntaxKind.MinusToken,
             TokenKind.StarToken => SyntaxKind.StarToken,
@@ -316,6 +332,7 @@ public sealed partial class Parser
             TokenKind.SelfKeyword => SyntaxKind.SelfKeyword,
             TokenKind.SelectKeyword => SyntaxKind.SelectKeyword,
             TokenKind.ScreenKeyword => SyntaxKind.ScreenKeyword,
+            TokenKind.SleepKeyword => SyntaxKind.SleepKeyword,
             TokenKind.StepKeyword => SyntaxKind.StepKeyword,
             TokenKind.StopKeyword => SyntaxKind.StopKeyword,
             TokenKind.StringKeyword => SyntaxKind.StringKeyword,

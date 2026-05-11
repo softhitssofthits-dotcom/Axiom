@@ -2140,6 +2140,27 @@ PRINT USING "##.##"; price; tax,
     }
 
     [Fact]
+    public void Bind_SleepStatementWithDuration()
+    {
+        var program = BindProgram("SLEEP 500", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundSleepStatement>(Assert.Single(program.GlobalStatements));
+        Assert.NotNull(statement.DurationExpression);
+        Assert.Equal(TypeSymbol.Long, statement.DurationExpression.Type);
+    }
+
+    [Fact]
+    public void Bind_SleepStatementWithoutDuration()
+    {
+        var program = BindProgram("SLEEP", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundSleepStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Null(statement.DurationExpression);
+    }
+
+    [Fact]
     public void Bind_InputListWithPrompt()
     {
         const string text = """
@@ -3410,6 +3431,27 @@ PRINT value + 1
         var print = Assert.IsType<BoundPrintStatement>(program.GlobalStatements[1]);
         var expression = Assert.IsType<BoundBinaryExpression>(Assert.Single(print.Items).Expression);
         Assert.Equal(TypeSymbol.Long, expression.Type);
+    }
+
+    [Fact]
+    public void Bind_AmpersandConcatenatesScalarValuesAsString()
+    {
+        const string text = """
+DIM name AS STRING = "Иван"
+DIM age AS INTEGER = 7
+PRINT "Привет, " & name & " тебе " & age & " лет."
+PRINT "flag=" & TRUE
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var greeting = Assert.IsType<BoundBinaryExpression>(AssertSinglePrintExpression(program.GlobalStatements[2]));
+        var flag = Assert.IsType<BoundBinaryExpression>(AssertSinglePrintExpression(program.GlobalStatements[3]));
+        Assert.Equal(SyntaxKind.AmpersandToken, greeting.OperatorKind);
+        Assert.Equal(TypeSymbol.String, greeting.Type);
+        Assert.Equal(SyntaxKind.AmpersandToken, flag.OperatorKind);
+        Assert.Equal(TypeSymbol.String, flag.Type);
     }
 
     [Fact]

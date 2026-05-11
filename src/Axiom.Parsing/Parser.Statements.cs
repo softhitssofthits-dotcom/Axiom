@@ -27,6 +27,7 @@ public sealed partial class Parser
             SyntaxKind.ConstKeyword => ParseConstStatement(),
             SyntaxKind.PrintKeyword => ParsePrintStatement(),
             SyntaxKind.InputKeyword => ParseInputStatement(),
+            SyntaxKind.SleepKeyword => ParseSleepStatement(),
             SyntaxKind.ScreenKeyword => ParseScreenStatement(),
             SyntaxKind.ClsKeyword => ParseClsStatement(),
             SyntaxKind.ColorKeyword => ParseColorStatement(),
@@ -185,6 +186,13 @@ public sealed partial class Parser
         }
 
         return new InputStatementSyntax(inputKeyword, promptToken, promptSeparatorToken, identifiers, commaTokens);
+    }
+
+    private SleepStatementSyntax ParseSleepStatement()
+    {
+        var sleepKeyword = Match(SyntaxKind.SleepKeyword, "SLEEP");
+        var durationExpression = IsStatementTerminator(Current.Kind) ? null : ParseExpression();
+        return new SleepStatementSyntax(sleepKeyword, durationExpression);
     }
 
     private ScreenStatementSyntax ParseScreenStatement()
@@ -434,7 +442,7 @@ public sealed partial class Parser
             if (Current.Kind == SyntaxKind.DotToken)
             {
                 var dotToken = Match(SyntaxKind.DotToken, ".");
-                var identifier = MatchIdentifier();
+                var identifier = MatchFieldIdentifier();
                 expression = new FieldAccessExpressionSyntax(expression, dotToken, identifier);
                 continue;
             }

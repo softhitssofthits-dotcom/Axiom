@@ -14,6 +14,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int CsVRedraw = 0x0001;
     private const int WmClose = 0x0010;
     private const int WmDestroy = 0x0002;
+    private const int WmSize = 0x0005;
+    private const int WmPaint = 0x000F;
     private const int WmKeyDown = 0x0100;
     private const int WmKeyUp = 0x0101;
     private const int WmChar = 0x0102;
@@ -25,6 +27,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int WmMButtonDown = 0x0207;
     private const int WmMButtonUp = 0x0208;
     private const int WmMouseWheel = 0x020A;
+    private const int SizeMinimized = 1;
+    private const int ErrorClassAlreadyExists = 1410;
 
     private static readonly string WindowClassName = "AxiomNativeScreenWindow";
     private static readonly WndProc StaticWndProc = DispatchWindowMessage;
@@ -32,6 +36,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     private readonly ProgramConsoleService _consoleService;
     private readonly Direct3D11SwapChainRenderer _renderer;
+    private ScreenFramebufferSnapshot? _lastFrame;
     private bool _closed;
 
     public NativeGraphicsScreenWindow(ProgramConsoleService consoleService, int width, int height)
@@ -41,15 +46,24 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         _consoleService = consoleService;
         RegisterWindowClass();
 
+        var windowRect = new Rect
+        {
+            Left = 0,
+            Top = 0,
+            Right = Math.Max(1, width),
+            Bottom = Math.Max(1, height)
+        };
+        AdjustWindowRectEx(ref windowRect, WsOverlappedWindow, false, 0);
+
         Hwnd = CreateWindowEx(
             0,
             WindowClassName,
             "Axiom SCREEN",
-            WsOverlappedWindow | WsVisible,
+            WsOverlappedWindow,
             CwUseDefault,
             CwUseDefault,
-            Math.Max(1, width),
-            Math.Max(1, height),
+            Math.Max(1, windowRect.Right - windowRect.Left),
+            Math.Max(1, windowRect.Bottom - windowRect.Top),
             IntPtr.Zero,
             IntPtr.Zero,
             IntPtr.Zero,
@@ -61,7 +75,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         }
 
         SetWindowLongPtr(Hwnd, -21, GCHandle.ToIntPtr(GCHandle.Alloc(this)));
-        _renderer = new Direct3D11SwapChainRenderer(Hwnd, Math.Max(1, width), Math.Max(1, height));
+        var (clientWidth, clientHeight) = GetClientSize(Hwnd);
+        _renderer = new Direct3D11SwapChainRenderer(Hwnd, clientWidth, clientHeight);
     }
 
     public event EventHandler? Closed;
@@ -71,6 +86,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     public void Show()
     {
         ShowWindow(Hwnd, SwShowNormal);
+        UpdateWindow(Hwnd);
         SetFocus(Hwnd);
     }
 
@@ -87,6 +103,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             return;
         }
 
+        _lastFrame = frame;
         _renderer.PresentFrame(frame);
     }
 
@@ -110,10 +127,23 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         switch (message)
         {
             case WmClose:
+                DestroyWindow(hwnd);
                 return IntPtr.Zero;
 
             case WmDestroy:
                 HandleDestroyed();
+                return IntPtr.Zero;
+
+            case WmSize:
+                if ((int)wParam != SizeMinimized)
+                {
+                    HandleResize(GetLowWord(lParam), GetHighWord(lParam));
+                }
+
+                return IntPtr.Zero;
+
+            case WmPaint:
+                HandlePaint();
                 return IntPtr.Zero;
 
             case WmKeyDown:
@@ -171,7 +201,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         if (TryMapVirtualKey(virtualKey, out var keyName))
         {
             _consoleService.SetKeyDown(keyName);
-            _consoleService.EnqueueKey(keyName);
+            if (!_consoleService.IsWaitingForInput && ShouldEnqueueKeyDown(virtualKey))
+            {
+                _consoleService.EnqueueKey(keyName);
+            }
         }
     }
 
@@ -191,10 +224,6 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             {
                 _consoleService.SubmitInput();
             }
-            else
-            {
-                _consoleService.EnqueueKey("ENTER");
-            }
 
             return;
         }
@@ -213,7 +242,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         {
             _consoleService.AppendInputCharacter(character);
         }
-        else if (!char.IsControl(character))
+        else if (ShouldEnqueueChar(character))
         {
             _consoleService.EnqueueKey(character.ToString());
         }
@@ -231,6 +260,29 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         {
             _consoleService.EnqueueMouseButtonRelease(button);
             _consoleService.SetMouseButtonUp(button);
+        }
+    }
+
+    private void HandleResize(int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        _renderer.Resize(width, height);
+        if (_lastFrame is not null)
+        {
+            _renderer.PresentFrame(_lastFrame);
+        }
+    }
+
+    private void HandlePaint()
+    {
+        ValidateRect(Hwnd, IntPtr.Zero);
+        if (_lastFrame is not null)
+        {
+            _renderer.PresentFrame(_lastFrame);
         }
     }
 
@@ -271,7 +323,13 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         s_windowClassAtom = RegisterClass(ref windowClass);
         if (s_windowClassAtom == 0)
         {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to register native SCREEN window class.");
+            var error = Marshal.GetLastWin32Error();
+            if (error != ErrorClassAlreadyExists)
+            {
+                throw new Win32Exception(error, "Failed to register native SCREEN window class.");
+            }
+
+            s_windowClassAtom = 1;
         }
     }
 
@@ -318,11 +376,31 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         return keyName.Length != 0;
     }
 
+    internal static bool ShouldEnqueueKeyDown(int virtualKey) =>
+        virtualKey is not (>= 0x30 and <= 0x39) and not (>= 0x41 and <= 0x5A);
+
+    internal static bool ShouldEnqueueChar(char character) =>
+        !char.IsControl(character) && character != ' ';
+
     private static short GetX(IntPtr lParam) => unchecked((short)((long)lParam & 0xFFFF));
 
     private static short GetY(IntPtr lParam) => unchecked((short)(((long)lParam >> 16) & 0xFFFF));
 
     private static int GetWheelDelta(IntPtr wParam) => unchecked((short)(((long)wParam >> 16) & 0xFFFF));
+
+    private static int GetLowWord(IntPtr value) => unchecked((short)((long)value & 0xFFFF));
+
+    private static int GetHighWord(IntPtr value) => unchecked((short)(((long)value >> 16) & 0xFFFF));
+
+    private static (int Width, int Height) GetClientSize(IntPtr hwnd)
+    {
+        if (!GetClientRect(hwnd, out var rect))
+        {
+            return (1, 1);
+        }
+
+        return (Math.Max(1, rect.Right - rect.Left), Math.Max(1, rect.Bottom - rect.Top));
+    }
 
     private delegate IntPtr WndProc(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
 
@@ -341,6 +419,15 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         public string lpszClassName;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern ushort RegisterClass(ref WndClass lpWndClass);
 
@@ -348,10 +435,19 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private static extern IntPtr CreateWindowEx(int dwExStyle, string lpClassName, string lpWindowName, int dwStyle, int x, int y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
 
     [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool AdjustWindowRectEx(ref Rect lpRect, int dwStyle, bool bMenu, int dwExStyle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool GetClientRect(IntPtr hWnd, out Rect lpRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
     private static extern bool DestroyWindow(IntPtr hWnd);
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool UpdateWindow(IntPtr hWnd);
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -361,6 +457,9 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     [DllImport("user32.dll")]
     private static extern IntPtr DefWindowProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool ValidateRect(IntPtr hWnd, IntPtr lpRect);
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
     private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);

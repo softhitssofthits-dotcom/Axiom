@@ -81,5 +81,7 @@ public sealed class ProgramRunResult
 
     public bool CanStepBack => StopState?.CanStepBack == true;
 
-    public bool Succeeded => Status == ProgramRunStatus.Success;
+    public bool Cancelled => Status == ProgramRunStatus.Cancelled;
+
+    public bool Succeeded => Status == ProgramRunStatus.Success || Status == ProgramRunStatus.Cancelled;
 }

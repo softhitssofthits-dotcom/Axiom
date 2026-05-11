@@ -141,8 +141,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             }
             else if (e.PropertyName == nameof(ProgramConsoleService.IsWaitingForInput))
             {
-                BottomPane.IsWaitingForInput = _programConsoleService.IsWaitingForInput;
-                if (_programConsoleService.IsWaitingForInput)
+                ApplyConsoleInputStateToBottomPane();
+                if (BottomPane.IsWaitingForInput)
                 {
                     BottomPane.SelectOutput();
                     BottomPane.RequestOutputFocus();
@@ -151,13 +151,23 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 RaiseInputCommandCanExecuteChanged();
                 RaiseShellCommandCanExecuteChanged();
             }
+            else if (e.PropertyName == nameof(ProgramConsoleService.IsScreenOutputActive))
+            {
+                ApplyConsoleInputStateToBottomPane();
+                RaiseInputCommandCanExecuteChanged();
+                RaiseShellCommandCanExecuteChanged();
+            }
             else if (e.PropertyName == nameof(ProgramConsoleService.CurrentPromptText))
             {
-                BottomPane.CurrentPromptText = _programConsoleService.CurrentPromptText;
+                BottomPane.CurrentPromptText = _programConsoleService.IsScreenOutputActive
+                    ? string.Empty
+                    : _programConsoleService.CurrentPromptText;
             }
             else if (e.PropertyName == nameof(ProgramConsoleService.CurrentInputText))
             {
-                BottomPane.CurrentInputText = _programConsoleService.CurrentInputText;
+                BottomPane.CurrentInputText = _programConsoleService.IsScreenOutputActive
+                    ? string.Empty
+                    : _programConsoleService.CurrentInputText;
             }
         };
 
@@ -872,7 +882,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         SetStoppedRunState(useSourceBreakpoints ? result.StopState : null, useSourceBreakpoints ? runDocument : null);
         UpdateRunTiming(result);
 
-        if (!result.Succeeded || result.Diagnostics.Count > 0)
+        if (result.Cancelled)
+        {
+            StatusBar.StatusText = GetLocalizedString("Run.StatusCancelled", "Run cancelled.");
+        }
+        else if (!result.Succeeded || result.Diagnostics.Count > 0)
         {
             BottomPane.ShowDiagnostics();
             BottomPane.RequestDiagnosticsFocus();
@@ -1045,7 +1059,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         SetStoppedRunState(result.StopState, runDocument);
         UpdateRunTiming(result);
 
-        if (!result.Succeeded || result.Diagnostics.Count > 0)
+        if (result.Cancelled)
+        {
+            StatusBar.StatusText = GetLocalizedString("Run.StatusCancelled", "Run cancelled.");
+        }
+        else if (!result.Succeeded || result.Diagnostics.Count > 0)
         {
             BottomPane.ShowDiagnostics();
             BottomPane.RequestDiagnosticsFocus();
@@ -1118,7 +1136,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         SetStoppedRunState(result.StopState, stoppedRunDocument);
         UpdateRunTiming(result);
 
-        if (!result.Succeeded || result.Diagnostics.Count > 0)
+        if (result.Cancelled)
+        {
+            StatusBar.StatusText = GetLocalizedString("Run.StatusCancelled", "Run cancelled.");
+        }
+        else if (!result.Succeeded || result.Diagnostics.Count > 0)
         {
             BottomPane.ShowDiagnostics();
             BottomPane.RequestDiagnosticsFocus();
@@ -1563,6 +1585,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     private void SubmitInput()
     {
+        if (_programConsoleService.IsScreenOutputActive)
+        {
+            return;
+        }
+
         _programConsoleService.SubmitInput();
     }
 
@@ -2543,6 +2570,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private void OnBottomPanePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(BottomPaneViewModel.CurrentInputText)
+            && !_programConsoleService.IsScreenOutputActive
             && !string.Equals(_programConsoleService.CurrentInputText, BottomPane.CurrentInputText, StringComparison.Ordinal))
         {
             _programConsoleService.CurrentInputText = BottomPane.CurrentInputText;
@@ -2777,6 +2805,17 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             {
                 FlushEditorNoiseBurst(burst);
             }
+        }
+    }
+
+    private void ApplyConsoleInputStateToBottomPane()
+    {
+        var useBottomPaneInput = _programConsoleService.IsWaitingForInput && !_programConsoleService.IsScreenOutputActive;
+        BottomPane.IsWaitingForInput = useBottomPaneInput;
+        if (!useBottomPaneInput)
+        {
+            BottomPane.CurrentPromptText = string.Empty;
+            BottomPane.CurrentInputText = string.Empty;
         }
     }
 

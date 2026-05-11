@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const nav = [
     {
       title: "Старт",
@@ -43,12 +43,17 @@
     {
       title: "Графика",
       items: [
-        { id: "screen", href: "screen.html", label: "SCREEN и графика" }
+        { id: "graphics", href: "graphics.html", label: "Графика" },
+        { id: "screen", href: "screen.html", label: "Оператор SCREEN" },
+        { id: "graphics-text", href: "graphics-text.html", label: "Текстовый слой SCREEN" },
+        { id: "graphics-primitives", href: "graphics-primitives.html", label: "Графические примитивы" },
+        { id: "screen-functions", href: "screen-functions.html", label: "Функции состояния SCREEN" }
       ]
     },
     {
       title: "Управление выполнением",
       items: [
+        { id: "sleep", href: "sleep.html", label: "Оператор SLEEP" },
         { id: "if", href: "if.html", label: "Оператор IF" },
         { id: "select-case", href: "select-case.html", label: "Оператор SELECT CASE" },
         { id: "error-handling", href: "error-handling.html", label: "Обработка ошибок" },
@@ -96,6 +101,7 @@
         { id: "string-functions-trim-and-case", href: "string-functions-trim-and-case.html", label: "Строковые: обрезка и регистр" },
         { id: "string-functions-search-and-replace", href: "string-functions-search-and-replace.html", label: "Строковые: поиск и замена" },
         { id: "string-functions-build-and-split", href: "string-functions-build-and-split.html", label: "Строковые: построение и массивы" },
+        { id: "characters", href: "characters.html", label: "Символы CHR/ASC" },
         { id: "numeric-functions", href: "numeric-functions.html", label: "Числовые" },
         { id: "numeric-functions-conversion-and-legacy", href: "numeric-functions-conversion-and-legacy.html", label: "Числовые: INT/STR/VAL" },
         { id: "numeric-functions-core", href: "numeric-functions-core.html", label: "Числовые: базовая математика" },

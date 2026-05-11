@@ -8,9 +8,10 @@ using Axiom.Runtime;
 
 namespace Axiom.Ide.Services.Input;
 
-public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleService
+public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleService, IRuntimeCancellationProvider
 {
     private static readonly TimeSpan GraphicsFrameCoalescingInterval = TimeSpan.FromMilliseconds(16);
+    private const long GraphicsFrameSummaryInterval = 120;
 
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
@@ -27,10 +28,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private long _mouseX = -1;
     private long _mouseY = -1;
     private bool _isScreenActive;
+    private bool _isScreenOutputActive;
     private int _screenMode;
     private int _screenWidth;
     private int _screenHeight;
     private string _graphicsText = string.Empty;
+    private readonly ScreenTextBuffer _graphicsTextBuffer = new();
     private int _graphicsForeground = 15;
     private int? _graphicsBackground;
     private int _graphicsRow = 1;
@@ -41,6 +44,24 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private bool _graphicsVisualRefreshPending;
     private DispatcherTimer? _graphicsVisualRefreshTimer;
     private NativeGraphicsScreenWindow? _graphicsWindow;
+    private DateTimeOffset? _graphicsFrameMetricsStartedAt;
+    private DateTimeOffset? _lastGraphicsFramePublishedAt;
+    private long _graphicsFramePublishCount;
+    private long _graphicsImmediateFramePublishCount;
+    private long _graphicsCoalescedFramePublishCount;
+    private long _graphicsQueuedCommandCount;
+    private long _graphicsQueuedCommandsSinceLastFrame;
+    private long _graphicsMaxCommandsPerFrame;
+    private double _graphicsTotalFrameIntervalMs;
+    private double _graphicsMaxFrameIntervalMs;
+    private long _graphicsKeysEnqueued;
+    private long _graphicsKeysRead;
+    private long _graphicsMouseEventsEnqueued;
+    private long _graphicsMouseEventsRead;
+    private long _graphicsMaxPendingKeys;
+    private long _graphicsMaxPendingMouseEvents;
+    private long _graphicsInputEventsAtLastSummary;
+    private bool _isCancellationRequested;
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
@@ -55,7 +76,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         get => _currentInputText;
         set
         {
-            if (SetProperty(ref _currentInputText, value) && _isScreenActive && _isWaitingForInput)
+            if (SetProperty(ref _currentInputText, value) && _isScreenOutputActive && _isWaitingForInput)
             {
                 PublishGraphicsFrame();
             }
@@ -67,7 +88,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         get => _currentPromptText;
         private set
         {
-            if (SetProperty(ref _currentPromptText, value) && _isScreenActive)
+            if (SetProperty(ref _currentPromptText, value) && _isScreenOutputActive)
             {
                 PublishGraphicsFrame();
             }
@@ -79,7 +100,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         get => _isWaitingForInput;
         private set
         {
-            if (SetProperty(ref _isWaitingForInput, value) && _isScreenActive)
+            if (SetProperty(ref _isWaitingForInput, value) && _isScreenOutputActive)
             {
                 PublishGraphicsFrame();
             }
@@ -110,6 +131,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         {
             var value = false;
             InvokeOnDispatcher(() => value = _isScreenActive, DispatcherPriority.Background);
+            return value;
+        }
+    }
+
+    public bool IsScreenOutputActive
+    {
+        get
+        {
+            var value = false;
+            InvokeOnDispatcher(() => value = _isScreenOutputActive, DispatcherPriority.Background);
             return value;
         }
     }
@@ -148,6 +179,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         string.IsNullOrEmpty(OutputText)
             ? 0
             : OutputText.Split(Environment.NewLine).Length;
+
+    public bool IsCancellationRequested
+    {
+        get
+        {
+            var value = false;
+            InvokeOnDispatcher(() => value = _isCancellationRequested, DispatcherPriority.Background);
+            return value;
+        }
+    }
 
     public void BeginSession()
     {
@@ -254,7 +295,18 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     public void WriteOutput(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        InvokeOnDispatcher(() => AppendTranscriptLine(text));
+        InvokeOnDispatcher(() =>
+        {
+            if (_isScreenOutputActive)
+            {
+                WriteGraphicsTextCore(text, newLine: true);
+                PublishGraphicsFrame();
+            }
+            else
+            {
+                AppendTranscriptLine(text);
+            }
+        });
     }
 
     public void ActivateScreen(int mode)
@@ -262,19 +314,23 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             var (width, height) = ResolveScreenSize(mode);
-            _isScreenActive = true;
+            _isScreenActive = mode != 0;
+            _isScreenOutputActive = true;
             _screenMode = mode;
             _screenWidth = width;
             _screenHeight = height;
             _framebuffer = new ScreenFramebuffer(width, height);
+            _graphicsTextBuffer.Clear();
             GraphicsText = string.Empty;
             CancelScheduledGraphicsVisualRefresh();
             _graphicsForeground = 15;
             _graphicsBackground = null;
             _graphicsRow = 1;
             _graphicsColumn = 1;
+            ResetGraphicsFrameMetrics();
             PublishGraphicsFrame();
             OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsScreenOutputActive));
             OnPropertyChanged(nameof(ScreenMode));
             OnPropertyChanged(nameof(ScreenWidth));
             OnPropertyChanged(nameof(ScreenHeight));
@@ -293,14 +349,19 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             var previousWidth = _screenWidth;
             var previousHeight = _screenHeight;
             _isScreenActive = false;
+            _isScreenOutputActive = false;
             _screenMode = 0;
             _screenWidth = 0;
             _screenHeight = 0;
             _framebuffer = null;
             GraphicsFrame = null;
+            _graphicsTextBuffer.Clear();
             GraphicsText = string.Empty;
             CancelScheduledGraphicsVisualRefresh();
+            WriteGraphicsFrameSummary(final: true);
+            WriteGraphicsInputSummary(final: true);
             OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsScreenOutputActive));
             OnPropertyChanged(nameof(ScreenMode));
             OnPropertyChanged(nameof(ScreenWidth));
             OnPropertyChanged(nameof(ScreenHeight));
@@ -316,6 +377,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             GraphicsText = string.Empty;
+            _graphicsTextBuffer.Clear();
             _framebuffer?.Clear();
             PublishGraphicsFrame();
             CancelScheduledGraphicsVisualRefresh();
@@ -329,7 +391,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             _graphicsForeground = foreground;
-            _graphicsBackground = background;
+            if (background.HasValue)
+            {
+                _graphicsBackground = background.Value;
+            }
+
             PublishGraphicsFrame();
         });
     }
@@ -420,9 +486,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _pendingKeys.Enqueue(keyText);
             if (_isScreenActive)
             {
-                WriteGraphicsEvent(
-                    "screen.key.enqueued",
-                    $"key=\"{SanitizeForLog(keyText)}\" | pendingKeys={_pendingKeys.Count}");
+                _graphicsKeysEnqueued++;
+                _graphicsMaxPendingKeys = Math.Max(_graphicsMaxPendingKeys, _pendingKeys.Count);
             }
         });
     }
@@ -455,9 +520,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             keyText = _pendingKeys.Count > 0 ? _pendingKeys.Dequeue() : string.Empty;
             if (_isScreenActive && !string.IsNullOrEmpty(keyText))
             {
-                WriteGraphicsEvent(
-                    "screen.key.read",
-                    $"key=\"{SanitizeForLog(keyText)}\" | pendingKeys={_pendingKeys.Count}");
+                _graphicsKeysRead++;
             }
         }, DispatcherPriority.Background);
 
@@ -608,9 +671,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             mouseEvent = _pendingMouseEvents.Count > 0 ? _pendingMouseEvents.Dequeue() : default;
             if (_isScreenActive && mouseEvent != default)
             {
-                WriteGraphicsEvent(
-                    "screen.mouse.read",
-                    $"{FormatMouseEvent(mouseEvent)} | pendingMouseEvents={_pendingMouseEvents.Count}");
+                _graphicsMouseEventsRead++;
             }
         }, DispatcherPriority.Background);
 
@@ -641,7 +702,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
 
         _submittedText = CurrentInputText;
-        AppendTranscriptLine(CurrentPromptText + CurrentInputText);
+        if (_isScreenOutputActive)
+        {
+            WriteGraphicsTextCore(CurrentPromptText + CurrentInputText, newLine: true);
+            IsWaitingForInput = false;
+            PublishGraphicsFrame();
+        }
+        else
+        {
+            AppendTranscriptLine(CurrentPromptText + CurrentInputText);
+        }
+
         _traceService.Write(
             "console.input.submit",
             $"text=\"{SanitizeForLog(CurrentInputText)}\"");
@@ -731,23 +802,27 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
 
         _submittedText = string.Empty;
+        _isCancellationRequested = false;
         _pendingKeys.Clear();
         _pendingMouseEvents.Clear();
         _pressedKeys.Clear();
         _pressedMouseButtons.Clear();
-        _mouseX = -1;
-        _mouseY = -1;
-        _isScreenActive = false;
-        _screenMode = 0;
+            _mouseX = -1;
+            _mouseY = -1;
+            _isScreenActive = false;
+            _isScreenOutputActive = false;
+            _screenMode = 0;
         _screenWidth = 0;
         _screenHeight = 0;
         _framebuffer = null;
         GraphicsFrame = null;
+        _graphicsTextBuffer.Clear();
         GraphicsText = string.Empty;
         CancelScheduledGraphicsVisualRefresh();
         OutputText = string.Empty;
         ResetInputState();
         OnPropertyChanged(nameof(IsScreenActive));
+        OnPropertyChanged(nameof(IsScreenOutputActive));
         OnPropertyChanged(nameof(ScreenMode));
         OnPropertyChanged(nameof(ScreenWidth));
         OnPropertyChanged(nameof(ScreenHeight));
@@ -814,14 +889,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _pendingMouseEvents.Enqueue(mouseEvent);
         if (_isScreenActive)
         {
-            WriteGraphicsEvent(
-                "screen.mouse.enqueued",
-                $"{FormatMouseEvent(mouseEvent)} | pendingMouseEvents={_pendingMouseEvents.Count}");
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMaxPendingMouseEvents = Math.Max(_graphicsMaxPendingMouseEvents, _pendingMouseEvents.Count);
         }
     }
-
-    private static string FormatMouseEvent(MouseInputEvent mouseEvent) =>
-        $"kind={mouseEvent.Kind} | value={mouseEvent.ButtonNumber}";
 
     private void WriteGraphicsEvent(string eventName, string message)
     {
@@ -874,54 +945,26 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _graphicsWindow.Closed -= OnGraphicsWindowClosed;
         _graphicsWindow = null;
+        _isCancellationRequested = true;
+        WriteGraphicsEvent("screen.closed-by-user", "SCREEN window was closed by the user; run cancellation requested.");
     }
 
     private void WriteGraphicsTextCore(string text, bool newLine)
     {
-        var lines = GraphicsText.Length == 0
-            ? new List<string>()
-            : GraphicsText.Split(Environment.NewLine).ToList();
-
-        EnsureGraphicsLine(lines, _graphicsRow);
-        var lineIndex = _graphicsRow - 1;
-        var columnIndex = Math.Max(0, _graphicsColumn - 1);
-        var line = lines[lineIndex];
-
-        lines[lineIndex] = OverwriteText(line, columnIndex, text);
+        _graphicsTextBuffer.Write(_graphicsRow, _graphicsColumn, text, _graphicsForeground, _graphicsBackground);
 
         if (newLine)
         {
             _graphicsRow++;
             _graphicsColumn = 1;
-            EnsureGraphicsLine(lines, _graphicsRow);
+            _graphicsTextBuffer.EnsureRow(_graphicsRow);
         }
         else
         {
             _graphicsColumn += text.Length;
         }
 
-        GraphicsText = string.Join(Environment.NewLine, lines);
-    }
-
-    private static void EnsureGraphicsLine(List<string> lines, int row)
-    {
-        while (lines.Count < row)
-        {
-            lines.Add(string.Empty);
-        }
-    }
-
-    private static string OverwriteText(string line, int columnIndex, string text)
-    {
-        if (line.Length < columnIndex)
-        {
-            line = line.PadRight(columnIndex);
-        }
-
-        var prefix = line[..columnIndex];
-        var suffixStart = columnIndex + text.Length;
-        var suffix = suffixStart < line.Length ? line[suffixStart..] : string.Empty;
-        return prefix + text + suffix;
+        GraphicsText = _graphicsTextBuffer.ToPlainText();
     }
 
     private void SetPixelCore(long x, long y, int color)
@@ -1039,22 +1082,26 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void RefreshGraphicsVisuals()
     {
-        PublishGraphicsFrame();
+        PublishGraphicsFrame(coalesced: true);
     }
 
-    private void PublishGraphicsFrame()
+    private void PublishGraphicsFrame(bool coalesced = false)
     {
         var frame = _framebuffer?.CreateSnapshot(
-            GraphicsText,
+            _graphicsTextBuffer,
             _graphicsForeground,
-            _graphicsBackground,
-            _isWaitingForInput ? CurrentPromptText + CurrentInputText : null);
+            _isWaitingForInput ? CurrentPromptText + CurrentInputText : null,
+            _graphicsRow,
+            _graphicsColumn);
         GraphicsFrame = frame;
         _graphicsWindow?.PresentFrame(frame);
+        RecordGraphicsFramePublished(coalesced);
     }
 
     private void ScheduleGraphicsVisualRefresh()
     {
+        RecordGraphicsCommandQueued();
+
         if (Application.Current is null)
         {
             RefreshGraphicsVisuals();
@@ -1090,6 +1137,114 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsVisualRefreshPending = false;
     }
 
+    private void ResetGraphicsFrameMetrics()
+    {
+        _graphicsFrameMetricsStartedAt = DateTimeOffset.UtcNow;
+        _lastGraphicsFramePublishedAt = null;
+        _graphicsFramePublishCount = 0;
+        _graphicsImmediateFramePublishCount = 0;
+        _graphicsCoalescedFramePublishCount = 0;
+        _graphicsQueuedCommandCount = 0;
+        _graphicsQueuedCommandsSinceLastFrame = 0;
+        _graphicsMaxCommandsPerFrame = 0;
+        _graphicsTotalFrameIntervalMs = 0;
+        _graphicsMaxFrameIntervalMs = 0;
+        _graphicsKeysEnqueued = 0;
+        _graphicsKeysRead = 0;
+        _graphicsMouseEventsEnqueued = 0;
+        _graphicsMouseEventsRead = 0;
+        _graphicsMaxPendingKeys = 0;
+        _graphicsMaxPendingMouseEvents = 0;
+        _graphicsInputEventsAtLastSummary = 0;
+    }
+
+    private void RecordGraphicsCommandQueued()
+    {
+        if (!_isScreenOutputActive)
+        {
+            return;
+        }
+
+        _graphicsQueuedCommandCount++;
+        _graphicsQueuedCommandsSinceLastFrame++;
+    }
+
+    private void RecordGraphicsFramePublished(bool coalesced)
+    {
+        if (!_isScreenOutputActive)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (_lastGraphicsFramePublishedAt is not null)
+        {
+            var intervalMs = (now - _lastGraphicsFramePublishedAt.Value).TotalMilliseconds;
+            _graphicsTotalFrameIntervalMs += intervalMs;
+            _graphicsMaxFrameIntervalMs = Math.Max(_graphicsMaxFrameIntervalMs, intervalMs);
+        }
+
+        _lastGraphicsFramePublishedAt = now;
+        _graphicsFramePublishCount++;
+        if (coalesced)
+        {
+            _graphicsCoalescedFramePublishCount++;
+        }
+        else
+        {
+            _graphicsImmediateFramePublishCount++;
+        }
+
+        _graphicsMaxCommandsPerFrame = Math.Max(_graphicsMaxCommandsPerFrame, _graphicsQueuedCommandsSinceLastFrame);
+        _graphicsQueuedCommandsSinceLastFrame = 0;
+
+        if (_graphicsFramePublishCount % GraphicsFrameSummaryInterval == 0)
+        {
+            WriteGraphicsFrameSummary(final: false);
+            WriteGraphicsInputSummary(final: false);
+        }
+    }
+
+    private void WriteGraphicsFrameSummary(bool final)
+    {
+        if (_graphicsFramePublishCount == 0)
+        {
+            return;
+        }
+
+        var intervalCount = Math.Max(0, _graphicsFramePublishCount - 1);
+        var averageIntervalMs = intervalCount == 0 ? 0 : _graphicsTotalFrameIntervalMs / intervalCount;
+        var elapsedMs = _graphicsFrameMetricsStartedAt is null
+            ? 0
+            : (DateTimeOffset.UtcNow - _graphicsFrameMetricsStartedAt.Value).TotalMilliseconds;
+
+        WriteGraphicsEvent(
+            "screen.frame.summary",
+            string.Create(
+                System.Globalization.CultureInfo.InvariantCulture,
+                $"final={final} | frames={_graphicsFramePublishCount} | immediateFrames={_graphicsImmediateFramePublishCount} | coalescedFrames={_graphicsCoalescedFramePublishCount} | commands={_graphicsQueuedCommandCount} | maxCommandsPerFrame={_graphicsMaxCommandsPerFrame} | avgIntervalMs={averageIntervalMs:F2} | maxIntervalMs={_graphicsMaxFrameIntervalMs:F2} | elapsedMs={elapsedMs:F2}"));
+    }
+
+    private void WriteGraphicsInputSummary(bool final)
+    {
+        var inputEvents =
+            _graphicsKeysEnqueued
+            + _graphicsKeysRead
+            + _graphicsMouseEventsEnqueued
+            + _graphicsMouseEventsRead;
+        if (inputEvents == 0 || inputEvents == _graphicsInputEventsAtLastSummary)
+        {
+            return;
+        }
+
+        _graphicsInputEventsAtLastSummary = inputEvents;
+        WriteGraphicsEvent(
+            "screen.input.summary",
+            string.Create(
+                System.Globalization.CultureInfo.InvariantCulture,
+                $"final={final} | keysEnqueued={_graphicsKeysEnqueued} | keysRead={_graphicsKeysRead} | mouseEventsEnqueued={_graphicsMouseEventsEnqueued} | mouseEventsRead={_graphicsMouseEventsRead} | maxPendingKeys={_graphicsMaxPendingKeys} | maxPendingMouseEvents={_graphicsMaxPendingMouseEvents}"));
+    }
+
     private void AddFillCore(long left, long top, long right, long bottom, int color)
     {
         if (!_isScreenActive)
@@ -1112,6 +1267,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private static (int Width, int Height) ResolveScreenSize(int mode) => mode switch
     {
+        0 => (80 * ScreenTextRasterizer.CellWidth, 25 * ScreenTextRasterizer.CellHeight),
         1 => (320, 200),
         2 => (640, 480),
         3 => (800, 600),

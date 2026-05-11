@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Символы CHR и ASC</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="characters">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Строковые функции</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="string-functions.html">Строковые функции</a><span>/</span><span>Символы CHR и ASC</span>
+            </nav>
+            <p class="eyebrow">Строковые функции</p>
+            <h1 class="page-title">Символы CHR и ASC</h1>
+            <p class="lead"><code>CHR()</code> строит строку из числового кода, а <code>ASC()</code> возвращает код первого символа строки. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы из BASIC/DOS-программ имели устойчивые числовые коды.</p>
+
+            <section class="article-section" id="rules">
+                <h2>Правила кодирования</h2>
+                <ul>
+                    <li><code>CHR(code)</code> для <code>0..255</code> возвращает символ из таблицы ASCII/IBM CP866.</li>
+                    <li><code>CHR(code)</code> для значений выше <code>255</code> возвращает символ по Unicode-коду, если такой код допустим.</li>
+                    <li><code>ASC(text)</code> для первого символа, представимого в ASCII/IBM CP866, возвращает его код из этой таблицы.</li>
+                    <li><code>ASC(text)</code> для первого символа вне ASCII/IBM CP866 возвращает Unicode-код.</li>
+                </ul>
+<pre><code class="language-basic">PRINT CHR(159)   ' Я
+PRINT CHR(196)   ' ─
+PRINT CHR(219)   ' █
+PRINT ASC("Я")   ' 159
+PRINT ASC("█")   ' 219</code></pre>
+                <p>Коды <code>0..31</code> и <code>127</code> в исходной таблице имеют управляющие имена. В колонке «Символ» для них показан экранный знак из справочной таблицы; в обычной строковой обработке эти коды остаются управляющими символами.</p>
+            </section>
+
+            <section class="article-section" id="cp866-table">
+                <h2>Таблица ASCII/IBM CP866</h2>
+                <table>
+                    <thead>
+                        <tr><th>Код</th><th>Hex</th><th>Символ</th><th>Назначение</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>0</code></td><td><code>00h</code></td><td>NUL</td><td>Управляющий ASCII-код NUL; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>1</code></td><td><code>01h</code></td><td>☺</td><td>Управляющий ASCII-код SOH; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>2</code></td><td><code>02h</code></td><td>☻</td><td>Управляющий ASCII-код STX; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>3</code></td><td><code>03h</code></td><td>♥</td><td>Управляющий ASCII-код ETX; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>4</code></td><td><code>04h</code></td><td>♦</td><td>Управляющий ASCII-код EOT; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>5</code></td><td><code>05h</code></td><td>♣</td><td>Управляющий ASCII-код ENQ; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>6</code></td><td><code>06h</code></td><td>♠</td><td>Управляющий ASCII-код ACK; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>7</code></td><td><code>07h</code></td><td>•</td><td>Управляющий ASCII-код BEL; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>8</code></td><td><code>08h</code></td><td>◘</td><td>Управляющий ASCII-код BS; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>9</code></td><td><code>09h</code></td><td>○</td><td>Управляющий ASCII-код TAB; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>10</code></td><td><code>0Ah</code></td><td>◙</td><td>Управляющий ASCII-код LF; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>11</code></td><td><code>0Bh</code></td><td>♂</td><td>Управляющий ASCII-код VT; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>12</code></td><td><code>0Ch</code></td><td>♀</td><td>Управляющий ASCII-код FF; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>13</code></td><td><code>0Dh</code></td><td>♪</td><td>Управляющий ASCII-код CR; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>14</code></td><td><code>0Eh</code></td><td>♫</td><td>Управляющий ASCII-код SO; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>15</code></td><td><code>0Fh</code></td><td>☼</td><td>Управляющий ASCII-код SI; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>16</code></td><td><code>10h</code></td><td>►</td><td>Управляющий ASCII-код DLE; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>17</code></td><td><code>11h</code></td><td>◄</td><td>Управляющий ASCII-код DC1; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>18</code></td><td><code>12h</code></td><td>↕</td><td>Управляющий ASCII-код DC2; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>19</code></td><td><code>13h</code></td><td>‼</td><td>Управляющий ASCII-код DC3; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>20</code></td><td><code>14h</code></td><td>¶</td><td>Управляющий ASCII-код DC4; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>21</code></td><td><code>15h</code></td><td>§</td><td>Управляющий ASCII-код NAK; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>22</code></td><td><code>16h</code></td><td>▬</td><td>Управляющий ASCII-код SYN; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>23</code></td><td><code>17h</code></td><td>↨</td><td>Управляющий ASCII-код ETB; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>24</code></td><td><code>18h</code></td><td>↑</td><td>Управляющий ASCII-код CAN; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>25</code></td><td><code>19h</code></td><td>↓</td><td>Управляющий ASCII-код EM; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>26</code></td><td><code>1Ah</code></td><td>→</td><td>Управляющий ASCII-код SUB; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>27</code></td><td><code>1Bh</code></td><td>←</td><td>Управляющий ASCII-код ESC; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>28</code></td><td><code>1Ch</code></td><td>∟</td><td>Управляющий ASCII-код FS; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>29</code></td><td><code>1Dh</code></td><td>↔</td><td>Управляющий ASCII-код GS; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>30</code></td><td><code>1Eh</code></td><td>▲</td><td>Управляющий ASCII-код RS; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>31</code></td><td><code>1Fh</code></td><td>▼</td><td>Управляющий ASCII-код US; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>32</code></td><td><code>20h</code></td><td>(sp)</td><td>Пробел.</td></tr>
+                        <tr><td><code>33</code></td><td><code>21h</code></td><td>!</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>34</code></td><td><code>22h</code></td><td>&quot;</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>35</code></td><td><code>23h</code></td><td>#</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>36</code></td><td><code>24h</code></td><td>$</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>37</code></td><td><code>25h</code></td><td>%</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>38</code></td><td><code>26h</code></td><td>&amp;</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>39</code></td><td><code>27h</code></td><td>'</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>40</code></td><td><code>28h</code></td><td>(</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>41</code></td><td><code>29h</code></td><td>)</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>42</code></td><td><code>2Ah</code></td><td>*</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>43</code></td><td><code>2Bh</code></td><td>+</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>44</code></td><td><code>2Ch</code></td><td>,</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>45</code></td><td><code>2Dh</code></td><td>-</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>46</code></td><td><code>2Eh</code></td><td>.</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>47</code></td><td><code>2Fh</code></td><td>/</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>48</code></td><td><code>30h</code></td><td>0</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>49</code></td><td><code>31h</code></td><td>1</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>50</code></td><td><code>32h</code></td><td>2</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>51</code></td><td><code>33h</code></td><td>3</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>52</code></td><td><code>34h</code></td><td>4</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>53</code></td><td><code>35h</code></td><td>5</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>54</code></td><td><code>36h</code></td><td>6</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>55</code></td><td><code>37h</code></td><td>7</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>56</code></td><td><code>38h</code></td><td>8</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>57</code></td><td><code>39h</code></td><td>9</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>58</code></td><td><code>3Ah</code></td><td>:</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>59</code></td><td><code>3Bh</code></td><td>;</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>60</code></td><td><code>3Ch</code></td><td>&lt;</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>61</code></td><td><code>3Dh</code></td><td>=</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>62</code></td><td><code>3Eh</code></td><td>&gt;</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>63</code></td><td><code>3Fh</code></td><td>?</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>64</code></td><td><code>40h</code></td><td>@</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>65</code></td><td><code>41h</code></td><td>A</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>66</code></td><td><code>42h</code></td><td>B</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>67</code></td><td><code>43h</code></td><td>C</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>68</code></td><td><code>44h</code></td><td>D</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>69</code></td><td><code>45h</code></td><td>E</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>70</code></td><td><code>46h</code></td><td>F</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>71</code></td><td><code>47h</code></td><td>G</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>72</code></td><td><code>48h</code></td><td>H</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>73</code></td><td><code>49h</code></td><td>I</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>74</code></td><td><code>4Ah</code></td><td>J</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>75</code></td><td><code>4Bh</code></td><td>K</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>76</code></td><td><code>4Ch</code></td><td>L</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>77</code></td><td><code>4Dh</code></td><td>M</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>78</code></td><td><code>4Eh</code></td><td>N</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>79</code></td><td><code>4Fh</code></td><td>O</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>80</code></td><td><code>50h</code></td><td>P</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>81</code></td><td><code>51h</code></td><td>Q</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>82</code></td><td><code>52h</code></td><td>R</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>83</code></td><td><code>53h</code></td><td>S</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>84</code></td><td><code>54h</code></td><td>T</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>85</code></td><td><code>55h</code></td><td>U</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>86</code></td><td><code>56h</code></td><td>V</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>87</code></td><td><code>57h</code></td><td>W</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>88</code></td><td><code>58h</code></td><td>X</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>89</code></td><td><code>59h</code></td><td>Y</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>90</code></td><td><code>5Ah</code></td><td>Z</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>91</code></td><td><code>5Bh</code></td><td>[</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>92</code></td><td><code>5Ch</code></td><td>\</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>93</code></td><td><code>5Dh</code></td><td>]</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>94</code></td><td><code>5Eh</code></td><td>^</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>95</code></td><td><code>5Fh</code></td><td>_</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>96</code></td><td><code>60h</code></td><td>`</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>97</code></td><td><code>61h</code></td><td>a</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>98</code></td><td><code>62h</code></td><td>b</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>99</code></td><td><code>63h</code></td><td>c</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>100</code></td><td><code>64h</code></td><td>d</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>101</code></td><td><code>65h</code></td><td>e</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>102</code></td><td><code>66h</code></td><td>f</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>103</code></td><td><code>67h</code></td><td>g</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>104</code></td><td><code>68h</code></td><td>h</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>105</code></td><td><code>69h</code></td><td>i</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>106</code></td><td><code>6Ah</code></td><td>j</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>107</code></td><td><code>6Bh</code></td><td>k</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>108</code></td><td><code>6Ch</code></td><td>l</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>109</code></td><td><code>6Dh</code></td><td>m</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>110</code></td><td><code>6Eh</code></td><td>n</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>111</code></td><td><code>6Fh</code></td><td>o</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>112</code></td><td><code>70h</code></td><td>p</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>113</code></td><td><code>71h</code></td><td>q</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>114</code></td><td><code>72h</code></td><td>r</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>115</code></td><td><code>73h</code></td><td>s</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>116</code></td><td><code>74h</code></td><td>t</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>117</code></td><td><code>75h</code></td><td>u</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>118</code></td><td><code>76h</code></td><td>v</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>119</code></td><td><code>77h</code></td><td>w</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>120</code></td><td><code>78h</code></td><td>x</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>121</code></td><td><code>79h</code></td><td>y</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>122</code></td><td><code>7Ah</code></td><td>z</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>123</code></td><td><code>7Bh</code></td><td>{</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>124</code></td><td><code>7Ch</code></td><td>|</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>125</code></td><td><code>7Dh</code></td><td>}</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>126</code></td><td><code>7Eh</code></td><td>~</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>127</code></td><td><code>7Fh</code></td><td>⌂</td><td>DEL; в справочной таблице также показан экранный символ.</td></tr>
+                        <tr><td><code>128</code></td><td><code>80h</code></td><td>А</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>129</code></td><td><code>81h</code></td><td>Б</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>130</code></td><td><code>82h</code></td><td>В</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>131</code></td><td><code>83h</code></td><td>Г</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>132</code></td><td><code>84h</code></td><td>Д</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>133</code></td><td><code>85h</code></td><td>Е</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>134</code></td><td><code>86h</code></td><td>Ж</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>135</code></td><td><code>87h</code></td><td>З</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>136</code></td><td><code>88h</code></td><td>И</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>137</code></td><td><code>89h</code></td><td>Й</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>138</code></td><td><code>8Ah</code></td><td>К</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>139</code></td><td><code>8Bh</code></td><td>Л</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>140</code></td><td><code>8Ch</code></td><td>М</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>141</code></td><td><code>8Dh</code></td><td>Н</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>142</code></td><td><code>8Eh</code></td><td>О</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>143</code></td><td><code>8Fh</code></td><td>П</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>144</code></td><td><code>90h</code></td><td>Р</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>145</code></td><td><code>91h</code></td><td>С</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>146</code></td><td><code>92h</code></td><td>Т</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>147</code></td><td><code>93h</code></td><td>У</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>148</code></td><td><code>94h</code></td><td>Ф</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>149</code></td><td><code>95h</code></td><td>Х</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>150</code></td><td><code>96h</code></td><td>Ц</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>151</code></td><td><code>97h</code></td><td>Ч</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>152</code></td><td><code>98h</code></td><td>Ш</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>153</code></td><td><code>99h</code></td><td>Щ</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>154</code></td><td><code>9Ah</code></td><td>Ъ</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>155</code></td><td><code>9Bh</code></td><td>Ы</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>156</code></td><td><code>9Ch</code></td><td>Ь</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>157</code></td><td><code>9Dh</code></td><td>Э</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>158</code></td><td><code>9Eh</code></td><td>Ю</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>159</code></td><td><code>9Fh</code></td><td>Я</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>160</code></td><td><code>A0h</code></td><td>а</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>161</code></td><td><code>A1h</code></td><td>б</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>162</code></td><td><code>A2h</code></td><td>в</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>163</code></td><td><code>A3h</code></td><td>г</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>164</code></td><td><code>A4h</code></td><td>д</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>165</code></td><td><code>A5h</code></td><td>е</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>166</code></td><td><code>A6h</code></td><td>ж</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>167</code></td><td><code>A7h</code></td><td>з</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>168</code></td><td><code>A8h</code></td><td>и</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>169</code></td><td><code>A9h</code></td><td>й</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>170</code></td><td><code>AAh</code></td><td>к</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>171</code></td><td><code>ABh</code></td><td>л</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>172</code></td><td><code>ACh</code></td><td>м</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>173</code></td><td><code>ADh</code></td><td>н</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>174</code></td><td><code>AEh</code></td><td>о</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>175</code></td><td><code>AFh</code></td><td>п</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>176</code></td><td><code>B0h</code></td><td>░</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>177</code></td><td><code>B1h</code></td><td>▒</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>178</code></td><td><code>B2h</code></td><td>▓</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>179</code></td><td><code>B3h</code></td><td>│</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>180</code></td><td><code>B4h</code></td><td>┤</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>181</code></td><td><code>B5h</code></td><td>╡</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>182</code></td><td><code>B6h</code></td><td>╢</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>183</code></td><td><code>B7h</code></td><td>╖</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>184</code></td><td><code>B8h</code></td><td>╕</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>185</code></td><td><code>B9h</code></td><td>╣</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>186</code></td><td><code>BAh</code></td><td>║</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>187</code></td><td><code>BBh</code></td><td>╗</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>188</code></td><td><code>BCh</code></td><td>╝</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>189</code></td><td><code>BDh</code></td><td>╜</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>190</code></td><td><code>BEh</code></td><td>╛</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>191</code></td><td><code>BFh</code></td><td>┐</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>192</code></td><td><code>C0h</code></td><td>└</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>193</code></td><td><code>C1h</code></td><td>┴</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>194</code></td><td><code>C2h</code></td><td>┬</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>195</code></td><td><code>C3h</code></td><td>├</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>196</code></td><td><code>C4h</code></td><td>─</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>197</code></td><td><code>C5h</code></td><td>┼</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>198</code></td><td><code>C6h</code></td><td>╞</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>199</code></td><td><code>C7h</code></td><td>╟</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>200</code></td><td><code>C8h</code></td><td>╚</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>201</code></td><td><code>C9h</code></td><td>╔</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>202</code></td><td><code>CAh</code></td><td>╩</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>203</code></td><td><code>CBh</code></td><td>╦</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>204</code></td><td><code>CCh</code></td><td>╠</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>205</code></td><td><code>CDh</code></td><td>═</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>206</code></td><td><code>CEh</code></td><td>╬</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>207</code></td><td><code>CFh</code></td><td>╧</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>208</code></td><td><code>D0h</code></td><td>╨</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>209</code></td><td><code>D1h</code></td><td>╤</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>210</code></td><td><code>D2h</code></td><td>╥</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>211</code></td><td><code>D3h</code></td><td>╙</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>212</code></td><td><code>D4h</code></td><td>╘</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>213</code></td><td><code>D5h</code></td><td>╒</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>214</code></td><td><code>D6h</code></td><td>╓</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>215</code></td><td><code>D7h</code></td><td>╫</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>216</code></td><td><code>D8h</code></td><td>╪</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>217</code></td><td><code>D9h</code></td><td>┘</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>218</code></td><td><code>DAh</code></td><td>┌</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>219</code></td><td><code>DBh</code></td><td>█</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>220</code></td><td><code>DCh</code></td><td>▄</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>221</code></td><td><code>DDh</code></td><td>▌</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>222</code></td><td><code>DEh</code></td><td>▐</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>223</code></td><td><code>DFh</code></td><td>▀</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>224</code></td><td><code>E0h</code></td><td>р</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>225</code></td><td><code>E1h</code></td><td>с</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>226</code></td><td><code>E2h</code></td><td>т</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>227</code></td><td><code>E3h</code></td><td>у</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>228</code></td><td><code>E4h</code></td><td>ф</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>229</code></td><td><code>E5h</code></td><td>х</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>230</code></td><td><code>E6h</code></td><td>ц</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>231</code></td><td><code>E7h</code></td><td>ч</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>232</code></td><td><code>E8h</code></td><td>ш</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>233</code></td><td><code>E9h</code></td><td>щ</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>234</code></td><td><code>EAh</code></td><td>ъ</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>235</code></td><td><code>EBh</code></td><td>ы</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>236</code></td><td><code>ECh</code></td><td>ь</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>237</code></td><td><code>EDh</code></td><td>э</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>238</code></td><td><code>EEh</code></td><td>ю</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>239</code></td><td><code>EFh</code></td><td>я</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>240</code></td><td><code>F0h</code></td><td>Ё</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>241</code></td><td><code>F1h</code></td><td>ё</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>242</code></td><td><code>F2h</code></td><td>Є</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>243</code></td><td><code>F3h</code></td><td>є</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>244</code></td><td><code>F4h</code></td><td>Ї</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>245</code></td><td><code>F5h</code></td><td>ї</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>246</code></td><td><code>F6h</code></td><td>Ў</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>247</code></td><td><code>F7h</code></td><td>ў</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>248</code></td><td><code>F8h</code></td><td>°</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>249</code></td><td><code>F9h</code></td><td>∙</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>250</code></td><td><code>FAh</code></td><td>·</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>251</code></td><td><code>FBh</code></td><td>√</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>252</code></td><td><code>FCh</code></td><td>№</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>253</code></td><td><code>FDh</code></td><td>¤</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>254</code></td><td><code>FEh</code></td><td>■</td><td>Печатный символ IBM CP866.</td></tr>
+                        <tr><td><code>255</code></td><td><code>FFh</code></td><td>NBSP</td><td>Печатный символ IBM CP866.</td></tr>
+                    </tbody>
+                </table>
+                <p>Таблица сверена по справочному PDF <a href="https://www.industrialnets.ru/files/misc/ascii.pdf">industrialnets.ru/files/misc/ascii.pdf</a>: первая часть описывает ASCII-коды <code>00h..7Fh</code>, вторая - расширение IBM CP866 <code>80h..FFh</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list"><a href="string-functions-build-and-split.html#codes">ASC и CHR</a><a href="graphics-text.html">Текстовый слой SCREEN</a></div>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

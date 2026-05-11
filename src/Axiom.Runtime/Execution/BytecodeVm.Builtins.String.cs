@@ -370,12 +370,12 @@ public sealed partial class BytecodeVm
 
         using var enumerator = text.EnumerateRunes();
         enumerator.MoveNext();
-        return enumerator.Current.Value;
+        return RuntimeCharacterEncoding.Asc(enumerator.Current);
     }
 
     private static string EvaluateChr(int code)
     {
-        return new Rune(code).ToString();
+        return RuntimeCharacterEncoding.Chr(code);
     }
 
     private RuntimeValue EvaluateSplitBuiltin(string text, string separator, TextLocation location)

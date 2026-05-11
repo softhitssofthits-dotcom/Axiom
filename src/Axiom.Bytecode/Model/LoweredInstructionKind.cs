@@ -46,6 +46,7 @@ public enum LoweredInstructionKind
     PrintSeparator,
     PrintLine,
     Input,
+    Sleep,
     PushErrorHandler,
     PopErrorHandler,
     RaiseError,

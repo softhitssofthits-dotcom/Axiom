@@ -86,7 +86,7 @@ public sealed partial class Parser
             }
 
             var dotToken = Match(SyntaxKind.DotToken, ".");
-            var identifier = MatchIdentifier();
+            var identifier = MatchFieldIdentifier();
             expression = new FieldAccessExpressionSyntax(expression, dotToken, identifier);
         }
 
@@ -179,7 +179,7 @@ public sealed partial class Parser
         {
             SyntaxKind.CaretToken => 11,
             SyntaxKind.StarToken or SyntaxKind.SlashToken or SyntaxKind.BackslashToken or SyntaxKind.ModKeyword => 9,
-            SyntaxKind.PlusToken or SyntaxKind.MinusToken => 8,
+            SyntaxKind.PlusToken or SyntaxKind.MinusToken or SyntaxKind.AmpersandToken => 8,
             SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => 7,
             SyntaxKind.EqualsToken or SyntaxKind.NotEqualsToken or SyntaxKind.LessToken or SyntaxKind.LessOrEqualsToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualsToken => 6,
             SyntaxKind.AndKeyword => 5,

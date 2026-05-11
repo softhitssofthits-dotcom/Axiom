@@ -26,6 +26,7 @@ public sealed partial class Interpreter
     private bool _hasPendingOutput;
     private readonly IRuntimeHost _host;
     private Diagnostic? _lastRuntimeFailureDiagnostic;
+    private bool _cancelled;
 
     private Interpreter(BoundProgram program, IRuntimeHost host)
     {
@@ -56,10 +57,21 @@ public sealed partial class Interpreter
             interpreter.CloseAllOpenFiles();
         }
 
-        return new RuntimeResult(interpreter._diagnostics);
+        return new RuntimeResult(interpreter._diagnostics, cancelled: interpreter._cancelled);
     }
 
     private RuntimeScope CurrentScope => _scopeStack.Peek();
+
+    private bool CheckCancellationRequested()
+    {
+        if (!_host.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        _cancelled = true;
+        return true;
+    }
 
     private void ExecuteProgram()
     {

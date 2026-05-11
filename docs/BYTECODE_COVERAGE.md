@@ -471,3 +471,91 @@
 - �������� VM: ��, ������ ����������� ����� `ExecutionMode.Bytecode` ��� ������ �� �������������;
 - ����������� ������ ��������: �������� ��������� ����� `KEYDOWN("LEFT")` � `KEYDOWN("RIGHT")`, ����� ����� `KEYPRESS("ESC")`, ������������ ����� ����� ����������� ������� `KEYPRESS("SPACE")`, ��������� ��������� ����� `LINE ..., BF` � ���� ����� `CIRCLE`;
 - �������: �� ���������, ������ ������������� � ������������ ��� ������ �������� ������� � �����, � �� ��� ����������������� ���������.
+## Обновление реестра - 2026-05-10 - разнесён manual по графике
+
+Дополнение к области `SCREEN` и графических команд:
+- Manual: да, прежняя общая страница `docs/manual/screen.html` разделена на обзор `docs/manual/graphics.html`, справочную страницу `docs/manual/screen.html`, страницу текстового слоя `docs/manual/graphics-text.html`, страницу примитивов `docs/manual/graphics-primitives.html` и страницу функций состояния `docs/manual/screen-functions.html`;
+- Навигация: да, обновлены `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/manual/index.html` и `docs/manual/reference.html`;
+- Покрытие поведения: не менялось, обновление относится только к справочнику и уточняет уже существующие `SCREEN`, `CLS`, `COLOR`, `LOCATE`, `PSET`, `PRESET`, `LINE`, `CIRCLE`, `POINT`, `SCREENISACTIVE`, `SCREENMODE`, `SCREENWIDTH` и `SCREENHEIGHT`;
+- Runnable sample: без изменений, существующие примеры в `samples/graphics/` теперь прямо указаны на профильных страницах.
+
+## Обновление реестра - 2026-05-10 - исправлена приёмка COLOR в SCREEN
+
+Дополнение к области `SCREEN` и текстового слоя:
+- Автотесты: да, добавлены IDE-проверки сохранения цветов ячеек, правила `COLOR foreground` без сброса фона, порядка палитры BGRA и масштабирования кадра renderer-ом;
+- Runnable sample: да, обновлён `samples/graphics/text/print_locate_color.axm`, теперь он прямо покрывает `COLOR 14, 1` и последующий `COLOR 15` с прежним фоном;
+- Manual: без изменения структуры, существующая страница `docs/manual/graphics-text.html` уже описывала правило «если фон не указан, текущий фон не меняется»;
+- Сквозной VM: статус не меняется, потому что исправление находится в IDE-host и framebuffer-отрисовке, а не в понижении или исполнении байткода.
+
+## Обновление реестра - 2026-05-10 - русский текст и 256 цветов SCREEN
+
+Дополнение к области `SCREEN` и графических команд:
+- Автотесты: да, добавлены IDE-проверки вывода русских букв в framebuffer и расширенной палитры `0..255`;
+- Runnable sample: да, обновлён `samples/graphics/text/print_locate_color.axm`, теперь он содержит русскую строку и цветовые индексы выше `15`;
+- Manual: да, обновлены `docs/manual/graphics-text.html` и `docs/manual/graphics-primitives.html`: палитра описана как `0..255`, с классическими цветами `0..15`, RGB-кубом `16..231`, серой шкалой `232..255` и правилом `ABS(color) MOD 256`;
+- Сквозной VM: существующий `ScreenTextAcceptanceSample_RunsOnBytecodeVm` продолжает запускать текстовый графический sample через `ExecutionMode.Bytecode`; изменение относится к host-отрисовке framebuffer и не требует новых bytecode-инструкций.
+
+## Обновление реестра - 2026-05-10 - блочная псевдографика SCREEN
+
+Дополнение к области `SCREEN` и текстового графического слоя:
+- Автотесты: да, добавлены IDE-проверки полного блока `█`, экранного кода `CHR(219)` и затенённых блоков `▓`, `▒`, `░` вместе с кодами `178`, `177`, `176`;
+- Runnable sample: да, обновлён `samples/graphics/text/print_locate_color.axm`, теперь он выводит расширенную палитру `16..255` через `PRINT CHR(219);` в ячейках `SCREEN`;
+- Manual: да, обновлена `docs/manual/graphics-text.html` с описанием поддержанных блочных псевдосимволов и примером палитры;
+- Сквозной VM: да, существующий `ScreenTextAcceptanceSample_RunsOnBytecodeVm` продолжает запускать этот пример через `ExecutionMode.Bytecode`; изменение находится в IDE-host rasterizer и не требует новых инструкций VM;
+- Профиль: не приоритет, это визуальное отображение текстового слоя, а не вычислительно горячий слой VM.
+
+## Обновление реестра - 2026-05-10 - CHR и ASC с CP866-диапазоном
+
+Дополнение к строковым функциям `CHR` и `ASC`:
+- VM: да, `BytecodeVm` использует общий `RuntimeCharacterEncoding` и возвращает CP866-символы для `CHR(0..255)`;
+- Интерпретатор: да, использует тот же слой;
+- Автотесты: да, обновлены runtime-, VM- и execution-проверки для `CHR(159)`, `CHR(219)`, `ASC("Я")`, `ASC("█")` и Unicode-кода выше `255`;
+- Runnable sample: да, обновлены `samples/functions/chr/basic_usage.axm`, `samples/functions/asc/basic_usage.axm` и `samples/graphics/text/print_locate_color.axm`;
+- Manual: да, обновлены `docs/manual/string-functions-build-and-split.html` и `docs/manual/graphics-text.html`;
+- Сквозной VM: да, execution-проверки подтверждают выполнение через `ExecutionMode.Bytecode` без отката на интерпретатор;
+- Профиль: не приоритет, изменение относится к строковой совместимости и визуальным символам, а не к новому производительному сценарию.
+
+## Обновление реестра - 2026-05-11 - отдельная таблица символов CHR и ASC в manual
+
+Дополнение к строковым функциям `CHR` и `ASC`:
+- Manual: да, помимо `docs/manual/string-functions-build-and-split.html` и `docs/manual/graphics-text.html`, добавлена отдельная страница `docs/manual/characters.html` с полной таблицей ASCII/IBM CP866 для кодов `0..255`;
+- Навигация: да, обновлены `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/manual/reference.html` и `docs/manual/index.html`;
+- Поведение языка, VM, автотесты и runnable samples не менялись: это уточнение пользовательского справочника по уже реализованному договору.
+## Обновление реестра - 2026-05-11 - оператор SLEEP
+
+Новая область: оператор временной остановки `SLEEP`.
+
+Состояние покрытия:
+- VM: да, `BytecodeVm` выполняет отдельную инструкцию `Opcode.Sleep`;
+- Интерпретатор: да, interpreter выполняет тот же пользовательский договор;
+- Автотесты: да, добавлены parser-, binder-, interpreter- и `BytecodeVm`-проверки для `SLEEP 0`, `SLEEP` без аргумента и отрицательной длительности;
+- Runnable sample: да, добавлен `samples/operators/sleep/delay_and_key_wait.axm`;
+- Manual: да, добавлена страница `docs/manual/sleep.html`, обновлены `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js` и `docs/manual/reference.html`;
+- Сквозной VM: да, добавлен acceptance-тест `SleepAcceptanceSample_RunsOnBytecodeVm`;
+- Негативный паритет: да, runtime- и VM-проверки фиксируют `MB3007` для отрицательной длительности;
+- Профиль: не приоритет, оператор предназначен для ожидания и интерактивных сценариев, а не для производительного сравнения.
+
+## Обновление реестра - 2026-05-11 - SCREEN 0 как текстовое окно
+
+Дополнение к области `SCREEN`:
+- VM: да, `BytecodeVm` теперь трактует инструкцию `SCREEN 0` как включение экранного текстового вывода, а не как возврат к служебной вкладке `Output`;
+- Интерпретатор: да, использует тот же host-договор `IsScreenOutputActive`;
+- Автотесты: да, добавлены IDE-проверки `ActivateScreenZero_UsesNativeTextWindowWithoutEnablingGraphicsMode` и `ScreenZeroInput_DoesNotEchoPromptToOutputPane`, а также acceptance-проверка `ScreenZeroTextInputAcceptanceSample_RunsOnBytecodeVm`;
+- Runnable sample: да, добавлен `samples/graphics/input/text_screen_input.axm`;
+- Manual: да, обновлены `docs/manual/screen.html`, `docs/manual/graphics.html` и `docs/manual/graphics-text.html`;
+- Сквозной VM: да, новый sample выполняется через `ExecutionMode.Bytecode` без отката на интерпретатор;
+- Негативный паритет: прежний договор `MB3010` сохраняется для графических команд вне `SCREEN 1..10`;
+- Профиль: не приоритет, потому что это интерактивная маршрутизация host-ввода и вывода, а не вычислительно горячий слой VM.
+## ���������� ������� - 2026-05-11 - �������� &
+
+����� �������: ��������� ������������ ��������� ��������� �������� ����� �������� `&`.
+
+��������� ��������:
+- VM: ��, `BytecodeVm` ��������� ��������� ���������� `Opcode.Concat`;
+- �������������: ��, interpreter ��������� ��� �� ���������������� ������� ����� ������������ ��������� ������������� ��������;
+- ���������: ��, ��������� lexer-, parser-, binder-, interpreter- � `BytecodeVm`-�������� ��� `&`;
+- Runnable sample: ��, �������� `samples/operators/ampersand/mixed_scalar_concat.axm`;
+- Manual: ��, ��������� �������� `docs/manual/arithmetic-and-logic.html` � ��������� ������ �����������;
+- �������� VM: ��, sample �������� � acceptance-�������� `ScalarOperatorAcceptanceSamples_RunOnBytecodeVm`;
+- ���������� �������: ��, ������������ ��������� ����� �������� � ������������ ����������� `MB2003`;
+- �������: �� ���������, �������� ��������� �������� ���������� ����� � ��������� � ��������� ����������, �� ��������� ���������������� �������� ������ �� ���������.

@@ -23,7 +23,7 @@ COLOR 15, 0
 LOCATE 1, 1
 PRINT "LEFT/RIGHT move, SPACE pauses/resumes, ESC exits"
 
-DO WHILE running AND frame < 900
+DO WHILE running
     oldPaddleX = paddleX
     oldBallX = ballX
     oldBallY = ballY
@@ -116,10 +116,6 @@ DO WHILE running AND frame < 900
 
     frame = frame + 1
 LOOP
-
-IF status = "running" THEN
-    status = "timeout"
-END IF
 
 SCREEN 0
 PRINT "Paddle ball sample finished: "; status

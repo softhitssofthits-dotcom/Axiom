@@ -684,6 +684,11 @@ public sealed class BytecodeModuleValidator
                     ValidateInputInstruction(module, routine, instructionIndex, instruction, globalsBySlot);
                     break;
 
+                case Opcode.Sleep:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateSleepInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
                 case Opcode.Color:
                 case Opcode.PSet:
                 case Opcode.Line:
@@ -748,6 +753,7 @@ public sealed class BytecodeModuleValidator
                 case Opcode.EndFinally:
                 case Opcode.Pop:
                 case Opcode.Negate:
+                case Opcode.Concat:
                 case Opcode.Add:
                 case Opcode.Subtract:
                 case Opcode.Multiply:
@@ -1195,6 +1201,17 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
+            case Opcode.Sleep:
+            {
+                if (instruction.GetOperand(0) == 1)
+                {
+                    var durationType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, durationType, TypeSymbol.Long, "длительность SLEEP");
+                }
+
+                break;
+            }
+
             case Opcode.Cls:
                 break;
 
@@ -1346,6 +1363,7 @@ public sealed class BytecodeModuleValidator
             }
 
             case Opcode.Add:
+            case Opcode.Concat:
             case Opcode.Subtract:
             case Opcode.Multiply:
             case Opcode.Power:
@@ -2441,6 +2459,7 @@ public sealed class BytecodeModuleValidator
     {
         return opcode switch
         {
+            Opcode.Concat => CanConcatenateAsString(leftType) && CanConcatenateAsString(rightType),
             Opcode.Add => (leftType == TypeSymbol.String && rightType == TypeSymbol.String)
                 || IsArithmeticOperationCompatible(leftType, rightType),
             Opcode.Subtract or Opcode.Multiply => IsArithmeticOperationCompatible(leftType, rightType),
@@ -2483,6 +2502,11 @@ public sealed class BytecodeModuleValidator
         if (opcode == Opcode.Power)
         {
             return TypeSymbol.Double;
+        }
+
+        if (opcode == Opcode.Concat)
+        {
+            return TypeSymbol.String;
         }
 
         return leftType;
@@ -2532,6 +2556,16 @@ public sealed class BytecodeModuleValidator
     private static bool IsIntegralOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
     {
         return leftType == rightType && (leftType == TypeSymbol.Integer || leftType == TypeSymbol.Long);
+    }
+
+    private static bool CanConcatenateAsString(TypeSymbol type)
+    {
+        return type == TypeSymbol.String
+            || type == TypeSymbol.Integer
+            || type == TypeSymbol.Long
+            || type == TypeSymbol.Double
+            || type == TypeSymbol.Decimal
+            || type == TypeSymbol.Boolean;
     }
 
     private static bool IsShiftOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
@@ -2907,9 +2941,14 @@ public sealed class BytecodeModuleValidator
             case Opcode.PrintSeparator:
             case Opcode.PrintLine:
             case Opcode.Input:
+            case Opcode.Sleep when instruction.GetOperand(0) == 0:
             case Opcode.PushErrorHandler:
             case Opcode.PopErrorHandler:
             case Opcode.EndFinally:
+                return true;
+
+            case Opcode.Sleep:
+                popCount = instruction.GetOperand(0);
                 return true;
 
             case Opcode.CloseFile:
@@ -3210,6 +3249,29 @@ public sealed class BytecodeModuleValidator
         }
 
         ValidateMouseEventKind(module, routine, instructionIndex, instruction, operandIndex: 1);
+    }
+
+    private void ValidateSleepInstruction(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        if (instruction.OperandCount < 1)
+        {
+            return;
+        }
+
+        var durationFlag = instruction.GetOperand(0);
+        if (durationFlag is < 0 or > 1)
+        {
+            Report(
+                "BC4127",
+                $"Инструкция Sleep в процедуре '{routine.Name}' содержит неизвестный флаг длительности {durationFlag}.",
+                module,
+                routine.Id,
+                instructionIndex);
+        }
     }
 
     private void ValidateMouseEventKind(

@@ -211,6 +211,72 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void ActivateScreenZero_UsesNativeTextWindowWithoutEnablingGraphicsMode()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(0);
+        service.WriteOutput("hello");
+
+        Assert.False(service.IsScreenActive);
+        Assert.True(service.IsScreenOutputActive);
+        Assert.Equal(0, service.ScreenMode);
+        Assert.Equal(640, service.ScreenWidth);
+        Assert.Equal(300, service.ScreenHeight);
+        Assert.Equal(string.Empty, service.OutputText);
+        Assert.Equal($"hello{Environment.NewLine}", service.GraphicsText);
+    }
+
+    [Fact]
+    public void ScreenZeroInput_DoesNotEchoPromptToOutputPane()
+    {
+        var service = new ProgramConsoleService();
+        var dispatcher = Dispatcher.CurrentDispatcher;
+
+        service.ActivateScreen(0);
+        dispatcher.BeginInvoke(() =>
+        {
+            Assert.True(service.IsWaitingForInput);
+            service.CurrentInputText = "Ada";
+            service.SubmitInput();
+        });
+
+        var result = service.ReadGraphicsInput(new InputRequest("Name", 1));
+
+        Assert.Equal("Ada", result);
+        Assert.Equal(string.Empty, service.OutputText);
+        Assert.Equal($"Name? Ada{Environment.NewLine}", service.GraphicsText);
+    }
+
+    [Fact]
+    public void ScreenZeroInput_PublishesPromptAndTypedTextBeforeSubmission()
+    {
+        var service = new ProgramConsoleService();
+        var dispatcher = Dispatcher.CurrentDispatcher;
+
+        service.ActivateScreen(0);
+        dispatcher.BeginInvoke(() =>
+        {
+            Assert.True(service.IsWaitingForInput);
+            Assert.Equal("Name? ", service.CurrentPromptText);
+            Assert.True(HasCellPixels(service.GraphicsFrame, row: 1, column: 1));
+
+            service.CurrentInputText = "Ada";
+            Assert.True(HasCellPixels(service.GraphicsFrame, row: 1, column: 1));
+            Assert.False(HasCellPixels(service.GraphicsFrame, row: 25, column: 1));
+
+            service.SubmitInput();
+            Assert.False(HasCellPixels(service.GraphicsFrame, row: 2, column: 1));
+        });
+
+        var result = service.ReadGraphicsInput(new InputRequest("Name", 1));
+
+        Assert.Equal("Ada", result);
+        Assert.Equal(string.Empty, service.OutputText);
+        Assert.Equal($"Name? Ada{Environment.NewLine}", service.GraphicsText);
+    }
+
+    [Fact]
     public void WriteGraphicsText_OverwritesAtLocatedCursor()
     {
         var service = new ProgramConsoleService();
@@ -236,6 +302,145 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void WriteGraphicsText_PreservesCellColorsAndOmittedBackground()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(3);
+        service.SetTextColor(14, 1);
+        service.WriteGraphicsText("A", newLine: true);
+        service.SetTextColor(15, null);
+        service.WriteGraphicsText("B", newLine: false);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var firstCell = GetCellPixels(frame, row: 1, column: 1);
+        var secondLineFirstCell = GetCellPixels(frame, row: 2, column: 1);
+
+        Assert.Contains(firstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(14));
+        Assert.Contains(firstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(1));
+        Assert.Contains(secondLineFirstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+        Assert.Contains(secondLineFirstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(1));
+    }
+
+    [Fact]
+    public void ScreenColorPalette_UsesBasicBgraColorOrder()
+    {
+        Assert.Equal(0xFF0000AAu, ScreenFramebuffer.MapColorToBgra(1));
+        Assert.Equal(0xFFAA0000u, ScreenFramebuffer.MapColorToBgra(4));
+        Assert.Equal(0xFFFFFF55u, ScreenFramebuffer.MapColorToBgra(14));
+    }
+
+    [Fact]
+    public void ScreenColorPalette_Supports256ColorIndices()
+    {
+        Assert.Equal(255, ScreenFramebuffer.NormalizeColorIndex(255));
+        Assert.Equal(44, ScreenFramebuffer.NormalizeColorIndex(300));
+        Assert.Equal(1, ScreenFramebuffer.NormalizeColorIndex(-257));
+        Assert.NotEqual(ScreenFramebuffer.MapColorToBgra(16), ScreenFramebuffer.MapColorToBgra(17));
+        Assert.NotEqual(ScreenFramebuffer.MapColorToBgra(231), ScreenFramebuffer.MapColorToBgra(255));
+    }
+
+    [Fact]
+    public void WriteGraphicsText_RendersRussianLetters()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(3);
+        service.WriteGraphicsText("Привет, экран", newLine: false);
+
+        Assert.Equal("Привет, экран", service.GraphicsText);
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var firstCell = GetCellPixels(frame, row: 1, column: 1);
+        var fallbackPixels = RenderCell('\u2603');
+
+        Assert.Contains(firstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+        Assert.NotEqual(fallbackPixels, firstCell);
+    }
+
+    [Theory]
+    [InlineData('\u2588')]
+    public void DrawGlyph_FillsFullBlockPseudoGraphicCell(char character)
+    {
+        var pixels = RenderCell(character);
+        var foreground = ScreenFramebuffer.MapColorToBgra(15);
+
+        Assert.All(pixels, pixel => Assert.Equal(foreground, pixel));
+    }
+
+    [Theory]
+    [InlineData('\u2593')]
+    [InlineData('\u2592')]
+    [InlineData('\u2591')]
+    public void DrawGlyph_RendersShadedPseudoGraphicCells(char character)
+    {
+        var pixels = new uint[ScreenTextRasterizer.CellWidth * ScreenTextRasterizer.CellHeight];
+        var foreground = ScreenFramebuffer.MapColorToBgra(15);
+        var background = ScreenFramebuffer.MapColorToBgra(0);
+
+        ScreenTextRasterizer.DrawGlyph(
+            pixels,
+            ScreenTextRasterizer.CellWidth,
+            ScreenTextRasterizer.CellHeight,
+            0,
+            0,
+            character,
+            foreground,
+            background);
+
+        Assert.Contains(foreground, pixels);
+        Assert.Contains(background, pixels);
+    }
+
+    [Theory]
+    [InlineData('\u2502')]
+    [InlineData('\u2500')]
+    [InlineData('\u250C')]
+    [InlineData('\u2518')]
+    [InlineData('\u2550')]
+    [InlineData('\u256C')]
+    public void DrawGlyph_RendersBoxDrawingCells(char character)
+    {
+        var pixels = RenderCell(character);
+        var fallbackPixels = RenderCell('\u2603');
+
+        Assert.Contains(pixels, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+        Assert.NotEqual(fallbackPixels, pixels);
+    }
+
+    [Theory]
+    [InlineData('Є')]
+    [InlineData('Ї')]
+    [InlineData('Ў')]
+    [InlineData('№')]
+    [InlineData('√')]
+    [InlineData('¤')]
+    public void DrawGlyph_RendersRemainingCp866PrintableCells(char character)
+    {
+        var pixels = RenderCell(character);
+        var fallbackPixels = RenderCell('\u2603');
+
+        Assert.Contains(pixels, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+        Assert.NotEqual(fallbackPixels, pixels);
+    }
+
+    [Fact]
+    public void ScreenRenderer_ScalesFrameToCurrentBackBuffer()
+    {
+        var frame = new ScreenFramebufferSnapshot(2, 2, [1u, 2u, 3u, 4u]);
+
+        var scaled = Direct3D11SwapChainRenderer.ScaleFramePixels(frame, 4, 4);
+
+        Assert.Equal(
+            [
+                1u, 1u, 2u, 2u,
+                1u, 1u, 2u, 2u,
+                3u, 3u, 4u, 4u,
+                3u, 3u, 4u, 4u
+            ],
+            scaled);
+    }
+
+    [Fact]
     public void ScreenInput_UpdatesFramebufferInputLine()
     {
         var service = new ProgramConsoleService();
@@ -248,9 +453,7 @@ public sealed class ProgramConsoleServiceTests
             service.CurrentInputText = "Ada";
 
             var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
-            var inputRowStart = (frame.Height - ScreenTextRasterizer.CellHeight) * frame.Width;
-            var inputRowPixels = frame.BgraPixels.Skip(inputRowStart).Take(ScreenTextRasterizer.CellHeight * frame.Width);
-            Assert.Contains(inputRowPixels, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
+            Assert.Contains(GetCellPixels(frame, row: 1, column: 1), pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
 
             service.SubmitInput();
         });
@@ -258,6 +461,38 @@ public sealed class ProgramConsoleServiceTests
         var result = service.ReadGraphicsInput(new InputRequest("Name", 1));
 
         Assert.Equal("Ada", result);
+    }
+
+    private static uint[] GetCellPixels(ScreenFramebufferSnapshot frame, int row, int column)
+    {
+        var startX = (column - 1) * ScreenTextRasterizer.CellWidth;
+        var startY = (row - 1) * ScreenTextRasterizer.CellHeight;
+        var pixels = new List<uint>(ScreenTextRasterizer.CellWidth * ScreenTextRasterizer.CellHeight);
+
+        for (var y = startY; y < startY + ScreenTextRasterizer.CellHeight; y++)
+        {
+            for (var x = startX; x < startX + ScreenTextRasterizer.CellWidth; x++)
+            {
+                pixels.Add(frame.BgraPixels[(y * frame.Width) + x]);
+            }
+        }
+
+        return pixels.ToArray();
+    }
+
+    private static uint[] RenderCell(char character)
+    {
+        var pixels = new uint[ScreenTextRasterizer.CellWidth * ScreenTextRasterizer.CellHeight];
+        ScreenTextRasterizer.DrawGlyph(
+            pixels,
+            ScreenTextRasterizer.CellWidth,
+            ScreenTextRasterizer.CellHeight,
+            0,
+            0,
+            character,
+            ScreenFramebuffer.MapColorToBgra(15),
+            null);
+        return pixels;
     }
 
     [Fact]
@@ -417,18 +652,36 @@ public sealed class ProgramConsoleServiceTests
         service.DeactivateScreen();
 
         Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.activated" && entry.Message.Contains("mode=5", StringComparison.Ordinal));
-        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.key.enqueued" && entry.Message.Contains("ESC", StringComparison.Ordinal));
-        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.key.read" && entry.Message.Contains("ESC", StringComparison.Ordinal));
-        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.mouse.enqueued" && entry.Message.Contains("Move", StringComparison.Ordinal));
-        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.mouse.read" && entry.Message.Contains("Move", StringComparison.Ordinal));
         Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.deactivated" && entry.Message.Contains("mode=5", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.frame.summary" && entry.Message.Contains("final=True", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.input.summary"
+            && entry.Message.Contains("keysEnqueued=1", StringComparison.Ordinal)
+            && entry.Message.Contains("keysRead=1", StringComparison.Ordinal)
+            && entry.Message.Contains("mouseEventsEnqueued=1", StringComparison.Ordinal)
+            && entry.Message.Contains("mouseEventsRead=1", StringComparison.Ordinal));
+        Assert.DoesNotContain(traceService.Entries, static entry => entry.Category == "screen.key.enqueued");
+        Assert.DoesNotContain(traceService.Entries, static entry => entry.Category == "screen.key.read");
+        Assert.DoesNotContain(traceService.Entries, static entry => entry.Category == "screen.mouse.enqueued");
+        Assert.DoesNotContain(traceService.Entries, static entry => entry.Category == "screen.mouse.read");
 
         Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.activated");
-        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.key.enqueued");
-        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.key.read");
-        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.mouse.enqueued");
-        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.mouse.read");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.frame.summary");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.input.summary");
         Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.deactivated");
+        Assert.DoesNotContain(eventLogService.Entries, static entry => entry.EventName == "screen.key.enqueued");
+        Assert.DoesNotContain(eventLogService.Entries, static entry => entry.EventName == "screen.key.read");
+        Assert.DoesNotContain(eventLogService.Entries, static entry => entry.EventName == "screen.mouse.enqueued");
+        Assert.DoesNotContain(eventLogService.Entries, static entry => entry.EventName == "screen.mouse.read");
+    }
+
+    private static bool HasCellPixels(ScreenFramebufferSnapshot? frame, int row, int column)
+    {
+        if (frame is null)
+        {
+            return false;
+        }
+
+        return GetCellPixels(frame, row, column).Any(static pixel => pixel != 0xFF000000);
     }
 
     private sealed class FakeIdeTraceService : IIdeTraceService

@@ -68,6 +68,7 @@ public sealed class Lexer
         ["SELF"] = TokenKind.SelfKeyword,
         ["SELECT"] = TokenKind.SelectKeyword,
         ["SCREEN"] = TokenKind.ScreenKeyword,
+        ["SLEEP"] = TokenKind.SleepKeyword,
         ["STEP"] = TokenKind.StepKeyword,
         ["STOP"] = TokenKind.StopKeyword,
         ["STRING"] = TokenKind.StringKeyword,
@@ -417,6 +418,9 @@ public sealed class Lexer
 
         switch (Current)
         {
+            case '&':
+                _position++;
+                return CreateToken(TokenKind.AmpersandToken, start, 1);
             case '+':
                 _position++;
                 return CreateToken(TokenKind.PlusToken, start, 1);

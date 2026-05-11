@@ -459,6 +459,7 @@ public sealed class ProgramRunService : IProgramRunService
             ExecutionStatus.SemanticFailure => ProgramRunStatus.SemanticFailure,
             ExecutionStatus.BackendFailure => ProgramRunStatus.BackendFailure,
             ExecutionStatus.RuntimeFailure => ProgramRunStatus.RuntimeFailure,
+            ExecutionStatus.Cancelled => ProgramRunStatus.Cancelled,
             _ => ProgramRunStatus.InfrastructureFailure
         };
     }

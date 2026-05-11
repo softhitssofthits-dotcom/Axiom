@@ -111,24 +111,53 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
             throw new ArgumentException("Framebuffer dimensions do not match the pixel buffer.", nameof(frame));
         }
 
-        if (frame.Width != _width || frame.Height != _height)
-        {
-            Resize(frame.Width, frame.Height);
-        }
-
-        if (_backBuffer is null)
+        if (_backBuffer is null || _width <= 0 || _height <= 0)
         {
             return;
         }
 
+        var pixels = frame.Width == _width && frame.Height == _height
+            ? frame.BgraPixels
+            : ScaleFramePixels(frame, _width, _height);
+
         _context.UpdateSubresource(
-            frame.BgraPixels.AsSpan(),
+            pixels.AsSpan(),
             _backBuffer,
             0,
-            (uint)(frame.Width * sizeof(uint)),
+            (uint)(_width * sizeof(uint)),
             0,
             null);
         _swapChain.Present(PresentSyncInterval, PresentFlags.None);
+    }
+
+    internal static uint[] ScaleFramePixels(ScreenFramebufferSnapshot frame, int targetWidth, int targetHeight)
+    {
+        ArgumentNullException.ThrowIfNull(frame);
+
+        if (targetWidth <= 0 || targetHeight <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(targetWidth), "Target dimensions must be positive.");
+        }
+
+        if (frame.Width == targetWidth && frame.Height == targetHeight)
+        {
+            return frame.BgraPixels;
+        }
+
+        var scaled = new uint[targetWidth * targetHeight];
+        for (var y = 0; y < targetHeight; y++)
+        {
+            var sourceY = y * frame.Height / targetHeight;
+            var sourceRow = sourceY * frame.Width;
+            var targetRow = y * targetWidth;
+            for (var x = 0; x < targetWidth; x++)
+            {
+                var sourceX = x * frame.Width / targetWidth;
+                scaled[targetRow + x] = frame.BgraPixels[sourceRow + sourceX];
+            }
+        }
+
+        return scaled;
     }
 
     public void Dispose()

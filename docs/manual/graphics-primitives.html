@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Графические примитивы</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="graphics-primitives">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Примитивы</span>
+            </nav>
+            <p class="eyebrow">Операторы и функция</p>
+            <h1 class="page-title">PSET, PRESET, LINE, CIRCLE и POINT</h1>
+            <p class="lead">Графические примитивы работают с пиксельным слоем активного <code>SCREEN</code>. Они используют координаты <code>x, y</code> с началом в левом верхнем углу и цвета из индексной палитры <code>0..255</code>.</p>
+
+            <section class="article-section">
+                <h2 id="pset">Оператор PSET</h2>
+<pre><code>PSET (x, y)[, color]</code></pre>
+                <p><code>PSET</code> устанавливает один пиксель. Если цвет не указан, используется <code>15</code>. Координаты вне поверхности игнорируются без ошибки.</p>
+<pre><code>SCREEN 1
+PSET (10, 10), 12
+PRINT POINT(10, 10)
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2 id="preset">Оператор PRESET</h2>
+<pre><code>PRESET (x, y)[, color]</code></pre>
+                <p><code>PRESET</code> использует тот же синтаксис, что и <code>PSET</code>, но без явного цвета ставит цвет <code>0</code>. Это удобно для стирания отдельного пикселя на обычном чёрном фоне.</p>
+<pre><code>SCREEN 1
+PSET (10, 10), 12
+PRESET (10, 10)
+PRINT POINT(10, 10)
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2 id="line">Оператор LINE</h2>
+<pre><code>LINE (x1, y1)-(x2, y2)[, color]
+LINE (x1, y1)-(x2, y2)[, color], B
+LINE (x1, y1)-(x2, y2)[, color], BF</code></pre>
+                <p><code>LINE</code> рисует отрезок между двумя точками. Если цвет не указан, используется <code>15</code>. Суффикс <code>B</code> рисует прямоугольную рамку по двум углам, а <code>BF</code> рисует заполненный прямоугольник.</p>
+<pre><code>SCREEN 3
+LINE (20, 20)-(220, 80), 10
+LINE (30, 100)-(180, 160), 11, B
+LINE (220, 100)-(360, 180), 11, BF
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2 id="circle">Оператор CIRCLE</h2>
+<pre><code>CIRCLE (x, y), radius[, color]</code></pre>
+                <p><code>CIRCLE</code> рисует окружность с центром в точке <code>x, y</code>. Радиус задаётся в пикселях. Если цвет не указан, используется <code>15</code>; отрицательный радиус не рисует пиксели.</p>
+<pre><code>SCREEN 3
+CIRCLE (420, 160), 50, 14
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2 id="point">Функция POINT</h2>
+<pre><code>POINT(x, y)</code></pre>
+                <p><code>POINT</code> возвращает цветовой индекс пикселя в указанной точке. Если точка находится вне активной поверхности, результат равен <code>0</code>. Без активного <code>SCREEN</code> функция сообщает <code>MB3010</code>.</p>
+<pre><code>SCREEN 1
+PSET (10, 10), 12
+PRINT "POINT(10,10)="; POINT(10, 10)
+SCREEN 0</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Цвета</h2>
+                <p>Все примитивы используют палитру <code>0..255</code>. Индексы <code>0..15</code> совместимы с классическими BASIC-цветами, <code>16..231</code> образуют RGB-куб 6x6x6, а <code>232..255</code> дают серую шкалу. Значения вне диапазона приводятся по правилу <code>ABS(color) MOD 256</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочный пример</h2>
+                <p>Ручной пример: <code>samples/graphics/primitives/pset_line_circle.axm</code>.</p>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>
