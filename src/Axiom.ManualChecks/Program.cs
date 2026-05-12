@@ -538,6 +538,7 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("Регекс: режимы и цепочка замен", @"samples/smoke/engine-compare/regex_modes_pipeline.axm"),
         new BenchmarkCase("Регекс: массивные результаты", @"samples/smoke/engine-compare/regex_array_result_mesh.axm"),
         new BenchmarkCase("Строки: низкоуровневые примитивы", @"samples/smoke/engine-compare/string_primitive_scan.axm"),
+        new BenchmarkCase("Strings: concat accumulator", @"samples/smoke/engine-compare/string_concat_accumulator.axm"),
         new BenchmarkCase("Скалярное ядро: побитовые операции", @"samples/smoke/engine-compare/bitwise_shift_mesh.axm"),
         new BenchmarkCase("Массивы и циклы: 3D сводка", @"samples/smoke/engine-compare/array_cube_rollup.axm"),
         new BenchmarkCase("Массивы: цепочка преобразований", @"samples/smoke/engine-compare/array_transform_chain.axm"),

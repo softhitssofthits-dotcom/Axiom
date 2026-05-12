@@ -46,6 +46,7 @@ public sealed partial class BytecodeVm
                     arguments[1].AsString(),
                     arguments[2].AsString(),
                     location)),
+            BuiltinFunctionId.ReplaceMany => EvaluateReplaceManyBuiltin(arguments[0], arguments[1], arguments[2], location),
             BuiltinFunctionId.InStr => RuntimeValue.FromInteger(EvaluateInStr(1, arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.InStrFrom => RuntimeValue.FromInteger(
                 EvaluateInStr(
@@ -112,9 +113,13 @@ public sealed partial class BytecodeVm
                     RequirePositiveStart("REMOVE", arguments[1].AsInteger(), location),
                     RequireNonNegativeCount("REMOVE", "count", arguments[2].AsInteger(), location))),
             BuiltinFunctionId.Asc => RuntimeValue.FromInteger(EvaluateAsc(arguments[0].AsString(), location)),
+            BuiltinFunctionId.AscW => RuntimeValue.FromInteger(EvaluateAscW(arguments[0].AsString(), location)),
             BuiltinFunctionId.Chr => RuntimeValue.FromString(
                 EvaluateChr(
                     RequireValidUnicodeCodePoint("CHR", "code", arguments[0].AsInteger(), location))),
+            BuiltinFunctionId.ChrW => RuntimeValue.FromString(
+                EvaluateChrW(
+                    RequireValidUnicodeCodePoint("CHRW", "code", arguments[0].AsInteger(), location))),
             BuiltinFunctionId.Split => EvaluateSplitBuiltin(arguments[0].AsString(), separator: ",", location),
             BuiltinFunctionId.SplitSeparator => EvaluateSplitBuiltin(arguments[0].AsString(), arguments[1].AsString(), location),
             BuiltinFunctionId.Join => EvaluateJoinBuiltin(arguments[0].AsArray(), separator: ","),

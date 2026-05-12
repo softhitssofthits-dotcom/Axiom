@@ -38,6 +38,11 @@ internal static class RuntimeCharacterEncoding
         return new Rune(code).ToString();
     }
 
+    public static string ChrW(int code)
+    {
+        return new Rune(code).ToString();
+    }
+
     public static int Asc(Rune rune)
     {
         if (rune.Value < 128)
@@ -48,6 +53,11 @@ internal static class RuntimeCharacterEncoding
         return Cp866CodesByRune.Value.TryGetValue(rune.Value, out var code)
             ? code
             : rune.Value;
+    }
+
+    public static int AscW(Rune rune)
+    {
+        return rune.Value;
     }
 
     private static IReadOnlyDictionary<int, int> CreateCp866CodesByRune()

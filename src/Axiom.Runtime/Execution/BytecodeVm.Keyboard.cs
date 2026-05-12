@@ -11,13 +11,27 @@ public sealed partial class BytecodeVm
 
     private void ExecuteStatementBoundary(int instructionIndex)
     {
+        if (_keyboardHandlers.Count == 0 && _mouseHandlers.Count == 0)
+        {
+            return;
+        }
+
         if (_keyboardHandlerDepth > 0)
         {
             return;
         }
 
         var location = ResolveLocation(CurrentFrame.Routine.Id, instructionIndex);
-        DispatchMouseHandlers(location);
+        if (_mouseHandlers.Count > 0)
+        {
+            DispatchMouseHandlers(location);
+        }
+
+        if (_keyboardHandlers.Count == 0)
+        {
+            return;
+        }
+
         var deferredKeys = new List<string>();
 
         while (TryReadKeyboardKey(out var keyText))

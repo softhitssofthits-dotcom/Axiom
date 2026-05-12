@@ -693,7 +693,9 @@ PRINT REPLACE("one two", "two", "three")
 PRINT INSTR("banana", "na")
 PRINT "[" + CENTER("A", 4, ".") + "]"
 PRINT ASC(CHR(1071))
+PRINT ASCW(CHR(1071))
 PRINT CHR(219)
+PRINT CHRW(9608)
 """;
 
         var result = Run(text);
@@ -701,7 +703,7 @@ PRINT CHR(219)
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(["Hel", "llo", "ello", "hello", "one three", "3", "[.A..]", "159", "█"], result.Output);
+        Assert.Equal(["Hel", "llo", "ello", "hello", "one three", "3", "[.A..]", "159", "1071", "█", "█"], result.Output);
     }
 
     [Fact]

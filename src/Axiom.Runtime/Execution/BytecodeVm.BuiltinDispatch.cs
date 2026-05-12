@@ -49,6 +49,8 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.EndsWith => BuiltinExecution.BinaryNoLocation(static (vm, left, right) => RuntimeValue.FromBoolean(BytecodeVm.EvaluateEndsWith(GetStringUnchecked(left), GetStringUnchecked(right)))),
             BuiltinFunctionId.Replace => BuiltinExecution.Ternary(static (vm, text, oldValue, newValue, location) =>
                 vm.EvaluateReplaceBuiltin(text, oldValue, newValue, location)),
+            BuiltinFunctionId.ReplaceMany => BuiltinExecution.Ternary(static (vm, text, oldItems, newItems, location) =>
+                vm.EvaluateReplaceManyBuiltin(text, oldItems, newItems, location)),
             BuiltinFunctionId.InStr => BuiltinExecution.BinaryNoLocation(static (vm, text, value) => RuntimeValue.FromInteger(BytecodeVm.EvaluateInStr(1, GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.InStrFrom => BuiltinExecution.Ternary(static (vm, start, text, value, location) => RuntimeValue.FromInteger(
                 BytecodeVm.EvaluateInStr(vm.RequirePositiveStart("INSTR", GetIntegerUnchecked(start), location), GetStringUnchecked(text), GetStringUnchecked(value)))),
@@ -107,8 +109,11 @@ public sealed partial class BytecodeVm
                     vm.RequirePositiveStart("REMOVE", GetIntegerUnchecked(start), location),
                     vm.RequireNonNegativeCount("REMOVE", "count", GetIntegerUnchecked(count), location)))),
             BuiltinFunctionId.Asc => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateAsc(GetStringUnchecked(value), location))),
+            BuiltinFunctionId.AscW => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateAscW(GetStringUnchecked(value), location))),
             BuiltinFunctionId.Chr => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromString(
                 BytecodeVm.EvaluateChr(vm.RequireValidUnicodeCodePoint("CHR", "code", GetIntegerUnchecked(value), location)))),
+            BuiltinFunctionId.ChrW => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromString(
+                BytecodeVm.EvaluateChrW(vm.RequireValidUnicodeCodePoint("CHRW", "code", GetIntegerUnchecked(value), location)))),
             BuiltinFunctionId.Split => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSplitBuiltin(GetStringUnchecked(value), ",", location)),
             BuiltinFunctionId.SplitSeparator => BuiltinExecution.Binary(static (vm, value, separator, location) => vm.EvaluateSplitBuiltin(GetStringUnchecked(value), GetStringUnchecked(separator), location)),
             BuiltinFunctionId.Join => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateJoinBuiltin(value.AsArray(), ",")),

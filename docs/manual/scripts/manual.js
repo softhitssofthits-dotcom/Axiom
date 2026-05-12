@@ -101,7 +101,7 @@
         { id: "string-functions-trim-and-case", href: "string-functions-trim-and-case.html", label: "Строковые: обрезка и регистр" },
         { id: "string-functions-search-and-replace", href: "string-functions-search-and-replace.html", label: "Строковые: поиск и замена" },
         { id: "string-functions-build-and-split", href: "string-functions-build-and-split.html", label: "Строковые: построение и массивы" },
-        { id: "characters", href: "characters.html", label: "Символы CHR/ASC" },
+        { id: "characters", href: "characters.html", label: "Символы CHR/ASC/CHRW/ASCW" },
         { id: "numeric-functions", href: "numeric-functions.html", label: "Числовые" },
         { id: "numeric-functions-conversion-and-legacy", href: "numeric-functions-conversion-and-legacy.html", label: "Числовые: INT/STR/VAL" },
         { id: "numeric-functions-core", href: "numeric-functions-core.html", label: "Числовые: базовая математика" },

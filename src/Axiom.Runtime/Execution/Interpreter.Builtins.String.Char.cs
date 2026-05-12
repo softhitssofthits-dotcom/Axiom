@@ -7,10 +7,24 @@ public sealed partial class Interpreter
 {
     private int EvaluateAsc(BoundCallExpression expression, string text)
     {
+        return EvaluateFirstRuneCode(expression, text, "ASC", RuntimeCharacterEncoding.Asc);
+    }
+
+    private int EvaluateAscW(BoundCallExpression expression, string text)
+    {
+        return EvaluateFirstRuneCode(expression, text, "ASCW", RuntimeCharacterEncoding.AscW);
+    }
+
+    private int EvaluateFirstRuneCode(
+        BoundCallExpression expression,
+        string text,
+        string functionName,
+        Func<Rune, int> getCode)
+    {
         if (text.Length == 0)
         {
             ReportBuiltInArgumentError(
-                "ASC",
+                functionName,
                 "text",
                 "не может быть пустой строкой.",
                 GetBuiltInArgumentLocation(expression, 0));
@@ -19,13 +33,19 @@ public sealed partial class Interpreter
 
         using var enumerator = text.EnumerateRunes();
         enumerator.MoveNext();
-        return RuntimeCharacterEncoding.Asc(enumerator.Current);
+        return getCode(enumerator.Current);
     }
 
     private static string EvaluateChr(BoundCallExpression expression, int code)
     {
         _ = expression;
         return RuntimeCharacterEncoding.Chr(code);
+    }
+
+    private static string EvaluateChrW(BoundCallExpression expression, int code)
+    {
+        _ = expression;
+        return RuntimeCharacterEncoding.ChrW(code);
     }
 
     private int RequireValidUnicodeCodePoint(

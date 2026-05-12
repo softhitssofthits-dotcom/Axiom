@@ -74,6 +74,7 @@ public partial class MainWindow : Window
         _smartIdentifierService = smartIdentifierService;
         _blockEditingService = blockEditingService;
         InitializeComponent();
+        InitializeOutputMouseInputHandlers();
         InitializeShellInputBindings();
         DataContextChanged += OnDataContextChanged;
     }
@@ -339,6 +340,38 @@ public partial class MainWindow : Window
         InputBindings.Add(new KeyBinding(ApplicationCommands.Find, Key.F, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(SearchCommands.FindNext, Key.F3, ModifierKeys.None));
         InputBindings.Add(new KeyBinding(SearchCommands.FindPrevious, Key.F3, ModifierKeys.Shift));
+    }
+
+    private void InitializeOutputMouseInputHandlers()
+    {
+        AddHandler(
+            UIElement.PreviewMouseMoveEvent,
+            new MouseEventHandler(OnOutputTextBoxPreviewMouseMove),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.PreviewMouseDownEvent,
+            new MouseButtonEventHandler(OnOutputTextBoxPreviewMouseDown),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.PreviewMouseUpEvent,
+            new MouseButtonEventHandler(OnOutputTextBoxPreviewMouseUp),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.PreviewMouseWheelEvent,
+            new MouseWheelEventHandler(OnOutputTextBoxPreviewMouseWheel),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.MouseLeaveEvent,
+            new MouseEventHandler(OnOutputTextBoxMouseLeave),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.PreviewMouseRightButtonDownEvent,
+            new MouseButtonEventHandler(OnOutputTextBoxPreviewMouseRightButtonDown),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.PreviewMouseRightButtonUpEvent,
+            new MouseButtonEventHandler(OnOutputTextBoxPreviewMouseRightButtonUp),
+            handledEventsToo: true);
     }
 
     private KeyBinding CreateShellKeyBinding(string path, Key key, ModifierKeys modifiers)
@@ -811,7 +844,7 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (ReferenceEquals(sender, OutputTextBox) &&
+        if (IsOutputTextBoxMouseEvent(sender, e) &&
             _consoleService is not null &&
             _viewModel?.StatusBar.IsRunning == true)
         {
@@ -833,7 +866,7 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (ReferenceEquals(sender, OutputTextBox) &&
+        if (IsOutputTextBoxMouseEvent(sender, e) &&
             _consoleService is not null &&
             _viewModel?.StatusBar.IsRunning == true)
         {
@@ -898,7 +931,7 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (!ReferenceEquals(sender, OutputTextBox) ||
+        if (!IsOutputTextBoxMouseEvent(sender, e) ||
             _consoleService is null ||
             _viewModel?.StatusBar.IsRunning != true)
         {
@@ -910,7 +943,7 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (!ReferenceEquals(sender, OutputTextBox) ||
+        if (!IsOutputTextBoxMouseEvent(sender, e) ||
             _consoleService is null ||
             _viewModel?.StatusBar.IsRunning != true ||
             e.ChangedButton == MouseButton.Right)
@@ -923,7 +956,7 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (!ReferenceEquals(sender, OutputTextBox) ||
+        if (!IsOutputTextBoxMouseEvent(sender, e) ||
             _consoleService is null ||
             _viewModel?.StatusBar.IsRunning != true ||
             e.ChangedButton == MouseButton.Right)
@@ -936,7 +969,7 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (!ReferenceEquals(sender, OutputTextBox) ||
+        if (!IsOutputTextBoxMouseEvent(sender, e) ||
             _consoleService is null ||
             _viewModel?.StatusBar.IsRunning != true)
         {
@@ -948,12 +981,26 @@ public partial class MainWindow : Window
 
     private void OnOutputTextBoxMouseLeave(object sender, MouseEventArgs e)
     {
-        if (!ReferenceEquals(sender, OutputTextBox) || _consoleService is null)
+        if (!IsOutputTextBoxMouseEvent(sender, e) || _consoleService is null)
         {
             return;
         }
 
         ProgramMouseInputRouter.HandleMouseLeave(_consoleService);
+    }
+
+    private bool IsOutputTextBoxMouseEvent(object sender, MouseEventArgs e)
+    {
+        if (ReferenceEquals(sender, OutputTextBox) || OutputTextBox.IsMouseOver)
+        {
+            return true;
+        }
+
+        var position = e.GetPosition(OutputTextBox);
+        return position.X >= 0
+            && position.Y >= 0
+            && position.X <= OutputTextBox.ActualWidth
+            && position.Y <= OutputTextBox.ActualHeight;
     }
 
     private void OnOutputTextBoxContextMenuOpening(object sender, ContextMenuEventArgs e)

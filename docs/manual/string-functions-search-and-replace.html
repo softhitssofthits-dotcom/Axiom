@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -33,6 +33,24 @@ result = ENDSWITH(text, fragment)</code></pre>
 <p>Пустой заменяемый фрагмент даёт <code>MB3007</code>.</p>
 </section>
 
+
+<section class="article-section" id="replacemany">
+<h2>REPLACEMANY</h2>
+<p><code>REPLACEMANY</code> применяет таблицу строковых замен за один проход по исходной строке. Функция нужна для случаев, где обычная цепочка из многих <code>REPLACE</code> слишком дорога: нормализация текста, исправление кодировки, пакетная замена маркеров.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-basic">result = REPLACEMANY(text, oldItems, newItems)</code></pre>
+<h3>Аргументы</h3>
+<p><code>oldItems</code> и <code>newItems</code> должны быть одномерными массивами строк одинаковой длины. Элемент <code>oldItems(i)</code> задаёт искомый фрагмент, а <code>newItems(i)</code> — замену для него.</p>
+<h3>Замечания</h3>
+<p>Поиск выполняется с учётом регистра и по точному порядковому сравнению символов. В каждой позиции выбирается самое длинное совпадение из таблицы; при равной длине используется более раннее правило. Пустой элемент в <code>oldItems</code> и разная длина массивов дают <code>MB3007</code>.</p>
+<pre><code class="language-basic">DIM oldItems(1 TO 2) AS STRING
+DIM newItems(1 TO 2) AS STRING
+oldItems(1) = "ab"
+newItems(1) = "X"
+oldItems(2) = "abc"
+newItems(2) = "Y"
+PRINT REPLACEMANY("abc ab", oldItems, newItems)</code></pre>
+</section>
 <section class="article-section" id="instr">
 <h2>INSTR и INSTRREV</h2>
 <p>Функции <code>INSTR</code> и <code>INSTRREV</code> возвращают позицию найденного фрагмента, считая с единицы.</p>
@@ -58,7 +76,7 @@ PRINT INSTR("banana", "na")
 PRINT INSTRREV("banana", "na")
 PRINT SUBSTRCOUNT("banana", "na")</code></pre></section>
 
-<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS</a></li><li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li><li><a href="../../samples/functions/instr/basic_usage.axm">INSTR</a></li><li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV</a></li><li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT</a></li></ul></section>
+<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS</a></li><li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li><li><a href="../../samples/functions/replacemany/multiple_tokens.axm">REPLACEMANY</a></li><li><a href="../../samples/functions/instr/basic_usage.axm">INSTR</a></li><li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV</a></li><li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT</a></li></ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="regex-functions.html">Регулярные выражения</a></div></section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

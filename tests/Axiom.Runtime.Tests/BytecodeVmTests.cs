@@ -24,6 +24,50 @@ PRINT "flag=" & TRUE
     }
 
     [Fact]
+    public void Execute_CompiledStringAppendAccumulatorPreservesSemantics()
+    {
+        const string text = """
+DIM result AS STRING = ""
+FOR i = 1 TO 4
+    result = result & i
+NEXT
+PRINT result
+DIM aliasText AS STRING = result
+result = result & "-x"
+PRINT aliasText
+PRINT result
+""";
+
+        var (module, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1234", "1234", "1234-x"], host.Output);
+        Assert.Contains(
+            module.Routines.SelectMany(static routine => routine.Instructions),
+            static instruction => instruction.Opcode == Opcode.AppendStringLocal);
+    }
+
+    [Fact]
+    public void Execute_CompiledStringPlusAppendAccumulatorPreservesSemantics()
+    {
+        const string text = """
+DIM result AS STRING = ""
+FOR i = 1 TO 3
+    result = result + "x"
+NEXT
+PRINT result
+""";
+
+        var (module, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["xxx"], host.Output);
+        Assert.Contains(
+            module.Routines.SelectMany(static routine => routine.Instructions),
+            static instruction => instruction.Opcode == Opcode.AppendStringLocal);
+    }
+
+    [Fact]
     public void Execute_CompiledScalarProgramWithRoutineAndBuiltin()
     {
         const string text = """
@@ -3332,6 +3376,12 @@ PRINT REVERSE("abcd")
     public void Execute_CompiledStringSearchBuiltins()
     {
         const string text = """
+DIM oldItems(1 TO 2) AS STRING
+DIM newItems(1 TO 2) AS STRING
+oldItems(1) = "ab"
+newItems(1) = "X"
+oldItems(2) = "abc"
+newItems(2) = "Y"
 PRINT CONTAINS("Hello", "ell")
 PRINT CONTAINS("", "x")
 PRINT CONTAINS("Hello", "Hello")
@@ -3346,6 +3396,7 @@ PRINT ENDSWITH("Hello", "Hello")
 PRINT STARTSWITH("Hello", "Hello!")
 PRINT ENDSWITH("Hello", "Hello!")
 PRINT REPLACE("one two two", "two", "three")
+PRINT REPLACEMANY("abc ab", oldItems, newItems)
 PRINT INSTR("banana", "na")
 PRINT INSTR(4, "banana", "na")
 PRINT INSTRREV("banana", "na")
@@ -3356,7 +3407,7 @@ PRINT SUBSTRCOUNT("banana", "na")
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "one three three", "3", "5", "5", "3", "2"], host.Output);
+        Assert.Equal(["TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "one three three", "Y X", "3", "5", "5", "3", "2"], host.Output);
     }
 
     [Fact]
@@ -3406,6 +3457,25 @@ PRINT REPLACE("abba", "b", "c")
     }
 
     [Fact]
+    public void Execute_CompiledReplaceManyReportsInvalidRules()
+    {
+        const string text = """
+DIM oldItems(1 TO 2) AS STRING
+DIM newItems(1 TO 1) AS STRING
+oldItems(1) = "a"
+oldItems(2) = "b"
+newItems(1) = "x"
+PRINT REPLACEMANY("abc", oldItems, newItems)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("REPLACEMANY", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Execute_CompiledStringCharBuiltins()
     {
         const string text = """
@@ -3423,6 +3493,26 @@ PRINT ASC(CHR(128512))
 
         Assert.True(result.Succeeded);
         Assert.Equal(["65", "A", "159", "Я", "219", "█", "159", "128512"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledUnicodeCharBuiltins()
+    {
+        const string text = """
+PRINT ASC("Я")
+PRINT ASCW("Я")
+PRINT ASC("█")
+PRINT ASCW("█")
+PRINT ASCW(CHR(159))
+PRINT ASCW(CHRW(1071))
+PRINT CHRW(1071)
+PRINT ASCW(CHRW(128512))
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["159", "1071", "219", "9608", "1071", "1071", "Я", "128512"], host.Output);
     }
 
     [Fact]
@@ -3719,6 +3809,22 @@ PRINT CHR(55296)
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("CHR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("code", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledChrWReportsInvalidCode()
+    {
+        const string text = """
+PRINT CHRW(55296)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3007", diagnostic.Code);
+        Assert.Contains("CHRW", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("code", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 

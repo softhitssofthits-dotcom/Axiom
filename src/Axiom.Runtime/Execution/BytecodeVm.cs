@@ -532,12 +532,20 @@ public sealed partial class BytecodeVm
                 StoreGlobalUnchecked(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
 
+            case Opcode.AppendStringGlobal:
+                ExecuteAppendStringGlobal(frame, instruction, instructionIndex);
+                break;
+
             case Opcode.LoadLocal:
                 frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
                 break;
 
             case Opcode.StoreLocal:
                 frame.StoreLocalValue(instruction.GetOperand(0), PopValue(frame, instructionIndex));
+                break;
+
+            case Opcode.AppendStringLocal:
+                ExecuteAppendStringLocal(frame, instruction, instructionIndex);
                 break;
 
             case Opcode.LoadArgument:
@@ -548,12 +556,20 @@ public sealed partial class BytecodeVm
                 frame.Arguments[instruction.GetOperand(0)].Store(PopValue(frame, instructionIndex));
                 break;
 
+            case Opcode.AppendStringArgument:
+                ExecuteAppendStringSlot(frame.Arguments[instruction.GetOperand(0)], PopValue(frame, instructionIndex), instruction.GetOperand(1) != 0);
+                break;
+
             case Opcode.LoadCapture:
                 frame.EvaluationStack.Push(frame.Captures[instruction.GetOperand(0)].Value);
                 break;
 
             case Opcode.StoreCapture:
                 frame.Captures[instruction.GetOperand(0)].Store(PopValue(frame, instructionIndex));
+                break;
+
+            case Opcode.AppendStringCapture:
+                ExecuteAppendStringSlot(frame.Captures[instruction.GetOperand(0)], PopValue(frame, instructionIndex), instruction.GetOperand(1) != 0);
                 break;
 
             case Opcode.Pop:
@@ -1083,6 +1099,53 @@ public sealed partial class BytecodeVm
             Opcode.CompareGreaterOrEqual => RuntimeValue.FromBoolean(Compare(left, right, location) >= 0),
             _ => throw new InvalidOperationException($"Unsupported binary opcode '{opcode}'.")
         });
+    }
+
+    private void ExecuteAppendStringGlobal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var slot = instruction.GetOperand(0);
+        var right = PopValue(frame, instructionIndex);
+        var useDisplayString = instruction.GetOperand(1) != 0;
+        var fixedStringLength = GetGlobalFixedStringLength(slot);
+        var current = LoadGlobalUnchecked(slot);
+        var value = AppendStringValue(current, right, useDisplayString, fixedStringLength);
+        StoreAppendStringGlobalValue(slot, value);
+    }
+
+    private void ExecuteAppendStringLocal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var slot = instruction.GetOperand(0);
+        var right = PopValue(frame, instructionIndex);
+        var useDisplayString = instruction.GetOperand(1) != 0;
+        var fixedStringLength = frame.GetLocalFixedStringLength(slot);
+        var current = frame.LoadLocalValue(slot);
+        var value = AppendStringValue(current, right, useDisplayString, fixedStringLength);
+        frame.StoreAppendStringLocalValue(slot, value);
+    }
+
+    private static void ExecuteAppendStringSlot(BytecodeVariableSlot slot, RuntimeValue right, bool useDisplayString)
+    {
+        var value = AppendStringValue(slot.Value, right, useDisplayString, slot.FixedStringLength);
+        slot.StoreAppendStringValue(value);
+    }
+
+    private static RuntimeValue AppendStringValue(RuntimeValue current, RuntimeValue right, bool useDisplayString, int? fixedStringLength)
+    {
+        var appendText = useDisplayString ? right.ToDisplayString() : right.AsString();
+
+        if (fixedStringLength is not null)
+        {
+            return RuntimeValue.FromString(RuntimeValue.NormalizeFixedString(current.AsString() + appendText, fixedStringLength.Value));
+        }
+
+        var accumulator = current.AsStringAccumulator();
+        if (accumulator is null)
+        {
+            accumulator = new RuntimeStringAccumulator(current.AsString());
+        }
+
+        accumulator.Append(appendText);
+        return RuntimeValue.FromStringAccumulator(accumulator);
     }
 
     private void ExecuteAddInstruction(BytecodeCallFrame frame, int instructionIndex)
@@ -2117,7 +2180,7 @@ public sealed partial class BytecodeVm
     private static decimal GetDecimalUnchecked(RuntimeValue value) => (decimal)value.Value!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetStringUnchecked(RuntimeValue value) => (string)value.Value!;
+    private static string GetStringUnchecked(RuntimeValue value) => value.AsString();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool GetBooleanUnchecked(RuntimeValue value) => (bool)value.Value!;
@@ -2422,7 +2485,7 @@ public sealed partial class BytecodeVm
         }
 
         var fixedStringLength = GetGlobalFixedStringLength(slot);
-        _globalsBySlot[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+        _globalsBySlot[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
             ? value
             : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
     }
@@ -2431,7 +2494,16 @@ public sealed partial class BytecodeVm
     private void StoreGlobalUnchecked(int slot, RuntimeValue value)
     {
         var fixedStringLength = _globalFixedStringLengths[slot];
-        _globalsBySlot[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+        _globalsBySlot[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
+            ? value
+            : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void StoreAppendStringGlobalValue(int slot, RuntimeValue value)
+    {
+        var fixedStringLength = _globalFixedStringLengths[slot];
+        _globalsBySlot[slot] = fixedStringLength is null
             ? value
             : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
     }

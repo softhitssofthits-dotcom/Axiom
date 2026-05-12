@@ -2650,7 +2650,9 @@ PRINT REMOVE("abcdef", 2, 3)
     {
         const string text = """
 PRINT ASC("A")
+PRINT ASCW("Я")
 PRINT CHR(65)
+PRINT CHRW(1071)
 """;
 
         var program = BindProgram(text, out var diagnostics);
@@ -2658,7 +2660,9 @@ PRINT CHR(65)
         Assert.Empty(diagnostics);
 
         AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.Integer, BuiltinFunctionId.Asc);
-        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.String, BuiltinFunctionId.Chr);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Integer, BuiltinFunctionId.AscW);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.String, BuiltinFunctionId.Chr);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.String, BuiltinFunctionId.ChrW);
     }
 
     [Fact]
@@ -2682,10 +2686,18 @@ PRINT ENDSWITH("Hello", "lo")
     [Fact]
     public void Bind_BuiltinReplaceReturnsString()
     {
-        var program = BindProgram("PRINT REPLACE(\"one two\", \"two\", \"three\")", out var diagnostics);
+        const string text = """
+DIM oldItems(1 TO 1) AS STRING
+DIM newItems(1 TO 1) AS STRING
+PRINT REPLACE("one two", "two", "three")
+PRINT REPLACEMANY("one two", oldItems, newItems)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
-        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.String, BuiltinFunctionId.Replace);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.String, BuiltinFunctionId.Replace);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.String, BuiltinFunctionId.ReplaceMany);
     }
 
     [Fact]

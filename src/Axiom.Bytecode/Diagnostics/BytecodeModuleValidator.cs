@@ -573,9 +573,19 @@ public sealed class BytecodeModuleValidator
                     ValidateGlobalSlot(module, routine, instructionIndex, instruction, globalsBySlot);
                     break;
 
+                case Opcode.AppendStringGlobal:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateGlobalSlot(module, routine, instructionIndex, instruction, globalsBySlot);
+                    break;
+
                 case Opcode.LoadLocal:
                 case Opcode.StoreLocal:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.AppendStringLocal:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     ValidateLocalSlot(module, routine, instructionIndex, instruction);
                     break;
 
@@ -585,9 +595,19 @@ public sealed class BytecodeModuleValidator
                     ValidateArgumentSlot(module, routine, instructionIndex, instruction);
                     break;
 
+                case Opcode.AppendStringArgument:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateArgumentSlot(module, routine, instructionIndex, instruction);
+                    break;
+
                 case Opcode.LoadCapture:
                 case Opcode.StoreCapture:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateCaptureSlot(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.AppendStringCapture:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     ValidateCaptureSlot(module, routine, instructionIndex, instruction);
                     break;
 
@@ -2824,6 +2844,10 @@ public sealed class BytecodeModuleValidator
             case Opcode.ValidateForStep:
             case Opcode.PrintValue:
             case Opcode.EraseArray:
+            case Opcode.AppendStringGlobal:
+            case Opcode.AppendStringLocal:
+            case Opcode.AppendStringArgument:
+            case Opcode.AppendStringCapture:
                 popCount = 1;
                 pushCount = instruction.Opcode is Opcode.Negate or Opcode.Not or Opcode.Convert ? 1 : 0;
                 return true;

@@ -128,6 +128,16 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.StoreVariable, location, variable: variable);
     }
 
+    public static LoweredInstruction AppendStringVariable(TextLocation location, VariableSymbol variable, bool useDisplayString)
+    {
+        ArgumentNullException.ThrowIfNull(variable);
+        return new LoweredInstruction(
+            LoweredInstructionKind.AppendStringVariable,
+            location,
+            variable: variable,
+            preserve: useDisplayString);
+    }
+
     public static LoweredInstruction Dup(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.Dup, location);

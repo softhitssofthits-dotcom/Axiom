@@ -9,6 +9,7 @@ ON MOUSE("WHEEL"), HandleWheel
 
 DO WHILE NOT KEYPRESS("ESC")
     DIM idle AS INTEGER = 1
+    SLEEP 1
 LOOP
 
 SCREEN 0
@@ -23,4 +24,6 @@ SUB HandleWheel(delta AS INTEGER, x AS LONG, y AS LONG)
     wheelDelta = delta
     wheelX = x
     wheelY = y
+    LOCATE 3, 1
+    PRINT "wheel="; delta; " x="; x; " y="; y; "                    "
 END SUB

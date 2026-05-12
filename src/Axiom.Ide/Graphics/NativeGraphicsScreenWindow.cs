@@ -16,6 +16,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int WmDestroy = 0x0002;
     private const int WmSize = 0x0005;
     private const int WmPaint = 0x000F;
+    private const int WmMouseActivate = 0x0021;
     private const int WmKeyDown = 0x0100;
     private const int WmKeyUp = 0x0101;
     private const int WmChar = 0x0102;
@@ -27,6 +28,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int WmMButtonDown = 0x0207;
     private const int WmMButtonUp = 0x0208;
     private const int WmMouseWheel = 0x020A;
+    private const int MaActivate = 1;
     private const int SizeMinimized = 1;
     private const int ErrorClassAlreadyExists = 1410;
 
@@ -146,6 +148,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 HandlePaint();
                 return IntPtr.Zero;
 
+            case WmMouseActivate:
+                SetFocus(Hwnd);
+                return new IntPtr(MaActivate);
+
             case WmKeyDown:
                 HandleKeyDown((int)wParam);
                 return IntPtr.Zero;
@@ -159,6 +165,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 return IntPtr.Zero;
 
             case WmMouseMove:
+                SetFocus(Hwnd);
                 _consoleService.SetMousePosition(GetX(lParam), GetY(lParam));
                 _consoleService.EnqueueMouseMove();
                 return IntPtr.Zero;
@@ -188,6 +195,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 return IntPtr.Zero;
 
             case WmMouseWheel:
+                SetFocus(Hwnd);
+                UpdateMousePositionFromScreenPoint(lParam);
                 _consoleService.EnqueueMouseWheel(GetWheelDelta(wParam));
                 return IntPtr.Zero;
 
@@ -250,9 +259,11 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     private void HandleMouseButton(IntPtr lParam, int button, bool down)
     {
+        SetFocus(Hwnd);
         _consoleService.SetMousePosition(GetX(lParam), GetY(lParam));
         if (down)
         {
+            SetCapture(Hwnd);
             _consoleService.EnqueueMouseButtonPress(button);
             _consoleService.SetMouseButtonDown(button);
         }
@@ -260,6 +271,21 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         {
             _consoleService.EnqueueMouseButtonRelease(button);
             _consoleService.SetMouseButtonUp(button);
+            ReleaseCapture();
+        }
+    }
+
+    private void UpdateMousePositionFromScreenPoint(IntPtr lParam)
+    {
+        var point = new Point
+        {
+            X = GetX(lParam),
+            Y = GetY(lParam)
+        };
+
+        if (ScreenToClient(Hwnd, ref point))
+        {
+            _consoleService.SetMousePosition(point.X, point.Y);
         }
     }
 
@@ -428,6 +454,13 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         public int Bottom;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Point
+    {
+        public int X;
+        public int Y;
+    }
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern ushort RegisterClass(ref WndClass lpWndClass);
 
@@ -454,6 +487,15 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     [DllImport("user32.dll")]
     private static extern IntPtr SetFocus(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetCapture(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    private static extern bool ScreenToClient(IntPtr hWnd, ref Point point);
 
     [DllImport("user32.dll")]
     private static extern IntPtr DefWindowProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);

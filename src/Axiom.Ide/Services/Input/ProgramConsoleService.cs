@@ -15,18 +15,13 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
+    private readonly RuntimeInputSnapshot _inputSnapshot = new();
     private DispatcherFrame? _pendingFrame;
-    private readonly Queue<string> _pendingKeys = [];
-    private readonly Queue<MouseInputEvent> _pendingMouseEvents = [];
-    private readonly HashSet<string> _pressedKeys = new(StringComparer.Ordinal);
-    private readonly HashSet<int> _pressedMouseButtons = [];
     private string _currentInputText = string.Empty;
     private string _currentPromptText = string.Empty;
     private bool _isWaitingForInput;
     private string _outputText = string.Empty;
     private string _submittedText = string.Empty;
-    private long _mouseX = -1;
-    private long _mouseY = -1;
     private bool _isScreenActive;
     private bool _isScreenOutputActive;
     private int _screenMode;
@@ -58,10 +53,18 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private long _graphicsKeysRead;
     private long _graphicsMouseEventsEnqueued;
     private long _graphicsMouseEventsRead;
+    private long _graphicsMouseMoveEnqueued;
+    private long _graphicsMousePressEnqueued;
+    private long _graphicsMouseReleaseEnqueued;
+    private long _graphicsMouseWheelEnqueued;
+    private long _graphicsMouseMoveRead;
+    private long _graphicsMousePressRead;
+    private long _graphicsMouseReleaseRead;
+    private long _graphicsMouseWheelRead;
     private long _graphicsMaxPendingKeys;
     private long _graphicsMaxPendingMouseEvents;
     private long _graphicsInputEventsAtLastSummary;
-    private bool _isCancellationRequested;
+    private volatile bool _isCancellationRequested;
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
@@ -76,7 +79,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         get => _currentInputText;
         set
         {
-            if (SetProperty(ref _currentInputText, value) && _isScreenOutputActive && _isWaitingForInput)
+            if (SetProperty(ref _currentInputText, value) && _inputSnapshot.IsScreenOutputActive && _isWaitingForInput)
             {
                 PublishGraphicsFrame();
             }
@@ -88,7 +91,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         get => _currentPromptText;
         private set
         {
-            if (SetProperty(ref _currentPromptText, value) && _isScreenOutputActive)
+            if (SetProperty(ref _currentPromptText, value) && _inputSnapshot.IsScreenOutputActive)
             {
                 PublishGraphicsFrame();
             }
@@ -100,7 +103,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         get => _isWaitingForInput;
         private set
         {
-            if (SetProperty(ref _isWaitingForInput, value) && _isScreenOutputActive)
+            if (SetProperty(ref _isWaitingForInput, value) && _inputSnapshot.IsScreenOutputActive)
             {
                 PublishGraphicsFrame();
             }
@@ -125,55 +128,15 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         private set => SetProperty(ref _graphicsFrame, value);
     }
 
-    public bool IsScreenActive
-    {
-        get
-        {
-            var value = false;
-            InvokeOnDispatcher(() => value = _isScreenActive, DispatcherPriority.Background);
-            return value;
-        }
-    }
+    public bool IsScreenActive => _inputSnapshot.IsScreenActive;
 
-    public bool IsScreenOutputActive
-    {
-        get
-        {
-            var value = false;
-            InvokeOnDispatcher(() => value = _isScreenOutputActive, DispatcherPriority.Background);
-            return value;
-        }
-    }
+    public bool IsScreenOutputActive => _inputSnapshot.IsScreenOutputActive;
 
-    public int ScreenMode
-    {
-        get
-        {
-            var value = 0;
-            InvokeOnDispatcher(() => value = _screenMode, DispatcherPriority.Background);
-            return value;
-        }
-    }
+    public int ScreenMode => _inputSnapshot.ScreenMode;
 
-    public int ScreenWidth
-    {
-        get
-        {
-            var value = 0;
-            InvokeOnDispatcher(() => value = _screenWidth, DispatcherPriority.Background);
-            return value;
-        }
-    }
+    public int ScreenWidth => _inputSnapshot.ScreenWidth;
 
-    public int ScreenHeight
-    {
-        get
-        {
-            var value = 0;
-            InvokeOnDispatcher(() => value = _screenHeight, DispatcherPriority.Background);
-            return value;
-        }
-    }
+    public int ScreenHeight => _inputSnapshot.ScreenHeight;
 
     public int OutputCheckpoint =>
         string.IsNullOrEmpty(OutputText)
@@ -182,12 +145,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public bool IsCancellationRequested
     {
-        get
-        {
-            var value = false;
-            InvokeOnDispatcher(() => value = _isCancellationRequested, DispatcherPriority.Background);
-            return value;
-        }
+        get => _isCancellationRequested;
     }
 
     public void BeginSession()
@@ -297,7 +255,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         ArgumentNullException.ThrowIfNull(text);
         InvokeOnDispatcher(() =>
         {
-            if (_isScreenOutputActive)
+            if (_inputSnapshot.IsScreenOutputActive)
             {
                 WriteGraphicsTextCore(text, newLine: true);
                 PublishGraphicsFrame();
@@ -319,6 +277,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenMode = mode;
             _screenWidth = width;
             _screenHeight = height;
+            _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             _framebuffer = new ScreenFramebuffer(width, height);
             _graphicsTextBuffer.Clear();
             GraphicsText = string.Empty;
@@ -353,6 +312,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenMode = 0;
             _screenWidth = 0;
             _screenHeight = 0;
+            _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             _framebuffer = null;
             GraphicsFrame = null;
             _graphicsTextBuffer.Clear();
@@ -481,15 +441,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() =>
+        _inputSnapshot.EnqueueKey(keyText);
+        if (_inputSnapshot.IsScreenActive)
         {
-            _pendingKeys.Enqueue(keyText);
-            if (_isScreenActive)
-            {
-                _graphicsKeysEnqueued++;
-                _graphicsMaxPendingKeys = Math.Max(_graphicsMaxPendingKeys, _pendingKeys.Count);
-            }
-        });
+            _graphicsKeysEnqueued++;
+            _graphicsMaxPendingKeys = Math.Max(_graphicsMaxPendingKeys, _inputSnapshot.PendingKeyCount);
+        }
     }
 
     public void SetKeyDown(string keyText)
@@ -499,7 +456,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pressedKeys.Add(KeyboardInputNormalizer.Normalize(keyText)));
+        _inputSnapshot.SetKeyDown(keyText);
     }
 
     public void SetKeyUp(string keyText)
@@ -509,22 +466,22 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pressedKeys.Remove(KeyboardInputNormalizer.Normalize(keyText)));
+        _inputSnapshot.SetKeyUp(keyText);
     }
 
     public string ReadKey()
     {
-        var keyText = string.Empty;
-        InvokeOnDispatcher(() =>
+        if (_inputSnapshot.TryReadKey(out var keyText))
         {
-            keyText = _pendingKeys.Count > 0 ? _pendingKeys.Dequeue() : string.Empty;
-            if (_isScreenActive && !string.IsNullOrEmpty(keyText))
+            if (_inputSnapshot.IsScreenActive)
             {
                 _graphicsKeysRead++;
             }
-        }, DispatcherPriority.Background);
 
-        return keyText;
+            return keyText;
+        }
+
+        return string.Empty;
     }
 
     public bool IsKeyDown(string keyText)
@@ -534,24 +491,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return false;
         }
 
-        var isDown = false;
-        var normalizedKey = KeyboardInputNormalizer.Normalize(keyText);
-        InvokeOnDispatcher(() => isDown = _pressedKeys.Contains(normalizedKey), DispatcherPriority.Background);
-        return isDown;
+        return _inputSnapshot.IsKeyDown(keyText);
     }
 
     public void ClearKeyState()
     {
-        InvokeOnDispatcher(_pressedKeys.Clear);
+        _inputSnapshot.ClearKeyState();
     }
 
     public void SetMousePosition(long x, long y)
     {
-        InvokeOnDispatcher(() =>
-        {
-            _mouseX = x;
-            _mouseY = y;
-        });
+        _inputSnapshot.SetMousePosition(x, y);
     }
 
     public void SetMouseButtonDown(int buttonNumber)
@@ -561,7 +511,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pressedMouseButtons.Add(buttonNumber));
+        _inputSnapshot.SetMouseButtonDown(buttonNumber);
     }
 
     public void EnqueueMouseButtonPress(int buttonNumber)
@@ -571,7 +521,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber)));
+        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber));
     }
 
     public void EnqueueMouseButtonRelease(int buttonNumber)
@@ -581,12 +531,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber)));
+        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber));
     }
 
     public void EnqueueMouseMove()
     {
-        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Move, 0)));
+        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Move, 0));
     }
 
     public void EnqueueMouseWheel(int delta)
@@ -596,7 +546,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Wheel, delta)));
+        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Wheel, delta));
     }
 
     public void SetMouseButtonUp(int buttonNumber)
@@ -606,21 +556,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        InvokeOnDispatcher(() => _pressedMouseButtons.Remove(buttonNumber));
+        _inputSnapshot.SetMouseButtonUp(buttonNumber);
     }
 
     public long GetMouseX()
     {
-        var mouseX = -1L;
-        InvokeOnDispatcher(() => mouseX = _mouseX, DispatcherPriority.Background);
-        return mouseX;
+        return _inputSnapshot.GetMouseX();
     }
 
     public long GetMouseY()
     {
-        var mouseY = -1L;
-        InvokeOnDispatcher(() => mouseY = _mouseY, DispatcherPriority.Background);
-        return mouseY;
+        return _inputSnapshot.GetMouseY();
     }
 
     public bool IsMouseButtonDown(int buttonNumber)
@@ -630,63 +576,33 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return false;
         }
 
-        var isDown = false;
-        InvokeOnDispatcher(() => isDown = _pressedMouseButtons.Contains(buttonNumber), DispatcherPriority.Background);
-        return isDown;
+        return _inputSnapshot.IsMouseButtonDown(buttonNumber);
     }
 
     public int ReadMouseButtonPress()
     {
-        var buttonNumber = 0;
-        InvokeOnDispatcher(() =>
-        {
-            var deferredEvents = new List<MouseInputEvent>();
-
-            while (_pendingMouseEvents.Count > 0)
-            {
-                var candidate = _pendingMouseEvents.Dequeue();
-                if (buttonNumber == 0 && candidate.Kind == MouseInputEventKind.Press)
-                {
-                    buttonNumber = candidate.ButtonNumber;
-                    continue;
-                }
-
-                deferredEvents.Add(candidate);
-            }
-
-            foreach (var deferredEvent in deferredEvents)
-            {
-                _pendingMouseEvents.Enqueue(deferredEvent);
-            }
-        }, DispatcherPriority.Background);
-
-        return buttonNumber;
+        return _inputSnapshot.ReadMouseButtonPress();
     }
 
     public MouseInputEvent ReadMouseEvent()
     {
-        var mouseEvent = default(MouseInputEvent);
-        InvokeOnDispatcher(() =>
+        if (_inputSnapshot.TryReadMouseEvent(out var mouseEvent))
         {
-            mouseEvent = _pendingMouseEvents.Count > 0 ? _pendingMouseEvents.Dequeue() : default;
-            if (_isScreenActive && mouseEvent != default)
+            if (_inputSnapshot.IsScreenActive)
             {
                 _graphicsMouseEventsRead++;
+                RecordGraphicsMouseEventRead(mouseEvent.Kind);
             }
-        }, DispatcherPriority.Background);
 
-        return mouseEvent;
+            return mouseEvent;
+        }
+
+        return default;
     }
 
     public void ClearMouseState()
     {
-        InvokeOnDispatcher(() =>
-        {
-            _mouseX = -1;
-            _mouseY = -1;
-            _pendingMouseEvents.Clear();
-            _pressedMouseButtons.Clear();
-        });
+        _inputSnapshot.ClearMouseState();
     }
 
     public void RestoreOutputCheckpoint(int checkpoint)
@@ -702,7 +618,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
 
         _submittedText = CurrentInputText;
-        if (_isScreenOutputActive)
+        if (_inputSnapshot.IsScreenOutputActive)
         {
             WriteGraphicsTextCore(CurrentPromptText + CurrentInputText, newLine: true);
             IsWaitingForInput = false;
@@ -803,15 +719,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _submittedText = string.Empty;
         _isCancellationRequested = false;
-        _pendingKeys.Clear();
-        _pendingMouseEvents.Clear();
-        _pressedKeys.Clear();
-        _pressedMouseButtons.Clear();
-            _mouseX = -1;
-            _mouseY = -1;
-            _isScreenActive = false;
-            _isScreenOutputActive = false;
-            _screenMode = 0;
+        _inputSnapshot.Reset();
+        _isScreenActive = false;
+        _isScreenOutputActive = false;
+        _screenMode = 0;
         _screenWidth = 0;
         _screenHeight = 0;
         _framebuffer = null;
@@ -886,11 +797,50 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void EnqueueMouseEventCore(MouseInputEvent mouseEvent)
     {
-        _pendingMouseEvents.Enqueue(mouseEvent);
-        if (_isScreenActive)
+        _inputSnapshot.EnqueueMouseEvent(mouseEvent);
+        if (_inputSnapshot.IsScreenActive)
         {
             _graphicsMouseEventsEnqueued++;
-            _graphicsMaxPendingMouseEvents = Math.Max(_graphicsMaxPendingMouseEvents, _pendingMouseEvents.Count);
+            RecordGraphicsMouseEventEnqueued(mouseEvent.Kind);
+            _graphicsMaxPendingMouseEvents = Math.Max(_graphicsMaxPendingMouseEvents, _inputSnapshot.PendingMouseEventCount);
+        }
+    }
+
+    private void RecordGraphicsMouseEventEnqueued(MouseInputEventKind eventKind)
+    {
+        switch (eventKind)
+        {
+            case MouseInputEventKind.Move:
+                _graphicsMouseMoveEnqueued++;
+                break;
+            case MouseInputEventKind.Press:
+                _graphicsMousePressEnqueued++;
+                break;
+            case MouseInputEventKind.Release:
+                _graphicsMouseReleaseEnqueued++;
+                break;
+            case MouseInputEventKind.Wheel:
+                _graphicsMouseWheelEnqueued++;
+                break;
+        }
+    }
+
+    private void RecordGraphicsMouseEventRead(MouseInputEventKind eventKind)
+    {
+        switch (eventKind)
+        {
+            case MouseInputEventKind.Move:
+                _graphicsMouseMoveRead++;
+                break;
+            case MouseInputEventKind.Press:
+                _graphicsMousePressRead++;
+                break;
+            case MouseInputEventKind.Release:
+                _graphicsMouseReleaseRead++;
+                break;
+            case MouseInputEventKind.Wheel:
+                _graphicsMouseWheelRead++;
+                break;
         }
     }
 
@@ -983,7 +933,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     }
 
     private bool IsInsideScreen(long x, long y) =>
-        _isScreenActive &&
+        _inputSnapshot.IsScreenActive &&
         x >= 0 &&
         y >= 0 &&
         x < _screenWidth &&
@@ -1153,6 +1103,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsKeysRead = 0;
         _graphicsMouseEventsEnqueued = 0;
         _graphicsMouseEventsRead = 0;
+        _graphicsMouseMoveEnqueued = 0;
+        _graphicsMousePressEnqueued = 0;
+        _graphicsMouseReleaseEnqueued = 0;
+        _graphicsMouseWheelEnqueued = 0;
+        _graphicsMouseMoveRead = 0;
+        _graphicsMousePressRead = 0;
+        _graphicsMouseReleaseRead = 0;
+        _graphicsMouseWheelRead = 0;
         _graphicsMaxPendingKeys = 0;
         _graphicsMaxPendingMouseEvents = 0;
         _graphicsInputEventsAtLastSummary = 0;
@@ -1160,7 +1118,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void RecordGraphicsCommandQueued()
     {
-        if (!_isScreenOutputActive)
+        if (!_inputSnapshot.IsScreenOutputActive)
         {
             return;
         }
@@ -1171,7 +1129,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void RecordGraphicsFramePublished(bool coalesced)
     {
-        if (!_isScreenOutputActive)
+        if (!_inputSnapshot.IsScreenOutputActive)
         {
             return;
         }
@@ -1242,12 +1200,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             "screen.input.summary",
             string.Create(
                 System.Globalization.CultureInfo.InvariantCulture,
-                $"final={final} | keysEnqueued={_graphicsKeysEnqueued} | keysRead={_graphicsKeysRead} | mouseEventsEnqueued={_graphicsMouseEventsEnqueued} | mouseEventsRead={_graphicsMouseEventsRead} | maxPendingKeys={_graphicsMaxPendingKeys} | maxPendingMouseEvents={_graphicsMaxPendingMouseEvents}"));
+                $"final={final} | keysEnqueued={_graphicsKeysEnqueued} | keysRead={_graphicsKeysRead} | mouseEventsEnqueued={_graphicsMouseEventsEnqueued} | mouseEventsRead={_graphicsMouseEventsRead} | moveEnqueued={_graphicsMouseMoveEnqueued} | moveRead={_graphicsMouseMoveRead} | pressEnqueued={_graphicsMousePressEnqueued} | pressRead={_graphicsMousePressRead} | releaseEnqueued={_graphicsMouseReleaseEnqueued} | releaseRead={_graphicsMouseReleaseRead} | wheelEnqueued={_graphicsMouseWheelEnqueued} | wheelRead={_graphicsMouseWheelRead} | maxPendingKeys={_graphicsMaxPendingKeys} | maxPendingMouseEvents={_graphicsMaxPendingMouseEvents}"));
     }
 
     private void AddFillCore(long left, long top, long right, long bottom, int color)
     {
-        if (!_isScreenActive)
+        if (!_inputSnapshot.IsScreenActive)
         {
             return;
         }

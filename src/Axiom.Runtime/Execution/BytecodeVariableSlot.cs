@@ -13,7 +13,7 @@ internal class BytecodeVariableSlot
     {
         ArgumentNullException.ThrowIfNull(value);
         FixedStringLength = fixedStringLength;
-        _value = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+        _value = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
             ? value
             : NormalizeForStorage(value, fixedStringLength);
     }
@@ -37,7 +37,7 @@ internal class BytecodeVariableSlot
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            var normalizedValue = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+            var normalizedValue = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
                 ? value
                 : NormalizeForStorage(value, FixedStringLength);
 
@@ -55,15 +55,33 @@ internal class BytecodeVariableSlot
     public void Store(RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        Value = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+        Value = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
             ? value
             : NormalizeForStorage(value, FixedStringLength);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void StoreAppendStringValue(RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        var normalizedValue = FixedStringLength is null
+            ? value
+            : NormalizeForStorage(value, FixedStringLength);
+
+        if (_setter is null)
+        {
+            _value = normalizedValue;
+            return;
+        }
+
+        _setter(normalizedValue);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RuntimeValue NormalizeForStorage(RuntimeValue value, int? fixedStringLength)
     {
-        if (fixedStringLength is null && value.Type is not UserDefinedTypeSymbol)
+        if (fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage)
         {
             return value;
         }

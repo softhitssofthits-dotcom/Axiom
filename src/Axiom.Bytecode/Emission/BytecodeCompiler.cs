@@ -755,6 +755,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.LoadFunction => EmitLoadFunction(routine, instruction),
             LoweredInstructionKind.LoadVariable => EmitLoadVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.StoreVariable => EmitStoreVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
+            LoweredInstructionKind.AppendStringVariable => EmitAppendStringVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.Dup => new BytecodeInstruction(Opcode.Dup),
             LoweredInstructionKind.UnaryOperation => EmitUnaryOperation(routine, instruction),
             LoweredInstructionKind.BinaryOperation => EmitBinaryOperation(routine, instruction),
@@ -902,6 +903,39 @@ public sealed class BytecodeCompiler
         return TryResolveVariableSlot(routine, instruction, parameterSlots, localSlots, captureSlots, out var opcode, out var slot, isStore: true)
             ? new BytecodeInstruction(opcode, [slot])
             : null;
+    }
+
+    private BytecodeInstruction? EmitAppendStringVariable(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots)
+    {
+        if (!TryResolveVariableSlot(routine, instruction, parameterSlots, localSlots, captureSlots, out var storeOpcode, out var slot, isStore: true))
+        {
+            return null;
+        }
+
+        var opcode = storeOpcode switch
+        {
+            Opcode.StoreGlobal => Opcode.AppendStringGlobal,
+            Opcode.StoreLocal => Opcode.AppendStringLocal,
+            Opcode.StoreArgument => Opcode.AppendStringArgument,
+            Opcode.StoreCapture => Opcode.AppendStringCapture,
+            _ => (Opcode?)null
+        };
+
+        if (opcode is null)
+        {
+            Report(
+                "BC5023",
+                $"Эмиттер байткода не смог выбрать инструкцию накопления строки для '{instruction.Variable?.Name ?? "<null>"}' в процедуре '{routine.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        return new BytecodeInstruction(opcode.Value, [slot, instruction.Preserve ? 1 : 0]);
     }
 
     private bool TryResolveVariableSlot(

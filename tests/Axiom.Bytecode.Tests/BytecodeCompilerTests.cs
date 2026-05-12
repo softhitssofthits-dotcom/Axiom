@@ -841,6 +841,35 @@ public sealed class BytecodeCompilerTests
     }
 
     [Fact]
+    public void Compile_StringAppendAssignment_UsesAppendStringLocal()
+    {
+        var text = new VariableSymbol("text", TypeSymbol.String, isReadOnly: false, isGlobal: false);
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.LoadLiteral(Location(2), string.Empty, TypeSymbol.String),
+                LoweredInstruction.StoreVariable(Location(2), text),
+                LoweredInstruction.LoadLiteral(Location(3), "x", TypeSymbol.String),
+                LoweredInstruction.AppendStringVariable(Location(3), text, useDisplayString: true),
+                LoweredInstruction.Return(Location(4))
+            ],
+            isEntryPoint: true,
+            localVariables: [text]);
+
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+
+        Assert.True(result.Succeeded);
+        var routine = Assert.Single(result.Module!.Routines);
+        var append = Assert.Single(routine.Instructions, static instruction => instruction.Opcode == Opcode.AppendStringLocal);
+        Assert.Equal(0, append.GetOperand(0));
+        Assert.Equal(1, append.GetOperand(1));
+    }
+
+    [Fact]
     public void Compile_LocalFunctionCapture_EmitsCaptureInstructions()
     {
         var outerParameter = new ParameterSymbol("seed", TypeSymbol.Integer, ordinal: 0);

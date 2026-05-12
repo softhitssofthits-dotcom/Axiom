@@ -11,6 +11,11 @@ public sealed partial class Interpreter
 
     private void DispatchKeyboardHandlers(TextLocation callSiteLocation)
     {
+        if (_keyboardHandlers.Count == 0)
+        {
+            return;
+        }
+
         if (_keyboardHandlerDepth > 0)
         {
             return;

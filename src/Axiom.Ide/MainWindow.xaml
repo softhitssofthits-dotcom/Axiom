@@ -1516,13 +1516,7 @@
                                  PreviewKeyUp="OnOutputTextBoxPreviewKeyUp"
                                  LostKeyboardFocus="OnOutputTextBoxLostKeyboardFocus"
                                  PreviewTextInput="OnOutputTextBoxPreviewTextInput"
-                                 PreviewMouseMove="OnOutputTextBoxPreviewMouseMove"
-                                 PreviewMouseDown="OnOutputTextBoxPreviewMouseDown"
-                                 PreviewMouseUp="OnOutputTextBoxPreviewMouseUp"
-                                 PreviewMouseWheel="OnOutputTextBoxPreviewMouseWheel"
-                                 MouseLeave="OnOutputTextBoxMouseLeave"
-                                 PreviewMouseRightButtonDown="OnOutputTextBoxPreviewMouseRightButtonDown"
-                                 PreviewMouseRightButtonUp="OnOutputTextBoxPreviewMouseRightButtonUp">
+                                 >
                             <TextBox.ContextMenu>
                                 <ContextMenu Style="{StaticResource ShellContextMenuStyle}"
                                              AutomationProperties.AutomationId="OutputContextMenu">

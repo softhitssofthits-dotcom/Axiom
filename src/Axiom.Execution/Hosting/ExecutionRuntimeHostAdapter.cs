@@ -9,6 +9,8 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     private readonly IOutputWriter _outputWriter;
     private readonly IRuntimeClock _runtimeClock;
     private readonly IRuntimeRandom _runtimeRandom;
+    private readonly IRuntimeCancellationProvider? _inputCancellationProvider;
+    private readonly IRuntimeCancellationProvider? _outputCancellationProvider;
 
     public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter, IRuntimeClock runtimeClock, IRuntimeRandom runtimeRandom)
     {
@@ -21,6 +23,10 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         _outputWriter = outputWriter;
         _runtimeClock = runtimeClock;
         _runtimeRandom = runtimeRandom;
+        _inputCancellationProvider = inputProvider as IRuntimeCancellationProvider;
+        _outputCancellationProvider = ReferenceEquals(inputProvider, outputWriter)
+            ? null
+            : outputWriter as IRuntimeCancellationProvider;
     }
 
     public IReadOnlyList<string> Output => _output;
@@ -28,8 +34,8 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public int OutputCheckpoint => _output.Count;
 
     public bool IsCancellationRequested =>
-        _inputProvider is IRuntimeCancellationProvider inputHost && inputHost.IsCancellationRequested
-        || _outputWriter is IRuntimeCancellationProvider outputHost && outputHost.IsCancellationRequested;
+        _inputCancellationProvider is not null && _inputCancellationProvider.IsCancellationRequested
+        || _outputCancellationProvider is not null && _outputCancellationProvider.IsCancellationRequested;
 
     public string ReadInput(InputRequest request) => _inputProvider.ReadInput(request);
 

@@ -4,6 +4,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
+    private const int MaxMouseEventsPerDispatch = 64;
     private readonly Dictionary<MouseHandlerKey, MouseHandlerRegistration> _mouseHandlers = [];
     private readonly Queue<MouseInputEvent> _bufferedMouseEvents = [];
     private int _mouseHandlerDepth;
@@ -28,6 +29,11 @@ public sealed partial class Interpreter
 
     private void DispatchMouseHandlers(TextLocation callSiteLocation)
     {
+        if (_mouseHandlers.Count == 0)
+        {
+            return;
+        }
+
         if (!_host.IsScreenActive)
         {
             return;
@@ -39,9 +45,11 @@ public sealed partial class Interpreter
         }
 
         var deferredEvents = new List<MouseInputEvent>();
+        var processedEvents = 0;
 
-        while (TryReadMouseEvent(out var mouseEvent))
+        while (processedEvents < MaxMouseEventsPerDispatch && TryReadMouseEvent(out var mouseEvent))
         {
+            processedEvents++;
             var handlerKey = GetMouseHandlerKey(mouseEvent);
             if (!_mouseHandlers.TryGetValue(handlerKey, out var registration) || !registration.IsEnabled)
             {

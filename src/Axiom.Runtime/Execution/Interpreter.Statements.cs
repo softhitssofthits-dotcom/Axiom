@@ -125,6 +125,12 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecuteAssignment(BoundAssignmentStatement statement)
     {
+        if (statement.Target is BoundVariableExpression directVariable
+            && TryExecuteStringAppendAssignment(statement, directVariable.Variable))
+        {
+            return ExecutionSignal.None;
+        }
+
         var value = EvaluateExpression(statement.Expression);
 
         switch (statement.Target)
@@ -190,6 +196,58 @@ public sealed partial class Interpreter
 
             System.Threading.Thread.Sleep(10);
         }
+    }
+
+    private bool TryExecuteStringAppendAssignment(BoundAssignmentStatement statement, VariableSymbol targetVariable)
+    {
+        if (targetVariable.Type != TypeSymbol.String
+            || statement.Expression is not BoundBinaryExpression binary
+            || binary.Left is not BoundVariableExpression leftVariable
+            || !ReferenceEquals(leftVariable.Variable, targetVariable))
+        {
+            return false;
+        }
+
+        var useDisplayString = binary.OperatorKind == SyntaxKind.AmpersandToken;
+        if (!useDisplayString
+            && (binary.OperatorKind != SyntaxKind.PlusToken || binary.Type != TypeSymbol.String))
+        {
+            return false;
+        }
+
+        var current = GetVariableValue(targetVariable);
+        var right = EvaluateExpression(binary.Right);
+        var appendText = useDisplayString ? right.ToDisplayString() : right.AsString();
+
+        if (targetVariable.FixedStringLength is { } fixedStringLength)
+        {
+            AssignVariable(
+                targetVariable,
+                RuntimeValue.FromString(RuntimeValue.NormalizeFixedString(current.AsString() + appendText, fixedStringLength)));
+            return true;
+        }
+
+        var accumulator = current.AsStringAccumulator() ?? new RuntimeStringAccumulator(current.AsString());
+        accumulator.Append(appendText);
+
+        // Для обычного присваивания накопитель нельзя копировать как ссылку:
+        // алиасы вроде t = s должны видеть прежнюю строку. Здесь мы обновляем
+        // только ту же самую переменную в распознанном шаблоне s = s & expr.
+        var accumulatedValue = RuntimeValue.FromStringAccumulator(accumulator);
+        var storedValue = LookupStorage(targetVariable);
+        if (storedValue is RuntimeReferenceStoredValue reference)
+        {
+            reference.Value = accumulatedValue;
+            return true;
+        }
+
+        if (storedValue is RuntimeValue && CurrentScope.TryAssign(targetVariable, accumulatedValue))
+        {
+            return true;
+        }
+
+        AssignVariable(targetVariable, accumulatedValue);
+        return true;
     }
 
     private void SleepForMilliseconds(long milliseconds, TextLocation location)

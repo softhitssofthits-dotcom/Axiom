@@ -42,6 +42,8 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/functions/acos/out_of_range_error.axm", ExecutionStatus.RuntimeFailure, "MB3007")]
     [InlineData("samples/functions/acosh/less_than_one_error.axm", ExecutionStatus.RuntimeFailure, "MB3007")]
     [InlineData("samples/functions/atanh/out_of_range_error.axm", ExecutionStatus.RuntimeFailure, "MB3007")]
+    [InlineData("samples/functions/ascw/empty_text_error.axm", ExecutionStatus.RuntimeFailure, "MB3007")]
+    [InlineData("samples/functions/chrw/invalid_code_error.axm", ExecutionStatus.RuntimeFailure, "MB3007")]
     [InlineData("samples/operators/const/fixed_string_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
     [InlineData("samples/operators/function/fixed_string_parameter_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
     [InlineData("samples/operators/function/fixed_string_return_error.axm", ExecutionStatus.SemanticFailure, "MB2026")]
@@ -74,6 +76,8 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/functions/log/non_positive_error.axm", "MB3007")]
     [InlineData("samples/functions/clamp/invalid_bounds_error.axm", "MB3007")]
     [InlineData("samples/functions/pow/invalid_domain_error.axm", "MB3007")]
+    [InlineData("samples/functions/ascw/empty_text_error.axm", "MB3007")]
+    [InlineData("samples/functions/chrw/invalid_code_error.axm", "MB3007")]
     public void NegativeRuntimeAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter(
         string relativePath,
         string expectedCode)
@@ -1896,7 +1900,8 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/functions/regexmatches/all_matches.axm", "2", "42", "100", "0")]
     [InlineData("samples/functions/regexextractall/group_values.axm", "2", "12", "34", "a", "b")]
     [InlineData("samples/functions/regexsplit/split_on_pattern.axm", "3", "one", "two", "three")]
-    public void RegexArrayAcceptanceSamples_RunSuccessfully(string relativePath, params string[] expectedOutput)
+    [InlineData("samples/functions/replacemany/multiple_tokens.axm", "Y X z", "one two")]
+    public void StringArrayFunctionAcceptanceSamples_RunSuccessfully(string relativePath, params string[] expectedOutput)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
@@ -1905,6 +1910,23 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.Empty(result.Diagnostics);
+        Assert.Equal(expectedOutput, result.Output);
+    }
+
+    [Theory]
+    [InlineData("samples/functions/ascw/unicode_codepoint.axm", "1071", "9608", "128512")]
+    [InlineData("samples/functions/chrw/unicode_character.axm", "Я", "█", "128512")]
+    public void UnicodeCharacterFunctionAcceptanceSamples_RunOnBytecodeVm(string relativePath, params string[] expectedOutput)
+    {
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+
+        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 

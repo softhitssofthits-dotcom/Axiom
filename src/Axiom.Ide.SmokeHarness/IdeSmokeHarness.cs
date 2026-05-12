@@ -20,11 +20,18 @@ internal sealed class IdeSmokeHarness
     private const uint WmAppSmokeHarnessToggleOutputPane = 0x8005;
     private const uint WmAppSmokeHarnessToggleDiagnosticsPane = 0x8006;
     private const uint WmAppSmokeHarnessToggleStatusBar = 0x8007;
+    private const int SystemMetricVirtualScreenX = 76;
+    private const int SystemMetricVirtualScreenY = 77;
+    private const int SystemMetricVirtualScreenWidth = 78;
+    private const int SystemMetricVirtualScreenHeight = 79;
+    private const uint InputMouse = 0;
+    private const uint MouseeventfMove = 0x0001;
     private const uint MouseeventfLeftDown = 0x0002;
     private const uint MouseeventfLeftUp = 0x0004;
     private const uint MouseeventfRightDown = 0x0008;
     private const uint MouseeventfRightUp = 0x0010;
     private const uint MouseeventfWheel = 0x0800;
+    private const uint MouseeventfAbsolute = 0x8000;
     private const uint KeyeventfKeyUp = 0x0002;
     private const byte VkLeft = 0x25;
     private const byte VkReturn = 0x0D;
@@ -298,13 +305,14 @@ internal sealed class IdeSmokeHarness
             text.Contains("console.output | Click inside Output, roll the mouse wheel, then press ESC.", StringComparison.Ordinal));
         var outputTextBox = RequireElement(mainWindow, "OutputTextBox");
         ClickElement(outputTextBox);
-        mouse_event(MouseeventfWheel, 0, 0, 120, UIntPtr.Zero);
+        SendMouseWheel(120);
+        Thread.Sleep(500);
+        PressVirtualKey(outputTextBox, VkEscape);
+        WaitForLatestIdeLogText(static text => text.Contains("console.output | DONE", StringComparison.Ordinal));
         WaitForLatestIdeLogText(static text =>
             text.Contains("console.output | PRESS", StringComparison.Ordinal)
             && text.Contains("console.output | UP", StringComparison.Ordinal)
             && text.Contains("console.output | WHEEL", StringComparison.Ordinal));
-        PressVirtualKey(outputTextBox, VkEscape);
-        WaitForLatestIdeLogText(static text => text.Contains("console.output | DONE", StringComparison.Ordinal));
         ReportStepCompleted();
 
         ReportStep("Close IDE after ON MOUSE smoke");
@@ -1299,9 +1307,38 @@ internal sealed class IdeSmokeHarness
 
         SetCursorPos(x, y);
         Thread.Sleep(100);
-        mouse_event(mouseDownFlag, 0, 0, 0, UIntPtr.Zero);
-        mouse_event(mouseUpFlag, 0, 0, 0, UIntPtr.Zero);
+        SendMouseButton(mouseDownFlag);
+        SendMouseButton(mouseUpFlag);
         Thread.Sleep(150);
+    }
+
+    private static void SendMouseButton(uint flags)
+    {
+        SendMouseInput(flags, mouseData: 0);
+    }
+
+    private static void SendMouseWheel(int delta)
+    {
+        SendMouseInput(MouseeventfWheel, unchecked((uint)delta));
+    }
+
+    private static void SendMouseInput(uint flags, uint mouseData)
+    {
+        var input = new Input
+        {
+            Type = InputMouse,
+            Mouse = new MouseInput
+            {
+                Flags = flags,
+                MouseData = mouseData
+            }
+        };
+
+        var sent = SendInput(1, [input], Marshal.SizeOf<Input>());
+        if (sent != 1)
+        {
+            throw new InvalidOperationException($"SendInput failed with Win32 error {Marshal.GetLastWin32Error()}.");
+        }
     }
 
     private static void BringElementWindowToForeground(AutomationElement element)
@@ -1362,14 +1399,16 @@ internal sealed class IdeSmokeHarness
             PRINT "Click the output pane and press a key while the loop runs."
 
             DIM keyName AS STRING
+            DIM started AS DOUBLE = TIMER()
 
-            FOR i = 1 TO 200000
+            DO WHILE TIMER() - started < 5
                 keyName = INKEY()
                 IF keyName <> "" THEN
                     PRINT keyName
-                    EXIT FOR
+                    EXIT DO
                 END IF
-            NEXT
+                SLEEP 1
+            LOOP
 
             IF keyName = "" THEN
                 PRINT "NO KEY"
@@ -1388,6 +1427,7 @@ internal sealed class IdeSmokeHarness
 
             DO WHILE NOT KEYPRESS("ESC")
                 DIM idle AS INTEGER = 1
+                SLEEP 1
             LOOP
 
             PRINT "DONE"
@@ -1620,8 +1660,26 @@ internal sealed class IdeSmokeHarness
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+    private static extern uint SendInput(uint inputCount, Input[] inputs, int inputSize);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Input
+    {
+        public uint Type;
+        public MouseInput Mouse;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MouseInput
+    {
+        public int Dx;
+        public int Dy;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public UIntPtr ExtraInfo;
+    }
 }

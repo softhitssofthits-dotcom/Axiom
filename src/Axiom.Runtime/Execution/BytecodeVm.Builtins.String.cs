@@ -304,6 +304,59 @@ public sealed partial class BytecodeVm
             : RuntimeValue.FromString(replaced);
     }
 
+    private RuntimeValue EvaluateReplaceManyBuiltin(
+        RuntimeValue textValue,
+        RuntimeValue oldItemsValue,
+        RuntimeValue newItemsValue,
+        TextLocation location)
+    {
+        var text = GetStringUnchecked(textValue);
+        var oldRules = ReadReplaceManyRules("oldItems", oldItemsValue.AsArray(), location);
+        var newRules = ReadReplaceManyRules("newItems", newItemsValue.AsArray(), location);
+
+        if (oldRules.Length != newRules.Length)
+        {
+            ReportBuiltInArgumentError("REPLACEMANY", "newItems", "должен иметь ту же длину, что и oldItems.", location);
+            throw new RuntimeFailureException();
+        }
+
+        for (var index = 0; index < oldRules.Length; index++)
+        {
+            if (oldRules[index].Length == 0)
+            {
+                ReportBuiltInArgumentError("REPLACEMANY", "oldItems", "не должен содержать пустые строки.", location);
+                throw new RuntimeFailureException();
+            }
+        }
+
+        var replaced = RuntimeStringReplaceMany.Replace(text, oldRules, newRules);
+        return ReferenceEquals(replaced, text)
+            ? textValue
+            : RuntimeValue.FromString(replaced);
+    }
+
+    private string[] ReadReplaceManyRules(string argumentName, RuntimeArrayValue array, TextLocation location)
+    {
+        if (!array.IsAllocated)
+        {
+            return [];
+        }
+
+        if (array.Rank != 1)
+        {
+            ReportBuiltInArgumentError("REPLACEMANY", argumentName, "должен быть одномерным массивом строк.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var values = new string[array.Length];
+        for (var index = 0; index < values.Length; index++)
+        {
+            values[index] = array.GetValue(array.LowerBound + index).AsString();
+        }
+
+        return values;
+    }
+
     private static int EvaluateInStr(int start, string text, string fragment)
     {
         if (start > text.Length + 1)
@@ -362,20 +415,39 @@ public sealed partial class BytecodeVm
 
     private int EvaluateAsc(string text, TextLocation location)
     {
+        return EvaluateFirstRuneCode(text, "ASC", location, RuntimeCharacterEncoding.Asc);
+    }
+
+    private int EvaluateAscW(string text, TextLocation location)
+    {
+        return EvaluateFirstRuneCode(text, "ASCW", location, RuntimeCharacterEncoding.AscW);
+    }
+
+    private int EvaluateFirstRuneCode(
+        string text,
+        string functionName,
+        TextLocation location,
+        Func<Rune, int> getCode)
+    {
         if (text.Length == 0)
         {
-            ReportBuiltInArgumentError("ASC", "text", "не может быть пустой строкой.", location);
+            ReportBuiltInArgumentError(functionName, "text", "не может быть пустой строкой.", location);
             throw new RuntimeFailureException();
         }
 
         using var enumerator = text.EnumerateRunes();
         enumerator.MoveNext();
-        return RuntimeCharacterEncoding.Asc(enumerator.Current);
+        return getCode(enumerator.Current);
     }
 
     private static string EvaluateChr(int code)
     {
         return RuntimeCharacterEncoding.Chr(code);
+    }
+
+    private static string EvaluateChrW(int code)
+    {
+        return RuntimeCharacterEncoding.ChrW(code);
     }
 
     private RuntimeValue EvaluateSplitBuiltin(string text, string separator, TextLocation location)

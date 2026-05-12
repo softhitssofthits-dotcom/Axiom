@@ -10,6 +10,7 @@ DIM marker AS INTEGER = 0
 
 DO WHILE NOT KEYPRESS("ESC")
     marker = marker + 1
+    SLEEP 1
 LOOP
 
 SCREEN 0
@@ -24,4 +25,6 @@ SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
     seenButton = button
     seenX = x
     seenY = y
+    LOCATE 3, 1
+    PRINT "button="; button; " x="; x; " y="; y; "                    "
 END SUB

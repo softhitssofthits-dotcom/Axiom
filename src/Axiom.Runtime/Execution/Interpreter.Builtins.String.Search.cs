@@ -34,6 +34,71 @@ public sealed partial class Interpreter
         return text.Replace(oldText, newText, StringComparison.Ordinal);
     }
 
+    private string EvaluateReplaceMany(
+        BoundCallExpression expression,
+        string text,
+        RuntimeArrayValue oldItems,
+        RuntimeArrayValue newItems)
+    {
+        var oldRules = ReadReplaceManyRules(expression, "oldItems", argumentIndex: 1, oldItems);
+        var newRules = ReadReplaceManyRules(expression, "newItems", argumentIndex: 2, newItems);
+
+        if (oldRules.Length != newRules.Length)
+        {
+            ReportBuiltInArgumentError(
+                "REPLACEMANY",
+                "newItems",
+                "должен иметь ту же длину, что и oldItems.",
+                GetBuiltInArgumentLocation(expression, 2));
+            throw new RuntimeFailureException();
+        }
+
+        for (var index = 0; index < oldRules.Length; index++)
+        {
+            if (oldRules[index].Length == 0)
+            {
+                ReportBuiltInArgumentError(
+                    "REPLACEMANY",
+                    "oldItems",
+                    "не должен содержать пустые строки.",
+                    GetBuiltInArgumentLocation(expression, 1));
+                throw new RuntimeFailureException();
+            }
+        }
+
+        return RuntimeStringReplaceMany.Replace(text, oldRules, newRules);
+    }
+
+    private string[] ReadReplaceManyRules(
+        BoundCallExpression expression,
+        string argumentName,
+        int argumentIndex,
+        RuntimeArrayValue array)
+    {
+        if (!array.IsAllocated)
+        {
+            return [];
+        }
+
+        if (array.Rank != 1)
+        {
+            ReportBuiltInArgumentError(
+                "REPLACEMANY",
+                argumentName,
+                "должен быть одномерным массивом строк.",
+                GetBuiltInArgumentLocation(expression, argumentIndex));
+            throw new RuntimeFailureException();
+        }
+
+        var values = new string[array.Length];
+        for (var index = 0; index < values.Length; index++)
+        {
+            values[index] = array.GetValue(array.LowerBound + index).AsString();
+        }
+
+        return values;
+    }
+
     private static int EvaluateInStr(int start, string text, string fragment)
     {
         if (start > text.Length + 1)

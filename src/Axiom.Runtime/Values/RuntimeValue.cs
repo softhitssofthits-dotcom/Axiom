@@ -116,6 +116,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         ? EmptyStringValue
         : new(TypeSymbol.String, value);
 
+    internal static RuntimeValue FromStringAccumulator(RuntimeStringAccumulator value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return new RuntimeValue(TypeSymbol.String, value);
+    }
+
     public static RuntimeValue FromBoolean(bool value) => value ? TrueValue : FalseValue;
 
     public static RuntimeValue FromFile(RuntimeTextFile? value) => new(TypeSymbol.File, value);
@@ -268,9 +274,20 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         throw new InvalidOperationException($"Value of type {Type.Name} is not DECIMAL.");
     }
 
-    public string AsString() => Type == TypeSymbol.String
-        ? (string)Value!
-        : throw new InvalidOperationException($"Value of type {Type.Name} is not STRING.");
+    public string AsString()
+    {
+        if (Type != TypeSymbol.String)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not STRING.");
+        }
+
+        return Value switch
+        {
+            string text => text,
+            RuntimeStringAccumulator accumulator => accumulator.ToString(),
+            _ => string.Empty
+        };
+    }
 
     public bool AsBoolean() => Type == TypeSymbol.Boolean
         ? (bool)Value!
@@ -332,12 +349,14 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         {
             var text = AsString();
 
-            if (fixedStringLength is null)
+            if (fixedStringLength is null && Value is not RuntimeStringAccumulator)
             {
                 return this;
             }
 
-            return FromString(NormalizeFixedString(text, fixedStringLength.Value));
+            return FromString(fixedStringLength is { } length
+                ? NormalizeFixedString(text, length)
+                : text);
         }
 
         if (Type is ArrayTypeSymbol arrayType && fixedStringLength is not null)
@@ -475,5 +494,14 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         }
 
         return FromString(ToDisplayString());
+    }
+
+    internal bool RequiresCopyForStorage => Value is RuntimeStringAccumulator;
+
+    internal RuntimeStringAccumulator? AsStringAccumulator()
+    {
+        return Type == TypeSymbol.String
+            ? Value as RuntimeStringAccumulator
+            : null;
     }
 }

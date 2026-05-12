@@ -122,6 +122,7 @@ public sealed partial class Interpreter
             BuiltinFunctionId.StartsWith => RuntimeValue.FromBoolean(EvaluateStartsWith(arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.EndsWith => RuntimeValue.FromBoolean(EvaluateEndsWith(arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.Replace => RuntimeValue.FromString(EvaluateReplace(expression, arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString())),
+            BuiltinFunctionId.ReplaceMany => RuntimeValue.FromString(EvaluateReplaceMany(expression, arguments[0].AsString(), arguments[1].AsArray(), arguments[2].AsArray())),
             BuiltinFunctionId.InStr => RuntimeValue.FromInteger(EvaluateInStr(1, arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.InStrFrom => RuntimeValue.FromInteger(
                 EvaluateInStr(
@@ -190,10 +191,15 @@ public sealed partial class Interpreter
                     RequirePositiveStart(expression, "REMOVE", 1, arguments[1].AsInteger()),
                     RequireNonNegativeCount(expression, "REMOVE", "count", 2, arguments[2].AsInteger()))),
             BuiltinFunctionId.Asc => RuntimeValue.FromInteger(EvaluateAsc(expression, arguments[0].AsString())),
+            BuiltinFunctionId.AscW => RuntimeValue.FromInteger(EvaluateAscW(expression, arguments[0].AsString())),
             BuiltinFunctionId.Chr => RuntimeValue.FromString(
                 EvaluateChr(
                     expression,
                     RequireValidUnicodeCodePoint(expression, "CHR", "code", 0, arguments[0].AsInteger()))),
+            BuiltinFunctionId.ChrW => RuntimeValue.FromString(
+                EvaluateChrW(
+                    expression,
+                    RequireValidUnicodeCodePoint(expression, "CHRW", "code", 0, arguments[0].AsInteger()))),
             BuiltinFunctionId.Split => EvaluateSplit(expression, arguments[0].AsString(), separator: ",", separatorArgumentIndex: -1),
             BuiltinFunctionId.SplitSeparator => EvaluateSplit(expression, arguments[0].AsString(), arguments[1].AsString(), separatorArgumentIndex: 1),
             BuiltinFunctionId.Join => EvaluateJoin(arguments[0].AsArray(), separator: ","),

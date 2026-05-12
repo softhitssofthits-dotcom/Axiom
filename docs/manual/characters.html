@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Символы CHR и ASC</title>
+    <title>Справочник Axiom - Символы CHR, ASC, CHRW и ASCW</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="characters">
@@ -18,11 +18,11 @@
         <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
         <main class="content">
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="string-functions.html">Строковые функции</a><span>/</span><span>Символы CHR и ASC</span>
+                <a href="index.html">Главная</a><span>/</span><a href="string-functions.html">Строковые функции</a><span>/</span><span>Символы CHR, ASC, CHRW и ASCW</span>
             </nav>
             <p class="eyebrow">Строковые функции</p>
-            <h1 class="page-title">Символы CHR и ASC</h1>
-            <p class="lead"><code>CHR()</code> строит строку из числового кода, а <code>ASC()</code> возвращает код первого символа строки. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы из BASIC/DOS-программ имели устойчивые числовые коды.</p>
+            <h1 class="page-title">Символы CHR, ASC, CHRW и ASCW</h1>
+            <p class="lead"><code>CHR()</code> строит строку из числового кода, а <code>ASC()</code> возвращает код первого символа строки. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы из BASIC/DOS-программ имели устойчивые числовые коды. Пара <code>CHRW()</code> и <code>ASCW()</code> нужна для прямой работы с Unicode-кодами без этой совместимой подмены.</p>
 
             <section class="article-section" id="rules">
                 <h2>Правила кодирования</h2>
@@ -31,12 +31,16 @@
                     <li><code>CHR(code)</code> для значений выше <code>255</code> возвращает символ по Unicode-коду, если такой код допустим.</li>
                     <li><code>ASC(text)</code> для первого символа, представимого в ASCII/IBM CP866, возвращает его код из этой таблицы.</li>
                     <li><code>ASC(text)</code> для первого символа вне ASCII/IBM CP866 возвращает Unicode-код.</li>
+                    <li><code>CHRW(code)</code> всегда трактует аргумент как Unicode-код, включая диапазон <code>0..255</code>.</li>
+                    <li><code>ASCW(text)</code> всегда возвращает Unicode-код первого символа строки.</li>
                 </ul>
 <pre><code class="language-basic">PRINT CHR(159)   ' Я
 PRINT CHR(196)   ' ─
 PRINT CHR(219)   ' █
 PRINT ASC("Я")   ' 159
-PRINT ASC("█")   ' 219</code></pre>
+PRINT ASC("█")   ' 219
+PRINT ASCW("Я")  ' 1071
+PRINT CHRW(1071) ' Я</code></pre>
                 <p>Коды <code>0..31</code> и <code>127</code> в исходной таблице имеют управляющие имена. В колонке «Символ» для них показан экранный знак из справочной таблицы; в обычной строковой обработке эти коды остаются управляющими символами.</p>
             </section>
 
@@ -310,7 +314,7 @@ PRINT ASC("█")   ' 219</code></pre>
 
             <section class="article-section">
                 <h2>См. также</h2>
-                <div class="link-list"><a href="string-functions-build-and-split.html#codes">ASC и CHR</a><a href="graphics-text.html">Текстовый слой SCREEN</a></div>
+                <div class="link-list"><a href="string-functions-build-and-split.html#codes">ASC, ASCW, CHR и CHRW</a><a href="graphics-text.html">Текстовый слой SCREEN</a></div>
             </section>
 
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>

@@ -1,0 +1,4 @@
+' ASCW возвращает Unicode-код первого символа, не CP866-код.
+PRINT ASCW("Я")
+PRINT ASCW("█")
+PRINT ASCW(CHRW(128512))

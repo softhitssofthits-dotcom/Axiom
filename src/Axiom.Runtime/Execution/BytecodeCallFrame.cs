@@ -163,7 +163,7 @@ internal sealed class BytecodeCallFrame
         if (!_hasSharedLocals)
         {
             var fixedStringLength = _localFixedStringLengths[slot];
-            _locals[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+            _locals[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
                 ? value
                 : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
             return;
@@ -178,7 +178,33 @@ internal sealed class BytecodeCallFrame
         }
 
         var localFixedStringLength = _localFixedStringLengths[slot];
-        _locals[slot] = localFixedStringLength is null && value.Type is not UserDefinedTypeSymbol
+        _locals[slot] = localFixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
+            ? value
+            : BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void StoreAppendStringLocalValue(int slot, RuntimeValue value)
+    {
+        if (!_hasSharedLocals)
+        {
+            var fixedStringLength = _localFixedStringLengths[slot];
+            _locals[slot] = fixedStringLength is null
+                ? value
+                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+            return;
+        }
+
+        var sharedLocals = _sharedLocals!;
+        var sharedSlot = sharedLocals[slot];
+        if (sharedSlot is not null)
+        {
+            sharedSlot.StoreAppendStringValue(value);
+            return;
+        }
+
+        var localFixedStringLength = _localFixedStringLengths[slot];
+        _locals[slot] = localFixedStringLength is null
             ? value
             : BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength);
     }

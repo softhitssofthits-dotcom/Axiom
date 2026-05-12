@@ -44,17 +44,21 @@ result = REMOVE(text, start, count)</code></pre>
 </section>
 
 <section class="article-section" id="codes">
-<h2>ASC и CHR</h2>
-<p><code>ASC</code> возвращает код первого символа строки. <code>CHR</code> строит строку из одного символа: коды <code>0..255</code> берутся из таблицы ASCII/IBM CP866, а коды выше <code>255</code> трактуются как Unicode-коды. Полная таблица находится на странице <a href="characters.html">Символы CHR и ASC</a>.</p>
+<h2>ASC, ASCW, CHR и CHRW</h2>
+<p><code>ASC</code> и <code>CHR</code> сохраняют BASIC/DOS-совместимый договор: коды <code>0..255</code> относятся к таблице ASCII/IBM CP866. Для задач, где нужен именно Unicode-код символа, используйте <code>ASCW</code> и <code>CHRW</code>: эта пара не делает CP866-подмену в младшем диапазоне. Полная таблица находится на странице <a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">code = ASC(text)
-charText = CHR(code)</code></pre>
+unicodeCode = ASCW(text)
+charText = CHR(code)
+unicodeCharText = CHRW(unicodeCode)</code></pre>
 <h3>Пример</h3>
 <pre><code class="language-basic">PRINT CHR(159)
 PRINT CHR(219)
 PRINT ASC("Я")
 PRINT ASC("█")
-PRINT CHR(128512)</code></pre>
+PRINT ASCW("Я")
+PRINT CHRW(1071)
+PRINT ASCW(CHRW(128512))</code></pre>
 </section>
 
 <section class="article-section" id="split">
@@ -78,7 +82,7 @@ parts = SPLIT("red,green,blue", ",")
 PRINT JOIN(parts, "/")</code></pre>
 </section>
 
-<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/repeat/basic_usage.axm">REPEAT</a></li><li><a href="../../samples/functions/string/basic_usage.axm">STRING</a></li><li><a href="../../samples/functions/padleft/basic_usage.axm">PADLEFT</a></li><li><a href="../../samples/functions/insert/basic_usage.axm">INSERT</a></li><li><a href="../../samples/functions/remove/basic_usage.axm">REMOVE</a></li><li><a href="../../samples/functions/asc/basic_usage.axm">ASC</a></li><li><a href="../../samples/functions/chr/basic_usage.axm">CHR</a></li><li><a href="../../samples/functions/split/basic_usage.axm">SPLIT</a></li><li><a href="../../samples/functions/join/basic_usage.axm">JOIN</a></li></ul></section>
+<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/repeat/basic_usage.axm">REPEAT</a></li><li><a href="../../samples/functions/string/basic_usage.axm">STRING</a></li><li><a href="../../samples/functions/padleft/basic_usage.axm">PADLEFT</a></li><li><a href="../../samples/functions/insert/basic_usage.axm">INSERT</a></li><li><a href="../../samples/functions/remove/basic_usage.axm">REMOVE</a></li><li><a href="../../samples/functions/asc/basic_usage.axm">ASC</a></li><li><a href="../../samples/functions/ascw/unicode_codepoint.axm">ASCW</a></li><li><a href="../../samples/functions/chr/basic_usage.axm">CHR</a></li><li><a href="../../samples/functions/chrw/unicode_character.axm">CHRW</a></li><li><a href="../../samples/functions/split/basic_usage.axm">SPLIT</a></li><li><a href="../../samples/functions/join/basic_usage.axm">JOIN</a></li></ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="arrays.html">Массивы</a></div></section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

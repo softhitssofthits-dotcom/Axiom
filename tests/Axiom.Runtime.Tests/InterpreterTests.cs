@@ -16,6 +16,44 @@ public sealed class InterpreterTests
     }
 
     [Fact]
+    public void Execute_StringAppendAccumulatorPreservesSemantics()
+    {
+        const string text = """
+DIM result AS STRING = ""
+FOR i = 1 TO 4
+    result = result & i
+NEXT
+PRINT result
+DIM aliasText AS STRING = result
+result = result & "-x"
+PRINT aliasText
+PRINT result
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1234", "1234", "1234-x"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_StringPlusAppendAccumulatorPreservesSemantics()
+    {
+        const string text = """
+DIM result AS STRING = ""
+FOR i = 1 TO 3
+    result = result + "x"
+NEXT
+PRINT result
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["xxx"], host.Output);
+    }
+
+    [Fact]
     public void Execute_IntegerDivisionAndRemainder()
     {
         const string text = """
@@ -5132,6 +5170,30 @@ PRINT REPLACE("abba", "b", "c")
     }
 
     [Fact]
+    public void Execute_BuiltinReplaceManyUsesOnePassLongestMatchRules()
+    {
+        const string text = """
+DIM oldItems(1 TO 4) AS STRING
+DIM newItems(1 TO 4) AS STRING
+oldItems(1) = "ab"
+newItems(1) = "X"
+oldItems(2) = "abc"
+newItems(2) = "Y"
+oldItems(3) = "x"
+newItems(3) = "z"
+oldItems(4) = "one"
+newItems(4) = "two"
+PRINT REPLACEMANY("abc ab x One", oldItems, newItems)
+PRINT REPLACEMANY("one", oldItems, newItems)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Y X z One", "two"], host.Output);
+    }
+
+    [Fact]
     public void Execute_BuiltinInStrReturnsOneBasedPositions()
     {
         const string text = """
@@ -5221,6 +5283,26 @@ PRINT ASC(CHR(128512))
     }
 
     [Fact]
+    public void Execute_BuiltinAscWAndChrWUseUnicodeCodePoints()
+    {
+        const string text = """
+PRINT ASC("Я")
+PRINT ASCW("Я")
+PRINT ASC("█")
+PRINT ASCW("█")
+PRINT ASCW(CHR(159))
+PRINT ASCW(CHRW(1071))
+PRINT CHRW(1071)
+PRINT ASCW(CHRW(128512))
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["159", "1071", "219", "9608", "1071", "1071", "Я", "128512"], host.Output);
+    }
+
+    [Fact]
     public void Execute_BuiltinCenterCentersText()
     {
         const string text = """
@@ -5268,6 +5350,16 @@ PRINT "[" + CENTER("Hello", 5, ".") + "]"
         Assert.Contains("text", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Execute_BuiltinAscWReportsEmptyText()
+    {
+        var (_, _, result) = ExecuteProgram("PRINT ASCW(\"\")");
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("ASCW", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("text", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData("-1")]
     [InlineData("55296")]
@@ -5278,6 +5370,19 @@ PRINT "[" + CENTER("Hello", 5, ".") + "]"
 
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
         Assert.Contains("CHR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("code", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("55296")]
+    [InlineData("1114112")]
+    public void Execute_BuiltinChrWReportsInvalidCode(string codeText)
+    {
+        var (_, _, result) = ExecuteProgram($"PRINT CHRW({codeText})");
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("CHRW", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("code", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -5315,6 +5420,24 @@ PRINT SUBSTRCOUNT("", "a")
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
         Assert.Contains("REPLACE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("oldText", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_BuiltinReplaceManyReportsInvalidRules()
+    {
+        const string text = """
+DIM oldItems(1 TO 1) AS STRING
+DIM newItems(1 TO 2) AS STRING
+oldItems(1) = ""
+newItems(1) = "x"
+newItems(2) = "y"
+PRINT REPLACEMANY("abc", oldItems, newItems)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("REPLACEMANY", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -6207,6 +6330,46 @@ PRINT DELETEDIR(emptyDir)
                 "# Спецификация Axiom\r\n" +
                 "- string-first договор\r\n" +
                 "- Уже исправленная строка\r\n";
+            File.WriteAllText(sourcePath, sourceText, Encoding.UTF8);
+
+            var samplePath = Path.Combine(FindRepositoryRoot(), "samples", "smoke", "repair_plans_mojibake.axm");
+            var text = SetRepairSamplePaths(File.ReadAllText(samplePath, Encoding.UTF8), sourcePath, workPath);
+
+            var (_, host, result) = ExecuteProgram(text);
+
+            Assert.True(result.Succeeded);
+            Assert.Equal(
+                [
+                    "Копирование исходного файла в рабочую копию: TRUE",
+                    "Исправлено строк с восстановимой битой кодировкой: 2",
+                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Запись исправленной рабочей копии: TRUE",
+                ],
+                host.Output);
+            Assert.Equal(expectedText, File.ReadAllText(workPath, Encoding.UTF8));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Execute_SmokeSampleRepairsWindows1251ControlByteInsideMojibake()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "axiom-smoke-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var sourcePath = Path.Combine(root, "WORKLOG4.md");
+            var workPath = Path.Combine(root, "WORKLOG4.axiom-work.md");
+            var sourceText =
+                "Р\u0098сторические части журнала:\r\n" +
+                "Р\u0098зменённые файлы:\r\n";
+            const string expectedText =
+                "Исторические части журнала:\r\n" +
+                "Изменённые файлы:\r\n";
             File.WriteAllText(sourcePath, sourceText, Encoding.UTF8);
 
             var samplePath = Path.Combine(FindRepositoryRoot(), "samples", "smoke", "repair_plans_mojibake.axm");
@@ -8649,11 +8812,14 @@ END TRY
     {
         const string sourceDeclarationPrefix = "DIM sourcePath AS STRING = ";
         const string workDeclarationPrefix = "DIM workPath AS STRING = ";
+        const string timingDeclarationPrefix = "DIM showTiming AS BOOLEAN = ";
         var sourceReplacement = sourceDeclarationPrefix + "\"" + ToBasicString(sourcePath) + "\"";
         var workReplacement = workDeclarationPrefix + "\"" + ToBasicString(workPath) + "\"";
+        var timingReplacement = timingDeclarationPrefix + "FALSE";
         var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
         var sourcePathSet = false;
         var workPathSet = false;
+        var timingSet = false;
 
         for (var index = 0; index < lines.Length; index++)
         {
@@ -8668,12 +8834,19 @@ END TRY
             {
                 lines[index] = workReplacement;
                 workPathSet = true;
+                continue;
+            }
+
+            if (lines[index].StartsWith(timingDeclarationPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                lines[index] = timingReplacement;
+                timingSet = true;
             }
         }
 
-        if (!sourcePathSet || !workPathSet)
+        if (!sourcePathSet || !workPathSet || !timingSet)
         {
-            throw new InvalidOperationException("Could not locate source or work path declarations in repair sample.");
+            throw new InvalidOperationException("Could not locate source, work path, or timing declarations in repair sample.");
         }
 
         return string.Join("\n", lines);

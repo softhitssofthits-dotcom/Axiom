@@ -105,6 +105,7 @@
             <Word>ACOSH</Word>
             <Word>APPENDFILE</Word>
             <Word>ASC</Word>
+            <Word>ASCW</Word>
             <Word>ARRAYCLONE</Word>
             <Word>ARRAYCONCAT</Word>
             <Word>ARRAYCONTAINS</Word>
@@ -147,6 +148,7 @@
             <Word>CENTER</Word>
             <Word>CHANGEDIR</Word>
             <Word>CHR</Word>
+            <Word>CHRW</Word>
             <Word>CLAMP</Word>
             <Word>COMBINEPATH</Word>
             <Word>CONTAINS</Word>

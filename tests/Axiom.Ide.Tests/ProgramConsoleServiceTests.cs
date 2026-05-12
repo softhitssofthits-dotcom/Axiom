@@ -162,6 +162,24 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void MouseState_CoalescesPendingMoveEventsWithoutDroppingButtons()
+    {
+        var service = new ProgramConsoleService();
+
+        service.EnqueueMouseMove();
+        service.EnqueueMouseMove();
+        service.EnqueueMouseButtonPress(1);
+        service.EnqueueMouseMove();
+        service.EnqueueMouseMove();
+        service.EnqueueMouseButtonRelease(1);
+
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Press, 1), service.ReadMouseEvent());
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Move, 0), service.ReadMouseEvent());
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Release, 1), service.ReadMouseEvent());
+        Assert.Equal(default, service.ReadMouseEvent());
+    }
+
+    [Fact]
     public void BeginSession_ClearsMouseState()
     {
         var service = new ProgramConsoleService();
@@ -191,6 +209,35 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(-1, service.GetMouseY());
         Assert.False(service.IsMouseButtonDown(1));
         Assert.Equal(0, service.ReadMouseButtonPress());
+    }
+
+    [Fact]
+    public async Task RuntimeInputState_CanBeReadFromRuntimeThread()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetKeyDown("LEFT");
+        service.EnqueueKey("LEFT");
+        service.SetMousePosition(12, 34);
+        service.SetMouseButtonDown(1);
+        service.EnqueueMouseButtonPress(1);
+
+        var result = await Task.Run(() => new
+        {
+            KeyDown = service.IsKeyDown("LEFT"),
+            Key = service.ReadKey(),
+            MouseX = service.GetMouseX(),
+            MouseY = service.GetMouseY(),
+            MouseButton = service.IsMouseButtonDown(1),
+            MouseEvent = service.ReadMouseEvent()
+        });
+
+        Assert.True(result.KeyDown);
+        Assert.Equal("LEFT", result.Key);
+        Assert.Equal(12, result.MouseX);
+        Assert.Equal(34, result.MouseY);
+        Assert.True(result.MouseButton);
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Press, 1), result.MouseEvent);
     }
 
     [Fact]

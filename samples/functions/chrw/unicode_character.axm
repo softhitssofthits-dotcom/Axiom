@@ -1,0 +1,4 @@
+' CHRW строит символ по Unicode-коду. Для 0..255 это тоже Unicode, а не CP866.
+PRINT CHRW(1071)
+PRINT CHRW(9608)
+PRINT ASCW(CHRW(128512))
