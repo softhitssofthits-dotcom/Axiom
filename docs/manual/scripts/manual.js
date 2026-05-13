@@ -19,6 +19,7 @@
         { id: "type", href: "type.html", label: "Тип TYPE" },
         { id: "data-types-conversions", href: "data-types-conversions.html", label: "Преобразования типов" },
         { id: "variables-constants", href: "variables-and-constants.html", label: "Переменные и константы" },
+        { id: "dim", href: "dim.html", label: "Оператор DIM" },
         { id: "arithmetic-logic", href: "arithmetic-and-logic.html", label: "Арифметика и логика" }
       ]
     },

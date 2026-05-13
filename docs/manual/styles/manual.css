@@ -366,6 +366,22 @@ ol {
     font-size: 1.15rem;
 }
 
+.article-section blockquote {
+    margin: 1.1rem 0 0;
+    padding: 0.9rem 1.05rem;
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    color: #2e4354;
+}
+
+.article-section blockquote p {
+    margin: 0;
+}
+
+.article-section blockquote p + p {
+    margin-top: 0.7rem;
+}
+
 .checklist {
     background: #f9fbfc;
     border: 1px solid #d8e1ec;

@@ -7,77 +7,154 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="select-case">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Оператор многовариантного ветвления</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор SELECT CASE</p><p class="sidebar__subtitle">Проверка одного выражения против набора вариантов.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<p class="eyebrow">Управление выполнением</p>
-<h1 class="page-title">Оператор SELECT CASE</h1>
-<p class="lead">Оператор <code>SELECT CASE</code> удобен тогда, когда одно и то же выражение нужно сопоставить сразу с несколькими значениями, диапазонами или упорядоченными условиями. Вместо длинной цепочки однотипных проверок страница выбора остаётся привязанной к одному проверяемому выражению и потому обычно читается проще.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Многовариантное ветвление</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Оператор SELECT CASE</p>
+                <p class="sidebar__subtitle">Сравнение одного выражения с несколькими вариантами.</p>
+            </div>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="expressions-and-branching.html">Выражения и ветвление</a>
+            <span>/</span>
+            <span>Оператор SELECT CASE</span>
+        </nav>
 
-<section class="article-section">
-<h2>Сводка</h2>
-<p>Оператор <code>SELECT CASE</code> удобен, когда нужно сравнить одно выражение с несколькими значениями, диапазонами или условиями сравнения. Проверяемое выражение вычисляется один раз, а ветви <code>CASE</code> просматриваются сверху вниз.</p>
-</section>
+        <p class="eyebrow">Операторы передачи управления</p>
+        <h1 class="page-title">Оператор SELECT CASE</h1>
+        <p class="lead"><code>SELECT CASE</code> — управляющий оператор, который выполняет один из нескольких блоков операторов в зависимости от значения одного проверяемого выражения. Он удобен, когда программа должна выбрать ветвь по точному значению, диапазону или сравнению.</p>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-basic">SELECT CASE testExpression
-    CASE selectorList
-        [statements]
-    [CASE selectorList
-        [statements]] ...
+        <section class="article-section">
+            <h2>Назначение</h2>
+            <p>Оператор <code>SELECT CASE</code> применяют там, где одна и та же величина сравнивается с несколькими вариантами. Выражение выбора вычисляется один раз, а затем Axiom просматривает ветви <code>CASE</code> сверху вниз.</p>
+            <p>Если ветвление строится не вокруг одного значения, а вокруг разных логических условий, обычно лучше использовать <code>IF ... ELSEIF ... ELSE</code>. Если же все варианты относятся к одному выражению, <code>SELECT CASE</code> делает программу короче и нагляднее.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
+            <pre><code class="language-basic">SELECT CASE &lt;выражение выбора&gt;
+    CASE &lt;список селекторов&gt;
+        [&lt;операторы&gt;]
+    [CASE &lt;список селекторов&gt;
+        [&lt;операторы&gt;]]
     [CASE ELSE
-        [elseStatements]]
+        [&lt;операторы&gt;]]
 END SELECT</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
-<p><code>testExpression</code> — выражение, которое вычисляется один раз перед разбором ветвей <code>CASE</code>.</p>
-<p><code>selectorList</code> — один селектор или несколько селекторов через запятую. Селектором может быть одно значение, диапазон вида <code>7 TO 10</code> или сравнение через <code>CASE IS</code>, например <code>CASE IS &gt; 100</code>.</p>
-<p><code>statements</code> — одна или несколько инструкций, которые выполняются в подошедшей ветви <code>CASE</code>.</p>
-<p><code>elseStatements</code> — инструкции запасной ветви <code>CASE ELSE</code>, если ни один обычный селектор не подошёл.</p>
-</section>
+        <section class="article-section">
+            <h2>Части записи</h2>
+            <ul>
+                <li><code>&lt;выражение выбора&gt;</code> — числовое, строковое или логическое выражение, значение которого сравнивается с селекторами в ветвях <code>CASE</code>.</li>
+                <li><code>&lt;список селекторов&gt;</code> — один селектор или несколько селекторов через запятую.</li>
+                <li><code>&lt;операторы&gt;</code> — инструкции, которые выполняются, если соответствующая ветвь выбрана.</li>
+                <li><code>CASE ELSE</code> — необязательная ветвь для случая, когда ни один обычный <code>CASE</code> не подошёл.</li>
+                <li><code>END SELECT</code> завершает блочную конструкцию.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<p><code>SELECT CASE</code> особенно полезен в тех ситуациях, где ветви отличаются прежде всего набором допустимых значений одного выражения, а не самостоятельными логическими формулами в каждой проверке.</p>
-<ul>
-<li>Проверяемое выражение вычисляется один раз перед разбором ветвей.</li>
-<li>Выполняется только первая подошедшая ветвь, после чего управление переходит сразу за <code>END SELECT</code>.</li>
-<li>В одной строке <code>CASE</code> можно перечислять несколько селекторов через запятую.</li>
-<li>Диапазоны <code>CASE ... TO</code> и упорядоченные сравнения через <code>CASE IS</code> применяются только там, где тип действительно поддерживает такой порядок сравнения.</li>
-<li>Каждая ветвь <code>CASE</code> и <code>CASE ELSE</code> образует собственную блочную область видимости.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Формы селекторов</h2>
+            <p>Селектор внутри <code>CASE</code> может быть записан одной из следующих форм:</p>
+            <pre><code class="language-basic">CASE &lt;значение&gt;
+CASE &lt;значение 1&gt;, &lt;значение 2&gt;, &lt;значение 3&gt;
+CASE &lt;начало&gt; TO &lt;конец&gt;
+CASE IS &lt;оператор сравнения&gt; &lt;значение&gt;</code></pre>
+            <ul>
+                <li><code>CASE &lt;значение&gt;</code> выбирает ветвь при точном совпадении с выражением выбора.</li>
+                <li>Список через запятую выбирает ветвь, если подошёл хотя бы один селектор из списка.</li>
+                <li><code>CASE &lt;начало&gt; TO &lt;конец&gt;</code> задаёт включительный диапазон.</li>
+                <li><code>CASE IS</code> задаёт сравнение с выбранным значением через <code>=</code>, <code>&lt;&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> или <code>&gt;=</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Пример</h2>
-<pre><code class="language-basic">SELECT CASE age
-    CASE 7 TO 10
-        PRINT "Младшая группа"
-    CASE 11, 12
-        PRINT "Средняя группа"
-    CASE IS >= 13
-        PRINT "Старшая группа"
+        <section class="article-section">
+            <h2>Логика работы</h2>
+            <p>Axiom вычисляет выражение после <code>SELECT CASE</code> и сравнивает его с ветвями <code>CASE</code> по порядку. Если выражение удовлетворяет одному из селекторов текущей ветви, выполняются операторы этой ветви.</p>
+            <p>После выполнения выбранного блока управление передаётся на оператор, следующий за <code>END SELECT</code>. Остальные ветви больше не проверяются.</p>
+            <p>Если ни одна ветвь <code>CASE</code> не подошла, выполняется <code>CASE ELSE</code>. Если <code>CASE ELSE</code> отсутствует, выполнение просто продолжается после <code>END SELECT</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Замечания</h2>
+            <ul>
+                <li>Точные значения можно использовать для чисел, строк и <code>BOOLEAN</code>.</li>
+                <li>Диапазоны <code>TO</code> и упорядоченные сравнения через <code>CASE IS</code> поддержаны для числовых и строковых значений.</li>
+                <li>Для диапазона указывают нижнюю и верхнюю границы включительного интервала.</li>
+                <li>Если одно значение подходит нескольким ветвям, выполняется только первая подходящая ветвь.</li>
+                <li>Каждая ветвь <code>CASE</code> и <code>CASE ELSE</code> образует собственную блочную область видимости.</li>
+                <li>Блоки <code>SELECT CASE</code> можно вкладывать друг в друга, если это делает выбор понятнее.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример</h2>
+            <p>В этом примере одно числовое значение сравнивается с точным значением, диапазоном и условием <code>CASE IS</code>. Значение <code>8</code> попадает в диапазон <code>5 TO 10</code>, поэтому выполняется первая ветвь.</p>
+            <pre><code class="language-basic">DIM value AS INTEGER = 8
+
+SELECT CASE value
+    CASE 1, 5 TO 10, IS &gt; 100
+        PRINT "matched"
     CASE ELSE
-        PRINT "Вне диапазона"
+        PRINT "other"
 END SELECT</code></pre>
-</section>
+            <p>Результат:</p>
+            <pre><code>matched</code></pre>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/control-flow/select_case/exact_values.axm">SELECT CASE: точные значения</a></li><li><a href="../../samples/control-flow/select_case/ranges_and_is.axm">SELECT CASE: диапазоны и CASE IS</a></li><li><a href="../../samples/control-flow/select_case/mixed_selectors.axm">SELECT CASE: смешанные селекторы</a></li><li><a href="../../samples/control-flow/select_case/string_values.axm">SELECT CASE: строковые значения</a></li><li><a href="../../samples/control-flow/select_case/string_ranges.axm">SELECT CASE: строковые диапазоны</a></li><li><a href="../../samples/control-flow/select_case/boolean_values.axm">SELECT CASE: логические значения</a></li><li><a href="../../samples/control-flow/select_case/first_match.axm">SELECT CASE: первая подошедшая ветвь</a></li><li><a href="../../samples/control-flow/select_case/no_match_no_else.axm">SELECT CASE: продолжение без совпадения</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>SELECT CASE</code>.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/control-flow/select_case/exact_values.axm">SELECT CASE: точные значения</a></li>
+                <li><a href="../../samples/control-flow/select_case/ranges_and_is.axm">SELECT CASE: диапазоны и CASE IS</a></li>
+                <li><a href="../../samples/control-flow/select_case/mixed_selectors.axm">SELECT CASE: смешанные селекторы</a></li>
+                <li><a href="../../samples/control-flow/select_case/string_values.axm">SELECT CASE: строковые значения</a></li>
+                <li><a href="../../samples/control-flow/select_case/string_ranges.axm">SELECT CASE: строковые диапазоны</a></li>
+                <li><a href="../../samples/control-flow/select_case/boolean_values.axm">SELECT CASE: логические значения</a></li>
+                <li><a href="../../samples/control-flow/select_case/first_match.axm">SELECT CASE: первая подошедшая ветвь</a></li>
+                <li><a href="../../samples/control-flow/select_case/no_match_no_else.axm">SELECT CASE: продолжение без совпадения</a></li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Ошибки возникают, если проверяемое выражение несовместимо с селектором, если тип не поддерживает диапазон <code>CASE ... TO</code> или если имя, объявленное внутри ветви, используется уже вне своей области видимости.</p>
-</section>
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2015</code> — диапазон <code>CASE ... TO</code> используется с типом, для которого диапазоны не поддержаны.</li>
+                <li><code>MB2003</code> — селектор или сравнение несовместимы с типом выражения выбора.</li>
+                <li><code>MB2001</code> — имя, объявленное внутри ветви, используется после выхода из области видимости.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="if.html">IF</a><a href="arithmetic-and-logic.html">Арифметика и логика</a><a href="diagnostics.html">Диагностика</a></div>
-</section>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="expressions-and-branching.html">Выражения и ветвление</a>
+                <a href="if.html">Оператор IF</a>
+                <a href="arithmetic-and-logic.html">Арифметика и логика</a>
+                <a href="loops.html">Циклы</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>
