@@ -10,12 +10,13 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Одноразовая проверка нажатия клавиши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция KEYPRESS</p><p class="sidebar__subtitle">Событие нажатия, которое считывается один раз.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>KEYPRESS</span></nav>
+<p class="eyebrow">Клавиатура</p>
 <h1 class="page-title">Функция KEYPRESS</h1>
 <p class="lead"><code>KEYPRESS()</code> проверяет, была ли указанная клавиша нажата и ещё не прочитана программой. В отличие от <a href="keydown.html"><code>KEYDOWN()</code></a>, функция не показывает текущее удержание клавиши: одно нажатие даёт один результат <code>TRUE</code>, после чего событие считается израсходованным.</p>
 
 <section class="article-section">
-<h2>Сводка</h2>
+<h2>Когда нужен KEYPRESS</h2>
 <p>Функция удобна для действий, которые должны произойти один раз на одно нажатие: открыть меню, подтвердить выбор, переключить режим или обработать одиночную стрелку. Если нужна непрерывная реакция, пока клавиша удерживается, используйте <code>KEYDOWN()</code>. Если нужно получить саму следующую клавишу как строку, используйте <code>INKEY()</code>.</p>
 </section>
 
@@ -78,7 +79,7 @@ END IF</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример одноразового нажатия</h2>
 <pre><code class="language-basic">FOR i = 1 TO 20000
     IF KEYPRESS("ESCAPE") THEN
         PRINT "ESC pressed once"
@@ -99,7 +100,7 @@ NEXT</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="inkey.html">Функция INKEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="on-key.html">Оператор ON KEY</a><a href="data-and-input.html">Ввод и вывод</a></div>
+<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="inkey.html">Функция INKEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="screen.html">Оператор SCREEN</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

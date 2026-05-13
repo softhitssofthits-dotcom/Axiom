@@ -7,83 +7,123 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="function">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Именованная функция с возвращаемым значением</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция FUNCTION</p><p class="sidebar__subtitle">Объявление функции, параметры, тип результата и возврат значения.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<p class="eyebrow">Процедуры и функции</p>
-<h1 class="page-title">Функция FUNCTION</h1>
-<p class="lead">Функция <code>FUNCTION</code> нужна тогда, когда фрагмент программы должен не просто выполнить действия, а вычислить и вернуть значение. В Axiom такую конструкцию используют в выражениях, присваиваниях, вызовах с параметрами и в более продвинутых сценариях, где функция сама становится значением подходящего функционального типа.</p>
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Именованная функция с возвращаемым значением</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Функция FUNCTION</p>
+                    <p class="sidebar__subtitle">Объявление функции, параметры, тип результата и RETURN.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="procedures-and-functions.html">Процедуры и функции</a>
+                <span>/</span>
+                <span>FUNCTION</span>
+            </nav>
+            <p class="eyebrow">Процедуры и функции</p>
+            <h1 class="page-title">Функция FUNCTION</h1>
+            <p class="lead">Функция <code>FUNCTION</code> описывает именованное вычисление. Она принимает параметры, выполняет инструкции и возвращает одно значение заданного типа. Поэтому функцию можно использовать в выражении: напечатать результат, присвоить его переменной, передать дальше или проверить в условии.</p>
 
-<section class="article-section">
-<h2>Сводка</h2>
-<p><code>FUNCTION ... END FUNCTION</code> объявляет именованную функцию. Функция вычисляет значение и может использоваться в выражениях, присваиваниях и других местах, где ожидается результат совместимого типа.</p>
-</section>
+            <section class="article-section">
+                <h2>Когда нужен вычисляемый результат</h2>
+                <p><code>FUNCTION ... END FUNCTION</code> объявляет функцию. Тип результата указывается после списка параметров через <code>AS</code>. Возврат значения выполняется оператором <code>RETURN &lt;выражение&gt;</code>; если выполнение дошло до конца функции без такого возврата, это ошибка времени выполнения.</p>
+            </section>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-basic">FUNCTION name([parameterDeclaration[, anotherParameterDeclaration] ...]) AS resultType
-    [statements]
-    RETURN expression
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">FUNCTION &lt;имя&gt;([&lt;список параметров&gt;]) AS &lt;тип результата&gt;
+    &lt;инструкции&gt;
+    RETURN &lt;выражение&gt;
 END FUNCTION</code></pre>
-<pre><code class="language-basic">name([argument[, anotherArgument] ...])</code></pre>
-<pre><code class="language-basic">DIM variable AS FUNCTION([parameterType[, anotherParameterType] ...]) AS resultType
-variable = name</code></pre>
-<pre><code class="language-basic">parameterDeclaration := [[BYVAL] | BYREF] parameterName AS parameterType</code></pre>
-</section>
+                <pre><code class="language-basic">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
+                <pre><code class="language-basic">DIM &lt;переменная&gt; AS FUNCTION([&lt;типы параметров&gt;]) AS &lt;тип результата&gt;
+&lt;переменная&gt; = &lt;имя функции&gt;</code></pre>
+                <pre><code class="language-basic">[BYVAL | BYREF] &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre>
+            </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
-<p><code>name</code> задаёт имя функции.</p>
-<p><code>parameterDeclaration</code> обозначает объявление параметра вида <code>[[BYVAL] | BYREF] parameterName AS parameterType</code>.</p>
-<p><code>resultType</code> задаёт тип возвращаемого значения.</p>
-<p><code>statements</code> обозначает любые допустимые инструкции внутри функции.</p>
-<p><code>expression</code> задаёт значение, которое возвращается оператором <code>RETURN</code>.</p>
-<p><code>argument</code> обозначает значение, передаваемое при вызове функции. В функциональном типе после слова <code>FUNCTION</code> перечисляются только типы параметров, без имён.</p>
-</section>
+            <section class="article-section">
+                <h2>Части записи</h2>
+                <p><code>&lt;имя&gt;</code> - имя объявляемой функции или имя функции при вызове.</p>
+                <p><code>&lt;список параметров&gt;</code> - объявления параметров через запятую. Каждый параметр имеет тип; <code>BYVAL</code> действует по умолчанию.</p>
+                <p><code>BYVAL</code> и <code>BYREF</code> - модификаторы параметра. Они не являются операторами и не возвращают значение; они только задают, получит функция копию значения или связь с исходной переменной.</p>
+                <p><code>&lt;тип результата&gt;</code> - тип значения, которое функция должна вернуть.</p>
+                <p><code>&lt;выражение&gt;</code> - значение, возвращаемое оператором <code>RETURN</code>. Его тип должен быть совместим с типом результата функции.</p>
+                <p><code>&lt;типы параметров&gt;</code> в функциональном типе перечисляют только типы, без имён параметров.</p>
+            </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<p>Обычно <code>FUNCTION</code> выбирают в тех случаях, где результат вычисления должен естественно встраиваться в остальной код: например, участвовать в арифметике, проверке условий, формировании строк или передаваться дальше как значение.</p>
-<ul>
-<li>После списка параметров функция обязана объявить тип результата через <code>AS</code>.</li>
-<li>В рабочей ветви выполнения функция должна завершаться формой <code>RETURN expression</code>.</li>
-<li>Если выполнение дошло до конца функции без возвращаемого значения, возникает ошибка времени выполнения.</li>
-<li>Если модификатор не указан, параметр функции передаётся как <code>BYVAL</code>.</li>
-<li><code>BYREF</code> позволяет функции менять переменную вызывающего кода, а <code>BYVAL</code> сохраняет обычную value-oriented передачу.</li>
-<li>Для записей <code>TYPE</code> это важно явно: <code>BYVAL</code> даёт функции отдельную копию записи, а <code>BYREF</code> работает с исходной переменной.</li>
-<li>Функции, в сигнатуре которых есть <code>BYREF</code>, в текущем шаге нельзя использовать как значение, callback или переменную функционального типа.</li>
-<li>Функцию можно использовать как значение, если ожидается совместимый функциональный тип.</li>
-<li>Типом параметра или результата может быть обычный тип, массивный тип вида <code>INTEGER()</code>, <code>STRING()</code> и так далее, а также функциональный тип.</li>
-<li>Форма <code>STRING * N</code> в параметрах, в типе результата и внутри функциональных типов сейчас не поддерживается.</li>
-<li>Внутри <code>FUNCTION</code> можно объявлять локальные <code>SUB</code> и локальные <code>FUNCTION</code>.</li>
-<li>Локальная функция может захватывать параметры и локальные переменные внешней функции, если эти имена объявлены раньше по тексту.</li>
-</ul>
-</section>
+            <section class="article-section">
+                <h2>RETURN и тип результата</h2>
+                <ul>
+                    <li>Функция возвращает одно значение и может быть частью выражения.</li>
+                    <li>В <code>FUNCTION</code> допустима только форма <code>RETURN &lt;выражение&gt;</code>.</li>
+                    <li>Параметры без модификатора передаются как <code>BYVAL</code>: функция получает отдельное значение, а для записи <code>TYPE</code> - копию записи.</li>
+                    <li><code>BYREF</code> требует простой переменной в месте вызова и позволяет функции изменить эту переменную до возврата результата.</li>
+                    <li>Для <code>BYREF</code> сейчас нельзя передавать выражение, поле записи или элемент массива: <code>total + 1</code>, <code>user.Name</code> и <code>items(1)</code> не являются допустимыми <code>BYREF</code>-аргументами.</li>
+                    <li>Функцию можно использовать как значение функционального типа, если сигнатура совместима и в ней нет параметров <code>BYREF</code>.</li>
+                    <li>Внутри функции можно объявлять локальные <code>SUB</code> и <code>FUNCTION</code>; локальные функции могут захватывать объявленные раньше внешние имена.</li>
+                    <li>Типом параметра или результата может быть обычный тип, массивный тип вроде <code>INTEGER()</code> или функциональный тип. Форма <code>STRING * N</code> в таких местах сейчас не поддерживается.</li>
+                </ul>
+                <blockquote>
+                    <p><em>В QuickBASIC функция <code>FUNCTION</code> была более современной заменой <code>DEF FN</code>, могла участвовать в выражениях и обычно возвращала результат через присваивание имени функции. В Axiom <code>DEF FN</code> не используется, а результат явно возвращается оператором <code>RETURN</code>.</em></p>
+                </blockquote>
+            </section>
 
-<section class="article-section">
-<h2>Пример</h2>
-<pre><code class="language-basic">' Функция возвращает квадрат числа, поэтому программа печатает 25
-' Ожидаемый вывод: 25
+            <section class="article-section">
+                <h2>Пример вызова FUNCTION</h2>
+                <pre><code class="language-basic">' Ожидаемый вывод: 25
 FUNCTION Square(value AS INTEGER) AS INTEGER
     RETURN value * value
 END FUNCTION
 
 PRINT Square(5)</code></pre>
-</section>
+            </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление и вызов</a></li><li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li><li><a href="../../samples/operators/function/capture_outer_local.axm">FUNCTION: захват внешнего параметра и локальной переменной</a></li><li><a href="../../samples/operators/function/first_class_value.axm">FUNCTION: функция как значение</a></li><li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возвращаемая функция</a></li><li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li></ul>
-</section>
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление и вызов</a></li>
+                    <li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li>
+                    <li><a href="../../samples/operators/function/capture_outer_local.axm">FUNCTION: захват внешней переменной</a></li>
+                    <li><a href="../../samples/operators/function/first_class_value.axm">FUNCTION: функция как значение</a></li>
+                    <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возвращаемая функция</a></li>
+                    <li><a href="../../samples/operators/function/shared_closure_state.axm">FUNCTION: общее состояние замыкания</a></li>
+                    <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
+                </ul>
+            </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Ошибки возникают, если в <code>FUNCTION</code> используется <code>RETURN</code> без выражения, если выполнение доходит до конца функции без возврата результата, если вызывается значение неверного типа или если в сигнатуре используется неподдержанная форма <code>STRING * N</code>.</p>
-</section>
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если функция объявлена без типа результата, если <code>RETURN</code> внутри <code>FUNCTION</code> не возвращает значение, если возвращаемое выражение несовместимо с типом результата, если функция завершается без <code>RETURN</code> со значением или если функция с параметром <code>BYREF</code> используется как функциональное значение.</p>
+            </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="sub.html">Процедура SUB</a><a href="return.html">Оператор RETURN</a><a href="diagnostics.html">Диагностика</a></div>
-</section>
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="procedures-and-functions.html">Процедуры и функции</a>
+                    <a href="sub.html">Процедура SUB</a>
+                    <a href="return.html">Оператор RETURN</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="arrays-and-builtins.html">Функции массивов</a>
+                    <a href="data-types-records-and-arrays.html">TYPE и массивы</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

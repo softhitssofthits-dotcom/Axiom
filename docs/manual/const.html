@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор CONST</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="const">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Именованные неизменяемые значения</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Оператор CONST</p>
+                <p class="sidebar__subtitle">Объявление констант и встроенные имена PI, ROW, COLUMN.</p>
+            </div>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="variables-and-constants.html">Переменные и константы</a>
+            <span>/</span>
+            <span>Оператор CONST</span>
+        </nav>
+
+        <p class="eyebrow">Операторы описания и объявления</p>
+        <h1 class="page-title">Оператор CONST</h1>
+        <p class="lead"><code>CONST</code> — оператор описания, который вводит в программу именованную константу. Константа получает значение в момент объявления и дальше используется вместо повторяющегося числового, строкового или логического значения, которое не должно меняться во время работы программы.</p>
+
+        <section class="article-section">
+            <h2>Когда использовать CONST</h2>
+            <p>Константа удобна там, где значение имеет постоянный смысл: максимальный счёт, имя приложения, число строк, код режима или другое заранее известное значение. Вместо того чтобы повторять одно и то же число или строку в разных местах программы, можно дать этому значению имя.</p>
+            <p>Такое имя делает программу легче читать и менять: значение задаётся один раз, а дальше используется как обычное выражение.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
+            <pre><code class="language-basic">CONST &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;
+CONST &lt;имя1&gt; AS &lt;тип&gt; = &lt;выражение1&gt;, &lt;имя2&gt; AS &lt;тип&gt; = &lt;выражение2&gt;</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Части записи</h2>
+            <ul>
+                <li><code>&lt;имя&gt;</code> — имя объявляемой константы.</li>
+                <li><code>AS &lt;тип&gt;</code> — тип константы: например <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code> или <code>BOOLEAN</code>.</li>
+                <li><code>= &lt;выражение&gt;</code> — значение константы. Оно обязательно задаётся прямо в объявлении.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Как константа входит в область видимости</h2>
+            <p>При связывании программы Axiom добавляет имя константы в текущую область видимости и помечает его как неизменяемое. После этого имя можно использовать в выражениях, в выводе, в вычислениях и в тех местах, где язык требует константное целочисленное значение.</p>
+            <pre><code class="language-basic">CONST MAX_SCORE AS INTEGER = 100
+CONST APP_NAME AS STRING = "Axiom"
+
+PRINT APP_NAME
+PRINT MAX_SCORE + 1</code></pre>
+            <p>Попытка присвоить новое значение уже объявленной константе является ошибкой: <code>CONST</code> не создаёт переменную, которую можно менять позднее.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Несколько констант</h2>
+            <p>Один оператор <code>CONST</code> может объявить несколько констант, если каждая часть имеет своё имя, тип и начальное значение.</p>
+            <pre><code class="language-basic">CONST MIN_ROW AS INTEGER = 1, MAX_ROW AS INTEGER = 10
+CONST TITLE AS STRING = "Report", ENABLED AS BOOLEAN = TRUE</code></pre>
+            <p>Такая форма полезна для коротких групп связанных значений. Если объявления становятся длинными, их обычно удобнее разделить на несколько строк.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Константы в размерах</h2>
+            <p>Целочисленные константы могут участвовать в местах, где Axiom требует значение времени связывания. Например, ими можно задавать границы фиксированных массивных полей внутри <code>TYPE</code>.</p>
+            <pre><code class="language-basic">CONST MIN_SCORE AS INTEGER = 1
+CONST MAX_SCORE AS INTEGER = MIN_SCORE + 2
+
+TYPE Player
+    Scores(MIN_SCORE TO MAX_SCORE) AS INTEGER
+END TYPE</code></pre>
+            <p>В таких выражениях Axiom вычисляет константное целое значение при связывании программы.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Предопределённые константы</h2>
+            <p>В Axiom есть встроенные именованные константы. Их не нужно объявлять через <code>CONST</code>.</p>
+            <ul>
+                <li><code>PI</code> — значение числа пи типа <code>DOUBLE</code>.</li>
+                <li><code>ROW</code> — целочисленное значение <code>1</code>.</li>
+                <li><code>COLUMN</code> — целочисленное значение <code>2</code>.</li>
+            </ul>
+            <pre><code class="language-basic">DIM board(10 TO 12, 20 TO 21) AS INTEGER
+
+PRINT LBOUND(board, ROW)
+PRINT UBOUND(board, COLUMN)
+PRINT PI > 3</code></pre>
+            <p><code>ROW</code> и <code>COLUMN</code> служат читаемыми именами для первого и второго измерения массива. Числовые формы <code>1</code> и <code>2</code> остаются допустимыми там же.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Имена и поддержанные формы</h2>
+            <ul>
+                <li>Имя константы регистронезависимо: <code>Limit</code>, <code>LIMIT</code> и <code>limit</code> обозначают одно и то же имя.</li>
+                <li>Предопределённые имена <code>PI</code>, <code>ROW</code> и <code>COLUMN</code> нельзя переобъявить через <code>DIM</code>, <code>CONST</code>, <code>SUB</code> или <code>FUNCTION</code>.</li>
+                <li>Форма <code>STRING * N</code> для <code>CONST</code> сейчас не поддерживается. Фиксированные строки поддержаны для <code>DIM</code> и для полей <code>TYPE</code>.</li>
+                <li>Если нужна изменяемая величина, используйте <code>DIM</code>, а не <code>CONST</code>.</li>
+            </ul>
+            <blockquote>
+                <p><em>В QuickBASIC тип константы мог задаваться суффиксом имени, например <code>%</code> или <code>$</code>, а в старых примерах часто встречалась форма без <code>AS</code>. В Axiom документируемая форма задаёт тип явно через <code>AS</code>; суффиксы типов и операторы <code>DEF...</code> не используются.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример именованных постоянных значений</h2>
+            <p>В примере имя приложения и числовой предел вынесены в константы, а затем используются в выражениях.</p>
+            <pre><code class="language-basic">CONST APP_NAME AS STRING = "Axiom"
+CONST MAX_SCORE AS INTEGER = 100
+
+DIM score AS INTEGER = 87
+
+PRINT APP_NAME
+PRINT score
+PRINT score <= MAX_SCORE</code></pre>
+            <p>Результат:</p>
+            <pre><code>Axiom
+87
+TRUE</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>CONST</code>.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление константы</a></li>
+                <li><a href="../../samples/operators/const/predefined_constants.axm">CONST: предопределённые PI, ROW, COLUMN</a></li>
+                <li><a href="../../samples/operators/const/fixed_string_error.axm">Ошибка: фиксированная строка в CONST</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2010</code> — попытка присвоить значение константе.</li>
+                <li><code>MB2002</code> — повторное объявление имени, включая попытку переобъявить <code>PI</code>, <code>ROW</code> или <code>COLUMN</code>.</li>
+                <li><code>MB2003</code> — значение объявления несовместимо с указанным типом.</li>
+                <li><code>MB2018</code> — литерал или константное значение не помещается в целевой тип.</li>
+                <li><code>MB2026</code> — фиксированная строка <code>STRING * N</code> использована в месте, где она не поддержана, например в <code>CONST</code>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="data-types.html">Типы данных</a>
+                <a href="data-types-scalars.html">Скалярные типы</a>
+                <a href="arrays.html">Массивы</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

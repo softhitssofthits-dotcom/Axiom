@@ -1,16 +1,16 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Данные и ввод</title>
+    <title>Справочник Axiom - Данные, ввод и вывод</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="data-and-input">
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Обзор типов данных, объявлений и ввода</div>
+            <div class="topbar__meta">Данные, объявления, ввод и вывод</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -18,8 +18,8 @@
         <aside class="sidebar">
             <div class="sidebar__inner">
                 <div class="sidebar__head">
-                    <p class="sidebar__title">Данные и ввод</p>
-                    <p class="sidebar__subtitle">Связывает типы данных, <code>DIM</code>, <code>CONST</code>, <code>INPUT</code> и <code>PRINT</code>.</p>
+                    <p class="sidebar__title">Данные, ввод и вывод</p>
+                    <p class="sidebar__subtitle">От значения в программе к переменной, вводу, проверке устройств и выводу результата.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -28,140 +28,146 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a>
                 <span>/</span>
-                <span>Данные и ввод</span>
+                <span>Ввод и вывод</span>
             </nav>
             <p class="eyebrow">Обзор</p>
-            <h1 class="page-title">Типы данных, объявления и ввод</h1>
-            <p class="lead">Работа с данными в Axiom начинается не с одной отдельной конструкции, а с целой связки тем: какие значения вообще существуют в языке, как объявлять переменные и константы и каким образом считывать или выводить результат. Эта обзорная страница помогает пройти этот маршрут без лишних повторов точной справки.</p>
+            <h1 class="page-title">Данные, ввод и вывод</h1>
+            <p class="lead">Любая программа получает данные, хранит их в именованных местах, преобразует выражениями и показывает результат. В Axiom этот путь строится из нескольких близких частей: <code>DIM</code> и <code>CONST</code> задают имена, <code>INPUT</code> получает строку от пользователя и разбирает её по типам, клавиатурные и мышиные функции читают текущее состояние устройств, а <code>PRINT</code> выводит готовые значения.</p>
 
-            <section class="article-section">
-                <h2>Как устроен раздел</h2>
-                <p>Здесь собраны входные точки для тех случаев, когда вы ещё не ищете одну конкретную форму синтаксиса, а хотите сначала понять, где именно находится нужная тема. Обычно это бывает в самом начале работы с языком или при переходе от простых выражений к реальному вводу и выводу данных.</p>
-                <ul>
-                    <li>сначала полезно понять модель типов и допустимых значений;</li>
-                    <li>затем обычно возникает задача объявить переменную или константу;</li>
-                    <li>после этого уже нужно либо считать данные через <code>INPUT</code>, либо показать результат через <code>PRINT</code>.</li>
-                </ul>
+            <section class="article-section" id="flow">
+                <h2>Откуда берутся данные</h2>
+                <p>В простейшем случае значение уже записано в тексте программы как число, строка или логическая константа. В более живой программе оно появляется после вычисления, чтения строки ввода, нажатия клавиши, действия мыши или файловой операции. Для языка это всё разные источники, но дальнейший маршрут одинаков: значение должно иметь тип, имя или место назначения и понятный способ вывода.</p>
+                <pre><code class="language-basic">DIM name AS STRING
+DIM age AS INTEGER
+
+INPUT "Имя: "; name
+INPUT "Возраст: "; age
+
+PRINT "Пользователь: " & name
+PRINT "Возраст: " & age</code></pre>
+                <p>Пример показывает основную цепочку: сначала объявляются места для значений, затем <code>INPUT</code> заполняет их пользовательским вводом, после чего <code>PRINT</code> возвращает результат на экран.</p>
             </section>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#route">Куда переходить дальше</a></li>
-                    <li><a href="#reading-order">Как читать раздел</a></li>
-                    <li><a href="#samples">Показательные примеры</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="summary">
-                <h2>Сводка</h2>
-                <p>Этот раздел особенно полезен тогда, когда нужно связать между собой типы данных, объявления и ввод-вывод, а не рассматривать их как разрозненные статьи.</p>
-                <ul>
-                    <li>когда нужно понять, с какой справочной главы начать работу с данными;</li>
-                    <li>когда требуется перейти от типов данных к объявлениям, а затем к <code>INPUT</code> и <code>PRINT</code>;</li>
-                    <li>когда нужна короткая карта раздела без повторения синтаксиса, диагностики и пограничных случаев на одной странице.</li>
-                </ul>
-                <div class="note">
-                    <h3>Коротко</h3>
-                    <p>Эта страница не дублирует точную справку по каждой конструкции. Она нужна для того, чтобы быстро выбрать нужную статью о типах, объявлениях или вводе-выводе.</p>
-                </div>
-            </section>
-
-            <section class="article-section" id="route">
-                <h2>Куда переходить дальше</h2>
+            <section class="article-section" id="storage">
+                <h2>Объявить место для значения</h2>
+                <p>Имя в программе полезно только тогда, когда известно, какие значения оно может держать. Для одного числа, строки или логического результата подходят скалярные типы. Для набора однотипных значений используется массив. Для записи с несколькими полями служит <code>TYPE</code>. Для открытого текстового файла используется отдельный тип <code>FILE</code>.</p>
                 <div class="cards-grid">
                     <section class="card">
                         <h3><a href="data-types.html">Типы данных</a></h3>
-                        <p><code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code> и <code>BOOLEAN</code>, а также основные правила преобразования.</p>
+                        <p>Общая карта чисел, строк, логических значений, файлов, записей, массивов и функциональных типов.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="data-types-scalars.html">Скалярные типы</a></h3>
+                        <p><code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> и <code>BOOLEAN</code>, включая диапазоны чисел.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="data-types-strings-and-files.html">STRING и FILE</a></h3>
+                        <p>Обычные строки, фиксированные строки <code>STRING * N</code> и файловое значение <code>FILE</code>.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="data-types-records-and-arrays.html">TYPE и массивы</a></h3>
+                        <p>Как отличить одну запись, массив значений, массив записей и массивное поле внутри записи.</p>
                     </section>
                     <section class="card">
                         <h3><a href="variables-and-constants.html">Переменные и константы</a></h3>
-                        <p>Правила именования, <code>DIM</code>, <code>CONST</code>, инициализация и область видимости.</p>
+                        <p>Имена, область видимости, изменяемые переменные и неизменяемые значения.</p>
                     </section>
                     <section class="card">
+                        <h3><a href="dim.html">Оператор DIM</a></h3>
+                        <p>Объявление переменных, массивов, явного типа и типа, выведенного из начального значения.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="const.html">Оператор CONST</a></h3>
+                        <p>Именованные значения, которые задаются один раз и потом не изменяются.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="input">
+                <h2>Получить значение от пользователя</h2>
+                <p><code>INPUT</code> останавливает программу в точке, где нужен ответ пользователя, и разбирает введённую строку в одну или несколько переменных. Если программа не должна ждать полной строки, применяются неблокирующие функции клавиатуры и мыши. Для повторяющейся реакции на ввод можно назначить обработчики через <code>ON KEY</code> и <code>ON MOUSE</code>.</p>
+                <div class="cards-grid">
+                    <section class="card">
                         <h3><a href="input.html">Оператор INPUT</a></h3>
-                        <p>Чтение одного или нескольких значений, строка приглашения, преобразование типов и частые ошибки.</p>
+                        <p>Ввод одного или нескольких значений, приглашение, разделение по запятым и преобразование к типам переменных.</p>
                     </section>
                     <section class="card">
                         <h3><a href="inkey.html">Функция INKEY</a></h3>
-                        <p>Неблокирующее чтение одной клавиши: символ, имя специальной клавиши или пустая строка.</p>
+                        <p>Читает одно событие клавиатуры без ожидания; если события нет, возвращает пустую строку.</p>
                     </section>
                     <section class="card">
                         <h3><a href="keydown.html">Функция KEYDOWN</a></h3>
-                        <p>Проверка текущего удержания клавиши или модификатора без чтения очереди клавиатуры.</p>
+                        <p>Проверяет, удерживается ли клавиша или сочетание клавиш прямо сейчас.</p>
                     </section>
                     <section class="card">
                         <h3><a href="keypress.html">Функция KEYPRESS</a></h3>
-                        <p>Одноразовая проверка нажатия клавиши с удалением события из очереди.</p>
+                        <p>Проверяет одноразовое нажатие и забирает подходящее событие из очереди.</p>
                     </section>
                     <section class="card">
-                        <h3><a href="mousex.html">Функция MOUSEX</a></h3>
-                        <p>Текущая горизонтальная координата указателя мыши на активной поверхности программы.</p>
+                        <h3><a href="mousex.html">MOUSEX и MOUSEY</a></h3>
+                        <p>Возвращают текущие координаты указателя мыши на активной поверхности программы.</p>
                     </section>
                     <section class="card">
-                        <h3><a href="mousey.html">Функция MOUSEY</a></h3>
-                        <p>Текущая вертикальная координата указателя мыши на активной поверхности программы.</p>
+                        <h3><a href="mousebutton.html">MOUSEBUTTON</a></h3>
+                        <p>Проверяет текущее удержание кнопки мыши.</p>
                     </section>
                     <section class="card">
-                        <h3><a href="mousebutton.html">Функция MOUSEBUTTON</a></h3>
-                        <p>Проверка удержания левой, правой или средней кнопки мыши по номеру.</p>
+                        <h3><a href="mousepress.html">MOUSEPRESS</a></h3>
+                        <p>Проверяет одноразовое нажатие кнопки мыши и удаляет событие из очереди.</p>
                     </section>
                     <section class="card">
-                        <h3><a href="mousepress.html">Функция MOUSEPRESS</a></h3>
-                        <p>Одноразовая проверка нажатия кнопки мыши с удалением события из очереди.</p>
+                        <h3><a href="on-key.html">ON KEY</a></h3>
+                        <p>Назначает обработчик клавиши, сочетания клавиш или запасной обработчик для любой клавиши.</p>
                     </section>
                     <section class="card">
-                        <h3><a href="on-mouse.html">Оператор ON MOUSE</a></h3>
-                        <p>Обработчик нажатия, отпускания, перемещения и колеса мыши с режимами включения, паузы и отключения.</p>
+                        <h3><a href="on-mouse.html">ON MOUSE</a></h3>
+                        <p>Назначает обработчик нажатия, отпускания, перемещения или колеса мыши.</p>
                     </section>
+                </div>
+            </section>
+
+            <section class="article-section" id="output">
+                <h2>Показать результат</h2>
+                <p><code>PRINT</code> завершает обычный путь данных: берёт готовое значение или выражение и показывает его пользователю. Пока программа не выбрала <code>SCREEN</code>, вывод идёт во вкладку <code>Output</code>. После <code>SCREEN 0</code> или графического режима <code>SCREEN 1..10</code> тот же вывод направляется в отдельное окно программы.</p>
+                <div class="cards-grid">
                     <section class="card">
                         <h3><a href="print.html">Оператор PRINT</a></h3>
-                        <p>Вывод строк, чисел, выражений и списков значений с разделителями <code>;</code> и <code>,</code>.</p>
+                        <p>Вывод одного значения, списка значений, пустой строки и разделителей <code>;</code> и <code>,</code>.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="screen.html">Оператор SCREEN</a></h3>
+                        <p>Переключение в текстовое окно <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>.</p>
+                    </section>
+                    <section class="card">
+                        <h3><a href="graphics-text.html">Текстовый слой SCREEN</a></h3>
+                        <p><code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code> для вывода текста в экранном окне.</p>
                     </section>
                 </div>
             </section>
 
             <section class="article-section" id="reading-order">
-                <h2>Как читать раздел</h2>
-                <p>Если идти по этой теме последовательно, manual обычно удобнее читать именно в таком порядке.</p>
+                <h2>Куда идти дальше</h2>
                 <ol>
-                    <li>Если важно понять, какие значения можно хранить в программе, начинайте со статьи о типах данных.</li>
-                    <li>Если нужно объявить переменную или константу, переходите к статье о <code>DIM</code> и <code>CONST</code>.</li>
-                    <li>Если нужно считать данные с клавиатуры, мыши или вывести результат, открывайте статьи по <code>INPUT</code>, <code>INKEY()</code>, <code>KEYDOWN()</code>, <code>KEYPRESS()</code>, <code>MOUSEX()</code>, <code>MOUSEY()</code>, <code>MOUSEBUTTON()</code>, <code>MOUSEPRESS()</code>, <code>ON MOUSE</code> и <code>PRINT</code>.</li>
+                    <li>Если непонятно, какой тип выбрать, начните с <a href="data-types.html">типов данных</a> и <a href="data-types-scalars.html">скалярных типов</a>.</li>
+                    <li>Если нужно сохранить значение, откройте <a href="dim.html"><code>DIM</code></a> или <a href="const.html"><code>CONST</code></a>.</li>
+                    <li>Если нужно получить ввод, выберите <a href="input.html"><code>INPUT</code></a>, клавиатурные функции или мышиные функции.</li>
+                    <li>Если нужно показать результат, переходите к <a href="print.html"><code>PRINT</code></a> и, при необходимости, к <a href="screen.html"><code>SCREEN</code></a>.</li>
                 </ol>
-                <pre><code class="language-basic">DIM name AS STRING
-DIM age AS INTEGER
-
-INPUT "Введите имя: "; name
-INPUT "Введите возраст: "; age
-
-PRINT "Пользователь:"; name
-PRINT "Возраст:"; age</code></pre>
-                <p>В этом коротком фрагменте сразу видно весь маршрут раздела: сначала объявляются переменные, затем значения читаются из ввода и после этого выводятся обратно в понятной форме.</p>
             </section>
 
             <section class="article-section" id="samples">
-                <h2>Показательные примеры</h2>
-                <p>Для проверки этого маршрута через IDE достаточно открыть несколько коротких файлов из соседних тем.</p>
+                <h2>Ручная проверка</h2>
+                <p>Эти примеры можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки объявления, ввода, клавиатуры, мыши и вывода.</p>
                 <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
-                    <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
+                    <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из начального значения</a></li>
                     <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление</a></li>
                     <li><a href="../../samples/operators/input/multiple_variables.axm">INPUT: несколько переменных</a></li>
                     <li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li>
-                    <li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификатора и стрелки</a></li>
-                    <li><a href="../../samples/functions/keydown/canonical_aliases.axm">KEYDOWN: канонические имена и алиасы клавиш</a></li>
-                    <li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие клавиши</a></li>
-                    <li><a href="../../samples/functions/keypress/modified_keypress.axm">KEYPRESS: нажатие с модификатором</a></li>
-                    <li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: одноразовые нажатия кнопок мыши</a></li>
+                    <li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание клавиши</a></li>
+                    <li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие</a></li>
+                    <li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: нажатия кнопок мыши</a></li>
                     <li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши</a></li>
-                    <li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li>
-                    <li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li>
                     <li><a href="../../samples/operators/on-key/any_key_handler.axm">ON KEY: обработчик любой клавиши</a></li>
-                    <li><a href="../../samples/operators/on-key/handler_key_name.axm">ON KEY: имя клавиши в обработчике</a></li>
-                    <li><a href="../../samples/operators/on-key/chord_handler.axm">ON KEY: аккорд клавиш</a></li>
-                    <li><a href="../../samples/operators/on-key/stop_resume_handler.axm">ON KEY: пауза и возобновление обработчика</a></li>
                     <li><a href="../../samples/operators/print/separator_semicolon.axm">PRINT: разделитель <code>;</code></a></li>
                 </ul>
             </section>
@@ -169,11 +175,15 @@ PRINT "Возраст:"; age</code></pre>
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="getting-started.html">Старт и первая программа</a>
-                    <a href="procedures-and-functions.html">Процедуры и функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                    <a href="examples.html">Примеры программ</a>
+                    <a href="print.html">Оператор PRINT</a>
+                    <a href="input.html">Оператор INPUT</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                    <a href="inkey.html">Клавиатура</a>
+                    <a href="on-key.html">События клавиатуры</a>
+                    <a href="mousex.html">Мышь</a>
+                    <a href="on-mouse.html">События мыши</a>
+                    <a href="file-system-functions.html">Файлы и файловая система</a>
                 </div>
             </section>
 

@@ -10,7 +10,8 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Текущая горизонтальная координата указателя</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEX</p><p class="sidebar__subtitle">Опрос текущей X-координаты указателя без событийной очереди.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>MOUSEX</span></nav>
+<p class="eyebrow">Мышь</p>
 <h1 class="page-title">Функция MOUSEX</h1>
 <p class="lead"><code>MOUSEX()</code> возвращает текущую горизонтальную координату указателя мыши на активной поверхности программы. Функция подходит для опросного режима, когда программе достаточно знать текущее положение курсора, а не получать отдельные события перемещения.</p>
 
@@ -29,7 +30,7 @@
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Что не хранит MOUSEX</h2>
 <ul>
 <li><code>MOUSEX()</code> не принимает аргументов;</li>
 <li>функция не создаёт очередь мышиных событий и не хранит историю перемещений;</li>
@@ -39,7 +40,7 @@
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример чтения координат</h2>
 <pre><code class="language-basic">PRINT MOUSEX()
 PRINT MOUSEY()</code></pre>
 </section>
@@ -56,7 +57,7 @@ PRINT MOUSEY()</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="mousey.html">Функция MOUSEY</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="data-and-input.html">Ввод и вывод</a></div>
+<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="mousey.html">Функция MOUSEY</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

@@ -1,0 +1,1595 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Справочник Axiom" [ref=e4] [cursor=pointer]:
+        - /url: index.html
+      - generic [ref=e5]: Алфавитный список, тематические входы и порядок чтения
+  - generic [ref=e6]:
+    - complementary [ref=e7]:
+      - generic [ref=e8]:
+        - paragraph [ref=e10]: Указатель
+        - navigation [ref=e11]:
+          - group [ref=e12]:
+            - generic "- Начало работы и среда" [ref=e13] [cursor=pointer]
+            - list [ref=e14]:
+              - listitem [ref=e15]:
+                - link "Главная" [ref=e16] [cursor=pointer]:
+                  - /url: index.html
+              - listitem [ref=e17]:
+                - link "Быстрый старт" [ref=e18] [cursor=pointer]:
+                  - /url: getting-started.html
+              - listitem [ref=e19]:
+                - link "Алфавитный указатель" [ref=e20] [cursor=pointer]:
+                  - /url: reference.html
+              - listitem [ref=e21]:
+                - link "Поиск по справочнику" [ref=e22] [cursor=pointer]:
+                  - /url: search.html
+          - group [ref=e23]:
+            - generic "+ Основы языка" [ref=e24] [cursor=pointer]
+          - group [ref=e25]:
+            - generic "+ Операторы описания и объявления" [ref=e26] [cursor=pointer]
+          - group [ref=e27]:
+            - generic "+ Выражения и операции" [ref=e28] [cursor=pointer]
+          - group [ref=e29]:
+            - generic "+ Операторы передачи управления" [ref=e30] [cursor=pointer]
+          - group [ref=e31]:
+            - generic "+ Процедуры и функции" [ref=e32] [cursor=pointer]
+          - group [ref=e33]:
+            - generic "+ Массивы и составные данные" [ref=e34] [cursor=pointer]
+          - group [ref=e35]:
+            - generic "+ Ввод и вывод" [ref=e36] [cursor=pointer]
+          - group [ref=e37]:
+            - generic "+ Файлы и файловая система" [ref=e38] [cursor=pointer]
+          - group [ref=e39]:
+            - generic "+ Графика и экран" [ref=e40] [cursor=pointer]
+          - group [ref=e41]:
+            - generic "+ Клавиатура, мышь и события" [ref=e42] [cursor=pointer]
+          - group [ref=e43]:
+            - generic "+ Встроенные функции" [ref=e44] [cursor=pointer]
+          - group [ref=e45]:
+            - generic "+ Обработка ошибок и диагностика" [ref=e46] [cursor=pointer]
+          - group [ref=e47]:
+            - generic "+ Примеры и справочные приложения" [ref=e48] [cursor=pointer]
+    - main [ref=e49]:
+      - navigation "Хлебные крошки" [ref=e50]:
+        - link "Главная" [ref=e51] [cursor=pointer]:
+          - /url: index.html
+        - text: / Алфавитный и тематический указатель
+      - paragraph [ref=e52]: Справочник
+      - heading "Алфавитный и тематический указатель" [level=1] [ref=e53]
+      - paragraph [ref=e54]: Если вы уже знаете имя функции, оператора, типа или раздела, начните с алфавитного списка. Если известна только задача, используйте тематические переходы ниже или страницу поиска.
+      - generic [ref=e55]:
+        - heading "Алфавитный указатель" [level=2] [ref=e56]
+        - paragraph [ref=e57]: Список строится из того же индекса, который используется поиском. В него входят обзорные разделы, операторы, функции, типы, приложения и ключевые справочные страницы.
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - link "А" [ref=e60] [cursor=pointer]:
+              - /url: "#letter-а"
+            - link "Б" [ref=e61] [cursor=pointer]:
+              - /url: "#letter-б"
+            - link "В" [ref=e62] [cursor=pointer]:
+              - /url: "#letter-в"
+            - link "Г" [ref=e63] [cursor=pointer]:
+              - /url: "#letter-г"
+            - link "Д" [ref=e64] [cursor=pointer]:
+              - /url: "#letter-д"
+            - link "З" [ref=e65] [cursor=pointer]:
+              - /url: "#letter-з"
+            - link "И" [ref=e66] [cursor=pointer]:
+              - /url: "#letter-и"
+            - link "К" [ref=e67] [cursor=pointer]:
+              - /url: "#letter-к"
+            - link "М" [ref=e68] [cursor=pointer]:
+              - /url: "#letter-м"
+            - link "О" [ref=e69] [cursor=pointer]:
+              - /url: "#letter-о"
+            - link "П" [ref=e70] [cursor=pointer]:
+              - /url: "#letter-п"
+            - link "Р" [ref=e71] [cursor=pointer]:
+              - /url: "#letter-р"
+            - link "С" [ref=e72] [cursor=pointer]:
+              - /url: "#letter-с"
+            - link "Т" [ref=e73] [cursor=pointer]:
+              - /url: "#letter-т"
+            - link "Ф" [ref=e74] [cursor=pointer]:
+              - /url: "#letter-ф"
+            - link "Ц" [ref=e75] [cursor=pointer]:
+              - /url: "#letter-ц"
+            - link "Ч" [ref=e76] [cursor=pointer]:
+              - /url: "#letter-ч"
+            - link "A" [ref=e77] [cursor=pointer]:
+              - /url: "#letter-a"
+            - link "C" [ref=e78] [cursor=pointer]:
+              - /url: "#letter-c"
+            - link "D" [ref=e79] [cursor=pointer]:
+              - /url: "#letter-d"
+            - link "E" [ref=e80] [cursor=pointer]:
+              - /url: "#letter-e"
+            - link "F" [ref=e81] [cursor=pointer]:
+              - /url: "#letter-f"
+            - link "G" [ref=e82] [cursor=pointer]:
+              - /url: "#letter-g"
+            - link "H" [ref=e83] [cursor=pointer]:
+              - /url: "#letter-h"
+            - link "I" [ref=e84] [cursor=pointer]:
+              - /url: "#letter-i"
+            - link "J" [ref=e85] [cursor=pointer]:
+              - /url: "#letter-j"
+            - link "K" [ref=e86] [cursor=pointer]:
+              - /url: "#letter-k"
+            - link "L" [ref=e87] [cursor=pointer]:
+              - /url: "#letter-l"
+            - link "M" [ref=e88] [cursor=pointer]:
+              - /url: "#letter-m"
+            - link "N" [ref=e89] [cursor=pointer]:
+              - /url: "#letter-n"
+            - link "P" [ref=e90] [cursor=pointer]:
+              - /url: "#letter-p"
+            - link "R" [ref=e91] [cursor=pointer]:
+              - /url: "#letter-r"
+            - link "S" [ref=e92] [cursor=pointer]:
+              - /url: "#letter-s"
+            - link "T" [ref=e93] [cursor=pointer]:
+              - /url: "#letter-t"
+            - link "U" [ref=e94] [cursor=pointer]:
+              - /url: "#letter-u"
+            - link "V" [ref=e95] [cursor=pointer]:
+              - /url: "#letter-v"
+            - link "W" [ref=e96] [cursor=pointer]:
+              - /url: "#letter-w"
+            - link "Y" [ref=e97] [cursor=pointer]:
+              - /url: "#letter-y"
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - heading "А" [level=3] [ref=e100]
+              - list [ref=e101]:
+                - listitem [ref=e102]:
+                  - link "Алфавитный и тематический указатель" [ref=e103] [cursor=pointer]:
+                    - /url: reference.html
+                  - text: Указатель - Начало работы и среда
+                - listitem [ref=e104]:
+                  - link "Арифметика, разбор и проверка дат" [ref=e105] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html
+                  - text: Раздел - Дата и время
+            - generic [ref=e106]:
+              - heading "Б" [level=3] [ref=e107]
+              - list [ref=e108]:
+                - listitem [ref=e109]:
+                  - link "Базовая математика" [ref=e110] [cursor=pointer]:
+                    - /url: numeric-functions-core.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e111]:
+                  - link "Быстрый старт" [ref=e112] [cursor=pointer]:
+                    - /url: getting-started.html
+                  - text: Раздел - Начало работы и среда
+            - generic [ref=e113]:
+              - heading "В" [level=3] [ref=e114]
+              - list [ref=e115]:
+                - listitem [ref=e116]:
+                  - link "Все совпадения, группы и разбиение" [ref=e117] [cursor=pointer]:
+                    - /url: regex-functions-arrays-and-split.html
+                  - text: Раздел - Регулярные выражения
+                - listitem [ref=e118]:
+                  - link "Вывод типа и преобразования" [ref=e119] [cursor=pointer]:
+                    - /url: data-types-conversions.html
+                  - text: Раздел - Основы
+                - listitem [ref=e120]:
+                  - link "Выражения и ветвление" [ref=e121] [cursor=pointer]:
+                    - /url: expressions-and-branching.html
+                  - text: Раздел - Выражения и операции
+                - listitem [ref=e122]:
+                  - link "Выражения и операции" [ref=e123] [cursor=pointer]:
+                    - /url: arithmetic-and-logic.html
+                  - text: Раздел - Выражения и операции
+            - generic [ref=e124]:
+              - heading "Г" [level=3] [ref=e125]
+              - list [ref=e126]:
+                - listitem [ref=e127]:
+                  - link "Главная" [ref=e128] [cursor=pointer]:
+                    - /url: index.html
+                  - text: Раздел - Начало работы и среда
+                - listitem [ref=e129]:
+                  - link "Графика" [ref=e130] [cursor=pointer]:
+                    - /url: graphics.html
+                  - text: Раздел - Графика
+                - listitem [ref=e131]:
+                  - link "Графические примитивы" [ref=e132] [cursor=pointer]:
+                    - /url: graphics-primitives.html
+                  - text: Раздел - Графика
+            - generic [ref=e133]:
+              - heading "Д" [level=3] [ref=e134]
+              - list [ref=e135]:
+                - listitem [ref=e136]:
+                  - link "Данные, ввод и вывод" [ref=e137] [cursor=pointer]:
+                    - /url: data-and-input.html
+                  - text: Раздел - Ввод и вывод
+                - listitem [ref=e138]:
+                  - link "Дата и время" [ref=e139] [cursor=pointer]:
+                    - /url: date-time-functions.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e140]:
+                  - link "Двумерные массивы" [ref=e141] [cursor=pointer]:
+                    - /url: arrays-2d.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e142]:
+                  - 'link "Двумерный массив: схема" [ref=e143] [cursor=pointer]':
+                    - /url: arrays-2d-visual.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e144]:
+                  - link "Диагностика" [ref=e145] [cursor=pointer]:
+                    - /url: diagnostics.html
+                  - text: Раздел - Обработка ошибок и диагностика
+                - listitem [ref=e146]:
+                  - link "Диапазоны и ограничения типов" [ref=e147] [cursor=pointer]:
+                    - /url: data-type-limits.html
+                  - text: Приложение - Примеры и справочные приложения
+                - listitem [ref=e148]:
+                  - link "Динамические массивы" [ref=e149] [cursor=pointer]:
+                    - /url: arrays-dynamic.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e150]:
+                  - link "Длина строки и фрагменты" [ref=e151] [cursor=pointer]:
+                    - /url: string-functions-slices-and-length.html
+                  - text: Раздел - Строковые функции
+            - generic [ref=e152]:
+              - heading "З" [level=3] [ref=e153]
+              - list [ref=e154]:
+                - listitem [ref=e155]:
+                  - link "Замена и подсчёт совпадений" [ref=e156] [cursor=pointer]:
+                    - /url: regex-functions-replace-and-count.html
+                  - text: Раздел - Регулярные выражения
+                - listitem [ref=e157]:
+                  - link "Записи TYPE и массивы" [ref=e158] [cursor=pointer]:
+                    - /url: data-types-records-and-arrays.html
+                  - text: Раздел - Основы
+            - generic [ref=e159]:
+              - heading "И" [level=3] [ref=e160]
+              - list [ref=e161]:
+                - listitem [ref=e162]:
+                  - link "Индексирование массивов" [ref=e163] [cursor=pointer]:
+                    - /url: arrays-indexing.html
+                  - text: Раздел - Массивы
+            - generic [ref=e164]:
+              - heading "К" [level=3] [ref=e165]
+              - list [ref=e166]:
+                - listitem [ref=e167]:
+                  - link "Корни, логарифмы и округление" [ref=e168] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e169]:
+                  - link "Краткая справка" [ref=e170] [cursor=pointer]:
+                    - /url: cheat-sheet.html
+                  - text: Приложение - Примеры и справочные приложения
+            - generic [ref=e171]:
+              - heading "М" [level=3] [ref=e172]
+              - list [ref=e173]:
+                - listitem [ref=e174]:
+                  - link "Массивы" [ref=e175] [cursor=pointer]:
+                    - /url: arrays.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e176]:
+                  - link "Многомерные массивы" [ref=e177] [cursor=pointer]:
+                    - /url: arrays-multidimensional.html
+                  - text: Раздел - Массивы
+            - generic [ref=e178]:
+              - heading "О" [level=3] [ref=e179]
+              - list [ref=e180]:
+                - listitem [ref=e181]:
+                  - link "Обработка пользовательских ошибок" [ref=e182] [cursor=pointer]:
+                    - /url: error-handling.html
+                  - text: Раздел - Обработка ошибок и диагностика
+                - listitem [ref=e183]:
+                  - link "Обрезка и регистр" [ref=e184] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html
+                  - text: Раздел - Строковые функции
+                - listitem [ref=e185]:
+                  - link "Одномерные массивы" [ref=e186] [cursor=pointer]:
+                    - /url: arrays-1d.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e187]:
+                  - 'link "Одномерный массив: схема" [ref=e188] [cursor=pointer]':
+                    - /url: arrays-1d-visual.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e189]:
+                  - link "Оператор &" [ref=e190] [cursor=pointer]:
+                    - /url: arithmetic-and-logic.html#string-concatenation
+                  - text: Оператор - Выражения и операции
+                - listitem [ref=e191]:
+                  - link "Оператор цикла DO ... LOOP" [ref=e192] [cursor=pointer]:
+                    - /url: do-loop.html
+                  - text: Оператор - Операторы передачи управления
+                - listitem [ref=e193]:
+                  - link "Оператор цикла FOR" [ref=e194] [cursor=pointer]:
+                    - /url: for.html
+                  - text: Оператор - Операторы передачи управления
+                - listitem [ref=e195]:
+                  - link "Оператор цикла WHILE ... END WHILE" [ref=e196] [cursor=pointer]:
+                    - /url: while.html
+                  - text: Оператор - Операторы передачи управления
+                - listitem [ref=e197]:
+                  - link "Оператор CIRCLE" [ref=e198] [cursor=pointer]:
+                    - /url: graphics-primitives.html#circle
+                  - text: Оператор - Графика
+                - listitem [ref=e199]:
+                  - link "Оператор CLOSE" [ref=e200] [cursor=pointer]:
+                    - /url: close.html
+                  - text: Оператор - Файлы и файловая система
+                - listitem [ref=e201]:
+                  - link "Оператор CLS" [ref=e202] [cursor=pointer]:
+                    - /url: graphics-text.html#cls
+                  - text: Оператор - Графика
+                - listitem [ref=e203]:
+                  - link "Оператор COLOR" [ref=e204] [cursor=pointer]:
+                    - /url: graphics-text.html#color
+                  - text: Оператор - Графика
+                - listitem [ref=e205]:
+                  - link "Оператор CONST" [ref=e206] [cursor=pointer]:
+                    - /url: const.html
+                  - text: Оператор - Операторы описания и объявления
+                - listitem [ref=e207]:
+                  - link "Оператор DIM" [ref=e208] [cursor=pointer]:
+                    - /url: dim.html
+                  - text: Оператор - Операторы описания и объявления
+                - listitem [ref=e209]:
+                  - link "Оператор ERROR" [ref=e210] [cursor=pointer]:
+                    - /url: error.html
+                  - text: Оператор - Обработка ошибок и диагностика
+                - listitem [ref=e211]:
+                  - link "Оператор IF" [ref=e212] [cursor=pointer]:
+                    - /url: if.html
+                  - text: Оператор - Операторы передачи управления
+                - listitem [ref=e213]:
+                  - link "Оператор INPUT" [ref=e214] [cursor=pointer]:
+                    - /url: input.html
+                  - text: Оператор - Ввод и вывод
+                - listitem [ref=e215]:
+                  - link "Оператор LINE" [ref=e216] [cursor=pointer]:
+                    - /url: graphics-primitives.html#line
+                  - text: Оператор - Графика
+                - listitem [ref=e217]:
+                  - link "Оператор LOCATE" [ref=e218] [cursor=pointer]:
+                    - /url: graphics-text.html#locate
+                  - text: Оператор - Графика
+                - listitem [ref=e219]:
+                  - link "Оператор ON KEY" [ref=e220] [cursor=pointer]:
+                    - /url: on-key.html
+                  - text: Оператор - Клавиатура
+                - listitem [ref=e221]:
+                  - link "Оператор ON MOUSE" [ref=e222] [cursor=pointer]:
+                    - /url: on-mouse.html
+                  - text: Оператор - Мышь
+                - listitem [ref=e223]:
+                  - link "Оператор OPEN" [ref=e224] [cursor=pointer]:
+                    - /url: open.html
+                  - text: Оператор - Файлы и файловая система
+                - listitem [ref=e225]:
+                  - link "Оператор PRESET" [ref=e226] [cursor=pointer]:
+                    - /url: graphics-primitives.html#preset
+                  - text: Оператор - Графика
+                - listitem [ref=e227]:
+                  - link "Оператор PRINT" [ref=e228] [cursor=pointer]:
+                    - /url: print.html
+                  - text: Оператор - Ввод и вывод
+                - listitem [ref=e229]:
+                  - link "Оператор PSET" [ref=e230] [cursor=pointer]:
+                    - /url: graphics-primitives.html#pset
+                  - text: Оператор - Графика
+                - listitem [ref=e231]:
+                  - link "Оператор RETURN" [ref=e232] [cursor=pointer]:
+                    - /url: return.html
+                  - text: Оператор - Процедуры и функции
+                - listitem [ref=e233]:
+                  - link "Оператор SCREEN" [ref=e234] [cursor=pointer]:
+                    - /url: screen.html
+                  - text: Оператор - Графика
+                - listitem [ref=e235]:
+                  - link "Оператор SELECT CASE" [ref=e236] [cursor=pointer]:
+                    - /url: select-case.html
+                  - text: Оператор - Операторы передачи управления
+                - listitem [ref=e237]:
+                  - link "Оператор SLEEP" [ref=e238] [cursor=pointer]:
+                    - /url: sleep.html
+                  - text: Оператор - Операторы передачи управления
+                - listitem [ref=e239]:
+                  - link "Оператор TRY" [ref=e240] [cursor=pointer]:
+                    - /url: try.html
+                  - text: Оператор - Обработка ошибок и диагностика
+                - listitem [ref=e241]:
+                  - link "Оператор TYPE" [ref=e242] [cursor=pointer]:
+                    - /url: type.html
+                  - text: Оператор - Операторы описания и объявления
+                - listitem [ref=e243]:
+                  - link "Ошибки массивов" [ref=e244] [cursor=pointer]:
+                    - /url: arrays-diagnostics.html
+                  - text: Раздел - Массивы
+            - generic [ref=e245]:
+              - heading "П" [level=3] [ref=e246]
+              - list [ref=e247]:
+                - listitem [ref=e248]:
+                  - link "Переменные и константы" [ref=e249] [cursor=pointer]:
+                    - /url: variables-and-constants.html
+                  - text: Раздел - Основы
+                - listitem [ref=e250]:
+                  - link "Поиск и замена в строках" [ref=e251] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html
+                  - text: Раздел - Строковые функции
+                - listitem [ref=e252]:
+                  - link "Поиск по справочнику" [ref=e253] [cursor=pointer]:
+                    - /url: search.html
+                  - text: Инструмент - Навигация
+                - listitem [ref=e254]:
+                  - link "Построение, заполнение и массивы строк" [ref=e255] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html
+                  - text: Раздел - Строковые функции
+                - listitem [ref=e256]:
+                  - link "Примеры программ" [ref=e257] [cursor=pointer]:
+                    - /url: examples.html
+                  - text: Раздел - Примеры и справочные приложения
+                - listitem [ref=e258]:
+                  - link "Проверка, первое совпадение и группы" [ref=e259] [cursor=pointer]:
+                    - /url: regex-functions-match-and-extract.html
+                  - text: Раздел - Регулярные выражения
+                - listitem [ref=e260]:
+                  - link "Процедура SUB" [ref=e261] [cursor=pointer]:
+                    - /url: sub.html
+                  - text: Оператор - Процедуры и функции
+                - listitem [ref=e262]:
+                  - link "Процедуры и функции" [ref=e263] [cursor=pointer]:
+                    - /url: procedures-and-functions.html
+                  - text: Раздел - Процедуры и функции
+            - generic [ref=e264]:
+              - heading "Р" [level=3] [ref=e265]
+              - list [ref=e266]:
+                - listitem [ref=e267]:
+                  - link "Регулярные выражения" [ref=e268] [cursor=pointer]:
+                    - /url: regex-functions.html
+                  - text: Раздел - Встроенные функции
+            - generic [ref=e269]:
+              - heading "С" [level=3] [ref=e270]
+              - list [ref=e271]:
+                - listitem [ref=e272]:
+                  - link "Сборка даты и календарные части" [ref=e273] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html
+                  - text: Раздел - Дата и время
+                - listitem [ref=e274]:
+                  - link "Символы CHR, ASC, CHRW и ASCW" [ref=e275] [cursor=pointer]:
+                    - /url: characters.html
+                  - text: Раздел - Строковые функции
+                - listitem [ref=e276]:
+                  - link "Скалярные типы и литералы" [ref=e277] [cursor=pointer]:
+                    - /url: data-types-scalars.html
+                  - text: Раздел - Основы
+                - listitem [ref=e278]:
+                  - link "Срезы и представления" [ref=e279] [cursor=pointer]:
+                    - /url: arrays-slices.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e280]:
+                  - link "Строковые функции" [ref=e281] [cursor=pointer]:
+                    - /url: string-functions.html
+                  - text: Раздел - Встроенные функции
+            - generic [ref=e282]:
+              - heading "Т" [level=3] [ref=e283]
+              - list [ref=e284]:
+                - listitem [ref=e285]:
+                  - link "Текстовый слой SCREEN" [ref=e286] [cursor=pointer]:
+                    - /url: graphics-text.html
+                  - text: Раздел - Графика
+                - listitem [ref=e287]:
+                  - link "Текущие дата и время" [ref=e288] [cursor=pointer]:
+                    - /url: date-time-functions-current.html
+                  - text: Раздел - Дата и время
+                - listitem [ref=e289]:
+                  - link "Типы данных" [ref=e290] [cursor=pointer]:
+                    - /url: data-types.html
+                  - text: Раздел - Основы
+                - listitem [ref=e291]:
+                  - link "Традиционные функции и преобразование" [ref=e292] [cursor=pointer]:
+                    - /url: numeric-functions-conversion-and-legacy.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e293]:
+                  - link "Тригонометрия и гиперболические функции" [ref=e294] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html
+                  - text: Раздел - Встроенные функции
+            - generic [ref=e295]:
+              - heading "Ф" [level=3] [ref=e296]
+              - list [ref=e297]:
+                - listitem [ref=e298]:
+                  - 'link "Файловая система: операции" [ref=e299] [cursor=pointer]':
+                    - /url: file-system-functions-management.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e300]:
+                  - 'link "Файловая система: открытые файлы FILE" [ref=e301] [cursor=pointer]':
+                    - /url: file-system-functions-open-files.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e302]:
+                  - 'link "Файловая система: пути и сведения" [ref=e303] [cursor=pointer]':
+                    - /url: file-system-functions-paths.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e304]:
+                  - 'link "Файловая система: текстовые файлы" [ref=e305] [cursor=pointer]':
+                    - /url: file-system-functions-text.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e306]:
+                  - link "Функции массивов" [ref=e307] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e308]:
+                  - link "Функции состояния SCREEN" [ref=e309] [cursor=pointer]:
+                    - /url: screen-functions.html
+                  - text: Раздел - Графика
+                - listitem [ref=e310]:
+                  - link "Функции файловой системы" [ref=e311] [cursor=pointer]:
+                    - /url: file-system-functions.html
+                  - text: Раздел - Встроенные функции
+                - listitem [ref=e312]:
+                  - link "Функция FUNCTION" [ref=e313] [cursor=pointer]:
+                    - /url: function.html
+                  - text: Оператор - Процедуры и функции
+                - listitem [ref=e314]:
+                  - link "Функция POINT" [ref=e315] [cursor=pointer]:
+                    - /url: graphics-primitives.html#point
+                  - text: Функция - Графика
+            - generic [ref=e316]:
+              - heading "Ц" [level=3] [ref=e317]
+              - list [ref=e318]:
+                - listitem [ref=e319]:
+                  - link "Циклы" [ref=e320] [cursor=pointer]:
+                    - /url: loops.html
+                  - text: Раздел - Операторы передачи управления
+            - generic [ref=e321]:
+              - heading "Ч" [level=3] [ref=e322]
+              - list [ref=e323]:
+                - listitem [ref=e324]:
+                  - link "Числовые функции" [ref=e325] [cursor=pointer]:
+                    - /url: numeric-functions.html
+                  - text: Раздел - Встроенные функции
+            - generic [ref=e326]:
+              - heading "A" [level=3] [ref=e327]
+              - list [ref=e328]:
+                - listitem [ref=e329]:
+                  - link "ABS" [ref=e330] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#abs
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e331]:
+                  - link "ACOS" [ref=e332] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#acos
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e333]:
+                  - link "ACOSH" [ref=e334] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#acosh
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e335]:
+                  - link "APPENDFILE" [ref=e336] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#appendfile
+                  - text: Функция - Файловая система
+                - listitem [ref=e337]:
+                  - link "ARRAY-функции" [ref=e338] [cursor=pointer]:
+                    - /url: arrays-functions.html
+                  - text: Раздел - Массивы
+                - listitem [ref=e339]:
+                  - link "ARRAYBINARYSEARCH" [ref=e340] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#search
+                  - text: Функция - Массивы
+                - listitem [ref=e341]:
+                  - link "ARRAYBOUNDS" [ref=e342] [cursor=pointer]:
+                    - /url: arrays-functions.html#arraybounds
+                  - text: Функция - Массивы
+                - listitem [ref=e343]:
+                  - link "ARRAYCLONE" [ref=e344] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#views
+                  - text: Функция - Массивы
+                - listitem [ref=e345]:
+                  - link "ARRAYCONCAT" [ref=e346] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#selection
+                  - text: Функция - Массивы
+                - listitem [ref=e347]:
+                  - link "ARRAYCONTAINS" [ref=e348] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#search
+                  - text: Функция - Массивы
+                - listitem [ref=e349]:
+                  - link "ARRAYCOUNT" [ref=e350] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#search
+                  - text: Функция - Массивы
+                - listitem [ref=e351]:
+                  - link "ARRAYDISTINCT" [ref=e352] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#selection
+                  - text: Функция - Массивы
+                - listitem [ref=e353]:
+                  - link "ARRAYEVERY" [ref=e354] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#callbacks
+                  - text: Функция - Массивы
+                - listitem [ref=e355]:
+                  - link "ARRAYFILL" [ref=e356] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#mutation
+                  - text: Функция - Массивы
+                - listitem [ref=e357]:
+                  - link "ARRAYFILTER" [ref=e358] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#callbacks
+                  - text: Функция - Массивы
+                - listitem [ref=e359]:
+                  - link "ARRAYFINDALL" [ref=e360] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#search
+                  - text: Функция - Массивы
+                - listitem [ref=e361]:
+                  - link "ARRAYFLATTEN" [ref=e362] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#views
+                  - text: Функция - Массивы
+                - listitem [ref=e363]:
+                  - link "ARRAYINDEXOF" [ref=e364] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#search
+                  - text: Функция - Массивы
+                - listitem [ref=e365]:
+                  - link "ARRAYINSERT" [ref=e366] [cursor=pointer]:
+                    - /url: arrays-functions.html#arrayinsert
+                  - text: Функция - Массивы
+                - listitem [ref=e367]:
+                  - link "ARRAYISALLOCATED" [ref=e368] [cursor=pointer]:
+                    - /url: arrays-functions.html#arrayisallocated
+                  - text: Функция - Массивы
+                - listitem [ref=e369]:
+                  - link "ARRAYLASTINDEXOF" [ref=e370] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#search
+                  - text: Функция - Массивы
+                - listitem [ref=e371]:
+                  - link "ARRAYLENGTH" [ref=e372] [cursor=pointer]:
+                    - /url: arrays-functions.html#arraylength
+                  - text: Функция - Массивы
+                - listitem [ref=e373]:
+                  - link "ARRAYMAP" [ref=e374] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#callbacks
+                  - text: Функция - Массивы
+                - listitem [ref=e375]:
+                  - link "ARRAYPOP" [ref=e376] [cursor=pointer]:
+                    - /url: arrays-functions.html#arraypop
+                  - text: Функция - Массивы
+                - listitem [ref=e377]:
+                  - link "ARRAYPUSH" [ref=e378] [cursor=pointer]:
+                    - /url: arrays-functions.html#arraypush
+                  - text: Функция - Массивы
+                - listitem [ref=e379]:
+                  - link "ARRAYRANK" [ref=e380] [cursor=pointer]:
+                    - /url: arrays-functions.html#arrayrank
+                  - text: Функция - Массивы
+                - listitem [ref=e381]:
+                  - link "ARRAYREDUCE" [ref=e382] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#callbacks
+                  - text: Функция - Массивы
+                - listitem [ref=e383]:
+                  - link "ARRAYREMOVE" [ref=e384] [cursor=pointer]:
+                    - /url: arrays-functions.html#arrayremove
+                  - text: Функция - Массивы
+                - listitem [ref=e385]:
+                  - link "ARRAYRESHAPE" [ref=e386] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#views
+                  - text: Функция - Массивы
+                - listitem [ref=e387]:
+                  - link "ARRAYREVERSE" [ref=e388] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#order
+                  - text: Функция - Массивы
+                - listitem [ref=e389]:
+                  - link "ARRAYSKIP" [ref=e390] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#selection
+                  - text: Функция - Массивы
+                - listitem [ref=e391]:
+                  - link "ARRAYSLICE" [ref=e392] [cursor=pointer]:
+                    - /url: arrays-functions.html#arrayslice
+                  - text: Функция - Массивы
+                - listitem [ref=e393]:
+                  - link "ARRAYSOME" [ref=e394] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#callbacks
+                  - text: Функция - Массивы
+                - listitem [ref=e395]:
+                  - link "ARRAYSORT" [ref=e396] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#order
+                  - text: Функция - Массивы
+                - listitem [ref=e397]:
+                  - link "ARRAYTAKE" [ref=e398] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#selection
+                  - text: Функция - Массивы
+                - listitem [ref=e399]:
+                  - link "ARRAYTOREVERSED" [ref=e400] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#order
+                  - text: Функция - Массивы
+                - listitem [ref=e401]:
+                  - link "ARRAYTOSORTED" [ref=e402] [cursor=pointer]:
+                    - /url: arrays-and-builtins.html#order
+                  - text: Функция - Массивы
+                - listitem [ref=e403]:
+                  - link "ASC" [ref=e404] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#codes
+                  - text: Функция - Строковые функции
+                - listitem [ref=e405]:
+                  - link "ASCW" [ref=e406] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#codes
+                  - text: Функция - Строковые функции
+                - listitem [ref=e407]:
+                  - link "ASIN" [ref=e408] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#asin
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e409]:
+                  - link "ASINH" [ref=e410] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#asinh
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e411]:
+                  - link "ATANH" [ref=e412] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#atanh
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e413]:
+                  - link "ATN" [ref=e414] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#atn
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e415]:
+                  - link "ATN2" [ref=e416] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#atn2
+                  - text: Функция - Встроенные функции
+            - generic [ref=e417]:
+              - heading "C" [level=3] [ref=e418]
+              - list [ref=e419]:
+                - listitem [ref=e420]:
+                  - link "CBRT" [ref=e421] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#cbrt
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e422]:
+                  - link "CEIL" [ref=e423] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#ceil
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e424]:
+                  - link "CENTER" [ref=e425] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#padding
+                  - text: Функция - Строковые функции
+                - listitem [ref=e426]:
+                  - link "CHANGEDIR" [ref=e427] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#changedir
+                  - text: Функция - Файловая система
+                - listitem [ref=e428]:
+                  - link "CHR" [ref=e429] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#codes
+                  - text: Функция - Строковые функции
+                - listitem [ref=e430]:
+                  - link "CHRW" [ref=e431] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#codes
+                  - text: Функция - Строковые функции
+                - listitem [ref=e432]:
+                  - link "CLAMP" [ref=e433] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#clamp
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e434]:
+                  - link "COMBINEPATH" [ref=e435] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#combinepath
+                  - text: Функция - Файловая система
+                - listitem [ref=e436]:
+                  - link "CONTAINS" [ref=e437] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#contains
+                  - text: Функция - Строковые функции
+                - listitem [ref=e438]:
+                  - link "COPYDIR" [ref=e439] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#copydir
+                  - text: Функция - Файловая система
+                - listitem [ref=e440]:
+                  - link "COPYFILE" [ref=e441] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#copyfile
+                  - text: Функция - Файловая система
+                - listitem [ref=e442]:
+                  - link "COS" [ref=e443] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#cos
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e444]:
+                  - link "COSH" [ref=e445] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#cosh
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e446]:
+                  - link "CURRENTDIR" [ref=e447] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#currentdir
+                  - text: Функция - Файловая система
+            - generic [ref=e448]:
+              - heading "D" [level=3] [ref=e449]
+              - list [ref=e450]:
+                - listitem [ref=e451]:
+                  - link "DATE" [ref=e452] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#date
+                  - text: Функция - Дата и время
+                - listitem [ref=e453]:
+                  - link "DATEADD" [ref=e454] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html#dateadd
+                  - text: Функция - Дата и время
+                - listitem [ref=e455]:
+                  - link "DATEDIFF" [ref=e456] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html#datediff
+                  - text: Функция - Дата и время
+                - listitem [ref=e457]:
+                  - link "DATEPART" [ref=e458] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html#datepart
+                  - text: Функция - Дата и время
+                - listitem [ref=e459]:
+                  - link "DATESERIAL" [ref=e460] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#dateserial
+                  - text: Функция - Дата и время
+                - listitem [ref=e461]:
+                  - link "DATEVALUE" [ref=e462] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html#datevalue-timevalue
+                  - text: Функция - Дата и время
+                - listitem [ref=e463]:
+                  - link "DAY" [ref=e464] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#year-month-day
+                  - text: Функция - Дата и время
+                - listitem [ref=e465]:
+                  - link "DAYSINMONTH" [ref=e466] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#calendar-helpers
+                  - text: Функция - Дата и время
+                - listitem [ref=e467]:
+                  - link "DELETEDIR" [ref=e468] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#deletedir
+                  - text: Функция - Файловая система
+                - listitem [ref=e469]:
+                  - link "DELETEDIRRECURSIVE" [ref=e470] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#deletedirrecursive
+                  - text: Функция - Файловая система
+                - listitem [ref=e471]:
+                  - link "DELETEFILE" [ref=e472] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#deletefile
+                  - text: Функция - Файловая система
+                - listitem [ref=e473]:
+                  - link "DIRDATE" [ref=e474] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#dirdate
+                  - text: Функция - Файловая система
+                - listitem [ref=e475]:
+                  - link "DIREXISTS" [ref=e476] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#direxists
+                  - text: Функция - Файловая система
+                - listitem [ref=e477]:
+                  - link "DIRNAME" [ref=e478] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#dirname
+                  - text: Функция - Файловая система
+                - listitem [ref=e479]:
+                  - link "DIRSIZE" [ref=e480] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#dirsize
+                  - text: Функция - Файловая система
+                - listitem [ref=e481]:
+                  - link "DRIVEFORMAT" [ref=e482] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#driveformat
+                  - text: Функция - Файловая система
+                - listitem [ref=e483]:
+                  - link "DRIVENAME" [ref=e484] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#drivename
+                  - text: Функция - Файловая система
+                - listitem [ref=e485]:
+                  - link "DRIVETYPE" [ref=e486] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#drivetype
+                  - text: Функция - Файловая система
+            - generic [ref=e487]:
+              - heading "E" [level=3] [ref=e488]
+              - list [ref=e489]:
+                - listitem [ref=e490]:
+                  - link "ENDOFMONTH" [ref=e491] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#calendar-helpers
+                  - text: Функция - Дата и время
+                - listitem [ref=e492]:
+                  - link "ENDOFYEAR" [ref=e493] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#calendar-helpers
+                  - text: Функция - Дата и время
+                - listitem [ref=e494]:
+                  - link "ENDSWITH" [ref=e495] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#contains
+                  - text: Функция - Строковые функции
+                - listitem [ref=e496]:
+                  - link "EOF" [ref=e497] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#eof
+                  - text: Функция - Файловая система
+                - listitem [ref=e498]:
+                  - link "EXP" [ref=e499] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#exp
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e500]:
+                  - link "EXTNAME" [ref=e501] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#extname
+                  - text: Функция - Файловая система
+            - generic [ref=e502]:
+              - heading "F" [level=3] [ref=e503]
+              - list [ref=e504]:
+                - listitem [ref=e505]:
+                  - link "FILEACCESSEDDATE" [ref=e506] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#fileaccesseddate
+                  - text: Функция - Файловая система
+                - listitem [ref=e507]:
+                  - link "FILECREATEDATE" [ref=e508] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#filecreatedate
+                  - text: Функция - Файловая система
+                - listitem [ref=e509]:
+                  - link "FILEDATE" [ref=e510] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#filedate
+                  - text: Функция - Файловая система
+                - listitem [ref=e511]:
+                  - link "FILEEXISTS" [ref=e512] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#fileexists
+                  - text: Функция - Файловая система
+                - listitem [ref=e513]:
+                  - link "FILELENGTH" [ref=e514] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#filelength
+                  - text: Функция - Файловая система
+                - listitem [ref=e515]:
+                  - link "FILEMODE" [ref=e516] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#filemode
+                  - text: Функция - Файловая система
+                - listitem [ref=e517]:
+                  - link "FILENAME" [ref=e518] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#filename
+                  - text: Функция - Файловая система
+                - listitem [ref=e519]:
+                  - link "FILEPATH" [ref=e520] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#filepath
+                  - text: Функция - Файловая система
+                - listitem [ref=e521]:
+                  - link "FILEPOS" [ref=e522] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#filepos
+                  - text: Функция - Файловая система
+                - listitem [ref=e523]:
+                  - link "FILESIZE" [ref=e524] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#filesize
+                  - text: Функция - Файловая система
+                - listitem [ref=e525]:
+                  - link "FIX" [ref=e526] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#fix
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e527]:
+                  - link "FLOOR" [ref=e528] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#floor
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e529]:
+                  - link "FLUSH" [ref=e530] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#flush
+                  - text: Функция - Файловая система
+                - listitem [ref=e531]:
+                  - link "FREESPACE" [ref=e532] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#freespace
+                  - text: Функция - Файловая система
+                - listitem [ref=e533]:
+                  - link "FROMUTC" [ref=e534] [cursor=pointer]:
+                    - /url: date-time-functions-time-zones.html#fromutc
+                  - text: Функция - Дата и время
+                - listitem [ref=e535]:
+                  - link "FULLPATH" [ref=e536] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#fullpath
+                  - text: Функция - Файловая система
+            - generic [ref=e537]:
+              - heading "G" [level=3] [ref=e538]
+              - list [ref=e539]:
+                - listitem [ref=e540]:
+                  - link "GETDIRS" [ref=e541] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#getdirs
+                  - text: Функция - Файловая система
+                - listitem [ref=e542]:
+                  - link "GETFILES" [ref=e543] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#getfiles
+                  - text: Функция - Файловая система
+            - generic [ref=e544]:
+              - heading "H" [level=3] [ref=e545]
+              - list [ref=e546]:
+                - listitem [ref=e547]:
+                  - link "HOUR" [ref=e548] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#hour-minute-second
+                  - text: Функция - Дата и время
+            - generic [ref=e549]:
+              - heading "I" [level=3] [ref=e550]
+              - list [ref=e551]:
+                - listitem [ref=e552]:
+                  - link "INKEY" [ref=e553] [cursor=pointer]:
+                    - /url: inkey.html
+                  - text: Функция - Клавиатура
+                - listitem [ref=e554]:
+                  - link "INSERT" [ref=e555] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#insertremove
+                  - text: Функция - Строковые функции
+                - listitem [ref=e556]:
+                  - link "INSTR" [ref=e557] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#instr
+                  - text: Функция - Строковые функции
+                - listitem [ref=e558]:
+                  - link "INSTRREV" [ref=e559] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#instr
+                  - text: Функция - Строковые функции
+                - listitem [ref=e560]:
+                  - link "INT" [ref=e561] [cursor=pointer]:
+                    - /url: numeric-functions-conversion-and-legacy.html#int
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e562]:
+                  - link "ISABSOLUTEPATH" [ref=e563] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#isabsolutepath
+                  - text: Функция - Файловая система
+                - listitem [ref=e564]:
+                  - link "ISDATE" [ref=e565] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html#isdate
+                  - text: Функция - Дата и время
+                - listitem [ref=e566]:
+                  - link "ISHIDDEN" [ref=e567] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#ishidden
+                  - text: Функция - Файловая система
+                - listitem [ref=e568]:
+                  - link "ISLEAPYEAR" [ref=e569] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#calendar-helpers
+                  - text: Функция - Дата и время
+                - listitem [ref=e570]:
+                  - link "ISOPEN" [ref=e571] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#isopen
+                  - text: Функция - Файловая система
+                - listitem [ref=e572]:
+                  - link "ISREADONLY" [ref=e573] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#isreadonly
+                  - text: Функция - Файловая система
+            - generic [ref=e574]:
+              - heading "J" [level=3] [ref=e575]
+              - list [ref=e576]:
+                - listitem [ref=e577]:
+                  - link "JOIN" [ref=e578] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#split
+                  - text: Функция - Строковые функции
+            - generic [ref=e579]:
+              - heading "K" [level=3] [ref=e580]
+              - list [ref=e581]:
+                - listitem [ref=e582]:
+                  - link "KEYDOWN" [ref=e583] [cursor=pointer]:
+                    - /url: keydown.html
+                  - text: Функция - Клавиатура
+                - listitem [ref=e584]:
+                  - link "KEYPRESS" [ref=e585] [cursor=pointer]:
+                    - /url: keypress.html
+                  - text: Функция - Клавиатура
+            - generic [ref=e586]:
+              - heading "L" [level=3] [ref=e587]
+              - list [ref=e588]:
+                - listitem [ref=e589]:
+                  - link "LBOUND" [ref=e590] [cursor=pointer]:
+                    - /url: arrays-functions.html#lbound
+                  - text: Функция - Массивы
+                - listitem [ref=e591]:
+                  - link "LCASE" [ref=e592] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html#lcase
+                  - text: Функция - Строковые функции
+                - listitem [ref=e593]:
+                  - link "LEFT" [ref=e594] [cursor=pointer]:
+                    - /url: string-functions-slices-and-length.html#left
+                  - text: Функция - Строковые функции
+                - listitem [ref=e595]:
+                  - link "LEN" [ref=e596] [cursor=pointer]:
+                    - /url: string-functions-slices-and-length.html#len
+                  - text: Функция - Строковые функции
+                - listitem [ref=e597]:
+                  - link "LINENUMBER" [ref=e598] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#linenumber
+                  - text: Функция - Файловая система
+                - listitem [ref=e599]:
+                  - link "LOG" [ref=e600] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#log
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e601]:
+                  - link "LOG2" [ref=e602] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#log2
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e603]:
+                  - link "LOG10" [ref=e604] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#log10
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e605]:
+                  - link "LTRIM" [ref=e606] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html#ltrim
+                  - text: Функция - Строковые функции
+            - generic [ref=e607]:
+              - heading "M" [level=3] [ref=e608]
+              - list [ref=e609]:
+                - listitem [ref=e610]:
+                  - link "MAKEDIR" [ref=e611] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#makedir
+                  - text: Функция - Файловая система
+                - listitem [ref=e612]:
+                  - link "MAKETEMPDIR" [ref=e613] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#maketempdir
+                  - text: Функция - Файловая система
+                - listitem [ref=e614]:
+                  - link "MAKETEMPFILE" [ref=e615] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#maketempfile
+                  - text: Функция - Файловая система
+                - listitem [ref=e616]:
+                  - link "MAX" [ref=e617] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#max
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e618]:
+                  - link "MID" [ref=e619] [cursor=pointer]:
+                    - /url: string-functions-slices-and-length.html#mid
+                  - text: Функция - Строковые функции
+                - listitem [ref=e620]:
+                  - link "MIN" [ref=e621] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#min
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e622]:
+                  - link "MINUTE" [ref=e623] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#hour-minute-second
+                  - text: Функция - Дата и время
+                - listitem [ref=e624]:
+                  - link "MONTH" [ref=e625] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#year-month-day
+                  - text: Функция - Дата и время
+                - listitem [ref=e626]:
+                  - link "MONTHNAME" [ref=e627] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#monthname
+                  - text: Функция - Дата и время
+                - listitem [ref=e628]:
+                  - link "MOUSEBUTTON" [ref=e629] [cursor=pointer]:
+                    - /url: mousebutton.html
+                  - text: Функция - Мышь
+                - listitem [ref=e630]:
+                  - link "MOUSEPRESS" [ref=e631] [cursor=pointer]:
+                    - /url: mousepress.html
+                  - text: Функция - Мышь
+                - listitem [ref=e632]:
+                  - link "MOUSEX" [ref=e633] [cursor=pointer]:
+                    - /url: mousex.html
+                  - text: Функция - Мышь
+                - listitem [ref=e634]:
+                  - link "MOUSEY" [ref=e635] [cursor=pointer]:
+                    - /url: mousey.html
+                  - text: Функция - Мышь
+                - listitem [ref=e636]:
+                  - link "MOVEDIR" [ref=e637] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#movedir
+                  - text: Функция - Файловая система
+                - listitem [ref=e638]:
+                  - link "MOVEFILE" [ref=e639] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#movefile
+                  - text: Функция - Файловая система
+            - generic [ref=e640]:
+              - heading "N" [level=3] [ref=e641]
+              - list [ref=e642]:
+                - listitem [ref=e643]:
+                  - link "NEWLINE" [ref=e644] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#newline
+                  - text: Функция - Файловая система
+                - listitem [ref=e645]:
+                  - link "NOW" [ref=e646] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#now
+                  - text: Функция - Дата и время
+            - generic [ref=e647]:
+              - heading "P" [level=3] [ref=e648]
+              - list [ref=e649]:
+                - listitem [ref=e650]:
+                  - link "PADLEFT" [ref=e651] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#padding
+                  - text: Функция - Строковые функции
+                - listitem [ref=e652]:
+                  - link "PADRIGHT" [ref=e653] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#padding
+                  - text: Функция - Строковые функции
+                - listitem [ref=e654]:
+                  - link "PATHEXISTS" [ref=e655] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#pathexists
+                  - text: Функция - Файловая система
+                - listitem [ref=e656]:
+                  - link "PATHROOT" [ref=e657] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#pathroot
+                  - text: Функция - Файловая система
+                - listitem [ref=e658]:
+                  - link "POW" [ref=e659] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#pow
+                  - text: Функция - Встроенные функции
+            - generic [ref=e660]:
+              - heading "R" [level=3] [ref=e661]
+              - list [ref=e662]:
+                - listitem [ref=e663]:
+                  - link "READALLLINES" [ref=e664] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#readalllines
+                  - text: Функция - Файловая система
+                - listitem [ref=e665]:
+                  - link "READFILE" [ref=e666] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#readfile
+                  - text: Функция - Файловая система
+                - listitem [ref=e667]:
+                  - link "READLINE" [ref=e668] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#readline
+                  - text: Функция - Файловая система
+                - listitem [ref=e669]:
+                  - link "READLINES" [ref=e670] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#readlines
+                  - text: Функция - Файловая система
+                - listitem [ref=e671]:
+                  - link "READTEXT" [ref=e672] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#readtext
+                  - text: Функция - Файловая система
+                - listitem [ref=e673]:
+                  - link "READTOEND" [ref=e674] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#readtoend
+                  - text: Функция - Файловая система
+                - listitem [ref=e675]:
+                  - link "REGEXCOUNT" [ref=e676] [cursor=pointer]:
+                    - /url: regex-functions-replace-and-count.html#regexcount
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e677]:
+                  - link "REGEXEXTRACT" [ref=e678] [cursor=pointer]:
+                    - /url: regex-functions-match-and-extract.html#regexextract
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e679]:
+                  - link "REGEXEXTRACTALL" [ref=e680] [cursor=pointer]:
+                    - /url: regex-functions-arrays-and-split.html#regexextractall
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e681]:
+                  - link "REGEXISMATCH" [ref=e682] [cursor=pointer]:
+                    - /url: regex-functions-match-and-extract.html#regexismatch
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e683]:
+                  - link "REGEXMATCH" [ref=e684] [cursor=pointer]:
+                    - /url: regex-functions-match-and-extract.html#regexmatch
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e685]:
+                  - link "REGEXMATCHES" [ref=e686] [cursor=pointer]:
+                    - /url: regex-functions-arrays-and-split.html#regexmatches
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e687]:
+                  - link "REGEXREPLACE" [ref=e688] [cursor=pointer]:
+                    - /url: regex-functions-replace-and-count.html#regexreplace
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e689]:
+                  - link "REGEXSPLIT" [ref=e690] [cursor=pointer]:
+                    - /url: regex-functions-arrays-and-split.html#regexsplit
+                  - text: Функция - Регулярные выражения
+                - listitem [ref=e691]:
+                  - link "REMOVE" [ref=e692] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#insertremove
+                  - text: Функция - Строковые функции
+                - listitem [ref=e693]:
+                  - link "RENAMEDIR" [ref=e694] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#renamedir
+                  - text: Функция - Файловая система
+                - listitem [ref=e695]:
+                  - link "RENAMEFILE" [ref=e696] [cursor=pointer]:
+                    - /url: file-system-functions-management.html#renamefile
+                  - text: Функция - Файловая система
+                - listitem [ref=e697]:
+                  - link "REPEAT" [ref=e698] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#repeat
+                  - text: Функция - Строковые функции
+                - listitem [ref=e699]:
+                  - link "REPLACE" [ref=e700] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#replace
+                  - text: Функция - Строковые функции
+                - listitem [ref=e701]:
+                  - link "REPLACEMANY" [ref=e702] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#replacemany
+                  - text: Функция - Строковые функции
+                - listitem [ref=e703]:
+                  - link "REVERSE" [ref=e704] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html#reverse
+                  - text: Функция - Строковые функции
+                - listitem [ref=e705]:
+                  - link "REWIND" [ref=e706] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#rewind
+                  - text: Функция - Файловая система
+                - listitem [ref=e707]:
+                  - link "RIGHT" [ref=e708] [cursor=pointer]:
+                    - /url: string-functions-slices-and-length.html#right
+                  - text: Функция - Строковые функции
+                - listitem [ref=e709]:
+                  - link "RND" [ref=e710] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#rnd
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e711]:
+                  - link "ROUND" [ref=e712] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#round
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e713]:
+                  - link "RTRIM" [ref=e714] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html#rtrim
+                  - text: Функция - Строковые функции
+            - generic [ref=e715]:
+              - heading "S" [level=3] [ref=e716]
+              - list [ref=e717]:
+                - listitem [ref=e718]:
+                  - link "SCREENHEIGHT" [ref=e719] [cursor=pointer]:
+                    - /url: screen-functions.html#screenheight
+                  - text: Функция - Графика
+                - listitem [ref=e720]:
+                  - link "SCREENISACTIVE" [ref=e721] [cursor=pointer]:
+                    - /url: screen-functions.html#screenisactive
+                  - text: Функция - Графика
+                - listitem [ref=e722]:
+                  - link "SCREENMODE" [ref=e723] [cursor=pointer]:
+                    - /url: screen-functions.html#screenmode
+                  - text: Функция - Графика
+                - listitem [ref=e724]:
+                  - link "SCREENWIDTH" [ref=e725] [cursor=pointer]:
+                    - /url: screen-functions.html#screenwidth
+                  - text: Функция - Графика
+                - listitem [ref=e726]:
+                  - link "SECOND" [ref=e727] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#hour-minute-second
+                  - text: Функция - Дата и время
+                - listitem [ref=e728]:
+                  - link "SEEKFILE" [ref=e729] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#seekfile
+                  - text: Функция - Файловая система
+                - listitem [ref=e730]:
+                  - link "SETSIGN" [ref=e731] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#setsign
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e732]:
+                  - link "SGN" [ref=e733] [cursor=pointer]:
+                    - /url: numeric-functions-core.html#sgn
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e734]:
+                  - link "SIN" [ref=e735] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#sin
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e736]:
+                  - link "SINH" [ref=e737] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#sinh
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e738]:
+                  - link "SKIPLINE" [ref=e739] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#skipline
+                  - text: Функция - Файловая система
+                - listitem [ref=e740]:
+                  - link "SPACE" [ref=e741] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#repeat
+                  - text: Функция - Строковые функции
+                - listitem [ref=e742]:
+                  - link "SPLIT" [ref=e743] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#split
+                  - text: Функция - Строковые функции
+                - listitem [ref=e744]:
+                  - link "SQR" [ref=e745] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html#sqr
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e746]:
+                  - link "STARTOFMONTH" [ref=e747] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#calendar-helpers
+                  - text: Функция - Дата и время
+                - listitem [ref=e748]:
+                  - link "STARTOFYEAR" [ref=e749] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#calendar-helpers
+                  - text: Функция - Дата и время
+                - listitem [ref=e750]:
+                  - link "STARTSWITH" [ref=e751] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#contains
+                  - text: Функция - Строковые функции
+                - listitem [ref=e752]:
+                  - link "STR" [ref=e753] [cursor=pointer]:
+                    - /url: numeric-functions-conversion-and-legacy.html#str
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e754]:
+                  - link "STRING" [ref=e755] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html#repeat
+                  - text: Функция - Строковые функции
+                - listitem [ref=e756]:
+                  - link "STRING, FILE и фиксированная длина" [ref=e757] [cursor=pointer]:
+                    - /url: data-types-strings-and-files.html
+                  - text: Раздел - Основы
+                - listitem [ref=e758]:
+                  - link "SUBSTRCOUNT" [ref=e759] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html#substrcount
+                  - text: Функция - Строковые функции
+            - generic [ref=e760]:
+              - heading "T" [level=3] [ref=e761]
+              - list [ref=e762]:
+                - listitem [ref=e763]:
+                  - link "TAN" [ref=e764] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#tan
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e765]:
+                  - link "TANH" [ref=e766] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html#tanh
+                  - text: Функция - Встроенные функции
+                - listitem [ref=e767]:
+                  - link "TIME" [ref=e768] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#time
+                  - text: Функция - Дата и время
+                - listitem [ref=e769]:
+                  - link "TIMER" [ref=e770] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#timer
+                  - text: Функция - Дата и время
+                - listitem [ref=e771]:
+                  - link "TIMESERIAL" [ref=e772] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#timeserial
+                  - text: Функция - Дата и время
+                - listitem [ref=e773]:
+                  - link "TIMEVALUE" [ref=e774] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html#datevalue-timevalue
+                  - text: Функция - Дата и время
+                - listitem [ref=e775]:
+                  - link "TOTALFREESPACE" [ref=e776] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#totalfreespace
+                  - text: Функция - Файловая система
+                - listitem [ref=e777]:
+                  - link "TOTALSPACE" [ref=e778] [cursor=pointer]:
+                    - /url: file-system-functions-paths.html#totalspace
+                  - text: Функция - Файловая система
+                - listitem [ref=e779]:
+                  - link "TOUTC" [ref=e780] [cursor=pointer]:
+                    - /url: date-time-functions-time-zones.html#toutc
+                  - text: Функция - Дата и время
+                - listitem [ref=e781]:
+                  - link "TRIM" [ref=e782] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html#trim
+                  - text: Функция - Строковые функции
+            - generic [ref=e783]:
+              - heading "U" [level=3] [ref=e784]
+              - list [ref=e785]:
+                - listitem [ref=e786]:
+                  - link "UBOUND" [ref=e787] [cursor=pointer]:
+                    - /url: arrays-functions.html#ubound
+                  - text: Функция - Массивы
+                - listitem [ref=e788]:
+                  - link "UCASE" [ref=e789] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html#lcase
+                  - text: Функция - Строковые функции
+                - listitem [ref=e790]:
+                  - link "UTC и часовые пояса" [ref=e791] [cursor=pointer]:
+                    - /url: date-time-functions-time-zones.html
+                  - text: Раздел - Дата и время
+                - listitem [ref=e792]:
+                  - link "UTCDATE" [ref=e793] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#utcdate
+                  - text: Функция - Дата и время
+                - listitem [ref=e794]:
+                  - link "UTCNOW" [ref=e795] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#utcnow
+                  - text: Функция - Дата и время
+                - listitem [ref=e796]:
+                  - link "UTCOFFSET" [ref=e797] [cursor=pointer]:
+                    - /url: date-time-functions-time-zones.html#utcoffset
+                  - text: Функция - Дата и время
+                - listitem [ref=e798]:
+                  - link "UTCTIME" [ref=e799] [cursor=pointer]:
+                    - /url: date-time-functions-current.html#utctime
+                  - text: Функция - Дата и время
+            - generic [ref=e800]:
+              - heading "V" [level=3] [ref=e801]
+              - list [ref=e802]:
+                - listitem [ref=e803]:
+                  - link "VAL" [ref=e804] [cursor=pointer]:
+                    - /url: numeric-functions-conversion-and-legacy.html#val
+                  - text: Функция - Встроенные функции
+            - generic [ref=e805]:
+              - heading "W" [level=3] [ref=e806]
+              - list [ref=e807]:
+                - listitem [ref=e808]:
+                  - link "WEEKDAY" [ref=e809] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#weekday
+                  - text: Функция - Дата и время
+                - listitem [ref=e810]:
+                  - link "WEEKDAYNAME" [ref=e811] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#weekday
+                  - text: Функция - Дата и время
+                - listitem [ref=e812]:
+                  - link "WRITE" [ref=e813] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#write
+                  - text: Функция - Файловая система
+                - listitem [ref=e814]:
+                  - link "WRITEFILE" [ref=e815] [cursor=pointer]:
+                    - /url: file-system-functions-text.html#writefile
+                  - text: Функция - Файловая система
+                - listitem [ref=e816]:
+                  - link "WRITELINE" [ref=e817] [cursor=pointer]:
+                    - /url: file-system-functions-open-files.html#writeline
+                  - text: Функция - Файловая система
+            - generic [ref=e818]:
+              - heading "Y" [level=3] [ref=e819]
+              - list [ref=e820]:
+                - listitem [ref=e821]:
+                  - link "YEAR" [ref=e822] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html#year-month-day
+                  - text: Функция - Дата и время
+      - generic [ref=e823]:
+        - heading "Тематические переходы" [level=2] [ref=e824]
+        - paragraph [ref=e825]: "Тематический вход удобен, когда известно не имя конструкции, а область задачи: данные, выражения, ввод-вывод, файлы, массивы, графика, события, ошибки или встроенные функции."
+        - generic [ref=e826]:
+          - link "Поиск по справочнику" [ref=e827] [cursor=pointer]:
+            - /url: search.html
+          - link "Начало работы" [ref=e828] [cursor=pointer]:
+            - /url: getting-started.html
+          - link "Типы данных" [ref=e829] [cursor=pointer]:
+            - /url: data-types.html
+          - link "Переменные и константы" [ref=e830] [cursor=pointer]:
+            - /url: variables-and-constants.html
+          - link "Оператор DIM" [ref=e831] [cursor=pointer]:
+            - /url: dim.html
+          - link "Оператор CONST" [ref=e832] [cursor=pointer]:
+            - /url: const.html
+          - link "Оператор TYPE" [ref=e833] [cursor=pointer]:
+            - /url: type.html
+          - link "Выражения и операции" [ref=e834] [cursor=pointer]:
+            - /url: arithmetic-and-logic.html
+          - link "Условные операторы" [ref=e835] [cursor=pointer]:
+            - /url: if.html
+          - link "Циклы" [ref=e836] [cursor=pointer]:
+            - /url: loops.html
+          - link "Процедуры и функции" [ref=e837] [cursor=pointer]:
+            - /url: procedures-and-functions.html
+          - link "Ввод и вывод" [ref=e838] [cursor=pointer]:
+            - /url: data-and-input.html
+          - link "Файлы и файловая система" [ref=e839] [cursor=pointer]:
+            - /url: file-system-functions.html
+          - link "Массивы" [ref=e840] [cursor=pointer]:
+            - /url: arrays.html
+          - link "Графика и экран" [ref=e841] [cursor=pointer]:
+            - /url: graphics.html
+          - link "Клавиатура" [ref=e842] [cursor=pointer]:
+            - /url: inkey.html
+          - link "Мышь" [ref=e843] [cursor=pointer]:
+            - /url: mousex.html
+          - link "Обработка ошибок" [ref=e844] [cursor=pointer]:
+            - /url: error-handling.html
+          - link "Диагностика" [ref=e845] [cursor=pointer]:
+            - /url: diagnostics.html
+          - link "Числовые функции" [ref=e846] [cursor=pointer]:
+            - /url: numeric-functions.html
+          - link "Строковые функции" [ref=e847] [cursor=pointer]:
+            - /url: string-functions.html
+          - link "Символы CHR, ASC, CHRW и ASCW" [ref=e848] [cursor=pointer]:
+            - /url: characters.html
+          - link "Регулярные выражения" [ref=e849] [cursor=pointer]:
+            - /url: regex-functions.html
+          - link "Дата и время" [ref=e850] [cursor=pointer]:
+            - /url: date-time-functions.html
+          - link "Диапазоны и ограничения типов" [ref=e851] [cursor=pointer]:
+            - /url: data-type-limits.html
+          - link "Примеры программ" [ref=e852] [cursor=pointer]:
+            - /url: examples.html
+      - generic [ref=e853]:
+        - heading "Порядок первого чтения" [level=2] [ref=e854]
+        - paragraph [ref=e855]: "Если нужно быстро собрать общую картину языка, удобен такой порядок:"
+        - list [ref=e856]:
+          - listitem [ref=e857]:
+            - link "Начало работы" [ref=e858] [cursor=pointer]:
+              - /url: getting-started.html
+            - text: "- общий вход в язык и первые примеры."
+          - listitem [ref=e859]:
+            - link "Типы данных" [ref=e860] [cursor=pointer]:
+              - /url: data-types.html
+            - text: ","
+            - link "переменные" [ref=e861] [cursor=pointer]:
+              - /url: variables-and-constants.html
+            - text: и
+            - link "операторы описания" [ref=e862] [cursor=pointer]:
+              - /url: dim.html
+            - text: "- чем программа хранит значения и как объявляет имена."
+          - listitem [ref=e863]:
+            - link "Выражения и операции" [ref=e864] [cursor=pointer]:
+              - /url: arithmetic-and-logic.html
+            - text: ","
+            - link "условия" [ref=e865] [cursor=pointer]:
+              - /url: if.html
+            - text: и
+            - link "циклы" [ref=e866] [cursor=pointer]:
+              - /url: loops.html
+            - text: "- как программа вычисляет, выбирает ветвь и повторяет действия."
+          - listitem [ref=e867]:
+            - link "Процедуры и функции" [ref=e868] [cursor=pointer]:
+              - /url: procedures-and-functions.html
+            - text: "- как делить код на именованные части."
+          - listitem [ref=e869]:
+            - link "Ввод-вывод" [ref=e870] [cursor=pointer]:
+              - /url: data-and-input.html
+            - text: ","
+            - link "файлы" [ref=e871] [cursor=pointer]:
+              - /url: file-system-functions.html
+            - text: ","
+            - link "экран" [ref=e872] [cursor=pointer]:
+              - /url: graphics.html
+            - text: ","
+            - link "клавиатура" [ref=e873] [cursor=pointer]:
+              - /url: inkey.html
+            - text: и
+            - link "мышь" [ref=e874] [cursor=pointer]:
+              - /url: mousex.html
+            - text: "- как программа общается с пользователем и средой."
+          - listitem [ref=e875]:
+            - link "Обработка ошибок" [ref=e876] [cursor=pointer]:
+              - /url: error-handling.html
+            - text: ","
+            - link "диагностика" [ref=e877] [cursor=pointer]:
+              - /url: diagnostics.html
+            - text: и
+            - link "справочные приложения" [ref=e878] [cursor=pointer]:
+              - /url: data-type-limits.html
+            - text: "- где смотреть ограничения, коды ошибок и готовые проверки."
+      - generic [ref=e879]:
+        - link "< Быстрый старт" [ref=e880] [cursor=pointer]:
+          - /url: getting-started.html
+        - link "Поиск по справочнику >" [ref=e881] [cursor=pointer]:
+          - /url: search.html

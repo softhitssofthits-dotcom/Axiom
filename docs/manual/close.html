@@ -10,11 +10,12 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Закрытие ранее открытого файла</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор CLOSE</p><p class="sidebar__subtitle">Завершение работы с переменной FILE.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Файлы и файловая система</span><span>/</span><span>CLOSE</span></nav>
+<p class="eyebrow">Файлы и файловая система</p>
 <h1 class="page-title">Оператор CLOSE</h1>
 
 <section class="article-section">
-<h2>Сводка</h2>
+<h2>Как CLOSE завершает работу с файлом</h2>
 <p>Оператор <code>CLOSE</code> завершает работу с ранее открытым текстовым файлом. После этого переменная типа <code>FILE</code> снова считается закрытой и не может использоваться в файловых операциях, пока файл не будет открыт заново.</p>
 </section>
 
@@ -29,7 +30,7 @@
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Закрытое и открытое состояние</h2>
 <ul>
 <li>Закрывать можно только действительно открытый файл.</li>
 <li>После <code>CLOSE</code> переменная возвращается в закрытое состояние.</li>
@@ -38,7 +39,7 @@
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример записи и закрытия файла</h2>
 <pre><code class="language-basic">DIM f AS FILE
 
 OPEN "notes.txt" FOR OUTPUT AS f
@@ -58,7 +59,7 @@ CLOSE f</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="open.html">Оператор OPEN</a><a href="file-system-functions.html">Функции файловой системы</a><a href="data-types-strings-and-files.html">STRING и FILE</a><a href="diagnostics.html">Диагностика</a></div>
+<div class="link-list"><a href="file-system-functions.html">Файлы и файловая система</a><a href="file-system-functions-open-files.html">Открытые файлы типа FILE</a><a href="open.html">Оператор OPEN</a><a href="data-types-strings-and-files.html">STRING и FILE</a><a href="diagnostics.html">Диагностика</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

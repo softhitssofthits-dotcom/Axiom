@@ -24,7 +24,8 @@
                 <nav id="manual-nav"></nav>
             </div>
         </aside>
-        <main class="content">
+<main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Регулярные выражения</span></nav>
             <p class="eyebrow">Регулярные выражения</p>
             <h1 class="page-title">Замена и подсчёт совпадений</h1>
 
@@ -34,9 +35,9 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = REGEXREPLACE(text, pattern, replacement[, modes][, count])</code></pre>
                 <p><strong>Части записи.</strong> <code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве.</p>
-                <h3>Замечания</h3>
+                <h3>Количество замен и ссылки на группы</h3>
                 <p>Если <code>count</code> равен нулю, функция возвращает исходный текст без изменений. Отрицательное количество замен даёт <code>MB3007</code>. В строке замены можно использовать ссылки на группы через <code>$1</code>, <code>$2</code> и далее.</p>
-                <h3>Пример</h3>
+                <h3>Пример замены по шаблону</h3>
                 <pre><code class="language-basic">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
 PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
 PRINT REGEXREPLACE("A12 B34", "([A-Z])(\\d+)", "$1-$2")</code></pre>
@@ -47,9 +48,9 @@ PRINT REGEXREPLACE("A12 B34", "([A-Z])(\\d+)", "$1-$2")</code></pre>
                 <p>Функция <code>REGEXCOUNT</code> возвращает количество совпадений с регулярным выражением.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = REGEXCOUNT(text, pattern[, modes])</code></pre>
-                <h3>Замечания</h3>
+                <h3>Ноль при отсутствии совпадений</h3>
                 <p>Если совпадений нет, результат равен <code>0</code>. Эта функция удобна, когда нужно только число найденных фрагментов без извлечения самих значений.</p>
-                <h3>Пример</h3>
+                <h3>Пример подсчета совпадений</h3>
                 <pre><code class="language-basic">PRINT REGEXCOUNT("one 12 two 34", "\d+")
 PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre>
             </section>
@@ -68,6 +69,8 @@ PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre>
                     <a href="regex-functions.html">Функции регулярных выражений</a>
                     <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
                     <a href="regex-functions-arrays-and-split.html">Все совпадения, группы и разбиение</a>
+                    <a href="string-functions-search-and-replace.html">Строковый поиск и замена</a>
+                    <a href="diagnostics.html">Диагностика</a>
                 </div>
             </section>
 

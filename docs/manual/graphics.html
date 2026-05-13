@@ -22,37 +22,87 @@
             </nav>
             <p class="eyebrow">Графика</p>
             <h1 class="page-title">Графика</h1>
-            <p class="lead">Команда <code>SCREEN</code> открывает отдельное окно программы. <code>SCREEN 0</code> выбирает текстовое окно, а режимы <code>1..10</code> включают графическую поверхность, на которой программа выводит текст, рисует пиксели и примитивы, читает мышь и клавиатуру.</p>
+            <p class="lead">Оператор <code>SCREEN</code> нужен для тех программ, которым недостаточно обычного вывода строк во вкладку <code>Output</code>. Он открывает отдельное окно программы: в режиме <code>SCREEN 0</code> это текстовый экран, похожий на консоль, а в режимах <code>SCREEN 1..10</code> - графический экран, на котором можно выводить текст, рисовать точки, линии и окружности, а также работать с клавиатурой и мышью.</p>
 
             <section class="article-section">
-                <h2>Состав раздела</h2>
+                <h2>Для чего нужен оператор SCREEN</h2>
+                <p>Если в программе нет оператора <code>SCREEN</code>, ввод и вывод выполняются во вкладке <code>Output</code>. Её можно рассматривать как обычную консоль Axiom: оператор <code>PRINT</code> печатает строки, оператор <code>INPUT</code> ждёт ввод, а результат остаётся внутри среды разработки.</p>
+                <p>При использовании экранного режима операторы <code>PRINT</code> и <code>INPUT</code>, а также команды, работающие с текстом на экране, переносятся в отдельное окно программы. В графических режимах к текстовому выводу добавляется рисование по точкам экрана. Поэтому <code>SCREEN</code> применяют в программах, где важна не только строка вывода, но и расположение текста, цвет, простая графика или интерактивное управление.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Основные средства работы с экраном</h2>
                 <table>
                     <thead>
-                        <tr><th>Тема</th><th>Что описывает</th></tr>
+                        <tr><th>Средство</th><th>Назначение</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Выбор текстового режима <code>0</code>, графических режимов <code>1..10</code> и логических размеров.</td></tr>
-                        <tr><td><a href="graphics-text.html">Текстовый слой</a></td><td><code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code>, цвета текста и перезапись строк после <code>LOCATE</code>.</td></tr>
-                        <tr><td><a href="graphics-primitives.html">Графические примитивы</a></td><td><code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code> и <code>POINT</code>.</td></tr>
-                        <tr><td><a href="screen-functions.html">Сведения о режиме</a></td><td><code>SCREENISACTIVE()</code>, <code>SCREENMODE()</code>, <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code>.</td></tr>
+                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Выбирает текстовый или графический режим и задаёт размер экранного окна.</td></tr>
+                        <tr><td><a href="graphics-text.html"><code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code></a></td><td>Очищают экран, задают цвет текста и помещают текстовый курсор в нужную строку и столбец.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code></a></td><td>Рисуют отдельную точку, стирают точку, проводят линию, строят прямоугольник или окружность.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>POINT</code></a></td><td>Возвращает цвет точки на графическом экране.</td></tr>
+                        <tr><td><a href="screen-functions.html"><code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code>, <code>SCREENHEIGHT</code></a></td><td>Сообщают, включён ли графический экран, какой режим выбран и каковы его размеры.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Координаты</h2>
-                <p>Пиксельная система координат начинается с левого верхнего угла. Координата <code>x</code> растёт вправо, координата <code>y</code> растёт вниз. Для активного экрана шириной <code>w</code> и высотой <code>h</code> видимая область пикселей имеет диапазоны <code>0..w-1</code> и <code>0..h-1</code>.</p>
-                <p>Текстовый слой использует строки и столбцы, начиная с <code>1</code>. Команда <code>LOCATE 1, 1</code> ставит текстовый курсор в начало первой строки.</p>
+                <h2>Экранные режимы</h2>
+                <p>Режим <code>SCREEN 0</code> открывает текстовое окно размером <code>80 x 25</code> знакомест. В нём работают <code>PRINT</code>, <code>INPUT</code> и клавиатурный ввод, но операторы рисования недоступны.</p>
+                <p>Режимы <code>SCREEN 1</code> ... <code>SCREEN 10</code> открывают графический экран. Каждый такой режим имеет логическую ширину и высоту в пикселях. Например, <code>SCREEN 1</code> даёт малый экран <code>320 x 200</code>, а <code>SCREEN 8</code> - экран <code>1920 x 1080</code>. Полная таблица режимов приведена на странице оператора <a href="screen.html"><code>SCREEN</code></a>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Цвета</h2>
-                <p>Основная палитра содержит индексы <code>0..15</code>. Если команда получает другое целое значение цвета, текущая реализация приводит его к палитре по правилу <code>ABS(color) MOD 16</code>. Это относится к цветам текста, фона, пикселей, линий, прямоугольников и окружностей.</p>
+                <h2>Координаты на экране</h2>
+                <p>На графическом экране положение точки задаётся двумя числами: <code>x</code> и <code>y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Если ширина экрана равна <code>w</code>, последняя видимая координата по горизонтали равна <code>w - 1</code>; если высота равна <code>h</code>, последняя видимая координата по вертикали равна <code>h - 1</code>.</p>
+                <p>Текст на экране располагается иначе. Оператор <code>LOCATE</code> работает со строками и столбцами, которые считаются с единицы. Команда <code>LOCATE 1, 1</code> помещает текстовый курсор в начало первой строки.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Цвета экрана</h2>
+                <p>Цвет задаётся числом от <code>0</code> до <code>255</code>. Значения <code>0..15</code> соответствуют классическим цветам BASIC, значения <code>16..231</code> образуют цветовой куб, а значения <code>232..255</code> дают оттенки серого. Если передано число вне этого диапазона, Axiom приводит его к палитре по правилу <code>ABS(color) MOD 256</code>.</p>
+                <p>Оператор <code>COLOR</code> задаёт цвет символов и, если указан второй аргумент, цвет фона. Операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code> используют те же номера цветов для рисования на графическом экране.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 3
+COLOR 14, 1
+LOCATE 2, 4
+PRINT "Axiom SCREEN"
+
+LINE (40, 80)-(260, 160), 10, B
+CIRCLE (150, 120), 35, 12
+
+DO WHILE NOT KEYPRESS("ESC")
+LOOP
+
+SCREEN 0</code></pre>
+                <p>Программа открывает графический экран, выводит строку в заданной позиции, рисует прямоугольник и окружность, а затем ждёт нажатия <code>ESC</code>. В конце включается текстовый режим <code>SCREEN 0</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Проверочные примеры</h2>
-                <p>Запускаемые примеры находятся в <code>samples/graphics/</code>: режимы экрана, текстовый слой, ввод на экране, мышь, примитивы и небольшой игровой пример. Открой нужный файл в <code>Axiom.Ide</code> и запусти его в режиме <code>Bytecode</code>.</p>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как ручные проверки экрана, текста, мыши и операторов рисования.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: сведения о режиме</a></li>
+                    <li><a href="../../samples/graphics/text/print_locate_color.axm">Текстовый слой: PRINT, LOCATE и COLOR</a></li>
+                    <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Операторы рисования: PSET, LINE и CIRCLE</a></li>
+                    <li><a href="../../samples/graphics/mouse/mouse_events.axm">Мышь в графическом окне</a></li>
+                    <li><a href="../../samples/graphics/input/input_on_screen.axm">INPUT в экранном окне</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="screen.html">Оператор SCREEN</a>
+                    <a href="graphics-text.html">Текстовый слой SCREEN</a>
+                    <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="screen-functions.html">Функции состояния SCREEN</a>
+                    <a href="mousex.html">Мышь</a>
+                    <a href="inkey.html">Клавиатура</a>
+                </div>
             </section>
 
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>

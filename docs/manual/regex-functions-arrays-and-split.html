@@ -24,7 +24,8 @@
                 <nav id="manual-nav"></nav>
             </div>
         </aside>
-        <main class="content">
+<main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Регулярные выражения</span></nav>
             <p class="eyebrow">Регулярные выражения</p>
             <h1 class="page-title">Все совпадения, группы и разбиение</h1>
 
@@ -34,9 +35,9 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">results = REGEXMATCHES(text, pattern[, modes])</code></pre>
                 <p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку, <code>pattern</code> регулярное выражение, <code>modes</code> необязательные режимы. Результат имеет тип <code>STRING()</code>.</p>
-                <h3>Замечания</h3>
+                <h3>Пустой массив без совпадений</h3>
                 <p>Если совпадений нет, функция возвращает пустой массив с границами <code>1 TO 0</code>.</p>
-                <h3>Пример</h3>
+                <h3>Пример массива совпадений</h3>
                 <pre><code class="language-basic">DIM values() AS STRING
 values = REGEXMATCHES("Order 42 and 100", "\d+")
 PRINT values(1)
@@ -49,9 +50,9 @@ PRINT values(2)</code></pre>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">results = REGEXEXTRACTALL(text, pattern, groupNumber[, modes])</code></pre>
                 <p><strong>Части записи.</strong> <code>groupNumber</code> задаёт номер группы. Группа <code>0</code> означает всё совпадение целиком.</p>
-                <h3>Замечания</h3>
+                <h3>Пустая строка вместо отсутствующей группы</h3>
                 <p>Если в отдельном совпадении нужной группы нет, соответствующий элемент массива получает пустую строку.</p>
-                <h3>Пример</h3>
+                <h3>Пример массива групп</h3>
                 <pre><code class="language-basic">DIM values() AS STRING
 values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\\d+)", 2)
 PRINT values(1)
@@ -63,10 +64,10 @@ PRINT values(2)</code></pre>
                 <p>Функция <code>REGEXSPLIT</code> разбивает строку по совпадениям регулярного выражения и возвращает части как новый массив строк.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">parts = REGEXSPLIT(text, pattern[, modes])</code></pre>
-                <h3>Замечания</h3>
+                <h3>Пустые части при разбиении</h3>
                 <p>Пустые части сохраняются, если совпадение стоит в начале, в конце или вплотную к другому совпадению. Для пустого исходного текста функция возвращает пустой массив <code>1 TO 0</code>.</p>
                 <p>В примере ниже шаблон <code>"[,;]\s*"</code> читается так: <code>[,;]</code> означает «запятая или точка с запятой», <code>\s</code> означает пробельный символ, а <code>*</code> разрешает ноль или больше таких пробельных символов после разделителя.</p>
-                <h3>Пример</h3>
+                <h3>Пример разбиения по шаблону</h3>
                 <pre><code class="language-basic">DIM parts() AS STRING
 parts = REGEXSPLIT("one, two;three", "[,;]\s*")
 PRINT parts(1)
@@ -90,6 +91,8 @@ PRINT parts(3)</code></pre>
                     <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
                     <a href="regex-functions-replace-and-count.html">Замена и подсчёт совпадений</a>
                     <a href="arrays-functions.html">Функции массивов</a>
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="diagnostics.html">Диагностика</a>
                 </div>
             </section>
 

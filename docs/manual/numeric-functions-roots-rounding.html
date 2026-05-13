@@ -90,7 +90,7 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = POW(value, power)</code></pre>
                 <p><strong>Части записи.</strong> <code>value</code> задаёт основание степени, а <code>power</code> показатель степени.</p>
-                <h3>Пример</h3>
+                <h3>Пример корней и степеней</h3>
                 <pre><code class="language-basic">' Степень, логарифм и квадратный корень
 PRINT POW(2, 8)
 PRINT LOG10(1000)
@@ -116,7 +116,7 @@ PRINT SQR(81)</code></pre>
                 <p>Функция <code>ROUND</code> округляет число к ближайшему целому и сохраняет числовой тип аргумента.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = ROUND(value)</code></pre>
-                <h3>Замечания</h3>
+                <h3>Округление и отбрасывание дробной части</h3>
                 <p>В Axiom половины округляются от нуля. Поэтому <code>ROUND(2.5)</code> даёт <code>3</code>, а <code>ROUND(-2.5)</code> даёт <code>-3</code>.</p>
             </section>
 
@@ -125,7 +125,7 @@ PRINT SQR(81)</code></pre>
                 <p>Функция <code>FIX</code> отбрасывает дробную часть числа по направлению к нулю и сохраняет числовой тип аргумента.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = FIX(value)</code></pre>
-                <h3>Пример</h3>
+                <h3>Пример округления чисел</h3>
                 <pre><code class="language-basic">' Разница между INT, FLOOR, ROUND и FIX
 PRINT INT(-3.9)
 PRINT FLOOR(-3.9)
@@ -134,7 +134,7 @@ PRINT FIX(-3.9)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
+                <h2>Области определения и способы округления</h2>
                 <ul>
                     <li><code>SQR</code> не принимает отрицательные значения, а <code>LOG</code>, <code>LOG10</code> и <code>LOG2</code> требуют аргумент строго больше нуля.</li>
                     <li><code>POW</code> может завершиться диагностикой времени выполнения, если комбинация основания и показателя степени выходит за допустимую область определения.</li>
@@ -166,9 +166,12 @@ PRINT FIX(-3.9)</code></pre>
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
+                    <a href="numeric-functions.html">Числовые функции</a>
                     <a href="numeric-functions-conversion-and-legacy.html">INT, STR и VAL</a>
                     <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
                     <a href="numeric-functions-core.html">Базовые числовые функции</a>
+                    <a href="data-types-scalars.html">Скалярные типы и литералы</a>
+                    <a href="diagnostics.html">Диагностика</a>
                 </div>
             </section>
 

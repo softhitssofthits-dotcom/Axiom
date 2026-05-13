@@ -10,14 +10,15 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Управляемая обработка ошибок</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор TRY ... CATCH ... FINALLY</p><p class="sidebar__subtitle">Перехват ошибки времени выполнения и обязательная очистка.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Управление выполнением</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Обработка ошибок и диагностика</span><span>/</span><span>TRY</span></nav>
+<p class="eyebrow">Обработка ошибок и диагностика</p>
 <h1 class="page-title">Оператор TRY ... CATCH ... FINALLY</h1>
 <p class="lead"><code>TRY</code> выделяет участок программы, где может возникнуть ошибка времени выполнения. <code>CATCH</code> получает управление, если ошибка произошла и её нужно обработать без остановки программы. <code>FINALLY</code> используют для действий, которые должны выполниться при выходе из блока: после обычного выполнения, после обработанной ошибки или перед передачей необработанной ошибки наружу.</p>
 
 <section class="article-section">
-<h2>Сводка</h2>
-<p>В Axiom эта форма заменяет старую идею <code>ON ERROR GOTO</code> без перехода по метке. Обработчик расположен рядом с опасным участком кода, а переменная <code>CATCH</code> содержит структурированное значение ошибки.</p>
-<p>Текущий срез поддерживается интерпретатором. Байткодная машина пока не выполняет <code>TRY</code>, поэтому в режиме принудительного байткода такие программы остаются временным ограничением.</p>
+<h2>Как TRY заменяет переход к обработчику</h2>
+<p>В Axiom эта форма заменяет старую идею <code>ON ERROR GOTO</code> без перехода по метке. Обработчик расположен рядом с опасным участком кода, а значение ошибки попадает в переменную, указанную после <code>CATCH</code>, например <code>err</code> в записи <code>CATCH err</code>.</p>
+<p>Поддержанные формы <code>TRY/CATCH/FINALLY</code> выполняются и интерпретатором, и <code>BytecodeVm</code>. Неподдержанными остаются старые формы продолжения с точки ошибки и фильтры обработчиков.</p>
 </section>
 
 <section class="article-section">
@@ -34,6 +35,7 @@ END TRY</code></pre>
 
 <section class="article-section">
 <h2>Части записи</h2>
+<p><code>TRY</code>, <code>CATCH</code>, <code>FINALLY</code> и <code>END TRY</code> — ключевые слова одного блочного оператора. Имена <code>tryStatements</code>, <code>catchStatements</code>, <code>finallyStatements</code> и <code>errorVariable</code> в синтаксисе — не слова языка, а обозначения мест, куда в реальном коде вставляются инструкции и имя переменной.</p>
 <p><code>tryStatements</code> — инструкции, при выполнении которых может возникнуть ошибка времени выполнения.</p>
 <p><code>errorVariable</code> — локальная переменная только для чтения. Она доступна только внутри блока <code>CATCH</code> и имеет встроенный тип <code>ERROR</code>.</p>
 <p><code>catchStatements</code> — инструкции обработки. Если ошибка обработана, выполнение продолжается после <code>END TRY</code>, если только обработчик сам не завершился новой ошибкой или ранним выходом.</p>
@@ -42,7 +44,7 @@ END TRY</code></pre>
 
 <section class="article-section">
 <h2>Значение ERROR</h2>
-<p>Переменная <code>CATCH</code> содержит сведения о перехваченной ошибке:</p>
+<p>Встроенный тип <code>ERROR</code> описывает значение ошибки. Это не сам оператор <code>ERROR</code>, а тип данных у переменной после <code>CATCH</code>:</p>
 <table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody>
 <tr><td><code>Code</code></td><td><code>STRING</code></td><td>Полный диагностический код, например <code>MB3001</code>.</td></tr>
 <tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения времени выполнения.</td></tr>
@@ -52,7 +54,7 @@ END TRY</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример перехвата ошибки</h2>
 <pre><code class="language-basic">TRY
     PRINT "before"
     PRINT 10 \ 0
@@ -86,7 +88,7 @@ PRINT "after"</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="error-handling.html">Обработка ошибок</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="if.html">IF</a><a href="select-case.html">SELECT CASE</a></div>
+<div class="link-list"><a href="error-handling.html">Обработка ошибок</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="return.html">Оператор RETURN</a><a href="examples.html">Примеры программ</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

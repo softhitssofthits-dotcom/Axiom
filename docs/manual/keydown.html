@@ -10,12 +10,13 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Проверка удержания клавиши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция KEYDOWN</p><p class="sidebar__subtitle">Текущее состояние клавиши или модификатора.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>KEYDOWN</span></nav>
+<p class="eyebrow">Клавиатура</p>
 <h1 class="page-title">Функция KEYDOWN</h1>
 <p class="lead"><code>KEYDOWN()</code> проверяет, удерживается ли указанная клавиша прямо сейчас. В отличие от <code>INKEY()</code>, функция не читает очередь клавиш и не удаляет событие ввода, поэтому подходит для циклов управления, проверки стрелок и сочетаний вроде <code>CTRL</code> вместе с другой клавишей.</p>
 
 <section class="article-section">
-<h2>Сводка</h2>
+<h2>Как KEYDOWN проверяет удержание</h2>
 <p><code>KEYDOWN()</code> возвращает логическое значение. Если среда выполнения знает, что указанная клавиша сейчас нажата, результатом будет <code>TRUE</code>; иначе возвращается <code>FALSE</code>. В средах без источника состояния клавиатуры функция также возвращает <code>FALSE</code>.</p>
 </section>
 
@@ -83,7 +84,7 @@ END IF</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример проверки сочетания клавиш</h2>
 <pre><code class="language-basic">FOR i = 1 TO 20000
     IF KEYDOWN("SHIFT+A") THEN
         PRINT "SHIFT+A"
@@ -104,7 +105,7 @@ NEXT</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="inkey.html">Функция INKEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="data-and-input.html">Ввод и вывод</a></div>
+<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="inkey.html">Функция INKEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="screen.html">Оператор SCREEN</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

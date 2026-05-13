@@ -3,87 +3,149 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - STRING, FILE и фиксированная длина</title>
+    <title>Справочник Axiom - STRING, STRING * N и FILE</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="data-types-strings-and-files">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Строки, фиксированная длина и файловые дескрипторы</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Типы данных</p>
-                    <p class="sidebar__subtitle">Текстовые значения и открытые файлы.</p>
-                </div>
-                <nav id="manual-nav"></nav>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Строки, фиксированная длина и файловые значения</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">STRING и FILE</p>
+                <p class="sidebar__subtitle">Текстовые данные, фиксированные строки и переменные открытых файлов.</p>
             </div>
-        </aside>
-        <main class="content">
-            <p class="eyebrow">Типы данных</p>
-            <h1 class="page-title">STRING, FILE и фиксированная длина</h1>
-            <p class="lead">Типы <code>STRING</code> и <code>FILE</code> имеют отдельные правила хранения и использования. Здесь же собрана форма <code>STRING * N</code> для фиксированной длины строки.</p>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="data-types.html">Типы данных</a>
+            <span>/</span>
+            <span>STRING, STRING * N и FILE</span>
+        </nav>
 
-            <section class="article-section">
-                <h2>Тип STRING</h2>
-                <p>Обычная форма <code>STRING</code> хранит строку переменной длины и используется для текста, подсказок <code>INPUT</code>, сообщений и строковых функций.</p>
-                <pre><code class="language-basic">DIM text AS STRING = "Привет"
-DIM name = "Алиса"</code></pre>
-            </section>
+        <p class="eyebrow">Типы данных</p>
+        <h1 class="page-title">STRING, STRING * N и FILE</h1>
+        <p class="lead">Строковый тип хранит текст: имена, сообщения, пути, фрагменты файлов и результаты строковых функций. В Axiom рядом с обычным <code>STRING</code> есть фиксированная форма <code>STRING * N</code> для мест хранения заданной ширины и отдельный тип <code>FILE</code> для уже открытого файлового потока.</p>
 
-            <section class="article-section">
-                <h2>Фиксированная длина STRING * N</h2>
-                <p>Если нужен фиксированный размер, можно объявить строку как <code>STRING * N</code>, где <code>N</code> — целочисленная константа в диапазоне от 1 до 65535.</p>
-                <pre><code class="language-basic">DIM code AS STRING * 4
+        <section class="article-section" id="string">
+            <h2>Обычная строка STRING</h2>
+            <p><code>STRING</code> хранит последовательность символов. Строковый литерал записывается в двойных кавычках, а переменная типа <code>STRING</code> может получить значение из литерала, выражения, ввода или строковой функции.</p>
+            <pre><code class="language-basic">DIM title AS STRING = "Axiom"
+DIM greeting = "Привет"
+
+PRINT title
+PRINT greeting</code></pre>
+            <p>Оператор <code>+</code> объединяет только две строки. Если нужно собрать строку из текста, чисел и логических значений, используйте оператор <code>&amp;</code>.</p>
+            <pre><code class="language-basic">DIM count AS INTEGER = 3
+
+PRINT "Count: " & count</code></pre>
+        </section>
+
+        <section class="article-section" id="fixed-string">
+            <h2>Фиксированная строка STRING * N</h2>
+            <p><code>STRING * N</code> задаёт место хранения ровно на <code>N</code> символов. При записи короткое значение дополняется пробелами справа, а слишком длинное значение обрезается справа.</p>
+            <pre><code class="language-basic">DIM code AS STRING * 4
+
+code = "AB"
+PRINT "[" + code + "]"
+
+code = "Alphabet"
+PRINT "[" + code + "]"</code></pre>
+            <p>Результат:</p>
+            <pre><code>[AB  ]
+[Alph]</code></pre>
+            <p>Длина <code>N</code> должна быть целочисленной константой от <code>1</code> до <code>65535</code>. Здесь можно использовать числовой литерал, обычную целочисленную <code>CONST</code> или предопределённые <code>ROW</code> и <code>COLUMN</code>, если они делают запись понятнее.</p>
+        </section>
+
+        <section class="article-section" id="fixed-string-support">
+            <h2>Где поддержан STRING * N</h2>
+            <p>Фиксированная строка поддержана только в местах, где программа действительно хранит значение: в переменной <code>DIM</code> и в поле пользовательской записи <code>TYPE</code>.</p>
+            <pre><code class="language-basic">DIM shortCode AS STRING * 4
+
 TYPE Person
     Name AS STRING * 12
 END TYPE</code></pre>
-                <p>Фиксированная строка не вводит отдельного нового типа выражений: строковые функции, сравнения и присваивания работают с ней как со строкой. Отличие проявляется в хранении: пустое значение создаётся как строка из пробелов нужной длины, короткая строка дополняется пробелами справа, длинная строка обрезается справа до заданного размера.</p>
-                <p>Сейчас форма <code>STRING * N</code> поддержана только как непосредственный тип в <code>DIM</code> и в строковых полях <code>TYPE</code>. В <code>CONST</code>, параметрах и типе результата <code>FUNCTION</code>, а также внутри функциональных типов нужно использовать обычный <code>STRING</code>; неподдержанная форма даёт диагностику <code>MB2026</code>.</p>
-            </section>
+            <p><code>STRING * N</code> не поддержан в <code>CONST</code>, параметрах <code>SUB</code> и <code>FUNCTION</code>, типе результата <code>FUNCTION</code> и внутри функциональных типов. В этих местах используйте обычный <code>STRING</code>.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>Тип FILE</h2>
-                <p><code>FILE</code> отличается от остальных базовых типов тем, что его значение не задают литералом и не получают обычным присваиванием. Переменная типа <code>FILE</code> получает открытый файл через <code>OPEN</code>, затем используется в <code>ISOPEN</code>, <code>FILEPATH</code>, <code>FILEMODE</code>, <code>FILEPOS</code>, <code>FILELENGTH</code>, <code>LINENUMBER</code>, <code>EOF</code>, <code>READLINE</code>, <code>SKIPLINE</code>, <code>READTEXT</code>, <code>READTOEND</code>, <code>WRITE</code>, <code>WRITELINE</code>, <code>NEWLINE</code>, <code>FLUSH</code>, <code>SEEKFILE</code>, <code>REWIND</code> и освобождается через <code>CLOSE</code>.</p>
-                <pre><code class="language-basic">DIM f AS FILE
-OPEN "notes.txt" FOR INPUT AS f
+        <section class="article-section" id="file">
+            <h2>Файловое значение FILE</h2>
+            <p><code>FILE</code> - это не путь к файлу в виде строки. Это значение открытого файла. Его объявляют через <code>DIM</code>, открывают оператором <code>OPEN</code>, передают файловым функциям и закрывают оператором <code>CLOSE</code>.</p>
+            <pre><code class="language-basic">DIM path AS STRING = "notes.txt"
+DIM f AS FILE
+
+OPEN path FOR INPUT AS f
 
 IF ISOPEN(f) THEN
     PRINT READLINE(f)
 END IF
 
 CLOSE f</code></pre>
-            </section>
+            <p>Строка <code>path</code> только указывает, какой файл открыть. Переменная <code>f</code> хранит уже открытый файловый ресурс, с которым работают <code>READLINE</code>, <code>WRITE</code>, <code>FILEPOS</code>, <code>EOF</code> и другие функции открытого файла.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
-                    <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
-                    <li><a href="../../samples/functions/readline/basic_usage.axm">READLINE: чтение строки из FILE</a></li>
-                    <li><a href="../../samples/functions/writeline/basic_usage.axm">WRITELINE: запись строки в FILE</a></li>
-                </ul>
-            </section>
+        <section class="article-section" id="pitfalls">
+            <h2>Что важно не путать</h2>
+            <ul>
+                <li><code>STRING</code> подходит для обычного текста, путей файловой системы, приглашений <code>INPUT</code> и результатов строковых функций.</li>
+                <li><code>STRING * N</code> полезен, когда нужна фиксированная ширина хранения, например в поле записи или коротком коде.</li>
+                <li><code>FILE</code> нельзя создать строковым литералом и нельзя использовать как обычный текстовый путь.</li>
+                <li>Чтобы получить <code>FILE</code>, сначала объявите переменную <code>DIM f AS FILE</code>, затем откройте файл через <code>OPEN ... AS f</code>.</li>
+                <li>После работы с открытым файлом закрывайте его через <code>CLOSE f</code>.</li>
+            </ul>
+        </section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="data-types.html">Обзор типов данных</a>
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="open.html">OPEN</a>
-                    <a href="close.html">CLOSE</a>
-                    <a href="file-system-functions.html">Файловые функции</a>
-                </div>
-            </section>
+        <section class="article-section" id="diagnostics">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2003</code> - значение несовместимо с типом, оператор применён к неподходящему типу или файловое значение используется как обычное присваиваемое значение.</li>
+                <li><code>MB2026</code> - форма <code>STRING * N</code> использована там, где фиксированные строки не поддержаны.</li>
+                <li><code>MB3001</code> - ошибка времени выполнения при файловой операции, например чтение из закрытого файла.</li>
+            </ul>
+        </section>
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+        <section class="article-section" id="samples">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки строк и файлового типа.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
+                <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
+                <li><a href="../../samples/expressions/string_concat/basic_concat.axm">Строковая конкатенация через +</a></li>
+                <li><a href="../../samples/operators/ampersand/mixed_scalar_concat.axm">Строковая конкатенация через &amp;</a></li>
+                <li><a href="../../samples/functions/readline/basic_usage.axm">READLINE: чтение строки из FILE</a></li>
+                <li><a href="../../samples/functions/writeline/basic_usage.axm">WRITELINE: запись строки в FILE</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="data-types.html">Типы данных</a>
+                <a href="data-types-scalars.html">Скалярные типы</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="type.html">Оператор TYPE</a>
+                <a href="arithmetic-and-logic.html#string-concatenation">Строковая конкатенация</a>
+                <a href="open.html">Оператор OPEN</a>
+                <a href="close.html">Оператор CLOSE</a>
+                <a href="file-system-functions-open-files.html">Функции FILE</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

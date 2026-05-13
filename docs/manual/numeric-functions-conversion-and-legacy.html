@@ -44,9 +44,9 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = INT(value)</code></pre>
                 <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат всегда имеет тип <code>INTEGER</code>, даже если исходное значение было <code>DOUBLE</code> или <code>LONG</code>.</p>
-                <h3>Замечания</h3>
+                <h3>Разбор числа из текста</h3>
                 <p><code>INT</code> округляет именно вниз, а не к нулю. Поэтому <code>INT(3.9)</code> даёт <code>3</code>, а <code>INT(-3.9)</code> даёт <code>-4</code>. Если итоговое значение не помещается в диапазон <code>INTEGER</code>, выполнение завершается диагностикой переполнения.</p>
-                <h3>Пример</h3>
+                <h3>Пример VAL</h3>
                 <pre><code class="language-basic">' Округление вниз для положительных и отрицательных значений
 PRINT INT(7.8)
 PRINT INT(-7.8)</code></pre>
@@ -58,9 +58,9 @@ PRINT INT(-7.8)</code></pre>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">text = STR(value)</code></pre>
                 <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение любого поддерживаемого числового типа. Результат имеет тип <code>STRING</code>.</p>
-                <h3>Замечания</h3>
+                <h3>Текстовое представление числа</h3>
                 <p><code>STR</code> удобна, когда числовое значение нужно объединить с другим текстом, записать в файл или показать через <code>PRINT</code> как часть более длинной строки. Для обратного преобразования используется <code>VAL</code>.</p>
-                <h3>Пример</h3>
+                <h3>Пример STR</h3>
                 <pre><code class="language-basic">' Преобразование числа в строку перед объединением
 DIM amount AS DOUBLE
 
@@ -74,9 +74,9 @@ PRINT "Сумма: " + STR(amount)</code></pre>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = VAL(text)</code></pre>
                 <p><strong>Части записи.</strong> <code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
-                <h3>Замечания</h3>
+                <h3>Старые имена совместимости</h3>
                 <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
-                <h3>Пример</h3>
+                <h3>Пример старых математических имен</h3>
                 <pre><code class="language-basic">' Преобразование строкового значения в число
 DIM text AS STRING
 
@@ -85,7 +85,7 @@ PRINT VAL(text) + 10</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
+                <h2>Выбор между INT, STR и VAL</h2>
                 <ul>
                     <li><code>INT</code> и <code>FIX</code> похожи только на первый взгляд: <code>INT</code> округляет вниз, а <code>FIX</code> отбрасывает дробную часть к нулю.</li>
                     <li><code>STR</code> и <code>VAL</code> часто используются парой, когда программа читает текстовые данные, а затем возвращает числовой результат обратно в строку.</li>
@@ -107,9 +107,13 @@ PRINT VAL(text) + 10</code></pre>
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
+                    <a href="numeric-functions.html">Числовые функции</a>
+                    <a href="data-types-conversions.html">Вывод типа и преобразования</a>
                     <a href="numeric-functions-core.html">Базовые числовые функции</a>
                     <a href="numeric-functions-roots-rounding.html">Округление и корни</a>
+                    <a href="data-types-scalars.html">Скалярные типы и литералы</a>
                     <a href="string-functions.html">Строковые функции</a>
+                    <a href="diagnostics.html">Диагностика</a>
                 </div>
             </section>
 

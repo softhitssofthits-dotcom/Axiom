@@ -7,79 +7,132 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="do-loop">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Оператор цикла с гибкой проверкой условия</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор цикла DO ... LOOP</p><p class="sidebar__subtitle">Предусловные, постусловные и безусловные формы цикла.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<p class="eyebrow">Циклы</p>
-<h1 class="page-title">Оператор цикла DO ... LOOP</h1>
-<p class="lead">Семейство <code>DO ... LOOP</code> нужно в тех случаях, когда одной формы цикла уже недостаточно и важно самому выбрать, где именно проверяется условие: до тела, после тела или вообще через отдельный явный выход. Это самая гибкая группа циклов Axiom.</p>
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Гибкий цикл с условием или явным выходом</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Оператор цикла DO ... LOOP</p>
+                    <p class="sidebar__subtitle">Проверка до тела, после тела или выход через EXIT DO.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="loops.html">Циклы</a>
+                <span>/</span>
+                <span>DO ... LOOP</span>
+            </nav>
+            <p class="eyebrow">Циклы</p>
+            <h1 class="page-title">Оператор цикла DO ... LOOP</h1>
+            <p class="lead">Цикл <code>DO ... LOOP</code> используют, когда нужно самому выбрать место проверки условия или выйти из цикла в середине тела. Он подходит для чтения ввода, ожидания события, повторения до признака завершения и других случаев, где простой счётчик не выражает намерение программы.</p>
 
-<section class="article-section">
-<h2>Сводка</h2>
-<p>Семейство <code>DO ... LOOP</code> используется, когда нужно самому выбрать момент проверки условия. Предусловные формы проверяют условие до тела, постусловные формы после тела, а безусловная форма работает до тех пор, пока цикл не будет завершён внутренней логикой.</p>
-</section>
+            <section class="article-section">
+                <h2>Где проверяется условие</h2>
+                <p>Формы с <code>WHILE</code> продолжают цикл, пока условие истинно. Формы с <code>UNTIL</code> продолжают цикл, пока условие ещё ложно, и завершаются, когда оно становится истинным. Если условие стоит после <code>LOOP</code>, тело выполняется минимум один раз.</p>
+            </section>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-basic">DO WHILE condition
-    [statements]
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">DO WHILE &lt;условие&gt;
+    &lt;инструкции&gt;
 LOOP</code></pre>
-<pre><code class="language-basic">DO UNTIL condition
-    [statements]
+                <pre><code class="language-basic">DO UNTIL &lt;условие&gt;
+    &lt;инструкции&gt;
 LOOP</code></pre>
-<pre><code class="language-basic">DO
-    [statements]
-LOOP WHILE condition</code></pre>
-<pre><code class="language-basic">DO
-    [statements]
-LOOP UNTIL condition</code></pre>
-<pre><code class="language-basic">DO
-    [statements]
+                <pre><code class="language-basic">DO
+    &lt;инструкции&gt;
+LOOP WHILE &lt;условие&gt;</code></pre>
+                <pre><code class="language-basic">DO
+    &lt;инструкции&gt;
+LOOP UNTIL &lt;условие&gt;</code></pre>
+                <pre><code class="language-basic">DO
+    &lt;инструкции&gt;
 LOOP</code></pre>
-</section>
+                <pre><code class="language-basic">EXIT DO</code></pre>
+            </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
-<p><code>condition</code> задаёт логическое выражение, которое управляет продолжением цикла. В формах <code>WHILE</code> цикл продолжается, пока условие истинно. В формах <code>UNTIL</code> цикл продолжается, пока условие ложно.</p>
-<p>Между <code>DO</code> и <code>LOOP</code> размещается тело цикла: обычные инструкции программы, например <code>PRINT</code>, <code>INPUT</code>, присваивания и проверки <code>IF</code>.</p>
-</section>
+            <section class="article-section">
+                <h2>Части записи</h2>
+                <p><code>&lt;условие&gt;</code> - логическое выражение типа <code>BOOLEAN</code>.</p>
+                <p><code>&lt;инструкции&gt;</code> - тело цикла между <code>DO</code> и <code>LOOP</code>.</p>
+                <p><code>EXIT DO</code> немедленно завершает ближайший окружающий цикл <code>DO ... LOOP</code> и передаёт управление инструкции после <code>LOOP</code>.</p>
+            </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<p>Обычно к <code>DO ... LOOP</code> переходят тогда, когда нужно явно подчеркнуть семантику предусловия или постусловия либо когда цикл естественно завершается через <code>EXIT DO</code> изнутри тела.</p>
-<ul>
-<li>Условие может стоять только в одном месте: либо после <code>DO</code>, либо после <code>LOOP</code>.</li>
-<li><code>DO WHILE</code> и <code>DO UNTIL</code> могут не выполнить тело ни разу.</li>
-<li><code>LOOP WHILE</code> и <code>LOOP UNTIL</code> сначала выполняют тело и только затем проверяют условие, поэтому делают как минимум один проход.</li>
-<li>Форма <code>DO ... LOOP</code> без условия является безусловным циклом.</li>
-<li><code>EXIT DO</code> завершает ближайший окружающий цикл <code>DO ... LOOP</code>.</li>
-<li>Тело цикла образует собственную блочную область видимости.</li>
-</ul>
-</section>
+            <section class="article-section">
+                <h2>Выход из середины цикла</h2>
+                <ul>
+                    <li><code>DO WHILE</code> и <code>DO UNTIL</code> проверяют условие до первого прохода.</li>
+                    <li><code>LOOP WHILE</code> и <code>LOOP UNTIL</code> проверяют условие после тела, поэтому тело выполняется хотя бы один раз.</li>
+                    <li>Форма <code>DO ... LOOP</code> без условия должна иметь понятный путь завершения, обычно через <code>EXIT DO</code>.</li>
+                    <li>Вложенный <code>EXIT DO</code> выходит только из ближайшего цикла <code>DO ... LOOP</code>.</li>
+                </ul>
+                <blockquote>
+                    <p><em>В QuickBASIC <code>DO ... LOOP</code> также служил более гибкой заменой переходам и способом получить прямой выход через <code>EXIT DO</code>. В Axiom эта идея сохранена, но используются только подтверждённые формы, перечисленные в синтаксисе этой страницы.</em></p>
+                </blockquote>
+            </section>
 
-<section class="article-section">
-<h2>Пример</h2>
-<pre><code class="language-basic">DO
-    INPUT "Введите число"; value
-    IF value = 0 THEN
+            <section class="article-section">
+                <h2>Пример выхода по событию</h2>
+                <pre><code class="language-basic">' Ожидаемый вывод:
+' 0
+' 1
+' done
+DIM i AS INTEGER = 0
+
+DO WHILE i &lt; 5
+    IF i = 2 THEN
         EXIT DO
     END IF
-LOOP</code></pre>
-</section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/control-flow/do/do_while_loop.axm">DO WHILE: предусловная форма</a></li><li><a href="../../samples/control-flow/do/do_until_loop.axm">DO UNTIL: предусловная форма</a></li><li><a href="../../samples/control-flow/do/loop_while.axm">LOOP WHILE: постусловная форма</a></li><li><a href="../../samples/control-flow/do/loop_until.axm">LOOP UNTIL: постусловная форма</a></li><li><a href="../../samples/control-flow/do/exit_do.axm">DO ... LOOP: досрочный выход через EXIT DO</a></li><li><a href="../../samples/control-flow/do/do_loop_exit.axm">DO ... LOOP: безусловная форма</a></li></ul>
-</section>
+    PRINT i
+    i = i + 1
+LOOP
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Ошибки возникают, если условие после <code>DO</code> или <code>LOOP</code> не имеет логический тип, а также если <code>EXIT DO</code> используется вне цикла <code>DO ... LOOP</code>.</p>
-</section>
+PRINT "done"</code></pre>
+            </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="while.html">WHILE</a><a href="for.html">FOR</a><a href="return.html">RETURN</a><a href="diagnostics.html">Диагностика</a></div>
-</section>
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/control-flow/do/do_while_loop.axm">DO WHILE: условие в начале</a></li>
+                    <li><a href="../../samples/control-flow/do/do_until_loop.axm">DO UNTIL: повторение до условия</a></li>
+                    <li><a href="../../samples/control-flow/do/loop_while.axm">LOOP WHILE: условие в конце</a></li>
+                    <li><a href="../../samples/control-flow/do/loop_until.axm">LOOP UNTIL: завершение после прохода</a></li>
+                    <li><a href="../../samples/control-flow/do/exit_do.axm">EXIT DO: досрочный выход</a></li>
+                    <li><a href="../../samples/control-flow/do/do_loop_exit.axm">DO ... LOOP: выход из безусловной формы</a></li>
+                </ul>
+            </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если условие цикла не имеет тип <code>BOOLEAN</code>, если <code>DO</code> не закрыт соответствующим <code>LOOP</code> или если <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="loops.html">Циклы</a>
+                    <a href="while.html">Оператор цикла WHILE</a>
+                    <a href="for.html">Оператор цикла FOR</a>
+                    <a href="if.html">Оператор IF</a>
+                    <a href="sleep.html">Оператор SLEEP</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

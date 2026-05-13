@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -10,7 +10,7 @@
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Процедуры, функции и возврат из них</div>
+            <div class="topbar__meta">Именованные части программы</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -19,7 +19,7 @@
             <div class="sidebar__inner">
                 <div class="sidebar__head">
                     <p class="sidebar__title">Процедуры и функции</p>
-                    <p class="sidebar__subtitle">Когда использовать <code>SUB</code>, когда <code>FUNCTION</code> и как работает <code>RETURN</code>.</p>
+                    <p class="sidebar__subtitle">SUB, FUNCTION, RETURN, параметры и локальные объявления.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -32,53 +32,16 @@
             </nav>
             <p class="eyebrow">Процедуры и функции</p>
             <h1 class="page-title">Процедуры и функции</h1>
-            <p class="lead">Процедуры и функции позволяют разбивать программу на именованные части. В Axiom процедуры удобно использовать для действий, а функции — для вычислений, которые должны вернуть значение. Эта страница помогает увидеть общую картину до перехода к точной справке по <code>SUB</code>, <code>FUNCTION</code> и <code>RETURN</code>.</p>
+            <p class="lead">Когда программа растёт, повторяющиеся и самостоятельные действия удобно выносить в именованные части. В Axiom для этого есть процедуры <code>SUB</code> и функции <code>FUNCTION</code>: процедура выполняет действие, а функция вычисляет значение и может участвовать в выражении.</p>
 
             <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#route">Куда переходить дальше</a></li>
-                    <li><a href="#orientation">Короткий ориентир</a></li>
-                    <li><a href="#samples">Показательные примеры</a></li>
-                </ul>
+                <h2>Зачем выносить код в процедуру</h2>
+                <p><code>SUB</code> вызывается как отдельная инструкция и не имеет возвращаемого значения. <code>FUNCTION</code> возвращает результат через <code>RETURN</code> и может использоваться там, где ожидается значение совместимого типа. Оба вида объявлений могут иметь параметры, локальные переменные и локальные вложенные процедуры или функции.</p>
             </section>
 
-            <section class="article-section" id="summary">
-                <h2>Сводка</h2>
-                <p>Этот раздел особенно полезен, когда программа перестаёт помещаться в одну линейную последовательность инструкций и возникает естественная потребность выносить повторяющиеся шаги в отдельные именованные блоки.</p>
-                <ul>
-                    <li>когда нужно понять, чем процедура отличается от функции;</li>
-                    <li>когда нужно выбрать форму для вычисления, побочного действия или раннего выхода;</li>
-                    <li>когда нужно быстро перейти к точной справке по <code>SUB</code>, <code>FUNCTION</code> или <code>RETURN</code>.</li>
-                </ul>
-                <div class="note">
-                    <h3>Коротко</h3>
-                    <p><code>SUB</code> выполняет действия и не становится значением. <code>FUNCTION</code> вычисляет значение, а в поддержанных формах функциональных типов сама тоже может использоваться как значение.</p>
-                </div>
-            </section>
-
-            <section class="article-section" id="route">
-                <h2>Куда переходить дальше</h2>
-                <div class="cards-grid">
-                    <section class="card">
-                        <h3><a href="sub.html">Процедура SUB</a></h3>
-                        <p>Именованные действия без возвращаемого значения: вывод, проверки, изменение уже доступных переменных.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="function.html">Функция FUNCTION</a></h3>
-                        <p>Именованные вычисления с обязательным результатом, функциональными типами и возвращаемыми замыканиями.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="return.html">Оператор RETURN</a></h3>
-                        <p>Возврат значения из функции и досрочное завершение процедуры.</p>
-                    </section>
-                </div>
-            </section>
-
-            <section class="article-section" id="orientation">
-                <h2>Короткий ориентир</h2>
-                <p>Ниже показан минимальный контраст между процедурой и функцией. Он полезен как первая практическая модель: одна конструкция что-то делает, другая возвращает вычисленный результат.</p>
+            <section class="article-section">
+                <h2>Выбор между SUB и FUNCTION</h2>
+                <p>Выбор между процедурой и функцией лучше делать по смыслу результата. Если важен сам эффект выполнения - вывести текст, изменить переменную по <code>BYREF</code>, заполнить данные, выполнить проверку - обычно подходит <code>SUB</code>. Если нужен вычисленный результат для присваивания, условия, печати или передачи в другой вызов, используйте <code>FUNCTION</code>.</p>
                 <pre><code class="language-basic">SUB ShowBanner(text AS STRING)
     PRINT "=="; text; "=="
 END SUB
@@ -89,42 +52,62 @@ END FUNCTION
 
 ShowBanner("Axiom")
 PRINT Square(5)</code></pre>
-                <p><code>SUB</code> выполняет действия, а <code>FUNCTION</code> вычисляет и возвращает значение. Оператор <code>RETURN</code> в <code>FUNCTION</code> обязателен для возврата результата, а в <code>SUB</code> используется только для досрочного выхода.</p>
-                <p>Параметры процедур и функций по умолчанию передаются как <code>BYVAL</code>. Для явного изменения вызывающей переменной можно отметить параметр как <code>BYREF</code>; это особенно важно на границе работы с пользовательскими записями <code>TYPE</code>, где <code>BYVAL</code> сохраняет копию значения, а <code>BYREF</code> работает с исходной переменной.</p>
-                <p>Те же формы <code>SUB</code> и <code>FUNCTION</code> можно объявлять и внутри <code>TYPE</code> как методы записи. В таком случае вызов идёт через точку, например <code>counter.Increment(2)</code>, а текущая запись внутри метода доступна как <code>SELF</code>.</p>
-                <p>Axiom также поддерживает локальные <code>SUB</code> и <code>FUNCTION</code> внутри другой процедуры или функции. Локальная функция может захватывать внешние данные, а если она возвращается наружу, то сохраняет их и после завершения внешней функции.</p>
-                <p>Функции можно хранить в переменных функционального типа, передавать в параметры и возвращать как результат. Процедуры <code>SUB</code> в этой роли не используются, поэтому выбирать между ними стоит не по вкусу, а по реальной модели вызова.</p>
             </section>
 
-            <section class="article-section" id="samples">
-                <h2>Показательные примеры</h2>
-                <p>Для проверки раздела через IDE лучше открыть несколько коротких файлов по отдельным сценариям: базовый вызов, локальное объявление, захват внешних значений и возврат результата.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов</a></li>
-                    <li><a href="../../samples/operators/sub/byref_record_argument.axm">SUB: BYREF для записи TYPE</a></li>
-                    <li><a href="../../samples/operators/sub/byval_record_copy.axm">SUB: BYVAL и копия записи</a></li>
-                    <li><a href="../../samples/operators/type/methods_self.axm">TYPE: методы и SELF</a></li>
-                    <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li>
-                    <li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li>
-                    <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление</a></li>
-                    <li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li>
-                    <li><a href="../../samples/operators/function/capture_outer_local.axm">FUNCTION: захват внешнего параметра и локальной переменной</a></li>
-                    <li><a href="../../samples/operators/function/first_class_value.axm">FUNCTION: функция как значение</a></li>
-                    <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возвращаемая функция с захваченными данными</a></li>
-                    <li><a href="../../samples/operators/function/shared_closure_state.axm">FUNCTION: общее захваченное состояние</a></li>
-                    <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
-                    <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
+            <section class="article-section">
+                <h2>Параметры и возврат</h2>
+                <p><code>BYVAL</code> и <code>BYREF</code> - это не операторы и не функции. Это модификаторы параметров: служебные слова, которые пишутся только в объявлении параметра <code>SUB</code> или <code>FUNCTION</code> перед именем параметра.</p>
+                <pre><code class="language-basic">SUB Touch(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+FUNCTION CopyOf(BYVAL value AS INTEGER) AS INTEGER
+    RETURN value
+END FUNCTION</code></pre>
+                <p>Параметр без явного модификатора передаётся как <code>BYVAL</code>. Это значит: процедура или функция получает значение, а не саму переменную. Для <code>TYPE</code> это особенно важно, потому что передаётся отдельная копия записи.</p>
+                <p>Параметр <code>BYREF</code> связывается с простой переменной вызывающего кода и позволяет изменить её значение внутри процедуры или функции. Сейчас в <code>BYREF</code> можно передать именно простую переменную, например <code>count</code>. Выражение <code>count + 1</code>, поле <code>user.Name</code> и элемент массива <code>items(1)</code> для такого аргумента не подходят.</p>
+                <p><code>RETURN</code> в <code>FUNCTION</code> должен возвращать значение. В <code>SUB</code> форма <code>RETURN</code> без значения используется для досрочного выхода.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Функции как значения</h2>
+                <p>В Axiom функция может быть значением функционального типа, если её сигнатура совместима с ожидаемым типом. Это отличает <code>FUNCTION</code> от <code>SUB</code>: процедура не является значением и не подставляется в выражение.</p>
+                <p>Функции с параметрами <code>BYREF</code> сейчас нельзя передавать как функциональные значения или использовать как обратные вызовы. Такое ограничение нужно, потому что <code>BYREF</code> требует простой переменной в месте вызова.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Область видимости и вложенные объявления</h2>
+                <blockquote>
+                    <p><em>В QuickBASIC функция возвращала значение и участвовала в выражениях, а процедура вызывалась как отдельный оператор. В Axiom это разделение сохранено, но нет текущей необходимости в <code>DECLARE</code>, а возврат значения из функции оформляется оператором <code>RETURN</code>, а не присваиванием имени функции.</em></p>
+                </blockquote>
+                <ul>
+                    <li>И <code>SUB</code>, и <code>FUNCTION</code> могут быть объявлены на верхнем уровне программы.</li>
+                    <li>Локальные <code>SUB</code> и <code>FUNCTION</code> можно объявлять внутри другой процедуры или функции.</li>
+                    <li>Локальная функция может захватывать параметры и локальные переменные внешней функции, если эти имена объявлены раньше по тексту.</li>
+                    <li>Для записей <code>TYPE</code> правила <code>BYVAL</code> и <code>BYREF</code> особенно важны: первое даёт копию, второе работает с исходной переменной.</li>
                 </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Основные темы</h2>
+                <div class="link-list">
+                    <a href="sub.html">Процедура SUB</a>
+                    <a href="function.html">Функция FUNCTION</a>
+                    <a href="return.html">Оператор RETURN</a>
+                    <a href="data-types-records-and-arrays.html">TYPE и массивы</a>
+                </div>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
                     <a href="sub.html">Процедура SUB</a>
                     <a href="function.html">Функция FUNCTION</a>
                     <a href="return.html">Оператор RETURN</a>
-                    <a href="examples.html">Примеры программ</a>
+                    <a href="variables-and-constants.html">Переменные и константы</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="arrays-and-builtins.html">Функции массивов</a>
+                    <a href="type.html">Тип TYPE</a>
                 </div>
             </section>
 

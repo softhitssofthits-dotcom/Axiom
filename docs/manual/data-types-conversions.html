@@ -7,95 +7,180 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="data-types-conversions">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Автоматические и явные преобразования</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Типы данных</p>
-                    <p class="sidebar__subtitle">Правила вывода типа и допустимые переходы между типами.</p>
-                </div>
-                <nav id="manual-nav"></nav>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Вывод типа, расширяющие переходы, VAL и STR</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Типы данных</p>
+                <p class="sidebar__subtitle">Как значение получает тип и когда Axiom допускает переход к другому типу.</p>
             </div>
-        </aside>
-        <main class="content">
-            <p class="eyebrow">Типы данных</p>
-            <h1 class="page-title">Вывод типа и преобразования</h1>
-            <p class="lead">Эта страница собирает правила, по которым Axiom выводит тип из инициализатора, а также перечисляет разрешённые автоматические и явные преобразования.</p>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="data-types.html">Типы данных</a>
+            <span>/</span>
+            <span>Вывод типа и преобразования</span>
+        </nav>
 
-            <section class="article-section">
-                <h2>Вывод типа в DIM</h2>
-                <pre><code class="language-basic">DIM total = 10
+        <p class="eyebrow">Типы данных</p>
+        <h1 class="page-title">Вывод типа и преобразования</h1>
+        <p class="lead">Преобразование типа меняет способ, которым программа рассматривает значение: целое число может стать более широким целым или десятичным числом, строка может быть разобрана как число, а число может быть выведено как текст.</p>
+
+        <section class="article-section">
+            <h2>Вывод типа</h2>
+            <p>Если в объявлении <code>DIM</code> не указан тип, Axiom берёт тип из инициализатора. Это удобно для простых локальных значений, но явная форма <code>AS</code> остаётся главным способом записать намерение программы.</p>
+            <pre><code class="language-basic">DIM count = 10
 DIM ratio = 1.5
 DIM ready = TRUE
 DIM name = "Алиса"</code></pre>
-                <ul>
-                    <li><code>10</code> выводится как <code>INTEGER</code>.</li>
-                    <li><code>1.5</code> выводится как <code>DOUBLE</code>.</li>
-                    <li><code>TRUE</code> и <code>FALSE</code> выводятся как <code>BOOLEAN</code>.</li>
-                    <li>Строковый литерал выводится как <code>STRING</code>.</li>
-                </ul>
-            </section>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Инициализатор</th><th>Выведенный тип</th><th>Пояснение</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>10</code></td><td><code>INTEGER</code></td><td>Целый литерал сначала выбирает <code>INTEGER</code>, если помещается в его диапазон.</td></tr>
+                    <tr><td><code>21474836479</code></td><td><code>LONG</code></td><td>Большой целый литерал выбирает <code>LONG</code>, если уже не помещается в <code>INTEGER</code>.</td></tr>
+                    <tr><td><code>1.5</code></td><td><code>DOUBLE</code></td><td>Дробный литерал с точкой выводится как <code>DOUBLE</code>.</td></tr>
+                    <tr><td><code>TRUE</code>, <code>FALSE</code></td><td><code>BOOLEAN</code></td><td>Логические литералы не смешиваются с числовой моделью.</td></tr>
+                    <tr><td><code>"Алиса"</code></td><td><code>STRING</code></td><td>Строковый литерал создаёт строку переменной длины.</td></tr>
+                </tbody>
+            </table>
+        </section>
 
-            <section class="article-section">
-                <h2>Автоматические преобразования</h2>
-                <ul>
-                    <li>Автоматически разрешены только <code>INTEGER -&gt; LONG</code>, <code>INTEGER -&gt; DECIMAL</code>, <code>INTEGER -&gt; DOUBLE</code>, <code>LONG -&gt; DECIMAL</code> и <code>LONG -&gt; DOUBLE</code>.</li>
-                    <li><code>DOUBLE</code> и <code>DECIMAL</code> не смешиваются автоматически.</li>
-                    <li><code>STRING</code> не превращается в число автоматически.</li>
-                    <li><code>FILE</code> не участвует в арифметике и не имеет автоматических преобразований.</li>
-                </ul>
-            </section>
+        <section class="article-section">
+            <h2>Автоматические преобразования</h2>
+            <p>Автоматический переход выполняется только тогда, когда он расширяет числовое значение и не требует угадывать намерение программиста.</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Переход</th><th>Разрешён</th><th>Пример</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>INTEGER</code> → <code>LONG</code></td><td>да</td><td><code>DIM wide AS LONG = 10</code></td></tr>
+                    <tr><td><code>INTEGER</code> → <code>DOUBLE</code></td><td>да</td><td><code>DIM angle AS DOUBLE = 0</code></td></tr>
+                    <tr><td><code>INTEGER</code> → <code>DECIMAL</code></td><td>да</td><td><code>DIM amount AS DECIMAL = 1</code></td></tr>
+                    <tr><td><code>LONG</code> → <code>DOUBLE</code></td><td>да</td><td><code>DIM value AS DOUBLE = bigLong</code></td></tr>
+                    <tr><td><code>LONG</code> → <code>DECIMAL</code></td><td>да</td><td><code>DIM value AS DECIMAL = bigLong</code></td></tr>
+                </tbody>
+            </table>
+            <p>Переходы в обратную сторону не выполняются автоматически. <code>DOUBLE</code> и <code>DECIMAL</code> тоже не смешиваются молча: обычное арифметическое выражение должно оставаться в одной понятной числовой линии.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>Явные переходы через built-in</h2>
-                <ul>
-                    <li>Для преобразования строки в число используйте <code>VAL(...)</code>.</li>
-                    <li>Для преобразования числа в строку используйте <code>STR(...)</code>.</li>
-                    <li>Для точного десятичного поведения у дробных литералов указывайте явный тип: <code>AS DECIMAL</code>.</li>
-                </ul>
-                <pre><code class="language-basic">DIM text AS STRING = "123.5"
-DIM number AS DOUBLE = VAL(text)
-DIM price AS DECIMAL = 10.50
+        <section class="article-section">
+            <h2>Явный DECIMAL</h2>
+            <p>Литерал <code>10.50</code> сам по себе имеет тип <code>DOUBLE</code>. Если значение должно участвовать в десятичных расчётах, целевой тип нужно указать явно.</p>
+            <pre><code class="language-basic">DIM price AS DECIMAL = 10.50
+DIM tax AS DECIMAL = 0.20
+DIM total AS DECIMAL = price + tax
 
-PRINT STR(number)
-PRINT price / 2</code></pre>
-            </section>
+PRINT total</code></pre>
+            <p>Результат:</p>
+            <pre><code>10.30</code></pre>
+        </section>
 
-            <section class="article-section">
-                <h2>Особое правило для деления</h2>
-                <p>Оператор <code>/</code> возвращает <code>DECIMAL</code>, если в выражении участвует <code>DECIMAL</code> и не участвует <code>DOUBLE</code>. Во всех остальных случаях результат имеет тип <code>DOUBLE</code>.</p>
-            </section>
+        <section class="article-section">
+            <h2>VAL</h2>
+            <p><code>VAL</code> преобразует строку в число типа <code>DOUBLE</code>. Строка читается в инвариантной числовой форме: десятичная часть отделяется точкой.</p>
+            <pre><code class="language-basic">DIM text AS STRING = "123.5"
+DIM value AS DOUBLE = VAL(text)
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
-                    <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явное объявление DECIMAL</a></li>
-                    <li><a href="../../samples/expressions/conversions/automatic_numeric.axm">Автоматические числовые преобразования</a></li>
-                    <li><a href="../../samples/functions/str/basic_usage.axm">STR: базовое использование</a></li>
-                    <li><a href="../../samples/functions/val/basic_usage.axm">VAL: базовое использование</a></li>
-                </ul>
-            </section>
+PRINT value / 2</code></pre>
+            <p>Результат:</p>
+            <pre><code>61.75</code></pre>
+            <p>Если строку нельзя разобрать как конечное число, <code>VAL</code> возвращает <code>0</code>. Это поведение полезно для простых проверок старого BASIC-стиля, но для строгого пользовательского ввода лучше отдельно проверять исходный текст.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="data-types.html">Обзор типов данных</a>
-                    <a href="numeric-functions-conversion-and-legacy.html">Преобразующие числовые функции</a>
-                    <a href="variables-and-constants.html">Переменные и константы</a>
-                </div>
-            </section>
+        <section class="article-section">
+            <h2>STR</h2>
+            <p><code>STR</code> преобразует число в строку. Результат использует тот же отображаемый вид значения, что и <code>PRINT</code>: целые числа печатаются без дробной части, <code>DOUBLE</code> использует общий числовой формат, а <code>DECIMAL</code> сохраняет десятичную запись.</p>
+            <pre><code class="language-basic">DIM count AS INTEGER = 42
+DIM price AS DECIMAL = 10.30
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+PRINT "Count = " + STR(count)
+PRINT "Price = " + STR(price)</code></pre>
+            <p>Результат:</p>
+            <pre><code>Count = 42
+Price = 10.30</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Особое правило деления</h2>
+            <p>Оператор <code>/</code> возвращает <code>DECIMAL</code>, если в выражении участвует <code>DECIMAL</code> и не участвует <code>DOUBLE</code>. Во всех остальных числовых случаях результат обычного деления имеет тип <code>DOUBLE</code>.</p>
+            <pre><code class="language-basic">DIM price AS DECIMAL = 10.50
+PRINT price / 2
+PRINT 7 / 2</code></pre>
+            <p>Результат:</p>
+            <pre><code>5.25
+3.5</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Что не преобразуется автоматически</h2>
+            <ul>
+                <li><code>STRING</code> не становится числом без <code>VAL</code>.</li>
+                <li>Число не становится строкой для оператора <code>+</code>; используйте <code>STR</code> или оператор <code>&amp;</code>.</li>
+                <li><code>BOOLEAN</code> не превращается в число и не принимает число вместо <code>TRUE</code> или <code>FALSE</code>.</li>
+                <li><code>FILE</code>, массивы, записи <code>TYPE</code> и значения функций не участвуют в обычных скалярных преобразованиях.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Отличия, важные при чтении старых BASIC-материалов</h2>
+            <blockquote>
+                <p><em>В QuickBASIC для явного числового преобразования были функции <code>CINT</code>, <code>CLNG</code>, <code>CSNG</code> и <code>CDBL</code>. В текущем Axiom эти имена не являются частью пользовательского договора; поддержаны ограниченные автоматические числовые переходы, <code>VAL</code> для строки в <code>DOUBLE</code> и <code>STR</code> для значения в строку.</em></p>
+            </blockquote>
+            <blockquote>
+                <p><em>В QuickBASIC строковое преобразование часто записывалось через имена с суффиксом <code>$</code>, например <code>STR$</code>. В Axiom встроенная функция называется <code>STR</code>, без суффикса имени.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти программы можно открыть в <code>Axiom.Ide</code> и использовать как короткие проверки вывода типа, десятичных объявлений и строко-числовых переходов.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
+                <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явное объявление DECIMAL</a></li>
+                <li><a href="../../samples/expressions/conversions/automatic_numeric.axm">Автоматические числовые преобразования</a></li>
+                <li><a href="../../samples/functions/val/basic_usage.axm">VAL: базовое использование</a></li>
+                <li><a href="../../samples/functions/val/invalid_text_behavior.axm">VAL: недопустимый текст</a></li>
+                <li><a href="../../samples/functions/str/basic_usage.axm">STR: базовое использование</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2003</code> — несовместимые типы, например попытка сложить строку и число через <code>+</code> или смешать <code>DOUBLE</code> и <code>DECIMAL</code> в неподдержанной форме.</li>
+                <li><code>MB2018</code> — константное числовое значение не помещается в явно указанный целевой тип.</li>
+                <li><code>MB3008</code> — арифметическое переполнение или неконечный результат <code>DOUBLE</code> во время выполнения.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="data-types.html">Типы данных</a>
+                <a href="data-types-scalars.html">Скалярные типы и литералы</a>
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="numeric-functions-conversion-and-legacy.html">Преобразующие числовые функции</a>
+                <a href="arithmetic-and-logic.html">Арифметика и логика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

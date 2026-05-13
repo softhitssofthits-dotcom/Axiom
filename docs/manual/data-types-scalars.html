@@ -7,94 +7,206 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="data-types-scalars">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">INTEGER, LONG, DOUBLE, DECIMAL и BOOLEAN</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Типы данных</p>
-                    <p class="sidebar__subtitle">Скалярные числовые и логические значения.</p>
-                </div>
-                <nav id="manual-nav"></nav>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">INTEGER, LONG, DOUBLE, DECIMAL и BOOLEAN</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Типы данных</p>
+                <p class="sidebar__subtitle">Числовые и логические значения, которые хранятся непосредственно.</p>
             </div>
-        </aside>
-        <main class="content">
-            <p class="eyebrow">Типы данных</p>
-            <h1 class="page-title">Скалярные типы и литералы</h1>
-            <p class="lead">Эта страница собирает базовые скалярные типы Axiom: целые, вещественные, точные десятичные и логические значения, а также правила литералов и диапазонов.</p>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="data-types.html">Типы данных</a>
+            <span>/</span>
+            <span>Скалярные типы и литералы</span>
+        </nav>
 
-            <section class="article-section">
-                <h2>Поддерживаемые типы</h2>
-                <table class="compact-table">
-                    <thead>
-                        <tr><th>Тип</th><th>Назначение</th><th>Типичная запись</th><th>Замечания</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>INTEGER</code></td><td>32-битное знаковое целое</td><td><code>0</code>, <code>42</code>, <code>-7</code></td><td>Подходит для обычных счётчиков, индексов и малых целых значений.</td></tr>
-                        <tr><td><code>LONG</code></td><td>64-битное знаковое целое</td><td><code>21474836479</code>, <code>-3000000000</code></td><td>Используется, когда литерал уже не помещается в <code>INTEGER</code>, но ещё помещается в <code>LONG</code>.</td></tr>
-                        <tr><td><code>DOUBLE</code></td><td>64-битное число с плавающей точкой</td><td><code>1.5</code>, <code>0.25</code>, <code>7 / 2</code></td><td>Обычный тип для дробных литералов и большинства математических вычислений.</td></tr>
-                        <tr><td><code>DECIMAL</code></td><td>Точное десятичное число</td><td><code>DIM price AS DECIMAL = 10.50</code></td><td>Подходит для денежных и других точных десятичных расчётов.</td></tr>
-                        <tr><td><code>BOOLEAN</code></td><td>Логический тип</td><td><code>TRUE</code>, <code>FALSE</code></td><td>Используется в условиях, сравнениях и логических выражениях.</td></tr>
-                    </tbody>
-                </table>
-            </section>
+        <p class="eyebrow">Типы данных</p>
+        <h1 class="page-title">Скалярные типы и литералы</h1>
+        <p class="lead">Скалярное значение хранит одно число или одно логическое состояние. В Axiom к этой группе относятся целые числа, вещественные числа, десятичные числа и значения <code>TRUE</code> / <code>FALSE</code>.</p>
 
-            <section class="article-section">
-                <h2>Литералы и вывод типа</h2>
-                <table>
-                    <thead>
-                        <tr><th>Форма</th><th>Результат</th><th>Что важно помнить</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>10</code></td><td><code>INTEGER</code></td><td>Ведущие нули вроде <code>001</code> не допускаются.</td></tr>
-                        <tr><td><code>21474836479</code></td><td><code>LONG</code></td><td>Если целый литерал не помещается даже в <code>LONG</code>, возникает <code>MB0004</code>.</td></tr>
-                        <tr><td><code>1.5</code></td><td><code>DOUBLE</code></td><td>Без явного <code>AS DECIMAL</code> вещественный литерал не становится <code>DECIMAL</code>.</td></tr>
-                        <tr><td><code>TRUE</code> / <code>FALSE</code></td><td><code>BOOLEAN</code></td><td>Логические литералы не считаются числовыми значениями.</td></tr>
-                    </tbody>
-                </table>
-            </section>
+        <section class="article-section">
+            <h2>Данные и их типы</h2>
+            <p>Тип определяет, какие значения может хранить переменная или константа и какие операции разрешены над этим значением. Числовой тип участвует в арифметике, логический тип участвует в условиях и логических выражениях, а неподходящее сочетание типов останавливается диагностикой до выполнения программы или во время выполнения.</p>
+            <p>Скалярные типы не содержат других значений внутри себя. Массивы, записи <code>TYPE</code>, строки и файловые значения описаны на соседних страницах, потому что у них есть отдельные правила хранения и обращения.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>Примеры</h2>
-                <pre><code class="language-basic">DIM count AS INTEGER = 10
+        <section class="article-section">
+            <h2>Числовые типы данных</h2>
+            <p>Числовые данные представляют числа. В Axiom они разделены на четыре типа: два целочисленных, один вещественный с плавающей точкой и один точный десятичный.</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Тип</th><th>Что хранит</th><th>Диапазон</th><th>Когда использовать</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>INTEGER</code></td>
+                        <td>32-битное знаковое целое число.</td>
+                        <td>от <code>-2147483648</code> до <code>2147483647</code>.</td>
+                        <td>Счётчики, индексы, небольшие целые значения, номера строк и столбцов.</td>
+                    </tr>
+                    <tr>
+                        <td><code>LONG</code></td>
+                        <td>64-битное знаковое целое число.</td>
+                        <td>от <code>-9223372036854775808</code> до <code>9223372036854775807</code>.</td>
+                        <td>Целые значения, которые могут выйти за диапазон <code>INTEGER</code>, например размер файла или длительность в миллисекундах.</td>
+                    </tr>
+                    <tr>
+                        <td><code>DOUBLE</code></td>
+                        <td>64-битное число с плавающей точкой.</td>
+                        <td>приблизительно от <code>-1.7976931348623157E+308</code> до <code>1.7976931348623157E+308</code>; минимальная положительная величина около <code>4.9406564584124654E-324</code>.</td>
+                        <td>Дробные величины, результаты обычного деления, тригонометрия и большая часть математических функций.</td>
+                    </tr>
+                    <tr>
+                        <td><code>DECIMAL</code></td>
+                        <td>Точное десятичное число.</td>
+                        <td>от <code>-79228162514264337593543950335</code> до <code>79228162514264337593543950335</code>; до 28-29 значащих десятичных цифр.</td>
+                        <td>Денежные и табличные расчёты, где важна десятичная точность и не подходит двоичная погрешность <code>DOUBLE</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>Диапазон относится к значениям типа, а не ко всем возможным формам записи литерала. Целый десятичный литерал без точки сначала выбирает <code>INTEGER</code> или <code>LONG</code>; если он не помещается в <code>LONG</code>, лексический анализ сообщает <code>MB0004</code>. Чтобы получить <code>DECIMAL</code> для дробного значения, укажите целевой тип явно в <code>DIM</code>. Короткая таблица тех же границ вынесена в приложение <a href="data-type-limits.html">Диапазоны и ограничения типов</a>.</p>
+            <p><code>DOUBLE</code> хранит приближённые двоичные значения и не обязан точно представлять каждую десятичную дробь. <code>DECIMAL</code> хранит десятичные значения точнее, но его диапазон меньше, чем у <code>DOUBLE</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Логический тип</h2>
+            <p><code>BOOLEAN</code> хранит только два значения: <code>TRUE</code> и <code>FALSE</code>. Такой тип используется в условиях <code>IF</code>, <code>WHILE</code>, <code>DO ... LOOP</code>, в результатах сравнений и во встроенных функциях, которые отвечают на вопрос «да или нет».</p>
+            <pre><code class="language-basic">DIM ready AS BOOLEAN = TRUE
+
+IF ready THEN
+    PRINT "готово"
+END IF</code></pre>
+            <blockquote>
+                <p><em>В QuickBASIC условие часто опиралось на числовую модель: ноль означал ложь, ненулевое значение — истину. В Axiom условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое значение нужно явно сравнить, например <code>count &gt; 0</code>.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section">
+            <h2>Литералы</h2>
+            <p>Литерал — это значение, записанное прямо в тексте программы. По форме литерала Axiom выбирает исходный тип, если рядом нет явного объявления, которое задаёт другой допустимый тип.</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Запись</th><th>Тип</th><th>Правило</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>10</code></td><td><code>INTEGER</code></td><td>Целый десятичный литерал получает <code>INTEGER</code>, если помещается в его диапазон.</td></tr>
+                    <tr><td><code>21474836479</code></td><td><code>LONG</code></td><td>Если целое число не помещается в <code>INTEGER</code>, но помещается в <code>LONG</code>, типом становится <code>LONG</code>.</td></tr>
+                    <tr><td><code>1.5</code></td><td><code>DOUBLE</code></td><td>Литерал с десятичной точкой получает <code>DOUBLE</code>.</td></tr>
+                    <tr><td><code>TRUE</code>, <code>FALSE</code></td><td><code>BOOLEAN</code></td><td>Логические литералы не считаются числами.</td></tr>
+                    <tr><td><code>&amp;HFF</code></td><td><code>INTEGER</code> или <code>LONG</code></td><td>Шестнадцатеричный литерал выбирает целочисленный тип по диапазону значения.</td></tr>
+                </tbody>
+            </table>
+            <p>Ведущие нули в числовых литералах не допускаются: формы вроде <code>001</code> и <code>01.25</code> дают диагностическое сообщение <code>MB0003</code>. Отрицательное значение записывается через унарный минус перед литералом: <code>-7</code>, <code>-1.5</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Явное объявление и вывод типа</h2>
+            <p>В объявлении <code>DIM</code> тип можно указать явно через <code>AS</code> или дать Axiom вывести тип из инициализатора. Явный тип полезен, когда важен именно договор переменной, а не только форма первого значения.</p>
+            <pre><code class="language-basic">DIM count AS INTEGER = 10
 DIM big AS LONG = 21474836479
 DIM ratio AS DOUBLE = 1.5
 DIM price AS DECIMAL = 10.50
 DIM ready AS BOOLEAN = TRUE</code></pre>
-                <pre><code class="language-basic">DIM total = 10
+            <p>Если тип не указан, <code>DIM</code> берёт его из инициализатора:</p>
+            <pre><code class="language-basic">DIM total = 10
 DIM fraction = 1.5
+DIM flag = FALSE</code></pre>
+            <p>Дробный литерал сам по себе выводится как <code>DOUBLE</code>. Чтобы получить <code>DECIMAL</code>, укажите целевой тип явно:</p>
+            <pre><code class="language-basic">DIM amount AS DECIMAL = 10.50</code></pre>
+        </section>
 
-PRINT total
-PRINT fraction</code></pre>
-            </section>
+        <section class="article-section">
+            <h2>Преобразования</h2>
+            <p>Axiom допускает только ограниченный набор автоматических числовых преобразований. <code>INTEGER</code> может перейти в <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>; <code>LONG</code> может перейти в <code>DOUBLE</code> или <code>DECIMAL</code>. Обратные переходы не выполняются молча.</p>
+            <p><code>DOUBLE</code> и <code>DECIMAL</code> не смешиваются автоматически в одном обычном арифметическом выражении. <code>BOOLEAN</code> также не превращается в число и не принимает число вместо <code>TRUE</code> или <code>FALSE</code>.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB0004</code> — числовой литерал выходит за допустимый диапазон своего типа.</li>
-                    <li><code>MB2018</code> — константное числовое значение не помещается в явно указанный целевой тип.</li>
-                    <li><code>MB3008</code> — во время выполнения произошло числовое переполнение или получен неконечный результат <code>DOUBLE</code>.</li>
-                </ul>
-            </section>
+        <section class="article-section">
+            <h2>Пример объявления скалярных значений</h2>
+            <pre><code class="language-basic">DIM count AS INTEGER = 10
+DIM big = 21474836479
+DIM ratio = 1.5
+DIM price AS DECIMAL = 10.50
+DIM ready AS BOOLEAN = count &gt; 0
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="data-types.html">Обзор типов данных</a>
-                    <a href="data-types-conversions.html">Вывод типа и преобразования</a>
-                    <a href="numeric-functions.html">Числовые функции</a>
-                </div>
-            </section>
+PRINT count + 5
+PRINT big + 1
+PRINT ratio / 2
+PRINT price / 2
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+IF ready THEN
+    PRINT "YES"
+END IF</code></pre>
+            <p>Результат:</p>
+            <pre><code>15
+21474836480
+0.75
+5.25
+YES</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Отличия, важные при чтении старых BASIC-материалов</h2>
+            <blockquote>
+                <p><em>В QuickBASIC <code>INTEGER</code> был 16-битным целым типом с диапазоном от <code>-32768</code> до <code>32767</code>, <code>LONG</code> был 32-битным типом с диапазоном от <code>-2147483648</code> до <code>2147483647</code>, а для вещественных чисел отдельно использовался <code>SINGLE</code>. В Axiom <code>INTEGER</code> является 32-битным типом, <code>LONG</code> — 64-битным, а отдельного типа <code>SINGLE</code> в текущем договоре языка нет.</em></p>
+            </blockquote>
+            <blockquote>
+                <p><em>В QuickBASIC тип переменной мог задаваться суффиксом имени или операторами семейства <code>DEF...</code>. В Axiom тип записывается через <code>AS</code> или выводится из инициализатора в поддержанных формах; суффиксы имён не являются частью текущего синтаксиса.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти короткие программы можно открыть в <code>Axiom.Ide</code> и запустить как проверку скалярных объявлений, вывода типа и числовых преобразований.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: объявление INTEGER</a></li>
+                <li><a href="../../samples/operators/dim/long_inference.axm">DIM: вывод LONG</a></li>
+                <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
+                <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
+                <li><a href="../../samples/expressions/conversions/automatic_numeric.axm">Автоматические числовые преобразования</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB0003</code> — некорректный числовой литерал, например запись с ведущими нулями.</li>
+                <li><code>MB0004</code> — числовой литерал выходит за диапазон поддерживаемого типа.</li>
+                <li><code>MB2003</code> — выражение или оператор применены к несовместимым типам.</li>
+                <li><code>MB2018</code> — константное числовое значение не помещается в явно указанный целевой тип.</li>
+                <li><code>MB3008</code> — арифметическое переполнение или неконечный результат <code>DOUBLE</code> во время выполнения.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="data-types.html">Типы данных</a>
+                <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="data-types-conversions.html">Вывод типа и преобразования</a>
+                <a href="arithmetic-and-logic.html">Арифметика и логика</a>
+                <a href="numeric-functions.html">Числовые функции</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

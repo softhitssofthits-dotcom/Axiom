@@ -10,14 +10,18 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Обработка ошибок</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Обработка пользовательских ошибок</p><p class="sidebar__subtitle">Создание и перехват ошибок времени выполнения.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Управление выполнением</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Обработка ошибок и диагностика</span><span>/</span><span>Обработка ошибок</span></nav>
+<p class="eyebrow">Обработка ошибок и диагностика</p>
 <h1 class="page-title">Обработка пользовательских ошибок</h1>
-<p class="lead">В Axiom обработка ошибок строится вокруг блока <code>TRY ... CATCH ... FINALLY ... END TRY</code> и оператора <code>ERROR</code>. Код, который может завершиться ошибкой, помещают в <code>TRY</code>; обработчик <code>CATCH</code> получает значение встроенного типа <code>ERROR</code>; часть <code>FINALLY</code> выполняет завершающие действия при выходе из блока.</p>
+<p class="lead">Ошибка времени выполнения прерывает обычный ход программы. В Axiom для таких ситуаций есть блок <code>TRY ... CATCH ... FINALLY ... END TRY</code>: опасный участок помещают в <code>TRY</code>, обработчик <code>CATCH</code> получает значение встроенного типа <code>ERROR</code>, а <code>FINALLY</code> выполняет завершающие действия при выходе из блока.</p>
 
 <section class="article-section">
-<h2>Сводка</h2>
-<p><code>ERROR</code> создаёт пользовательскую ошибку времени выполнения или повторно поднимает уже пойманное значение ошибки. Если оператор находится внутри подходящего блока <code>TRY</code>, управление переходит в <code>CATCH</code>. Если обработчика нет, программа завершается диагностикой времени выполнения с указанным кодом и сообщением.</p>
-<p>Имя <code>ERROR</code> выбрано по линии BASIC: оно ближе к традиционной форме создания ошибки времени выполнения, чем заимствованные <code>RAISE</code> или <code>THROW</code>. При этом Axiom не повторяет старую модель <code>ON ERROR GOTO</code> и не использует переходы по меткам.</p>
+<h2>Как работает обработка</h2>
+<p>Оператор <code>ERROR</code> создаёт пользовательскую ошибку времени выполнения или повторно поднимает уже пойманное значение ошибки. Если выполнение находится внутри подходящего блока <code>TRY</code>, управление переходит к <code>CATCH</code>. Если обработчика нет, программа завершается диагностикой времени выполнения с указанным кодом и сообщением.</p>
+<p>Здесь важно различать два похожих имени. <code>ERROR</code> как оператор создаёт или повторно поднимает ошибку. <code>ERROR</code> как встроенный тип — это значение, которое получает переменная в строке <code>CATCH err</code>.</p>
+<blockquote>
+    <p><em>В QuickBASIC обработка ошибок строилась вокруг <code>ON ERROR GOTO</code> и перехода к метке. В Axiom используется блочный <code>TRY ... CATCH ... FINALLY</code>, а оператор <code>ERROR</code> служит для создания или повторного проброса значения ошибки.</em></p>
+</blockquote>
 </section>
 
 <section class="article-section">
@@ -60,6 +64,7 @@ END TRY</code></pre>
 
 <section class="article-section">
 <h2>Значение ERROR</h2>
+<p>В этом разделе <code>ERROR</code> означает встроенный тип значения ошибки, а не строку оператора <code>ERROR код</code>.</p>
 <table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Смысл</th></tr></thead><tbody>
 <tr><td><code>Code</code></td><td><code>STRING</code></td><td>Полный код ошибки. Для системных ошибок времени выполнения это код вроде <code>MB3001</code>, для пользовательских ошибок - строка, переданная в <code>ERROR</code>.</td></tr>
 <tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения об ошибке.</td></tr>
@@ -85,7 +90,7 @@ END TRY</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="error.html">Оператор ERROR</a><a href="try.html">Оператор TRY</a><a href="diagnostics.html">Диагностика</a></div>
+<div class="link-list"><a href="try.html">Оператор TRY</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="arrays-diagnostics.html">Ошибки массивов</a><a href="data-type-limits.html">Диапазоны и ограничения типов</a><a href="examples.html">Примеры программ</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

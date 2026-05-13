@@ -25,33 +25,42 @@
             </div>
         </aside>
         <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <a href="arrays.html">Массивы</a>
+                <span>/</span>
+                <span>Динамические массивы</span>
+            </nav>
             <p class="eyebrow">Массивы</p>
             <h1 class="page-title">Динамические массивы</h1>
 
             <section class="article-section">
-                <h2>Сводка</h2>
+                <h2>Как REDIM выделяет границы</h2>
                 <p>Динамический массив объявляется без конкретных границ, а затем получает их через <code>REDIM</code>. Такой подход удобен, когда размер массива становится известен только во время выполнения программы.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">DIM arrayName() AS elementType</code></pre>
-                <pre><code class="language-basic">REDIM arrayName(lowerBound TO upperBound)</code></pre>
-                <pre><code class="language-basic">REDIM PRESERVE arrayName(lowerBound TO upperBound)</code></pre>
-                <pre><code class="language-basic">ERASE arrayName</code></pre>
+                <pre><code class="language-basic">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-basic">REDIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
+                <pre><code class="language-basic">REDIM PRESERVE &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
+                <pre><code class="language-basic">ERASE &lt;имя массива&gt;</code></pre>
             </section>
 
             <section class="article-section">
                 <h2>Части записи</h2>
                 <ul>
-                    <li><code>arrayName</code> — имя динамического массива.</li>
-                    <li><code>elementType</code> — тип элементов массива.</li>
-                    <li><code>lowerBound TO upperBound</code> — новые включительные границы массива.</li>
+                    <li><code>&lt;имя массива&gt;</code> — имя динамического массива.</li>
+                    <li><code>&lt;тип элемента&gt;</code> — тип элементов массива.</li>
+                    <li><code>&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;</code> — новые включительные границы массива.</li>
                 </ul>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
+                <h2>Выделение, сохранение и очистка</h2>
                 <ul>
                     <li><code>DIM values() AS INTEGER</code> объявляет динамический массив без выделения памяти для элементов.</li>
                     <li><code>REDIM</code> задаёт новые границы массива и выделяет память в соответствии с ними.</li>
@@ -62,7 +71,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Пример</h2>
+                <h2>Пример расширения с сохранением значений</h2>
                 <pre><code class="language-basic">' Программа создаёт массив, расширяет его и сохраняет первые значения
 ' Ожидаемый вывод:
 ' 10

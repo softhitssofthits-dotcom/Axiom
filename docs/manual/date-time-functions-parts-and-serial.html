@@ -24,7 +24,8 @@
                 <nav id="manual-nav"></nav>
             </div>
         </aside>
-        <main class="content">
+<main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Дата и время</span></nav>
             <p class="eyebrow">Дата и время</p>
             <h1 class="page-title">Сборка даты и календарные части</h1>
 
@@ -34,7 +35,7 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATESERIAL(year, month, day)</code></pre>
                 <p><strong>Части записи.</strong> <code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат возвращается как строка формата <code>yyyy-MM-dd</code>.</p>
-                <h3>Замечания</h3>
+                <h3>Проверка реальной календарной даты</h3>
                 <p>Компоненты должны образовывать реальную календарную дату. Автоматического переноса переполненных значений вроде тринадцатого месяца здесь нет.</p>
             </section>
 
@@ -92,7 +93,7 @@ result = ENDOFMONTH(value)
 result = STARTOFYEAR(value)
 result = ENDOFYEAR(value)</code></pre>
                 <p><strong>Части записи.</strong> <code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают строку даты формата <code>yyyy-MM-dd</code>.</p>
-                <h3>Пример</h3>
+                <h3>Пример сборки и чтения даты</h3>
                 <pre><code class="language-basic">' Сборка даты и работа с календарными частями
 PRINT DATESERIAL(2026, 4, 20)
 PRINT YEAR("2026-04-20 14:05:06")

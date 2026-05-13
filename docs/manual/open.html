@@ -10,11 +10,12 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Открытие текстового файла в переменную FILE</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор OPEN</p><p class="sidebar__subtitle">Открытие файла для чтения, записи или дописывания.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Файлы и файловая система</span><span>/</span><span>OPEN</span></nav>
+<p class="eyebrow">Файлы и файловая система</p>
 <h1 class="page-title">Оператор OPEN</h1>
 
 <section class="article-section">
-<h2>Сводка</h2>
+<h2>Как OPEN связывает файл с переменной</h2>
 <p>Оператор <code>OPEN</code> открывает текстовый файл и связывает его с переменной типа <code>FILE</code>. В Axiom файл открывается не по историческому номеру, а сразу в именованную переменную.</p>
 </section>
 
@@ -32,7 +33,7 @@ OPEN path FOR APPEND AS fileVariable</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Состояние FILE-переменной</h2>
 <ul>
 <li>Переменная после <code>AS</code> должна иметь тип <code>FILE</code>.</li>
 <li>Если в переменной уже есть открытый файл, повторный <code>OPEN</code> даёт ошибку времени выполнения.</li>
@@ -41,7 +42,7 @@ OPEN path FOR APPEND AS fileVariable</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример чтения открытого файла</h2>
 <pre><code class="language-basic">DIM sourceFile AS FILE
 DIM line AS STRING
 
@@ -67,7 +68,7 @@ CLOSE sourceFile</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="close.html">Оператор CLOSE</a><a href="file-system-functions.html">Функции файловой системы</a><a href="data-types-strings-and-files.html">STRING и FILE</a><a href="diagnostics.html">Диагностика</a></div>
+<div class="link-list"><a href="file-system-functions.html">Файлы и файловая система</a><a href="file-system-functions-open-files.html">Открытые файлы типа FILE</a><a href="close.html">Оператор CLOSE</a><a href="data-types-strings-and-files.html">STRING и FILE</a><a href="diagnostics.html">Диагностика</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

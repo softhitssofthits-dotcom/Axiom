@@ -10,6 +10,7 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">DATE, TIME, NOW, UTCNOW и TIMER</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Текущие дата и время</p><p class="sidebar__subtitle">Чтение текущих значений в локальном времени и в UTC.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Дата и время</span></nav>
 <p class="eyebrow">Дата и время</p>
 <h1 class="page-title">Текущие дата и время</h1>
 
@@ -19,7 +20,7 @@
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">dateText = DATE([timeZone])</code></pre>
 <p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, возвращается текущая дата для этого пояса.</p>
-<h3>Пример</h3>
+<h3>Пример текущей даты</h3>
 <pre><code class="language-basic">' Текущая локальная дата и дата в UTC
 PRINT DATE()
 PRINT DATE("UTC")</code></pre>
@@ -31,7 +32,7 @@ PRINT DATE("UTC")</code></pre>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">timeText = TIME([timeZone])</code></pre>
 <p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, время вычисляется для этого пояса.</p>
-<h3>Пример</h3>
+<h3>Пример текущего времени</h3>
 <pre><code class="language-basic">' Текущее локальное время и время в UTC
 PRINT TIME()
 PRINT TIME("UTC")</code></pre>
@@ -43,7 +44,7 @@ PRINT TIME("UTC")</code></pre>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">dateTimeText = NOW([timeZone])</code></pre>
 <p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, дата и время вычисляются для него.</p>
-<h3>Пример</h3>
+<h3>Пример текущих даты и времени</h3>
 <pre><code class="language-basic">' Текущие дата и время в локальном поясе и в UTC
 PRINT NOW()
 PRINT NOW("UTC")</code></pre>
@@ -76,9 +77,9 @@ PRINT NOW("UTC")</code></pre>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">seconds = TIMER()</code></pre>
 <p><strong>Части записи.</strong> Результат имеет тип <code>DOUBLE</code>.</p>
-<h3>Замечания</h3>
+<h3>Измерение внутри одного дня</h3>
 <p>Эта функция удобна для простых измерений времени внутри одного дня.</p>
-<h3>Пример</h3>
+<h3>Пример секунд от полуночи</h3>
 <pre><code class="language-basic">' Количество секунд от полуночи
 PRINT TIMER()</code></pre>
 </section>

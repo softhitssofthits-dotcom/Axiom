@@ -10,12 +10,13 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Неблокирующее чтение клавиатуры</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция INKEY</p><p class="sidebar__subtitle">Чтение одной клавиши без остановки программы.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>INKEY</span></nav>
+<p class="eyebrow">Клавиатура</p>
 <h1 class="page-title">Функция INKEY</h1>
 <p class="lead"><code>INKEY()</code> читает одну клавишу из очереди клавиатуры и сразу возвращает управление программе. Если клавиши пока нет, функция возвращает пустую строку, поэтому её удобно использовать в циклах опроса, а не в блокирующем пользовательском вводе.</p>
 
 <section class="article-section">
-<h2>Сводка</h2>
+<h2>Как INKEY читает очередь клавиатуры</h2>
 <p><code>INKEY()</code> не показывает приглашение и не ждёт подтверждения Enter. Обычная печатная клавиша возвращается как символ, а специальная клавиша возвращается как строковое имя, например <code>"LEFT"</code> или <code>"ESC"</code>.</p>
 </section>
 
@@ -35,7 +36,7 @@
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Ограничения опроса клавиатуры</h2>
 <ul>
 <li><code>INKEY()</code> не принимает аргументы.</li>
 <li>Имя функции записывается без суффикса <code>$</code>; алиасы для этой функции не поддерживаются.</li>
@@ -48,7 +49,7 @@
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример чтения одной клавиши</h2>
 <pre><code class="language-basic">DIM pressedKey AS STRING
 
 pressedKey = INKEY()
@@ -71,7 +72,7 @@ END IF</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="keydown.html">Функция KEYDOWN</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="print.html">Оператор PRINT</a><a href="data-and-input.html">Ввод и вывод</a></div>
+<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="keydown.html">Функция KEYDOWN</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="screen.html">Оператор SCREEN</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

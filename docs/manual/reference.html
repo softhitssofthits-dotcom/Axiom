@@ -7,13 +7,174 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="reference">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Быстрый вход в разделы и ключевые сущности</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Указатель</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content"><p class="eyebrow">Справочник</p><h1 class="page-title">Алфавитный и тематический указатель</h1><p class="lead">Если вы уже знаете имя функции, оператора или крупного раздела, начинайте отсюда. Эта страница служит быстрым входом в manual, а для поиска по части имени лучше переходить на отдельную страницу поиска.</p>
-<section class="article-section"><h2>Когда полезно начинать отсюда</h2><p>Указатель особенно удобен в двух случаях: когда вы уже помните нужное имя и хотите сразу перейти к справке, или когда вам нужен не учебный маршрут, а быстрый обзор доступных тематических разделов.</p><ul><li>если нужна обзорная глава, открывайте крупные разделы вроде типов данных, массивов или выражений;</li><li>если нужно найти точную справку по группе встроенных функций, переходите сразу к тематическому блоку;</li><li>если известно только начало имени, используйте страницу поиска.</li></ul></section>
-<section class="article-section"><h2>Быстрые переходы</h2><div class="link-list"><a href="search.html">Поиск по справочнику</a><a href="getting-started.html">Начало работы</a><a href="data-and-input.html">Данные и ввод</a><a href="data-types.html">Типы данных</a><a href="expressions-and-branching.html">Выражения и ветвление</a><a href="sleep.html">SLEEP</a><a href="try.html">TRY и обработка ошибок</a><a href="loops.html">Циклы</a><a href="procedures-and-functions.html">Процедуры и функции</a><a href="arrays.html">Раздел массивов</a><a href="graphics.html">Графика</a><a href="numeric-functions.html">Числовые функции</a><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Строковые: длина и фрагменты</a><a href="string-functions-trim-and-case.html">Строковые: обрезка и регистр</a><a href="string-functions-search-and-replace.html">Строковые: поиск и замена</a><a href="string-functions-build-and-split.html">Строковые: построение и массивы</a><a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a><a href="regex-functions.html">Регулярные выражения</a><a href="regex-functions-match-and-extract.html">Регулярные: проверка и извлечение</a><a href="regex-functions-arrays-and-split.html">Регулярные: массивы и разбиение</a><a href="regex-functions-replace-and-count.html">Регулярные: замена и подсчёт</a><a href="date-time-functions.html">Дата и время</a><a href="date-time-functions-current.html">Дата и время: текущие значения</a><a href="date-time-functions-parts-and-serial.html">Дата и время: части и сборка</a><a href="date-time-functions-arithmetic-and-validation.html">Дата и время: арифметика и проверка</a><a href="date-time-functions-time-zones.html">Дата и время: UTC и пояса</a><a href="file-system-functions.html">Файловая система</a><a href="file-system-functions-text.html">Файловая система: текстовые файлы</a><a href="file-system-functions-open-files.html">Файловая система: открытые файлы</a><a href="file-system-functions-paths.html">Файловая система: пути и сведения</a><a href="file-system-functions-management.html">Файловая система: операции</a><a href="diagnostics.html">Диагностика</a></div></section>
-<section class="article-section"><h2>Короткий маршрут по manual</h2><p>Если вы открыли указатель не ради одной конкретной ссылки, а чтобы быстро сориентироваться, обычно удобен такой порядок чтения:</p><ol><li><a href="getting-started.html">Начало работы</a> — когда нужен общий вход в язык и первые примеры.</li><li><a href="data-and-input.html">Данные и ввод</a> — когда нужно понять переменные, типы и базовый ввод-вывод.</li><li><a href="expressions-and-branching.html">Выражения и ветвление</a> и <a href="loops.html">Циклы</a> — когда программа начинает принимать решения и повторять действия.</li><li><a href="procedures-and-functions.html">Процедуры и функции</a> — когда код уже нужно делить на именованные части.</li></ol></section>
-<div id="page-pager" class="pager"></div></main></div>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Алфавитный список, тематические входы и порядок чтения</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Указатель</p>
+            </div>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <span>Алфавитный и тематический указатель</span>
+        </nav>
+
+        <p class="eyebrow">Справочник</p>
+        <h1 class="page-title">Алфавитный и тематический указатель</h1>
+        <p class="lead">Если вы уже знаете имя функции, оператора, типа или раздела, начните с алфавитного списка. Если известна только задача, используйте тематические переходы ниже или страницу поиска.</p>
+
+        <section class="article-section" id="alphabet">
+            <h2>Алфавитный указатель</h2>
+            <p>Список строится из того же индекса, который используется поиском. В него входят обзорные разделы, операторы, функции, типы, приложения и ключевые справочные страницы.</p>
+            <div id="alphabet-index" class="alphabet-index" aria-live="polite"></div>
+        </section>
+
+        <section class="article-section" id="topics">
+            <h2>Тематические переходы</h2>
+            <p>Тематический вход удобен, когда известно не имя конструкции, а область задачи: данные, выражения, ввод-вывод, файлы, массивы, графика, события, ошибки или встроенные функции.</p>
+            <div class="link-list">
+                <a href="search.html">Поиск по справочнику</a>
+                <a href="getting-started.html">Начало работы</a>
+                <a href="data-types.html">Типы данных</a>
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="const.html">Оператор CONST</a>
+                <a href="type.html">Оператор TYPE</a>
+                <a href="arithmetic-and-logic.html">Выражения и операции</a>
+                <a href="if.html">Условные операторы</a>
+                <a href="loops.html">Циклы</a>
+                <a href="procedures-and-functions.html">Процедуры и функции</a>
+                <a href="data-and-input.html">Ввод и вывод</a>
+                <a href="file-system-functions.html">Файлы и файловая система</a>
+                <a href="arrays.html">Массивы</a>
+                <a href="graphics.html">Графика и экран</a>
+                <a href="inkey.html">Клавиатура</a>
+                <a href="mousex.html">Мышь</a>
+                <a href="error-handling.html">Обработка ошибок</a>
+                <a href="diagnostics.html">Диагностика</a>
+                <a href="numeric-functions.html">Числовые функции</a>
+                <a href="string-functions.html">Строковые функции</a>
+                <a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>
+                <a href="regex-functions.html">Регулярные выражения</a>
+                <a href="date-time-functions.html">Дата и время</a>
+                <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
+                <a href="examples.html">Примеры программ</a>
+            </div>
+        </section>
+
+        <section class="article-section" id="reading-order">
+            <h2>Порядок первого чтения</h2>
+            <p>Если нужно быстро собрать общую картину языка, удобен такой порядок:</p>
+            <ol>
+                <li><a href="getting-started.html">Начало работы</a> - общий вход в язык и первые примеры.</li>
+                <li><a href="data-types.html">Типы данных</a>, <a href="variables-and-constants.html">переменные</a> и <a href="dim.html">операторы описания</a> - чем программа хранит значения и как объявляет имена.</li>
+                <li><a href="arithmetic-and-logic.html">Выражения и операции</a>, <a href="if.html">условия</a> и <a href="loops.html">циклы</a> - как программа вычисляет, выбирает ветвь и повторяет действия.</li>
+                <li><a href="procedures-and-functions.html">Процедуры и функции</a> - как делить код на именованные части.</li>
+                <li><a href="data-and-input.html">Ввод-вывод</a>, <a href="file-system-functions.html">файлы</a>, <a href="graphics.html">экран</a>, <a href="inkey.html">клавиатура</a> и <a href="mousex.html">мышь</a> - как программа общается с пользователем и средой.</li>
+                <li><a href="error-handling.html">Обработка ошибок</a>, <a href="diagnostics.html">диагностика</a> и <a href="data-type-limits.html">справочные приложения</a> - где смотреть ограничения, коды ошибок и проверочные примеры.</li>
+            </ol>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="search.html">Поиск по справочнику</a>
+                <a href="index.html">Главная страница справочника</a>
+                <a href="getting-started.html">Начало работы</a>
+                <a href="examples.html">Примеры программ</a>
+                <a href="cheat-sheet.html">Краткая шпаргалка</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/search-index.js"></script>
+<script>
+(function () {
+    const host = document.getElementById("alphabet-index");
+    const entries = Array.isArray(window.AxiomSearchIndex) ? window.AxiomSearchIndex : [];
+
+    if (!host) {
+        return;
+    }
+
+    if (entries.length === 0) {
+        host.textContent = "Индекс пока недоступен.";
+        return;
+    }
+
+    const ordered = [...entries].sort((left, right) =>
+        left.title.localeCompare(right.title, "ru", { sensitivity: "base", numeric: true })
+    );
+    const groups = new Map();
+
+    for (const entry of ordered) {
+        const first = (entry.title || "#").trim().charAt(0).toUpperCase();
+        const key = /[0-9]/.test(first) ? "0-9" : first;
+        if (!groups.has(key)) {
+            groups.set(key, []);
+        }
+        groups.get(key).push(entry);
+    }
+
+    const letterNav = document.createElement("div");
+    letterNav.className = "alphabet-index__letters";
+    host.appendChild(letterNav);
+
+    const body = document.createElement("div");
+    body.className = "alphabet-index__body";
+    host.appendChild(body);
+
+    for (const [letter, items] of groups) {
+        const anchor = "letter-" + letter.toLowerCase().replace(/[^a-zа-яё0-9-]/gi, "-");
+
+        const jump = document.createElement("a");
+        jump.href = "#" + anchor;
+        jump.textContent = letter;
+        letterNav.appendChild(jump);
+
+        const section = document.createElement("section");
+        section.className = "alphabet-index__group";
+        section.id = anchor;
+
+        const title = document.createElement("h3");
+        title.textContent = letter;
+        section.appendChild(title);
+
+        const list = document.createElement("ul");
+        list.className = "alphabet-index__list";
+
+        for (const entry of items) {
+            const item = document.createElement("li");
+            const link = document.createElement("a");
+            link.href = entry.href;
+            link.textContent = entry.title;
+            item.appendChild(link);
+
+            const meta = document.createElement("span");
+            meta.textContent = " " + entry.kind + " - " + entry.category;
+            item.appendChild(meta);
+            list.appendChild(item);
+        }
+
+        section.appendChild(list);
+        body.appendChild(section);
+    }
+})();
+</script>
 <script src="scripts/manual.js"></script>
 </body>
 </html>

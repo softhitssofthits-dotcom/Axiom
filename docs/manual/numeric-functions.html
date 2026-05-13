@@ -37,12 +37,12 @@
             <p class="lead">Числовые функции Axiom помогают преобразовывать данные, выполнять типовые вычисления, работать со случайными значениями, углами, корнями, логарифмами и разными способами округления. Для удобства они разбиты на несколько тематических страниц.</p>
 
             <section class="article-section">
-                <h2>Что входит в раздел</h2>
-                <p>Здесь собраны как классические функции семейства BASIC вроде <code>INT</code>, <code>STR</code> и <code>VAL</code>, так и более общие математические средства: <code>ABS</code>, <code>MIN</code>, <code>MAX</code>, <code>RND</code>, тригонометрические функции, логарифмы, степени, корни и функции округления.</p>
+                <h2>Группы числовых функций</h2>
+                <p>Числовые функции делятся по задаче: преобразование между числом и строкой, базовые вычисления, случайные значения, тригонометрия, корни, логарифмы и округление. Если нужно превратить текст в число, смотри <code>VAL</code>. Если нужно взять модуль, минимум или максимум, смотри базовые функции. Если нужно работать с углами, переходи к тригонометрии.</p>
             </section>
 
             <section class="article-section">
-                <h2>Основные правила</h2>
+                <h2>Тип результата и ошибки</h2>
                 <ul>
                     <li><code>RND()</code> вызывается без аргументов и возвращает <code>DOUBLE</code> в диапазоне от <code>0</code> включительно до <code>1</code> не включительно.</li>
                     <li><code>INT</code> возвращает результат именно в типе <code>INTEGER</code>, а <code>FLOOR</code>, <code>CEIL</code>, <code>ROUND</code> и <code>FIX</code> обычно сохраняют числовой тип исходного аргумента.</li>
@@ -51,7 +51,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Подразделы</h2>
+                <h2>Куда перейти за конкретной функцией</h2>
                 <div class="link-list">
                     <a href="numeric-functions-conversion-and-legacy.html">Преобразование чисел и классические функции</a>
                     <a href="numeric-functions-core.html">Базовые числовые функции</a>
@@ -67,7 +67,10 @@
                     <li><a href="../../samples/functions/str/basic_usage.axm">STR: преобразование числа в строку</a></li>
                     <li><a href="../../samples/functions/val/basic_usage.axm">VAL: чтение числа из строки</a></li>
                     <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: модуль числа</a></li>
+                    <li><a href="../../samples/functions/min/basic_usage.axm">MIN: меньшее значение</a></li>
+                    <li><a href="../../samples/functions/rnd/basic_usage.axm">RND: случайное значение</a></li>
                     <li><a href="../../samples/functions/sin/basic_usage.axm">SIN: синус угла</a></li>
+                    <li><a href="../../samples/functions/sqr/basic_usage.axm">SQR: квадратный корень</a></li>
                     <li><a href="../../samples/functions/log/basic_usage.axm">LOG: натуральный логарифм</a></li>
                     <li><a href="../../samples/functions/round/basic_usage.axm">ROUND: округление к ближайшему</a></li>
                 </ul>
@@ -76,7 +79,12 @@
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
+                    <a href="numeric-functions-conversion-and-legacy.html">Преобразование чисел</a>
+                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
+                    <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
+                    <a href="numeric-functions-roots-rounding.html">Корни, логарифмы и округление</a>
                     <a href="data-types.html">Типы данных</a>
+                    <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
                     <a href="date-time-functions.html">Дата и время</a>
                     <a href="string-functions.html">Строковые функции</a>
                     <a href="diagnostics.html">Диагностика</a>

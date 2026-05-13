@@ -10,30 +10,37 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">TRIM, LTRIM, RTRIM, LCASE, UCASE и REVERSE</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Обрезка, регистр и разворот строки</p><p class="sidebar__subtitle">Удаление символов по краям, смена регистра и обратный порядок символов.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
 <p class="eyebrow">Строковые функции</p>
 <h1 class="page-title">Обрезка, регистр и разворот строки</h1>
+
+<section class="article-section">
+<p>Функции этой страницы возвращают новую строку на основе исходной: удаляют лишние символы по краям, переводят буквы в другой регистр или меняют порядок символов на обратный. Исходное значение при этом не изменяется само по себе.</p>
+</section>
 
 <section class="article-section" id="trim">
 <h2>TRIM</h2>
 <p>Функция <code>TRIM</code> убирает символы с обоих краёв строки.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">result = TRIM(text[, chars])</code></pre>
-<h3>Замечания</h3>
+<h3>Удаляемые символы</h3>
 <p>Без аргумента <code>chars</code> удаляются пробельные символы. Если <code>chars</code> указан, по краям убираются все символы из этого набора.</p>
-</section>
-
-<h3>РџСЂРёРјРµСЂ</h3>
+<h3>Пример удаления начальных пробелов</h3>
 <pre><code class="language-basic">PRINT "[" + TRIM("abc   ") + "]"
 PRINT "[" + TRIM("   abc") + "]"
-PRINT "[" + TRIM("   ") + "]"</code></pre>
+PRINT "[" + TRIM("...abc...", ".") + "]"</code></pre>
 </section>
+
 <section class="article-section" id="ltrim">
 <h2>LTRIM</h2>
 <p>Функция <code>LTRIM</code> убирает символы только слева.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">result = LTRIM(text[, chars])</code></pre>
-<h3>Замечания</h3>
+<h3>Удаляемые символы</h3>
 <p>Без аргумента <code>chars</code> убираются пробельные символы слева. Если <code>chars</code> указан, убираются символы из этого набора.</p>
+<h3>Пример удаления конечных пробелов</h3>
+<pre><code class="language-basic">PRINT "[" + LTRIM("   abc") + "]"
+PRINT "[" + LTRIM("...abc", ".") + "]"</code></pre>
 </section>
 
 <section class="article-section" id="rtrim">
@@ -41,8 +48,11 @@ PRINT "[" + TRIM("   ") + "]"</code></pre>
 <p>Функция <code>RTRIM</code> убирает символы только справа.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">result = RTRIM(text[, chars])</code></pre>
-<h3>Замечания</h3>
+<h3>Удаляемые символы</h3>
 <p>Без аргумента <code>chars</code> убираются пробельные символы справа. Если <code>chars</code> указан, убираются символы из этого набора.</p>
+<h3>Пример удаления пробелов с двух сторон</h3>
+<pre><code class="language-basic">PRINT "[" + RTRIM("abc   ") + "]"
+PRINT "[" + RTRIM("abc...", ".") + "]"</code></pre>
 </section>
 
 <section class="article-section" id="lcase">
@@ -51,8 +61,11 @@ PRINT "[" + TRIM("   ") + "]"</code></pre>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">lowerText = LCASE(text)
 upperText = UCASE(text)</code></pre>
-<h3>Замечания</h3>
+<h3>Возвращаемое значение</h3>
 <p>Обе функции возвращают новое значение и не меняют исходную строку автоматически.</p>
+<h3>Пример перевода в верхний регистр</h3>
+<pre><code class="language-basic">PRINT LCASE("ПРИМЕР")
+PRINT UCASE("пример")</code></pre>
 </section>
 
 <section class="article-section" id="reverse">
@@ -60,15 +73,11 @@ upperText = UCASE(text)</code></pre>
 <p>Функция <code>REVERSE</code> возвращает строку в обратном порядке символов.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">result = REVERSE(text)</code></pre>
-<h3>Пример</h3>
-<pre><code class="language-basic">' Обрезка строки, смена регистра и разворот
-PRINT TRIM("  abc  ")
-PRINT LCASE("ПРИМЕР")
-PRINT UCASE("пример")
-PRINT REVERSE("abcd")</code></pre>
+<h3>Пример перевода в нижний регистр</h3>
+<pre><code class="language-basic">PRINT REVERSE("abcd")</code></pre>
 </section>
 
 <section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li><li><a href="../../samples/functions/ltrim/basic_usage.axm">LTRIM</a></li><li><a href="../../samples/functions/rtrim/basic_usage.axm">RTRIM</a></li><li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE</a></li><li><a href="../../samples/functions/ucase/basic_usage.axm">UCASE</a></li></ul></section>
-<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a></div></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

@@ -66,14 +66,14 @@ SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
+                <h2>Режим, окно и ошибки</h2>
                 <p>Значения режима меньше <code>0</code> или больше <code>10</code> дают ошибку времени выполнения. В <code>SCREEN 0</code> функция <code>SCREENISACTIVE()</code> возвращает <code>FALSE</code>, потому что активной графической поверхности нет; <code>SCREENMODE()</code> возвращает <code>0</code>, а <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> отражают размер текстового окна.</p>
                 <p>В текущей IDE окно <code>SCREEN</code> создаётся как отдельное обычное Win32/DirectX-окно. Ввод клавиатуры, строковый <code>INPUT</code> и, для графических режимов, события мыши поступают из этого окна. Вкладка <code>Output</code> используется только программами, которые не выбирали <code>SCREEN</code> явно. При <code>SCREEN 0</code> приглашение <code>INPUT</code> появляется в текущей текстовой позиции окна, начиная с первой строки, а нижняя консоль IDE не принимает параллельный ввод. Окно можно закрыть системной кнопкой закрытия; следующий запуск или сброс сеанса также закрывает старое окно.</p>
                 <p>Если пользователь закрывает окно <code>SCREEN</code> системной кнопкой закрытия во время выполнения программы, IDE считает это запросом на прерывание текущего запуска. Выполнение останавливается кооперативно между инструкциями, следующие операторы программы не выполняются, а команды IDE снова становятся доступными.</p>
             </section>
 
             <section class="article-section">
-                <h2>Пример</h2>
+                <h2>Пример выбора режима</h2>
 <pre><code>SCREEN 5
 PRINT "active="; SCREENISACTIVE()
 PRINT "mode="; SCREENMODE()
@@ -93,7 +93,15 @@ PRINT "text mode screen"</code></pre>
 
             <section class="article-section">
                 <h2>См. также</h2>
-                <p><a href="graphics.html">Графика</a>, <a href="graphics-text.html">текстовый слой</a>, <a href="graphics-primitives.html">графические примитивы</a>, <a href="screen-functions.html">функции состояния экрана</a>.</p>
+                <div class="link-list">
+                    <a href="data-and-input.html">Клавиатура, мышь и события</a>
+                    <a href="graphics.html">Графика и экран</a>
+                    <a href="graphics-text.html">Текстовый слой SCREEN</a>
+                    <a href="graphics-primitives.html">Графические примитивы</a>
+                    <a href="screen-functions.html">Функции состояния SCREEN</a>
+                    <a href="mousex.html">Функция MOUSEX</a>
+                    <a href="inkey.html">Функция INKEY</a>
+                </div>
             </section>
 
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>

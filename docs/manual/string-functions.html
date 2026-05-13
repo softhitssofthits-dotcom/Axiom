@@ -10,16 +10,17 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Длина, фрагменты, обрезка, поиск, замена и массивы строк</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Строковые функции</p><p class="sidebar__subtitle">Работа с длиной текста, частями строки, поиском, заменой и переходом к массивам строк.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
 <p class="eyebrow">Встроенные функции</p>
 <h1 class="page-title">Строковые функции</h1>
 
 <section class="article-section">
-<h2>Сводка</h2>
+<h2>Какие задачи решают строковые функции</h2>
 <p>Строковые функции Axiom позволяют измерять длину текста, извлекать фрагменты, убирать символы по краям, менять регистр, искать и заменять подстроки, строить новые строки из повторов и заполнителей, а также переходить между строкой и массивом строк.</p>
 </section>
 
 <section class="article-section">
-<h2>Разделы</h2>
+<h2>Куда перейти за строковой задачей</h2>
 <div class="link-list">
 <a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a>
 <a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a>
@@ -29,7 +30,7 @@
 </section>
 
 <section class="article-section">
-<h2>Что входит в раздел</h2>
+<h2>Группы строковых функций</h2>
 <ul>
 <li><code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code></li>
 <li><code>TRIM</code>, <code>LTRIM</code>, <code>RTRIM</code>, <code>LCASE</code>, <code>UCASE</code>, <code>REVERSE</code></li>
@@ -40,7 +41,7 @@
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Позиции, параметры и тип строки</h2>
 <ul>
 <li>Строковые позиции в функциях вроде <code>MID</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>INSERT</code> и <code>REMOVE</code> считаются с единицы.</li>
 <li>Необязательные параметры, например у <code>TRIM</code>, <code>SPLIT</code>, <code>JOIN</code>, <code>PADLEFT</code>, <code>PADRIGHT</code> и <code>CENTER</code>, на справочных страницах показываются в квадратных скобках.</li>
@@ -52,16 +53,24 @@
 <h2>Ручная проверка</h2>
 <ul class="resource-list">
 <li><a href="../../samples/functions/len/basic_usage.axm">LEN</a></li>
+<li><a href="../../samples/functions/mid/basic_usage.axm">MID</a></li>
 <li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li>
+<li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE</a></li>
 <li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li>
 <li><a href="../../samples/functions/replacemany/multiple_tokens.axm">REPLACEMANY</a></li>
 <li><a href="../../samples/functions/split/basic_usage.axm">SPLIT</a></li>
+<li><a href="../../samples/functions/join/basic_usage.axm">JOIN</a></li>
 </ul>
 </section>
 
 <section class="article-section">
 <h2>См. также</h2>
 <div class="link-list">
+<a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a>
+<a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a>
+<a href="string-functions-search-and-replace.html">Поиск и замена в строках</a>
+<a href="string-functions-build-and-split.html">Построение строк и массивы строк</a>
+<a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>
 <a href="regex-functions.html">Регулярные выражения</a>
 <a href="data-types-strings-and-files.html">STRING и FILE</a>
 </div>

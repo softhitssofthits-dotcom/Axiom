@@ -56,7 +56,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Подразделы</h2>
+                <h2>Куда перейти за конкретной задачей</h2>
                 <div class="link-list">
                     <a href="date-time-functions-current.html">Текущие дата и время</a>
                     <a href="date-time-functions-parts-and-serial.html">Сборка даты и календарные части</a>
@@ -66,16 +66,18 @@
             </section>
 
             <section class="article-section">
-                <h2>Что входит в раздел</h2>
-                <p>Сюда относятся текущие значения <code>DATE</code>, <code>TIME</code>, <code>NOW</code>, UTC-варианты, сборка даты и времени через <code>DATESERIAL</code> и <code>TIMESERIAL</code>, функции извлечения частей вроде <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code>, календарная арифметика <code>DATEADD</code> и <code>DATEDIFF</code>, а также функции преобразования между часовыми поясами.</p>
+                <h2>Группы функций даты и времени</h2>
+                <p>Для текущих значений используются <code>DATE</code>, <code>TIME</code>, <code>NOW</code> и их UTC-варианты. Для сборки даты из чисел используются <code>DATESERIAL</code> и <code>TIMESERIAL</code>. Для чтения отдельных частей служат <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code> и соседние функции. Для расчётов между датами используются <code>DATEADD</code>, <code>DATEDIFF</code> и <code>DATEPART</code>, а для часовых поясов - <code>UTCOFFSET</code>, <code>TOUTC</code> и <code>FROMUTC</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Ручная проверка</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущая локальная дата</a></li>
+                    <li><a href="../../samples/functions/now/basic_usage.axm">NOW: текущие дата и время</a></li>
                     <li><a href="../../samples/functions/dateserial/basic_usage.axm">DATESERIAL: построение даты</a></li>
                     <li><a href="../../samples/functions/dateadd/month_end_shift.axm">DATEADD: сдвиг даты</a></li>
+                    <li><a href="../../samples/functions/datediff/day_boundary.axm">DATEDIFF: разница между датами</a></li>
                     <li><a href="../../samples/functions/utcoffset/current_local_offset.axm">UTCOFFSET: локальное смещение</a></li>
                 </ul>
             </section>
@@ -83,6 +85,10 @@
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
+                    <a href="date-time-functions-current.html">Текущие дата и время</a>
+                    <a href="date-time-functions-parts-and-serial.html">Сборка даты и календарные части</a>
+                    <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>
+                    <a href="date-time-functions-time-zones.html">UTC и часовые пояса</a>
                     <a href="numeric-functions.html">Числовые функции</a>
                     <a href="string-functions.html">Строковые функции</a>
                     <a href="diagnostics.html">Диагностика</a>

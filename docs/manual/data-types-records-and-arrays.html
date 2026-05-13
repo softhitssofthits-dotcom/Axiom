@@ -1,125 +1,197 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - TYPE, массивы и групповые объявления</title>
+    <title>Справочник Axiom - Записи TYPE и массивы</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="data-types-records-and-arrays">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Пользовательские записи и типы элементов массива</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Типы данных</p>
-                    <p class="sidebar__subtitle">TYPE, групповые объявления и массивы поверх типа элемента.</p>
-                </div>
-                <nav id="manual-nav"></nav>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Записи, массивы и групповые объявления</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Записи и массивы</p>
+                <p class="sidebar__subtitle">Как выбрать между карточкой данных, списком и таблицей.</p>
             </div>
-        </aside>
-        <main class="content">
-            <p class="eyebrow">Типы данных</p>
-            <h1 class="page-title">TYPE, массивы и групповые объявления</h1>
-            <p class="lead">Помимо встроенных базовых типов Axiom поддерживает пользовательские записи через <code>TYPE</code>. Такая запись может содержать поля, массивные поля и пользовательские методы, а массивы в целом строятся поверх типа элемента.</p>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="data-types.html">Типы данных</a>
+            <span>/</span>
+            <span>Записи TYPE и массивы</span>
+        </nav>
 
-            <section class="article-section">
-                <h2>Пользовательские записи TYPE</h2>
-                <p><code>TYPE ... END TYPE</code> объявляет новый тип записи с именованными полями. Переменная такого типа объявляется через <code>DIM name AS TypeName</code>, а поля читаются и записываются через точку: <code>name.Field</code>.</p>
-                <p>Если объяснять по-простому, <code>TYPE</code> нужен тогда, когда несколько значений должны жить вместе как одна сущность. Например, имя, возраст и город можно держать не в трёх отдельных переменных, а в одной записи <code>Person</code>.</p>
-                <p>Внутри <code>TYPE</code> можно объявлять не только поля, но и методы через <code>SUB</code> и <code>FUNCTION</code>. Метод — это действие самой записи, а текущая запись внутри него доступна как <code>SELF</code>.</p>
-                <p>Если у одного <code>TYPE</code> объявлено несколько методов с одним именем, они могут образовать набор перегрузок. В таком случае Axiom выбирает подходящий вариант по числу аргументов, совместимости сигнатуры и точности совпадения типов, а не по типу результата.</p>
-                <p>Запись можно создать через форму <code>TypeName(...)</code> в трёх режимах. Именованная форма <code>Person(Name := "Ada", Age := 36)</code> заполняет указанные поля, а остальные берёт из значений по умолчанию. Если внутри <code>TYPE</code> нет пользовательского конструктора, пустая форма <code>Person()</code> даёт запись со значениями по умолчанию, а позиционная форма <code>Person("Ada", 36)</code> сопоставляет аргументы полям по порядку объявления.</p>
-                <p>Если внутри <code>TYPE</code> объявлен <code>SUB New(...)</code>, неименованная форма <code>TypeName(...)</code> становится вызовом конструктора. В текущем шаге такие конструкторы можно перегружать по полной сигнатуре пользовательских параметров, включая нулевую форму <code>SUB New()</code>. Именованная форма с <code>:=</code> при этом остаётся литералом записи и конструктор не вызывает.</p>
-                <p>После выбранного <code>SUB New(...)</code> запись может пройти ещё одну пользовательскую проверку через специальную форму <code>FUNCTION IsValid() AS BOOLEAN</code>. Это инвариант: простая автоматическая проверка того, что запись после создания находится в допустимом состоянии. Если такая функция возвращает <code>FALSE</code>, конструкторный путь завершается runtime-ошибкой. Именованный литерал <code>TypeName(Field := ...)</code> этот шаг не выполняет.</p>
-                <p>Поле записи может быть не только скаляром или вложенным <code>TYPE</code>, но и массивом. Для массивных полей работает тот же договор ранга, что и для обычных переменных: допустимы динамические формы <code>Scores()</code>, <code>Grid(,)</code>, <code>Cube(,,)</code> и фиксированные формы с диапазонами в каждом измерении.</p>
-                <pre><code class="language-basic">TYPE Person
+        <p class="eyebrow">Типы данных</p>
+        <h1 class="page-title">Записи TYPE и массивы</h1>
+        <p class="lead">В Axiom есть два разных способа собрать несколько значений. <code>TYPE</code> делает одну запись с именованными полями, а массив делает набор элементов одного типа с доступом по номеру. Их можно сочетать, но сначала важно не путать эти две идеи.</p>
+
+        <section class="article-section" id="record-vs-array">
+            <h2>Запись и массив: две разные идеи</h2>
+            <p><strong>Запись</strong> похожа на карточку или анкету. В ней есть разные графы: имя, возраст, город. У каждой графы своё имя и свой тип.</p>
+            <p><strong>Массив</strong> похож на ряд ячеек или таблицу. В нём много однотипных элементов: оценки, строки, клетки поля, записи сотрудников.</p>
+            <pre><code class="language-basic">TYPE Person
     Name AS STRING
     Age AS INTEGER
 END TYPE
 
 DIM user AS Person
-user = Person(Name := "Ada", Age := 36)</code></pre>
-                <pre><code class="language-basic">DIM user AS Person
-user = Person("Ada", 36)</code></pre>
-                <pre><code class="language-basic">TYPE Person
-    Name AS STRING = "Unknown"
-    Age AS INTEGER = 18
+DIM scores(1 TO 3) AS INTEGER</code></pre>
+            <p><code>user</code> хранит одну карточку человека. <code>scores</code> хранит несколько целых чисел.</p>
+        </section>
 
-    SUB New()
-        SELF.Name = "Zero"
-    END SUB
-
-    SUB New(name AS STRING)
-        SELF.Name = name
-        SELF.Age = SELF.Age + 1
-    END SUB
+        <section class="article-section" id="when-to-use-type">
+            <h2>Когда нужен TYPE</h2>
+            <p><code>TYPE</code> нужен, когда несколько разных значений описывают один предмет. Например, человек состоит не из одного числа и не из одной строки: у него есть имя, возраст, город и другие свойства.</p>
+            <pre><code class="language-basic">TYPE Player
+    Name AS STRING
+    Score AS INTEGER
+    Active AS BOOLEAN
 END TYPE
 
-DIM built AS Person
-DIM literalOnly AS Person
+DIM current AS Player
+current.Name = "Ada"
+current.Score = 100
+current.Active = TRUE</code></pre>
+            <p>Точка в <code>current.Name</code> означает: возьми поле <code>Name</code> внутри записи <code>current</code>.</p>
+        </section>
 
-built = Person()
-literalOnly = Person(Name := "Grace")</code></pre>
-                <p>Подробное и более простое объяснение с отдельными примерами полей, методов, конструктора и инварианта описано на странице <a href="type.html">Тип TYPE</a>.</p>
-            </section>
+        <section class="article-section" id="when-to-use-array">
+            <h2>Когда нужен массив</h2>
+            <p>Массив нужен, когда значений много и они однотипные. Вместо отдельных переменных <code>score1</code>, <code>score2</code>, <code>score3</code> можно завести один массив <code>scores</code>.</p>
+            <pre><code class="language-basic">DIM scores(1 TO 3) AS INTEGER
 
-            <section class="article-section">
-                <h2>Групповые объявления</h2>
-                <ul>
-                    <li><code>AS &lt;тип&gt;</code> относится ко всей ближайшей группе имён слева до начала оператора <code>DIM</code> или до предыдущего разделителя группы.</li>
-                    <li>Форма <code>DIM left, right AS BOOLEAN</code> объявляет обе переменные как <code>BOOLEAN</code>.</li>
-                    <li>Форма <code>DIM total = 10</code> выводит тип как <code>INTEGER</code>, а <code>DIM price = 1.5</code> выводит тип как <code>DOUBLE</code>.</li>
-                </ul>
-            </section>
+scores(1) = 80
+scores(2) = 95
+scores(3) = 70
 
-            <section class="article-section">
-                <h2>Массивы как тип поверх элемента</h2>
-                <p>Массивы используют тот же базовый набор типов, только через тип элемента, например <code>DIM scores(1 TO 3) AS INTEGER</code>. Отдельный базовый тип массива не вводится: в договоре участвуют тип элемента, ранг и видимые границы.</p>
-                <pre><code class="language-basic">DIM scores(1 TO 3) AS INTEGER
-DIM names(1 TO 2) AS STRING
-DIM board(1 TO 3, 1 TO 3) AS BOOLEAN</code></pre>
-            </section>
+PRINT scores(2)</code></pre>
+            <p>Скобки в <code>scores(2)</code> означают: возьми элемент массива с индексом <code>2</code>. Подробные правила массивов описаны на странице <a href="arrays.html">Массивы</a>.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/type/methods_self.axm">TYPE: методы и SELF</a></li>
-                    <li><a href="../../samples/operators/type/method_receivers_field_and_array.axm">TYPE: методы у поля записи и элемента массива</a></li>
-                    <li><a href="../../samples/operators/type/method_receivers_temporary.axm">TYPE: методы у временного литерала и результата функции</a></li>
-                    <li><a href="../../samples/operators/type/method_overloads.axm">TYPE: перегрузка обычных методов по сигнатуре</a></li>
-                    <li><a href="../../samples/operators/type/constructor_new.axm">TYPE: пользовательский конструктор через SUB New</a></li>
-                    <li><a href="../../samples/operators/type/constructor_invariant.axm">TYPE: инвариант после конструктора через FUNCTION IsValid</a></li>
-                    <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: групповые объявления с общим типом</a></li>
-                    <li><a href="../../samples/operators/type/named_literals.axm">TYPE: именованные литералы через :=</a></li>
-                    <li><a href="../../samples/operators/type/positional_constructor.axm">TYPE: позиционная форма TypeName(...)</a></li>
-                    <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: строковые поля фиксированной длины</a></li>
-                    <li><a href="../../samples/operators/type/array_field_views.axm">TYPE: подмассивы и диапазонные представления через поле</a></li>
-                    <li><a href="../../samples/operators/type/multidimensional_array_fields.axm">TYPE: многомерные динамические массивные поля</a></li>
-                    <li><a href="../../samples/operators/type/fixed_multidimensional_array_fields.axm">TYPE: многомерные фиксированные массивные поля</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Многомерные массивы: двумерная сетка</a></li>
-                </ul>
-            </section>
+        <section class="article-section" id="array-of-records">
+            <h2>Массив записей</h2>
+            <p>Самое частое сочетание — массив записей. Это уже не одна карточка, а целая картотека: каждый элемент массива хранит одну запись <code>Person</code>.</p>
+            <pre><code class="language-basic">TYPE Person
+    Name AS STRING
+    Age AS INTEGER
+END TYPE
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="data-types.html">Обзор типов данных</a>
-                    <a href="type.html">TYPE</a>
-                    <a href="arrays.html">Массивы</a>
-                    <a href="variables-and-constants.html">Переменные и константы</a>
-                </div>
-            </section>
+DIM people(1 TO 2) AS Person
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+people(1).Name = "Ada"
+people(1).Age = 36
+
+people(2).Name = "Grace"
+people(2).Age = 37
+
+PRINT people(1).Name
+PRINT people(2).Age</code></pre>
+            <p>Читается слева направо: <code>people(1)</code> выбирает первую карточку, а <code>.Name</code> берёт поле <code>Name</code> в этой карточке.</p>
+        </section>
+
+        <section class="article-section" id="array-field">
+            <h2>Массив внутри записи</h2>
+            <p>Иногда список принадлежит одной записи. Например, у одного ученика может быть несколько оценок. Тогда массив делают полем внутри <code>TYPE</code>.</p>
+            <pre><code class="language-basic">TYPE Student
+    Name AS STRING
+    Marks(1 TO 3) AS INTEGER
+END TYPE
+
+DIM pupil AS Student
+
+pupil.Name = "Ada"
+pupil.Marks(1) = 5
+pupil.Marks(2) = 4
+pupil.Marks(3) = 5
+
+PRINT pupil.Name
+PRINT pupil.Marks(3)</code></pre>
+            <p><code>pupil</code> — одна запись ученика. <code>pupil.Marks</code> — массив оценок внутри этой записи.</p>
+        </section>
+
+        <section class="article-section" id="nested-record">
+            <h2>Запись внутри записи</h2>
+            <p>Поле записи может быть другой записью. Так удобно выделять отдельную часть данных, например адрес.</p>
+            <pre><code class="language-basic">TYPE Address
+    City AS STRING
+    Street AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+
+user.Name = "Ada"
+user.Home.City = "London"
+user.Home.Street = "King Street"
+
+PRINT user.Home.City</code></pre>
+            <p>Здесь две точки подряд не означают ничего таинственного: сначала берётся поле <code>Home</code> внутри <code>user</code>, потом поле <code>City</code> внутри <code>Home</code>.</p>
+        </section>
+
+        <section class="article-section" id="grouped-dim">
+            <h2>Групповые объявления DIM</h2>
+            <p><code>DIM</code> может объявлять несколько имён в одной строке. Общий <code>AS &lt;тип&gt;</code> относится к ближайшей группе имён слева.</p>
+            <pre><code class="language-basic">DIM left, right AS BOOLEAN
+DIM total = 10, title AS STRING = "Result"</code></pre>
+            <p>В первой строке обе переменные получают тип <code>BOOLEAN</code>. Во второй строке <code>total</code> получает тип из значения <code>10</code>, а <code>title</code> явно объявляется как <code>STRING</code>.</p>
+        </section>
+
+        <section class="article-section" id="where-to-read">
+            <h2>Куда идти за подробностями</h2>
+            <ul>
+                <li>Если нужно понять сам оператор <code>TYPE</code>, поля, точку и создание записи, откройте <a href="type.html">Оператор TYPE</a>. Там же разобраны методы записи: <code>SELF</code> как ссылка на текущую запись, <code>SUB New</code> как конструктор и <code>IsValid</code> как проверка после конструктора.</li>
+                <li>Если нужна работа со списками, таблицами, индексами, <code>REDIM</code>, срезами и границами, откройте <a href="arrays.html">Массивы</a>.</li>
+                <li>Если нужно объявить переменную, массив или несколько имён в одной строке, откройте <a href="dim.html">Оператор DIM</a>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section" id="manual-check">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки записей, массивов и групповых объявлений.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/type/field_access.axm">TYPE: доступ к полям</a></li>
+                <li><a href="../../samples/operators/type/array_fields.axm">TYPE: массивные поля</a></li>
+                <li><a href="../../samples/operators/type/multidimensional_array_fields.axm">TYPE: многомерные массивные поля</a></li>
+                <li><a href="../../samples/operators/type/structural_equality.axm">TYPE: сравнение записей</a></li>
+                <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: групповые объявления</a></li>
+                <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Многомерные массивы: двумерная сетка</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="data-types.html">Типы данных</a>
+                <a href="type.html">Оператор TYPE</a>
+                <a href="arrays.html">Массивы</a>
+                <a href="arrays-dynamic.html">Динамические массивы</a>
+                <a href="arrays-indexing.html">Индексирование массивов</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="const.html">Оператор CONST</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

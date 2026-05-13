@@ -40,7 +40,7 @@
         <p class="lead"><code>SELECT CASE</code> — управляющий оператор, который выполняет один из нескольких блоков операторов в зависимости от значения одного проверяемого выражения. Он удобен, когда программа должна выбрать ветвь по точному значению, диапазону или сравнению.</p>
 
         <section class="article-section">
-            <h2>Назначение</h2>
+            <h2>Когда использовать SELECT CASE</h2>
             <p>Оператор <code>SELECT CASE</code> применяют там, где одна и та же величина сравнивается с несколькими вариантами. Выражение выбора вычисляется один раз, а затем Axiom просматривает ветви <code>CASE</code> сверху вниз.</p>
             <p>Если ветвление строится не вокруг одного значения, а вокруг разных логических условий, обычно лучше использовать <code>IF ... ELSEIF ... ELSE</code>. Если же все варианты относятся к одному выражению, <code>SELECT CASE</code> делает программу короче и нагляднее.</p>
         </section>
@@ -84,14 +84,14 @@ CASE IS &lt;оператор сравнения&gt; &lt;значение&gt;</co
         </section>
 
         <section class="article-section">
-            <h2>Логика работы</h2>
+            <h2>Как значение выбирает CASE</h2>
             <p>Axiom вычисляет выражение после <code>SELECT CASE</code> и сравнивает его с ветвями <code>CASE</code> по порядку. Если выражение удовлетворяет одному из селекторов текущей ветви, выполняются операторы этой ветви.</p>
             <p>После выполнения выбранного блока управление передаётся на оператор, следующий за <code>END SELECT</code>. Остальные ветви больше не проверяются.</p>
             <p>Если ни одна ветвь <code>CASE</code> не подошла, выполняется <code>CASE ELSE</code>. Если <code>CASE ELSE</code> отсутствует, выполнение просто продолжается после <code>END SELECT</code>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Замечания</h2>
+            <h2>Порядок проверки CASE</h2>
             <ul>
                 <li>Точные значения можно использовать для чисел, строк и <code>BOOLEAN</code>.</li>
                 <li>Диапазоны <code>TO</code> и упорядоченные сравнения через <code>CASE IS</code> поддержаны для числовых и строковых значений.</li>
@@ -103,7 +103,7 @@ CASE IS &lt;оператор сравнения&gt; &lt;значение&gt;</co
         </section>
 
         <section class="article-section">
-            <h2>Пример</h2>
+            <h2>Пример выбора CASE</h2>
             <p>В этом примере одно числовое значение сравнивается с точным значением, диапазоном и условием <code>CASE IS</code>. Значение <code>8</code> попадает в диапазон <code>5 TO 10</code>, поэтому выполняется первая ветвь.</p>
             <pre><code class="language-basic">DIM value AS INTEGER = 8
 
@@ -141,16 +141,17 @@ END SELECT</code></pre>
             </ul>
         </section>
 
-        <section class="article-section">
-            <h2>См. также</h2>
-            <div class="link-list">
-                <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                <a href="if.html">Оператор IF</a>
-                <a href="arithmetic-and-logic.html">Арифметика и логика</a>
-                <a href="loops.html">Циклы</a>
-                <a href="diagnostics.html">Диагностика</a>
-            </div>
-        </section>
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
+                    <a href="if.html">Оператор IF</a>
+                    <a href="arithmetic-and-logic.html">Арифметика и логика</a>
+                    <a href="loops.html">Циклы</a>
+                    <a href="data-types.html">Типы данных</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
 
         <div id="page-pager" class="pager"></div>
     </main>

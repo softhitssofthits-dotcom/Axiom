@@ -40,7 +40,7 @@
         <p class="lead"><code>IF</code> — управляющий оператор, который выполняет один блок инструкций или другой блок инструкций в зависимости от значения логического выражения. С помощью <code>IF</code> программа переходит от простого последовательного выполнения к условному ветвлению.</p>
 
         <section class="article-section">
-            <h2>Назначение</h2>
+            <h2>Когда использовать IF</h2>
             <p>Оператор <code>IF</code> используется, когда дальнейшие действия программы зависят от условия. Условие вычисляется как значение типа <code>BOOLEAN</code>: если оно истинно, выполняется ветвь <code>THEN</code>; если ложно, Axiom проверяет следующие ветви <code>ELSEIF</code> или переходит к ветви <code>ELSE</code>.</p>
             <p>Когда проверяется одно условие или небольшая цепочка связанных условий, <code>IF</code> обычно читается проще всего. Если же нужно выбрать один вариант из набора значений одного выражения, часто удобнее использовать <code>SELECT CASE</code>.</p>
         </section>
@@ -68,14 +68,14 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Логика работы</h2>
+            <h2>Как условие выбирает ветвь</h2>
             <p>Axiom сначала вычисляет условие после <code>IF</code>. Если оно имеет значение <code>TRUE</code>, выполняются операторы первой ветви, а остальные ветви пропускаются.</p>
             <p>Если первое условие имеет значение <code>FALSE</code>, Axiom последовательно проверяет ветви <code>ELSEIF</code> сверху вниз. При первом истинном условии выполняется соответствующий блок, после чего управление передаётся на оператор, следующий за <code>END IF</code>.</p>
             <p>Если ни одно условие не истинно, выполняется ветвь <code>ELSE</code>. Если ветвь <code>ELSE</code> отсутствует, оператор <code>IF</code> завершается без выполнения какого-либо блока.</p>
         </section>
 
         <section class="article-section">
-            <h2>Замечания</h2>
+            <h2>Порядок проверки ветвей</h2>
             <ul>
                 <li>В Axiom условие <code>IF</code> должно иметь тип <code>BOOLEAN</code>.</li>
                 <li>Документируемая форма оператора — блочная форма с обязательным завершением <code>END IF</code>.</li>
@@ -89,7 +89,7 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Пример</h2>
+            <h2>Пример выбора ветви</h2>
             <p>В этом примере проверяется значение переменной <code>value</code>. Первое условие ложно, второе истинно, поэтому выполняется только ветвь <code>ELSEIF</code>.</p>
             <pre><code class="language-basic">DIM value AS INTEGER = 7
 
@@ -123,16 +123,17 @@ END IF</code></pre>
             </ul>
         </section>
 
-        <section class="article-section">
-            <h2>См. также</h2>
-            <div class="link-list">
-                <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                <a href="arithmetic-and-logic.html">Арифметика и логика</a>
-                <a href="select-case.html">Оператор SELECT CASE</a>
-                <a href="loops.html">Циклы</a>
-                <a href="diagnostics.html">Диагностика</a>
-            </div>
-        </section>
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
+                    <a href="arithmetic-and-logic.html">Арифметика и логика</a>
+                    <a href="select-case.html">Оператор SELECT CASE</a>
+                    <a href="loops.html">Циклы</a>
+                    <a href="try.html">Оператор TRY</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
 
         <div id="page-pager" class="pager"></div>
     </main>

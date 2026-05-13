@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Тип TYPE</title>
+    <title>Справочник Axiom - Оператор TYPE</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="type">
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Поля, методы, конструкторы и проверки записи</div>
+            <div class="topbar__meta">Поля, точка, создание записи, методы и конструкторы</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -18,8 +18,8 @@
         <aside class="sidebar">
             <div class="sidebar__inner">
                 <div class="sidebar__head">
-                    <p class="sidebar__title">Тип TYPE</p>
-                    <p class="sidebar__subtitle">Простое объяснение записи, её полей, методов, конструкторов и инварианта.</p>
+                    <p class="sidebar__title">Оператор TYPE</p>
+                    <p class="sidebar__subtitle">Запись как карточка данных: поля, точка, массивы, SELF, SUB New и IsValid.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -28,88 +28,139 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a>
                 <span>/</span>
-                <a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a>
+                <a href="data-types-records-and-arrays.html">Записи TYPE и массивы</a>
                 <span>/</span>
-                <span>Тип TYPE</span>
+                <span>Оператор TYPE</span>
             </nav>
             <p class="eyebrow">Данные и объявления</p>
-            <h1 class="page-title">Тип TYPE</h1>
-            <p class="lead"><code>TYPE ... END TYPE</code> создаёт пользовательский тип записи. Если говорить совсем просто, это способ хранить несколько связанных значений под одним именем и, при желании, дать этой записи свои действия через методы.</p>
+            <h1 class="page-title">Оператор TYPE</h1>
+            <p class="lead"><code>TYPE ... END TYPE</code> объявляет пользовательскую запись: новый тип данных, в котором несколько полей хранятся как одно значение. Запись удобно представлять как карточку с подписанными графами.</p>
 
-            <section class="article-section" id="summary">
-                <h2>Если совсем просто</h2>
-                <p>Представьте карточку человека: имя, возраст и город. Хранить это в трёх отдельных переменных неудобно. <code>TYPE</code> позволяет собрать их в одну запись.</p>
+            <section class="article-section" id="what-type-does">
+                <h2>Что делает TYPE</h2>
+                <p>Обычная переменная хранит одно значение. Запись хранит несколько связанных значений сразу. Например, человеку нужны имя и возраст, точке на экране нужны координаты, товару нужны название и цена.</p>
                 <pre><code class="language-basic">TYPE Person
     Name AS STRING
     Age AS INTEGER
-    City AS STRING
+END TYPE</code></pre>
+                <p>Эта запись ещё не создаёт конкретного человека. Она описывает форму будущей карточки: в каждой карточке <code>Person</code> будут поля <code>Name</code> и <code>Age</code>.</p>
+            </section>
+
+            <section class="article-section" id="simple-example">
+                <h2>Самый простой пример</h2>
+                <pre><code class="language-basic">TYPE Person
+    Name AS STRING
+    Age AS INTEGER
 END TYPE
 
 DIM user AS Person
+
 user.Name = "Ada"
 user.Age = 36
-user.City = "London"
 
 PRINT user.Name
-PRINT user.City</code></pre>
-                <p>После этого <code>user</code> — одна переменная, но внутри неё лежат сразу несколько полей.</p>
+PRINT user.Age</code></pre>
+                <p>Здесь есть три шага. Сначала <code>TYPE Person</code> описывает форму записи. Потом <code>DIM user AS Person</code> создаёт переменную такого типа. Потом через точку заполняются и читаются поля этой переменной.</p>
             </section>
 
-            <section class="article-section" id="what-is-inside">
-                <h2>Что находится внутри TYPE</h2>
-                <ul>
-                    <li><strong>Поле</strong> — это отдельное значение внутри записи. Например, <code>Name</code> или <code>Age</code>.</li>
-                    <li><strong>Метод</strong> — это процедура или функция, которая живёт внутри записи и работает именно с ней.</li>
-                    <li><strong>Конструктор</strong> — это специальный <code>SUB New(...)</code>, который помогает собрать запись при создании.</li>
-                    <li><strong>Инвариант</strong> — это специальная проверка <code>FUNCTION IsValid() AS BOOLEAN</code>, которая отвечает на вопрос: "запись после конструктора в допустимом состоянии или нет?"</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="declaration">
-                <h2>Объявление</h2>
-                <pre><code class="language-basic">TYPE typeName
-    fieldDeclaration
-    [anotherFieldDeclaration]
-    [methodDeclaration]
+            <section class="article-section" id="syntax">
+                <h2>Синтаксис объявления</h2>
+                <pre><code class="language-basic">TYPE имяТипа
+    имяПоля AS типПоля
+    другоеПоле AS другойТип = значениеПоУмолчанию
 END TYPE</code></pre>
-                <p>Внутри <code>TYPE</code> можно объявлять поля, методы, конструкторы и специальную проверку <code>IsValid()</code>.</p>
                 <ul>
-                    <li><code>Name AS STRING</code> — обычное поле.</li>
-                    <li><code>Age AS INTEGER = 18</code> — поле со значением по умолчанию.</li>
-                    <li>Имя после <code>TYPE</code> становится новым типом данных, который можно использовать в <code>DIM</code>, параметрах и результатах функций.</li>
+                    <li><code>имяТипа</code> становится новым типом данных. Его можно использовать в <code>DIM</code>, параметрах процедур и типах результата функций.</li>
+                    <li><code>имяПоля</code> — имя отдельного значения внутри записи.</li>
+                    <li><code>типПоля</code> может быть скалярным типом, строкой, другой записью или массивным типом.</li>
                     <li><code>TYPE ... END TYPE</code> объявляется на верхнем уровне программы.</li>
                 </ul>
             </section>
 
+            <section class="article-section" id="field-and-dot">
+                <h2>Поле и точка</h2>
+                <p>Поле — это подписанная часть записи. Точка показывает, какое поле нужно взять из какой записи.</p>
+                <pre><code class="language-basic">user.Name = "Ada"
+PRINT user.Name</code></pre>
+                <p>Читается так: у записи <code>user</code> возьми поле <code>Name</code>. Если поле само является записью, точки можно продолжать.</p>
+                <pre><code class="language-basic">TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Home AS Address
+END TYPE
+
+DIM user AS Person
+user.Home.City = "London"
+PRINT user.Home.City</code></pre>
+            </section>
+
             <section class="article-section" id="creation">
                 <h2>Как создать запись</h2>
-                <p>Запись создаётся через форму <code>TypeName(...)</code>. У неё есть несколько режимов.</p>
+                <p>Переменную записи можно заполнить по полям вручную или создать запись выражением <code>TypeName(...)</code>. В этой записи <code>TypeName</code> — не ключевое слово, а имя вашего типа, например <code>Person(...)</code> или <code>Counter(...)</code>.</p>
 
-                <h3>1. Именованная форма</h3>
-                <pre><code class="language-basic">DIM user AS Person
-user = Person(Name := "Ada", Age := 36)</code></pre>
-                <p>Здесь вы явно говорите, какое поле чем заполнить. Эта форма особенно удобна, когда у записи много полей.</p>
-
-                <h3>2. Пустая форма</h3>
+                <h3>Пустая запись</h3>
                 <pre><code class="language-basic">DIM user AS Person
 user = Person()</code></pre>
-                <p>Если у типа нет пользовательского конструктора, поля получают значения по умолчанию. Если есть <code>SUB New()</code>, пустой вызов идёт уже в него.</p>
+                <p>Без конструктора такая форма создаёт запись со значениями по умолчанию: числа получают <code>0</code>, строки — пустой текст, <code>BOOLEAN</code> — <code>FALSE</code>. Если у типа есть <code>SUB New()</code> без параметров, будет вызван он.</p>
 
-                <h3>3. Позиционная форма</h3>
+                <h3>Именованная форма</h3>
+                <pre><code class="language-basic">DIM user AS Person
+user = Person(Name := "Ada", Age := 36)</code></pre>
+                <p>Эта форма заполняет поля по именам. Она самая понятная, когда полей много. Важно: именованная форма с <code>:=</code> не вызывает <code>SUB New(...)</code> и не запускает <code>IsValid()</code>.</p>
+
+                <h3>Позиционная форма</h3>
                 <pre><code class="language-basic">DIM user AS Person
 user = Person("Ada", 36)</code></pre>
-                <p>Здесь значения сопоставляются по порядку. Без конструктора это позиционный литерал записи. Если внутри <code>TYPE</code> объявлен <code>SUB New(...)</code>, такая форма становится вызовом конструктора.</p>
+                <p>Значения идут по порядку. Если конструкторов нет, это позиционный литерал записи. Если внутри <code>TYPE</code> есть хотя бы один <code>SUB New(...)</code>, неименованная форма становится вызовом конструктора.</p>
 
                 <ul>
-                    <li>Смешивать именованные и позиционные аргументы в одном <code>TypeName(...)</code> нельзя.</li>
-                    <li>Именованная форма с <code>:=</code> не вызывает <code>SUB New(...)</code>.</li>
-                    <li>Именованная форма с <code>:=</code> не запускает <code>IsValid()</code>.</li>
+                    <li>В одном <code>TypeName(...)</code> нельзя смешивать позиционные аргументы и именованные аргументы <code>Field := value</code>.</li>
+                    <li>Для позиционной формы число аргументов должно подходить к полям или к одному из конструкторов.</li>
+                    <li>Для именованной формы можно указывать поля в удобном порядке.</li>
                 </ul>
             </section>
 
+            <section class="article-section" id="type-and-arrays">
+                <h2>TYPE и массивы: три случая</h2>
+                <p>Записи и массивы часто встречаются рядом. Главное — понимать, где карточка, а где набор карточек или набор значений.</p>
+
+                <h3>Массив записей</h3>
+                <pre><code class="language-basic">DIM people(1 TO 3) AS Person
+
+people(1).Name = "Ada"
+people(2).Name = "Grace"</code></pre>
+                <p><code>people</code> — массив, а каждый его элемент — запись <code>Person</code>.</p>
+
+                <h3>Массивное поле внутри записи</h3>
+                <pre><code class="language-basic">TYPE Student
+    Name AS STRING
+    Marks() AS INTEGER
+END TYPE
+
+DIM pupil AS Student
+REDIM pupil.Marks(1 TO 3)
+
+pupil.Marks(1) = 5</code></pre>
+                <p><code>pupil</code> — одна запись, а <code>pupil.Marks</code> — массив внутри этой записи. Поддерживаются динамические и фиксированные массивные поля, включая многомерные.</p>
+
+                <h3>Запись как поле другой записи</h3>
+                <pre><code class="language-basic">TYPE Address
+    City AS STRING
+END TYPE
+
+TYPE Person
+    Name AS STRING
+    Home AS Address
+END TYPE</code></pre>
+                <p>Так запись можно разбивать на понятные части. Пользовательские типы не могут образовывать прямой или косвенный цикл вложенности.</p>
+            </section>
+
             <section class="article-section" id="methods">
-                <h2>Что такое метод</h2>
-                <p>Метод — это обычная процедура или функция, но не снаружи программы, а внутри записи. Он нужен, когда запись должна уметь что-то делать со своими полями.</p>
+                <h2>Методы и SELF простыми словами</h2>
+                <p>Метод — это процедура или функция внутри <code>TYPE</code>. Он нужен, когда действие естественно принадлежит самой записи. <code>SELF</code> внутри метода означает текущую запись.</p>
                 <pre><code class="language-basic">TYPE Counter
     Value AS INTEGER
 
@@ -126,81 +177,21 @@ DIM counter AS Counter
 counter.Add(2)
 counter.Add(3)
 
-PRINT counter.Current()
-PRINT counter.Value</code></pre>
-                <p>Здесь <code>Add</code> и <code>Current</code> — методы. Они вызываются через точку.</p>
+PRINT counter.Current()</code></pre>
                 <ul>
-                    <li><code>counter.Add(2)</code> — вызов метода у переменной.</li>
-                    <li><code>counter.Current()</code> — вызов функции-метода, которая возвращает значение.</li>
-                    <li>Внутри метода текущая запись доступна через <code>SELF</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="self">
-                <h2>Что такое SELF</h2>
-                <p><code>SELF</code> — это имя для текущей записи внутри её метода или конструктора. Проще говоря, это способ обратиться к самому объекту данных, с которым сейчас работает код.</p>
-                <pre><code class="language-basic">TYPE Person
-    Name AS STRING
-
-    SUB Rename(newName AS STRING)
-        SELF.Name = newName
-    END SUB
-END TYPE</code></pre>
-                <ul>
+                    <li><code>counter.Add(2)</code> вызывает метод у записи <code>counter</code>.</li>
+                    <li><code>SELF.Value</code> внутри метода означает поле <code>Value</code> у той записи, для которой метод вызвали.</li>
                     <li><code>SELF</code> не нужно объявлять вручную.</li>
-                    <li>Если метод вызван у обычной переменной, изменения через <code>SELF</code> сохраняются в этой переменной.</li>
-                    <li>Если метод вызван у временного значения, например <code>Person("Ada").Rename("Grace")</code>, изменение живёт только во время этого вызова.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="method-overloads">
-                <h2>Когда у одного имени может быть несколько методов</h2>
-                <p>Иногда удобно дать одному действию одно имя, но разрешить несколько вариантов аргументов. Это называется перегрузкой методов.</p>
-                <pre><code class="language-basic">TYPE Counter
-    Value AS INTEGER
-    Label AS STRING
-
-    SUB Set(value AS INTEGER)
-        SELF.Value = value
-    END SUB
-
-    SUB Set(label AS STRING)
-        SELF.Label = label
-    END SUB
-
-    SUB Set(value AS INTEGER, label AS STRING)
-        SELF.Value = value
-        SELF.Label = label
-    END SUB
-END TYPE
-
-DIM counter AS Counter
-counter.Set(2)
-counter.Set("Alpha")
-counter.Set(7, "Beta")</code></pre>
-                <p>Axiom сам выбирает нужный вариант по имени метода, числу аргументов и их типам.</p>
-                <ul>
-                    <li>Если подходит один вариант, будет вызван он.</li>
-                    <li>Если одинаково хорошо подходят несколько вариантов, программа получает семантическую ошибку <code>MB2033</code>.</li>
-                    <li>Тип результата в выборе перегрузки не участвует.</li>
+                    <li>Методы можно перегружать по числу и типам параметров. Если выбор неоднозначен, Axiom сообщает <code>MB2033</code>.</li>
                 </ul>
             </section>
 
             <section class="article-section" id="constructors">
-                <h2>Что такое конструктор</h2>
-                <p>Конструктор — это специальный <code>SUB New(...)</code> внутри <code>TYPE</code>. Он нужен, когда простого заполнения полей недостаточно и при создании записи надо выполнить дополнительную логику.</p>
+                <h2>Конструктор SUB New</h2>
+                <p><code>SUB New(...)</code> — специальная процедура внутри <code>TYPE</code>. Она запускается при создании записи неименованной формой <code>TypeName(...)</code>, если подходит по числу и типам аргументов.</p>
                 <pre><code class="language-basic">TYPE Person
     Name AS STRING = "Unknown"
-    Age AS INTEGER = 18
-
-    SUB New()
-        SELF.Name = "Zero"
-    END SUB
-
-    SUB New(name AS STRING)
-        SELF.Name = name
-        SELF.Age = SELF.Age + 1
-    END SUB
+    Age AS INTEGER = 0
 
     SUB New(name AS STRING, age AS INTEGER)
         SELF.Name = name
@@ -208,22 +199,22 @@ counter.Set(7, "Beta")</code></pre>
     END SUB
 END TYPE
 
-PRINT Person().Name
-PRINT Person("Ada").Age
-PRINT Person("Grace", 20).Age</code></pre>
-                <p>Здесь у одного типа есть три способа создания записи.</p>
+DIM user AS Person
+user = Person("Ada", 36)
+
+PRINT user.Name
+PRINT user.Age</code></pre>
                 <ul>
-                    <li><code>Person()</code> вызывает <code>SUB New()</code>.</li>
-                    <li><code>Person("Ada")</code> вызывает одноаргументный конструктор.</li>
-                    <li><code>Person("Grace", 20)</code> вызывает двухаргументный конструктор.</li>
-                    <li>Перед входом в <code>SUB New(...)</code> запись уже существует, а поля уже имеют значения по умолчанию.</li>
-                    <li>Именованная форма <code>Person(Name := "Ada")</code> конструктор не вызывает.</li>
+                    <li>Перед входом в <code>SUB New(...)</code> запись уже создана, а поля уже имеют значения по умолчанию.</li>
+                    <li>Внутри конструктора поля обычно заполняют через <code>SELF</code>.</li>
+                    <li>У одного <code>TYPE</code> может быть несколько <code>SUB New(...)</code> с разными параметрами.</li>
+                    <li><code>Person(Name := "Ada", Age := 36)</code> остаётся именованным литералом записи и конструктор не вызывает.</li>
                 </ul>
             </section>
 
             <section class="article-section" id="invariant">
-                <h2>Что такое инвариант</h2>
-                <p>Инвариант — это простая автоматическая проверка после конструктора. Она отвечает на вопрос: "запись собрана правильно?"</p>
+                <h2>Проверка IsValid</h2>
+                <p><code>FUNCTION IsValid() AS BOOLEAN</code> — специальная проверка после конструктора. Она отвечает на простой вопрос: получилась ли допустимая запись?</p>
                 <pre><code class="language-basic">TYPE Person
     Name AS STRING = ""
     Age AS INTEGER = 0
@@ -238,20 +229,19 @@ PRINT Person("Grace", 20).Age</code></pre>
     END FUNCTION
 END TYPE
 
-PRINT Person("Ada", 20).Name
-PRINT Person("Ada", 20).Age</code></pre>
+DIM user AS Person
+user = Person("Ada", 36)</code></pre>
                 <ul>
-                    <li><code>IsValid()</code> вызывается только после успешного <code>SUB New(...)</code>.</li>
-                    <li>Если <code>IsValid()</code> возвращает <code>TRUE</code>, запись считается корректной.</li>
-                    <li>Если <code>IsValid()</code> возвращает <code>FALSE</code>, конструкторный путь завершается runtime-ошибкой <code>MB3005</code>.</li>
-                    <li><code>IsValid()</code> не является обычным методом по точке.</li>
-                    <li>Именованный литерал <code>TypeName(Field := ...)</code> эту проверку не запускает.</li>
+                    <li><code>IsValid()</code> запускается только после успешного <code>SUB New(...)</code>.</li>
+                    <li>Если функция вернула <code>TRUE</code>, запись создана.</li>
+                    <li>Если функция вернула <code>FALSE</code>, создание завершается runtime-ошибкой <code>MB3005</code>.</li>
+                    <li><code>IsValid()</code> не вызывается для именованной формы <code>TypeName(Field := value)</code>.</li>
                 </ul>
             </section>
 
             <section class="article-section" id="copying">
-                <h2>Как запись копируется и сравнивается</h2>
-                <p><code>TYPE</code> в текущем договоре остаётся value-oriented типом. Это значит, что запись ведёт себя скорее как значение, а не как отдельный ссылочный объект.</p>
+                <h2>Копирование и сравнение</h2>
+                <p>Запись <code>TYPE</code> ведёт себя как значение. Когда вы присваиваете одну запись другой, Axiom копирует запись целиком.</p>
                 <pre><code class="language-basic">TYPE Person
     Name AS STRING
     Age AS INTEGER
@@ -267,44 +257,24 @@ first.Name = "Grace"
 
 PRINT first.Name
 PRINT second.Name</code></pre>
-                <p>После такого присваивания <code>second</code> хранит свою копию записи.</p>
+                <p>После присваивания <code>second</code> хранит свою копию. Изменение <code>first.Name</code> не меняет <code>second.Name</code>.</p>
                 <ul>
-                    <li><code>second = first</code> копирует всю запись.</li>
-                    <li><code>=</code> и <code>&lt;&gt;</code> сравнивают записи по значениям полей.</li>
-                    <li>Структурное сравнение сейчас не поддерживается для записей с массивными полями.</li>
+                    <li><code>=</code> и <code>&lt;&gt;</code> сравнивают две записи одного пользовательского типа по полям.</li>
+                    <li>Структурное сравнение не поддерживается для записей с массивными полями.</li>
+                    <li>Если поле само является записью, копируется и эта вложенная запись.</li>
                 </ul>
             </section>
 
-            <section class="article-section" id="arrays">
-                <h2>Массивы внутри TYPE</h2>
-                <p>Поле записи может быть массивом. Это удобно, когда у одной сущности есть собственный набор элементов, например таблица оценок, сетка клеток или список кодов.</p>
-                <pre><code class="language-basic">TYPE Board
-    Scores(,) AS INTEGER
-END TYPE
-
-DIM board AS Board
-REDIM board.Scores(1 TO 2, 1 TO 3)
-
-board.Scores(1, 2) = 10
-board.Scores(2, 3) = 20
-
-PRINT board.Scores(1, 2)
-PRINT board.Scores(2, 3)</code></pre>
-                <ul>
-                    <li>Поддерживаются динамические и фиксированные массивные поля.</li>
-                    <li>Для массивного поля работают те же правила индексирования и срезов, что и для обычного массива.</li>
-                    <li>Пользовательские типы не могут образовывать прямой или косвенный цикл вложенности.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="notes">
+            <section class="article-section" id="what-to-remember">
                 <h2>Что важно помнить</h2>
                 <ul>
-                    <li>Именованная форма <code>TypeName(Field := ...)</code> — это литерал записи, а не вызов конструктора.</li>
-                    <li>Неименованная форма <code>TypeName(...)</code> при наличии <code>SUB New(...)</code> становится конструкторным вызовом.</li>
-                    <li><code>SELF</code> работает внутри методов и конструкторов, но не объявляется вручную.</li>
-                    <li><code>IsValid()</code> — это специальная проверка после конструктора, а не обычный метод.</li>
-                    <li>Если значение поля по умолчанию не указано, поле получает обычное значение своего типа: <code>0</code>, пустую строку или <code>FALSE</code>.</li>
+                    <li><code>TYPE</code> описывает форму записи, а <code>DIM name AS TypeName</code> создаёт переменную этой формы.</li>
+                    <li>Поле читается и записывается через точку: <code>record.Field</code>.</li>
+                    <li>Массив записей записывается как <code>items(index).Field</code>.</li>
+                    <li>Массивное поле записывается как <code>record.Items(index)</code>.</li>
+                    <li>Именованная форма <code>TypeName(Field := value)</code> не вызывает <code>SUB New(...)</code>.</li>
+                    <li>Неименованная форма <code>TypeName(...)</code> при наличии конструктора выбирает <code>SUB New(...)</code>.</li>
+                    <li><code>SELF</code> доступен только внутри методов и конструкторов записи.</li>
                 </ul>
             </section>
 
@@ -312,14 +282,14 @@ PRINT board.Scores(2, 3)</code></pre>
                 <h2>Ручная проверка</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/type/field_access.axm">TYPE: поля, вложенный TYPE и копирование записи</a></li>
-                    <li><a href="../../samples/operators/type/methods_self.axm">TYPE: методы и SELF</a></li>
-                    <li><a href="../../samples/operators/type/method_receivers_field_and_array.axm">TYPE: методы у поля записи и элемента массива</a></li>
-                    <li><a href="../../samples/operators/type/method_receivers_temporary.axm">TYPE: методы у временного литерала и результата функции</a></li>
-                    <li><a href="../../samples/operators/type/method_overloads.axm">TYPE: перегрузка методов</a></li>
-                    <li><a href="../../samples/operators/type/constructor_new.axm">TYPE: пользовательский конструктор</a></li>
-                    <li><a href="../../samples/operators/type/constructor_invariant.axm">TYPE: инвариант после конструктора</a></li>
                     <li><a href="../../samples/operators/type/named_literals.axm">TYPE: именованные литералы</a></li>
                     <li><a href="../../samples/operators/type/positional_constructor.axm">TYPE: позиционная форма TypeName(...)</a></li>
+                    <li><a href="../../samples/operators/type/methods_self.axm">TYPE: методы и SELF</a></li>
+                    <li><a href="../../samples/operators/type/method_receivers_field_and_array.axm">TYPE: методы у поля записи и элемента массива</a></li>
+                    <li><a href="../../samples/operators/type/method_receivers_temporary.axm">TYPE: методы у временного значения</a></li>
+                    <li><a href="../../samples/operators/type/method_overloads.axm">TYPE: перегрузка методов</a></li>
+                    <li><a href="../../samples/operators/type/constructor_new.axm">TYPE: пользовательский конструктор</a></li>
+                    <li><a href="../../samples/operators/type/constructor_invariant.axm">TYPE: проверка IsValid после конструктора</a></li>
                     <li><a href="../../samples/operators/type/array_fields.axm">TYPE: массивные поля</a></li>
                     <li><a href="../../samples/operators/type/multidimensional_array_fields.axm">TYPE: многомерные массивные поля</a></li>
                     <li><a href="../../samples/operators/type/structural_equality.axm">TYPE: структурное сравнение записей</a></li>
@@ -333,13 +303,13 @@ PRINT board.Scores(2, 3)</code></pre>
                     <li><code>MB2021</code> — тип после <code>AS</code> не найден.</li>
                     <li><code>MB2022</code> — внутри <code>TYPE</code> использована неподдерживаемая форма члена.</li>
                     <li><code>MB2023</code> — указанного поля нет в записи.</li>
-                    <li><code>MB2024</code> — доступ через точку применён к значению, у которого нет пользовательского типа.</li>
+                    <li><code>MB2024</code> — доступ через точку применён к значению без пользовательского типа.</li>
                     <li><code>MB2025</code> — <code>REDIM</code> или <code>ERASE</code> применены к фиксированному массивному полю.</li>
                     <li><code>MB2027</code> — значение поля по умолчанию недопустимо.</li>
                     <li><code>MB2031</code> — в одном <code>TypeName(...)</code> смешаны именованные и позиционные аргументы.</li>
                     <li><code>MB2032</code> — позиционная форма <code>TypeName(...)</code> получила неверное число аргументов.</li>
                     <li><code>MB2033</code> — вызов конструктора или перегруженного метода оказался неоднозначным.</li>
-                    <li><code>MB3005</code> — инвариант <code>IsValid()</code> вернул <code>FALSE</code> после конструктора.</li>
+                    <li><code>MB3005</code> — <code>IsValid()</code> вернул <code>FALSE</code> после конструктора или массивное поле использовано до выделения.</li>
                 </ul>
             </section>
 
@@ -347,8 +317,10 @@ PRINT board.Scores(2, 3)</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="data-types.html">Типы данных</a>
-                    <a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a>
+                    <a href="data-types-records-and-arrays.html">Записи TYPE и массивы</a>
                     <a href="arrays.html">Массивы</a>
+                    <a href="arrays-indexing.html">Индексирование массивов</a>
+                    <a href="dim.html">Оператор DIM</a>
                     <a href="sub.html">Процедура SUB</a>
                     <a href="function.html">Функция FUNCTION</a>
                     <a href="diagnostics.html">Диагностика</a>

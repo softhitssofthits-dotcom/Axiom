@@ -1,61 +1,81 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Справочник Axiom - Срезы и представления</title>
-<link rel="stylesheet" href="styles/manual.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Срезы и представления массивов</title>
+    <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="arrays-slices">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Работа с частью массива без лишнего копирования</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Срезы и представления</p><p class="sidebar__subtitle">Выбор части массива по диапазону индексов и явная функция ARRAYSLICE.</p></div><nav id="manual-nav"></nav></div></aside><main class="content">
-<p class="eyebrow">Массивы</p>
-<h1 class="page-title">Срезы и представления</h1>
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Работа с частью массива</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Срезы и представления</p>
+                    <p class="sidebar__subtitle">Выбор диапазона индексов без ручного копирования элементов.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="arrays.html">Массивы</a>
+                <span>/</span>
+                <span>Срезы</span>
+            </nav>
+            <p class="eyebrow">Массивы</p>
+            <h1 class="page-title">Срезы и представления массивов</h1>
+            <p class="lead">Срез выбирает не весь массив, а непрерывную часть его индексов. В Axiom такой выбор можно записать прямо в индексировании через <code>TO</code> или вызвать функцию <code>ARRAYSLICE</code>, когда удобнее передать начало и длину отдельными аргументами.</p>
 
-<section class="article-section">
-<h2>Сводка</h2>
-<p>Срез позволяет взять не весь массив, а только нужную его часть. В Axiom это можно сделать либо формой индексирования с диапазоном, либо явным вызовом <code>ARRAYSLICE</code>.</p>
-<p>В обычном случае результатом становится представление, а не независимая копия. Это значит, что срез смотрит на те же данные, что и исходный массив, и изменения через срез видны в исходном массиве.</p>
-</section>
+            <section class="article-section">
+                <h2>Как срез связан с исходным массивом</h2>
+                <p>Обычный срез является представлением: он смотрит на выбранную часть исходного массива. Если изменить элемент через представление, меняется тот же элемент исходного массива. Это удобно для строк, столбцов и прямоугольных областей, но важно помнить, что представление не является независимой копией.</p>
+            </section>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-basic">view = array(startIndex TO finishIndex)</code></pre>
-<pre><code class="language-basic">view = array(rowStart TO rowFinish, columnStart TO columnFinish)</code></pre>
-<pre><code class="language-basic">view = array(rowIndex, columnStart TO columnFinish)</code></pre>
-<pre><code class="language-basic">part = ARRAYSLICE(array, startIndex, count)
-part = ARRAYSLICE(array, startIndex, count, dimension)</code></pre>
-</section>
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic"><представление> = <массив>(<начало> TO <конец>)
+<представление> = <массив>(<строка>, <начало> TO <конец>)
+<представление> = <массив>(<начало строки> TO <конец строки>, <начало столбца> TO <конец столбца>)
 
-<section class="article-section">
-<h2>Части записи</h2>
-<ul>
-<li><code>array</code> — исходный массив, из которого выбирается часть данных.</li>
-<li><code>startIndex TO finishIndex</code> — включительный диапазон индексов для одномерного среза.</li>
-<li><code>rowStart TO rowFinish</code> и <code>columnStart TO columnFinish</code> — диапазоны строк и столбцов для двумерного среза.</li>
-<li><code>rowIndex</code> — фиксированный индекс строки, если нужно взять часть одной строки.</li>
-<li><code>view</code> — результат индексирования с диапазоном. Обычно это представление на часть исходного массива.</li>
-<li><code>startIndex</code> — индекс первого элемента или первого среза для <code>ARRAYSLICE</code>.</li>
-<li><code>count</code> — сколько элементов или срезов нужно взять через <code>ARRAYSLICE</code>.</li>
-<li><code>dimension</code> — измерение, вдоль которого строится срез в многомерном массиве.</li>
-</ul>
-</section>
+<часть> = ARRAYSLICE(<массив>, <начальный индекс>, <количество>)
+<часть> = ARRAYSLICE(<массив>, <начальный индекс>, <количество>, <измерение>)</code></pre>
+            </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<ul>
-<li>Представление не создаёт независимую копию данных. Если изменить элемент через представление, изменится и исходный массив.</li>
-<li>Срез полезен, когда нужно передать в вычисление только часть массива или работать с отдельной строкой, столбцом либо прямоугольным блоком.</li>
-<li>Если нужна именно копия, используйте <code>ARRAYCLONE</code> или создайте новый массив отдельно.</li>
-<li>Операции, меняющие размер массива, не выполняются через представление для группы <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code> и <code>ARRAYREMOVE</code>.</li>
-<li><code>ARRAYSLICE</code> полезна там, где нужен явный вызов функции, например при передаче результата как аргумента или когда удобнее задавать начало и длину, а не границы диапазона.</li>
-</ul>
-</section>
+            <section class="article-section">
+                <h2>Части записи</h2>
+                <ul>
+                    <li><code>&lt;начало&gt; TO &lt;конец&gt;</code> - включительный диапазон индексов в форме индексирования.</li>
+                    <li><code>&lt;строка&gt;</code> - фиксированный индекс первого измерения, если выбирается часть одной строки.</li>
+                    <li><code>&lt;начальный индекс&gt;</code> - первый индекс для <code>ARRAYSLICE</code>.</li>
+                    <li><code>&lt;количество&gt;</code> - сколько элементов или срезов нужно взять.</li>
+                    <li><code>&lt;измерение&gt;</code> - измерение, вдоль которого строится срез в многомерном массиве.</li>
+                </ul>
+            </section>
 
-<section class="article-section">
-<h2>Пример</h2>
-<pre><code class="language-basic">' Программа берёт часть второй строки и меняет элемент через представление
-' Ожидаемый вывод:
+            <section class="article-section">
+                <h2>Когда использовать срез</h2>
+                <ul>
+                    <li>Чтобы передать в процедуру только часть массива.</li>
+                    <li>Чтобы обработать одну строку, один столбец или прямоугольный блок двумерного массива.</li>
+                    <li>Чтобы избежать ручного цикла копирования, когда копия не нужна.</li>
+                    <li>Чтобы явно взять участок по началу и длине через <code>ARRAYSLICE</code>.</li>
+                </ul>
+                <p>Операции, которые меняют размер массива, не выполняются через представление для группы <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code> и <code>ARRAYREMOVE</code>. Для изменения размера используйте сам исходный массив.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример среза без ручного копирования</h2>
+                <pre><code class="language-basic">' Ожидаемый вывод:
 ' 20
 ' 99
 DIM board(1 TO 3, 1 TO 4) AS INTEGER
@@ -70,30 +90,35 @@ PRINT rowPart(2)
 
 rowPart(3) = 99
 PRINT board(2, 3)</code></pre>
-<pre><code class="language-basic">' Тот же участок можно взять явным вызовом ARRAYSLICE
-DIM values(1 TO 5) AS INTEGER
+                <pre><code class="language-basic">DIM values(1 TO 5) AS INTEGER
 DIM part() AS INTEGER
 
 part = ARRAYSLICE(values, 2, 3)</code></pre>
-</section>
+            </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list">
-<li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Представление на прямоугольный диапазон</a></li>
-<li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Представление на часть строки</a></li>
-<li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: базовое использование</a></li>
-</ul>
-</section>
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Представление на прямоугольный диапазон</a></li>
+                    <li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Представление на часть строки</a></li>
+                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: базовое использование</a></li>
+                    <li><a href="../../samples/functions/arrayslice/by_column.axm">ARRAYSLICE: срез по столбцу</a></li>
+                </ul>
+            </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list">
-<a href="arrays-indexing.html">Индексирование</a>
-<a href="arrays-2d-visual.html">Двумерные массивы наглядно</a>
-<a href="arrays-functions.html#arrayslice">ARRAYSLICE</a>
-<a href="arrays-functions.html">ARRAY-функции</a>
-</div>
-</section>
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="arrays-indexing.html">Индексирование массивов</a>
+                    <a href="arrays-2d.html">Двумерные массивы</a>
+                    <a href="arrays-functions.html#arrayslice">ARRAYSLICE</a>
+                    <a href="arrays-functions.html">ARRAY-функции</a>
+                </div>
+            </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -37,7 +37,7 @@
             <p class="lead">Здесь собраны функции для проверки существования файлов и папок, чтения и записи текста, работы с открытыми файлами типа <code>FILE</code>, разбора путей и изменения файловой системы.</p>
 
             <section class="article-section">
-                <h2>Подразделы</h2>
+                <h2>Куда перейти за файловой задачей</h2>
                 <div class="link-list">
                     <a href="file-system-functions-text.html">Проверка существования и работа с текстовыми файлами</a>
                     <a href="file-system-functions-open-files.html">Открытые файлы типа FILE</a>
@@ -47,7 +47,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Что входит в раздел</h2>
+                <h2>Группы файловых функций</h2>
                 <ul>
                     <li>Проверка существования файла, папки или любого пути: <code>FILEEXISTS</code>, <code>DIREXISTS</code>, <code>PATHEXISTS</code>.</li>
                     <li>Чтение и запись целого текстового файла: <code>READFILE</code>, <code>READALLLINES</code>, <code>WRITEFILE</code>, <code>APPENDFILE</code>.</li>
@@ -58,7 +58,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Общие правила</h2>
+                <h2>Пути, кодировка и открытые FILE</h2>
                 <ul>
                     <li>Все пути передаются как значения типа <code>STRING</code>.</li>
                     <li>Для работы с уже открытым текстовым файлом используется тип <code>FILE</code> вместе с <a href="open.html">OPEN</a> и <a href="close.html">CLOSE</a>.</li>
@@ -69,8 +69,24 @@
             </section>
 
             <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/functions/fileexists/basic_usage.axm">FILEEXISTS: проверка файла</a></li>
+                    <li><a href="../../samples/functions/readfile/basic_usage.axm">READFILE: чтение текста</a></li>
+                    <li><a href="../../samples/functions/writefile/basic_usage.axm">WRITEFILE: запись текста</a></li>
+                    <li><a href="../../samples/functions/fullpath/basic_usage.axm">FULLPATH: полный путь</a></li>
+                    <li><a href="../../samples/operators/open/basic_usage.axm">OPEN: открытие текстового файла</a></li>
+                    <li><a href="../../samples/operators/close/basic_usage.axm">CLOSE: закрытие файла</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
+                    <a href="file-system-functions-text.html">Текстовые файлы</a>
+                    <a href="file-system-functions-open-files.html">Открытые файлы типа FILE</a>
+                    <a href="file-system-functions-paths.html">Пути и сведения</a>
+                    <a href="file-system-functions-management.html">Управление файлами и папками</a>
                     <a href="open.html">OPEN</a>
                     <a href="close.html">CLOSE</a>
                     <a href="data-types-strings-and-files.html">Тип FILE</a>

@@ -24,7 +24,8 @@
                 <nav id="manual-nav"></nav>
             </div>
         </aside>
-        <main class="content">
+<main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Дата и время</span></nav>
             <p class="eyebrow">Дата и время</p>
             <h1 class="page-title">Арифметика, разбор и проверка</h1>
 
@@ -34,7 +35,7 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEADD(interval, number, value)</code></pre>
                 <p><strong>Части записи.</strong> <code>interval</code> задаёт токен интервала, <code>number</code> число шагов, а <code>value</code> исходную дату, время или дату-время.</p>
-                <h3>Замечания</h3>
+                <h3>Единицы прибавления даты и времени</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходной строки: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем.</p>
             </section>
 
@@ -52,7 +53,7 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEPART(part, value)</code></pre>
                 <p><strong>Части записи.</strong> <code>part</code> задаёт требуемую часть, а <code>value</code> строку даты, времени или даты-времени. Результат имеет тип <code>INTEGER</code>.</p>
-                <h3>Замечания</h3>
+                <h3>Проверка перед разбором строки</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
             </section>
 
@@ -74,7 +75,7 @@ result = TIMEVALUE(value)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Пример</h2>
+                <h2>Пример календарной арифметики и разбора</h2>
                 <pre><code class="language-basic">' Арифметика и разбор канонических значений даты и времени
 PRINT DATEADD("m", 1, "2026-01-31")
 PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")

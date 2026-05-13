@@ -10,7 +10,8 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Текущее состояние кнопок мыши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEBUTTON</p><p class="sidebar__subtitle">Проверка удержания кнопки мыши по номеру.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>MOUSEBUTTON</span></nav>
+<p class="eyebrow">Мышь</p>
 <h1 class="page-title">Функция MOUSEBUTTON</h1>
 <p class="lead"><code>MOUSEBUTTON(buttonNumber)</code> возвращает текущее состояние указанной кнопки мыши. Эта функция, как и клавиатурная <code>KEYDOWN()</code>, смотрит только на текущее состояние и не расходует никаких событий.</p>
 
@@ -38,7 +39,7 @@
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Удержание кнопки и события</h2>
 <ul>
 <li><code>MOUSEBUTTON()</code> не сообщает нажатие как событие и не различает момент нажатия и удержание;</li>
 <li>в текущем срезе нет отдельной очереди кликов, колеса мыши и захвата указателя;</li>
@@ -47,7 +48,7 @@
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример проверки левой кнопки</h2>
 <pre><code class="language-basic">IF MOUSEBUTTON(1) THEN
     PRINT "LEFT"
 END IF</code></pre>
@@ -65,7 +66,7 @@ END IF</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="data-and-input.html">Ввод и вывод</a></div>
+<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

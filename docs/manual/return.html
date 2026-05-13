@@ -7,76 +7,118 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="return">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Завершение процедуры или функции и возврат результата</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор RETURN</p><p class="sidebar__subtitle">Досрочный выход из SUB и возврат значения из FUNCTION.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<p class="eyebrow">Процедуры и функции</p>
-<h1 class="page-title">Оператор RETURN</h1>
-<p class="lead">Оператор <code>RETURN</code> управляет выходом из текущей процедуры или функции. В <code>FUNCTION</code> он завершает вычисление и отдаёт результат вызывающему коду, а в <code>SUB</code> позволяет прервать дальнейшее выполнение раньше конца блока, если логика уже достигла нужной точки.</p>
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Выход из SUB и возврат значения из FUNCTION</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__head">
+                    <p class="sidebar__title">Оператор RETURN</p>
+                    <p class="sidebar__subtitle">Завершение текущей процедуры или функции.</p>
+                </div>
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="procedures-and-functions.html">Процедуры и функции</a>
+                <span>/</span>
+                <span>RETURN</span>
+            </nav>
+            <p class="eyebrow">Процедуры и функции</p>
+            <h1 class="page-title">Оператор RETURN</h1>
+            <p class="lead"><code>RETURN</code> завершает выполнение текущей процедуры или функции. В функции он отдаёт вызывающему коду вычисленное значение, а в процедуре служит досрочным выходом без результата.</p>
 
-<section class="article-section">
-<h2>Сводка</h2>
-<p><code>RETURN</code> завершает выполнение текущей процедуры или функции. Внутри <code>FUNCTION</code> он возвращает значение вызывающему коду, а внутри <code>SUB</code> используется для досрочного выхода без результата.</p>
-</section>
+            <section class="article-section">
+                <h2>Что возвращает RETURN</h2>
+                <p>В <code>FUNCTION</code> оператор <code>RETURN</code> обязателен на исполняемом пути, который должен вернуть результат. В <code>SUB</code> он не обязателен: процедура может спокойно дойти до <code>END SUB</code>, а <code>RETURN</code> нужен только для раннего завершения.</p>
+            </section>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-basic">' Возврат значения из FUNCTION
-RETURN expression</code></pre>
-<pre><code class="language-basic">' Досрочный выход из SUB
-RETURN</code></pre>
-</section>
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+                <pre><code class="language-basic">RETURN &lt;выражение&gt;</code></pre>
+                <pre><code class="language-basic">RETURN</code></pre>
+            </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
-<p><code>expression</code> обозначает значение, которое возвращает текущая функция. Форма без выражения допустима только в процедуре <code>SUB</code>.</p>
-</section>
+            <section class="article-section">
+                <h2>Части записи</h2>
+                <p><code>&lt;выражение&gt;</code> - значение, которое возвращает текущая функция. Эта форма допустима только внутри <code>FUNCTION</code>.</p>
+                <p>Форма <code>RETURN</code> без выражения допустима только внутри <code>SUB</code>.</p>
+            </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<p><code>RETURN</code> особенно полезен там, где не хочется строить лишнюю вложенность из нескольких <code>IF</code> только ради того, чтобы дойти до конца процедуры или функции естественным путём.</p>
-<ul>
-<li>В <code>FUNCTION</code> допустима только форма <code>RETURN expression</code>.</li>
-<li>В <code>SUB</code> допустима только форма <code>RETURN</code> без значения.</li>
-<li><code>RETURN</code> разрешён только внутри <code>SUB</code> или <code>FUNCTION</code>.</li>
-<li>После выполнения <code>RETURN</code> оставшиеся инструкции текущей процедуры или функции больше не выполняются.</li>
-<li>Те же правила действуют и для локальных процедур и функций, объявленных внутри другой процедуры или функции.</li>
-</ul>
-</section>
+            <section class="article-section">
+                <h2>Завершение текущей процедуры</h2>
+                <ul>
+                    <li>После выполнения <code>RETURN</code> оставшиеся инструкции текущей процедуры или функции не выполняются.</li>
+                    <li><code>RETURN &lt;выражение&gt;</code> должен вернуть значение, совместимое с типом результата текущей функции.</li>
+                    <li><code>RETURN</code> без значения в <code>SUB</code> удобен для проверки особого случая в начале процедуры.</li>
+                    <li><code>RETURN</code> допустим только внутри <code>SUB</code> или <code>FUNCTION</code>.</li>
+                </ul>
+                <blockquote>
+                    <p><em>В QuickBASIC слово <code>RETURN</code> прежде всего связано с подпрограммами <code>GOSUB</code>, а выход из <code>FUNCTION</code> часто оформлялся через присваивание имени функции и <code>EXIT FUNCTION</code>. В Axiom <code>GOSUB</code> не относится к текущей реализованной справке, а <code>RETURN</code> явно обслуживает <code>SUB</code> и <code>FUNCTION</code>.</em></p>
+                </blockquote>
+            </section>
 
-<section class="article-section">
-<h2>Пример</h2>
-<pre><code class="language-basic">' Функция возвращает 42, а процедура выходит раньше
-' Ожидаемый вывод:
+            <section class="article-section">
+                <h2>Пример досрочного возврата</h2>
+                <pre><code class="language-basic">' Ожидаемый вывод:
 ' 42
-' Нельзя
-FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
-    RETURN value * 2
+' before return
+' after if
+FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value + value
 END FUNCTION
 
-SUB Check(value AS INTEGER)
-    IF value &lt; 0 THEN
-        PRINT "Нельзя"
+SUB Show(flag AS BOOLEAN)
+    IF flag THEN
+        PRINT "before return"
         RETURN
     END IF
 
-    PRINT "Можно продолжать"
-END SUB</code></pre>
-</section>
+    PRINT "after if"
+END SUB
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li><li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li><li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возврат функции с захваченными данными</a></li></ul>
-</section>
+PRINT DoubleValue(21)
+Show(TRUE)
+Show(FALSE)</code></pre>
+            </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Ошибки возникают, если <code>RETURN</code> используется вне процедуры или функции, если в <code>SUB</code> возвращается значение, если в <code>FUNCTION</code> значение не возвращается вовсе или если вместо требуемой формы используется неподходящий вариант оператора.</p>
-</section>
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <ul class="resource-list">
+                    <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
+                    <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
+                    <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возврат функции с захваченными данными</a></li>
+                </ul>
+            </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="sub.html">Процедура SUB</a><a href="function.html">Функция FUNCTION</a><a href="diagnostics.html">Диагностика</a></div>
-</section>
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если <code>RETURN</code> записан вне <code>SUB</code> или <code>FUNCTION</code>, если <code>SUB</code> возвращает значение, если <code>FUNCTION</code> использует <code>RETURN</code> без значения, если тип возвращаемого выражения не подходит к типу результата функции или если функция завершилась без возвращённого значения.</p>
+            </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="procedures-and-functions.html">Процедуры и функции</a>
+                    <a href="sub.html">Процедура SUB</a>
+                    <a href="function.html">Функция FUNCTION</a>
+                    <a href="if.html">Оператор IF</a>
+                    <a href="do-loop.html">Оператор DO ... LOOP</a>
+                    <a href="diagnostics.html">Диагностика</a>
+                </div>
+            </section>
+
+            <div id="page-pager" class="pager"></div>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -25,35 +25,45 @@
             </div>
         </aside>
         <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a>
+                <span>/</span>
+                <a href="reference.html">Алфавитный и тематический указатель</a>
+                <span>/</span>
+                <a href="arrays.html">Массивы</a>
+                <span>/</span>
+                <span>Двумерные массивы</span>
+            </nav>
             <p class="eyebrow">Массивы</p>
             <h1 class="page-title">Двумерные массивы</h1>
 
             <section class="article-section">
-                <h2>Сводка</h2>
+                <h2>Как двумерный массив хранит таблицу</h2>
                 <p>Двумерный массив хранит значения одного типа в виде таблицы. Для доступа к элементу используются два индекса: первый выбирает строку, второй — столбец.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">DIM arrayName(rowLowerBound TO rowUpperBound, columnLowerBound TO columnUpperBound) AS elementType</code></pre>
-                <pre><code class="language-basic">DIM arrayName(,) AS elementType</code></pre>
-                <pre><code class="language-basic">arrayName(rowIndex, columnIndex) = expression
-variable = arrayName(rowIndex, columnIndex)</code></pre>
+                <pre><code class="language-basic">DIM &lt;имя массива&gt;(&lt;нижняя строка&gt; TO &lt;верхняя строка&gt;, &lt;нижний столбец&gt; TO &lt;верхний столбец&gt;) AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-basic">DIM &lt;имя массива&gt;(,) AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-basic">&lt;имя массива&gt;(&lt;индекс строки&gt;, &lt;индекс столбца&gt;) = &lt;выражение&gt;
+&lt;переменная&gt; = &lt;имя массива&gt;(&lt;индекс строки&gt;, &lt;индекс столбца&gt;)</code></pre>
             </section>
 
             <section class="article-section">
                 <h2>Части записи</h2>
                 <ul>
-                    <li><code>arrayName</code> — имя двумерного массива.</li>
-                    <li><code>rowLowerBound TO rowUpperBound</code> — включительный диапазон индексов по строкам.</li>
-                    <li><code>columnLowerBound TO columnUpperBound</code> — включительный диапазон индексов по столбцам.</li>
-                    <li><code>elementType</code> — тип всех элементов массива.</li>
-                    <li><code>rowIndex</code> и <code>columnIndex</code> — индексы строки и столбца для доступа к элементу.</li>
+                    <li><code>&lt;имя массива&gt;</code> — имя двумерного массива.</li>
+                    <li><code>&lt;нижняя строка&gt; TO &lt;верхняя строка&gt;</code> — включительный диапазон индексов по строкам.</li>
+                    <li><code>&lt;нижний столбец&gt; TO &lt;верхний столбец&gt;</code> — включительный диапазон индексов по столбцам.</li>
+                    <li><code>&lt;тип элемента&gt;</code> — тип всех элементов массива.</li>
+                    <li><code>&lt;индекс строки&gt;</code> и <code>&lt;индекс столбца&gt;</code> — индексы строки и столбца для доступа к элементу.</li>
+                    <li><code>&lt;выражение&gt;</code> — значение, которое записывается в выбранную ячейку.</li>
                 </ul>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
+                <h2>Строки, столбцы и границы</h2>
                 <ul>
                     <li>Оба измерения имеют включительные границы.</li>
                     <li>Первое измерение соответствует строкам, второе — столбцам.</li>
@@ -64,7 +74,7 @@ variable = arrayName(rowIndex, columnIndex)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Пример</h2>
+                <h2>Пример записи и чтения ячеек таблицы</h2>
                 <pre><code class="language-basic">' Программа заполняет несколько ячеек таблицы и печатает их
 ' Ожидаемый вывод:
 ' 20

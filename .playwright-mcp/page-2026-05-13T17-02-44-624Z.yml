@@ -1,0 +1,153 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Справочник Axiom" [ref=e4] [cursor=pointer]:
+        - /url: index.html
+      - generic [ref=e5]: Быстрый синтаксический конспект
+  - generic [ref=e6]:
+    - complementary [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: Шпаргалка
+          - paragraph [ref=e11]: Короткая сводка по базовому синтаксису языка без длинных пояснений.
+        - navigation [ref=e12]:
+          - group [ref=e13]:
+            - generic "+ Начало работы и среда" [ref=e14] [cursor=pointer]
+          - group [ref=e15]:
+            - generic "+ Основы языка" [ref=e16] [cursor=pointer]
+          - group [ref=e17]:
+            - generic "+ Операторы описания и объявления" [ref=e18] [cursor=pointer]
+          - group [ref=e19]:
+            - generic "+ Выражения и операции" [ref=e20] [cursor=pointer]
+          - group [ref=e21]:
+            - generic "+ Операторы передачи управления" [ref=e22] [cursor=pointer]
+          - group [ref=e23]:
+            - generic "+ Процедуры и функции" [ref=e24] [cursor=pointer]
+          - group [ref=e25]:
+            - generic "+ Массивы и составные данные" [ref=e26] [cursor=pointer]
+          - group [ref=e27]:
+            - generic "+ Ввод и вывод" [ref=e28] [cursor=pointer]
+          - group [ref=e29]:
+            - generic "+ Файлы и файловая система" [ref=e30] [cursor=pointer]
+          - group [ref=e31]:
+            - generic "+ Графика и экран" [ref=e32] [cursor=pointer]
+          - group [ref=e33]:
+            - generic "+ Клавиатура, мышь и события" [ref=e34] [cursor=pointer]
+          - group [ref=e35]:
+            - generic "+ Встроенные функции" [ref=e36] [cursor=pointer]
+          - group [ref=e37]:
+            - generic "+ Обработка ошибок и диагностика" [ref=e38] [cursor=pointer]
+          - group [ref=e39]:
+            - generic "- Примеры и справочные приложения" [ref=e40] [cursor=pointer]
+            - list [ref=e41]:
+              - listitem [ref=e42]:
+                - link "Диапазоны и ограничения типов" [ref=e43] [cursor=pointer]:
+                  - /url: data-type-limits.html
+              - listitem [ref=e44]:
+                - link "Примеры программ" [ref=e45] [cursor=pointer]:
+                  - /url: examples.html
+              - listitem [ref=e46]:
+                - link "Краткая справка" [ref=e47] [cursor=pointer]:
+                  - /url: cheat-sheet.html
+    - main [ref=e48]:
+      - navigation "Хлебные крошки" [ref=e49]:
+        - link "Главная" [ref=e50] [cursor=pointer]:
+          - /url: index.html
+        - text: / Шпаргалка
+      - paragraph [ref=e51]: Практика и справка
+      - heading "Краткая шпаргалка" [level=1] [ref=e52]
+      - paragraph [ref=e53]: "Краткая справка собирает опорные формы синтаксиса Axiom в одном месте: объявления, ввод и вывод, условия, циклы, процедуры, массивы и небольшую выборку встроенных функций для быстрого узнавания записи."
+      - generic [ref=e54]:
+        - heading "Основные группы синтаксиса" [level=2] [ref=e55]
+        - list [ref=e56]:
+          - listitem [ref=e57]:
+            - code [ref=e58]: DIM
+            - text: и
+            - code [ref=e59]: CONST
+            - text: вводят имена значений;
+          - listitem [ref=e60]:
+            - code [ref=e61]: PRINT
+            - text: показывает результат, а
+            - code [ref=e62]: INPUT
+            - text: получает строку от пользователя;
+          - listitem [ref=e63]:
+            - code [ref=e64]: IF
+            - text: ","
+            - code [ref=e65]: SELECT CASE
+            - text: ", циклы и вызовы процедур меняют обычный порядок выполнения;"
+          - listitem [ref=e66]: встроенные функции возвращают готовые значения; подробные списки функций находятся в тематических разделах по строкам, числам, датам, файлам, массивам и регулярным выражениям.
+      - generic [ref=e67]:
+        - heading "Типы и объявления" [level=2] [ref=e68]
+        - code [ref=e70]: DIM age AS INTEGER DIM price AS DOUBLE = 1.5 DIM title = "Пример" CONST APP_NAME AS STRING = "Demo"
+      - generic [ref=e71]:
+        - heading "Ввод и вывод" [level=2] [ref=e72]
+        - code [ref=e74]: "PRINT \"Привет\" PRINT 10, 20 PRINT \"Имя: \"; \"Анна\" PRINT INPUT value INPUT \"Введите имя: \"; name INPUT x, y"
+      - generic [ref=e75]:
+        - heading "Условия" [level=2] [ref=e76]
+        - code [ref=e78]: IF score >= 90 THEN PRINT "Отлично" ELSEIF score >= 70 THEN PRINT "Хорошо" ELSE PRINT "Нужно доработать" END IF SELECT CASE score CASE 1 PRINT "Минимум" CASE 2, 3 PRINT "Небольшое значение" CASE 10 TO 20 PRINT "Диапазон от 10 до 20" CASE IS > 100 PRINT "Больше ста" CASE ELSE PRINT "Другой случай" END SELECT
+      - generic [ref=e79]:
+        - heading "Циклы" [level=2] [ref=e80]
+        - code [ref=e82]: FOR i = 1 TO 10 STEP 2 PRINT i NEXT WHILE total < 100 total = total + 10 END WHILE DO WHILE value <> 0 INPUT "Введите число"; value LOOP DO UNTIL ready = TRUE ready = CheckState() LOOP DO PRINT "Первый проход обязателен" LOOP WHILE keepRunning DO total = total + 1 LOOP UNTIL total >= 10 DO PRINT "Повторение до EXIT DO" EXIT DO LOOP
+      - generic [ref=e83]:
+        - heading "Процедуры и функции" [level=2] [ref=e84]
+        - code [ref=e86]: SUB ShowMessage(text AS STRING) PRINT text END SUB FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER RETURN a + b END FUNCTION
+      - generic [ref=e87]:
+        - heading "Массивы" [level=2] [ref=e88]
+        - code [ref=e90]: DIM numbers(1 TO 3) AS INTEGER numbers(1) = 10 PRINT numbers(1)
+      - generic [ref=e91]:
+        - heading "Несколько встроенных функций" [level=2] [ref=e92]
+        - paragraph [ref=e93]: Это не полный список функций, а короткий набор для чтения формы вызова. За полными группами переходите в тематические разделы.
+        - list [ref=e94]:
+          - listitem [ref=e95]:
+            - code [ref=e96]: LEN(text)
+          - listitem [ref=e97]:
+            - code [ref=e98]: LEFT(text, count)
+          - listitem [ref=e99]:
+            - code [ref=e100]: RIGHT(text, count)
+          - listitem [ref=e101]:
+            - code [ref=e102]: MID(text, start, count)
+          - listitem [ref=e103]:
+            - code [ref=e104]: LCASE(text)
+          - listitem [ref=e105]:
+            - code [ref=e106]: UCASE(text)
+          - listitem [ref=e107]:
+            - code [ref=e108]: INT(value)
+          - listitem [ref=e109]:
+            - code [ref=e110]: STR(value)
+          - listitem [ref=e111]:
+            - code [ref=e112]: VAL(text)
+      - generic [ref=e113]:
+        - heading "Частые правила синтаксиса" [level=2] [ref=e114]
+        - generic [ref=e115]:
+          - heading "Проверьте перед запуском" [level=3] [ref=e116]
+          - list [ref=e117]:
+            - listitem [ref=e118]:
+              - text: новые переменные обычно объявляются через
+              - code [ref=e119]: DIM
+              - text: ;
+            - listitem [ref=e120]: локальная переменная блока недоступна после выхода из блока;
+            - listitem [ref=e121]:
+              - code [ref=e122]: FOR
+              - text: "-счетчик не требует отдельного предварительного"
+              - code [ref=e123]: DIM
+              - text: ;
+            - listitem [ref=e124]:
+              - code [ref=e125]: MID
+              - text: использует позицию с единицы.
+      - generic [ref=e126]:
+        - heading "См. также" [level=2] [ref=e127]
+        - generic [ref=e128]:
+          - link "Алфавитный и тематический указатель" [ref=e129] [cursor=pointer]:
+            - /url: reference.html
+          - link "Начало работы" [ref=e130] [cursor=pointer]:
+            - /url: getting-started.html
+          - link "Готовые примеры" [ref=e131] [cursor=pointer]:
+            - /url: examples.html
+          - link "Строковые функции" [ref=e132] [cursor=pointer]:
+            - /url: string-functions.html
+          - link "Числовые функции" [ref=e133] [cursor=pointer]:
+            - /url: numeric-functions.html
+          - link "Диагностика" [ref=e134] [cursor=pointer]:
+            - /url: diagnostics.html
+      - link "< Примеры программ" [ref=e136] [cursor=pointer]:
+        - /url: examples.html

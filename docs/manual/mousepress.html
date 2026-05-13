@@ -10,7 +10,8 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Одноразовая проверка нажатия кнопки мыши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEPRESS</p><p class="sidebar__subtitle">Читает одно событие нажатия кнопки мыши без полной событийной модели.</p></div><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<p class="eyebrow">Ввод и вывод</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>MOUSEPRESS</span></nav>
+<p class="eyebrow">Мышь</p>
 <h1 class="page-title">Функция MOUSEPRESS</h1>
 <p class="lead"><code>MOUSEPRESS(buttonNumber)</code> проверяет, было ли в очереди мыши ещё не прочитанное нажатие указанной кнопки. Функция подходит для опросного сценария, когда программе нужно один раз заметить факт нажатия, а не только текущее удержание кнопки.</p>
 
@@ -38,7 +39,7 @@
 </section>
 
 <section class="article-section">
-<h2>Замечания</h2>
+<h2>Очередь нажатий мыши</h2>
 <ul>
 <li><code>MOUSEPRESS()</code> удаляет только первое подходящее событие нажатия, поэтому повторный вызов вернёт <code>FALSE</code>, пока пользователь не нажмёт кнопку снова;</li>
 <li>неподходящие нажатия не теряются и остаются доступными для следующих вызовов <code>MOUSEPRESS()</code>;</li>
@@ -48,7 +49,7 @@
 </section>
 
 <section class="article-section">
-<h2>Пример</h2>
+<h2>Пример одноразового нажатия</h2>
 <pre><code class="language-basic">IF MOUSEPRESS(1) THEN
     PRINT "LEFT ONCE"
 END IF</code></pre>
@@ -66,7 +67,7 @@ END IF</code></pre>
 
 <section class="article-section">
 <h2>См. также</h2>
-<div class="link-list"><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="data-and-input.html">Ввод и вывод</a></div>
+<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
 </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

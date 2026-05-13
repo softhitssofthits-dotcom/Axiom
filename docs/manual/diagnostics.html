@@ -30,6 +30,8 @@
                 <span>/</span>
                 <a href="reference.html">Алфавитный и тематический указатель</a>
                 <span>/</span>
+                <span>Обработка ошибок и диагностика</span>
+                <span>/</span>
                 <span>Диагностика</span>
             </nav>
             <p class="eyebrow">Диагностика</p>
@@ -37,18 +39,18 @@
             <p class="lead">Диагностика сообщает, на каком этапе язык столкнулся с проблемой: при чтении текста программы, при проверке её смысла или во время выполнения. Эта глава помогает определить вид ошибки, прочитать её код и выбрать следующий шаг исправления.</p>
 
             <section class="article-section">
-                <h2>Содержание</h2>
+                <h2>Разделы диагностики</h2>
                 <ul>
-                    <li><a href="#summary">Сводка</a></li>
+                    <li><a href="#summary">Виды ошибок</a></li>
                     <li><a href="#format">Формат сообщения</a></li>
-                    <li><a href="#remarks">Замечания</a></li>
-                    <li><a href="#examples">Примеры</a></li>
-                    <li><a href="#diagnostics">Диагностика</a></li>
+                    <li><a href="#remarks">Как читать сообщения</a></li>
+                    <li><a href="#examples">Примеры ошибок</a></li>
+                    <li><a href="#diagnostics">Коды диагностики</a></li>
                 </ul>
             </section>
 
             <section class="article-section" id="summary">
-                <h2>Сводка</h2>
+                <h2>Виды ошибок</h2>
                 <p>Сообщение об ошибке в Axiom всегда привязано к месту в тексте и содержит код, по которому можно понять класс проблемы. В текущем публичном контракте различаются ошибки чтения и разбора, смысловые ошибки и ошибки времени выполнения.</p>
             </section>
 
@@ -77,7 +79,7 @@
             </section>
 
             <section class="article-section" id="remarks">
-                <h2>Замечания</h2>
+                <h2>Как читать сообщения</h2>
                 <ul>
                     <li>Сначала полезно определить не точный код, а общий вид ошибки: чтение текста, проверка смысла или выполнение программы.</li>
                     <li>Если сообщение кажется неожиданным, проверьте несколько строк выше: в блочных конструкциях реальная причина часто находится раньше, чем место окончательной остановки.</li>
@@ -107,7 +109,7 @@
             </section>
 
             <section class="article-section" id="examples">
-                <h2>Примеры</h2>
+                <h2>Примеры ошибок</h2>
                 <pre><code class="language-basic">IF TRUE THEN
     DIM LOCAL_NAME AS STRING = "A"
 END IF
@@ -136,7 +138,7 @@ END FUNCTION</code></pre>
             </section>
 
             <section class="article-section" id="diagnostics">
-                <h2>Диагностика</h2>
+                <h2>Коды диагностики</h2>
 
                 <h3>Ошибки чтения и разбора</h3>
                 <table class="compact-table">
@@ -196,12 +198,12 @@ END FUNCTION</code></pre>
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="variables-and-constants.html">Переменные и константы</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="for.html">Цикл FOR</a>
-                    <a href="input.html">Оператор INPUT</a>
-                    <a href="return.html">Оператор RETURN</a>
-                    <a href="arithmetic-and-logic.html">Арифметика, сравнения и логика</a>
+                    <a href="error-handling.html">Обработка ошибок</a>
+                    <a href="try.html">Оператор TRY</a>
+                    <a href="error.html">Оператор ERROR</a>
+                    <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
+                    <a href="arrays-diagnostics.html">Ошибки массивов</a>
+                    <a href="examples.html">Примеры программ</a>
                 </div>
             </section>
 

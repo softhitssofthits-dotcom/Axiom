@@ -1,16 +1,16 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Массивы и встроенные функции</title>
+    <title>Справочник Axiom - Функции массивов</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="arrays-and-builtins">
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Обзор массивов и встроенных функций</div>
+            <div class="topbar__meta">Размеры, копии, срезы, поиск и сортировка массивов</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -18,8 +18,8 @@
         <aside class="sidebar">
             <div class="sidebar__inner">
                 <div class="sidebar__head">
-                    <p class="sidebar__title">Массивы и встроенные функции</p>
-                    <p class="sidebar__subtitle">Помогает перейти к справке по массивам, строковым и числовым функциям.</p>
+                    <p class="sidebar__title">Функции массивов</p>
+                    <p class="sidebar__subtitle">Операции над границами, элементами, копиями и порядком массива.</p>
                 </div>
                 <nav id="manual-nav"></nav>
             </div>
@@ -28,135 +28,258 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a>
                 <span>/</span>
-                <span>Массивы и встроенные функции</span>
+                <a href="arrays.html">Массивы</a>
+                <span>/</span>
+                <span>Функции массивов</span>
             </nav>
-            <p class="eyebrow">Обзор</p>
-            <h1 class="page-title">Массивы и встроенные функции</h1>
-            <p class="lead">Эта обзорная глава связывает статьи по массивам, строковым функциям, регулярным выражениям, файловой системе, дате и времени и числовым функциям. Она помогает выбрать нужную справочную страницу и не повторяет подробности, вынесенные в отдельные статьи.</p>
+            <p class="eyebrow">Массивы</p>
+            <h1 class="page-title">Функции массивов</h1>
+            <p class="lead">Встроенные функции массивов читают границы, проверяют выделение памяти, создают копии, выбирают фрагменты, меняют порядок элементов и ищут значения. Они дополняют объявление через <code>DIM</code>, изменение размера через <code>REDIM</code> и прямой доступ по индексам.</p>
 
             <section class="article-section">
-                <h2>Содержание</h2>
+                <h2>Группы функций массива</h2>
                 <ul>
-                    <li><a href="#summary">Сводка</a></li>
-                    <li><a href="#route">Навигация по разделу</a></li>
-                    <li><a href="#samples">Показательные примеры</a></li>
+                    <li><a href="#shape">Границы и размер массива</a></li>
+                    <li><a href="#views">Копии и представления</a></li>
+                    <li><a href="#mutation">Изменение содержимого</a></li>
+                    <li><a href="#selection">Срезы, объединение и изменение формы</a></li>
+                    <li><a href="#callbacks">Функции с пользовательской обработкой элемента</a></li>
+                    <li><a href="#search">Поиск значений</a></li>
+                    <li><a href="#order">Порядок элементов</a></li>
+                    <li><a href="#samples">Проверочные примеры</a></li>
                 </ul>
             </section>
 
-            <section class="article-section" id="summary">
-                <h2>Сводка</h2>
-                <ul>
-                    <li>когда нужно перейти от хранения набора значений к операциям над строками и числами;</li>
-                    <li>когда важно увидеть, как массивы, строковые функции, функции регулярных выражений, функции файловой системы, функции даты и времени и числовые функции разнесены по отдельным справочным статьям;</li>
-                    <li>когда нужен короткий маршрут по связанным разделам без повторения всех сигнатур на одной странице.</li>
-                </ul>
-                <div class="note">
-                    <h3>Как читать раздел</h3>
-                    <p>Если вы только начинаете работу с массивами, откройте сначала справочную статью по массивам. Если нужно обрабатывать текст простыми операциями, переходите к строковым функциям. Если нужен поиск по регулярному выражению, открывайте отдельную страницу по регулярным выражениям. Если нужно читать или записывать текстовые файлы, откройте страницу файловой системы. Если нужны текущие дата и время, переходите к отдельной странице дата-временных функций. Если важны вычисления и преобразование чисел, открывайте главу по числовым функциям.</p>
-                </div>
+            <section class="article-section" id="shape">
+                <h2>Границы и размер массива</h2>
+                <p>Границы измерения задают допустимые индексы. В Axiom они включительные: если массив объявлен как <code>DIM values(1 TO 3) AS INTEGER</code>, допустимы индексы <code>1</code>, <code>2</code> и <code>3</code>.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Функция</th><th>Что возвращает</th><th>Когда использовать</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>LBOUND(array)</code></td><td>нижнюю границу первого измерения</td><td>цикл должен идти от фактического начала массива</td></tr>
+                        <tr><td><code>UBOUND(array)</code></td><td>верхнюю границу первого измерения</td><td>цикл должен остановиться на последнем допустимом индексе</td></tr>
+                        <tr><td><code>LBOUND(array, dimension)</code></td><td>нижнюю границу выбранного измерения</td><td>нужно обойти строки, столбцы или другое измерение отдельно</td></tr>
+                        <tr><td><code>UBOUND(array, dimension)</code></td><td>верхнюю границу выбранного измерения</td><td>нужно узнать последний индекс выбранного измерения</td></tr>
+                        <tr><td><code>ARRAYLENGTH(array)</code></td><td>общее число видимых элементов</td><td>нужно проверить размер результата или пустой срез</td></tr>
+                        <tr><td><code>ARRAYISALLOCATED(array)</code></td><td><code>TRUE</code>, если массив выделен</td><td>динамический массив мог быть объявлен, но ещё не получить хранилище</td></tr>
+                        <tr><td><code>ARRAYRANK(array)</code></td><td>число измерений</td><td>код принимает массивы разной формы</td></tr>
+                        <tr><td><code>ARRAYBOUNDS(array)</code></td><td>массив пар нижней и верхней границы</td><td>нужно вывести или передать форму массива целиком</td></tr>
+                    </tbody>
+                </table>
+                <p>Номер измерения в <code>LBOUND(array, dimension)</code> и <code>UBOUND(array, dimension)</code> считается с единицы. Для двумерных массивов можно использовать предопределённые целочисленные константы <code>ROW</code> и <code>COLUMN</code>: <code>ROW</code> равно <code>1</code>, <code>COLUMN</code> равно <code>2</code>. Это не отдельные операторы, а готовые имена для чтения строк и столбцов.</p>
+                <pre><code class="language-basic">DIM board(1 TO 2, 1 TO 3) AS INTEGER
+
+PRINT LBOUND(board, ROW)
+PRINT UBOUND(board, ROW)
+PRINT LBOUND(board, COLUMN)
+PRINT UBOUND(board, COLUMN)
+PRINT ARRAYLENGTH(board)</code></pre>
             </section>
 
-            <section class="article-section" id="route">
-                <h2>Навигация по разделу</h2>
-                <div class="cards-grid">
-                    <section class="card">
-                        <h3><a href="arrays.html">Массивы</a></h3>
-                        <p>Одномерные и многомерные массивы, границы измерений, доступ к элементам, подмассивы-представления и ограничения встроенных функций массива.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="string-functions.html">Строковые функции</a></h3>
-                        <p><code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code>, <code>SPLIT</code>, <code>JOIN</code> и другие операции над текстом.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="regex-functions.html">Функции регулярных выражений</a></h3>
-                        <p><code>REGEXISMATCH</code>, <code>REGEXMATCH</code>, <code>REGEXMATCHES</code>, <code>REGEXEXTRACTALL</code>, <code>REGEXSPLIT</code>, <code>REGEXREPLACE</code> и <code>REGEXCOUNT</code> для поиска по образцу.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="file-system-functions.html">Функции файловой системы</a></h3>
-                        <p><code>READFILE</code>, <code>READALLLINES</code>, <code>READLINES</code>, <code>GETFILES</code>, <code>GETDIRS</code>, запись текста, проверки существования, пути и сведения о файлах.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="date-time-functions.html">Функции даты и времени</a></h3>
-                        <p><code>DATE</code>, <code>TIME</code>, <code>NOW</code> и <code>TIMER</code> для чтения локальных даты и времени в каноническом формате.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="numeric-functions.html">Числовые функции</a></h3>
-                        <p><code>INT</code>, <code>STR</code>, <code>VAL</code> и математические функции с отдельными справочными описаниями.</p>
-                    </section>
-                </div>
+            <section class="article-section" id="views">
+                <h2>Копии и представления</h2>
+                <p>Частичное индексирование и диапазонные срезы могут возвращать представление: оно смотрит на те же элементы исходного массива. Когда нужна независимая копия, используйте <code>ARRAYCLONE</code>.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Функция</th><th>Результат</th><th>Особенность</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>ARRAYCLONE(array)</code></td><td>новый массив той же видимой формы</td><td>копия не разделяет элементы с исходным массивом или представлением</td></tr>
+                        <tr><td><code>ARRAYFLATTEN(array)</code></td><td>одномерный массив в порядке обхода</td><td>удобно перед сортировкой или выводом таблицы одной строкой</td></tr>
+                        <tr><td><code>ARRAYRESHAPE(values, template)</code></td><td>новый массив по форме образца</td><td>число элементов плоского массива должно подходить форме образца</td></tr>
+                    </tbody>
+                </table>
+                <pre><code class="language-basic">flat = ARRAYFLATTEN(board)
+sorted = ARRAYTOSORTED(flat)
+reshaped = ARRAYRESHAPE(sorted, board)</code></pre>
+            </section>
+
+            <section class="article-section" id="mutation">
+                <h2>Изменение содержимого</h2>
+                <p>Операции этой группы меняют существующий массив или выбранное представление. Если аргументом передан срез, меняются только элементы, видимые через этот срез.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Функция или операторная форма</th><th>Действие</th><th>Что важно помнить</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>ARRAYFILL(array, value)</code></td><td>заполняет видимые элементы одним значением</td><td>работает на месте</td></tr>
+                        <tr><td><code>ARRAYPUSH(array, value)</code></td><td>добавляет элемент в конец одномерного массива</td><td>границы массива меняются</td></tr>
+                        <tr><td><code>ARRAYPOP(array)</code></td><td>удаляет и возвращает последний элемент</td><td>для пустого массива нужна отдельная проверка</td></tr>
+                        <tr><td><code>ARRAYINSERT(array, index, value)</code></td><td>вставляет элемент по логическому индексу</td><td>последующие элементы сдвигаются</td></tr>
+                        <tr><td><code>ARRAYREMOVE(array, index)</code></td><td>удаляет элемент по логическому индексу</td><td>последующие элементы сдвигаются назад</td></tr>
+                        <tr><td><code>ARRAYREVERSE(array[, dimension])</code></td><td>разворачивает элементы на месте</td><td>для многомерного массива измерение задаёт направление разворота</td></tr>
+                        <tr><td><code>ARRAYSORT(array[, dimension])</code></td><td>сортирует на месте</td><td>для многомерного массива сортируется выбранное измерение</td></tr>
+                    </tbody>
+                </table>
+                <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+values(1) = 30
+values(2) = 10
+values(3) = 20
+
+ARRAYSORT(values)
+ARRAYPUSH(values, 40)
+PRINT values(1)
+PRINT values(4)</code></pre>
+            </section>
+
+            <section class="article-section" id="selection">
+                <h2>Срезы, объединение и изменение формы</h2>
+                <p>Функции выбора создают новый массив из части исходных данных. Одномерные формы работают с логическим порядком элементов. Многомерные формы используют выбранное измерение: число <code>1</code> или константу <code>ROW</code> для строк, число <code>2</code> или константу <code>COLUMN</code> для столбцов.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Функция</th><th>Что выбирает</th><th>Форма результата</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>ARRAYSLICE(array, start, count[, dimension])</code></td><td>фрагмент с указанной позиции</td><td>сохраняет выбранную форму среза</td></tr>
+                        <tr><td><code>ARRAYTAKE(array, count[, dimension])</code></td><td>первые элементы, строки или столбцы</td><td>результат компактный и выделенный</td></tr>
+                        <tr><td><code>ARRAYSKIP(array, count[, dimension])</code></td><td>остаток после пропуска начальной части</td><td>результат компактный и выделенный</td></tr>
+                        <tr><td><code>ARRAYCONCAT(left, right[, dimension])</code></td><td>склеивает совместимые массивы</td><td>одномерный массив или массив по выбранному измерению</td></tr>
+                        <tr><td><code>ARRAYDISTINCT(array)</code></td><td>уникальные значения</td><td>одномерный список значений в порядке первого появления</td></tr>
+                    </tbody>
+                </table>
+                <pre><code class="language-basic">topRows = ARRAYTAKE(board, 2, ROW)
+rightPart = ARRAYSKIP(board, 1, COLUMN)
+merged = ARRAYCONCAT(topRows, topRows, ROW)</code></pre>
+            </section>
+
+            <section class="article-section" id="callbacks">
+                <h2>Функции с пользовательской обработкой элемента</h2>
+                <p><code>ARRAYEVERY</code>, <code>ARRAYSOME</code>, <code>ARRAYFILTER</code>, <code>ARRAYMAP</code> и <code>ARRAYREDUCE</code> вызывают указанную пользователем функцию для каждого видимого элемента массива. Такая функция передаётся по имени и должна иметь подходящие параметры и тип результата.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Функция</th><th>Передаваемая функция должна вернуть</th><th>Результат</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>ARRAYEVERY(array, test)</code></td><td><code>BOOLEAN</code></td><td><code>TRUE</code>, если проверка истинна для всех элементов</td></tr>
+                        <tr><td><code>ARRAYSOME(array, test)</code></td><td><code>BOOLEAN</code></td><td><code>TRUE</code>, если проверка истинна хотя бы для одного элемента</td></tr>
+                        <tr><td><code>ARRAYFILTER(array, test)</code></td><td><code>BOOLEAN</code></td><td>массив элементов, прошедших проверку</td></tr>
+                        <tr><td><code>ARRAYMAP(array, transform)</code></td><td>новое значение элемента</td><td>массив той же видимой формы с преобразованными значениями</td></tr>
+                        <tr><td><code>ARRAYREDUCE(array, seed, combine)</code></td><td>новое значение накопителя</td><td>одно итоговое значение</td></tr>
+                    </tbody>
+                </table>
+                <pre><code class="language-basic">FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+    RETURN value &gt; 0
+END FUNCTION
+
+FUNCTION Twice(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION
+
+PRINT ARRAYEVERY(values, IsPositive)
+mapped = ARRAYMAP(values, Twice)</code></pre>
+            </section>
+
+            <section class="article-section" id="search">
+                <h2>Поиск значений</h2>
+                <p>Функции поиска обходят видимые элементы массива. Для одномерного массива индекс результата относится к логическому индексу массива. Для многомерного массива функции, возвращающие позицию, используют координаты.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Функция</th><th>Результат при совпадении</th><th>Результат без совпадения</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>ARRAYCONTAINS(array, value)</code></td><td><code>TRUE</code></td><td><code>FALSE</code></td></tr>
+                        <tr><td><code>ARRAYCOUNT(array, value)</code></td><td>число найденных элементов</td><td><code>0</code></td></tr>
+                        <tr><td><code>ARRAYINDEXOF(array, value)</code></td><td>первый индекс или координаты</td><td><code>0</code> для одномерного массива, пустой координатный результат для многомерного</td></tr>
+                        <tr><td><code>ARRAYLASTINDEXOF(array, value)</code></td><td>последний индекс или координаты</td><td><code>0</code> для одномерного массива, пустой координатный результат для многомерного</td></tr>
+                        <tr><td><code>ARRAYFINDALL(array, value)</code></td><td>все индексы или таблица координат</td><td>пустой массив</td></tr>
+                        <tr><td><code>ARRAYBINARYSEARCH(array, value[, dimension])</code></td><td>позиция в отсортированном массиве</td><td><code>0</code> для одномерного массива, пустой координатный результат для многомерного</td></tr>
+                    </tbody>
+                </table>
+                <p><code>ARRAYBINARYSEARCH</code> предполагает, что массив уже отсортирован в том же порядке, в котором выполняется поиск. Если данные не отсортированы, сначала используйте <code>ARRAYSORT</code> или <code>ARRAYTOSORTED</code>.</p>
+                <pre><code class="language-basic">sortedValues = ARRAYTOSORTED(values)
+PRINT ARRAYBINARYSEARCH(sortedValues, 20)
+PRINT ARRAYCONTAINS(values, 99)
+hits = ARRAYFINDALL(board, 4)</code></pre>
+            </section>
+
+            <section class="article-section" id="order">
+                <h2>Порядок элементов</h2>
+                <p>Для изменения порядка есть две пары функций: одни меняют исходный массив, другие возвращают новую копию. Выбирайте форму по тому, нужно ли сохранить исходные данные.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Задача</th><th>Меняет исходный массив</th><th>Возвращает копию</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Развернуть порядок</td><td><code>ARRAYREVERSE(array[, dimension])</code></td><td><code>ARRAYTOREVERSED(array[, dimension])</code></td></tr>
+                        <tr><td>Отсортировать</td><td><code>ARRAYSORT(array[, dimension])</code></td><td><code>ARRAYTOSORTED(array[, dimension])</code></td></tr>
+                    </tbody>
+                </table>
+                <pre><code class="language-basic">copy = ARRAYTOSORTED(values)
+ARRAYREVERSE(values)
+
+PRINT values(1)
+PRINT copy(1)</code></pre>
             </section>
 
             <section class="article-section" id="samples">
-                <h2>Показательные примеры</h2>
-                <p>Ниже приведён набор файлов для проверки этого маршрута через IDE.</p>
+                <h2>Проверочные примеры</h2>
+                <p>Эти файлы можно открыть в IDE и выполнить вручную, чтобы проверить конкретные семейства функций массива.</p>
                 <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/array_declaration.axm">Массив: объявление через DIM</a></li>
-                    <li><a href="../../samples/expressions/arrays/index_access.axm">Массив: доступ по индексу</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Массив: двумерный REDIM и PRESERVE</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Массив: подмассив-представление через частичное индексирование</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Массив: диапазонный срез многомерного массива</a></li>
-                    <li><a href="../../samples/functions/left/basic_usage.axm">LEFT: базовое использование</a></li>
-                    <li><a href="../../samples/functions/mid/basic_usage.axm">MID: извлечение фрагмента строки</a></li>
-                    <li><a href="../../samples/functions/split/basic_usage.axm">SPLIT: разделение строки</a></li>
-                    <li><a href="../../samples/functions/join/basic_usage.axm">JOIN: сборка строки из массива</a></li>
                     <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND: нижняя граница массива</a></li>
                     <li><a href="../../samples/functions/ubound/basic_usage.axm">UBOUND: верхняя граница массива</a></li>
+                    <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS: форма многомерного массива</a></li>
+                    <li><a href="../../samples/functions/arrayrank/basic_usage.axm">ARRAYRANK: число измерений</a></li>
                     <li><a href="../../samples/functions/arraylength/basic_usage.axm">ARRAYLENGTH: текущее число элементов</a></li>
                     <li><a href="../../samples/functions/arrayisallocated/basic_usage.axm">ARRAYISALLOCATED: проверка выделения массива</a></li>
                     <li><a href="../../samples/functions/arrayclone/basic_usage.axm">ARRAYCLONE: независимая копия массива</a></li>
-                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: компактный срез массива</a></li>
-                    <li><a href="../../samples/functions/arrayconcat/basic_usage.axm">ARRAYCONCAT: объединение двух массивов</a></li>
-                    <li><a href="../../samples/functions/arrayflatten/by_visible_order.axm">ARRAYFLATTEN: превращение двумерного массива в компактный список</a></li>
-                    <li><a href="../../samples/functions/arrayreshape/from_sorted_flat.axm">ARRAYRESHAPE: сборка таблицы из отсортированного списка</a></li>
+                    <li><a href="../../samples/functions/arrayclone/unallocated_and_empty.axm">ARRAYCLONE: невыделенный и пустой массив</a></li>
                     <li><a href="../../samples/functions/arrayfill/basic_usage.axm">ARRAYFILL: заполнение массива значением</a></li>
-                    <li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH: добавление элемента в конец массива</a></li>
-                    <li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP: снятие последнего элемента массива</a></li>
-                    <li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT: вставка элемента по индексу</a></li>
-                    <li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE: удаление элемента по индексу</a></li>
-                    <li><a href="../../samples/functions/arrayevery/basic_usage.axm">ARRAYEVERY: predicate для всех элементов</a></li>
-                    <li><a href="../../samples/functions/arraysome/basic_usage.axm">ARRAYSOME: predicate хотя бы для одного элемента</a></li>
-                    <li><a href="../../samples/functions/arrayfilter/basic_usage.axm">ARRAYFILTER: фильтрация массива</a></li>
-                    <li><a href="../../samples/functions/arraymap/polymorphic_transform.axm">ARRAYMAP: полиморфное преобразование массива</a></li>
-                    <li><a href="../../samples/functions/arrayreduce/polymorphic_accumulator.axm">ARRAYREDUCE: полиморфная свёртка массива</a></li>
-                    <li><a href="../../samples/functions/arrayreverse/basic_usage.axm">ARRAYREVERSE: разворот массива на месте</a></li>
-                    <li><a href="../../samples/functions/arrayreverse/by_column.axm">ARRAYREVERSE: разворот двумерного массива по столбцам</a></li>
-                    <li><a href="../../samples/functions/arraysort/basic_usage.axm">ARRAYSORT: сортировка массива на месте</a></li>
-                    <li><a href="../../samples/functions/arraytosorted/basic_usage.axm">ARRAYTOSORTED: отсортированная копия массива</a></li>
-                    <li><a href="../../samples/functions/arraytoreversed/basic_usage.axm">ARRAYTOREVERSED: разворот массива</a></li>
-                    <li><a href="../../samples/functions/arraytake/basic_usage.axm">ARRAYTAKE: первые элементы массива</a></li>
-                    <li><a href="../../samples/functions/arrayskip/basic_usage.axm">ARRAYSKIP: пропуск начальной части массива</a></li>
-                    <li><a href="../../samples/functions/arraydistinct/basic_usage.axm">ARRAYDISTINCT: устранение повторов массива</a></li>
-                    <li><a href="../../samples/functions/arraydistinct/multidimensional_values.axm">ARRAYDISTINCT: уникальные значения из двумерного массива</a></li>
-                    <li><a href="../../samples/functions/arraybinarysearch/basic_usage.axm">ARRAYBINARYSEARCH: бинарный поиск по отсортированному массиву</a></li>
-                    <li><a href="../../samples/functions/arraycontains/basic_usage.axm">ARRAYCONTAINS: проверка наличия совпадения</a></li>
+                    <li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH: добавление элемента</a></li>
+                    <li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP: снятие последнего элемента</a></li>
+                    <li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT: вставка по индексу</a></li>
+                    <li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE: удаление по индексу</a></li>
+                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: срез одномерного массива</a></li>
+                    <li><a href="../../samples/functions/arrayslice/by_column.axm">ARRAYSLICE: срез по столбцам</a></li>
+                    <li><a href="../../samples/functions/arraytake/basic_usage.axm">ARRAYTAKE: первые элементы</a></li>
+                    <li><a href="../../samples/functions/arraytake/by_row.axm">ARRAYTAKE: строки двумерного массива</a></li>
+                    <li><a href="../../samples/functions/arrayskip/basic_usage.axm">ARRAYSKIP: пропуск начальной части</a></li>
+                    <li><a href="../../samples/functions/arrayskip/by_row.axm">ARRAYSKIP: пропуск строк</a></li>
+                    <li><a href="../../samples/functions/arrayconcat/basic_usage.axm">ARRAYCONCAT: объединение одномерных массивов</a></li>
+                    <li><a href="../../samples/functions/arrayconcat/by_column.axm">ARRAYCONCAT: объединение по столбцам</a></li>
+                    <li><a href="../../samples/functions/arrayflatten/by_visible_order.axm">ARRAYFLATTEN: плоский массив в порядке обхода</a></li>
+                    <li><a href="../../samples/functions/arrayreshape/from_sorted_flat.axm">ARRAYRESHAPE: новая форма по образцу</a></li>
+                    <li><a href="../../samples/functions/arrayevery/basic_usage.axm">ARRAYEVERY: проверка всех элементов</a></li>
+                    <li><a href="../../samples/functions/arraysome/basic_usage.axm">ARRAYSOME: проверка хотя бы одного элемента</a></li>
+                    <li><a href="../../samples/functions/arrayfilter/basic_usage.axm">ARRAYFILTER: отбор элементов</a></li>
+                    <li><a href="../../samples/functions/arraymap/polymorphic_transform.axm">ARRAYMAP: преобразование элементов</a></li>
+                    <li><a href="../../samples/functions/arrayreduce/polymorphic_accumulator.axm">ARRAYREDUCE: свёртка в одно значение</a></li>
+                    <li><a href="../../samples/functions/arrayreverse/basic_usage.axm">ARRAYREVERSE: разворот на месте</a></li>
+                    <li><a href="../../samples/functions/arrayreverse/by_column.axm">ARRAYREVERSE: разворот по столбцам</a></li>
+                    <li><a href="../../samples/functions/arraysort/basic_usage.axm">ARRAYSORT: сортировка на месте</a></li>
+                    <li><a href="../../samples/functions/arraysort/multidimensional_by_dimension.axm">ARRAYSORT: сортировка по измерению</a></li>
+                    <li><a href="../../samples/functions/arraytosorted/basic_usage.axm">ARRAYTOSORTED: отсортированная копия</a></li>
+                    <li><a href="../../samples/functions/arraytosorted/multidimensional_by_dimension.axm">ARRAYTOSORTED: копия с сортировкой по измерению</a></li>
+                    <li><a href="../../samples/functions/arraytoreversed/basic_usage.axm">ARRAYTOREVERSED: развёрнутая копия</a></li>
+                    <li><a href="../../samples/functions/arraytoreversed/by_column.axm">ARRAYTOREVERSED: копия с разворотом по столбцам</a></li>
+                    <li><a href="../../samples/functions/arraydistinct/basic_usage.axm">ARRAYDISTINCT: уникальные значения</a></li>
+                    <li><a href="../../samples/functions/arraydistinct/multidimensional_values.axm">ARRAYDISTINCT: уникальные значения из таблицы</a></li>
+                    <li><a href="../../samples/functions/arraycontains/basic_usage.axm">ARRAYCONTAINS: проверка наличия значения</a></li>
                     <li><a href="../../samples/functions/arraycount/basic_usage.axm">ARRAYCOUNT: число совпадений</a></li>
-                    <li><a href="../../samples/functions/arrayfindall/basic_usage.axm">ARRAYFINDALL: все индексы совпадений в 1D</a></li>
-                    <li><a href="../../samples/functions/arrayfindall/multidimensional_coordinates.axm">ARRAYFINDALL: таблица координат в 2D</a></li>
-                    <li><a href="../../samples/functions/arrayindexof/basic_usage.axm">ARRAYINDEXOF: первый индекс совпадения в 1D</a></li>
-                    <li><a href="../../samples/functions/arrayindexof/multidimensional_coordinates.axm">ARRAYINDEXOF: координаты первого совпадения в 2D</a></li>
-                    <li><a href="../../samples/functions/arraylastindexof/basic_usage.axm">ARRAYLASTINDEXOF: последний индекс совпадения в 1D</a></li>
-                    <li><a href="../../samples/functions/arraylastindexof/multidimensional_coordinates.axm">ARRAYLASTINDEXOF: координаты последнего совпадения в 2D</a></li>
-                    <li><a href="../../samples/functions/regexismatch/basic_usage.axm">REGEXISMATCH: проверка по образцу</a></li>
-                    <li><a href="../../samples/functions/regexmatches/all_matches.axm">REGEXMATCHES: все совпадения</a></li>
-                    <li><a href="../../samples/functions/regexextractall/group_values.axm">REGEXEXTRACTALL: группы из всех совпадений</a></li>
-                    <li><a href="../../samples/functions/regexsplit/split_on_pattern.axm">REGEXSPLIT: разделение по образцу</a></li>
-                    <li><a href="../../samples/functions/readalllines/basic_usage.axm">READALLLINES: чтение строк файла</a></li>
-                    <li><a href="../../samples/functions/readlines/basic_usage.axm">READLINES: чтение набора строк</a></li>
-                    <li><a href="../../samples/functions/writefile/basic_usage.axm">WRITEFILE: запись текстового файла</a></li>
-                    <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущая локальная дата</a></li>
-                    <li><a href="../../samples/functions/timer/basic_usage.axm">TIMER: секунды с локальной полуночи</a></li>
-                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: базовое использование</a></li>
-                    <li><a href="../../samples/functions/pow/basic_usage.axm">POW: базовое использование</a></li>
+                    <li><a href="../../samples/functions/arrayindexof/basic_usage.axm">ARRAYINDEXOF: первый индекс</a></li>
+                    <li><a href="../../samples/functions/arrayindexof/multidimensional_coordinates.axm">ARRAYINDEXOF: координаты первого совпадения</a></li>
+                    <li><a href="../../samples/functions/arraylastindexof/basic_usage.axm">ARRAYLASTINDEXOF: последний индекс</a></li>
+                    <li><a href="../../samples/functions/arraylastindexof/multidimensional_coordinates.axm">ARRAYLASTINDEXOF: координаты последнего совпадения</a></li>
+                    <li><a href="../../samples/functions/arrayfindall/basic_usage.axm">ARRAYFINDALL: все индексы</a></li>
+                    <li><a href="../../samples/functions/arrayfindall/multidimensional_coordinates.axm">ARRAYFINDALL: таблица координат</a></li>
+                    <li><a href="../../samples/functions/arraybinarysearch/basic_usage.axm">ARRAYBINARYSEARCH: бинарный поиск</a></li>
+                    <li><a href="../../samples/functions/arraybinarysearch/multidimensional_coordinates.axm">ARRAYBINARYSEARCH: поиск с координатным результатом</a></li>
                 </ul>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                    <a href="examples.html">Примеры программ</a>
+                    <a href="arrays.html">Массивы</a>
+                    <a href="arrays-functions.html">Базовые ARRAY-функции</a>
+                    <a href="arrays-indexing.html">Индексы массива</a>
+                    <a href="arrays-slices.html">Срезы и представления</a>
+                    <a href="arrays-multidimensional.html">Многомерные массивы</a>
+                    <a href="arrays-diagnostics.html">Ошибки массивов</a>
+                    <a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a>
+                    <a href="string-functions.html">Строковые функции</a>
+                    <a href="numeric-functions.html">Числовые функции</a>
                 </div>
             </section>
 

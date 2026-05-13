@@ -1,213 +1,228 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Арифметика и логика</title>
+    <title>Справочник Axiom - Выражения и операции</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="arithmetic-logic">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Арифметические, сравнительные, логические и побитовые выражения</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Арифметика, сравнения, логика, строки и сдвиги</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Выражения и операции</p>
+                <p class="sidebar__subtitle">Как Axiom получает значения из данных.</p>
+            </div>
+            <nav id="manual-nav"></nav>
         </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Арифметика и логика</p><p class="sidebar__subtitle">Справка по вычислениям, сравнениям, степеням, побитовым операциям и сдвигам.</p></div><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                <span>/</span>
-                <span>Арифметика и логика</span>
-            </nav>
-            <p class="eyebrow">Выражения</p>
-            <h1 class="page-title">Арифметика и логика</h1>
-            <p class="lead">Axiom поддерживает обычную арифметику, сравнения, логические выражения, побитовые операции, сдвиги и шестнадцатеричные литералы. Здесь собраны формы записи, правила типов и подтверждённые примеры поведения.</p>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="expressions-and-branching.html">Выражения и ветвление</a>
+            <span>/</span>
+            <span>Выражения и операции</span>
+        </nav>
 
-            <section class="article-section">
-                <h2>Сводка</h2>
-                <p>В арифметике доступны <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code> и <code>^</code>. Для целочисленных типов <code>INTEGER</code> и <code>LONG</code> дополнительно доступны побитовые <code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code>, <code>IMP</code> и сдвиги <code>&lt;&lt;</code>, <code>&gt;&gt;</code>. Для построения строк есть строгая строковая форма <code>+</code> и отдельный оператор <code>&amp;</code>, который превращает скалярные значения в текст и объединяет их. Литералы вида <code>&amp;HFF</code> задают шестнадцатеричные целые числа.</p>
-            </section>
+        <p class="eyebrow">Выражения</p>
+        <h1 class="page-title">Выражения и операции</h1>
+        <p class="lead">Выражение — это запись, по которой Axiom вычисляет значение. В выражении могут участвовать литералы, переменные, константы, вызовы функций, поля записей, элементы массивов и операции. Результатом выражения становится число, строка, логическое значение, запись, массив или другое поддержанное значение языка.</p>
 
-            <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-basic">&lt;числовое выражение&gt; + &lt;числовое выражение&gt;
+        <section class="article-section">
+            <h2>Категории операций</h2>
+            <p>В этой главе собраны операции, которые чаще всего встречаются в обычных вычислениях.</p>
+            <ul>
+                <li>арифметические операции: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code>, <code>^</code>;</li>
+                <li>операции сравнения: <code>=</code>, <code>&lt;&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>;</li>
+                <li>логические операции: <code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code>, <code>IMP</code>;</li>
+                <li>побитовые операции и сдвиги для целых чисел;</li>
+                <li>строковые операции: строгое сложение строк через <code>+</code> и построение строки через <code>&amp;</code>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
+            <pre><code class="language-basic">&lt;числовое выражение&gt; + &lt;числовое выражение&gt;
 &lt;числовое выражение&gt; - &lt;числовое выражение&gt;
 &lt;числовое выражение&gt; * &lt;числовое выражение&gt;
 &lt;числовое выражение&gt; / &lt;числовое выражение&gt;
-&lt;числовое выражение&gt; ^ &lt;числовое выражение&gt;
 &lt;целое выражение&gt; \ &lt;целое выражение&gt;
 &lt;целое выражение&gt; MOD &lt;целое выражение&gt;
-&lt;строковое выражение&gt; + &lt;строковое выражение&gt;
-&lt;скалярное выражение&gt; &amp; &lt;скалярное выражение&gt;
-
-&lt;выражение&gt; = &lt;выражение&gt;
+&lt;числовое выражение&gt; ^ &lt;числовое выражение&gt;</code></pre>
+            <pre><code class="language-basic">&lt;выражение&gt; = &lt;выражение&gt;
 &lt;выражение&gt; &lt;&gt; &lt;выражение&gt;
 &lt;выражение&gt; &lt; &lt;выражение&gt;
 &lt;выражение&gt; &lt;= &lt;выражение&gt;
 &lt;выражение&gt; &gt; &lt;выражение&gt;
-&lt;выражение&gt; &gt;= &lt;выражение&gt;
-
-NOT &lt;логическое выражение&gt;
-NOT &lt;целое выражение&gt;
-&lt;логическое выражение&gt; AND &lt;логическое выражение&gt;
-&lt;целое выражение&gt; AND &lt;целое выражение&gt;
-&lt;логическое выражение&gt; OR &lt;логическое выражение&gt;
-&lt;целое выражение&gt; OR &lt;целое выражение&gt;
-&lt;логическое выражение&gt; XOR &lt;логическое выражение&gt;
-&lt;целое выражение&gt; XOR &lt;целое выражение&gt;
-&lt;логическое выражение&gt; EQV &lt;логическое выражение&gt;
-&lt;целое выражение&gt; EQV &lt;целое выражение&gt;
-&lt;логическое выражение&gt; IMP &lt;логическое выражение&gt;
-&lt;целое выражение&gt; IMP &lt;целое выражение&gt;
+&lt;выражение&gt; &gt;= &lt;выражение&gt;</code></pre>
+            <pre><code class="language-basic">NOT &lt;логическое или целое выражение&gt;
+&lt;логическое или целое выражение&gt; AND &lt;логическое или целое выражение&gt;
+&lt;логическое или целое выражение&gt; OR &lt;логическое или целое выражение&gt;
+&lt;логическое или целое выражение&gt; XOR &lt;логическое или целое выражение&gt;
+&lt;логическое или целое выражение&gt; EQV &lt;логическое или целое выражение&gt;
+&lt;логическое или целое выражение&gt; IMP &lt;логическое или целое выражение&gt;
 &lt;целое выражение&gt; &lt;&lt; &lt;целое выражение&gt;
-&lt;целое выражение&gt; &gt;&gt; &lt;целое выражение&gt;
-
+&lt;целое выражение&gt; &gt;&gt; &lt;целое выражение&gt;</code></pre>
+            <pre><code class="language-basic">&lt;строковое выражение&gt; + &lt;строковое выражение&gt;
+&lt;скалярное выражение&gt; &amp; &lt;скалярное выражение&gt;
 &amp;H&lt;шестнадцатеричные цифры&gt;</code></pre>
-            </section>
+        </section>
 
-            <section class="article-section">
-                <h2>Части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;числовое выражение&gt;</code> — выражение типов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>.</li>
-                    <li><code>&lt;целое выражение&gt;</code> — выражение только типов <code>INTEGER</code> или <code>LONG</code>.</li>
-                    <li><code>&lt;строковое выражение&gt;</code> — выражение типа <code>STRING</code>.</li>
-                    <li><code>&lt;скалярное выражение&gt;</code> — выражение типа <code>STRING</code>, <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> или <code>BOOLEAN</code>.</li>
-                    <li><code>&lt;логическое выражение&gt;</code> — выражение типа <code>BOOLEAN</code>.</li>
-                    <li><code>&lt;шестнадцатеричные цифры&gt;</code> — одна или больше цифр <code>0-9</code>, <code>A-F</code> или <code>a-f</code>.</li>
-                </ul>
-            </section>
+        <section class="article-section">
+            <h2>Части записи</h2>
+            <ul>
+                <li><code>&lt;числовое выражение&gt;</code> — выражение типов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>.</li>
+                <li><code>&lt;целое выражение&gt;</code> — выражение типов <code>INTEGER</code> или <code>LONG</code>.</li>
+                <li><code>&lt;логическое выражение&gt;</code> — выражение типа <code>BOOLEAN</code>.</li>
+                <li><code>&lt;строковое выражение&gt;</code> — выражение типа <code>STRING</code>.</li>
+                <li><code>&lt;скалярное выражение&gt;</code> — <code>STRING</code>, <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> или <code>BOOLEAN</code>.</li>
+            </ul>
+        </section>
 
-            <section class="article-section">
-                <h2>Арифметика</h2>
-                <h3 id="numeric-operators">Числовые операторы</h3>
-                <p><code>+</code>, <code>-</code> и <code>*</code> работают с числовыми операндами и продвигают тип результата по правилу <code>DOUBLE</code> → <code>DECIMAL</code> → <code>LONG</code> → <code>INTEGER</code>. Смешивать <code>DECIMAL</code> и <code>DOUBLE</code> в одном обычном арифметическом выражении нельзя: такое выражение отвергается ещё на этапе семантического анализа.</p>
+        <section class="article-section">
+            <h2>Арифметические операции</h2>
+            <p><code>+</code>, <code>-</code> и <code>*</code> работают с числами и возвращают числовой результат. Если операнды имеют разные числовые типы, Axiom применяет разрешённые расширяющие преобразования. Смешивать <code>DECIMAL</code> и <code>DOUBLE</code> в одном обычном арифметическом выражении нельзя.</p>
+            <p><code>/</code> выполняет обычное деление. Если в выражении участвует <code>DECIMAL</code> и не участвует <code>DOUBLE</code>, результат имеет тип <code>DECIMAL</code>. В остальных случаях результат имеет тип <code>DOUBLE</code>.</p>
+            <p><code>\</code> выполняет целочисленное деление, а <code>MOD</code> возвращает остаток. Эти операции работают только с <code>INTEGER</code> и <code>LONG</code>. Деление на ноль даёт ошибку времени выполнения.</p>
+            <p><code>^</code> возводит левый операнд в степень правого, всегда возвращает <code>DOUBLE</code> и связывается справа налево: <code>2 ^ 3 ^ 2</code> вычисляется как <code>2 ^ (3 ^ 2)</code>.</p>
+        </section>
 
-                <h3 id="power">Возведение в степень</h3>
-                <p>Оператор <code>^</code> возводит левый операнд в степень правого. Он принимает любые числовые операнды, всегда возвращает <code>DOUBLE</code> и связывается справа налево. Поэтому выражение <code>2 ^ 3 ^ 2</code> вычисляется как <code>2 ^ (3 ^ 2)</code>, а выражение <code>-2 ^ 2</code> читается как <code>-(2 ^ 2)</code>.</p>
+        <section class="article-section">
+            <h2>Порядок вычисления</h2>
+            <p>Сначала выполняются операции более высокого приоритета. Скобки позволяют явно изменить порядок вычисления.</p>
+            <ol>
+                <li>скобки <code>(...)</code>;</li>
+                <li><code>^</code>;</li>
+                <li>унарный <code>-</code> и <code>NOT</code>;</li>
+                <li><code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code>;</li>
+                <li><code>+</code>, <code>-</code>, <code>&amp;</code>;</li>
+                <li><code>&lt;&lt;</code>, <code>&gt;&gt;</code>;</li>
+                <li>сравнения;</li>
+                <li><code>AND</code>, затем <code>XOR</code>, затем <code>OR</code>, затем <code>EQV</code>, затем <code>IMP</code>.</li>
+            </ol>
+            <pre><code class="language-basic">PRINT 3 + 6 / 12 * 3 - 2
+PRINT (3 + 6) / (12 * 3 - 2)</code></pre>
+        </section>
 
-                <h3 id="floating-division">Обычное деление</h3>
-                <p><code>/</code> выполняет обычное деление. Если хотя бы один операнд имеет тип <code>DECIMAL</code> и ни один операнд не имеет тип <code>DOUBLE</code>, результат тоже имеет тип <code>DECIMAL</code>. Во всех остальных случаях результат имеет тип <code>DOUBLE</code>.</p>
+        <section class="article-section">
+            <h2>Сравнения</h2>
+            <p>Операции сравнения возвращают <code>BOOLEAN</code>. Для чисел поддержаны все шесть сравнений. Для строк также поддержаны все шесть сравнений, и порядок определяется кодами символов. Для <code>BOOLEAN</code> допустимы только <code>=</code> и <code>&lt;&gt;</code>.</p>
+            <pre><code class="language-basic">PRINT 10 > 3
+PRINT "ABC" < "ABD"
+PRINT TRUE <> FALSE</code></pre>
+        </section>
 
-                <h3 id="integer-division">Целочисленное деление</h3>
-                <p>Целочисленное деление <code>\</code> работает только с типами <code>INTEGER</code> и <code>LONG</code>, делит левый операнд на правый и отбрасывает дробную часть к нулю. Если хотя бы один операнд имеет тип <code>LONG</code>, результат тоже имеет тип <code>LONG</code>; иначе возвращается <code>INTEGER</code>.</p>
-
-                <h3 id="mod">Остаток от деления</h3>
-                <p>Оператор <code>MOD</code> тоже работает только с типами <code>INTEGER</code> и <code>LONG</code>. Тип результата определяется так же, как у <code>\</code>. Знак остатка совпадает со знаком левого операнда, потому что операция следует правилу вычисления, принятому в C#.</p>
-
-                <h3 id="string-concatenation">Конкатенация строк</h3>
-                <p>Если оба операнда имеют тип <code>STRING</code>, оператор <code>+</code> объединяет их в одну строку. Эта форма остаётся строгой: выражение <code>"Возраст: " + age</code> не проходит семантическую проверку, если <code>age</code> имеет числовой тип.</p>
-                <p>Оператор <code>&amp;</code> предназначен для явного построения строки из скалярных значений. Он принимает <code>STRING</code>, <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code> и <code>BOOLEAN</code>, переводит каждое значение в тот же текстовый вид, который использует <code>PRINT</code>, и возвращает <code>STRING</code>. Для массивов, записей <code>TYPE</code>, <code>FILE</code>, значений функций и ошибок такая конкатенация не определена.</p>
-                <pre><code class="language-basic">DIM name AS STRING = "Иван"
-DIM age AS INTEGER = 7
-
-PRINT "Привет, " & name & " тебе " & age & " лет."</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2 id="hex-literals">Шестнадцатеричные литералы</h2>
-                <p>Литерал вида <code>&amp;HFF</code> задаёт неотрицательное целое число в шестнадцатеричной записи. Литерал получает тип <code>INTEGER</code>, если помещается в диапазон <code>INTEGER</code>; иначе, если значение помещается в диапазон <code>LONG</code>, он получает тип <code>LONG</code>. Форма <code>&amp;H</code> без цифр даёт диагностическое сообщение <code>MB0003</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Сравнения</h2>
-                <p>Все операторы сравнения возвращают <code>BOOLEAN</code>. Для чисел поддерживаются все шесть сравнений. Для строк тоже поддерживаются все шесть сравнений, причём упорядочение выполняется по кодам символов без учёта локали. Для <code>BOOLEAN</code> допустимы только <code>=</code> и <code>&lt;&gt;</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2 id="logical-bitwise">Логические и побитовые операторы</h2>
-                <p><code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code> и <code>IMP</code> работают в двух режимах. С <code>BOOLEAN</code> они выполняют логические операции и возвращают <code>BOOLEAN</code>. С <code>INTEGER</code> и <code>LONG</code> они выполняют побитовые операции. Для бинарных побитовых операций тип результата продвигается до <code>LONG</code>, если хотя бы один операнд имеет тип <code>LONG</code>; иначе результат имеет тип <code>INTEGER</code>.</p>
-                <p><code>EQV</code> означает равнозначность: для логических значений результат равен <code>TRUE</code>, когда оба операнда одинаковы. Для целых чисел <code>EQV</code> вычисляет побитовое отрицание результата <code>XOR</code>. <code>IMP</code> означает импликацию: для логических значений результат равен <code>FALSE</code> только в случае <code>TRUE IMP FALSE</code>. Для целых чисел <code>IMP</code> вычисляется как побитовое <code>NOT</code> от левого операнда, затем побитовое <code>OR</code> с правым операндом.</p>
-            </section>
-
-            <section class="article-section">
-                <h2 id="shifts">Сдвиги</h2>
-                <p>Операторы <code>&lt;&lt;</code> и <code>&gt;&gt;</code> работают только с <code>INTEGER</code> и <code>LONG</code>. Левый операнд задаёт сдвигаемое значение, правый — количество битов для сдвига. Тип результата всегда совпадает с типом левого операнда.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Приоритет</h2>
-                <ol>
-                    <li>скобки <code>(...)</code>;</li>
-                    <li><code>^</code>;</li>
-                    <li>унарный <code>-</code> и <code>NOT</code>;</li>
-                    <li><code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code>;</li>
-                    <li><code>+</code>, <code>-</code>, <code>&amp;</code>;</li>
-                    <li><code>&lt;&lt;</code>, <code>&gt;&gt;</code>;</li>
-                    <li>сравнения;</li>
-                    <li><code>AND</code>;</li>
-                    <li><code>XOR</code>;</li>
-                    <li><code>OR</code>;</li>
-                    <li><code>EQV</code>;</li>
-                    <li><code>IMP</code>.</li>
-                </ol>
-            </section>
-
-            <section class="article-section">
-                <h2>Примеры</h2>
-                <pre><code class="language-basic">PRINT 2 ^ 3 ^ 2
-PRINT &amp;HFF
+        <section class="article-section">
+            <h2>Логика и побитовый режим</h2>
+            <p><code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code> и <code>IMP</code> имеют два режима. С логическими значениями они возвращают <code>BOOLEAN</code>. С целыми числами они работают по битам и возвращают <code>INTEGER</code> или <code>LONG</code>.</p>
+            <p><code>EQV</code> означает равнозначность: логический результат равен <code>TRUE</code>, когда оба операнда одинаковы. <code>IMP</code> означает импликацию: <code>TRUE IMP FALSE</code> даёт <code>FALSE</code>, остальные логические сочетания дают <code>TRUE</code>.</p>
+            <pre><code class="language-basic">PRINT TRUE AND NOT FALSE
 PRINT 6 AND 3
 PRINT 6 XOR 3
-PRINT 6 EQV 3
-PRINT 6 IMP 3
-PRINT 1 + 2 &lt;&lt; 1
-PRINT "A" + "B"
-PRINT "Age: " & 42
-PRINT 10 &gt; 3 AND NOT FALSE</code></pre>
-                <ul class="resource-list">
-                    <li><a href="../../samples/expressions/arithmetic/basic_math.axm">Арифметика: базовые вычисления</a></li>
-                    <li><a href="../../samples/operators/power/basic_usage.axm">Оператор <code>^</code>: обычные примеры</a></li>
-                    <li><a href="../../samples/expressions/hex-literals/basic_usage.axm">Шестнадцатеричные литералы <code>&amp;H</code></a></li>
-                    <li><a href="../../samples/operators/integer-division/basic_usage.axm">Оператор <code>\</code>: обычные примеры</a></li>
-                    <li><a href="../../samples/operators/integer-division/division_by_zero_error.axm">Оператор <code>\</code>: деление на ноль</a></li>
-                    <li><a href="../../samples/operators/mod/basic_usage.axm">Оператор <code>MOD</code>: обычные примеры</a></li>
-                    <li><a href="../../samples/operators/mod/division_by_zero_error.axm">Оператор <code>MOD</code>: деление на ноль</a></li>
-                    <li><a href="../../samples/operators/not/bitwise_usage.axm">Оператор <code>NOT</code>: логический и побитовый режим</a></li>
-                    <li><a href="../../samples/operators/and/bitwise_usage.axm">Оператор <code>AND</code>: логический и побитовый режим</a></li>
-                    <li><a href="../../samples/operators/or/bitwise_usage.axm">Оператор <code>OR</code>: логический и побитовый режим</a></li>
-                    <li><a href="../../samples/operators/xor/basic_usage.axm">Оператор <code>XOR</code></a></li>
-                    <li><a href="../../samples/operators/eqv/basic_usage.axm">Оператор <code>EQV</code></a></li>
-                    <li><a href="../../samples/operators/imp/basic_usage.axm">Оператор <code>IMP</code></a></li>
-                    <li><a href="../../samples/operators/shift-left/basic_usage.axm">Оператор <code>&lt;&lt;</code></a></li>
-                    <li><a href="../../samples/operators/shift-right/basic_usage.axm">Оператор <code>&gt;&gt;</code></a></li>
-                    <li><a href="../../samples/operators/ampersand/mixed_scalar_concat.axm">Оператор <code>&amp;</code>: конкатенация смешанных скалярных значений</a></li>
-                    <li><a href="../../samples/expressions/comparisons/basic_compare.axm">Сравнения: базовые проверки</a></li>
-                    <li><a href="../../samples/expressions/comparisons/string_order.axm">Сравнения строк</a></li>
-                    <li><a href="../../samples/expressions/logical/basic_logic.axm">Логика: <code>NOT</code>, <code>AND</code>, <code>OR</code></a></li>
-                    <li><a href="../../samples/expressions/string_concat/basic_concat.axm">Конкатенация строк</a></li>
-                </ul>
-            </section>
+PRINT TRUE IMP FALSE</code></pre>
+        </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB0003</code> — некорректный числовой литерал, например <code>&amp;H</code> без шестнадцатеричных цифр.</li>
-                    <li><code>MB0004</code> — числовой литерал выходит за диапазон поддерживаемого типа, в том числе слишком большой шестнадцатеричный литерал.</li>
-                    <li><code>MB2003</code> — оператор применён к несовместимым типам, например <code>7.5 \ 2</code>, <code>TRUE MOD 2</code>, <code>TRUE EQV 1</code> или конкатенация <code>&amp;</code> со значением не скалярного типа.</li>
-                    <li><code>MB3001</code> — деление на ноль в <code>/</code>, <code>\</code> или <code>MOD</code>.</li>
-                    <li><code>MB3008</code> — арифметическое переполнение, в том числе в крайних случаях наподобие деления минимального <code>INTEGER</code> или <code>LONG</code> на <code>-1</code> и при недопустимом результате <code>^</code>.</li>
-                </ul>
-            </section>
+        <section class="article-section">
+            <h2>Сдвиги и шестнадцатеричные числа</h2>
+            <p><code>&lt;&lt;</code> и <code>&gt;&gt;</code> сдвигают целое значение на указанное число битов. Левый операнд задаёт значение, правый — количество битов. Тип результата совпадает с типом левого операнда.</p>
+            <p>Литерал вида <code>&amp;HFF</code> задаёт неотрицательное целое число в шестнадцатеричной записи. Если значение помещается в <code>INTEGER</code>, литерал получает тип <code>INTEGER</code>; иначе, если помещается в <code>LONG</code>, получает тип <code>LONG</code>.</p>
+        </section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                    <a href="numeric-functions-roots-rounding.html#pow">Функция POW</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="select-case.html">Оператор SELECT CASE</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
+        <section class="article-section" id="string-concatenation">
+            <h2>Строковые операции</h2>
+            <p><code>+</code> объединяет строки только тогда, когда оба операнда имеют тип <code>STRING</code>. Это строгая форма: число или логическое значение нужно преобразовать отдельно либо использовать <code>&amp;</code>.</p>
+            <p><code>&amp;</code> строит строку из скалярных значений. Он принимает строки, числа и <code>BOOLEAN</code>, переводит их в текстовый вид, близкий к выводу <code>PRINT</code>, и возвращает <code>STRING</code>.</p>
+            <pre><code class="language-basic">DIM name AS STRING = "Ada"
+DIM age AS INTEGER = 36
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+PRINT "Name: " + name
+PRINT "Age: " & age</code></pre>
+            <blockquote>
+                <p><em>В QuickBASIC основная строковая конкатенация обычно записывалась через <code>+</code> и работала со строковыми значениями. В Axiom <code>+</code> для строк тоже строгий, а отдельный <code>&amp;</code> нужен для явного построения строки из смешанных скалярных значений.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример вычисления выражений</h2>
+            <p>В примере используются арифметика, сравнение, логика и строковое построение.</p>
+            <pre><code class="language-basic">DIM x AS INTEGER = 10
+DIM y AS INTEGER = 3
+DIM ok AS BOOLEAN
+
+ok = x > y AND y > 0
+
+PRINT x \ y
+PRINT x MOD y
+PRINT "ok=" & ok
+PRINT &amp;HFF</code></pre>
+            <p>Результат:</p>
+            <pre><code>3
+1
+ok=TRUE
+255</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки выражений.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/expressions/arithmetic/basic_math.axm">Арифметика: базовые вычисления</a></li>
+                <li><a href="../../samples/operators/power/basic_usage.axm">Оператор ^</a></li>
+                <li><a href="../../samples/operators/integer-division/basic_usage.axm">Оператор \</a></li>
+                <li><a href="../../samples/operators/mod/basic_usage.axm">Оператор MOD</a></li>
+                <li><a href="../../samples/expressions/hex-literals/basic_usage.axm">Шестнадцатеричные литералы &amp;H</a></li>
+                <li><a href="../../samples/expressions/comparisons/basic_compare.axm">Сравнения</a></li>
+                <li><a href="../../samples/expressions/comparisons/string_order.axm">Сравнения строк</a></li>
+                <li><a href="../../samples/expressions/logical/basic_logic.axm">Логические операции</a></li>
+                <li><a href="../../samples/operators/and/bitwise_usage.axm">Побитовый AND</a></li>
+                <li><a href="../../samples/operators/or/bitwise_usage.axm">Побитовый OR</a></li>
+                <li><a href="../../samples/operators/xor/basic_usage.axm">Оператор XOR</a></li>
+                <li><a href="../../samples/operators/eqv/basic_usage.axm">Оператор EQV</a></li>
+                <li><a href="../../samples/operators/imp/basic_usage.axm">Оператор IMP</a></li>
+                <li><a href="../../samples/operators/shift-left/basic_usage.axm">Оператор &lt;&lt;</a></li>
+                <li><a href="../../samples/operators/shift-right/basic_usage.axm">Оператор &gt;&gt;</a></li>
+                <li><a href="../../samples/expressions/string_concat/basic_concat.axm">Строковая конкатенация через +</a></li>
+                <li><a href="../../samples/operators/ampersand/mixed_scalar_concat.axm">Строковая конкатенация через &amp;</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB0003</code> — некорректный числовой литерал, например <code>&amp;H</code> без цифр.</li>
+                <li><code>MB0004</code> — числовой литерал выходит за диапазон поддерживаемого типа.</li>
+                <li><code>MB2003</code> — операция применена к несовместимым типам.</li>
+                <li><code>MB3001</code> — деление на ноль.</li>
+                <li><code>MB3008</code> — арифметическое переполнение или недопустимый результат операции.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="expressions-and-branching.html">Выражения и ветвление</a>
+                <a href="data-types-scalars.html">Скалярные типы</a>
+                <a href="data-types-conversions.html">Преобразования типов</a>
+                <a href="if.html">Оператор IF</a>
+                <a href="select-case.html">Оператор SELECT CASE</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

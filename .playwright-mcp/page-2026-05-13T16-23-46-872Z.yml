@@ -1,0 +1,218 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Справочник Axiom" [ref=e4] [cursor=pointer]:
+        - /url: index.html
+      - generic [ref=e5]: Преобразование чисел, математика, тригонометрия и округление
+  - generic [ref=e6]:
+    - complementary [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: Числовые функции
+          - paragraph [ref=e11]: Преобразование типов, вычисления, случайные числа, тригонометрия и округление.
+        - navigation [ref=e12]:
+          - group [ref=e13]:
+            - generic "+ Начало работы и среда" [ref=e14] [cursor=pointer]
+          - group [ref=e15]:
+            - generic "+ Основы языка" [ref=e16] [cursor=pointer]
+          - group [ref=e17]:
+            - generic "+ Операторы описания и объявления" [ref=e18] [cursor=pointer]
+          - group [ref=e19]:
+            - generic "+ Выражения и операции" [ref=e20] [cursor=pointer]
+          - group [ref=e21]:
+            - generic "+ Операторы передачи управления" [ref=e22] [cursor=pointer]
+          - group [ref=e23]:
+            - generic "+ Процедуры и функции" [ref=e24] [cursor=pointer]
+          - group [ref=e25]:
+            - generic "+ Массивы и составные данные" [ref=e26] [cursor=pointer]
+          - group [ref=e27]:
+            - generic "+ Ввод и вывод" [ref=e28] [cursor=pointer]
+          - group [ref=e29]:
+            - generic "+ Файлы и файловая система" [ref=e30] [cursor=pointer]
+          - group [ref=e31]:
+            - generic "+ Графика и экран" [ref=e32] [cursor=pointer]
+          - group [ref=e33]:
+            - generic "+ Клавиатура, мышь и события" [ref=e34] [cursor=pointer]
+          - group [ref=e35]:
+            - generic "- Встроенные функции" [ref=e36] [cursor=pointer]
+            - generic [ref=e37]:
+              - heading "Строки и символы" [level=4] [ref=e38]
+              - list [ref=e39]:
+                - listitem [ref=e40]:
+                  - link "Строковые функции" [ref=e41] [cursor=pointer]:
+                    - /url: string-functions.html
+                - listitem [ref=e42]:
+                  - link "Длина и фрагменты" [ref=e43] [cursor=pointer]:
+                    - /url: string-functions-slices-and-length.html
+                - listitem [ref=e44]:
+                  - link "Обрезка и регистр" [ref=e45] [cursor=pointer]:
+                    - /url: string-functions-trim-and-case.html
+                - listitem [ref=e46]:
+                  - link "Поиск и замена" [ref=e47] [cursor=pointer]:
+                    - /url: string-functions-search-and-replace.html
+                - listitem [ref=e48]:
+                  - link "Построение и массивы строк" [ref=e49] [cursor=pointer]:
+                    - /url: string-functions-build-and-split.html
+                - listitem [ref=e50]:
+                  - link "CHR, ASC, CHRW и ASCW" [ref=e51] [cursor=pointer]:
+                    - /url: characters.html
+            - generic [ref=e52]:
+              - heading "Числа" [level=4] [ref=e53]
+              - list [ref=e54]:
+                - listitem [ref=e55]:
+                  - link "Числовые функции" [ref=e56] [cursor=pointer]:
+                    - /url: numeric-functions.html
+                - listitem [ref=e57]:
+                  - link "INT, STR и VAL" [ref=e58] [cursor=pointer]:
+                    - /url: numeric-functions-conversion-and-legacy.html
+                - listitem [ref=e59]:
+                  - link "Базовая математика" [ref=e60] [cursor=pointer]:
+                    - /url: numeric-functions-core.html
+                - listitem [ref=e61]:
+                  - link "Тригонометрия" [ref=e62] [cursor=pointer]:
+                    - /url: numeric-functions-trigonometry.html
+                - listitem [ref=e63]:
+                  - link "Корни и округление" [ref=e64] [cursor=pointer]:
+                    - /url: numeric-functions-roots-rounding.html
+            - generic [ref=e65]:
+              - heading "Дата и время" [level=4] [ref=e66]
+              - list [ref=e67]:
+                - listitem [ref=e68]:
+                  - link "Дата и время" [ref=e69] [cursor=pointer]:
+                    - /url: date-time-functions.html
+                - listitem [ref=e70]:
+                  - link "Текущие значения" [ref=e71] [cursor=pointer]:
+                    - /url: date-time-functions-current.html
+                - listitem [ref=e72]:
+                  - link "Части и сборка" [ref=e73] [cursor=pointer]:
+                    - /url: date-time-functions-parts-and-serial.html
+                - listitem [ref=e74]:
+                  - link "Арифметика и проверка" [ref=e75] [cursor=pointer]:
+                    - /url: date-time-functions-arithmetic-and-validation.html
+                - listitem [ref=e76]:
+                  - link "UTC и часовые пояса" [ref=e77] [cursor=pointer]:
+                    - /url: date-time-functions-time-zones.html
+            - generic [ref=e78]:
+              - heading "Регулярные выражения" [level=4] [ref=e79]
+              - list [ref=e80]:
+                - listitem [ref=e81]:
+                  - link "Регулярные выражения" [ref=e82] [cursor=pointer]:
+                    - /url: regex-functions.html
+                - listitem [ref=e83]:
+                  - link "Проверка и извлечение" [ref=e84] [cursor=pointer]:
+                    - /url: regex-functions-match-and-extract.html
+                - listitem [ref=e85]:
+                  - link "Массивы и разбиение" [ref=e86] [cursor=pointer]:
+                    - /url: regex-functions-arrays-and-split.html
+                - listitem [ref=e87]:
+                  - link "Замена и подсчёт" [ref=e88] [cursor=pointer]:
+                    - /url: regex-functions-replace-and-count.html
+          - group [ref=e89]:
+            - generic "+ Обработка ошибок и диагностика" [ref=e90] [cursor=pointer]
+          - group [ref=e91]:
+            - generic "+ Примеры и справочные приложения" [ref=e92] [cursor=pointer]
+    - main [ref=e93]:
+      - navigation "Хлебные крошки" [ref=e94]:
+        - link "Главная" [ref=e95] [cursor=pointer]:
+          - /url: index.html
+        - text: /
+        - link "Алфавитный и тематический указатель" [ref=e96] [cursor=pointer]:
+          - /url: reference.html
+        - text: / Числовые функции
+      - paragraph [ref=e97]: Встроенные функции
+      - heading "Числовые функции" [level=1] [ref=e98]
+      - paragraph [ref=e99]: Числовые функции Axiom помогают преобразовывать данные, выполнять типовые вычисления, работать со случайными значениями, углами, корнями, логарифмами и разными способами округления. Для удобства они разбиты на несколько тематических страниц.
+      - generic [ref=e100]:
+        - heading "Группы числовых функций" [level=2] [ref=e101]
+        - paragraph [ref=e102]:
+          - text: "Числовые функции делятся по задаче: преобразование между числом и строкой, базовые вычисления, случайные значения, тригонометрия, корни, логарифмы и округление. Если нужно превратить текст в число, смотри"
+          - code [ref=e103]: VAL
+          - text: . Если нужно взять модуль, минимум или максимум, смотри базовые функции. Если нужно работать с углами, переходи к тригонометрии.
+      - generic [ref=e104]:
+        - heading "Тип результата и ошибки" [level=2] [ref=e105]
+        - list [ref=e106]:
+          - listitem [ref=e107]:
+            - code [ref=e108]: RND()
+            - text: вызывается без аргументов и возвращает
+            - code [ref=e109]: DOUBLE
+            - text: в диапазоне от
+            - code [ref=e110]: "0"
+            - text: включительно до
+            - code [ref=e111]: "1"
+            - text: не включительно.
+          - listitem [ref=e112]:
+            - code [ref=e113]: INT
+            - text: возвращает результат именно в типе
+            - code [ref=e114]: INTEGER
+            - text: ", а"
+            - code [ref=e115]: FLOOR
+            - text: ","
+            - code [ref=e116]: CEIL
+            - text: ","
+            - code [ref=e117]: ROUND
+            - text: и
+            - code [ref=e118]: FIX
+            - text: обычно сохраняют числовой тип исходного аргумента.
+          - listitem [ref=e119]:
+            - text: Функции вроде
+            - code [ref=e120]: SQR
+            - text: ","
+            - code [ref=e121]: LOG
+            - text: ","
+            - code [ref=e122]: ASIN
+            - text: ","
+            - code [ref=e123]: ACOS
+            - text: и
+            - code [ref=e124]: ATANH
+            - text: имеют ограничения по области допустимых значений. Если аргумент не подходит, программа получает диагностику времени выполнения.
+      - generic [ref=e125]:
+        - heading "Куда перейти за конкретной функцией" [level=2] [ref=e126]
+        - generic [ref=e127]:
+          - link "Преобразование чисел и классические функции" [ref=e128] [cursor=pointer]:
+            - /url: numeric-functions-conversion-and-legacy.html
+          - link "Базовые числовые функции" [ref=e129] [cursor=pointer]:
+            - /url: numeric-functions-core.html
+          - link "Тригонометрические функции" [ref=e130] [cursor=pointer]:
+            - /url: numeric-functions-trigonometry.html
+          - link "Корни, логарифмы и округление" [ref=e131] [cursor=pointer]:
+            - /url: numeric-functions-roots-rounding.html
+      - generic [ref=e132]:
+        - heading "Ручная проверка" [level=2] [ref=e133]
+        - list [ref=e134]:
+          - listitem [ref=e135]:
+            - 'link "INT: округление вниз" [ref=e136] [cursor=pointer]':
+              - /url: ../../samples/functions/int/basic_usage.axm
+          - listitem [ref=e137]:
+            - 'link "STR: преобразование числа в строку" [ref=e138] [cursor=pointer]':
+              - /url: ../../samples/functions/str/basic_usage.axm
+          - listitem [ref=e139]:
+            - 'link "VAL: чтение числа из строки" [ref=e140] [cursor=pointer]':
+              - /url: ../../samples/functions/val/basic_usage.axm
+          - listitem [ref=e141]:
+            - 'link "ABS: модуль числа" [ref=e142] [cursor=pointer]':
+              - /url: ../../samples/functions/abs/basic_usage.axm
+          - listitem [ref=e143]:
+            - 'link "SIN: синус угла" [ref=e144] [cursor=pointer]':
+              - /url: ../../samples/functions/sin/basic_usage.axm
+          - listitem [ref=e145]:
+            - 'link "LOG: натуральный логарифм" [ref=e146] [cursor=pointer]':
+              - /url: ../../samples/functions/log/basic_usage.axm
+          - listitem [ref=e147]:
+            - 'link "ROUND: округление к ближайшему" [ref=e148] [cursor=pointer]':
+              - /url: ../../samples/functions/round/basic_usage.axm
+      - generic [ref=e149]:
+        - heading "См. также" [level=2] [ref=e150]
+        - generic [ref=e151]:
+          - link "Типы данных" [ref=e152] [cursor=pointer]:
+            - /url: data-types.html
+          - link "Дата и время" [ref=e153] [cursor=pointer]:
+            - /url: date-time-functions.html
+          - link "Строковые функции" [ref=e154] [cursor=pointer]:
+            - /url: string-functions.html
+          - link "Диагностика" [ref=e155] [cursor=pointer]:
+            - /url: diagnostics.html
+      - generic [ref=e156]:
+        - link "< CHR, ASC, CHRW и ASCW" [ref=e157] [cursor=pointer]:
+          - /url: characters.html
+        - link "INT, STR и VAL >" [ref=e158] [cursor=pointer]:
+          - /url: numeric-functions-conversion-and-legacy.html
