@@ -721,6 +721,30 @@ public sealed class ProgramConsoleServiceTests
         Assert.DoesNotContain(eventLogService.Entries, static entry => entry.EventName == "screen.mouse.read");
     }
 
+    [Fact]
+    public void DeactivateScreen_WritesFinalInputSummaryAfterPeriodicSummary()
+    {
+        var traceService = new FakeIdeTraceService();
+        var service = new ProgramConsoleService(traceService);
+
+        service.ActivateScreen(5);
+        service.EnqueueKey("ESC");
+        Assert.Equal("ESC", service.ReadKey());
+        for (var i = 0; i < 119; i++)
+        {
+            service.ClearGraphics();
+        }
+
+        service.DeactivateScreen();
+
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.input.summary"
+            && entry.Message.Contains("final=False", StringComparison.Ordinal));
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.input.summary"
+            && entry.Message.Contains("final=True", StringComparison.Ordinal)
+            && entry.Message.Contains("keysEnqueued=1", StringComparison.Ordinal)
+            && entry.Message.Contains("keysRead=1", StringComparison.Ordinal));
+    }
+
     private static bool HasCellPixels(ScreenFramebufferSnapshot? frame, int row, int column)
     {
         if (frame is null)

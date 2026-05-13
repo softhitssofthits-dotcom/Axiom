@@ -9251,3 +9251,27 @@
 
 Следующий точный шаг:
 - запустить свежую IDE обычной командой `dotnet run --project src\Axiom.Ide\Axiom.Ide.csproj`, повторить `samples/graphics/mouse/mouse_events.axm` и по новому журналу проверить отдельно `press`, `release`, `wheel` и `MOVE`, а также выход через `ESC`.
+
+## Session 780 - 2026-05-13 09:03 - финальная сводка ввода SCREEN в журнале
+
+Что сделано:
+- проверен свежий журнал `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Logs\ide-session-20260513-085151.log` после живого запуска `samples\graphics\mouse\mouse_events.axm`;
+- подтверждено, что мышиные события не теряются: к концу запуска `pressEnqueued=44` и `pressRead=44`, `releaseEnqueued=43` и `releaseRead=43`, `wheelEnqueued=42` и `wheelRead=42`, а `maxPendingMouseEvents=3`;
+- найдено, что финальная `screen.input.summary` могла не попадать в журнал при переключении на `SCREEN 0`, если счётчики совпадали с последней промежуточной сводкой;
+- `ProgramConsoleService.WriteGraphicsInputSummary` теперь всегда пишет финальную сводку при `final=True`, если за экранную сессию были события ввода;
+- добавлена регрессионная проверка `DeactivateScreen_WritesFinalInputSummaryAfterPeriodicSummary`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~ProgramConsoleService" -p:UseSharedCompilation=false` проходит: 51 тест;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~ProgramConsoleService|FullyQualifiedName~ProgramMouseInputRouter|FullyQualifiedName~Screen|FullyQualifiedName~Mouse" -p:UseSharedCompilation=false` проходит: 73 теста;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Mouse|FullyQualifiedName~OnMouse|FullyQualifiedName~KeyPress" -p:UseSharedCompilation=false` проходит: 28 тестов.
+
+Следующий точный шаг:
+- запустить свежую IDE командой `dotnet run --project src\Axiom.Ide\Axiom.Ide.csproj`, повторить `samples\graphics\mouse\mouse_events.axm` и проверить новый журнал: теперь перед `screen.activated | mode=0` должна появиться финальная `screen.input.summary`, по которой можно окончательно увидеть путь `ESC`.

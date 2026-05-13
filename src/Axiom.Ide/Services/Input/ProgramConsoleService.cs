@@ -271,6 +271,9 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     {
         InvokeOnDispatcher(() =>
         {
+            WriteGraphicsFrameSummary(final: true);
+            WriteGraphicsInputSummary(final: true);
+
             var (width, height) = ResolveScreenSize(mode);
             _isScreenActive = mode != 0;
             _isScreenOutputActive = true;
@@ -1190,7 +1193,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             + _graphicsKeysRead
             + _graphicsMouseEventsEnqueued
             + _graphicsMouseEventsRead;
-        if (inputEvents == 0 || inputEvents == _graphicsInputEventsAtLastSummary)
+        if (inputEvents == 0 || (!final && inputEvents == _graphicsInputEventsAtLastSummary))
         {
             return;
         }

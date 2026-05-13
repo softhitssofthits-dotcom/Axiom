@@ -3925,3 +3925,14 @@
 
 Следующий точный шаг:
 - закрыть старую IDE, запустить свежую IDE обычной командой `dotnet run --project src\Axiom.Ide\Axiom.Ide.csproj`, повторить `samples/graphics/mouse/mouse_events.axm`, затем проверить в новом журнале, совпадают ли `pressEnqueued` и `pressRead`, `releaseEnqueued` и `releaseRead`, `wheelEnqueued` и `wheelRead`, а также завершается ли пример через `ESC`.
+
+## Уточнение плана - 2026-05-13 - финальная сводка ввода SCREEN
+
+Сделано:
+- свежий журнал `ide-session-20260513-085151.log` показал, что события мыши уже не теряются: `press`, `release` и `wheel` доходят до runtime и читаются, а очередь мыши остаётся маленькой;
+- найдено, что финальная строка `screen.input.summary` могла не записаться при `SCREEN 0`, если после последней периодической сводки счётчики не изменились;
+- `ProgramConsoleService` теперь не подавляет финальную сводку ввода при `final=True`;
+- добавлена регрессионная проверка, что после периодической сводки выключение `SCREEN` всё равно пишет итоговую строку с `keysEnqueued` и `keysRead`.
+
+Следующий точный шаг:
+- запустить свежую IDE обычной пользовательской командой `dotnet run --project src\Axiom.Ide\Axiom.Ide.csproj`, повторить `samples/graphics/mouse/mouse_events.axm` и проверить новый журнал: перед `screen.activated | mode=0` должна быть `screen.input.summary | final=True`, а при выходе по `ESC` должны быть ненулевые `keysEnqueued` и `keysRead`.
