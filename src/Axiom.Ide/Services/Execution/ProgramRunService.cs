@@ -148,6 +148,7 @@ public sealed class ProgramRunService : IProgramRunService
                         }
                     });
 
+                    _consoleService.EndSession();
                     return new ProgramRunResult(
                         MapCompilationFailureStatus(compilationResult.Status),
                         failedDiagnostics,
@@ -180,6 +181,11 @@ public sealed class ProgramRunService : IProgramRunService
             if (!executionResult.Stopped && _consoleService.IsScreenActive)
             {
                 _consoleService.DeactivateScreen();
+            }
+
+            if (!executionResult.Stopped)
+            {
+                _consoleService.EndSession();
             }
 
             _traceService.Write(
@@ -234,6 +240,8 @@ public sealed class ProgramRunService : IProgramRunService
             {
                 _consoleService.DeactivateScreen();
             }
+
+            _consoleService.EndSession();
 
             _traceService.WriteException("run.exception", exception, "Unexpected ProgramRunService failure.");
             _eventLogService.Write(new IdeEventLogEntry
@@ -334,6 +342,11 @@ public sealed class ProgramRunService : IProgramRunService
                 _consoleService.DeactivateScreen();
             }
 
+            if (!runtimeResult.Stopped)
+            {
+                _consoleService.EndSession();
+            }
+
             _traceService.Write(
                 traceName,
                 $"status={(diagnostics.Length == 0 ? ProgramRunStatus.Success : ProgramRunStatus.RuntimeFailure)} | stopped={runtimeResult.Stopped} | diagnostics={diagnostics.Length} | executionMs={executionStopwatch.Elapsed.TotalMilliseconds:F3}");
@@ -372,6 +385,8 @@ public sealed class ProgramRunService : IProgramRunService
             {
                 _consoleService.DeactivateScreen();
             }
+
+            _consoleService.EndSession();
 
             _traceService.WriteException(exceptionTraceName, exception, exceptionTraceMessage);
             _eventLogService.Write(new IdeEventLogEntry

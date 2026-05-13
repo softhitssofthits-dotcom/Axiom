@@ -9275,3 +9275,28 @@
 
 Следующий точный шаг:
 - запустить свежую IDE командой `dotnet run --project src\Axiom.Ide\Axiom.Ide.csproj`, повторить `samples\graphics\mouse\mouse_events.axm` и проверить новый журнал: теперь перед `screen.activated | mode=0` должна появиться финальная `screen.input.summary`, по которой можно окончательно увидеть путь `ESC`.
+
+## Session 781 - 2026-05-13 09:21 - закрытие SCREEN после успешного запуска больше не выглядит отменой
+
+Что сделано:
+- исправлен ложный диагностический путь, при котором закрытие оставшегося окна `SCREEN 0` после успешного `run.result` записывалось как `screen.closed-by-user` и выставляло отмену запуска;
+- в `IProgramConsoleService` добавлен внутренний метод `EndSession`, а `ProgramRunService` вызывает его после завершения обычного запуска или продолжения без остановки в отладчике;
+- `ProgramConsoleService` теперь считает закрытие native-окна отменой только во время активной сессии запуска; после завершения программы окно можно закрыть без `cancellation requested`;
+- добавлена регрессионная проверка, что успешный `Run` завершает консольную сессию.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Services/Input/IProgramConsoleService.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Ide/Services/Execution/ProgramRunService.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramMouseInputRouterTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramKeyboardInputRouterTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~ProgramRunService|FullyQualifiedName~ProgramConsoleService|FullyQualifiedName~ProgramMouseInputRouter|FullyQualifiedName~ProgramKeyboardInputRouter" -p:UseSharedCompilation=false` проходит: 96 тестов;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Следующий точный шаг:
+- вручную повторить `samples\graphics\mouse\mouse_events.axm` в IDE, выйти через `ESC`, закрыть оставшееся окно `SCREEN 0` и проверить, что после `run.result` больше нет `screen.closed-by-user`.

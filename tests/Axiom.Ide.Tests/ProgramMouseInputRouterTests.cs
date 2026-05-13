@@ -93,6 +93,10 @@ public sealed class ProgramMouseInputRouterTests
         {
         }
 
+        public void EndSession()
+        {
+        }
+
         public void Clear()
         {
         }

@@ -78,6 +78,10 @@ public sealed class ProgramKeyboardInputRouterTests
         {
         }
 
+        public void EndSession()
+        {
+        }
+
         public void Clear()
         {
         }

@@ -54,6 +54,19 @@ PRINT 1 + 2
     }
 
     [Fact]
+    public void Run_WhenProgramCompletes_EndsConsoleSession()
+    {
+        var consoleService = new FakeProgramConsoleService(new FakeProgramInputPromptService());
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        var result = service.Run("PRINT 1");
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.True(consoleService.SessionStarted);
+        Assert.True(consoleService.SessionEnded);
+    }
+
+    [Fact]
     public void Run_AfterCompile_UsesCompiledCache()
     {
         var traceService = new FakeIdeTraceService();
@@ -826,12 +839,20 @@ PRINT 1 + 2
 
         public bool SessionStarted { get; private set; }
 
+        public bool SessionEnded { get; private set; }
+
         public bool IsCancellationRequested { get; init; }
 
         public void BeginSession()
         {
             SessionStarted = true;
+            SessionEnded = false;
             WrittenOutput.Clear();
+        }
+
+        public void EndSession()
+        {
+            SessionEnded = true;
         }
 
         public void Clear()
@@ -989,6 +1010,10 @@ PRINT 1 + 2
         public void BeginSession()
         {
             throw _exception;
+        }
+
+        public void EndSession()
+        {
         }
 
         public void Clear()

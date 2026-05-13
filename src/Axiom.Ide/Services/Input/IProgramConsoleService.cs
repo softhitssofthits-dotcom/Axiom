@@ -6,6 +6,8 @@ public interface IProgramConsoleService : IProgramInputPromptService, IKeyboardI
 {
     void BeginSession();
 
+    void EndSession();
+
     void Clear();
 
     void ClearOutput();

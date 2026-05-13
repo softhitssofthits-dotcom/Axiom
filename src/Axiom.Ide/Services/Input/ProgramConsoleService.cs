@@ -65,6 +65,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private long _graphicsMaxPendingMouseEvents;
     private long _graphicsInputEventsAtLastSummary;
     private volatile bool _isCancellationRequested;
+    private volatile bool _isSessionActive;
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
@@ -151,6 +152,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     public void BeginSession()
     {
         InvokeOnDispatcher(ResetSessionState);
+        _isSessionActive = true;
         _traceService.Write("console.begin", "Console session started.");
         _eventLogService.Write(new IdeEventLogEntry
         {
@@ -160,6 +162,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             Source = nameof(ProgramConsoleService),
             OutputLength = 0
         });
+    }
+
+    public void EndSession()
+    {
+        _isSessionActive = false;
     }
 
     public void Clear()
@@ -722,6 +729,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _submittedText = string.Empty;
         _isCancellationRequested = false;
+        _isSessionActive = false;
         _inputSnapshot.Reset();
         _isScreenActive = false;
         _isScreenOutputActive = false;
@@ -898,6 +906,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _graphicsWindow.Closed -= OnGraphicsWindowClosed;
         _graphicsWindow = null;
+        if (!_isSessionActive)
+        {
+            return;
+        }
+
         _isCancellationRequested = true;
         WriteGraphicsEvent("screen.closed-by-user", "SCREEN window was closed by the user; run cancellation requested.");
     }
