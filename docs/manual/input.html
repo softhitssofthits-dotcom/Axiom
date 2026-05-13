@@ -7,64 +7,156 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="input">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Ввод значений от пользователя</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор INPUT</p><p class="sidebar__subtitle">Чтение одной или нескольких переменных из строки ввода.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<p class="eyebrow">Ввод и вывод</p>
-<h1 class="page-title">Оператор INPUT</h1>
-<p class="lead">Оператор <code>INPUT</code> связывает программу с пользовательским вводом. Он ожидает строку данных, разбирает её по правилам языка и пытается распределить полученные значения по указанным переменным в нужных типах.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Ввод значений от пользователя</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Оператор INPUT</p>
+                <p class="sidebar__subtitle">Чтение одной строки ввода и запись значений в переменные.</p>
+            </div>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <span>Ввод и вывод</span>
+            <span>/</span>
+            <span>Оператор INPUT</span>
+        </nav>
 
-<section class="article-section">
-<h2>Сводка</h2>
-<p>Оператор <code>INPUT</code> читает одну логическую строку ввода и преобразует её к типу одной или нескольких целевых переменных. При необходимости перед списком переменных можно вывести строку приглашения.</p>
-</section>
+        <p class="eyebrow">Ввод и вывод</p>
+        <h1 class="page-title">Оператор INPUT</h1>
+        <p class="lead"><code>INPUT</code> — оператор ввода, который останавливает выполнение программы, ждёт строку от пользователя и присваивает введённые значения указанным переменным. Его используют в простых интерактивных программах, когда данные должны поступить во время выполнения, а не быть записаны в тексте программы заранее.</p>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-basic">INPUT [promptText{;|,}] variableList</code></pre>
-</section>
+        <section class="article-section">
+            <h2>Назначение</h2>
+            <p>Оператор <code>INPUT</code> читает одну логическую строку ввода. Если в списке указана одна переменная, вся введённая строка преобразуется к типу этой переменной. Если переменных несколько, строка разбирается как список значений, разделённых запятыми.</p>
+            <p>Перед ожиданием ввода можно вывести строку приглашения. Если программа не выбирала экранный режим через <code>SCREEN</code>, ввод идёт через нижнюю область <code>Output</code> в IDE. Если активен <code>SCREEN 0</code> или графический <code>SCREEN</code>, приглашение и ввод отображаются в окне <code>SCREEN</code>.</p>
+        </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
-<p><code>promptText</code> обозначает строку приглашения, которая выводится перед ожиданием ввода.</p>
-<p><code>variableList</code> обозначает одну или несколько переменных, в которые будет записан введённый результат.</p>
-</section>
+        <section class="article-section">
+            <h2>Синтаксис</h2>
+            <pre><code class="language-basic">INPUT &lt;переменная&gt;
+INPUT &lt;переменная1&gt;, &lt;переменная2&gt;[, &lt;переменнаяN&gt;]
+INPUT &lt;приглашение&gt; ; &lt;переменная&gt;
+INPUT &lt;приглашение&gt; , &lt;переменная&gt;</code></pre>
+        </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<p><code>INPUT</code> особенно удобен для простых интерактивных сценариев, где программа последовательно запрашивает значения и сразу использует их в вычислениях или выводе.</p>
-<ul>
-<li>При вводе нескольких переменных строка разбирается как минимальный список значений, разделённых запятыми.</li>
-<li>Количество введённых значений должно совпадать с количеством целевых переменных.</li>
-<li>Для <code>STRING</code> текст берётся как есть.</li>
-<li>Для числовых и логических типов текст преобразуется к типу целевой переменной.</li>
-<li>Обе формы приглашения, через <code>;</code> и через <code>,</code>, синтаксически поддерживаются.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Части записи</h2>
+            <ul>
+                <li><code>&lt;приглашение&gt;</code> — строковая константа, которая выводится перед ожиданием ввода.</li>
+                <li><code>;</code> или <code>,</code> после приглашения отделяет текст приглашения от списка переменных. В текущем Axiom обе формы принимаются как синтаксические варианты одного договора.</li>
+                <li><code>&lt;переменная&gt;</code> — изменяемая переменная, в которую записывается введённое значение.</li>
+                <li><code>&lt;переменная1&gt;, &lt;переменная2&gt;</code> — список переменных. Количество введённых значений должно совпадать с количеством переменных.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Пример</h2>
-<pre><code class="language-basic">' Программа запрашивает имя и возраст
-DIM name AS STRING
+        <section class="article-section">
+            <h2>Логика работы</h2>
+            <p>Когда выполнение доходит до <code>INPUT</code>, программа ждёт подтверждения строки ввода. После этого Axiom разбирает введённый текст и только затем записывает значения в переменные.</p>
+            <p>Для одной строковой переменной ввод не разбивается по запятым: вся строка становится значением переменной. Для нескольких переменных запятые разделяют поля ввода, а пробелы вокруг каждого поля отбрасываются.</p>
+            <p>Числовые значения разбираются в инвариантной записи с точкой как десятичным разделителем. Логическое значение должно быть записано как <code>TRUE</code> или <code>FALSE</code> без учёта регистра. Если преобразование невозможно, выполнение сообщает ошибку времени выполнения.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Приглашение</h2>
+            <p>Если приглашение не указано, IDE показывает стандартное приглашение <code>? </code>. Если приглашение указано и не заканчивается символом <code>?</code> или <code>:</code>, видимое приглашение получает добавленный знак вопроса и пробел.</p>
+            <pre><code class="language-basic">DIM name AS STRING
+INPUT "Enter name"; name
+PRINT name</code></pre>
+            <p>Для строки приглашения <code>"Enter name"</code> пользователь увидит приглашение вида <code>Enter name? </code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Ввод нескольких значений</h2>
+            <p>Если в операторе перечислено несколько переменных, пользователь должен ввести столько же значений через запятую.</p>
+            <pre><code class="language-basic">DIM name AS STRING
 DIM age AS INTEGER
 
-INPUT "Введите имя"; name
-INPUT "Введите возраст"; age</code></pre>
-</section>
+INPUT name, age
+PRINT name, age</code></pre>
+            <p>Для этого примера можно ввести:</p>
+            <pre><code>Ada, 42</code></pre>
+            <p>Результат:</p>
+            <pre><code>Ada 42</code></pre>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li><li><a href="../../samples/operators/input/multiple_variables.axm">INPUT: несколько переменных</a></li><li><a href="../../samples/operators/input/prompt_semicolon.axm">INPUT: приглашение через ;</a></li><li><a href="../../samples/operators/input/prompt_comma.axm">INPUT: приглашение через ,</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Замечания</h2>
+            <ul>
+                <li><code>INPUT</code> записывает значения только в изменяемые переменные поддержанных скалярных типов.</li>
+                <li>Поддержанные типы ввода: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code> и <code>BOOLEAN</code>.</li>
+                <li>Массивное значение целиком не может быть целью <code>INPUT</code>; вводите значение в отдельную скалярную переменную или элемент после отдельной обработки.</li>
+                <li>Для нескольких переменных число полей ввода должно точно совпадать с числом целей.</li>
+                <li>В активном <code>SCREEN</code> нижняя вкладка <code>Output</code> не принимает ввод для текущего <code>INPUT</code>; видимая поверхность ввода — окно <code>SCREEN</code>.</li>
+            </ul>
+            <blockquote>
+                <p><em>В QuickBASIC разделитель после строки приглашения влиял на вывод знака вопроса: форма с <code>;</code> обычно добавляла <code>?</code>, а форма с <code>,</code> выводила приглашение без него. В Axiom текущий договор проще: обе формы синтаксически поддержаны, а видимое приглашение строится host-слоем по самой строке приглашения.</em></p>
+            </blockquote>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика времени выполнения <code>MB3003</code> возникает, если число введённых значений не совпадает с числом переменных или если введённый текст нельзя преобразовать к требуемому типу.</p>
-</section>
+        <section class="article-section">
+            <h2>Пример</h2>
+            <p>В этом примере программа запрашивает имя и возраст, затем выводит полученные значения.</p>
+            <pre><code class="language-basic">DIM name AS STRING
+DIM age AS INTEGER
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="print.html">Оператор PRINT</a><a href="variables-and-constants.html">Переменные и константы</a><a href="examples.html">Примеры</a><a href="diagnostics.html">Диагностика</a></div>
-</section>
+INPUT "Name"; name
+INPUT "Age"; age
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+PRINT "Name:"; " "; name
+PRINT "Age:", age</code></pre>
+            <p>Если ввести <code>Ada</code>, затем <code>42</code>, результат будет таким:</p>
+            <pre><code>Name: Ada
+Age: 42</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>INPUT</code>.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li>
+                <li><a href="../../samples/operators/input/multiple_variables.axm">INPUT: несколько переменных</a></li>
+                <li><a href="../../samples/operators/input/prompt_semicolon.axm">INPUT: приглашение через ;</a></li>
+                <li><a href="../../samples/operators/input/prompt_comma.axm">INPUT: приглашение через ,</a></li>
+                <li><a href="../../samples/graphics/input/text_screen_input.axm">INPUT: ввод в окне SCREEN 0</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB3003</code> — число введённых значений не совпадает с числом переменных или введённый текст нельзя преобразовать к требуемому типу.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="print.html">Оператор PRINT</a>
+                <a href="screen.html">Оператор SCREEN</a>
+                <a href="graphics-text.html">Текстовый слой SCREEN</a>
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="data-types.html">Типы данных</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

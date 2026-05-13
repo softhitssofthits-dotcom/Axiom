@@ -7,140 +7,182 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="data-types">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Скалярные типы, строки, FILE, TYPE и массивы</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Типы данных</p>
-                    <p class="sidebar__subtitle">Что именно хранит программа Axiom и по каким правилам язык обращается с этими значениями.</p>
-                </div>
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Типы данных</span>
-            </nav>
-            <p class="eyebrow">Типы данных</p>
-            <h1 class="page-title">Типы данных</h1>
-            <p class="lead">Тип данных определяет, какие значения может хранить переменная, как эти значения участвуют в выражениях и какие преобразования допустимы без явного вмешательства программиста. В Axiom типы помогают не только хранить данные, но и заранее удерживать программу в понятных границах поведения.</p>
-
-            <section class="article-section">
-                <h2>Что включает этот раздел</h2>
-                <p>На этой обзорной странице собраны основные направления по работе с типами. Она полезна, когда нужно быстро понять общую модель языка, а затем перейти к точной справке по конкретному виду данных.</p>
-                <div class="cards-grid">
-                    <section class="card">
-                        <h3><a href="data-types-scalars.html">Скалярные типы и литералы</a></h3>
-                        <p>Целые, вещественные и логические значения, а также формы литералов, с которых обычно начинается работа с выражениями.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></h3>
-                        <p>Строковые значения, формат <code>STRING * N</code> и файловые переменные для текстового ввода и вывода.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a></h3>
-                        <p>Составные данные, именованные поля и контейнеры из нескольких значений одного типа.</p>
-                    </section>
-                    <section class="card">
-                        <h3><a href="data-types-conversions.html">Вывод типа и преобразования</a></h3>
-                        <p>Ситуации, где тип вычисляется по инициализатору, и правила явных либо автоматических преобразований.</p>
-                    </section>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Как устроена модель типов в Axiom</h2>
-                <p>Большая часть программ Axiom опирается на несколько базовых идей. Переменная всегда имеет определённый тип, массив строится поверх типа элемента, а пользовательские записи описываются явно через <code>TYPE ... END TYPE</code>. Благодаря этому код проще читать и легче проверять ещё до запуска.</p>
-                <ul>
-                    <li>тип задаёт допустимую форму значения и влияет на результат выражений;</li>
-                    <li>массив не считается отдельным базовым типом, а описывает набор элементов уже известного типа;</li>
-                    <li>записи через <code>TYPE</code> объединяют несколько именованных полей в одно составное значение;</li>
-                    <li>вывод типа из инициализатора работает только в подтверждённых формах, которые отдельно описаны в manual и спецификации.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Краткая сводка по часто используемым типам</h2>
-                <table class="compact-table">
-                    <thead>
-                        <tr><th>Тип</th><th>Назначение</th><th>Где подробнее</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>INTEGER</code></td><td>32-битное знаковое целое число</td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
-                        <tr><td><code>LONG</code></td><td>64-битное знаковое целое число</td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
-                        <tr><td><code>DOUBLE</code></td><td>64-битное число с плавающей точкой</td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
-                        <tr><td><code>DECIMAL</code></td><td>Точное десятичное число</td><td><a href="data-types-conversions.html">Вывод типа и преобразования</a></td></tr>
-                        <tr><td><code>STRING</code></td><td>Строка Unicode, включая форму <code>STRING * N</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
-                        <tr><td><code>BOOLEAN</code></td><td>Логическое значение <code>TRUE</code> или <code>FALSE</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
-                        <tr><td><code>FILE</code></td><td>Открытый текстовый файл</td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="article-section">
-                <h2>Небольшой ориентир</h2>
-                <p>Даже короткий пример показывает, что типы участвуют не только в объявлении переменных, но и в выборе допустимых операций.</p>
-                <pre><code class="language-basic">DIM count AS INTEGER = 3
-DIM title AS STRING = "Axiom"
-DIM opened AS BOOLEAN = TRUE
-
-PRINT count + 2
-PRINT title
-PRINT opened</code></pre>
-                <p>В этом фрагменте числовая переменная участвует в арифметике, строковая хранит текст, а логическая переменная передаёт условное состояние. Дальше manual разбирает каждый такой тип подробнее, включая объявления, литералы и преобразования.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Когда переходить на соседние страницы</h2>
-                <div class="checklist">
-                    <strong>Обычно это полезно в трёх случаях:</strong>
-                    <ul>
-                        <li>нужно выбрать точный тип для новой переменной или параметра;</li>
-                        <li>нужно понять, допустимо ли преобразование между двумя значениями;</li>
-                        <li>нужно проверить, как объявляются массивы, записи или строки фиксированной длины.</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <p>Если хотите быстро пройтись по теме в IDE, откройте несколько коротких примеров из каталога <code>samples/</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое явное объявление</a></li>
-                    <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
-                    <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
-                    <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
-                    <li><a href="../../samples/expressions/conversions/automatic_numeric.axm">Автоматические числовые преобразования</a></li>
-                    <li><a href="../../samples/functions/str/basic_usage.axm">STR: явное преобразование числа в строку</a></li>
-                    <li><a href="../../samples/functions/val/basic_usage.axm">VAL: явное преобразование строки в число</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="variables-and-constants.html">Переменные и константы</a>
-                    <a href="type.html">Оператор TYPE</a>
-                    <a href="arrays.html">Массивы</a>
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Числа, строки, логические значения, FILE, TYPE и массивы</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
-    <script src="scripts/manual.js"></script>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Типы данных</p>
+                <p class="sidebar__subtitle">Какие значения хранит программа Axiom и как язык различает их назначение.</p>
+            </div>
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <span>Типы данных</span>
+        </nav>
+
+        <p class="eyebrow">Основы языка</p>
+        <h1 class="page-title">Типы данных</h1>
+        <p class="lead">Тип данных определяет, какого рода значение находится в переменной, константе, выражении, параметре процедуры или результате функции. По типу Axiom понимает, какие операции допустимы, какие преобразования возможны и какую диагностику нужно выдать, если значение используется не по назначению.</p>
+
+        <section class="article-section">
+            <h2>Главные правила</h2>
+            <ul>
+                <li>Каждая переменная и константа имеет определённый тип.</li>
+                <li>Тип задаётся явно через <code>AS</code> или выводится из инициализатора там, где такая форма поддержана.</li>
+                <li>Базовые скалярные типы Axiom: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code> и <code>FILE</code>.</li>
+                <li>Пользовательские записи объявляются через <code>TYPE ... END TYPE</code>.</li>
+                <li>Массивный тип строится из типа элемента и ранга: <code>INTEGER()</code>, <code>STRING(,)</code>, <code>Record(,,)</code>.</li>
+                <li>Если операция требует <code>BOOLEAN</code>, числовое значение не заменяет логическое автоматически.</li>
+            </ul>
+        </section>
+
+        <section class="article-section" id="numeric">
+            <h2>Числовые типы</h2>
+            <p>Числовые данные представляют числа. В Axiom они разделены по назначению: целые значения, длинные целые значения, числа с плавающей точкой и десятичные значения для случаев, где важна десятичная точность.</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Тип</th><th>Назначение</th><th>Типичный пример</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>INTEGER</code></td><td>32-битное знаковое целое число</td><td><code>DIM count AS INTEGER = 10</code></td></tr>
+                    <tr><td><code>LONG</code></td><td>64-битное знаковое целое число</td><td><code>DIM total AS LONG = 1000000</code></td></tr>
+                    <tr><td><code>DOUBLE</code></td><td>64-битное число с плавающей точкой</td><td><code>DIM ratio AS DOUBLE = 0.75</code></td></tr>
+                    <tr><td><code>DECIMAL</code></td><td>десятичное число для точных десятичных вычислений</td><td><code>DIM price AS DECIMAL = 10.50</code></td></tr>
+                </tbody>
+            </table>
+            <p>Арифметические операции и встроенные числовые функции описаны отдельно, потому что результат выражения зависит не только от имени типа, но и от участвующих операндов.</p>
+        </section>
+
+        <section class="article-section" id="strings">
+            <h2>Строковые типы</h2>
+            <p>Строка хранит текст. Обычная форма <code>STRING</code> используется для строк переменной длины, а форма <code>STRING * N</code> задаёт фиксированную длину хранения там, где такая запись поддержана: в переменных <code>DIM</code>, полях <code>TYPE</code> и разрешённых постоянных формах внутри записей.</p>
+            <pre><code class="language-basic">DIM title AS STRING
+DIM code AS STRING * 4
+
+title = "Axiom"
+code = "AB"</code></pre>
+            <p>Фиксированная строка остаётся строковым значением, но при записи подгоняется к указанной длине: короткое значение дополняется пробелами справа, длинное обрезается.</p>
+        </section>
+
+        <section class="article-section" id="boolean">
+            <h2>Логический тип</h2>
+            <p><code>BOOLEAN</code> хранит одно из двух значений: <code>TRUE</code> или <code>FALSE</code>. Этот тип используется в условиях <code>IF</code>, циклах с условием, логических выражениях и функциях, которые отвечают на вопрос «да или нет».</p>
+            <pre><code class="language-basic">DIM ready AS BOOLEAN = TRUE
+
+IF ready THEN
+    PRINT "ready"
+END IF</code></pre>
+            <blockquote>
+                <p><em>В QuickBASIC в условных выражениях часто использовалась числовая модель: ноль означал ложь, ненулевое значение — истину. В Axiom условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое выражение нужно явно превратить в сравнение, например <code>count &gt; 0</code>.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section" id="file">
+            <h2>Файловый тип</h2>
+            <p><code>FILE</code> обозначает открытый текстовый файл. Значение этого типа появляется при работе с файловыми операторами и функциями: файл открывается, используется для чтения или записи, а затем закрывается.</p>
+            <p>Файловые переменные не предназначены для арифметики, строковой конкатенации или сравнения как обычные скалярные данные. Их область — ввод-вывод и функции открытых файлов.</p>
+        </section>
+
+        <section class="article-section" id="records">
+            <h2>Пользовательские типы TYPE</h2>
+            <p>Если несколько значений описывают один предмет, их удобно объединить в запись. В Axiom такая запись объявляется через <code>TYPE ... END TYPE</code>, а её поля получают собственные имена и типы.</p>
+            <pre><code class="language-basic">TYPE Student
+    Id AS INTEGER
+    Name AS STRING * 20
+    Score AS DOUBLE
+END TYPE
+
+DIM item AS Student</code></pre>
+            <p>Поля записи могут быть скалярными, строковыми, фиксированными, массивными и пользовательскими в пределах текущего договора языка. Подробности о конструкторах, методах, <code>SELF</code> и массивных полях находятся на странице <a href="type.html">Тип TYPE</a>.</p>
+        </section>
+
+        <section class="article-section" id="arrays">
+            <h2>Массивные типы</h2>
+            <p>Массив хранит группу элементов одного типа. В типе массива важны два свойства: тип элемента и число измерений. Запись <code>INTEGER()</code> означает одномерный массив целых чисел, а <code>INTEGER(,)</code> — двумерный массив целых чисел.</p>
+            <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+DIM names() AS STRING
+DIM board(,) AS INTEGER</code></pre>
+            <p>Массивы могут быть сразу выделены с границами или объявлены как динамические и позже получить область элементов через <code>REDIM</code>.</p>
+        </section>
+
+        <section class="article-section" id="function-values">
+            <h2>Функциональные значения</h2>
+            <p>Процедуры и функции Axiom могут использовать типы параметров и результата, а в поддержанных местах функция может выступать как значение. Такой тип записывается через форму вида <code>FUNCTION(INTEGER) AS BOOLEAN</code> и используется, например, в callback-функциях массивов.</p>
+            <p>Эта тема относится к разделу процедур, функций и встроенных функций массивов, поэтому здесь важно только общее правило: сигнатура функции тоже является частью её типа.</p>
+        </section>
+
+        <section class="article-section" id="summary">
+            <h2>Сводная таблица</h2>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Группа</th><th>Типы и формы</th><th>Где подробнее</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Числовые</td><td><code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
+                    <tr><td>Строковые</td><td><code>STRING</code>, <code>STRING * N</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
+                    <tr><td>Логические</td><td><code>BOOLEAN</code>, <code>TRUE</code>, <code>FALSE</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
+                    <tr><td>Файловые</td><td><code>FILE</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
+                    <tr><td>Записи</td><td><code>TYPE ... END TYPE</code></td><td><a href="type.html">Тип TYPE</a></td></tr>
+                    <tr><td>Массивы</td><td><code>INTEGER()</code>, <code>STRING(,)</code>, <code>Record(,,)</code></td><td><a href="arrays.html">Массивы</a></td></tr>
+                    <tr><td>Функции как значения</td><td><code>FUNCTION(...) AS ...</code></td><td><a href="function.html">Функция FUNCTION</a></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="article-section" id="differences">
+            <h2>Отличия, важные при чтении старых BASIC-материалов</h2>
+            <blockquote>
+                <p><em>В QuickBASIC были типы <code>SINGLE</code>, суффиксы имён вроде <code>%</code>, <code>&amp;</code>, <code>!</code>, <code>#</code>, <code>$</code> и операторы семейства <code>DEF...</code> для задания типа по первой букве имени. В Axiom документируемая модель другая: поддержанные скалярные типы перечислены явно, тип задаётся через <code>AS</code> или выводится из инициализатора, а суффиксы имён и <code>DEF...</code>-операторы не являются частью текущего синтаксиса.</em></p>
+            </blockquote>
+            <blockquote>
+                <p><em>В QuickBASIC строки описывались через байтовую модель исторической кодировки. В Axiom строковые значения работают как современные строки, а точные правила ввода, вывода, длины и символьных функций описываются на страницах строковых функций manual.</em></p>
+            </blockquote>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и использовать как короткие проверки объявлений, строк, записей и преобразований.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
+                <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
+                <li><a href="../../samples/operators/dim/long_inference.axm">DIM: вывод типа LONG</a></li>
+                <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
+                <li><a href="../../samples/operators/type/field_access.axm">TYPE: доступ к полям</a></li>
+                <li><a href="../../samples/operators/type/fixed_string_fields.axm">TYPE: фиксированные строковые поля</a></li>
+                <li><a href="../../samples/expressions/conversions/automatic_numeric.axm">Автоматические числовые преобразования</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="data-types-scalars.html">Скалярные типы и литералы</a>
+                <a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a>
+                <a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a>
+                <a href="data-types-conversions.html">Вывод типа и преобразования</a>
+                <a href="arrays.html">Массивы</a>
+                <a href="type.html">Тип TYPE</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>

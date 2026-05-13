@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -7,238 +7,156 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="variables-constants">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Переменные, константы и правила объявления</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Имена, значения и объявления</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__head">
+                <p class="sidebar__title">Переменные и константы</p>
+                <p class="sidebar__subtitle">Как в программе Axiom появляются именованные значения.</p>
+            </div>
+            <nav id="manual-nav"></nav>
         </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Переменные и константы</p><p class="sidebar__subtitle">Справочная глава по объявлениям, инициализации и правилам имён в Axiom.</p></div><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Переменные и константы</span>
-            </nav>
-            <p class="eyebrow">Декларации</p>
-            <h1 class="page-title">Переменные и константы</h1>
-            <p class="lead">Эта глава описывает, как Axiom объявляет переменные и константы, как выводит тип из инициализатора и какие требования накладывает на имена и повторное использование значений.</p>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <span>Переменные и константы</span>
+        </nav>
 
-            <section class="article-section">
-                <h2>Главные правила</h2>
-                <ul>
-                    <li>Все переменные должны быть объявлены до использования.</li>
-                    <li><code>DIM</code> поддерживает как явное указание типа, так и вывод типа из инициализатора.</li>
-                    <li>Форма <code>DIM &lt;имя&gt;</code> без <code>AS &lt;тип&gt;</code> и без <code>= &lt;выражение&gt;</code> недопустима.</li>
-                    <li><code>CONST</code> требует значение в момент объявления и не допускает последующего изменения.</li>
-                    <li>Имена регистронезависимы и не могут совпадать с зарезервированными словами языка.</li>
-                    <li>Запись вида <code>DIM values() AS INTEGER</code> объявляет имя массива; до первого <code>REDIM</code> его текущее массивное значение существует, но остаётся невыделенным.</li>
-                </ul>
-            </section>
+        <p class="eyebrow">Операторы описания</p>
+        <h1 class="page-title">Переменные и константы</h1>
+        <p class="lead">Переменные и константы дают значениям имена. Переменная хранит значение, которое программа может изменить во время выполнения, а константа закрепляет значение, которое после объявления остаётся неизменным.</p>
 
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ul>
-                    <li><a href="#what-is-variable">Что такое переменная</a></li>
-                    <li><a href="#dim">Описание переменной</a> и отдельная справка <a href="dim.html">Оператор DIM</a></li>
-                    <li><a href="#array-variables">Имя массива и невыделенное состояние</a></li>
-                    <li><a href="#parts">Части синтаксиса</a></li>
-                    <li><a href="#assignment">Присвоение значений и инициализация</a></li>
-                    <li><a href="#identifiers">Правила именования переменных</a></li>
-                    <li><a href="#const">Константы</a></li>
-                    <li><a href="#predefined-constants">Предопределённые константы</a></li>
-                    <li><a href="#explicit">Явность объявлений</a></li>
-                    <li><a href="#summary">Итого</a></li>
-                </ul>
-            </section>
+        <section class="article-section">
+            <h2>Главные правила</h2>
+            <ul>
+                <li>Переменная объявляется через <code>DIM</code> и имеет определённый тип данных.</li>
+                <li>Константа объявляется через <code>CONST</code>, получает значение сразу и позднее не изменяется.</li>
+                <li>Простое присваивание не создаёт новую переменную: имя должно быть объявлено заранее.</li>
+                <li>Тип переменной задаётся после <code>AS</code> или выводится из инициализатора.</li>
+                <li>Форма <code>DIM &lt;имя&gt;</code> без типа и без начального значения недопустима.</li>
+                <li>Имена регистронезависимы: <code>name</code>, <code>Name</code> и <code>NAME</code> обозначают одно и то же имя.</li>
+            </ul>
+        </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
-                <p>Для ручной проверки объявлений и инициализации используйте готовые файлы примеров из репозитория.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
-                    <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
-                    <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: несколько объявлений в одной инструкции</a></li>
-                    <li><a href="../../samples/operators/dim/long_inference.axm">DIM: вывод типа LONG</a></li>
-                    <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
-                    <li><a href="../../samples/operators/dim/array_declaration.axm">DIM: объявление массива</a></li>
-                    <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
-                    <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление константы</a></li>
-                    <li><a href="../../samples/operators/const/predefined_constants.axm">Предопределённые константы: PI, ROW, COLUMN</a></li>
-                </ul>
-            </section>
+        <section class="article-section" id="variables">
+            <h2>Переменные</h2>
+            <p>Переменная представляет именованное хранилище значения. В тексте программы вы обращаетесь к имени, а Axiom связывает это имя с типом и текущим значением.</p>
+            <pre><code class="language-basic">DIM score AS INTEGER
+score = 10
+PRINT score</code></pre>
+            <p>Тип переменной определяет, какие значения она может хранить. Например, <code>INTEGER</code> предназначен для целых чисел, <code>STRING</code> — для текста, а <code>BOOLEAN</code> — для логических значений <code>TRUE</code> и <code>FALSE</code>.</p>
+        </section>
 
-            <section class="article-section" id="what-is-variable">
-                <h2>Что такое переменная</h2>
-                <p>Переменная в Axiom представляет именованное хранилище значения с определённым типом данных. На уровне записи в программе вы работаете с именем или идентификатором, а в среде выполнения этому имени соответствует значение определённого типа.</p>
-                <p>Язык не является бестиповым: переменная типа <code>INTEGER</code> не принимает строку без допустимого преобразования, а переменная типа <code>STRING</code> предназначена для текстовых данных.</p>
-            </section>
+        <section class="article-section" id="dim">
+            <h2>Описание переменных через DIM</h2>
+            <p>Основной оператор описания переменной — <code>DIM</code>. Он вводит имя в текущую область видимости и задаёт тип явно или через начальное значение.</p>
+            <pre><code class="language-basic">DIM name AS STRING
+DIM age AS INTEGER = 19
+DIM total = 10</code></pre>
+            <p>Для строк поддержана фиксированная форма <code>STRING * N</code>, где <code>N</code> задаёт длину хранения.</p>
+            <pre><code class="language-basic">DIM code AS STRING * 4</code></pre>
+            <p>Подробные формы записи, групповые объявления, массивы и диагностика описаны на странице <a href="dim.html">Оператор DIM</a>.</p>
+        </section>
 
-            <section class="article-section" id="dim">
-                <h2>Описание переменной</h2>
-                <p>В общем случае переменная объявляется через оператор <code>DIM</code>. Базовая форма выглядит так:</p>
-                <pre><code class="language-basic">DIM &lt;имя&gt; AS &lt;тип&gt;
-DIM &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;
-DIM &lt;имя&gt; = &lt;выражение&gt;</code></pre>
-                <p>Например:</p>
-                <pre><code class="language-basic">DIM name AS STRING
-DIM age AS INTEGER
-DIM price AS DOUBLE
-DIM ready AS BOOLEAN</code></pre>
-                <p>Сначала указывается ключевое слово <code>DIM</code>, затем имя переменной, а после слова <code>AS</code> её тип.</p>
-                <p>Для строк также поддерживается фиксированная форма <code>STRING * N</code>, где <code>N</code> — целочисленная константа длины:</p>
-                <pre><code class="language-basic">DIM code AS STRING * 4
-DIM title AS STRING * 12</code></pre>
-                <p>Такая переменная по семантике остаётся строкой, но при хранении значения язык автоматически подгоняет его к указанной длине: короткая строка дополняется пробелами справа, длинная — обрезается.</p>
-                <p>Подробная справочная карточка по формам записи, массивам, фиксированным строкам и диагностике находится на странице <a href="dim.html">Оператор DIM</a>.</p>
-            </section>
+        <section class="article-section" id="arrays">
+            <h2>Имена массивов</h2>
+            <p>Если после имени в объявлении стоят скобки, переменная имеет массивный тип. Массив может быть сразу выделен с границами или объявлен как динамический без выделенного диапазона.</p>
+            <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+DIM names() AS STRING
+DIM table(,) AS INTEGER</code></pre>
+            <p><code>values(1 TO 3)</code> создаёт одномерный массив с доступными индексами от <code>1</code> до <code>3</code>. <code>names()</code> объявляет одномерный динамический массив, который обычно нужно выделить через <code>REDIM</code> перед обращением к элементам. <code>table(,)</code> объявляет двумерный динамический массив.</p>
+            <p>Общие правила массивов описаны в разделе <a href="arrays.html">Массивы</a>, а динамическое выделение — на странице <a href="arrays-dynamic.html">Динамические массивы</a>.</p>
+        </section>
 
-            <section class="article-section" id="array-variables">
-                <h2>Имя массива и невыделенное состояние</h2>
-                <pre><code class="language-basic">DIM values() AS INTEGER
-DIM matrix(,) AS INTEGER
+        <section class="article-section" id="constants">
+            <h2>Константы</h2>
+            <p>Константа — это именованное значение, которое не меняется после объявления. Она полезна для чисел, строк и других значений, смысл которых в программе должен быть постоянным.</p>
+            <pre><code class="language-basic">CONST MAX_SCORE AS INTEGER = 100
+CONST APP_NAME AS STRING = "Axiom"</code></pre>
+            <p><code>CONST</code> требует значение в момент объявления. Попытка изменить константу позднее не является корректной программой.</p>
+            <p>Форма <code>STRING * N</code> для <code>CONST</code> сейчас не поддерживается. Если нужна строка фиксированной длины, используйте переменную <code>DIM</code> или поле внутри <code>TYPE</code>.</p>
+        </section>
 
-REDIM values(1 TO 3)
-REDIM matrix(1 TO 2, 10 TO 11)</code></pre>
-                <p>Если после имени стоят скобки, объявляется не скалярное имя, а имя массива. Форма <code>values()</code> означает одномерный массив, а форма <code>matrix(,)</code> означает двумерный массив.</p>
-                <p>Отдельного синтаксиса для «имени массива» и для «невыделенного массива» нет. Это один и тот же идентификатор: сначала он объявлен с массивным типом, а до первого успешного <code>REDIM</code> его текущее массивное значение остаётся невыделенным.</p>
-                <p>Поэтому запись <code>DIM values() AS INTEGER</code> означает сразу две вещи: имя <code>values</code> имеет массивный тип <code>INTEGER()</code>, и в момент объявления в нём ещё нет доступного диапазона индексов.</p>
-                <p>После <code>REDIM</code> то же самое имя остаётся именем массива, но его текущее значение уже становится выделенным массивом с конкретными границами. После <code>ERASE</code> оно снова возвращается в невыделенное состояние.</p>
-                <p>Именно поэтому присваивание вроде <code>reversed = ARRAYTOREVERSED(source)</code> не «делает имя reversed массивом» заново. Имя <code>reversed</code> уже было объявлено с массивным типом; вызов только помещает в него новый массив-результат.</p>
-                <p>Само имя при этом остаётся типизированным как массив. Поэтому запись вида <code>values = 5</code> для объявления <code>DIM values() AS INTEGER</code> недопустима: здесь пытаются присвоить одно число не элементу, а массивному значению целиком. Скалярное значение присваивается не массиву целиком, а его элементу, например <code>values(1) = 5</code> после выделения через <code>REDIM</code>.</p>
-            </section>
-
-            <section class="article-section" id="parts">
-                <h2>Части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;имя&gt;</code> — имя объявляемой переменной.</li>
-                    <li><code>&lt;тип&gt;</code> — явный тип переменной после <code>AS</code>, в том числе форма фиксированной строки <code>STRING * N</code>.</li>
-                    <li><code>&lt;выражение&gt;</code> — выражение начального значения. В форме без <code>AS</code> оно также определяет выводимый тип.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="assignment">
-                <h2>Присвоение значений и инициализация</h2>
-                <p>После объявления переменной ей можно присвоить значение. Для этого используется оператор <code>=</code>:</p>
-                <pre><code class="language-basic">DIM name AS STRING
-name = "Вася"</code></pre>
-                <p>Также переменную можно инициализировать сразу в момент объявления:</p>
-                <pre><code class="language-basic">DIM name AS STRING = "Вася"
-DIM age AS INTEGER = 19</code></pre>
-                <p>Для фиксированной строки те же правила работают с автоматическим дополнением или обрезкой:</p>
-                <pre><code class="language-basic">DIM code AS STRING * 4
-PRINT "[" + code + "]"
-code = "AB"
-PRINT "[" + code + "]"
-code = "Alpha"
-PRINT "[" + code + "]"</code></pre>
-                <p>Кроме того, Axiom поддерживает сокращённую форму, когда тип выводится из инициализатора:</p>
-                <pre><code class="language-basic">DIM total = 10
-DIM title = "Axiom"
-DIM ratio = 0.75
-DIM passed = TRUE</code></pre>
-                <div class="note">
-                    <h3>Важно</h3>
-                    <p>Форма <code>DIM &lt;имя&gt;</code> без <code>AS &lt;тип&gt;</code> и без <code>= &lt;выражение&gt;</code> недопустима. В Axiom переменная должна либо получить тип явно, либо вывести его из инициализатора.</p>
-                </div>
-                <p>Если переменная уже объявлена, её значение можно менять позднее:</p>
-                <pre><code class="language-basic">DIM name AS STRING
-name = "Вася"
-PRINT name
-name = "Иван"
-PRINT name</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Групповое объявление переменных</h2>
-                <p>В одном операторе <code>DIM</code> можно объявлять сразу несколько переменных:</p>
-                <pre><code class="language-basic">DIM x, y AS INTEGER
-DIM firstName, lastName AS STRING
-DIM left, right = 7</code></pre>
-                <p>Тип после <code>AS</code> относится ко всей ближайшей группе имён слева. Аналогично работает и форма с выводом типа из инициализатора.</p>
-            </section>
-
-            <section class="article-section" id="identifiers">
-                <h2>Правила именования переменных</h2>
-                <p>Для имён переменных и констант в Axiom действуют следующие правила:</p>
-                <ol>
-                    <li>Имя должно начинаться с буквы или символа подчеркивания <code>_</code>.</li>
-                    <li>После первого символа допускаются буквы, цифры и символ подчеркивания.</li>
-                    <li>Имя не должно быть зарезервированным словом языка.</li>
-                    <li>Имя не должно содержать пробелы и знаки пунктуации.</li>
-                </ol>
-                <p>Примеры корректных имён:</p>
-                <p><code>name</code>, <code>total</code>, <code>version1</code>, <code>_tmp</code>, <code>studentName</code></p>
-                <p>Примеры некорректных имён:</p>
-                <p><code>1value</code> — начинается с цифры, <code>PRINT</code> — ключевое слово языка, <code>user-name</code> — содержит символ пунктуации, <code>user name</code> — содержит пробел.</p>
-                <div class="note">
-                    <h3>Обратите внимание</h3>
-                    <p>Axiom регистронезависим. Это значит, что <code>name</code>, <code>Name</code> и <code>NAME</code> считаются одним и тем же именем. Язык также не вводит отдельного числового ограничения на длину идентификатора сверх ограничений реализации на платформе .NET/C#.</p>
-                </div>
-            </section>
-
-            <section class="article-section" id="const">
-                <h2>Константы</h2>
-                <p>Кроме переменных, в Axiom есть константы. Константа — это именованное значение, которое после объявления уже не изменяется. Для объявления константы используется ключевое слово <code>CONST</code>.</p>
-                <pre><code class="language-basic">CONST APP_NAME AS STRING = "Axiom"
-CONST MAX_SCORE AS INTEGER = 100</code></pre>
-                <p>Константа должна получить значение сразу при объявлении. Изменять её позднее нельзя.</p>
-                <p>Форма <code>STRING * N</code> в <code>CONST</code> сейчас не поддерживается. Если нужна фиксированная длина хранения, используйте <code>DIM</code> или строковое поле внутри <code>TYPE</code>; для обычной строковой константы объявляйте тип как <code>STRING</code>.</p>
-            </section>
-
-            <section class="article-section" id="predefined-constants">
-                <h2>Предопределённые константы</h2>
-                <p>Кроме констант, объявленных через <code>CONST</code>, Axiom предоставляет несколько встроенных именованных значений. Они доступны в любом месте программы без предварительного объявления и не могут быть переопределены через <code>DIM</code>, <code>CONST</code>, <code>SUB</code> или <code>FUNCTION</code>.</p>
-                <pre><code class="language-basic">PRINT PI
-PRINT ROW
-PRINT COLUMN</code></pre>
-                <ul>
-                    <li><code>PI</code> — число пи типа <code>DOUBLE</code>.</li>
-                    <li><code>ROW</code> — целочисленная константа со значением <code>1</code>.</li>
-                    <li><code>COLUMN</code> — целочисленная константа со значением <code>2</code>.</li>
-                </ul>
-                <p><code>ROW</code> и <code>COLUMN</code> введены как более читаемые синонимы для первых двух измерений массива. Их можно использовать там же, где допустимы обычные числа <code>1</code> и <code>2</code>, например в вызовах <code>LBOUND</code>, <code>UBOUND</code> и в формах, где язык просит номер измерения.</p>
-                <pre><code class="language-basic">DIM board(10 TO 12, 20 TO 21) AS INTEGER
+        <section class="article-section" id="predefined">
+            <h2>Предопределённые константы</h2>
+            <p>Axiom предоставляет несколько встроенных именованных констант. Их не нужно объявлять через <code>CONST</code>, и их нельзя переопределить своим <code>DIM</code>, <code>CONST</code>, <code>SUB</code> или <code>FUNCTION</code>.</p>
+            <ul>
+                <li><code>PI</code> — значение числа пи типа <code>DOUBLE</code>.</li>
+                <li><code>ROW</code> — целочисленная константа со значением <code>1</code>.</li>
+                <li><code>COLUMN</code> — целочисленная константа со значением <code>2</code>.</li>
+            </ul>
+            <pre><code class="language-basic">DIM board(10 TO 12, 20 TO 21) AS INTEGER
 PRINT LBOUND(board, ROW)
 PRINT UBOUND(board, COLUMN)</code></pre>
-                <p>Числовая форма при этом сохраняется: <code>ROW</code> эквивалентно <code>1</code>, а <code>COLUMN</code> эквивалентно <code>2</code>. Для третьего и следующих измерений по-прежнему используются обычные числа.</p>
-            </section>
+            <p><code>ROW</code> и <code>COLUMN</code> удобны в двумерных примерах как читаемые имена для первого и второго измерения. Числовые формы <code>1</code> и <code>2</code> остаются допустимыми.</p>
+        </section>
 
-            <section class="article-section" id="explicit">
-                <h2>Явность объявлений</h2>
-                <p>Axiom работает в строгом режиме. Это означает:</p>
-                <ul>
-                    <li>переменные объявляются только через <code>DIM</code>;</li>
-                    <li>константы объявляются только через <code>CONST</code>;</li>
-                    <li>простая запись <code>&lt;имя&gt; = &lt;выражение&gt;</code> не создаёт новую переменную автоматически.</li>
-                </ul>
-                <p>Иначе говоря, если имя не объявлено заранее, использовать его как переменную нельзя.</p>
-            </section>
+        <section class="article-section" id="names">
+            <h2>Имена</h2>
+            <p>Имена переменных и констант подчиняются общим правилам идентификаторов.</p>
+            <ol>
+                <li>Имя должно начинаться с буквы или символа подчёркивания <code>_</code>.</li>
+                <li>После первого символа допускаются буквы, цифры и символ подчёркивания.</li>
+                <li>Имя не должно быть зарезервированным словом языка.</li>
+                <li>Имя не должно содержать пробелы и знаки пунктуации.</li>
+            </ol>
+            <p>Примеры корректных имён: <code>name</code>, <code>total</code>, <code>version1</code>, <code>_tmp</code>, <code>studentName</code>.</p>
+            <p>Примеры некорректных имён: <code>1value</code>, <code>PRINT</code>, <code>user-name</code>, <code>user name</code>.</p>
+        </section>
 
-            <section class="article-section" id="summary">
-                <h2>Итого</h2>
-                <p>В Axiom переменная — это именованное значение с определённым типом. Переменные объявляются через <code>DIM</code>, могут инициализироваться сразу или позже, а их имена должны подчиняться формальным правилам языка. Если после имени стоят скобки, переменная имеет массивный тип; до первого <code>REDIM</code> такой массив может оставаться невыделенным. Для текстовых данных доступны и обычные строки, и фиксированная форма <code>STRING * N</code> с автоматическим дополнением или обрезкой до заданной длины. Константы объявляются через <code>CONST</code>, обязаны получить значение в момент объявления и после этого уже не изменяются; фиксированная строковая форма для них сейчас не поддерживается. Дополнительно язык предоставляет встроенные предопределённые константы <code>PI</code>, <code>ROW</code> и <code>COLUMN</code>.</p>
-            </section>
+        <section class="article-section" id="strict">
+            <h2>Явность объявлений</h2>
+            <p>Axiom работает в строгой модели объявлений. Имя должно быть известно до использования, а тип должен быть понятен уже в момент объявления.</p>
+            <pre><code class="language-basic">DIM count AS INTEGER
+count = 5</code></pre>
+            <p>Такая модель делает ошибки имён и типов видимыми раньше: если переменная не объявлена или имя написано иначе, программа получает диагностику вместо скрытого создания нового имени.</p>
+            <blockquote>
+                <p><em>В QuickBASIC тип мог задаваться суффиксом имени, операторами семейства <code>DEF...</code> или умолчанием для неописанных имён. В Axiom документируемая модель строже: переменные объявляются через <code>DIM</code>, константы — через <code>CONST</code>, а тип задаётся явно или выводится из инициализатора.</em></p>
+            </blockquote>
+        </section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="dim.html">Оператор DIM</a>
-                    <a href="input.html">Оператор INPUT</a>
-                    <a href="print.html">Оператор PRINT</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки объявлений, констант и фиксированных строк.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
+                <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
+                <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: несколько объявлений в одной инструкции</a></li>
+                <li><a href="../../samples/operators/dim/array_declaration.axm">DIM: объявление массива</a></li>
+                <li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">DIM: динамический массив</a></li>
+                <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
+                <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление константы</a></li>
+                <li><a href="../../samples/operators/const/predefined_constants.axm">Предопределённые константы: PI, ROW, COLUMN</a></li>
+                <li><a href="../../samples/operators/const/fixed_string_error.axm">Ошибка: фиксированная строка в CONST</a></li>
+            </ul>
+        </section>
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="dim.html">Оператор DIM</a>
+                <a href="type.html">Тип TYPE</a>
+                <a href="data-types.html">Типы данных</a>
+                <a href="arrays.html">Массивы</a>
+                <a href="arrays-dynamic.html">Динамические массивы</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
 </body>
 </html>
