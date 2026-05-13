@@ -159,44 +159,73 @@ public sealed partial class Binder
     private BoundStatement BindForStatement(ForStatementSyntax statement)
     {
         var startExpression = BindExpression(statement.StartExpression);
-        var provisionalType = startExpression.Type == TypeSymbol.Double ? TypeSymbol.Double : TypeSymbol.Integer;
+        var reusesExistingVariable = _scope.TryLookupVariable(statement.Identifier.Text, out var existingVariable)
+            && existingVariable is not null
+            && !_implicitForVariables.Contains(existingVariable);
+
+        var provisionalType = reusesExistingVariable
+            ? existingVariable!.Type
+            : startExpression.Type == TypeSymbol.Double ? TypeSymbol.Double : TypeSymbol.Integer;
 
         EnterScope(DeclarationContexts.ForLoop);
 
         try
         {
-            var provisionalVariable = new VariableSymbol(
-                statement.Identifier.Text,
-                provisionalType,
-                isReadOnly: false,
-                isGlobal: false);
+            if (!reusesExistingVariable)
+            {
+                var provisionalVariable = new VariableSymbol(
+                    statement.Identifier.Text,
+                    provisionalType,
+                    isReadOnly: false,
+                    isGlobal: false);
 
-            _scope.TryDeclareVariable(provisionalVariable);
+                _scope.TryDeclareVariable(provisionalVariable);
+            }
 
             var boundEndExpression = BindExpression(statement.EndExpression);
             var boundStepExpression = statement.StepClause is null
                 ? null
                 : BindExpression(statement.StepClause.Expression);
 
-            var variableType = InferForControlVariableType(startExpression, boundEndExpression, boundStepExpression);
+            var variableType = reusesExistingVariable
+                ? existingVariable!.Type
+                : InferForControlVariableType(startExpression, boundEndExpression, boundStepExpression);
 
-            if (variableType == TypeSymbol.Error)
+            if (variableType == TypeSymbol.Error || !IsValidForControlVariableType(variableType))
             {
-                ReportInvalidForControlVariable(statement.Identifier.Text, TypeSymbol.Error, statement.Identifier.Location);
+                ReportInvalidForControlVariable(statement.Identifier.Text, variableType, statement.Identifier.Location);
+            }
+
+            if (reusesExistingVariable && existingVariable!.IsReadOnly)
+            {
+                ReportAssignToConst(existingVariable.Name, statement.Identifier.Location);
             }
 
             LeaveScope();
             EnterScope(DeclarationContexts.ForLoop);
 
-            var variable = new VariableSymbol(
-                statement.Identifier.Text,
-                variableType == TypeSymbol.Error ? TypeSymbol.Integer : variableType,
-                isReadOnly: false,
-                isGlobal: false);
+            VariableSymbol variable;
+            var declaresVariable = !reusesExistingVariable;
 
-            TryDeclareScopedVariable(variable, statement.Identifier.Location);
+            if (reusesExistingVariable)
+            {
+                variable = existingVariable!;
+            }
+            else
+            {
+                variable = new VariableSymbol(
+                    statement.Identifier.Text,
+                    variableType == TypeSymbol.Error ? TypeSymbol.Integer : variableType,
+                    isReadOnly: false,
+                    isGlobal: false);
 
-            var expectedType = variableType == TypeSymbol.Error ? TypeSymbol.Error : variable.Type;
+                if (TryDeclareScopedVariable(variable, statement.Identifier.Location))
+                {
+                    _implicitForVariables.Add(variable);
+                }
+            }
+
+            var expectedType = IsValidForControlVariableType(variable.Type) ? variable.Type : TypeSymbol.Error;
             startExpression = expectedType == TypeSymbol.Error
                 ? BindExpression(statement.StartExpression)
                 : BindExpression(statement.StartExpression, expectedType);
@@ -220,7 +249,7 @@ public sealed partial class Binder
                 _forDepth--;
             }
 
-            return new BoundForStatement(GetLocation(statement), variable, startExpression, endExpression, stepExpression, statements);
+            return new BoundForStatement(GetLocation(statement), variable, declaresVariable, startExpression, endExpression, stepExpression, statements);
         }
         finally
         {

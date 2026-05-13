@@ -655,6 +655,7 @@ public sealed class BoundForStatement : BoundStatement
     public BoundForStatement(
         TextLocation location,
         VariableSymbol variable,
+        bool declaresVariable,
         BoundExpression startExpression,
         BoundExpression endExpression,
         BoundExpression stepExpression,
@@ -668,6 +669,7 @@ public sealed class BoundForStatement : BoundStatement
         ArgumentNullException.ThrowIfNull(statements);
 
         Variable = variable;
+        DeclaresVariable = declaresVariable;
         StartExpression = startExpression;
         EndExpression = endExpression;
         StepExpression = stepExpression;
@@ -677,6 +679,8 @@ public sealed class BoundForStatement : BoundStatement
     public override BoundNodeKind Kind => BoundNodeKind.ForStatement;
 
     public VariableSymbol Variable { get; }
+
+    public bool DeclaresVariable { get; }
 
     public BoundExpression StartExpression { get; }
 

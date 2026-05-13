@@ -1,0 +1,14 @@
+' Пример показывает, что счетчик FOR можно заранее объявить через DIM.
+' Ожидаемый вывод:
+' 1
+' 2
+' 3
+' after=4
+
+DIM i AS INTEGER
+
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+
+PRINT "after=" & i

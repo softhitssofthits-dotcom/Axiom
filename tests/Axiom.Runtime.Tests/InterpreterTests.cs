@@ -54,6 +54,23 @@ PRINT result
     }
 
     [Fact]
+    public void Execute_ForReusesPredeclaredControlVariable()
+    {
+        const string text = """
+DIM i AS INTEGER
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+PRINT "after=" & i
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "3", "after=4"], host.Output);
+    }
+
+    [Fact]
     public void Execute_IntegerDivisionAndRemainder()
     {
         const string text = """

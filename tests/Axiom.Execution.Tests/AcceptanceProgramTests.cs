@@ -167,6 +167,7 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/control-flow/for/step_loop.axm", new[] { "0", "2", "4", "6" })]
     [InlineData("samples/control-flow/for/nested_loops.axm", new[] { "1:1", "1:2", "2:1", "2:2" })]
     [InlineData("samples/control-flow/for/exit_for.axm", new[] { "1", "2", "done" })]
+    [InlineData("samples/control-flow/for/predeclared_counter.axm", new[] { "1", "2", "3", "after=4" })]
     [InlineData("samples/control-flow/while/basic_loop.axm", new[] { "0", "1", "2" })]
     [InlineData("samples/control-flow/do/do_while_loop.axm", new[] { "0", "1", "2", "done" })]
     [InlineData("samples/control-flow/do/do_until_loop.axm", new[] { "0", "1", "2" })]

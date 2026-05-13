@@ -9300,3 +9300,58 @@
 
 Следующий точный шаг:
 - вручную повторить `samples\graphics\mouse\mouse_events.axm` в IDE, выйти через `ESC`, закрыть оставшееся окно `SCREEN 0` и проверить, что после `run.result` больше нет `screen.closed-by-user`.
+
+## Session 782 - 2026-05-13 09:48 - заранее объявленный счётчик FOR через DIM
+
+Что сделано:
+- в binder снят конфликт между `DIM i AS INTEGER` и последующим `FOR i = ...`;
+- `FOR` теперь переиспользует заранее объявленную изменяемую переменную типа `INTEGER`, `LONG` или `DOUBLE`, а при отсутствии объявления сохраняет прежнее неявное объявление счётчика внутри цикла;
+- `BoundForStatement` получил признак `DeclaresVariable`, чтобы interpreter отличал временный счётчик `FOR` от уже существующей переменной;
+- interpreter теперь записывает начальное и последующие значения в заранее объявленный счётчик, поэтому после `NEXT` переменная остаётся доступной и содержит итоговое значение;
+- `BytecodeVm` использует тот же символ переменной через существующий путь загрузки и сохранения;
+- добавлен runnable-пример `samples/control-flow/for/predeclared_counter.axm`;
+- обновлены спецификация, manual по `FOR`, обзор циклов, реестр покрытия bytecode и план.
+
+Изменённые файлы:
+- `src/Axiom.Semantics/Binding/Binder.cs`
+- `src/Axiom.Semantics/Binding/Binder.ControlFlowStatements.cs`
+- `src/Axiom.Semantics/Binding/Binder.ScopeHelpers.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/control-flow/for/predeclared_counter.axm`
+- `docs/manual/for.html`
+- `docs/manual/loops.html`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --filter "FullyQualifiedName~For" -p:UseSharedCompilation=false` проходит: 35 тестов;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~For" -p:UseSharedCompilation=false` проходит: 46 тестов.
+
+Что осталось:
+- запустить сквозные acceptance-проверки нового примера и общий build после завершения документальных правок.
+
+Следующий точный шаг:
+- выполнить `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~Acceptance|FullyQualifiedName~For" -p:UseSharedCompilation=false` и затем `dotnet build Axiom.sln -p:UseSharedCompilation=false`.
+
+## Session 783 - 2026-05-13 09:59 - проверки DIM-счётчика FOR завершены
+
+Что сделано:
+- после документальных правок выполнены сквозная проверка control-flow acceptance-примеров и общий build;
+- подтверждено, что новый `samples/control-flow/for/predeclared_counter.axm` входит в bytecode acceptance-набор и проходит вместе с остальными сценариями управляющих конструкций.
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~ControlFlowAcceptanceSamples_RunOnBytecodeVm" -p:UseSharedCompilation=false` проходит: 23 теста;
+- `dotnet build Axiom.sln -p:UseSharedCompilation=false` проходит без предупреждений и ошибок.
+
+Примечание:
+- широкий фильтр `FullyQualifiedName~Acceptance|FullyQualifiedName~For` был остановлен после тайм-аута инструмента, потому что он захватил слишком большой набор acceptance-проверок; после остановки зависших `dotnet`-процессов выполнен точный control-flow срез.
+
+Следующий точный шаг:
+- текущий срез `DIM`-счётчика перед `FOR` завершён; следующий языковой шаг выбирать отдельно по новой пользовательской задаче.

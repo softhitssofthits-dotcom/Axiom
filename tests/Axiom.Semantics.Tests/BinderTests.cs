@@ -3791,6 +3791,42 @@ NEXT
     }
 
     [Fact]
+    public void Bind_ForReusesPredeclaredNumericControlVariable()
+    {
+        const string text = """
+DIM i AS INTEGER
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var statement = Assert.IsType<BoundForStatement>(program.GlobalStatements[1]);
+        Assert.Same(declaration.Variable, statement.Variable);
+        Assert.False(statement.DeclaresVariable);
+    }
+
+    [Fact]
+    public void Bind_ForReportsInvalidPredeclaredControlVariableType()
+    {
+        const string text = """
+DIM i AS STRING
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2009");
+        Assert.Contains("i", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_ExitForInsideFor()
     {
         const string text = """
@@ -3876,7 +3912,7 @@ END IF
     }
 
     [Fact]
-    public void Bind_ReportsShadowingForLoopVariableWithForContext()
+    public void Bind_ForReusesPredeclaredControlVariableWithInitializer()
     {
         const string text = """
 DIM i AS INTEGER = 10
@@ -3885,11 +3921,13 @@ FOR i = 1 TO 2
 NEXT
 """;
 
-        BindProgram(text, out var diagnostics);
+        var program = BindProgram(text, out var diagnostics);
 
-        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2016");
-        Assert.Contains("i", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("FOR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var statement = Assert.IsType<BoundForStatement>(program.GlobalStatements[1]);
+        Assert.Same(declaration.Variable, statement.Variable);
+        Assert.False(statement.DeclaresVariable);
     }
 
     [Fact]

@@ -29,6 +29,7 @@ NEXT</code></pre>
 <section class="article-section">
 <h2>Части записи</h2>
 <p><code>counter</code> задаёт управляющую переменную цикла. Она получает начальное значение перед первым проходом и затем автоматически изменяется после каждой итерации.</p>
+<p>Если имя <code>counter</code> заранее объявлено через <code>DIM</code> как изменяемая переменная типа <code>INTEGER</code>, <code>LONG</code> или <code>DOUBLE</code>, <code>FOR</code> использует эту переменную как счётчик. Если такого объявления нет, <code>FOR</code> создаёт счётчик сам и его область видимости ограничена телом цикла. Форма объявления типа прямо внутри строки <code>FOR</code> в Axiom не вводится: для явного типа используйте отдельный <code>DIM</code> перед циклом.</p>
 <p><code>startExpression</code> и <code>endExpression</code> определяют границы диапазона. Необязательное <code>stepExpression</code> задаёт шаг изменения счётчика. Если шаг не указан, используется <code>1</code>.</p>
 </section>
 
@@ -40,7 +41,8 @@ NEXT</code></pre>
 <li>Отрицательный <code>STEP</code> используется для убывающего счёта.</li>
 <li><code>STEP 0</code> синтаксически допустим, но приводит к ошибке времени выполнения.</li>
 <li><code>EXIT FOR</code> завершает ближайший окружающий цикл <code>FOR ... NEXT</code>.</li>
-<li>Имя счётчика существует только внутри цикла и после <code>NEXT</code> недоступно как обычная переменная программы.</li>
+<li>Счётчик, созданный самой строкой <code>FOR</code>, существует только внутри цикла и после <code>NEXT</code> недоступен как обычная переменная программы.</li>
+<li>Счётчик, заранее объявленный через <code>DIM</code>, сохраняет обычную область видимости этой переменной и после <code>NEXT</code> содержит значение, на котором цикл завершился.</li>
 </ul>
 </section>
 
@@ -53,16 +55,24 @@ NEXT</code></pre>
 
     PRINT i
 NEXT</code></pre>
+<p>Если нужно явно задать тип счётчика или использовать его после цикла, объявите переменную перед <code>FOR</code>:</p>
+<pre><code class="language-basic">DIM i AS INTEGER
+
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+
+PRINT "after=" & i</code></pre>
 </section>
 
 <section class="article-section">
 <h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: базовый счёт по возрастанию</a></li><li><a href="../../samples/control-flow/for/step_loop.axm">FOR: явный положительный шаг</a></li><li><a href="../../samples/control-flow/for/exit_for.axm">FOR: досрочный выход через EXIT FOR</a></li><li><a href="../../samples/control-flow/for/nested_loops.axm">FOR: вложенные циклы</a></li></ul>
+<ul class="resource-list"><li><a href="../../samples/control-flow/for/basic_loop.axm">FOR: базовый счёт по возрастанию</a></li><li><a href="../../samples/control-flow/for/step_loop.axm">FOR: явный положительный шаг</a></li><li><a href="../../samples/control-flow/for/exit_for.axm">FOR: досрочный выход через EXIT FOR</a></li><li><a href="../../samples/control-flow/for/nested_loops.axm">FOR: вложенные циклы</a></li><li><a href="../../samples/control-flow/for/predeclared_counter.axm">FOR: заранее объявленный счётчик через DIM</a></li></ul>
 </section>
 
 <section class="article-section">
 <h2>Диагностика</h2>
-<p>Ошибки возможны, если счётчик имеет неподдерживаемый тип, если используется <code>STEP 0</code>, если <code>EXIT FOR</code> стоит вне цикла или если имя счётчика используется уже после выхода из своей области видимости.</p>
+<p>Ошибки возможны, если счётчик имеет неподдерживаемый тип, если заранее объявленный счётчик является константой, если используется <code>STEP 0</code>, если <code>EXIT FOR</code> стоит вне цикла или если имя счётчика, созданного самим <code>FOR</code>, используется уже после выхода из своей области видимости.</p>
 </section>
 
 <section class="article-section">

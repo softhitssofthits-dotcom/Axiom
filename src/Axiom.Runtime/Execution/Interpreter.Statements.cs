@@ -752,53 +752,61 @@ public sealed partial class Interpreter
         }
 
         var loopScope = new RuntimeScope(CurrentScope);
+        EnterScope(loopScope);
 
-        if (statement.Variable.Type == TypeSymbol.Integer)
+        try
         {
-            loopScope.Define(statement.Variable, RuntimeValue.FromInteger(start.AsInteger()));
-            EnterScope(loopScope);
-
-            try
+            if (statement.Variable.Type == TypeSymbol.Integer)
             {
+                var startValue = RuntimeValue.FromInteger(start.AsInteger());
+                if (statement.DeclaresVariable)
+                {
+                    loopScope.Define(statement.Variable, startValue);
+                }
+                else
+                {
+                    AssignVariable(statement.Variable, startValue);
+                }
+
                 return RunIntegerForLoop(statement, end.AsInteger(), step.AsInteger());
             }
-            finally
-            {
-                LeaveScope();
-            }
-        }
 
-        if (statement.Variable.Type == TypeSymbol.Long)
-        {
-            loopScope.Define(statement.Variable, RuntimeValue.FromLong(start.AsLong()));
-            EnterScope(loopScope);
-
-            try
+            if (statement.Variable.Type == TypeSymbol.Long)
             {
+                var startValue = RuntimeValue.FromLong(start.AsLong());
+                if (statement.DeclaresVariable)
+                {
+                    loopScope.Define(statement.Variable, startValue);
+                }
+                else
+                {
+                    AssignVariable(statement.Variable, startValue);
+                }
+
                 return RunLongForLoop(statement, end.AsLong(), step.AsLong());
             }
-            finally
-            {
-                LeaveScope();
-            }
-        }
 
-        if (statement.Variable.Type == TypeSymbol.Double)
-        {
-            loopScope.Define(statement.Variable, RuntimeValue.FromDouble(start.AsDouble()));
-            EnterScope(loopScope);
-
-            try
+            if (statement.Variable.Type == TypeSymbol.Double)
             {
+                var startValue = RuntimeValue.FromDouble(start.AsDouble());
+                if (statement.DeclaresVariable)
+                {
+                    loopScope.Define(statement.Variable, startValue);
+                }
+                else
+                {
+                    AssignVariable(statement.Variable, startValue);
+                }
+
                 return RunDoubleForLoop(statement, end.AsDouble(), step.AsDouble());
             }
-            finally
-            {
-                LeaveScope();
-            }
-        }
 
-        return ReportInvalidRuntimeState<ExecutionSignal>($"Unsupported FOR control variable type: {statement.Variable.Type.Name}.", statement.Location);
+            return ReportInvalidRuntimeState<ExecutionSignal>($"Unsupported FOR control variable type: {statement.Variable.Type.Name}.", statement.Location);
+        }
+        finally
+        {
+            LeaveScope();
+        }
     }
 
     private ExecutionSignal RunIntegerForLoop(BoundForStatement statement, int endValue, int stepValue)

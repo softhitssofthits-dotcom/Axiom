@@ -132,6 +132,13 @@ public sealed partial class Binder
         return sawLong ? TypeSymbol.Long : TypeSymbol.Integer;
     }
 
+    private static bool IsValidForControlVariableType(TypeSymbol type)
+    {
+        return type == TypeSymbol.Integer
+            || type == TypeSymbol.Long
+            || type == TypeSymbol.Double;
+    }
+
     private string? GetCurrentDeclarationContext()
     {
         foreach (var context in _declarationContexts)
