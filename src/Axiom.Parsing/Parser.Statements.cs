@@ -34,8 +34,9 @@ public sealed partial class Parser
             SyntaxKind.LocateKeyword => ParseLocateStatement(),
             SyntaxKind.PSetKeyword => ParsePSetStatement(reset: false),
             SyntaxKind.PresetKeyword => ParsePSetStatement(reset: true),
-            SyntaxKind.LineKeyword => ParseLineStatement(),
+            SyntaxKind.LineKeyword => Peek(1).Kind is SyntaxKind.OpenParenToken or SyntaxKind.StepKeyword or SyntaxKind.MinusToken ? ParseLineStatement() : ParseIdentifierLeadingStatement(),
             SyntaxKind.CircleKeyword => ParseCircleStatement(),
+            SyntaxKind.PaintKeyword => ParsePaintStatement(),
             SyntaxKind.OnKeyword => ParseOnStatement(),
             SyntaxKind.OpenKeyword => ParseOpenStatement(),
             SyntaxKind.CloseKeyword => ParseCloseStatement(),
@@ -214,14 +215,22 @@ public sealed partial class Parser
         var foregroundExpression = ParseExpression();
         SyntaxToken? commaToken = null;
         ExpressionSyntax? backgroundExpression = null;
+        SyntaxToken? transparentKeyword = null;
 
         if (Current.Kind == SyntaxKind.CommaToken)
         {
             commaToken = Match(SyntaxKind.CommaToken, ",");
-            backgroundExpression = ParseExpression();
+            if (Current.Kind == SyntaxKind.TransparentKeyword)
+            {
+                transparentKeyword = NextToken();
+            }
+            else
+            {
+                backgroundExpression = ParseExpression();
+            }
         }
 
-        return new ColorStatementSyntax(colorKeyword, foregroundExpression, commaToken, backgroundExpression);
+        return new ColorStatementSyntax(colorKeyword, foregroundExpression, commaToken, backgroundExpression, transparentKeyword);
     }
 
     private LocateStatementSyntax ParseLocateStatement()
@@ -236,6 +245,7 @@ public sealed partial class Parser
     private PSetStatementSyntax ParsePSetStatement(bool reset)
     {
         var keyword = Match(reset ? SyntaxKind.PresetKeyword : SyntaxKind.PSetKeyword, reset ? "PRESET" : "PSET");
+        var stepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
         var point = ParseGraphicsPoint();
         SyntaxToken? commaToken = null;
         ExpressionSyntax? colorExpression = null;
@@ -246,14 +256,21 @@ public sealed partial class Parser
             colorExpression = ParseExpression();
         }
 
-        return new PSetStatementSyntax(keyword, point, commaToken, colorExpression, reset);
+        return new PSetStatementSyntax(keyword, stepKeyword, point, commaToken, colorExpression, reset);
     }
 
     private LineStatementSyntax ParseLineStatement()
     {
         var lineKeyword = Match(SyntaxKind.LineKeyword, "LINE");
-        var startPoint = ParseGraphicsPoint();
+        var startStepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
+        GraphicsPointSyntax? startPoint = null;
+        if (Current.Kind == SyntaxKind.OpenParenToken)
+        {
+            startPoint = ParseGraphicsPoint();
+        }
+
         var minusToken = Match(SyntaxKind.MinusToken, "'-' между точками LINE");
+        var endStepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
         var endPoint = ParseGraphicsPoint();
         SyntaxToken? colorCommaToken = null;
         ExpressionSyntax? colorExpression = null;
@@ -283,25 +300,114 @@ public sealed partial class Parser
                     : LineBoxKind.None;
         }
 
-        return new LineStatementSyntax(lineKeyword, startPoint, minusToken, endPoint, colorCommaToken, colorExpression, boxCommaToken, boxToken, boxKind);
+        return new LineStatementSyntax(
+            lineKeyword,
+            startStepKeyword,
+            startPoint,
+            minusToken,
+            endStepKeyword,
+            endPoint,
+            colorCommaToken,
+            colorExpression,
+            boxCommaToken,
+            boxToken,
+            boxKind);
     }
 
     private CircleStatementSyntax ParseCircleStatement()
     {
         var circleKeyword = Match(SyntaxKind.CircleKeyword, "CIRCLE");
+        var stepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
         var centerPoint = ParseGraphicsPoint();
         var commaToken = Match(SyntaxKind.CommaToken, "',' после центра CIRCLE");
         var radiusExpression = ParseExpression();
         SyntaxToken? colorCommaToken = null;
         ExpressionSyntax? colorExpression = null;
+        SyntaxToken? startCommaToken = null;
+        ExpressionSyntax? startExpression = null;
+        SyntaxToken? endCommaToken = null;
+        ExpressionSyntax? endExpression = null;
+        SyntaxToken? aspectCommaToken = null;
+        ExpressionSyntax? aspectExpression = null;
 
         if (Current.Kind == SyntaxKind.CommaToken)
         {
             colorCommaToken = Match(SyntaxKind.CommaToken, ",");
-            colorExpression = ParseExpression();
+            colorExpression = ParseOptionalGraphicsArgumentExpression();
         }
 
-        return new CircleStatementSyntax(circleKeyword, centerPoint, commaToken, radiusExpression, colorCommaToken, colorExpression);
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            startCommaToken = Match(SyntaxKind.CommaToken, ",");
+            startExpression = ParseOptionalGraphicsArgumentExpression();
+        }
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            endCommaToken = Match(SyntaxKind.CommaToken, ",");
+            endExpression = ParseOptionalGraphicsArgumentExpression();
+        }
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            aspectCommaToken = Match(SyntaxKind.CommaToken, ",");
+            aspectExpression = ParseOptionalGraphicsArgumentExpression();
+        }
+
+        return new CircleStatementSyntax(
+            circleKeyword,
+            stepKeyword,
+            centerPoint,
+            commaToken,
+            radiusExpression,
+            colorCommaToken,
+            colorExpression,
+            startCommaToken,
+            startExpression,
+            endCommaToken,
+            endExpression,
+            aspectCommaToken,
+            aspectExpression);
+    }
+
+    private PaintStatementSyntax ParsePaintStatement()
+    {
+        var paintKeyword = Match(SyntaxKind.PaintKeyword, "PAINT");
+        var point = ParseGraphicsPoint();
+        SyntaxToken? fillCommaToken = null;
+        ExpressionSyntax? fillColorExpression = null;
+        SyntaxToken? borderCommaToken = null;
+        ExpressionSyntax? borderColorExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            fillCommaToken = Match(SyntaxKind.CommaToken, ",");
+            fillColorExpression = ParseExpression();
+        }
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            borderCommaToken = Match(SyntaxKind.CommaToken, ",");
+            borderColorExpression = ParseExpression();
+        }
+
+        return new PaintStatementSyntax(
+            paintKeyword,
+            point,
+            fillCommaToken,
+            fillColorExpression,
+            borderCommaToken,
+            borderColorExpression);
+    }
+
+    private ExpressionSyntax? ParseOptionalGraphicsArgumentExpression()
+    {
+        if (Current.Kind == SyntaxKind.CommaToken || IsStatementTerminator(Current.Kind))
+        {
+            return null;
+        }
+
+        return ParseExpression();
     }
 
     private GraphicsPointSyntax ParseGraphicsPoint()

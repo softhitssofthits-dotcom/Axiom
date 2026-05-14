@@ -833,6 +833,45 @@ PRINT rightDown
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForGraphicsStepAndPointState()
+    {
+        var inputProvider = new QueueKeyboardInputProvider();
+        var result = Run(
+            """
+SCREEN 1
+CLS
+COLOR 6, 2
+PSET (10, 20)
+PRINT "point0="; POINT(0); " point1="; POINT(1)
+PSET STEP (5, 4)
+PRINT "after pset step="; POINT(0); ","; POINT(1)
+LINE -(30, 40)
+PRINT "after line from current="; POINT(0); ","; POINT(1)
+LINE STEP (5, 5)-STEP (10, 15)
+PRINT "after line step-step="; POINT(0); ","; POINT(1)
+PRINT "pixel 10,20="; POINT(10, 20)
+PRINT "pixel 15,24="; POINT(15, 24)
+""",
+            inputProvider: inputProvider,
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "point0=10 point1=20",
+                "after pset step=15,24",
+                "after line from current=30,40",
+                "after line step-step=45,60",
+                "pixel 10,20=6",
+                "pixel 15,24=6"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void Run_MouseFunctionsWithoutActiveScreenReturnDiagnostic()
     {
         var result = Run(
@@ -2961,6 +3000,11 @@ INPUT value
         private int _screenMode;
         private int _screenWidth;
         private int _screenHeight;
+        private int _currentForegroundColor = 15;
+        private int _currentBackgroundColor;
+        private bool _isTextBackgroundTransparent;
+        private long _currentGraphicsX;
+        private long _currentGraphicsY;
         private string _pendingGraphicsLine = string.Empty;
 
         public QueueKeyboardInputProvider(params string[] keys)
@@ -3038,6 +3082,16 @@ INPUT value
 
         public int ScreenHeight => _screenHeight;
 
+        public int CurrentForegroundColor => _currentForegroundColor;
+
+        public int CurrentBackgroundColor => _currentBackgroundColor;
+
+        public bool IsTextBackgroundTransparent => _isTextBackgroundTransparent;
+
+        public long CurrentGraphicsX => _currentGraphicsX;
+
+        public long CurrentGraphicsY => _currentGraphicsY;
+
         public void ActivateScreen(int mode)
         {
             _isScreenActive = mode != 0;
@@ -3052,6 +3106,11 @@ INPUT value
             _pixels.Clear();
             GraphicsOutput.Clear();
             _pendingGraphicsLine = string.Empty;
+            _currentForegroundColor = 15;
+            _currentBackgroundColor = 0;
+            _isTextBackgroundTransparent = false;
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
         }
 
         public void DeactivateScreen()
@@ -3062,6 +3121,34 @@ INPUT value
             _screenWidth = 0;
             _screenHeight = 0;
             _pixels.Clear();
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
+        }
+
+        public void ClearGraphics()
+        {
+            _pixels.Clear();
+            GraphicsOutput.Clear();
+            _pendingGraphicsLine = string.Empty;
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
+        }
+
+        public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
+        {
+            _currentForegroundColor = foreground;
+            switch (backgroundMode)
+            {
+                case TextBackgroundMode.Color:
+                    _currentBackgroundColor = background;
+                    _isTextBackgroundTransparent = false;
+                    break;
+                case TextBackgroundMode.Transparent:
+                    _isTextBackgroundTransparent = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void WriteGraphicsText(string text, bool newLine)
@@ -3077,7 +3164,20 @@ INPUT value
             _pendingGraphicsLine = string.Empty;
         }
 
-        public void SetPixel(long x, long y, int color) => _pixels[(x, y)] = color;
+        public void SetPixel(long x, long y, int color)
+        {
+            _pixels[(x, y)] = color;
+            _currentGraphicsX = x;
+            _currentGraphicsY = y;
+        }
+
+        public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
+        {
+            _pixels[(x1, y1)] = color;
+            _pixels[(x2, y2)] = color;
+            _currentGraphicsX = x2;
+            _currentGraphicsY = y2;
+        }
 
         public int GetPixel(long x, long y) => _pixels.TryGetValue((x, y), out var color) ? color : 0;
     }

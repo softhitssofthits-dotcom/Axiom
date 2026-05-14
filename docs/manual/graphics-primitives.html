@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Графические примитивы</title>
+    <title>Справочник Axiom - Операторы рисования</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="graphics-primitives">
@@ -18,73 +18,181 @@
         <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
         <main class="content">
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Примитивы</span>
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Операторы рисования</span>
             </nav>
             <p class="eyebrow">Операторы и функция</p>
-            <h1 class="page-title">PSET, PRESET, LINE, CIRCLE и POINT</h1>
-            <p class="lead">Графические примитивы работают с пиксельным слоем активного <code>SCREEN</code>. Они используют координаты <code>x, y</code> с началом в левом верхнем углу и цвета из индексной палитры <code>0..255</code>.</p>
+            <h1 class="page-title">PSET, PRESET, LINE, CIRCLE, PAINT и POINT</h1>
+            <p class="lead">Операторы рисования работают с точками графического экрана <code>SCREEN</code>. <code>PSET</code> и <code>PRESET</code> закрашивают одну точку, <code>LINE</code> рисует линию или прямоугольник, <code>CIRCLE</code> рисует окружность, эллипс или дугу, <code>PAINT</code> заполняет замкнутую область, а <code>POINT</code> читает цвет точки или текущую графическую позицию.</p>
+
+            <section class="article-section">
+                <h2>Координаты и цвета</h2>
+                <p>Перед использованием операторов рисования программа должна выбрать графический режим: <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Текстовый режим <code>SCREEN 0</code> не включает графический экран.</p>
+                <p>Координаты записываются как <code>x, y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Цвет задаётся числом из палитры <code>0..255</code>.</p>
+            </section>
 
             <section class="article-section">
                 <h2 id="pset">Оператор PSET</h2>
-<pre><code>PSET (x, y)[, color]</code></pre>
-                <p><code>PSET</code> устанавливает один пиксель. Если цвет не указан, используется <code>15</code>. Координаты вне поверхности игнорируются без ошибки.</p>
+<pre><code>PSET [STEP] (&lt;x&gt;, &lt;y&gt;)[, &lt;цвет&gt;]</code></pre>
+                <p><code>PSET</code> закрашивает одну точку. Если цвет не указан, используется текущий foreground-цвет, установленный через <code>COLOR</code>. Координаты за пределами графического экрана игнорируются без ошибки.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>STEP</code></td><td>Если указано, координаты считаются смещением от текущей графической позиции.</td></tr>
+                        <tr><td><code>&lt;x&gt;</code></td><td>Горизонтальная координата точки или смещение по X.</td></tr>
+                        <tr><td><code>&lt;y&gt;</code></td><td>Вертикальная координата точки или смещение по Y.</td></tr>
+                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет точки. Если он не указан, используется текущий foreground-цвет.</td></tr>
+                    </tbody>
+                </table>
 <pre><code>SCREEN 1
+COLOR 6, 2
 PSET (10, 10), 12
-PRINT POINT(10, 10)
+PSET STEP (5, 4)
+PRINT "Цвет точки:"; POINT(10, 10)
 SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
                 <h2 id="preset">Оператор PRESET</h2>
-<pre><code>PRESET (x, y)[, color]</code></pre>
-                <p><code>PRESET</code> использует тот же синтаксис, что и <code>PSET</code>, но без явного цвета ставит цвет <code>0</code>. Это удобно для стирания отдельного пикселя на обычном чёрном фоне.</p>
+<pre><code>PRESET [STEP] (&lt;x&gt;, &lt;y&gt;)[, &lt;цвет&gt;]</code></pre>
+                <p><code>PRESET</code> работает с одной точкой так же, как <code>PSET</code>, но без явного цвета ставит текущий background-цвет. Обычно это используют, чтобы стереть отдельную точку или линию цветом фона.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>STEP</code></td><td>Если указано, координаты считаются смещением от текущей графической позиции.</td></tr>
+                        <tr><td><code>&lt;x&gt;</code></td><td>Горизонтальная координата точки или смещение по X.</td></tr>
+                        <tr><td><code>&lt;y&gt;</code></td><td>Вертикальная координата точки или смещение по Y.</td></tr>
+                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет точки. Если он не указан, используется текущий background-цвет.</td></tr>
+                    </tbody>
+                </table>
 <pre><code>SCREEN 1
+COLOR 14, 1
 PSET (10, 10), 12
 PRESET (10, 10)
-PRINT POINT(10, 10)
+PRINT "После PRESET:"; POINT(10, 10)
 SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
                 <h2 id="line">Оператор LINE</h2>
-<pre><code>LINE (x1, y1)-(x2, y2)[, color]
-LINE (x1, y1)-(x2, y2)[, color], B
-LINE (x1, y1)-(x2, y2)[, color], BF</code></pre>
-                <p><code>LINE</code> рисует отрезок между двумя точками. Если цвет не указан, используется <code>15</code>. Суффикс <code>B</code> рисует прямоугольную рамку по двум углам, а <code>BF</code> рисует заполненный прямоугольник.</p>
+<pre><code>LINE [[STEP](&lt;x1&gt;, &lt;y1&gt;)]-[STEP](&lt;x2&gt;, &lt;y2&gt;)[, &lt;цвет&gt;]
+LINE [[STEP](&lt;x1&gt;, &lt;y1&gt;)]-[STEP](&lt;x2&gt;, &lt;y2&gt;)[, &lt;цвет&gt;], B
+LINE [[STEP](&lt;x1&gt;, &lt;y1&gt;)]-[STEP](&lt;x2&gt;, &lt;y2&gt;)[, &lt;цвет&gt;], BF</code></pre>
+                <p><code>LINE</code> рисует отрезок между двумя точками. Если цвет не указан, используется текущий foreground-цвет. Форма с <code>B</code> рисует прямоугольную рамку по двум углам, а форма с <code>BF</code> рисует закрашенный прямоугольник.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>[STEP](&lt;x1&gt;, &lt;y1&gt;)</code></td><td>Первая точка. Если форма перед дефисом пропущена, линия начинается из текущей графической позиции. Если указан <code>STEP</code>, первая точка вычисляется как смещение от текущей графической позиции.</td></tr>
+                        <tr><td><code>[STEP](&lt;x2&gt;, &lt;y2&gt;)</code></td><td>Вторая точка. Если указан <code>STEP</code>, она вычисляется как смещение от первой точки линии.</td></tr>
+                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет линии, рамки или прямоугольника. Если цвет не указан, используется текущий foreground-цвет.</td></tr>
+                        <tr><td><code>B</code></td><td>Рисует прямоугольную рамку.</td></tr>
+                        <tr><td><code>BF</code></td><td>Рисует закрашенный прямоугольник.</td></tr>
+                    </tbody>
+                </table>
 <pre><code>SCREEN 3
-LINE (20, 20)-(220, 80), 10
-LINE (30, 100)-(180, 160), 11, B
+COLOR 6, 2
+PSET (20, 20)
+LINE -(220, 80)
+LINE STEP (10, 20)-STEP (150, 60), 11, B
 LINE (220, 100)-(360, 180), 11, BF
 SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
                 <h2 id="circle">Оператор CIRCLE</h2>
-<pre><code>CIRCLE (x, y), radius[, color]</code></pre>
-                <p><code>CIRCLE</code> рисует окружность с центром в точке <code>x, y</code>. Радиус задаётся в пикселях. Если цвет не указан, используется <code>15</code>; отрицательный радиус не рисует пиксели.</p>
+<pre><code>CIRCLE [STEP] (&lt;x&gt;, &lt;y&gt;), &lt;радиус&gt;[, [&lt;цвет&gt;][, [&lt;начало&gt;][, [&lt;конец&gt;][, &lt;aspect&gt;]]]]</code></pre>
+                <p><code>CIRCLE</code> рисует контур окружности, эллипса или дуги. Центр задаётся точкой <code>x, y</code>, радиус задаётся в пикселях, а необязательные углы позволяют оставить только часть контура.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>STEP</code></td><td>Если указано, координаты центра считаются смещением от текущей графической позиции. После <code>PSET</code> текущая позиция равна этой точке, после <code>LINE</code> — конечной точке, после <code>CIRCLE</code> — центру окружности или дуги.</td></tr>
+                        <tr><td><code>&lt;x&gt;, &lt;y&gt;</code></td><td>Координаты центра или смещение центра при форме <code>STEP</code>.</td></tr>
+                        <tr><td><code>&lt;радиус&gt;</code></td><td>Неотрицательный радиус. Для эллипса при <code>aspect &lt; 1</code> это радиус по X, при <code>aspect &gt; 1</code> — радиус по Y.</td></tr>
+                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет контура. Если он не указан, используется <code>15</code>.</td></tr>
+                        <tr><td><code>&lt;начало&gt;</code></td><td>Необязательный начальный угол дуги в радианах. Если значение отрицательное, рисуется радиальная линия от центра к началу дуги, а сам угол берётся по модулю.</td></tr>
+                        <tr><td><code>&lt;конец&gt;</code></td><td>Необязательный конечный угол дуги в радианах. Если значение отрицательное, рисуется радиальная линия от центра к концу дуги, а сам угол берётся по модулю.</td></tr>
+                        <tr><td><code>&lt;aspect&gt;</code></td><td>Отношение радиуса по Y к радиусу по X. Значение <code>1</code> даёт обычную окружность, значения меньше или больше <code>1</code> дают эллипс.</td></tr>
+                    </tbody>
+                </table>
+                <p>Параметры в середине списка можно пропускать, оставляя соответствующие запятые. Например, форма <code>CIRCLE (180, 180), 90, , 0, PI</code> использует обычный цвет <code>15</code>, но задаёт дугу от <code>0</code> до <code>PI</code>.</p>
 <pre><code>SCREEN 3
 CIRCLE (420, 160), 50, 14
+CIRCLE (420, 160), 80, 10, 0, PI
+CIRCLE STEP (40, 0), 45, 11, -PI / 2, PI / 2, 0.5
 SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
                 <h2 id="point">Функция POINT</h2>
-<pre><code>POINT(x, y)</code></pre>
-                <p><code>POINT</code> возвращает цветовой индекс пикселя в указанной точке. Если точка находится вне активной поверхности, результат равен <code>0</code>. Без активного <code>SCREEN</code> функция сообщает <code>MB3010</code>.</p>
+<pre><code>POINT(&lt;x&gt;, &lt;y&gt;)
+POINT(&lt;number&gt;)</code></pre>
+                <p><code>POINT</code> имеет две формы. <code>POINT(x, y)</code> возвращает номер цвета в указанной точке. <code>POINT(number)</code> возвращает текущую графическую позицию: по значениям <code>0</code> и <code>2</code> возвращается текущий X, по значениям <code>1</code> и <code>3</code> — текущий Y. Без активного <code>SCREEN</code> функция сообщает <code>MB3010</code>.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>&lt;x&gt;</code></td><td>Горизонтальная координата точки в форме <code>POINT(x, y)</code>.</td></tr>
+                        <tr><td><code>&lt;y&gt;</code></td><td>Вертикальная координата точки в форме <code>POINT(x, y)</code>.</td></tr>
+                        <tr><td><code>&lt;number&gt;</code></td><td>Селектор текущей графической позиции в форме <code>POINT(number)</code>. Значения <code>0</code> и <code>2</code> возвращают X, значения <code>1</code> и <code>3</code> возвращают Y.</td></tr>
+                    </tbody>
+                </table>
 <pre><code>SCREEN 1
 PSET (10, 10), 12
-PRINT "POINT(10,10)="; POINT(10, 10)
+PRINT "Текущий X:"; POINT(0)
+PRINT "Текущий Y:"; POINT(1)
+PRINT "Цвет точки:"; POINT(10, 10)
 SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Цвета</h2>
-                <p>Все примитивы используют палитру <code>0..255</code>. Индексы <code>0..15</code> совместимы с классическими BASIC-цветами, <code>16..231</code> образуют RGB-куб 6x6x6, а <code>232..255</code> дают серую шкалу. Значения вне диапазона приводятся по правилу <code>ABS(color) MOD 256</code>.</p>
+                <h2 id="paint">Оператор PAINT</h2>
+<pre><code>PAINT (&lt;x&gt;, &lt;y&gt;)
+PAINT (&lt;x&gt;, &lt;y&gt;), &lt;цвет-заливки&gt;
+PAINT (&lt;x&gt;, &lt;y&gt;), &lt;цвет-заливки&gt;, &lt;цвет-границы&gt;</code></pre>
+                <p><code>PAINT</code> заполняет область, начиная со стартового пикселя. Оператор удобен, когда контур уже нарисован через <code>LINE</code> или <code>CIRCLE</code>, а внутри него нужно быстро закрасить внутреннюю часть.</p>
+                <table>
+                    <thead>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>&lt;x&gt;, &lt;y&gt;</code></td><td>Координаты стартового пикселя.</td></tr>
+                        <tr><td><code>&lt;цвет-заливки&gt;</code></td><td>Необязательный цвет заливки. По умолчанию используется текущий foreground-цвет из <code>COLOR</code>.</td></tr>
+                        <tr><td><code>&lt;цвет-границы&gt;</code></td><td>Необязательный цвет границы. Если он не указан, границей считается исходный цвет стартового пикселя.</td></tr>
+                    </tbody>
+                </table>
+                <p>В текущем срезе <code>PAINT</code> использует связность по четырём соседям: влево, вправо, вверх и вниз. Если стартовый пиксель уже совпадает с цветом заливки или с цветом границы, оператор ничего не меняет.</p>
+<pre><code>SCREEN 1
+LINE (20, 20)-(120, 90), 12, B
+PAINT (40, 40), 14, 12
+SCREEN 0</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Проверочный пример</h2>
-                <p>Ручной пример: <code>samples/graphics/primitives/pset_line_circle.axm</code>.</p>
+                <h2>Замечания</h2>
+                <p>Все операторы рисования используют палитру <code>0..255</code>. Индексы <code>0..15</code> соответствуют классическим BASIC-цветам, <code>16..231</code> образуют RGB-куб 6x6x6, а <code>232..255</code> дают серую шкалу. Значения вне диапазона приводятся по правилу <code>ABS(color) MOD 256</code>.</p>
+                <p>Операторы рисования работают только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Без активного графического экрана они сообщают ошибку времени выполнения <code>MB3010</code>.</p>
+                <p>Формы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code> используют текущую графическую позицию в BASIC-стиле. После <code>PSET</code> и <code>PRESET</code> текущая позиция равна поставленной точке, после <code>LINE</code> — конечной точке, после <code>CIRCLE</code> — центру окружности или дуги.</p>
+                <p>Форма <code>CIRCLE</code> следует BASIC-линейке: углы задаются в радианах, отрицательный начальный или конечный угол добавляет радиус к центру, а <code>STEP</code> использует текущую графическую позицию.</p>
+                <p>Форма <code>PAINT</code> в этом срезе не поддерживает <code>STEP</code> и шаблонную заливку. Эти варианты остаются отдельным будущим подшагом.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочная программа</h2>
+                <p>Программы можно открыть в <code>Axiom.Ide</code> и запустить для проверки точек, линий, окружностей, дуг и эллипсов.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Точки, линии и окружности</a></li>
+                    <li><a href="../../samples/graphics/primitives/step_and_point_position.axm">STEP и текущая графическая позиция</a></li>
+                    <li><a href="../../samples/graphics/primitives/circle_arcs_step_aspect.axm">Дуги, эллипсы и STEP у CIRCLE</a></li>
+                    <li><a href="../../samples/graphics/primitives/paint_fill_region.axm">Базовая заливка через PAINT</a></li>
+                </ul>
             </section>
 
             <section class="article-section">
@@ -92,7 +200,7 @@ SCREEN 0</code></pre>
                 <div class="link-list">
                     <a href="graphics.html">Графика и экран</a>
                     <a href="screen.html">Оператор SCREEN</a>
-                    <a href="graphics-text.html">Текстовый слой SCREEN</a>
+                    <a href="graphics-text.html">Текст на экране</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                     <a href="mousex.html">Мышь</a>
                 </div>

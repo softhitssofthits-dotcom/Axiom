@@ -34,7 +34,7 @@ public sealed partial class Parser
 
     private SyntaxToken MatchIdentifier()
     {
-        if (Current.Kind == SyntaxKind.IdentifierToken)
+        if (Current.Kind is SyntaxKind.IdentifierToken or SyntaxKind.LineKeyword)
         {
             return NextToken();
         }
@@ -64,7 +64,7 @@ public sealed partial class Parser
 
     private bool IsExpressionNameToken(SyntaxKind kind)
     {
-        return kind is SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword;
+        return kind is SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword or SyntaxKind.LineKeyword;
     }
 
     private SyntaxToken MatchNamedTypeToken()
@@ -323,6 +323,7 @@ public sealed partial class Parser
             TokenKind.OpenKeyword => SyntaxKind.OpenKeyword,
             TokenKind.OrKeyword => SyntaxKind.OrKeyword,
             TokenKind.OutputKeyword => SyntaxKind.OutputKeyword,
+            TokenKind.PaintKeyword => SyntaxKind.PaintKeyword,
             TokenKind.PreserveKeyword => SyntaxKind.PreserveKeyword,
             TokenKind.PresetKeyword => SyntaxKind.PresetKeyword,
             TokenKind.PrintKeyword => SyntaxKind.PrintKeyword,
@@ -339,6 +340,7 @@ public sealed partial class Parser
             TokenKind.SubKeyword => SyntaxKind.SubKeyword,
             TokenKind.ThenKeyword => SyntaxKind.ThenKeyword,
             TokenKind.ToKeyword => SyntaxKind.ToKeyword,
+            TokenKind.TransparentKeyword => SyntaxKind.TransparentKeyword,
             TokenKind.TryKeyword => SyntaxKind.TryKeyword,
             TokenKind.TypeKeyword => SyntaxKind.TypeKeyword,
             TokenKind.UsingKeyword => SyntaxKind.UsingKeyword,

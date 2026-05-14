@@ -165,6 +165,11 @@ public sealed partial class BytecodeVm
     {
         while (!TryReadKeyboardKey(out _))
         {
+            if (CheckCancellationRequested())
+            {
+                return;
+            }
+
             System.Threading.Thread.Sleep(10);
         }
     }
@@ -177,7 +182,23 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        System.Threading.Thread.Sleep((int)milliseconds);
+        if (milliseconds == 0)
+        {
+            return;
+        }
+
+        var remainingMilliseconds = milliseconds;
+        while (remainingMilliseconds > 0)
+        {
+            if (CheckCancellationRequested())
+            {
+                return;
+            }
+
+            var sleepChunk = (int)Math.Min(remainingMilliseconds, 10L);
+            System.Threading.Thread.Sleep(sleepChunk);
+            remainingMilliseconds -= sleepChunk;
+        }
     }
 
     private bool IsKeyboardKeyDown(string keyText)

@@ -45,6 +45,7 @@ public sealed partial class Parser
             SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken or SyntaxKind.StringLiteralToken or SyntaxKind.BooleanLiteralToken => new LiteralExpressionSyntax(NextToken()),
             SyntaxKind.IdentifierToken
                 or SyntaxKind.SelfKeyword
+                or SyntaxKind.LineKeyword
                 or SyntaxKind.IntegerKeyword
                 or SyntaxKind.LongKeyword
                 or SyntaxKind.DoubleKeyword

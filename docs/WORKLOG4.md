@@ -10776,3 +10776,648 @@
 
 Следующий точный шаг:
 - пройти `docs/manual/screen.html` тем же редакционным стандартом, чтобы атомарная страница `SCREEN` не звучала тяжелее, чем новый обзор графики.
+
+## Session 830 - 2026-05-13 21:48 - обзор графики дополнен таблицами
+
+Что сделано:
+- в `docs/manual/graphics.html` исправлен заголовок `Основные средства работы с экраном` на `Основные операторы работы с экраном`;
+- таблица операторов переписана построчно: `SCREEN`, `CLS`, `COLOR`, `LOCATE`, `PSET`, `PRESET`, `LINE`, `CIRCLE`, `POINT` и функции состояния больше не называются средствами;
+- добавлена сводная таблица режимов `SCREEN 0..10` с разрешением, числом столбцов `LOCATE` и числом строк `LOCATE`;
+- добавлена таблица классических цветов `0..15` прямо на обзорную страницу графики.
+
+Изменённые файлы:
+- `docs/manual/graphics.html`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- обзор графики должен содержать базовые справочные таблицы по режимам и цветам, потому что это первое место, где читатель ищет параметры экрана;
+- правка была редакционной и справочной: поведение языка, runnable `.axm`-примеры, автотесты, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` не менялись.
+
+Проверки:
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит;
+- проверка локальных HTML-ссылок прошла: `OK: html pages 89, missing links 0`;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- синхронизировать `docs/manual/screen.html` и `docs/manual/graphics-text.html` с обновлённым обзором графики, чтобы терминология операторов, режимов, цветов и `LOCATE` была одинаковой.
+
+## Session 831 - 2026-05-13 22:04 - выровнена страница SCREEN и терминология рисования
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и правила `axiom-doc-author`;
+- `docs/manual/screen.html` переписан в справочном порядке: назначение оператора, синтаксис, параметры, таблица режимов, замечания, пример и проверочные программы;
+- на странице `SCREEN` добавлена таблица режимов `SCREEN 0..10` с размерами, столбцами `LOCATE` и строками `LOCATE`;
+- раздел с сырыми путями к проверочным `.axm`-файлам заменён на список проверочных программ с понятными названиями и ссылками;
+- в `docs/manual/graphics-text.html` и `docs/manual/graphics-primitives.html` такие же строки вида `Ручной пример: samples/...` заменены на оформленные списки проверочных программ;
+- видимое название `Графические примитивы` заменено на `Операторы рисования` в соседних страницах, нижних ссылках, меню manual и поисковом индексе.
+
+Изменённые файлы:
+- `docs/manual/screen.html`
+- `docs/manual/graphics-text.html`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/screen-functions.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- пользовательская страница не должна показывать внутренний путь как основной текст раздела;
+- проверочные программы должны иметь читаемые названия, а путь к `.axm`-файлу должен оставаться ссылкой;
+- правка была редакционной: поведение языка, runnable `.axm`-примеры, автотесты, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` не менялись.
+
+Проверки:
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит;
+- проверка локальных HTML-ссылок прошла: `OK: html pages 89, missing links 0`;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- продолжить содержательный проход по `docs/manual/graphics-text.html`: привести `CLS`, `COLOR` и `LOCATE` к той же справочной структуре, сверить таблицы цветов и координат с `graphics.html` и `screen.html`, убрать остатки тяжёлой терминологии.
+
+## Session 832 - 2026-05-13 22:09 - переписаны текстовые операторы SCREEN
+
+Что сделано:
+- продолжен редакционный проход по графическому разделу справочника;
+- `docs/manual/graphics-text.html` переписан как страница операторов `CLS`, `COLOR` и `LOCATE`;
+- начало страницы теперь объясняет текст в окне `SCREEN` через `PRINT`, строки, столбцы и текстовую ячейку `8 x 12`;
+- для `COLOR` и `LOCATE` добавлены формальные записи с русскими метапеременными и таблицы параметров;
+- примеры на странице переведены на русский вывод;
+- таблица палитры упрощена до строгой справочной формы `индекс -> цвет`;
+- видимое название `Текстовый слой SCREEN` заменено на `Текст на экране` в соседних ссылках, верхней навигации, меню manual и поисковом индексе;
+- оставшиеся формулировки вроде `текстовый слой`, `пиксельная поверхность`, `графическая поверхность`, `Ручной пример: samples/...` проверены и убраны из затронутых графических страниц.
+
+Изменённые файлы:
+- `docs/manual/graphics-text.html`
+- `docs/manual/characters.html`
+- `docs/manual/data-and-input.html`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/graphics.html`
+- `docs/manual/index.html`
+- `docs/manual/input.html`
+- `docs/manual/print.html`
+- `docs/manual/screen-functions.html`
+- `docs/manual/screen.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- для читателя manual лучше использовать видимое название `Текст на экране`, а не техническое `Текстовый слой SCREEN`;
+- проверочные пути и технические термины должны быть ссылками и точными справочными словами, а не основным текстом;
+- правка была редакционной: поведение языка, runnable `.axm`-примеры, автотесты, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` не менялись.
+
+Проверки:
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит;
+- проверка локальных HTML-ссылок прошла: `OK: html pages 89, missing links 0`;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- продолжить содержательный проход по `docs/manual/graphics-primitives.html`: переписать страницу операторов рисования в том же стиле, убрать остатки технической подачи, проверить синтаксис и примеры `PSET`, `PRESET`, `LINE`, `CIRCLE` и `POINT`.
+
+## Session 833 - 2026-05-13 22:13 - переписаны операторы рисования
+
+Что сделано:
+- продолжен редакционный проход по графическому разделу справочника;
+- `docs/manual/graphics-primitives.html` переписан как страница операторов рисования `PSET`, `PRESET`, `LINE`, `CIRCLE` и функции `POINT`;
+- добавлено объяснение координат, цветов и требования выбрать графический режим `SCREEN 1..10`;
+- для `PSET`, `PRESET`, `LINE`, `CIRCLE` и `POINT` добавлены формальные записи с метапеременными и таблицы параметров;
+- примеры на странице уточнены так, чтобы вывод был понятен читателю;
+- в замечания добавлены палитра `0..255`, ошибка `MB3010` вне графического экрана и короткое сравнение с QuickBASIC по неподдержанным формам;
+- `docs/manual/scripts/search-index.js` уточнён без видимой формулировки `пиксельные команды`.
+
+Изменённые файлы:
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- страницу операторов рисования нужно читать как BASIC-справку по конкретным операторам, а не как описание внутреннего пиксельного слоя;
+- правка была редакционной: поведение языка, runnable `.axm`-примеры, автотесты, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` не менялись.
+
+Проверки:
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит;
+- проверка локальных HTML-ссылок прошла: `OK: html pages 89, missing links 0`;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- пройти `docs/manual/screen-functions.html`: привести функции `SCREENISACTIVE`, `SCREENMODE`, `SCREENWIDTH` и `SCREENHEIGHT` к той же справочной структуре и сверить формулировки с текущим договором `SCREEN 0` и графических режимов.
+
+## Session 834 - 2026-05-13 22:34 - полная форма CIRCLE
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и продолжена работа по более приоритетному запросу пользователя о `CIRCLE`;
+- изучен BASIC-договор оператора `CIRCLE`: `STEP`, пропускаемые параметры, дуги через `start`/`end`, отрицательные углы с радиальными линиями и `aspect` для эллипса;
+- `CIRCLE` расширен в parser, syntax, semantics, interpreter, lowering, bytecode-эмиссии, валидаторе байткода, `BytecodeVm` и host-слое IDE;
+- `ProgramConsoleService` теперь хранит текущую графическую позицию и рисует дуги/эллипсы через общий путь `DrawCircle`;
+- добавлен runnable sample `samples/graphics/primitives/circle_arcs_step_aspect.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/graphics/primitives/circle_arcs_step_aspect.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj` проходит;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~CircleSupportsStepArcAndAspect|FullyQualifiedName~DrawCircle"` проходит;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~DrawCircle"` проходит;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~ScreenCircleFullFormsAcceptanceSample"` проходит.
+
+Решения:
+- новая форма `CIRCLE` сохраняет BASIC-порядок параметров и не вводит отдельные имена для дуг или эллипсов;
+- `STEP` у `CIRCLE` использует текущую графическую позицию, которую обновляют `PSET`, `LINE` и сам `CIRCLE`;
+- отрицательные `start` и `end` не означают отрицательный угол дуги, а включают радиальную линию и используют модуль угла.
+
+Следующий шаг:
+- запустить широкий последовательный прогон затронутых тестовых проектов и сборки;
+- после стабилизации вернуться к плановому редакционному проходу `docs/manual/screen-functions.html`.
+
+## Session 835 - 2026-05-13 23:04 - CIRCLE доведён до проверенного состояния
+
+Что сделано:
+- завершена реализация полной BASIC-подобной формы `CIRCLE [STEP] (x, y), radius[, [color][, [start][, [end][, aspect]]]]`;
+- подтверждены `STEP`, пропускаемые параметры, дуги через `start`/`end`, радиальные линии для отрицательных углов и `aspect` для эллипсов в parser, semantics, interpreter, bytecode VM и host-слое IDE;
+- общий аудит положительных `.axm`-примеров получил дополнительные scripted input случаи для интерактивных `INKEY`, `KEYPRESS`, `ON KEY` и `ON MOUSE` примеров, чтобы графические примеры не зависали из-за отсутствующего ввода;
+- подтверждён runnable sample `samples/graphics/primitives/circle_arcs_step_aspect.axm`;
+- после финальных проверок оставлены актуальными спецификация, справочник, реестр покрытия bytecode и план.
+
+Изменённые файлы:
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Expressions.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/graphics/primitives/circle_arcs_step_aspect.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj` проходит: 104 теста;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj` проходит: 661 тест;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~DrawCircle"` проходит: 3 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~ScreenCircleFullFormsAcceptanceSample"` проходит: 1 тест;
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит;
+- `dotnet build Axiom.sln` проходит.
+
+Ограничения проверки:
+- полный `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj` не доведён до конца: отдельный существующий тест `OnKeyStopResumeAcceptanceSample_RunsOnBytecodeVm` и sample `samples/operators/on-key/stop_resume_handler.axm` зависают при scripted вводе и требуют отдельного разбора `ON KEY STOP/ON`.
+
+Следующий точный шаг:
+- разобраться с зависанием `samples/operators/on-key/stop_resume_handler.axm` в `Axiom.Execution.Tests`, затем повторить полный `Axiom.Execution.Tests`; после этого вернуться к плановому редакционному проходу по `docs/manual/screen-functions.html`.
+
+## Session 836 - 2026-05-14 10:01 - стабилизирован scripted input для ON KEY STOP/ON
+
+Что сделано:
+- проверены журналы открытой IDE после ручного запуска `samples/operators/on-key/stop_resume_handler.axm`;
+- ручной запуск в IDE прошёл успешно: вывод содержит приглашение, `LEFT`, `обработчик LEFT`, `готово`, статус `Success`;
+- установлено, что IDE запускала sample в режиме `Interpreter`, поэтому ручная проверка подтверждает пользовательский сценарий, но не воспроизводит байткодный acceptance-путь;
+- причина зависания `OnKeyStopResumeAcceptanceSample_RunsOnBytecodeVm` найдена в тестовом scripted input: очередь `LEFT`, `LEFT`, `ESC` была доступна сразу после регистрации обработчика, ещё до `ON KEY("LEFT"), STOP`, и boundary-диспетчер `BytecodeVm` мог обработать будущие клавиши раньше точки, которую sample имитирует как ручной ввод;
+- scripted input для точечного теста и для общего audit-провайдера `samples/operators/on-key/stop_resume_handler.axm` синхронизирован с низкоуровневыми runtime-тестами: добавлены два пустых чтения перед реальными клавишами, чтобы первые реальные `LEFT`, `LEFT`, `ESC` появились только после установки `STOP`.
+
+Изменённые файлы:
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~OnKeyStopResumeAcceptanceSample_RunsOnBytecodeVm" --no-restore` проходит: 1 тест;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~OnKey" --no-restore` проходит: 16 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~stop_resume_handler" --no-restore` проходит: 1 тест;
+- полный `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` был остановлен после долгой паузы без вывода, поэтому его нужно повторить отдельно с диагностикой зависаний.
+
+Решение:
+- поведение языка и sample не менялись, изменена только модель тестового ввода для сценария, который в реальном IDE-потоке получает клавиши после вывода приглашения и установки `STOP`;
+- новая `.axm`-проба и правка manual не требуются, потому что пользовательское поведение `ON KEY STOP/ON` не изменилось.
+
+Следующий точный шаг:
+- повторить полный `Axiom.Execution.Tests`; если он снова не завершится, запускать его с `--blame-hang` и искать следующий зависающий test case, затем вернуться к плановому редакционному проходу по `docs/manual/screen-functions.html`.
+
+## Session 837 - 2026-05-14 11:40 - уточнён текст примера ON KEY STOP/ON
+
+Что сделано:
+- проверены свежие журналы IDE после ручного запуска `samples/operators/on-key/stop_resume_handler.axm` в режиме `Bytecode`;
+- подтверждено, что запуск прошёл через `BytecodeVm` и завершился успешно: `requestedMode=Bytecode`, `actualEngine=BytecodeVm`, `status=Success`, диагностики отсутствуют;
+- вывод байткодного запуска: приглашение, `LEFT`, `обработчик LEFT`, `готово`;
+- текст runnable sample уточнён: вместо неясного «на паузе» теперь сказано «при отключённом обработчике», чтобы было понятно, что `ON KEY("LEFT"), STOP` отключает обработчик события, а не ставит всю программу на паузу;
+- ожидаемая строка вывода в acceptance-тесте синхронизирована с новым текстом sample.
+
+Изменённые файлы:
+- `samples/operators/on-key/stop_resume_handler.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~OnKeyStopResumeAcceptanceSample_RunsOnBytecodeVm" --no-restore` проходит: 1 тест;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~stop_resume_handler" --no-restore` проходит: 1 тест.
+
+Решение:
+- поведение языка не менялось, поэтому справочник и реестр покрытия bytecode не требуют отдельной правки;
+- sample должен говорить пользовательским языком: первое `LEFT` проверяет, что при отключённом обработчике клавиша доступна через `INKEY`, второе `LEFT` проверяет, что после `ON` обработчик снова вызывается.
+
+Следующий точный шаг:
+- повторить полный `Axiom.Execution.Tests`; если он снова не завершится, запускать его с `--blame-hang` и искать следующий зависающий test case, затем вернуться к плановому редакционному проходу по `docs/manual/screen-functions.html`.
+
+## Session 838 - 2026-05-14 11:56 - полный Axiom.Execution.Tests стабилизирован
+
+Что сделано:
+- повторён полный `Axiom.Execution.Tests` с `--blame-hang --blame-hang-timeout 90s`;
+- после снятия блокера `ON KEY STOP/ON` найдены и исправлены оставшиеся проблемы общего audit-ввода для интерактивных samples;
+- для `samples/graphics/text/print_locate_color.axm` audit-провайдер теперь отдаёт две клавиши, потому что пример содержит два `SLEEP` без длительности;
+- для `samples/graphics/input/text_screen_input.axm` audit-провайдер и точечный тест теперь отдают имя и возраст, потому что пример читает две переменные через `INPUT`;
+- для `samples/functions/keydown/held_modifiers.axm` и `samples/functions/keydown/canonical_aliases.axm` audit-провайдер задаёт удерживаемые клавиши;
+- для `samples/functions/mousex`, `mousey`, `mousebutton` и `mousepress` audit-провайдер теперь использует графический host с активируемым `SCREEN` и нужным состоянием мыши;
+- mouse acceptance-тесты синхронизированы с текущим договором `SCREEN`: проверяют, что обычный `Output` пуст, а текст после `SCREEN 0` находится в `GraphicsOutput`.
+
+Изменённые файлы:
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~print_locate_color" --no-restore` проходит: 1 тест;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~ScreenZeroTextInputAcceptanceSample_RunsOnBytecodeVm" --no-restore` проходит: 1 тест;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~text_screen_input|FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~canonical_aliases|FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~held_modifiers" --no-restore` проходит: 3 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MouseCoordinatesAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~MouseButtonAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~MousePressAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~OnMouseAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~OnMouseReleaseMoveAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~OnMouseWheelAcceptanceSample_RunsOnBytecodeVm" --no-restore` проходит: 6 тестов;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~mousex|FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~mousey|FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~mousebutton|FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~mousepress" --no-restore` проходит: 4 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --blame-hang --blame-hang-timeout 90s` проходит: 840 тестов.
+
+Решение:
+- проблема полного `Axiom.Execution.Tests` закрыта: набор больше не зависает и не падает;
+- изменения относятся к тестовому scripted input и ожиданиям acceptance-тестов, поведение языка и runnable samples не менялись.
+
+Следующий точный шаг:
+- вернуться к плановому редакционному проходу по `docs/manual/screen-functions.html`, если не появится более срочный запрос.
+
+## Session 839 - 2026-05-14 13:32 - STEP у PSET и LINE, позиционная форма POINT
+
+Что сделано:
+- после обязательного чтения `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` поднят текущий графический срез и сверены уже реализованные команды с QuickBASIC-линейкой;
+- выяснено, что базовое графическое ядро уже есть (`SCREEN`, `CLS`, `COLOR`, `LOCATE`, `PSET`, `PRESET`, `LINE`, `CIRCLE`, `POINT`), но для исторической совместимости не хватало `STEP` у `PSET`/`PRESET` и `LINE`, формы `LINE -(...)` от текущей графической позиции и позиционной формы `POINT(number)`;
+- синтаксис, binder, lowered-модель, bytecode-эмиссия, `BytecodeVm` и interpreter расширены на:
+  - `PSET [STEP](x, y)[, color]`;
+  - `PRESET [STEP](x, y)[, color]`;
+  - `LINE [[STEP](x1, y1)]-[STEP](x2, y2)[, [color][, B|BF]]`;
+  - `POINT(number)` со значениями `0..3` для чтения текущей графической позиции;
+- host-договор `IGraphicsHost` расширен текущими foreground/background-цветами и текущей графической позицией, чтобы interpreter и `BytecodeVm` использовали один и тот же источник состояния;
+- приведены к исторической модели цвета по умолчанию:
+  - `PSET` без цвета теперь берёт текущий foreground;
+  - `PRESET` без цвета теперь берёт текущий background;
+  - `LINE` без цвета теперь берёт текущий foreground;
+- добавлен runnable sample `samples/graphics/primitives/step_and_point_position.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html`, `docs/manual/screen-functions.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/Symbols/BuiltinFunctionId.cs`
+- `src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.Input.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/graphics/primitives/step_and_point_position.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/screen-functions.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build Axiom.sln` проходит;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Execute_PSetAndLineSupportStepAndPointPosition|FullyQualifiedName~Execute_CircleSupportsStepArcAndAspect|FullyQualifiedName~Execute_CompiledPSetAndLineSupportStepAndPointPosition|FullyQualifiedName~Execute_CompiledCircleSupportsStepArcAndAspect"` проходит: 4 теста;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~GraphicsState_TracksCurrentPositionAndColors|FullyQualifiedName~DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius"` проходит: 2 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~ScreenStepAndPointPositionAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ScreenPrimitivesAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ScreenCircleFullFormsAcceptanceSample_RunsOnBytecodeVm"` проходит: 3 теста;
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит.
+
+Решение:
+- сначала выровнять историческое поведение уже существующих примитивов, а не начинать следующую большую графическую ветку с `PAINT` или `DRAW`;
+- `POINT(number)` введён как часть уже известного BASIC-имени `POINT`, а не как новый built-in с отдельным названием;
+- изменение цвета по умолчанию для `PSET`/`PRESET`/`LINE` закреплено сразу в runtime, VM, sample и manual, чтобы не оставлять расхождение между интерпретатором и справочником.
+
+Следующий точный шаг:
+- выбрать следующий самостоятельный графический срез: либо `PAINT` как базовую заливку, либо `DRAW` как графический макроязык;
+- если перед этим нужнее координатная инфраструктура, спроектировать отдельным пакетом `VIEW`, `WINDOW` и `PMAP`.
+
+## Session 840 - 2026-05-14 12:59 - исправлен IDE-путь графического состояния для STEP и POINT
+
+Сделано:
+- разобран ручной запуск `samples/graphics/primitives/step_and_point_position.axm` по свежему журналу `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Logs\ide-session-20260514-125143.log`;
+- подтверждено, что sample реально выполнялся в `BytecodeVm`, а расхождение возникало не в parser/runtime-логике примитивов, а в IDE/execution-переходнике;
+- найдена точная причина: `ExecutionRuntimeHostAdapter` и `IdeInputProvider` проксировали графические методы, но не проксировали свойства текущего графического состояния `CurrentForegroundColor`, `CurrentBackgroundColor`, `CurrentGraphicsX`, `CurrentGraphicsY`;
+- из-за этого `BytecodeVm` в реальном IDE-пути читал дефолты `IGraphicsHost` (`15/0/0/0`), поэтому `POINT(0..3)`, `PSET STEP` и `LINE` от текущей точки работали как будто позиция и цвета не менялись;
+- добавлено проксирование этих свойств в оба слоя;
+- добавлены регрессионные проверки:
+  - `IdeInputProvider_ProxiesGraphicsStateFromProgramConsoleService`;
+  - `Run_GraphicsStepSample_CompletesOnBytecodeVmWithoutInterpreterFallback`;
+  - `Run_WithBytecodeMode_UsesBytecodeVmForGraphicsStepAndPointState`;
+- тестовый graphics-host в `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` доведён до хранения текущих цветов и текущей графической позиции, чтобы такие ошибки больше не маскировались дефолтами тестового двойника.
+
+Изменённые файлы:
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~Run_GraphicsStepSample_CompletesOnBytecodeVmWithoutInterpreterFallback|FullyQualifiedName~IdeInputProvider_ProxiesGraphicsStateFromProgramConsoleService|FullyQualifiedName~GraphicsState_TracksCurrentPositionAndColors" --no-restore` проходит: 3 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForGraphicsStepAndPointState|FullyQualifiedName~ScreenStepAndPointPositionAcceptanceSample_RunsOnBytecodeVm" --no-restore` проходит: 2 теста.
+
+Решение:
+- ручное расхождение IDE против тестов было вызвано не старой сборкой и не логикой `ProgramConsoleService`, а неполным проксированием состояния через IDE/execution-адаптеры;
+- для `SCREEN`-сценариев `ProgramRunResult.OutputText` по-прежнему может оставаться пустым, потому что `PRINT` внутри активного `SCREEN` уходит в графический канал, а не в обычный transcript; это не связано с исправленным багом `STEP`/`POINT`.
+
+Следующий точный шаг:
+- вручную повторить `samples/graphics/primitives/step_and_point_position.axm` в `Axiom.Ide` и убедиться по экрану, что теперь выводятся ожидаемые значения `point0=10 point1=20`, `after pset step=15,24`, `after line from current=30,40`, `after line step-step=45,60`, `pixel 10,20=6`, `pixel 15,24=6`;
+- после подтверждения вернуться к следующему самостоятельному графическому срезу: `PAINT`, `DRAW` или координатный пакет `VIEW`/`WINDOW`/`PMAP`.
+
+## Session 841 - 2026-05-14 17:07 - реализован прозрачный текстовый фон COLOR в SCREEN
+
+Сделано:
+- после обязательного чтения `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md` и плана `docs/План современная BASIC-модель текстового слоя SCREEN.txt` продолжена и завершена реализация современного договора текстового слоя `SCREEN`;
+- подтверждён и доведён центральный host-контракт с тремя состояниями фона `Unchanged`, `Color`, `Transparent`, чтобы `COLOR foreground`, `COLOR foreground, background` и `COLOR foreground, TRANSPARENT` больше не делили один и тот же смысл;
+- исправлена IDE-регрессия: `ProgramConsoleService` сохраняет последний числовой background для `PRESET`, даже когда текстовый фон переведён в прозрачный режим;
+- добавлены адресные runtime- и `BytecodeVm`-проверки на непрозрачный фон, прозрачный фон и сохранение режима фона после `COLOR foreground`;
+- словари подсветки `Axiom.xshd` и `Axiom.Dark.xshd` дополнены ключевым словом `TRANSPARENT`;
+- добавлен runnable sample `samples/graphics/text/transparent_text.axm`, который показывает непрозрачную строку, прозрачную подпись поверх графики, ожидание `ESC` и завершение через `SCREEN 0`;
+- обновлены `docs/manual/graphics-text.html`, `docs/manual/scripts/search-index.js`, `docs/SPECIFICATION3.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/graphics/text/transparent_text.axm`
+- `docs/manual/graphics-text.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Execute_ColorSupportsOpaqueTransparentAndUnchangedBackgroundModes|FullyQualifiedName~Execute_CompiledColorSupportsOpaqueTransparentAndUnchangedBackgroundModes"` проходит: 2 теста;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~SetTextColor_TransparentBackgroundPreservesNumericBackgroundForPreset|FullyQualifiedName~WriteGraphicsText_PreservesCellColorsAndTransparentBackground|FullyQualifiedName~Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes"` проходит: 3 теста;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~ScreenTransparentTextAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ScreenTextAcceptanceSample_RunsOnBytecodeVm"` проходит: 2 теста.
+
+Решение:
+- считать план по современному текстовому фону `SCREEN` реализованным на уровне языка, VM, IDE, acceptance-sample и manual;
+- сохранять разделение между прозрачностью текстового фона и числовым background для графических операций как постоянный договор дальнейших графических задач.
+
+Следующий точный шаг:
+- вручную открыть `samples/graphics/text/transparent_text.axm` в `Axiom.Ide` и визуально подтвердить, что непрозрачная строка имеет синюю плашку, а строка `TRANSPARENT` лежит поверх красного прямоугольника без своей плашки;
+- после ручного подтверждения вернуться к следующему самостоятельному графическому срезу: `PAINT`, `DRAW` или `VIEW`/`WINDOW`/`PMAP`.
+
+## Session 842 - 2026-05-14 17:18 - отложенная прокрутка SCREEN 0 вынесена в отдельный файл, следующим срезом выбран PAINT
+
+Сделано:
+- после пользовательского подтверждения по скриншоту и журналу зафиксировано, что `transparent_text.axm` ведёт себя правильно и в интерпретаторе, и в `BytecodeVm`;
+- обсуждение автопереноса и прокрутки не смешивалось с текущим графическим шагом: принято решение не расширять сейчас общий договор `SCREEN`;
+- создан новый файл `docs/FUTURE.md` для отложенных и будущих задач, которые нельзя терять между сессиями, но которые не должны засорять активный ближайший план;
+- в `docs/FUTURE.md` записана тема будущей вертикальной прокрутки `SCREEN 0` с отдельным договором и причиной, почему она отложена;
+- в `docs/PLANS3.md` зафиксировано, что следующим самостоятельным графическим срезом выбран `PAINT`, а не дальнейшее расширение текстового слоя.
+
+Изменённые файлы:
+- `docs/FUTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- для `SCREEN 1..10` сохранить текущий договор без автопереноса и автопрокрутки;
+- для `SCREEN 0` не потерять идею будущей прокрутки, но вести её как отдельную отложенную задачу;
+- следующий активный графический шаг вести вокруг `PAINT` как следующего базового примитива после `PSET`, `PRESET`, `LINE` и `CIRCLE`.
+
+Следующий точный шаг:
+- открыть проектирование `PAINT` через обновление `docs/SPECIFICATION3.md`: зафиксировать синтаксис, минимальную семантику первого среза, ограничения, диагностику и acceptance-sample;
+- после этого переходить к реализации.
+
+## Session 843 - 2026-05-14 17:24 - зафиксирован договор первого графического среза PAINT
+
+Сделано:
+- после обязательного чтения `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` открыт следующий активный графический шаг вокруг `PAINT`;
+- в `docs/SPECIFICATION3.md` добавлен первый пользовательский договор `PAINT` как базовой граничной заливки;
+- зафиксированы формы `PAINT (x, y)`, `PAINT (x, y), fillColor` и `PAINT (x, y), fillColor, borderColor`;
+- зафиксированы обязательные правила первого среза: только `SCREEN 1..10`, координаты как `LONG`, foreground по умолчанию от `COLOR`, граница по умолчанию из стартового пикселя, отсутствие действия при совпадении стартового пикселя с цветом заливки или границы, распространение только по четырём соседям;
+- отдельно зафиксированы границы этого шага: без `STEP`, без шаблонов заливки, без отдельного высокого host-API и без смешивания с отложенной темой прокрутки `SCREEN 0`.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- сначала реализовать минимальный честный `PAINT`, который естественно продолжает уже существующие `PSET`, `PRESET`, `LINE`, `LINE ..., BF`, `CIRCLE` и `POINT`;
+- не вводить пока расширенные формы, чтобы сквозная реализация в interpreter, `BytecodeVm` и IDE-host оставалась локальной и проверяемой.
+
+Следующий точный шаг:
+- провести реализацию `PAINT` по всей цепочке `lexer -> syntax -> parser -> binder -> lowering -> bytecode compiler -> interpreter -> BytecodeVm -> IDE host`;
+- затем добавить automated tests, runnable sample, manual и обновление `docs/BYTECODE_COVERAGE.md`.
+
+## Session 844 - 2026-05-14 18:18 - базовый PAINT реализован
+
+Сделано:
+- после обязательного чтения `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` продолжен активный графический шаг `PAINT`;
+- ключевое слово `PAINT` добавлено в `lexer`, `syntax`, parser, binder, lowering, bytecode compiler, interpreter и `BytecodeVm`;
+- базовая заливка реализована как общий runtime-хелпер поверх `GetPixel` и `SetPixel`, без нового высокого host-API;
+- добавлены parser-, interpreter-, `BytecodeVm`-, IDE framebuffer- и execution-acceptance-проверки;
+- добавлен runnable sample `samples/graphics/primitives/paint_fill_region.axm`;
+- обновлены `docs/manual/graphics-primitives.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundNodeKind.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Model/Opcode.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Execution/GraphicsFloodFill.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/graphics/primitives/paint_fill_region.axm`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать первый базовый договор `PAINT` завершённым без `STEP` и шаблонной заливки;
+- не смешивать этот шаг с отложенной темой прокрутки `SCREEN 0`.
+
+Следующий точный шаг:
+- последовательно прогнать целевые проверки;
+- затем вручную проверить `samples/graphics/primitives/paint_fill_region.axm` в `Axiom.Ide`.
+
+## Session 845 - 2026-05-14 19:02 - PAINT в IDE переведён на пакетную публикацию кадра
+
+Сделано:
+- после пользовательской ручной проверки подтверждено, что базовый `PAINT` в IDE визуально закрашивал область слишком медленно, с заметным распространением по слоям;
+- узкое место локализовано в `ProgramConsoleService`: сама заливка работала корректно, но UI-путь не отделял массовое изменение framebuffer от публикации кадра;
+- в `ProgramConsoleService` добавлен внутренний пакетный режим графического обновления для `PAINT`, чтобы заливка выполнялась целиком и только после этого планировалась визуальная публикация;
+- повторно пройдены целевые IDE-проверки `Paint_FillsRegionWithoutRecoloringBorder` и `Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\\Axiom.Ide.Tests\\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~Paint_FillsRegionWithoutRecoloringBorder|FullyQualifiedName~Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes" --no-restore` проходит.
+
+Решение:
+- считать медленную покадровую заливку дефектом первого host-пути, а не ожидаемым пользовательским поведением;
+- не менять пользовательский синтаксис `PAINT`, а доводить только внутренний IDE-rendering.
+
+Следующий точный шаг:
+- отдельно добить execution acceptance для `samples/graphics/primitives/paint_fill_region.axm`, если эта ветка остаётся обязательной перед выбором следующего графического среза;
+- затем вернуться к выбору следующего самостоятельного графического шага.
+
+## Session 846 - 2026-05-14 19:18 - PAINT переведён на быстрый host-путь без пиксельных прокси-вызовов
+
+Сделано:
+- после повторной пользовательской оценки подтверждено, что одна только пакетная публикация кадра не дала заметного ускорения `PAINT`;
+- реальный источник тормоза локализован в том, что runtime-заливка в IDE шла через цепочку `ExecutionRuntimeHostAdapter -> IdeInputProvider -> ProgramConsoleService` с отдельными `GetPixel` и `SetPixel` на каждый пиксель;
+- в `IGraphicsHost` добавлен специализированный метод `Paint(x, y, fillColor, borderColor)` с fallback-реализацией по умолчанию через `GraphicsFloodFill`;
+- interpreter и `BytecodeVm` переведены на `_host.Paint(...)` вместо прямого вызова flood-fill helper через делегаты `GetPixel`/`SetPixel`;
+- `ExecutionRuntimeHostAdapter` и `IdeInputProvider` проксируют новый метод целиком, а `ProgramConsoleService` выполняет заливку локально на стороне IDE-host;
+- повторно пройдены целевые runtime- и IDE-проверки.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\\Axiom.Runtime.Tests\\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Execute_PaintFillsBoundedRegion|FullyQualifiedName~Execute_CompiledPaintFillsBoundedRegion" --no-restore` проходит;
+- `dotnet test tests\\Axiom.Ide.Tests\\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~Paint_FillsRegionWithoutRecoloringBorder|FullyQualifiedName~Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes" --no-restore` проходит.
+
+Решение:
+- считать именно межслойные пиксельные прокси-вызовы главным тормозом первого варианта `PAINT` в IDE;
+- держать специализированный host-путь `Paint(...)` как постоянную оптимизацию для массовых графических операций.
+
+Следующий точный шаг:
+- снова вручную проверить `paint_fill_region.axm` в IDE;
+- если ручная скорость уже устраивает, вернуться к execution acceptance или к следующему графическому срезу.
+
+## Session 847 - 2026-05-14 18:44 - закрытие SCREEN во время SLEEP больше не оставляет IDE в состоянии выполнения
+
+Сделано:
+- после обязательного перечитывания `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` разобран новый дефект IDE по пользовательскому логу;
+- по журналу `ide-session-20260514-182447.log` подтверждено, что после `screen.closed-by-user` выполнение не доходило до `run.pipeline`, то есть зависание происходило не в сбросе UI, а внутри самого runtime-ожидания;
+- найдена причина: `ProgramConsoleService` корректно поднимал `IsCancellationRequested` при закрытии native-окна `SCREEN`, но `SLEEP milliseconds` в interpreter и `BytecodeVm`, а также `SLEEP` без аргумента в `BytecodeVm`, не прерывали ожидание по этому флагу;
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.Keyboard.cs` переведены на прерываемое ожидание короткими порциями по 10 мс с проверкой отмены между шагами;
+- добавлены регрессионные runtime-тесты для обеих форм `SLEEP`: отмена во время `SLEEP` и отмена во время `SLEEP 1000` как для interpreter, так и для `BytecodeVm`;
+- тестовые runtime-host'ы в `tests/Axiom.Runtime.Tests/InterpreterTests.cs` и `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` дополнены явной реализацией `IRuntimeCancellationProvider`, чтобы проверка точно шла через тот же контракт, что и в IDE.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Keyboard.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "Execute_SleepWithoutDuration_StopsWhenCancellationIsRequested|Execute_SleepWithDuration_StopsWhenCancellationIsRequested|Execute_CompiledSleepWithoutDuration_StopsWhenCancellationIsRequested|Execute_CompiledSleepWithDuration_StopsWhenCancellationIsRequested"` проходит;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "Run_WhenHostCancellationIsRequested_ReturnsCancelled"` проходит.
+
+Решение:
+- считать этот дефект закрытым именно на уровне runtime-контракта отмены: IDE уже умела переводить `Cancelled` в выход из режима `Выполнение`, проблема была в том, что до `Cancelled` выполнение не доходило;
+- не добавлять отдельный UI-обходной сброс состояния в `MainWindowViewModel`, пока корректно работает нормальная цепочка `screen.closed-by-user -> cancellation -> ProgramRunResult.Cancelled`.
+
+Следующий точный шаг:
+- вручную повторить пользовательский сценарий: открыть графический пример с `SLEEP`, закрыть окно `SCREEN` крестиком и убедиться, что IDE сразу возвращается в режим редактирования со статусом отменённого запуска;
+- после ручного подтверждения вернуться к следующему графическому срезу.

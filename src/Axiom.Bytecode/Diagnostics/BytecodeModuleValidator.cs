@@ -710,10 +710,17 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.Color:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    break;
+
                 case Opcode.PSet:
                 case Opcode.Line:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    break;
+
                 case Opcode.Circle:
-                    ValidateOperandCount(module, routine, instructionIndex, instruction, instruction.Opcode == Opcode.Color || instruction.Opcode == Opcode.Circle ? 1 : 2);
+                case Opcode.Paint:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     break;
 
                 case Opcode.StatementBoundary:
@@ -1237,7 +1244,7 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.Color:
             {
-                if (instruction.GetOperand(0) == 2)
+                if (instruction.GetOperand(1) == 2)
                 {
                     var backgroundType = Pop();
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, backgroundType, TypeSymbol.Integer, "цвет фона");
@@ -1293,7 +1300,42 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.Circle:
             {
-                if (instruction.GetOperand(0) == 4)
+                var flags = instruction.GetOperand(0);
+                var valueCount = instruction.GetOperand(1);
+                var expectedValueCount = 3
+                    + ((flags & 16) != 0 ? 1 : 0)
+                    + ((flags & 2) != 0 ? 1 : 0)
+                    + ((flags & 4) != 0 ? 1 : 0)
+                    + ((flags & 8) != 0 ? 1 : 0);
+                if (valueCount != expectedValueCount)
+                {
+                    Report(
+                        "BC4122",
+                        $"Инструкция 'Circle' в процедуре '{routine.Name}' содержит несовместимые флаги {flags} и число значений {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                if ((flags & 8) != 0)
+                {
+                    var aspectType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, aspectType, TypeSymbol.Double, "aspect");
+                }
+
+                if ((flags & 4) != 0)
+                {
+                    var endType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, endType, TypeSymbol.Double, "конечный угол");
+                }
+
+                if ((flags & 2) != 0)
+                {
+                    var startType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, startType, TypeSymbol.Double, "начальный угол");
+                }
+
+                if ((flags & 16) != 0)
                 {
                     var colorType = Pop();
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет окружности");
@@ -1304,7 +1346,46 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, TypeSymbol.Long, "радиус");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, TypeSymbol.Double, "радиус");
+                break;
+            }
+
+            case Opcode.Paint:
+            {
+                var flags = instruction.GetOperand(0);
+                var valueCount = instruction.GetOperand(1);
+                var hasFillColor = (flags & 1) != 0;
+                var hasBorderColor = (flags & 2) != 0;
+                var expectedValueCount = 2
+                    + (hasFillColor ? 1 : 0)
+                    + (hasBorderColor ? 1 : 0);
+                if (valueCount != expectedValueCount)
+                {
+                    Report(
+                        "BC4123",
+                        $"Инструкция {instruction.Opcode} ожидает {expectedValueCount} значений на стеке, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                    break;
+                }
+
+                if (hasBorderColor)
+                {
+                    var borderType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, borderType, TypeSymbol.Integer, "цвет границы");
+                }
+
+                if (hasFillColor)
+                {
+                    var fillType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, fillType, TypeSymbol.Integer, "цвет заливки");
+                }
+
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
                 break;
             }
 

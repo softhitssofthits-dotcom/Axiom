@@ -31,15 +31,20 @@
             </section>
 
             <section class="article-section">
-                <h2>Основные средства работы с экраном</h2>
+                <h2>Основные операторы работы с экраном</h2>
                 <table>
                     <thead>
-                        <tr><th>Средство</th><th>Назначение</th></tr>
+                        <tr><th>Оператор или функция</th><th>Назначение</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Выбирает текстовый или графический режим и задаёт размер экранного окна.</td></tr>
-                        <tr><td><a href="graphics-text.html"><code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code></a></td><td>Очищают экран, задают цвет текста и помещают текстовый курсор в нужную строку и столбец.</td></tr>
-                        <tr><td><a href="graphics-primitives.html"><code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code></a></td><td>Рисуют отдельную точку, стирают точку, проводят линию, строят прямоугольник или окружность.</td></tr>
+                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Оператор, выбирающий текстовый или графический режим и задающий размер экранного окна.</td></tr>
+                        <tr><td><a href="graphics-text.html"><code>CLS</code></a></td><td>Оператор, очищающий экран и возвращающий текстовый курсор в начало.</td></tr>
+                        <tr><td><a href="graphics-text.html"><code>COLOR</code></a></td><td>Оператор, задающий цвет символов и, при необходимости, цвет фона.</td></tr>
+                        <tr><td><a href="graphics-text.html"><code>LOCATE</code></a></td><td>Оператор, помещающий текстовый курсор в указанную строку и столбец.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>PSET</code></a></td><td>Оператор, закрашивающий одну точку графического экрана.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>PRESET</code></a></td><td>Оператор, стирающий одну точку или закрашивающий её указанным цветом.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>LINE</code></a></td><td>Оператор, рисующий линию, рамку или закрашенный прямоугольник.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>CIRCLE</code></a></td><td>Оператор, рисующий окружность.</td></tr>
                         <tr><td><a href="graphics-primitives.html"><code>POINT</code></a></td><td>Возвращает цвет точки на графическом экране.</td></tr>
                         <tr><td><a href="screen-functions.html"><code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code>, <code>SCREENHEIGHT</code></a></td><td>Сообщают, включён ли графический экран, какой режим выбран и каковы его размеры.</td></tr>
                     </tbody>
@@ -49,7 +54,26 @@
             <section class="article-section">
                 <h2>Экранные режимы</h2>
                 <p>Режим <code>SCREEN 0</code> открывает текстовое окно размером <code>80 x 25</code> знакомест. В нём работают <code>PRINT</code>, <code>INPUT</code> и клавиатурный ввод, но операторы рисования недоступны.</p>
-                <p>Режимы <code>SCREEN 1</code> ... <code>SCREEN 10</code> открывают графический экран. Каждый такой режим имеет логическую ширину и высоту в пикселях. Например, <code>SCREEN 1</code> даёт малый экран <code>320 x 200</code>, а <code>SCREEN 8</code> - экран <code>1920 x 1080</code>. Полная таблица режимов приведена на странице оператора <a href="screen.html"><code>SCREEN</code></a>.</p>
+                <p>Режимы <code>SCREEN 1</code> ... <code>SCREEN 10</code> открывают графический экран. Каждый режим имеет логическую ширину и высоту в пикселях, а текстовый оператор <code>LOCATE</code> делит этот экран на строки и столбцы. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей.</p>
+                <table>
+                    <thead>
+                        <tr><th>Режим</th><th>Размер в пикселях</th><th>Столбцы LOCATE</th><th>Строки LOCATE</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td><code>80</code></td><td><code>25</code></td></tr>
+                        <tr><td><code>SCREEN 1</code></td><td><code>320 x 200</code></td><td><code>40</code></td><td><code>16</code></td></tr>
+                        <tr><td><code>SCREEN 2</code></td><td><code>640 x 480</code></td><td><code>80</code></td><td><code>40</code></td></tr>
+                        <tr><td><code>SCREEN 3</code></td><td><code>800 x 600</code></td><td><code>100</code></td><td><code>50</code></td></tr>
+                        <tr><td><code>SCREEN 4</code></td><td><code>1024 x 768</code></td><td><code>128</code></td><td><code>64</code></td></tr>
+                        <tr><td><code>SCREEN 5</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td></tr>
+                        <tr><td><code>SCREEN 6</code></td><td><code>1366 x 768</code></td><td><code>170</code></td><td><code>64</code></td></tr>
+                        <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td><code>200</code></td><td><code>75</code></td></tr>
+                        <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td><code>240</code></td><td><code>90</code></td></tr>
+                        <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td><code>320</code></td><td><code>120</code></td></tr>
+                        <tr><td><code>SCREEN 10</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td></tr>
+                    </tbody>
+                </table>
+                <p>Если размер режима не делится на размер текстовой ячейки без остатка, оставшиеся пиксели справа или снизу не образуют отдельную позицию <code>LOCATE</code>.</p>
             </section>
 
             <section class="article-section">
@@ -62,6 +86,29 @@
                 <h2>Цвета экрана</h2>
                 <p>Цвет задаётся числом от <code>0</code> до <code>255</code>. Значения <code>0..15</code> соответствуют классическим цветам BASIC, значения <code>16..231</code> образуют цветовой куб, а значения <code>232..255</code> дают оттенки серого. Если передано число вне этого диапазона, Axiom приводит его к палитре по правилу <code>ABS(color) MOD 256</code>.</p>
                 <p>Оператор <code>COLOR</code> задаёт цвет символов и, если указан второй аргумент, цвет фона. Операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code> используют те же номера цветов для рисования на графическом экране.</p>
+                <table>
+                    <thead>
+                        <tr><th>Номер</th><th>Цвет</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>0</code></td><td>чёрный</td></tr>
+                        <tr><td><code>1</code></td><td>тёмно-синий</td></tr>
+                        <tr><td><code>2</code></td><td>тёмно-зелёный</td></tr>
+                        <tr><td><code>3</code></td><td>тёмно-голубой</td></tr>
+                        <tr><td><code>4</code></td><td>тёмно-красный</td></tr>
+                        <tr><td><code>5</code></td><td>тёмно-пурпурный</td></tr>
+                        <tr><td><code>6</code></td><td>коричневый</td></tr>
+                        <tr><td><code>7</code></td><td>светло-серый</td></tr>
+                        <tr><td><code>8</code></td><td>тёмно-серый</td></tr>
+                        <tr><td><code>9</code></td><td>светло-синий</td></tr>
+                        <tr><td><code>10</code></td><td>светло-зелёный</td></tr>
+                        <tr><td><code>11</code></td><td>светло-голубой</td></tr>
+                        <tr><td><code>12</code></td><td>светло-красный</td></tr>
+                        <tr><td><code>13</code></td><td>светло-пурпурный</td></tr>
+                        <tr><td><code>14</code></td><td>жёлтый</td></tr>
+                        <tr><td><code>15</code></td><td>белый</td></tr>
+                    </tbody>
+                </table>
             </section>
 
             <section class="article-section">
@@ -86,7 +133,7 @@ SCREEN 0</code></pre>
                 <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как ручные проверки экрана, текста, мыши и операторов рисования.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: сведения о режиме</a></li>
-                    <li><a href="../../samples/graphics/text/print_locate_color.axm">Текстовый слой: PRINT, LOCATE и COLOR</a></li>
+                    <li><a href="../../samples/graphics/text/print_locate_color.axm">Текст, позиция курсора и цвета</a></li>
                     <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Операторы рисования: PSET, LINE и CIRCLE</a></li>
                     <li><a href="../../samples/graphics/mouse/mouse_events.axm">Мышь в графическом окне</a></li>
                     <li><a href="../../samples/graphics/input/input_on_screen.axm">INPUT в экранном окне</a></li>
@@ -97,7 +144,7 @@ SCREEN 0</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
-                    <a href="graphics-text.html">Текстовый слой SCREEN</a>
+                    <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                     <a href="mousex.html">Мышь</a>

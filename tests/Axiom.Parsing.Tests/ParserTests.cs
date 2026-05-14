@@ -363,13 +363,26 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_ColorTransparentStatement()
+    {
+        var program = ParseProgram("COLOR 15, TRANSPARENT", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var color = AssertGlobalStatement<ColorStatementSyntax>(program);
+        Assert.Null(color.BackgroundExpression);
+        Assert.NotNull(color.TransparentKeyword);
+        Assert.Equal(SyntaxKind.TransparentKeyword, color.TransparentKeyword!.Kind);
+    }
+
+    [Fact]
     public void Parse_GraphicsPrimitiveStatements()
     {
         var program = ParseProgram("""
             PSET (1, 2), 12
             PRESET (3, 4), 0
             LINE (0, 0)-(10, 10), 14, BF
-            CIRCLE (20, 20), 5, 11
+            CIRCLE STEP (20, 20), 5, , -PI / 2, PI, 0.5
+            PAINT (8, 9), 6, 1
             """, out var diagnostics);
 
         Assert.Empty(diagnostics);
@@ -377,11 +390,18 @@ public sealed class ParserTests
         var preset = Assert.IsType<PSetStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
         var line = Assert.IsType<LineStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
         var circle = Assert.IsType<CircleStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
+        var paint = Assert.IsType<PaintStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[4]).Statement);
 
         Assert.False(pset.Reset);
         Assert.True(preset.Reset);
         Assert.Equal(LineBoxKind.Filled, line.BoxKind);
-        Assert.NotNull(circle.ColorExpression);
+        Assert.True(circle.IsRelative);
+        Assert.Null(circle.ColorExpression);
+        Assert.NotNull(circle.StartExpression);
+        Assert.NotNull(circle.EndExpression);
+        Assert.NotNull(circle.AspectExpression);
+        Assert.NotNull(paint.FillColorExpression);
+        Assert.NotNull(paint.BorderColorExpression);
     }
 
     [Fact]

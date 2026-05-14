@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Функции</p>
             <h1 class="page-title">Функции состояния SCREEN</h1>
-            <p class="lead">Функции состояния позволяют программе узнать, включён ли графический режим, какой режим выбран и каковы текущие логические размеры текущего окна <code>SCREEN</code>.</p>
+            <p class="lead">Функции состояния позволяют программе узнать, включён ли графический режим, какой режим выбран, каковы текущие логические размеры окна <code>SCREEN</code> и где находится текущая графическая позиция.</p>
 
             <section class="article-section">
                 <h2 id="screenisactive">SCREENISACTIVE</h2>
@@ -49,12 +49,23 @@
             </section>
 
             <section class="article-section">
+                <h2 id="point-position">POINT(number)</h2>
+<pre><code>POINT(0)
+POINT(1)
+POINT(2)
+POINT(3)</code></pre>
+                <p>Форма <code>POINT(number)</code> возвращает текущую графическую позицию. Значения <code>0</code> и <code>2</code> возвращают текущий X, а значения <code>1</code> и <code>3</code> возвращают текущий Y. Эту форму удобно использовать после <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code>, когда следующая фигура строится относительно предыдущей.</p>
+            </section>
+
+            <section class="article-section">
                 <h2>Пример чтения состояния</h2>
 <pre><code>PRINT SCREENISACTIVE()
 SCREEN 5
 PRINT SCREENISACTIVE()
 PRINT SCREENMODE()
 PRINT SCREENWIDTH(); "x"; SCREENHEIGHT()
+PSET (10, 20), 12
+PRINT POINT(0); ","; POINT(1)
 SCREEN 0
 PRINT SCREENMODE()</code></pre>
             </section>
@@ -64,8 +75,8 @@ PRINT SCREENMODE()</code></pre>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="graphics.html">Графика и экран</a>
-                    <a href="graphics-text.html">Текстовый слой SCREEN</a>
-                    <a href="graphics-primitives.html">Графические примитивы</a>
+                    <a href="graphics-text.html">Текст на экране</a>
+                    <a href="graphics-primitives.html">Операторы рисования</a>
                 </div>
             </section>
 

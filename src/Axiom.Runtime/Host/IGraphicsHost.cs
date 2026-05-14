@@ -7,6 +7,13 @@ public enum GraphicsLineKind
     FilledBox
 }
 
+public enum TextBackgroundMode
+{
+    Unchanged,
+    Color,
+    Transparent
+}
+
 public interface IGraphicsHost
 {
     bool IsScreenActive => false;
@@ -18,6 +25,16 @@ public interface IGraphicsHost
     int ScreenWidth => 0;
 
     int ScreenHeight => 0;
+
+    int CurrentForegroundColor => 15;
+
+    int CurrentBackgroundColor => 0;
+
+    bool IsTextBackgroundTransparent => false;
+
+    long CurrentGraphicsX => 0;
+
+    long CurrentGraphicsY => 0;
 
     void ActivateScreen(int mode)
     {
@@ -31,7 +48,7 @@ public interface IGraphicsHost
     {
     }
 
-    void SetTextColor(int foreground, int? background)
+    void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
     {
     }
 
@@ -51,11 +68,32 @@ public interface IGraphicsHost
 
     int GetPixel(long x, long y) => 0;
 
+    void Paint(long x, long y, int fillColor, int borderColor)
+    {
+        GraphicsFloodFill.Paint(
+            x,
+            y,
+            fillColor,
+            borderColor,
+            GetPixel,
+            SetPixel);
+    }
+
     void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
     }
 
-    void DrawCircle(long x, long y, long radius, int color)
+    void DrawCircle(
+        long x,
+        long y,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
     {
     }
 }

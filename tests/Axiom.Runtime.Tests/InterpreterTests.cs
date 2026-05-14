@@ -234,6 +234,52 @@ PRINT INKEY()
     }
 
     [Fact]
+    public void Execute_SleepWithoutDuration_StopsWhenCancellationIsRequested()
+    {
+        const string text = """
+SLEEP
+PRINT "after"
+""";
+
+        var host = new TestRuntimeHost([], cancelAfterReadKeyCalls: 3);
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var result = Interpreter.Execute(program, host);
+
+        Assert.True(result.Cancelled);
+        Assert.False(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain("after", host.Output, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_SleepWithDuration_StopsWhenCancellationIsRequested()
+    {
+        const string text = """
+SLEEP 1000
+PRINT "after"
+""";
+
+        var host = new TestRuntimeHost([], cancelAfterCancellationPolls: 3);
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var result = Interpreter.Execute(program, host);
+
+        Assert.True(result.Cancelled);
+        Assert.False(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain("after", host.Output, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Execute_KeyDownReadsHeldKeyStateWithoutConsumingQueuedKeys()
     {
         const string text = """
@@ -367,6 +413,108 @@ PRINT MOUSEBUTTON(1)
 
         Assert.False(result.Succeeded);
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_CircleSupportsStepArcAndAspect()
+    {
+        const string text = """
+SCREEN 1
+PSET (10, 20), 7
+CIRCLE STEP (5, 6), 12, , -PI / 2, PI, 0.5
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        var circle = Assert.Single(host.Circles);
+        Assert.Equal(5, circle.X);
+        Assert.Equal(6, circle.Y);
+        Assert.Equal(12d, circle.Radius);
+        Assert.Equal(15, circle.Color);
+        Assert.True(circle.RelativeCenter);
+        Assert.True(circle.DrawStartRadius);
+        Assert.False(circle.DrawEndRadius);
+        Assert.Equal(Math.PI / 2, circle.StartAngle.GetValueOrDefault(), precision: 10);
+        Assert.Equal(Math.PI, circle.EndAngle.GetValueOrDefault(), precision: 10);
+        Assert.Equal(.5d, circle.Aspect);
+    }
+
+    [Fact]
+    public void Execute_PSetAndLineSupportStepAndPointPosition()
+    {
+        const string text = """
+SCREEN 1
+COLOR 6, 2
+PSET (10, 20)
+PRINT POINT(0)
+PRINT POINT(1)
+PSET STEP (5, 4)
+PRINT POINT(0)
+PRINT POINT(1)
+LINE -(30, 40)
+PRINT POINT(0)
+PRINT POINT(1)
+LINE STEP (5, 5)-STEP (10, 15)
+PRINT POINT(0)
+PRINT POINT(1)
+PRINT POINT(10, 20)
+PRINT POINT(15, 24)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["10", "20", "15", "24", "30", "40", "45", "60", "6", "6"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PaintFillsBoundedRegion()
+    {
+        const string text = """
+SCREEN 1
+PSET (2, 2), 9
+PSET (3, 2), 9
+PSET (4, 2), 9
+PSET (2, 3), 9
+PSET (4, 3), 9
+PSET (2, 4), 9
+PSET (3, 4), 9
+PSET (4, 4), 9
+PAINT (3, 3), 6, 9
+PRINT POINT(3, 3)
+PRINT POINT(2, 2)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(6, host.GetPixel(3, 3));
+        Assert.Equal(9, host.GetPixel(2, 2));
+        Assert.Equal(["6", "9"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ColorSupportsOpaqueTransparentAndUnchangedBackgroundModes()
+    {
+        const string text = """
+SCREEN 1
+COLOR 6, 2
+PRINT "A";
+COLOR 15
+PRINT "B";
+COLOR 14, TRANSPARENT
+PRINT "C";
+COLOR 13
+PRINT "D"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(13, host.CurrentForegroundColor);
+        Assert.Equal(2, host.CurrentBackgroundColor);
+        Assert.True(host.IsTextBackgroundTransparent);
     }
 
     [Fact]
@@ -8962,7 +9110,17 @@ END TRY
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
         private readonly long _mouseX;
         private readonly long _mouseY;
+        private readonly Dictionary<(long X, long Y), int> _pixels = [];
+        private readonly int _cancelAfterReadKeyCalls;
+        private readonly int _cancelAfterCancellationPolls;
+        private int _readKeyCalls;
+        private int _cancellationPolls;
         private bool _isScreenActive;
+        private int _foreground = 15;
+        private int _background;
+        private bool _isTextBackgroundTransparent;
+        private long _currentGraphicsX;
+        private long _currentGraphicsY;
 
         public TestRuntimeHost(
             IEnumerable<string> inputs,
@@ -8975,7 +9133,9 @@ END TRY
             long mouseY = -1,
             IEnumerable<int>? pressedMouseButtons = null,
             IEnumerable<int>? mousePresses = null,
-            IEnumerable<MouseInputEvent>? mouseEvents = null)
+            IEnumerable<MouseInputEvent>? mouseEvents = null,
+            int cancelAfterReadKeyCalls = int.MaxValue,
+            int cancelAfterCancellationPolls = int.MaxValue)
         {
             _inputs = new Queue<string>(inputs);
             _keys = new Queue<string>(keys ?? []);
@@ -8990,6 +9150,8 @@ END TRY
             _namedTimeZones = namedTimeZones ?? new Dictionary<string, TimeZoneInfo>(StringComparer.OrdinalIgnoreCase);
             _mouseX = mouseX;
             _mouseY = mouseY;
+            _cancelAfterReadKeyCalls = cancelAfterReadKeyCalls;
+            _cancelAfterCancellationPolls = cancelAfterCancellationPolls;
             _isScreenActive = mouseX >= 0 || mouseY >= 0 || _pressedMouseButtons.Count > 0 || _mouseEvents.Count > 0 || _mousePresses.Count > 0;
         }
 
@@ -8997,13 +9159,19 @@ END TRY
 
         public List<string> Output { get; } = [];
 
+        public List<CircleCall> Circles { get; } = [];
+
         public string ReadInput(InputRequest request)
         {
             InputRequests.Add(request);
             return _inputs.Count > 0 ? _inputs.Dequeue() : string.Empty;
         }
 
-        public string ReadKey() => _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
+        public string ReadKey()
+        {
+            _readKeyCalls++;
+            return _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
+        }
 
         public bool IsKeyDown(string keyText) => _pressedKeys.Contains(KeyboardInputNormalizer.Normalize(keyText));
 
@@ -9025,9 +9193,77 @@ END TRY
 
         public int ScreenHeight => _isScreenActive ? 200 : 0;
 
+        public int CurrentForegroundColor => _foreground;
+
+        public int CurrentBackgroundColor => _background;
+
+        public bool IsTextBackgroundTransparent => _isTextBackgroundTransparent;
+
+        public long CurrentGraphicsX => _currentGraphicsX;
+
+        public long CurrentGraphicsY => _currentGraphicsY;
+
         public void ActivateScreen(int mode) => _isScreenActive = mode != 0;
 
         public void DeactivateScreen() => _isScreenActive = false;
+
+        public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
+        {
+            _foreground = foreground;
+            switch (backgroundMode)
+            {
+                case TextBackgroundMode.Color:
+                    _background = background;
+                    _isTextBackgroundTransparent = false;
+                    break;
+                case TextBackgroundMode.Transparent:
+                    _isTextBackgroundTransparent = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void SetPixel(long x, long y, int color)
+        {
+            _pixels[(x, y)] = color;
+            _currentGraphicsX = x;
+            _currentGraphicsY = y;
+        }
+
+        public int GetPixel(long x, long y) => _pixels.TryGetValue((x, y), out var color) ? color : 0;
+
+        public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
+        {
+            _currentGraphicsX = x2;
+            _currentGraphicsY = y2;
+        }
+
+        public void DrawCircle(
+            long x,
+            long y,
+            double radius,
+            int color,
+            bool relativeCenter,
+            double? startAngle,
+            double? endAngle,
+            double aspect,
+            bool drawStartRadius,
+            bool drawEndRadius)
+        {
+            if (relativeCenter)
+            {
+                _currentGraphicsX += x;
+                _currentGraphicsY += y;
+            }
+            else
+            {
+                _currentGraphicsX = x;
+                _currentGraphicsY = y;
+            }
+
+            Circles.Add(new CircleCall(x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius));
+        }
 
         public void WriteGraphicsText(string text, bool newLine) => Output.Add(text);
 
@@ -9035,6 +9271,12 @@ END TRY
         {
             Output.Add(text);
         }
+
+        public bool IsCancellationRequested =>
+            _readKeyCalls >= _cancelAfterReadKeyCalls
+            || ++_cancellationPolls >= _cancelAfterCancellationPolls;
+
+        bool IRuntimeCancellationProvider.IsCancellationRequested => IsCancellationRequested;
 
         public DateTimeOffset GetLocalNow() => _localNow;
 
@@ -9059,4 +9301,16 @@ END TRY
             return _namedTimeZones.TryGetValue(id, out timeZone!);
         }
     }
+
+    private sealed record CircleCall(
+        long X,
+        long Y,
+        double Radius,
+        int Color,
+        bool RelativeCenter,
+        double? StartAngle,
+        double? EndAngle,
+        double Aspect,
+        bool DrawStartRadius,
+        bool DrawEndRadius);
 }

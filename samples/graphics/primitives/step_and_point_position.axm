@@ -1,0 +1,26 @@
+﻿' Expected: PSET STEP, LINE STEP and POINT(0..3) use the current graphics position.
+SCREEN 1
+CLS
+COLOR 6, 3
+
+PSET (10, 20)
+PRINT "point0="; POINT(0); " point1="; POINT(1)
+
+PSET STEP (5, 4)
+PRINT "after pset step="; POINT(0); ","; POINT(1)
+
+LINE -(30, 40)
+PRINT "after line from current="; POINT(0); ","; POINT(1)
+
+LINE STEP (5, 5)-STEP (10, 15)
+PRINT "after line step-step="; POINT(0); ","; POINT(1)
+
+PRINT "pixel 10,20="; POINT(10, 20)
+PRINT "pixel 15,24="; POINT(15, 24)
+PRINT "Press ESC to close"
+
+DO WHILE NOT KEYPRESS("ESC")
+LOOP
+
+SCREEN 0
+PRINT "STEP and POINT position sample finished"

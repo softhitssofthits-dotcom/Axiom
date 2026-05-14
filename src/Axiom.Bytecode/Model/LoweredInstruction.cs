@@ -336,9 +336,13 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Cls, location);
     }
 
-    public static LoweredInstruction Color(TextLocation location, bool hasBackground)
+    public static LoweredInstruction Color(TextLocation location, BoundColorBackgroundMode backgroundMode)
     {
-        return new LoweredInstruction(LoweredInstructionKind.Color, location, valueCount: hasBackground ? 2 : 1);
+        return new LoweredInstruction(
+            LoweredInstructionKind.Color,
+            location,
+            valueCount: backgroundMode == BoundColorBackgroundMode.Color ? 2 : 1,
+            mouseEventKind: (int)backgroundMode);
     }
 
     public static LoweredInstruction Locate(TextLocation location)
@@ -346,19 +350,112 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Locate, location);
     }
 
-    public static LoweredInstruction PSet(TextLocation location, bool reset, bool hasColor)
+    public static LoweredInstruction PSet(TextLocation location, bool reset, bool hasColor, bool isRelative)
     {
-        return new LoweredInstruction(LoweredInstructionKind.PSet, location, valueCount: hasColor ? 3 : 2, preserve: reset);
+        var flags = 0;
+        if (reset)
+        {
+            flags |= 1;
+        }
+
+        if (isRelative)
+        {
+            flags |= 2;
+        }
+
+        return new LoweredInstruction(LoweredInstructionKind.PSet, location, valueCount: hasColor ? 3 : 2, mouseEventKind: flags);
     }
 
-    public static LoweredInstruction Line(TextLocation location, BoundLineBoxKind boxKind, bool hasColor)
+    public static LoweredInstruction Line(
+        TextLocation location,
+        BoundLineBoxKind boxKind,
+        bool hasColor,
+        bool hasExplicitStartPoint,
+        bool isStartRelative,
+        bool isEndRelative)
     {
-        return new LoweredInstruction(LoweredInstructionKind.Line, location, valueCount: hasColor ? 5 : 4, mouseEventKind: (int)boxKind);
+        var flags = (int)boxKind;
+        if (hasExplicitStartPoint)
+        {
+            flags |= 4;
+        }
+
+        if (isStartRelative)
+        {
+            flags |= 8;
+        }
+
+        if (isEndRelative)
+        {
+            flags |= 16;
+        }
+
+        return new LoweredInstruction(
+            LoweredInstructionKind.Line,
+            location,
+            valueCount: hasColor ? (hasExplicitStartPoint ? 5 : 3) : (hasExplicitStartPoint ? 4 : 2),
+            mouseEventKind: flags);
     }
 
-    public static LoweredInstruction Circle(TextLocation location, bool hasColor)
+    public static LoweredInstruction Circle(
+        TextLocation location,
+        bool isRelative,
+        bool hasColor,
+        bool hasStart,
+        bool hasEnd,
+        bool hasAspect)
     {
-        return new LoweredInstruction(LoweredInstructionKind.Circle, location, valueCount: hasColor ? 4 : 3);
+        var flags = 0;
+        if (isRelative)
+        {
+            flags |= 1;
+        }
+
+        if (hasColor)
+        {
+            flags |= 16;
+        }
+
+        if (hasStart)
+        {
+            flags |= 2;
+        }
+
+        if (hasEnd)
+        {
+            flags |= 4;
+        }
+
+        if (hasAspect)
+        {
+            flags |= 8;
+        }
+
+        var valueCount = 3
+            + (hasColor ? 1 : 0)
+            + (hasStart ? 1 : 0)
+            + (hasEnd ? 1 : 0)
+            + (hasAspect ? 1 : 0);
+        return new LoweredInstruction(LoweredInstructionKind.Circle, location, valueCount: valueCount, mouseEventKind: flags);
+    }
+
+    public static LoweredInstruction Paint(TextLocation location, bool hasFillColor, bool hasBorderColor)
+    {
+        var flags = 0;
+        if (hasFillColor)
+        {
+            flags |= 1;
+        }
+
+        if (hasBorderColor)
+        {
+            flags |= 2;
+        }
+
+        var valueCount = 2
+            + (hasFillColor ? 1 : 0)
+            + (hasBorderColor ? 1 : 0);
+        return new LoweredInstruction(LoweredInstructionKind.Paint, location, valueCount: valueCount, mouseEventKind: flags);
     }
 
     public static LoweredInstruction PrintUsing(TextLocation location, int valueCount, PrintSeparatorKind? separatorKind)

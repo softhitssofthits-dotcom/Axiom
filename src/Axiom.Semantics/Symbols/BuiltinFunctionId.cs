@@ -47,6 +47,7 @@ public enum BuiltinFunctionId
     ScreenMode,
     ScreenWidth,
     ScreenHeight,
+    PointPosition,
     Point,
     Len,
     Left,

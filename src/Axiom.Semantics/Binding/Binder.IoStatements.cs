@@ -63,10 +63,20 @@ public sealed partial class Binder
 
     private BoundStatement BindColorStatement(ColorStatementSyntax statement)
     {
+        var backgroundMode = statement switch
+        {
+            { TransparentKeyword: not null } => BoundColorBackgroundMode.Transparent,
+            { BackgroundExpression: not null } => BoundColorBackgroundMode.Color,
+            _ => BoundColorBackgroundMode.Unchanged
+        };
+
         return new BoundColorStatement(
             GetLocation(statement),
             BindExpression(statement.ForegroundExpression, TypeSymbol.Integer),
-            statement.BackgroundExpression is null ? null : BindExpression(statement.BackgroundExpression, TypeSymbol.Integer));
+            backgroundMode,
+            backgroundMode == BoundColorBackgroundMode.Color
+                ? BindExpression(statement.BackgroundExpression!, TypeSymbol.Integer)
+                : null);
     }
 
     private BoundStatement BindLocateStatement(LocateStatementSyntax statement)
@@ -84,15 +94,16 @@ public sealed partial class Binder
             BindExpression(statement.Point.XExpression, TypeSymbol.Long),
             BindExpression(statement.Point.YExpression, TypeSymbol.Long),
             statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer),
-            statement.Reset);
+            statement.Reset,
+            statement.IsRelative);
     }
 
     private BoundStatement BindLineStatement(LineStatementSyntax statement)
     {
         return new BoundLineStatement(
             GetLocation(statement),
-            BindExpression(statement.StartPoint.XExpression, TypeSymbol.Long),
-            BindExpression(statement.StartPoint.YExpression, TypeSymbol.Long),
+            statement.StartPoint is null ? null : BindExpression(statement.StartPoint.XExpression, TypeSymbol.Long),
+            statement.StartPoint is null ? null : BindExpression(statement.StartPoint.YExpression, TypeSymbol.Long),
             BindExpression(statement.EndPoint.XExpression, TypeSymbol.Long),
             BindExpression(statement.EndPoint.YExpression, TypeSymbol.Long),
             statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer),
@@ -101,7 +112,10 @@ public sealed partial class Binder
                 LineBoxKind.Border => BoundLineBoxKind.Border,
                 LineBoxKind.Filled => BoundLineBoxKind.Filled,
                 _ => BoundLineBoxKind.None
-            });
+            },
+            statement.StartPoint is not null,
+            statement.IsStartRelative,
+            statement.IsEndRelative);
     }
 
     private BoundStatement BindCircleStatement(CircleStatementSyntax statement)
@@ -110,8 +124,22 @@ public sealed partial class Binder
             GetLocation(statement),
             BindExpression(statement.CenterPoint.XExpression, TypeSymbol.Long),
             BindExpression(statement.CenterPoint.YExpression, TypeSymbol.Long),
-            BindExpression(statement.RadiusExpression, TypeSymbol.Long),
-            statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+            BindExpression(statement.RadiusExpression, TypeSymbol.Double),
+            statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer),
+            statement.StartExpression is null ? null : BindExpression(statement.StartExpression, TypeSymbol.Double),
+            statement.EndExpression is null ? null : BindExpression(statement.EndExpression, TypeSymbol.Double),
+            statement.AspectExpression is null ? null : BindExpression(statement.AspectExpression, TypeSymbol.Double),
+            statement.IsRelative);
+    }
+
+    private BoundStatement BindPaintStatement(PaintStatementSyntax statement)
+    {
+        return new BoundPaintStatement(
+            GetLocation(statement),
+            BindExpression(statement.Point.XExpression, TypeSymbol.Long),
+            BindExpression(statement.Point.YExpression, TypeSymbol.Long),
+            statement.FillColorExpression is null ? null : BindExpression(statement.FillColorExpression, TypeSymbol.Integer),
+            statement.BorderColorExpression is null ? null : BindExpression(statement.BorderColorExpression, TypeSymbol.Integer));
     }
 
     private BoundStatement BindOnKeyStatement(OnKeyStatementSyntax statement)

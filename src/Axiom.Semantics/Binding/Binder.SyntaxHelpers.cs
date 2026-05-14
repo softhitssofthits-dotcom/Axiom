@@ -74,6 +74,7 @@ public sealed partial class Binder
             PSetStatementSyntax psetStatement => psetStatement.Keyword.Location,
             LineStatementSyntax lineStatement => lineStatement.LineKeyword.Location,
             CircleStatementSyntax circleStatement => circleStatement.CircleKeyword.Location,
+            PaintStatementSyntax paintStatement => paintStatement.PaintKeyword.Location,
             OnKeyStatementSyntax onKeyStatement => onKeyStatement.OnKeyword.Location,
             OnMouseStatementSyntax onMouseStatement => onMouseStatement.OnKeyword.Location,
             OpenStatementSyntax openStatement => openStatement.OpenKeyword.Location,

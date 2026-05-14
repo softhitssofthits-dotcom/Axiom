@@ -33,7 +33,12 @@ public sealed class ClsStatementSyntax : StatementSyntax
 
 public sealed class ColorStatementSyntax : StatementSyntax
 {
-    public ColorStatementSyntax(SyntaxToken colorKeyword, ExpressionSyntax foregroundExpression, SyntaxToken? commaToken, ExpressionSyntax? backgroundExpression)
+    public ColorStatementSyntax(
+        SyntaxToken colorKeyword,
+        ExpressionSyntax foregroundExpression,
+        SyntaxToken? commaToken,
+        ExpressionSyntax? backgroundExpression,
+        SyntaxToken? transparentKeyword)
     {
         ArgumentNullException.ThrowIfNull(colorKeyword);
         ArgumentNullException.ThrowIfNull(foregroundExpression);
@@ -42,6 +47,7 @@ public sealed class ColorStatementSyntax : StatementSyntax
         ForegroundExpression = foregroundExpression;
         CommaToken = commaToken;
         BackgroundExpression = backgroundExpression;
+        TransparentKeyword = transparentKeyword;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ColorStatement;
@@ -53,6 +59,8 @@ public sealed class ColorStatementSyntax : StatementSyntax
     public SyntaxToken? CommaToken { get; }
 
     public ExpressionSyntax? BackgroundExpression { get; }
+
+    public SyntaxToken? TransparentKeyword { get; }
 }
 
 public sealed class LocateStatementSyntax : StatementSyntax
@@ -113,12 +121,19 @@ public sealed class GraphicsPointSyntax : SyntaxNode
 
 public sealed class PSetStatementSyntax : StatementSyntax
 {
-    public PSetStatementSyntax(SyntaxToken keyword, GraphicsPointSyntax point, SyntaxToken? commaToken, ExpressionSyntax? colorExpression, bool reset)
+    public PSetStatementSyntax(
+        SyntaxToken keyword,
+        SyntaxToken? stepKeyword,
+        GraphicsPointSyntax point,
+        SyntaxToken? commaToken,
+        ExpressionSyntax? colorExpression,
+        bool reset)
     {
         ArgumentNullException.ThrowIfNull(keyword);
         ArgumentNullException.ThrowIfNull(point);
 
         Keyword = keyword;
+        StepKeyword = stepKeyword;
         Point = point;
         CommaToken = commaToken;
         ColorExpression = colorExpression;
@@ -128,6 +143,10 @@ public sealed class PSetStatementSyntax : StatementSyntax
     public override SyntaxKind Kind => SyntaxKind.PSetStatement;
 
     public SyntaxToken Keyword { get; }
+
+    public SyntaxToken? StepKeyword { get; }
+
+    public bool IsRelative => StepKeyword is not null;
 
     public GraphicsPointSyntax Point { get; }
 
@@ -149,8 +168,10 @@ public sealed class LineStatementSyntax : StatementSyntax
 {
     public LineStatementSyntax(
         SyntaxToken lineKeyword,
-        GraphicsPointSyntax startPoint,
+        SyntaxToken? startStepKeyword,
+        GraphicsPointSyntax? startPoint,
         SyntaxToken minusToken,
+        SyntaxToken? endStepKeyword,
         GraphicsPointSyntax endPoint,
         SyntaxToken? colorCommaToken,
         ExpressionSyntax? colorExpression,
@@ -159,13 +180,14 @@ public sealed class LineStatementSyntax : StatementSyntax
         LineBoxKind boxKind)
     {
         ArgumentNullException.ThrowIfNull(lineKeyword);
-        ArgumentNullException.ThrowIfNull(startPoint);
         ArgumentNullException.ThrowIfNull(minusToken);
         ArgumentNullException.ThrowIfNull(endPoint);
 
         LineKeyword = lineKeyword;
+        StartStepKeyword = startStepKeyword;
         StartPoint = startPoint;
         MinusToken = minusToken;
+        EndStepKeyword = endStepKeyword;
         EndPoint = endPoint;
         ColorCommaToken = colorCommaToken;
         ColorExpression = colorExpression;
@@ -178,9 +200,19 @@ public sealed class LineStatementSyntax : StatementSyntax
 
     public SyntaxToken LineKeyword { get; }
 
-    public GraphicsPointSyntax StartPoint { get; }
+    public SyntaxToken? StartStepKeyword { get; }
+
+    public bool IsStartRelative => StartStepKeyword is not null;
+
+    public GraphicsPointSyntax? StartPoint { get; }
+
+    public bool UsesCurrentGraphicsPositionAsStart => StartPoint is null;
 
     public SyntaxToken MinusToken { get; }
+
+    public SyntaxToken? EndStepKeyword { get; }
+
+    public bool IsEndRelative => EndStepKeyword is not null;
 
     public GraphicsPointSyntax EndPoint { get; }
 
@@ -197,7 +229,20 @@ public sealed class LineStatementSyntax : StatementSyntax
 
 public sealed class CircleStatementSyntax : StatementSyntax
 {
-    public CircleStatementSyntax(SyntaxToken circleKeyword, GraphicsPointSyntax centerPoint, SyntaxToken commaToken, ExpressionSyntax radiusExpression, SyntaxToken? colorCommaToken, ExpressionSyntax? colorExpression)
+    public CircleStatementSyntax(
+        SyntaxToken circleKeyword,
+        SyntaxToken? stepKeyword,
+        GraphicsPointSyntax centerPoint,
+        SyntaxToken commaToken,
+        ExpressionSyntax radiusExpression,
+        SyntaxToken? colorCommaToken,
+        ExpressionSyntax? colorExpression,
+        SyntaxToken? startCommaToken,
+        ExpressionSyntax? startExpression,
+        SyntaxToken? endCommaToken,
+        ExpressionSyntax? endExpression,
+        SyntaxToken? aspectCommaToken,
+        ExpressionSyntax? aspectExpression)
     {
         ArgumentNullException.ThrowIfNull(circleKeyword);
         ArgumentNullException.ThrowIfNull(centerPoint);
@@ -205,16 +250,27 @@ public sealed class CircleStatementSyntax : StatementSyntax
         ArgumentNullException.ThrowIfNull(radiusExpression);
 
         CircleKeyword = circleKeyword;
+        StepKeyword = stepKeyword;
         CenterPoint = centerPoint;
         CommaToken = commaToken;
         RadiusExpression = radiusExpression;
         ColorCommaToken = colorCommaToken;
         ColorExpression = colorExpression;
+        StartCommaToken = startCommaToken;
+        StartExpression = startExpression;
+        EndCommaToken = endCommaToken;
+        EndExpression = endExpression;
+        AspectCommaToken = aspectCommaToken;
+        AspectExpression = aspectExpression;
     }
 
     public override SyntaxKind Kind => SyntaxKind.CircleStatement;
 
     public SyntaxToken CircleKeyword { get; }
+
+    public SyntaxToken? StepKeyword { get; }
+
+    public bool IsRelative => StepKeyword is not null;
 
     public GraphicsPointSyntax CenterPoint { get; }
 
@@ -225,4 +281,52 @@ public sealed class CircleStatementSyntax : StatementSyntax
     public SyntaxToken? ColorCommaToken { get; }
 
     public ExpressionSyntax? ColorExpression { get; }
+
+    public SyntaxToken? StartCommaToken { get; }
+
+    public ExpressionSyntax? StartExpression { get; }
+
+    public SyntaxToken? EndCommaToken { get; }
+
+    public ExpressionSyntax? EndExpression { get; }
+
+    public SyntaxToken? AspectCommaToken { get; }
+
+    public ExpressionSyntax? AspectExpression { get; }
+}
+
+public sealed class PaintStatementSyntax : StatementSyntax
+{
+    public PaintStatementSyntax(
+        SyntaxToken paintKeyword,
+        GraphicsPointSyntax point,
+        SyntaxToken? fillCommaToken,
+        ExpressionSyntax? fillColorExpression,
+        SyntaxToken? borderCommaToken,
+        ExpressionSyntax? borderColorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(paintKeyword);
+        ArgumentNullException.ThrowIfNull(point);
+
+        PaintKeyword = paintKeyword;
+        Point = point;
+        FillCommaToken = fillCommaToken;
+        FillColorExpression = fillColorExpression;
+        BorderCommaToken = borderCommaToken;
+        BorderColorExpression = borderColorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.PaintStatement;
+
+    public SyntaxToken PaintKeyword { get; }
+
+    public GraphicsPointSyntax Point { get; }
+
+    public SyntaxToken? FillCommaToken { get; }
+
+    public ExpressionSyntax? FillColorExpression { get; }
+
+    public SyntaxToken? BorderCommaToken { get; }
+
+    public ExpressionSyntax? BorderColorExpression { get; }
 }

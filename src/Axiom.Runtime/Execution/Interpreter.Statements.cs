@@ -47,6 +47,7 @@ public sealed partial class Interpreter
             BoundPSetStatement pset => ExecutePSet(pset),
             BoundLineStatement line => ExecuteLine(line),
             BoundCircleStatement circle => ExecuteCircle(circle),
+            BoundPaintStatement paint => ExecutePaint(paint),
             BoundOnKeyStatement onKey => ExecuteOnKey(onKey),
             BoundOnMouseStatement onMouse => ExecuteOnMouse(onMouse),
             BoundOpenStatement open => ExecuteOpen(open),
@@ -258,7 +259,23 @@ public sealed partial class Interpreter
             throw new RuntimeFailureException();
         }
 
-        System.Threading.Thread.Sleep((int)milliseconds);
+        if (milliseconds == 0)
+        {
+            return;
+        }
+
+        var remainingMilliseconds = milliseconds;
+        while (remainingMilliseconds > 0)
+        {
+            if (CheckCancellationRequested())
+            {
+                return;
+            }
+
+            var sleepChunk = (int)Math.Min(remainingMilliseconds, 10L);
+            System.Threading.Thread.Sleep(sleepChunk);
+            remainingMilliseconds -= sleepChunk;
+        }
     }
 
     private ExecutionSignal ExecuteRedim(BoundRedimStatement statement)

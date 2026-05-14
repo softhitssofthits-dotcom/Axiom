@@ -17,6 +17,7 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.ScreenMode, "SCREENMODE", TypeSymbol.Integer, []),
             CreateDefault(BuiltinFunctionId.ScreenWidth, "SCREENWIDTH", TypeSymbol.Integer, []),
             CreateDefault(BuiltinFunctionId.ScreenHeight, "SCREENHEIGHT", TypeSymbol.Integer, []),
+            CreateDefault(BuiltinFunctionId.PointPosition, "POINT", TypeSymbol.Integer, [Parameter("number", TypeSymbol.Integer)]),
             CreateDefault(BuiltinFunctionId.Point, "POINT", TypeSymbol.Integer, [Parameter("x", TypeSymbol.Long), Parameter("y", TypeSymbol.Long)])
         ];
     }

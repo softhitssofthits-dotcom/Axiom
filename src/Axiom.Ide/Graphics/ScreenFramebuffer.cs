@@ -124,6 +124,7 @@ public sealed class ScreenFramebuffer
     public ScreenFramebufferSnapshot CreateSnapshot(
         ScreenTextBuffer graphicsText,
         int inputForeground,
+        int? inputBackground,
         string? inputText = null,
         int inputRow = 1,
         int inputColumn = 1)
@@ -162,7 +163,7 @@ public sealed class ScreenFramebuffer
                 inputY,
                 inputText,
                 MapColorToBgra(inputForeground),
-                MapColorToBgra(0));
+                inputBackground.HasValue ? MapColorToBgra(inputBackground.Value) : null);
         }
 
         return snapshot;

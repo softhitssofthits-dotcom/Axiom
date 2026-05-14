@@ -69,6 +69,21 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public int ScreenHeight =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.ScreenHeight : 0;
 
+    public int CurrentForegroundColor =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentForegroundColor : 15;
+
+    public int CurrentBackgroundColor =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentBackgroundColor : 0;
+
+    public bool IsTextBackgroundTransparent =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.IsTextBackgroundTransparent;
+
+    public long CurrentGraphicsX =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsX : 0;
+
+    public long CurrentGraphicsY =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
+
     public void ActivateScreen(int mode)
     {
         if (_promptService is IGraphicsHost graphicsHost)
@@ -93,11 +108,11 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         }
     }
 
-    public void SetTextColor(int foreground, int? background)
+    public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
     {
         if (_promptService is IGraphicsHost graphicsHost)
         {
-            graphicsHost.SetTextColor(foreground, background);
+            graphicsHost.SetTextColor(foreground, backgroundMode, background);
         }
     }
 
@@ -131,6 +146,14 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public int GetPixel(long x, long y) =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
 
+    public void Paint(long x, long y, int fillColor, int borderColor)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.Paint(x, y, fillColor, borderColor);
+        }
+    }
+
     public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
         if (_promptService is IGraphicsHost graphicsHost)
@@ -139,11 +162,21 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         }
     }
 
-    public void DrawCircle(long x, long y, long radius, int color)
+    public void DrawCircle(
+        long x,
+        long y,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
     {
         if (_promptService is IGraphicsHost graphicsHost)
         {
-            graphicsHost.DrawCircle(x, y, radius, color);
+            graphicsHost.DrawCircle(x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
         }
     }
 }

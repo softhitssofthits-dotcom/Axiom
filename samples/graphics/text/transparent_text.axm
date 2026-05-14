@@ -1,0 +1,16 @@
+' Expected: the first line has an opaque panel, the second line is drawn transparently over graphics.
+SCREEN 1
+LINE (0, 0)-(319, 199), 1, BF
+LINE (24, 24)-(296, 120), 4, BF
+LOCATE 4, 5
+COLOR 14, 1
+PRINT "Opaque status bar on blue background"
+LOCATE 7, 5
+COLOR 15, TRANSPARENT
+PRINT "Transparent caption over the red rectangle"
+LOCATE 16, 1
+COLOR 10, TRANSPARENT
+PRINT "Press ESC to finish"
+SLEEP
+SCREEN 0
+PRINT "Transparent text sample finished"

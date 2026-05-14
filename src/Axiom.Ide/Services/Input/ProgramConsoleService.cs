@@ -31,14 +31,19 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private readonly ScreenTextBuffer _graphicsTextBuffer = new();
     private int _graphicsForeground = 15;
     private int? _graphicsBackground;
+    private int _graphicsLastBackgroundColor;
     private int _graphicsRow = 1;
     private int _graphicsColumn = 1;
+    private long _graphicsCurrentX;
+    private long _graphicsCurrentY;
     private int _graphicsInputRequestCount;
     private ScreenFramebuffer? _framebuffer;
     private ScreenFramebufferSnapshot? _graphicsFrame;
     private bool _graphicsVisualRefreshPending;
     private DispatcherTimer? _graphicsVisualRefreshTimer;
     private NativeGraphicsScreenWindow? _graphicsWindow;
+    private int _graphicsBatchDepth;
+    private bool _graphicsBatchHasChanges;
     private DateTimeOffset? _graphicsFrameMetricsStartedAt;
     private DateTimeOffset? _lastGraphicsFramePublishedAt;
     private long _graphicsFramePublishCount;
@@ -138,6 +143,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     public int ScreenWidth => _inputSnapshot.ScreenWidth;
 
     public int ScreenHeight => _inputSnapshot.ScreenHeight;
+
+    public int CurrentForegroundColor => _graphicsForeground;
+
+    public int CurrentBackgroundColor => _graphicsLastBackgroundColor;
+
+    public bool IsTextBackgroundTransparent => !_graphicsBackground.HasValue;
+
+    public long CurrentGraphicsX => _graphicsCurrentX;
+
+    public long CurrentGraphicsY => _graphicsCurrentY;
 
     public int OutputCheckpoint =>
         string.IsNullOrEmpty(OutputText)
@@ -294,8 +309,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             CancelScheduledGraphicsVisualRefresh();
             _graphicsForeground = 15;
             _graphicsBackground = null;
+            _graphicsLastBackgroundColor = 0;
             _graphicsRow = 1;
             _graphicsColumn = 1;
+            _graphicsCurrentX = 0;
+            _graphicsCurrentY = 0;
             ResetGraphicsFrameMetrics();
             PublishGraphicsFrame();
             OnPropertyChanged(nameof(IsScreenActive));
@@ -353,17 +371,25 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             CancelScheduledGraphicsVisualRefresh();
             _graphicsRow = 1;
             _graphicsColumn = 1;
+            _graphicsCurrentX = 0;
+            _graphicsCurrentY = 0;
         });
     }
 
-    public void SetTextColor(int foreground, int? background)
+    public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
     {
         InvokeOnDispatcher(() =>
         {
             _graphicsForeground = foreground;
-            if (background.HasValue)
+            switch (backgroundMode)
             {
-                _graphicsBackground = background.Value;
+                case TextBackgroundMode.Color:
+                    _graphicsBackground = background;
+                    _graphicsLastBackgroundColor = background;
+                    break;
+                case TextBackgroundMode.Transparent:
+                    _graphicsBackground = null;
+                    break;
             }
 
             PublishGraphicsFrame();
@@ -401,6 +427,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             SetPixelCore(x, y, color);
+            SetGraphicsCurrentPosition(x, y);
             ScheduleGraphicsVisualRefresh();
         });
     }
@@ -431,16 +458,40 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                     break;
             }
 
+            SetGraphicsCurrentPosition(x2, y2);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawCircle(
+        long x,
+        long y,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            DrawCircleCore(x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
             ScheduleGraphicsVisualRefresh();
         });
     }
 
     public void DrawCircle(long x, long y, long radius, int color)
     {
+        DrawCircle(x, y, radius, color, relativeCenter: false, startAngle: null, endAngle: null, aspect: 1d, drawStartRadius: false, drawEndRadius: false);
+    }
+
+    public void Paint(long x, long y, int fillColor, int borderColor)
+    {
         InvokeOnDispatcher(() =>
         {
-            DrawCircleCore(x, y, radius, color);
-            ScheduleGraphicsVisualRefresh();
+            RunBatchedGraphicsUpdate(() => PaintCore(x, y, fillColor, borderColor));
         });
     }
 
@@ -741,6 +792,13 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsTextBuffer.Clear();
         GraphicsText = string.Empty;
         CancelScheduledGraphicsVisualRefresh();
+        _graphicsForeground = 15;
+        _graphicsBackground = null;
+        _graphicsLastBackgroundColor = 0;
+        _graphicsRow = 1;
+        _graphicsColumn = 1;
+        _graphicsCurrentX = 0;
+        _graphicsCurrentY = 0;
         OutputText = string.Empty;
         ResetInputState();
         OnPropertyChanged(nameof(IsScreenActive));
@@ -941,11 +999,49 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
 
         _framebuffer?.SetPixel(x, y, color);
+        _graphicsBatchHasChanges = true;
+    }
+
+    private void SetGraphicsCurrentPosition(long x, long y)
+    {
+        _graphicsCurrentX = x;
+        _graphicsCurrentY = y;
     }
 
     private int GetPixelCore(long x, long y)
     {
         return _framebuffer?.GetPixel(x, y) ?? 0;
+    }
+
+    private void PaintCore(long x, long y, int fillColor, int borderColor)
+    {
+        GraphicsFloodFill.Paint(
+            x,
+            y,
+            fillColor,
+            borderColor,
+            GetPixelCore,
+            SetPixelCore);
+    }
+
+    private void RunBatchedGraphicsUpdate(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        _graphicsBatchDepth++;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            _graphicsBatchDepth--;
+            if (_graphicsBatchDepth == 0 && _graphicsBatchHasChanges)
+            {
+                _graphicsBatchHasChanges = false;
+                ScheduleGraphicsVisualRefresh();
+            }
+        }
     }
 
     private bool IsInsideScreen(long x, long y) =>
@@ -984,6 +1080,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 y1 += sy;
             }
         }
+
+        SetGraphicsCurrentPosition(x2, y2);
     }
 
     private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
@@ -1006,44 +1104,89 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         DrawLineCore(left, bottom, left, top, color);
     }
 
-    private void DrawCircleCore(long centerX, long centerY, long radius, int color)
+    private void DrawCircleCore(
+        long centerX,
+        long centerY,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
     {
-        if (radius < 0)
+        if (radius < 0 || aspect <= 0 || !double.IsFinite(radius) || !double.IsFinite(aspect))
         {
             return;
         }
 
-        var x = radius;
-        var y = 0L;
-        var error = 1 - x;
-
-        while (x >= y)
+        if (relativeCenter)
         {
-            PlotCircleOctants(centerX, centerY, x, y, color);
-            y++;
-
-            if (error < 0)
-            {
-                error += 2 * y + 1;
-            }
-            else
-            {
-                x--;
-                error += 2 * (y - x) + 1;
-            }
+            centerX += _graphicsCurrentX;
+            centerY += _graphicsCurrentY;
         }
+
+        SetGraphicsCurrentPosition(centerX, centerY);
+
+        var radiusX = aspect <= 1d ? radius : radius / aspect;
+        var radiusY = aspect <= 1d ? radius * aspect : radius;
+
+        if (radiusX <= 0 || radiusY <= 0)
+        {
+            SetPixelCore(centerX, centerY, color);
+            return;
+        }
+
+        var arcStart = NormalizeAngle(startAngle ?? 0d);
+        var arcEnd = NormalizeAngle(endAngle ?? Math.Tau);
+        var fullCircle = startAngle is null && endAngle is null;
+        var sweep = fullCircle ? Math.Tau : arcEnd - arcStart;
+        if (!fullCircle && sweep <= 0)
+        {
+            sweep += Math.Tau;
+        }
+
+        var steps = Math.Max(12, (int)Math.Ceiling(Math.Tau * Math.Max(radiusX, radiusY) * (fullCircle ? 1d : sweep / Math.Tau)));
+        var previous = GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
+
+        if (drawStartRadius)
+        {
+            DrawLineCore(centerX, centerY, previous.X, previous.Y, color);
+        }
+
+        for (var index = 0; index <= steps; index++)
+        {
+            var angle = arcStart + (sweep * index / steps);
+            var point = GetEllipsePoint(centerX, centerY, radiusX, radiusY, angle);
+            DrawLineCore(previous.X, previous.Y, point.X, point.Y, color);
+            previous = point;
+        }
+
+        if (drawEndRadius)
+        {
+            DrawLineCore(centerX, centerY, previous.X, previous.Y, color);
+        }
+
+        SetGraphicsCurrentPosition(centerX, centerY);
     }
 
-    private void PlotCircleOctants(long centerX, long centerY, long x, long y, int color)
+    private static double NormalizeAngle(double angle)
     {
-        SetPixelCore(centerX + x, centerY + y, color);
-        SetPixelCore(centerX + y, centerY + x, color);
-        SetPixelCore(centerX - y, centerY + x, color);
-        SetPixelCore(centerX - x, centerY + y, color);
-        SetPixelCore(centerX - x, centerY - y, color);
-        SetPixelCore(centerX - y, centerY - x, color);
-        SetPixelCore(centerX + y, centerY - x, color);
-        SetPixelCore(centerX + x, centerY - y, color);
+        if (!double.IsFinite(angle))
+        {
+            return 0d;
+        }
+
+        var normalized = angle % Math.Tau;
+        return normalized < 0 ? normalized + Math.Tau : normalized;
+    }
+
+    private static (long X, long Y) GetEllipsePoint(long centerX, long centerY, double radiusX, double radiusY, double angle)
+    {
+        return (
+            centerX + (long)Math.Round(Math.Cos(angle) * radiusX),
+            centerY - (long)Math.Round(Math.Sin(angle) * radiusY));
     }
 
     private void RefreshGraphicsVisuals()
@@ -1056,6 +1199,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         var frame = _framebuffer?.CreateSnapshot(
             _graphicsTextBuffer,
             _graphicsForeground,
+            _graphicsBackground,
             _isWaitingForInput ? CurrentPromptText + CurrentInputText : null,
             _graphicsRow,
             _graphicsColumn);

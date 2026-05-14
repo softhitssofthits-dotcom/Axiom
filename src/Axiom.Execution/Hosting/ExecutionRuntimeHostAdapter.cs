@@ -87,6 +87,21 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public int ScreenHeight =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ScreenHeight : 0;
 
+    public int CurrentForegroundColor =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentForegroundColor : 15;
+
+    public int CurrentBackgroundColor =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentBackgroundColor : 0;
+
+    public bool IsTextBackgroundTransparent =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsTextBackgroundTransparent;
+
+    public long CurrentGraphicsX =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsX : 0;
+
+    public long CurrentGraphicsY =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
+
     public void ActivateScreen(int mode)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -111,11 +126,11 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         }
     }
 
-    public void SetTextColor(int foreground, int? background)
+    public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
-            graphicsHost.SetTextColor(foreground, background);
+            graphicsHost.SetTextColor(foreground, backgroundMode, background);
         }
     }
 
@@ -149,6 +164,14 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public int GetPixel(long x, long y) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
 
+    public void Paint(long x, long y, int fillColor, int borderColor)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.Paint(x, y, fillColor, borderColor);
+        }
+    }
+
     public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -157,11 +180,21 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         }
     }
 
-    public void DrawCircle(long x, long y, long radius, int color)
+    public void DrawCircle(
+        long x,
+        long y,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
-            graphicsHost.DrawCircle(x, y, radius, color);
+            graphicsHost.DrawCircle(x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
         }
     }
 

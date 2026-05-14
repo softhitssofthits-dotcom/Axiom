@@ -20,6 +20,7 @@ public enum BoundNodeKind
     PSetStatement,
     LineStatement,
     CircleStatement,
+    PaintStatement,
     OnKeyStatement,
     OnMouseStatement,
     OpenStatement,

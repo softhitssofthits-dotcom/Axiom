@@ -65,6 +65,7 @@
             <Word>OPEN</Word>
             <Word>OR</Word>
             <Word>OUTPUT</Word>
+            <Word>PAINT</Word>
             <Word>PRESERVE</Word>
             <Word>PRINT</Word>
             <Word>PRESET</Word>
@@ -80,6 +81,7 @@
             <Word>SUB</Word>
             <Word>THEN</Word>
             <Word>TO</Word>
+            <Word>TRANSPARENT</Word>
             <Word>TRY</Word>
             <Word>TRUE</Word>
             <Word>TYPE</Word>

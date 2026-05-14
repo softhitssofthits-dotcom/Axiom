@@ -86,6 +86,7 @@ public enum Opcode
     PSet,
     Line,
     Circle,
+    Paint,
     AdvanceForLoopLocal,
     PrintValue,
     PrintUsing,

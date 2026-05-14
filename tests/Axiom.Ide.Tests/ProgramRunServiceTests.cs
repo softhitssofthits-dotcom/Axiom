@@ -538,6 +538,41 @@ PRINT 2
     }
 
     [Fact]
+    public void Run_GraphicsStepSample_CompletesOnBytecodeVmWithoutInterpreterFallback()
+    {
+        var consoleService = new ProgramConsoleService();
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+SCREEN 1
+CLS
+COLOR 6, 2
+PSET (10, 20)
+PRINT "point0="; POINT(0); " point1="; POINT(1)
+PSET STEP (5, 4)
+PRINT "after pset step="; POINT(0); ","; POINT(1)
+LINE -(30, 40)
+PRINT "after line from current="; POINT(0); ","; POINT(1)
+LINE STEP (5, 5)-STEP (10, 15)
+PRINT "after line step-step="; POINT(0); ","; POINT(1)
+PRINT "pixel 10,20="; POINT(10, 20)
+PRINT "pixel 15,24="; POINT(15, 24)
+SCREEN 0
+PRINT "done"
+""";
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionMode.Bytecode, result.RequestedExecutionMode);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(string.Empty, result.OutputText);
+        Assert.False(consoleService.IsScreenActive);
+    }
+
+    [Fact]
     public void Run_MapsSemanticDiagnosticsToUiModel()
     {
         var service = CreateService();

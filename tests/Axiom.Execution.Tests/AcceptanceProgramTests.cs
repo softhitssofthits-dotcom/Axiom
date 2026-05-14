@@ -1461,7 +1461,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("LEFT", "LEFT", "ESC"),
+            inputProvider: new QueueKeyboardInputProvider("", "", "LEFT", "LEFT", "ESC"),
             mode: ExecutionMode.Bytecode);
 
         Assert.True(
@@ -1473,7 +1473,7 @@ public sealed class AcceptanceProgramTests
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
-                "Нажмите LEFT на паузе, затем LEFT после возобновления, затем ESC.",
+                "Нажмите LEFT при отключённом обработчике, затем LEFT после ON, затем ESC.",
                 "LEFT",
                 "обработчик LEFT",
                 "готово"
@@ -1590,10 +1590,11 @@ public sealed class AcceptanceProgramTests
     public void MouseCoordinatesAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/functions/mousex/current_position.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240);
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.True(
@@ -1603,23 +1604,25 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
         Assert.Equal(
             [
                 "320",
                 "240",
                 "done"
             ],
-            result.Output);
+            inputProvider.GraphicsOutput);
     }
 
     [Fact]
     public void MouseButtonAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/functions/mousebutton/button_states.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1, 3]);
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1, 3]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.True(
@@ -1629,6 +1632,7 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
         Assert.Equal(
             [
                 "TRUE",
@@ -1637,17 +1641,18 @@ public sealed class AcceptanceProgramTests
                 "FALSE",
                 "done"
             ],
-            result.Output);
+            inputProvider.GraphicsOutput);
     }
 
     [Fact]
     public void MousePressAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/functions/mousepress/button_presses.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]);
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.True(
@@ -1657,6 +1662,7 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
         Assert.Equal(
             [
                 "TRUE",
@@ -1664,17 +1670,18 @@ public sealed class AcceptanceProgramTests
                 "TRUE",
                 "done"
             ],
-            result.Output);
+            inputProvider.GraphicsOutput);
     }
 
     [Fact]
     public void OnMouseAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/left_button_handler.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]);
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.True(
@@ -1684,6 +1691,7 @@ public sealed class AcceptanceProgramTests
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
         Assert.Equal(
             [
                 "TRUE",
@@ -1692,32 +1700,34 @@ public sealed class AcceptanceProgramTests
                 "240",
                 "done"
             ],
-            result.Output);
+            inputProvider.GraphicsOutput);
     }
 
     [Fact]
     public void OnMouseReleaseMoveAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/release_move_handler.axm");
+        var inputProvider = new QueueKeyboardInputProvider(
+            keys: ["ESC"],
+            pressedKeys: [],
+            mouseX: 320,
+            mouseY: 240,
+            mouseEvents:
+            [
+                new MouseInputEvent(MouseInputEventKind.Move, 0),
+                new MouseInputEvent(MouseInputEventKind.Release, 1)
+            ]);
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(
-                keys: ["ESC"],
-                pressedKeys: [],
-                mouseX: 320,
-                mouseY: 240,
-                mouseEvents:
-                [
-                    new MouseInputEvent(MouseInputEventKind.Move, 0),
-                    new MouseInputEvent(MouseInputEventKind.Release, 1)
-                ]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
         Assert.Equal(
             [
                 "TRUE",
@@ -1729,28 +1739,30 @@ public sealed class AcceptanceProgramTests
                 "240",
                 "done"
             ],
-            result.Output);
+            inputProvider.GraphicsOutput);
     }
 
     [Fact]
     public void OnMouseWheelAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/wheel_handler.axm");
+        var inputProvider = new QueueKeyboardInputProvider(
+            keys: ["ESC"],
+            pressedKeys: [],
+            mouseX: 320,
+            mouseY: 240,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]);
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(
-                keys: ["ESC"],
-                pressedKeys: [],
-                mouseX: 320,
-                mouseY: 240,
-                mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]),
+            inputProvider: inputProvider,
             mode: ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
         Assert.Equal(
             [
                 "TRUE",
@@ -1759,7 +1771,7 @@ public sealed class AcceptanceProgramTests
                 "240",
                 "done"
             ],
-            result.Output);
+            inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1795,6 +1807,22 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void ScreenTransparentTextAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/text/transparent_text.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["Transparent text sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenInputAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/input/input_on_screen.axm");
@@ -1814,7 +1842,7 @@ public sealed class AcceptanceProgramTests
     public void ScreenZeroTextInputAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/input/text_screen_input.axm");
-        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada"]);
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada", "7"]);
 
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
@@ -1823,7 +1851,7 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
-        Assert.Equal(["Your name? Ada", "Hello, Ada"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Ваше имя? Ada", "Ваш возраст? 7", "Привет, Ada тебе 7 лет."], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1840,6 +1868,54 @@ public sealed class AcceptanceProgramTests
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Graphics primitives sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void ScreenCircleFullFormsAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/circle_arcs_step_aspect.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["Circle full forms sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void ScreenStepAndPointPositionAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/step_and_point_position.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["STEP and POINT position sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void ScreenPaintAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/paint_fill_region.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["PAINT sample finished"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2100,6 +2176,93 @@ public sealed class AcceptanceProgramTests
 
     private static IInputProvider CreateAuditInputProvider(string relativePath)
     {
+        if (relativePath.Equals("samples/graphics/text/print_locate_color.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE"], pressedKeys: []);
+        }
+
+        if (relativePath.Equals("samples/graphics/text/transparent_text.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+        }
+
+        if (relativePath.Equals("samples/graphics/input/text_screen_input.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada", "7"]);
+        }
+
+        if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+        }
+
+        if (relativePath.Equals("samples/operators/sleep/delay_and_key_wait.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["SPACE"], pressedKeys: []);
+        }
+
+        if (relativePath.Equals("samples/functions/inkey/poll_keys.axm", StringComparison.OrdinalIgnoreCase)
+            || relativePath.Equals("samples/functions/keypress/single_press.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["LEFT"], pressedKeys: []);
+        }
+
+        if (relativePath.Equals("samples/functions/keypress/modified_keypress.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["LEFT"], pressedKeys: ["CTRL", "LEFT"]);
+        }
+
+        if (relativePath.Equals("samples/functions/keydown/held_modifiers.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "LEFT"]);
+        }
+
+        if (relativePath.Equals("samples/functions/keydown/canonical_aliases.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "PAGEUP"]);
+        }
+
+        if (relativePath.StartsWith("samples/functions/mousex/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/functions/mousey/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240);
+        }
+
+        if (relativePath.StartsWith("samples/functions/mousebutton/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1, 3]);
+        }
+
+        if (relativePath.StartsWith("samples/functions/mousepress/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1, 3]);
+        }
+
+        if (relativePath.Equals("samples/operators/on-key/chord_handler.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["LEFT", "ESC"], pressedKeys: ["CTRL", "LEFT"]);
+        }
+
+        if (relativePath.Equals("samples/operators/on-key/stop_resume_handler.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["", "", "LEFT", "LEFT", "ESC"], pressedKeys: []);
+        }
+
+        if (relativePath.StartsWith("samples/operators/on-key/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["LEFT", "ESC"], pressedKeys: []);
+        }
+
+        if (relativePath.StartsWith("samples/operators/on-mouse/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(
+                keys: ["ESC"],
+                pressedKeys: [],
+                mouseX: 320,
+                mouseY: 240,
+                mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0), new MouseInputEvent(MouseInputEventKind.Press, 1), new MouseInputEvent(MouseInputEventKind.Wheel, -120)]);
+        }
+
         if (relativePath.Equals("samples/smoke/smoke_v0_1.axm", StringComparison.OrdinalIgnoreCase)
             || relativePath.Equals("samples/acceptance/smoke_v0_1.axm", StringComparison.OrdinalIgnoreCase))
         {
@@ -2197,6 +2360,9 @@ public sealed class AcceptanceProgramTests
         private int _screenMode;
         private int _screenWidth;
         private int _screenHeight;
+        private int _currentForegroundColor = 15;
+        private int _currentBackgroundColor;
+        private bool _isTextBackgroundTransparent;
         private string _pendingGraphicsLine = string.Empty;
 
         public QueueKeyboardInputProvider(params string[] keys)
@@ -2254,6 +2420,12 @@ public sealed class AcceptanceProgramTests
 
         public int ScreenHeight => _screenHeight;
 
+        public int CurrentForegroundColor => _currentForegroundColor;
+
+        public int CurrentBackgroundColor => _currentBackgroundColor;
+
+        public bool IsTextBackgroundTransparent => _isTextBackgroundTransparent;
+
         public void ActivateScreen(int mode)
         {
             _isScreenActive = mode != 0;
@@ -2268,6 +2440,9 @@ public sealed class AcceptanceProgramTests
             _pixels.Clear();
             GraphicsOutput.Clear();
             _pendingGraphicsLine = string.Empty;
+            _currentForegroundColor = 15;
+            _currentBackgroundColor = 0;
+            _isTextBackgroundTransparent = false;
         }
 
         public void DeactivateScreen()
@@ -2287,8 +2462,21 @@ public sealed class AcceptanceProgramTests
             _pendingGraphicsLine = string.Empty;
         }
 
-        public void SetTextColor(int foreground, int? background)
+        public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
         {
+            _currentForegroundColor = foreground;
+            switch (backgroundMode)
+            {
+                case TextBackgroundMode.Color:
+                    _currentBackgroundColor = background;
+                    _isTextBackgroundTransparent = false;
+                    break;
+                case TextBackgroundMode.Transparent:
+                    _isTextBackgroundTransparent = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void LocateText(int row, int column)

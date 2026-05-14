@@ -42,6 +42,7 @@ public enum LoweredInstructionKind
     PSet,
     Line,
     Circle,
+    Paint,
     PrintValue,
     PrintUsing,
     PrintSeparator,

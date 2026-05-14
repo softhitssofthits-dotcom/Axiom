@@ -258,6 +258,28 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void IdeInputProvider_ProxiesGraphicsStateFromProgramConsoleService()
+    {
+        var service = new ProgramConsoleService();
+        var inputProvider = new IdeInputProvider(service);
+
+        service.ActivateScreen(1);
+        service.SetTextColor(6, TextBackgroundMode.Color, 2);
+        service.SetPixel(10, 20, 6);
+        service.DrawLine(10, 20, 15, 24, 6, GraphicsLineKind.Normal);
+
+        Assert.True(inputProvider.IsScreenActive);
+        Assert.Equal(1, inputProvider.ScreenMode);
+        Assert.Equal(6, inputProvider.CurrentForegroundColor);
+        Assert.Equal(2, inputProvider.CurrentBackgroundColor);
+        Assert.False(inputProvider.IsTextBackgroundTransparent);
+        Assert.Equal(15, inputProvider.CurrentGraphicsX);
+        Assert.Equal(24, inputProvider.CurrentGraphicsY);
+        Assert.Equal(6, inputProvider.GetPixel(10, 20));
+        Assert.Equal(6, inputProvider.GetPixel(15, 24));
+    }
+
+    [Fact]
     public void ActivateScreenZero_UsesNativeTextWindowWithoutEnablingGraphicsMode()
     {
         var service = new ProgramConsoleService();
@@ -349,14 +371,14 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
-    public void WriteGraphicsText_PreservesCellColorsAndOmittedBackground()
+    public void WriteGraphicsText_PreservesCellColorsAndTransparentBackground()
     {
         var service = new ProgramConsoleService();
 
         service.ActivateScreen(3);
-        service.SetTextColor(14, 1);
+        service.SetTextColor(14, TextBackgroundMode.Color, 1);
         service.WriteGraphicsText("A", newLine: true);
-        service.SetTextColor(15, null);
+        service.SetTextColor(15, TextBackgroundMode.Transparent);
         service.WriteGraphicsText("B", newLine: false);
 
         var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
@@ -366,7 +388,7 @@ public sealed class ProgramConsoleServiceTests
         Assert.Contains(firstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(14));
         Assert.Contains(firstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(1));
         Assert.Contains(secondLineFirstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(15));
-        Assert.Contains(secondLineFirstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(1));
+        Assert.DoesNotContain(secondLineFirstCell, pixel => pixel == ScreenFramebuffer.MapColorToBgra(1));
     }
 
     [Fact]
@@ -597,6 +619,82 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(14, service.GetPixel(7, 10));
         Assert.Equal(14, service.GetPixel(10, 13));
         Assert.Equal(14, service.GetPixel(10, 7));
+    }
+
+    [Fact]
+    public void DrawCircle_RasterizesArcAndAspect()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawCircle(20, 10, 4, 12, relativeCenter: false, startAngle: 0, endAngle: Math.PI, aspect: .5, drawStartRadius: false, drawEndRadius: false);
+
+        Assert.Equal(12, service.GetPixel(24, 10));
+        Assert.Equal(12, service.GetPixel(20, 8));
+        Assert.Equal(12, service.GetPixel(16, 10));
+        Assert.Equal(0, service.GetPixel(20, 12));
+    }
+
+    [Fact]
+    public void DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.SetPixel(10, 20, 7);
+        service.DrawCircle(5, 6, 2, 14, relativeCenter: true, startAngle: 0, endAngle: Math.PI / 2, aspect: 1, drawStartRadius: true, drawEndRadius: false);
+
+        Assert.Equal(14, service.GetPixel(15, 26));
+        Assert.Equal(14, service.GetPixel(17, 26));
+        Assert.Equal(14, service.GetPixel(15, 24));
+    }
+
+    [Fact]
+    public void Paint_FillsRegionWithoutRecoloringBorder()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(1, 1, 5, 5, 9, GraphicsLineKind.Box);
+        service.Paint(3, 3, 6, 9);
+
+        Assert.Equal(6, service.GetPixel(3, 3));
+        Assert.Equal(9, service.GetPixel(1, 1));
+        Assert.Equal(0, service.GetPixel(0, 0));
+    }
+
+    [Fact]
+    public void GraphicsState_TracksCurrentPositionAndColors()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.SetTextColor(6, TextBackgroundMode.Color, 2);
+        service.SetPixel(10, 20, service.CurrentForegroundColor);
+        service.SetPixel(service.CurrentGraphicsX + 5, service.CurrentGraphicsY + 4, service.CurrentForegroundColor);
+        service.DrawLine(service.CurrentGraphicsX, service.CurrentGraphicsY, service.CurrentGraphicsX + 15, service.CurrentGraphicsY + 16, service.CurrentForegroundColor, GraphicsLineKind.Normal);
+
+        Assert.Equal(6, service.CurrentForegroundColor);
+        Assert.Equal(2, service.CurrentBackgroundColor);
+        Assert.False(service.IsTextBackgroundTransparent);
+        Assert.Equal(30, service.CurrentGraphicsX);
+        Assert.Equal(40, service.CurrentGraphicsY);
+        Assert.Equal(6, service.GetPixel(10, 20));
+        Assert.Equal(6, service.GetPixel(15, 24));
+    }
+
+    [Fact]
+    public void SetTextColor_TransparentBackgroundPreservesNumericBackgroundForPreset()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.SetTextColor(6, TextBackgroundMode.Color, 2);
+        service.SetTextColor(15, TextBackgroundMode.Transparent);
+
+        Assert.Equal(15, service.CurrentForegroundColor);
+        Assert.Equal(2, service.CurrentBackgroundColor);
+        Assert.True(service.IsTextBackgroundTransparent);
     }
 
     [Fact]

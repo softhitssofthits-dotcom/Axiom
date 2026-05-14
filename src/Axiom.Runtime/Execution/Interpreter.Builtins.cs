@@ -233,6 +233,7 @@ public sealed partial class Interpreter
             BuiltinFunctionId.ScreenMode => RuntimeValue.FromInteger(_host.ScreenMode),
             BuiltinFunctionId.ScreenWidth => RuntimeValue.FromInteger(_host.ScreenWidth),
             BuiltinFunctionId.ScreenHeight => RuntimeValue.FromInteger(_host.ScreenHeight),
+            BuiltinFunctionId.PointPosition => EvaluatePoint(expression, arguments),
             BuiltinFunctionId.Point => EvaluatePoint(expression, arguments),
             BuiltinFunctionId.Date => EvaluateDateBuiltin(),
             BuiltinFunctionId.DateInZone => EvaluateDateBuiltin(expression, arguments[0].AsString()),

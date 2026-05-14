@@ -282,11 +282,11 @@ public sealed class BoundProgramLowerer
                 break;
             case BoundColorStatement color:
                 LowerExpression(color.ForegroundExpression, instructions);
-                if (color.BackgroundExpression is not null)
+                if (color.BackgroundMode == BoundColorBackgroundMode.Color)
                 {
-                    LowerExpression(color.BackgroundExpression, instructions);
+                    LowerExpression(color.BackgroundExpression!, instructions);
                 }
-                instructions.Add(LoweredInstruction.Color(color.Location, color.BackgroundExpression is not null));
+                instructions.Add(LoweredInstruction.Color(color.Location, color.BackgroundMode));
                 break;
             case BoundLocateStatement locate:
                 LowerExpression(locate.RowExpression, instructions);
@@ -300,18 +300,28 @@ public sealed class BoundProgramLowerer
                 {
                     LowerExpression(pset.ColorExpression, instructions);
                 }
-                instructions.Add(LoweredInstruction.PSet(pset.Location, pset.Reset, pset.ColorExpression is not null));
+                instructions.Add(LoweredInstruction.PSet(pset.Location, pset.Reset, pset.ColorExpression is not null, pset.IsRelative));
                 break;
             case BoundLineStatement line:
-                LowerExpression(line.X1Expression, instructions);
-                LowerExpression(line.Y1Expression, instructions);
+                if (line.HasExplicitStartPoint)
+                {
+                    LowerExpression(line.X1Expression!, instructions);
+                    LowerExpression(line.Y1Expression!, instructions);
+                }
+
                 LowerExpression(line.X2Expression, instructions);
                 LowerExpression(line.Y2Expression, instructions);
                 if (line.ColorExpression is not null)
                 {
                     LowerExpression(line.ColorExpression, instructions);
                 }
-                instructions.Add(LoweredInstruction.Line(line.Location, line.BoxKind, line.ColorExpression is not null));
+                instructions.Add(LoweredInstruction.Line(
+                    line.Location,
+                    line.BoxKind,
+                    line.ColorExpression is not null,
+                    line.HasExplicitStartPoint,
+                    line.IsStartRelative,
+                    line.IsEndRelative));
                 break;
             case BoundCircleStatement circle:
                 LowerExpression(circle.XExpression, instructions);
@@ -321,7 +331,41 @@ public sealed class BoundProgramLowerer
                 {
                     LowerExpression(circle.ColorExpression, instructions);
                 }
-                instructions.Add(LoweredInstruction.Circle(circle.Location, circle.ColorExpression is not null));
+                if (circle.StartExpression is not null)
+                {
+                    LowerExpression(circle.StartExpression, instructions);
+                }
+                if (circle.EndExpression is not null)
+                {
+                    LowerExpression(circle.EndExpression, instructions);
+                }
+                if (circle.AspectExpression is not null)
+                {
+                    LowerExpression(circle.AspectExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.Circle(
+                    circle.Location,
+                    circle.IsRelative,
+                    circle.ColorExpression is not null,
+                    circle.StartExpression is not null,
+                    circle.EndExpression is not null,
+                    circle.AspectExpression is not null));
+                break;
+            case BoundPaintStatement paint:
+                LowerExpression(paint.XExpression, instructions);
+                LowerExpression(paint.YExpression, instructions);
+                if (paint.FillColorExpression is not null)
+                {
+                    LowerExpression(paint.FillColorExpression, instructions);
+                }
+                if (paint.BorderColorExpression is not null)
+                {
+                    LowerExpression(paint.BorderColorExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.Paint(
+                    paint.Location,
+                    paint.FillColorExpression is not null,
+                    paint.BorderColorExpression is not null));
                 break;
 
             case BoundOnKeyStatement onKey:

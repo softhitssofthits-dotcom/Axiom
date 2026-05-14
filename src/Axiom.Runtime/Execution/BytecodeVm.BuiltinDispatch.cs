@@ -147,6 +147,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ScreenMode => BuiltinExecution.NullaryNoLocation(static vm => RuntimeValue.FromInteger(vm._host.ScreenMode)),
             BuiltinFunctionId.ScreenWidth => BuiltinExecution.NullaryNoLocation(static vm => RuntimeValue.FromInteger(vm._host.ScreenWidth)),
             BuiltinFunctionId.ScreenHeight => BuiltinExecution.NullaryNoLocation(static vm => RuntimeValue.FromInteger(vm._host.ScreenHeight)),
+            BuiltinFunctionId.PointPosition => BuiltinExecution.Unary(static (vm, selector, location) => vm.EvaluatePointBuiltin([selector], location)),
             BuiltinFunctionId.Point => BuiltinExecution.Binary(static (vm, x, y, location) => vm.EvaluatePointBuiltin([x, y], location)),
             BuiltinFunctionId.Int => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateIntBuiltin(value, location))),
             BuiltinFunctionId.Str => BuiltinExecution.UnaryNoLocation(static (vm, value) => value.ToDisplayRuntimeValue()),

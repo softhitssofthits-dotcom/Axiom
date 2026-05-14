@@ -148,8 +148,8 @@
       items: [
         { id: "graphics", href: "graphics.html", label: "Графика" },
         { id: "screen", href: "screen.html", label: "Оператор SCREEN" },
-        { id: "graphics-text", href: "graphics-text.html", label: "Текстовый слой SCREEN" },
-        { id: "graphics-primitives", href: "graphics-primitives.html", label: "Графические примитивы" },
+        { id: "graphics-text", href: "graphics-text.html", label: "Текст на экране" },
+        { id: "graphics-primitives", href: "graphics-primitives.html", label: "Операторы рисования" },
         { id: "screen-functions", href: "screen-functions.html", label: "Функции состояния SCREEN" }
       ]
     },
