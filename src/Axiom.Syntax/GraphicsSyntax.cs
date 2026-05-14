@@ -299,26 +299,36 @@ public sealed class PaintStatementSyntax : StatementSyntax
 {
     public PaintStatementSyntax(
         SyntaxToken paintKeyword,
+        SyntaxToken? stepKeyword,
         GraphicsPointSyntax point,
         SyntaxToken? fillCommaToken,
         ExpressionSyntax? fillColorExpression,
         SyntaxToken? borderCommaToken,
-        ExpressionSyntax? borderColorExpression)
+        ExpressionSyntax? borderColorExpression,
+        SyntaxToken? backgroundCommaToken,
+        ExpressionSyntax? backgroundExpression)
     {
         ArgumentNullException.ThrowIfNull(paintKeyword);
         ArgumentNullException.ThrowIfNull(point);
 
         PaintKeyword = paintKeyword;
+        StepKeyword = stepKeyword;
         Point = point;
         FillCommaToken = fillCommaToken;
         FillColorExpression = fillColorExpression;
         BorderCommaToken = borderCommaToken;
         BorderColorExpression = borderColorExpression;
+        BackgroundCommaToken = backgroundCommaToken;
+        BackgroundExpression = backgroundExpression;
     }
 
     public override SyntaxKind Kind => SyntaxKind.PaintStatement;
 
     public SyntaxToken PaintKeyword { get; }
+
+    public SyntaxToken? StepKeyword { get; }
+
+    public bool IsRelative => StepKeyword is not null;
 
     public GraphicsPointSyntax Point { get; }
 
@@ -329,4 +339,8 @@ public sealed class PaintStatementSyntax : StatementSyntax
     public SyntaxToken? BorderCommaToken { get; }
 
     public ExpressionSyntax? BorderColorExpression { get; }
+
+    public SyntaxToken? BackgroundCommaToken { get; }
+
+    public ExpressionSyntax? BackgroundExpression { get; }
 }

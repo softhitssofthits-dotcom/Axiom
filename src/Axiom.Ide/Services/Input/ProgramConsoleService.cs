@@ -427,7 +427,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         InvokeOnDispatcher(() =>
         {
             SetPixelCore(x, y, color);
-            SetGraphicsCurrentPosition(x, y);
+            SetGraphicsCurrentPositionCore(x, y);
             ScheduleGraphicsVisualRefresh();
         });
     }
@@ -458,7 +458,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                     break;
             }
 
-            SetGraphicsCurrentPosition(x2, y2);
+            SetGraphicsCurrentPositionCore(x2, y2);
             ScheduleGraphicsVisualRefresh();
         });
     }
@@ -487,12 +487,25 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         DrawCircle(x, y, radius, color, relativeCenter: false, startAngle: null, endAngle: null, aspect: 1d, drawStartRadius: false, drawEndRadius: false);
     }
 
-    public void Paint(long x, long y, int fillColor, int borderColor)
+    public void SetGraphicsCurrentPosition(long x, long y)
     {
+        InvokeOnDispatcher(() => SetGraphicsCurrentPositionCore(x, y));
+    }
+
+    public void Paint(GraphicsPaintRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
         InvokeOnDispatcher(() =>
         {
-            RunBatchedGraphicsUpdate(() => PaintCore(x, y, fillColor, borderColor));
+            RunBatchedGraphicsUpdate(() => PaintCore(request));
+            SetGraphicsCurrentPositionCore(request.X, request.Y);
         });
+    }
+
+    public void Paint(long x, long y, int fillColor, int borderColor)
+    {
+        Paint(GraphicsPaintRequest.CreateSolid(x, y, fillColor, borderColor));
     }
 
     public void EnqueueKey(string keyText)
@@ -1002,7 +1015,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsBatchHasChanges = true;
     }
 
-    private void SetGraphicsCurrentPosition(long x, long y)
+    private void SetGraphicsCurrentPositionCore(long x, long y)
     {
         _graphicsCurrentX = x;
         _graphicsCurrentY = y;
@@ -1013,15 +1026,15 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         return _framebuffer?.GetPixel(x, y) ?? 0;
     }
 
-    private void PaintCore(long x, long y, int fillColor, int borderColor)
+    private void PaintCore(GraphicsPaintRequest request)
     {
         GraphicsFloodFill.Paint(
-            x,
-            y,
-            fillColor,
-            borderColor,
+            request,
             GetPixelCore,
-            SetPixelCore);
+            SetPixelCore,
+            static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
+            _screenWidth,
+            _screenHeight);
     }
 
     private void RunBatchedGraphicsUpdate(Action action)
@@ -1081,7 +1094,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             }
         }
 
-        SetGraphicsCurrentPosition(x2, y2);
+        SetGraphicsCurrentPositionCore(x2, y2);
     }
 
     private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
@@ -1127,7 +1140,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             centerY += _graphicsCurrentY;
         }
 
-        SetGraphicsCurrentPosition(centerX, centerY);
+        SetGraphicsCurrentPositionCore(centerX, centerY);
 
         var radiusX = aspect <= 1d ? radius : radius / aspect;
         var radiusY = aspect <= 1d ? radius * aspect : radius;
@@ -1168,7 +1181,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             DrawLineCore(centerX, centerY, previous.X, previous.Y, color);
         }
 
-        SetGraphicsCurrentPosition(centerX, centerY);
+        SetGraphicsCurrentPositionCore(centerX, centerY);
     }
 
     private static double NormalizeAngle(double angle)

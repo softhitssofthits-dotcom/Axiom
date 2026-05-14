@@ -1,6 +1,7 @@
 using Axiom.Bytecode;
 using Axiom.Core;
 using Axiom.Semantics;
+using System.Text;
 
 namespace Axiom.Runtime;
 
@@ -161,18 +162,22 @@ public sealed partial class BytecodeVm
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("PAINT", location);
         var flags = instruction.GetOperand(0);
-        var hasFillColor = (flags & 1) != 0;
-        var hasBorderColor = (flags & 2) != 0;
-        var borderColorValue = hasBorderColor
-            ? PopValue(frame, instructionIndex).AsInteger()
-            : 0;
-        var fillColor = hasFillColor
-            ? PopValue(frame, instructionIndex).AsInteger()
-            : _host.CurrentForegroundColor;
+        var hasFillColor = HasPaintFill(flags);
+        var hasBorderColor = HasPaintBorder(flags);
+        var hasBackground = HasPaintBackground(flags);
+        var backgroundValue = hasBackground ? PopValue(frame, instructionIndex) : null;
+        var borderValue = hasBorderColor ? PopValue(frame, instructionIndex) : null;
+        var fillValue = hasFillColor ? PopValue(frame, instructionIndex) : null;
         var y = PopValue(frame, instructionIndex).AsLong();
         var x = PopValue(frame, instructionIndex).AsLong();
-        var borderColor = hasBorderColor ? borderColorValue : _host.GetPixel(x, y);
-        _host.Paint(x, y, fillColor, borderColor);
+        if (HasPaintRelativeStart(flags))
+        {
+            x += _host.CurrentGraphicsX;
+            y += _host.CurrentGraphicsY;
+        }
+
+        _host.Paint(CreatePaintRequest(x, y, fillValue, borderValue, backgroundValue, location));
+        _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private static bool HasCircleRelativeCenter(int flags) => (flags & 1) != 0;
@@ -184,6 +189,119 @@ public sealed partial class BytecodeVm
     private static bool HasCircleAspect(int flags) => (flags & 8) != 0;
 
     private static bool HasCircleColor(int flags) => (flags & 16) != 0;
+
+    private static bool HasPaintRelativeStart(int flags) => (flags & 1) != 0;
+
+    private static bool HasPaintFill(int flags) => (flags & 2) != 0;
+
+    private static bool HasPaintBorder(int flags) => (flags & 4) != 0;
+
+    private static bool HasPaintBackground(int flags) => (flags & 8) != 0;
+
+    private GraphicsPaintRequest CreatePaintRequest(
+        long x,
+        long y,
+        RuntimeValue? fillValue,
+        RuntimeValue? borderValue,
+        RuntimeValue? backgroundValue,
+        TextLocation location)
+    {
+        if (fillValue is null)
+        {
+            if (backgroundValue is not null)
+            {
+                ReportBuiltInArgumentError("PAINT", "фон", "допустим только вместе со строковой формой аргумента 'краска'.", location);
+                throw new RuntimeFailureException();
+            }
+
+            var fillColor = _host.CurrentBackgroundColor;
+            var borderColor = borderValue is null ? fillColor : ToPaintColor(borderValue, "граница", location);
+            return GraphicsPaintRequest.CreateSolid(x, y, fillColor, borderColor);
+        }
+
+        if (fillValue.Type == TypeSymbol.String)
+        {
+            var fillPattern = DecodePaintPattern(fillValue.AsString(), "краска", location);
+            var borderColor = borderValue is null ? _host.CurrentForegroundColor : ToPaintColor(borderValue, "граница", location);
+            var backgroundPattern = backgroundValue is null ? null : DecodePaintPattern(backgroundValue.AsString(), "фон", location);
+            return GraphicsPaintRequest.CreatePattern(
+                x,
+                y,
+                fillPattern,
+                borderColor,
+                _host.CurrentForegroundColor,
+                _host.CurrentBackgroundColor,
+                backgroundPattern);
+        }
+
+        if (backgroundValue is not null)
+        {
+            ReportBuiltInArgumentError("PAINT", "фон", "допустим только вместе со строковой формой аргумента 'краска'.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var solidFillColor = ToPaintColor(fillValue, "краска", location);
+        var solidBorderColor = borderValue is null ? solidFillColor : ToPaintColor(borderValue, "граница", location);
+        return GraphicsPaintRequest.CreateSolid(x, y, solidFillColor, solidBorderColor);
+    }
+
+    private byte[] DecodePaintPattern(string text, string argumentName, TextLocation location)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            ReportBuiltInArgumentError("PAINT", argumentName, "не может быть пустой строкой.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var bytes = new List<byte>(text.Length);
+        foreach (var rune in text.EnumerateRunes())
+        {
+            var code = RuntimeCharacterEncoding.Asc(rune);
+            if (code > 255)
+            {
+                ReportBuiltInArgumentError("PAINT", argumentName, "должен содержать только символы с кодами 0..255.", location);
+                throw new RuntimeFailureException();
+            }
+
+            bytes.Add((byte)code);
+            if (bytes.Count > 64)
+            {
+                ReportBuiltInArgumentError("PAINT", argumentName, "не должен быть длиннее 64 байтов шаблона.", location);
+                throw new RuntimeFailureException();
+            }
+        }
+
+        return bytes.ToArray();
+    }
+
+    private int ToPaintColor(RuntimeValue value, string argumentName, TextLocation location)
+    {
+        return value.Type switch
+        {
+            var type when type == TypeSymbol.Integer => value.AsInteger(),
+            var type when type == TypeSymbol.Long => ToInt32Checked(value.AsLong(), location, $"Аргумент '{argumentName}' у PAINT"),
+            var type when type == TypeSymbol.Double => ToPaintColor(value.AsDouble(), argumentName, location),
+            var type when type == TypeSymbol.Decimal => ToInt32Checked(decimal.Truncate(value.AsDecimal()), location, $"Аргумент '{argumentName}' у PAINT"),
+            _ => ThrowInvalidPaintColor(argumentName, location)
+        };
+    }
+
+    private int ToPaintColor(double value, string argumentName, TextLocation location)
+    {
+        if (!double.IsFinite(value))
+        {
+            ReportBuiltInArgumentError("PAINT", argumentName, "должен быть конечным числом.", location);
+            throw new RuntimeFailureException();
+        }
+
+        return ToInt32Checked(Math.Truncate(value), location, $"Аргумент '{argumentName}' у PAINT");
+    }
+
+    private int ThrowInvalidPaintColor(string argumentName, TextLocation location)
+    {
+        ReportBuiltInArgumentError("PAINT", argumentName, "должен быть числовым значением.", location);
+        throw new RuntimeFailureException();
+    }
 
     private void ValidateCircleArguments(double radius, double aspect, TextLocation location)
     {

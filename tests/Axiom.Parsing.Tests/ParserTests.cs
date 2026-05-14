@@ -405,6 +405,19 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_PaintStatementSupportsStepEmptySlotsAndBackground()
+    {
+        var program = ParseProgram("PAINT STEP (8, 9), pattern, , backPattern", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var paint = AssertGlobalStatement<PaintStatementSyntax>(program);
+        Assert.True(paint.IsRelative);
+        Assert.NotNull(paint.FillColorExpression);
+        Assert.Null(paint.BorderColorExpression);
+        Assert.NotNull(paint.BackgroundExpression);
+    }
+
+    [Fact]
     public void Parse_FunctionDeclarationWithFunctionTypedParameterAndReturnType()
     {
         const string text = """

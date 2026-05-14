@@ -450,6 +450,54 @@ PRINT POINT(2, 2)
     }
 
     [Fact]
+    public void Execute_CompiledPaintStepUsesCurrentPositionAndBackgroundColorByDefault()
+    {
+        const string text = """
+SCREEN 1
+COLOR 15, 2
+LINE (10, 10)-(12, 12), 9, B
+PSET (10, 10), 9
+PAINT STEP (1, 1), , 9
+PRINT POINT(11, 11)
+PRINT POINT(0)
+PRINT POINT(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(2, host.GetPixel(11, 11));
+        Assert.Equal(["2", "11", "11"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledPaintPatternAndBackgroundPatternRepaintRegion()
+    {
+        const string text = """
+SCREEN 1
+COLOR 6, 1
+DIM oldPattern AS STRING = CHR(170) & CHR(85)
+DIM newPattern AS STRING = CHR(85) & CHR(170)
+LINE (1, 1)-(4, 4), 9, B
+PAINT (2, 2), oldPattern, 9
+PAINT (2, 2), newPattern, 9, oldPattern
+PRINT POINT(2, 2)
+PRINT POINT(3, 2)
+PRINT POINT(2, 3)
+PRINT POINT(3, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "6", "6", "1"], host.Output);
+        Assert.Equal(1, host.GetPixel(2, 2));
+        Assert.Equal(6, host.GetPixel(3, 2));
+        Assert.Equal(6, host.GetPixel(2, 3));
+        Assert.Equal(1, host.GetPixel(3, 3));
+    }
+
+    [Fact]
     public void Execute_MousePressConsumesMatchingButtonOnce()
     {
         const string text = """
@@ -4936,6 +4984,12 @@ PRINT Person(-1).Age
         public void SetPixel(long x, long y, int color)
         {
             _pixels[(x, y)] = color;
+            _currentGraphicsX = x;
+            _currentGraphicsY = y;
+        }
+
+        public void SetGraphicsCurrentPosition(long x, long y)
+        {
             _currentGraphicsX = x;
             _currentGraphicsY = y;
         }

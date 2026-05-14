@@ -221,6 +221,38 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportInvalidPaintFillType(TypeSymbol actualType, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Аргумент 'краска' у PAINT должен иметь числовой или строковый тип, получен {actualType.Name}.",
+            location);
+    }
+
+    private void ReportInvalidPaintBorderType(TypeSymbol actualType, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Аргумент 'граница' у PAINT должен иметь числовой тип, получен {actualType.Name}.",
+            location);
+    }
+
+    private void ReportInvalidPaintBackgroundType(TypeSymbol actualType, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Аргумент 'фон' у PAINT должен иметь тип STRING, получен {actualType.Name}.",
+            location);
+    }
+
+    private void ReportInvalidPaintBackgroundWithoutPattern(TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            "Аргумент 'фон' у PAINT допустим только вместе со строковой формой аргумента 'краска'.",
+            location);
+    }
+
     private void ReportValueIsNotCallable(TypeSymbol type, TextLocation location)
     {
         _diagnostics.Report(ValueNotCallableCode, $"Значение типа {type.Name} нельзя вызывать как функцию.", location);

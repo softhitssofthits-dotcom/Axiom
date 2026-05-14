@@ -437,7 +437,9 @@ public sealed class BoundPaintStatement : BoundStatement
         BoundExpression xExpression,
         BoundExpression yExpression,
         BoundExpression? fillColorExpression,
-        BoundExpression? borderColorExpression)
+        BoundExpression? borderColorExpression,
+        BoundExpression? backgroundExpression,
+        bool isRelative)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(xExpression);
@@ -446,6 +448,8 @@ public sealed class BoundPaintStatement : BoundStatement
         YExpression = yExpression;
         FillColorExpression = fillColorExpression;
         BorderColorExpression = borderColorExpression;
+        BackgroundExpression = backgroundExpression;
+        IsRelative = isRelative;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.PaintStatement;
@@ -457,6 +461,10 @@ public sealed class BoundPaintStatement : BoundStatement
     public BoundExpression? FillColorExpression { get; }
 
     public BoundExpression? BorderColorExpression { get; }
+
+    public BoundExpression? BackgroundExpression { get; }
+
+    public bool IsRelative { get; }
 }
 
 public sealed class BoundOnKeyStatement : BoundStatement

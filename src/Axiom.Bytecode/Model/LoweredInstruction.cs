@@ -439,22 +439,33 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Circle, location, valueCount: valueCount, mouseEventKind: flags);
     }
 
-    public static LoweredInstruction Paint(TextLocation location, bool hasFillColor, bool hasBorderColor)
+    public static LoweredInstruction Paint(TextLocation location, bool isRelative, bool hasFillColor, bool hasBorderColor, bool hasBackground)
     {
         var flags = 0;
-        if (hasFillColor)
+        if (isRelative)
         {
             flags |= 1;
         }
 
-        if (hasBorderColor)
+        if (hasFillColor)
         {
             flags |= 2;
         }
 
+        if (hasBorderColor)
+        {
+            flags |= 4;
+        }
+
+        if (hasBackground)
+        {
+            flags |= 8;
+        }
+
         var valueCount = 2
             + (hasFillColor ? 1 : 0)
-            + (hasBorderColor ? 1 : 0);
+            + (hasBorderColor ? 1 : 0)
+            + (hasBackground ? 1 : 0);
         return new LoweredInstruction(LoweredInstructionKind.Paint, location, valueCount: valueCount, mouseEventKind: flags);
     }
 

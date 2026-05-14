@@ -84,6 +84,14 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public long CurrentGraphicsY =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
 
+    public void SetGraphicsCurrentPosition(long x, long y)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetGraphicsCurrentPosition(x, y);
+        }
+    }
+
     public void ActivateScreen(int mode)
     {
         if (_promptService is IGraphicsHost graphicsHost)
@@ -145,6 +153,14 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
 
     public int GetPixel(long x, long y) =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
+
+    public void Paint(GraphicsPaintRequest request)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.Paint(request);
+        }
+    }
 
     public void Paint(long x, long y, int fillColor, int borderColor)
     {

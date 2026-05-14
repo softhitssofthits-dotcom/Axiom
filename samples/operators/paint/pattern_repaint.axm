@@ -1,0 +1,13 @@
+SCREEN 1
+CLS
+COLOR 6, 1
+DIM oldPattern AS STRING = CHR(170) & CHR(85)
+DIM newPattern AS STRING = CHR(85) & CHR(170)
+
+LINE (20, 20)-(100, 100), 9, B
+PAINT (30, 30), oldPattern, 9
+PAINT (30, 30), newPattern, 9, oldPattern
+
+LOCATE 1, 1
+PRINT "PAINT pattern sample finished"
+SLEEP

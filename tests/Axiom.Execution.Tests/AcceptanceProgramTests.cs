@@ -1905,7 +1905,7 @@ public sealed class AcceptanceProgramTests
     [Fact]
     public void ScreenPaintAcceptanceSample_RunsOnBytecodeVm()
     {
-        var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/paint_fill_region.axm");
+        var sourceText = TestProgramLoader.LoadText("samples/operators/paint/pattern_repaint.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
@@ -1915,7 +1915,23 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
-        Assert.Equal(["PAINT sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["PAINT pattern sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void ScreenPaintStepAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/paint/step_default_fill.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["PAINT STEP sample finished"], inputProvider.GraphicsOutput);
     }
 
     [Fact]

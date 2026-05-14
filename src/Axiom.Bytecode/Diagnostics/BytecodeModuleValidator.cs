@@ -1354,11 +1354,13 @@ public sealed class BytecodeModuleValidator
             {
                 var flags = instruction.GetOperand(0);
                 var valueCount = instruction.GetOperand(1);
-                var hasFillColor = (flags & 1) != 0;
-                var hasBorderColor = (flags & 2) != 0;
+                var hasFillColor = (flags & 2) != 0;
+                var hasBorderColor = (flags & 4) != 0;
+                var hasBackground = (flags & 8) != 0;
                 var expectedValueCount = 2
                     + (hasFillColor ? 1 : 0)
-                    + (hasBorderColor ? 1 : 0);
+                    + (hasBorderColor ? 1 : 0)
+                    + (hasBackground ? 1 : 0);
                 if (valueCount != expectedValueCount)
                 {
                     Report(
@@ -1370,16 +1372,40 @@ public sealed class BytecodeModuleValidator
                     break;
                 }
 
+                if (hasBackground)
+                {
+                    var backgroundType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, backgroundType, TypeSymbol.String, "фоновый шаблон");
+                }
+
                 if (hasBorderColor)
                 {
                     var borderType = Pop();
-                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, borderType, TypeSymbol.Integer, "цвет границы");
+                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, borderType, "цвет границы");
                 }
 
                 if (hasFillColor)
                 {
                     var fillType = Pop();
-                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, fillType, TypeSymbol.Integer, "цвет заливки");
+                    ValidatePaintFillStackType(module, routine, instructionIndex, instruction.Opcode, fillType);
+                    if (hasBackground && fillType is not null && fillType != TypeSymbol.String)
+                    {
+                        Report(
+                            "BC4128",
+                            $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' использует аргумент 'фон' без строковой формы аргумента 'краска'.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                }
+                else if (hasBackground)
+                {
+                    Report(
+                        "BC4129",
+                        $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' использует аргумент 'фон' без аргумента 'краска'.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
                 }
 
                 var yType = Pop();
@@ -2097,6 +2123,28 @@ public sealed class BytecodeModuleValidator
         Report(
             "BC4113",
             $"Инструкция '{opcode}' в процедуре '{routine.Name}' ожидает числовое значение для роли '{role}', но получила {actualType.Name}.",
+            module,
+            routine.Id,
+            instructionIndex);
+    }
+
+    private void ValidatePaintFillStackType(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        Opcode opcode,
+        TypeSymbol? actualType)
+    {
+        if (actualType is null
+            || actualType == TypeSymbol.String
+            || IsNumericType(actualType))
+        {
+            return;
+        }
+
+        Report(
+            "BC4130",
+            $"Инструкция '{opcode}' в процедуре '{routine.Name}' ожидает для аргумента 'краска' числовой или строковый тип, но получила {actualType.Name}.",
             module,
             routine.Id,
             instructionIndex);

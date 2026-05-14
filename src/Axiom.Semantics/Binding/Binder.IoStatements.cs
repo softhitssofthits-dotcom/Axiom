@@ -134,12 +134,70 @@ public sealed partial class Binder
 
     private BoundStatement BindPaintStatement(PaintStatementSyntax statement)
     {
+        var fillExpression = statement.FillColorExpression is null ? null : BindPaintFillExpression(statement.FillColorExpression);
+        var borderExpression = statement.BorderColorExpression is null ? null : BindPaintBorderExpression(statement.BorderColorExpression);
+        var backgroundExpression = statement.BackgroundExpression is null ? null : BindPaintBackgroundExpression(statement.BackgroundExpression);
+
+        if (backgroundExpression is not null && fillExpression is null)
+        {
+            ReportInvalidPaintBackgroundWithoutPattern(GetLocation(statement.BackgroundExpression!));
+            backgroundExpression = new BoundErrorExpression(GetLocation(statement.BackgroundExpression!));
+        }
+        else if (backgroundExpression is not null
+                 && fillExpression is not null
+                 && fillExpression.Type != TypeSymbol.String
+                 && fillExpression.Type != TypeSymbol.Error)
+        {
+            ReportInvalidPaintBackgroundWithoutPattern(GetLocation(statement.BackgroundExpression!));
+            backgroundExpression = new BoundErrorExpression(GetLocation(statement.BackgroundExpression!));
+        }
+
         return new BoundPaintStatement(
             GetLocation(statement),
             BindExpression(statement.Point.XExpression, TypeSymbol.Long),
             BindExpression(statement.Point.YExpression, TypeSymbol.Long),
-            statement.FillColorExpression is null ? null : BindExpression(statement.FillColorExpression, TypeSymbol.Integer),
-            statement.BorderColorExpression is null ? null : BindExpression(statement.BorderColorExpression, TypeSymbol.Integer));
+            fillExpression,
+            borderExpression,
+            backgroundExpression,
+            statement.IsRelative);
+    }
+
+    private BoundExpression BindPaintFillExpression(ExpressionSyntax expression)
+    {
+        var boundExpression = BindExpression(expression);
+        if (boundExpression.Type == TypeSymbol.Error
+            || boundExpression.Type == TypeSymbol.String
+            || IsNumeric(boundExpression.Type))
+        {
+            return boundExpression;
+        }
+
+        ReportInvalidPaintFillType(boundExpression.Type, GetLocation(expression));
+        return new BoundErrorExpression(GetLocation(expression));
+    }
+
+    private BoundExpression BindPaintBorderExpression(ExpressionSyntax expression)
+    {
+        var boundExpression = BindExpression(expression);
+        if (boundExpression.Type == TypeSymbol.Error || IsNumeric(boundExpression.Type))
+        {
+            return boundExpression;
+        }
+
+        ReportInvalidPaintBorderType(boundExpression.Type, GetLocation(expression));
+        return new BoundErrorExpression(GetLocation(expression));
+    }
+
+    private BoundExpression BindPaintBackgroundExpression(ExpressionSyntax expression)
+    {
+        var boundExpression = BindExpression(expression);
+        if (boundExpression.Type == TypeSymbol.Error || boundExpression.Type == TypeSymbol.String)
+        {
+            return boundExpression;
+        }
+
+        ReportInvalidPaintBackgroundType(boundExpression.Type, GetLocation(expression));
+        return new BoundErrorExpression(GetLocation(expression));
     }
 
     private BoundStatement BindOnKeyStatement(OnKeyStatementSyntax statement)

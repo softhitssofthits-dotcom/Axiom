@@ -102,6 +102,14 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public long CurrentGraphicsY =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
 
+    public void SetGraphicsCurrentPosition(long x, long y)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetGraphicsCurrentPosition(x, y);
+        }
+    }
+
     public void ActivateScreen(int mode)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -163,6 +171,14 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
 
     public int GetPixel(long x, long y) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
+
+    public void Paint(GraphicsPaintRequest request)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.Paint(request);
+        }
+    }
 
     public void Paint(long x, long y, int fillColor, int borderColor)
     {

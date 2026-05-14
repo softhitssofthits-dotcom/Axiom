@@ -36,6 +36,10 @@ public interface IGraphicsHost
 
     long CurrentGraphicsY => 0;
 
+    void SetGraphicsCurrentPosition(long x, long y)
+    {
+    }
+
     void ActivateScreen(int mode)
     {
     }
@@ -68,15 +72,20 @@ public interface IGraphicsHost
 
     int GetPixel(long x, long y) => 0;
 
-    void Paint(long x, long y, int fillColor, int borderColor)
+    void Paint(GraphicsPaintRequest request)
     {
         GraphicsFloodFill.Paint(
-            x,
-            y,
-            fillColor,
-            borderColor,
+            request,
             GetPixel,
-            SetPixel);
+            SetPixel,
+            static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
+            ScreenWidth,
+            ScreenHeight);
+    }
+
+    void Paint(long x, long y, int fillColor, int borderColor)
+    {
+        Paint(GraphicsPaintRequest.CreateSolid(x, y, fillColor, borderColor));
     }
 
     void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)

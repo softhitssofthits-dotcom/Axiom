@@ -362,10 +362,16 @@ public sealed class BoundProgramLowerer
                 {
                     LowerExpression(paint.BorderColorExpression, instructions);
                 }
+                if (paint.BackgroundExpression is not null)
+                {
+                    LowerExpression(paint.BackgroundExpression, instructions);
+                }
                 instructions.Add(LoweredInstruction.Paint(
                     paint.Location,
+                    paint.IsRelative,
                     paint.FillColorExpression is not null,
-                    paint.BorderColorExpression is not null));
+                    paint.BorderColorExpression is not null,
+                    paint.BackgroundExpression is not null));
                 break;
 
             case BoundOnKeyStatement onKey:

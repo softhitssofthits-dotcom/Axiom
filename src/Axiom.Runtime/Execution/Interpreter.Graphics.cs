@@ -1,4 +1,5 @@
 using Axiom.Core;
+using System.Text;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -144,14 +145,123 @@ public sealed partial class Interpreter
         RequireScreenActive("PAINT", statement.Location);
         var x = EvaluateExpression(statement.XExpression).AsLong();
         var y = EvaluateExpression(statement.YExpression).AsLong();
-        var fillColor = statement.FillColorExpression is null
-            ? _host.CurrentForegroundColor
-            : EvaluateExpression(statement.FillColorExpression).AsInteger();
-        var borderColor = statement.BorderColorExpression is null
-            ? _host.GetPixel(x, y)
-            : EvaluateExpression(statement.BorderColorExpression).AsInteger();
-        _host.Paint(x, y, fillColor, borderColor);
+        if (statement.IsRelative)
+        {
+            x += _host.CurrentGraphicsX;
+            y += _host.CurrentGraphicsY;
+        }
+
+        var fillValue = statement.FillColorExpression is null ? null : EvaluateExpression(statement.FillColorExpression);
+        var borderValue = statement.BorderColorExpression is null ? null : EvaluateExpression(statement.BorderColorExpression);
+        var backgroundValue = statement.BackgroundExpression is null ? null : EvaluateExpression(statement.BackgroundExpression);
+        _host.Paint(CreatePaintRequest(x, y, fillValue, borderValue, backgroundValue, statement.Location));
+        _host.SetGraphicsCurrentPosition(x, y);
         return ExecutionSignal.None;
+    }
+
+    private GraphicsPaintRequest CreatePaintRequest(
+        long x,
+        long y,
+        RuntimeValue? fillValue,
+        RuntimeValue? borderValue,
+        RuntimeValue? backgroundValue,
+        TextLocation location)
+    {
+        if (fillValue is null)
+        {
+            if (backgroundValue is not null)
+            {
+                ReportBuiltInArgumentError("PAINT", "фон", "допустим только вместе со строковой формой аргумента 'краска'.", location);
+                throw new RuntimeFailureException();
+            }
+
+            var fillColor = _host.CurrentBackgroundColor;
+            var borderColor = borderValue is null ? fillColor : ToPaintColor(borderValue, "граница", location);
+            return GraphicsPaintRequest.CreateSolid(x, y, fillColor, borderColor);
+        }
+
+        if (fillValue.Type == TypeSymbol.String)
+        {
+            var fillPattern = DecodePaintPattern(fillValue.AsString(), "краска", location);
+            var borderColor = borderValue is null ? _host.CurrentForegroundColor : ToPaintColor(borderValue, "граница", location);
+            var backgroundPattern = backgroundValue is null ? null : DecodePaintPattern(backgroundValue.AsString(), "фон", location);
+            return GraphicsPaintRequest.CreatePattern(
+                x,
+                y,
+                fillPattern,
+                borderColor,
+                _host.CurrentForegroundColor,
+                _host.CurrentBackgroundColor,
+                backgroundPattern);
+        }
+
+        if (backgroundValue is not null)
+        {
+            ReportBuiltInArgumentError("PAINT", "фон", "допустим только вместе со строковой формой аргумента 'краска'.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var solidFillColor = ToPaintColor(fillValue, "краска", location);
+        var solidBorderColor = borderValue is null ? solidFillColor : ToPaintColor(borderValue, "граница", location);
+        return GraphicsPaintRequest.CreateSolid(x, y, solidFillColor, solidBorderColor);
+    }
+
+    private byte[] DecodePaintPattern(string text, string argumentName, TextLocation location)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            ReportBuiltInArgumentError("PAINT", argumentName, "не может быть пустой строкой.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var bytes = new List<byte>(text.Length);
+        foreach (var rune in text.EnumerateRunes())
+        {
+            var code = RuntimeCharacterEncoding.Asc(rune);
+            if (code > 255)
+            {
+                ReportBuiltInArgumentError("PAINT", argumentName, "должен содержать только символы с кодами 0..255.", location);
+                throw new RuntimeFailureException();
+            }
+
+            bytes.Add((byte)code);
+            if (bytes.Count > 64)
+            {
+                ReportBuiltInArgumentError("PAINT", argumentName, "не должен быть длиннее 64 байтов шаблона.", location);
+                throw new RuntimeFailureException();
+            }
+        }
+
+        return bytes.ToArray();
+    }
+
+    private int ToPaintColor(RuntimeValue value, string argumentName, TextLocation location)
+    {
+        return value.Type switch
+        {
+            var type when type == TypeSymbol.Integer => value.AsInteger(),
+            var type when type == TypeSymbol.Long => ToInt32Checked(value.AsLong(), location, $"Аргумент '{argumentName}' у PAINT"),
+            var type when type == TypeSymbol.Double => ToPaintColor(value.AsDouble(), argumentName, location),
+            var type when type == TypeSymbol.Decimal => ToInt32Checked(decimal.Truncate(value.AsDecimal()), location, $"Аргумент '{argumentName}' у PAINT"),
+            _ => ThrowInvalidPaintColor(argumentName, location)
+        };
+    }
+
+    private int ToPaintColor(double value, string argumentName, TextLocation location)
+    {
+        if (!double.IsFinite(value))
+        {
+            ReportBuiltInArgumentError("PAINT", argumentName, "должен быть конечным числом.", location);
+            throw new RuntimeFailureException();
+        }
+
+        return ToInt32Checked(Math.Truncate(value), location, $"Аргумент '{argumentName}' у PAINT");
+    }
+
+    private int ThrowInvalidPaintColor(string argumentName, TextLocation location)
+    {
+        ReportBuiltInArgumentError("PAINT", argumentName, "должен быть числовым значением.", location);
+        throw new RuntimeFailureException();
     }
 
     private void ValidateCircleArguments(double radius, double aspect, TextLocation location)

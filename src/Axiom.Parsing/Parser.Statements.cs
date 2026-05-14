@@ -373,31 +373,43 @@ public sealed partial class Parser
     private PaintStatementSyntax ParsePaintStatement()
     {
         var paintKeyword = Match(SyntaxKind.PaintKeyword, "PAINT");
+        var stepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
         var point = ParseGraphicsPoint();
         SyntaxToken? fillCommaToken = null;
         ExpressionSyntax? fillColorExpression = null;
         SyntaxToken? borderCommaToken = null;
         ExpressionSyntax? borderColorExpression = null;
+        SyntaxToken? backgroundCommaToken = null;
+        ExpressionSyntax? backgroundExpression = null;
 
         if (Current.Kind == SyntaxKind.CommaToken)
         {
             fillCommaToken = Match(SyntaxKind.CommaToken, ",");
-            fillColorExpression = ParseExpression();
+            fillColorExpression = ParseOptionalGraphicsArgumentExpression();
         }
 
         if (Current.Kind == SyntaxKind.CommaToken)
         {
             borderCommaToken = Match(SyntaxKind.CommaToken, ",");
-            borderColorExpression = ParseExpression();
+            borderColorExpression = ParseOptionalGraphicsArgumentExpression();
+        }
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            backgroundCommaToken = Match(SyntaxKind.CommaToken, ",");
+            backgroundExpression = ParseOptionalGraphicsArgumentExpression();
         }
 
         return new PaintStatementSyntax(
             paintKeyword,
+            stepKeyword,
             point,
             fillCommaToken,
             fillColorExpression,
             borderCommaToken,
-            borderColorExpression);
+            borderColorExpression,
+            backgroundCommaToken,
+            backgroundExpression);
     }
 
     private ExpressionSyntax? ParseOptionalGraphicsArgumentExpression()

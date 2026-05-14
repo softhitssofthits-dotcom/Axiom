@@ -664,6 +664,32 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void Paint_PatternFillAndBackgroundPatternRepaintRegion()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.SetTextColor(6, TextBackgroundMode.Color, 1);
+        service.DrawLine(1, 1, 4, 4, 9, GraphicsLineKind.Box);
+        var oldPattern = new byte[] { 170, 85 };
+        var newPattern = new byte[] { 85, 170 };
+
+        service.Paint(GraphicsPaintRequest.CreatePattern(2, 2, oldPattern, 9, service.CurrentForegroundColor, service.CurrentBackgroundColor));
+        Assert.Equal(6, service.GetPixel(2, 2));
+        Assert.Equal(1, service.GetPixel(3, 2));
+        Assert.Equal(1, service.GetPixel(2, 3));
+        Assert.Equal(6, service.GetPixel(3, 3));
+
+        service.Paint(GraphicsPaintRequest.CreatePattern(2, 2, newPattern, 9, service.CurrentForegroundColor, service.CurrentBackgroundColor, oldPattern));
+        Assert.Equal(1, service.GetPixel(2, 2));
+        Assert.Equal(6, service.GetPixel(3, 2));
+        Assert.Equal(6, service.GetPixel(2, 3));
+        Assert.Equal(1, service.GetPixel(3, 3));
+        Assert.Equal(2, service.CurrentGraphicsX);
+        Assert.Equal(2, service.CurrentGraphicsY);
+    }
+
+    [Fact]
     public void GraphicsState_TracksCurrentPositionAndColors()
     {
         var service = new ProgramConsoleService();
