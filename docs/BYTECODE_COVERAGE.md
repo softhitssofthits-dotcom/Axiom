@@ -662,7 +662,7 @@
 - VM: да, `BytecodeVm` теперь выполняет полную форму `PAINT [STEP] (x, y)[, [краска][, [граница][, фон]]]`, включая `STEP`, пустые позиционные места, строковую краску и четвёртый аргумент `фон`;
 - Интерпретатор: да, использует тот же договор аргументов и тот же `GraphicsPaintRequest` для сплошной и шаблонной заливки;
 - Автотесты: да, добавлены parser-, interpreter-, `BytecodeVm`-, IDE- и execution-проверки для `PAINT STEP`, заливки текущим цветом фона по умолчанию, шаблонной перекраски и повторной шаблонной заливки поверх старого фона;
-- Runnable sample: да, добавлены `samples/operators/paint/step_default_fill.axm` и `samples/operators/paint/pattern_repaint.axm`;
+- Runnable sample: да, добавлены `samples/operators/paint/fish_fill.axm`, `samples/operators/paint/step_default_fill.axm` и `samples/operators/paint/pattern_repaint.axm`;
 - Manual: да, обновлены `docs/manual/graphics-primitives.html` и `docs/manual/scripts/search-index.js`;
 - Сквозной VM: да, добавлены acceptance-тесты `ScreenPaintAcceptanceSample_RunsOnBytecodeVm` и `ScreenPaintStepAcceptanceSample_RunsOnBytecodeVm`;
 - Негативный паритет: частично, сохраняется `MB3010` вне графического режима; положительные формы полного договора закрыты, но отдельный отрицательный `.axm` для недопустимого строкового образца или неверного аргумента `фон` в этом шаге не добавлялся;

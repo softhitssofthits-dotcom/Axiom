@@ -1,0 +1,20 @@
+﻿SCREEN 8
+CLS
+
+CIRCLE (90, 100), 40, 1, , , 0.45
+CIRCLE (74, 92), 3, 1, , , 0.7
+PAINT (90, 100), 2, 1
+
+LINE (50, 100)-STEP(-24, 18), 2
+LINE -STEP(0, -36), 2
+LINE -STEP(24, 18), 2
+PAINT (36, 100), 1, 2
+
+CIRCLE (58, 100), 14, 0, PI - 0.75, PI - 1.25, 1.5
+FOR Y = 90 TO 110 STEP 4
+    LINE (26, Y)-STEP(10, 0), 0
+NEXT
+
+LOCATE 1, 1
+PRINT "PAINT fish sample finished"
+SLEEP
