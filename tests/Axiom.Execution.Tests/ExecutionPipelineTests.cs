@@ -956,6 +956,7 @@ PRINT POINT(17, 10)
         Assert.False(GraphicsCircleValidation.HasValidArguments(3d, double.NaN, null, 1d));
         Assert.False(GraphicsCircleValidation.HasValidArguments(3d, null, double.PositiveInfinity, 1d));
         Assert.False(GraphicsCircleValidation.HasValidArguments(3d, null, double.NegativeInfinity, 1d));
+        Assert.False(GraphicsCircleValidation.HasValidArguments(3d, 0d, Math.PI, 1_000_001d));
     }
 
     [Fact]
@@ -964,6 +965,9 @@ PRINT POINT(17, 10)
         Assert.Equal(long.MaxValue, GraphicsLineMath.SaturatingDouble(long.MaxValue / 2 + 1));
         Assert.Equal(long.MinValue, GraphicsLineMath.SaturatingDouble(long.MinValue / 2 - 1));
         Assert.Equal(-8642L, GraphicsLineMath.SaturatingDouble(-4321));
+        Assert.Equal(long.MaxValue, GraphicsLineMath.SaturatingAdd(long.MaxValue - 1, 10));
+        Assert.Equal(long.MinValue, GraphicsLineMath.SaturatingAdd(long.MinValue + 1, -10));
+        Assert.Equal(77L, GraphicsLineMath.SaturatingAdd(70, 7));
     }
 
     [Fact]

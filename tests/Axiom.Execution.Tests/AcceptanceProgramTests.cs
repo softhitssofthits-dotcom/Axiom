@@ -1887,6 +1887,22 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void ScreenCircleFullTurnAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/circle_full_turn.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["Circle full turn sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenStepAndPointPositionAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/step_and_point_position.axm");

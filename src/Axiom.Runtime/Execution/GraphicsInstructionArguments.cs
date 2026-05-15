@@ -46,29 +46,33 @@ internal readonly record struct GraphicsLineArguments(
     GraphicsLineKind Kind);
 
 internal readonly record struct GraphicsCircleArguments(
-    long X,
-    long Y,
+    long CenterX,
+    long CenterY,
     double Radius,
     int Color,
-    bool RelativeCenter,
     double? StartAngle,
     double? EndAngle,
     double Aspect,
     bool DrawStartRadius,
-    bool DrawEndRadius);
+    bool DrawEndRadius,
+    bool FullCircle,
+    double Sweep);
 
 internal static class GraphicsInstructionArguments
 {
-    public static GraphicsLineArguments CreateLine(
+    public static bool TryCreateLine(
         long currentGraphicsX,
         long currentGraphicsY,
         long x2,
         long y2,
         int color,
         GraphicsLineInstructionFlags flags,
+        out GraphicsLineArguments arguments,
         long? explicitX1 = null,
         long? explicitY1 = null)
     {
+        arguments = default;
+
         var x1 = flags.HasExplicitStartPoint
             ? explicitX1 ?? throw new ArgumentNullException(nameof(explicitX1))
             : currentGraphicsX;
@@ -78,20 +82,32 @@ internal static class GraphicsInstructionArguments
 
         if (flags.HasExplicitStartPoint && flags.StartRelative)
         {
-            x1 += currentGraphicsX;
-            y1 += currentGraphicsY;
+            if (!GraphicsCoordinateValidation.TryResolvePoint(currentGraphicsX, currentGraphicsY, x1, y1, out x1, out y1))
+            {
+                return false;
+            }
         }
 
         if (flags.EndRelative)
         {
-            x2 += x1;
-            y2 += y1;
+            if (!GraphicsCoordinateValidation.TryResolvePoint(x1, y1, x2, y2, out x2, out y2))
+            {
+                return false;
+            }
         }
 
-        return new GraphicsLineArguments(x1, y1, x2, y2, color, flags.Kind);
+        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
+        {
+            return false;
+        }
+
+        arguments = new GraphicsLineArguments(x1, y1, x2, y2, color, flags.Kind);
+        return true;
     }
 
-    public static GraphicsCircleArguments CreateCircle(
+    public static bool TryCreateCircle(
+        long currentGraphicsX,
+        long currentGraphicsY,
         long x,
         long y,
         double radius,
@@ -99,26 +115,59 @@ internal static class GraphicsInstructionArguments
         bool relativeCenter,
         double? startAngle,
         double? endAngle,
-        double aspect)
+        double aspect,
+        out GraphicsCircleArguments arguments)
     {
-        return new GraphicsCircleArguments(
-            x,
-            y,
+        arguments = default;
+
+        var centerX = x;
+        var centerY = y;
+        if (relativeCenter && !GraphicsCoordinateValidation.TryResolvePoint(currentGraphicsX, currentGraphicsY, x, y, out centerX, out centerY))
+        {
+            return false;
+        }
+
+        if (!relativeCenter && !GraphicsCoordinateValidation.IsSupportedCircleCenter(centerX, centerY))
+        {
+            return false;
+        }
+
+        var normalizedStart = NormalizeCircleAngle(startAngle);
+        var normalizedEnd = NormalizeCircleAngle(endAngle);
+        var fullCircle = !normalizedStart.HasValue && !normalizedEnd.HasValue;
+        if (!fullCircle && normalizedStart.HasValue && normalizedEnd.HasValue)
+        {
+            fullCircle = Math.Abs(normalizedStart.Value - normalizedEnd.Value) <= 1e-9;
+        }
+
+        var arcStart = normalizedStart ?? 0d;
+        var arcEnd = normalizedEnd ?? Math.Tau;
+        var sweep = fullCircle ? Math.Tau : arcEnd - arcStart;
+        if (!fullCircle && sweep <= 0d)
+        {
+            sweep += Math.Tau;
+        }
+
+        arguments = new GraphicsCircleArguments(
+            centerX,
+            centerY,
             radius,
             color,
-            relativeCenter,
-            NormalizeCircleAngle(startAngle),
-            NormalizeCircleAngle(endAngle),
+            normalizedStart,
+            normalizedEnd,
             aspect,
             startAngle is < 0,
-            endAngle is < 0);
+            endAngle is < 0,
+            fullCircle,
+            sweep);
+        return true;
     }
 
     private static double? NormalizeCircleAngle(double? angle) =>
         angle switch
         {
             null => null,
-            < 0 => -angle,
-            _ => angle
+            < 0 => GraphicsEllipseRasterizer.NormalizeAngle(-angle.Value),
+            _ => GraphicsEllipseRasterizer.NormalizeAngle(angle.Value)
         };
 }

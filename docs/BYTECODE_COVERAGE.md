@@ -704,3 +704,15 @@
 - Сквозной VM: да, fallback-путь `IGraphicsHost.DrawCircle` и IDE-host одинаково игнорируют невалидные внутренние вызовы без специальной реализации графического host-а;
 - Негативный паритет: да, ошибка `MB3007` теперь явно покрывает и нечисловые/бесконечные углы дуги;
 - Профиль: не приоритет, это внутреннее упрочнение договора аргументов без изменения производительного сценария.
+
+## Обновление реестра - 2026-05-15 - LINE и CIRCLE насыщены по координатам и полному обороту
+
+Дополнение к области `SCREEN` и операторов рисования:
+- VM: да, `BytecodeVm` и интерпретатор теперь используют общий путь `GraphicsInstructionArguments.TryCreateLine(...)` / `TryCreateCircle(...)`, который отвергает координаты вне диапазона `-1000000000..1000000000`, ограничивает `aspect <= 1000000` и трактует совпавшие после нормализации `start`/`end` как полный контур `CIRCLE`;
+- Интерпретатор: да, fallback `IGraphicsHost.DrawLine` и IDE-host используют насыщающее сложение в алгоритме Брезенхэма, а `GraphicsEllipseRasterizer` клиппирует вывод по границам текущего `SCREEN`;
+- Автотесты: да, добавлены проверки `Execute_LineReportsOutOfRangeCoordinates()`, `Execute_CircleReportsOutOfRangeCoordinatesAndAspect()`, `Execute_CompiledLineReportsOutOfRangeCoordinates()`, `Execute_CompiledCircleReportsOutOfRangeCoordinatesAndAspect()`, `DrawLine_DoesNotOverflowWhenErrorDoublingSaturates()`, `DrawCircle_FullTurnAnglesRasterizeFullCircle()`, `GraphicsEllipseRasterizer_RasterizeClipsPlotPixelsToScreen()`, `Run_WithBytecodeMode_DrawLineFallbackSurvivesErrorDoublingOverflow()` и `ScreenCircleFullTurnAcceptanceSample_RunsOnBytecodeVm`;
+- Runnable sample: да, добавлен `samples/graphics/primitives/circle_full_turn.axm`;
+- Manual: да, обновлены `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html` и `docs/GRAPHICS_OPERATORS_FLAGS.md`;
+- Сквозной VM: да, новый sample полного оборота `CIRCLE` запускается через `ExecutionMode.Bytecode` без отката;
+- Негативный паритет: да, `MB3007` теперь явно покрывает выход координат `LINE`/`CIRCLE` за поддержанный диапазон и чрезмерный `aspect`, а форма `CIRCLE ..., 0, 2 * PI` фиксирована как полный контур, а не пустая дуга;
+- Профиль: не приоритет, это упрочнение графического договора и защит от переполнения, а не новый горячий benchmark.

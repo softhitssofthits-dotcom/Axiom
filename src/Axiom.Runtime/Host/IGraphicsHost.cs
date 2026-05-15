@@ -90,6 +90,11 @@ public interface IGraphicsHost
 
     void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
+        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
+        {
+            return;
+        }
+
         switch (kind)
         {
             case GraphicsLineKind.Box:
@@ -125,36 +130,38 @@ public interface IGraphicsHost
             return;
         }
 
-        var centerX = x;
-        var centerY = y;
-        if (relativeCenter)
+        if (!GraphicsInstructionArguments.TryCreateCircle(
+                CurrentGraphicsX,
+                CurrentGraphicsY,
+                x,
+                y,
+                radius,
+                color,
+                relativeCenter,
+                startAngle,
+                endAngle,
+                aspect,
+                out var circle))
         {
-            centerX += CurrentGraphicsX;
-            centerY += CurrentGraphicsY;
+            return;
         }
 
+        var centerX = circle.CenterX;
+        var centerY = circle.CenterY;
         SetGraphicsCurrentPosition(centerX, centerY);
 
-        var radiusX = aspect <= 1d ? radius : radius / aspect;
-        var radiusY = aspect <= 1d ? radius * aspect : radius;
+        var radiusX = circle.Aspect <= 1d ? circle.Radius : circle.Radius / circle.Aspect;
+        var radiusY = circle.Aspect <= 1d ? circle.Radius * circle.Aspect : circle.Radius;
         if (radiusX <= 0 || radiusY <= 0)
         {
             SetPixel(centerX, centerY, color);
             return;
         }
 
-        var arcStart = GraphicsEllipseRasterizer.NormalizeAngle(startAngle ?? 0d);
-        var arcEnd = GraphicsEllipseRasterizer.NormalizeAngle(endAngle ?? Math.Tau);
-        var fullCircle = startAngle is null && endAngle is null;
-        var sweep = fullCircle ? Math.Tau : arcEnd - arcStart;
-        if (!fullCircle && sweep <= 0)
-        {
-            sweep += Math.Tau;
-        }
-
+        var arcStart = circle.StartAngle ?? 0d;
         var startPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
 
-        if (drawStartRadius)
+        if (circle.DrawStartRadius)
         {
             DrawLineCore(centerX, centerY, startPoint.X, startPoint.Y, color);
         }
@@ -164,16 +171,16 @@ public interface IGraphicsHost
             centerY,
             radiusX,
             radiusY,
-            fullCircle,
+            circle.FullCircle,
             arcStart,
-            sweep,
+            circle.Sweep,
             ScreenWidth,
             ScreenHeight,
             (x, y) => SetPixel(x, y, color));
 
-        if (drawEndRadius)
+        if (circle.DrawEndRadius)
         {
-            var endPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart + sweep);
+            var endPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart + circle.Sweep);
             DrawLineCore(centerX, centerY, endPoint.X, endPoint.Y, color);
         }
 
@@ -199,13 +206,13 @@ public interface IGraphicsHost
             var doubledError = GraphicsLineMath.SaturatingDouble(error);
             if (doubledError >= dy)
             {
-                error += dy;
+                error = GraphicsLineMath.SaturatingAdd(error, dy);
                 x1 += sx;
             }
 
             if (doubledError <= dx)
             {
-                error += dx;
+                error = GraphicsLineMath.SaturatingAdd(error, dx);
                 y1 += sy;
             }
         }

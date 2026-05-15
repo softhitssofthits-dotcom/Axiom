@@ -42,7 +42,7 @@ public static class GraphicsEllipseRasterizer
         var dy = 2d * rxSq * y;
         var decisionRegion1 = rySq - (rxSq * ry) + (0.25d * rxSq);
 
-        PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, plotPixel);
+        PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, screenWidth, screenHeight, plotPixel);
 
         while (dx < dy)
         {
@@ -64,7 +64,7 @@ public static class GraphicsEllipseRasterizer
                 decisionRegion1 += dx - dy + rySq;
             }
 
-            PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, plotPixel);
+            PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, screenWidth, screenHeight, plotPixel);
         }
 
         var decisionRegion2 =
@@ -92,7 +92,7 @@ public static class GraphicsEllipseRasterizer
                 decisionRegion2 += dx - dy + rxSq;
             }
 
-            PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, plotPixel);
+            PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, screenWidth, screenHeight, plotPixel);
         }
     }
 
@@ -116,13 +116,17 @@ public static class GraphicsEllipseRasterizer
 
     public static int ComputeMaxIterations(long radiusX, long radiusY, bool fullEllipse, double sweep, int screenWidth, int screenHeight)
     {
-        var safeWidth = Math.Max(1, screenWidth);
-        var safeHeight = Math.Max(1, screenHeight);
-        var screenPerimeter = 2L * (safeWidth + safeHeight);
-        var ellipsePerimeter = EstimateEllipsePerimeter(radiusX, radiusY);
+        var safeWidth = Math.Max(1L, screenWidth);
+        var safeHeight = Math.Max(1L, screenHeight);
         var sweepFraction = fullEllipse ? 1d : Math.Clamp(sweep / FullTurn, 0d, 1d);
-        var boundedPerimeter = Math.Max(1d, Math.Min(ellipsePerimeter * sweepFraction, screenPerimeter));
-        return Math.Max(8, (int)Math.Ceiling(boundedPerimeter));
+        var coverageFactor = ComputeCoverageFactor(fullEllipse, sweepFraction);
+        var fullEllipseBudget = Math.Max(1d, Math.Abs((double)radiusX) + Math.Abs((double)radiusY));
+        var requestedBudget = Math.Max(8d, Math.Ceiling(fullEllipseBudget * coverageFactor));
+
+        // Keep the guard proportional to the visible screen size so pathological radii do not
+        // turn a defensive limit into a near-infinite loop on a small surface.
+        var screenBudget = Math.Max(64d, 16d * 2d * (safeWidth + safeHeight));
+        return ClampIterationBudget(Math.Min(requestedBudget, screenBudget));
     }
 
     private static void PlotSymmetricPoints(
@@ -135,6 +139,8 @@ public static class GraphicsEllipseRasterizer
         bool fullEllipse,
         double arcStart,
         double sweep,
+        int screenWidth,
+        int screenHeight,
         Action<long, long> plotPixel)
     {
         PlotCandidate(centerX + x, centerY - y);
@@ -144,7 +150,11 @@ public static class GraphicsEllipseRasterizer
 
         void PlotCandidate(long pointX, long pointY)
         {
-            if (fullEllipse || IsAngleInSweep(centerX, centerY, pointX, pointY, radiusX, radiusY, arcStart, sweep))
+            if ((fullEllipse || IsAngleInSweep(centerX, centerY, pointX, pointY, radiusX, radiusY, arcStart, sweep)) &&
+                pointX >= 0 &&
+                pointY >= 0 &&
+                pointX < screenWidth &&
+                pointY < screenHeight)
             {
                 plotPixel(pointX, pointY);
             }
@@ -205,5 +215,25 @@ public static class GraphicsEllipseRasterizer
 
         var h = Math.Pow(a - b, 2d) / Math.Pow(a + b, 2d);
         return Math.PI * (a + b) * (1d + (3d * h) / (10d + Math.Sqrt(4d - 3d * h)));
+    }
+
+    private static double ComputeCoverageFactor(bool fullEllipse, double sweepFraction)
+    {
+        if (fullEllipse)
+        {
+            return 1d;
+        }
+
+        return Math.Max(0.5d, sweepFraction);
+    }
+
+    private static int ClampIterationBudget(double budget)
+    {
+        if (budget >= int.MaxValue)
+        {
+            return int.MaxValue;
+        }
+
+        return Math.Max(8, (int)Math.Ceiling(budget));
     }
 }

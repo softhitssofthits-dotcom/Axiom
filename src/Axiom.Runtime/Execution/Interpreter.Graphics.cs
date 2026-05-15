@@ -84,15 +84,21 @@ public sealed partial class Interpreter
         var flags = new GraphicsLineInstructionFlags(statement.BoxKind, statement.HasExplicitStartPoint, statement.IsStartRelative, statement.IsEndRelative);
         var x2 = EvaluateExpression(statement.X2Expression).AsLong();
         var y2 = EvaluateExpression(statement.Y2Expression).AsLong();
-        var line = GraphicsInstructionArguments.CreateLine(
-            _host.CurrentGraphicsX,
-            _host.CurrentGraphicsY,
-            x2,
-            y2,
-            color,
-            flags,
-            statement.HasExplicitStartPoint ? EvaluateExpression(statement.X1Expression!).AsLong() : null,
-            statement.HasExplicitStartPoint ? EvaluateExpression(statement.Y1Expression!).AsLong() : null);
+        if (!GraphicsInstructionArguments.TryCreateLine(
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                x2,
+                y2,
+                color,
+                flags,
+                out var line,
+                statement.HasExplicitStartPoint ? EvaluateExpression(statement.X1Expression!).AsLong() : null,
+                statement.HasExplicitStartPoint ? EvaluateExpression(statement.Y1Expression!).AsLong() : null))
+        {
+            ReportInvalidGraphicsCoordinates("LINE", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
         _host.DrawLine(line.X1, line.Y1, line.X2, line.Y2, line.Color, line.Kind);
         return ExecutionSignal.None;
     }
@@ -105,22 +111,30 @@ public sealed partial class Interpreter
         var startAngle = statement.StartExpression is null ? (double?)null : EvaluateExpression(statement.StartExpression).AsDouble();
         var endAngle = statement.EndExpression is null ? (double?)null : EvaluateExpression(statement.EndExpression).AsDouble();
         var aspect = statement.AspectExpression is null ? 1d : EvaluateExpression(statement.AspectExpression).AsDouble();
-        var circle = GraphicsInstructionArguments.CreateCircle(
-            EvaluateExpression(statement.XExpression).AsLong(),
-            EvaluateExpression(statement.YExpression).AsLong(),
-            radius,
-            color,
-            statement.IsRelative,
-            startAngle,
-            endAngle,
-            aspect);
-        ValidateCircleArguments(circle.Radius, circle.StartAngle, circle.EndAngle, circle.Aspect, statement.Location);
+        ValidateCircleArguments(radius, startAngle, endAngle, aspect, statement.Location);
+        if (!GraphicsInstructionArguments.TryCreateCircle(
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                EvaluateExpression(statement.XExpression).AsLong(),
+                EvaluateExpression(statement.YExpression).AsLong(),
+                radius,
+                color,
+                statement.IsRelative,
+                startAngle,
+                endAngle,
+                aspect,
+                out var circle))
+        {
+            ReportInvalidGraphicsCoordinates("CIRCLE", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
         _host.DrawCircle(
-            circle.X,
-            circle.Y,
+            circle.CenterX,
+            circle.CenterY,
             circle.Radius,
             circle.Color,
-            circle.RelativeCenter,
+            relativeCenter: false,
             circle.StartAngle,
             circle.EndAngle,
             circle.Aspect,
@@ -276,8 +290,17 @@ public sealed partial class Interpreter
             return;
         }
 
-        ReportBuiltInArgumentError("CIRCLE", "radius/start/end/aspect", "радиус должен быть неотрицательным конечным числом, start и end должны быть конечными числами, а aspect должен быть положительным конечным числом.", location);
+        ReportBuiltInArgumentError("CIRCLE", "radius/start/end/aspect", "радиус должен быть неотрицательным конечным числом, start и end должны быть конечными числами, а aspect должен быть положительным конечным числом не больше 1000000.", location);
         throw new RuntimeFailureException();
+    }
+
+    private void ReportInvalidGraphicsCoordinates(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            $"координаты должны оставаться в диапазоне {GraphicsCoordinateValidation.MinCoordinate}..{GraphicsCoordinateValidation.MaxCoordinate}.",
+            location);
     }
 
     private RuntimeValue EvaluatePoint(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)

@@ -354,11 +354,11 @@ CIRCLE STEP (5, 6), 12, , -PI / 2, PI, 0.5
             module.Routines.SelectMany(static routine => routine.Instructions),
             static instruction => instruction.Opcode == Opcode.Circle && instruction.GetOperand(0) == 15);
         var circle = Assert.Single(host.Circles);
-        Assert.Equal(5, circle.X);
-        Assert.Equal(6, circle.Y);
+        Assert.Equal(15, circle.X);
+        Assert.Equal(26, circle.Y);
         Assert.Equal(12d, circle.Radius);
         Assert.Equal(15, circle.Color);
-        Assert.True(circle.RelativeCenter);
+        Assert.False(circle.RelativeCenter);
         Assert.True(circle.DrawStartRadius);
         Assert.False(circle.DrawEndRadius);
         Assert.Equal(Math.PI / 2, circle.StartAngle.GetValueOrDefault(), precision: 10);
@@ -372,7 +372,41 @@ CIRCLE STEP (5, 6), 12, , -PI / 2, PI, 0.5
         Assert.False(GraphicsCircleValidation.HasValidArguments(12d, double.NaN, null, .5d));
         Assert.False(GraphicsCircleValidation.HasValidArguments(12d, null, double.PositiveInfinity, .5d));
         Assert.False(GraphicsCircleValidation.HasValidArguments(12d, double.NegativeInfinity, 0d, .5d));
+        Assert.False(GraphicsCircleValidation.HasValidArguments(12d, 0d, Math.PI, 1_000_001d));
         Assert.True(GraphicsCircleValidation.HasValidArguments(12d, -Math.PI / 2, Math.PI, .5d));
+    }
+
+    [Fact]
+    public void Execute_CompiledLineReportsOutOfRangeCoordinates()
+    {
+        var (_, _, result) = ExecuteProgram(
+            """
+SCREEN 1
+LINE (1000000001, 0)-(0, 0), 10
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
+    public void Execute_CompiledCircleReportsOutOfRangeCoordinatesAndAspect()
+    {
+        var (_, _, coordinateResult) = ExecuteProgram(
+            """
+SCREEN 1
+CIRCLE (1000000001, 10), 4, 12
+""");
+        var (_, _, aspectResult) = ExecuteProgram(
+            """
+SCREEN 1
+CIRCLE (10, 10), 4, 12, 0, PI, 1000001
+""");
+
+        Assert.False(coordinateResult.Succeeded);
+        Assert.Contains(coordinateResult.Diagnostics, diagnostic => diagnostic.Code == "MB3007");
+        Assert.False(aspectResult.Succeeded);
+        Assert.Contains(aspectResult.Diagnostics, diagnostic => diagnostic.Code == "MB3007");
     }
 
     [Fact]

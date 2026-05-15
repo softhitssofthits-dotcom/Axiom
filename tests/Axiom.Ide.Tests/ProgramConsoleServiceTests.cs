@@ -584,6 +584,9 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(long.MaxValue, GraphicsLineMath.SaturatingDouble(long.MaxValue / 2 + 1));
         Assert.Equal(long.MinValue, GraphicsLineMath.SaturatingDouble(long.MinValue / 2 - 1));
         Assert.Equal(2468L, GraphicsLineMath.SaturatingDouble(1234));
+        Assert.Equal(long.MaxValue, GraphicsLineMath.SaturatingAdd(long.MaxValue - 2, 10));
+        Assert.Equal(long.MinValue, GraphicsLineMath.SaturatingAdd(long.MinValue + 2, -10));
+        Assert.Equal(-55L, GraphicsLineMath.SaturatingAdd(-50, -5));
     }
 
     [Fact]
@@ -681,13 +684,15 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
-    public void DrawCircle_IterationLimitTracksScreenPerimeter()
+    public void DrawCircle_IterationLimitTracksArcCoverageAndRadius()
     {
         var fullLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(10_000, 10_000, fullEllipse: true, sweep: Math.Tau, screenWidth: 320, screenHeight: 200);
         var arcLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(10_000, 10_000, fullEllipse: false, sweep: Math.PI / 2, screenWidth: 320, screenHeight: 200);
+        var smallArcLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(4, 4, fullEllipse: false, sweep: Math.PI / 8, screenWidth: 320, screenHeight: 200);
 
-        Assert.Equal(1040, fullLimit);
-        Assert.Equal(1040, arcLimit);
+        Assert.Equal(16_640, fullLimit);
+        Assert.Equal(10_000, arcLimit);
+        Assert.Equal(8, smallArcLimit);
     }
 
     [Fact]
@@ -702,6 +707,45 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(12, service.GetPixel(20, 8));
         Assert.Equal(12, service.GetPixel(16, 10));
         Assert.Equal(0, service.GetPixel(20, 12));
+    }
+
+    [Fact]
+    public void DrawCircle_FullTurnAnglesRasterizeFullCircle()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawCircle(20, 10, 4, 12, relativeCenter: false, startAngle: 0d, endAngle: Math.Tau, aspect: 1d, drawStartRadius: false, drawEndRadius: false);
+
+        Assert.Equal(12, service.GetPixel(24, 10));
+        Assert.Equal(12, service.GetPixel(16, 10));
+        Assert.Equal(12, service.GetPixel(20, 6));
+        Assert.Equal(12, service.GetPixel(20, 14));
+    }
+
+    [Fact]
+    public void GraphicsEllipseRasterizer_RasterizeClipsPlotPixelsToScreen()
+    {
+        var plotted = new List<(long X, long Y)>();
+
+        GraphicsEllipseRasterizer.Rasterize(
+            centerX: 5,
+            centerY: 4,
+            radiusX: 6,
+            radiusY: 6,
+            fullEllipse: true,
+            arcStart: 0d,
+            sweep: Math.Tau,
+            screenWidth: 10,
+            screenHeight: 8,
+            plotPixel: (x, y) => plotted.Add((x, y)));
+
+        Assert.NotEmpty(plotted);
+        Assert.All(plotted, point =>
+        {
+            Assert.InRange(point.X, 0, 9);
+            Assert.InRange(point.Y, 0, 7);
+        });
     }
 
     [Theory]

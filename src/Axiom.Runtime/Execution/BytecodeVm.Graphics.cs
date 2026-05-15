@@ -95,15 +95,21 @@ public sealed partial class BytecodeVm
         var x2 = PopValue(frame, instructionIndex).AsLong();
         var explicitY1 = flags.HasExplicitStartPoint ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
         var explicitX1 = flags.HasExplicitStartPoint ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
-        var line = GraphicsInstructionArguments.CreateLine(
-            _host.CurrentGraphicsX,
-            _host.CurrentGraphicsY,
-            x2,
-            y2,
-            color,
-            flags,
-            explicitX1,
-            explicitY1);
+        if (!GraphicsInstructionArguments.TryCreateLine(
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                x2,
+                y2,
+                color,
+                flags,
+                out var line,
+                explicitX1,
+                explicitY1))
+        {
+            ReportInvalidGraphicsCoordinates("LINE", location);
+            throw new RuntimeFailureException();
+        }
+
         _host.DrawLine(line.X1, line.Y1, line.X2, line.Y2, line.Color, line.Kind);
     }
 
@@ -120,14 +126,30 @@ public sealed partial class BytecodeVm
         var radius = PopValue(frame, instructionIndex).AsDouble();
         var y = PopValue(frame, instructionIndex).AsLong();
         var x = PopValue(frame, instructionIndex).AsLong();
-        var circle = GraphicsInstructionArguments.CreateCircle(x, y, radius, color, flags.RelativeCenter, startAngle, endAngle, aspect);
-        ValidateCircleArguments(circle.Radius, circle.StartAngle, circle.EndAngle, circle.Aspect, location);
+        ValidateCircleArguments(radius, startAngle, endAngle, aspect, location);
+        if (!GraphicsInstructionArguments.TryCreateCircle(
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                x,
+                y,
+                radius,
+                color,
+                flags.RelativeCenter,
+                startAngle,
+                endAngle,
+                aspect,
+                out var circle))
+        {
+            ReportInvalidGraphicsCoordinates("CIRCLE", location);
+            throw new RuntimeFailureException();
+        }
+
         _host.DrawCircle(
-            circle.X,
-            circle.Y,
+            circle.CenterX,
+            circle.CenterY,
             circle.Radius,
             circle.Color,
-            circle.RelativeCenter,
+            relativeCenter: false,
             circle.StartAngle,
             circle.EndAngle,
             circle.Aspect,
@@ -294,8 +316,17 @@ public sealed partial class BytecodeVm
             return;
         }
 
-        ReportBuiltInArgumentError("CIRCLE", "radius/start/end/aspect", "радиус должен быть неотрицательным конечным числом, start и end должны быть конечными числами, а aspect должен быть положительным конечным числом.", location);
+        ReportBuiltInArgumentError("CIRCLE", "radius/start/end/aspect", "радиус должен быть неотрицательным конечным числом, start и end должны быть конечными числами, а aspect должен быть положительным конечным числом не больше 1000000.", location);
         throw new RuntimeFailureException();
+    }
+
+    private void ReportInvalidGraphicsCoordinates(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            $"координаты должны оставаться в диапазоне {GraphicsCoordinateValidation.MinCoordinate}..{GraphicsCoordinateValidation.MaxCoordinate}.",
+            location);
     }
 
     private RuntimeValue EvaluatePointBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)

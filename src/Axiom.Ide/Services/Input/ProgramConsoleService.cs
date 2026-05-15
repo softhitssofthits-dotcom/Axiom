@@ -443,6 +443,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     {
         InvokeOnDispatcher(() =>
         {
+            if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
+            {
+                return;
+            }
+
             switch (kind)
             {
                 case GraphicsLineKind.Box:
@@ -1083,13 +1088,13 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             var doubledError = GraphicsLineMath.SaturatingDouble(error);
             if (doubledError >= dy)
             {
-                error += dy;
+                error = GraphicsLineMath.SaturatingAdd(error, dy);
                 x1 += sx;
             }
 
             if (doubledError <= dx)
             {
-                error += dx;
+                error = GraphicsLineMath.SaturatingAdd(error, dx);
                 y1 += sy;
             }
         }
@@ -1135,8 +1140,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         if (relativeCenter)
         {
-            centerX += _graphicsCurrentX;
-            centerY += _graphicsCurrentY;
+            if (!GraphicsCoordinateValidation.TryResolvePoint(_graphicsCurrentX, _graphicsCurrentY, centerX, centerY, out centerX, out centerY))
+            {
+                return;
+            }
+        }
+        else if (!GraphicsCoordinateValidation.IsSupportedCircleCenter(centerX, centerY))
+        {
+            return;
         }
 
         SetGraphicsCurrentPositionCore(centerX, centerY);
@@ -1150,11 +1161,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        var arcStart = GraphicsEllipseRasterizer.NormalizeAngle(startAngle ?? 0d);
-        var arcEnd = GraphicsEllipseRasterizer.NormalizeAngle(endAngle ?? Math.Tau);
-        var fullCircle = startAngle is null && endAngle is null;
-        var sweep = fullCircle ? Math.Tau : arcEnd - arcStart;
-        if (!fullCircle && sweep <= 0)
+        var arcStart = NormalizeCircleAngle(startAngle) ?? 0d;
+        var normalizedEnd = NormalizeCircleAngle(endAngle);
+        var fullCircle = !startAngle.HasValue && !endAngle.HasValue;
+        if (!fullCircle && startAngle.HasValue && normalizedEnd.HasValue)
+        {
+            fullCircle = Math.Abs(arcStart - normalizedEnd.Value) <= 1e-9;
+        }
+
+        var sweep = fullCircle ? Math.Tau : (normalizedEnd ?? Math.Tau) - arcStart;
+        if (!fullCircle && sweep <= 0d)
         {
             sweep += Math.Tau;
         }
@@ -1186,6 +1202,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         SetGraphicsCurrentPositionCore(centerX, centerY);
     }
+
+    private static double? NormalizeCircleAngle(double? angle) =>
+        angle switch
+        {
+            null => null,
+            < 0 => GraphicsEllipseRasterizer.NormalizeAngle(-angle.Value),
+            _ => GraphicsEllipseRasterizer.NormalizeAngle(angle.Value)
+        };
 
     private void RefreshGraphicsVisuals()
     {
