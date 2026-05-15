@@ -1128,6 +1128,95 @@
 - вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
 - графический слой дальше не трогать без нового подтверждённого сценария.
 
+## Session 867 - 2026-05-15 12:34 - XAML-ожидания EditorFeatureTests синхронизированы с текущим MainWindow
+
+Что сделано:
+- перечитан хвост `tests\Axiom.Ide.Tests\EditorFeatureTests.cs` и сверены проблемные ожидания с актуальными `src\Axiom.Ide\MainWindow.xaml` и `src\Axiom.Ide\MainWindow.xaml.cs`;
+- в тесте `MainWindowXaml_WiresEditorContextMenuAndFindCommands()` ожидание иконки обновлено до фактического pack URI `Icon="/Axiom.Ide;component/Assets/axiom.ico"`;
+- в тесте `MainWindowXaml_UsesFocusedOutputContextMenu()` убрано устаревшее требование наличия `PreviewMouseRightButtonDown/Up` прямо в XAML, потому что эти обработчики сейчас подключаются через `InitializeOutputMouseInputHandlers()` в code-behind;
+- подтверждено, что `OutputTextBox`, `OnOutputTextBoxContextMenuOpening`, `OutputContextMenu`, `OutputCopyMenuItem`, `OutputClearMenuItem` и остальной пользовательский контракт output menu остаются на месте.
+
+Изменённые файлы:
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~EditorFeatureTests"` — успешно, `60/60`.
+
+Решение:
+- считать этот шаг исправлением устаревших строковых IDE-тестов, а не причиной для правки `MainWindow.xaml`;
+- графический слой в этом шаге не менять, потому что подтверждённый красный сценарий относился только к XAML-ожиданиям тестов.
+
+Следующий точный шаг:
+- ждать нового подтверждённого сценария по IDE- или языковому слою вне графического хвоста `EditorFeatureTests`;
+- графический слой дальше не трогать без нового подтверждённого сценария.
+
+## Session 866 - 2026-05-15 12:28 - документация по флагам графических операторов собрана в отдельный developer-файл
+
+Что сделано:
+- перечитаны актуальные разделы `docs/manual/graphics-primitives.html`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md` и `README.md`, чтобы не плодить второй противоречащий источник по `LINE`, `CIRCLE` и `PAINT`;
+- создан новый файл `docs/GRAPHICS_OPERATORS_FLAGS.md` с разработческим описанием:
+  - пользовательских форм операторов;
+  - значений по умолчанию для цветов и необязательных параметров;
+  - правил `STEP`, относительных координат и обновления текущей графической позиции;
+  - битовых флагов `LINE`, `CIRCLE` и `PAINT` в bytecode-слое;
+  - соответствия между этими флагами, helper-структурами runtime и host-вызовами;
+  - списка файлов и типов, которые нужно менять вместе при развитии графического договора;
+- `README.md` дополнен ссылкой на новый developer-документ;
+- `docs/ARCHITECTURE.md` дополнен указанием, что разработческий договор графического runtime-слоя ведётся в `docs/GRAPHICS_OPERATORS_FLAGS.md`.
+
+Изменённые файлы:
+- `docs/GRAPHICS_OPERATORS_FLAGS.md`
+- `docs/ARCHITECTURE.md`
+- `README.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- код и тесты в этом шаге не менялись, поэтому отдельный прогон не запускался;
+- документ сверён с актуальными `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html`, `GraphicsInstructionArguments.cs`, `GraphicsPaintRequest.cs` и `IGraphicsHost.cs`.
+
+Решение:
+- считать `docs/GRAPHICS_OPERATORS_FLAGS.md` главным developer-ориентиром по внутренним флагам и параметрам графических операторов;
+- сохранять разделение ролей: manual объясняет пользовательское поведение, спецификация фиксирует проектный договор, а новый файл помогает сопровождать bytecode/runtime/helper-слой.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- графический слой дальше не трогать без нового подтверждённого сценария.
+
+## Session 865 - 2026-05-15 12:23 - графические тесты добраны по граничным сценариям
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и уточнено текущее состояние графического покрытия: базовые проверки `LINE`, `CIRCLE` и `PAINT` уже были, но не хватало явных сценариев на клиппинг, очень большой радиус, старт заливки вне экрана и совместную проверку `STEP` + обновления текущей позиции;
+- в `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлены проверки:
+  - `DrawLine_ClipsPixelsOutsideScreenAndKeepsEndPosition()`;
+  - `DrawCircle_LargeRadiusOutsideScreenStillUpdatesCenterPosition()`;
+  - `Paint_StartOutsideScreenLeavesFramebufferAndPositionUnchanged()` в терминах фактического текущего договора, где позиция после `Paint(x, y, ...)` становится стартовой точкой вызова;
+- существующая проверка `DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius()` усилена явной проверкой итоговой позиции центра;
+- в `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` добавлен сквозной сценарий `Run_WithBytecodeMode_GraphicsOperatorsMaintainPositionAcrossStepArcAndPaint()`, который подтверждает совместную работу `LINE STEP`, `CIRCLE STEP`, `PAINT STEP` и `POINT(0/1)` в `BytecodeVm`;
+- по результатам прогона ожидания тестов приведены к реальному зафиксированному договору:
+  - после `PAINT STEP (0, 0)` текущая графическая позиция становится стартовой точкой заливки;
+  - для очень большого `CIRCLE` надёжно фиксируется отсутствие сбоя и обновление центра, а не обязательное попадание в конкретные граничные пиксели.
+
+Изменённые файлы:
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests.DrawLine_ClipsPixelsOutsideScreenAndKeepsEndPosition|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_LargeRadiusOutsideScreenStillUpdatesCenterPosition|FullyQualifiedName~ProgramConsoleServiceTests.Paint_StartOutsideScreenLeavesFramebufferAndPositionUnchanged|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius|FullyQualifiedName~ProgramConsoleServiceTests.Paint_FillsRegionWithoutRecoloringBorder"` — успешно;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Run_WithBytecodeMode_GraphicsOperatorsMaintainPositionAcrossStepArcAndPaint|FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForGraphicsStepAndPointState|FullyQualifiedName~Run_WithBytecodeMode_DrawLineFallbackWorksWithoutSpecialGraphicsHost|FullyQualifiedName~Run_WithBytecodeMode_DrawCircleFallbackWorksWithoutSpecialGraphicsHost"` — успешно.
+
+Решение:
+- считать этот шаг чистым расширением модульного и сквозного графического покрытия без изменения пользовательского договора языка;
+- опираться дальше на уже подтверждённый тестами фактический договор `PAINT` по текущей позиции, а не на предположение, что позиция обязана сохраняться прежней при старте вне экрана.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- графический слой дальше не трогать без нового подтверждённого сценария.
+
 ## Session 864 - 2026-05-15 12:16 - разбор LINE/CIRCLE объединён, PAINT переведён на scanline flood fill
 
 Что сделано:

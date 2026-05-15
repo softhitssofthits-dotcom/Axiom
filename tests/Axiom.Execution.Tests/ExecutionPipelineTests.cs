@@ -922,6 +922,35 @@ PRINT POINT(10, 7)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_GraphicsOperatorsMaintainPositionAcrossStepArcAndPaint()
+    {
+        const string text = """
+SCREEN 1
+COLOR 15, 2
+PSET (10, 10), 9
+LINE STEP (0, 0)-STEP (4, 0), 9
+CIRCLE STEP (6, 0), 2, 14, -PI / 2, PI / 2
+PRINT POINT(0)
+PRINT POINT(1)
+LINE (13, 8)-(17, 12), 9, B
+PAINT STEP (0, 0), , 9
+PRINT POINT(0)
+PRINT POINT(1)
+PRINT POINT(15, 10)
+PRINT POINT(17, 10)
+""";
+
+        var inputProvider = new MinimalGraphicsHostInputProvider();
+        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["20", "10", "17", "12", "0", "9"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_DrawCircleFallbackIgnoresNonFiniteAngles()
     {
         Assert.False(GraphicsCircleValidation.HasValidArguments(3d, double.NaN, null, 1d));

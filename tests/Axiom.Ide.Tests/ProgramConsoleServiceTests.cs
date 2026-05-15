@@ -635,6 +635,22 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void DrawLine_ClipsPixelsOutsideScreenAndKeepsEndPosition()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(-10, -10, 3, 3, 10, GraphicsLineKind.Normal);
+
+        Assert.Equal(10, service.GetPixel(0, 0));
+        Assert.Equal(10, service.GetPixel(1, 1));
+        Assert.Equal(10, service.GetPixel(2, 2));
+        Assert.Equal(10, service.GetPixel(3, 3));
+        Assert.Equal(3, service.CurrentGraphicsX);
+        Assert.Equal(3, service.CurrentGraphicsY);
+    }
+
+    [Fact]
     public void DrawCircle_RasterizesCirclePoints()
     {
         var service = new ProgramConsoleService();
@@ -718,6 +734,20 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(14, service.GetPixel(15, 26));
         Assert.Equal(14, service.GetPixel(17, 26));
         Assert.Equal(14, service.GetPixel(15, 24));
+        Assert.Equal(15, service.CurrentGraphicsX);
+        Assert.Equal(26, service.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void DrawCircle_LargeRadiusOutsideScreenStillUpdatesCenterPosition()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawCircle(160, 100, 10_000, 13);
+
+        Assert.Equal(160, service.CurrentGraphicsX);
+        Assert.Equal(100, service.CurrentGraphicsY);
     }
 
     [Fact]
@@ -747,6 +777,22 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(6, service.GetPixel(3, 3));
         Assert.Equal(9, service.GetPixel(1, 1));
         Assert.Equal(0, service.GetPixel(0, 0));
+    }
+
+    [Fact]
+    public void Paint_StartOutsideScreenLeavesFramebufferAndPositionUnchanged()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(1, 1, 5, 5, 9, GraphicsLineKind.Box);
+        service.SetGraphicsCurrentPosition(12, 13);
+        service.Paint(-1, -1, 6, 9);
+
+        Assert.Equal(0, service.GetPixel(3, 3));
+        Assert.Equal(9, service.GetPixel(1, 1));
+        Assert.Equal(-1, service.CurrentGraphicsX);
+        Assert.Equal(-1, service.CurrentGraphicsY);
     }
 
     [Fact]

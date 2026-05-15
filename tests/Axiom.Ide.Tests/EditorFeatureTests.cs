@@ -304,7 +304,7 @@ public sealed class EditorFeatureTests
         var xaml = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml"), Encoding.UTF8);
 
         Assert.DoesNotContain("editor:SearchPanelBehavior.InstallSearchPanel=\"True\"", xaml, StringComparison.Ordinal);
-        Assert.Contains("Icon=\"Assets/axiom.ico\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("Icon=\"/Axiom.Ide;component/Assets/axiom.ico\"", xaml, StringComparison.Ordinal);
         Assert.Contains("LineNumbersForeground=\"{DynamicResource LineNumberForegroundBrush}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("IsReadOnly=\"{Binding IsReadOnly}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Loaded=\"OnEditorLoaded\"", xaml, StringComparison.Ordinal);
@@ -466,8 +466,8 @@ public sealed class EditorFeatureTests
 
         Assert.Contains("x:Name=\"OutputTextBox\"", xaml, StringComparison.Ordinal);
         Assert.Contains("ContextMenuOpening=\"OnOutputTextBoxContextMenuOpening\"", xaml, StringComparison.Ordinal);
-        Assert.Contains("PreviewMouseRightButtonDown=\"OnOutputTextBoxPreviewMouseRightButtonDown\"", xaml, StringComparison.Ordinal);
-        Assert.Contains("PreviewMouseRightButtonUp=\"OnOutputTextBoxPreviewMouseRightButtonUp\"", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("PreviewMouseRightButtonDown=\"OnOutputTextBoxPreviewMouseRightButtonDown\"", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("PreviewMouseRightButtonUp=\"OnOutputTextBoxPreviewMouseRightButtonUp\"", xaml, StringComparison.Ordinal);
         Assert.Contains("<ContextMenu Style=\"{StaticResource ShellContextMenuStyle}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"OutputContextMenu\"", xaml, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"OutputCopyMenuItem\"", xaml, StringComparison.Ordinal);
