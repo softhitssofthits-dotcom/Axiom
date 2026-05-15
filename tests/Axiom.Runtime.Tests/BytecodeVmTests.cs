@@ -733,6 +733,8 @@ PRINT POINT(1)
     [Theory]
     [InlineData("DRAW \"M+9223372036854775807,+1\"", "переполнению координат")]
     [InlineData("DRAW \"S255 R9223372036854775807\"", "переполнению координат")]
+    [InlineData("DRAW \"R9223372036854775807\"", "переполнению координат")]
+    [InlineData("DRAW \"L9223372036854775808\"", "переполнению координат")]
     [InlineData("DRAW \"C9223372036854775808 R1\"", "слишком большой числовой цвет")]
     [InlineData("DRAW \"P2147483648\"", "выходит за диапазон INTEGER")]
     public void Execute_CompiledDrawReportsControlledDiagnosticsForOverflowAndHugeColors(string statement, string messageFragment)

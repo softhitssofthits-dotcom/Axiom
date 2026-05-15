@@ -896,3 +896,52 @@
 Следующий точный шаг:
 - отдельно разобрать два оставшихся XAML-теста в `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`, не смешивая их с уже доведённым `DRAW`;
 - если потребуется отдельная ручная приёмка, открыть в `Axiom.Ide` sample `samples/operators/draw/paint_default_border.axm` вместе с остальными `samples/operators/draw/`.
+
+## Session 856 - 2026-05-15 09:54 - исправлен демонстрационный sample DRAW P
+
+Что сделано:
+- пользовательский ручной запуск `samples/operators/draw/paint_default_border.axm` показал заливку всего экрана, и это было сверено с уже зафиксированным договором `DRAW "P4"`;
+- подтверждено, что runtime `DRAW` работает корректно: форма `P4` берёт границу по умолчанию из цвета заливки, поэтому рамка другого цвета не обязана ограничивать flood-fill;
+- исправлен именно sample `samples/operators/draw/paint_default_border.axm`: рамка переведена в цвет `4`, чтобы пример визуально демонстрировал bounded-fill внутри рамки того же цвета;
+- уточнена подпись к sample в `docs/manual/graphics-primitives.html`;
+- повторно выполнен `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore`, acceptance-путь снова успешен.
+
+Изменённые файлы:
+- `samples/operators/draw/paint_default_border.axm`
+- `docs/manual/graphics-primitives.html`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` — успешно.
+
+Решение:
+- не менять код runtime `DRAW` по итогам ручного запуска этого sample;
+- считать найденную проблему ошибкой демонстрационного примера, а не семантики `DRAW`.
+
+Следующий точный шаг:
+- при необходимости повторно открыть `samples/operators/draw/paint_default_border.axm` в `Axiom.Ide` и визуально подтвердить bounded-fill внутри рамки цвета `4`.
+
+## Session 857 - 2026-05-15 09:59 - закрыт пограничный overflow в RoundToLong для DRAW
+
+Что сделано:
+- по дополнительной проверке `RoundToLong` добавлены interpreter- и `BytecodeVm`-тесты на граничные формы `DRAW "R9223372036854775807"` и `DRAW "L9223372036854775808"`;
+- тесты подтвердили реальный хвост: правая граница выпускала сырой `OverflowException` из `checked((long)Math.Round(...))`, а левая граница проходила через пограничное округление без controlled-диагностики;
+- в `GraphicsDrawExecutor.RoundToLong` защита усилена: проверка теперь идёт по уже округлённому значению, границы `long.MaxValue` и `long.MinValue` считаются переполнением координат, а сам cast дополнительно обёрнут в `try/catch` с переводом `OverflowException` в `GraphicsDrawException`;
+- повторный `Axiom.Runtime.Tests` подтвердил controlled `MB3007` для обоих граничных сценариев без сырого `OverflowException`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsDrawExecutor.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore` — успешно.
+
+Решение:
+- считать хвост `RoundToLong` для `DRAW` закрытым;
+- дополнительной правки interpreter или `BytecodeVm` поверх общего runtime-исполнителя не требуется.
+
+Следующий точный шаг:
+- новых хвостов по `DRAW` больше не открывать без отдельного подтверждённого сценария; оставшиеся несвязанные падения по-прежнему локализованы в XAML-тестах IDE.

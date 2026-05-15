@@ -141,12 +141,20 @@ internal static class GraphicsDrawExecutor
             throw new GraphicsDrawException("Команда DRAW привела к неконечному смещению.", position);
         }
 
-        if (value > long.MaxValue || value < long.MinValue)
+        var rounded = Math.Round(value, MidpointRounding.AwayFromZero);
+        if (rounded >= long.MaxValue || rounded <= long.MinValue)
         {
             throw new GraphicsDrawException("Команда DRAW привела к переполнению координат.", position);
         }
 
-        return checked((long)Math.Round(value, MidpointRounding.AwayFromZero));
+        try
+        {
+            return checked((long)rounded);
+        }
+        catch (OverflowException)
+        {
+            throw new GraphicsDrawException("Команда DRAW привела к переполнению координат.", position);
+        }
     }
 
     private static long CheckedAdd(long left, long right, int position)
