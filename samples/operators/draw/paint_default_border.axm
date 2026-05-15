@@ -1,0 +1,9 @@
+SCREEN 1
+CLS
+COLOR 15, 0
+LINE (20, 20)-(60, 60), 15, B
+PSET (30, 30), 15
+DRAW "P4"
+LOCATE 1, 1
+PRINT "DRAW paint default border sample finished"
+SLEEP

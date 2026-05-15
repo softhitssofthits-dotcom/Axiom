@@ -79,42 +79,46 @@ internal static class GraphicsDrawParser
                         AddMove(GraphicsDrawDirection.UpLeft, commandPosition, ReadOptionalNonNegativeNumber(defaultValue: 1));
                         break;
                     case 'C':
+                        ThrowIfPendingModifiersForNonMovementCommand();
                         _position++;
                         _commands.Add(new GraphicsDrawCommand(
                             GraphicsDrawCommandKind.SetColor,
                             commandPosition,
                             NumericValue: ReadRequiredFiniteNumber("У команды C должен быть числовой аргумент цвета."),
-                            Blind: ConsumeBlind(),
-                            ReturnToOrigin: ConsumeReturn()));
+                            Blind: false,
+                            ReturnToOrigin: false));
                         break;
                     case 'S':
+                        ThrowIfPendingModifiersForNonMovementCommand();
                         _position++;
                         _commands.Add(new GraphicsDrawCommand(
                             GraphicsDrawCommandKind.SetScale,
                             commandPosition,
                             NumericValue: ReadRequiredFiniteNumber("У команды S должен быть числовой аргумент масштаба."),
-                            Blind: ConsumeBlind(),
-                            ReturnToOrigin: ConsumeReturn()));
+                            Blind: false,
+                            ReturnToOrigin: false));
                         break;
                     case 'A':
+                        ThrowIfPendingModifiersForNonMovementCommand();
                         _position++;
                         _commands.Add(new GraphicsDrawCommand(
                             GraphicsDrawCommandKind.SetAngleQuadrant,
                             commandPosition,
                             NumericValue: ReadRequiredFiniteNumber("У команды A должен быть числовой аргумент угла."),
-                            Blind: ConsumeBlind(),
-                            ReturnToOrigin: ConsumeReturn()));
+                            Blind: false,
+                            ReturnToOrigin: false));
                         break;
                     case 'T':
                         if (PeekKeyword("TA"))
                         {
+                            ThrowIfPendingModifiersForNonMovementCommand();
                             _position += 2;
                             _commands.Add(new GraphicsDrawCommand(
                                 GraphicsDrawCommandKind.SetAngleDegrees,
                                 commandPosition,
                                 NumericValue: ReadRequiredFiniteNumber("У команды TA должен быть числовой аргумент угла."),
-                                Blind: ConsumeBlind(),
-                                ReturnToOrigin: ConsumeReturn()));
+                                Blind: false,
+                                ReturnToOrigin: false));
                             break;
                         }
 
@@ -124,16 +128,18 @@ internal static class GraphicsDrawParser
                         ParseMoveTo(commandPosition);
                         break;
                     case 'P':
+                        ThrowIfPendingModifiersForNonMovementCommand();
                         _position++;
                         ParsePaint(commandPosition);
                         break;
                     case 'X':
+                        ThrowIfPendingModifiersForNonMovementCommand();
                         _position++;
                         _commands.Add(new GraphicsDrawCommand(
                             GraphicsDrawCommandKind.UnsupportedHistoricalX,
                             commandPosition,
-                            Blind: ConsumeBlind(),
-                            ReturnToOrigin: ConsumeReturn()));
+                            Blind: false,
+                            ReturnToOrigin: false));
                         SkipHistoricalXPayload();
                         break;
                     default:
@@ -222,6 +228,14 @@ internal static class GraphicsDrawParser
             var value = _returnNext;
             _returnNext = false;
             return value;
+        }
+
+        private void ThrowIfPendingModifiersForNonMovementCommand()
+        {
+            if (_blindNext || _returnNext)
+            {
+                throw new GraphicsDrawException("Модификатор B/N в DRAW может применяться только к команде движения или M.", _position + 1);
+            }
         }
 
         private void SkipWhitespace()

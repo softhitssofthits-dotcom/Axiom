@@ -5212,3 +5212,20 @@
 Следующий точный шаг:
 - отдельно разобрать `tests\Axiom.Ide.Tests\EditorFeatureTests.cs` и синхронизировать ожидания с текущим `MainWindow.xaml`;
 - после этого при необходимости выполнить ручную приёмку `samples/operators/draw/` в `Axiom.Ide` и только затем считать хвост по `DRAW` окончательно исчерпанным.
+
+## Обновление плана - 2026-05-15 - приёмочный аудит DRAW по семантике завершён
+
+Сделано:
+- подтверждены и закрыты реальные хвосты `DRAW`: строгая диагностика для `B/N` перед немув-командами, единый договор `P f` с обычным `PAINT`, controlled-диагностика вместо сырых overflow и усиленное покрытие `A/TA`, `M`, `P`, `X` и current position;
+- расширены parser-, binder-, interpreter- и `BytecodeVm`-проверки именно под спорные семантические случаи `DRAW`;
+- добавлен runnable sample `samples/operators/draw/paint_default_border.axm` и расширен acceptance-набор `ScreenDrawAcceptanceSamples_RunOnBytecodeVm`;
+- `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html`, `docs/BYTECODE_COVERAGE.md` и `docs/WORKLOG4.md` синхронизированы с фактическим итогом аудита.
+
+Решение:
+- считать договор `DRAW` по коду, автотестам, acceptance-sample и активной документации доведённым до честного проверенного состояния;
+- не открывать следующий графический оператор в рамках этого хвоста;
+- не смешивать состояние `DRAW` с двумя оставшимися несвязанными XAML-проверками `Axiom.Ide.Tests`.
+
+Следующий точный шаг:
+- отдельно разобрать и починить `tests\Axiom.Ide.Tests\EditorFeatureTests.cs` для двух XAML-ожиданий, не относящихся к `DRAW`;
+- при отдельном ручном проходе, если он понадобится пользователю, открыть в `Axiom.Ide` sample `samples/operators/draw/paint_default_border.axm` вместе с остальными `samples/operators/draw/` и зафиксировать результат отдельной записью.

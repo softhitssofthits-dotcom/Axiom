@@ -851,3 +851,48 @@
 Следующий точный шаг:
 - отдельно разобрать и починить два оставшихся XAML-теста в `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`, не трогая уже закрытый договор `DRAW`;
 - после этого, если потребуется, провести ручную приёмку `samples/operators/draw/` в `Axiom.Ide` и зафиксировать её отдельной записью.
+
+## Session 855 - 2026-05-15 09:38 - проведён приёмочный аудит DRAW по семантике
+
+Что сделано:
+- перечитаны обязательные активные документы проекта, manual по графике и runtime-реализация `DRAW`, после чего подтверждено, что текущая задача не открывает новый оператор, а доводит уже реализованный `DRAW` до честного приёмочного состояния;
+- подтверждено, что `STR` уже является штатной встроенной функцией Axiom и в активных материалах `DRAW` больше нет ложных QuickBASIC-форм `STR$`: примеры остаются только в синтаксисе Axiom с `STR(...)`;
+- в `GraphicsDrawParser` закрыта реальная семантическая ошибка: `B` и `N` больше не съедаются командами `C`, `S`, `A`, `TA`, `P` и `X`, а дают явную runtime-диагностику `Модификатор B/N в DRAW может применяться только к команде движения или M.`;
+- в `GraphicsDrawExecutor` выровнен договор `P f`: форма `DRAW "P4"` теперь создаёт `GraphicsPaintRequest` с границей по умолчанию, равной цвету заливки, как и обычный сплошной `PAINT`;
+- в `GraphicsDrawExecutor` закрыт хвост по сырым переполнениям: directional move, относительный `M` и очень большие цвета теперь дают контролируемые `GraphicsDrawException`, а не выпускают наружу `OverflowException` или другие сырые исключения;
+- существенно расширены parser-, binder-, interpreter- и `BytecodeVm`-тесты для `DRAW`: покрыты строгая семантика `B/N`, `P` с границей по умолчанию, `A0..A3`, `TA90`, `TA-90`, `TA0`, приоритет последней команды `A/TA`, current graphics position, unsupported `X`, overflow и строковые edge-case формы;
+- добавлен runnable sample `samples/operators/draw/paint_default_border.axm` и он включён в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` как часть graphics-aware acceptance-пути `DRAW`;
+- `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы с фактическим итогом этого аудита.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsDrawParser.cs`
+- `src/Axiom.Runtime/Execution/GraphicsDrawExecutor.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/draw/paint_default_border.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build Axiom.sln` — успешно;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore` — успешно;
+- `dotnet test tests\Axiom.Semantics.Tests\Axiom.Semantics.Tests.csproj --no-restore` — успешно;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore` — успешно;
+- `dotnet test tests\Axiom.Bytecode.Tests\Axiom.Bytecode.Tests.csproj --no-restore` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` — падают только два несвязанных XAML-теста `MainWindowXaml_UsesFocusedOutputContextMenu` и `MainWindowXaml_WiresEditorContextMenuAndFindCommands`; к `DRAW` они не относятся;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` — успешно, `samples/operators/draw/` проходят через graphics-aware provider, ложных `MB3010` для valid `DRAW` sample нет;
+- `node --check docs\manual\scripts\manual.js` — успешно;
+- `node --check docs\manual\scripts\search-index.js` — успешно.
+
+Решение:
+- считать приёмочный хвост `DRAW` по семантике закрытым: подтверждены strict `B/N`, выровнен `P` default border, закрыты controlled overflow, усилены interpreter/VM tests и acceptance-путь;
+- не считать оставшиеся два падения `Axiom.Ide.Tests` проблемой `DRAW`, потому что они проверяют `MainWindow.xaml`, а не parser/runtime/manual/sample-договор графического оператора.
+
+Следующий точный шаг:
+- отдельно разобрать два оставшихся XAML-теста в `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`, не смешивая их с уже доведённым `DRAW`;
+- если потребуется отдельная ручная приёмка, открыть в `Axiom.Ide` sample `samples/operators/draw/paint_default_border.axm` вместе с остальными `samples/operators/draw/`.

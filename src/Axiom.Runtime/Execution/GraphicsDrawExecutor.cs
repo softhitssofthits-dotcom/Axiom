@@ -77,26 +77,27 @@ internal static class GraphicsDrawExecutor
         };
 
         var (dx, dy) = Rotate(baseDx, baseDy, angleDegrees);
-        var targetX = checked(host.CurrentGraphicsX + RoundToLong(dx, command.Position));
-        var targetY = checked(host.CurrentGraphicsY + RoundToLong(dy, command.Position));
+        var targetX = CheckedAdd(host.CurrentGraphicsX, RoundToLong(dx, command.Position), command.Position);
+        var targetY = CheckedAdd(host.CurrentGraphicsY, RoundToLong(dy, command.Position), command.Position);
         ExecuteSegment(host, targetX, targetY, color, command.Blind, command.ReturnToOrigin);
     }
 
     private static void ExecuteMoveTo(IGraphicsHost host, GraphicsDrawCommand command, int color)
     {
-        var targetX = command.IsRelativeMove ? checked(host.CurrentGraphicsX + command.X) : command.X;
-        var targetY = command.IsRelativeMove ? checked(host.CurrentGraphicsY + command.Y) : command.Y;
+        var targetX = command.IsRelativeMove ? CheckedAdd(host.CurrentGraphicsX, command.X, command.Position) : command.X;
+        var targetY = command.IsRelativeMove ? CheckedAdd(host.CurrentGraphicsY, command.Y, command.Position) : command.Y;
         ExecuteSegment(host, targetX, targetY, color, command.Blind, command.ReturnToOrigin);
     }
 
     private static void ExecutePaint(IGraphicsHost host, GraphicsDrawCommand command)
     {
-        var borderColor = command.BorderColor ?? host.CurrentBackgroundColor;
+        var fillColor = NormalizeColor(command.FillColor, command.Position);
+        var borderColor = NormalizeColor(command.BorderColor ?? fillColor, command.Position);
         host.Paint(GraphicsPaintRequest.CreateSolid(
             host.CurrentGraphicsX,
             host.CurrentGraphicsY,
-            NormalizeColor(command.FillColor, command.Position),
-            NormalizeColor(borderColor, command.Position)));
+            fillColor,
+            borderColor));
     }
 
     private static void ExecuteSegment(IGraphicsHost host, long targetX, long targetY, int color, bool blind, bool returnToOrigin)
@@ -148,6 +149,18 @@ internal static class GraphicsDrawExecutor
         return checked((long)Math.Round(value, MidpointRounding.AwayFromZero));
     }
 
+    private static long CheckedAdd(long left, long right, int position)
+    {
+        try
+        {
+            return checked(left + right);
+        }
+        catch (OverflowException)
+        {
+            throw new GraphicsDrawException("Команда DRAW привела к переполнению координат.", position);
+        }
+    }
+
     private static int NormalizeColor(double value, int position)
     {
         if (!double.IsFinite(value))
@@ -155,7 +168,14 @@ internal static class GraphicsDrawExecutor
             throw new GraphicsDrawException("Команда DRAW требует конечный числовой цвет.", position);
         }
 
-        return NormalizeColor((long)Math.Truncate(value), position);
+        try
+        {
+            return NormalizeColor(checked((long)Math.Truncate(value)), position);
+        }
+        catch (OverflowException)
+        {
+            throw new GraphicsDrawException("Команда DRAW содержит слишком большой числовой цвет.", position);
+        }
     }
 
     private static int NormalizeColor(long value, int position)

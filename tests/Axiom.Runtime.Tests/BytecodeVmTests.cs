@@ -558,6 +558,246 @@ PRINT POINT(41, 41)
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3007");
     }
 
+    [Theory]
+    [InlineData("DRAW \"BC12 R10\"")]
+    [InlineData("DRAW \"NC12 R10\"")]
+    [InlineData("DRAW \"BP4\"")]
+    [InlineData("DRAW \"NP4\"")]
+    [InlineData("DRAW \"BA1 R10\"")]
+    [InlineData("DRAW \"BTA45 R10\"")]
+    [InlineData("DRAW \"BXdemo\"")]
+    [InlineData("DRAW \"NXdemo\"")]
+    [InlineData("DRAW \"BNXdemo\"")]
+    public void Execute_CompiledDrawRejectsMovementModifiersBeforeNonMovementCommands(string statement)
+    {
+        var (_, host, result) = ExecuteProgram(
+            """
+SCREEN 1
+PSET (10, 10), 15
+""" + "\r\n" + statement);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("Модификатор B/N", diagnostic.Message, StringComparison.Ordinal);
+        Assert.Empty(host.Lines);
+        Assert.Empty(host.PaintRequests);
+    }
+
+    [Theory]
+    [InlineData("DRAW \"B\"")]
+    [InlineData("DRAW \"N\"")]
+    [InlineData("DRAW \"BN\"")]
+    public void Execute_CompiledDrawRejectsDanglingMovementModifiers(string statement)
+    {
+        var (_, _, result) = ExecuteProgram("SCREEN 1\r\n" + statement);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("должны предшествовать команде движения или M", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawReportsUnsupportedHistoricalX()
+    {
+        var (_, _, result) = ExecuteProgram("SCREEN 1\r\nDRAW \"Xdemo\"");
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("X/VARPTR$", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawTracksCurrentGraphicsPositionAcrossMovementModes()
+    {
+        const string text = """
+SCREEN 1
+PSET (10, 10), 15
+DRAW "R10"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "BR10"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "NR10"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "BNR10"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "M20,30"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "BM20,30"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "NM30,40"
+PRINT POINT(0)
+PRINT POINT(1)
+DRAW "M+10,-5"
+PRINT POINT(0)
+PRINT POINT(1)
+LINE -(35, 25), 7
+PRINT POINT(0)
+PRINT POINT(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            ["20", "10", "30", "10", "30", "10", "30", "10", "20", "30", "20", "30", "20", "30", "30", "25", "35", "25"],
+            host.Output);
+        Assert.Equal(6, host.Lines.Count);
+        Assert.Contains(host.Lines, line => line is { X1: 10, Y1: 10, X2: 20, Y2: 10, Color: 15 });
+        Assert.Contains(host.Lines, line => line is { X1: 30, Y1: 10, X2: 40, Y2: 10, Color: 15 });
+        Assert.Contains(host.Lines, line => line is { X1: 30, Y1: 25, X2: 35, Y2: 25, Color: 7 });
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawUsesPaintDefaultBorderAndNormalizesColors()
+    {
+        const string text = """
+SCREEN 1
+PSET (10, 10), 15
+DRAW "P4"
+PSET (12, 12), 15
+DRAW "P4,15"
+DRAW "C-1 R1"
+PSET (14, 14), 15
+DRAW "P-1,-2"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(3, host.PaintRequests.Count);
+        Assert.Contains(host.PaintRequests, request => request.X == 10 && request.Y == 10 && request.SolidFillColor == 4 && request.BorderColor == 4);
+        Assert.Contains(host.PaintRequests, request => request.X == 12 && request.Y == 12 && request.SolidFillColor == 4 && request.BorderColor == 15);
+        Assert.Contains(host.PaintRequests, request => request.X == 14 && request.Y == 14 && request.SolidFillColor == 255 && request.BorderColor == 254);
+        Assert.Contains(host.Lines, line => line is { X1: 12, Y1: 12, X2: 13, Y2: 12, Color: 255 });
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawAppliesAAndTAAnglesInScreenCoordinates()
+    {
+        const string text = """
+SCREEN 1
+PSET (50, 50), 15
+DRAW "A0 U10 R10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "A1 U10 R10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "A2 U10 R10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "A3 U10 R10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "TA90 U10 R10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "TA-90 U10 R10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "TA90 U10 TA0 U10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "TA90 A0 U10"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (50, 50), 15
+DRAW "A0 TA90 U10"
+PRINT POINT(0)
+PRINT POINT(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            ["60", "40", "60", "60", "40", "60", "40", "40", "60", "60", "40", "40", "60", "40", "50", "40", "60", "50"],
+            host.Output);
+        Assert.Contains(host.Lines, line => line is { X1: 50, Y1: 50, X2: 60, Y2: 50, Color: 15 });
+        Assert.Contains(host.Lines, line => line is { X1: 50, Y1: 50, X2: 40, Y2: 50, Color: 15 });
+    }
+
+    [Theory]
+    [InlineData("DRAW \"M+9223372036854775807,+1\"", "переполнению координат")]
+    [InlineData("DRAW \"S255 R9223372036854775807\"", "переполнению координат")]
+    [InlineData("DRAW \"C9223372036854775808 R1\"", "слишком большой числовой цвет")]
+    [InlineData("DRAW \"P2147483648\"", "выходит за диапазон INTEGER")]
+    public void Execute_CompiledDrawReportsControlledDiagnosticsForOverflowAndHugeColors(string statement, string messageFragment)
+    {
+        var (_, _, result) = ExecuteProgram(
+            """
+SCREEN 1
+PSET (1, 1), 15
+""" + "\r\n" + statement);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains(messageFragment, diagnostic.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("OverflowException", diagnostic.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("FormatException", diagnostic.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("IndexOutOfRangeException", diagnostic.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("ArgumentOutOfRangeException", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawAcceptsWhitespaceLowercaseDefaultLengthsAndFractionalLengths()
+    {
+        const string text = """
+SCREEN 1
+DRAW ""
+DRAW "   r10   d5   "
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (0, 0), 15
+DRAW "R D L U"
+PRINT POINT(0)
+PRINT POINT(1)
+PSET (0, 0), 15
+DRAW "R1.5"
+PRINT POINT(0)
+PRINT POINT(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["10", "5", "0", "0", "2", "0"], host.Output);
+        Assert.Contains(host.Lines, line => line is { X1: 0, Y1: 0, X2: 10, Y2: 0 });
+        Assert.Contains(host.Lines, line => line is { X1: 0, Y1: 0, X2: 2, Y2: 0 });
+    }
+
+    [Theory]
+    [InlineData("DRAW \"R.\"", "числовой аргумент длины")]
+    [InlineData("DRAW \"R-1\"", "не может быть отрицательной")]
+    [InlineData("DRAW \"Q10\"", "Неизвестная команда DRAW")]
+    [InlineData("DRAW \"M10\"", "Команда M требует координаты")]
+    [InlineData("DRAW \"M+10,20\"", "Относительная команда M должна задавать знак у обеих координат")]
+    [InlineData("DRAW \"M10,+20\"", "Относительная команда M должна задавать знак у обеих координат")]
+    [InlineData("DRAW \"P\"", "Команда P требует числовой цвет заливки")]
+    [InlineData("DRAW \"P4,\"", "Команда P требует числовой цвет границы")]
+    [InlineData("DRAW \"P,4\"", "Команда P требует числовой цвет заливки")]
+    public void Execute_CompiledDrawReportsDiagnosticsForStringEdgeCases(string statement, string messageFragment)
+    {
+        var (_, _, result) = ExecuteProgram("SCREEN 1\r\n" + statement);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains(messageFragment, diagnostic.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Execute_MousePressConsumesMatchingButtonOnce()
     {

@@ -1940,6 +1940,7 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/operators/draw/blind_and_return.axm", "DRAW blind and return sample finished")]
     [InlineData("samples/operators/draw/rotated_spokes.axm", "DRAW rotated spokes sample finished")]
     [InlineData("samples/operators/draw/paint_segments.axm", "DRAW paint segments sample finished")]
+    [InlineData("samples/operators/draw/paint_default_border.axm", "DRAW paint default border sample finished")]
     [InlineData("samples/operators/draw/dynamic_string.axm", "DRAW dynamic string sample finished")]
     public void ScreenDrawAcceptanceSamples_RunOnBytecodeVm(string relativePath, string expectedLine)
     {

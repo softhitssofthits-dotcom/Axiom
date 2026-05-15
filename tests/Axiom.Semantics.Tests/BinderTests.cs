@@ -217,6 +217,20 @@ DRAW commands
     }
 
     [Fact]
+    public void Bind_DrawComposedStringExpressionStatement()
+    {
+        const string text = """
+DIM penColor AS INTEGER = 12
+DRAW "C" + STR(penColor) + "R20"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.IsType<BoundDrawStatement>(program.GlobalStatements[1]);
+    }
+
+    [Fact]
     public void Bind_DrawRejectsNumericExpression()
     {
         _ = BindProgram("DRAW 123", out var diagnostics);
