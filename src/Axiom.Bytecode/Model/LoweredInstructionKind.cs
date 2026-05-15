@@ -43,6 +43,7 @@ public enum LoweredInstructionKind
     Line,
     Circle,
     Paint,
+    Draw,
     PrintValue,
     PrintUsing,
     PrintSeparator,

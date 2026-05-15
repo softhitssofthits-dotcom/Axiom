@@ -162,6 +162,13 @@ public sealed partial class Binder
             statement.IsRelative);
     }
 
+    private BoundStatement BindDrawStatement(DrawStatementSyntax statement)
+    {
+        return new BoundDrawStatement(
+            GetLocation(statement),
+            BindExpression(statement.CommandExpression, TypeSymbol.String));
+    }
+
     private BoundExpression BindPaintFillExpression(ExpressionSyntax expression)
     {
         var boundExpression = BindExpression(expression);

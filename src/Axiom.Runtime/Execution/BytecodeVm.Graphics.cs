@@ -180,6 +180,22 @@ public sealed partial class BytecodeVm
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
+    private void ExecuteDrawInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("DRAW", location);
+        var commandText = PopValue(frame, instructionIndex).AsString();
+        try
+        {
+            GraphicsDrawExecutor.Execute(_host, commandText);
+        }
+        catch (GraphicsDrawException exception)
+        {
+            ReportRuntimeDiagnostic(BuiltinArgumentCode, $"DRAW: {exception.Message}", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private static bool HasCircleRelativeCenter(int flags) => (flags & 1) != 0;
 
     private static bool HasCircleStart(int flags) => (flags & 2) != 0;

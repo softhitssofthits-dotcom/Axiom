@@ -37,6 +37,7 @@
             <Word>CONST</Word>
             <Word>DIM</Word>
             <Word>DO</Word>
+            <Word>DRAW</Word>
             <Word>ELSE</Word>
             <Word>ELSEIF</Word>
             <Word>END</Word>
@@ -267,6 +268,7 @@
             <Word>RENAMEFILE</Word>
             <Word>REPEAT</Word>
             <Word>REPLACE</Word>
+            <Word>REPLACEMANY</Word>
             <Word>REVERSE</Word>
             <Word>REWIND</Word>
             <Word>RIGHT</Word>
@@ -291,6 +293,7 @@
             <Word>STARTOFYEAR</Word>
             <Word>STARTSWITH</Word>
             <Word>STR</Word>
+            <Word>STR$</Word>
             <Word>STRING</Word>
             <Word>SUBSTRCOUNT</Word>
             <Word>TAN</Word>

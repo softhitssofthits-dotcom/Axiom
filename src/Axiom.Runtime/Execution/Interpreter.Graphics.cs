@@ -159,6 +159,22 @@ public sealed partial class Interpreter
         return ExecutionSignal.None;
     }
 
+    private ExecutionSignal ExecuteDraw(BoundDrawStatement statement)
+    {
+        RequireScreenActive("DRAW", statement.Location);
+        var commandText = EvaluateExpression(statement.CommandExpression).AsString();
+        try
+        {
+            GraphicsDrawExecutor.Execute(_host, commandText);
+            return ExecutionSignal.None;
+        }
+        catch (GraphicsDrawException exception)
+        {
+            ReportRuntimeDiagnostic(BuiltinArgumentCode, $"DRAW: {exception.Message}", statement.Location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private GraphicsPaintRequest CreatePaintRequest(
         long x,
         long y,

@@ -193,6 +193,46 @@ public sealed class BinderTests
     }
 
     [Fact]
+    public void Bind_DrawStringLiteralStatement()
+    {
+        var program = BindProgram("DRAW \"R10\"", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundDrawStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(TypeSymbol.String, statement.CommandExpression.Type);
+    }
+
+    [Fact]
+    public void Bind_DrawStringVariableStatement()
+    {
+        const string text = """
+DIM commands AS STRING = "R10"
+DRAW commands
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.IsType<BoundDrawStatement>(program.GlobalStatements[1]);
+    }
+
+    [Fact]
+    public void Bind_DrawRejectsNumericExpression()
+    {
+        _ = BindProgram("DRAW 123", out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == "MB2003");
+    }
+
+    [Fact]
+    public void Bind_DrawRejectsBooleanExpression()
+    {
+        _ = BindProgram("DRAW TRUE", out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == "MB2003");
+    }
+
+    [Fact]
     public void Bind_OnKeyStatement_BindsZeroArgumentSubHandler()
     {
         const string text = """

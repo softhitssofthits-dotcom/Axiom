@@ -469,6 +469,66 @@ PRINT POINT(15, 24)
     }
 
     [Fact]
+    public void Execute_DrawWithoutScreenReportsRuntimeDiagnostic()
+    {
+        var (_, _, result) = ExecuteProgram("DRAW \"R10\"");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_DrawSupportsMovementModifiersColorScaleAngleMoveAndPaint()
+    {
+        const string text = """
+SCREEN 1
+COLOR 6, 2
+DRAW ""
+DRAW "R10"
+DRAW "D10 L5 U5"
+DRAW "BR10 D5"
+DRAW "NR10"
+DRAW "BNR10"
+DRAW "C12 R10"
+DRAW "S8 R10"
+DRAW "A1 U10"
+DRAW "TA90 U10"
+DRAW "M20,30"
+DRAW "BM20,30"
+DRAW "M+10,-5"
+LINE (40, 40)-(44, 44), 15, B
+DRAW "P4,15"
+PRINT POINT(0)
+PRINT POINT(1)
+PRINT POINT(41, 41)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.True(host.Lines.Count >= 9);
+        Assert.Contains(host.Lines, line => line is { X1: 0, Y1: 0, X2: 10, Y2: 0, Color: 6 });
+        Assert.Contains(host.Lines, line => line is { X1: 15, Y1: 10, X2: 25, Y2: 10, Color: 12 });
+        Assert.Contains(host.Lines, line => line.Color == 12 && line.X2 > line.X1);
+        Assert.Contains(host.Lines, line => line.Color == 12 && line.Y2 == line.Y1);
+        Assert.Contains(host.PaintRequests, request => request.X == 44 && request.Y == 44 && request.SolidFillColor == 4 && request.BorderColor == 15);
+        Assert.Equal(["44", "44", "4"], host.Output);
+    }
+
+    [Theory]
+    [InlineData("DRAW \"Q10\"")]
+    [InlineData("DRAW \"R-5\"")]
+    [InlineData("DRAW \"M10\"")]
+    [InlineData("DRAW \"Xdemo\"")]
+    public void Execute_DrawReportsRuntimeDiagnosticsForInvalidCommands(string statement)
+    {
+        var (_, _, result) = ExecuteProgram("SCREEN 1\r\n" + statement);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
     public void Execute_PaintFillsBoundedRegion()
     {
         const string text = """
@@ -9209,6 +9269,10 @@ END TRY
 
         public List<CircleCall> Circles { get; } = [];
 
+        public List<LineCall> Lines { get; } = [];
+
+        public List<GraphicsPaintRequest> PaintRequests { get; } = [];
+
         public string ReadInput(InputRequest request)
         {
             InputRequests.Add(request);
@@ -9289,6 +9353,7 @@ END TRY
 
         public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
         {
+            Lines.Add(new LineCall(x1, y1, x2, y2, color, kind));
             _currentGraphicsX = x2;
             _currentGraphicsY = y2;
         }
@@ -9317,6 +9382,22 @@ END TRY
             }
 
             Circles.Add(new CircleCall(x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius));
+        }
+
+        public void Paint(GraphicsPaintRequest request)
+        {
+            PaintRequests.Add(request);
+            _currentGraphicsX = request.X;
+            _currentGraphicsY = request.Y;
+            GraphicsFloodFill.Paint(
+                request,
+                GetPixel,
+                SetPixel,
+                static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
+                ScreenWidth,
+                ScreenHeight);
+            _currentGraphicsX = request.X;
+            _currentGraphicsY = request.Y;
         }
 
         public void WriteGraphicsText(string text, bool newLine) => Output.Add(text);
@@ -9367,4 +9448,12 @@ END TRY
         double Aspect,
         bool DrawStartRadius,
         bool DrawEndRadius);
+
+    private sealed record LineCall(
+        long X1,
+        long Y1,
+        long X2,
+        long Y2,
+        int Color,
+        GraphicsLineKind Kind);
 }

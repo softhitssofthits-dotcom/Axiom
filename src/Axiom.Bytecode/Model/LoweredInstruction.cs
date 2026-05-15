@@ -469,6 +469,11 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Paint, location, valueCount: valueCount, mouseEventKind: flags);
     }
 
+    public static LoweredInstruction Draw(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Draw, location, valueCount: 1);
+    }
+
     public static LoweredInstruction PrintUsing(TextLocation location, int valueCount, PrintSeparatorKind? separatorKind)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(valueCount);

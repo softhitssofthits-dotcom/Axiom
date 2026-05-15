@@ -5171,3 +5171,26 @@
 Следующий точный шаг:
 - при следующем проходе по графическим страницам manual сначала сверять раздел у Зельднера и по возможности брать оттуда пример или прямой мотив примера;
 - если по `PAINT` не появится новых пользовательских замечаний к manual или к runnable sample, считать оператор закрытым и только после этого открывать следующий графический оператор.
+
+## Обновление плана - 2026-05-15 - DRAW открыт как полный самостоятельный договор
+
+Сделано:
+- `DRAW` проведён через `lexer`, `syntax`, `parser`, `binder`, `bound node`, lowering, `BytecodeVm` opcode и общий runtime-исполнитель DRAW-строки;
+- строковые формы `commands$` и `STR$(...)` доведены до рабочего состояния, потому что они входят в обязательный пользовательский договор `DRAW`;
+- добавлены parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-уровни проверок для `DRAW`;
+- добавлены runnable sample в `samples/operators/draw/` и раздел `DRAW` в `docs/manual/graphics-primitives.html`.
+
+Решение:
+- считать `DRAW` текущим активным графическим оператором, который должен быть закрыт полностью и не допускает перехода к следующему оператору до синхронизации docs/manual/реестров и ручной приёмки;
+- историческую форму `X/VARPTR$` считать сознательно исключённой из Axiom по проектному решению, а не временной недореализацией;
+- общую логику DRAW-строки держать только в runtime-подсистеме `GraphicsDrawParser` / `GraphicsDrawExecutor`, а interpreter и `BytecodeVm` оставлять thin-wrapper слоями.
+
+Остатки и блокеры:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` после закрытия части `DRAW` по-прежнему падает на несвязанных проверках `MainWindow.xaml`, которые не затрагивались этой задачей, и на долге подсветки `REPLACEMANY`, если он ещё не синхронизирован в ветке;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` падает в общем positive-наборе на старых `PAINT` sample `pattern_repaint.axm`, `step_default_fill.axm` и `fish_fill.axm` с диагностикой `MB3010`, то есть acceptance-путь графических sample уже нестабилен вне зоны `DRAW`;
+- из-за этих внешних падений ручной и общий acceptance-хвост по `DRAW` нужно доводить, не смешивая его с несвязанной старой нестабильностью графических sample и XAML-тестов.
+
+Следующий точный шаг:
+- повторить `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` и `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` после синхронизации новых `DRAW`-страниц и sample, отделив оставшиеся несвязанные падения от самого `DRAW`;
+- затем выполнить `node --check docs\manual\scripts\manual.js` и `node --check docs\manual\scripts\search-index.js`;
+- после этого вручную открыть новые `samples/operators/draw/` в `Axiom.Ide` и зафиксировать итог в `docs/WORKLOG4.md` как следующий приёмочный хвост `DRAW`, а не переходить к другому оператору.

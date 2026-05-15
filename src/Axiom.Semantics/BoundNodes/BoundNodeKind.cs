@@ -21,6 +21,7 @@ public enum BoundNodeKind
     LineStatement,
     CircleStatement,
     PaintStatement,
+    DrawStatement,
     OnKeyStatement,
     OnMouseStatement,
     OpenStatement,

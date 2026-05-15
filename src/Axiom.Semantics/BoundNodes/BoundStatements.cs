@@ -467,6 +467,20 @@ public sealed class BoundPaintStatement : BoundStatement
     public bool IsRelative { get; }
 }
 
+public sealed class BoundDrawStatement : BoundStatement
+{
+    public BoundDrawStatement(TextLocation location, BoundExpression commandExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(commandExpression);
+        CommandExpression = commandExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawStatement;
+
+    public BoundExpression CommandExpression { get; }
+}
+
 public sealed class BoundOnKeyStatement : BoundStatement
 {
     public BoundOnKeyStatement(

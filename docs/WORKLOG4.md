@@ -736,3 +736,79 @@
 Следующий точный шаг:
 - прогнать форматные проверки по изменённым файлам и при отсутствии замечаний считать текущий документный проход по `PAINT` завершённым;
 - если пользователь не попросит дополнительную доводку `PAINT`, только после этого открывать следующий графический оператор.
+
+## Session 853 - 2026-05-15 00:35 - DRAW проведён как полный самостоятельный договор
+
+Что сделано:
+- перечитан активный проектный контекст и подтверждено, что после закрытого `PAINT` следующим графическим оператором должен быть именно `DRAW`, причём не как первый срез, а как полный поддерживаемый договор;
+- `DRAW` добавлен в `TokenKind`, `SyntaxKind`, parser, binder, `BoundNodeKind`, `BoundDrawStatement`, lowering, `Opcode.Draw`, compiler emission и validator;
+- для `DRAW` выделена отдельная runtime-подсистема `GraphicsDrawParser`, `GraphicsDrawCommand`, `GraphicsDrawExecutor`, `GraphicsDrawException`; interpreter и `BytecodeVm` теперь только проверяют `SCREEN`, получают строку и вызывают общий executor;
+- проведены parser- и binder-проверки для строкового литерала, строковой переменной и составного строкового выражения;
+- проведены runtime-проверки interpreter и `BytecodeVm` для `B`, `N`, `C`, `S`, `A`, `TA`, `M`, `P`, пустой строки и диагностик;
+- для пользовательского договора `DRAW` отдельно доведены строковые BASIC-формы `commands$` и `STR$(...)`: lexer теперь принимает `$` в идентификаторе, а `STR$` зарегистрирован как alias существующей встроенной функции `STR`;
+- `DRAW` и `STR$` добавлены в IDE highlighting, а заодно локально синхронизирован долг по `REPLACEMANY`, чтобы не оставлять заведомо неполный словарь подсветки;
+- добавлены runnable sample в `samples/operators/draw/`: `square.axm`, `octagon.axm`, `blind_and_return.axm`, `rotated_spokes.axm`, `paint_segments.axm`, `dynamic_string.axm`;
+- manual обновлён: в `docs/manual/graphics-primitives.html` добавлен отдельный раздел `DRAW`, а в `docs/manual/scripts/search-index.js` добавлена поисковая карточка `DRAW`;
+- `docs/SPECIFICATION3.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы под полный договор `DRAW`.
+
+Изменённые файлы:
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Expressions.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.SyntaxHelpers.cs`
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundNodeKind.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.Conversion.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Model/Opcode.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Runtime/Execution/GraphicsDrawException.cs`
+- `src/Axiom.Runtime/Execution/GraphicsDrawCommand.cs`
+- `src/Axiom.Runtime/Execution/GraphicsDrawParser.cs`
+- `src/Axiom.Runtime/Execution/GraphicsDrawExecutor.cs`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/draw/square.axm`
+- `samples/operators/draw/octagon.axm`
+- `samples/operators/draw/blind_and_return.axm`
+- `samples/operators/draw/rotated_spokes.axm`
+- `samples/operators/draw/paint_segments.axm`
+- `samples/operators/draw/dynamic_string.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build Axiom.sln` — успешно;
+- `dotnet test tests\Axiom.Parsing.Tests\Axiom.Parsing.Tests.csproj --no-restore` — успешно после доводки `commands$`, `STR$` и `color` в выражении;
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore` — успешно после стабилизации ожиданий по `DRAW`;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` — `DRAW`-часть подсветки закрыта, но прогон всё ещё падает на несвязанных проверках `MainWindow.xaml` и на старом долге словаря built-in, не открытом этой задачей;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` — прогон остаётся нестабилен на старых `PAINT` sample в общем positive-наборе: `pattern_repaint.axm`, `step_default_fill.axm`, `fish_fill.axm` сообщают `MB3010`, то есть это внешний графический acceptance-хвост вне текущего `DRAW`.
+
+Решение:
+- считать `DRAW` проведённым по основному коду и собственным parser/runtime/bytecode/sample/manual слоям, но не объявлять задачу закрытой на 100%, пока не будет отдельно разобрана внешняя нестабильность `Axiom.Ide.Tests` и общего acceptance-набора `Axiom.Execution.Tests`.
+
+Следующий точный шаг:
+- добить приёмочный хвост `DRAW`: повторить `Axiom.Ide.Tests` и `Axiom.Execution.Tests` после финальной синхронизации manual/scripts, затем выполнить `node --check` для manual-скриптов и вручную открыть новые sample `samples/operators/draw/` в `Axiom.Ide`.

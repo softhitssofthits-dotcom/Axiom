@@ -87,6 +87,7 @@ public enum Opcode
     Line,
     Circle,
     Paint,
+    Draw,
     AdvanceForLoopLocal,
     PrintValue,
     PrintUsing,

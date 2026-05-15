@@ -1934,6 +1934,28 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(["PAINT STEP sample finished"], inputProvider.GraphicsOutput);
     }
 
+    [Theory]
+    [InlineData("samples/operators/draw/square.axm", "DRAW square sample finished")]
+    [InlineData("samples/operators/draw/octagon.axm", "DRAW octagon sample finished")]
+    [InlineData("samples/operators/draw/blind_and_return.axm", "DRAW blind and return sample finished")]
+    [InlineData("samples/operators/draw/rotated_spokes.axm", "DRAW rotated spokes sample finished")]
+    [InlineData("samples/operators/draw/paint_segments.axm", "DRAW paint segments sample finished")]
+    [InlineData("samples/operators/draw/dynamic_string.axm", "DRAW dynamic string sample finished")]
+    public void ScreenDrawAcceptanceSamples_RunOnBytecodeVm(string relativePath, string expectedLine)
+    {
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal([expectedLine], inputProvider.GraphicsOutput);
+    }
+
     [Fact]
     public void ScreenMouseAcceptanceSample_RunsOnBytecodeVm()
     {

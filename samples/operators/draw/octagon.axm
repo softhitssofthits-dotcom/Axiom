@@ -1,0 +1,7 @@
+﻿SCREEN 1
+COLOR 11, 1
+PSET (120, 80)
+DRAW "S8 U10 F7 D10 G7 U10 E7 D10 H7"
+LOCATE 1, 1
+PRINT "DRAW octagon sample finished"
+SLEEP

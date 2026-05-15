@@ -1,0 +1,6 @@
+﻿SCREEN 1
+COLOR 14, 1
+DRAW "R60 D60 L60 U60"
+LOCATE 1, 1
+PRINT "DRAW square sample finished"
+SLEEP

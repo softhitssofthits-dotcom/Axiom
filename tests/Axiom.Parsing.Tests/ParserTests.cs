@@ -418,6 +418,37 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_DrawStringLiteralStatement()
+    {
+        var program = ParseProgram("DRAW \"R10\"", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var draw = AssertGlobalStatement<DrawStatementSyntax>(program);
+        var literal = Assert.IsType<LiteralExpressionSyntax>(draw.CommandExpression);
+        Assert.Equal("R10", Assert.IsType<string>(literal.LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_DrawVariableStatement()
+    {
+        var program = ParseProgram("DRAW commands$", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var draw = AssertGlobalStatement<DrawStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(draw.CommandExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawConcatenatedExpressionStatement()
+    {
+        var program = ParseProgram("DRAW \"C\" + STR$(color) + \"R20\"", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var draw = AssertGlobalStatement<DrawStatementSyntax>(program);
+        Assert.IsType<BinaryExpressionSyntax>(draw.CommandExpression);
+    }
+
+    [Fact]
     public void Parse_FunctionDeclarationWithFunctionTypedParameterAndReturnType()
     {
         const string text = """

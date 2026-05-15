@@ -344,3 +344,20 @@ public sealed class PaintStatementSyntax : StatementSyntax
 
     public ExpressionSyntax? BackgroundExpression { get; }
 }
+
+public sealed class DrawStatementSyntax : StatementSyntax
+{
+    public DrawStatementSyntax(SyntaxToken drawKeyword, ExpressionSyntax commandExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawKeyword);
+        ArgumentNullException.ThrowIfNull(commandExpression);
+        DrawKeyword = drawKeyword;
+        CommandExpression = commandExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawStatement;
+
+    public SyntaxToken DrawKeyword { get; }
+
+    public ExpressionSyntax CommandExpression { get; }
+}

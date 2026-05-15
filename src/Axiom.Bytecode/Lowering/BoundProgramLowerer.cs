@@ -373,6 +373,10 @@ public sealed class BoundProgramLowerer
                     paint.BorderColorExpression is not null,
                     paint.BackgroundExpression is not null));
                 break;
+            case BoundDrawStatement draw:
+                LowerExpression(draw.CommandExpression, instructions);
+                instructions.Add(LoweredInstruction.Draw(draw.Location));
+                break;
 
             case BoundOnKeyStatement onKey:
                 LowerOnKey(onKey, instructions);

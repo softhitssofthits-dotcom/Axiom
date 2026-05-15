@@ -50,6 +50,7 @@ public enum TokenKind
     DimKeyword,
     DoKeyword,
     DoubleKeyword,
+    DrawKeyword,
     ElseKeyword,
     ElseIfKeyword,
     EndKeyword,

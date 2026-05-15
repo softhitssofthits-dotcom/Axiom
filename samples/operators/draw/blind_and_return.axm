@@ -1,0 +1,7 @@
+﻿SCREEN 1
+COLOR 12, 1
+PSET (80, 80)
+DRAW "BR40 D20 NR30 BNR20"
+LOCATE 1, 1
+PRINT "DRAW blind and return sample finished"
+SLEEP

@@ -46,6 +46,7 @@ public sealed partial class Parser
             SyntaxKind.IdentifierToken
                 or SyntaxKind.SelfKeyword
                 or SyntaxKind.LineKeyword
+                or SyntaxKind.ColorKeyword
                 or SyntaxKind.IntegerKeyword
                 or SyntaxKind.LongKeyword
                 or SyntaxKind.DoubleKeyword

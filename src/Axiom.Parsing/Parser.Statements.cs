@@ -37,6 +37,7 @@ public sealed partial class Parser
             SyntaxKind.LineKeyword => Peek(1).Kind is SyntaxKind.OpenParenToken or SyntaxKind.StepKeyword or SyntaxKind.MinusToken ? ParseLineStatement() : ParseIdentifierLeadingStatement(),
             SyntaxKind.CircleKeyword => ParseCircleStatement(),
             SyntaxKind.PaintKeyword => ParsePaintStatement(),
+            SyntaxKind.DrawKeyword => ParseDrawStatement(),
             SyntaxKind.OnKeyword => ParseOnStatement(),
             SyntaxKind.OpenKeyword => ParseOpenStatement(),
             SyntaxKind.CloseKeyword => ParseCloseStatement(),
@@ -410,6 +411,13 @@ public sealed partial class Parser
             borderColorExpression,
             backgroundCommaToken,
             backgroundExpression);
+    }
+
+    private DrawStatementSyntax ParseDrawStatement()
+    {
+        var drawKeyword = Match(SyntaxKind.DrawKeyword, "DRAW");
+        var commandExpression = ParseExpression();
+        return new DrawStatementSyntax(drawKeyword, commandExpression);
     }
 
     private ExpressionSyntax? ParseOptionalGraphicsArgumentExpression()

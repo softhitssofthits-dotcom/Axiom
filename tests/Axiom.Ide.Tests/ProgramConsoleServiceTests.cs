@@ -579,6 +579,24 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void DrawLineAndPaint_PreserveCurrentGraphicsPositionForDrawStyleScenarios()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.SetPixel(10, 10, 9);
+        service.DrawLine(service.CurrentGraphicsX, service.CurrentGraphicsY, 20, 10, 12, GraphicsLineKind.Normal);
+        service.SetGraphicsCurrentPosition(10, 10);
+        service.DrawLine(service.CurrentGraphicsX, service.CurrentGraphicsY, 10, 20, 12, GraphicsLineKind.Normal);
+        service.SetGraphicsCurrentPosition(20, 20);
+        service.Paint(20, 20, 4, 15);
+
+        Assert.Equal(20, service.CurrentGraphicsX);
+        Assert.Equal(20, service.CurrentGraphicsY);
+        Assert.Equal(12, service.GetPixel(15, 10));
+    }
+
+    [Fact]
     public void DrawLine_UpdatesFramebufferSnapshot()
     {
         var service = new ProgramConsoleService();

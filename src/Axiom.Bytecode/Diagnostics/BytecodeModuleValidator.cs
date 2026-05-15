@@ -722,6 +722,18 @@ public sealed class BytecodeModuleValidator
                 case Opcode.Paint:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     break;
+                case Opcode.Draw:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.GetOperand(0) != 1)
+                    {
+                        Report(
+                            "BC4121",
+                            $"Инструкция Draw в процедуре '{routine.Name}' должна потреблять ровно одно значение, получено {instruction.GetOperand(0)}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                    break;
 
                 case Opcode.StatementBoundary:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);

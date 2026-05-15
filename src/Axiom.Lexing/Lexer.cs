@@ -29,6 +29,7 @@ public sealed class Lexer
         ["DIM"] = TokenKind.DimKeyword,
         ["DO"] = TokenKind.DoKeyword,
         ["DOUBLE"] = TokenKind.DoubleKeyword,
+        ["DRAW"] = TokenKind.DrawKeyword,
         ["ELSE"] = TokenKind.ElseKeyword,
         ["ELSEIF"] = TokenKind.ElseIfKeyword,
         ["END"] = TokenKind.EndKeyword,
@@ -566,7 +567,7 @@ public sealed class Lexer
 
     private static bool IsIdentifierStart(char c) => char.IsLetter(c) || c == '_';
 
-    private static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_';
+    private static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
 
     private static bool IsHexDigit(char c) =>
         (c >= '0' && c <= '9')
