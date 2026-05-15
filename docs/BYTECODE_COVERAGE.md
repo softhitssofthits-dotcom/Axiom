@@ -692,3 +692,15 @@
 - Manual: да, раздел `DRAW` в `docs/manual/graphics-primitives.html` уточнён под строгий запрет `B/N` перед немув-командами, под фактическую экранную геометрию `TA` и под правило `P f` с границей, равной цвету заливки;
 - Негативный паритет: да, runtime-путь больше не выпускает наружу сырые `OverflowException`, `FormatException`, `IndexOutOfRangeException` или `ArgumentOutOfRangeException` в проверенных сценариях `DRAW`;
 - Сквозной VM: да, acceptance-путь `samples/operators/draw/` проходит целиком, включая новый sample `paint_default_border.axm`.
+
+## Обновление реестра - 2026-05-15 - CIRCLE отвергает нечисловые и бесконечные углы
+
+Дополнение к области `SCREEN` и операторов рисования:
+- VM: да, `BytecodeVm` и интерпретатор теперь одинаково проверяют не только `radius` и `aspect`, но и конечность `start`/`end` перед вызовом host-слоя;
+- Интерпретатор: да, использует общий helper `GraphicsCircleValidation` и сообщает тот же `MB3007`, если `start` или `end` не являются конечными числами;
+- Автотесты: да, добавлены проверки `Execute_CircleValidationRejectsNonFiniteAngles()`, `Execute_CompiledCircleValidationRejectsNonFiniteAngles()`, `DrawCircle_IgnoresNonFiniteAngles(...)` и `Run_WithBytecodeMode_DrawCircleFallbackIgnoresNonFiniteAngles()`;
+- Runnable sample: нет, отдельный отрицательный `.axm` для `NaN`/`Infinity` не добавлялся, потому что текущий пользовательский слой языка не даёт честно довести такие `DOUBLE` до вызова `CIRCLE`;
+- Manual: да, `docs/manual/graphics-primitives.html` и спецификация `CIRCLE` уточнены под требование конечности `start`, `end` и `aspect`;
+- Сквозной VM: да, fallback-путь `IGraphicsHost.DrawCircle` и IDE-host одинаково игнорируют невалидные внутренние вызовы без специальной реализации графического host-а;
+- Негативный паритет: да, ошибка `MB3007` теперь явно покрывает и нечисловые/бесконечные углы дуги;
+- Профиль: не приоритет, это внутреннее упрочнение договора аргументов без изменения производительного сценария.

@@ -139,28 +139,75 @@ public static class GraphicsFloodFill
         Func<long, long, int> getFillColor)
     {
         var pending = new Stack<(long X, long Y)>();
-        var visited = new HashSet<(long X, long Y)>();
         pending.Push((startX, startY));
 
         while (pending.Count > 0)
         {
-            var (x, y) = pending.Pop();
-            if (!isInsideScreen(x, y, screenWidth, screenHeight) || !visited.Add((x, y)))
+            var (seedX, seedY) = pending.Pop();
+            if (!CanPaint(seedX, seedY))
             {
                 continue;
+            }
+
+            var left = seedX;
+            while (CanPaint(left - 1, seedY))
+            {
+                left--;
+            }
+
+            var right = seedX;
+            while (CanPaint(right + 1, seedY))
+            {
+                right++;
+            }
+
+            for (var x = left; x <= right; x++)
+            {
+                setPixel(x, seedY, getFillColor(x, seedY));
+            }
+
+            EnqueueNeighborSpans(left, right, seedY - 1);
+            EnqueueNeighborSpans(left, right, seedY + 1);
+        }
+
+        bool CanPaint(long x, long y)
+        {
+            if (!isInsideScreen(x, y, screenWidth, screenHeight))
+            {
+                return false;
             }
 
             var currentColor = NormalizeColor(getPixel(x, y));
-            if (!canPaint(x, y, currentColor))
+            return canPaint(x, y, currentColor);
+        }
+
+        void EnqueueNeighborSpans(long left, long right, long y)
+        {
+            if (y < 0 || y >= screenHeight)
             {
-                continue;
+                return;
             }
 
-            setPixel(x, y, getFillColor(x, y));
-            pending.Push((x - 1, y));
-            pending.Push((x + 1, y));
-            pending.Push((x, y - 1));
-            pending.Push((x, y + 1));
+            var x = left;
+            while (x <= right)
+            {
+                while (x <= right && !CanPaint(x, y))
+                {
+                    x++;
+                }
+
+                if (x > right)
+                {
+                    break;
+                }
+
+                pending.Push((x, y));
+                x++;
+                while (x <= right && CanPaint(x, y))
+                {
+                    x++;
+                }
+            }
         }
     }
 

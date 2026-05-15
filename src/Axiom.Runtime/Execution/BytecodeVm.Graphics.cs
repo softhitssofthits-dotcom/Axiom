@@ -86,75 +86,53 @@ public sealed partial class BytecodeVm
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("LINE", location);
-        var flags = instruction.GetOperand(0);
-        var boxKind = (BoundLineBoxKind)(flags & 3);
-        var hasExplicitStartPoint = (flags & 4) != 0;
-        var startRelative = (flags & 8) != 0;
-        var endRelative = (flags & 16) != 0;
+        var flags = GraphicsLineInstructionFlags.FromEncoded(instruction.GetOperand(0));
         var count = instruction.GetOperand(1);
-        var color = (hasExplicitStartPoint ? count == 5 : count == 3)
+        var color = (flags.HasExplicitStartPoint ? count == 5 : count == 3)
             ? PopValue(frame, instructionIndex).AsInteger()
             : _host.CurrentForegroundColor;
         var y2 = PopValue(frame, instructionIndex).AsLong();
         var x2 = PopValue(frame, instructionIndex).AsLong();
-        long x1;
-        long y1;
-        if (hasExplicitStartPoint)
-        {
-            y1 = PopValue(frame, instructionIndex).AsLong();
-            x1 = PopValue(frame, instructionIndex).AsLong();
-            if (startRelative)
-            {
-                x1 += _host.CurrentGraphicsX;
-                y1 += _host.CurrentGraphicsY;
-            }
-        }
-        else
-        {
-            x1 = _host.CurrentGraphicsX;
-            y1 = _host.CurrentGraphicsY;
-        }
-
-        if (endRelative)
-        {
-            x2 += x1;
-            y2 += y1;
-        }
-
-        var kind = boxKind switch
-        {
-            BoundLineBoxKind.Border => GraphicsLineKind.Box,
-            BoundLineBoxKind.Filled => GraphicsLineKind.FilledBox,
-            _ => GraphicsLineKind.Normal
-        };
-        _host.DrawLine(x1, y1, x2, y2, color, kind);
+        var explicitY1 = flags.HasExplicitStartPoint ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
+        var explicitX1 = flags.HasExplicitStartPoint ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
+        var line = GraphicsInstructionArguments.CreateLine(
+            _host.CurrentGraphicsX,
+            _host.CurrentGraphicsY,
+            x2,
+            y2,
+            color,
+            flags,
+            explicitX1,
+            explicitY1);
+        _host.DrawLine(line.X1, line.Y1, line.X2, line.Y2, line.Color, line.Kind);
     }
 
     private void ExecuteCircleInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("CIRCLE", location);
-        var flags = instruction.GetOperand(0);
+        var flags = GraphicsCircleInstructionFlags.FromEncoded(instruction.GetOperand(0));
         var count = instruction.GetOperand(1);
-        var aspect = HasCircleAspect(flags) ? PopValue(frame, instructionIndex).AsDouble() : 1d;
-        var endAngle = HasCircleEnd(flags) ? PopValue(frame, instructionIndex).AsDouble() : (double?)null;
-        var startAngle = HasCircleStart(flags) ? PopValue(frame, instructionIndex).AsDouble() : (double?)null;
-        var color = HasCircleColor(flags) ? PopValue(frame, instructionIndex).AsInteger() : 15;
+        var aspect = flags.HasAspect ? PopValue(frame, instructionIndex).AsDouble() : 1d;
+        var endAngle = flags.HasEnd ? PopValue(frame, instructionIndex).AsDouble() : (double?)null;
+        var startAngle = flags.HasStart ? PopValue(frame, instructionIndex).AsDouble() : (double?)null;
+        var color = flags.HasColor ? PopValue(frame, instructionIndex).AsInteger() : 15;
         var radius = PopValue(frame, instructionIndex).AsDouble();
         var y = PopValue(frame, instructionIndex).AsLong();
         var x = PopValue(frame, instructionIndex).AsLong();
-        ValidateCircleArguments(radius, aspect, location);
+        var circle = GraphicsInstructionArguments.CreateCircle(x, y, radius, color, flags.RelativeCenter, startAngle, endAngle, aspect);
+        ValidateCircleArguments(circle.Radius, circle.StartAngle, circle.EndAngle, circle.Aspect, location);
         _host.DrawCircle(
-            x,
-            y,
-            radius,
-            color,
-            HasCircleRelativeCenter(flags),
-            startAngle is < 0 ? -startAngle : startAngle,
-            endAngle is < 0 ? -endAngle : endAngle,
-            aspect,
-            startAngle is < 0,
-            endAngle is < 0);
+            circle.X,
+            circle.Y,
+            circle.Radius,
+            circle.Color,
+            circle.RelativeCenter,
+            circle.StartAngle,
+            circle.EndAngle,
+            circle.Aspect,
+            circle.DrawStartRadius,
+            circle.DrawEndRadius);
     }
 
     private void ExecutePaintInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -195,16 +173,6 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
     }
-
-    private static bool HasCircleRelativeCenter(int flags) => (flags & 1) != 0;
-
-    private static bool HasCircleStart(int flags) => (flags & 2) != 0;
-
-    private static bool HasCircleEnd(int flags) => (flags & 4) != 0;
-
-    private static bool HasCircleAspect(int flags) => (flags & 8) != 0;
-
-    private static bool HasCircleColor(int flags) => (flags & 16) != 0;
 
     private static bool HasPaintRelativeStart(int flags) => (flags & 1) != 0;
 
@@ -319,14 +287,14 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
-    private void ValidateCircleArguments(double radius, double aspect, TextLocation location)
+    private void ValidateCircleArguments(double radius, double? startAngle, double? endAngle, double aspect, TextLocation location)
     {
-        if (double.IsFinite(radius) && radius >= 0 && double.IsFinite(aspect) && aspect > 0)
+        if (GraphicsCircleValidation.HasValidArguments(radius, startAngle, endAngle, aspect))
         {
             return;
         }
 
-        ReportBuiltInArgumentError("CIRCLE", "radius/aspect", "радиус должен быть неотрицательным, а aspect должен быть положительным конечным числом.", location);
+        ReportBuiltInArgumentError("CIRCLE", "radius/start/end/aspect", "радиус должен быть неотрицательным конечным числом, start и end должны быть конечными числами, а aspect должен быть положительным конечным числом.", location);
         throw new RuntimeFailureException();
     }
 

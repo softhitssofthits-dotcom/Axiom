@@ -579,6 +579,14 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void DrawLine_DoesNotOverflowWhenErrorDoublingSaturates()
+    {
+        Assert.Equal(long.MaxValue, GraphicsLineMath.SaturatingDouble(long.MaxValue / 2 + 1));
+        Assert.Equal(long.MinValue, GraphicsLineMath.SaturatingDouble(long.MinValue / 2 - 1));
+        Assert.Equal(2468L, GraphicsLineMath.SaturatingDouble(1234));
+    }
+
+    [Fact]
     public void DrawLineAndPaint_PreserveCurrentGraphicsPositionForDrawStyleScenarios()
     {
         var service = new ProgramConsoleService();
@@ -641,6 +649,32 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void DrawCircle_FillsPerimeterWithoutSegmentApproximation()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawCircle(10, 10, 4, 12);
+
+        Assert.Equal(12, service.GetPixel(14, 10));
+        Assert.Equal(12, service.GetPixel(6, 10));
+        Assert.Equal(12, service.GetPixel(10, 14));
+        Assert.Equal(12, service.GetPixel(10, 6));
+        Assert.Equal(12, service.GetPixel(13, 12));
+        Assert.Equal(12, service.GetPixel(7, 12));
+    }
+
+    [Fact]
+    public void DrawCircle_IterationLimitTracksScreenPerimeter()
+    {
+        var fullLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(10_000, 10_000, fullEllipse: true, sweep: Math.Tau, screenWidth: 320, screenHeight: 200);
+        var arcLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(10_000, 10_000, fullEllipse: false, sweep: Math.PI / 2, screenWidth: 320, screenHeight: 200);
+
+        Assert.Equal(1040, fullLimit);
+        Assert.Equal(1040, arcLimit);
+    }
+
+    [Fact]
     public void DrawCircle_RasterizesArcAndAspect()
     {
         var service = new ProgramConsoleService();
@@ -652,6 +686,24 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(12, service.GetPixel(20, 8));
         Assert.Equal(12, service.GetPixel(16, 10));
         Assert.Equal(0, service.GetPixel(20, 12));
+    }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void DrawCircle_IgnoresNonFiniteAngles(double invalidAngle)
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawCircle(20, 10, 4, 12, relativeCenter: false, startAngle: invalidAngle, endAngle: null, aspect: 1, drawStartRadius: false, drawEndRadius: false);
+        service.DrawCircle(20, 10, 4, 12, relativeCenter: false, startAngle: null, endAngle: invalidAngle, aspect: 1, drawStartRadius: false, drawEndRadius: false);
+
+        Assert.Equal(0, service.GetPixel(24, 10));
+        Assert.Equal(0, service.GetPixel(20, 14));
+        Assert.Equal(0, service.GetPixel(16, 10));
+        Assert.Equal(0, service.GetPixel(20, 6));
     }
 
     [Fact]
@@ -666,6 +718,21 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(14, service.GetPixel(15, 26));
         Assert.Equal(14, service.GetPixel(17, 26));
         Assert.Equal(14, service.GetPixel(15, 24));
+    }
+
+    [Fact]
+    public void Paint_FillsLargeRectangleInteriorWithIterativeScanlinePath()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.DrawLine(20, 20, 120, 80, 9, GraphicsLineKind.Box);
+        service.Paint(60, 40, 6, 9);
+
+        Assert.Equal(9, service.GetPixel(20, 20));
+        Assert.Equal(6, service.GetPixel(60, 40));
+        Assert.Equal(6, service.GetPixel(119, 79));
+        Assert.Equal(0, service.GetPixel(121, 81));
     }
 
     [Fact]

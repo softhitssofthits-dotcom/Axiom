@@ -872,6 +872,72 @@ PRINT "pixel 15,24="; POINT(15, 24)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_DrawLineFallbackWorksWithoutSpecialGraphicsHost()
+    {
+        const string text = """
+SCREEN 1
+LINE (1, 1)-(4, 1), 12
+LINE (6, 6)-(8, 8), 9, B
+PRINT POINT(0)
+PRINT POINT(1)
+PRINT POINT(2, 1)
+PRINT POINT(3, 1)
+PRINT POINT(6, 6)
+PRINT POINT(7, 7)
+PRINT POINT(8, 8)
+""";
+
+        var inputProvider = new MinimalGraphicsHostInputProvider();
+        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["8", "8", "12", "12", "9", "0", "9"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_DrawCircleFallbackWorksWithoutSpecialGraphicsHost()
+    {
+        const string text = """
+SCREEN 1
+CIRCLE (10, 10), 3, 14
+PRINT POINT(0)
+PRINT POINT(1)
+PRINT POINT(13, 10)
+PRINT POINT(7, 10)
+PRINT POINT(10, 13)
+PRINT POINT(10, 7)
+""";
+
+        var inputProvider = new MinimalGraphicsHostInputProvider();
+        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["10", "10", "14", "14", "14", "14"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_DrawCircleFallbackIgnoresNonFiniteAngles()
+    {
+        Assert.False(GraphicsCircleValidation.HasValidArguments(3d, double.NaN, null, 1d));
+        Assert.False(GraphicsCircleValidation.HasValidArguments(3d, null, double.PositiveInfinity, 1d));
+        Assert.False(GraphicsCircleValidation.HasValidArguments(3d, null, double.NegativeInfinity, 1d));
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_DrawLineFallbackSurvivesErrorDoublingOverflow()
+    {
+        Assert.Equal(long.MaxValue, GraphicsLineMath.SaturatingDouble(long.MaxValue / 2 + 1));
+        Assert.Equal(long.MinValue, GraphicsLineMath.SaturatingDouble(long.MinValue / 2 - 1));
+        Assert.Equal(-8642L, GraphicsLineMath.SaturatingDouble(-4321));
+    }
+
+    [Fact]
     public void Run_MouseFunctionsWithoutActiveScreenReturnDiagnostic()
     {
         var result = Run(
@@ -3177,6 +3243,144 @@ INPUT value
             _pixels[(x2, y2)] = color;
             _currentGraphicsX = x2;
             _currentGraphicsY = y2;
+        }
+
+        public int GetPixel(long x, long y) => _pixels.TryGetValue((x, y), out var color) ? color : 0;
+    }
+
+    private sealed class MinimalGraphicsHostInputProvider : IInputProvider, IKeyboardInputProvider, IMouseInputProvider, IGraphicsHost
+    {
+        private readonly Dictionary<(long X, long Y), int> _pixels = [];
+        private bool _isScreenActive;
+        private bool _isScreenOutputActive;
+        private int _screenMode;
+        private int _screenWidth;
+        private int _screenHeight;
+        private int _currentForegroundColor = 15;
+        private int _currentBackgroundColor;
+        private bool _isTextBackgroundTransparent;
+        private long _currentGraphicsX;
+        private long _currentGraphicsY;
+        private string _pendingGraphicsLine = string.Empty;
+
+        public List<string> GraphicsOutput { get; } = [];
+
+        public bool IsScreenActive => _isScreenActive;
+
+        public bool IsScreenOutputActive => _isScreenOutputActive;
+
+        public int ScreenMode => _screenMode;
+
+        public int ScreenWidth => _screenWidth;
+
+        public int ScreenHeight => _screenHeight;
+
+        public int CurrentForegroundColor => _currentForegroundColor;
+
+        public int CurrentBackgroundColor => _currentBackgroundColor;
+
+        public bool IsTextBackgroundTransparent => _isTextBackgroundTransparent;
+
+        public long CurrentGraphicsX => _currentGraphicsX;
+
+        public long CurrentGraphicsY => _currentGraphicsY;
+
+        public string ReadInput(InputRequest request) => string.Empty;
+
+        public string ReadKey() => string.Empty;
+
+        public bool IsKeyDown(string keyText) => false;
+
+        public long GetMouseX() => -1;
+
+        public long GetMouseY() => -1;
+
+        public bool IsMouseButtonDown(int buttonNumber) => false;
+
+        public int ReadMouseButtonPress() => 0;
+
+        public MouseInputEvent ReadMouseEvent() => default;
+
+        public void ActivateScreen(int mode)
+        {
+            _isScreenActive = mode != 0;
+            _isScreenOutputActive = true;
+            _screenMode = mode;
+            (_screenWidth, _screenHeight) = mode switch
+            {
+                0 => (640, 300),
+                1 => (320, 200),
+                _ => (1280, 720)
+            };
+            _pixels.Clear();
+            GraphicsOutput.Clear();
+            _pendingGraphicsLine = string.Empty;
+            _currentForegroundColor = 15;
+            _currentBackgroundColor = 0;
+            _isTextBackgroundTransparent = false;
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
+        }
+
+        public void DeactivateScreen()
+        {
+            _isScreenActive = false;
+            _isScreenOutputActive = false;
+            _screenMode = 0;
+            _screenWidth = 0;
+            _screenHeight = 0;
+            _pixels.Clear();
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
+        }
+
+        public void ClearGraphics()
+        {
+            _pixels.Clear();
+            GraphicsOutput.Clear();
+            _pendingGraphicsLine = string.Empty;
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
+        }
+
+        public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
+        {
+            _currentForegroundColor = foreground;
+            switch (backgroundMode)
+            {
+                case TextBackgroundMode.Color:
+                    _currentBackgroundColor = background;
+                    _isTextBackgroundTransparent = false;
+                    break;
+                case TextBackgroundMode.Transparent:
+                    _isTextBackgroundTransparent = true;
+                    break;
+            }
+        }
+
+        public void WriteGraphicsText(string text, bool newLine)
+        {
+            _pendingGraphicsLine += text;
+            if (!newLine)
+            {
+                return;
+            }
+
+            GraphicsOutput.Add(_pendingGraphicsLine);
+            _pendingGraphicsLine = string.Empty;
+        }
+
+        public void SetPixel(long x, long y, int color)
+        {
+            _pixels[(x, y)] = color;
+            _currentGraphicsX = x;
+            _currentGraphicsY = y;
+        }
+
+        public void SetGraphicsCurrentPosition(long x, long y)
+        {
+            _currentGraphicsX = x;
+            _currentGraphicsY = y;
         }
 
         public int GetPixel(long x, long y) => _pixels.TryGetValue((x, y), out var color) ? color : 0;

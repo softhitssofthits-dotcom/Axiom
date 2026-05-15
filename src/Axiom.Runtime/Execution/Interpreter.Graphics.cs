@@ -81,39 +81,19 @@ public sealed partial class Interpreter
     {
         RequireScreenActive("LINE", statement.Location);
         var color = statement.ColorExpression is null ? _host.CurrentForegroundColor : EvaluateExpression(statement.ColorExpression).AsInteger();
-        var kind = statement.BoxKind switch
-        {
-            BoundLineBoxKind.Border => GraphicsLineKind.Box,
-            BoundLineBoxKind.Filled => GraphicsLineKind.FilledBox,
-            _ => GraphicsLineKind.Normal
-        };
-        var x1 = statement.HasExplicitStartPoint
-            ? EvaluateExpression(statement.X1Expression!).AsLong()
-            : _host.CurrentGraphicsX;
-        var y1 = statement.HasExplicitStartPoint
-            ? EvaluateExpression(statement.Y1Expression!).AsLong()
-            : _host.CurrentGraphicsY;
-        if (statement.HasExplicitStartPoint && statement.IsStartRelative)
-        {
-            x1 += _host.CurrentGraphicsX;
-            y1 += _host.CurrentGraphicsY;
-        }
-
+        var flags = new GraphicsLineInstructionFlags(statement.BoxKind, statement.HasExplicitStartPoint, statement.IsStartRelative, statement.IsEndRelative);
         var x2 = EvaluateExpression(statement.X2Expression).AsLong();
         var y2 = EvaluateExpression(statement.Y2Expression).AsLong();
-        if (statement.IsEndRelative)
-        {
-            x2 += x1;
-            y2 += y1;
-        }
-
-        _host.DrawLine(
-            x1,
-            y1,
+        var line = GraphicsInstructionArguments.CreateLine(
+            _host.CurrentGraphicsX,
+            _host.CurrentGraphicsY,
             x2,
             y2,
             color,
-            kind);
+            flags,
+            statement.HasExplicitStartPoint ? EvaluateExpression(statement.X1Expression!).AsLong() : null,
+            statement.HasExplicitStartPoint ? EvaluateExpression(statement.Y1Expression!).AsLong() : null);
+        _host.DrawLine(line.X1, line.Y1, line.X2, line.Y2, line.Color, line.Kind);
         return ExecutionSignal.None;
     }
 
@@ -125,18 +105,27 @@ public sealed partial class Interpreter
         var startAngle = statement.StartExpression is null ? (double?)null : EvaluateExpression(statement.StartExpression).AsDouble();
         var endAngle = statement.EndExpression is null ? (double?)null : EvaluateExpression(statement.EndExpression).AsDouble();
         var aspect = statement.AspectExpression is null ? 1d : EvaluateExpression(statement.AspectExpression).AsDouble();
-        ValidateCircleArguments(radius, aspect, statement.Location);
-        _host.DrawCircle(
+        var circle = GraphicsInstructionArguments.CreateCircle(
             EvaluateExpression(statement.XExpression).AsLong(),
             EvaluateExpression(statement.YExpression).AsLong(),
             radius,
             color,
             statement.IsRelative,
-            startAngle is < 0 ? -startAngle : startAngle,
-            endAngle is < 0 ? -endAngle : endAngle,
-            aspect,
-            startAngle is < 0,
-            endAngle is < 0);
+            startAngle,
+            endAngle,
+            aspect);
+        ValidateCircleArguments(circle.Radius, circle.StartAngle, circle.EndAngle, circle.Aspect, statement.Location);
+        _host.DrawCircle(
+            circle.X,
+            circle.Y,
+            circle.Radius,
+            circle.Color,
+            circle.RelativeCenter,
+            circle.StartAngle,
+            circle.EndAngle,
+            circle.Aspect,
+            circle.DrawStartRadius,
+            circle.DrawEndRadius);
         return ExecutionSignal.None;
     }
 
@@ -280,14 +269,14 @@ public sealed partial class Interpreter
         throw new RuntimeFailureException();
     }
 
-    private void ValidateCircleArguments(double radius, double aspect, TextLocation location)
+    private void ValidateCircleArguments(double radius, double? startAngle, double? endAngle, double aspect, TextLocation location)
     {
-        if (double.IsFinite(radius) && radius >= 0 && double.IsFinite(aspect) && aspect > 0)
+        if (GraphicsCircleValidation.HasValidArguments(radius, startAngle, endAngle, aspect))
         {
             return;
         }
 
-        ReportBuiltInArgumentError("CIRCLE", "radius/aspect", "радиус должен быть неотрицательным, а aspect должен быть положительным конечным числом.", location);
+        ReportBuiltInArgumentError("CIRCLE", "radius/start/end/aspect", "радиус должен быть неотрицательным конечным числом, start и end должны быть конечными числами, а aspect должен быть положительным конечным числом.", location);
         throw new RuntimeFailureException();
     }
 

@@ -90,6 +90,22 @@ public interface IGraphicsHost
 
     void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
+        switch (kind)
+        {
+            case GraphicsLineKind.Box:
+                DrawBoxCore(x1, y1, x2, y2, color, filled: false);
+                break;
+
+            case GraphicsLineKind.FilledBox:
+                DrawBoxCore(x1, y1, x2, y2, color, filled: true);
+                break;
+
+            default:
+                DrawLineCore(x1, y1, x2, y2, color);
+                break;
+        }
+
+        SetGraphicsCurrentPosition(x2, y2);
     }
 
     void DrawCircle(
@@ -104,5 +120,117 @@ public interface IGraphicsHost
         bool drawStartRadius,
         bool drawEndRadius)
     {
+        if (!GraphicsCircleValidation.HasValidArguments(radius, startAngle, endAngle, aspect))
+        {
+            return;
+        }
+
+        var centerX = x;
+        var centerY = y;
+        if (relativeCenter)
+        {
+            centerX += CurrentGraphicsX;
+            centerY += CurrentGraphicsY;
+        }
+
+        SetGraphicsCurrentPosition(centerX, centerY);
+
+        var radiusX = aspect <= 1d ? radius : radius / aspect;
+        var radiusY = aspect <= 1d ? radius * aspect : radius;
+        if (radiusX <= 0 || radiusY <= 0)
+        {
+            SetPixel(centerX, centerY, color);
+            return;
+        }
+
+        var arcStart = GraphicsEllipseRasterizer.NormalizeAngle(startAngle ?? 0d);
+        var arcEnd = GraphicsEllipseRasterizer.NormalizeAngle(endAngle ?? Math.Tau);
+        var fullCircle = startAngle is null && endAngle is null;
+        var sweep = fullCircle ? Math.Tau : arcEnd - arcStart;
+        if (!fullCircle && sweep <= 0)
+        {
+            sweep += Math.Tau;
+        }
+
+        var startPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
+
+        if (drawStartRadius)
+        {
+            DrawLineCore(centerX, centerY, startPoint.X, startPoint.Y, color);
+        }
+
+        GraphicsEllipseRasterizer.Rasterize(
+            centerX,
+            centerY,
+            radiusX,
+            radiusY,
+            fullCircle,
+            arcStart,
+            sweep,
+            ScreenWidth,
+            ScreenHeight,
+            (x, y) => SetPixel(x, y, color));
+
+        if (drawEndRadius)
+        {
+            var endPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart + sweep);
+            DrawLineCore(centerX, centerY, endPoint.X, endPoint.Y, color);
+        }
+
+        SetGraphicsCurrentPosition(centerX, centerY);
+    }
+
+    private void DrawLineCore(long x1, long y1, long x2, long y2, int color)
+    {
+        var dx = Math.Abs(x2 - x1);
+        var sx = x1 < x2 ? 1 : -1;
+        var dy = -Math.Abs(y2 - y1);
+        var sy = y1 < y2 ? 1 : -1;
+        var error = dx + dy;
+
+        while (true)
+        {
+            SetPixel(x1, y1, color);
+            if (x1 == x2 && y1 == y2)
+            {
+                break;
+            }
+
+            var doubledError = GraphicsLineMath.SaturatingDouble(error);
+            if (doubledError >= dy)
+            {
+                error += dy;
+                x1 += sx;
+            }
+
+            if (doubledError <= dx)
+            {
+                error += dx;
+                y1 += sy;
+            }
+        }
+    }
+
+    private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
+    {
+        var left = Math.Min(x1, x2);
+        var right = Math.Max(x1, x2);
+        var top = Math.Min(y1, y2);
+        var bottom = Math.Max(y1, y2);
+
+        if (filled)
+        {
+            for (var y = top; y <= bottom; y++)
+            {
+                DrawLineCore(left, y, right, y, color);
+            }
+
+            return;
+        }
+
+        DrawLineCore(left, top, right, top, color);
+        DrawLineCore(right, top, right, bottom, color);
+        DrawLineCore(right, bottom, left, bottom, color);
+        DrawLineCore(left, bottom, left, top, color);
     }
 }

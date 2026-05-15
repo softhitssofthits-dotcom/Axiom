@@ -441,6 +441,15 @@ CIRCLE STEP (5, 6), 12, , -PI / 2, PI, 0.5
     }
 
     [Fact]
+    public void Execute_CircleValidationRejectsNonFiniteAngles()
+    {
+        Assert.False(GraphicsCircleValidation.HasValidArguments(12d, double.NaN, null, .5d));
+        Assert.False(GraphicsCircleValidation.HasValidArguments(12d, null, double.PositiveInfinity, .5d));
+        Assert.False(GraphicsCircleValidation.HasValidArguments(12d, double.NegativeInfinity, 0d, .5d));
+        Assert.True(GraphicsCircleValidation.HasValidArguments(12d, -Math.PI / 2, Math.PI, .5d));
+    }
+
+    [Fact]
     public void Execute_PSetAndLineSupportStepAndPointPosition()
     {
         const string text = """

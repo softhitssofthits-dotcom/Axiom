@@ -1080,7 +1080,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 break;
             }
 
-            var doubledError = 2 * error;
+            var doubledError = GraphicsLineMath.SaturatingDouble(error);
             if (doubledError >= dy)
             {
                 error += dy;
@@ -1096,7 +1096,6 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         SetGraphicsCurrentPositionCore(x2, y2);
     }
-
     private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
     {
         var left = Math.Min(x1, x2);
@@ -1129,7 +1128,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         bool drawStartRadius,
         bool drawEndRadius)
     {
-        if (radius < 0 || aspect <= 0 || !double.IsFinite(radius) || !double.IsFinite(aspect))
+        if (!GraphicsCircleValidation.HasValidArguments(radius, startAngle, endAngle, aspect))
         {
             return;
         }
@@ -1151,8 +1150,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        var arcStart = NormalizeAngle(startAngle ?? 0d);
-        var arcEnd = NormalizeAngle(endAngle ?? Math.Tau);
+        var arcStart = GraphicsEllipseRasterizer.NormalizeAngle(startAngle ?? 0d);
+        var arcEnd = GraphicsEllipseRasterizer.NormalizeAngle(endAngle ?? Math.Tau);
         var fullCircle = startAngle is null && endAngle is null;
         var sweep = fullCircle ? Math.Tau : arcEnd - arcStart;
         if (!fullCircle && sweep <= 0)
@@ -1160,46 +1159,32 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             sweep += Math.Tau;
         }
 
-        var steps = Math.Max(12, (int)Math.Ceiling(Math.Tau * Math.Max(radiusX, radiusY) * (fullCircle ? 1d : sweep / Math.Tau)));
-        var previous = GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
+        var startPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
 
         if (drawStartRadius)
         {
-            DrawLineCore(centerX, centerY, previous.X, previous.Y, color);
+            DrawLineCore(centerX, centerY, startPoint.X, startPoint.Y, color);
         }
 
-        for (var index = 0; index <= steps; index++)
-        {
-            var angle = arcStart + (sweep * index / steps);
-            var point = GetEllipsePoint(centerX, centerY, radiusX, radiusY, angle);
-            DrawLineCore(previous.X, previous.Y, point.X, point.Y, color);
-            previous = point;
-        }
+        GraphicsEllipseRasterizer.Rasterize(
+            centerX,
+            centerY,
+            radiusX,
+            radiusY,
+            fullCircle,
+            arcStart,
+            sweep,
+            _screenWidth,
+            _screenHeight,
+            (x, y) => SetPixelCore(x, y, color));
 
         if (drawEndRadius)
         {
-            DrawLineCore(centerX, centerY, previous.X, previous.Y, color);
+            var endPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart + sweep);
+            DrawLineCore(centerX, centerY, endPoint.X, endPoint.Y, color);
         }
 
         SetGraphicsCurrentPositionCore(centerX, centerY);
-    }
-
-    private static double NormalizeAngle(double angle)
-    {
-        if (!double.IsFinite(angle))
-        {
-            return 0d;
-        }
-
-        var normalized = angle % Math.Tau;
-        return normalized < 0 ? normalized + Math.Tau : normalized;
-    }
-
-    private static (long X, long Y) GetEllipsePoint(long centerX, long centerY, double radiusX, double radiusY, double angle)
-    {
-        return (
-            centerX + (long)Math.Round(Math.Cos(angle) * radiusX),
-            centerY - (long)Math.Round(Math.Sin(angle) * radiusY));
     }
 
     private void RefreshGraphicsVisuals()

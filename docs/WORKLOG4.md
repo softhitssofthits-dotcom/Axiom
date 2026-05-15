@@ -974,3 +974,190 @@
 
 Следующий точный шаг:
 - новых хвостов по `DRAW` не открывать без нового подтверждённого сценария; оставшиеся падающие проверки по-прежнему относятся к XAML-слою IDE, а не к графическому договору `DRAW`.
+
+## Session 859 - 2026-05-15 10:35 - базовый fallback DrawLine и DrawCircle добавлен в IGraphicsHost
+
+Что сделано:
+- перечитаны `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md`, после чего задача локализована в общем host-договоре графики;
+- подтверждено, что в `IGraphicsHost` уже был fallback только для `Paint`, тогда как default-методы `DrawLine` и `DrawCircle` оставались пустыми и требовали специального host-а даже для базовых графических инструкций;
+- в `src/Axiom.Runtime/Host/IGraphicsHost.cs` добавлены стандартные реализации `DrawLine` и `DrawCircle`, работающие через общие внутренние алгоритмы рисования и `SetPixel`/`SetGraphicsCurrentPosition`;
+- та же fallback-ветка покрывает `GraphicsLineKind.Normal`, `Box` и `FilledBox`, а также дуги и эллипсы `CIRCLE` с `relativeCenter`, `startAngle`, `endAngle`, `aspect`, `drawStartRadius` и `drawEndRadius`;
+- в `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` добавлены регрессионные проверки, которые запускают `LINE` и `CIRCLE` через минимальный host без собственной реализации этих методов и подтверждают, что графические инструкции теперь работают через общий default-host путь.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawLineFallbackWorksWithoutSpecialGraphicsHost|FullyQualifiedName~DrawCircleFallbackWorksWithoutSpecialGraphicsHost|FullyQualifiedName~GraphicsStepAndPointState"` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests"` — успешно.
+
+Решение:
+- считать базовый графический fallback host-слоя выровненным: простые и тестовые реализации `IGraphicsHost` больше не обязаны дублировать алгоритмы `LINE` и `CIRCLE`, если им достаточно `SetPixel`/`GetPixel`;
+- пользовательский договор языка не изменился: это инфраструктурное усиление существующего графического поведения, а не новый оператор или новая форма языка.
+
+Следующий точный шаг:
+- вернуться к уже выделенному отдельному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`, где остаются несвязанные XAML-ожидания;
+- новых специальных графических хвостов не открывать без отдельного подтверждённого сценария.
+
+## Session 860 - 2026-05-15 11:06 - DrawLineCore защищён от переполнения при удвоении error
+
+Что сделано:
+- проверены оба активных пути алгоритма линии Брезенхэма: `ProgramConsoleService.DrawLineCore` и общий fallback `IGraphicsHost.DrawLineCore`; в обоих местах подтверждён риск переполнения `long` на выражении `2 * error`;
+- вместо локальной дублирующей защиты введён общий helper `GraphicsLineMath.SaturatingDouble(long)` в `src/Axiom.Runtime/Execution/GraphicsLineMath.cs`;
+- `ProgramConsoleService.DrawLineCore` и default-реализация `IGraphicsHost.DrawLineCore` переведены на saturating-удвоение, которое:
+  - возвращает `long.MaxValue`, если обычное удвоение переполнило бы верхнюю границу;
+  - возвращает `long.MinValue`, если обычное удвоение переполнило бы нижнюю границу;
+  - иначе возвращает обычное `value * 2`;
+- адресные тесты обновлены так, чтобы проверять именно новую защиту без искусственного многомиллиардного прогона линии:
+  - в `Axiom.Execution.Tests` подтверждён helper и сохранён fallback-путь `LINE`/`CIRCLE` через минимальный host;
+  - в `ProgramConsoleServiceTests` добавлена прямая проверка saturating-поведения helper и повторно подтверждён весь профильный набор `ProgramConsoleService`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsLineMath.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawLineFallbackSurvivesErrorDoublingOverflow|FullyQualifiedName~DrawLineFallbackWorksWithoutSpecialGraphicsHost|FullyQualifiedName~DrawCircleFallbackWorksWithoutSpecialGraphicsHost"` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests"` — успешно.
+
+Решение:
+- считать переполнение на `2 * error` закрытым одинаково для IDE-host и для общего fallback-графического host-слоя;
+- не переводить `error` на `double`, потому что saturating-арифметика на `long` сохраняет точный дискретный алгоритм линии и не меняет существующее поведение на обычных координатах.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- графический слой дальше трогать только при новом подтверждённом сценарии.
+
+## Session 861 - 2026-05-15 11:18 - DrawCircleCore переведён на прямой rasterizer окружности и эллипса
+
+Что сделано:
+- проверена текущая реализация `ProgramConsoleService.DrawCircleCore` и подтверждено, что она строила окружность и эллипс через цепочку коротких отрезков с числом шагов, растущим пропорционально радиусу;
+- для сохранения одинакового поведения IDE-host и общего fallback-контракта вынесен общий rasterizer `GraphicsEllipseRasterizer` в `src/Axiom.Runtime/Execution/GraphicsEllipseRasterizer.cs`;
+- новый rasterizer строит окружность и эллипс напрямую по пикселям через midpoint-style алгоритм по симметричным точкам вместо полилинии из множества `DrawLineCore`-сегментов;
+- `ProgramConsoleService.DrawCircleCore` и default-реализация `IGraphicsHost.DrawCircle` переведены на общий rasterizer;
+- логика дуг, `STEP`, `aspect`, `drawStartRadius` и `drawEndRadius` сохранена: радиальные линии по-прежнему рисуются через `DrawLineCore`, а стартовая и конечная точки дуги вычисляются тем же геометрическим договором.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsEllipseRasterizer.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawCircleFallbackWorksWithoutSpecialGraphicsHost"` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests"` — успешно.
+
+Решение:
+- считать графический договор `CIRCLE` неизменным, а замену полилинейного построения на прямой rasterizer — внутренней оптимизацией реализации;
+- не дублировать circle/ellipse-алгоритм между IDE и fallback-host, чтобы дальнейшие правки точности и производительности не расходились по двум разным копиям кода.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- новых графических оптимизаций не открывать без отдельного подтверждённого сценария или профиля.
+
+## Session 862 - 2026-05-15 11:30 - лимит итераций CIRCLE привязан к экрану и длине дуги
+
+Что сделано:
+- в общий `GraphicsEllipseRasterizer` добавлен динамический лимит итераций для больших окружностей и эллипсов, чтобы построение не уходило в лишние проходы на радиусах, многократно превышающих экран;
+- лимит теперь вычисляется через оценку периметра эллипса, долю дуги `sweep` и верхнюю границу по периметру экрана, поэтому полный круг и дуга используют один и тот же общий предохранитель без возврата к старому шаговому построению;
+- ограничение применено прямо в обоих циклах rasterizer, а `ProgramConsoleService.DrawCircleCore` и fallback `IGraphicsHost.DrawCircle` переведены на новую сигнатуру общего вызова с размерами экрана;
+- в `ProgramConsoleServiceTests` добавлена проверка `DrawCircle_IterationLimitTracksScreenPerimeter`, подтверждающая, что для очень большого радиуса лимит упирается в экранный периметр, а не растёт вместе с радиусом.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsEllipseRasterizer.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests"` — успешно;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawCircleFallbackWorksWithoutSpecialGraphicsHost"` — успешно.
+
+Решение:
+- считать этот шаг внутренней оптимизацией rasterizer-а без изменения пользовательского договора `CIRCLE`;
+- держать ограничение итераций общим для IDE-host и fallback-host, чтобы оба графических пути не расходились по производительности и предельным случаям.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- новые графические правки открывать только при появлении отдельного подтверждённого сценария.
+
+## Session 863 - 2026-05-15 12:05 - CIRCLE проверяет конечность start и end
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и продолжен именно текущий графический шаг, а не следующий общий хвост плана;
+- в `src/Axiom.Runtime/Execution/GraphicsCircleValidation.cs` добавлен общий договор аргументов `CIRCLE`: `radius` должен быть конечным и неотрицательным, `aspect` — конечным и положительным, `start` и `end` при наличии тоже должны быть конечными числами;
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` переведены на новый валидатор и теперь сообщают `MB3007` не только для `radius/aspect`, но и для нечисловых или бесконечных `start/end`;
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs` и `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs` получили ту же защиту на host-уровне: невалидный внутренний вызов `DrawCircle(...)` теперь безопасно игнорируется вместо попадания в геометрию с `NaN` и бесконечностями;
+- добавлены и подтверждены адресные тесты в `tests/Axiom.Runtime.Tests`, `tests/Axiom.Execution.Tests` и `tests/Axiom.Ide.Tests`;
+- повреждённые строковые фрагменты в `Interpreter.Graphics.cs` и `BytecodeVm.Graphics.cs`, появившиеся при неудачной промежуточной правке, вычищены: итоговый diff по этим файлам содержит только нужное расширение валидации `CIRCLE`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsCircleValidation.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~CircleValidationRejectsNonFiniteAngles|FullyQualifiedName~CircleSupportsStepArcAndAspect|FullyQualifiedName~CompiledCircleValidationRejectsNonFiniteAngles|FullyQualifiedName~CompiledCircleSupportsStepArcAndAspect"` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_IgnoresNonFiniteAngles|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_RasterizesArcAndAspect|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius"` — успешно;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawCircleFallbackWorksWithoutSpecialGraphicsHost|FullyQualifiedName~DrawCircleFallbackIgnoresNonFiniteAngles"` — успешно.
+
+Решение:
+- считать это внутренним усилением проверок `CIRCLE`, а не изменением пользовательского синтаксиса или новой формы языка;
+- отдельный runnable negative sample для `NaN`/`Infinity` не добавлять, пока такой сценарий не достижим честным пользовательским кодом Axiom и не подтверждён отдельной языковой возможностью.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- графический слой дальше не трогать без нового подтверждённого сценария.
+
+## Session 864 - 2026-05-15 12:16 - разбор LINE/CIRCLE объединён, PAINT переведён на scanline flood fill
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и затем локализованы два графических хвоста: дублирующий разбор аргументов `LINE`/`CIRCLE` в интерпретаторе и `BytecodeVm`, а также внутренний алгоритм `GraphicsFloodFill`;
+- добавлен общий helper `src/Axiom.Runtime/Execution/GraphicsInstructionArguments.cs`, который:
+  - декодирует флаги байткодных инструкций `LINE` и `CIRCLE`;
+  - нормализует координаты `LINE` с учётом `STEP`, относительного начала и относительного конца;
+  - нормализует углы `CIRCLE` и признаки `drawStartRadius`/`drawEndRadius`;
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` переведён на новый helper и больше не держит отдельный локальный разбор тех же флагов и координат;
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs` переведён на тот же helper, поэтому интерпретатор и `BytecodeVm` теперь собирают одинаковые аргументы `LINE` и `CIRCLE` одним и тем же кодом;
+- `src/Axiom.Runtime/Execution/GraphicsFloodFill.cs` переведён с покомпонентного обхода через `Stack + HashSet visited` на итеративный scanline flood fill по горизонтальным сегментам, что уменьшает лишние проверки и память на больших заливках;
+- в `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлена адресная проверка `Paint_FillsLargeRectangleInteriorWithIterativeScanlinePath()` для крупной прямоугольной области.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsInstructionArguments.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/GraphicsFloodFill.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_CircleValidationRejectsNonFiniteAngles|FullyQualifiedName~Execute_CompiledCircleValidationRejectsNonFiniteAngles|FullyQualifiedName~Execute_PaintFillsBoundedRegion|FullyQualifiedName~Execute_CompiledPaintFillsBoundedRegion|FullyQualifiedName~Execute_PaintPatternAndBackgroundPatternRepaintRegion|FullyQualifiedName~Execute_CompiledPaintPatternAndBackgroundPatternRepaintRegion"` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests.Paint_FillsLargeRectangleInteriorWithIterativeScanlinePath|FullyQualifiedName~ProgramConsoleServiceTests.Paint_FillsRegionWithoutRecoloringBorder|FullyQualifiedName~ProgramConsoleServiceTests.Paint_PatternFillAndBackgroundPatternRepaintRegion|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_RasterizesArcAndAspect|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius|FullyQualifiedName~ProgramConsoleServiceTests.DrawCircle_IgnoresNonFiniteAngles"` — успешно.
+
+Решение:
+- считать это внутренней оптимизацией и устранением дублирования, а не новым пользовательским поведением языка;
+- сохранить единый путь разбора графических аргументов в runtime-слое, чтобы дальнейшие правки `LINE` и `CIRCLE` не расходились между интерпретатором и `BytecodeVm`.
+
+Следующий точный шаг:
+- вернуться к уже выделенному несвязанному хвосту `tests\Axiom.Ide.Tests\EditorFeatureTests.cs`;
+- графический слой дальше не трогать без нового подтверждённого сценария.
