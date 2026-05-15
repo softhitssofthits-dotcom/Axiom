@@ -945,3 +945,32 @@
 
 Следующий точный шаг:
 - новых хвостов по `DRAW` больше не открывать без отдельного подтверждённого сценария; оставшиеся несвязанные падения по-прежнему локализованы в XAML-тестах IDE.
+
+## Session 858 - 2026-05-15 10:20 - синхронизирована нормализация цветов DRAW с общим графическим договором
+
+Что сделано:
+- проведён точечный аудит нормализации цветов `DRAW` против активного графического договора проекта и подтверждено расхождение: `GraphicsDrawExecutor.NormalizeColor` использовал signed modulo, тогда как manual, `ScreenFramebuffer.NormalizeColorIndex` и `GraphicsFloodFill.NormalizeColor` уже работали по правилу `ABS(color) MOD 256`;
+- принято единое проектное решение в пользу общего графического договора: `DRAW` не должен отличаться от `LINE`, `PAINT`, framebuffer и flood-fill по приведению цветовых индексов;
+- в `GraphicsDrawExecutor.NormalizeColor(long value)` signed modulo заменён на нормализацию `Math.Abs(value) % 256`, поэтому `-1 -> 1`, `-2 -> 2`, `-255 -> 255`;
+- обновлены interpreter- и `BytecodeVm`-тесты `DRAW`: теперь `DRAW "C-1 R1"` использует цвет `1`, а `DRAW "P-1,-2"` создаёт `fill=1`, `border=2`; сценарии `DRAW "P4"` и `DRAW "P4,15"` сохранены рабочими;
+- `docs/SPECIFICATION3.md` и `docs/manual/graphics-primitives.html` уточнены так, чтобы `DRAW` явно следовал общему правилу `ABS(color) MOD 256`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsDrawExecutor.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --no-restore` — успешно;
+- `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` — успешно;
+- `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` — по-прежнему падают только два несвязанных XAML-теста `MainWindowXaml_UsesFocusedOutputContextMenu` и `MainWindowXaml_WiresEditorContextMenuAndFindCommands`.
+
+Решение:
+- считать нормализацию цветов `DRAW` синхронизированной с общим графическим договором проекта;
+- не открывать отдельное исключение для `DRAW C/P` и не заводить скрытую несовместимость с `LINE` и `PAINT`.
+
+Следующий точный шаг:
+- новых хвостов по `DRAW` не открывать без нового подтверждённого сценария; оставшиеся падающие проверки по-прежнему относятся к XAML-слою IDE, а не к графическому договору `DRAW`.

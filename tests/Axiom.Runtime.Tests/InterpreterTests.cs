@@ -643,8 +643,8 @@ DRAW "P-1,-2"
         Assert.Equal(3, host.PaintRequests.Count);
         Assert.Contains(host.PaintRequests, request => request.X == 10 && request.Y == 10 && request.SolidFillColor == 4 && request.BorderColor == 4);
         Assert.Contains(host.PaintRequests, request => request.X == 12 && request.Y == 12 && request.SolidFillColor == 4 && request.BorderColor == 15);
-        Assert.Contains(host.PaintRequests, request => request.X == 14 && request.Y == 14 && request.SolidFillColor == 255 && request.BorderColor == 254);
-        Assert.Contains(host.Lines, line => line is { X1: 12, Y1: 12, X2: 13, Y2: 12, Color: 255 });
+        Assert.Contains(host.PaintRequests, request => request.X == 14 && request.Y == 14 && request.SolidFillColor == 1 && request.BorderColor == 2);
+        Assert.Contains(host.Lines, line => line is { X1: 12, Y1: 12, X2: 13, Y2: 12, Color: 1 });
     }
 
     [Fact]

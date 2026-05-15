@@ -189,12 +189,6 @@ internal static class GraphicsDrawExecutor
     private static int NormalizeColor(long value, int position)
     {
         _ = position;
-        var normalized = value % 256;
-        if (normalized < 0)
-        {
-            normalized += 256;
-        }
-
-        return (int)normalized;
+        return (int)(Math.Abs(value) % 256);
     }
 }
