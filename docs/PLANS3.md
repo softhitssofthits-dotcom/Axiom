@@ -5176,7 +5176,7 @@
 
 Сделано:
 - `DRAW` проведён через `lexer`, `syntax`, `parser`, `binder`, `bound node`, lowering, `BytecodeVm` opcode и общий runtime-исполнитель DRAW-строки;
-- строковые формы `commands$` и `STR$(...)` доведены до рабочего состояния, потому что они входят в обязательный пользовательский договор `DRAW`;
+- строковые формы `DRAW` доведены до рабочего состояния через обычный синтаксис Axiom: строковые переменные без суффикса `$` и встроенную функцию `STR(...)` без QuickBASIC-алиаса;
 - добавлены parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-уровни проверок для `DRAW`;
 - добавлены runnable sample в `samples/operators/draw/` и раздел `DRAW` в `docs/manual/graphics-primitives.html`.
 
@@ -5194,3 +5194,21 @@
 - повторить `dotnet test tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --no-restore` и `dotnet test tests\Axiom.Execution.Tests\Axiom.Execution.Tests.csproj --no-restore` после синхронизации новых `DRAW`-страниц и sample, отделив оставшиеся несвязанные падения от самого `DRAW`;
 - затем выполнить `node --check docs\manual\scripts\manual.js` и `node --check docs\manual\scripts\search-index.js`;
 - после этого вручную открыть новые `samples/operators/draw/` в `Axiom.Ide` и зафиксировать итог в `docs/WORKLOG4.md` как следующий приёмочный хвост `DRAW`, а не переходить к другому оператору.
+
+## Обновление плана - 2026-05-15 - регрессии DRAW после документного прохода устранены
+
+Сделано:
+- из активных примеров и manual убраны ложные QuickBASIC-формы с суффиксом `$`; пользовательский материал по `DRAW` снова показывает только синтаксис Axiom с `STR(...)` и обычными строковыми переменными;
+- `docs/manual/graphics-primitives.html` и `docs/manual/scripts/search-index.js` восстановлены после порчи кодировки и повторно синхронизированы с `DRAW`;
+- в `Axiom.Ide.Tests` исправлен графический host-тест `ProgramConsoleServiceTests`, который раньше давал ложное ожидание на незамкнутой заливке;
+- в `Axiom.Execution.Tests` исправлен audit-provider для `samples/operators/paint/` и `samples/operators/draw/`, поэтому общий positive-набор снова корректно запускает графические acceptance-sample;
+- `dotnet build`, `Axiom.Parsing.Tests`, `Axiom.Semantics.Tests`, `Axiom.Runtime.Tests`, `Axiom.Execution.Tests` и оба `node --check` прошли успешно.
+
+Решение:
+- считать хвост по `DRAW` после порчи manual и ложных `$`-примеров закрытым;
+- не возвращаться к обсуждению `commands$` или `STR$`: это не часть языка Axiom и не должно снова попадать в docs, sample или тесты;
+- оставшиеся падения `Axiom.Ide.Tests` локализованы до двух несвязанных XAML-проверок и больше не маскируют состояние графического договора `DRAW`.
+
+Следующий точный шаг:
+- отдельно разобрать `tests\Axiom.Ide.Tests\EditorFeatureTests.cs` и синхронизировать ожидания с текущим `MainWindow.xaml`;
+- после этого при необходимости выполнить ручную приёмку `samples/operators/draw/` в `Axiom.Ide` и только затем считать хвост по `DRAW` окончательно исчерпанным.

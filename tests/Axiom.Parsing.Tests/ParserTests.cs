@@ -431,7 +431,7 @@ public sealed class ParserTests
     [Fact]
     public void Parse_DrawVariableStatement()
     {
-        var program = ParseProgram("DRAW commands$", out var diagnostics);
+        var program = ParseProgram("DRAW commands", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var draw = AssertGlobalStatement<DrawStatementSyntax>(program);
@@ -441,7 +441,7 @@ public sealed class ParserTests
     [Fact]
     public void Parse_DrawConcatenatedExpressionStatement()
     {
-        var program = ParseProgram("DRAW \"C\" + STR$(color) + \"R20\"", out var diagnostics);
+        var program = ParseProgram("DRAW \"C\" + STR(penColor) + \"R20\"", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var draw = AssertGlobalStatement<DrawStatementSyntax>(program);

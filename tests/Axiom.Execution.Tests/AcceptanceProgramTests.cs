@@ -2229,7 +2229,9 @@ public sealed class AcceptanceProgramTests
             return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada", "7"]);
         }
 
-        if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase))
+        if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/paint/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/draw/", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
         }

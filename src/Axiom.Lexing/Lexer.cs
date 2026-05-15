@@ -567,7 +567,7 @@ public sealed class Lexer
 
     private static bool IsIdentifierStart(char c) => char.IsLetter(c) || c == '_';
 
-    private static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
+    private static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_';
 
     private static bool IsHexDigit(char c) =>
         (c >= '0' && c <= '9')

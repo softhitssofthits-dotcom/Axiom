@@ -1,9 +1,9 @@
 ﻿SCREEN 1
-DIM color AS INTEGER = 12
+DIM penColor AS INTEGER = 12
 DIM angle AS INTEGER = 90
-DIM commands$ AS STRING = "C" + STR$(color) + " TA" + STR$(angle) + " U60 R20"
+DIM commands AS STRING = "C" + STR(penColor) + " TA" + STR(angle) + " U60 R20"
 PSET (140, 120)
-DRAW commands$
+DRAW commands
 LOCATE 1, 1
 PRINT "DRAW dynamic string sample finished"
 SLEEP

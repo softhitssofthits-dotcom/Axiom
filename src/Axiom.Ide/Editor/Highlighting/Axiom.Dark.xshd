@@ -293,7 +293,6 @@
             <Word>STARTOFYEAR</Word>
             <Word>STARTSWITH</Word>
             <Word>STR</Word>
-            <Word>STR$</Word>
             <Word>STRING</Word>
             <Word>SUBSTRCOUNT</Word>
             <Word>TAN</Word>
