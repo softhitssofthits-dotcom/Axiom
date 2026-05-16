@@ -713,6 +713,10 @@ public sealed class BytecodeModuleValidator
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     break;
 
+                case Opcode.View:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    break;
+
                 case Opcode.PSet:
                 case Opcode.Line:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
@@ -1237,6 +1241,54 @@ public sealed class BytecodeModuleValidator
             {
                 var modeType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, modeType, TypeSymbol.Integer, "режим SCREEN");
+                break;
+            }
+
+            case Opcode.View:
+            {
+                var flags = instruction.GetOperand(0);
+                var valueCount = instruction.GetOperand(1);
+                var hasCoordinates = (flags & 2) != 0;
+                var hasFillColor = (flags & 4) != 0;
+                var hasBorderColor = (flags & 8) != 0;
+                var expectedValueCount = hasCoordinates
+                    ? 4 + (hasFillColor ? 1 : 0) + (hasBorderColor ? 1 : 0)
+                    : 0;
+                if (valueCount != expectedValueCount)
+                {
+                    Report(
+                        "BC4124",
+                        $"Инструкция View в процедуре '{routine.Name}' ожидает {expectedValueCount} значений, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                    break;
+                }
+
+                if (hasBorderColor)
+                {
+                    var borderType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, borderType, TypeSymbol.Integer, "цвет рамки VIEW");
+                }
+
+                if (hasFillColor)
+                {
+                    var fillType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, fillType, TypeSymbol.Integer, "цвет заливки VIEW");
+                }
+
+                if (hasCoordinates)
+                {
+                    var bottomType = Pop();
+                    var rightType = Pop();
+                    var topType = Pop();
+                    var leftType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, leftType, TypeSymbol.Long, "левая координата VIEW");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, topType, TypeSymbol.Long, "верхняя координата VIEW");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, rightType, TypeSymbol.Long, "правая координата VIEW");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, TypeSymbol.Long, "нижняя координата VIEW");
+                }
+
                 break;
             }
 

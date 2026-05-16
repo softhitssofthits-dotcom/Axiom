@@ -38,6 +38,7 @@
                     </thead>
                     <tbody>
                         <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Оператор, выбирающий текстовый или графический режим и задающий размер экранного окна.</td></tr>
+                        <tr><td><a href="view.html"><code>VIEW</code></a></td><td>Оператор, задающий физический viewport для графических примитивов и функции <code>POINT</code>.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>CLS</code></a></td><td>Оператор, очищающий экран и возвращающий текстовый курсор в начало.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>COLOR</code></a></td><td>Оператор, задающий цвет символов и, при необходимости, цвет фона.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>LOCATE</code></a></td><td>Оператор, помещающий текстовый курсор в указанную строку и столбец.</td></tr>
@@ -79,6 +80,7 @@
             <section class="article-section">
                 <h2>Координаты на экране</h2>
                 <p>На графическом экране положение точки задаётся двумя числами: <code>x</code> и <code>y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Если ширина экрана равна <code>w</code>, последняя видимая координата по горизонтали равна <code>w - 1</code>; если высота равна <code>h</code>, последняя видимая координата по вертикали равна <code>h - 1</code>.</p>
+                <p>Оператор <code>VIEW</code> может ограничить работу графики прямоугольной областью. Форма <code>VIEW SCREEN</code> оставляет координаты абсолютными, но клиппирует рисование по границам прямоугольника. Форма <code>VIEW</code> без слова <code>SCREEN</code> переводит графические примитивы и <code>POINT(x, y)</code> в локальные координаты viewport.</p>
                 <p>Текст на экране располагается иначе. Оператор <code>LOCATE</code> работает со строками и столбцами, которые считаются с единицы. Команда <code>LOCATE 1, 1</code> помещает текстовый курсор в начало первой строки.</p>
             </section>
 
@@ -133,6 +135,7 @@ SCREEN 0</code></pre>
                 <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как ручные проверки экрана, текста, мыши и операторов рисования.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: сведения о режиме</a></li>
+                    <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
                     <li><a href="../../samples/graphics/text/print_locate_color.axm">Текст, позиция курсора и цвета</a></li>
                     <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Операторы рисования: PSET, LINE и CIRCLE</a></li>
                     <li><a href="../../samples/graphics/mouse/mouse_events.axm">Мышь в графическом окне</a></li>
@@ -144,6 +147,7 @@ SCREEN 0</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
+                    <a href="view.html">Оператор VIEW</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>

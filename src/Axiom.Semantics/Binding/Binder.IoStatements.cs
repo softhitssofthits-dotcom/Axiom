@@ -61,6 +61,32 @@ public sealed partial class Binder
         return new BoundScreenStatement(GetLocation(statement), BindExpression(statement.ModeExpression, TypeSymbol.Integer));
     }
 
+    private BoundStatement BindViewStatement(ViewStatementSyntax statement)
+    {
+        if (statement.IsReset)
+        {
+            return new BoundViewStatement(
+                GetLocation(statement),
+                useScreenCoordinates: false,
+                leftExpression: null,
+                topExpression: null,
+                rightExpression: null,
+                bottomExpression: null,
+                fillColorExpression: null,
+                borderColorExpression: null);
+        }
+
+        return new BoundViewStatement(
+            GetLocation(statement),
+            statement.ScreenKeyword is not null,
+            BindExpression(statement.TopLeftPoint!.XExpression, TypeSymbol.Long),
+            BindExpression(statement.TopLeftPoint.YExpression, TypeSymbol.Long),
+            BindExpression(statement.BottomRightPoint!.XExpression, TypeSymbol.Long),
+            BindExpression(statement.BottomRightPoint.YExpression, TypeSymbol.Long),
+            statement.FillColorExpression is null ? null : BindExpression(statement.FillColorExpression, TypeSymbol.Integer),
+            statement.BorderColorExpression is null ? null : BindExpression(statement.BorderColorExpression, TypeSymbol.Integer));
+    }
+
     private BoundStatement BindColorStatement(ColorStatementSyntax statement)
     {
         var backgroundMode = statement switch

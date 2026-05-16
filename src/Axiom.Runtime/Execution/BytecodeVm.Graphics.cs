@@ -28,6 +28,33 @@ public sealed partial class BytecodeVm
         _host.ActivateScreen(mode);
     }
 
+    private void ExecuteViewInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("VIEW", location);
+        var flags = instruction.GetOperand(0);
+        var hasCoordinates = (flags & 2) != 0;
+        var hasFillColor = (flags & 4) != 0;
+        var hasBorderColor = (flags & 8) != 0;
+        if (!hasCoordinates)
+        {
+            _host.ResetViewport();
+            return;
+        }
+
+        int? borderColor = hasBorderColor ? PopValue(frame, instructionIndex).AsInteger() : null;
+        int? fillColor = hasFillColor ? PopValue(frame, instructionIndex).AsInteger() : null;
+        var bottom = PopValue(frame, instructionIndex).AsLong();
+        var right = PopValue(frame, instructionIndex).AsLong();
+        var top = PopValue(frame, instructionIndex).AsLong();
+        var left = PopValue(frame, instructionIndex).AsLong();
+        if (!TryApplyViewport(left, top, right, bottom, fillColor, borderColor, (flags & 1) != 0))
+        {
+            ReportInvalidViewport("VIEW", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private void ExecuteClsInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         if (_host.IsScreenOutputActive)
@@ -327,6 +354,37 @@ public sealed partial class BytecodeVm
             "x/y",
             $"координаты должны оставаться в диапазоне {GraphicsCoordinateValidation.MinCoordinate}..{GraphicsCoordinateValidation.MaxCoordinate}.",
             location);
+    }
+
+    private void ReportInvalidViewport(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            "координаты viewport должны задавать прямоугольник внутри текущего SCREEN.",
+            location);
+    }
+
+    private bool TryApplyViewport(
+        long left,
+        long top,
+        long right,
+        long bottom,
+        int? fillColor,
+        int? borderColor,
+        bool useScreenCoordinates)
+    {
+        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(left, top, right, bottom))
+        {
+            return false;
+        }
+
+        if (left > right || top > bottom)
+        {
+            return false;
+        }
+
+        return _host.SetViewport(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
     }
 
     private RuntimeValue EvaluatePointBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)

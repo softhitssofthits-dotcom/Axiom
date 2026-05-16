@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор VIEW</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="view">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор VIEW</span>
+            </nav>
+            <p class="eyebrow">Оператор</p>
+            <h1 class="page-title">VIEW</h1>
+            <p class="lead"><code>VIEW</code> задаёт прямоугольную область графического экрана, внутри которой работают графические примитивы, <code>PAINT</code>, <code>DRAW</code> и функция <code>POINT</code>. Это удобно, когда программе нужно рисовать в ограниченной части экрана и при необходимости перейти к локальной системе координат.</p>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code>VIEW
+VIEW SCREEN (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;заливка&gt;][, &lt;рамка&gt;]]
+VIEW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;заливка&gt;][, &lt;рамка&gt;]]</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Части синтаксиса</h2>
+                <table>
+                    <thead>
+                        <tr><th>Часть</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>VIEW</code> без аргументов</td><td>Сбрасывает viewport и возвращает графические координаты к полному экрану.</td></tr>
+                        <tr><td><code>SCREEN</code></td><td>Оставляет координаты абсолютными экранными координатами.</td></tr>
+                        <tr><td><code>&lt;left&gt;, &lt;top&gt;, &lt;right&gt;, &lt;bottom&gt;</code></td><td>Координаты углов viewport. Прямоугольник включителен: обе границы входят в область.</td></tr>
+                        <tr><td><code>&lt;заливка&gt;</code></td><td>Необязательный цвет внутренней области viewport. Если аргумент опущен, существующие пиксели внутри области не меняются.</td></tr>
+                        <tr><td><code>&lt;рамка&gt;</code></td><td>Необязательный цвет рамки viewport. Если аргумент опущен, рамка не рисуется.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <p><code>VIEW</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Без активного графического режима оператор сообщает ошибку времени выполнения <code>MB3010</code>.</p>
+                <p>Форма <code>VIEW SCREEN</code> задаёт физический прямоугольник в абсолютных координатах экрана. После неё <code>PSET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и <code>POINT(x, y)</code> продолжают принимать абсолютные координаты, но их вывод ограничивается границами viewport.</p>
+                <p>Форма <code>VIEW</code> без слова <code>SCREEN</code> задаёт viewport относительно текущего viewport. После неё графические координаты становятся локальными: точка <code>(0, 0)</code> означает левый верхний угол нового viewport, а <code>POINT(number)</code> возвращает текущую графическую позицию в той же локальной системе координат.</p>
+                <p>При смене viewport Axiom сохраняет физическую точку текущей графической позиции и просто пересчитывает её в новую систему координат. После <code>VIEW</code> без аргументов текущая графическая позиция снова читается в абсолютных координатах экрана.</p>
+                <p><code>VIEW</code> не меняет поведение <code>LOCATE</code> и текстового курсора. Текстовые операторы продолжают работать по общему экранному режиму <code>SCREEN</code>.</p>
+                <p>Если прямоугольник выходит за пределы активного экрана или если левая граница больше правой либо верхняя больше нижней, выполнение сообщает <code>MB3007</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Примеры</h2>
+<pre><code>SCREEN 1
+VIEW SCREEN (10, 10)-(100, 80), 3, 9
+PSET (11, 11), 6
+
+VIEW (5, 5)-(20, 20), 2, 8
+PSET (0, 0), 7
+PRINT POINT(0, 0)
+PRINT POINT(0), POINT(1)
+
+VIEW</code></pre>
+                <p>Сначала программа создаёт абсолютный viewport с заливкой и рамкой. Затем она открывает вложенный относительный viewport, рисует в его локальной точке <code>(0, 0)</code>, читает локальный цвет и текущую локальную позицию, а после <code>VIEW</code> без аргументов возвращается к полному экрану.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3007</code>: прямоугольник viewport некорректен или выходит за пределы активного экрана.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочная программа</h2>
+                <p>Готовый пример для ручной проверки абсолютного и относительного viewport находится в <code>samples/operators/view/screen_and_relative.axm</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="graphics.html">Графика и экран</a>
+                    <a href="screen.html">Оператор SCREEN</a>
+                    <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="screen-functions.html">Функции состояния SCREEN</a>
+                </div>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1280,3 +1280,54 @@
 Следующий точный шаг:
 - выполнить контрольный `git status` и зафиксировать фактический состав изменённых файлов в итоговом отчёте;
 - затем возвращаться только к следующему подтверждённому сценарию вне уже закрытого графического хвоста.
+
+## Session 869 - 2026-05-15 18:15 - VIEW доведён до рабочего договора
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и подтверждён текущий фокус только на графическом слое;
+- ранее внесённый каркас `VIEW` доведён до рабочего пользовательского договора по parser, semantics, interpreter, `BytecodeVm`, execution-пути и IDE-host;
+- добавлены целевые проверки на `VIEW` reset, `VIEW SCREEN`, относительный `VIEW`, rebasing текущей графической позиции и приёмочный путь через runnable sample `samples/operators/view/screen_and_relative.axm`;
+- manual и проектные документы синхронизированы с фактическим поведением: добавлена страница `docs/manual/view.html`, обновлены графический обзор, поиск по manual, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`;
+- в `docs/WORKLOG4.md` зафиксирован итог закрытия графического шага `VIEW`.
+
+Изменённые файлы:
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/view/screen_and_relative.axm`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `docs/manual/view.html`
+- `docs/manual/graphics.html`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/ARCHITECTURE.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build Axiom.sln --no-restore` — успешно;
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-build` — успешно;
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-build` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj` — успешно;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-build` — успешно;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-build --filter "FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForViewScreenAndRelativeCoordinates|FullyQualifiedName~ScreenViewAcceptanceSample_RunsOnBytecodeVm|DisplayName~screen_and_relative"` — успешно;
+- `node --check docs/manual/scripts/manual.js` — успешно;
+- `node --check docs/manual/scripts/search-index.js` — успешно;
+- полный `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj` в этой среде по-прежнему упирается в посторонний файловый sample `samples/smoke/engine-compare/file_management_roundtrip.axm` с `Access denied` в `.artifacts/manual-checks`; к договору `VIEW` это не относится.
+
+Решение:
+- считать графический шаг `VIEW` закрытым по критерию кода, автотестов, runnable sample, manual и проектной документации;
+- не возвращаться к `LINE`, `CIRCLE`, `PAINT` и `DRAW` без нового подтверждённого сценария;
+- не смешивать следующий графический шаг с `PMAP`, `GET` и `PUT`, пока не будет отдельного подтверждённого договора именно для `WINDOW`.
+
+Следующий точный шаг:
+- если фокус остаётся только на графике, открыть отдельный договор оператора `WINDOW` как следующий шаг поверх уже закрытого `VIEW`;
+- до этого не расширять `VIEW` и не возвращаться к уже закрытым графическим операторам без нового подтверждённого сценария.

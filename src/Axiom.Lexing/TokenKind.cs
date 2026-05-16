@@ -102,6 +102,7 @@ public enum TokenKind
     TypeKeyword,
     UsingKeyword,
     UntilKeyword,
+    ViewKeyword,
     LoopKeyword,
     WhileKeyword,
     XorKeyword

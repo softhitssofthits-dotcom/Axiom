@@ -68,6 +68,7 @@ public sealed partial class Binder
                 : inputStatement.InputKeyword.Location,
             SleepStatementSyntax sleepStatement => sleepStatement.SleepKeyword.Location,
             ScreenStatementSyntax screenStatement => screenStatement.ScreenKeyword.Location,
+            ViewStatementSyntax viewStatement => viewStatement.ViewKeyword.Location,
             ClsStatementSyntax clsStatement => clsStatement.ClsKeyword.Location,
             ColorStatementSyntax colorStatement => colorStatement.ColorKeyword.Location,
             LocateStatementSyntax locateStatement => locateStatement.LocateKeyword.Location,

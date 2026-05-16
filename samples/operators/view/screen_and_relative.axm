@@ -1,0 +1,17 @@
+SCREEN 1
+CLS
+COLOR 14, 2
+
+VIEW SCREEN (10, 10) - (20, 20), 3, 9
+PSET (11, 11), 6
+PRINT "abs border="; POINT(10, 10); " abs fill="; POINT(12, 12)
+
+VIEW (1, 1) - (3, 3), 2, 8
+PSET (0, 0), 7
+PRINT "rel pixel="; POINT(0, 0)
+PRINT "rel pos="; POINT(0); ","; POINT(1)
+
+VIEW
+PRINT "reset pos="; POINT(0); ","; POINT(1)
+PRINT "VIEW sample finished"
+SLEEP

@@ -36,7 +36,25 @@ public interface IGraphicsHost
 
     long CurrentGraphicsY => 0;
 
+    bool ViewportEnabled => false;
+
+    bool ViewportRelativeCoordinates => false;
+
+    long ViewportLeft => 0;
+
+    long ViewportTop => 0;
+
+    long ViewportRight => ScreenWidth > 0 ? ScreenWidth - 1L : -1L;
+
+    long ViewportBottom => ScreenHeight > 0 ? ScreenHeight - 1L : -1L;
+
     void SetGraphicsCurrentPosition(long x, long y)
+    {
+    }
+
+    bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates) => false;
+
+    void ResetViewport()
     {
     }
 
@@ -74,11 +92,34 @@ public interface IGraphicsHost
 
     void Paint(GraphicsPaintRequest request)
     {
+        var viewport = GraphicsViewportMath.GetEffectiveViewport(this);
+        if (viewport.IsEmpty)
+        {
+            return;
+        }
+
+        if (viewport.UsesRelativeCoordinates)
+        {
+            GraphicsFloodFill.Paint(
+                request,
+                GetPixel,
+                SetPixel,
+                static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
+                checked((int)viewport.Width),
+                checked((int)viewport.Height));
+            return;
+        }
+
         GraphicsFloodFill.Paint(
             request,
             GetPixel,
             SetPixel,
-            static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
+            (x, y, width, height) =>
+                x >= 0 &&
+                y >= 0 &&
+                x < width &&
+                y < height &&
+                viewport.IsInsideAbsolute(x, y),
             ScreenWidth,
             ScreenHeight);
     }
@@ -174,8 +215,8 @@ public interface IGraphicsHost
             circle.FullCircle,
             arcStart,
             circle.Sweep,
-            ScreenWidth,
-            ScreenHeight,
+            GetRasterWidth(),
+            GetRasterHeight(),
             (x, y) => SetPixel(x, y, color));
 
         if (circle.DrawEndRadius)
@@ -239,5 +280,21 @@ public interface IGraphicsHost
         DrawLineCore(right, top, right, bottom, color);
         DrawLineCore(right, bottom, left, bottom, color);
         DrawLineCore(left, bottom, left, top, color);
+    }
+
+    private int GetRasterWidth()
+    {
+        var viewport = GraphicsViewportMath.GetEffectiveViewport(this);
+        return viewport.UsesRelativeCoordinates
+            ? checked((int)Math.Max(0, viewport.Width))
+            : ScreenWidth;
+    }
+
+    private int GetRasterHeight()
+    {
+        var viewport = GraphicsViewportMath.GetEffectiveViewport(this);
+        return viewport.UsesRelativeCoordinates
+            ? checked((int)Math.Max(0, viewport.Height))
+            : ScreenHeight;
     }
 }

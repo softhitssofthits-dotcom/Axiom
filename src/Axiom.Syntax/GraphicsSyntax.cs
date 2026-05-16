@@ -18,6 +18,55 @@ public sealed class ScreenStatementSyntax : StatementSyntax
     public ExpressionSyntax ModeExpression { get; }
 }
 
+public sealed class ViewStatementSyntax : StatementSyntax
+{
+    public ViewStatementSyntax(
+        SyntaxToken viewKeyword,
+        SyntaxToken? screenKeyword,
+        GraphicsPointSyntax? topLeftPoint,
+        SyntaxToken? minusToken,
+        GraphicsPointSyntax? bottomRightPoint,
+        SyntaxToken? fillCommaToken,
+        ExpressionSyntax? fillColorExpression,
+        SyntaxToken? borderCommaToken,
+        ExpressionSyntax? borderColorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(viewKeyword);
+
+        ViewKeyword = viewKeyword;
+        ScreenKeyword = screenKeyword;
+        TopLeftPoint = topLeftPoint;
+        MinusToken = minusToken;
+        BottomRightPoint = bottomRightPoint;
+        FillCommaToken = fillCommaToken;
+        FillColorExpression = fillColorExpression;
+        BorderCommaToken = borderCommaToken;
+        BorderColorExpression = borderColorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ViewStatement;
+
+    public SyntaxToken ViewKeyword { get; }
+
+    public SyntaxToken? ScreenKeyword { get; }
+
+    public GraphicsPointSyntax? TopLeftPoint { get; }
+
+    public SyntaxToken? MinusToken { get; }
+
+    public GraphicsPointSyntax? BottomRightPoint { get; }
+
+    public SyntaxToken? FillCommaToken { get; }
+
+    public ExpressionSyntax? FillColorExpression { get; }
+
+    public SyntaxToken? BorderCommaToken { get; }
+
+    public ExpressionSyntax? BorderColorExpression { get; }
+
+    public bool IsReset => TopLeftPoint is null || BottomRightPoint is null;
+}
+
 public sealed class ClsStatementSyntax : StatementSyntax
 {
     public ClsStatementSyntax(SyntaxToken clsKeyword)

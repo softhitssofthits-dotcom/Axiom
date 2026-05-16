@@ -27,6 +27,30 @@ public sealed partial class Interpreter
         return ExecutionSignal.None;
     }
 
+    private ExecutionSignal ExecuteView(BoundViewStatement statement)
+    {
+        RequireScreenActive("VIEW", statement.Location);
+        if (statement.IsReset)
+        {
+            _host.ResetViewport();
+            return ExecutionSignal.None;
+        }
+
+        var left = EvaluateExpression(statement.LeftExpression!).AsLong();
+        var top = EvaluateExpression(statement.TopExpression!).AsLong();
+        var right = EvaluateExpression(statement.RightExpression!).AsLong();
+        var bottom = EvaluateExpression(statement.BottomExpression!).AsLong();
+        int? fillColor = statement.FillColorExpression is null ? null : EvaluateExpression(statement.FillColorExpression).AsInteger();
+        int? borderColor = statement.BorderColorExpression is null ? null : EvaluateExpression(statement.BorderColorExpression).AsInteger();
+        if (!TryApplyViewport(left, top, right, bottom, fillColor, borderColor, statement.UseScreenCoordinates))
+        {
+            ReportInvalidViewport("VIEW", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
+        return ExecutionSignal.None;
+    }
+
     private ExecutionSignal ExecuteCls(BoundClsStatement statement)
     {
         if (_host.IsScreenOutputActive)
@@ -301,6 +325,37 @@ public sealed partial class Interpreter
             "x/y",
             $"координаты должны оставаться в диапазоне {GraphicsCoordinateValidation.MinCoordinate}..{GraphicsCoordinateValidation.MaxCoordinate}.",
             location);
+    }
+
+    private void ReportInvalidViewport(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            "координаты viewport должны задавать прямоугольник внутри текущего SCREEN.",
+            location);
+    }
+
+    private bool TryApplyViewport(
+        long left,
+        long top,
+        long right,
+        long bottom,
+        int? fillColor,
+        int? borderColor,
+        bool useScreenCoordinates)
+    {
+        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(left, top, right, bottom))
+        {
+            return false;
+        }
+
+        if (left > right || top > bottom)
+        {
+            return false;
+        }
+
+        return _host.SetViewport(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
     }
 
     private RuntimeValue EvaluatePoint(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)

@@ -29,6 +29,7 @@ public sealed partial class Parser
             SyntaxKind.InputKeyword => ParseInputStatement(),
             SyntaxKind.SleepKeyword => ParseSleepStatement(),
             SyntaxKind.ScreenKeyword => ParseScreenStatement(),
+            SyntaxKind.ViewKeyword => ParseViewStatement(),
             SyntaxKind.ClsKeyword => ParseClsStatement(),
             SyntaxKind.ColorKeyword => ParseColorStatement(),
             SyntaxKind.LocateKeyword => ParseLocateStatement(),
@@ -202,6 +203,52 @@ public sealed partial class Parser
         var screenKeyword = Match(SyntaxKind.ScreenKeyword, "SCREEN");
         var modeExpression = ParseExpression();
         return new ScreenStatementSyntax(screenKeyword, modeExpression);
+    }
+
+    private ViewStatementSyntax ParseViewStatement()
+    {
+        var viewKeyword = Match(SyntaxKind.ViewKeyword, "VIEW");
+        if (IsStatementTerminator(Current.Kind))
+        {
+            return new ViewStatementSyntax(viewKeyword, null, null, null, null, null, null, null, null);
+        }
+
+        SyntaxToken? screenKeyword = null;
+        if (Current.Kind == SyntaxKind.ScreenKeyword)
+        {
+            screenKeyword = NextToken();
+        }
+
+        var topLeftPoint = ParseGraphicsPoint();
+        var minusToken = Match(SyntaxKind.MinusToken, "'-' между углами VIEW");
+        var bottomRightPoint = ParseGraphicsPoint();
+        SyntaxToken? fillCommaToken = null;
+        ExpressionSyntax? fillColorExpression = null;
+        SyntaxToken? borderCommaToken = null;
+        ExpressionSyntax? borderColorExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            fillCommaToken = Match(SyntaxKind.CommaToken, "',' после прямоугольника VIEW");
+            fillColorExpression = ParseOptionalGraphicsArgumentExpression();
+
+            if (Current.Kind == SyntaxKind.CommaToken)
+            {
+                borderCommaToken = Match(SyntaxKind.CommaToken, "',' перед цветом рамки VIEW");
+                borderColorExpression = ParseOptionalGraphicsArgumentExpression();
+            }
+        }
+
+        return new ViewStatementSyntax(
+            viewKeyword,
+            screenKeyword,
+            topLeftPoint,
+            minusToken,
+            bottomRightPoint,
+            fillCommaToken,
+            fillColorExpression,
+            borderCommaToken,
+            borderColorExpression);
     }
 
     private ClsStatementSyntax ParseClsStatement()

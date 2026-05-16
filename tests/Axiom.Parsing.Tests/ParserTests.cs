@@ -405,6 +405,32 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_ViewResetStatement()
+    {
+        var program = ParseProgram("VIEW", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var view = AssertGlobalStatement<ViewStatementSyntax>(program);
+        Assert.True(view.IsReset);
+        Assert.Null(view.ScreenKeyword);
+    }
+
+    [Fact]
+    public void Parse_ViewStatementSupportsScreenAndOptionalBorder()
+    {
+        var program = ParseProgram("VIEW SCREEN (1, 2)-(3, 4), , 7", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var view = AssertGlobalStatement<ViewStatementSyntax>(program);
+        Assert.False(view.IsReset);
+        Assert.NotNull(view.ScreenKeyword);
+        Assert.NotNull(view.TopLeftPoint);
+        Assert.NotNull(view.BottomRightPoint);
+        Assert.Null(view.FillColorExpression);
+        Assert.NotNull(view.BorderColorExpression);
+    }
+
+    [Fact]
     public void Parse_PaintStatementSupportsStepEmptySlotsAndBackground()
     {
         var program = ParseProgram("PAINT STEP (8, 9), pattern, , backPattern", out var diagnostics);

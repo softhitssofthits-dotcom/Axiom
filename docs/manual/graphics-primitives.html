@@ -28,6 +28,7 @@
                 <h2>Координаты и цвета</h2>
                 <p>Перед использованием операторов рисования программа должна выбрать графический режим: <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Текстовый режим <code>SCREEN 0</code> не включает графический экран.</p>
                 <p>Координаты записываются как <code>x, y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Цвет задаётся числом из палитры <code>0..255</code>.</p>
+                <p>Если активен <code>VIEW</code> без слова <code>SCREEN</code>, координаты графических примитивов, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code> считаются относительно текущего viewport. Форма <code>VIEW SCREEN</code> оставляет координаты абсолютными, но ограничивает вывод границами viewport.</p>
             </section>
 
             <section class="article-section">
@@ -179,6 +180,7 @@ DRAW "C" + STR(penColor) + " TA" + STR(angle) + " U40"</code></pre>
 <pre><code>POINT(&lt;x&gt;, &lt;y&gt;)
 POINT(&lt;number&gt;)</code></pre>
                 <p><code>POINT</code> имеет две формы. <code>POINT(x, y)</code> возвращает номер цвета в указанной точке. <code>POINT(number)</code> возвращает текущую графическую позицию: по значениям <code>0</code> и <code>2</code> возвращается текущий X, по значениям <code>1</code> и <code>3</code> — текущий Y. Без активного <code>SCREEN</code> функция сообщает <code>MB3010</code>.</p>
+                <p>Если активен <code>VIEW</code> без слова <code>SCREEN</code>, обе формы <code>POINT</code> работают в локальной системе координат viewport. После <code>VIEW</code> без аргументов текущая графическая позиция снова читается в абсолютных экранных координатах.</p>
                 <table>
                     <thead>
                         <tr><th>Параметр</th><th>Описание</th></tr>
@@ -252,6 +254,7 @@ NEXT</code></pre>
                     <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Точки, линии и окружности</a></li>
                     <li><a href="../../samples/graphics/primitives/step_and_point_position.axm">STEP и текущая графическая позиция</a></li>
                     <li><a href="../../samples/graphics/primitives/circle_arcs_step_aspect.axm">Дуги, эллипсы и STEP у CIRCLE</a></li>
+                    <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
                     <li><a href="../../samples/operators/paint/fish_fill.axm">PAINT: рыбка по мотивам примера Зельднера</a></li>
                     <li><a href="../../samples/operators/paint/step_default_fill.axm">PAINT STEP и заливка цветом фона по умолчанию</a></li>
                     <li><a href="../../samples/operators/paint/pattern_repaint.axm">Шаблонная заливка и повторная перекраска через фон</a></li>
@@ -270,6 +273,7 @@ NEXT</code></pre>
                 <div class="link-list">
                     <a href="graphics.html">Графика и экран</a>
                     <a href="screen.html">Оператор SCREEN</a>
+                    <a href="view.html">Оператор VIEW</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                     <a href="mousex.html">Мышь</a>

@@ -80,6 +80,7 @@ public enum Opcode
     PauseMouseHandler,
     ResumeMouseHandler,
     Screen,
+    View,
     Cls,
     Color,
     Locate,

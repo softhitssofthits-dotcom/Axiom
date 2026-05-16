@@ -82,6 +82,7 @@ public sealed class Lexer
         ["TYPE"] = TokenKind.TypeKeyword,
         ["USING"] = TokenKind.UsingKeyword,
         ["UNTIL"] = TokenKind.UntilKeyword,
+        ["VIEW"] = TokenKind.ViewKeyword,
         ["WHILE"] = TokenKind.WhileKeyword,
         ["XOR"] = TokenKind.XorKeyword
     };

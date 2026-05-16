@@ -5394,3 +5394,25 @@
 Следующий точный шаг:
 - при необходимости ручной приёмки открыть `samples/graphics/primitives/circle_full_turn.axm` в `Axiom.Ide` и визуально подтвердить, что форма `CIRCLE ..., 0, 2 * PI` рисует полный контур;
 - в отсутствие нового графического сценария возвращаться к следующей подтверждённой задаче вне этой ветки, не меняя `LINE`, `CIRCLE` и `PAINT` вслепую.
+
+## Обновление плана - 2026-05-15 - оператор VIEW доведён до рабочего договора
+
+Сделано:
+- ранее внесённый каркас `VIEW` закрыт по parser, semantics, interpreter, bytecode VM, IDE-host и execution-пути;
+- добавлены целевые тесты на `VIEW` reset, `VIEW SCREEN`, относительный `VIEW`, rebasing текущей графической позиции и acceptance-path через `samples/operators/view/screen_and_relative.axm`;
+- manual и проектные документы синхронизированы: добавлена страница `docs/manual/view.html`, `VIEW` включён в навигацию, графический обзор и поисковый индекс, обновлены `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md` и `docs/BYTECODE_COVERAGE.md`.
+
+Проверка:
+- `dotnet build Axiom.sln --no-restore` проходит;
+- проходят `Axiom.Parsing.Tests`, `Axiom.Semantics.Tests`, `Axiom.Runtime.Tests` и `Axiom.Ide.Tests`;
+- проходят адресные execution-проверки `Run_WithBytecodeMode_UsesBytecodeVmForViewScreenAndRelativeCoordinates`, `ScreenViewAcceptanceSample_RunsOnBytecodeVm` и audit-путь `samples/operators/view/screen_and_relative.axm`;
+- полный `Axiom.Execution.Tests` в этой среде упирается в посторонний файловый sample `samples/smoke/engine-compare/file_management_roundtrip.axm` с `Access denied` в `.artifacts/manual-checks`, не связанный с `VIEW`.
+
+Решение:
+- считать графический шаг `VIEW` закрытым по критерию кода, автотестов, runnable sample, manual и проектной документации;
+- не возвращаться к `LINE`, `CIRCLE`, `PAINT` и `DRAW` без нового подтверждённого сценария;
+- следующий графический шаг открывать отдельно и не смешивать его с уже закрытым viewport-договором.
+
+Следующий точный шаг:
+- если фокус остаётся только на графике, зафиксировать отдельный договор оператора `WINDOW` как следующего шага поверх уже реализованного `VIEW`;
+- не смешивать этот следующий шаг с `PMAP`, `GET` и `PUT`, пока не будет отдельного подтверждённого договора именно для `WINDOW`.

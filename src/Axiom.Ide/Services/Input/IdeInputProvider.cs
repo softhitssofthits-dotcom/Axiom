@@ -84,11 +84,41 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public long CurrentGraphicsY =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
 
+    public bool ViewportEnabled =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.ViewportEnabled;
+
+    public bool ViewportRelativeCoordinates =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.ViewportRelativeCoordinates;
+
+    public long ViewportLeft =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ViewportLeft : 0;
+
+    public long ViewportTop =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ViewportTop : 0;
+
+    public long ViewportRight =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ViewportRight : -1;
+
+    public long ViewportBottom =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.ViewportBottom : -1;
+
     public void SetGraphicsCurrentPosition(long x, long y)
     {
         if (_promptService is IGraphicsHost graphicsHost)
         {
             graphicsHost.SetGraphicsCurrentPosition(x, y);
+        }
+    }
+
+    public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates) =>
+        _promptService is IGraphicsHost graphicsHost &&
+        graphicsHost.SetViewport(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
+
+    public void ResetViewport()
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetViewport();
         }
     }
 

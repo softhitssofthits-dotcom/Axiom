@@ -886,6 +886,39 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void Viewport_AbsoluteAndRelativeCoordinatesTranslatePixelsAndPreservePhysicalPosition()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        Assert.True(service.SetViewport(10, 10, 20, 20, fillColor: 3, borderColor: 9, useScreenCoordinates: true));
+        service.SetPixel(11, 11, 6);
+
+        Assert.Equal(9, service.GetPixel(10, 10));
+        Assert.Equal(6, service.GetPixel(11, 11));
+
+        Assert.True(service.SetViewport(1, 1, 3, 3, fillColor: 2, borderColor: 8, useScreenCoordinates: false));
+        Assert.True(service.ViewportEnabled);
+        Assert.True(service.ViewportRelativeCoordinates);
+        Assert.Equal(0, service.CurrentGraphicsX);
+        Assert.Equal(0, service.CurrentGraphicsY);
+
+        service.SetPixel(0, 0, 7);
+
+        Assert.Equal(7, service.GetPixel(0, 0));
+        Assert.Equal(8, service.GetPixel(2, 0));
+
+        service.ResetViewport();
+
+        Assert.False(service.ViewportEnabled);
+        Assert.Equal(11, service.CurrentGraphicsX);
+        Assert.Equal(11, service.CurrentGraphicsY);
+        Assert.Equal(7, service.GetPixel(11, 11));
+        Assert.Equal(8, service.GetPixel(13, 11));
+        Assert.Equal(2, service.GetPixel(12, 12));
+    }
+
+    [Fact]
     public void SetTextColor_TransparentBackgroundPreservesNumericBackgroundForPreset()
     {
         var service = new ProgramConsoleService();

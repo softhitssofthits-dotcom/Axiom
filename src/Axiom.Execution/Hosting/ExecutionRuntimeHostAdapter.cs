@@ -102,11 +102,41 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public long CurrentGraphicsY =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
 
+    public bool ViewportEnabled =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.ViewportEnabled;
+
+    public bool ViewportRelativeCoordinates =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.ViewportRelativeCoordinates;
+
+    public long ViewportLeft =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ViewportLeft : 0;
+
+    public long ViewportTop =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ViewportTop : 0;
+
+    public long ViewportRight =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ViewportRight : -1;
+
+    public long ViewportBottom =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ViewportBottom : -1;
+
     public void SetGraphicsCurrentPosition(long x, long y)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
             graphicsHost.SetGraphicsCurrentPosition(x, y);
+        }
+    }
+
+    public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates) =>
+        _inputProvider is IGraphicsHost graphicsHost &&
+        graphicsHost.SetViewport(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
+
+    public void ResetViewport()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetViewport();
         }
     }
 

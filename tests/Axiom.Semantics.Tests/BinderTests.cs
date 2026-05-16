@@ -247,6 +247,46 @@ DRAW "C" + STR(penColor) + "R20"
     }
 
     [Fact]
+    public void Bind_ViewResetStatement()
+    {
+        var program = BindProgram("VIEW", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundViewStatement>(Assert.Single(program.GlobalStatements));
+        Assert.True(statement.IsReset);
+        Assert.False(statement.UseScreenCoordinates);
+    }
+
+    [Fact]
+    public void Bind_ViewStatementBindsCoordinatesAndOptionalColors()
+    {
+        var program = BindProgram("VIEW SCREEN (1, 2)-(3, 4), 5, 6", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundViewStatement>(Assert.Single(program.GlobalStatements));
+        Assert.False(statement.IsReset);
+        Assert.True(statement.UseScreenCoordinates);
+        Assert.Equal(TypeSymbol.Long, statement.LeftExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, statement.TopExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, statement.RightExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, statement.BottomExpression!.Type);
+        Assert.Equal(TypeSymbol.Integer, statement.FillColorExpression!.Type);
+        Assert.Equal(TypeSymbol.Integer, statement.BorderColorExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_ViewStatementSupportsEmptyFillSlot()
+    {
+        var program = BindProgram("VIEW (1, 2)-(3, 4), , 7", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundViewStatement>(Assert.Single(program.GlobalStatements));
+        Assert.False(statement.UseScreenCoordinates);
+        Assert.Null(statement.FillColorExpression);
+        Assert.NotNull(statement.BorderColorExpression);
+    }
+
+    [Fact]
     public void Bind_OnKeyStatement_BindsZeroArgumentSubHandler()
     {
         const string text = """

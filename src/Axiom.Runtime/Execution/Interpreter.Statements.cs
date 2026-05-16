@@ -41,6 +41,7 @@ public sealed partial class Interpreter
             BoundInputStatement input => ExecuteInput(input),
             BoundSleepStatement sleep => ExecuteSleep(sleep),
             BoundScreenStatement screen => ExecuteScreen(screen),
+            BoundViewStatement view => ExecuteView(view),
             BoundClsStatement cls => ExecuteCls(cls),
             BoundColorStatement color => ExecuteColor(color),
             BoundLocateStatement locate => ExecuteLocate(locate),

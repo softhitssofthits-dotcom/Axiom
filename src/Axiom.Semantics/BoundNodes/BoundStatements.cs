@@ -236,6 +236,47 @@ public sealed class BoundScreenStatement : BoundStatement
     public BoundExpression ModeExpression { get; }
 }
 
+public sealed class BoundViewStatement : BoundStatement
+{
+    public BoundViewStatement(
+        TextLocation location,
+        bool useScreenCoordinates,
+        BoundExpression? leftExpression,
+        BoundExpression? topExpression,
+        BoundExpression? rightExpression,
+        BoundExpression? bottomExpression,
+        BoundExpression? fillColorExpression,
+        BoundExpression? borderColorExpression)
+        : base(location)
+    {
+        UseScreenCoordinates = useScreenCoordinates;
+        LeftExpression = leftExpression;
+        TopExpression = topExpression;
+        RightExpression = rightExpression;
+        BottomExpression = bottomExpression;
+        FillColorExpression = fillColorExpression;
+        BorderColorExpression = borderColorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ViewStatement;
+
+    public bool UseScreenCoordinates { get; }
+
+    public BoundExpression? LeftExpression { get; }
+
+    public BoundExpression? TopExpression { get; }
+
+    public BoundExpression? RightExpression { get; }
+
+    public BoundExpression? BottomExpression { get; }
+
+    public BoundExpression? FillColorExpression { get; }
+
+    public BoundExpression? BorderColorExpression { get; }
+
+    public bool IsReset => LeftExpression is null || TopExpression is null || RightExpression is null || BottomExpression is null;
+}
+
 public sealed class BoundClsStatement : BoundStatement
 {
     public BoundClsStatement(TextLocation location)

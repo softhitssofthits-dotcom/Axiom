@@ -331,6 +331,38 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Screen, location);
     }
 
+    public static LoweredInstruction View(
+        TextLocation location,
+        bool useScreenCoordinates,
+        bool hasCoordinates,
+        bool hasFillColor,
+        bool hasBorderColor)
+    {
+        var flags = 0;
+        if (useScreenCoordinates)
+        {
+            flags |= 1;
+        }
+
+        if (hasCoordinates)
+        {
+            flags |= 2;
+        }
+
+        if (hasFillColor)
+        {
+            flags |= 4;
+        }
+
+        if (hasBorderColor)
+        {
+            flags |= 8;
+        }
+
+        var valueCount = hasCoordinates ? 4 + (hasFillColor ? 1 : 0) + (hasBorderColor ? 1 : 0) : 0;
+        return new LoweredInstruction(LoweredInstructionKind.View, location, valueCount: valueCount, mouseEventKind: flags);
+    }
+
     public static LoweredInstruction Cls(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.Cls, location);

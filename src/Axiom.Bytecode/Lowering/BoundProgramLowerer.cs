@@ -277,6 +277,31 @@ public sealed class BoundProgramLowerer
                 LowerExpression(screen.ModeExpression, instructions);
                 instructions.Add(LoweredInstruction.Screen(screen.Location));
                 break;
+            case BoundViewStatement view:
+                if (!view.IsReset)
+                {
+                    LowerExpression(view.LeftExpression!, instructions);
+                    LowerExpression(view.TopExpression!, instructions);
+                    LowerExpression(view.RightExpression!, instructions);
+                    LowerExpression(view.BottomExpression!, instructions);
+                    if (view.FillColorExpression is not null)
+                    {
+                        LowerExpression(view.FillColorExpression, instructions);
+                    }
+
+                    if (view.BorderColorExpression is not null)
+                    {
+                        LowerExpression(view.BorderColorExpression, instructions);
+                    }
+                }
+
+                instructions.Add(LoweredInstruction.View(
+                    view.Location,
+                    view.UseScreenCoordinates,
+                    hasCoordinates: !view.IsReset,
+                    hasFillColor: view.FillColorExpression is not null,
+                    hasBorderColor: view.BorderColorExpression is not null));
+                break;
             case BoundClsStatement cls:
                 instructions.Add(LoweredInstruction.Cls(cls.Location));
                 break;

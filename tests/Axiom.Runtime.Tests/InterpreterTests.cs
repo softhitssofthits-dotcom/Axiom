@@ -512,6 +512,36 @@ PRINT POINT(15, 24)
     }
 
     [Fact]
+    public void Execute_ViewSupportsAbsoluteAndRelativeViewportCoordinates()
+    {
+        const string text = """
+SCREEN 1
+VIEW SCREEN (10, 10)-(20, 20), 3, 9
+PSET (11, 11), 6
+PRINT POINT(10, 10)
+PRINT POINT(12, 12)
+VIEW (1, 1)-(3, 3), 2, 8
+PSET (0, 0), 7
+PRINT POINT(0, 0)
+PRINT POINT(0)
+PRINT POINT(1)
+VIEW
+PRINT POINT(11, 11)
+PRINT POINT(0)
+PRINT POINT(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["9", "3", "7", "0", "0", "7", "11", "11"], host.Output);
+        Assert.Equal(11, host.CurrentGraphicsX);
+        Assert.Equal(11, host.CurrentGraphicsY);
+        Assert.Equal(7, host.GetPixel(11, 11));
+        Assert.Equal(8, host.GetPixel(13, 11));
+    }
+
+    [Fact]
     public void Execute_DrawWithoutScreenReportsRuntimeDiagnostic()
     {
         var (_, _, result) = ExecuteProgram("DRAW \"R10\"");
@@ -9514,6 +9544,12 @@ END TRY
         private bool _isTextBackgroundTransparent;
         private long _currentGraphicsX;
         private long _currentGraphicsY;
+        private bool _viewportEnabled;
+        private bool _viewportRelativeCoordinates;
+        private long _viewportLeft;
+        private long _viewportTop;
+        private long _viewportRight = -1;
+        private long _viewportBottom = -1;
 
         public TestRuntimeHost(
             IEnumerable<string> inputs,
@@ -9600,9 +9636,29 @@ END TRY
 
         public long CurrentGraphicsY => _currentGraphicsY;
 
-        public void ActivateScreen(int mode) => _isScreenActive = mode != 0;
+        public bool ViewportEnabled => _viewportEnabled;
 
-        public void DeactivateScreen() => _isScreenActive = false;
+        public bool ViewportRelativeCoordinates => _viewportRelativeCoordinates;
+
+        public long ViewportLeft => _viewportLeft;
+
+        public long ViewportTop => _viewportTop;
+
+        public long ViewportRight => _viewportRight;
+
+        public long ViewportBottom => _viewportBottom;
+
+        public void ActivateScreen(int mode)
+        {
+            _isScreenActive = mode != 0;
+            ResetViewport();
+        }
+
+        public void DeactivateScreen()
+        {
+            _isScreenActive = false;
+            ResetViewport();
+        }
 
         public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
         {
@@ -9623,7 +9679,12 @@ END TRY
 
         public void SetPixel(long x, long y, int color)
         {
-            _pixels[(x, y)] = color;
+            if (!TryTranslateLogicalToAbsolute(x, y, out var absoluteX, out var absoluteY))
+            {
+                return;
+            }
+
+            _pixels[(absoluteX, absoluteY)] = color;
             _currentGraphicsX = x;
             _currentGraphicsY = y;
         }
@@ -9634,7 +9695,85 @@ END TRY
             _currentGraphicsY = y;
         }
 
-        public int GetPixel(long x, long y) => _pixels.TryGetValue((x, y), out var color) ? color : 0;
+        public int GetPixel(long x, long y)
+        {
+            if (!TryTranslateLogicalToAbsolute(x, y, out var absoluteX, out var absoluteY))
+            {
+                return 0;
+            }
+
+            return _pixels.TryGetValue((absoluteX, absoluteY), out var color) ? color : 0;
+        }
+
+        public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates)
+        {
+            if (!_isScreenActive || left > right || top > bottom)
+            {
+                return false;
+            }
+
+            var baseLeft = _viewportEnabled ? _viewportLeft : 0L;
+            var baseTop = _viewportEnabled ? _viewportTop : 0L;
+            var absoluteLeft = useScreenCoordinates ? left : GraphicsLineMath.SaturatingAdd(baseLeft, left);
+            var absoluteTop = useScreenCoordinates ? top : GraphicsLineMath.SaturatingAdd(baseTop, top);
+            var absoluteRight = useScreenCoordinates ? right : GraphicsLineMath.SaturatingAdd(baseLeft, right);
+            var absoluteBottom = useScreenCoordinates ? bottom : GraphicsLineMath.SaturatingAdd(baseTop, bottom);
+            if (!IsInsideScreen(absoluteLeft, absoluteTop) || !IsInsideScreen(absoluteRight, absoluteBottom))
+            {
+                return false;
+            }
+
+            var currentAbsolute = ResolveCurrentAbsolutePosition();
+            if (fillColor.HasValue)
+            {
+                for (var y = absoluteTop; y <= absoluteBottom; y++)
+                {
+                    for (var x = absoluteLeft; x <= absoluteRight; x++)
+                    {
+                        _pixels[(x, y)] = fillColor.Value;
+                    }
+                }
+            }
+
+            if (borderColor.HasValue)
+            {
+                for (var x = absoluteLeft; x <= absoluteRight; x++)
+                {
+                    _pixels[(x, absoluteTop)] = borderColor.Value;
+                    _pixels[(x, absoluteBottom)] = borderColor.Value;
+                }
+
+                for (var y = absoluteTop; y <= absoluteBottom; y++)
+                {
+                    _pixels[(absoluteLeft, y)] = borderColor.Value;
+                    _pixels[(absoluteRight, y)] = borderColor.Value;
+                }
+            }
+
+            _viewportEnabled = true;
+            _viewportRelativeCoordinates = !useScreenCoordinates;
+            _viewportLeft = absoluteLeft;
+            _viewportTop = absoluteTop;
+            _viewportRight = absoluteRight;
+            _viewportBottom = absoluteBottom;
+            var logicalPosition = ToLogicalPosition(currentAbsolute.X, currentAbsolute.Y);
+            _currentGraphicsX = logicalPosition.X;
+            _currentGraphicsY = logicalPosition.Y;
+            return true;
+        }
+
+        public void ResetViewport()
+        {
+            var currentAbsolute = ResolveCurrentAbsolutePosition();
+            _viewportEnabled = false;
+            _viewportRelativeCoordinates = false;
+            _viewportLeft = 0;
+            _viewportTop = 0;
+            _viewportRight = ScreenWidth - 1L;
+            _viewportBottom = ScreenHeight - 1L;
+            _currentGraphicsX = currentAbsolute.X;
+            _currentGraphicsY = currentAbsolute.Y;
+        }
 
         public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
         {
@@ -9720,6 +9859,36 @@ END TRY
 
             return _namedTimeZones.TryGetValue(id, out timeZone!);
         }
+
+        private bool TryTranslateLogicalToAbsolute(long x, long y, out long absoluteX, out long absoluteY)
+        {
+            var viewport = _viewportEnabled
+                ? new GraphicsViewport(_viewportLeft, _viewportTop, _viewportRight, _viewportBottom, _viewportRelativeCoordinates)
+                : new GraphicsViewport(0, 0, ScreenWidth - 1L, ScreenHeight - 1L, UsesRelativeCoordinates: false);
+            return viewport.TryTranslateLogicalToAbsolute(x, y, out absoluteX, out absoluteY) &&
+                   IsInsideScreen(absoluteX, absoluteY);
+        }
+
+        private (long X, long Y) ResolveCurrentAbsolutePosition()
+        {
+            if (_viewportEnabled && _viewportRelativeCoordinates)
+            {
+                return (
+                    GraphicsLineMath.SaturatingAdd(_viewportLeft, _currentGraphicsX),
+                    GraphicsLineMath.SaturatingAdd(_viewportTop, _currentGraphicsY));
+            }
+
+            return (_currentGraphicsX, _currentGraphicsY);
+        }
+
+        private (long X, long Y) ToLogicalPosition(long absoluteX, long absoluteY)
+        {
+            return _viewportEnabled && _viewportRelativeCoordinates
+                ? (absoluteX - _viewportLeft, absoluteY - _viewportTop)
+                : (absoluteX, absoluteY);
+        }
+
+        private bool IsInsideScreen(long x, long y) => x >= 0 && y >= 0 && x < ScreenWidth && y < ScreenHeight;
     }
 
     private sealed record CircleCall(

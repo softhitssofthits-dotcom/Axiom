@@ -716,3 +716,15 @@
 - Сквозной VM: да, новый sample полного оборота `CIRCLE` запускается через `ExecutionMode.Bytecode` без отката;
 - Негативный паритет: да, `MB3007` теперь явно покрывает выход координат `LINE`/`CIRCLE` за поддержанный диапазон и чрезмерный `aspect`, а форма `CIRCLE ..., 0, 2 * PI` фиксирована как полный контур, а не пустая дуга;
 - Профиль: не приоритет, это упрочнение графического договора и защит от переполнения, а не новый горячий benchmark.
+
+## Обновление реестра - 2026-05-15 - оператор VIEW
+
+Дополнение к области `SCREEN` и операторов рисования:
+- VM: да, `BytecodeVm` выполняет отдельную инструкцию `View`, различает `VIEW` reset, абсолютную форму `VIEW SCREEN` и относительную форму `VIEW`;
+- Интерпретатор: да, использует тот же host-договор `SetViewport(...)` / `ResetViewport()` и те же правила пересчёта координат;
+- Автотесты: да, добавлены parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-проверки `Parse_ViewResetStatement()`, `Parse_ViewStatementSupportsScreenAndOptionalBorder()`, `Bind_ViewResetStatement()`, `Bind_ViewStatementBindsCoordinatesAndOptionalColors()`, `Bind_ViewStatementSupportsEmptyFillSlot()`, `Execute_ViewSupportsAbsoluteAndRelativeViewportCoordinates()`, `Execute_CompiledViewSupportsAbsoluteAndRelativeViewportCoordinates()`, `Viewport_AbsoluteAndRelativeCoordinatesTranslatePixelsAndPreservePhysicalPosition()` и `Run_WithBytecodeMode_UsesBytecodeVmForViewScreenAndRelativeCoordinates()`;
+- Runnable sample: да, добавлен `samples/operators/view/screen_and_relative.axm`;
+- Manual: да, добавлены `docs/manual/view.html` и обновления в `docs/manual/graphics.html`, `docs/manual/graphics-primitives.html`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, добавлены acceptance-проверки `ScreenViewAcceptanceSample_RunsOnBytecodeVm()` и автоматический audit-путь для `samples/operators/view/screen_and_relative.axm`;
+- Негативный паритет: частично, runtime-диагностики `MB3010` и `MB3007` используются тем же путём, что и другие графические операторы, но отдельный отрицательный `.axm`-sample для некорректного viewport в этом шаге не добавлялся;
+- Профиль: не приоритет, потому что `VIEW` меняет границы и систему координат framebuffer, а не является горячим вычислительным циклом.
