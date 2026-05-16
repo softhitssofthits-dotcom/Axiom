@@ -30,6 +30,7 @@ public sealed partial class Parser
             SyntaxKind.SleepKeyword => ParseSleepStatement(),
             SyntaxKind.ScreenKeyword => ParseScreenStatement(),
             SyntaxKind.ViewKeyword => ParseViewStatement(),
+            SyntaxKind.WindowKeyword => ParseWindowStatement(),
             SyntaxKind.ClsKeyword => ParseClsStatement(),
             SyntaxKind.ColorKeyword => ParseColorStatement(),
             SyntaxKind.LocateKeyword => ParseLocateStatement(),
@@ -249,6 +250,26 @@ public sealed partial class Parser
             fillColorExpression,
             borderCommaToken,
             borderColorExpression);
+    }
+
+    private WindowStatementSyntax ParseWindowStatement()
+    {
+        var windowKeyword = Match(SyntaxKind.WindowKeyword, "WINDOW");
+        if (IsStatementTerminator(Current.Kind))
+        {
+            return new WindowStatementSyntax(windowKeyword, null, null, null, null);
+        }
+
+        SyntaxToken? screenKeyword = null;
+        if (Current.Kind == SyntaxKind.ScreenKeyword)
+        {
+            screenKeyword = NextToken();
+        }
+
+        var topLeftPoint = ParseGraphicsPoint();
+        var minusToken = Match(SyntaxKind.MinusToken, "'-' между углами WINDOW");
+        var bottomRightPoint = ParseGraphicsPoint();
+        return new WindowStatementSyntax(windowKeyword, screenKeyword, topLeftPoint, minusToken, bottomRightPoint);
     }
 
     private ClsStatementSyntax ParseClsStatement()

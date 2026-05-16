@@ -37,6 +37,7 @@ public enum LoweredInstructionKind
     ResumeMouseHandler,
     Screen,
     View,
+    Window,
     Cls,
     Color,
     Locate,

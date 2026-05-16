@@ -803,6 +803,11 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.Window:
+                ExecuteWindowInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.Cls:
                 ExecuteClsInstruction(frame, instructionIndex);
                 InvalidateReverseExecutionHistory();

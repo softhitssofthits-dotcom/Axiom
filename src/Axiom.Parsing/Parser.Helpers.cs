@@ -347,6 +347,7 @@ public sealed partial class Parser
             TokenKind.UsingKeyword => SyntaxKind.UsingKeyword,
             TokenKind.UntilKeyword => SyntaxKind.UntilKeyword,
             TokenKind.ViewKeyword => SyntaxKind.ViewKeyword,
+            TokenKind.WindowKeyword => SyntaxKind.WindowKeyword,
             TokenKind.WhileKeyword => SyntaxKind.WhileKeyword,
             TokenKind.XorKeyword => SyntaxKind.XorKeyword,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported token kind.")

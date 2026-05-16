@@ -15,6 +15,7 @@ public enum BoundNodeKind
     SleepStatement,
     ScreenStatement,
     ViewStatement,
+    WindowStatement,
     ClsStatement,
     ColorStatement,
     LocateStatement,

@@ -287,6 +287,32 @@ DRAW "C" + STR(penColor) + "R20"
     }
 
     [Fact]
+    public void Bind_WindowResetStatement()
+    {
+        var program = BindProgram("WINDOW", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundWindowStatement>(Assert.Single(program.GlobalStatements));
+        Assert.True(statement.IsReset);
+        Assert.False(statement.UseScreenCoordinates);
+    }
+
+    [Fact]
+    public void Bind_WindowStatementBindsCoordinatesAsDouble()
+    {
+        var program = BindProgram("WINDOW SCREEN (1, 2)-(3, 4)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundWindowStatement>(Assert.Single(program.GlobalStatements));
+        Assert.False(statement.IsReset);
+        Assert.True(statement.UseScreenCoordinates);
+        Assert.Equal(TypeSymbol.Double, statement.LeftExpression!.Type);
+        Assert.Equal(TypeSymbol.Double, statement.TopExpression!.Type);
+        Assert.Equal(TypeSymbol.Double, statement.RightExpression!.Type);
+        Assert.Equal(TypeSymbol.Double, statement.BottomExpression!.Type);
+    }
+
+    [Fact]
     public void Bind_OnKeyStatement_BindsZeroArgumentSubHandler()
     {
         const string text = """

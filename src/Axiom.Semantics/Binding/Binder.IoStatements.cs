@@ -87,6 +87,28 @@ public sealed partial class Binder
             statement.BorderColorExpression is null ? null : BindExpression(statement.BorderColorExpression, TypeSymbol.Integer));
     }
 
+    private BoundStatement BindWindowStatement(WindowStatementSyntax statement)
+    {
+        if (statement.IsReset)
+        {
+            return new BoundWindowStatement(
+                GetLocation(statement),
+                useScreenCoordinates: false,
+                leftExpression: null,
+                topExpression: null,
+                rightExpression: null,
+                bottomExpression: null);
+        }
+
+        return new BoundWindowStatement(
+            GetLocation(statement),
+            statement.ScreenKeyword is not null,
+            BindExpression(statement.TopLeftPoint!.XExpression, TypeSymbol.Double),
+            BindExpression(statement.TopLeftPoint.YExpression, TypeSymbol.Double),
+            BindExpression(statement.BottomRightPoint!.XExpression, TypeSymbol.Double),
+            BindExpression(statement.BottomRightPoint.YExpression, TypeSymbol.Double));
+    }
+
     private BoundStatement BindColorStatement(ColorStatementSyntax statement)
     {
         var backgroundMode = statement switch

@@ -67,6 +67,39 @@ public sealed class ViewStatementSyntax : StatementSyntax
     public bool IsReset => TopLeftPoint is null || BottomRightPoint is null;
 }
 
+public sealed class WindowStatementSyntax : StatementSyntax
+{
+    public WindowStatementSyntax(
+        SyntaxToken windowKeyword,
+        SyntaxToken? screenKeyword,
+        GraphicsPointSyntax? topLeftPoint,
+        SyntaxToken? minusToken,
+        GraphicsPointSyntax? bottomRightPoint)
+    {
+        ArgumentNullException.ThrowIfNull(windowKeyword);
+
+        WindowKeyword = windowKeyword;
+        ScreenKeyword = screenKeyword;
+        TopLeftPoint = topLeftPoint;
+        MinusToken = minusToken;
+        BottomRightPoint = bottomRightPoint;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.WindowStatement;
+
+    public SyntaxToken WindowKeyword { get; }
+
+    public SyntaxToken? ScreenKeyword { get; }
+
+    public GraphicsPointSyntax? TopLeftPoint { get; }
+
+    public SyntaxToken? MinusToken { get; }
+
+    public GraphicsPointSyntax? BottomRightPoint { get; }
+
+    public bool IsReset => TopLeftPoint is null || BottomRightPoint is null;
+}
+
 public sealed class ClsStatementSyntax : StatementSyntax
 {
     public ClsStatementSyntax(SyntaxToken clsKeyword)

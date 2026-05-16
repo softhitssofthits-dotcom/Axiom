@@ -51,6 +51,28 @@ public sealed partial class Interpreter
         return ExecutionSignal.None;
     }
 
+    private ExecutionSignal ExecuteWindow(BoundWindowStatement statement)
+    {
+        RequireScreenActive("WINDOW", statement.Location);
+        if (statement.IsReset)
+        {
+            _host.ResetWindow();
+            return ExecutionSignal.None;
+        }
+
+        var left = EvaluateExpression(statement.LeftExpression!).AsDouble();
+        var top = EvaluateExpression(statement.TopExpression!).AsDouble();
+        var right = EvaluateExpression(statement.RightExpression!).AsDouble();
+        var bottom = EvaluateExpression(statement.BottomExpression!).AsDouble();
+        if (!TryApplyWindow(left, top, right, bottom, statement.UseScreenCoordinates))
+        {
+            ReportInvalidWindow("WINDOW", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
+        return ExecutionSignal.None;
+    }
+
     private ExecutionSignal ExecuteCls(BoundClsStatement statement)
     {
         if (_host.IsScreenOutputActive)
@@ -336,6 +358,15 @@ public sealed partial class Interpreter
             location);
     }
 
+    private void ReportInvalidWindow(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            "координаты WINDOW должны задавать ненулевой логический прямоугольник в допустимом диапазоне, а текущий VIEW должен оставлять минимум два пикселя по каждой оси.",
+            location);
+    }
+
     private bool TryApplyViewport(
         long left,
         long top,
@@ -358,6 +389,21 @@ public sealed partial class Interpreter
         return _host.SetViewport(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
     }
 
+    private bool TryApplyWindow(
+        double left,
+        double top,
+        double right,
+        double bottom,
+        bool useScreenCoordinates)
+    {
+        if (!GraphicsCoordinateValidation.AreSupportedWindowCoordinates(left, top, right, bottom))
+        {
+            return false;
+        }
+
+        return _host.SetWindow(left, top, right, bottom, useScreenCoordinates);
+    }
+
     private RuntimeValue EvaluatePoint(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)
     {
         RequireScreenActive("POINT", expression.Location);
@@ -373,8 +419,8 @@ public sealed partial class Interpreter
     {
         return selector switch
         {
-            0 => checked((int)_host.CurrentGraphicsX),
-            1 => checked((int)_host.CurrentGraphicsY),
+            0 => checked((int)_host.CurrentViewportX),
+            1 => checked((int)_host.CurrentViewportY),
             2 => checked((int)_host.CurrentGraphicsX),
             3 => checked((int)_host.CurrentGraphicsY),
             _ =>

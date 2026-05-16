@@ -42,6 +42,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private long _viewportTop;
     private long _viewportRight = -1;
     private long _viewportBottom = -1;
+    private bool _windowEnabled;
+    private bool _windowUsesScreenCoordinates;
+    private double _windowLeft;
+    private double _windowTop;
+    private double _windowRight;
+    private double _windowBottom;
     private int _graphicsInputRequestCount;
     private ScreenFramebuffer? _framebuffer;
     private ScreenFramebufferSnapshot? _graphicsFrame;
@@ -171,6 +177,18 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     public long ViewportRight => _viewportRight;
 
     public long ViewportBottom => _viewportBottom;
+
+    public bool WindowEnabled => _windowEnabled;
+
+    public bool WindowUsesScreenCoordinates => _windowUsesScreenCoordinates;
+
+    public double WindowLeft => _windowLeft;
+
+    public double WindowTop => _windowTop;
+
+    public double WindowRight => _windowRight;
+
+    public double WindowBottom => _windowBottom;
 
     public int OutputCheckpoint =>
         string.IsNullOrEmpty(OutputText)
@@ -322,6 +340,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenHeight = height;
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
+            ResetWindowCore();
             _framebuffer = new ScreenFramebuffer(width, height);
             _graphicsTextBuffer.Clear();
             GraphicsText = string.Empty;
@@ -361,6 +380,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenHeight = 0;
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
+            ResetWindowCore();
             _framebuffer = null;
             GraphicsFrame = null;
             _graphicsTextBuffer.Clear();
@@ -459,31 +479,21 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         return color;
     }
 
+    public void SetAbsolutePixel(long x, long y, int color)
+    {
+        SetPixelCore(x, y, color);
+    }
+
+    public int GetAbsolutePixel(long x, long y)
+    {
+        return GetPixelCore(x, y);
+    }
+
     public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
         InvokeOnDispatcher(() =>
         {
-            if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
-            {
-                return;
-            }
-
-            switch (kind)
-            {
-                case GraphicsLineKind.Box:
-                    DrawBoxCore(x1, y1, x2, y2, color, filled: false);
-                    break;
-
-                case GraphicsLineKind.FilledBox:
-                    DrawBoxCore(x1, y1, x2, y2, color, filled: true);
-                    break;
-
-                default:
-                    DrawLineCore(x1, y1, x2, y2, color);
-                    break;
-            }
-
-            SetGraphicsCurrentPositionCore(x2, y2);
+            GraphicsHostDrawing.DrawLine(this, x1, y1, x2, y2, color, kind);
             ScheduleGraphicsVisualRefresh();
         });
     }
@@ -502,7 +512,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     {
         InvokeOnDispatcher(() =>
         {
-            DrawCircleCore(x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
+            GraphicsHostDrawing.DrawCircle(this, x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
             ScheduleGraphicsVisualRefresh();
         });
     }
@@ -541,13 +551,37 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         });
     }
 
+    public bool SetWindow(double left, double top, double right, double bottom, bool useScreenCoordinates)
+    {
+        var applied = false;
+        InvokeOnDispatcher(() =>
+        {
+            applied = TrySetWindowCore(left, top, right, bottom, useScreenCoordinates);
+            if (applied)
+            {
+                ScheduleGraphicsVisualRefresh();
+            }
+        });
+
+        return applied;
+    }
+
+    public void ResetWindow()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            ResetWindowCore(preserveCurrentPosition: true);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
     public void Paint(GraphicsPaintRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         InvokeOnDispatcher(() =>
         {
-            RunBatchedGraphicsUpdate(() => PaintCore(request));
+            RunBatchedGraphicsUpdate(() => GraphicsHostDrawing.Paint(this, request));
             SetGraphicsCurrentPositionCore(request.X, request.Y);
         });
     }
@@ -861,6 +895,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsColumn = 1;
         _graphicsCurrentX = 0;
         _graphicsCurrentY = 0;
+        ResetViewportCore();
+        ResetWindowCore();
         OutputText = string.Empty;
         ResetInputState();
         OnPropertyChanged(nameof(IsScreenActive));
@@ -1094,36 +1130,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void PaintCore(GraphicsPaintRequest request)
     {
-        var viewport = GetEffectiveViewportCore();
-        if (viewport.IsEmpty)
-        {
-            return;
-        }
-
-        if (viewport.UsesRelativeCoordinates)
-        {
-            GraphicsFloodFill.Paint(
-                request,
-                GetLogicalPixelCore,
-                SetLogicalPixelCore,
-                static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
-                checked((int)viewport.Width),
-                checked((int)viewport.Height));
-            return;
-        }
-
-        GraphicsFloodFill.Paint(
-            request,
-            GetLogicalPixelCore,
-            SetLogicalPixelCore,
-            (x, y, width, height) =>
-                x >= 0 &&
-                y >= 0 &&
-                x < width &&
-                y < height &&
-                viewport.IsInsideAbsolute(x, y),
-            _screenWidth,
-            _screenHeight);
+        GraphicsHostDrawing.Paint(this, request);
     }
 
     private void RunBatchedGraphicsUpdate(Action action)
@@ -1167,33 +1174,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private bool TryTranslateLogicalToAbsoluteCore(long x, long y, out long absoluteX, out long absoluteY)
     {
-        var viewport = GetEffectiveViewportCore();
-        if (viewport.IsEmpty)
-        {
-            absoluteX = 0;
-            absoluteY = 0;
-            return false;
-        }
-
-        return viewport.TryTranslateLogicalToAbsolute(x, y, out absoluteX, out absoluteY) &&
-               IsInsideScreen(absoluteX, absoluteY);
+        return GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out absoluteX, out absoluteY);
     }
 
     private (long X, long Y) ResolveCurrentAbsolutePositionCore()
     {
-        var viewport = GetEffectiveViewportCore();
-        return viewport.UsesRelativeCoordinates
-            ? (
-                GraphicsLineMath.SaturatingAdd(viewport.Left, _graphicsCurrentX),
-                GraphicsLineMath.SaturatingAdd(viewport.Top, _graphicsCurrentY))
-            : (_graphicsCurrentX, _graphicsCurrentY);
-    }
-
-    private static (long X, long Y) ConvertAbsoluteToLogical(GraphicsViewport viewport, long absoluteX, long absoluteY)
-    {
-        return viewport.UsesRelativeCoordinates
-            ? (absoluteX - viewport.Left, absoluteY - viewport.Top)
-            : (absoluteX, absoluteY);
+        return GraphicsCoordinateSpaceMath.TryResolveCurrentAbsolutePosition(this, out var absoluteX, out var absoluteY)
+            ? (absoluteX, absoluteY)
+            : (0L, 0L);
     }
 
     private void ResetViewportCore(bool preserveCurrentPosition = false)
@@ -1207,8 +1195,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _viewportBottom = _screenHeight > 0 ? _screenHeight - 1L : -1L;
         if (preserveCurrentPosition)
         {
-            var logicalPosition = ConvertAbsoluteToLogical(GetEffectiveViewportCore(), absolutePosition.Item1, absolutePosition.Item2);
-            SetGraphicsCurrentPositionCore(logicalPosition.X, logicalPosition.Y);
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, absolutePosition.Item1, absolutePosition.Item2, out var logicalX, out var logicalY))
+            {
+                SetGraphicsCurrentPositionCore(logicalX, logicalY);
+            }
         }
     }
 
@@ -1253,9 +1243,57 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _viewportTop = absoluteTop;
             _viewportRight = absoluteRight;
             _viewportBottom = absoluteBottom;
-            var logicalPosition = ConvertAbsoluteToLogical(GetEffectiveViewportCore(), previousAbsolutePosition.X, previousAbsolutePosition.Y);
-            SetGraphicsCurrentPositionCore(logicalPosition.X, logicalPosition.Y);
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, previousAbsolutePosition.X, previousAbsolutePosition.Y, out var logicalX, out var logicalY))
+            {
+                SetGraphicsCurrentPositionCore(logicalX, logicalY);
+            }
         });
+
+        return true;
+    }
+
+    private void ResetWindowCore(bool preserveCurrentPosition = false)
+    {
+        var absolutePosition = preserveCurrentPosition ? ResolveCurrentAbsolutePositionCore() : (0L, 0L);
+        _windowEnabled = false;
+        _windowUsesScreenCoordinates = false;
+        _windowLeft = 0d;
+        _windowTop = 0d;
+        _windowRight = 0d;
+        _windowBottom = 0d;
+        if (preserveCurrentPosition)
+        {
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, absolutePosition.Item1, absolutePosition.Item2, out var logicalX, out var logicalY))
+            {
+                SetGraphicsCurrentPositionCore(logicalX, logicalY);
+            }
+        }
+    }
+
+    private bool TrySetWindowCore(double left, double top, double right, double bottom, bool useScreenCoordinates)
+    {
+        var viewport = GetEffectiveViewportCore();
+        if (_screenWidth <= 0 || _screenHeight <= 0 || viewport.Width < 2 || viewport.Height < 2)
+        {
+            return false;
+        }
+
+        if (!GraphicsCoordinateSpaceMath.TryCreateWindow(left, top, right, bottom, useScreenCoordinates, out var window))
+        {
+            return false;
+        }
+
+        var previousAbsolutePosition = ResolveCurrentAbsolutePositionCore();
+        _windowEnabled = true;
+        _windowUsesScreenCoordinates = window.UsesScreenCoordinates;
+        _windowLeft = window.Left;
+        _windowTop = window.Top;
+        _windowRight = window.Right;
+        _windowBottom = window.Bottom;
+        if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, previousAbsolutePosition.X, previousAbsolutePosition.Y, out var logicalX, out var logicalY))
+        {
+            SetGraphicsCurrentPositionCore(logicalX, logicalY);
+        }
 
         return true;
     }

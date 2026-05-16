@@ -714,6 +714,7 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.View:
+                case Opcode.Window:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     break;
 
@@ -1287,6 +1288,38 @@ public sealed class BytecodeModuleValidator
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, topType, TypeSymbol.Long, "верхняя координата VIEW");
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, rightType, TypeSymbol.Long, "правая координата VIEW");
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, TypeSymbol.Long, "нижняя координата VIEW");
+                }
+
+                break;
+            }
+
+            case Opcode.Window:
+            {
+                var flags = instruction.GetOperand(0);
+                var valueCount = instruction.GetOperand(1);
+                var hasCoordinates = (flags & 2) != 0;
+                var expectedValueCount = hasCoordinates ? 4 : 0;
+                if (valueCount != expectedValueCount)
+                {
+                    Report(
+                        "BC4125",
+                        $"Инструкция Window в процедуре '{routine.Name}' ожидает {expectedValueCount} значений, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                    break;
+                }
+
+                if (hasCoordinates)
+                {
+                    var bottomType = Pop();
+                    var rightType = Pop();
+                    var topType = Pop();
+                    var leftType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, leftType, TypeSymbol.Double, "левая координата WINDOW");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, topType, TypeSymbol.Double, "верхняя координата WINDOW");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, rightType, TypeSymbol.Double, "правая координата WINDOW");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, TypeSymbol.Double, "нижняя координата WINDOW");
                 }
 
                 break;

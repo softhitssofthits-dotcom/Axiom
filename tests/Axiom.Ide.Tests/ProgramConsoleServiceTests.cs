@@ -919,6 +919,52 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void Window_ScreenAndCartesianCoordinatesTranslatePixelsAndPreservePhysicalPosition()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        Assert.True(service.SetViewport(10, 10, 20, 20, fillColor: null, borderColor: null, useScreenCoordinates: true));
+        Assert.True(service.SetWindow(100, 200, 110, 210, useScreenCoordinates: true));
+
+        service.SetPixel(104, 205, 6);
+
+        Assert.True(service.WindowEnabled);
+        Assert.Equal(6, service.GetPixel(104, 205));
+        Assert.Equal(14, ((IGraphicsHost)service).CurrentViewportX);
+        Assert.Equal(15, ((IGraphicsHost)service).CurrentViewportY);
+        Assert.Equal(104, service.CurrentGraphicsX);
+        Assert.Equal(205, service.CurrentGraphicsY);
+        Assert.Equal(6, service.GetAbsolutePixel(14, 15));
+
+        service.ResetWindow();
+
+        Assert.False(service.WindowEnabled);
+        Assert.Equal(14, service.CurrentGraphicsX);
+        Assert.Equal(15, service.CurrentGraphicsY);
+
+        Assert.True(service.SetViewport(2, 3, 8, 9, fillColor: null, borderColor: null, useScreenCoordinates: false));
+        Assert.Equal(2, service.CurrentGraphicsX);
+        Assert.Equal(2, service.CurrentGraphicsY);
+
+        Assert.True(service.SetWindow(100, 210, 110, 200, useScreenCoordinates: false));
+
+        service.SetPixel(104, 205, 7);
+
+        Assert.Equal(7, service.GetPixel(104, 205));
+        Assert.Equal(2, ((IGraphicsHost)service).CurrentViewportX);
+        Assert.Equal(3, ((IGraphicsHost)service).CurrentViewportY);
+        Assert.Equal(104, service.CurrentGraphicsX);
+        Assert.Equal(205, service.CurrentGraphicsY);
+        Assert.Equal(7, service.GetAbsolutePixel(14, 16));
+
+        service.ResetWindow();
+
+        Assert.Equal(2, service.CurrentGraphicsX);
+        Assert.Equal(3, service.CurrentGraphicsY);
+    }
+
+    [Fact]
     public void SetTextColor_TransparentBackgroundPreservesNumericBackgroundForPreset()
     {
         var service = new ProgramConsoleService();

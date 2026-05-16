@@ -277,6 +277,39 @@ public sealed class BoundViewStatement : BoundStatement
     public bool IsReset => LeftExpression is null || TopExpression is null || RightExpression is null || BottomExpression is null;
 }
 
+public sealed class BoundWindowStatement : BoundStatement
+{
+    public BoundWindowStatement(
+        TextLocation location,
+        bool useScreenCoordinates,
+        BoundExpression? leftExpression,
+        BoundExpression? topExpression,
+        BoundExpression? rightExpression,
+        BoundExpression? bottomExpression)
+        : base(location)
+    {
+        UseScreenCoordinates = useScreenCoordinates;
+        LeftExpression = leftExpression;
+        TopExpression = topExpression;
+        RightExpression = rightExpression;
+        BottomExpression = bottomExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.WindowStatement;
+
+    public bool UseScreenCoordinates { get; }
+
+    public BoundExpression? LeftExpression { get; }
+
+    public BoundExpression? TopExpression { get; }
+
+    public BoundExpression? RightExpression { get; }
+
+    public BoundExpression? BottomExpression { get; }
+
+    public bool IsReset => LeftExpression is null || TopExpression is null || RightExpression is null || BottomExpression is null;
+}
+
 public sealed class BoundClsStatement : BoundStatement
 {
     public BoundClsStatement(TextLocation location)

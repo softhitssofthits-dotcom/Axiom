@@ -102,6 +102,24 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public long ViewportBottom =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.ViewportBottom : -1;
 
+    public bool WindowEnabled =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.WindowEnabled;
+
+    public bool WindowUsesScreenCoordinates =>
+        _promptService is IGraphicsHost graphicsHost && graphicsHost.WindowUsesScreenCoordinates;
+
+    public double WindowLeft =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.WindowLeft : 0d;
+
+    public double WindowTop =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.WindowTop : 0d;
+
+    public double WindowRight =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.WindowRight : 0d;
+
+    public double WindowBottom =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.WindowBottom : 0d;
+
     public void SetGraphicsCurrentPosition(long x, long y)
     {
         if (_promptService is IGraphicsHost graphicsHost)
@@ -119,6 +137,18 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         if (_promptService is IGraphicsHost graphicsHost)
         {
             graphicsHost.ResetViewport();
+        }
+    }
+
+    public bool SetWindow(double left, double top, double right, double bottom, bool useScreenCoordinates) =>
+        _promptService is IGraphicsHost graphicsHost &&
+        graphicsHost.SetWindow(left, top, right, bottom, useScreenCoordinates);
+
+    public void ResetWindow()
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetWindow();
         }
     }
 

@@ -1331,3 +1331,82 @@
 Следующий точный шаг:
 - если фокус остаётся только на графике, открыть отдельный договор оператора `WINDOW` как следующий шаг поверх уже закрытого `VIEW`;
 - до этого не расширять `VIEW` и не возвращаться к уже закрытым графическим операторам без нового подтверждённого сценария.
+
+## Session 870 - 2026-05-16 17:00 - WINDOW доведён до рабочего договора
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и подтверждено, что после закрытого `VIEW` следующим графическим шагом остаётся отдельный оператор `WINDOW`;
+- ранее внесённый код `WINDOW` доведён до собираемого состояния: исправлена общая координатная математика `GraphicsCoordinateSpaceMath`, а тестовые host'ы `BytecodeVmTests`, `ExecutionPipelineTests` и `AcceptanceProgramTests` синхронизированы с новым host-договором `WindowEnabled` / `SetWindow(...)` / `ResetWindow()` и абсолютными пиксельными операциями;
+- в runtime и `BytecodeVm` подтверждён пользовательский договор `WINDOW`: формы reset, `WINDOW SCREEN`, декартова форма без `SCREEN`, пересчёт `POINT(0..3)`, rebasing текущей позиции при смене `VIEW` / `WINDOW` и проектное решение Axiom, что `DRAW` использует ту же логическую систему окна и общую текущую графическую позицию;
+- добавлены целевые автотесты в `Axiom.Parsing.Tests`, `Axiom.Semantics.Tests`, `Axiom.Runtime.Tests`, `Axiom.Ide.Tests` и `Axiom.Execution.Tests`;
+- добавлен runnable sample `samples/operators/window/cartesian_and_screen.axm`;
+- в manual добавлена новая страница `docs/manual/window.html`, а также синхронизированы `docs/manual/graphics.html`, `docs/manual/view.html`, `docs/manual/graphics-primitives.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` обновлены под фактический итог шага `WINDOW`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Host/GraphicsCoordinateSpace.cs`
+- `src/Axiom.Runtime/Host/GraphicsHostDrawing.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/GraphicsCoordinateValidation.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundNodeKind.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.SyntaxHelpers.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs`
+- `src/Axiom.Bytecode/Model/Opcode.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/window/cartesian_and_screen.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/ARCHITECTURE.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/manual/window.html`
+- `docs/manual/graphics.html`
+- `docs/manual/view.html`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build Axiom.sln --no-restore` — успешно;
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~Parse_Window"` — успешно;
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~Bind_Window"` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~WindowSupportsDrawPointSelectorsAndViewRebase"` — успешно;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests.Window_"` — успешно;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Window"` — успешно;
+- `node --check docs/manual/scripts/manual.js` — ожидается в финальном прогоне вместе с `search-index.js`.
+
+Решение:
+- считать графический шаг `WINDOW` закрытым по критерию кода, автотестов, runnable sample, manual и проектной документации;
+- держать `WINDOW` отдельным логическим слоем поверх `VIEW`, а `DRAW` — подчинённым той же общей текущей графической позиции, не возвращаясь к QuickBASIC-идее отдельной внутренней координатной модели только для `DRAW`.
+
+Следующий точный шаг:
+- если продолжаем именно графическую ветку, открыть отдельный договор `PMAP` поверх уже закрытых `VIEW` и `WINDOW`;
+- `GET` и `PUT` пока не трогать и не смешивать с этим шагом.

@@ -363,6 +363,25 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.View, location, valueCount: valueCount, mouseEventKind: flags);
     }
 
+    public static LoweredInstruction Window(
+        TextLocation location,
+        bool useScreenCoordinates,
+        bool hasCoordinates)
+    {
+        var flags = 0;
+        if (useScreenCoordinates)
+        {
+            flags |= 1;
+        }
+
+        if (hasCoordinates)
+        {
+            flags |= 2;
+        }
+
+        return new LoweredInstruction(LoweredInstructionKind.Window, location, valueCount: hasCoordinates ? 4 : 0, mouseEventKind: flags);
+    }
+
     public static LoweredInstruction Cls(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.Cls, location);

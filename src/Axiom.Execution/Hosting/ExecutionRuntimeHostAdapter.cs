@@ -120,6 +120,24 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public long ViewportBottom =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.ViewportBottom : -1;
 
+    public bool WindowEnabled =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.WindowEnabled;
+
+    public bool WindowUsesScreenCoordinates =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.WindowUsesScreenCoordinates;
+
+    public double WindowLeft =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.WindowLeft : 0d;
+
+    public double WindowTop =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.WindowTop : 0d;
+
+    public double WindowRight =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.WindowRight : 0d;
+
+    public double WindowBottom =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.WindowBottom : 0d;
+
     public void SetGraphicsCurrentPosition(long x, long y)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -137,6 +155,18 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
             graphicsHost.ResetViewport();
+        }
+    }
+
+    public bool SetWindow(double left, double top, double right, double bottom, bool useScreenCoordinates) =>
+        _inputProvider is IGraphicsHost graphicsHost &&
+        graphicsHost.SetWindow(left, top, right, bottom, useScreenCoordinates);
+
+    public void ResetWindow()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetWindow();
         }
     }
 

@@ -728,3 +728,16 @@
 - Сквозной VM: да, добавлены acceptance-проверки `ScreenViewAcceptanceSample_RunsOnBytecodeVm()` и автоматический audit-путь для `samples/operators/view/screen_and_relative.axm`;
 - Негативный паритет: частично, runtime-диагностики `MB3010` и `MB3007` используются тем же путём, что и другие графические операторы, но отдельный отрицательный `.axm`-sample для некорректного viewport в этом шаге не добавлялся;
 - Профиль: не приоритет, потому что `VIEW` меняет границы и систему координат framebuffer, а не является горячим вычислительным циклом.
+
+## Обновление реестра - 2026-05-16 - оператор WINDOW
+
+Дополнение к области `SCREEN` и операторов рисования:
+- VM: да, `BytecodeVm` выполняет отдельную инструкцию `Window`, различает `WINDOW` reset, `WINDOW SCREEN` и декартову форму `WINDOW`;
+- Интерпретатор: да, использует тот же host-договор `SetWindow(...)` / `ResetWindow()` и тот же пересчёт текущей физической точки через общий координатный helper;
+- Автотесты: да, добавлены parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-проверки `Parse_WindowResetStatement()`, `Parse_WindowStatementSupportsScreenCoordinates()`, `Bind_WindowResetStatement()`, `Bind_WindowStatementBindsCoordinatesAsDouble()`, `Execute_WindowSupportsDrawPointSelectorsAndViewRebase()`, `Execute_CompiledWindowSupportsDrawPointSelectorsAndViewRebase()`, `Window_ScreenAndCartesianCoordinatesTranslatePixelsAndPreservePhysicalPosition()` и `Run_WithBytecodeMode_UsesBytecodeVmForWindowScreenCartesianAndDraw()`;
+- Runnable sample: да, добавлен `samples/operators/window/cartesian_and_screen.axm`;
+- Manual: да, добавлена страница `docs/manual/window.html` и обновлены `docs/manual/graphics.html`, `docs/manual/view.html`, `docs/manual/graphics-primitives.html`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, добавлена acceptance-проверка `ScreenWindowAcceptanceSample_RunsOnBytecodeVm()` для `samples/operators/window/cartesian_and_screen.axm`;
+- Негативный паритет: частично, runtime-диагностики `MB3010` и `MB3007` используют тот же общий путь, но отдельный отрицательный `.axm`-sample для некорректного окна в этом шаге не добавлялся;
+- Профиль: не приоритет, потому что `WINDOW` меняет координатное отображение и текущую графическую позицию, а не является горячим вычислительным сценарием VM;
+- Проектное решение Axiom: `DRAW` подчиняется активному `WINDOW` и делит общую текущую графическую позицию с остальными графическими операторами, а `POINT(0/1)` возвращает физические координаты viewport, тогда как `POINT(2/3)` возвращает логические координаты активного окна.

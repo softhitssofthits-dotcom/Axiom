@@ -55,6 +55,29 @@ public sealed partial class BytecodeVm
         }
     }
 
+    private void ExecuteWindowInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("WINDOW", location);
+        var flags = instruction.GetOperand(0);
+        var hasCoordinates = (flags & 2) != 0;
+        if (!hasCoordinates)
+        {
+            _host.ResetWindow();
+            return;
+        }
+
+        var bottom = PopValue(frame, instructionIndex).AsDouble();
+        var right = PopValue(frame, instructionIndex).AsDouble();
+        var top = PopValue(frame, instructionIndex).AsDouble();
+        var left = PopValue(frame, instructionIndex).AsDouble();
+        if (!TryApplyWindow(left, top, right, bottom, (flags & 1) != 0))
+        {
+            ReportInvalidWindow("WINDOW", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private void ExecuteClsInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         if (_host.IsScreenOutputActive)
@@ -365,6 +388,15 @@ public sealed partial class BytecodeVm
             location);
     }
 
+    private void ReportInvalidWindow(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            "координаты WINDOW должны задавать ненулевой логический прямоугольник в допустимом диапазоне, а текущий VIEW должен оставлять минимум два пикселя по каждой оси.",
+            location);
+    }
+
     private bool TryApplyViewport(
         long left,
         long top,
@@ -387,6 +419,21 @@ public sealed partial class BytecodeVm
         return _host.SetViewport(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
     }
 
+    private bool TryApplyWindow(
+        double left,
+        double top,
+        double right,
+        double bottom,
+        bool useScreenCoordinates)
+    {
+        if (!GraphicsCoordinateValidation.AreSupportedWindowCoordinates(left, top, right, bottom))
+        {
+            return false;
+        }
+
+        return _host.SetWindow(left, top, right, bottom, useScreenCoordinates);
+    }
+
     private RuntimeValue EvaluatePointBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
         RequireScreenActive("POINT", location);
@@ -402,8 +449,8 @@ public sealed partial class BytecodeVm
     {
         return selector switch
         {
-            0 => checked((int)_host.CurrentGraphicsX),
-            1 => checked((int)_host.CurrentGraphicsY),
+            0 => checked((int)_host.CurrentViewportX),
+            1 => checked((int)_host.CurrentViewportY),
             2 => checked((int)_host.CurrentGraphicsX),
             3 => checked((int)_host.CurrentGraphicsY),
             _ =>

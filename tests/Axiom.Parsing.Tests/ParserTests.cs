@@ -431,6 +431,30 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_WindowResetStatement()
+    {
+        var program = ParseProgram("WINDOW", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var window = AssertGlobalStatement<WindowStatementSyntax>(program);
+        Assert.True(window.IsReset);
+        Assert.Null(window.ScreenKeyword);
+    }
+
+    [Fact]
+    public void Parse_WindowStatementSupportsScreenCoordinates()
+    {
+        var program = ParseProgram("WINDOW SCREEN (1, 2)-(3, 4)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var window = AssertGlobalStatement<WindowStatementSyntax>(program);
+        Assert.False(window.IsReset);
+        Assert.NotNull(window.ScreenKeyword);
+        Assert.NotNull(window.TopLeftPoint);
+        Assert.NotNull(window.BottomRightPoint);
+    }
+
+    [Fact]
     public void Parse_PaintStatementSupportsStepEmptySlotsAndBackground()
     {
         var program = ParseProgram("PAINT STEP (8, 9), pattern, , backPattern", out var diagnostics);

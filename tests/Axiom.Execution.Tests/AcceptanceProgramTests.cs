@@ -1943,6 +1943,34 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void ScreenWindowAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/window/cartesian_and_screen.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "draw pixel=15",
+                "screen pos=15,15",
+                "screen logical=105,205",
+                "reset pos=15,15 logical=15,15",
+                "view pos=3,2 logical=3,2",
+                "cart pixel=7",
+                "cart pos=2,3",
+                "cart logical=104,205",
+                "WINDOW sample finished"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenPaintAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/paint/pattern_repaint.axm");
@@ -2453,6 +2481,12 @@ public sealed class AcceptanceProgramTests
         private long _viewportTop;
         private long _viewportRight = -1;
         private long _viewportBottom = -1;
+        private bool _windowEnabled;
+        private bool _windowUsesScreenCoordinates;
+        private double _windowLeft;
+        private double _windowTop;
+        private double _windowRight;
+        private double _windowBottom;
         private string _pendingGraphicsLine = string.Empty;
 
         public QueueKeyboardInputProvider(params string[] keys)
@@ -2532,6 +2566,18 @@ public sealed class AcceptanceProgramTests
 
         public long ViewportBottom => _viewportBottom;
 
+        public bool WindowEnabled => _windowEnabled;
+
+        public bool WindowUsesScreenCoordinates => _windowUsesScreenCoordinates;
+
+        public double WindowLeft => _windowLeft;
+
+        public double WindowTop => _windowTop;
+
+        public double WindowRight => _windowRight;
+
+        public double WindowBottom => _windowBottom;
+
         public void ActivateScreen(int mode)
         {
             _isScreenActive = mode != 0;
@@ -2552,6 +2598,7 @@ public sealed class AcceptanceProgramTests
             _currentGraphicsX = 0;
             _currentGraphicsY = 0;
             ResetViewport();
+            ResetWindow();
         }
 
         public void DeactivateScreen()
@@ -2565,6 +2612,7 @@ public sealed class AcceptanceProgramTests
             _currentGraphicsX = 0;
             _currentGraphicsY = 0;
             ResetViewport();
+            ResetWindow();
         }
 
         public void ClearGraphics()
@@ -2632,7 +2680,7 @@ public sealed class AcceptanceProgramTests
 
         public void SetPixel(long x, long y, int color)
         {
-            if (!TryTranslateLogicalToAbsolute(x, y, out var absoluteX, out var absoluteY))
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out var absoluteX, out var absoluteY))
             {
                 return;
             }
@@ -2640,6 +2688,14 @@ public sealed class AcceptanceProgramTests
             _pixels[(absoluteX, absoluteY)] = color;
             _currentGraphicsX = x;
             _currentGraphicsY = y;
+        }
+
+        public void SetAbsolutePixel(long x, long y, int color)
+        {
+            if (IsInsideScreen(x, y))
+            {
+                _pixels[(x, y)] = color;
+            }
         }
 
         public void SetGraphicsCurrentPosition(long x, long y)
@@ -2650,13 +2706,16 @@ public sealed class AcceptanceProgramTests
 
         public int GetPixel(long x, long y)
         {
-            if (!TryTranslateLogicalToAbsolute(x, y, out var absoluteX, out var absoluteY))
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out var absoluteX, out var absoluteY))
             {
                 return 0;
             }
 
             return _pixels.TryGetValue((absoluteX, absoluteY), out var color) ? color : 0;
         }
+
+        public int GetAbsolutePixel(long x, long y) =>
+            _pixels.TryGetValue((x, y), out var color) ? color : 0;
 
         public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates)
         {
@@ -2710,9 +2769,11 @@ public sealed class AcceptanceProgramTests
             _viewportTop = absoluteTop;
             _viewportRight = absoluteRight;
             _viewportBottom = absoluteBottom;
-            var logicalPosition = ToLogicalPosition(currentAbsolute.X, currentAbsolute.Y);
-            _currentGraphicsX = logicalPosition.X;
-            _currentGraphicsY = logicalPosition.Y;
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, currentAbsolute.X, currentAbsolute.Y, out var logicalX, out var logicalY))
+            {
+                _currentGraphicsX = logicalX;
+                _currentGraphicsY = logicalY;
+            }
             return true;
         }
 
@@ -2725,36 +2786,68 @@ public sealed class AcceptanceProgramTests
             _viewportTop = 0;
             _viewportRight = _screenWidth - 1L;
             _viewportBottom = _screenHeight - 1L;
-            _currentGraphicsX = currentAbsolute.X;
-            _currentGraphicsY = currentAbsolute.Y;
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, currentAbsolute.X, currentAbsolute.Y, out var logicalX, out var logicalY))
+            {
+                _currentGraphicsX = logicalX;
+                _currentGraphicsY = logicalY;
+            }
         }
 
-        private bool TryTranslateLogicalToAbsolute(long x, long y, out long absoluteX, out long absoluteY)
+        public bool SetWindow(double left, double top, double right, double bottom, bool useScreenCoordinates)
         {
             var viewport = _viewportEnabled
                 ? new GraphicsViewport(_viewportLeft, _viewportTop, _viewportRight, _viewportBottom, _viewportRelativeCoordinates)
                 : new GraphicsViewport(0, 0, _screenWidth - 1L, _screenHeight - 1L, UsesRelativeCoordinates: false);
-            return viewport.TryTranslateLogicalToAbsolute(x, y, out absoluteX, out absoluteY) &&
-                   IsInsideScreen(absoluteX, absoluteY);
+            if (!_isScreenActive || viewport.Width < 2 || viewport.Height < 2)
+            {
+                return false;
+            }
+
+            if (!GraphicsCoordinateSpaceMath.TryCreateWindow(left, top, right, bottom, useScreenCoordinates, out var window))
+            {
+                return false;
+            }
+
+            var currentAbsolute = ResolveCurrentAbsolutePosition();
+            _windowEnabled = true;
+            _windowUsesScreenCoordinates = window.UsesScreenCoordinates;
+            _windowLeft = window.Left;
+            _windowTop = window.Top;
+            _windowRight = window.Right;
+            _windowBottom = window.Bottom;
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, currentAbsolute.X, currentAbsolute.Y, out var logicalX, out var logicalY))
+            {
+                _currentGraphicsX = logicalX;
+                _currentGraphicsY = logicalY;
+            }
+
+            return true;
+        }
+
+        public void ResetWindow()
+        {
+            var currentAbsolute = ResolveCurrentAbsolutePosition();
+            _windowEnabled = false;
+            _windowUsesScreenCoordinates = false;
+            _windowLeft = 0d;
+            _windowTop = 0d;
+            _windowRight = 0d;
+            _windowBottom = 0d;
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, currentAbsolute.X, currentAbsolute.Y, out var logicalX, out var logicalY))
+            {
+                _currentGraphicsX = logicalX;
+                _currentGraphicsY = logicalY;
+            }
         }
 
         private (long X, long Y) ResolveCurrentAbsolutePosition()
         {
-            if (_viewportEnabled && _viewportRelativeCoordinates)
+            if (GraphicsCoordinateSpaceMath.TryResolveCurrentAbsolutePosition(this, out var absoluteX, out var absoluteY))
             {
-                return (
-                    GraphicsLineMath.SaturatingAdd(_viewportLeft, _currentGraphicsX),
-                    GraphicsLineMath.SaturatingAdd(_viewportTop, _currentGraphicsY));
+                return (absoluteX, absoluteY);
             }
 
             return (_currentGraphicsX, _currentGraphicsY);
-        }
-
-        private (long X, long Y) ToLogicalPosition(long absoluteX, long absoluteY)
-        {
-            return _viewportEnabled && _viewportRelativeCoordinates
-                ? (absoluteX - _viewportLeft, absoluteY - _viewportTop)
-                : (absoluteX, absoluteY);
         }
 
         private bool IsInsideScreen(long x, long y) => x >= 0 && y >= 0 && x < _screenWidth && y < _screenHeight;

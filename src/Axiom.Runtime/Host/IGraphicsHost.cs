@@ -36,6 +36,16 @@ public interface IGraphicsHost
 
     long CurrentGraphicsY => 0;
 
+    long CurrentViewportX =>
+        GraphicsCoordinateSpaceMath.TryResolveCurrentViewportPosition(this, out var viewportX, out _)
+            ? viewportX
+            : CurrentGraphicsX;
+
+    long CurrentViewportY =>
+        GraphicsCoordinateSpaceMath.TryResolveCurrentViewportPosition(this, out _, out var viewportY)
+            ? viewportY
+            : CurrentGraphicsY;
+
     bool ViewportEnabled => false;
 
     bool ViewportRelativeCoordinates => false;
@@ -48,6 +58,18 @@ public interface IGraphicsHost
 
     long ViewportBottom => ScreenHeight > 0 ? ScreenHeight - 1L : -1L;
 
+    bool WindowEnabled => false;
+
+    bool WindowUsesScreenCoordinates => false;
+
+    double WindowLeft => 0d;
+
+    double WindowTop => 0d;
+
+    double WindowRight => 0d;
+
+    double WindowBottom => 0d;
+
     void SetGraphicsCurrentPosition(long x, long y)
     {
     }
@@ -55,6 +77,12 @@ public interface IGraphicsHost
     bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates) => false;
 
     void ResetViewport()
+    {
+    }
+
+    bool SetWindow(double left, double top, double right, double bottom, bool useScreenCoordinates) => false;
+
+    void ResetWindow()
     {
     }
 
@@ -84,6 +112,12 @@ public interface IGraphicsHost
 
     string ReadGraphicsInput(InputRequest request) => string.Empty;
 
+    void SetAbsolutePixel(long x, long y, int color)
+    {
+    }
+
+    int GetAbsolutePixel(long x, long y) => 0;
+
     void SetPixel(long x, long y, int color)
     {
     }
@@ -92,36 +126,7 @@ public interface IGraphicsHost
 
     void Paint(GraphicsPaintRequest request)
     {
-        var viewport = GraphicsViewportMath.GetEffectiveViewport(this);
-        if (viewport.IsEmpty)
-        {
-            return;
-        }
-
-        if (viewport.UsesRelativeCoordinates)
-        {
-            GraphicsFloodFill.Paint(
-                request,
-                GetPixel,
-                SetPixel,
-                static (x, y, width, height) => x >= 0 && y >= 0 && x < width && y < height,
-                checked((int)viewport.Width),
-                checked((int)viewport.Height));
-            return;
-        }
-
-        GraphicsFloodFill.Paint(
-            request,
-            GetPixel,
-            SetPixel,
-            (x, y, width, height) =>
-                x >= 0 &&
-                y >= 0 &&
-                x < width &&
-                y < height &&
-                viewport.IsInsideAbsolute(x, y),
-            ScreenWidth,
-            ScreenHeight);
+        GraphicsHostDrawing.Paint(this, request);
     }
 
     void Paint(long x, long y, int fillColor, int borderColor)
@@ -131,27 +136,7 @@ public interface IGraphicsHost
 
     void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
     {
-        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
-        {
-            return;
-        }
-
-        switch (kind)
-        {
-            case GraphicsLineKind.Box:
-                DrawBoxCore(x1, y1, x2, y2, color, filled: false);
-                break;
-
-            case GraphicsLineKind.FilledBox:
-                DrawBoxCore(x1, y1, x2, y2, color, filled: true);
-                break;
-
-            default:
-                DrawLineCore(x1, y1, x2, y2, color);
-                break;
-        }
-
-        SetGraphicsCurrentPosition(x2, y2);
+        GraphicsHostDrawing.DrawLine(this, x1, y1, x2, y2, color, kind);
     }
 
     void DrawCircle(
@@ -166,135 +151,6 @@ public interface IGraphicsHost
         bool drawStartRadius,
         bool drawEndRadius)
     {
-        if (!GraphicsCircleValidation.HasValidArguments(radius, startAngle, endAngle, aspect))
-        {
-            return;
-        }
-
-        if (!GraphicsInstructionArguments.TryCreateCircle(
-                CurrentGraphicsX,
-                CurrentGraphicsY,
-                x,
-                y,
-                radius,
-                color,
-                relativeCenter,
-                startAngle,
-                endAngle,
-                aspect,
-                out var circle))
-        {
-            return;
-        }
-
-        var centerX = circle.CenterX;
-        var centerY = circle.CenterY;
-        SetGraphicsCurrentPosition(centerX, centerY);
-
-        var radiusX = circle.Aspect <= 1d ? circle.Radius : circle.Radius / circle.Aspect;
-        var radiusY = circle.Aspect <= 1d ? circle.Radius * circle.Aspect : circle.Radius;
-        if (radiusX <= 0 || radiusY <= 0)
-        {
-            SetPixel(centerX, centerY, color);
-            return;
-        }
-
-        var arcStart = circle.StartAngle ?? 0d;
-        var startPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
-
-        if (circle.DrawStartRadius)
-        {
-            DrawLineCore(centerX, centerY, startPoint.X, startPoint.Y, color);
-        }
-
-        GraphicsEllipseRasterizer.Rasterize(
-            centerX,
-            centerY,
-            radiusX,
-            radiusY,
-            circle.FullCircle,
-            arcStart,
-            circle.Sweep,
-            GetRasterWidth(),
-            GetRasterHeight(),
-            (x, y) => SetPixel(x, y, color));
-
-        if (circle.DrawEndRadius)
-        {
-            var endPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart + circle.Sweep);
-            DrawLineCore(centerX, centerY, endPoint.X, endPoint.Y, color);
-        }
-
-        SetGraphicsCurrentPosition(centerX, centerY);
-    }
-
-    private void DrawLineCore(long x1, long y1, long x2, long y2, int color)
-    {
-        var dx = Math.Abs(x2 - x1);
-        var sx = x1 < x2 ? 1 : -1;
-        var dy = -Math.Abs(y2 - y1);
-        var sy = y1 < y2 ? 1 : -1;
-        var error = dx + dy;
-
-        while (true)
-        {
-            SetPixel(x1, y1, color);
-            if (x1 == x2 && y1 == y2)
-            {
-                break;
-            }
-
-            var doubledError = GraphicsLineMath.SaturatingDouble(error);
-            if (doubledError >= dy)
-            {
-                error = GraphicsLineMath.SaturatingAdd(error, dy);
-                x1 += sx;
-            }
-
-            if (doubledError <= dx)
-            {
-                error = GraphicsLineMath.SaturatingAdd(error, dx);
-                y1 += sy;
-            }
-        }
-    }
-
-    private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
-    {
-        var left = Math.Min(x1, x2);
-        var right = Math.Max(x1, x2);
-        var top = Math.Min(y1, y2);
-        var bottom = Math.Max(y1, y2);
-
-        if (filled)
-        {
-            for (var y = top; y <= bottom; y++)
-            {
-                DrawLineCore(left, y, right, y, color);
-            }
-
-            return;
-        }
-
-        DrawLineCore(left, top, right, top, color);
-        DrawLineCore(right, top, right, bottom, color);
-        DrawLineCore(right, bottom, left, bottom, color);
-        DrawLineCore(left, bottom, left, top, color);
-    }
-
-    private int GetRasterWidth()
-    {
-        var viewport = GraphicsViewportMath.GetEffectiveViewport(this);
-        return viewport.UsesRelativeCoordinates
-            ? checked((int)Math.Max(0, viewport.Width))
-            : ScreenWidth;
-    }
-
-    private int GetRasterHeight()
-    {
-        var viewport = GraphicsViewportMath.GetEffectiveViewport(this);
-        return viewport.UsesRelativeCoordinates
-            ? checked((int)Math.Max(0, viewport.Height))
-            : ScreenHeight;
+        GraphicsHostDrawing.DrawCircle(this, x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
     }
 }

@@ -81,6 +81,7 @@ public enum Opcode
     ResumeMouseHandler,
     Screen,
     View,
+    Window,
     Cls,
     Color,
     Locate,
