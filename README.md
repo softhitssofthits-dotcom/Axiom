@@ -81,6 +81,13 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 ```
 
 - этот режим открывает `poll_keys.axm`, запускает его в IDE, переводит фокус в `Output` и отправляет клавишу `LEFT`, подтверждая реальный ввод через окно IDE;
+- для отдельной приёмки графических `SCREEN`-сценариев `GET` / `PUT` есть узкий smoke-маршрут на настоящих sample из репозитория:
+
+```powershell
+dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj -- --get-put-only
+```
+
+- этот режим копирует `samples/operators/get/rectangle_capture.axm` и `samples/operators/put/default_xor_and_preset.axm` во временный workspace, запускает их через реальный `Axiom.Ide.exe` и ждёт в IDE trace события `screen.activated`, строки `screen.output` и финальное `screen.deactivated`;
 - для отладки workspace можно оставить:
 
 ```powershell

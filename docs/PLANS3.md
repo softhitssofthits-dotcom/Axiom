@@ -5436,3 +5436,66 @@
 Следующий точный шаг:
 - если продолжаем именно графическую ветку, открыть отдельный договор `PMAP` поверх уже закрытых `VIEW` и `WINDOW`;
 - `GET` и `PUT` не трогать до отдельного подтверждённого сценария после `PMAP`.
+
+## Обновление плана - 2026-05-16 - функция PMAP доведена до рабочего договора
+
+Сделано:
+- `PMAP` открыт как отдельный графический шаг поверх уже закрытых `VIEW` и `WINDOW`, без смешивания с `GET` и `PUT`;
+- договор закрыт по регистрации встроенной функции, интерпретатору, `BytecodeVm`, общей координатной математике, приёмочному примеру и справочнику;
+- отдельно зафиксировано проектное решение Axiom, что `PMAP` возвращает `DOUBLE`, сохраняет дробную часть и без активного `WINDOW` работает как тождественное преобразование в текущей системе viewport;
+- по ходу шага синхронизирована соседняя страница справочника `screen-functions.html`, где после `WINDOW` оставалось устаревшее описание `POINT(number)`.
+
+Проверка:
+- `dotnet build Axiom.sln --no-restore` проходит;
+- проходят адресные проверки `Axiom.Semantics.Tests`, `Axiom.Runtime.Tests` и `Axiom.Execution.Tests` по фильтру `PMap`;
+- `samples/functions/pmap/window_and_viewport_conversion.axm` запускается через `ExecutionMode.Bytecode` без отката на интерпретатор;
+- `node --check docs/manual/scripts/manual.js` и `node --check docs/manual/scripts/search-index.js` остаются обязательной финальной проверкой навигации справочника.
+
+Решение:
+- считать графический шаг `PMAP` закрытым по критерию кода, автотестов, запускаемого примера, справочника и проектной документации;
+- держать `PMAP` чистой функцией преобразования поверх того же договора графического хоста `VIEW` + `WINDOW`, не превращая её в отдельную координатную подсистему.
+
+Следующий точный шаг:
+- если продолжаем именно графическую ветку, открыть отдельный договор `GET` / `PUT` поверх уже закрытых `VIEW`, `WINDOW` и `PMAP`;
+- не возвращаться к `PMAP` без нового подтверждённого сценария или ручного расхождения в проверочном примере.
+
+## Обновление плана - 2026-05-17 - операторы GET и PUT доведены до рабочего договора
+
+Сделано:
+- `GET` и `PUT` закрыты по parser, binder, interpreter, `BytecodeVm`, execution-host и acceptance-path;
+- устранён реальный execution-хвост: `ExecutionRuntimeHostAdapter` теперь прокидывает `GetAbsolutePixel(...)` и `SetAbsolutePixel(...)`, поэтому поблочный перенос в режиме `Bytecode` работает через тот же графический host-договор, что и прямые runtime-проверки;
+- добавлены runnable-примеры `samples/operators/get/rectangle_capture.axm` и `samples/operators/put/default_xor_and_preset.axm`, а справочник синхронизирован отдельной страницей `docs/manual/get-put.html`, обзором графики, навигацией и поиском.
+
+Проверка:
+- проходят адресные execution-проверки `Run_WithBytecodeMode_UsesBytecodeVmForGetPutTransfers`, `GetAcceptanceSample_RunsOnBytecodeVm` и `PutAcceptanceSample_RunsOnBytecodeVm`;
+- ранее в этой же рабочей ветке уже были подтверждены адресные parser-, binder- и runtime-проверки для `GET` / `PUT`;
+- после обновления manual остаются обязательными финальные проверки `node --check docs/manual/scripts/manual.js` и `node --check docs/manual/scripts/search-index.js`.
+
+Решение:
+- считать графический шаг `GET` / `PUT` закрытым по критерию кода, автотестов, runnable sample, manual и проектной документации;
+- держать `GET` / `PUT` массивно-ориентированным слоем поверх уже закрытого координатного договора `VIEW` + `WINDOW`, не вводя packed-буфер и не раздувая host-контракт сверх абсолютных пикселей.
+
+Следующий точный шаг:
+- вручную открыть в `Axiom.Ide` `samples/operators/get/rectangle_capture.axm` и `samples/operators/put/default_xor_and_preset.axm`, чтобы визуально подтвердить пользовательский сценарий поверх реального окна `SCREEN`;
+- после этой ручной приёмки не открывать новый графический оператор вслепую, а сначала зафиксировать отдельный следующий сценарий в документах проекта.
+
+## Обновление плана - 2026-05-17 - smoke-приёмка GET и PUT закрыта через Axiom.Ide.SmokeHarness
+
+Сделано:
+- в `ProgramConsoleService` добавлен наблюдаемый trace/event-log сигнал `screen.output` для строк, которые печатаются в активный `SCREEN`;
+- найден и закрыт живой IDE-хвост: `IdeInputProvider` теперь тоже прокидывает `GetAbsolutePixel(...)` и `SetAbsolutePixel(...)`, поэтому путь `ProgramRunService -> IdeInputProvider -> ProgramConsoleService` больше не теряет `GET` / `PUT` на абсолютных пикселях;
+- `Axiom.Ide.SmokeHarness` получил отдельный режим `--get-put-only`, который копирует реальные sample `samples/operators/get/rectangle_capture.axm` и `samples/operators/put/default_xor_and_preset.axm` во временный workspace и проверяет их по trace реального `Axiom.Ide.exe`;
+- в `Axiom.Ide.Tests` добавлены адресные регрессии как на новый `screen.output`, так и на живой путь `ProgramRunService` для acceptance-программ `GET` и `PUT`.
+
+Проверка:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests.ScreenOutput_WritesGraphicsOutputTraceAndEventLogEntries|FullyQualifiedName~ProgramRunServiceTests.Run_GetAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm|FullyQualifiedName~ProgramRunServiceTests.Run_PutAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm"` проходит;
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj --no-restore` проходит;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --get-put-only` проходит и подтверждает `GET` и `PUT` через реальное окно `SCREEN`.
+
+Решение:
+- считать хвост ручной приёмки `GET` / `PUT` закрытым не только по runtime/execution-проверкам, но и по автоматизированной приёмке живого IDE-пути;
+- держать `screen.output` и `--get-put-only` как постоянный адресный маршрут регрессии для графического слоя IDE.
+
+Следующий точный шаг:
+- если продолжаем именно графическую ветку, сначала зафиксировать в документах следующий отдельный графический договор поверх уже закрытых `VIEW`, `WINDOW`, `PMAP`, `GET` и `PUT`, а потом открывать код только под него;
+- к `GET` / `PUT` не возвращаться без нового расхождения в `--get-put-only`, acceptance-sample или адресных IDE-тестах.

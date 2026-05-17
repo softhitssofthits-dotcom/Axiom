@@ -1971,6 +1971,64 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void PMapAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/pmap/window_and_viewport_conversion.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "abs=14,15",
+                "back=104,205",
+                "view only=3,2 back=3,2",
+                "frac=1.5,102.5",
+                "cart=3,3",
+                "cart back=105,205",
+                "PMAP sample finished"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void GetAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/get/rectangle_capture.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["6", "9", "12", "15", "GET sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void PutAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/put/default_xor_and_preset.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["1", "2", "254", "253", "PUT sample finished"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenPaintAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/paint/pattern_repaint.axm");
@@ -2300,8 +2358,12 @@ public sealed class AcceptanceProgramTests
 
         if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/view/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/window/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/get/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/put/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/paint/", StringComparison.OrdinalIgnoreCase)
-            || relativePath.StartsWith("samples/operators/draw/", StringComparison.OrdinalIgnoreCase))
+            || relativePath.StartsWith("samples/operators/draw/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/functions/pmap/", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
         }

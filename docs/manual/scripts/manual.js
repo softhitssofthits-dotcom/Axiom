@@ -150,8 +150,10 @@
         { id: "screen", href: "screen.html", label: "Оператор SCREEN" },
         { id: "view", href: "view.html", label: "Оператор VIEW" },
         { id: "window", href: "window.html", label: "Оператор WINDOW" },
+        { id: "pmap", href: "pmap.html", label: "Функция PMAP" },
         { id: "graphics-text", href: "graphics-text.html", label: "Текст на экране" },
         { id: "graphics-primitives", href: "graphics-primitives.html", label: "Операторы рисования" },
+        { id: "get-put", href: "get-put.html", label: "Операторы GET и PUT" },
         { id: "screen-functions", href: "screen-functions.html", label: "Функции состояния SCREEN" }
       ]
     },

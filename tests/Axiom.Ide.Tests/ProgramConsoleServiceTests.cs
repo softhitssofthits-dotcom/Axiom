@@ -1101,6 +1101,25 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void ScreenOutput_WritesGraphicsOutputTraceAndEventLogEntries()
+    {
+        var traceService = new FakeIdeTraceService();
+        var eventLogService = new FakeIdeEventLogService();
+        var service = new ProgramConsoleService(traceService, eventLogService);
+
+        service.ActivateScreen(1);
+        service.WriteGraphicsText("A", newLine: false);
+        service.WriteGraphicsText("B", newLine: true);
+        service.WriteGraphicsText("C", newLine: false);
+        service.DeactivateScreen();
+
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.output" && entry.Message == "AB");
+        Assert.Contains(traceService.Entries, static entry => entry.Category == "screen.output" && entry.Message == "C");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.output" && entry.TextPreview == "AB");
+        Assert.Contains(eventLogService.Entries, static entry => entry.Category == "graphics" && entry.EventName == "screen.output" && entry.TextPreview == "C");
+    }
+
+    [Fact]
     public void DeactivateScreen_WritesFinalInputSummaryAfterPeriodicSummary()
     {
         var traceService = new FakeIdeTraceService();

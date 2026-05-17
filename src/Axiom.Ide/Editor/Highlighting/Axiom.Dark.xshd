@@ -49,6 +49,7 @@
             <Word>FINALLY</Word>
             <Word>FOR</Word>
             <Word>FUNCTION</Word>
+            <Word>GET</Word>
             <Word>IF</Word>
             <Word>IMP</Word>
             <Word>INPUT</Word>
@@ -71,6 +72,7 @@
             <Word>PRINT</Word>
             <Word>PRESET</Word>
             <Word>PSET</Word>
+            <Word>PUT</Word>
             <Word>REDIM</Word>
             <Word>RETURN</Word>
             <Word>SCREEN</Word>
@@ -249,6 +251,7 @@
             <Word>PADRIGHT</Word>
             <Word>PATHEXISTS</Word>
             <Word>PATHROOT</Word>
+            <Word>PMAP</Word>
             <Word>POW</Word>
             <Word>POINT</Word>
             <Word>READALLLINES</Word>

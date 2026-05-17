@@ -123,6 +123,58 @@ public sealed partial class Interpreter
         return ExecutionSignal.None;
     }
 
+    private ExecutionSignal ExecuteGet(BoundGetStatement statement)
+    {
+        RequireScreenActive("GET", statement.Location);
+        if (!GraphicsBufferTransfer.TryResolveTwoDimensionalNumericBuffer(
+                EvaluateExpression(statement.BufferExpression),
+                out var buffer,
+                out var shape)
+            || !GraphicsBufferTransfer.TryCreateGetRectangle(
+                _host,
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                EvaluateExpression(statement.X1Expression).AsLong(),
+                EvaluateExpression(statement.Y1Expression).AsLong(),
+                EvaluateExpression(statement.X2Expression).AsLong(),
+                EvaluateExpression(statement.Y2Expression).AsLong(),
+                statement.IsStartRelative,
+                statement.IsEndRelative,
+                out var rectangle)
+            || !GraphicsBufferTransfer.BufferMatchesRectangle(shape, rectangle))
+        {
+            ReportInvalidGraphicsTransfer("GET", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
+        GraphicsBufferTransfer.CaptureRectangle(_host, buffer, shape, rectangle);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecutePut(BoundPutStatement statement)
+    {
+        RequireScreenActive("PUT", statement.Location);
+        if (!GraphicsBufferTransfer.TryResolveTwoDimensionalNumericBuffer(
+                EvaluateExpression(statement.BufferExpression),
+                out var buffer,
+                out var shape)
+            || !GraphicsBufferTransfer.TryCreatePutAnchor(
+                _host,
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                EvaluateExpression(statement.XExpression).AsLong(),
+                EvaluateExpression(statement.YExpression).AsLong(),
+                statement.IsRelative,
+                out var anchor)
+            || !GraphicsBufferTransfer.TryPutBuffer(_host, buffer, shape, anchor, statement.Action))
+        {
+            ReportInvalidGraphicsTransfer("PUT", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
+        return ExecutionSignal.None;
+    }
+
     private ExecutionSignal ExecuteLine(BoundLineStatement statement)
     {
         RequireScreenActive("LINE", statement.Location);
@@ -349,6 +401,15 @@ public sealed partial class Interpreter
             location);
     }
 
+    private void ReportInvalidGraphicsTransfer(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "buffer",
+            "координаты должны успешно преобразовываться через текущее VIEW/WINDOW, а buffer должен быть выделенным двумерным числовым массивом допустимой формы; для GET размер buffer обязан совпадать с прямоугольником.",
+            location);
+    }
+
     private void ReportInvalidViewport(string instructionName, TextLocation location)
     {
         ReportBuiltInArgumentError(
@@ -415,6 +476,29 @@ public sealed partial class Interpreter
         };
     }
 
+    private RuntimeValue EvaluatePMap(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)
+    {
+        RequireScreenActive("PMAP", expression.Location);
+        var coordinate = arguments[0].AsDouble();
+        var selector = arguments[1].AsInteger();
+        if (!double.IsFinite(coordinate))
+        {
+            throw CreatePMapCoordinateFailure(expression.Location);
+        }
+
+        if (selector is < 0 or > 3)
+        {
+            throw CreatePMapSelectorFailure(expression.Location);
+        }
+
+        if (!GraphicsCoordinateSpaceMath.TryMapPMapCoordinate(_host, coordinate, selector, out var mapped))
+        {
+            throw CreatePMapTransformFailure(expression.Location);
+        }
+
+        return RuntimeValue.FromDouble(mapped);
+    }
+
     private int EvaluatePointCoordinate(int selector, TextLocation location)
     {
         return selector switch
@@ -431,6 +515,24 @@ public sealed partial class Interpreter
     private RuntimeFailureException CreatePointSelectorFailure(TextLocation location)
     {
         ReportBuiltInArgumentError("POINT", "number", "должен быть в диапазоне 0..3.", location);
+        return new RuntimeFailureException();
+    }
+
+    private RuntimeFailureException CreatePMapCoordinateFailure(TextLocation location)
+    {
+        ReportBuiltInArgumentError("PMAP", "coordinate", "должна быть конечным числом.", location);
+        return new RuntimeFailureException();
+    }
+
+    private RuntimeFailureException CreatePMapSelectorFailure(TextLocation location)
+    {
+        ReportBuiltInArgumentError("PMAP", "selector", "должен быть в диапазоне 0..3.", location);
+        return new RuntimeFailureException();
+    }
+
+    private RuntimeFailureException CreatePMapTransformFailure(TextLocation location)
+    {
+        ReportBuiltInArgumentError("PMAP", "coordinate", "не может быть преобразована: текущий effective viewport слишком мал для активного WINDOW.", location);
         return new RuntimeFailureException();
     }
 

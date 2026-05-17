@@ -232,6 +232,17 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public int GetPixel(long x, long y) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
 
+    public void SetAbsolutePixel(long x, long y, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetAbsolutePixel(x, y, color);
+        }
+    }
+
+    public int GetAbsolutePixel(long x, long y) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetAbsolutePixel(x, y) : 0;
+
     public void Paint(GraphicsPaintRequest request)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)

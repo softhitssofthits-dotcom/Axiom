@@ -1,3 +1,4 @@
+using System.Text;
 using System.Windows;
 using System.Windows.Threading;
 using Axiom.Ide.Graphics;
@@ -29,6 +30,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private int _screenHeight;
     private string _graphicsText = string.Empty;
     private readonly ScreenTextBuffer _graphicsTextBuffer = new();
+    private readonly StringBuilder _pendingGraphicsTraceLine = new();
     private int _graphicsForeground = 15;
     private int? _graphicsBackground;
     private int _graphicsLastBackgroundColor;
@@ -343,6 +345,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             ResetWindowCore();
             _framebuffer = new ScreenFramebuffer(width, height);
             _graphicsTextBuffer.Clear();
+            _pendingGraphicsTraceLine.Clear();
             GraphicsText = string.Empty;
             CancelScheduledGraphicsVisualRefresh();
             _graphicsForeground = 15;
@@ -381,6 +384,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
+            FlushPendingGraphicsTraceLine(logEmpty: false);
             _framebuffer = null;
             GraphicsFrame = null;
             _graphicsTextBuffer.Clear();
@@ -404,6 +408,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     {
         InvokeOnDispatcher(() =>
         {
+            FlushPendingGraphicsTraceLine(logEmpty: false);
             GraphicsText = string.Empty;
             _graphicsTextBuffer.Clear();
             _framebuffer?.Clear();
@@ -886,6 +891,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _framebuffer = null;
         GraphicsFrame = null;
         _graphicsTextBuffer.Clear();
+        _pendingGraphicsTraceLine.Clear();
         GraphicsText = string.Empty;
         CancelScheduledGraphicsVisualRefresh();
         _graphicsForeground = 15;
@@ -1024,6 +1030,31 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         });
     }
 
+    private void WriteGraphicsOutputTrace(string line)
+    {
+        _traceService.Write("screen.output", SanitizeForLog(line));
+        _eventLogService.Write(new IdeEventLogEntry
+        {
+            Level = IdeEventLevel.Info,
+            Category = "graphics",
+            EventName = "screen.output",
+            Source = nameof(ProgramConsoleService),
+            TextLength = line.Length,
+            TextPreview = line
+        });
+    }
+
+    private void FlushPendingGraphicsTraceLine(bool logEmpty)
+    {
+        if (_pendingGraphicsTraceLine.Length == 0 && !logEmpty)
+        {
+            return;
+        }
+
+        WriteGraphicsOutputTrace(_pendingGraphicsTraceLine.ToString());
+        _pendingGraphicsTraceLine.Clear();
+    }
+
     private static bool IsSupportedMouseButton(int buttonNumber) => buttonNumber is >= 1 and <= 3;
 
     private void EnsureGraphicsWindow()
@@ -1074,12 +1105,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private void WriteGraphicsTextCore(string text, bool newLine)
     {
         _graphicsTextBuffer.Write(_graphicsRow, _graphicsColumn, text, _graphicsForeground, _graphicsBackground);
+        _pendingGraphicsTraceLine.Append(text);
 
         if (newLine)
         {
             _graphicsRow++;
             _graphicsColumn = 1;
             _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            FlushPendingGraphicsTraceLine(logEmpty: true);
         }
         else
         {

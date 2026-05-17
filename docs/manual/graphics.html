@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Графика</p>
             <h1 class="page-title">Графика</h1>
-            <p class="lead">Оператор <code>SCREEN</code> нужен для тех программ, которым недостаточно обычного вывода строк во вкладку <code>Output</code>. Он открывает отдельное окно программы: в режиме <code>SCREEN 0</code> это текстовый экран, похожий на консоль, а в режимах <code>SCREEN 1..10</code> - графический экран, на котором можно выводить текст, рисовать точки, линии и окружности, а также работать с клавиатурой и мышью.</p>
+            <p class="lead">Оператор <code>SCREEN</code> нужен для тех программ, которым недостаточно обычного вывода строк во вкладку <code>Output</code>. Он открывает отдельное окно программы: в режиме <code>SCREEN 0</code> это текстовый экран, похожий на консоль, а в режимах <code>SCREEN 1..10</code> - графический экран, на котором можно выводить текст, рисовать точки, линии и окружности, переносить прямоугольные блоки через <code>GET</code> / <code>PUT</code>, а также работать с клавиатурой и мышью.</p>
 
             <section class="article-section">
                 <h2>Для чего нужен оператор SCREEN</h2>
@@ -40,6 +40,7 @@
                         <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Оператор, выбирающий текстовый или графический режим и задающий размер экранного окна.</td></tr>
                         <tr><td><a href="view.html"><code>VIEW</code></a></td><td>Оператор, задающий физический viewport для графических примитивов и функции <code>POINT</code>.</td></tr>
                         <tr><td><a href="window.html"><code>WINDOW</code></a></td><td>Оператор, задающий логическое окно координат внутри текущего viewport.</td></tr>
+                        <tr><td><a href="pmap.html"><code>PMAP</code></a></td><td>Функция, переводящая координату между viewport и логической системой активного <code>WINDOW</code>.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>CLS</code></a></td><td>Оператор, очищающий экран и возвращающий текстовый курсор в начало.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>COLOR</code></a></td><td>Оператор, задающий цвет символов и, при необходимости, цвет фона.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>LOCATE</code></a></td><td>Оператор, помещающий текстовый курсор в указанную строку и столбец.</td></tr>
@@ -48,6 +49,7 @@
                         <tr><td><a href="graphics-primitives.html"><code>LINE</code></a></td><td>Оператор, рисующий линию, рамку или закрашенный прямоугольник.</td></tr>
                         <tr><td><a href="graphics-primitives.html"><code>CIRCLE</code></a></td><td>Оператор, рисующий окружность.</td></tr>
                         <tr><td><a href="graphics-primitives.html"><code>POINT</code></a></td><td>Возвращает цвет точки на графическом экране.</td></tr>
+                        <tr><td><a href="get-put.html"><code>GET</code>, <code>PUT</code></a></td><td>Операторы чтения и возврата прямоугольного блока пикселей через двумерный числовой буфер.</td></tr>
                         <tr><td><a href="screen-functions.html"><code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code>, <code>SCREENHEIGHT</code></a></td><td>Сообщают, включён ли графический экран, какой режим выбран и каковы его размеры.</td></tr>
                     </tbody>
                 </table>
@@ -83,6 +85,7 @@
                 <p>На графическом экране положение точки задаётся двумя числами: <code>x</code> и <code>y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Если ширина экрана равна <code>w</code>, последняя видимая координата по горизонтали равна <code>w - 1</code>; если высота равна <code>h</code>, последняя видимая координата по вертикали равна <code>h - 1</code>.</p>
                 <p>Оператор <code>VIEW</code> может ограничить работу графики прямоугольной областью. Форма <code>VIEW SCREEN</code> оставляет координаты абсолютными, но клиппирует рисование по границам прямоугольника. Форма <code>VIEW</code> без слова <code>SCREEN</code> переводит графические примитивы и <code>POINT(x, y)</code> в локальные координаты viewport.</p>
                 <p>Оператор <code>WINDOW</code> работает поверх текущего viewport и задаёт уже не физическую, а логическую шкалу. Форма <code>WINDOW SCREEN</code> сохраняет экранное направление оси <code>Y</code>, а форма <code>WINDOW</code> без слова <code>SCREEN</code> даёт декартову систему координат с ростом <code>Y</code> вверх.</p>
+                <p>Если программе нужно явно перевести координату между этими двумя системами, используйте <code>PMAP</code>. Функция не рисует сама по себе, а только возвращает соответствующую координату для текущего сочетания <code>VIEW</code> и <code>WINDOW</code>.</p>
                 <p>Текст на экране располагается иначе. Оператор <code>LOCATE</code> работает со строками и столбцами, которые считаются с единицы. Команда <code>LOCATE 1, 1</code> помещает текстовый курсор в начало первой строки.</p>
             </section>
 
@@ -139,8 +142,11 @@ SCREEN 0</code></pre>
                     <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: сведения о режиме</a></li>
                     <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
                     <li><a href="../../samples/operators/window/cartesian_and_screen.axm">WINDOW: экранные и декартовы координаты</a></li>
+                    <li><a href="../../samples/functions/pmap/window_and_viewport_conversion.axm">PMAP: преобразование между WINDOW и viewport</a></li>
                     <li><a href="../../samples/graphics/text/print_locate_color.axm">Текст, позиция курсора и цвета</a></li>
                     <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Операторы рисования: PSET, LINE и CIRCLE</a></li>
+                    <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: чтение прямоугольника в буфер</a></li>
+                    <li><a href="../../samples/operators/put/default_xor_and_preset.axm">PUT: возврат буфера через XOR и PRESET</a></li>
                     <li><a href="../../samples/graphics/mouse/mouse_events.axm">Мышь в графическом окне</a></li>
                     <li><a href="../../samples/graphics/input/input_on_screen.axm">INPUT в экранном окне</a></li>
                 </ul>
@@ -152,8 +158,10 @@ SCREEN 0</code></pre>
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="view.html">Оператор VIEW</a>
                     <a href="window.html">Оператор WINDOW</a>
+                    <a href="pmap.html">Функция PMAP</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="get-put.html">Операторы GET и PUT</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                     <a href="mousex.html">Мышь</a>
                     <a href="inkey.html">Клавиатура</a>

@@ -341,6 +341,20 @@ public sealed class BoundProgramLowerer
                 }
                 instructions.Add(LoweredInstruction.PSet(pset.Location, pset.Reset, pset.ColorExpression is not null, pset.IsRelative));
                 break;
+            case BoundGetStatement get:
+                LowerExpression(get.X1Expression, instructions);
+                LowerExpression(get.Y1Expression, instructions);
+                LowerExpression(get.X2Expression, instructions);
+                LowerExpression(get.Y2Expression, instructions);
+                LowerExpression(get.BufferExpression, instructions);
+                instructions.Add(LoweredInstruction.Get(get.Location, get.IsStartRelative, get.IsEndRelative));
+                break;
+            case BoundPutStatement put:
+                LowerExpression(put.XExpression, instructions);
+                LowerExpression(put.YExpression, instructions);
+                LowerExpression(put.BufferExpression, instructions);
+                instructions.Add(LoweredInstruction.Put(put.Location, put.Action, put.IsRelative));
+                break;
             case BoundLineStatement line:
                 if (line.HasExplicitStartPoint)
                 {

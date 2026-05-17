@@ -155,6 +155,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ScreenHeight => RuntimeValue.FromInteger(_host.ScreenHeight),
             BuiltinFunctionId.PointPosition => EvaluatePointBuiltin(arguments, location),
             BuiltinFunctionId.Point => EvaluatePointBuiltin(arguments, location),
+            BuiltinFunctionId.PMap => EvaluatePMapBuiltin(arguments, location),
             BuiltinFunctionId.Int => RuntimeValue.FromInteger(EvaluateIntBuiltin(arguments[0], location)),
             BuiltinFunctionId.Str => RuntimeValue.FromString(arguments[0].ToDisplayString()),
             BuiltinFunctionId.Val => RuntimeValue.FromDouble(ParseVal(arguments[0].AsString())),

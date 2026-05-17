@@ -36,6 +36,8 @@ public sealed partial class Binder
             ColorStatementSyntax colorStatement => BindColorStatement(colorStatement),
             LocateStatementSyntax locateStatement => BindLocateStatement(locateStatement),
             PSetStatementSyntax psetStatement => BindPSetStatement(psetStatement),
+            GetStatementSyntax getStatement => BindGetStatement(getStatement),
+            PutStatementSyntax putStatement => BindPutStatement(putStatement),
             LineStatementSyntax lineStatement => BindLineStatement(lineStatement),
             CircleStatementSyntax circleStatement => BindCircleStatement(circleStatement),
             PaintStatementSyntax paintStatement => BindPaintStatement(paintStatement),

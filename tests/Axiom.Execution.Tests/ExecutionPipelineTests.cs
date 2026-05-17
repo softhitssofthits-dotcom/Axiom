@@ -951,6 +951,45 @@ PRINT "cart logical="; POINT(2); ","; POINT(3)
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForPMapAcrossViewAndWindow()
+    {
+        var inputProvider = new QueueKeyboardInputProvider();
+        var result = Run(
+            """
+SCREEN 1
+VIEW SCREEN (10, 10)-(20, 20)
+WINDOW SCREEN (100, 200)-(110, 210)
+PRINT "abs="; PMAP(104, 0); ","; PMAP(205, 1)
+PRINT "back="; PMAP(14, 2); ","; PMAP(15, 3)
+VIEW (2, 3)-(8, 9)
+WINDOW
+PRINT "view only="; PMAP(3, 0); ","; PMAP(2, 1); " back="; PMAP(3, 2); ","; PMAP(2, 3)
+WINDOW SCREEN (100, 200)-(110, 210)
+PRINT "frac="; PMAP(102.5, 0); ","; PMAP(1.5, 2)
+WINDOW (100, 210)-(110, 200)
+PRINT "cart="; PMAP(105, 0); ","; PMAP(205, 1)
+PRINT "cart back="; PMAP(3, 2); ","; PMAP(3, 3)
+""",
+            inputProvider: inputProvider,
+            mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "abs=14,15",
+                "back=104,205",
+                "view only=3,2 back=3,2",
+                "frac=1.5,102.5",
+                "cart=3,3",
+                "cart back=105,205"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_DrawLineFallbackWorksWithoutSpecialGraphicsHost()
     {
         const string text = """
@@ -966,7 +1005,7 @@ PRINT POINT(7, 7)
 PRINT POINT(8, 8)
 """;
 
-        var inputProvider = new MinimalGraphicsHostInputProvider();
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
         var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
@@ -1027,6 +1066,39 @@ PRINT POINT(17, 10)
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["20", "10", "17", "12", "0", "9"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_UsesBytecodeVmForGetPutTransfers()
+    {
+        const string text = """
+SCREEN 1
+DIM buffer(1 TO 2, 1 TO 2) AS INTEGER
+PSET (10, 10), 1
+PSET (11, 10), 2
+PSET (10, 11), 3
+PSET (11, 11), 4
+GET (11, 11)-(10, 10), buffer
+LINE (10, 10)-(11, 11), 0, BF
+PUT (10, 10), buffer
+PRINT buffer(1, 1)
+PRINT buffer(2, 1)
+PRINT buffer(1, 2)
+PRINT buffer(2, 2)
+PRINT POINT(10, 10)
+PRINT POINT(11, 10)
+PRINT POINT(10, 11)
+PRINT POINT(11, 11)
+""";
+
+        var inputProvider = new MinimalGraphicsHostInputProvider();
+        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["1", "2", "3", "4", "1", "2", "3", "4"], inputProvider.GraphicsOutput);
     }
 
     [Fact]

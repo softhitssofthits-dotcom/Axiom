@@ -146,6 +146,30 @@ public sealed partial class Binder
             statement.IsRelative);
     }
 
+    private BoundStatement BindGetStatement(GetStatementSyntax statement)
+    {
+        return new BoundGetStatement(
+            GetLocation(statement),
+            BindExpression(statement.StartPoint.XExpression, TypeSymbol.Long),
+            BindExpression(statement.StartPoint.YExpression, TypeSymbol.Long),
+            BindExpression(statement.EndPoint.XExpression, TypeSymbol.Long),
+            BindExpression(statement.EndPoint.YExpression, TypeSymbol.Long),
+            BindGraphicsBufferExpression(statement.BufferExpression, "GET"),
+            statement.IsStartRelative,
+            statement.IsEndRelative);
+    }
+
+    private BoundStatement BindPutStatement(PutStatementSyntax statement)
+    {
+        return new BoundPutStatement(
+            GetLocation(statement),
+            BindExpression(statement.Point.XExpression, TypeSymbol.Long),
+            BindExpression(statement.Point.YExpression, TypeSymbol.Long),
+            BindGraphicsBufferExpression(statement.BufferExpression, "PUT"),
+            BindPutAction(statement.ActionToken),
+            statement.IsRelative);
+    }
+
     private BoundStatement BindLineStatement(LineStatementSyntax statement)
     {
         return new BoundLineStatement(
@@ -253,6 +277,48 @@ public sealed partial class Binder
 
         ReportInvalidPaintBackgroundType(boundExpression.Type, GetLocation(expression));
         return new BoundErrorExpression(GetLocation(expression));
+    }
+
+    private BoundExpression BindGraphicsBufferExpression(ExpressionSyntax expression, string operatorName)
+    {
+        var boundExpression = BindExpression(expression);
+        if (boundExpression.Type == TypeSymbol.Error)
+        {
+            return boundExpression;
+        }
+
+        if (boundExpression.Type is not ArrayTypeSymbol arrayType)
+        {
+            ReportExpectedArrayType(boundExpression.Type, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
+
+        if (arrayType.Rank != 2)
+        {
+            ReportExpectedArrayRank(operatorName, expectedRank: 2, arrayType.Rank, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
+
+        if (!IsNumeric(arrayType.ElementType))
+        {
+            ReportNumericArrayElementRequired(operatorName, arrayType.ElementType, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
+
+        return boundExpression;
+    }
+
+    private static BoundPutActionKind BindPutAction(SyntaxToken? actionToken)
+    {
+        return actionToken?.Kind switch
+        {
+            SyntaxKind.PSetKeyword => BoundPutActionKind.PSet,
+            SyntaxKind.PresetKeyword => BoundPutActionKind.Preset,
+            SyntaxKind.AndKeyword => BoundPutActionKind.And,
+            SyntaxKind.OrKeyword => BoundPutActionKind.Or,
+            SyntaxKind.XorKeyword or null => BoundPutActionKind.Xor,
+            _ => BoundPutActionKind.Xor
+        };
     }
 
     private BoundStatement BindOnKeyStatement(OnKeyStatementSyntax statement)

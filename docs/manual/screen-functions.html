@@ -54,7 +54,8 @@
 POINT(1)
 POINT(2)
 POINT(3)</code></pre>
-                <p>Форма <code>POINT(number)</code> возвращает текущую графическую позицию. Значения <code>0</code> и <code>2</code> возвращают текущий X, а значения <code>1</code> и <code>3</code> возвращают текущий Y. Эту форму удобно использовать после <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code>, когда следующая фигура строится относительно предыдущей.</p>
+                <p>Форма <code>POINT(number)</code> возвращает текущую графическую позицию. Значения <code>0</code> и <code>1</code> дают физические координаты viewport. Значения <code>2</code> и <code>3</code> дают логические координаты активного <code>WINDOW</code>; если окно не активно, они совпадают с координатами viewport. Эту форму удобно использовать после <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code> и <code>DRAW</code>, когда следующая фигура строится относительно предыдущей.</p>
+                <p>Для преобразования произвольной координаты между viewport и <code>WINDOW</code> используйте <code>PMAP</code>.</p>
             </section>
 
             <section class="article-section">
@@ -77,6 +78,7 @@ PRINT SCREENMODE()</code></pre>
                     <a href="graphics.html">Графика и экран</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="pmap.html">Функция PMAP</a>
                 </div>
             </section>
 

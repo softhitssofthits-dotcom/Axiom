@@ -239,6 +239,102 @@ public sealed class PSetStatementSyntax : StatementSyntax
     public bool Reset { get; }
 }
 
+public sealed class GetStatementSyntax : StatementSyntax
+{
+    public GetStatementSyntax(
+        SyntaxToken getKeyword,
+        SyntaxToken? startStepKeyword,
+        GraphicsPointSyntax startPoint,
+        SyntaxToken minusToken,
+        SyntaxToken? endStepKeyword,
+        GraphicsPointSyntax endPoint,
+        SyntaxToken commaToken,
+        ExpressionSyntax bufferExpression)
+    {
+        ArgumentNullException.ThrowIfNull(getKeyword);
+        ArgumentNullException.ThrowIfNull(startPoint);
+        ArgumentNullException.ThrowIfNull(minusToken);
+        ArgumentNullException.ThrowIfNull(endPoint);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(bufferExpression);
+
+        GetKeyword = getKeyword;
+        StartStepKeyword = startStepKeyword;
+        StartPoint = startPoint;
+        MinusToken = minusToken;
+        EndStepKeyword = endStepKeyword;
+        EndPoint = endPoint;
+        CommaToken = commaToken;
+        BufferExpression = bufferExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.GetStatement;
+
+    public SyntaxToken GetKeyword { get; }
+
+    public SyntaxToken? StartStepKeyword { get; }
+
+    public bool IsStartRelative => StartStepKeyword is not null;
+
+    public GraphicsPointSyntax StartPoint { get; }
+
+    public SyntaxToken MinusToken { get; }
+
+    public SyntaxToken? EndStepKeyword { get; }
+
+    public bool IsEndRelative => EndStepKeyword is not null;
+
+    public GraphicsPointSyntax EndPoint { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public ExpressionSyntax BufferExpression { get; }
+}
+
+public sealed class PutStatementSyntax : StatementSyntax
+{
+    public PutStatementSyntax(
+        SyntaxToken putKeyword,
+        SyntaxToken? stepKeyword,
+        GraphicsPointSyntax point,
+        SyntaxToken commaToken,
+        ExpressionSyntax bufferExpression,
+        SyntaxToken? actionCommaToken,
+        SyntaxToken? actionToken)
+    {
+        ArgumentNullException.ThrowIfNull(putKeyword);
+        ArgumentNullException.ThrowIfNull(point);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(bufferExpression);
+
+        PutKeyword = putKeyword;
+        StepKeyword = stepKeyword;
+        Point = point;
+        CommaToken = commaToken;
+        BufferExpression = bufferExpression;
+        ActionCommaToken = actionCommaToken;
+        ActionToken = actionToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.PutStatement;
+
+    public SyntaxToken PutKeyword { get; }
+
+    public SyntaxToken? StepKeyword { get; }
+
+    public bool IsRelative => StepKeyword is not null;
+
+    public GraphicsPointSyntax Point { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public ExpressionSyntax BufferExpression { get; }
+
+    public SyntaxToken? ActionCommaToken { get; }
+
+    public SyntaxToken? ActionToken { get; }
+}
+
 public enum LineBoxKind
 {
     None,

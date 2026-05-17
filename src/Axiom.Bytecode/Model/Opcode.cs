@@ -86,6 +86,8 @@ public enum Opcode
     Color,
     Locate,
     PSet,
+    Get,
+    Put,
     Line,
     Circle,
     Paint,

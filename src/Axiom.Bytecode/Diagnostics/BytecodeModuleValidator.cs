@@ -719,6 +719,8 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.PSet:
+                case Opcode.Get:
+                case Opcode.Put:
                 case Opcode.Line:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     break;
@@ -1373,6 +1375,77 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                break;
+            }
+
+            case Opcode.Get:
+            {
+                var flags = instruction.GetOperand(0);
+                var valueCount = instruction.GetOperand(1);
+                if (valueCount != 5)
+                {
+                    Report(
+                        "BC4126",
+                        $"Инструкция Get в процедуре '{routine.Name}' ожидает 5 значений, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                if ((flags & ~3) != 0)
+                {
+                    Report(
+                        "BC4127",
+                        $"Инструкция Get в процедуре '{routine.Name}' содержит неизвестные флаги {flags}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                var bufferType = Pop();
+                var y2Type = Pop();
+                var x2Type = Pop();
+                var y1Type = Pop();
+                var x1Type = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, TypeSymbol.Long, "координата X1");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, TypeSymbol.Long, "координата Y1");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, TypeSymbol.Long, "координата X2");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, TypeSymbol.Long, "координата Y2");
+                ValidateRankTwoNumericArrayStackType(module, routine, instructionIndex, instruction.Opcode, bufferType, "буфер GET");
+                break;
+            }
+
+            case Opcode.Put:
+            {
+                var flags = instruction.GetOperand(0);
+                var valueCount = instruction.GetOperand(1);
+                if (valueCount != 3)
+                {
+                    Report(
+                        "BC4128",
+                        $"Инструкция Put в процедуре '{routine.Name}' ожидает 3 значения, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                var action = flags >> 1;
+                if ((flags & 1) != flags && action is < 0 or > 4)
+                {
+                    Report(
+                        "BC4129",
+                        $"Инструкция Put в процедуре '{routine.Name}' содержит неизвестные флаги {flags}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                var bufferType = Pop();
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                ValidateRankTwoNumericArrayStackType(module, routine, instructionIndex, instruction.Opcode, bufferType, "буфер PUT");
                 break;
             }
 
@@ -2223,6 +2296,41 @@ public sealed class BytecodeModuleValidator
             module,
             routine.Id,
             instructionIndex);
+    }
+
+    private void ValidateRankTwoNumericArrayStackType(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        Opcode opcode,
+        TypeSymbol? actualType,
+        string role)
+    {
+        var arrayType = ValidateArrayStackType(module, routine, instructionIndex, opcode, actualType, role);
+        if (arrayType is null)
+        {
+            return;
+        }
+
+        if (arrayType.Rank != 2)
+        {
+            Report(
+                "BC4130",
+                $"Инструкция '{opcode}' в процедуре '{routine.Name}' ожидает двумерный массив для роли '{role}', но получила массив ранга {arrayType.Rank}.",
+                module,
+                routine.Id,
+                instructionIndex);
+        }
+
+        if (!IsNumericType(arrayType.ElementType))
+        {
+            Report(
+                "BC4131",
+                $"Инструкция '{opcode}' в процедуре '{routine.Name}' ожидает числовой массив для роли '{role}', но получила элементы типа {arrayType.ElementType.Name}.",
+                module,
+                routine.Id,
+                instructionIndex);
+        }
     }
 
     private void ValidatePaintFillStackType(

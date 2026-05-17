@@ -794,6 +794,8 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.Color => new BytecodeInstruction(Opcode.Color, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.Locate => new BytecodeInstruction(Opcode.Locate),
             LoweredInstructionKind.PSet => new BytecodeInstruction(Opcode.PSet, [instruction.MouseEventKind, instruction.ValueCount]),
+            LoweredInstructionKind.Get => new BytecodeInstruction(Opcode.Get, [instruction.MouseEventKind, instruction.ValueCount]),
+            LoweredInstructionKind.Put => new BytecodeInstruction(Opcode.Put, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.Line => new BytecodeInstruction(Opcode.Line, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.Circle => new BytecodeInstruction(Opcode.Circle, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.Paint => new BytecodeInstruction(Opcode.Paint, [instruction.MouseEventKind, instruction.ValueCount]),

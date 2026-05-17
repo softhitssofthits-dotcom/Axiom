@@ -155,6 +155,22 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportExpectedArrayRank(string name, int expectedRank, int actualRank, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Форма '{name}' требует массив ранга {expectedRank}, а получен массив ранга {actualRank}.",
+            location);
+    }
+
+    private void ReportNumericArrayElementRequired(string name, TypeSymbol actualElementType, TextLocation location)
+    {
+        _diagnostics.Report(
+            TypeMismatchCode,
+            $"Форма '{name}' требует числовой массив, а получен массив с элементами типа {actualElementType.Name}.",
+            location);
+    }
+
     private void ReportArrayDimensionArgumentRequired(string name, int actualRank, TextLocation location)
     {
         _diagnostics.Report(

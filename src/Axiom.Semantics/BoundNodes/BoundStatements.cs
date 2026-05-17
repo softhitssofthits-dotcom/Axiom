@@ -376,6 +376,15 @@ public enum BoundLineBoxKind
     Filled
 }
 
+public enum BoundPutActionKind
+{
+    PSet,
+    Preset,
+    And,
+    Or,
+    Xor
+}
+
 public sealed class BoundPSetStatement : BoundStatement
 {
     public BoundPSetStatement(
@@ -405,6 +414,84 @@ public sealed class BoundPSetStatement : BoundStatement
     public BoundExpression? ColorExpression { get; }
 
     public bool Reset { get; }
+
+    public bool IsRelative { get; }
+}
+
+public sealed class BoundGetStatement : BoundStatement
+{
+    public BoundGetStatement(
+        TextLocation location,
+        BoundExpression x1Expression,
+        BoundExpression y1Expression,
+        BoundExpression x2Expression,
+        BoundExpression y2Expression,
+        BoundExpression bufferExpression,
+        bool isStartRelative,
+        bool isEndRelative)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(x1Expression);
+        ArgumentNullException.ThrowIfNull(y1Expression);
+        ArgumentNullException.ThrowIfNull(x2Expression);
+        ArgumentNullException.ThrowIfNull(y2Expression);
+        ArgumentNullException.ThrowIfNull(bufferExpression);
+        X1Expression = x1Expression;
+        Y1Expression = y1Expression;
+        X2Expression = x2Expression;
+        Y2Expression = y2Expression;
+        BufferExpression = bufferExpression;
+        IsStartRelative = isStartRelative;
+        IsEndRelative = isEndRelative;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.GetStatement;
+
+    public BoundExpression X1Expression { get; }
+
+    public BoundExpression Y1Expression { get; }
+
+    public BoundExpression X2Expression { get; }
+
+    public BoundExpression Y2Expression { get; }
+
+    public BoundExpression BufferExpression { get; }
+
+    public bool IsStartRelative { get; }
+
+    public bool IsEndRelative { get; }
+}
+
+public sealed class BoundPutStatement : BoundStatement
+{
+    public BoundPutStatement(
+        TextLocation location,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression bufferExpression,
+        BoundPutActionKind action,
+        bool isRelative)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(bufferExpression);
+        XExpression = xExpression;
+        YExpression = yExpression;
+        BufferExpression = bufferExpression;
+        Action = action;
+        IsRelative = isRelative;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.PutStatement;
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression BufferExpression { get; }
+
+    public BoundPutActionKind Action { get; }
 
     public bool IsRelative { get; }
 }

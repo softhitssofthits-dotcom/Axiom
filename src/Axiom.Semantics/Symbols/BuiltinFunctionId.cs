@@ -49,6 +49,7 @@ public enum BuiltinFunctionId
     ScreenHeight,
     PointPosition,
     Point,
+    PMap,
     Len,
     Left,
     Right,

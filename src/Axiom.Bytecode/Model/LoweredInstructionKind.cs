@@ -42,6 +42,8 @@ public enum LoweredInstructionKind
     Color,
     Locate,
     PSet,
+    Get,
+    Put,
     Line,
     Circle,
     Paint,

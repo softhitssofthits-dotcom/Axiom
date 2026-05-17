@@ -405,6 +405,30 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_GetAndPutStatements()
+    {
+        var program = ParseProgram("""
+            GET STEP (1, 2)-STEP (3, 4), buffer
+            PUT STEP (5, 6), buffer, PRESET
+            PUT (7, 8), buffer
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var get = Assert.IsType<GetStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[0]).Statement);
+        var putPreset = Assert.IsType<PutStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        var putDefault = Assert.IsType<PutStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
+
+        Assert.True(get.IsStartRelative);
+        Assert.True(get.IsEndRelative);
+        Assert.IsType<NameExpressionSyntax>(get.BufferExpression);
+        Assert.True(putPreset.IsRelative);
+        Assert.NotNull(putPreset.ActionToken);
+        Assert.Equal(SyntaxKind.PresetKeyword, putPreset.ActionToken!.Kind);
+        Assert.False(putDefault.IsRelative);
+        Assert.Null(putDefault.ActionToken);
+    }
+
+    [Fact]
     public void Parse_ViewResetStatement()
     {
         var program = ParseProgram("VIEW", out var diagnostics);

@@ -20,6 +20,8 @@ public enum BoundNodeKind
     ColorStatement,
     LocateStatement,
     PSetStatement,
+    GetStatement,
+    PutStatement,
     LineStatement,
     CircleStatement,
     PaintStatement,

@@ -586,6 +586,142 @@ PRINT "cart logical="; POINT(2); ","; POINT(3)
     }
 
     [Fact]
+    public void Execute_PMapUsesWindowAndViewportCoordinatesAndPreservesFractions()
+    {
+        const string text = """
+SCREEN 1
+VIEW SCREEN (10, 10)-(20, 20)
+WINDOW SCREEN (100, 200)-(110, 210)
+PRINT "abs="; PMAP(104, 0); ","; PMAP(205, 1)
+PRINT "back="; PMAP(14, 2); ","; PMAP(15, 3)
+VIEW (2, 3)-(8, 9)
+WINDOW
+PRINT "view only="; PMAP(3, 0); ","; PMAP(2, 1); " back="; PMAP(3, 2); ","; PMAP(2, 3)
+WINDOW SCREEN (100, 200)-(110, 210)
+PRINT "frac="; PMAP(102.5, 0); ","; PMAP(1.5, 2)
+WINDOW (100, 210)-(110, 200)
+PRINT "cart="; PMAP(105, 0); ","; PMAP(205, 1)
+PRINT "cart back="; PMAP(3, 2); ","; PMAP(3, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            [
+                "abs=14,15",
+                "back=104,205",
+                "view only=3,2 back=3,2",
+                "frac=1.5,102.5",
+                "cart=3,3",
+                "cart back=105,205"
+            ],
+            host.Output);
+    }
+
+    [Fact]
+    public void Execute_PMapRejectsSelectorOutsideRange()
+    {
+        const string text = """
+SCREEN 1
+PRINT PMAP(1, 4)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("PMAP", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("selector", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_GetAndPutSupportWindowCoordinatesAndPreservePosition()
+    {
+        const string text = """
+SCREEN 1
+VIEW SCREEN (10, 10)-(30, 30)
+WINDOW SCREEN (100, 200)-(120, 220)
+DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+PSET (104, 205), 6
+PSET (105, 205), 9
+PSET (104, 206), 12
+PSET (105, 206), 15
+PRINT POINT(0)
+PRINT POINT(1)
+GET (105, 206)-(104, 205), buffer
+PRINT POINT(0)
+PRINT POINT(1)
+LINE (104, 205)-(105, 206), 0, BF
+PUT (104, 205), buffer
+PRINT POINT(0)
+PRINT POINT(1)
+PRINT buffer(1, 5)
+PRINT buffer(2, 5)
+PRINT buffer(1, 6)
+PRINT buffer(2, 6)
+PRINT POINT(104, 205)
+PRINT POINT(105, 205)
+PRINT POINT(104, 206)
+PRINT POINT(105, 206)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["15", "16", "15", "16", "15", "16", "6", "9", "12", "15", "6", "9", "12", "15"], host.Output);
+        Assert.Equal(6, host.GetAbsolutePixel(14, 15));
+        Assert.Equal(9, host.GetAbsolutePixel(15, 15));
+        Assert.Equal(12, host.GetAbsolutePixel(14, 16));
+        Assert.Equal(15, host.GetAbsolutePixel(15, 16));
+    }
+
+    [Fact]
+    public void Execute_PutSupportsRelativePresetAndNormalizesBufferValues()
+    {
+        const string text = """
+SCREEN 1
+DIM buffer(1 TO 2, 1 TO 1) AS DOUBLE
+buffer(1, 1) = 1.9
+buffer(2, 1) = -2.2
+PUT (10, 10), buffer
+PRINT POINT(10, 10)
+PRINT POINT(11, 10)
+PSET (12, 10), 0
+PUT STEP (2, 0), buffer, PRESET
+PRINT POINT(14, 10)
+PRINT POINT(15, 10)
+PRINT POINT(0)
+PRINT POINT(1)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "254", "253", "12", "10"], host.Output);
+        Assert.Equal(1, host.GetAbsolutePixel(10, 10));
+        Assert.Equal(2, host.GetAbsolutePixel(11, 10));
+        Assert.Equal(254, host.GetAbsolutePixel(14, 10));
+        Assert.Equal(253, host.GetAbsolutePixel(15, 10));
+    }
+
+    [Fact]
+    public void Execute_GetRejectsBufferShapeMismatch()
+    {
+        const string text = """
+SCREEN 1
+DIM buffer(1 TO 3, 1 TO 1) AS INTEGER
+GET (10, 10)-(11, 11), buffer
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("GET", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Execute_DrawWithoutScreenReportsRuntimeDiagnostic()
     {
         var (_, _, result) = ExecuteProgram("DRAW \"R10\"");
@@ -8524,7 +8660,7 @@ END TYPE
 
 DIM board AS Board
 DIM lineView() AS INTEGER
-DIM window(,) AS INTEGER
+DIM region(,) AS INTEGER
 
 REDIM board.Cells(1 TO 3, 1 TO 4)
 board.Cells(2, 3) = 23
@@ -8534,11 +8670,11 @@ PRINT lineView(3)
 lineView(4) = 24
 PRINT board.Cells(2, 4)
 
-window = board.Cells(2 TO 3, 3 TO 4)
-PRINT LBOUND(window, 1)
-PRINT UBOUND(window, 2)
-PRINT ARRAYLENGTH(window)
-window(3, 3) = 99
+region = board.Cells(2 TO 3, 3 TO 4)
+PRINT LBOUND(region, 1)
+PRINT UBOUND(region, 2)
+PRINT ARRAYLENGTH(region)
+region(3, 3) = 99
 PRINT board.Cells(3, 3)
 """;
 

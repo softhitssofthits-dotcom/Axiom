@@ -189,6 +189,26 @@ public static class GraphicsCoordinateSpaceMath
         return double.IsFinite(scaleX) && scaleX > 0d && double.IsFinite(scaleY) && scaleY > 0d;
     }
 
+    public static bool TryMapPMapCoordinate(IGraphicsHost host, double coordinate, int selector, out double mapped)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+
+        mapped = 0d;
+        if (!double.IsFinite(coordinate))
+        {
+            return false;
+        }
+
+        return selector switch
+        {
+            0 => TryTranslateLogicalAxisToViewport(host, coordinate, isVertical: false, out mapped),
+            1 => TryTranslateLogicalAxisToViewport(host, coordinate, isVertical: true, out mapped),
+            2 => TryTranslateViewportAxisToLogical(host, coordinate, isVertical: false, out mapped),
+            3 => TryTranslateViewportAxisToLogical(host, coordinate, isVertical: true, out mapped),
+            _ => false
+        };
+    }
+
     public static bool IsInsideClip(IGraphicsHost host, long absoluteX, long absoluteY)
     {
         ArgumentNullException.ThrowIfNull(host);
@@ -261,6 +281,66 @@ public static class GraphicsCoordinateSpaceMath
         return TryMapRange(viewportY, viewportTop, viewportBottom, window.Top, window.Bottom, out logicalY);
     }
 
+    private static bool TryTranslateLogicalAxisToViewport(
+        IGraphicsHost host,
+        double logicalCoordinate,
+        bool isVertical,
+        out double viewportCoordinate)
+    {
+        var viewport = GraphicsViewportMath.GetEffectiveViewport(host);
+        if (viewport.IsEmpty)
+        {
+            viewportCoordinate = 0d;
+            return false;
+        }
+
+        if (!TryGetWindow(host, out var window))
+        {
+            viewportCoordinate = logicalCoordinate;
+            return true;
+        }
+
+        if (!TryGetViewportRange(viewport, out var viewportLeft, out var viewportTop, out var viewportRight, out var viewportBottom))
+        {
+            viewportCoordinate = 0d;
+            return false;
+        }
+
+        return isVertical
+            ? TryMapRangeToDouble(logicalCoordinate, window.Top, window.Bottom, viewportTop, viewportBottom, out viewportCoordinate)
+            : TryMapRangeToDouble(logicalCoordinate, window.Left, window.Right, viewportLeft, viewportRight, out viewportCoordinate);
+    }
+
+    private static bool TryTranslateViewportAxisToLogical(
+        IGraphicsHost host,
+        double viewportCoordinate,
+        bool isVertical,
+        out double logicalCoordinate)
+    {
+        var viewport = GraphicsViewportMath.GetEffectiveViewport(host);
+        if (viewport.IsEmpty)
+        {
+            logicalCoordinate = 0d;
+            return false;
+        }
+
+        if (!TryGetWindow(host, out var window))
+        {
+            logicalCoordinate = viewportCoordinate;
+            return true;
+        }
+
+        if (!TryGetViewportRange(viewport, out var viewportLeft, out var viewportTop, out var viewportRight, out var viewportBottom))
+        {
+            logicalCoordinate = 0d;
+            return false;
+        }
+
+        return isVertical
+            ? TryMapRangeToDouble(viewportCoordinate, viewportTop, viewportBottom, window.Top, window.Bottom, out logicalCoordinate)
+            : TryMapRangeToDouble(viewportCoordinate, viewportLeft, viewportRight, window.Left, window.Right, out logicalCoordinate);
+    }
+
     private static bool TryGetViewportRange(
         GraphicsViewport viewport,
         out double left,
@@ -311,6 +391,23 @@ public static class GraphicsCoordinateSpaceMath
         out long mapped)
     {
         mapped = 0;
+        if (!TryMapRangeToDouble(input, sourceStart, sourceEnd, targetStart, targetEnd, out var mappedDouble))
+        {
+            return false;
+        }
+
+        return TryRoundToLong(mappedDouble, out mapped);
+    }
+
+    private static bool TryMapRangeToDouble(
+        double input,
+        double sourceStart,
+        double sourceEnd,
+        double targetStart,
+        double targetEnd,
+        out double mapped)
+    {
+        mapped = 0d;
         var sourceSpan = sourceEnd - sourceStart;
         if (!double.IsFinite(input) ||
             !double.IsFinite(sourceStart) ||
@@ -323,8 +420,8 @@ public static class GraphicsCoordinateSpaceMath
         }
 
         var normalized = (input - sourceStart) / sourceSpan;
-        var value = targetStart + ((targetEnd - targetStart) * normalized);
-        return TryRoundToLong(value, out mapped);
+        mapped = targetStart + ((targetEnd - targetStart) * normalized);
+        return double.IsFinite(mapped);
     }
 
     private static bool TryRoundToLong(double value, out long rounded)

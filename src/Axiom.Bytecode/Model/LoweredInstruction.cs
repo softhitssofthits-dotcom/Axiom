@@ -417,6 +417,33 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.PSet, location, valueCount: hasColor ? 3 : 2, mouseEventKind: flags);
     }
 
+    public static LoweredInstruction Get(TextLocation location, bool isStartRelative, bool isEndRelative)
+    {
+        var flags = 0;
+        if (isStartRelative)
+        {
+            flags |= 1;
+        }
+
+        if (isEndRelative)
+        {
+            flags |= 2;
+        }
+
+        return new LoweredInstruction(LoweredInstructionKind.Get, location, valueCount: 5, mouseEventKind: flags);
+    }
+
+    public static LoweredInstruction Put(TextLocation location, BoundPutActionKind action, bool isRelative)
+    {
+        var flags = ((int)action) << 1;
+        if (isRelative)
+        {
+            flags |= 1;
+        }
+
+        return new LoweredInstruction(LoweredInstructionKind.Put, location, valueCount: 3, mouseEventKind: flags);
+    }
+
     public static LoweredInstruction Line(
         TextLocation location,
         BoundLineBoxKind boxKind,

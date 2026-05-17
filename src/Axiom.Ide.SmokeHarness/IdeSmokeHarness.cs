@@ -50,6 +50,8 @@ internal sealed class IdeSmokeHarness
     private readonly string _syntaxErrorProgramPath;
     private readonly string _inKeyProgramPath;
     private readonly string _onMouseProgramPath;
+    private readonly string _getProgramPath;
+    private readonly string _putProgramPath;
     private Process? _ideProcess;
     private byte[]? _originalStateBytes;
     private bool _stateFileExisted;
@@ -79,6 +81,8 @@ internal sealed class IdeSmokeHarness
         _syntaxErrorProgramPath = Path.Combine(_workspaceRootPath, "syntax_error.axm");
         _inKeyProgramPath = Path.Combine(_workspaceRootPath, "poll_keys.axm");
         _onMouseProgramPath = Path.Combine(_workspaceRootPath, "on_mouse.axm");
+        _getProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "get", "rectangle_capture.axm");
+        _putProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "put", "default_xor_and_preset.axm");
     }
 
     public void Run()
@@ -119,6 +123,14 @@ internal sealed class IdeSmokeHarness
                 RunOnMouseOnlySmoke(mainWindow);
                 Console.WriteLine();
                 Console.WriteLine("Axiom IDE ON MOUSE smoke completed successfully.");
+                return;
+            }
+
+            if (_options.GetPutOnly)
+            {
+                RunGetPutOnlySmoke(mainWindow);
+                Console.WriteLine();
+                Console.WriteLine("Axiom IDE GET/PUT smoke completed successfully.");
                 return;
             }
 
@@ -317,6 +329,61 @@ internal sealed class IdeSmokeHarness
 
         ReportStep("Close IDE after ON MOUSE smoke");
         CloseWindow(mainWindow, expectProcessExit: true);
+        ReportStepCompleted();
+    }
+
+    private void RunGetPutOnlySmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Initial shell state");
+        RequireElement(mainWindow, "MainMenu");
+        RequireElement(mainWindow, "FilesTreeView");
+        ReportStepCompleted();
+
+        RunGraphicsSampleSmoke(
+            mainWindow,
+            _getProgramPath,
+            "Run GET sample -> SCREEN trace",
+            "6",
+            "9",
+            "12",
+            "15",
+            "GET sample finished");
+
+        RunGraphicsSampleSmoke(
+            mainWindow,
+            _putProgramPath,
+            "Run PUT sample -> SCREEN trace",
+            "1",
+            "2",
+            "254",
+            "253",
+            "PUT sample finished");
+
+        ReportStep("Close IDE after GET/PUT smoke");
+        CloseWindow(mainWindow, expectProcessExit: true);
+        ReportStepCompleted();
+    }
+
+    private void RunGraphicsSampleSmoke(
+        AutomationElement mainWindow,
+        string workspacePath,
+        string stepDescription,
+        params string[] expectedOutputLines)
+    {
+        ReportStep(stepDescription);
+        OpenWorkspaceFileFromTree(mainWindow, workspacePath);
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+
+        var expectedFragments = new List<string>(expectedOutputLines.Length + 2)
+        {
+            $"run.request | document={Path.GetFileName(workspacePath)}",
+            "screen.activated | mode=1"
+        };
+
+        expectedFragments.AddRange(expectedOutputLines.Select(static line => $"screen.output | {line}"));
+        expectedFragments.Add("screen.deactivated | mode=1");
+
+        WaitForLatestIdeLogText(text => ContainsFragmentsInOrder(text, expectedFragments));
         ReportStepCompleted();
     }
 
@@ -534,6 +601,13 @@ internal sealed class IdeSmokeHarness
     private void OpenFileFromTree(AutomationElement mainWindow, string fileName)
     {
         SelectTreeItem(mainWindow, fileName);
+        WaitForWindowTitle(mainWindow, title => title.Contains(fileName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OpenWorkspaceFileFromTree(AutomationElement mainWindow, string workspacePath)
+    {
+        SelectTreeItem(mainWindow, workspacePath);
+        var fileName = Path.GetFileName(workspacePath);
         WaitForWindowTitle(mainWindow, title => title.Contains(fileName, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -813,6 +887,24 @@ internal sealed class IdeSmokeHarness
             .Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries);
     }
 
+    private static bool ContainsFragmentsInOrder(string text, IReadOnlyList<string> fragments)
+    {
+        var searchStart = 0;
+
+        foreach (var fragment in fragments)
+        {
+            var index = text.IndexOf(fragment, searchStart, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            searchStart = index + fragment.Length;
+        }
+
+        return true;
+    }
+
     private void InvokeMenuItem(AutomationElement mainWindow, params string[] automationIds)
     {
         if (automationIds.Length < 2)
@@ -1063,7 +1155,13 @@ internal sealed class IdeSmokeHarness
 
         try
         {
-            return File.ReadAllText(latestLog.FullName, Encoding.UTF8);
+            using var stream = new FileStream(
+                latestLog.FullName,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            return reader.ReadToEnd();
         }
         catch (IOException)
         {
@@ -1445,6 +1543,16 @@ internal sealed class IdeSmokeHarness
             END SUB
             """ + Environment.NewLine,
             Encoding.UTF8);
+
+        CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "get", "rectangle_capture.axm"), _getProgramPath);
+        CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "put", "default_xor_and_preset.axm"), _putProgramPath);
+    }
+
+    private void CopyRepositoryFileToWorkspace(string repositoryRelativePath, string workspacePath)
+    {
+        var sourcePath = Path.Combine(_repositoryRoot, repositoryRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(workspacePath) ?? _workspaceRootPath);
+        File.Copy(sourcePath, workspacePath, overwrite: true);
     }
 
     private void BackupStateFile()

@@ -573,6 +573,86 @@ PRINT "done"
     }
 
     [Fact]
+    public void Run_GetAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    {
+        var traceService = new FakeIdeTraceService();
+        var consoleService = new ProgramConsoleService(traceService);
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+SCREEN 1
+VIEW SCREEN (10, 10)-(30, 30)
+WINDOW SCREEN (100, 200)-(120, 220)
+
+DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+
+PSET (104, 205), 6
+PSET (105, 205), 9
+PSET (104, 206), 12
+PSET (105, 206), 15
+
+GET (104, 205)-(105, 206), buffer
+
+PRINT buffer(1, 5)
+PRINT buffer(2, 5)
+PRINT buffer(1, 6)
+PRINT buffer(2, 6)
+PRINT "GET sample finished"
+""";
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var graphicsOutput = traceService.Entries
+            .Where(static entry => entry.Category == "screen.output")
+            .Select(static entry => entry.Message)
+            .ToArray();
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["6", "9", "12", "15", "GET sample finished"], graphicsOutput);
+    }
+
+    [Fact]
+    public void Run_PutAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    {
+        var traceService = new FakeIdeTraceService();
+        var consoleService = new ProgramConsoleService(traceService);
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+SCREEN 1
+
+DIM buffer(1 TO 2, 1 TO 1) AS DOUBLE
+buffer(1, 1) = 1.9
+buffer(2, 1) = -2.2
+
+PUT (10, 10), buffer
+DIM xorLeft AS INTEGER = POINT(10, 10)
+DIM xorRight AS INTEGER = POINT(11, 10)
+
+LINE (10, 10)-(11, 10), 0, BF
+PUT (10, 10), buffer, PRESET
+DIM presetLeft AS INTEGER = POINT(10, 10)
+DIM presetRight AS INTEGER = POINT(11, 10)
+
+PRINT xorLeft
+PRINT xorRight
+PRINT presetLeft
+PRINT presetRight
+PRINT "PUT sample finished"
+""";
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var graphicsOutput = traceService.Entries
+            .Where(static entry => entry.Category == "screen.output")
+            .Select(static entry => entry.Message)
+            .ToArray();
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["1", "2", "254", "253", "PUT sample finished"], graphicsOutput);
+    }
+
+    [Fact]
     public void Run_MapsSemanticDiagnosticsToUiModel()
     {
         var service = CreateService();

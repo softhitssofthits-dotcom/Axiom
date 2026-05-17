@@ -193,6 +193,27 @@ public sealed class BinderTests
     }
 
     [Fact]
+    public void Bind_PMapFunction_ReturnsDouble()
+    {
+        var program = BindProgram("PRINT PMAP(100, 0)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(Assert.Single(program.GlobalStatements), TypeSymbol.Double, BuiltinFunctionId.PMap);
+    }
+
+    [Fact]
+    public void Bind_PMapFunction_RequiresNumericCoordinateAndIntegerSelector()
+    {
+        _ = BindProgram("PRINT PMAP()", out var missingDiagnostics);
+        _ = BindProgram("PRINT PMAP(\"x\", 0)", out var coordinateDiagnostics);
+        _ = BindProgram("PRINT PMAP(1, \"x\")", out var selectorDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(missingDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(coordinateDiagnostics, static d => d.Code == "MB2003").Code);
+        Assert.Equal("MB2003", Assert.Single(selectorDiagnostics, static d => d.Code == "MB2003").Code);
+    }
+
+    [Fact]
     public void Bind_DrawStringLiteralStatement()
     {
         var program = BindProgram("DRAW \"R10\"", out var diagnostics);
@@ -242,6 +263,47 @@ DRAW "C" + STR(penColor) + "R20"
     public void Bind_DrawRejectsBooleanExpression()
     {
         _ = BindProgram("DRAW TRUE", out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == "MB2003");
+    }
+
+    [Fact]
+    public void Bind_GetAndPutStatementsBindNumericTwoDimensionalBuffer()
+    {
+        const string text = """
+DIM buffer(1 TO 2, 5 TO 6) AS DOUBLE
+GET STEP (1, 2)-STEP (3, 4), buffer
+PUT (5, 6), buffer
+PUT STEP (7, 8), buffer, OR
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var get = Assert.IsType<BoundGetStatement>(program.GlobalStatements[1]);
+        var putDefault = Assert.IsType<BoundPutStatement>(program.GlobalStatements[2]);
+        var putOr = Assert.IsType<BoundPutStatement>(program.GlobalStatements[3]);
+
+        var getBufferType = Assert.IsType<ArrayTypeSymbol>(get.BufferExpression.Type);
+        Assert.Equal(2, getBufferType.Rank);
+        Assert.Equal(TypeSymbol.Double, getBufferType.ElementType);
+        Assert.Equal(TypeSymbol.Long, get.X1Expression.Type);
+        Assert.Equal(TypeSymbol.Long, get.Y1Expression.Type);
+        Assert.True(get.IsStartRelative);
+        Assert.True(get.IsEndRelative);
+        Assert.Equal(BoundPutActionKind.Xor, putDefault.Action);
+        Assert.False(putDefault.IsRelative);
+        Assert.Equal(BoundPutActionKind.Or, putOr.Action);
+        Assert.True(putOr.IsRelative);
+    }
+
+    [Fact]
+    public void Bind_GetRejectsNonNumericTwoDimensionalBuffer()
+    {
+        _ = BindProgram("""
+DIM textBuffer(1 TO 2, 1 TO 2) AS STRING
+GET (0, 0)-(1, 1), textBuffer
+""", out var diagnostics);
 
         Assert.Contains(diagnostics, static d => d.Code == "MB2003");
     }
@@ -4922,9 +4984,9 @@ END TYPE
 
 DIM board AS Board
 DIM lineView() AS INTEGER
-DIM window(,) AS INTEGER
+DIM region(,) AS INTEGER
 lineView = board.Cells(2)
-window = board.Cells(2 TO 3, 3 TO 4)
+region = board.Cells(2 TO 3, 3 TO 4)
 """;
 
         var program = BindProgram(text, out var diagnostics);

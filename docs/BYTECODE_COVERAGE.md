@@ -741,3 +741,28 @@
 - Негативный паритет: частично, runtime-диагностики `MB3010` и `MB3007` используют тот же общий путь, но отдельный отрицательный `.axm`-sample для некорректного окна в этом шаге не добавлялся;
 - Профиль: не приоритет, потому что `WINDOW` меняет координатное отображение и текущую графическую позицию, а не является горячим вычислительным сценарием VM;
 - Проектное решение Axiom: `DRAW` подчиняется активному `WINDOW` и делит общую текущую графическую позицию с остальными графическими операторами, а `POINT(0/1)` возвращает физические координаты viewport, тогда как `POINT(2/3)` возвращает логические координаты активного окна.
+
+## Обновление реестра - 2026-05-16 - функция PMAP
+
+Дополнение к области `SCREEN`, `VIEW` и `WINDOW`:
+- VM: да, `BytecodeVm` выполняет `PMAP` как встроенную функцию и возвращает `DOUBLE` для обоих направлений преобразования;
+- Интерпретатор: да, использует тот же helper `GraphicsCoordinateSpaceMath` и тот же пользовательский договор аргументов;
+- Автотесты: да, добавлены binder-, interpreter-, `BytecodeVm`- и execution-проверки `Bind_PMapFunction_ReturnsDouble()`, `Bind_PMapFunction_RequiresNumericCoordinateAndIntegerSelector()`, `Execute_PMapUsesWindowAndViewportCoordinatesAndPreservesFractions()`, `Execute_PMapRejectsSelectorOutsideRange()`, `Execute_CompiledPMapUsesWindowAndViewportCoordinatesAndPreservesFractions()`, `Execute_CompiledPMapRejectsSelectorOutsideRange()` и `Run_WithBytecodeMode_UsesBytecodeVmForPMapAcrossViewAndWindow()`;
+- Запускаемый пример: да, добавлен `samples/functions/pmap/window_and_viewport_conversion.axm`;
+- Справочник: да, добавлена страница `docs/manual/pmap.html` и обновлены `docs/manual/graphics.html`, `docs/manual/window.html`, `docs/manual/view.html`, `docs/manual/graphics-primitives.html`, `docs/manual/screen-functions.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, добавлена acceptance-проверка `PMapAcceptanceSample_RunsOnBytecodeVm()` для `samples/functions/pmap/window_and_viewport_conversion.axm`;
+- Негативный паритет: да, interpreter и VM одинаково сообщают `MB3007` для селектора вне диапазона `0..3` и для некорректной преобразуемой координаты;
+- Профиль: не приоритет, потому что `PMAP` выполняет единичное координатное преобразование и не является самостоятельным горячим сценарием VM;
+- Проектное решение Axiom: `PMAP` строится поверх уже закрытого `VIEW` + `WINDOW`, работает в системе физического viewport, без активного `WINDOW` ведёт себя как тождественное преобразование и сохраняет дробный результат без округления к пикселю.
+
+## Обновление реестра - 2026-05-17 - операторы GET и PUT
+
+Дополнение к области `SCREEN`, `VIEW`, `WINDOW` и `PMAP`:
+- VM: да, `BytecodeVm` выполняет отдельные инструкции `Get` и `Put` и использует общий helper `GraphicsBufferTransfer` для вычисления прямоугольника, формы буфера и действий `PSET` / `PRESET` / `AND` / `OR` / `XOR`;
+- Интерпретатор: да, использует тот же helper без отдельного второго договора packed-буфера;
+- Автотесты: да, добавлены parser-, binder-, runtime-, `BytecodeVm`- и execution-проверки для обычной формы, `STEP`, `WINDOW`-координат, `PRESET`, нормализации значений буфера и несовпадения формы массива;
+- Запускаемый пример: да, добавлены `samples/operators/get/rectangle_capture.axm` и `samples/operators/put/default_xor_and_preset.axm`;
+- Справочник: да, добавлена страница `docs/manual/get-put.html` и обновлены `docs/manual/graphics.html`, `docs/manual/graphics-primitives.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, execution-проверки `Run_WithBytecodeMode_UsesBytecodeVmForGetPutTransfers()`, `GetAcceptanceSample_RunsOnBytecodeVm()` и `PutAcceptanceSample_RunsOnBytecodeVm()` проходят без отката на интерпретатор;
+- Профиль: не приоритет, потому что текущий шаг фиксирует пользовательский договор поблочного переноса и общую host-границу абсолютных пикселей, а не новый самостоятельный benchmark-сценарий;
+- Проектное решение Axiom: пользовательский буфер `GET` / `PUT` — это обычный двумерный числовой массив, первая размерность задаёт ширину, вторая — высоту, действие `PUT` по умолчанию равно `XOR`, а `PRESET` трактуется как `255 - source` после нормализации `ABS(TRUNC(value)) MOD 256`.

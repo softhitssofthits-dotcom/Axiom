@@ -40,6 +40,8 @@ public sealed partial class Parser
             SyntaxKind.CircleKeyword => ParseCircleStatement(),
             SyntaxKind.PaintKeyword => ParsePaintStatement(),
             SyntaxKind.DrawKeyword => ParseDrawStatement(),
+            SyntaxKind.GetKeyword => ParseGetStatement(),
+            SyntaxKind.PutKeyword => ParsePutStatement(),
             SyntaxKind.OnKeyword => ParseOnStatement(),
             SyntaxKind.OpenKeyword => ParseOpenStatement(),
             SyntaxKind.CloseKeyword => ParseCloseStatement(),
@@ -488,6 +490,38 @@ public sealed partial class Parser
         return new DrawStatementSyntax(drawKeyword, commandExpression);
     }
 
+    private GetStatementSyntax ParseGetStatement()
+    {
+        var getKeyword = Match(SyntaxKind.GetKeyword, "GET");
+        var startStepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
+        var startPoint = ParseGraphicsPoint();
+        var minusToken = Match(SyntaxKind.MinusToken, "'-' между точками GET");
+        var endStepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
+        var endPoint = ParseGraphicsPoint();
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после прямоугольника GET");
+        var bufferExpression = ParseExpression();
+        return new GetStatementSyntax(getKeyword, startStepKeyword, startPoint, minusToken, endStepKeyword, endPoint, commaToken, bufferExpression);
+    }
+
+    private PutStatementSyntax ParsePutStatement()
+    {
+        var putKeyword = Match(SyntaxKind.PutKeyword, "PUT");
+        var stepKeyword = Current.Kind == SyntaxKind.StepKeyword ? NextToken() : null;
+        var point = ParseGraphicsPoint();
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после точки PUT");
+        var bufferExpression = ParseExpression();
+        SyntaxToken? actionCommaToken = null;
+        SyntaxToken? actionToken = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            actionCommaToken = Match(SyntaxKind.CommaToken, ",");
+            actionToken = ParsePutActionToken();
+        }
+
+        return new PutStatementSyntax(putKeyword, stepKeyword, point, commaToken, bufferExpression, actionCommaToken, actionToken);
+    }
+
     private ExpressionSyntax? ParseOptionalGraphicsArgumentExpression()
     {
         if (Current.Kind == SyntaxKind.CommaToken || IsStatementTerminator(Current.Kind))
@@ -506,6 +540,21 @@ public sealed partial class Parser
         var yExpression = ParseExpression();
         var closeParenToken = Match(SyntaxKind.CloseParenToken, "')'");
         return new GraphicsPointSyntax(openParenToken, xExpression, commaToken, yExpression, closeParenToken);
+    }
+
+    private SyntaxToken ParsePutActionToken()
+    {
+        if (Current.Kind is SyntaxKind.PSetKeyword
+            or SyntaxKind.PresetKeyword
+            or SyntaxKind.AndKeyword
+            or SyntaxKind.OrKeyword
+            or SyntaxKind.XorKeyword)
+        {
+            return NextToken();
+        }
+
+        ReportExpectedToken("PSET, PRESET, AND, OR или XOR");
+        return CreateMissingToken(SyntaxKind.PSetKeyword);
     }
 
     private StatementSyntax ParseOnStatement()

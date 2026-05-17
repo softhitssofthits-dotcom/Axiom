@@ -214,6 +214,17 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public int GetPixel(long x, long y) =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetPixel(x, y) : 0;
 
+    public void SetAbsolutePixel(long x, long y, int color)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetAbsolutePixel(x, y, color);
+        }
+    }
+
+    public int GetAbsolutePixel(long x, long y) =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetAbsolutePixel(x, y) : 0;
+
     public void Paint(GraphicsPaintRequest request)
     {
         if (_promptService is IGraphicsHost graphicsHost)

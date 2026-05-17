@@ -74,6 +74,8 @@ public sealed partial class Binder
             ColorStatementSyntax colorStatement => colorStatement.ColorKeyword.Location,
             LocateStatementSyntax locateStatement => locateStatement.LocateKeyword.Location,
             PSetStatementSyntax psetStatement => psetStatement.Keyword.Location,
+            GetStatementSyntax getStatement => getStatement.GetKeyword.Location,
+            PutStatementSyntax putStatement => putStatement.PutKeyword.Location,
             LineStatementSyntax lineStatement => lineStatement.LineKeyword.Location,
             CircleStatementSyntax circleStatement => circleStatement.CircleKeyword.Location,
             PaintStatementSyntax paintStatement => paintStatement.PaintKeyword.Location,

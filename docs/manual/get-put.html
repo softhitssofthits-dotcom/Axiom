@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Операторы GET и PUT</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="get-put">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Операторы GET и PUT</span>
+            </nav>
+            <p class="eyebrow">Операторы</p>
+            <h1 class="page-title">GET и PUT</h1>
+            <p class="lead"><code>GET</code> и <code>PUT</code> переносят прямоугольный блок пикселей между текущим framebuffer и обычным двумерным числовым массивом. Эти операторы нужны, когда программе надо сохранить часть изображения, временно стереть её, а затем вернуть обратно или наложить в другом месте.</p>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code id="get">GET [STEP] (&lt;x1&gt;, &lt;y1&gt;)-[STEP] (&lt;x2&gt;, &lt;y2&gt;), &lt;buffer&gt;</code></pre>
+<pre><code id="put">PUT [STEP] (&lt;x&gt;, &lt;y&gt;), &lt;buffer&gt;[, PSET|PRESET|AND|OR|XOR]</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Для чего нужен двумерный буфер</h2>
+                <p>В Axiom буфер для <code>GET</code> и <code>PUT</code> - это не скрытый packed-формат старых видеорежимов, а обычный двумерный числовой массив. Поэтому содержимое блока можно читать, менять обычными выражениями языка и передавать через уже существующие массивные формы.</p>
+                <p>Первая размерность буфера задаёт ширину блока по оси <code>X</code>, вторая - высоту по оси <code>Y</code>. Границы индексов могут быть любыми: важен не стартовый индекс, а видимый размер прямоугольника.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Части синтаксиса</h2>
+                <table>
+                    <thead>
+                        <tr><th>Часть</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>&lt;x1&gt;, &lt;y1&gt;</code></td><td>Первая точка прямоугольника для <code>GET</code>. Если перед ней стоит <code>STEP</code>, координаты считаются смещением от текущей графической позиции.</td></tr>
+                        <tr><td><code>&lt;x2&gt;, &lt;y2&gt;</code></td><td>Вторая точка прямоугольника для <code>GET</code>. Если перед ней стоит <code>STEP</code>, смещение считается уже от фактически вычисленной первой точки.</td></tr>
+                        <tr><td><code>&lt;x&gt;, &lt;y&gt;</code></td><td>Левый верхний угол блока для <code>PUT</code>. Форма <code>STEP</code> считает координаты как смещение от текущей графической позиции.</td></tr>
+                        <tr><td><code>&lt;buffer&gt;</code></td><td>Обычный двумерный числовой массив или двумерное представление массива. Допустимы элементы типов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>.</td></tr>
+                        <tr><td><code>PSET</code>, <code>PRESET</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code></td><td>Способ наложения буфера при <code>PUT</code>. Если действие не указано, Axiom использует <code>XOR</code>.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Действия PUT</h2>
+                <table>
+                    <thead>
+                        <tr><th>Действие</th><th>Результат</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>PSET</code></td><td>Пиксель назначения получает нормализованное значение из буфера без учёта старого цвета.</td></tr>
+                        <tr><td><code>PRESET</code></td><td>Пиксель назначения получает значение <code>255 - source</code> после нормализации буфера к диапазону <code>0..255</code>.</td></tr>
+                        <tr><td><code>AND</code></td><td>Новый цвет равен <code>destination AND source</code>.</td></tr>
+                        <tr><td><code>OR</code></td><td>Новый цвет равен <code>destination OR source</code>.</td></tr>
+                        <tr><td><code>XOR</code></td><td>Новый цвет равен <code>destination XOR source</code>. Это действие используется по умолчанию.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <p><code>GET</code> и <code>PUT</code> работают только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Вне активного графического экрана оба оператора сообщают ошибку времени выполнения <code>MB3010</code>.</p>
+                <p>Координаты проходят через тот же договор, что и остальные графические операторы. После <code>VIEW</code> без слова <code>SCREEN</code> они считаются в локальной системе viewport, а при активном <code>WINDOW</code> - в логической системе окна.</p>
+                <p><code>GET</code> можно вызывать с точками в любом порядке. Axiom сначала переводит обе пользовательские точки в физические координаты framebuffer, а затем сам определяет левую, правую, верхнюю и нижнюю границы блока.</p>
+                <p>Размер прямоугольника и видимая форма буфера должны совпадать. Если блок имеет ширину <code>2</code> и высоту <code>3</code>, то у буфера тоже должна быть видимая форма <code>2 x 3</code>, независимо от фактических нижних границ индексов.</p>
+                <p><code>PUT</code> не меняет текущую графическую позицию, настройки <code>VIEW</code> и <code>WINDOW</code> и текстовый курсор. <code>GET</code> тоже не меняет текущую графическую позицию: оператор только считывает цвета из framebuffer в массив.</p>
+                <p>Перед наложением <code>PUT</code> приводит каждое значение буфера к 8-битному цвету по правилу <code>ABS(TRUNC(value)) MOD 256</code>. Для дробных значений сохраняется только целая часть, а нечисловые и бесконечные значения считаются ошибкой.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Примеры</h2>
+<pre><code>SCREEN 1
+DIM block(1 TO 2, 1 TO 2) AS INTEGER
+
+PSET (10, 10), 1
+PSET (11, 10), 2
+PSET (10, 11), 3
+PSET (11, 11), 4
+
+GET (10, 10)-(11, 11), block
+LINE (10, 10)-(11, 11), 0, BF
+PUT (10, 10), block</code></pre>
+                <p>Сначала четыре пикселя читаются в массив, затем область очищается и возвращается обратно через <code>PUT</code>. В такой форме буфер можно дополнительно изменить между двумя вызовами.</p>
+<pre><code>SCREEN 1
+DIM buffer(1 TO 2, 1 TO 1) AS DOUBLE
+buffer(1, 1) = 1.9
+buffer(2, 1) = -2.2
+
+PUT (10, 10), buffer
+PUT (10, 12), buffer, PRESET</code></pre>
+                <p>Здесь видно два важных правила: <code>PUT</code> принимает обычный числовой массив, а форма <code>PRESET</code> использует уже нормализованный цвет буфера и инвертирует его как <code>255 - source</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3007</code>: координаты вне поддержанного диапазона, буфер не является двумерным числовым массивом, форма буфера не совпадает с прямоугольником <code>GET</code> или значение буфера нельзя привести к допустимому 8-битному цвету.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочные программы</h2>
+                <p>Для ручной проверки чтения блока, наложения по умолчанию через <code>XOR</code> и режима <code>PRESET</code> используйте тематические runnable-примеры.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: чтение прямоугольника в двумерный массив</a></li>
+                    <li><a href="../../samples/operators/put/default_xor_and_preset.axm">PUT: действие по умолчанию XOR и режим PRESET</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="graphics.html">Графика и экран</a>
+                    <a href="view.html">Оператор VIEW</a>
+                    <a href="window.html">Оператор WINDOW</a>
+                    <a href="pmap.html">Функция PMAP</a>
+                    <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="screen-functions.html">Функции состояния SCREEN</a>
+                </div>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

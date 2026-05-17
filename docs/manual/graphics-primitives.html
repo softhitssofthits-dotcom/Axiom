@@ -182,6 +182,7 @@ DRAW "C" + STR(penColor) + " TA" + STR(angle) + " U40"</code></pre>
 POINT(&lt;number&gt;)</code></pre>
                 <p><code>POINT</code> имеет две формы. <code>POINT(x, y)</code> возвращает номер цвета в указанной точке. <code>POINT(number)</code> возвращает текущую графическую позицию. Без активного <code>SCREEN</code> функция сообщает <code>MB3010</code>.</p>
                 <p>Если активен только <code>VIEW</code>, селекторы <code>POINT(0)</code>, <code>POINT(1)</code>, <code>POINT(2)</code> и <code>POINT(3)</code> работают в текущей системе viewport. Если активен <code>WINDOW</code>, селекторы <code>0</code> и <code>1</code> возвращают физическую координату в системе viewport, а селекторы <code>2</code> и <code>3</code> возвращают логическую координату окна.</p>
+                <p>Если нужно преобразовать не текущую позицию, а произвольную координату между viewport и <code>WINDOW</code>, используйте функцию <code>PMAP</code>.</p>
                 <table>
                     <thead>
                         <tr><th>Параметр</th><th>Описание</th></tr>
@@ -277,6 +278,8 @@ NEXT</code></pre>
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="view.html">Оператор VIEW</a>
                     <a href="window.html">Оператор WINDOW</a>
+                    <a href="pmap.html">Функция PMAP</a>
+                    <a href="get-put.html">Операторы GET и PUT</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                     <a href="mousex.html">Мышь</a>

@@ -51,6 +51,7 @@ WINDOW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)</code></pre>
                 <p><code>VIEW</code> и <code>WINDOW</code> выполняют разные задачи. <code>VIEW</code> выбирает физическую область экрана, в которой разрешено рисование, а <code>WINDOW</code> задаёт логическую шкалу внутри этой области. Сначала программа обычно определяет viewport через <code>VIEW</code>, а затем, если нужно, включает поверх него логическое окно через <code>WINDOW</code>.</p>
                 <p>Форма <code>WINDOW SCREEN</code> создаёт логические координаты с экранным направлением оси <code>Y</code>: большее значение означает более низкую точку. Форма <code>WINDOW</code> без слова <code>SCREEN</code> создаёт декартову систему координат, где <code>Y</code> растёт вверх.</p>
                 <p>После <code>WINDOW</code> логические координаты используют <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>. Текущая графическая позиция остаётся общей для всех этих операторов.</p>
+                <p>Для явного перевода между логическими координатами окна и физическими координатами viewport используйте <code>PMAP</code>. Это полезно, когда программе нужно совместить логический рисунок с экранными измерениями.</p>
                 <p>Форма <code>POINT(number)</code> делится на две пары селекторов. <code>POINT(0)</code> и <code>POINT(1)</code> возвращают текущую физическую координату в системе viewport. <code>POINT(2)</code> и <code>POINT(3)</code> возвращают текущую логическую координату активного <code>WINDOW</code>. Если логическое окно не активно, все четыре селектора работают как координаты viewport.</p>
                 <p>Когда программа меняет <code>VIEW</code> или <code>WINDOW</code>, Axiom сохраняет физическую точку текущей графической позиции и заново вычисляет её логические координаты. Если при пересчёте получается нецелое значение, используется ближайшее целое.</p>
                 <p><code>WINDOW</code> не влияет на <code>LOCATE</code>, текстовый курсор и текстовые координаты <code>SCREEN</code>. Для текста продолжает работать общий экранный режим.</p>
@@ -96,6 +97,7 @@ PRINT POINT(104, 205)</code></pre>
                     <a href="graphics.html">Графика и экран</a>
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="view.html">Оператор VIEW</a>
+                    <a href="pmap.html">Функция PMAP</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                 </div>

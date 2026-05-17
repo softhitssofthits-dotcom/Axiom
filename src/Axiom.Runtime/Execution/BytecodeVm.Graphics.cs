@@ -132,6 +132,66 @@ public sealed partial class BytecodeVm
         _host.SetPixel(x, y, color);
     }
 
+    private void ExecuteGetInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("GET", location);
+        var flags = instruction.GetOperand(0);
+        var bufferValue = PopValue(frame, instructionIndex);
+        var y2 = PopValue(frame, instructionIndex).AsLong();
+        var x2 = PopValue(frame, instructionIndex).AsLong();
+        var y1 = PopValue(frame, instructionIndex).AsLong();
+        var x1 = PopValue(frame, instructionIndex).AsLong();
+        if (!GraphicsBufferTransfer.TryResolveTwoDimensionalNumericBuffer(bufferValue, out var buffer, out var shape)
+            || !GraphicsBufferTransfer.TryCreateGetRectangle(
+                _host,
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                x1,
+                y1,
+                x2,
+                y2,
+                (flags & 1) != 0,
+                (flags & 2) != 0,
+                out var rectangle)
+            || !GraphicsBufferTransfer.BufferMatchesRectangle(shape, rectangle))
+        {
+            ReportInvalidGraphicsTransfer("GET", location);
+            throw new RuntimeFailureException();
+        }
+
+        GraphicsBufferTransfer.CaptureRectangle(_host, buffer, shape, rectangle);
+    }
+
+    private void ExecutePutInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("PUT", location);
+        var flags = instruction.GetOperand(0);
+        var bufferValue = PopValue(frame, instructionIndex);
+        var y = PopValue(frame, instructionIndex).AsLong();
+        var x = PopValue(frame, instructionIndex).AsLong();
+        if (!GraphicsBufferTransfer.TryResolveTwoDimensionalNumericBuffer(bufferValue, out var buffer, out var shape)
+            || !GraphicsBufferTransfer.TryCreatePutAnchor(
+                _host,
+                _host.CurrentGraphicsX,
+                _host.CurrentGraphicsY,
+                x,
+                y,
+                (flags & 1) != 0,
+                out var anchor)
+            || !GraphicsBufferTransfer.TryPutBuffer(
+                _host,
+                buffer,
+                shape,
+                anchor,
+                (BoundPutActionKind)(flags >> 1)))
+        {
+            ReportInvalidGraphicsTransfer("PUT", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private void ExecuteLineInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
@@ -379,6 +439,15 @@ public sealed partial class BytecodeVm
             location);
     }
 
+    private void ReportInvalidGraphicsTransfer(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "buffer",
+            "координаты должны успешно преобразовываться через текущее VIEW/WINDOW, а buffer должен быть выделенным двумерным числовым массивом допустимой формы; для GET размер buffer обязан совпадать с прямоугольником.",
+            location);
+    }
+
     private void ReportInvalidViewport(string instructionName, TextLocation location)
     {
         ReportBuiltInArgumentError(
@@ -445,6 +514,29 @@ public sealed partial class BytecodeVm
         };
     }
 
+    private RuntimeValue EvaluatePMapBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
+    {
+        RequireScreenActive("PMAP", location);
+        var coordinate = arguments[0].AsDouble();
+        var selector = arguments[1].AsInteger();
+        if (!double.IsFinite(coordinate))
+        {
+            throw CreatePMapCoordinateFailure(location);
+        }
+
+        if (selector is < 0 or > 3)
+        {
+            throw CreatePMapSelectorFailure(location);
+        }
+
+        if (!GraphicsCoordinateSpaceMath.TryMapPMapCoordinate(_host, coordinate, selector, out var mapped))
+        {
+            throw CreatePMapTransformFailure(location);
+        }
+
+        return RuntimeValue.FromDouble(mapped);
+    }
+
     private int EvaluatePointCoordinate(int selector, TextLocation location)
     {
         return selector switch
@@ -461,6 +553,24 @@ public sealed partial class BytecodeVm
     private RuntimeFailureException CreatePointSelectorFailure(TextLocation location)
     {
         ReportBuiltInArgumentError("POINT", "number", "должен быть в диапазоне 0..3.", location);
+        return new RuntimeFailureException();
+    }
+
+    private RuntimeFailureException CreatePMapCoordinateFailure(TextLocation location)
+    {
+        ReportBuiltInArgumentError("PMAP", "coordinate", "должна быть конечным числом.", location);
+        return new RuntimeFailureException();
+    }
+
+    private RuntimeFailureException CreatePMapSelectorFailure(TextLocation location)
+    {
+        ReportBuiltInArgumentError("PMAP", "selector", "должен быть в диапазоне 0..3.", location);
+        return new RuntimeFailureException();
+    }
+
+    private RuntimeFailureException CreatePMapTransformFailure(TextLocation location)
+    {
+        ReportBuiltInArgumentError("PMAP", "coordinate", "не может быть преобразована: текущий effective viewport слишком мал для активного WINDOW.", location);
         return new RuntimeFailureException();
     }
 

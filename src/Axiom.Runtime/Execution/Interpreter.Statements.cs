@@ -47,6 +47,8 @@ public sealed partial class Interpreter
             BoundColorStatement color => ExecuteColor(color),
             BoundLocateStatement locate => ExecuteLocate(locate),
             BoundPSetStatement pset => ExecutePSet(pset),
+            BoundGetStatement get => ExecuteGet(get),
+            BoundPutStatement put => ExecutePut(put),
             BoundLineStatement line => ExecuteLine(line),
             BoundCircleStatement circle => ExecuteCircle(circle),
             BoundPaintStatement paint => ExecutePaint(paint),

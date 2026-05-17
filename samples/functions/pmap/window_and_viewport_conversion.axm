@@ -1,0 +1,21 @@
+SCREEN 1
+CLS
+
+VIEW SCREEN (10, 10) - (20, 20)
+WINDOW SCREEN (100, 200) - (110, 210)
+PRINT "abs="; PMAP(104, 0); ","; PMAP(205, 1)
+PRINT "back="; PMAP(14, 2); ","; PMAP(15, 3)
+
+VIEW (2, 3) - (8, 9)
+WINDOW
+PRINT "view only="; PMAP(3, 0); ","; PMAP(2, 1); " back="; PMAP(3, 2); ","; PMAP(2, 3)
+
+WINDOW SCREEN (100, 200) - (110, 210)
+PRINT "frac="; PMAP(102.5, 0); ","; PMAP(1.5, 2)
+
+WINDOW (100, 210) - (110, 200)
+PRINT "cart="; PMAP(105, 0); ","; PMAP(205, 1)
+PRINT "cart back="; PMAP(3, 2); ","; PMAP(3, 3)
+
+PRINT "PMAP sample finished"
+SLEEP
