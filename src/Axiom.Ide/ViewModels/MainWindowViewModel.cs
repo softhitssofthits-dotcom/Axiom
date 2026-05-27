@@ -27,8 +27,8 @@ using Axiom.Ide.ViewModels;
 namespace Axiom.Ide.ViewModels;
 
 /// <summary>
-/// Root shell ViewModel РЅРѕРІРѕРіРѕ РґРёР·Р°Р№РЅР° СЃ РєРѕРјРїРѕР·РёС†РёРµР№ child viewmodels.
-/// РџРѕРєР° СЃРѕС…СЂР°РЅСЏРµС‚ РѕР±СЂР°С‚РЅСѓСЋ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ СЃРѕ СЃС‚Р°СЂС‹Рј UI.
+/// Корневая shell-модель представления нового дизайна с композицией дочерних моделей.
+/// Пока сохраняет обратную совместимость со старым UI.
 /// </summary>
 public sealed partial class MainWindowViewModel : ViewModelBase
 {
@@ -114,13 +114,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         RecentFiles = [];
         _preferredWindowState = IdeWindowState.Normal;
 
-        // РЎРѕР·РґР°С‘Рј СЃС‚Р°СЂС‚РѕРІСѓСЋ РїСѓСЃС‚СѓСЋ РІРєР»Р°РґРєСѓ
+        // Создаём стартовую пустую вкладку
         Documents.CreateNewDocument();
         RestoreShellPreferences();
         RefreshRecentFiles();
         UpdateFilesPaneRoot();
 
-        // РџРѕРґРїРёСЃС‹РІР°РµРјСЃСЏ РЅР° РёР·РјРµРЅРµРЅРёСЏ active document РґР»СЏ СЃС‚Р°С‚СѓСЃР°
+        // Подписываемся на изменения active document для статуса
         Documents.PropertyChanged += OnDocumentsPropertyChanged;
         Documents.Documents.CollectionChanged += OnDocumentsCollectionChanged;
         FilesPane.PropertyChanged += OnFilesPanePropertyChanged;
@@ -132,7 +132,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             AttachDocument(document);
         }
 
-        // РџРѕРґРїРёСЃС‹РІР°РµРјСЃСЏ РЅР° РёР·РјРµРЅРµРЅРёСЏ console output РґР»СЏ bottom pane
+        // Подписываемся на изменения console output для bottom pane
         _programConsoleService.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ProgramConsoleService.OutputText))
@@ -230,7 +230,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         AboutCommand = new RelayCommand(ShowAbout);
         ExitCommand = new RelayCommand(ExitApplication, CanModifyDocuments);
 
-        // РџРѕРґРїРёСЃРєР° РЅР° РёР·РјРµРЅРµРЅРёСЏ РґР»СЏ CanExecute
+        // Подписка на изменения для CanExecute
         OnActiveDocumentChanged();
     }
 
@@ -408,7 +408,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public RelayCommand AboutCommand { get; }
     public RelayCommand ExitCommand { get; }
 
-    // Legacy properties РґР»СЏ РѕР±СЂР°С‚РЅРѕР№ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё СЃРѕ СЃС‚Р°СЂС‹Рј UI
+    // Legacy properties для обратной совместимости со старым UI
     public ProgramConsoleService InputConsole => _programConsoleService;
 
     public string SourceText
@@ -2264,7 +2264,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         if (activeDoc is null || string.IsNullOrWhiteSpace(activeDoc.FilePath))
         {
-            // Untitled вЂ” РёСЃРїРѕР»СЊР·СѓРµРј last-used directory РёР»Рё MyDocuments
+            // Untitled - используем last-used directory или MyDocuments
             var snapshot = _recentFilesService.GetSnapshot();
             FilesPane.RootPath = IdeWorkspaceDefaults.ResolveRootPath(snapshot.LastDirectoryPath);
         }

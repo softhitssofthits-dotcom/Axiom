@@ -116,7 +116,9 @@ internal static class GraphicsInstructionArguments
         double? startAngle,
         double? endAngle,
         double aspect,
-        out GraphicsCircleArguments arguments)
+        out GraphicsCircleArguments arguments,
+        bool? drawStartRadius = null,
+        bool? drawEndRadius = null)
     {
         arguments = default;
 
@@ -156,8 +158,8 @@ internal static class GraphicsInstructionArguments
             normalizedStart,
             normalizedEnd,
             aspect,
-            startAngle is < 0,
-            endAngle is < 0,
+            drawStartRadius ?? startAngle is < 0,
+            drawEndRadius ?? endAngle is < 0,
             fullCircle,
             sweep);
         return true;

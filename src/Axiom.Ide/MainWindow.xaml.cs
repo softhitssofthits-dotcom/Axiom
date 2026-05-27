@@ -1583,7 +1583,7 @@ public partial class MainWindow : Window
 
         if (DataContext is MainWindowViewModel viewModel)
         {
-            viewModel.StatusBar.StatusText = $"РћС€РёР±РєР° СЂРµРґР°РєС‚РѕСЂР°. РџРѕРґСЂРѕР±РЅРѕСЃС‚Рё РІ Р»РѕРіРµ: {TraceService.CurrentSessionLogPath}";
+            viewModel.StatusBar.StatusText = $"Ошибка редактора. Подробности в логе: {TraceService.CurrentSessionLogPath}";
         }
     }
 

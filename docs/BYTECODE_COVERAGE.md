@@ -1,4 +1,4 @@
-﻿# Реестр покрытия Bytecode VM
+# Реестр покрытия Bytecode VM
 
 Этот файл фиксирует текущее покрытие пользовательских операторов, встроенных функций и связанных проверок для байткодного пути Axiom.
 
@@ -498,7 +498,7 @@
 ## Обновление реестра - 2026-05-10 - блочная псевдографика SCREEN
 
 Дополнение к области `SCREEN` и текстового графического слоя:
-- Автотесты: да, добавлены IDE-проверки полного блока `в–€`, экранного кода `CHR(219)` и затенённых блоков `в–“`, `в–’`, `в–‘` вместе с кодами `178`, `177`, `176`;
+- Автотесты: да, добавлены IDE-проверки полного блока `█`, экранного кода `CHR(219)` и затенённых блоков `▓`, `▒`, `░` вместе с кодами `178`, `177`, `176`;
 - Runnable sample: да, обновлён `samples/graphics/text/print_locate_color.axm`, теперь он выводит расширенную палитру `16..255` через `PRINT CHR(219);` в ячейках `SCREEN`;
 - Manual: да, обновлена `docs/manual/graphics-text.html` с описанием поддержанных блочных псевдосимволов и примером палитры;
 - Сквозной VM: да, существующий `ScreenTextAcceptanceSample_RunsOnBytecodeVm` продолжает запускать этот пример через `ExecutionMode.Bytecode`; изменение находится в IDE-host rasterizer и не требует новых инструкций VM;
@@ -509,7 +509,7 @@
 Дополнение к строковым функциям `CHR` и `ASC`:
 - VM: да, `BytecodeVm` использует общий `RuntimeCharacterEncoding` и возвращает CP866-символы для `CHR(0..255)`;
 - Интерпретатор: да, использует тот же слой;
-- Автотесты: да, обновлены runtime-, VM- и execution-проверки для `CHR(159)`, `CHR(219)`, `ASC("Я")`, `ASC("в–€")` и Unicode-кода выше `255`;
+- Автотесты: да, обновлены runtime-, VM- и execution-проверки для `CHR(159)`, `CHR(219)`, `ASC("Я")`, `ASC("█")` и Unicode-кода выше `255`;
 - Runnable sample: да, обновлены `samples/functions/chr/basic_usage.axm`, `samples/functions/asc/basic_usage.axm` и `samples/graphics/text/print_locate_color.axm`;
 - Manual: да, обновлены `docs/manual/string-functions-build-and-split.html` и `docs/manual/graphics-text.html`;
 - Сквозной VM: да, execution-проверки подтверждают выполнение через `ExecutionMode.Bytecode` без отката на интерпретатор;
@@ -766,3 +766,15 @@
 - Сквозной VM: да, execution-проверки `Run_WithBytecodeMode_UsesBytecodeVmForGetPutTransfers()`, `GetAcceptanceSample_RunsOnBytecodeVm()` и `PutAcceptanceSample_RunsOnBytecodeVm()` проходят без отката на интерпретатор;
 - Профиль: не приоритет, потому что текущий шаг фиксирует пользовательский договор поблочного переноса и общую host-границу абсолютных пикселей, а не новый самостоятельный benchmark-сценарий;
 - Проектное решение Axiom: пользовательский буфер `GET` / `PUT` — это обычный двумерный числовой массив, первая размерность задаёт ширину, вторая — высоту, действие `PUT` по умолчанию равно `XOR`, а `PRESET` трактуется как `255 - source` после нормализации `ABS(TRUNC(value)) MOD 256`.
+
+## Обновление реестра - 2026-05-17 - SCREEN 10 выбирает наибольший вписываемый размер 16:9
+
+Дополнение к области `SCREEN`, текстовой сетки и информационных функций `SCREEN...`:
+- VM: да, `BytecodeVm` и интерпретатор используют один и тот же host-договор `ActivateScreen(10)` и получают фактические размеры режима через общий provider, поэтому `SCREENWIDTH()` / `SCREENHEIGHT()` и расчёт сетки `LOCATE` больше не завязаны на старое фиксированное `1280 x 720`;
+- Интерпретатор: да, `ProgramConsoleService` вынес выбор размеров `SCREEN` в отдельный `IScreenModeSizeProvider`, а для `SCREEN 10` использует рабочую область выбранного монитора, режим `16:9` и запасной путь `1280 x 720`, если host не смог определить геометрию;
+- Автотесты: да, добавлены `ActivateScreen10_UsesProvidedBestFitSizeAndVisibleLocateGrid`, `ScreenModeSizeProviderTests`, `Run_Screen10BestFitAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm`, `Screen10BestFitAcceptanceSample_RunsOnBytecodeVm`, а execution/IDE fake-host-таблицы синхронизированы под детерминированный surrogate `1918 x 1079`;
+- Запускаемый пример: да, добавлен `samples/graphics/screen/best_fit_dimensions.axm`;
+- Справочник: да, обновлены `docs/manual/screen.html`, `docs/manual/screen-functions.html`, `docs/manual/graphics.html`, `docs/manual/graphics-text.html` и `README.md`;
+- Сквозной VM: да, адресные IDE- и execution-проверки проходят, а `Axiom.Ide.SmokeHarness` получил отдельный маршрут `--screen10-only`, который подтверждает фактические `SCREENWIDTH()` / `SCREENHEIGHT()`, расчёт `LOCATE` и финальный вывод через реальный `Axiom.Ide.exe`;
+- Профиль: не приоритет, потому что шаг уточняет host-геометрию режима `SCREEN 10`, а не добавляет новый вычислительно горячий сценарий;
+- Проектное решение Axiom: `SCREEN 10` выбирает рабочую область монитора по центру главного окна IDE, строит в ней максимально возможный клиентский прямоугольник `16:9`, не подгоняет размеры под кратность текстовой ячейки `8 x 12`, а `LOCATE` рассчитывает видимую сетку от фактических пикселей.

@@ -278,6 +278,7 @@ public sealed class LexerTests
 
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("MB0001", diagnostic.Code);
+        Assert.Equal("Недопустимый символ: '@'.", diagnostic.Message);
         Assert.Equal(TokenKind.BadToken, tokens[0].Kind);
         Assert.Equal("@", tokens[0].Text);
     }

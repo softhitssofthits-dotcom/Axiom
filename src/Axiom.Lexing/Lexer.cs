@@ -454,7 +454,7 @@ public sealed class Lexer
                 }
 
                 _position++;
-                ReportDiagnostic(start, 1, InvalidCharacterCode, $"РќРµРґРѕРїСѓСЃС‚РёРјС‹Р№ СЃРёРјРІРѕР»: '{_text[start]}'.");
+                ReportDiagnostic(start, 1, InvalidCharacterCode, $"Недопустимый символ: '{_text[start]}'.");
                 return CreateToken(TokenKind.BadToken, start, 1);
             case '=':
                 _position++;

@@ -2808,7 +2808,7 @@ public sealed partial class BytecodeVm
         if (executionInfo is null)
         {
             ReportInvalidRuntimeState(
-                $"РќРµ РЅР°Р№РґРµРЅ built-in СЃ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРј {builtinId}.",
+                $"Не найден built-in с идентификатором {builtinId}.",
                 ResolveLocation(frame.Routine.Id, instructionIndex));
             throw new RuntimeFailureException();
         }
@@ -4051,7 +4051,7 @@ public sealed partial class BytecodeVm
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>(
-            $"РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ VM: {value.Type.Name} -> {targetType}.",
+            $"Неподдерживаемое преобразование VM: {value.Type.Name} -> {targetType}.",
             location);
     }
 

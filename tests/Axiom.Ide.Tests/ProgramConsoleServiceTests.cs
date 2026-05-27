@@ -246,15 +246,37 @@ public sealed class ProgramConsoleServiceTests
         var service = new ProgramConsoleService();
 
         service.WriteOutput("before");
-        service.ActivateScreen(10);
+        service.ActivateScreen(5);
         service.WriteGraphicsText("hello", newLine: true);
 
         Assert.True(service.IsScreenActive);
-        Assert.Equal(10, service.ScreenMode);
+        Assert.Equal(5, service.ScreenMode);
         Assert.Equal(1280, service.ScreenWidth);
         Assert.Equal(720, service.ScreenHeight);
         Assert.Equal("before", service.OutputText);
         Assert.Equal($"hello{Environment.NewLine}", service.GraphicsText);
+    }
+
+    [Fact]
+    public void ActivateScreen10_UsesProvidedBestFitSizeAndVisibleLocateGrid()
+    {
+        const int width = 1918;
+        const int height = 1079;
+        var service = new ProgramConsoleService(screenModeSizeProvider: new FixedScreenModeSizeProvider((width, height)));
+
+        service.ActivateScreen(10);
+        service.LocateText(height / ScreenTextRasterizer.CellHeight, width / ScreenTextRasterizer.CellWidth);
+        service.WriteGraphicsText("#", newLine: false);
+
+        Assert.True(service.IsScreenActive);
+        Assert.Equal(10, service.ScreenMode);
+        Assert.Equal(width, service.ScreenWidth);
+        Assert.Equal(height, service.ScreenHeight);
+        Assert.True(
+            HasCellPixels(
+                service.GraphicsFrame,
+                row: height / ScreenTextRasterizer.CellHeight,
+                column: width / ScreenTextRasterizer.CellWidth));
     }
 
     [Fact]
@@ -1204,5 +1226,31 @@ public sealed class ProgramConsoleServiceTests
         public void Dispose()
         {
         }
+    }
+
+    private sealed class FixedScreenModeSizeProvider : IScreenModeSizeProvider
+    {
+        private readonly (int Width, int Height) _screen10Size;
+
+        public FixedScreenModeSizeProvider((int Width, int Height) screen10Size)
+        {
+            _screen10Size = screen10Size;
+        }
+
+        public (int Width, int Height) GetSize(int mode) => mode switch
+        {
+            0 => (640, 300),
+            1 => (320, 200),
+            2 => (640, 480),
+            3 => (800, 600),
+            4 => (1024, 768),
+            5 => (1280, 720),
+            6 => (1366, 768),
+            7 => (1600, 900),
+            8 => (1920, 1080),
+            9 => (2560, 1440),
+            10 => _screen10Size,
+            _ => (0, 0)
+        };
     }
 }

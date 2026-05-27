@@ -22,12 +22,13 @@
             </nav>
             <p class="eyebrow">Графика</p>
             <h1 class="page-title">Графика</h1>
-            <p class="lead">Оператор <code>SCREEN</code> нужен для тех программ, которым недостаточно обычного вывода строк во вкладку <code>Output</code>. Он открывает отдельное окно программы: в режиме <code>SCREEN 0</code> это текстовый экран, похожий на консоль, а в режимах <code>SCREEN 1..10</code> - графический экран, на котором можно выводить текст, рисовать точки, линии и окружности, переносить прямоугольные блоки через <code>GET</code> / <code>PUT</code>, а также работать с клавиатурой и мышью.</p>
+            <p class="lead">Графический раздел Axiom строится слоями поверх <code>SCREEN</code>. Сначала программа выбирает экранный режим и узнаёт его фактические размеры, затем размещает текст или рисует примитивы, при необходимости задаёт viewport через <code>VIEW</code> и логическую систему координат через <code>WINDOW</code>, переводит координаты функцией <code>PMAP</code>, переносит прямоугольные блоки через <code>GET</code> / <code>PUT</code> и только поверх этого читает клавиатуру и мышь активной поверхности.</p>
 
             <section class="article-section">
                 <h2>Для чего нужен оператор SCREEN</h2>
                 <p>Если в программе нет оператора <code>SCREEN</code>, ввод и вывод выполняются во вкладке <code>Output</code>. Её можно рассматривать как обычную консоль Axiom: оператор <code>PRINT</code> печатает строки, оператор <code>INPUT</code> ждёт ввод, а результат остаётся внутри среды разработки.</p>
                 <p>При использовании экранного режима операторы <code>PRINT</code> и <code>INPUT</code>, а также команды, работающие с текстом на экране, переносятся в отдельное окно программы. В графических режимах к текстовому выводу добавляется рисование по точкам экрана. Поэтому <code>SCREEN</code> применяют в программах, где важна не только строка вывода, но и расположение текста, цвет, простая графика или интерактивное управление.</p>
+                <p>Дальнейшие страницы этого раздела описывают уже не один общий «графический режим», а несколько отдельных договоров: выбор режима и размеров, текстовый слой, примитивы, преобразование координат, блочный перенос пикселей и слой ввода поверх активной поверхности <code>SCREEN</code>.</p>
             </section>
 
             <section class="article-section">
@@ -51,6 +52,7 @@
                         <tr><td><a href="graphics-primitives.html"><code>POINT</code></a></td><td>Возвращает цвет точки на графическом экране.</td></tr>
                         <tr><td><a href="get-put.html"><code>GET</code>, <code>PUT</code></a></td><td>Операторы чтения и возврата прямоугольного блока пикселей через двумерный числовой буфер.</td></tr>
                         <tr><td><a href="screen-functions.html"><code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code>, <code>SCREENHEIGHT</code></a></td><td>Сообщают, включён ли графический экран, какой режим выбран и каковы его размеры.</td></tr>
+                        <tr><td><a href="mousex.html"><code>MOUSEX</code>, <code>MOUSEY</code>, <code>MOUSEBUTTON</code>, <code>MOUSEPRESS</code>, <code>ON MOUSE</code></a></td><td>Читают или обрабатывают мышь поверх активной поверхности ввода; этот слой не переводится через <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -74,10 +76,11 @@
                         <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td><code>200</code></td><td><code>75</code></td></tr>
                         <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td><code>240</code></td><td><code>90</code></td></tr>
                         <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td><code>320</code></td><td><code>120</code></td></tr>
-                        <tr><td><code>SCREEN 10</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td></tr>
+                        <tr><td><code>SCREEN 10</code></td><td><code>адаптивный 16:9</code></td><td><code>SCREENWIDTH() \ 8</code></td><td><code>SCREENHEIGHT() \ 12</code></td></tr>
                     </tbody>
                 </table>
                 <p>Если размер режима не делится на размер текстовой ячейки без остатка, оставшиеся пиксели справа или снизу не образуют отдельную позицию <code>LOCATE</code>.</p>
+                <p>Для <code>SCREEN 10</code> фактические числа зависят от рабочей области текущего монитора и поэтому определяются только во время запуска через <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code>.</p>
             </section>
 
             <section class="article-section">
@@ -87,6 +90,13 @@
                 <p>Оператор <code>WINDOW</code> работает поверх текущего viewport и задаёт уже не физическую, а логическую шкалу. Форма <code>WINDOW SCREEN</code> сохраняет экранное направление оси <code>Y</code>, а форма <code>WINDOW</code> без слова <code>SCREEN</code> даёт декартову систему координат с ростом <code>Y</code> вверх.</p>
                 <p>Если программе нужно явно перевести координату между этими двумя системами, используйте <code>PMAP</code>. Функция не рисует сама по себе, а только возвращает соответствующую координату для текущего сочетания <code>VIEW</code> и <code>WINDOW</code>.</p>
                 <p>Текст на экране располагается иначе. Оператор <code>LOCATE</code> работает со строками и столбцами, которые считаются с единицы. Команда <code>LOCATE 1, 1</code> помещает текстовый курсор в начало первой строки.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Мышь и клавиатура поверх SCREEN</h2>
+                <p>Экранное окно <code>SCREEN</code> служит не только поверхностью рисования, но и активной поверхностью ввода. Клавиатурные функции и обработчики работают здесь в том же окне, где программа печатает текст и рисует графику.</p>
+                <p>Для мыши важно не смешивать два соседних договора. Графические примитивы могут работать в локальной или логической системе координат через <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code>, а <code>MOUSEX()</code>, <code>MOUSEY()</code> и параметры <code>x/y</code> в <code>ON MOUSE</code> остаются в клиентской системе координат активной поверхности ввода. Они не клиппируются к <code>VIEW</code> и не переводятся в систему <code>WINDOW</code>.</p>
+                <p>Если программе нужна текущая позиция указателя или удержание кнопки, используйте <code>MOUSEX()</code>, <code>MOUSEY()</code> и <code>MOUSEBUTTON()</code>. Если нужно одноразово снять нажатие из очереди, используйте <code>MOUSEPRESS()</code>. Если реакция должна запускаться между обычными операторами программы, переходите к <code>ON MOUSE</code>.</p>
             </section>
 
             <section class="article-section">
@@ -166,6 +176,17 @@ SCREEN 0</code></pre>
                     <a href="mousex.html">Мышь</a>
                     <a href="inkey.html">Клавиатура</a>
                 </div>
+            </section>
+
+            <section class="article-section">
+                <h2>Куда идти дальше</h2>
+                <ol>
+                    <li>Если сначала нужен сам режим экрана и его размеры, начните со страницы <a href="screen.html"><code>SCREEN</code></a> и блока <a href="screen-functions.html">функций состояния SCREEN</a>.</li>
+                    <li>Если программа печатает в экранном окне, переходите к <a href="graphics-text.html">текстовому слою</a> с <code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code>.</li>
+                    <li>Если программа рисует фигуры, открывайте <a href="graphics-primitives.html">операторы рисования</a>; если ей нужно ограничить или переопределить систему координат, дальше идите к <a href="view.html"><code>VIEW</code></a>, <a href="window.html"><code>WINDOW</code></a> и <a href="pmap.html"><code>PMAP</code></a>.</li>
+                    <li>Если программе нужно переносить участок изображения, переходите к <a href="get-put.html"><code>GET</code> и <code>PUT</code></a>.</li>
+                    <li>Если нужна интерактивность поверх активного экрана, открывайте страницы клавиатуры и мыши, начиная с <a href="mousex.html"><code>MOUSEX()</code> / <code>MOUSEY()</code></a> и <a href="on-mouse.html"><code>ON MOUSE</code></a>.</li>
+                </ol>
             </section>
 
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>

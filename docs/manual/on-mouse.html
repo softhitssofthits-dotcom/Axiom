@@ -18,14 +18,24 @@
 <section class="article-section">
 <h2>Синтаксис</h2>
 <pre><code class="language-basic">ON MOUSE(buttonNumber), HandlerName
-ON MOUSE(buttonNumber, "UP"), HandlerName
-ON MOUSE("MOVE"), HandlerName
-ON MOUSE("WHEEL"), HandlerName
 ON MOUSE(buttonNumber), ON
 ON MOUSE(buttonNumber), STOP
 ON MOUSE(buttonNumber), OFF
+
+ON MOUSE(buttonNumber, "UP"), HandlerName
+ON MOUSE(buttonNumber, "UP"), ON
+ON MOUSE(buttonNumber, "UP"), STOP
+ON MOUSE(buttonNumber, "UP"), OFF
+
+ON MOUSE("MOVE"), HandlerName
 ON MOUSE("MOVE"), ON
-ON MOUSE("WHEEL"), STOP</code></pre>
+ON MOUSE("MOVE"), STOP
+ON MOUSE("MOVE"), OFF
+
+ON MOUSE("WHEEL"), HandlerName
+ON MOUSE("WHEEL"), ON
+ON MOUSE("WHEEL"), STOP
+ON MOUSE("WHEEL"), OFF</code></pre>
 </section>
 
 <section class="article-section">
@@ -56,12 +66,12 @@ END SUB</code></pre>
 
 <section class="article-section">
 <h2>Режимы</h2>
-<p><code>ON</code>, <code>STOP</code> и <code>OFF</code> после запятой задают состояние уже зарегистрированного обработчика. В этой записи они являются режимами <code>ON MOUSE</code>, а не самостоятельными операторами.</p>
+<p><code>ON</code>, <code>STOP</code> и <code>OFF</code> после запятой задают состояние уже зарегистрированного обработчика. Эти формы доступны для нажатия кнопки, отпускания <code>"UP"</code>, перемещения <code>"MOVE"</code> и колеса <code>"WHEEL"</code>. В этой записи они являются режимами <code>ON MOUSE</code>, а не самостоятельными операторами.</p>
 <ul>
 <li><code>ON MOUSE(buttonNumber), HandlerName</code> регистрирует и включает обработчик;</li>
-<li><code>ON MOUSE(buttonNumber), STOP</code> временно ставит существующий обработчик на паузу;</li>
-<li><code>ON MOUSE(buttonNumber), ON</code> возобновляет ранее зарегистрированный обработчик;</li>
-<li><code>ON MOUSE(buttonNumber), OFF</code> полностью снимает регистрацию.</li>
+<li><code>ON MOUSE(...), STOP</code> временно ставит существующий обработчик на паузу для выбранной цели события;</li>
+<li><code>ON MOUSE(...), ON</code> возобновляет ранее зарегистрированный обработчик для той же формы <code>ON MOUSE</code>;</li>
+<li><code>ON MOUSE(...), OFF</code> полностью снимает регистрацию для выбранной цели события.</li>
 </ul>
 </section>
 
@@ -72,6 +82,10 @@ END SUB</code></pre>
 <li>если обработчик включён, совпавшее нажатие считается обработанным и не попадёт в последующий <code>MOUSEPRESS()</code>;</li>
 <li>если обработчик на паузе или не зарегистрирован, нажатие остаётся доступным для <code>MOUSEPRESS()</code>;</li>
 <li>отпускание, перемещение и колесо не читаются функцией <code>MOUSEPRESS()</code>, но доступны обработчикам <code>ON MOUSE(..., "UP")</code>, <code>ON MOUSE("MOVE")</code> и <code>ON MOUSE("WHEEL")</code>;</li>
+<li>при активном <code>SCREEN</code> координаты <code>x</code> и <code>y</code> совпадают с теми же «сырыми» чтениями, которые в этот момент дают <code>MOUSEX()</code> и <code>MOUSEY()</code>;</li>
+<li><code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют координаты события: обработчик получает клиентские координаты активной поверхности ввода, а не логические координаты графических примитивов;</li>
+<li>в панели <code>Output</code> среды разработки уход указателя за пределы поверхности сбрасывает состояние мыши: координаты становятся <code>-1/-1</code>, очередь событий очищается, удержание кнопок снимается;</li>
+<li>в нативном графическом окне <code>SCREEN</code> уход указателя за видимую область сам по себе не создаёт отдельного сброса координат: без нового события ввода сохраняется последняя известная точка;</li>
 <li>в текущем срезе нет обработчиков двойного клика и захвата указателя.</li>
 </ul>
 </section>

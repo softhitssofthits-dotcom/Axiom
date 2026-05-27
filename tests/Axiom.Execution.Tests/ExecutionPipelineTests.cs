@@ -80,6 +80,35 @@ public sealed class ExecutionPipelineTests
     }
 
     [Fact]
+    public void Compile_ReturnsDiagnosticWhenBytecodeSnapshotWriteFails()
+    {
+        var pipeline = new AxiomExecutionPipeline();
+        var snapshotDirectory = Path.Combine(Path.GetTempPath(), $"axiom-bytecode-dir-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(snapshotDirectory);
+
+        try
+        {
+            var result = pipeline.Compile(new CompilationRequest("PRINT 1 + 2", bytecodeSnapshotPath: snapshotDirectory));
+
+            Assert.Equal(CompilationStatus.Success, result.Status);
+            Assert.True(result.Succeeded);
+            Assert.Empty(result.Diagnostics);
+            Assert.False(result.BackendSucceeded);
+            Assert.False(result.BytecodeAvailable);
+            var diagnostic = Assert.Single(result.BackendDiagnostics);
+            Assert.Equal("MB4003", diagnostic.Code);
+            Assert.Contains("Не удалось записать JSON-снимок байткода", diagnostic.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(snapshotDirectory))
+            {
+                Directory.Delete(snapshotDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void RunCompiled_ExecutesPrecompiledProgram()
     {
         var pipeline = new AxiomExecutionPipeline();
@@ -3387,7 +3416,16 @@ INPUT value
             {
                 0 => (640, 300),
                 1 => (320, 200),
-                _ => (1280, 720)
+                2 => (640, 480),
+                3 => (800, 600),
+                4 => (1024, 768),
+                5 => (1280, 720),
+                6 => (1366, 768),
+                7 => (1600, 900),
+                8 => (1920, 1080),
+                9 => (2560, 1440),
+                10 => (1918, 1079),
+                _ => (0, 0)
             };
             _pixels.Clear();
             GraphicsOutput.Clear();
@@ -3731,7 +3769,16 @@ INPUT value
             {
                 0 => (640, 300),
                 1 => (320, 200),
-                _ => (1280, 720)
+                2 => (640, 480),
+                3 => (800, 600),
+                4 => (1024, 768),
+                5 => (1280, 720),
+                6 => (1366, 768),
+                7 => (1600, 900),
+                8 => (1920, 1080),
+                9 => (2560, 1440),
+                10 => (1918, 1079),
+                _ => (0, 0)
             };
             _pixels.Clear();
             GraphicsOutput.Clear();

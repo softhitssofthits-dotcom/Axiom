@@ -1,0 +1,22 @@
+' Ожидается: SCREEN 10 выбирает наибольший вписываемый размер 16:9
+' для текущего монитора и сообщает фактические размеры через SCREENWIDTH/SCREENHEIGHT.
+
+SCREEN 10
+DIM wasActive AS BOOLEAN = SCREENISACTIVE()
+DIM mode AS INTEGER = SCREENMODE()
+DIM width AS INTEGER = SCREENWIDTH()
+DIM height AS INTEGER = SCREENHEIGHT()
+DIM cols AS INTEGER = width \ 8
+DIM rows AS INTEGER = height \ 12
+
+LOCATE rows, cols
+PRINT "#"
+
+SCREEN 0
+PRINT "mode10 active="; wasActive
+PRINT "mode10 mode="; mode
+PRINT "mode10 width="; width
+PRINT "mode10 height="; height
+PRINT "mode10 cols="; cols
+PRINT "mode10 rows="; rows
+PRINT "Проверка SCREEN 10 завершена"

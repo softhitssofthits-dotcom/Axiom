@@ -112,7 +112,9 @@ public static class GraphicsHostDrawing
                 startAngle,
                 endAngle,
                 aspect,
-                out var circle))
+                out var circle,
+                drawStartRadius || startAngle is < 0,
+                drawEndRadius || endAngle is < 0))
         {
             return;
         }

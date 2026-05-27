@@ -42,7 +42,7 @@ public sealed partial class BytecodeVm
         if (recordValue.Type is not UserDefinedTypeSymbol recordType)
         {
             return ReportInvalidRuntimeState<TypeFieldSymbol>(
-                $"Значение типа '{recordValue.Type.Name}' не содержит TYPE для доступа к полю '{fieldName}'.",
+                $"Р—РЅР°С‡РµРЅРёРµ С‚РёРїР° '{recordValue.Type.Name}' РЅРµ СЏРІР»СЏРµС‚СЃСЏ TYPE РґР»СЏ РґРѕСЃС‚СѓРїР° Рє РїРѕР»СЋ '{fieldName}'.",
                 ResolveLocation(routineId, instructionIndex));
         }
 
@@ -59,7 +59,7 @@ public sealed partial class BytecodeVm
         }
 
         return ReportInvalidRuntimeState<TypeFieldSymbol>(
-            $"TYPE '{recordType.Name}' не содержит поле '{fieldName}'.",
+            $"TYPE '{recordType.Name}' РЅРµ СЃРѕРґРµСЂР¶РёС‚ РїРѕР»Рµ '{fieldName}'.",
             ResolveLocation(routineId, instructionIndex));
     }
     private TypeFieldSymbol ResolveRuntimeErrorField(int routineId, int instructionIndex, string fieldName)
@@ -70,7 +70,7 @@ public sealed partial class BytecodeVm
         }
 
         return ReportInvalidRuntimeState<TypeFieldSymbol>(
-            $"ERROR не содержит поле '{fieldName}'.",
+            $"ERROR РЅРµ СЃРѕРґРµСЂР¶РёС‚ РїРѕР»Рµ '{fieldName}'.",
             ResolveLocation(routineId, instructionIndex));
     }
 
@@ -129,7 +129,7 @@ public sealed partial class BytecodeVm
         }
 
         return ReportInvalidRuntimeState<UserDefinedTypeSymbol>(
-            $"Не удалось разрешить TYPE '{typeName}' для инструкции CreateRecord.",
+            $"РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°Р·СЂРµС€РёС‚СЊ TYPE '{typeName}' РґР»СЏ РёРЅСЃС‚СЂСѓРєС†РёРё CreateRecord.",
             ResolveLocation(routineId, instructionIndex));
     }
 

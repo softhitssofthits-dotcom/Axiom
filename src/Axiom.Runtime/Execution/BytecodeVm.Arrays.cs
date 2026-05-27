@@ -273,8 +273,8 @@ public sealed partial class BytecodeVm
         {
             var detailSuffix = dimensionCount == 1
                 ? string.Empty
-                : $" РёР·РјРµСЂРµРЅРёСЏ {dimension + 1}";
-            span[dimension] = ToArrayBound(PopValue(frame, instructionIndex), location, $"Р—РЅР°С‡РµРЅРёРµ РёРЅРґРµРєСЃР° РјР°СЃСЃРёРІР°{detailSuffix}");
+                : $" измерения {dimension + 1}";
+            span[dimension] = ToArrayBound(PopValue(frame, instructionIndex), location, $"Значение индекса массива{detailSuffix}");
         }
 
         return new PooledIntBuffer(buffer, dimensionCount);
@@ -293,8 +293,8 @@ public sealed partial class BytecodeVm
         {
             var detailSuffix = dimensionCount == 1
                 ? string.Empty
-                : $" РёР·РјРµСЂРµРЅРёСЏ {dimension + 1}";
-            indices[dimension] = ToArrayBound(stack.Pop(), location, $"Р—РЅР°С‡РµРЅРёРµ РёРЅРґРµРєСЃР° РјР°СЃСЃРёРІР°{detailSuffix}");
+                : $" измерения {dimension + 1}";
+            indices[dimension] = ToArrayBound(stack.Pop(), location, $"Значение индекса массива{detailSuffix}");
         }
     }
 
@@ -495,17 +495,17 @@ public sealed partial class BytecodeVm
         {
             var detailSuffix = dimensionCount == 1
                 ? string.Empty
-                : $" РёР·РјРµСЂРµРЅРёСЏ {dimension + 1}";
+                : $" измерения {dimension + 1}";
 
             if ((rangeMask & (1 << dimension)) != 0)
             {
-                var upperBound = ToArrayBound(PopValue(frame, instructionIndex), location, $"Р’РµСЂС…РЅСЏСЏ РіСЂР°РЅРёС†Р° СЃСЂРµР·Р°{detailSuffix}");
-                var lowerBound = ToArrayBound(PopValue(frame, instructionIndex), location, $"РќРёР¶РЅСЏСЏ РіСЂР°РЅРёС†Р° СЃСЂРµР·Р°{detailSuffix}");
+                var upperBound = ToArrayBound(PopValue(frame, instructionIndex), location, $"Верхняя граница среза{detailSuffix}");
+                var lowerBound = ToArrayBound(PopValue(frame, instructionIndex), location, $"Нижняя граница среза{detailSuffix}");
                 slices[dimension] = RuntimeArrayIndexSlice.Range(lowerBound, upperBound);
                 continue;
             }
 
-            slices[dimension] = RuntimeArrayIndexSlice.Single(ToArrayBound(PopValue(frame, instructionIndex), location, $"Р—РЅР°С‡РµРЅРёРµ РёРЅРґРµРєСЃР° РјР°СЃСЃРёРІР°{detailSuffix}"));
+            slices[dimension] = RuntimeArrayIndexSlice.Single(ToArrayBound(PopValue(frame, instructionIndex), location, $"Значение индекса массива{detailSuffix}"));
         }
 
         return slices;
@@ -633,7 +633,7 @@ public sealed partial class BytecodeVm
     {
         ReportRuntimeDiagnostic(
             ArrayBoundsCode,
-            $"РРЅРґРµРєСЃС‹ {FormatArraySlices(slices)} РІС‹С…РѕРґСЏС‚ Р·Р° РіСЂР°РЅРёС†С‹ РјР°СЃСЃРёРІР° '{arrayName}' ({FormatArrayBounds(array)}).",
+            $"Индексы {FormatArraySlices(slices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
 
@@ -716,7 +716,7 @@ public sealed partial class BytecodeVm
     {
         ReportRuntimeDiagnostic(
             ArrayBoundsCode,
-            $"РРЅРґРµРєСЃС‹ {FormatArrayIndices(indices.AsSpan(0, count))} РІС‹С…РѕРґСЏС‚ Р·Р° РіСЂР°РЅРёС†С‹ РјР°СЃСЃРёРІР° '{arrayName}' ({FormatArrayBounds(array)}).",
+            $"Индексы {FormatArrayIndices(indices.AsSpan(0, count))} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
 
@@ -724,7 +724,7 @@ public sealed partial class BytecodeVm
     {
         ReportRuntimeDiagnostic(
             ArrayBoundsCode,
-            $"РРЅРґРµРєСЃС‹ {FormatArrayIndices(indices)} РІС‹С…РѕРґСЏС‚ Р·Р° РіСЂР°РЅРёС†С‹ РјР°СЃСЃРёРІР° '{arrayName}' ({FormatArrayBounds(array)}).",
+            $"Индексы {FormatArrayIndices(indices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
 

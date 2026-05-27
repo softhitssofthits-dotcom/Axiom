@@ -6,6 +6,9 @@ namespace Axiom.Ide.Tests;
 
 public sealed class NativeGraphicsScreenWindowTests
 {
+    private const int WmPaint = 0x000F;
+    private const int WmMouseMove = 0x0200;
+
     [Theory]
     [InlineData(0x25)] // LEFT
     [InlineData(0x20)] // SPACE
@@ -49,6 +52,26 @@ public sealed class NativeGraphicsScreenWindowTests
         Assert.True(closed);
         Assert.Equal(IntPtr.Zero, window.Hwnd);
     }
+
+    [Fact]
+    public void MouseMoveMessage_KeepsLastKnownCoordinatesUntilAnotherMouseInputArrives()
+    {
+        var service = new ProgramConsoleService();
+        using var window = new NativeGraphicsScreenWindow(service, 64, 48);
+
+        SendMessage(window.Hwnd, WmMouseMove, IntPtr.Zero, MakeMouseLParam(11, 22));
+
+        Assert.Equal(11, service.GetMouseX());
+        Assert.Equal(22, service.GetMouseY());
+
+        SendMessage(window.Hwnd, WmPaint, IntPtr.Zero, IntPtr.Zero);
+
+        Assert.Equal(11, service.GetMouseX());
+        Assert.Equal(22, service.GetMouseY());
+    }
+
+    private static IntPtr MakeMouseLParam(short x, short y) =>
+        new((y << 16) | (ushort)x);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);

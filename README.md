@@ -49,7 +49,13 @@ dotnet build Axiom.sln
 ## Как запустить тесты
 
 ```powershell
-dotnet test Axiom.sln
+powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 Axiom.sln
+```
+
+Для адресного прогона отдельного проекта или фильтра можно передать обычные аргументы `dotnet test` после пути:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_SmokeSampleReportsUnrecoverableReplacementMarkers"
 ```
 
 ## Как запустить IDE
@@ -88,6 +94,13 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 ```
 
 - этот режим копирует `samples/operators/get/rectangle_capture.axm` и `samples/operators/put/default_xor_and_preset.axm` во временный workspace, запускает их через реальный `Axiom.Ide.exe` и ждёт в IDE trace события `screen.activated`, строки `screen.output` и финальное `screen.deactivated`;
+- для отдельной приёмки договора `SCREEN 10` есть узкий smoke-маршрут:
+
+```powershell
+dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj -- --screen10-only
+```
+
+- этот режим копирует `samples/graphics/screen/best_fit_dimensions.axm` во временный workspace, запускает его через реальный `Axiom.Ide.exe` и проверяет по IDE trace фактические `SCREENWIDTH()` / `SCREENHEIGHT()`, расчёт `LOCATE` и выбор наибольшего вписываемого размера с отношением `16:9`;
 - для отладки workspace можно оставить:
 
 ```powershell
@@ -117,10 +130,17 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 
 В репозитории действует правило чистой рабочей копии для локальных прогонов:
 - все результаты сборки и промежуточные файлы складываются централизованно в скрытый каталог `.artifacts/` в корне репозитория;
+- для тестовых прогонов каталог результатов `trx` и сопутствующих файлов тоже должен идти через `scripts/dotnet-test-artifacts.ps1`, чтобы `dotnet test` не создавал `TestResults/` внутри `tests/`;
 - каталоги `bin/` и `obj/` внутри `src/` и `tests/` считаются только создаваемыми артефактами и не должны использоваться как место хранения проектных файлов;
 - локальные служебные каталоги `.dotnet-home/`, `.dotnet-cli/`, `.tmp-build/`, а также диагностические журналы сборки считаются временными и не относятся к исходникам проекта.
 
 Если нужно очистить рабочую копию после локальных прогонов, достаточно удалить `.artifacts/` и временные служебные каталоги.
+
+Для быстрой проверки этого правила есть отдельная команда:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1
+```
 
 ## Проверочные примеры
 

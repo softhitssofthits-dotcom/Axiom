@@ -265,7 +265,7 @@ public sealed partial class BytecodeVm
 
         if (oldText.Length == 0)
         {
-            ReportBuiltInArgumentError("REPLACE", "oldText", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚РѕР№ СЃС‚СЂРѕРєРѕР№.", location);
+            ReportBuiltInArgumentError("REPLACE", "oldText", "не может быть пустой строкой.", location);
             throw new RuntimeFailureException();
         }
 

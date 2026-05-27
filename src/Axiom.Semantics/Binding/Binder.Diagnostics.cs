@@ -138,7 +138,7 @@ public sealed partial class Binder
 
         _diagnostics.Report(
             AmbiguousTypeConstructorCode,
-            $"Р’С‹Р·РѕРІ '{typeName}.{methodName}(...)' РЅРµРѕРґРЅРѕР·РЅР°С‡РµРЅ: РїРѕРґС…РѕРґСЏС‚ РЅРµСЃРєРѕР»СЊРєРѕ РїРµСЂРµРіСЂСѓР¶РµРЅРЅС‹С… РјРµС‚РѕРґРѕРІ: {methodList}.",
+            $"Вызов '{typeName}.{methodName}(...)' неоднозначен: подходят несколько перегруженных методов: {methodList}.",
             location);
     }
 

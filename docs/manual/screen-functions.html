@@ -39,13 +39,19 @@
             <section class="article-section">
                 <h2 id="screenwidth">SCREENWIDTH</h2>
 <pre><code>SCREENWIDTH()</code></pre>
-                <p>Возвращает ширину текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>640</code>.</p>
+                <p>Возвращает ширину текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>640</code>. Для <code>SCREEN 10</code> функция возвращает фактически выбранную ширину адаптивного режима <code>16:9</code>, а не заранее зафиксированное историческое значение.</p>
             </section>
 
             <section class="article-section">
                 <h2 id="screenheight">SCREENHEIGHT</h2>
 <pre><code>SCREENHEIGHT()</code></pre>
-                <p>Возвращает высоту текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>300</code>.</p>
+                <p>Возвращает высоту текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>300</code>. Для <code>SCREEN 10</code> функция возвращает фактически выбранную высоту адаптивного режима <code>16:9</code>, рассчитанную для того же клиентского прямоугольника, что и <code>SCREENWIDTH()</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания о SCREEN 10</h2>
+                <p>Режим <code>SCREEN 10</code> выбирает максимально возможную клиентскую область с отношением сторон <code>16:9</code>, которая помещается в рабочую область текущего монитора. Поэтому результаты <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> зависят от того, на каком мониторе находится главное окно <code>Axiom.Ide</code> в момент входа в режим.</p>
+                <p>Текстовая сетка для <code>LOCATE</code> по-прежнему считается как <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>. Если после деления остаются пиксели справа или снизу, они не образуют дополнительную текстовую позицию.</p>
             </section>
 
             <section class="article-section">

@@ -16,6 +16,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
+    private readonly IScreenModeSizeProvider _screenModeSizeProvider;
     private readonly RuntimeInputSnapshot _inputSnapshot = new();
     private DispatcherFrame? _pendingFrame;
     private string _currentInputText = string.Empty;
@@ -88,10 +89,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
-        IIdeEventLogService? eventLogService = null)
+        IIdeEventLogService? eventLogService = null,
+        IScreenModeSizeProvider? screenModeSizeProvider = null)
     {
         _traceService = traceService ?? NullIdeTraceService.Instance;
         _eventLogService = eventLogService ?? NullIdeEventLogService.Instance;
+        _screenModeSizeProvider = screenModeSizeProvider ?? ScreenModeSizeProvider.Instance;
     }
 
     public string CurrentInputText
@@ -334,7 +337,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             WriteGraphicsFrameSummary(final: true);
             WriteGraphicsInputSummary(final: true);
 
-            var (width, height) = ResolveScreenSize(mode);
+            var (width, height) = _screenModeSizeProvider.GetSize(mode);
             _isScreenActive = mode != 0;
             _isScreenOutputActive = true;
             _screenMode = mode;
@@ -1715,19 +1718,4 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _framebuffer?.FillRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
     }
 
-    private static (int Width, int Height) ResolveScreenSize(int mode) => mode switch
-    {
-        0 => (80 * ScreenTextRasterizer.CellWidth, 25 * ScreenTextRasterizer.CellHeight),
-        1 => (320, 200),
-        2 => (640, 480),
-        3 => (800, 600),
-        4 => (1024, 768),
-        5 => (1280, 720),
-        6 => (1366, 768),
-        7 => (1600, 900),
-        8 => (1920, 1080),
-        9 => (2560, 1440),
-        10 => (1280, 720),
-        _ => (0, 0)
-    };
 }

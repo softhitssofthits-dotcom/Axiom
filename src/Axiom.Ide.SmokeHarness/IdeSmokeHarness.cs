@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows.Automation;
 
 namespace Axiom.Ide.SmokeHarness;
@@ -52,6 +53,7 @@ internal sealed class IdeSmokeHarness
     private readonly string _onMouseProgramPath;
     private readonly string _getProgramPath;
     private readonly string _putProgramPath;
+    private readonly string _screen10ProgramPath;
     private Process? _ideProcess;
     private byte[]? _originalStateBytes;
     private bool _stateFileExisted;
@@ -83,6 +85,7 @@ internal sealed class IdeSmokeHarness
         _onMouseProgramPath = Path.Combine(_workspaceRootPath, "on_mouse.axm");
         _getProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "get", "rectangle_capture.axm");
         _putProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "put", "default_xor_and_preset.axm");
+        _screen10ProgramPath = Path.Combine(_workspaceRootPath, "samples", "graphics", "screen", "best_fit_dimensions.axm");
     }
 
     public void Run()
@@ -131,6 +134,14 @@ internal sealed class IdeSmokeHarness
                 RunGetPutOnlySmoke(mainWindow);
                 Console.WriteLine();
                 Console.WriteLine("Axiom IDE GET/PUT smoke completed successfully.");
+                return;
+            }
+
+            if (_options.Screen10Only)
+            {
+                RunScreen10OnlySmoke(mainWindow);
+                Console.WriteLine();
+                Console.WriteLine("Axiom IDE SCREEN 10 smoke completed successfully.");
                 return;
             }
 
@@ -360,6 +371,25 @@ internal sealed class IdeSmokeHarness
             "PUT sample finished");
 
         ReportStep("Close IDE after GET/PUT smoke");
+        CloseWindow(mainWindow, expectProcessExit: true);
+        ReportStepCompleted();
+    }
+
+    private void RunScreen10OnlySmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Initial shell state");
+        RequireElement(mainWindow, "MainMenu");
+        RequireElement(mainWindow, "FilesTreeView");
+        ReportStepCompleted();
+
+        ReportStep("Проверка SCREEN 10 -> трасса SCREEN");
+        OpenWorkspaceFileFromTree(mainWindow, _screen10ProgramPath);
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+        var documentName = Path.GetFileName(_screen10ProgramPath);
+        WaitForLatestIdeLogText(text => Screen10SmokeTraceLooksGood(text, documentName));
+        ReportStepCompleted();
+
+        ReportStep("Close IDE after SCREEN 10 smoke");
         CloseWindow(mainWindow, expectProcessExit: true);
         ReportStepCompleted();
     }
@@ -903,6 +933,66 @@ internal sealed class IdeSmokeHarness
         }
 
         return true;
+    }
+
+    private static bool Screen10SmokeTraceLooksGood(string text, string documentName)
+    {
+        if (!ContainsFragmentsInOrder(
+                text,
+                [
+                    $"run.request | document={documentName}",
+                    "screen.activated | mode=10 | size=",
+                    "screen.activated | mode=0 | size=640x300",
+                    "screen.output | mode10 active=TRUE",
+                    "screen.output | mode10 mode=10",
+                    "screen.output | mode10 width=",
+                    "screen.output | mode10 height=",
+                    "screen.output | mode10 cols=",
+                    "screen.output | mode10 rows=",
+                    "screen.output | Проверка SCREEN 10 завершена"
+                ]))
+        {
+            return false;
+        }
+
+        var activationMatch = Regex.Match(text, @"screen\.activated \| mode=10 \| size=(\d+)x(\d+)");
+        var widthMatch = Regex.Match(text, @"screen\.output \| mode10 width=(\d+)");
+        var heightMatch = Regex.Match(text, @"screen\.output \| mode10 height=(\d+)");
+        var colsMatch = Regex.Match(text, @"screen\.output \| mode10 cols=(\d+)");
+        var rowsMatch = Regex.Match(text, @"screen\.output \| mode10 rows=(\d+)");
+
+        if (!activationMatch.Success
+            || !widthMatch.Success
+            || !heightMatch.Success
+            || !colsMatch.Success
+            || !rowsMatch.Success)
+        {
+            return false;
+        }
+
+        var activatedWidth = int.Parse(activationMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var activatedHeight = int.Parse(activationMatch.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var width = int.Parse(widthMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var height = int.Parse(heightMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var cols = int.Parse(colsMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var rows = int.Parse(rowsMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+
+        if (width != activatedWidth || height != activatedHeight)
+        {
+            return false;
+        }
+
+        if (width <= 0 || height <= 0 || cols <= 0 || rows <= 0)
+        {
+            return false;
+        }
+
+        if (cols != width / 8 || rows != height / 12)
+        {
+            return false;
+        }
+
+        return Math.Abs((width * 9L) - (height * 16L)) <= 16;
     }
 
     private void InvokeMenuItem(AutomationElement mainWindow, params string[] automationIds)
@@ -1546,6 +1636,7 @@ internal sealed class IdeSmokeHarness
 
         CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "get", "rectangle_capture.axm"), _getProgramPath);
         CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "put", "default_xor_and_preset.axm"), _putProgramPath);
+        CopyRepositoryFileToWorkspace(Path.Combine("samples", "graphics", "screen", "best_fit_dimensions.axm"), _screen10ProgramPath);
     }
 
     private void CopyRepositoryFileToWorkspace(string repositoryRelativePath, string workspacePath)

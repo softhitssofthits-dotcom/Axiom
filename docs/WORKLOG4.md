@@ -1538,3 +1538,634 @@
 Следующий точный шаг:
 - если продолжаем именно графическую ветку, сначала зафиксировать в `docs/PLANS3.md` следующий отдельный графический договор поверх уже закрытых `VIEW`, `WINDOW`, `PMAP`, `GET` и `PUT`, а потом открывать код;
 - к `GET` / `PUT` возвращаться только при новом расхождении в `--get-put-only`, acceptance-sample или адресных IDE-тестах.
+
+## Session 874 - 2026-05-17 08:14 - в плане выбран следующий графический договор
+
+Что сделано:
+- после закрытия smoke-приёмки `GET` / `PUT` повторно поднят активный графический контекст в `docs/SPECIFICATION3.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`, чтобы выбрать следующий шаг не по инерции, а по уже зафиксированному проектному объёму;
+- подтверждено, что следующий отдельный графический шаг в активной спецификации уже назван явно: текущий `SCREEN 10` использует безопасный размер `1280x720`, а адаптивный best-fit по фактической доступной области монитора остаётся следующим отдельным улучшением;
+- в `docs/PLANS3.md` добавлено новое обновление плана, которое закрепляет именно этот шаг как следующий графический договор вместо открытия нового оператора рисования.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать следующим отдельным графическим договором не новый оператор поверх уже закрытых `VIEW`, `WINDOW`, `PMAP`, `GET` и `PUT`, а host-договор `SCREEN 10` как настоящий adaptive best-fit;
+- до кода сначала формализовать точные правила выбора доступной области, возвращаемых размеров `SCREENWIDTH()` / `SCREENHEIGHT()` и поведения на многомониторной конфигурации.
+
+Следующий точный шаг:
+- открыть в `docs/SPECIFICATION3.md` отдельную запись про полный договор `SCREEN 10 best-fit`;
+- только после этой спецификации переходить к реализации IDE-host, smoke-приёмке и sample для `SCREEN 10`.
+
+## Session 875 - 2026-05-17 08:16 - зафиксирован договор SCREEN 10 best-fit
+
+Что сделано:
+- после выбора следующего графического шага открыт и формализован отдельный договор `SCREEN 10 best-fit` в `docs/SPECIFICATION3.md`;
+- закреплено, что режим выбирает максимальный размер клиентской области `16:9` по рабочей области монитора, а не старое фиксированное `1280 x 720`;
+- зафиксированы ответы на открытые вопросы следующего шага: берётся рабочая область без системных панелей, монитор выбирается по центру главного окна IDE с запасным переходом на основной монитор, `SCREENWIDTH()` / `SCREENHEIGHT()` возвращают фактический выбранный размер, `LOCATE` продолжает считать сетку `8 x 12` без дополнительной подгонки режима к кратности ячейки;
+- активный план синхронизирован с тем, что следующий шаг теперь уже реализационный: `ProgramConsoleService`, оконный слой `SCREEN` и smoke-приёмка.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `git diff --check -- docs/SPECIFICATION3.md docs/PLANS3.md docs/WORKLOG4.md` — успешно; `Git` показал только предупреждения о будущей нормализации `LF -> CRLF` без пробельных ошибок.
+
+Решение:
+- считать `SCREEN 10 best-fit` закрытым на уровне проектного договора и готовым к отдельной реализации узким срезом;
+- не смешивать этот шаг с новыми графическими операторами или пересмотром уже закрытой координатной семантики.
+
+Следующий точный шаг:
+- реализовать вычисление `SCREEN 10` по рабочей области выбранного монитора вместо жёсткого `1280 x 720`;
+- покрыть шаг адресными IDE-тестами, smoke-приёмкой и runnable sample, затем синхронизировать `README.md` и `docs/manual/`.
+
+## Session 876 - 2026-05-17 08:49 - SCREEN 10 переведён на адаптивный размер 16:9
+
+Что сделано:
+- перечитан активный контекст графической ветки и подтверждено, что после Session 875 открытым оставался именно реализационный шаг по размерной политике `SCREEN 10`;
+- в `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs` старое локальное вычисление размеров заменено на отдельный `IScreenModeSizeProvider`, а новый `ScreenModeSizeProvider` выбирает для `SCREEN 10` рабочую область монитора по центру главного окна IDE, строит в ней наибольший вписываемый размер `16:9` и использует запасной размер `1280 x 720`, если host не смог определить геометрию;
+- добавлены новые файлы `src/Axiom.Ide/Services/Input/IScreenModeSizeProvider.cs` и `src/Axiom.Ide/Services/Input/ScreenModeSizeProvider.cs`;
+- адресные IDE- и execution-тесты синхронизированы под новый договор: `ProgramConsoleServiceTests`, `ProgramRunServiceTests`, `ScreenModeSizeProviderTests`, `AcceptanceProgramTests` и `ExecutionPipelineTests`;
+- добавлен runnable sample `samples/graphics/screen/best_fit_dimensions.axm`, а `Axiom.Ide.SmokeHarness` расширен отдельным маршрутом `--screen10-only` для проверки фактических размеров и `LOCATE` через реальный `Axiom.Ide.exe`;
+- `README.md`, страницы manual `screen.html`, `screen-functions.html`, `graphics.html`, `graphics-text.html`, реестр bytecode-покрытия и активный план синхронизированы с итоговым пользовательским договором `SCREEN 10`;
+- по ходу валидации закрыты два живых дефекта интеграции: публичная доступность `IScreenModeSizeProvider` и отсутствующий `using Axiom.Ide.Graphics;` в `ScreenModeSizeProvider`.
+
+Изменённые файлы:
+- `README.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+- `docs/manual/graphics-text.html`
+- `docs/manual/graphics.html`
+- `docs/manual/screen-functions.html`
+- `docs/manual/screen.html`
+- `samples/graphics/screen/best_fit_dimensions.axm`
+- `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs`
+- `src/Axiom.Ide.SmokeHarness/Program.cs`
+- `src/Axiom.Ide/Services/Input/IScreenModeSizeProvider.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Ide/Services/Input/ScreenModeSizeProvider.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ScreenModeSizeProviderTests.cs`
+
+Проверки:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ProgramConsoleServiceTests.ActivateScreen10_UsesProvidedBestFitSizeAndVisibleLocateGrid|FullyQualifiedName~ScreenModeSizeProviderTests|FullyQualifiedName~ProgramRunServiceTests.Run_Screen10BestFitAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm"` — успешно;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Screen10BestFitAcceptanceSample_RunsOnBytecodeVm"` — успешно;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --screen10-only` — успешно;
+- `git diff --check` остаётся финальной завершающей проверкой после синхронизации документации.
+
+Решение:
+- считать `SCREEN 10` закрытым как отдельный графический договор: размеры режима теперь определяются фактической рабочей областью монитора, а `SCREENWIDTH()` / `SCREENHEIGHT()` и текстовая сетка `LOCATE` отражают именно этот размер;
+- не открывать поверх этого шага новый оператор рисования, пока следующим отдельным графическим договором явно не будет зафиксирована координатная семантика мыши в `SCREEN`.
+
+Следующий точный шаг:
+- формализовать следующий отдельный графический договор: что именно возвращают `MOUSEX()` / `MOUSEY()` и координаты `ON MOUSE` относительно фактической клиентской области `SCREEN`, `VIEW`, `WINDOW` и выхода указателя за видимую область;
+- после такой фиксации переходить к отдельной реализации и проверкам этого договора.
+
+## Session 877 - 2026-05-26 08:53 - первая волна ремонта кодировки в коде и тестах
+
+Что сделано:
+- после обязательного перечитывания `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` поднят новый активный хвост из плана: ремонт кодировки в активных документах и пользовательских диагностических строках;
+- в уже затронутых файлах кода исправлены подтверждаемые битые строки пользовательского уровня:
+  - parser-сообщения ожиданий и неожиданных токенов в `src/Axiom.Parsing/Parser.Statements.cs`;
+  - диагностики и подписи в `src/Axiom.Lexing/Lexer.cs`, `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`, `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`, `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs`, `src/Axiom.Runtime/Execution/BytecodeVm*.cs`, `src/Axiom.Runtime/Execution/Interpreter.Builtins.Array.cs`, `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs`;
+  - видимые комментарии и строка статуса в `src/Axiom.Ide/MainWindow.xaml.cs` и `src/Axiom.Ide/ViewModels/MainWindowViewModel.cs`;
+  - русские названия benchmark-сценариев в `src/Axiom.ManualChecks/Program.cs`.
+- добавлен адресный тест в `tests/Axiom.Lexing.Tests/LexerTests.cs`, который фиксирует точное сообщение `MB0001` для недопустимого символа;
+- в `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs` выровнен устаревший тест под текущий договор `Compile`: ошибка записи JSON snapshot теперь проверяется как backend-диагностика при `CompilationStatus.Success`, а не как несуществующий `BackendFailure`.
+
+Изменённые файлы:
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Regex.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.String.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.PrintUsing.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Records.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.Array.cs`
+- `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs`
+- `src/Axiom.Ide/MainWindow.xaml.cs`
+- `src/Axiom.Ide/ViewModels/MainWindowViewModel.cs`
+- `src/Axiom.ManualChecks/Program.cs`
+- `tests/Axiom.Lexing.Tests/LexerTests.cs`
+- `tests/Axiom.Execution.Tests/ExecutionPipelineTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Lexing.Tests/Axiom.Lexing.Tests.csproj --no-restore` проходит;
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore` проходит;
+- `dotnet test tests/Axiom.Bytecode.Tests/Axiom.Bytecode.Tests.csproj --no-restore --filter "FullyQualifiedName~Validate_InvalidConversionTypeCode_ReturnsDiagnostic"` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Compile_ReturnsDiagnosticWhenBytecodeSnapshotWriteFails"` проходит.
+
+Решение:
+- считать эту сессию первой узкой волной ремонта кодировки: выровнены живые пользовательские строки в коде и тестах без изменения семантики языка;
+- массовую перепись больших mojibake-блоков в `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md` и старых участках `docs/PLANS3.md` не смешивать с этим кодовым проходом и брать отдельной следующей волной, только там, где смысл можно честно восстановить.
+
+Следующий точный шаг:
+- перейти ко второй волне ремонта кодировки и восстановить подтверждаемые битые блоки в `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md` и старых разделах `docs/PLANS3.md`;
+- после этого снова прогнать точечные проверки и обновить журнал работ.
+
+## Session 877 - 2026-05-17 22:54 - формализован координатный договор мыши в активном SCREEN
+
+Что сделано:
+- перечитан обязательный активный контекст (`AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`) и подтверждено, что после Session 876 открытым шагом остаётся именно формализация мышиного координатного договора;
+- по коду повторно зафиксировано фактическое поведение в runtime и IDE: `MOUSEX()` / `MOUSEY()` читают host-координаты с проверкой `SCREEN`, `ON MOUSE` передаёт те же `x/y`, `RuntimeInputSnapshot` держит `-1/-1` как состояние «нет данных», `Output`-маршрут сбрасывает мышь через `ClearMouseState()` на `MouseLeave`, нативный `SCREEN`-маршрут работает по клиентским координатам окна и не сбрасывает координаты автоматически при выходе курсора;
+- в `docs/SPECIFICATION3.md` добавлен отдельный блок `Обновление спецификации - 2026-05-17 - координатный договор мыши в активном SCREEN` с явной фиксацией связи `MOUSEX()`/`MOUSEY()` и параметров `ON MOUSE`, а также отношений к `VIEW`, `WINDOW`, `PMAP` и выходу указателя из видимой области;
+- в `docs/PLANS3.md` добавлена синхронизация состояния, что документный договор координат мыши закрыт и следующий шаг — manual + адресные тесты.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `git diff --check -- docs/SPECIFICATION3.md docs/PLANS3.md docs/WORKLOG4.md` остаётся финальной проверкой после документной синхронизации.
+
+Решение:
+- считать договор координат мыши в активном `SCREEN` зафиксированным на уровне спецификации без изменения кода выполнения;
+- держать этот шаг отдельным от новых операторов рисования и не смешивать его с расширением графического синтаксиса.
+
+Следующий точный шаг:
+- синхронизировать manual-страницы `docs/manual/mousex.html`, `docs/manual/mousey.html`, `docs/manual/on-mouse.html` с новым спецификационным договором про `SCREEN`, `VIEW`, `WINDOW` и поведение при выходе курсора;
+- затем добавить/уточнить адресные runtime- и IDE-тесты на зафиксированное поведение (`-1/-1` после `MouseLeave` в `Output`, сохранение последней точки в нативном `SCREEN` без нового события, совпадение `ON MOUSE` `x/y` с чтениями `MOUSEX()`/`MOUSEY()` в момент вызова).
+
+## Session 878 - 2026-05-22 10:08 - manual и тесты синхронизированы с координатным договором мыши
+
+Что сделано:
+- перечитан обязательный активный контекст проекта и подтверждено, что после Session 877 следующим шагом по плану оставались именно manual и адресные тесты для уже формализованного договора мыши;
+- страницы `docs/manual/mousex.html` и `docs/manual/mousey.html` приведены к одному договору с `docs/SPECIFICATION3.md`: теперь там явно сказано, что функции работают только при активном `SCREEN`, возвращают клиентские координаты активной поверхности ввода, не проходят через `VIEW` / `WINDOW` / `PMAP`, а при отсутствии известных координат возвращают `-1`;
+- страница `docs/manual/on-mouse.html` дополнена точными замечаниями о том, что параметры `x/y` совпадают с текущими чтениями `MOUSEX()` / `MOUSEY()`, что маршрут `Output` в IDE сбрасывает мышиное состояние в `-1/-1` на `MouseLeave`, а нативное `SCREEN`-окно удерживает последнюю известную точку до следующего события ввода;
+- `docs/manual/scripts/search-index.js` синхронизирован с новыми формулировками, чтобы поиск по `SCREEN`, `VIEW`, `WINDOW`, клиентской области и координатам мыши приводил к обновлённым страницам;
+- в `tests/Axiom.Runtime.Tests` добавлены две адресные проверки на совпадение `ON MOUSE` `x/y` с `MOUSEX()` / `MOUSEY()` в interpreter- и `BytecodeVm`-пути;
+- в `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs` добавлена проверка, что нативное `SCREEN`-окно сохраняет последнюю известную мышиную координату без нового события ввода.
+
+Изменённые файлы:
+- `docs/manual/mousex.html`
+- `docs/manual/mousey.html`
+- `docs/manual/on-mouse.html`
+- `docs/manual/scripts/search-index.js`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_OnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen|FullyQualifiedName~Execute_CompiledOnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen"` — успешно;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~MouseMoveMessage_KeepsLastKnownCoordinatesUntilAnotherMouseInputArrives"` — успешно;
+- `node --check docs/manual/scripts/search-index.js` — успешно;
+- `git diff --check` остаётся финальной завершающей проверкой после обновления журналов.
+
+Решение:
+- считать мышиный координатный договор закрытым по спецификации, manual и адресным автотестам;
+- не расширять этот шаг новыми пользовательскими формами ввода, пока отдельно не выбран следующий графический или событийный договор.
+
+Следующий точный шаг:
+- выбрать следующий отдельный шаг графической ветки после уже закрытых `SCREEN`, `VIEW`, `WINDOW`, `PMAP`, `GET`, `PUT` и мышиного координатного договора;
+- если ближайший приоритет остаётся у справочника, продолжить редакционный проход по обзорным страницам `data-and-input.html` и `graphics.html`, чтобы они одинаково явно вели к уже закрытым договорам ввода и экрана.
+
+## Session 879 - 2026-05-22 10:27 - обзорные страницы manual по вводу и графике подчистены
+
+Что сделано:
+- перечитан обязательный активный контекст проекта и подтверждено, что после Session 878 следующим логичным шагом оставался именно обзорный редакционный проход по `docs/manual/data-and-input.html` и `docs/manual/graphics.html`;
+- `docs/manual/data-and-input.html` переписан так, чтобы обзор ввода явнее различал блокирующий строковый ввод `INPUT`, опрос текущего состояния устройства, чтение одноразовых событий из очереди и обработчики `ON KEY` / `ON MOUSE`;
+- на странице `docs/manual/data-and-input.html` мышиный маршрут теперь прямо разводит роли `MOUSEX()` / `MOUSEY()`, `MOUSEBUTTON()`, `MOUSEPRESS()` и `ON MOUSE`, включая уже закрытый договор о том, что в графическом `SCREEN` мышиные координаты остаются клиентскими и не проходят через `VIEW` / `WINDOW` / `PMAP`;
+- `docs/manual/graphics.html` перестроен как обзор уже закрытых слоёв графики: выбор режима `SCREEN`, экранные размеры и текстовая сетка, текстовый слой, примитивы, преобразование координат через `VIEW` / `WINDOW` / `PMAP`, блочный перенос через `GET` / `PUT` и отдельный слой клавиатуры и мыши поверх активной поверхности ввода;
+- в `docs/manual/graphics.html` добавлен явный маршрут чтения раздела, чтобы обзор вёл к адресным страницам по режиму экрана, тексту, координатам, буферам и интерактивному вводу без смешения пользовательских договоров.
+
+Изменённые файлы:
+- `docs/manual/data-and-input.html`
+- `docs/manual/graphics.html`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `git diff --check -- docs/manual/data-and-input.html docs/manual/graphics.html docs/PLANS3.md docs/WORKLOG4.md` запланирован как финальная проверка после завершения этого журнального шага.
+
+Решение:
+- считать этот проход чисто редакционным: он не меняет семантику языка, а только делает обзорные страницы согласованными с уже закрытыми договорами `SCREEN` и мыши;
+- не обновлять `docs/manual/scripts/search-index.js` и `docs/manual/scripts/manual.js`, потому что discoverability для этих тем уже обеспечивается существующей навигацией и адресными страницами.
+
+Следующий точный шаг:
+- выбрать следующий отдельный пользовательский договор графической ветки после уже закрытых `SCREEN`, `VIEW`, `WINDOW`, `PMAP`, `GET`, `PUT` и мышиного слоя;
+- если приоритет у manual сохранится, продолжить такой же обзорный проход по следующему соседнему тематическому узлу, где обзор ещё недостаточно явно ведёт к закрытым договорам.
+
+## Session 880 - 2026-05-25 16:20 - аудит слабых мест перед дальнейшим развитием
+
+Что сделано:
+- перечитан обязательный активный контекст проекта: `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md`;
+- подтверждено текущее состояние: проект уже имеет развитое ядро языка, `BytecodeVm`, WPF IDE, графический слой, runnable samples, manual и служебные инструменты сопровождения;
+- установлено, что предыдущая работа остановилась после редакционного прохода по обзорным manual-страницам ввода и графики, а ближайший записанный шаг был выбором следующего графического договора или продолжением редакционного прохода;
+- выполнен обзор структуры solution, крупных файлов, временных артефактов, служебных инструментов, fallback-модели запуска и признаков mojibake в активных документах и коде;
+- в `docs/PLANS3.md` добавлен отдельный план улучшений перед дальнейшим развитием.
+
+Найденные слабые места:
+- активные документы и пользовательские строки кода всё ещё содержат повреждённые русские фрагменты;
+- `TestResults` обнаружены под `tests/`, хотя временные результаты должны жить в `.artifacts/`;
+- `Axiom.ManualChecks` фактически стал важным инструментом сопровождения, но его `Program.cs` объединяет слишком много ролей;
+- несколько производственных и тестовых файлов уже достаточно велики, чтобы затруднять дальнейшие точечные изменения;
+- после удаления пользовательского режима `Auto` в модели результата запуска ещё видны fallback-поля, требующие отдельного решения;
+- карта solution в README и архитектуре местами отстаёт от фактического состава проектов.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- код, поведение языка, samples и manual-страницы не менялись;
+- полная сборка и тесты не запускались, потому что задача была аналитической и документной.
+
+Решение:
+- перед новым крупным развитием лучше сначала закрыть не новую языковую возможность, а короткую стабилизационную очередь: кодировка, временные артефакты, оформление `Axiom.ManualChecks`, карта solution, затем точечное дробление крупных файлов и fallback-модель.
+
+Следующий точный шаг:
+- начать с отдельной задачи «ремонт кодировки активных документов и пользовательских диагностик»: составить список повреждённых строк, исправить только подтверждаемые фрагменты, добавить точечные тесты на исправленные диагностики и обновить журнал работ.
+
+## Session 881 - 2026-05-26 11:44 - вторая узкая волна ремонта кодировки в active docs
+
+Что сделано:
+- во второй узкой волне исправлены подтверждаемые повреждённые строки в уже открытых файлах `tests/Axiom.Runtime.Tests/InterpreterTests.cs`, `samples/smoke/repair_plans_mojibake.axm` и `docs/ARCHITECTURE.md`;
+- в runtime-тесте и smoke-sample выровнены пользовательские строки с маркером `�/U+FFFD`, чтобы они совпадали с фактическим символом замены, а не с битой последовательностью `пїЅ`;
+- в `docs/ARCHITECTURE.md` восстановлены читаемые активные блоки про `KEYDOWN()`, единый договор имён клавиш и одноразовую проверку `KEYPRESS()` по уже подтверждённым соседним разделам и текущему коду.
+
+Изменённые файлы:
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `samples/smoke/repair_plans_mojibake.axm`
+- `docs/ARCHITECTURE.md`
+
+Проверка:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_SmokeSampleReportsUnrecoverableReplacementMarkers"` проходит.
+
+Решение:
+- считать этот подшаг завершённым: исправлены только те строки и абзацы, смысл которых можно было подтвердить без догадок;
+- не расширять эту же правку на сильно повреждённые исторические фрагменты `docs/PLANS3.md`, пока для них нет надёжного контекста восстановления.
+
+Следующий точный шаг:
+- продолжить вторую волну только по подтверждаемым mojibake-блокам в `docs/SPECIFICATION3.md` и в старых, но всё ещё читаемых разделах `docs/PLANS3.md`, не смешивая это с другими задачами стабилизации.
+
+## Session 882 - 2026-05-26 12:19 - восстановлены активные TYPE-блоки в спецификации
+
+Что сделано:
+- в `docs/SPECIFICATION3.md` восстановлены два активных подтверждаемых блока, ранее повреждённых mojibake: про конструктор значений `TYPE` через `:=` и про явные режимы `BYREF` / `BYVAL`;
+- текст восстановлен только по уже согласованному соседнему контексту спецификации, коду, тестам и предыдущим документным решениям, без добавления новой семантики;
+- для активной спецификации убраны оставшиеся повреждённые последовательности из этого участка, чтобы раздел снова читался как источник проектного договора.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+
+Проверка:
+- `rg -n "Ð|Ñ|вЂ|пїЅ|�" docs/SPECIFICATION3.md` не находит совпадений;
+- `git diff --check -- docs/SPECIFICATION3.md` проходит без ошибок содержимого.
+
+Решение:
+- считать восстановление этих TYPE-разделов завершённым, потому что их смысл подтверждался соседними частями активной спецификации и текущим состоянием реализации;
+- не продолжать в этой же правке массовое восстановление сильно повреждённых исторических фрагментов, где без догадок уже нельзя гарантировать исходный смысл.
+
+Следующий точный шаг:
+- продолжить вторую волну ремонта кодировки только по тем фрагментам `docs/PLANS3.md`, где смысл можно надёжно восстановить по текущим активным документам и уже проверенному коду;
+- если такой уверенности нет, оставить исторический блок нетронутым и перейти к следующей стабилизационной задаче из плана.
+
+## Session 883 - 2026-05-26 12:38 - вторая волна ремонта кодировки остановлена на исторических блоках
+
+Что сделано:
+- выполнен повторный целевой просмотр оставшихся совпадений по mojibake-маркерам в `docs/PLANS3.md` и активных журналах;
+- подтверждено, что после уже сделанных правок оставшиеся повреждённые совпадения в `docs/PLANS3.md` сосредоточены в старых плотных исторических блоках 2026-04-30 и 2026-05-01, где безопасного восстановления исходного смысла по одному только текущему контексту уже нет;
+- для `docs/WORKLOG4.md` найденные совпадения относятся к буквальному упоминанию маркеров поиска и к уже исправленной строке про `�/U+FFFD`, то есть не требуют дополнительного ремонта.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `rg -n "Ð|Ñ|вЂ|пїЅ|�" docs/PLANS3.md docs/WORKLOG4.md` подтверждает, что активные новые записи читаемы, а проблемные совпадения остались только в старых исторических блоках `docs/PLANS3.md` и в буквальных поисковых маркерах;
+- повторный просмотр хвостов `docs/PLANS3.md` и `docs/WORKLOG4.md` подтверждает корректное append-only обновление.
+
+Решение:
+- считать текущую волну ремонта кодировки исчерпанной на честно подтверждаемых фрагментах и не продолжать ручное «восстановление по догадке» для старых исторических абзацев;
+- перевести следующий рабочий шаг на соседнюю стабилизационную задачу про временные артефакты и быстрый репозиторный sanity-check.
+
+Следующий точный шаг:
+- разобраться, почему `dotnet test` оставляет `TestResults` под `tests/`, и настроить вынос результатов тестов в `.artifacts/test-results/`;
+- затем добавить короткую проверку репозитория на временные каталоги вне `.artifacts/`.
+
+## Session 884 - 2026-05-26 13:39 - маршрутизация результатов `dotnet test` переведена в `.artifacts`
+
+Что сделано:
+- подтверждено, что одних свойств `Directory.Build.props` недостаточно для переноса `trx`-результатов: `dotnet test` продолжал создавать `TestResults` рядом с тестовым проектом, поэтому временная попытка через MSBuild-свойства отменена;
+- добавлен сценарий `scripts/dotnet-test-artifacts.ps1`, который запускает `dotnet test` с `--results-directory` и складывает результаты в `.artifacts/test-results/<имя-цели>/`;
+- добавлен сценарий `scripts/repo-sanity.ps1`, который проверяет, что вне `.artifacts/` не остались временные каталоги `bin`, `obj`, `TestResults`, `.dotnet-home`, `.dotnet-cli` и `.tmp-build`;
+- `README.md` обновлён под новый рабочий способ запуска тестов и под репозиторную sanity-проверку;
+- старые каталоги `tests/**/TestResults` удалены перед повторной проверкой, чтобы убедиться, что новые запуски их больше не создают.
+
+Изменённые файлы:
+- `README.md`
+- `scripts/dotnet-test-artifacts.ps1`
+- `scripts/repo-sanity.ps1`
+
+Проверка:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_SmokeSampleReportsUnrecoverableReplacementMarkers" --logger "trx;LogFileName=redirect-check.trx"` проходит, а файл результатов появляется в `.artifacts/test-results/Axiom.Runtime.Tests/redirect-check.trx`;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` проходит и не находит временных каталогов вне `.artifacts/`;
+- `git diff --check -- Directory.Build.props README.md scripts/dotnet-test-artifacts.ps1 scripts/repo-sanity.ps1` проходит; остаётся только предупреждение Git о будущем переводе `README.md` в `CRLF`.
+
+Решение:
+- считать задачу по выносу тестовых результатов и по базовой проверке временных каталогов закрытой на уровне репозиторного рабочего процесса;
+- не пытаться дальше продавить это через глобальные MSBuild-свойства, раз надёжный и проверяемый контракт уже обеспечен обёрткой вокруг `dotnet test`.
+
+Следующий точный шаг:
+- пройтись по уже накопившимся изменениям `Axiom.ManualChecks` и `docs/manual/`, проверить их на соответствие текущему состоянию `SCREEN`, экранных функций и связанных справочных страниц, затем дописать `WORKLOG4` и `PLANS3` уже для этой волны выравнивания документации и ручных проверок.
+
+## Session 885 - 2026-05-26 14:15 - повторно подтверждена согласованность `SCREEN 10` и мышиной семантики
+
+Что сделано:
+- повторно проверена уже накопленная ветка изменений вокруг `SCREEN 10`, экранных функций `SCREENWIDTH()` / `SCREENHEIGHT()`, справочных страниц `docs/manual/` и координатной семантики мыши в активном `SCREEN`, чтобы отделить живое текущее состояние от старых незавершённых заходов;
+- подтверждено, что адресные IDE- и execution-проверки для адаптивного `SCREEN 10` проходят на текущем дереве, а `Axiom.Ide.SmokeHarness` по-прежнему успешно проходит узкий маршрут `--screen10-only` через реальный `Axiom.Ide.exe`;
+- дополнительно подтверждено, что текущий договор мыши не расползается: runtime-проверки для `ON MOUSE("MOVE")` показывают совпадение координат обработчика с `MOUSEX()` / `MOUSEY()`, а `NativeGraphicsScreenWindowTests` сохраняет последнюю известную точку до нового события ввода;
+- после тестов и живого smoke-пути повторно выполнен `scripts/repo-sanity.ps1`, чтобы убедиться, что новые прогоны не оставили временных каталогов вне `.artifacts/`.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ScreenModeSizeProviderTests"` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Run_Screen10BestFitAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm"` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~MouseMoveMessage_KeepsLastKnownCoordinatesUntilAnotherMouseInputArrives"` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Screen10BestFitAcceptanceSample_RunsOnBytecodeVm"` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~OnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen"` — успешно;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --screen10-only` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` — успешно, временные каталоги вне `.artifacts/` не найдены.
+
+Решение:
+- считать текущую волну повторной проверки закрытой: на сегодняшнем дереве договор `SCREEN 10`, связанный runnable sample, адресные автотесты, мышиная координатная семантика и узкий IDE smoke-маршрут согласованы между собой;
+- не переписывать заново уже существующие записи Session 876 и соответствующие плановые блоки как будто это новая разработка, потому что в этом заходе был именно повторный контроль состояния, а не новая функциональная волна.
+
+Следующий точный шаг:
+- отдельно разобрать остаточные mojibake-подозрения в `src/Axiom.ManualChecks/Program.cs` и соседних ручных benchmark-названиях, чтобы понять, это реальный дефект файлового содержимого или только артефакт текущего консольного вывода, и после этого либо исправить подтверждённые строки, либо явно снять ложную тревогу.
+
+## Session 886 - 2026-05-26 14:21 - снята ложная тревога по mojibake в `Axiom.ManualChecks`
+
+Что сделано:
+- проверен актуальный диапазон benchmark-имён в `src/Axiom.ManualChecks/Program.cs`: текущее файловое содержимое хранит нормальные русские строки для документных, файловых, строковых, regex-, массивных и управляющих сценариев, включая ранее подозрительные записи вокруг `regex_*`, `array_*`, `date_time_*` и `type_record_roundtrip`;
+- отдельно сверено, что поиск маркеров перекодировки `Ð`, `Ñ`, `пїЅ`, `�`, `вЂ`, `Ã` по каталогу `src/Axiom.ManualChecks` больше ничего не находит, а значит подозрение по этому участку не подтверждается на уровне файлов репозитория;
+- собран `src/Axiom.ManualChecks/Axiom.ManualChecks.csproj`, чтобы подтвердить, что текущий файл в рабочем дереве не только читаем, но и проходит обычную компиляцию без дополнительных правок;
+- проверен `scripts/repo-sanity.ps1`: сам файл хранит корректную русскую строку `Sanity-check пройден: временные каталоги вне .artifacts не найдены.`, поэтому кракозябры в выводе этого сценария относятся к текущему терминальному декодированию, а не к порче содержимого репозитория.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `rg -n "Ð|Ñ|пїЅ|�|вЂ|Ã" src/Axiom.ManualChecks` — совпадений не найдено;
+- `dotnet build src/Axiom.ManualChecks/Axiom.ManualChecks.csproj --no-restore` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` — успешно по сути проверки; строка успеха в терминале отображается с артефактами декодирования, но сам `scripts/repo-sanity.ps1` хранит корректный русский текст.
+
+Решение:
+- считать пункт плана про mojibake в `src/Axiom.ManualChecks/Program.cs` закрытым как ложную тревогу: рабочее дерево уже содержит нормальный текст, а путаница пришла из старого диффа и терминального отображения;
+- не править `src/Axiom.ManualChecks/Program.cs` наугад только ради косметического совпадения с тем, как старое содержимое показывается в `git diff` через текущий терминал.
+
+Следующий точный шаг:
+- снять узкий инвентарь уже изменённых страниц `docs/manual/` и связанных проверок `Axiom.ManualChecks`, чтобы понять, какие из этих накопленных правок ещё требуют адресной валидации или документного добивания, а какие уже достаточно подтверждены текущими тестами и smoke-сценариями.
+
+## Session 887 - 2026-05-26 21:47 - выровнен синтаксис страницы `ON MOUSE` в manual
+
+Что сделано:
+- в `docs/manual/on-mouse.html` расширен раздел `Синтаксис`: страница теперь явно перечисляет все подтверждённые формы `ON MOUSE(...), ON/STOP/OFF` для нажатия, отпускания `UP`, перемещения `MOVE` и колеса `WHEEL`, вместо прежнего неполного набора;
+- в том же файле уточнён раздел `Режимы`, чтобы `ON`, `STOP` и `OFF` больше не читались как возможности только для формы нажатия кнопки;
+- подтверждено по `docs/SPECIFICATION3.md` и уже существующим parser/runtime-тестам, что manual теперь совпадает с фактически поддержанными синтаксическими формами оператора.
+
+Изменённые файлы:
+- `docs/manual/on-mouse.html`
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `git diff --check -- docs/manual/on-mouse.html` — без ошибок содержимого; Git отдельно предупреждает, что в рабочем дереве `LF` при следующем касании Git будет нормализован в `CRLF`;
+- `rg -n "ON MOUSE\\(" docs/manual/on-mouse.html` — подтверждает, что на странице теперь перечислены формы для `buttonNumber`, `buttonNumber, "UP"`, `"MOVE"` и `"WHEEL"`.
+
+Решение:
+- считать пункт инвентаризации по странице `ON MOUSE` закрытым: найденный дефект был именно в неполном manual-списке, а не в спецификации или реализации;
+- не трогать навигацию `docs/manual/scripts/search-index.js`, потому что сам оператор `ON MOUSE` уже был discoverable, менялась только полнота описания на существующей странице.
+
+Следующий точный шаг:
+- пройтись по соседним страницам `docs/manual/mousex.html`, `docs/manual/mousey.html` и `docs/manual/screen-functions.html`, чтобы так же адресно подтвердить договор `MB3010`, `-1/-1`, сырой координатный слой и связь с активным `SCREEN`.
+
+## Session 888 - 2026-05-26 21:53 - закрыт соседний manual-срез по `SCREEN` и мыши
+
+Что сделано:
+- перепроверены уже изменённые страницы `docs/manual/mousex.html`, `docs/manual/mousey.html`, `docs/manual/screen-functions.html`, `docs/manual/screen.html`, `docs/manual/graphics.html`, `docs/manual/graphics-text.html`, `docs/manual/data-and-input.html` и индекс `docs/manual/scripts/search-index.js`;
+- подтверждено, что текущие тексты уже согласованы с активным договором `docs/SPECIFICATION3.md`: требование активного `SCREEN`, диагностика `MB3010`, возврат `-1` при неизвестной позиции, сырой координатный слой мыши без пересчёта через `VIEW` / `WINDOW` / `PMAP`, а также adaptive best-fit-поведение `SCREEN 10`;
+- новых подтверждаемых manual-расхождений в этом связанном блоке не найдено, поэтому дополнительных правок в HTML и индексе не вносилось.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `rg -n "ON MOUSE|MOUSEX|MOUSEY|SCREEN 10|SCREENWIDTH\\(\\)|SCREENHEIGHT\\(\\)|VIEW|WINDOW|PMAP|MB3010|-1/-1" docs/manual/scripts/search-index.js docs/manual/index.html docs/manual/*.html` — проверка индекса и manual-покрытия; `rg` на Windows отдельно ругается на шаблон `docs/manual/*.html`, но по целевым файлам `index.html` и `search-index.js` выдаёт ожидаемые совпадения;
+- выборочное чтение `docs/manual/*.html` с `UTF-8`-выводом — подтверждает корректное содержимое без новых расхождений со спецификацией.
+
+Решение:
+- считать текущий manual-срез вокруг `SCREEN`, экранных функций и мыши документно закрытым: после правки страницы `ON MOUSE` остальные затронутые страницы уже находятся в согласованном состоянии;
+- не продолжать ручной поиск «ещё одного дефекта» внутри того же блока без нового сигнала из кода, smoke-проверок или пользовательского сценария.
+
+Следующий точный шаг:
+- перейти от manual-инвентаризации к оставшемуся связанному хвосту в `src/Axiom.Ide.SmokeHarness` и `src/Axiom.Ide`, чтобы проверить, не осталось ли там неподтверждённых рабочих изменений вокруг `SCREEN` и мыши, которые ещё не закрыты адресной валидацией.
+
+## Session 889 - 2026-05-26 22:10 - подтверждён хвост `Axiom.Ide` и `Axiom.Ide.SmokeHarness`
+
+Что сделано:
+- просмотрены текущие diff-блоки `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs`, `src/Axiom.Ide.SmokeHarness/Program.cs`, `src/Axiom.Ide/MainWindow.xaml.cs`, `src/Axiom.Ide/ViewModels/MainWindowViewModel.cs` и `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`;
+- подтверждено, что этот хвост состоит из уже проверенной поддержки отдельного `--screen10-only` smoke-прогона, перевода `ProgramConsoleService` на общий `IScreenModeSizeProvider` и локальных исправлений mojibake-строк в `Axiom.Ide`;
+- поиск маркеров перекодировки по `src/Axiom.Ide` и `src/Axiom.Ide.SmokeHarness` не дал новых совпадений.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `rg -n "Ð|Ñ|пїЅ|�|вЂ|Ã" src/Axiom.Ide src/Axiom.Ide.SmokeHarness` — новых маркеров mojibake не найдено;
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj --no-restore` — успешно;
+- `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore` — успешно.
+
+Решение:
+- считать текущий хвост `Axiom.Ide` и `Axiom.Ide.SmokeHarness` адресно подтверждённым: документно и технически он больше не выглядит как неподтверждённый шум рабочего дерева;
+- не возвращаться к этой связке без нового сигнала из тестов, smoke-прогона или пользовательского сценария.
+
+Следующий точный шаг:
+- перейти к оставшейся волне изменений в `src/Axiom.Bytecode`, `src/Axiom.Runtime`, `src/Axiom.Execution`, `src/Axiom.Lexing`, `src/Axiom.Parsing`, `src/Axiom.Semantics` и связанных `tests/`, чтобы отделить уже подтверждённые функциональные правки от тех, которым ещё нужна адресная валидация или документное сопровождение.
+
+## Session 890 - 2026-05-26 22:33 - адресно подтверждён языковой хвост диагностик и smoke-починки mojibake
+
+Что сделано:
+- последовательно прогнаны адресные тесты по оставшейся связке `Bytecode`/`Execution`/`Lexer`/`Runtime`, чтобы подтвердить точные русские диагностические сообщения и сценарии, затронутые текущей волной правок;
+- отдельно подтверждено, что кривой вид русских строк в части выводов PowerShell остаётся эффектом терминального отображения, а не содержимого файлов: прямое UTF-8 чтение `tests/Axiom.Lexing.Tests/LexerTests.cs` показывает корректную строку `Недопустимый символ: '@'.`;
+- закрыт хвост по smoke-сценариям `repair_plans_mojibake.axm`, чтобы не оставлять рядом с изменённым образцом недопроверенные рабочие изменения.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `dotnet test tests/Axiom.Bytecode.Tests/Axiom.Bytecode.Tests.csproj --no-restore --filter "FullyQualifiedName~Validate_ConvertWithUnsupportedSourceStackValue_ReturnsDiagnostic"` — успешно;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Compile_ReturnsDiagnosticWhenBytecodeSnapshotWriteFails"` — успешно;
+- `dotnet test tests/Axiom.Lexing.Tests/Axiom.Lexing.Tests.csproj --no-restore --filter "FullyQualifiedName~Lex_ReportsUnknownCharacter"` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_CompiledOnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen"` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_OnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen"` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_BuiltinReplaceReportsEmptyOldText"` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_SmokeSampleRepairsMixedUtf8Cp1251MojibakeCopy"` — успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_SmokeSampleRepairsWindows1251ControlByteInsideMojibake"` — успешно.
+
+Решение:
+- считать текущую языковую волну вокруг русских диагностик, координат мыши и smoke-починки mojibake технически подтверждённой адресными прогонами;
+- не возвращаться к этой группе изменений без нового сигнала из более широкого полного прогона, пользовательского сценария или обзора diff-блока.
+
+Следующий точный шаг:
+- проверить, не остаются ли после текущих `dotnet test` временные каталоги `TestResults` вне `.artifacts`, и если остаются, перенастроить репозиторную тестовую обвязку так, чтобы все такие артефакты уходили только в `.artifacts/`.
+
+## Session 891 - 2026-05-26 22:35 - подтверждено отсутствие новых `TestResults` вне `.artifacts`
+
+Что сделано:
+- проверено, не появились ли после серии прямых адресных `dotnet test` новые каталоги `TestResults` вне `.artifacts`;
+- перепроверено, что в репозитории уже есть защитный сценарий `scripts/repo-sanity.ps1`, и он по-прежнему подтверждает чистоту рабочего дерева по временным каталогам;
+- снят быстрый инвентарь оставшихся крупных diff-блоков документации, чтобы не держать в плане уже закрытый инфраструктурный риск.
+
+Изменённые файлы:
+- `docs/WORKLOG4.md`
+- `docs/PLANS3.md`
+
+Проверка:
+- `Get-ChildItem -Path . -Recurse -Directory -Filter TestResults | ForEach-Object { $_.FullName }` — новых каталогов `TestResults` не найдено;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` — успешно, временные каталоги вне `.artifacts` не обнаружены;
+- `git diff --stat -- README.md docs/ARCHITECTURE.md docs/BYTECODE_COVERAGE.md docs/SPECIFICATION3.md` — остаётся крупный документный хвост, требующий отдельного прохода на согласованность.
+
+Решение:
+- считать риск повторного появления `TestResults` вне `.artifacts` на текущем шаге фактически закрытым: прямые targeted-прогоны его не воспроизводят, а существующая репозиторная проверка остаётся рабочей;
+- не держать проверку `TestResults` в роли следующего шага, чтобы не крутиться на уже подтверждённой теме.
+
+Следующий точный шаг:
+- перейти к оставшемуся крупному документному хвосту в `README.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/SPECIFICATION3.md`, чтобы понять, какие из этих изменений уже соответствуют подтверждённому состоянию кода и manual, а какие ещё требуют адресной сверки.
+
+## Session 892 - 2026-05-26 22:52 - подтверждён крупный документный хвост и восстановлена `ARCHITECTURE`
+
+Что сделано:
+- проверены текущие diff-блоки `README.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/SPECIFICATION3.md`;
+- подтверждено, что добавленные в `README.md` команды тестового wrapper-сценария, sanity-проверки и маршрута `--screen10-only` опираются на существующие файлы и код;
+- подтверждено, что новая запись `SCREEN 10` в `docs/BYTECODE_COVERAGE.md` соответствует текущим provider-, sample-, smoke- и test-опорам;
+- в `docs/ARCHITECTURE.md` восстановлены оставшиеся повреждённые блоки `2026-05-10` про залитые прямоугольники, native `SCREEN`, сглаживание и ритм показа кадров, а также агрегированные журналы кадров и ввода.
+
+Изменённые файлы:
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `rg -n "Ð|Ñ|вЂ|пїЅ|�|Ã|����" README.md docs/ARCHITECTURE.md docs/BYTECODE_COVERAGE.md docs/SPECIFICATION3.md` — совпадений не найдено;
+- `git diff --check -- README.md docs/ARCHITECTURE.md docs/BYTECODE_COVERAGE.md docs/SPECIFICATION3.md` — проходит, остаются только предупреждения Git о будущей нормализации LF/CRLF;
+- адресный поиск по `screen10-only`, `best_fit_dimensions`, `IScreenModeSizeProvider`, `ScreenModeSizeProviderTests`, `screen.frame.summary` и `screen.input.summary` подтверждает, что документные утверждения опираются на существующие файлы кода, тестов, примеров и сценариев.
+
+Решение:
+- считать крупный документный хвост по `README.md`, `docs/ARCHITECTURE.md`, `docs/BYTECODE_COVERAGE.md` и `docs/SPECIFICATION3.md` закрытым на текущем дереве;
+- не запускать .NET-тесты специально для этой правки, потому что в этом заходе менялся только восстановленный текст архитектурного документа и записи состояния проекта, а поведение языка, VM и IDE не менялось.
+
+Следующий точный шаг:
+- снять общий итоговый инвентарь оставшегося рабочего diff-а по коду, тестам, manual и samples, затем выбрать минимальную финальную последовательную валидацию перед сдачей этой стабилизационной волны.
+
+## Session 893 - 2026-05-27 07:40 - зелёная финальная валидация стабилизационной волны
+
+Что сделано:
+- снят общий инвентарь оставшегося рабочего дерева после закрытия документного хвоста;
+- общий прогон `dotnet test Axiom.sln` через `scripts/dotnet-test-artifacts.ps1` сначала выявил три реальные падающие проверки вокруг `DRAW P` и радиальных линий `CIRCLE`;
+- исправлен общий host-слой `GraphicsHostDrawing.DrawCircle`: уже вычисленные флаги радиальных линий больше не теряются при повторной нормализации аргументов `CIRCLE`;
+- выровнены runtime-тесты `DRAW P`: seed-точка заливки явно переносится внутрь рамки через `BM44,44`, чтобы тест проверял заливку, а не случай старта на цвете границы.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/GraphicsInstructionArguments.cs`
+- `src/Axiom.Runtime/Host/GraphicsHostDrawing.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `powershell -ExecutionPolicy Bypass -File .\scripts\dotnet-test-artifacts.ps1 tests\Axiom.Runtime.Tests\Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Execute_CompiledDrawSupportsMovementModifiersColorScaleAngleMoveAndPaint|FullyQualifiedName~Execute_DrawSupportsMovementModifiersColorScaleAngleMoveAndPaint" --logger "trx"` — успешно, 2/2;
+- `powershell -ExecutionPolicy Bypass -File .\scripts\dotnet-test-artifacts.ps1 tests\Axiom.Ide.Tests\Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius" --logger "trx"` — успешно, 1/1;
+- `powershell -ExecutionPolicy Bypass -File .\scripts\dotnet-test-artifacts.ps1 Axiom.sln --logger "trx"` — успешно, весь набор решения проходит;
+- `powershell -ExecutionPolicy Bypass -File .\scripts\repo-sanity.ps1` — успешно, временные каталоги вне `.artifacts` не найдены;
+- `git diff --check -- ...` по затронутым файлам — успешно, остаются только предупреждения Git о будущей нормализации LF/CRLF.
+
+Решение:
+- считать активные тестовые падения стабилизационной волны закрытыми;
+- не добавлять новый `.axm`-пример и новую manual-страницу для исправления `CIRCLE`, потому что существующий договор уже описан в `docs/manual/graphics-primitives.html`, а runnable sample `samples/graphics/primitives/circle_arcs_step_aspect.axm` уже покрывает отрицательные углы, радиальные линии, `STEP` и `aspect`;
+- не менять реестры bytecode-покрытия: покрытие и статус паритета не расширялись, исправлялась регрессия общего host-выполнения.
+
+Следующий точный шаг:
+- пройти финальный обзор рабочего дерева перед сдачей: убедиться, что все оставшиеся изменения связаны с одной стабилизационной волной, затем подготовить итоговый отчёт или, если пользователь попросит, стадирование/коммит.
+
+## Session 894 - 2026-05-27 07:44 - снят финальный обзор рабочего дерева
+
+Что сделано:
+- после зелёного полного тестового прогона снят финальный обзор рабочего дерева;
+- подтверждено, что в tracked-части остаётся 47 изменённых файлов, а в untracked-части — 6 новых файлов: `samples/graphics/screen/best_fit_dimensions.axm`, `scripts/dotnet-test-artifacts.ps1`, `scripts/repo-sanity.ps1`, `src/Axiom.Ide/Services/Input/IScreenModeSizeProvider.cs`, `src/Axiom.Ide/Services/Input/ScreenModeSizeProvider.cs`, `tests/Axiom.Ide.Tests/ScreenModeSizeProviderTests.cs`;
+- `docs/PLANS3.md` обновлён так, чтобы следующий шаг больше не указывал на уже выполненный обзор.
+
+Проверка:
+- `git diff --check -- src/Axiom.Runtime/Execution/GraphicsInstructionArguments.cs src/Axiom.Runtime/Host/GraphicsHostDrawing.cs tests/Axiom.Runtime.Tests/InterpreterTests.cs tests/Axiom.Runtime.Tests/BytecodeVmTests.cs docs/PLANS3.md docs/WORKLOG4.md` — успешно, остаются только предупреждения Git о будущей нормализации LF/CRLF;
+- `git status --short`, `git diff --stat` и `git ls-files --others --exclude-standard` использованы для финального инвентаря.
+
+Решение:
+- считать обзор рабочего дерева выполненным: оставшиеся изменения относятся к одной стабилизационной волне вокруг `SCREEN`, мыши, manual, runtime/bytecode-проверок и инфраструктуры тестовых артефактов;
+- не запускать дополнительный общий `dotnet test` после этой записи, потому что после зелёного полного прогона менялись только документы состояния проекта.
+
+Следующий точный шаг:
+- подготовить итоговый отчёт по стабилизационной волне; если пользователь попросит, следующим отдельным действием можно стадировать и коммитить текущий набор изменений.
+
+## Session 895 - 2026-05-27 07:45 - acceptance-sample `CIRCLE` уточнён под радиальные линии
+
+Что сделано:
+- существующий runnable sample `samples/graphics/primitives/circle_arcs_step_aspect.axm` уточнён в ожидаемом описании: отрицательные углы `CIRCLE` должны рисовать радиальные линии;
+- это закрывает обязательный sample-след для исправления регрессии общего host-выполнения `CIRCLE`.
+
+Изменённые файлы:
+- `samples/graphics/primitives/circle_arcs_step_aspect.axm`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- не добавлять отдельный новый sample, потому что текущий тематический пример уже содержит отрицательный угол, радиальную линию, `STEP` и `aspect`;
+- не менять manual и bytecode-реестр дополнительно: manual уже описывает отрицательные углы `CIRCLE`, а реестр уже отмечает sample `circle_arcs_step_aspect.axm` как покрытие полной формы `CIRCLE`.
+
+Следующий точный шаг:
+- подготовить итоговый отчёт по стабилизационной волне; если пользователь попросит, следующим отдельным действием можно стадировать и коммитить текущий набор изменений.
+
+## Session 896 - 2026-05-27 08:38 - ручная приёмка `CIRCLE` sample подтверждена
+
+Что сделано:
+- пользователь вручную запустил `samples/graphics/primitives/circle_arcs_step_aspect.axm` в `Axiom.Ide` и прислал снимок результата;
+- по снимку подтверждены ожидаемые элементы sample: полная окружность, дуги, радиальные линии у отрицательных углов, `STEP`-смещение центра и эллипсы с `aspect`;
+- дополнительных расхождений в визуальном результате не выявлено.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- ручная визуальная приёмка `samples/graphics/primitives/circle_arcs_step_aspect.axm` в `Axiom.Ide` подтверждена снимком пользователя.
+
+Решение:
+- считать ручную приёмку `samples/graphics/primitives/circle_arcs_step_aspect.axm` подтверждённой;
+- не вносить дополнительные изменения в код, manual или sample по итогам этого снимка.
+
+Следующий точный шаг:
+- подготовить итоговый отчёт по стабилизационной волне; если пользователь попросит, следующим отдельным действием можно стадировать и коммитить текущий набор изменений.

@@ -4019,7 +4019,7 @@ public sealed class BytecodeModuleValidator
         {
             Report(
                 "BC4047",
-                $"РРЅСЃС‚СЂСѓРєС†РёСЏ Convert РІ РїСЂРѕС†РµРґСѓСЂРµ '{routine.Name}' СЃРѕРґРµСЂР¶РёС‚ РЅРµРёР·РІРµСЃС‚РЅС‹Р№ РєРѕРґ С‚РёРїР° {typeCode}.",
+                $"Инструкция Convert в процедуре '{routine.Name}' содержит неизвестный код типа {typeCode}.",
                 module,
                 routine.Id,
                 instructionIndex);

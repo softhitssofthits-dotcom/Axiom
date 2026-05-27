@@ -2306,6 +2306,7 @@ public sealed class BytecodeModuleValidatorTests
 
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("BC4047", diagnostic.Code);
+        Assert.Contains("неизвестный код типа 99", diagnostic.Message, StringComparison.Ordinal);
         Assert.Equal(10, diagnostic.Location.Line);
     }
 

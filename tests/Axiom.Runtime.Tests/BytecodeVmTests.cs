@@ -782,8 +782,8 @@ DRAW "TA90 U10"
 DRAW "M20,30"
 DRAW "BM20,30"
 DRAW "M+10,-5"
-LINE (40, 40)-(44, 44), 15, B
-DRAW "P4,15"
+LINE (40, 40)-(45, 45), 15, B
+DRAW "BM44,44 P4,15"
 PRINT POINT(0)
 PRINT POINT(1)
 PRINT POINT(41, 41)
@@ -1129,6 +1129,46 @@ END SUB
 
         Assert.True(result.Succeeded);
         Assert.Equal(["3", "320", "240"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledOnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen()
+    {
+        const string text = """
+SCREEN 1
+DIM handled AS BOOLEAN = FALSE
+DIM eventX AS LONG = 0
+DIM eventY AS LONG = 0
+DIM readX AS LONG = 0
+DIM readY AS LONG = 0
+ON MOUSE("MOVE"), HandleMouse
+DIM marker AS INTEGER = 1
+SCREEN 0
+PRINT handled
+PRINT eventX = readX
+PRINT eventY = readY
+PRINT eventX
+PRINT readX
+PRINT eventY
+PRINT readY
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    handled = TRUE
+    eventX = x
+    eventY = y
+    readX = MOUSEX()
+    readY = MOUSEY()
+END SUB
+""";
+
+        var host = new TestRuntimeHost(
+            mouseX: 42,
+            mouseY: 24,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0)]);
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", "TRUE", "42", "42", "24", "24"], host.Output);
     }
 
     [Fact]
@@ -4564,6 +4604,7 @@ PRINT REPLACE("abc", "", "x")
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("REPLACE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("oldText", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("не может быть пустой строкой", diagnostic.Message, StringComparison.Ordinal);
     }
 
     [Fact]

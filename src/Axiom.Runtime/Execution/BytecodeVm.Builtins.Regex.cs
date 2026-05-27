@@ -57,7 +57,7 @@ public sealed partial class BytecodeVm
     {
         if (group < 0)
         {
-            ReportBuiltInArgumentError("REGEXEXTRACT", "group", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј.", location);
+            ReportBuiltInArgumentError("REGEXEXTRACT", "group", "не может быть отрицательным.", location);
             throw new RuntimeFailureException();
         }
 
@@ -115,7 +115,7 @@ public sealed partial class BytecodeVm
     {
         if (group < 0)
         {
-            ReportBuiltInArgumentError("REGEXEXTRACTALL", "group", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј.", location);
+            ReportBuiltInArgumentError("REGEXEXTRACTALL", "group", "не может быть отрицательным.", location);
             throw new RuntimeFailureException();
         }
 
@@ -245,7 +245,7 @@ public sealed partial class BytecodeVm
             ReportBuiltInArgumentError(
                 "REGEXREPLACE",
                 "replacement",
-                $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјСѓСЋ СЃСЃС‹Р»РєСѓ РЅР° РіСЂСѓРїРїСѓ: {ex.Message}",
+                $"содержит недопустимую ссылку на группу: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
         }
@@ -276,7 +276,7 @@ public sealed partial class BytecodeVm
             ReportBuiltInArgumentError(
                 "REGEXREPLACE",
                 "replacement",
-                $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјСѓСЋ СЃСЃС‹Р»РєСѓ РЅР° РіСЂСѓРїРїСѓ: {ex.Message}",
+                $"содержит недопустимую ссылку на группу: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
         }
@@ -316,7 +316,7 @@ public sealed partial class BytecodeVm
     {
         if (count is < 0)
         {
-            ReportBuiltInArgumentError("REGEXREPLACE", "count", "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј.", location);
+            ReportBuiltInArgumentError("REGEXREPLACE", "count", "не может быть отрицательным.", location);
             throw new RuntimeFailureException();
         }
     }
@@ -342,7 +342,7 @@ public sealed partial class BytecodeVm
             ReportBuiltInArgumentError(
                 functionName,
                 "pattern",
-                $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјРѕРµ СЂРµРіСѓР»СЏСЂРЅРѕРµ РІС‹СЂР°Р¶РµРЅРёРµ: {ex.Message}",
+                $"содержит недопустимое регулярное выражение: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
         }
@@ -383,7 +383,7 @@ public sealed partial class BytecodeVm
         ReportBuiltInArgumentError(
             functionName,
             "modes",
-            $"СЃРѕРґРµСЂР¶РёС‚ РЅРµРёР·РІРµСЃС‚РЅС‹Р№ СЂРµР¶РёРј '{mode}'. Р”РѕРїСѓСЃС‚РёРјС‹ С‚РѕР»СЊРєРѕ i, m, s, x.",
+            $"содержит неизвестный режим '{mode}'. Допустимы только i, m, s, x.",
             location);
         throw new RuntimeFailureException();
     }
@@ -457,6 +457,6 @@ public sealed partial class BytecodeVm
 
     private void ReportRegexTimeout(string functionName, TextLocation location)
     {
-        ReportBuiltInArgumentError(functionName, "pattern", "РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ СЃР»РёС€РєРѕРј РґРѕР»РіРѕ.", location);
+        ReportBuiltInArgumentError(functionName, "pattern", "выполняется слишком долго.", location);
     }
 }

@@ -493,7 +493,7 @@ public sealed class AxiomExecutionPipeline
         {
             diagnostic = new Diagnostic(
                 "MB4003",
-                $"Не удалось записать JSON-снимок байткода '{path}': {exception.Message}",
+                $"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РїРёСЃР°С‚СЊ JSON-СЃРЅРёРјРѕРє Р±Р°Р№С‚РєРѕРґР° '{path}': {exception.Message}",
                 default);
             return false;
         }

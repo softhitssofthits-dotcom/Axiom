@@ -1,4 +1,4 @@
-' Expected: CIRCLE draws full circles, arcs, radius lines, ellipses and STEP-relative centers.
+' Expected: CIRCLE draws full circles, arcs, radius lines for negative angles, ellipses and STEP-relative centers.
 SCREEN 8
 CLS
 

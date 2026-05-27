@@ -27,7 +27,7 @@
             <section class="article-section">
                 <h2>Текст на экране</h2>
                 <p>После выбора экранного режима оператор <code>PRINT</code> выводит текст не во вкладку <code>Output</code>, а в окно программы. В <code>SCREEN 0</code> это текстовое окно без операторов рисования. В режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code> текст выводится поверх графического экрана.</p>
-                <p>Оператор <code>LOCATE</code> считает не пиксели, а строки и столбцы. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей. Поэтому количество строк и столбцов зависит от выбранного режима <code>SCREEN</code>.</p>
+                <p>Оператор <code>LOCATE</code> считает не пиксели, а строки и столбцы. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей. Поэтому количество строк и столбцов зависит от выбранного режима <code>SCREEN</code>. Для <code>SCREEN 10</code> эти числа вычисляются от фактически выбранных размеров адаптивного режима <code>16:9</code> для текущего монитора.</p>
             </section>
 
             <section class="article-section">
@@ -119,9 +119,10 @@ SCREEN 0</code></pre>
                         <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td><code>200</code></td><td><code>75</code></td><td>Нет.</td></tr>
                         <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td><code>240</code></td><td><code>90</code></td><td>Нет.</td></tr>
                         <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td><code>320</code></td><td><code>120</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 10</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td><td>Нет.</td></tr>
+                        <tr><td><code>SCREEN 10</code></td><td><code>адаптивный 16:9</code></td><td><code>SCREENWIDTH() \ 8</code></td><td><code>SCREENHEIGHT() \ 12</code></td><td>Зависит от фактического размера режима.</td></tr>
                     </tbody>
                 </table>
+                <p>В <code>SCREEN 10</code> ширина и высота подбираются по рабочей области монитора, поэтому и последняя видимая позиция <code>LOCATE</code> определяется только во время запуска.</p>
                 <p>Последующий <code>PRINT</code> перезаписывает символы с указанной позиции, а не вставляет их в строку. Если новый текст короче старого, хвост старой строки остаётся на экране.</p>
 <pre><code>SCREEN 3
 LOCATE 2, 4

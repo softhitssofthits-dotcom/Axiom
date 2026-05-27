@@ -1791,6 +1791,32 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void Screen10BestFitAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/screen/best_fit_dimensions.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "mode10 active=TRUE",
+                "mode10 mode=10",
+                "mode10 width=1918",
+                "mode10 height=1079",
+                "mode10 cols=239",
+                "mode10 rows=89",
+                "Проверка SCREEN 10 завершена"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenTextAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/text/print_locate_color.axm");
@@ -2649,7 +2675,16 @@ public sealed class AcceptanceProgramTests
             {
                 0 => (640, 300),
                 1 => (320, 200),
-                _ => (1280, 720)
+                2 => (640, 480),
+                3 => (800, 600),
+                4 => (1024, 768),
+                5 => (1280, 720),
+                6 => (1366, 768),
+                7 => (1600, 900),
+                8 => (1920, 1080),
+                9 => (2560, 1440),
+                10 => (1918, 1079),
+                _ => (0, 0)
             };
             _pixels.Clear();
             GraphicsOutput.Clear();

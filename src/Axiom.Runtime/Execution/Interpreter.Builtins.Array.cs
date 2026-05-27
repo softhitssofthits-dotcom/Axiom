@@ -880,7 +880,7 @@ public sealed partial class Interpreter
             ReportBuiltInArgumentError(
                 "ARRAYSLICE",
                 "start",
-                "РІРјРµСЃС‚Рµ СЃ 'count' Р·Р°РґР°С‘С‚ РґРёР°РїР°Р·РѕРЅ РІРЅРµ РіСЂР°РЅРёС† РёСЃС…РѕРґРЅРѕРіРѕ РјР°СЃСЃРёРІР°.",
+                "вместе с 'count' задаёт диапазон вне границ исходного массива.",
                 GetBuiltInArgumentLocation(expression, 1));
             throw new RuntimeFailureException();
         }
@@ -1123,7 +1123,7 @@ public sealed partial class Interpreter
             ReportBuiltInArgumentError(
                 functionName,
                 "dimension",
-                $"РґР»СЏ РјР°СЃСЃРёРІР° СЂР°РЅРіР° {array.Rank} РЅСѓР¶РЅРѕ СЏРІРЅРѕ СѓРєР°Р·Р°С‚СЊ РёР·РјРµСЂРµРЅРёРµ.",
+                $"для массива ранга {array.Rank} нужно явно указать измерение.",
                 expression.Location);
             throw new RuntimeFailureException();
         }
@@ -1131,14 +1131,14 @@ public sealed partial class Interpreter
         var dimension = ToArrayBound(
             arguments[dimensionArgumentIndex],
             GetBuiltInArgumentLocation(expression, dimensionArgumentIndex),
-            $"РР·РјРµСЂРµРЅРёРµ РґР»СЏ {functionName}");
+            $"Измерение для {functionName}");
 
         if (dimension < 1 || dimension > array.Rank)
         {
             ReportBuiltInArgumentError(
                 functionName,
                 "dimension",
-                $"РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ РґРёР°РїР°Р·РѕРЅРµ РѕС‚ 1 РґРѕ {array.Rank}.",
+                $"должен быть в диапазоне от 1 до {array.Rank}.",
                 GetBuiltInArgumentLocation(expression, dimensionArgumentIndex));
             throw new RuntimeFailureException();
         }
@@ -1360,7 +1360,7 @@ public sealed partial class Interpreter
             ReportBuiltInArgumentError(
                 "ARRAYCONCAT",
                 "right",
-                "РґРѕР»Р¶РµРЅ РёРјРµС‚СЊ С‚РѕС‚ Р¶Рµ СЂР°РЅРі, С‡С‚Рѕ Рё Р°СЂРіСѓРјРµРЅС‚ 'left'.",
+                "должен иметь тот же ранг, что и аргумент 'left'.",
                 GetBuiltInArgumentLocation(expression, 1));
             throw new RuntimeFailureException();
         }
@@ -1378,7 +1378,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "ARRAYCONCAT",
                     "right",
-                    "РґРѕР»Р¶РµРЅ РёРјРµС‚СЊ СЃРѕРІРјРµСЃС‚РёРјСѓСЋ РІРёРґРёРјСѓСЋ С„РѕСЂРјСѓ РїРѕ РІСЃРµРј РёР·РјРµСЂРµРЅРёСЏРј, РєСЂРѕРјРµ РІС‹Р±СЂР°РЅРЅРѕРіРѕ.",
+                    "должен иметь совместимую видимую форму по всем измерениям, кроме выбранного.",
                     GetBuiltInArgumentLocation(expression, 1));
                 throw new RuntimeFailureException();
             }

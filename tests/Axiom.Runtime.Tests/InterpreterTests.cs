@@ -749,8 +749,8 @@ DRAW "TA90 U10"
 DRAW "M20,30"
 DRAW "BM20,30"
 DRAW "M+10,-5"
-LINE (40, 40)-(44, 44), 15, B
-DRAW "P4,15"
+LINE (40, 40)-(45, 45), 15, B
+DRAW "BM44,44 P4,15"
 PRINT POINT(0)
 PRINT POINT(1)
 PRINT POINT(41, 41)
@@ -1188,6 +1188,46 @@ END SUB
 
         Assert.True(result.Succeeded);
         Assert.Equal(["3", "320", "240"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen()
+    {
+        const string text = """
+SCREEN 1
+DIM handled AS BOOLEAN = FALSE
+DIM eventX AS LONG = 0
+DIM eventY AS LONG = 0
+DIM readX AS LONG = 0
+DIM readY AS LONG = 0
+ON MOUSE("MOVE"), HandleMouse
+DIM marker AS INTEGER = 1
+SCREEN 0
+PRINT handled
+PRINT eventX = readX
+PRINT eventY = readY
+PRINT eventX
+PRINT readX
+PRINT eventY
+PRINT readY
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    handled = TRUE
+    eventX = x
+    eventY = y
+    readX = MOUSEX()
+    readY = MOUSEY()
+END SUB
+""";
+
+        var (_, host, result) = ExecuteProgramWithMouseState(
+            text,
+            mouseX: 42,
+            mouseY: 24,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0)]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", "TRUE", "42", "42", "24", "24"], host.Output);
     }
 
     [Fact]
@@ -6188,6 +6228,7 @@ PRINT SUBSTRCOUNT("", "a")
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
         Assert.Contains("REPLACE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("oldText", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("не может быть пустой строкой", diagnostic.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -6892,7 +6933,10 @@ PRINT DELETEDIR(emptyDir)
         {
             var sourcePath = Path.Combine(root, "PLANS.md");
             var workPath = Path.Combine(root, "PLANS.axiom-work.md");
-            const string sourceText = "# РџР»Р°РЅ СЂР°Р±РѕС‚\r\n\r\n## Р§С‚Рѕ СѓР¶Рµ Р·Р°РІРµСЂС€РµРЅРѕ\r\n\r\n### Следующий точный шаг\r\n";
+            var sourceText =
+                CreateUtf8Cp1251Mojibake("# План работ", passes: 1) + "\r\n\r\n" +
+                CreateUtf8Cp1251Mojibake("## Что уже завершено", passes: 1) + "\r\n\r\n" +
+                "### Следующий точный шаг\r\n";
             File.WriteAllText(sourcePath, sourceText, Encoding.UTF8);
 
             var samplePath = Path.Combine(FindRepositoryRoot(), "samples", "smoke", "repair_plans_mojibake.axm");
@@ -6905,7 +6949,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 2",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -6946,7 +6990,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 2",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -6985,7 +7029,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 0",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -7026,7 +7070,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 1",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -7068,7 +7112,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 2",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -7110,7 +7154,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 2",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -7133,8 +7177,8 @@ PRINT DELETEDIR(emptyDir)
             var sourcePath = Path.Combine(root, "WORKLOG4.md");
             var workPath = Path.Combine(root, "WORKLOG4.axiom-work.md");
             var sourceText =
-                "Р\u0098сторические части журнала:\r\n" +
-                "Р\u0098зменённые файлы:\r\n";
+                CreateUtf8Cp1251Mojibake("Исторические части журнала:", passes: 1) + "\r\n" +
+                CreateUtf8Cp1251Mojibake("Изменённые файлы:", passes: 1) + "\r\n";
             const string expectedText =
                 "Исторические части журнала:\r\n" +
                 "Изменённые файлы:\r\n";
@@ -7150,7 +7194,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 2",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 0",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 0",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);
@@ -7173,7 +7217,7 @@ PRINT DELETEDIR(emptyDir)
             var sourcePath = Path.Combine(root, "WORKLOG2.md");
             var workPath = Path.Combine(root, "WORKLOG2.axiom-work.md");
             const string sourceText =
-                "### пїЅпїЅпїЅпїЅ\r\n" +
+                "### ����\r\n" +
                 "- normal ASCII line\r\n";
             File.WriteAllText(sourcePath, sourceText, Encoding.UTF8);
 
@@ -7187,7 +7231,7 @@ PRINT DELETEDIR(emptyDir)
                 [
                     "Копирование исходного файла в рабочую копию: TRUE",
                     "Исправлено строк с восстановимой битой кодировкой: 0",
-                    "Строк с невосстановимыми маркерами пїЅ/U+FFFD: 1",
+                    "Строк с невосстановимыми маркерами �/U+FFFD: 1",
                     "Запись исправленной рабочей копии: TRUE",
                 ],
                 host.Output);

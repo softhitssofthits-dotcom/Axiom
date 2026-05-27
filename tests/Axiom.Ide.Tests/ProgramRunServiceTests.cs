@@ -653,6 +653,59 @@ PRINT "PUT sample finished"
     }
 
     [Fact]
+    public void Run_Screen10BestFitAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    {
+        var traceService = new FakeIdeTraceService();
+        var consoleService = new ProgramConsoleService(
+            traceService: traceService,
+            screenModeSizeProvider: new FixedScreenModeSizeProvider((1918, 1079)));
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        const string sourceText = """
+SCREEN 10
+DIM wasActive AS BOOLEAN = SCREENISACTIVE()
+DIM mode AS INTEGER = SCREENMODE()
+DIM width AS INTEGER = SCREENWIDTH()
+DIM height AS INTEGER = SCREENHEIGHT()
+DIM cols AS INTEGER = width \ 8
+DIM rows AS INTEGER = height \ 12
+
+LOCATE rows, cols
+PRINT "#"
+
+SCREEN 0
+PRINT "mode10 active="; wasActive
+PRINT "mode10 mode="; mode
+PRINT "mode10 width="; width
+PRINT "mode10 height="; height
+PRINT "mode10 cols="; cols
+PRINT "mode10 rows="; rows
+PRINT "Проверка SCREEN 10 завершена"
+""";
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var graphicsOutput = traceService.Entries
+            .Where(static entry => entry.Category == "screen.output")
+            .Select(static entry => entry.Message)
+            .ToArray();
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(
+            [
+                "#",
+                "mode10 active=TRUE",
+                "mode10 mode=10",
+                "mode10 width=1918",
+                "mode10 height=1079",
+                "mode10 cols=239",
+                "mode10 rows=89",
+                "Проверка SCREEN 10 завершена"
+            ],
+            graphicsOutput);
+    }
+
+    [Fact]
     public void Run_MapsSemanticDiagnosticsToUiModel()
     {
         var service = CreateService();
@@ -1216,6 +1269,32 @@ PRINT 1 + 2
                 throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint must be 0.");
             }
         }
+    }
+
+    private sealed class FixedScreenModeSizeProvider : IScreenModeSizeProvider
+    {
+        private readonly (int Width, int Height) _screen10Size;
+
+        public FixedScreenModeSizeProvider((int Width, int Height) screen10Size)
+        {
+            _screen10Size = screen10Size;
+        }
+
+        public (int Width, int Height) GetSize(int mode) => mode switch
+        {
+            0 => (640, 300),
+            1 => (320, 200),
+            2 => (640, 480),
+            3 => (800, 600),
+            4 => (1024, 768),
+            5 => (1280, 720),
+            6 => (1366, 768),
+            7 => (1600, 900),
+            8 => (1920, 1080),
+            9 => (2560, 1440),
+            10 => _screen10Size,
+            _ => (0, 0)
+        };
     }
 }
 

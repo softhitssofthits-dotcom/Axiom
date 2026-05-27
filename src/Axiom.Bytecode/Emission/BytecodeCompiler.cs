@@ -486,7 +486,7 @@ public sealed class BytecodeCompiler
             {
                 Report(
                     "BC5012",
-                    $"РЭмиттер байткода не нашёл метку '{collapsedForLoopCheck.EndLabel}' в процедуре '{routine.Name}'.",
+                    $"Эмиттер байткода не нашёл метку '{collapsedForLoopCheck.EndLabel}' в процедуре '{routine.Name}'.",
                     collapsedForLoopCheck.Location);
                 return true;
             }

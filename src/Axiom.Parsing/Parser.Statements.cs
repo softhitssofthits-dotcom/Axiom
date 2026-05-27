@@ -1012,7 +1012,7 @@ public sealed partial class Parser
 
         if (catchClause is null && finallyClause is null)
         {
-            ReportExpectedToken("CATCH РёР»Рё FINALLY");
+            ReportExpectedToken("CATCH или FINALLY");
         }
 
         var (endKeyword, endTryKeyword) = MatchEndPair(SyntaxKind.TryKeyword, "END TRY");

@@ -14,7 +14,7 @@ public sealed partial class BytecodeVm
     {
         if (format.Length > 2048)
         {
-            ReportPrintUsingError("РґР»РёРЅР° С„РѕСЂРјР°С‚РЅРѕР№ СЃС‚СЂРѕРєРё РЅРµ РґРѕР»Р¶РЅР° РїСЂРµРІС‹С€Р°С‚СЊ 2048 СЃРёРјРІРѕР»РѕРІ.", statementLocation);
+            ReportPrintUsingError("длина форматной строки не должна превышать 2048 символов.", statementLocation);
             throw new RuntimeFailureException();
         }
 
@@ -177,7 +177,7 @@ public sealed partial class BytecodeVm
         if (value.Type != TypeSymbol.String)
         {
             ReportPrintUsingError(
-                $"СЃС‚СЂРѕРєРѕРІРѕРµ РїРѕР»Рµ С‚СЂРµР±СѓРµС‚ Р·РЅР°С‡РµРЅРёРµ С‚РёРїР° STRING, РЅРѕ РїРѕР»СѓС‡РµРЅ {value.Type.Name}.",
+                $"строковое поле требует значение типа STRING, но получен {value.Type.Name}.",
                 statementLocation);
             throw new RuntimeFailureException();
         }
@@ -192,7 +192,7 @@ public sealed partial class BytecodeVm
     {
         if (index >= values.Length)
         {
-            ReportPrintUsingError("РґР»СЏ С‡РёСЃР»РѕРІРѕРіРѕ РїРѕР»СЏ РЅРµ С…РІР°С‚РёР»Рѕ Р·РЅР°С‡РµРЅРёСЏ.", statementLocation);
+            ReportPrintUsingError("для числового поля не хватило значения.", statementLocation);
             throw new RuntimeFailureException();
         }
 
@@ -201,7 +201,7 @@ public sealed partial class BytecodeVm
         if (!IsNumericType(value.Type))
         {
             ReportPrintUsingError(
-                $"С‡РёСЃР»РѕРІРѕРµ РїРѕР»Рµ С‚СЂРµР±СѓРµС‚ С‡РёСЃР»РѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ, РЅРѕ РїРѕР»СѓС‡РµРЅ {value.Type.Name}.",
+                $"числовое поле требует числовое значение, но получен {value.Type.Name}.",
                 statementLocation);
             throw new RuntimeFailureException();
         }
