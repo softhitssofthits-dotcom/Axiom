@@ -1,0 +1,24 @@
+' Ожидается: строки 10..15 образуют текстовый viewport,
+' прокручиваются независимо и не ломают строки вне viewport.
+' Нажмите ESC для выхода.
+SCREEN 1
+CLS
+
+VIEW PRINT 10 TO 15
+LOCATE 9, 1
+PRINT "VIEW PRINT viewport:"
+LOCATE 16, 1
+PRINT "ESC - выход"
+
+VIEW PRINT 10 TO 15
+DIM i AS INTEGER
+FOR i = 1 TO 10
+    PRINT "viewport line"; i
+NEXT
+
+VIEW PRINT
+LOCATE 1, 1
+PRINT "VIEW PRINT sample finished"
+
+DO WHILE NOT KEYPRESS("ESC")
+LOOP

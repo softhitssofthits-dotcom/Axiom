@@ -224,16 +224,49 @@ public sealed class BoundSleepStatement : BoundStatement
 
 public sealed class BoundScreenStatement : BoundStatement
 {
-    public BoundScreenStatement(TextLocation location, BoundExpression modeExpression)
+    public BoundScreenStatement(
+        TextLocation location,
+        BoundExpression modeExpression,
+        BoundExpression? colorSwitchExpression,
+        BoundExpression? activePageExpression,
+        BoundExpression? visualPageExpression)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(modeExpression);
         ModeExpression = modeExpression;
+        ColorSwitchExpression = colorSwitchExpression;
+        ActivePageExpression = activePageExpression;
+        VisualPageExpression = visualPageExpression;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.ScreenStatement;
 
     public BoundExpression ModeExpression { get; }
+
+    public BoundExpression? ColorSwitchExpression { get; }
+
+    public BoundExpression? ActivePageExpression { get; }
+
+    public BoundExpression? VisualPageExpression { get; }
+}
+
+public sealed class BoundPCopyStatement : BoundStatement
+{
+    public BoundPCopyStatement(TextLocation location, BoundExpression sourcePageExpression, BoundExpression destinationPageExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(sourcePageExpression);
+        ArgumentNullException.ThrowIfNull(destinationPageExpression);
+
+        SourcePageExpression = sourcePageExpression;
+        DestinationPageExpression = destinationPageExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.PCopyStatement;
+
+    public BoundExpression SourcePageExpression { get; }
+
+    public BoundExpression DestinationPageExpression { get; }
 }
 
 public sealed class BoundViewStatement : BoundStatement
@@ -275,6 +308,24 @@ public sealed class BoundViewStatement : BoundStatement
     public BoundExpression? BorderColorExpression { get; }
 
     public bool IsReset => LeftExpression is null || TopExpression is null || RightExpression is null || BottomExpression is null;
+}
+
+public sealed class BoundViewPrintStatement : BoundStatement
+{
+    public BoundViewPrintStatement(TextLocation location, BoundExpression? topExpression, BoundExpression? bottomExpression)
+        : base(location)
+    {
+        TopExpression = topExpression;
+        BottomExpression = bottomExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ViewPrintStatement;
+
+    public BoundExpression? TopExpression { get; }
+
+    public BoundExpression? BottomExpression { get; }
+
+    public bool IsReset => TopExpression is null || BottomExpression is null;
 }
 
 public sealed class BoundWindowStatement : BoundStatement
@@ -367,6 +418,29 @@ public sealed class BoundLocateStatement : BoundStatement
     public BoundExpression RowExpression { get; }
 
     public BoundExpression ColumnExpression { get; }
+}
+
+public sealed class BoundPaletteStatement : BoundStatement
+{
+    public BoundPaletteStatement(TextLocation location, BoundExpression? indexExpression, BoundExpression? colorExpression, BoundExpression? valuesExpression)
+        : base(location)
+    {
+        IndexExpression = indexExpression;
+        ColorExpression = colorExpression;
+        ValuesExpression = valuesExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.PaletteStatement;
+
+    public BoundExpression? IndexExpression { get; }
+
+    public BoundExpression? ColorExpression { get; }
+
+    public BoundExpression? ValuesExpression { get; }
+
+    public bool IsReset => ValuesExpression is null && (IndexExpression is null || ColorExpression is null);
+
+    public bool IsUsing => ValuesExpression is not null;
 }
 
 public enum BoundLineBoxKind

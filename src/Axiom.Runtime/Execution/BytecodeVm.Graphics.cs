@@ -10,6 +10,9 @@ public sealed partial class BytecodeVm
     private void ExecuteScreenInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var valueCount = PopValue(frame, instructionIndex).AsInteger();
+        var visualPage = PopValue(frame, instructionIndex).AsInteger();
+        var activePage = PopValue(frame, instructionIndex).AsInteger();
         var mode = PopValue(frame, instructionIndex).AsInteger();
         if (mode == 0)
         {
@@ -24,8 +27,33 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
+        if (activePage is < 0 or > 3)
+        {
+            ReportBuiltInArgumentError("SCREEN", "activePage", "должен быть в диапазоне 0..3.", location);
+            throw new RuntimeFailureException();
+        }
+
+        if (visualPage is < 0 or > 3)
+        {
+            ReportBuiltInArgumentError("SCREEN", "visualPage", "должен быть в диапазоне 0..3.", location);
+            throw new RuntimeFailureException();
+        }
+
         FlushPendingOutput(forceEmptyLine: false);
-        _host.ActivateScreen(mode);
+        _host.ActivateScreen(mode, activePage, valueCount >= 3 ? visualPage : activePage);
+    }
+
+    private void ExecutePCopyInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("PCOPY", location);
+        var destinationPage = PopValue(frame, instructionIndex).AsInteger();
+        var sourcePage = PopValue(frame, instructionIndex).AsInteger();
+        if (!_host.CopyScreenPage(sourcePage, destinationPage))
+        {
+            ReportBuiltInArgumentError("PCOPY", "page", "должна быть в диапазоне 0..3.", location);
+            throw new RuntimeFailureException();
+        }
     }
 
     private void ExecuteViewInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -51,6 +79,26 @@ public sealed partial class BytecodeVm
         if (!TryApplyViewport(left, top, right, bottom, fillColor, borderColor, (flags & 1) != 0))
         {
             ReportInvalidViewport("VIEW", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private void ExecuteViewPrintInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("VIEW PRINT", location);
+        var valueCount = instruction.GetOperand(0);
+        if (valueCount == 0)
+        {
+            _host.ResetTextViewport();
+            return;
+        }
+
+        var bottomRow = PopValue(frame, instructionIndex).AsInteger();
+        var topRow = PopValue(frame, instructionIndex).AsInteger();
+        if (!_host.SetTextViewport(topRow, bottomRow))
+        {
+            ReportInvalidTextViewport("VIEW PRINT", location);
             throw new RuntimeFailureException();
         }
     }
@@ -108,6 +156,65 @@ public sealed partial class BytecodeVm
         var column = PopValue(frame, instructionIndex).AsInteger();
         var row = PopValue(frame, instructionIndex).AsInteger();
         _host.LocateText(row, column);
+    }
+
+    private void ExecutePaletteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        RequireScreenActive("PALETTE", location);
+        if (instruction.GetOperand(0) == 0)
+        {
+            _host.ResetPalette();
+            return;
+        }
+
+        if (instruction.GetOperand(0) == 1)
+        {
+            ApplyPaletteUsing(PopValue(frame, instructionIndex).AsArray(), location);
+            return;
+        }
+
+        var color = PopValue(frame, instructionIndex).AsInteger();
+        var index = PopValue(frame, instructionIndex).AsInteger();
+        _host.SetPaletteColor(index, color);
+    }
+
+    private void ApplyPaletteUsing(RuntimeArrayValue array, TextLocation location)
+    {
+        if (!array.IsAllocated)
+        {
+            ReportInvalidRuntimeState("Массив 'PALETTE USING' объявлен, но ещё не выделен.", location);
+            return;
+        }
+
+        if (array.Rank != 1)
+        {
+            ReportRuntimeDiagnostic(BuiltinArgumentCode, "PALETTE USING: ожидается одномерный массив.", location);
+            return;
+        }
+
+        var paletteIndex = 0;
+        array.ForEachVisibleIndexSetAscending(indices =>
+        {
+            if (paletteIndex < 256)
+            {
+                _host.SetPaletteColor(paletteIndex, ToPaletteColor(array.GetValue(indices), location));
+            }
+
+            paletteIndex++;
+        });
+    }
+
+    private int ToPaletteColor(RuntimeValue value, TextLocation location)
+    {
+        return value.Type switch
+        {
+            var type when type == TypeSymbol.Integer => value.AsInteger(),
+            var type when type == TypeSymbol.Long => ToInt32Checked(value.AsLong(), location, "Элемент массива PALETTE USING"),
+            var type when type == TypeSymbol.Double => ToInt32Checked(Math.Truncate(value.AsDouble()), location, "Элемент массива PALETTE USING"),
+            var type when type == TypeSymbol.Decimal => ToInt32Checked(decimal.Truncate(value.AsDecimal()), location, "Элемент массива PALETTE USING"),
+            _ => ReportInvalidRuntimeState<int>($"PALETTE USING не поддерживает элемент типа '{value.Type.Name}'.", location)
+        };
     }
 
     private void ExecutePSetInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -463,6 +570,15 @@ public sealed partial class BytecodeVm
             instructionName,
             "x/y",
             "координаты WINDOW должны задавать ненулевой логический прямоугольник в допустимом диапазоне, а текущий VIEW должен оставлять минимум два пикселя по каждой оси.",
+            location);
+    }
+
+    private void ReportInvalidTextViewport(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "row",
+            "верхняя и нижняя строки VIEW PRINT должны задавать корректную текстовую область внутри текущего SCREEN.",
             location);
     }
 

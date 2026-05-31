@@ -349,6 +349,94 @@ GET (0, 0)-(1, 1), textBuffer
     }
 
     [Fact]
+    public void Bind_ViewPrintResetStatement()
+    {
+        var program = BindProgram("VIEW PRINT", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundViewPrintStatement>(Assert.Single(program.GlobalStatements));
+        Assert.True(statement.IsReset);
+    }
+
+    [Fact]
+    public void Bind_ViewPrintStatementBindsRowsAsInteger()
+    {
+        var program = BindProgram("VIEW PRINT 10 TO 20", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundViewPrintStatement>(Assert.Single(program.GlobalStatements));
+        Assert.False(statement.IsReset);
+        Assert.Equal(TypeSymbol.Integer, statement.TopExpression!.Type);
+        Assert.Equal(TypeSymbol.Integer, statement.BottomExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_PaletteResetStatement()
+    {
+        var program = BindProgram("PALETTE", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundPaletteStatement>(Assert.Single(program.GlobalStatements));
+        Assert.True(statement.IsReset);
+    }
+
+    [Fact]
+    public void Bind_PaletteStatementBindsIndexAndColorAsInteger()
+    {
+        var program = BindProgram("PALETTE 1, 196", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundPaletteStatement>(Assert.Single(program.GlobalStatements));
+        Assert.False(statement.IsReset);
+        Assert.Equal(TypeSymbol.Integer, statement.IndexExpression!.Type);
+        Assert.Equal(TypeSymbol.Integer, statement.ColorExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_PaletteUsingRequiresOneDimensionalNumericArray()
+    {
+        const string text = """
+DIM colors(0 TO 2) AS INTEGER
+PALETTE USING colors
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundPaletteStatement>(program.GlobalStatements[1]);
+        Assert.True(statement.IsUsing);
+        var arrayType = Assert.IsType<ArrayTypeSymbol>(statement.ValuesExpression!.Type);
+        Assert.Equal(TypeSymbol.Integer, arrayType.ElementType);
+        Assert.Equal(1, arrayType.Rank);
+    }
+
+    [Fact]
+    public void Bind_PaletteUsingRejectsStringArray()
+    {
+        const string text = """
+DIM colors(0 TO 2) AS STRING
+PALETTE USING colors
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("PALETTE USING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_PCopyBindsPagesAsInteger()
+    {
+        var program = BindProgram("PCOPY 1, 0", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundPCopyStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(TypeSymbol.Integer, statement.SourcePageExpression.Type);
+        Assert.Equal(TypeSymbol.Integer, statement.DestinationPageExpression.Type);
+    }
+
+    [Fact]
     public void Bind_WindowResetStatement()
     {
         var program = BindProgram("WINDOW", out var diagnostics);

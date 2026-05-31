@@ -9,6 +9,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int CwUseDefault = unchecked((int)0x80000000);
     private const int SwShowNormal = 1;
     private const int WsOverlappedWindow = 0x00CF0000;
+    private const int WsVScroll = 0x00200000;
     private const int WsVisible = 0x10000000;
     private const int CsHRedraw = 0x0002;
     private const int CsVRedraw = 0x0001;
@@ -16,6 +17,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int WmDestroy = 0x0002;
     private const int WmSize = 0x0005;
     private const int WmPaint = 0x000F;
+    private const int WmVScroll = 0x0115;
     private const int WmMouseActivate = 0x0021;
     private const int WmKeyDown = 0x0100;
     private const int WmKeyUp = 0x0101;
@@ -31,14 +33,30 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int MaActivate = 1;
     private const int SizeMinimized = 1;
     private const int ErrorClassAlreadyExists = 1410;
+    private const int SbVert = 1;
+    private const int SbLineUp = 0;
+    private const int SbLineDown = 1;
+    private const int SbPageUp = 2;
+    private const int SbPageDown = 3;
+    private const int SbThumbPosition = 4;
+    private const int SbThumbTrack = 5;
+    private const int SbTop = 6;
+    private const int SbBottom = 7;
+    private const int SifRange = 0x0001;
+    private const int SifPage = 0x0002;
+    private const int SifPos = 0x0004;
+    private const int SifTrackPos = 0x0010;
 
     private static readonly string WindowClassName = "AxiomNativeScreenWindow";
     private static readonly WndProc StaticWndProc = DispatchWindowMessage;
     private static ushort s_windowClassAtom;
 
     private readonly ProgramConsoleService _consoleService;
-    private readonly Direct3D11SwapChainRenderer _renderer;
+    private Direct3D11SwapChainRenderer? _renderer;
     private ScreenFramebufferSnapshot? _lastFrame;
+    private bool _isVerticalScrollBarVisible;
+    private int _clientWidth;
+    private int _clientHeight;
     private bool _closed;
 
     public NativeGraphicsScreenWindow(ProgramConsoleService consoleService, int width, int height)
@@ -55,13 +73,14 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             Right = Math.Max(1, width),
             Bottom = Math.Max(1, height)
         };
-        AdjustWindowRectEx(ref windowRect, WsOverlappedWindow, false, 0);
+        var windowStyle = WsOverlappedWindow | WsVScroll;
+        AdjustWindowRectEx(ref windowRect, windowStyle, false, 0);
 
         Hwnd = CreateWindowEx(
             0,
             WindowClassName,
             "Axiom SCREEN",
-            WsOverlappedWindow,
+            windowStyle,
             CwUseDefault,
             CwUseDefault,
             Math.Max(1, windowRect.Right - windowRect.Left),
@@ -77,8 +96,9 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         }
 
         SetWindowLongPtr(Hwnd, -21, GCHandle.ToIntPtr(GCHandle.Alloc(this)));
-        var (clientWidth, clientHeight) = GetClientSize(Hwnd);
-        _renderer = new Direct3D11SwapChainRenderer(Hwnd, clientWidth, clientHeight);
+        ShowScrollBar(Hwnd, SbVert, false);
+        (_clientWidth, _clientHeight) = GetClientSize(Hwnd);
+        _renderer = new Direct3D11SwapChainRenderer(Hwnd, _clientWidth, _clientHeight);
     }
 
     public event EventHandler? Closed;
@@ -106,7 +126,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         }
 
         _lastFrame = frame;
-        _renderer.PresentFrame(frame);
+        UpdateVerticalScrollBar();
+        _renderer?.PresentFrame(frame);
     }
 
     public void Close()
@@ -146,6 +167,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
             case WmPaint:
                 HandlePaint();
+                return IntPtr.Zero;
+
+            case WmVScroll:
+                HandleVerticalScroll(GetLowWord(wParam));
                 return IntPtr.Zero;
 
             case WmMouseActivate:
@@ -289,6 +314,90 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         }
     }
 
+    private void HandleVerticalScroll(int request)
+    {
+        if (!_consoleService.TryGetScreenTextScrollState(out var state) || !state.HasOverflow)
+        {
+            return;
+        }
+
+        var currentPosition = state.FirstVisibleRow - 1;
+        var targetPosition = request switch
+        {
+            SbLineUp => currentPosition - 1,
+            SbLineDown => currentPosition + 1,
+            SbPageUp => currentPosition - state.VisibleRows,
+            SbPageDown => currentPosition + state.VisibleRows,
+            SbTop => 0,
+            SbBottom => state.MaxFirstVisibleRow - 1,
+            SbThumbPosition or SbThumbTrack => GetScrollTrackPosition(currentPosition),
+            _ => currentPosition
+        };
+
+        _consoleService.SetScreenTextFirstVisibleRow(targetPosition + 1);
+    }
+
+    private int GetScrollTrackPosition(int fallbackPosition)
+    {
+        var info = new ScrollInfo
+        {
+            cbSize = (uint)Marshal.SizeOf<ScrollInfo>(),
+            fMask = SifTrackPos
+        };
+
+        return GetScrollInfo(Hwnd, SbVert, ref info)
+            ? info.nTrackPos
+            : fallbackPosition;
+    }
+
+    private void UpdateVerticalScrollBar()
+    {
+        var showVerticalScrollBar = _consoleService.TryGetScreenTextScrollState(out var state) && state.HasOverflow;
+        SetVerticalScrollBarVisible(showVerticalScrollBar);
+
+        if (!showVerticalScrollBar)
+        {
+            return;
+        }
+
+        var info = new ScrollInfo
+        {
+            cbSize = (uint)Marshal.SizeOf<ScrollInfo>(),
+            fMask = SifRange | SifPage | SifPos,
+            nMin = 0,
+            nMax = state.TotalRows - 1,
+            nPage = (uint)state.VisibleRows,
+            nPos = state.FirstVisibleRow - 1
+        };
+
+        SetScrollInfo(Hwnd, SbVert, ref info, true);
+    }
+
+    private void SetVerticalScrollBarVisible(bool visible)
+    {
+        if (_isVerticalScrollBarVisible == visible)
+        {
+            return;
+        }
+
+        ShowScrollBar(Hwnd, SbVert, visible);
+        _isVerticalScrollBarVisible = visible;
+        ResizeRendererToCurrentClientSize();
+    }
+
+    private void ResizeRendererToCurrentClientSize()
+    {
+        var (width, height) = GetClientSize(Hwnd);
+        if (width == _clientWidth && height == _clientHeight)
+        {
+            return;
+        }
+
+        _clientWidth = width;
+        _clientHeight = height;
+        _renderer?.Resize(width, height);
+    }
+
     private void HandleResize(int width, int height)
     {
         if (width <= 0 || height <= 0)
@@ -296,10 +405,12 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             return;
         }
 
-        _renderer.Resize(width, height);
+        _clientWidth = width;
+        _clientHeight = height;
+        _renderer?.Resize(width, height);
         if (_lastFrame is not null)
         {
-            _renderer.PresentFrame(_lastFrame);
+            _renderer?.PresentFrame(_lastFrame);
         }
     }
 
@@ -308,7 +419,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         ValidateRect(Hwnd, IntPtr.Zero);
         if (_lastFrame is not null)
         {
-            _renderer.PresentFrame(_lastFrame);
+            _renderer?.PresentFrame(_lastFrame);
         }
     }
 
@@ -320,7 +431,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         }
 
         _closed = true;
-        _renderer.Dispose();
+        _renderer?.Dispose();
         var handle = GCHandle.FromIntPtr(GetWindowLongPtr(Hwnd, -21));
         if (handle.IsAllocated)
         {
@@ -461,6 +572,18 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         public int Y;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ScrollInfo
+    {
+        public uint cbSize;
+        public int fMask;
+        public int nMin;
+        public int nMax;
+        public uint nPage;
+        public int nPos;
+        public int nTrackPos;
+    }
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern ushort RegisterClass(ref WndClass lpWndClass);
 
@@ -502,6 +625,15 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     [DllImport("user32.dll")]
     private static extern bool ValidateRect(IntPtr hWnd, IntPtr lpRect);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowScrollBar(IntPtr hWnd, int wBar, bool bShow);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool GetScrollInfo(IntPtr hWnd, int nBar, ref ScrollInfo lpsi);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern int SetScrollInfo(IntPtr hWnd, int nBar, ref ScrollInfo lpsi, bool redraw);
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
     private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);

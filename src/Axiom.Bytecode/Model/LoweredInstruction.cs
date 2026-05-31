@@ -331,6 +331,16 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Screen, location);
     }
 
+    public static LoweredInstruction Screen(TextLocation location, int valueCount)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Screen, location, valueCount: valueCount);
+    }
+
+    public static LoweredInstruction PCopy(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.PCopy, location);
+    }
+
     public static LoweredInstruction View(
         TextLocation location,
         bool useScreenCoordinates,
@@ -361,6 +371,11 @@ public sealed class LoweredInstruction
 
         var valueCount = hasCoordinates ? 4 + (hasFillColor ? 1 : 0) + (hasBorderColor ? 1 : 0) : 0;
         return new LoweredInstruction(LoweredInstructionKind.View, location, valueCount: valueCount, mouseEventKind: flags);
+    }
+
+    public static LoweredInstruction ViewPrint(TextLocation location, bool hasRows)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.ViewPrint, location, valueCount: hasRows ? 2 : 0);
     }
 
     public static LoweredInstruction Window(
@@ -399,6 +414,16 @@ public sealed class LoweredInstruction
     public static LoweredInstruction Locate(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.Locate, location);
+    }
+
+    public static LoweredInstruction Palette(TextLocation location, bool hasColor)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Palette, location, valueCount: hasColor ? 2 : 0);
+    }
+
+    public static LoweredInstruction Palette(TextLocation location, int valueCount)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Palette, location, valueCount: valueCount);
     }
 
     public static LoweredInstruction PSet(TextLocation location, bool reset, bool hasColor, bool isRelative)

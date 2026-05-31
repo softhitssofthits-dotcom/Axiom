@@ -3,6 +3,7 @@ namespace Axiom.Ide.Graphics;
 public sealed class ScreenFramebuffer
 {
     private readonly int[] _colorIndices;
+    private readonly uint[] _palette;
 
     public ScreenFramebuffer(int width, int height)
     {
@@ -19,6 +20,7 @@ public sealed class ScreenFramebuffer
         Width = width;
         Height = height;
         _colorIndices = new int[width * height];
+        _palette = CreateDefaultPalette();
     }
 
     public int Width { get; }
@@ -28,6 +30,29 @@ public sealed class ScreenFramebuffer
     public void Clear()
     {
         Array.Clear(_colorIndices);
+    }
+
+    public void ResetPalette()
+    {
+        var defaultPalette = CreateDefaultPalette();
+        Array.Copy(defaultPalette, _palette, _palette.Length);
+    }
+
+    public void SetPaletteColor(int index, int color)
+    {
+        _palette[NormalizeColorIndex(index)] = MapColorToBgra(color);
+    }
+
+    public void CopyFrom(ScreenFramebuffer source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        if (source.Width != Width || source.Height != Height)
+        {
+            throw new InvalidOperationException("Framebuffer sizes must match.");
+        }
+
+        Array.Copy(source._colorIndices, _colorIndices, _colorIndices.Length);
+        Array.Copy(source._palette, _palette, _palette.Length);
     }
 
     public void SetPixel(long x, long y, int color)
@@ -78,7 +103,7 @@ public sealed class ScreenFramebuffer
         var pixels = new uint[_colorIndices.Length];
         for (var index = 0; index < _colorIndices.Length; index++)
         {
-            pixels[index] = MapColorToBgra(_colorIndices[index]);
+            pixels[index] = MapPaletteColor(_colorIndices[index]);
         }
 
         return new ScreenFramebufferSnapshot(Width, Height, pixels);
@@ -91,8 +116,8 @@ public sealed class ScreenFramebuffer
         string? inputText = null)
     {
         var snapshot = CreateSnapshot();
-        var foreground = MapColorToBgra(textForeground);
-        var background = textBackground.HasValue ? MapColorToBgra(textBackground.Value) : (uint?)null;
+        var foreground = MapPaletteColor(textForeground);
+        var background = textBackground.HasValue ? MapPaletteColor(textBackground.Value) : (uint?)null;
 
         ScreenTextRasterizer.DrawText(
             snapshot.BgraPixels,
@@ -115,7 +140,7 @@ public sealed class ScreenFramebuffer
                 inputY,
                 inputText,
                 foreground,
-                MapColorToBgra(0));
+                MapPaletteColor(0));
         }
 
         return snapshot;
@@ -127,16 +152,28 @@ public sealed class ScreenFramebuffer
         int? inputBackground,
         string? inputText = null,
         int inputRow = 1,
-        int inputColumn = 1)
+        int inputColumn = 1,
+        int firstVisibleRow = 1,
+        int? maxVisibleRows = null,
+        int? maxVisibleColumns = null)
     {
         ArgumentNullException.ThrowIfNull(graphicsText);
 
         var snapshot = CreateSnapshot();
 
-        for (var row = 0; row < graphicsText.Lines.Count; row++)
+        firstVisibleRow = Math.Max(1, firstVisibleRow);
+        var visibleRowCount = maxVisibleRows ?? int.MaxValue;
+        var visibleColumnCount = maxVisibleColumns ?? int.MaxValue;
+        var lastVisibleRow = visibleRowCount <= 0
+            ? firstVisibleRow - 1
+            : firstVisibleRow + visibleRowCount - 1;
+
+        for (var row = firstVisibleRow - 1; row < graphicsText.Lines.Count && row <= lastVisibleRow - 1; row++)
         {
             var line = graphicsText.Lines[row];
-            for (var column = 0; column < line.Count; column++)
+            var visibleRow = row - (firstVisibleRow - 1);
+            var columnLimit = Math.Min(line.Count, visibleColumnCount);
+            for (var column = 0; column < columnLimit; column++)
             {
                 var cell = line[column];
                 ScreenTextRasterizer.DrawGlyph(
@@ -144,26 +181,30 @@ public sealed class ScreenFramebuffer
                     snapshot.Width,
                     snapshot.Height,
                     column * ScreenTextRasterizer.CellWidth,
-                    row * ScreenTextRasterizer.CellHeight,
+                    visibleRow * ScreenTextRasterizer.CellHeight,
                     cell.Character,
-                    MapColorToBgra(cell.Foreground),
-                    cell.Background.HasValue ? MapColorToBgra(cell.Background.Value) : null);
+                    MapPaletteColor(cell.Foreground),
+                    cell.Background.HasValue ? MapPaletteColor(cell.Background.Value) : null);
             }
         }
 
         if (!string.IsNullOrEmpty(inputText))
         {
-            var inputX = Math.Max(0, inputColumn - 1) * ScreenTextRasterizer.CellWidth;
-            var inputY = Math.Max(0, inputRow - 1) * ScreenTextRasterizer.CellHeight;
-            ScreenTextRasterizer.DrawText(
-                snapshot.BgraPixels,
-                snapshot.Width,
-                snapshot.Height,
-                inputX,
-                inputY,
-                inputText,
-                MapColorToBgra(inputForeground),
-                inputBackground.HasValue ? MapColorToBgra(inputBackground.Value) : null);
+            var visibleInputRow = inputRow - firstVisibleRow + 1;
+            if (visibleInputRow >= 1 && visibleInputRow <= visibleRowCount)
+            {
+                var inputX = Math.Max(0, inputColumn - 1) * ScreenTextRasterizer.CellWidth;
+                var inputY = Math.Max(0, visibleInputRow - 1) * ScreenTextRasterizer.CellHeight;
+                ScreenTextRasterizer.DrawText(
+                    snapshot.BgraPixels,
+                    snapshot.Width,
+                    snapshot.Height,
+                    inputX,
+                    inputY,
+                    inputText,
+                    MapPaletteColor(inputForeground),
+                    inputBackground.HasValue ? MapPaletteColor(inputBackground.Value) : null);
+            }
         }
 
         return snapshot;
@@ -178,6 +219,19 @@ public sealed class ScreenFramebuffer
     private int GetOffset(int x, int y) => y * Width + x;
 
     public static int NormalizeColorIndex(int color) => (int)(Math.Abs((long)color) % 256);
+
+    private uint MapPaletteColor(int color) => _palette[NormalizeColorIndex(color)];
+
+    private static uint[] CreateDefaultPalette()
+    {
+        var palette = new uint[256];
+        for (var index = 0; index < palette.Length; index++)
+        {
+            palette[index] = MapColorToBgra(index);
+        }
+
+        return palette;
+    }
 
     public static uint MapColorToBgra(int color) => NormalizeColorIndex(color) switch
     {

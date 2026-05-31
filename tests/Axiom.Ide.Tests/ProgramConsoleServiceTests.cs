@@ -368,6 +368,129 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void ScreenZero_ScrollsVisibleTextWhenNewLinePassesLastRow()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(0);
+        for (var index = 1; index <= 27; index++)
+        {
+            service.WriteGraphicsText($"line {index:00}", newLine: true);
+        }
+
+        var lines = service.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal(25, lines.Length);
+        Assert.Equal("line 04", lines[0]);
+        Assert.Equal("line 27", lines[23]);
+        Assert.Equal(string.Empty, lines[24]);
+        Assert.True(service.TryGetScreenTextScrollState(out var scrollState));
+        Assert.Equal(4, scrollState.FirstVisibleRow);
+        Assert.Equal(25, scrollState.VisibleRows);
+        Assert.Equal(28, scrollState.TotalRows);
+        Assert.True(HasCellPixels(service.GraphicsFrame, row: 24, column: 1));
+        Assert.False(HasCellPixels(service.GraphicsFrame, row: 25, column: 1));
+    }
+
+    [Fact]
+    public void ScreenZero_ManualScrollShowsOlderHistoryAndReturnsToBottom()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(0);
+        for (var index = 1; index <= 27; index++)
+        {
+            service.WriteGraphicsText($"line {index:00}", newLine: true);
+        }
+
+        service.SetScreenTextFirstVisibleRow(1);
+        var topLines = service.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal("line 01", topLines[0]);
+        Assert.Equal("line 25", topLines[24]);
+
+        service.SetScreenTextFirstVisibleRow(4);
+        var bottomLines = service.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal("line 04", bottomLines[0]);
+        Assert.Equal("line 27", bottomLines[23]);
+        Assert.Equal(string.Empty, bottomLines[24]);
+    }
+
+    [Fact]
+    public void ScreenZero_EmptyPrintOnLastRowScrollsToBlankLastRow()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(0);
+        service.LocateText(25, 1);
+        service.WriteGraphicsText(string.Empty, newLine: true);
+
+        var lines = service.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal(25, lines.Length);
+        Assert.All(lines, line => Assert.Equal(string.Empty, line));
+        Assert.False(HasCellPixels(service.GraphicsFrame, row: 25, column: 1));
+    }
+
+    [Fact]
+    public void ScreenZero_ClipsLongTextWithoutVerticalScroll()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(0);
+        service.WriteGraphicsText(new string('A', 100), newLine: false);
+
+        Assert.Equal(80, service.GraphicsText.Length);
+        Assert.Equal(new string('A', 80), service.GraphicsText);
+    }
+
+    [Fact]
+    public void GraphicsScreen_DoesNotAutoScrollTextPastVisibleRows()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        for (var index = 1; index <= 18; index++)
+        {
+            service.WriteGraphicsText($"line {index:00}", newLine: true);
+        }
+
+        var lines = service.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal(16, lines.Length);
+        Assert.Equal("line 01", lines[0]);
+        Assert.Equal("line 16", lines[15]);
+        Assert.DoesNotContain("line 17", lines);
+        Assert.True(HasCellPixels(service.GraphicsFrame, row: 1, column: 1));
+        Assert.True(HasCellPixels(service.GraphicsFrame, row: 16, column: 1));
+    }
+
+    [Fact]
+    public void GraphicsScreen_ViewPrintScrollsOnlyWithinConfiguredRows()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        Assert.True(service.SetTextViewport(10, 12));
+        service.LocateText(16, 1);
+        service.WriteGraphicsText("status", newLine: true);
+        Assert.True(service.SetTextViewport(10, 12));
+        for (var index = 1; index <= 5; index++)
+        {
+            service.WriteGraphicsText($"row{index}", newLine: true);
+        }
+
+        var lines = service.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal(16, lines.Length);
+        Assert.Equal("row3", lines[9]);
+        Assert.Equal("row4", lines[10]);
+        Assert.Equal("row5", lines[11]);
+        Assert.Equal("status", lines[15]);
+    }
+
+    [Fact]
     public void WriteGraphicsText_OverwritesAtLocatedCursor()
     {
         var service = new ProgramConsoleService();
@@ -429,6 +552,47 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(1, ScreenFramebuffer.NormalizeColorIndex(-257));
         Assert.NotEqual(ScreenFramebuffer.MapColorToBgra(16), ScreenFramebuffer.MapColorToBgra(17));
         Assert.NotEqual(ScreenFramebuffer.MapColorToBgra(231), ScreenFramebuffer.MapColorToBgra(255));
+    }
+
+    [Fact]
+    public void ScreenColorPalette_SetAndResetRemapExistingPixelIndices()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1);
+        service.SetPixel(20, 40, 1);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var pixelIndex = (40 * frame.Width) + 20;
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(1), frame.BgraPixels[pixelIndex]);
+
+        service.SetPaletteColor(1, 196);
+
+        frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(196), frame.BgraPixels[pixelIndex]);
+        Assert.Equal(1, service.GetPixel(20, 40));
+
+        service.ResetPalette();
+
+        frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(1), frame.BgraPixels[pixelIndex]);
+    }
+
+    [Fact]
+    public void ScreenPages_CopyScreenPageCopiesPixelsAndPaletteToVisiblePage()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(1, activePage: 1, visualPage: 0);
+        service.SetPixel(20, 40, 1);
+        service.SetPaletteColor(1, 196);
+
+        Assert.True(service.CopyScreenPage(1, 0));
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var pixelIndex = (40 * frame.Width) + 20;
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(196), frame.BgraPixels[pixelIndex]);
+        Assert.Equal(1, service.GetPixel(20, 40));
     }
 
     [Fact]

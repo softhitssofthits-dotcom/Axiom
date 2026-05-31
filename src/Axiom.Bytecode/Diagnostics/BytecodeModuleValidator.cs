@@ -718,6 +718,19 @@ public sealed class BytecodeModuleValidator
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     break;
 
+                case Opcode.ViewPrint:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    break;
+
+                case Opcode.Palette:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidatePaletteInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.PCopy:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
                 case Opcode.PSet:
                 case Opcode.Get:
                 case Opcode.Put:
@@ -826,10 +839,13 @@ public sealed class BytecodeModuleValidator
                 case Opcode.EraseArray:
                 case Opcode.PrintValue:
                 case Opcode.PrintLine:
-                case Opcode.Screen:
                 case Opcode.Cls:
                 case Opcode.Locate:
                 case Opcode.CloseFile:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.Screen:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
 
@@ -1242,8 +1258,23 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.Screen:
             {
+                var valueCountType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, valueCountType, TypeSymbol.Integer, "число аргументов SCREEN");
+                var visualPageType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, visualPageType, TypeSymbol.Integer, "видимая страница SCREEN");
+                var activePageType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, activePageType, TypeSymbol.Integer, "активная страница SCREEN");
                 var modeType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, modeType, TypeSymbol.Integer, "режим SCREEN");
+                break;
+            }
+
+            case Opcode.PCopy:
+            {
+                var destinationPageType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, destinationPageType, TypeSymbol.Integer, "страница назначения PCOPY");
+                var sourcePageType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, sourcePageType, TypeSymbol.Integer, "исходная страница PCOPY");
                 break;
             }
 
@@ -1290,6 +1321,31 @@ public sealed class BytecodeModuleValidator
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, topType, TypeSymbol.Long, "верхняя координата VIEW");
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, rightType, TypeSymbol.Long, "правая координата VIEW");
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, TypeSymbol.Long, "нижняя координата VIEW");
+                }
+
+                break;
+            }
+
+            case Opcode.ViewPrint:
+            {
+                var valueCount = instruction.GetOperand(0);
+                if (valueCount != 0 && valueCount != 2)
+                {
+                    Report(
+                        "BC4126",
+                        $"Инструкция ViewPrint в процедуре '{routine.Name}' ожидает 0 или 2 значения, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                    break;
+                }
+
+                if (valueCount == 2)
+                {
+                    var bottomType = Pop();
+                    var topType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, topType, TypeSymbol.Integer, "верхняя строка VIEW PRINT");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, TypeSymbol.Integer, "нижняя строка VIEW PRINT");
                 }
 
                 break;
@@ -3280,6 +3336,10 @@ public sealed class BytecodeModuleValidator
                     : instruction.GetOperand(0) + 1;
                 return true;
 
+            case Opcode.ViewPrint:
+                popCount = instruction.GetOperand(0);
+                return true;
+
             case Opcode.JumpIfTrue:
             case Opcode.JumpIfFalse:
                 popCount = 1;
@@ -3630,6 +3690,31 @@ public sealed class BytecodeModuleValidator
                 routine.Id,
                 instructionIndex);
         }
+    }
+
+    private void ValidatePaletteInstruction(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        if (instruction.OperandCount < 1)
+        {
+            return;
+        }
+
+        var valueCount = instruction.GetOperand(0);
+        if (valueCount is 0 or 1 or 2)
+        {
+            return;
+        }
+
+        Report(
+            "BC4128",
+            $"Инструкция Palette в процедуре '{routine.Name}' содержит некорректное число аргументов {valueCount}.",
+            module,
+            routine.Id,
+            instructionIndex);
     }
 
     private void ValidateMouseEventKind(

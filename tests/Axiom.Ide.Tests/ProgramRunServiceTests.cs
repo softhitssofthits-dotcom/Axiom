@@ -706,6 +706,26 @@ PRINT "Проверка SCREEN 10 завершена"
     }
 
     [Fact]
+    public void Run_ScreenZeroScrollAcceptanceProgram_KeepsLatestVisibleLinesOnBytecodeVm()
+    {
+        var consoleService = new ProgramConsoleService();
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "graphics", "screen", "text_scroll.axm")));
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var visibleLines = consoleService.GraphicsText.Split(Environment.NewLine);
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(25, visibleLines.Length);
+        Assert.Equal("line 5", visibleLines[0]);
+        Assert.Equal("visible after scroll", visibleLines[23]);
+        Assert.Equal(string.Empty, visibleLines[24]);
+    }
+
+    [Fact]
     public void Run_MapsSemanticDiagnosticsToUiModel()
     {
         var service = CreateService();

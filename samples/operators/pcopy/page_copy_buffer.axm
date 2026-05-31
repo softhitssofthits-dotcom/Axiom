@@ -1,0 +1,14 @@
+' Ожидается: линия рисуется на странице 1 цветовым индексом 1,
+' PALETTE меняет вид этого индекса, а PCOPY копирует пиксели и палитру на страницу 0.
+' После переключения активной страницы POINT возвращает сохранённый индекс 1.
+' Нажмите ESC для выхода.
+SCREEN 1, , 1, 0
+CLS
+LINE (20, 40)-(180, 40), 1
+PALETTE 1, 196
+PCOPY 1, 0
+SCREEN 1, , 0, 0
+PRINT "visible page="; POINT(20, 40)
+PRINT "PCOPY sample finished"
+DO WHILE NOT KEYPRESS("ESC")
+LOOP

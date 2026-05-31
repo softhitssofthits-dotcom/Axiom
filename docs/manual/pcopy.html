@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор PCOPY</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="pcopy">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор PCOPY</span>
+            </nav>
+            <p class="eyebrow">Оператор</p>
+            <h1 class="page-title">PCOPY</h1>
+            <p class="lead"><code>PCOPY</code> копирует одну экранную страницу графического <code>SCREEN</code> в другую. Эта форма полезна, когда программа сначала готовит изображение на скрытой странице, а затем переносит готовый кадр на видимую страницу без поэлементного рисования заново.</p>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code>PCOPY &lt;источник&gt;, &lt;приёмник&gt;</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Части синтаксиса</h2>
+                <table>
+                    <thead>
+                        <tr><th>Часть</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>&lt;источник&gt;</code></td><td>Номер экранной страницы, из которой берётся копия. В текущем договоре Axiom допустимы страницы <code>0..3</code>.</td></tr>
+                        <tr><td><code>&lt;приёмник&gt;</code></td><td>Номер экранной страницы, куда помещается копия. Допустимый диапазон тот же: <code>0..3</code>.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Экранные страницы</h2>
+                <p>Графический <code>SCREEN</code> может иметь активную страницу и видимую страницу. Активная страница получает команды рисования и чтение через <code>POINT(x, y)</code>. Видимая страница показывается в окне программы.</p>
+                <p>Страницы выбираются через расширенную форму оператора <code>SCREEN</code>:</p>
+<pre><code>SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;, &lt;видимая_страница&gt;</code></pre>
+                <p>Пустое место после первой запятой оставлено под исторический параметр <code>colorSwitch</code>, который в Axiom не поддерживается. Чтобы задать страницы, оставляйте это место пустым.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Замечания</h2>
+                <p><code>PCOPY</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. В текстовом <code>SCREEN 0</code> и без выбранного графического режима оператор сообщает <code>MB3010</code>.</p>
+                <p>Копируется графический кадровый буфер страницы: цветовые индексы пикселей и палитра этой страницы. После копирования <code>POINT(x, y)</code> на странице-приёмнике возвращает те же индексы, которые были в источнике.</p>
+                <p>Текст, выведенный через <code>PRINT</code> поверх графического экрана, в текущем срезе не является отдельной страницей <code>PCOPY</code>. Оператор не меняет текущий текстовый курсор, <code>VIEW PRINT</code>, обычный <code>VIEW</code>, <code>WINDOW</code>, текущую графическую позицию, активную страницу и видимую страницу.</p>
+                <p>Если источник и приёмник совпадают, состояние экрана остаётся тем же. Если страница-приёмник сейчас видима, окно программы обновляется сразу после копирования.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+<pre><code>SCREEN 1, , 1, 0
+LINE (20, 40)-(180, 40), 1
+PALETTE 1, 196
+
+PCOPY 1, 0
+SCREEN 1, , 0, 0
+PRINT "visible page="; POINT(20, 40)</code></pre>
+                <p>Программа рисует линию на активной странице <code>1</code>, пока видимой остаётся страница <code>0</code>, и меняет вид индекса <code>1</code> через <code>PALETTE</code>. Оператор <code>PCOPY 1, 0</code> переносит готовое изображение и палитру на страницу <code>0</code>. После переключения активной страницы на <code>0</code> функция <code>POINT</code> подтверждает тот же цветовой индекс.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3007</code>: номер страницы источника или приёмника находится вне диапазона <code>0..3</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Проверочные программы</h2>
+                <p>Готовые примеры для ручной и отрицательной проверки находятся в <code>samples/operators/pcopy/</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование скрытой страницы на видимую</a></li>
+                    <li><a href="../../samples/operators/pcopy/invalid_page_error.axm">PCOPY: ошибка неверного номера страницы</a></li>
+                    <li><a href="../../samples/operators/pcopy/text_screen_error.axm">PCOPY: ошибка в текстовом SCREEN 0</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="screen.html">Оператор SCREEN</a>
+                    <a href="palette.html">Оператор PALETTE</a>
+                    <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="get-put.html">Операторы GET и PUT</a>
+                    <a href="screen-functions.html">Функции состояния SCREEN</a>
+                </div>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

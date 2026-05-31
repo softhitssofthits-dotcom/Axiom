@@ -22,6 +22,10 @@ public interface IGraphicsHost
 
     int ScreenMode => 0;
 
+    int ActiveScreenPage => 0;
+
+    int VisualScreenPage => 0;
+
     int ScreenWidth => 0;
 
     int ScreenHeight => 0;
@@ -90,6 +94,13 @@ public interface IGraphicsHost
     {
     }
 
+    void ActivateScreen(int mode, int activePage, int visualPage)
+    {
+        ActivateScreen(mode);
+    }
+
+    bool CopyScreenPage(int sourcePage, int destinationPage) => false;
+
     void DeactivateScreen()
     {
     }
@@ -103,6 +114,20 @@ public interface IGraphicsHost
     }
 
     void LocateText(int row, int column)
+    {
+    }
+
+    void ResetPalette()
+    {
+    }
+
+    void SetPaletteColor(int index, int color)
+    {
+    }
+
+    bool SetTextViewport(int topRow, int bottomRow) => false;
+
+    void ResetTextViewport()
     {
     }
 

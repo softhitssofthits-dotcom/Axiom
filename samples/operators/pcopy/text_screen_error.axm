@@ -1,0 +1,3 @@
+' Ожидается: PCOPY в текстовом SCREEN 0 сообщает MB3010.
+SCREEN 0
+PCOPY 1, 0

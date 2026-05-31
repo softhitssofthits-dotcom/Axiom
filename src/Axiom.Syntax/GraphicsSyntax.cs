@@ -2,13 +2,27 @@ namespace Axiom.Syntax;
 
 public sealed class ScreenStatementSyntax : StatementSyntax
 {
-    public ScreenStatementSyntax(SyntaxToken screenKeyword, ExpressionSyntax modeExpression)
+    public ScreenStatementSyntax(
+        SyntaxToken screenKeyword,
+        ExpressionSyntax modeExpression,
+        SyntaxToken? colorSwitchCommaToken,
+        ExpressionSyntax? colorSwitchExpression,
+        SyntaxToken? activePageCommaToken,
+        ExpressionSyntax? activePageExpression,
+        SyntaxToken? visualPageCommaToken,
+        ExpressionSyntax? visualPageExpression)
     {
         ArgumentNullException.ThrowIfNull(screenKeyword);
         ArgumentNullException.ThrowIfNull(modeExpression);
 
         ScreenKeyword = screenKeyword;
         ModeExpression = modeExpression;
+        ColorSwitchCommaToken = colorSwitchCommaToken;
+        ColorSwitchExpression = colorSwitchExpression;
+        ActivePageCommaToken = activePageCommaToken;
+        ActivePageExpression = activePageExpression;
+        VisualPageCommaToken = visualPageCommaToken;
+        VisualPageExpression = visualPageExpression;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ScreenStatement;
@@ -16,6 +30,44 @@ public sealed class ScreenStatementSyntax : StatementSyntax
     public SyntaxToken ScreenKeyword { get; }
 
     public ExpressionSyntax ModeExpression { get; }
+
+    public SyntaxToken? ColorSwitchCommaToken { get; }
+
+    public ExpressionSyntax? ColorSwitchExpression { get; }
+
+    public SyntaxToken? ActivePageCommaToken { get; }
+
+    public ExpressionSyntax? ActivePageExpression { get; }
+
+    public SyntaxToken? VisualPageCommaToken { get; }
+
+    public ExpressionSyntax? VisualPageExpression { get; }
+}
+
+public sealed class PCopyStatementSyntax : StatementSyntax
+{
+    public PCopyStatementSyntax(SyntaxToken pcopyKeyword, ExpressionSyntax sourcePageExpression, SyntaxToken commaToken, ExpressionSyntax destinationPageExpression)
+    {
+        ArgumentNullException.ThrowIfNull(pcopyKeyword);
+        ArgumentNullException.ThrowIfNull(sourcePageExpression);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(destinationPageExpression);
+
+        PCopyKeyword = pcopyKeyword;
+        SourcePageExpression = sourcePageExpression;
+        CommaToken = commaToken;
+        DestinationPageExpression = destinationPageExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.PCopyStatement;
+
+    public SyntaxToken PCopyKeyword { get; }
+
+    public ExpressionSyntax SourcePageExpression { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public ExpressionSyntax DestinationPageExpression { get; }
 }
 
 public sealed class ViewStatementSyntax : StatementSyntax
@@ -65,6 +117,40 @@ public sealed class ViewStatementSyntax : StatementSyntax
     public ExpressionSyntax? BorderColorExpression { get; }
 
     public bool IsReset => TopLeftPoint is null || BottomRightPoint is null;
+}
+
+public sealed class ViewPrintStatementSyntax : StatementSyntax
+{
+    public ViewPrintStatementSyntax(
+        SyntaxToken viewKeyword,
+        SyntaxToken printKeyword,
+        ExpressionSyntax? topExpression,
+        SyntaxToken? toKeyword,
+        ExpressionSyntax? bottomExpression)
+    {
+        ArgumentNullException.ThrowIfNull(viewKeyword);
+        ArgumentNullException.ThrowIfNull(printKeyword);
+
+        ViewKeyword = viewKeyword;
+        PrintKeyword = printKeyword;
+        TopExpression = topExpression;
+        ToKeyword = toKeyword;
+        BottomExpression = bottomExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ViewPrintStatement;
+
+    public SyntaxToken ViewKeyword { get; }
+
+    public SyntaxToken PrintKeyword { get; }
+
+    public ExpressionSyntax? TopExpression { get; }
+
+    public SyntaxToken? ToKeyword { get; }
+
+    public ExpressionSyntax? BottomExpression { get; }
+
+    public bool IsReset => TopExpression is null || BottomExpression is null;
 }
 
 public sealed class WindowStatementSyntax : StatementSyntax
@@ -169,6 +255,45 @@ public sealed class LocateStatementSyntax : StatementSyntax
     public SyntaxToken CommaToken { get; }
 
     public ExpressionSyntax ColumnExpression { get; }
+}
+
+public sealed class PaletteStatementSyntax : StatementSyntax
+{
+    public PaletteStatementSyntax(
+        SyntaxToken paletteKeyword,
+        SyntaxToken? usingKeyword,
+        ExpressionSyntax? valuesExpression,
+        ExpressionSyntax? indexExpression,
+        SyntaxToken? commaToken,
+        ExpressionSyntax? colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(paletteKeyword);
+
+        PaletteKeyword = paletteKeyword;
+        UsingKeyword = usingKeyword;
+        ValuesExpression = valuesExpression;
+        IndexExpression = indexExpression;
+        CommaToken = commaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.PaletteStatement;
+
+    public SyntaxToken PaletteKeyword { get; }
+
+    public SyntaxToken? UsingKeyword { get; }
+
+    public ExpressionSyntax? ValuesExpression { get; }
+
+    public ExpressionSyntax? IndexExpression { get; }
+
+    public SyntaxToken? CommaToken { get; }
+
+    public ExpressionSyntax? ColorExpression { get; }
+
+    public bool IsReset => UsingKeyword is null && (IndexExpression is null || ColorExpression is null);
+
+    public bool IsUsing => UsingKeyword is not null;
 }
 
 public sealed class GraphicsPointSyntax : SyntaxNode

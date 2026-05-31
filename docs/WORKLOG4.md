@@ -1797,7 +1797,7 @@
 
 Что сделано:
 - во второй узкой волне исправлены подтверждаемые повреждённые строки в уже открытых файлах `tests/Axiom.Runtime.Tests/InterpreterTests.cs`, `samples/smoke/repair_plans_mojibake.axm` и `docs/ARCHITECTURE.md`;
-- в runtime-тесте и smoke-sample выровнены пользовательские строки с маркером `�/U+FFFD`, чтобы они совпадали с фактическим символом замены, а не с битой последовательностью `пїЅ`;
+- в runtime-тесте и smoke-sample выровнены пользовательские строки с маркером `U+FFFD/U+FFFD`, чтобы они совпадали с фактическим символом замены, а не с битой последовательностью `U+043F/U+0457/U+0405`;
 - в `docs/ARCHITECTURE.md` восстановлены читаемые активные блоки про `KEYDOWN()`, единый договор имён клавиш и одноразовую проверку `KEYPRESS()` по уже подтверждённым соседним разделам и текущему коду.
 
 Изменённые файлы:
@@ -1826,7 +1826,7 @@
 - `docs/SPECIFICATION3.md`
 
 Проверка:
-- `rg -n "Ð|Ñ|вЂ|пїЅ|�" docs/SPECIFICATION3.md` не находит совпадений;
+- `rg -n "U+00D0|U+00D1|U+0432/U+0402|U+043F/U+0457/U+0405|U+FFFD" docs/SPECIFICATION3.md` не находит совпадений;
 - `git diff --check -- docs/SPECIFICATION3.md` проходит без ошибок содержимого.
 
 Решение:
@@ -1842,14 +1842,14 @@
 Что сделано:
 - выполнен повторный целевой просмотр оставшихся совпадений по mojibake-маркерам в `docs/PLANS3.md` и активных журналах;
 - подтверждено, что после уже сделанных правок оставшиеся повреждённые совпадения в `docs/PLANS3.md` сосредоточены в старых плотных исторических блоках 2026-04-30 и 2026-05-01, где безопасного восстановления исходного смысла по одному только текущему контексту уже нет;
-- для `docs/WORKLOG4.md` найденные совпадения относятся к буквальному упоминанию маркеров поиска и к уже исправленной строке про `�/U+FFFD`, то есть не требуют дополнительного ремонта.
+- для `docs/WORKLOG4.md` найденные совпадения относятся к буквальному упоминанию маркеров поиска и к уже исправленной строке про `U+FFFD/U+FFFD`, то есть не требуют дополнительного ремонта.
 
 Изменённые файлы:
 - `docs/WORKLOG4.md`
 - `docs/PLANS3.md`
 
 Проверка:
-- `rg -n "Ð|Ñ|вЂ|пїЅ|�" docs/PLANS3.md docs/WORKLOG4.md` подтверждает, что активные новые записи читаемы, а проблемные совпадения остались только в старых исторических блоках `docs/PLANS3.md` и в буквальных поисковых маркерах;
+- `rg -n "U+00D0|U+00D1|U+0432/U+0402|U+043F/U+0457/U+0405|U+FFFD" docs/PLANS3.md docs/WORKLOG4.md` подтверждает, что активные новые записи читаемы, а проблемные совпадения остались только в старых исторических блоках `docs/PLANS3.md` и в буквальных поисковых маркерах;
 - повторный просмотр хвостов `docs/PLANS3.md` и `docs/WORKLOG4.md` подтверждает корректное append-only обновление.
 
 Решение:
@@ -1918,7 +1918,7 @@
 
 Что сделано:
 - проверен актуальный диапазон benchmark-имён в `src/Axiom.ManualChecks/Program.cs`: текущее файловое содержимое хранит нормальные русские строки для документных, файловых, строковых, regex-, массивных и управляющих сценариев, включая ранее подозрительные записи вокруг `regex_*`, `array_*`, `date_time_*` и `type_record_roundtrip`;
-- отдельно сверено, что поиск маркеров перекодировки `Ð`, `Ñ`, `пїЅ`, `�`, `вЂ`, `Ã` по каталогу `src/Axiom.ManualChecks` больше ничего не находит, а значит подозрение по этому участку не подтверждается на уровне файлов репозитория;
+- отдельно сверено, что поиск маркеров перекодировки `U+00D0`, `U+00D1`, `U+043F/U+0457/U+0405`, `U+FFFD`, `U+0432/U+0402`, `U+00C3` по каталогу `src/Axiom.ManualChecks` больше ничего не находит, а значит подозрение по этому участку не подтверждается на уровне файлов репозитория;
 - собран `src/Axiom.ManualChecks/Axiom.ManualChecks.csproj`, чтобы подтвердить, что текущий файл в рабочем дереве не только читаем, но и проходит обычную компиляцию без дополнительных правок;
 - проверен `scripts/repo-sanity.ps1`: сам файл хранит корректную русскую строку `Sanity-check пройден: временные каталоги вне .artifacts не найдены.`, поэтому кракозябры в выводе этого сценария относятся к текущему терминальному декодированию, а не к порче содержимого репозитория.
 
@@ -1927,7 +1927,7 @@
 - `docs/PLANS3.md`
 
 Проверка:
-- `rg -n "Ð|Ñ|пїЅ|�|вЂ|Ã" src/Axiom.ManualChecks` — совпадений не найдено;
+- `rg -n "U+00D0|U+00D1|U+043F/U+0457/U+0405|U+FFFD|U+0432/U+0402|U+00C3" src/Axiom.ManualChecks` — совпадений не найдено;
 - `dotnet build src/Axiom.ManualChecks/Axiom.ManualChecks.csproj --no-restore` — успешно;
 - `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` — успешно по сути проверки; строка успеха в терминале отображается с артефактами декодирования, но сам `scripts/repo-sanity.ps1` хранит корректный русский текст.
 
@@ -1995,7 +1995,7 @@
 - `docs/PLANS3.md`
 
 Проверка:
-- `rg -n "Ð|Ñ|пїЅ|�|вЂ|Ã" src/Axiom.Ide src/Axiom.Ide.SmokeHarness` — новых маркеров mojibake не найдено;
+- `rg -n "U+00D0|U+00D1|U+043F/U+0457/U+0405|U+FFFD|U+0432/U+0402|U+00C3" src/Axiom.Ide src/Axiom.Ide.SmokeHarness` — новых маркеров mojibake не найдено;
 - `dotnet build src/Axiom.Ide/Axiom.Ide.csproj --no-restore` — успешно;
 - `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore` — успешно.
 
@@ -2071,7 +2071,7 @@
 - `docs/WORKLOG4.md`
 
 Проверка:
-- `rg -n "Ð|Ñ|вЂ|пїЅ|�|Ã|����" README.md docs/ARCHITECTURE.md docs/BYTECODE_COVERAGE.md docs/SPECIFICATION3.md` — совпадений не найдено;
+- `rg -n "U+00D0|U+00D1|U+0432/U+0402|U+043F/U+0457/U+0405|U+FFFD|U+00C3|U+FFFDU+FFFDU+FFFDU+FFFD" README.md docs/ARCHITECTURE.md docs/BYTECODE_COVERAGE.md docs/SPECIFICATION3.md` — совпадений не найдено;
 - `git diff --check -- README.md docs/ARCHITECTURE.md docs/BYTECODE_COVERAGE.md docs/SPECIFICATION3.md` — проходит, остаются только предупреждения Git о будущей нормализации LF/CRLF;
 - адресный поиск по `screen10-only`, `best_fit_dimensions`, `IScreenModeSizeProvider`, `ScreenModeSizeProviderTests`, `screen.frame.summary` и `screen.input.summary` подтверждает, что документные утверждения опираются на существующие файлы кода, тестов, примеров и сценариев.
 
@@ -2186,3 +2186,588 @@
 
 Следующий точный шаг:
 - после успешной отправки продолжать уже с чистого рабочего дерева и новой задачи пользователя.
+
+## Session 898 - 2026-05-28 10:22 - аудит реализации графических операторов
+
+Что сделано:
+- по запросу пользователя проверено текущее состояние графической ветки после стабилизационной волны;
+- снят инвентарь рабочего дерева: до документных записей оставалась только пользовательская правка `samples/smoke/repair_plans_mojibake.axm` с локальными рабочими путями, к графике она не относится и не изменялась;
+- повторно прогнаны адресные проверки runtime, IDE и execution по `SCREEN 10`, `GET` / `PUT`, `VIEW`, `WINDOW`, `PMAP`, `DRAW`, `CIRCLE` и мышиному координатному договору;
+- повторно пройдены smoke-маршруты реального `Axiom.Ide` для `SCREEN 10` и `GET` / `PUT`;
+- `docs/BYTECODE_COVERAGE.md` дополнен уточнением по графическому негативному покрытию: `GET` / `PUT`, `PMAP` и `DRAW` уже имеют явные негативные опоры, а `VIEW`, `WINDOW` и полный `PAINT` остаются частично покрытыми именно из-за отсутствия отдельных отрицательных `.axm`-samples.
+
+Изменённые файлы:
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_CompiledDrawSupportsMovementModifiersColorScaleAngleMoveAndPaint|FullyQualifiedName~Execute_DrawSupportsMovementModifiersColorScaleAngleMoveAndPaint|FullyQualifiedName~Execute_CompiledCircleSupportsStepArcAndAspect|FullyQualifiedName~Execute_CircleSupportsStepArcAndAspect|FullyQualifiedName~Execute_CompiledGetAndPutSupportWindowCoordinatesAndPreservePosition|FullyQualifiedName~Execute_GetAndPutSupportWindowCoordinatesAndPreservePosition|FullyQualifiedName~Execute_CompiledPMap|FullyQualifiedName~Execute_PMap|FullyQualifiedName~Execute_CompiledOnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen|FullyQualifiedName~Execute_OnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen" --logger "trx;LogFileName=graphics-runtime.trx"` — успешно, 12 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ScreenModeSizeProviderTests|FullyQualifiedName~Run_Screen10BestFitAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm|FullyQualifiedName~MouseMoveMessage_KeepsLastKnownCoordinatesUntilAnotherMouseInputArrives|FullyQualifiedName~Run_GetAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm|FullyQualifiedName~Run_PutAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm|FullyQualifiedName~DrawCircle_StepUsesCurrentGraphicsPositionAndNegativeAngleDrawsRadius" --logger "trx;LogFileName=graphics-ide.trx"` — успешно, 9 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Screen10BestFitAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~GetAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~PutAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~PMapAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ScreenViewAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ScreenWindowAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForGetPutTransfers|FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForPMapAcrossViewAndWindow|FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForViewScreenAndRelativeCoordinates|FullyQualifiedName~Run_WithBytecodeMode_UsesBytecodeVmForWindowScreenCartesianAndDraw|FullyQualifiedName~Run_WithBytecodeMode_GraphicsOperatorsMaintainPositionAcrossStepArcAndPaint" --logger "trx;LogFileName=graphics-execution.trx"` — успешно, 13 тестов;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --screen10-only` — успешно;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --get-put-only` — успешно;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` — успешно, временные каталоги вне `.artifacts` не найдены.
+
+Решение:
+- считать текущую реализацию графических операторов и связанных функций проверенной по адресному набору и smoke-маршрутам;
+- не открывать новый графический оператор без отдельного договора в спецификации;
+- ближайшим графическим долгом, если пользователь продолжит эту ветку, считать отрицательные runnable `.axm`-samples для `VIEW`, `WINDOW` и полного `PAINT` либо отдельный договор прокрутки `SCREEN 0` из `docs/FUTURE.md`.
+
+Следующий точный шаг:
+- выбрать один из трёх вариантов: добавить отрицательные графические acceptance-samples для `VIEW`, `WINDOW` и `PAINT`; открыть договор прокрутки `SCREEN 0`; либо перейти к следующей неграфической стабилизационной задаче.
+
+## Session 899 - 2026-05-28 10:38 - отрицательные sample для VIEW, WINDOW и PAINT
+
+Что сделано:
+- добавлены runnable `.axm`-samples отрицательного поведения для трёх уже закрытых графических договоров;
+- `samples/operators/view/invalid_bounds_error.axm` проверяет, что `VIEW SCREEN (20, 20)-(10, 30)` даёт `MB3007`;
+- `samples/operators/window/zero_size_error.axm` проверяет, что `WINDOW SCREEN (100, 200)-(100, 210)` даёт `MB3007`;
+- `samples/operators/paint/empty_pattern_error.axm` проверяет, что пустой строковый образец полного `PAINT` даёт `MB3007`;
+- в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена проверка `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity`, которая запускает эти sample в режимах `Bytecode` и `Interpreter`, сверяет `MB3007`, отсутствие fallback у `BytecodeVm` и наличие координат диагностики;
+- `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` обновлены под закрытие этого графического долга.
+
+Изменённые файлы:
+- `samples/operators/view/invalid_bounds_error.axm`
+- `samples/operators/window/zero_size_error.axm`
+- `samples/operators/paint/empty_pattern_error.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity" --logger "trx;LogFileName=graphics-negative.trx"` — успешно, 3 теста.
+
+Решение:
+- считать отрицательные runnable sample для `VIEW`, `WINDOW` и полного `PAINT` добавленными и подключёнными к сквозной проверке паритета interpreter / `BytecodeVm`;
+- не менять manual, потому что текущие ограничения уже описаны на существующих страницах, а этот шаг добавляет недостающий проверочный слой.
+
+Следующий точный шаг:
+- выполнить финальные проверки по затронутым файлам: `repo-sanity`, `git diff --check` и при необходимости повторить адресный `Axiom.Execution.Tests` по новому фильтру после документных записей.
+
+## Session 900 - 2026-05-28 12:17 - выбран договор прокрутки SCREEN 0
+
+Что сделано:
+- по запросу пользователя открыт отдельный договор прокрутки `SCREEN 0`;
+- перечитаны активные документы проекта, текущий договор `SCREEN 0`, запись `docs/FUTURE.md` про отложенную прокрутку и фактический путь вывода через `ProgramConsoleService` / `ScreenTextBuffer`;
+- в `docs/SPECIFICATION3.md` зафиксирован целевой договор ближайшего кодового среза: вертикальная прокрутка только в явном `SCREEN 0`, без word wrap, без горизонтальной прокрутки и без изменения графических режимов `SCREEN 1..10`;
+- в `docs/PLANS3.md` записан следующий кодовый шаг по реализации прокрутки;
+- в `docs/FUTURE.md` добавлена отметка, что тема прокрутки активирована и перенесена в текущий план.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/FUTURE.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- первым кодовым срезом делать только вертикальную прокрутку текстового окна `SCREEN 0`;
+- `PRINT`, `PRINT USING` и подтверждённый `INPUT` должны использовать один договор перехода на новую строку и прокрутки;
+- графические режимы остаются без автопрокрутки, потому что текст в них используется как координатная надпись поверх framebuffer.
+
+Проверка:
+- `git diff --check -- docs/SPECIFICATION3.md docs/PLANS3.md docs/FUTURE.md docs/WORKLOG4.md` прошёл без ошибок пробелов; остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- реализовать договор в `ProgramConsoleService` и `ScreenTextBuffer`, добавить IDE-регрессии и runnable sample в `samples/graphics/screen/`, затем обновить manual уже по факту работающего поведения.
+
+## Session 901 - 2026-05-28 15:29 - реализована прокрутка SCREEN 0
+
+Что сделано:
+- в `ProgramConsoleService` и `ScreenTextBuffer` включена вертикальная прокрутка только для явного `SCREEN 0`: видимое окно ограничено сеткой `80 x 25`, новая строка после нижней границы удаляет верхнюю строку и очищает новую строку `25`;
+- графические режимы `SCREEN 1..10` сохранены без автопрокрутки и без word wrap;
+- добавлены IDE-регрессии для прокрутки `SCREEN 0`, пустого `PRINT` на последней строке, клиппинга длинной строки и контроля отсутствия прокрутки в графическом `SCREEN`;
+- добавлена end-to-end проверка через `ProgramRunService` и acceptance-проверка `BytecodeVm` для нового runnable sample;
+- добавлен runnable sample `samples/graphics/screen/text_scroll.axm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/FUTURE.md`, `docs/manual/screen.html`, `docs/manual/graphics-text.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Graphics/ScreenTextBuffer.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/graphics/screen/text_scroll.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/FUTURE.md`
+- `docs/manual/screen.html`
+- `docs/manual/graphics-text.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- не расширять этот шаг до горизонтальной прокрутки, истории удалённых строк или новых экранных команд;
+- считать прокрутку пользовательским договором только для `SCREEN 0`, а не для графических режимов.
+
+Проверки:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ScreenZero|FullyQualifiedName~GraphicsScreen_DoesNotAutoScrollTextPastVisibleRows|FullyQualifiedName~Run_ScreenZeroScrollAcceptanceProgram"` проходит: 8 тестов;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~ScreenZeroTextScrollAcceptanceSample"` проходит: 1 тест;
+- `node --check docs/manual/scripts/search-index.js` проходит.
+
+Что остаётся:
+- живая ручная приёмка нового sample в реальном `Axiom.Ide`.
+
+Следующий точный шаг:
+- открыть `samples/graphics/screen/text_scroll.axm` в `Axiom.Ide` и подтвердить, что после двадцать пятой строки верхние строки уходят вверх, последняя строка очищается для следующего вывода, а графические режимы `SCREEN 1..10` не получили автопрокрутку.
+
+## Session 902 - 2026-05-28 15:41 - ручная приёмка прокрутки SCREEN 0 подтверждена
+
+Что сделано:
+- пользователь вручную проверил `samples/graphics/screen/text_scroll.axm` в `Axiom.Ide`;
+- подтверждено, что прокрутка в sample работает ожидаемо.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать задачу по прокрутке `SCREEN 0` полностью закрытой, включая живую ручную приёмку;
+- не добавлять новые изменения в код, sample или manual по этой теме без отдельного нового запроса.
+
+Проверки:
+- ручной запуск `samples/graphics/screen/text_scroll.axm` в `Axiom.Ide` подтверждён пользователем.
+
+Следующий точный шаг:
+- ждать следующую отдельную задачу пользователя.
+
+## Session 903 - 2026-05-28 16:00 - для SCREEN 0 добавлены история и правый скролбар
+
+Что сделано:
+- по новому запросу пользователя поведение `SCREEN 0` расширено от простой автопрокрутки до истории строк с ручной прокруткой;
+- `ProgramConsoleService` перестал отбрасывать ранние строки `SCREEN 0`: теперь буфер хранит историю текущего сеанса и отдельно держит первую видимую строку окна;
+- `ScreenFramebuffer` научен рисовать только выбранное видимое окно текста, а не весь накопленный буфер целиком;
+- `NativeGraphicsScreenWindow` получил правую вертикальную полосу прокрутки, синхронизацию её диапазона с историей `SCREEN 0` и обработку ручной прокрутки через `WM_VSCROLL`;
+- `GraphicsText` в IDE-сервисе теперь отражает именно текущую видимую область окна, поэтому IDE-регрессии проверяют не только факт накопления истории, но и фактический вид после ручной прокрутки;
+- runnable sample `samples/graphics/screen/text_scroll.axm` обновлён под новый договор: после переполнения окно должно показать полосу прокрутки и позволить вернуться к ранним строкам;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/screen.html`, `docs/manual/graphics-text.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`
+- `src/Axiom.Ide/Graphics/ScreenFramebuffer.cs`
+- `src/Axiom.Ide/Graphics/ScreenTextBuffer.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Ide/Services/Input/ScreenTextScrollState.cs`
+- `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `samples/graphics/screen/text_scroll.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/screen.html`
+- `docs/manual/graphics-text.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- историю и правый скролбар давать только текстовому `SCREEN 0`, а графические режимы `SCREEN 1..10` оставить без ручной прокрутки и без изменения старого клиппинга;
+- ручная прокрутка должна влиять только на видимую область окна, а не на семантику `LOCATE`, `PRINT`, `PRINT USING` и `INPUT`.
+
+Проверки:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~ScreenZero|FullyQualifiedName~GraphicsScreen_DoesNotAutoScrollTextPastVisibleRows|FullyQualifiedName~NativeGraphicsScreenWindowTests"` проходит: 24 теста;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore` проходит: 436 тестов;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~ScreenZeroTextScrollAcceptanceSample"` проходит: 1 тест.
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `git diff --check` по затронутым файлам не нашёл ошибок пробелов; остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Что остаётся:
+- живая ручная приёмка появления полосы прокрутки и возврата к ранним строкам в реальном окне `Axiom.Ide`.
+
+Следующий точный шаг:
+- открыть `samples/graphics/screen/text_scroll.axm` в `Axiom.Ide` и визуально подтвердить, что справа появляется полоса прокрутки и через неё можно вернуться к ранним строкам без поломки обычного вывода внизу окна.
+
+## Session 904 - 2026-05-28 17:40 - VIEW PRINT выведен в справочник
+
+Что сделано:
+- продолжена разработка `VIEW PRINT` по запросу пользователя;
+- подтверждено, что parser, binder, interpreter, `BytecodeVm`, IDE-host и sample для `VIEW PRINT` уже присутствуют в рабочем дереве;
+- закрыт недостающий пользовательский слой: `docs/manual/view.html` описывает формы `VIEW PRINT` и `VIEW PRINT top TO bottom`, границы строк, прокрутку внутри диапазона, сброс и диагностику;
+- `docs/manual/graphics.html`, `docs/manual/graphics-text.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js` обновлены для навигации, поиска и соседних ссылок;
+- добавлена явная сквозная acceptance-проверка `ViewPrintAcceptanceSample_RunsOnBytecodeVm` для `samples/operators/view-print/scrolling_region.axm`;
+- общий audit-путь позитивных sample теперь отдаёт `ESC` для `samples/operators/view-print/`, чтобы проверочный пример не зависал в цикле ожидания клавиши;
+- `docs/SPECIFICATION3.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` обновлены под фактический договор и состояние покрытия.
+
+Изменённые файлы:
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/manual/view.html`
+- `docs/manual/graphics.html`
+- `docs/manual/graphics-text.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать `VIEW PRINT` частью графического текстового слоя `SCREEN 1..10`, независимой от пиксельного viewport обычного `VIEW`;
+- не расширять этот шаг до новых команд управления прокруткой, истории строк в графических режимах или горизонтального поведения;
+- отдельный отрицательный `.axm`-sample для неверного диапазона `VIEW PRINT` оставить возможным следующим улучшением, потому что runtime- и VM-негативные проверки уже есть, а текущий шаг закрывает discoverability и позитивную приёмку.
+
+Проверки:
+- первая попытка `ViewPrintAcceptanceSample_RunsOnBytecodeVm` с `--no-restore` не дошла до выполнения из-за отсутствующего локального пакета `xunit.analyzers 1.18.0`;
+- повтор с восстановлением пакетов выявил реальный дефект bytecode-валидации: `Opcode.ViewPrint` не был включён в верхний dispatch валидатора и давал `BC4011`;
+- после минимальной правки валидатора следующий прогон выявил недостающий fake-host слой в `QueueKeyboardInputProvider`: acceptance-host не реализовывал `SetTextViewport`, хотя реальный IDE-host уже реализовывал его;
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` обновлён: `Opcode.ViewPrint` валидируется как инструкция с одним операндом и корректно участвует в расчёте стека;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` обновлён: fake-host теперь принимает корректный диапазон `VIEW PRINT` по числу строк текущего `SCREEN`;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~ViewPrintAcceptanceSample_RunsOnBytecodeVm" --logger "trx;LogFileName=view-print-acceptance.trx"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~scrolling_region" --logger "trx;LogFileName=view-print-audit.trx"` проходит: 1 тест;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` проходит, временные каталоги вне `.artifacts` не найдены;
+- `git diff --check -- ...` по затронутым файлам проходит, остаются только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- выполнить проверки из списка выше; после зелёного результата вручную открыть `samples/operators/view-print/scrolling_region.axm` в `Axiom.Ide` и подтвердить, что прокручиваются только строки `10..15`, а строки вне диапазона остаются на месте.
+
+## Session 905 - 2026-05-28 19:22 - ручная приёмка VIEW PRINT подтверждена
+
+Что сделано:
+- пользователь вручную запустил `samples/operators/view-print/scrolling_region.axm` в `Axiom.Ide`;
+- подтверждено, что фактический результат совпадает с ожидаемым описанием: верхняя строка содержит `VIEW PRINT sample finished`, строка `VIEW PRINT viewport:` остаётся перед окном прокрутки, строки `10..15` показывают последние строки вывода viewport, а строка `ESC - выход` ниже диапазона остаётся на месте.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверка:
+- ручная визуальная приёмка `samples/operators/view-print/scrolling_region.axm` в `Axiom.Ide` подтверждена пользователем.
+
+Решение:
+- считать позитивный `VIEW PRINT` sample принятым вручную;
+- не менять код, sample или manual по итогам этой проверки.
+
+Следующий точный шаг:
+- если продолжать `VIEW PRINT`, добавить отдельный отрицательный runnable `.axm`-sample для неверного диапазона строк и подключить его к паритетной проверке interpreter / `BytecodeVm`; иначе переходить к следующей графической или стабилизационной задаче.
+
+## Session 906 - 2026-05-28 19:36 - VIEW PRINT получил отрицательный sample-паритет
+
+Что сделано:
+- добавлен runnable negative sample `samples/operators/view-print/invalid_rows_error.axm` для неверного диапазона строк `VIEW PRINT`;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` обновлён: `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` теперь включает и `VIEW PRINT`, поэтому один и тот же sample прогоняется через `Interpreter` и `BytecodeVm`;
+- `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` обновлены под закрытый статус негативного sample-паритета.
+
+Изменённые файлы:
+- `samples/operators/view-print/invalid_rows_error.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать отрицательный runnable sample и паритетную execution-проверку для неверного диапазона `VIEW PRINT` закрытыми;
+- не менять код runtime, manual и спецификацию, потому что пользовательское поведение оператора не изменялось.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~ViewPrintAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity" --logger "trx;LogFileName=view-print-negative-parity.trx"` проходит: 5 тестов;
+- `git diff --check -- "samples/operators/view-print/invalid_rows_error.axm" "tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs"` не нашёл ошибок пробелов; Git вывел только стандартное предупреждение о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- если продолжать графический слой, выбрать следующий оператор или режим, у которого ещё нет отдельного runnable negative sample и явной parity-проверки interpreter / `BytecodeVm`; ветку `VIEW PRINT` считать закрытой.
+
+## Session 907 - 2026-05-28 21:23 - PMAP получил отрицательный sample-паритет
+
+Что сделано:
+- продолжена графическая стабилизационная ветка после закрытия `VIEW PRINT`;
+- выбран следующий узкий пробел: у `PMAP` уже были runtime-проверки неверного селектора, но не было отдельного runnable negative sample;
+- добавлен `samples/functions/pmap/invalid_selector_error.axm`, который вызывает `PMAP(1, 4)` в графическом режиме и ожидает `MB3007`;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` обновлён: `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` теперь прогоняет этот sample через `Bytecode` и `Interpreter`;
+- `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` обновлены под закрытый статус негативного sample-паритета `PMAP`.
+
+Изменённые файлы:
+- `samples/functions/pmap/invalid_selector_error.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать отрицательный runnable sample и паритетную execution-проверку для неверного селектора `PMAP` закрытыми;
+- не менять runtime, manual и спецификацию, потому что пользовательское поведение функции не изменялось, а `docs/manual/pmap.html` уже описывает ошибку селектора вне `0..3`.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity" --logger "trx;LogFileName=pmap-negative-parity.trx"` — успешно, 5 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` — успешно, временные каталоги вне `.artifacts` не найдены;
+- `git diff --check -- "samples/functions/pmap/invalid_selector_error.axm" "tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs" "docs/BYTECODE_COVERAGE.md" "docs/PLANS3.md" "docs/WORKLOG4.md"` — ошибок пробелов нет, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- выбрать следующий графический элемент без отдельного negative sample либо перейти к неграфической стабилизационной задаче; ветку `PMAP` считать закрытой.
+
+## Session 908 - 2026-05-28 22:11 - выбран следующий графический оператор
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и текущие записи по графической ветке;
+- проверен фактический набор реализованных графических операторов и функций в parser, справочнике и sample-структуре;
+- выбран следующий самостоятельный графический оператор: `PALETTE`.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- `PALETTE` выбран как следующий логичный BASIC-подобный оператор после закрытых примитивов, координатных преобразований, блочного переноса и текстового окна `VIEW PRINT`;
+- `PCOPY` пока не выбран, потому что он потребовал бы сначала проектировать видеостраницы, которых в текущей модели `SCREEN` нет;
+- первый шаг по `PALETTE` должен быть проектным: зафиксировать точные формы оператора, сброс палитры и границы возможной формы `PALETTE USING`.
+
+Проверки:
+- тесты не запускались, потому что код и поведение языка в этой сессии не менялись.
+
+Следующий точный шаг:
+- открыть договор `PALETTE` в `docs/SPECIFICATION3.md`, затем реализовать его сквозным срезом parser/semantics/runtime/bytecode/IDE-host с sample, manual и реестром покрытия.
+
+## Session 909 - 2026-05-29 00:02 - PALETTE доведён до рабочего договора
+
+Что сделано:
+- реализован и закрыт первый срез `PALETTE`: форма `PALETTE` сбрасывает палитру, форма `PALETTE index, color` переназначает один индекс палитры;
+- добавлена недостающая привязка `PaletteStatementSyntax` к location в binder, чтобы семантика и runtime-диагностика получали корректную позицию оператора;
+- добавлены runtime- и `BytecodeVm`-проверки вызова `ResetPalette()` / `SetPaletteColor(index, color)` и ошибки `MB3010` без активного графического `SCREEN`;
+- добавлена IDE-проверка, что `ProgramConsoleService` меняет видимое BGRA-отображение уже нарисованного пикселя и возвращает его после `ResetPalette()`;
+- добавлен runnable sample `samples/operators/palette/change_and_reset_colors.axm` и execution-проверка `PaletteAcceptanceSample_RunsOnBytecodeVm`;
+- обновлены `docs/SPECIFICATION3.md`, `docs/manual/palette.html`, `docs/manual/graphics.html`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы по этому срезу:
+- `src/Axiom.Semantics/Binding/Binder.SyntaxHelpers.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/palette/change_and_reset_colors.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/palette.html`
+- `docs/manual/graphics.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- имя `PALETTE` оставлено по BASIC-линейке и разделу Зельднера `PALETTE, PALETTE USING`;
+- `PALETTE USING` не входит в первый срез и зафиксирован как отдельная будущая возможность;
+- пиксели framebuffer остаются индексными: `PALETTE` меняет отображение индекса, а `POINT(x, y)` возвращает сохранённый индекс.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 2 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 2 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 4 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 3 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~palette"` проходит: 1 тест;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` проходит;
+- `git diff --check` ошибок пробелов не нашёл, остались только предупреждения Git о будущей нормализации LF/CRLF;
+- первый `dotnet build Axiom.sln --no-restore` снова упал на известном `NETSDK1064` по `xunit.analyzers 1.18.0` в части тестовых проектов, после `dotnet restore Axiom.sln` повторный `dotnet build Axiom.sln --no-restore` прошёл без предупреждений и ошибок.
+
+Следующий точный шаг:
+- вручную открыть `samples/operators/palette/change_and_reset_colors.axm` в `Axiom.Ide`, запустить и подтвердить, что линия меняет видимый цвет после `PALETTE 1, 196`, а затем возвращается к стандартному цвету после `PALETTE`.
+
+## Session 910 - 2026-05-29 00:32 - проверена кодировка PLANS3
+
+Что сделано:
+- проверен `docs/PLANS3.md` как UTF-8, отдельно от вывода PowerShell;
+- найден старый повреждённый блок с невосстановимыми маркерами битой кодировки;
+- вместо нечитаемого фрагмента оставлена короткая служебная пометка без догадок о потерянном тексте;
+- буквальные поисковые маркеры в `docs/PLANS3.md` и `docs/WORKLOG4.md` переписаны в ASCII-форме.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- не восстанавливать историческую запись по памяти или предположениям;
+- свежие записи по `PALETTE` оставить без смысловых изменений.
+
+Проверка:
+- проверка UTF-8 и поиск маркеров битой кодировки выполняются после записи этой сессии отдельной командой.
+
+Следующий точный шаг:
+- завершить повторный аудит `PALETTE` и ручную визуальную приёмку `samples/operators/palette/change_and_reset_colors.axm` в `Axiom.Ide`.
+
+## Session 911 - 2026-05-31 18:16 - реализован PALETTE USING
+
+Что сделано:
+- проверено, что базовый `PALETTE` уже был реализован и закрыт в сессии 909;
+- реализована форма `PALETTE USING array` для одномерного числового массива;
+- парсер распознаёт `PALETTE USING`, связыватель проверяет массивность, одномерность и числовой тип элемента;
+- интерпретатор и `BytecodeVm` применяют видимые элементы массива к индексам палитры от `0` до `255` через существующий договор хоста `SetPaletteColor(index, color)`;
+- добавлен запускаемый пример `samples/operators/palette/using_array_colors.axm`;
+- исправлен сценарный ввод старого приёмочного теста `PaletteAcceptanceSample_RunsOnBytecodeVm`: пример содержит два `SLEEP` без длительности и финальное ожидание `ESC`, поэтому тесту нужны три клавиши;
+- обновлены спецификация, план, справочник и реестр покрытия байткодного пути.
+
+Изменённые файлы по этому срезу:
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/palette/using_array_colors.axm`
+- `docs/SPECIFICATION3.md`
+- `docs/manual/palette.html`
+- `docs/manual/graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- `PALETTE USING` сохраняет BASIC-линейное имя и не вводит новое пользовательское обозначение;
+- нижняя граница массива не считается индексом палитры: первый видимый элемент всегда задаёт индекс `0`;
+- лишние элементы после первых `256` игнорируются, а недостающие индексы палитры остаются без изменения.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 3 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 4 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Palette"` проходит: 6 тестов;
+- `dotnet build tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj` проходит;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --no-build --filter "FullyQualifiedName~PaletteAcceptanceSample_RunsOnBytecodeVm"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --no-build --filter "FullyQualifiedName~PaletteUsingAcceptanceSample_RunsOnBytecodeVm"` проходит: 1 тест;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `dotnet build Axiom.sln --no-restore` проходит;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Ограничение проверки:
+- широкий запуск `Axiom.Execution.Tests` с фильтром `FullyQualifiedName~Palette` несколько раз упирался в `MSB4166` и тайм-аут рабочих узлов; прямые приёмочные тесты `PaletteAcceptanceSample_RunsOnBytecodeVm` и `PaletteUsingAcceptanceSample_RunsOnBytecodeVm` после отдельной сборки проходят.
+
+Следующий точный шаг:
+- вручную открыть `samples/operators/palette/change_and_reset_colors.axm` и `samples/operators/palette/using_array_colors.axm` в `Axiom.Ide`, запустить и подтвердить видимое изменение палитры и сброс;
+- после этого выбрать следующий графический оператор отдельным проектным решением.
+
+## Session 912 - 2026-05-31 21:41 - очищены свежие русские формулировки
+
+Что сделано:
+- выполнена обещанная редакционная чистка свежих проектных документов после проверенного среза `PALETTE USING` / `PCOPY`;
+- в новых блоках спецификации, архитектуры, плана и реестра покрытия заменены смешанные формулировки вроде `host-договор`, `fallback`, `page flipping`, `framebuffer`, `runnable sample`, `parser` и `binder` на русские или уже принятые проектные формулировки;
+- связанные страницы справочника `graphics.html`, `screen.html`, `pcopy.html` и поисковый индекс выровнены там, где новая графическая подача говорила о кадровом буфере и экранных страницах;
+- старые исторические записи с прежними терминами не переписывались массово, чтобы не раздувать редакционную правку и не менять историю проекта.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/manual/graphics.html`
+- `docs/manual/pcopy.html`
+- `docs/manual/screen.html`
+- `docs/manual/scripts/search-index.js`
+
+Решение:
+- считать правку только редакционной: поведение языка, код, тесты, `.axm`-примеры и покрытие `BytecodeVm` не менялись;
+- для свежей русской проектной прозы использовать `договор хоста`, `хост IDE`, `кадровый буфер`, `запускаемый пример`, `приёмочная проверка`, `откат на интерпретатор` и похожие русские формы вместо смешанных англо-русских оборотов.
+
+Проверки:
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `git diff --check -- "docs/SPECIFICATION3.md" "docs/ARCHITECTURE.md" "docs/PLANS3.md" "docs/WORKLOG4.md" "docs/BYTECODE_COVERAGE.md" "docs/manual/screen.html" "docs/manual/pcopy.html" "docs/manual/graphics.html" "docs/manual/scripts/search-index.js"` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF;
+- адресный поиск `host-договор|page flipping|page-flipping` подтвердил, что в свежих блоках `PALETTE` / `PCOPY` эти целевые формулировки убраны; найденные остатки относятся к более старым историческим записям.
+
+Следующий точный шаг:
+- вернуться к предметной графической ветке: вручную открыть `samples/operators/palette/change_and_reset_colors.axm` и `samples/operators/palette/using_array_colors.axm` в `Axiom.Ide`, запустить и подтвердить видимое изменение палитры и сброс; после этого выбирать следующий графический оператор отдельным проектным решением.
+
+## Session 913 - 2026-05-31 22:18 - проверена полнота договора PCOPY
+
+Что сделано:
+- перечитаны обязательные активные документы проекта и выполнена предметная сверка `PCOPY` по реализации, спецификации, справочнику, примерам и приёмочным проверкам;
+- подтверждено, что фактический хост IDE копирует и цветовые индексы пикселей, и палитру: `ScreenFramebuffer.CopyFrom(...)` копирует оба массива, а `ProgramConsoleServiceTests.ScreenPages_CopyScreenPageCopiesPixelsAndPaletteToVisiblePage` проверяет видимый результат;
+- позитивный пример `samples/operators/pcopy/page_copy_buffer.axm` уточнён так, чтобы он одновременно проверял сохранение пиксельного индекса через `POINT` и копирование палитры через `PALETTE 1, 196`;
+- добавлены отрицательные запускаемые примеры `samples/graphics/screen/invalid_page_error.axm` и `samples/operators/pcopy/text_screen_error.axm`;
+- приёмочная проверка `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` расширена на неверную страницу `SCREEN` и `PCOPY` в текстовом `SCREEN 0`;
+- `docs/manual/pcopy.html`, `docs/manual/screen.html`, `docs/manual/graphics.html`, `docs/manual/scripts/search-index.js`, `docs/SPECIFICATION3.md` и `docs/BYTECODE_COVERAGE.md` синхронизированы с уточнённым договором.
+
+Изменённые файлы:
+- `samples/operators/pcopy/page_copy_buffer.axm`
+- `samples/operators/pcopy/text_screen_error.axm`
+- `samples/graphics/screen/invalid_page_error.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/manual/pcopy.html`
+- `docs/manual/screen.html`
+- `docs/manual/graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать договор `PCOPY` полным на текущем уровне `0..3` страниц: страницы `SCREEN`, копирование пикселей и палитры, запрет вне графического `SCREEN` и отрицательный паритет закрыты;
+- отдельный отрицательный пример для каждой комбинации неверной страницы пока не нужен, потому что текущие примеры проверяют границу договора без дублирования.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~PCopyAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity" --logger "trx;LogFileName=pcopy-contract-parity.trx"` проходит: 9 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --no-build --filter "FullyQualifiedName~PositiveAcceptanceSample_RunsOnBytecodeVmWithoutFallback&DisplayName~pcopy" --logger "trx;LogFileName=pcopy-positive-audit.trx"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~CopyScreenPageCopiesPixelsAndPalette" --logger "trx;LogFileName=pcopy-ide-palette.trx"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~PCopy" --logger "trx;LogFileName=pcopy-parsing.trx"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~PCopy" --logger "trx;LogFileName=pcopy-semantics.trx"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~PCopy" --logger "trx;LogFileName=pcopy-runtime.trx"` проходит: 4 теста;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj --no-restore` проходит: 45 проверок;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` проходит, временные каталоги вне `.artifacts` не найдены;
+- `git diff --check` по затронутым файлам не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- вручную открыть в `Axiom.Ide` и визуально проверить `samples/operators/pcopy/page_copy_buffer.axm`, `samples/operators/palette/change_and_reset_colors.axm` и `samples/operators/palette/using_array_colors.axm`; после этого выбирать следующий графический оператор только отдельным проектным решением.
+
+## Session 914 - 2026-05-31 23:34 - закрыта ручная приёмка PALETTE и PCOPY
+
+Что сделано:
+- пользователь подтвердил ручную проверку `samples/operators/palette/change_and_reset_colors.axm`, `samples/operators/palette/using_array_colors.axm` и `samples/operators/pcopy/page_copy_buffer.axm` в `Axiom.Ide`;
+- договоры `PALETTE`, `PALETTE USING` и `PCOPY` закрыты на текущем уровне ручной приёмки;
+- в `docs/PLANS3.md` добавлен подробный план следующего графического направления: современный слой `IMAGE` / `DRAWIMAGE`, затем `SPRITE` / `DRAWSPRITE`, затем отдельные игровые удобства только после проверки первых двух срезов.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- не возвращаться к `PALETTE` и `PCOPY` без новой ошибки или нового пользовательского требования;
+- не брать ближайшим шагом `BLOAD` и `BSAVE`, потому что это DOS-ориентированный слой работы с участками памяти, а не лучший путь к современной игровой графике;
+- следующим направлением считать проектирование первого современного графического договора: `IMAGE`, `LOADIMAGE`, `IMAGEWIDTH`, `IMAGEHEIGHT`, `DRAWIMAGE`.
+
+Проверки:
+- поведение языка и код не менялись;
+- `git diff --check -- "docs/PLANS3.md" "docs/WORKLOG4.md"` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` прошёл: временные каталоги вне `.artifacts` не найдены.
+
+Следующий точный шаг:
+- открыть договор первого современного графического среза в `docs/SPECIFICATION3.md`, окончательно зафиксировать тип `IMAGE`, загрузку, отрисовку, работу с полноцветными пикселями, относительными путями и взаимодействие с `VIEW`, `WINDOW`, `PALETTE`, `GET`, `PUT` и `PCOPY`; затем переходить к реализации.
+
+## Session 915 - 2026-05-31 23:40 - открыт договор IMAGE и DRAWIMAGE
+
+Что сделано:
+- открыт целевой договор первого современного графического среза в `docs/SPECIFICATION3.md`;
+- зафиксированы тип `IMAGE`, функции `LOADIMAGE`, `IMAGEWIDTH`, `IMAGEHEIGHT` и оператор `DRAWIMAGE`;
+- сверены ближайшие BASIC-семейные ориентиры: в QuickBASIC 4.5 современного слоя изображений не было, а QB64 Phoenix использует `_LOADIMAGE` и `_PUTIMAGE`; для Axiom выбраны имена `LOADIMAGE` и `DRAWIMAGE` без подчёркивания и без модели числовых дескрипторов;
+- зафиксированы правила относительных путей, полноцветного слоя кадрового буфера, альфа-композиции, диагностики, взаимодействия с `VIEW`, `WINDOW`, `PALETTE`, `GET`, `PUT`, `POINT` и `PCOPY`;
+- `docs/PLANS3.md` обновлён: следующим шагом теперь является реализация первого `IMAGE`-среза, а не дальнейшее проектирование.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- первый современный графический кодовый срез ограничивается `IMAGE`, `LOADIMAGE`, `IMAGEWIDTH`, `IMAGEHEIGHT` и `DRAWIMAGE`;
+- тип `IMAGE` должен быть настоящим ссылочным типом языка, а не числовым дескриптором;
+- декодирование файлов изображений должно идти через абстракцию хоста, чтобы не привязывать `Axiom.Runtime` к WPF;
+- `SPRITE`, `LOADSPRITE`, `DRAWSPRITE`, столкновения и тайловые карты остаются следующими договорами после реализации и ручной приёмки изображений.
+
+Проверки:
+- поведение языка и код не менялись;
+- `git diff --check -- "docs/SPECIFICATION3.md" "docs/PLANS3.md" "docs/WORKLOG4.md"` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` прошёл: временные каталоги вне `.artifacts` не найдены.
+
+Следующий точный шаг:
+- начать реализацию первого современного графического среза по договору `IMAGE` / `DRAWIMAGE`: лексер, синтаксис, парсер, семантика, runtime, байткод, слой запуска, хост IDE, автоматические проверки, запускаемый пример, справочник и реестр покрытия байткодной виртуальной машины.

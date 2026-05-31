@@ -23,8 +23,8 @@
 ' - старый посимвольный путь оставлен ниже как запасной и поясняющий, но обычный
 '   запуск через него больше не проходит.
 
-DIM sourcePath AS STRING = "C:\TEST.md" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
-DIM workPath AS STRING = "C:\TEST_copy.md" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
+DIM sourcePath AS STRING = "C:\Users\comp\Downloads\CodexKeySwitcher\README-ru.md" ' Исходный файл: сюда вручную вписываем путь к документу с битой кодировкой.
+DIM workPath AS STRING = "C:\Users\comp\Downloads\CodexKeySwitcher\README-ru_copy.md" ' Рабочая копия: сюда программа копирует исходник и чинит уже только копию.
 DIM showTiming AS BOOLEAN = TRUE ' Включает фазовые замеры, чтобы в IDE было видно, где именно тратится время.
 DIM sourceText AS STRING ' Здесь будет весь текст рабочей копии до исправления.
 DIM repairedText AS STRING ' Здесь будет весь текст рабочей копии после исправления.

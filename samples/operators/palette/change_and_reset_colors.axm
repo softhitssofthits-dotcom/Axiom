@@ -1,0 +1,16 @@
+﻿' Ожидается: линия цвета 1 меняет видимый цвет после PALETTE 1, 196,
+' затем PALETTE без аргументов возвращает стандартную палитру.
+' Нажмите ESC для выхода.
+SCREEN 1
+CLS
+LINE (20, 40)-(180, 40), 1
+PRINT "default index="; POINT(20, 40)
+SLEEP
+PALETTE 1, 196
+PRINT "changed index="; POINT(20, 40)
+SLEEP
+PALETTE
+PRINT "reset index="; POINT(20, 40)
+PRINT "PALETTE sample finished"
+DO WHILE NOT KEYPRESS("ESC")
+LOOP

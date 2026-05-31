@@ -160,6 +160,18 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         }
     }
 
+    public void ActivateScreen(int mode, int activePage, int visualPage)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ActivateScreen(mode, activePage, visualPage);
+        }
+    }
+
+    public bool CopyScreenPage(int sourcePage, int destinationPage) =>
+        _promptService is IGraphicsHost graphicsHost &&
+        graphicsHost.CopyScreenPage(sourcePage, destinationPage);
+
     public void DeactivateScreen()
     {
         if (_promptService is IGraphicsHost graphicsHost)
@@ -189,6 +201,34 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         if (_promptService is IGraphicsHost graphicsHost)
         {
             graphicsHost.LocateText(row, column);
+        }
+    }
+
+    public void ResetPalette()
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetPalette();
+        }
+    }
+
+    public void SetPaletteColor(int index, int color)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetPaletteColor(index, color);
+        }
+    }
+
+    public bool SetTextViewport(int topRow, int bottomRow) =>
+        _promptService is IGraphicsHost graphicsHost &&
+        graphicsHost.SetTextViewport(topRow, bottomRow);
+
+    public void ResetTextViewport()
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetTextViewport();
         }
     }
 

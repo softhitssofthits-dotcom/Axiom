@@ -542,6 +542,120 @@ PRINT POINT(1)
     }
 
     [Fact]
+    public void Execute_ViewPrintScrollsTextWithinGraphicsViewportAndPreservesOutsideRows()
+    {
+        const string text = """
+SCREEN 1
+VIEW PRINT 10 TO 12
+LOCATE 16, 1
+PRINT "status"
+VIEW PRINT 10 TO 12
+FOR i = 1 TO 5
+    PRINT "row"; i
+NEXT
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal("row3", host.GetVisibleTextLine(10));
+        Assert.Equal("row4", host.GetVisibleTextLine(11));
+        Assert.Equal("row5", host.GetVisibleTextLine(12));
+        Assert.Equal("status", host.GetVisibleTextLine(16));
+    }
+
+    [Fact]
+    public void Execute_ViewPrintRejectsInvalidRowsAndMissingGraphicsScreen()
+    {
+        var (_, _, invalidRowsResult) = ExecuteProgram(
+            """
+SCREEN 1
+VIEW PRINT 0 TO 20
+""");
+
+        var (_, _, missingScreenResult) = ExecuteProgram("VIEW PRINT 10 TO 12");
+
+        Assert.False(invalidRowsResult.Succeeded);
+        Assert.Contains(invalidRowsResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+        Assert.False(missingScreenResult.Succeeded);
+        Assert.Contains(missingScreenResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_PaletteCallsGraphicsHostForColorAndReset()
+    {
+        const string text = """
+SCREEN 1
+PALETTE 1, 196
+PALETTE
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal([(1, 196)], host.PaletteColors);
+        Assert.Equal(1, host.PaletteResets);
+    }
+
+    [Fact]
+    public void Execute_PaletteUsingAppliesVisibleArrayValues()
+    {
+        const string text = """
+SCREEN 1
+DIM colors(0 TO 2) AS INTEGER
+colors(0) = 16
+colors(1) = 196
+colors(2) = 46
+PALETTE USING colors
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal([(0, 16), (1, 196), (2, 46)], host.PaletteColors);
+    }
+
+    [Fact]
+    public void Execute_PaletteRequiresGraphicsScreen()
+    {
+        var (_, _, result) = ExecuteProgram("PALETTE 1, 196");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_PCopyCopiesBetweenScreenPages()
+    {
+        const string text = """
+SCREEN 1, , 1, 0
+PSET (5, 5), 12
+PCOPY 1, 0
+SCREEN 1, , 0, 0
+PRINT POINT(5, 5)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["12"], host.Output);
+        Assert.Equal(12, host.GetPagePixel(0, 5, 5));
+        Assert.Equal(12, host.GetPagePixel(1, 5, 5));
+    }
+
+    [Fact]
+    public void Execute_PCopyRequiresGraphicsScreenAndValidPages()
+    {
+        var (_, _, missingScreenResult) = ExecuteProgram("PCOPY 1, 0");
+        Assert.False(missingScreenResult.Succeeded);
+        Assert.Contains(missingScreenResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+
+        var (_, _, invalidPageResult) = ExecuteProgram("SCREEN 1\r\nPCOPY 4, 0");
+        Assert.False(invalidPageResult.Succeeded);
+        Assert.Contains(invalidPageResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
     public void Execute_WindowSupportsDrawPointSelectorsAndViewRebase()
     {
         const string text = """
@@ -9745,6 +9859,8 @@ END TRY
 
     private sealed class TestRuntimeHost : IRuntimeHost
     {
+        private const int VisibleTextColumns = 40;
+        private const int VisibleTextRows = 16;
         private readonly Queue<string> _inputs;
         private readonly Queue<string> _keys;
         private readonly Queue<int> _mousePresses;
@@ -9758,11 +9874,14 @@ END TRY
         private readonly long _mouseX;
         private readonly long _mouseY;
         private readonly Dictionary<(long X, long Y), int> _pixels = [];
+        private readonly Dictionary<int, Dictionary<(long X, long Y), int>> _screenPages = [];
         private readonly int _cancelAfterReadKeyCalls;
         private readonly int _cancelAfterCancellationPolls;
         private int _readKeyCalls;
         private int _cancellationPolls;
         private bool _isScreenActive;
+        private int _activeScreenPage;
+        private int _visualScreenPage;
         private int _foreground = 15;
         private int _background;
         private bool _isTextBackgroundTransparent;
@@ -9780,6 +9899,11 @@ END TRY
         private double _windowTop;
         private double _windowRight;
         private double _windowBottom;
+        private readonly List<string> _visibleTextLines = [];
+        private int _textCursorRow = 1;
+        private int _textCursorColumn = 1;
+        private int _textViewportTop = 1;
+        private int _textViewportBottom = VisibleTextRows;
 
         public TestRuntimeHost(
             IEnumerable<string> inputs,
@@ -9824,6 +9948,20 @@ END TRY
 
         public List<GraphicsPaintRequest> PaintRequests { get; } = [];
 
+        public List<(int Index, int Color)> PaletteColors { get; } = [];
+
+        public int PaletteResets { get; private set; }
+
+        public string GetVisibleTextLine(int row)
+        {
+            if (row < 1 || row > VisibleTextRows)
+            {
+                return string.Empty;
+            }
+
+            return row <= _visibleTextLines.Count ? _visibleTextLines[row - 1] : string.Empty;
+        }
+
         public string ReadInput(InputRequest request)
         {
             InputRequests.Add(request);
@@ -9849,6 +9987,10 @@ END TRY
         public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
 
         public bool IsScreenActive => _isScreenActive;
+
+        public int ActiveScreenPage => _activeScreenPage;
+
+        public int VisualScreenPage => _visualScreenPage;
 
         public int ScreenMode => _isScreenActive ? 1 : 0;
 
@@ -9892,16 +10034,53 @@ END TRY
 
         public void ActivateScreen(int mode)
         {
+            ActivateScreen(mode, activePage: 0, visualPage: 0);
+        }
+
+        public void ActivateScreen(int mode, int activePage, int visualPage)
+        {
             _isScreenActive = mode != 0;
+            _activeScreenPage = _isScreenActive ? activePage : 0;
+            _visualScreenPage = _isScreenActive ? visualPage : 0;
+            if (_isScreenActive)
+            {
+                _screenPages.TryAdd(_activeScreenPage, []);
+                _screenPages.TryAdd(_visualScreenPage, []);
+                _pixels.Clear();
+                foreach (var item in _screenPages[_activeScreenPage])
+                {
+                    _pixels[item.Key] = item.Value;
+                }
+            }
             ResetViewport();
             ResetWindow();
+            ResetTextViewport();
+            _visibleTextLines.Clear();
+            _textCursorRow = 1;
+            _textCursorColumn = 1;
         }
 
         public void DeactivateScreen()
         {
             _isScreenActive = false;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
             ResetViewport();
             ResetWindow();
+            ResetTextViewport();
+            _visibleTextLines.Clear();
+        }
+
+        public void ClearGraphics()
+        {
+            _pixels.Clear();
+            if (_isScreenActive)
+            {
+                _screenPages[_activeScreenPage] = [];
+            }
+            _visibleTextLines.Clear();
+            _textCursorRow = _textViewportTop;
+            _textCursorColumn = 1;
         }
 
         public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
@@ -9921,6 +10100,44 @@ END TRY
             }
         }
 
+        public void LocateText(int row, int column)
+        {
+            _textCursorRow = Math.Max(1, row);
+            _textCursorColumn = Math.Max(1, column);
+        }
+
+        public void ResetPalette()
+        {
+            PaletteResets++;
+        }
+
+        public void SetPaletteColor(int index, int color)
+        {
+            PaletteColors.Add((index, color));
+        }
+
+        public bool SetTextViewport(int topRow, int bottomRow)
+        {
+            if (!_isScreenActive || topRow < 1 || bottomRow < topRow || bottomRow > VisibleTextRows)
+            {
+                return false;
+            }
+
+            _textViewportTop = topRow;
+            _textViewportBottom = bottomRow;
+            _textCursorRow = topRow;
+            _textCursorColumn = 1;
+            return true;
+        }
+
+        public void ResetTextViewport()
+        {
+            _textViewportTop = 1;
+            _textViewportBottom = VisibleTextRows;
+            _textCursorRow = 1;
+            _textCursorColumn = 1;
+        }
+
         public void SetPixel(long x, long y, int color)
         {
             if (!TryTranslateLogicalToAbsolute(x, y, out var absoluteX, out var absoluteY))
@@ -9929,6 +10146,11 @@ END TRY
             }
 
             _pixels[(absoluteX, absoluteY)] = color;
+            if (_isScreenActive)
+            {
+                _screenPages.TryAdd(_activeScreenPage, []);
+                _screenPages[_activeScreenPage][(absoluteX, absoluteY)] = color;
+            }
             _currentGraphicsX = x;
             _currentGraphicsY = y;
         }
@@ -9938,8 +10160,37 @@ END TRY
             if (IsInsideScreen(x, y))
             {
                 _pixels[(x, y)] = color;
+                if (_isScreenActive)
+                {
+                    _screenPages.TryAdd(_activeScreenPage, []);
+                    _screenPages[_activeScreenPage][(x, y)] = color;
+                }
             }
         }
+
+        public bool CopyScreenPage(int sourcePage, int destinationPage)
+        {
+            if (!_isScreenActive || sourcePage is < 0 or > 3 || destinationPage is < 0 or > 3)
+            {
+                return false;
+            }
+
+            _screenPages.TryAdd(sourcePage, []);
+            _screenPages[destinationPage] = new Dictionary<(long X, long Y), int>(_screenPages[sourcePage]);
+            if (destinationPage == _activeScreenPage)
+            {
+                _pixels.Clear();
+                foreach (var item in _screenPages[destinationPage])
+                {
+                    _pixels[item.Key] = item.Value;
+                }
+            }
+
+            return true;
+        }
+
+        public int GetPagePixel(int page, long x, long y) =>
+            _screenPages.TryGetValue(page, out var pixels) && pixels.TryGetValue((x, y), out var color) ? color : 0;
 
         public void SetGraphicsCurrentPosition(long x, long y)
         {
@@ -10112,7 +10363,19 @@ END TRY
             _currentGraphicsY = request.Y;
         }
 
-        public void WriteGraphicsText(string text, bool newLine) => Output.Add(text);
+        public void WriteGraphicsText(string text, bool newLine)
+        {
+            WriteVisibleText(text);
+            if (newLine)
+            {
+                Output.Add(text);
+                AdvanceTextCursorAfterNewLine();
+            }
+            else
+            {
+                _textCursorColumn += text.Length;
+            }
+        }
 
         public void WriteOutput(string text)
         {
@@ -10150,6 +10413,87 @@ END TRY
 
         private bool TryTranslateLogicalToAbsolute(long x, long y, out long absoluteX, out long absoluteY)
             => GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out absoluteX, out absoluteY);
+
+        private void WriteVisibleText(string text)
+        {
+            if (_textCursorRow < 1 || _textCursorRow > VisibleTextRows)
+            {
+                return;
+            }
+
+            EnsureVisibleTextRow(_textCursorRow);
+            var line = _visibleTextLines[_textCursorRow - 1];
+            var columnIndex = Math.Max(0, _textCursorColumn - 1);
+            if (columnIndex >= VisibleTextColumns)
+            {
+                return;
+            }
+
+            if (line.Length < columnIndex)
+            {
+                line = line.PadRight(columnIndex);
+            }
+
+            var buffer = new StringBuilder(line);
+            while (buffer.Length < columnIndex)
+            {
+                buffer.Append(' ');
+            }
+
+            var visibleLength = Math.Min(text.Length, VisibleTextColumns - columnIndex);
+            for (var index = 0; index < visibleLength; index++)
+            {
+                var targetIndex = columnIndex + index;
+                if (targetIndex < buffer.Length)
+                {
+                    buffer[targetIndex] = text[index];
+                }
+                else
+                {
+                    buffer.Append(text[index]);
+                }
+            }
+
+            _visibleTextLines[_textCursorRow - 1] = buffer.ToString().TrimEnd();
+        }
+
+        private void AdvanceTextCursorAfterNewLine()
+        {
+            _textCursorColumn = 1;
+            if (_textCursorRow >= _textViewportTop && _textCursorRow <= _textViewportBottom)
+            {
+                if (_textCursorRow < _textViewportBottom)
+                {
+                    _textCursorRow++;
+                    return;
+                }
+
+                ScrollViewportUp();
+                _textCursorRow = _textViewportBottom;
+                return;
+            }
+
+            _textCursorRow++;
+        }
+
+        private void ScrollViewportUp()
+        {
+            EnsureVisibleTextRow(_textViewportBottom);
+            for (var row = _textViewportTop; row < _textViewportBottom; row++)
+            {
+                _visibleTextLines[row - 1] = _visibleTextLines[row];
+            }
+
+            _visibleTextLines[_textViewportBottom - 1] = string.Empty;
+        }
+
+        private void EnsureVisibleTextRow(int row)
+        {
+            while (_visibleTextLines.Count < row)
+            {
+                _visibleTextLines.Add(string.Empty);
+            }
+        }
 
         private (long X, long Y) ResolveCurrentAbsolutePosition()
             => GraphicsCoordinateSpaceMath.TryResolveCurrentAbsolutePosition(this, out var absoluteX, out var absoluteY)

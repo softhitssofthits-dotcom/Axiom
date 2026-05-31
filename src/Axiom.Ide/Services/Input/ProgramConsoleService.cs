@@ -13,6 +13,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 {
     private static readonly TimeSpan GraphicsFrameCoalescingInterval = TimeSpan.FromMilliseconds(16);
     private const long GraphicsFrameSummaryInterval = 120;
+    private const int ScreenTextCellColumns = 80;
+    private const int ScreenTextCellRows = 25;
 
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
@@ -29,12 +31,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private int _screenMode;
     private int _screenWidth;
     private int _screenHeight;
+    private int _activeScreenPage;
+    private int _visualScreenPage;
     private string _graphicsText = string.Empty;
     private readonly ScreenTextBuffer _graphicsTextBuffer = new();
     private readonly StringBuilder _pendingGraphicsTraceLine = new();
     private int _graphicsForeground = 15;
     private int? _graphicsBackground;
     private int _graphicsLastBackgroundColor;
+    private int _textViewportTop = 1;
+    private int _textViewportBottom = ScreenTextCellRows;
+    private int _screenTextFirstVisibleRow = 1;
     private int _graphicsRow = 1;
     private int _graphicsColumn = 1;
     private long _graphicsCurrentX;
@@ -53,6 +60,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private double _windowBottom;
     private int _graphicsInputRequestCount;
     private ScreenFramebuffer? _framebuffer;
+    private ScreenFramebuffer?[] _screenPages = new ScreenFramebuffer?[4];
     private ScreenFramebufferSnapshot? _graphicsFrame;
     private bool _graphicsVisualRefreshPending;
     private DispatcherTimer? _graphicsVisualRefreshTimer;
@@ -151,15 +159,70 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         private set => SetProperty(ref _graphicsFrame, value);
     }
 
+    public IntPtr ScreenWindowHandle => _graphicsWindow?.Hwnd ?? IntPtr.Zero;
+
     public bool IsScreenActive => _inputSnapshot.IsScreenActive;
 
     public bool IsScreenOutputActive => _inputSnapshot.IsScreenOutputActive;
 
     public int ScreenMode => _inputSnapshot.ScreenMode;
 
+    public int ActiveScreenPage => _activeScreenPage;
+
+    public int VisualScreenPage => _visualScreenPage;
+
     public int ScreenWidth => _inputSnapshot.ScreenWidth;
 
     public int ScreenHeight => _inputSnapshot.ScreenHeight;
+
+    public bool TryGetScreenTextScrollState(out ScreenTextScrollState state)
+    {
+        if (!IsScreenZeroMode)
+        {
+            state = default;
+            return false;
+        }
+
+        var totalRows = Math.Max(1, _graphicsTextBuffer.LineCount);
+        state = new ScreenTextScrollState(_screenTextFirstVisibleRow, ScreenTextCellRows, totalRows);
+        return true;
+    }
+
+    public void SetScreenTextFirstVisibleRow(int firstVisibleRow)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!TryGetScreenTextScrollState(out var state))
+            {
+                return;
+            }
+
+            var normalizedFirstVisibleRow = state.NormalizeFirstVisibleRow(firstVisibleRow);
+            if (_screenTextFirstVisibleRow == normalizedFirstVisibleRow)
+            {
+                return;
+            }
+
+            _screenTextFirstVisibleRow = normalizedFirstVisibleRow;
+            PublishGraphicsFrame();
+        });
+    }
+
+    public bool SetTextViewport(int topRow, int bottomRow)
+    {
+        var applied = false;
+        InvokeOnDispatcher(() => applied = TrySetTextViewportCore(topRow, bottomRow));
+        return applied;
+    }
+
+    public void ResetTextViewport()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            ResetTextViewportCore();
+            PublishGraphicsFrame();
+        });
+    }
 
     public int CurrentForegroundColor => _graphicsForeground;
 
@@ -332,21 +395,52 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public void ActivateScreen(int mode)
     {
+        ActivateScreen(mode, activePage: 0, visualPage: 0);
+    }
+
+    public void ActivateScreen(int mode, int activePage, int visualPage)
+    {
         InvokeOnDispatcher(() =>
         {
             WriteGraphicsFrameSummary(final: true);
             WriteGraphicsInputSummary(final: true);
 
             var (width, height) = _screenModeSizeProvider.GetSize(mode);
+            if (activePage is < 0 or > 3 || visualPage is < 0 or > 3)
+            {
+                return;
+            }
+
+            var preservePages = _screenMode == mode && _screenWidth == width && _screenHeight == height && _screenPages.Length == 4;
             _isScreenActive = mode != 0;
             _isScreenOutputActive = true;
             _screenMode = mode;
             _screenWidth = width;
             _screenHeight = height;
+            _activeScreenPage = _isScreenActive ? activePage : 0;
+            _visualScreenPage = _isScreenActive ? visualPage : 0;
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
-            _framebuffer = new ScreenFramebuffer(width, height);
+            if (!_isScreenActive || !preservePages)
+            {
+                _screenPages = new ScreenFramebuffer?[4];
+            }
+
+            if (_isScreenActive)
+            {
+                for (var page = 0; page < _screenPages.Length; page++)
+                {
+                    _screenPages[page] ??= new ScreenFramebuffer(width, height);
+                }
+
+                _framebuffer = _screenPages[_activeScreenPage];
+            }
+            else
+            {
+                _framebuffer = new ScreenFramebuffer(width, height);
+            }
+
             _graphicsTextBuffer.Clear();
             _pendingGraphicsTraceLine.Clear();
             GraphicsText = string.Empty;
@@ -354,6 +448,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _graphicsForeground = 15;
             _graphicsBackground = null;
             _graphicsLastBackgroundColor = 0;
+            ResetTextViewportCore(resetCursor: false);
+            _screenTextFirstVisibleRow = 1;
             _graphicsRow = 1;
             _graphicsColumn = 1;
             _graphicsCurrentX = 0;
@@ -384,13 +480,18 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenMode = 0;
             _screenWidth = 0;
             _screenHeight = 0;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
             FlushPendingGraphicsTraceLine(logEmpty: false);
             _framebuffer = null;
+            _screenPages = new ScreenFramebuffer?[4];
             GraphicsFrame = null;
             _graphicsTextBuffer.Clear();
+            ResetTextViewportCore(resetCursor: false);
+            _screenTextFirstVisibleRow = 1;
             GraphicsText = string.Empty;
             CancelScheduledGraphicsVisualRefresh();
             WriteGraphicsFrameSummary(final: true);
@@ -414,13 +515,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             FlushPendingGraphicsTraceLine(logEmpty: false);
             GraphicsText = string.Empty;
             _graphicsTextBuffer.Clear();
+            _screenTextFirstVisibleRow = 1;
             _framebuffer?.Clear();
-            PublishGraphicsFrame();
-            CancelScheduledGraphicsVisualRefresh();
-            _graphicsRow = 1;
+            _graphicsRow = _textViewportTop;
             _graphicsColumn = 1;
             _graphicsCurrentX = 0;
             _graphicsCurrentY = 0;
+            PublishGraphicsFrame();
+            CancelScheduledGraphicsVisualRefresh();
         });
     }
 
@@ -451,6 +553,56 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _graphicsRow = Math.Max(1, row);
             _graphicsColumn = Math.Max(1, column);
         });
+    }
+
+    public void ResetPalette()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _framebuffer?.ResetPalette();
+            PublishGraphicsFrame();
+        });
+    }
+
+    public void SetPaletteColor(int index, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _framebuffer?.SetPaletteColor(index, color);
+            PublishGraphicsFrame();
+        });
+    }
+
+    public bool CopyScreenPage(int sourcePage, int destinationPage)
+    {
+        var copied = false;
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isScreenActive || sourcePage is < 0 or > 3 || destinationPage is < 0 or > 3)
+            {
+                copied = false;
+                return;
+            }
+
+            var source = _screenPages[sourcePage];
+            var destination = _screenPages[destinationPage];
+            if (source is null || destination is null)
+            {
+                copied = false;
+                return;
+            }
+
+            destination.CopyFrom(source);
+            if (destinationPage == _activeScreenPage)
+            {
+                _framebuffer = destination;
+            }
+
+            copied = true;
+            PublishGraphicsFrame();
+        });
+
+        return copied;
     }
 
     public void WriteGraphicsText(string text, bool newLine)
@@ -891,7 +1043,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _screenMode = 0;
         _screenWidth = 0;
         _screenHeight = 0;
+        _activeScreenPage = 0;
+        _visualScreenPage = 0;
         _framebuffer = null;
+        _screenPages = new ScreenFramebuffer?[4];
         GraphicsFrame = null;
         _graphicsTextBuffer.Clear();
         _pendingGraphicsTraceLine.Clear();
@@ -900,6 +1055,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsForeground = 15;
         _graphicsBackground = null;
         _graphicsLastBackgroundColor = 0;
+        ResetTextViewportCore(resetCursor: false);
+        _screenTextFirstVisibleRow = 1;
         _graphicsRow = 1;
         _graphicsColumn = 1;
         _graphicsCurrentX = 0;
@@ -1107,14 +1264,34 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void WriteGraphicsTextCore(string text, bool newLine)
     {
-        _graphicsTextBuffer.Write(_graphicsRow, _graphicsColumn, text, _graphicsForeground, _graphicsBackground);
+        var followScreenZeroBottom = IsScreenZeroMode && IsViewingScreenZeroBottom();
+        var targetRow = ResolveGraphicsTextBufferRow(_graphicsRow);
+        _graphicsTextBuffer.Write(
+            targetRow,
+            _graphicsColumn,
+            text,
+            _graphicsForeground,
+            _graphicsBackground,
+            IsScreenZeroMode ? ScreenTextCellColumns : GetVisibleTextColumns());
         _pendingGraphicsTraceLine.Append(text);
 
         if (newLine)
         {
-            _graphicsRow++;
             _graphicsColumn = 1;
-            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            if (IsScreenZeroMode)
+            {
+                AdvanceScreenZeroCursorAfterNewLine(targetRow, followScreenZeroBottom);
+            }
+            else if (IsScreenActive)
+            {
+                AdvanceGraphicsViewportCursorAfterNewLine();
+            }
+            else
+            {
+                _graphicsRow++;
+                _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            }
+
             FlushPendingGraphicsTraceLine(logEmpty: true);
         }
         else
@@ -1122,8 +1299,122 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _graphicsColumn += text.Length;
         }
 
-        GraphicsText = _graphicsTextBuffer.ToPlainText();
     }
+
+    private void AdvanceScreenZeroCursorAfterNewLine(int targetRow, bool followScreenZeroBottom)
+    {
+        var nextRow = targetRow + 1;
+        _graphicsTextBuffer.EnsureRow(nextRow);
+        if (_graphicsRow < ScreenTextCellRows)
+        {
+            _graphicsRow++;
+        }
+
+        if (followScreenZeroBottom)
+        {
+            _screenTextFirstVisibleRow = GetScreenZeroBottomFirstVisibleRow();
+        }
+    }
+
+    private void AdvanceGraphicsViewportCursorAfterNewLine()
+    {
+        if (_graphicsRow >= _textViewportTop && _graphicsRow <= _textViewportBottom)
+        {
+            if (_graphicsRow < _textViewportBottom)
+            {
+                _graphicsRow++;
+                _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                return;
+            }
+
+            _graphicsTextBuffer.ScrollRowsUp(_textViewportTop, _textViewportBottom);
+            _graphicsTextBuffer.EnsureRow(_textViewportBottom);
+            _graphicsRow = _textViewportBottom;
+            return;
+        }
+
+        _graphicsRow++;
+        _graphicsTextBuffer.EnsureRow(_graphicsRow);
+    }
+
+    private bool TrySetTextViewportCore(int topRow, int bottomRow)
+    {
+        if (!IsScreenActive)
+        {
+            return false;
+        }
+
+        var visibleRows = GetVisibleTextRows();
+        if (topRow < 1 || bottomRow < topRow || bottomRow > visibleRows)
+        {
+            return false;
+        }
+
+        _textViewportTop = topRow;
+        _textViewportBottom = bottomRow;
+        _graphicsRow = topRow;
+        _graphicsColumn = 1;
+        PublishGraphicsFrame();
+        return true;
+    }
+
+    private void ResetTextViewportCore(bool resetCursor = true)
+    {
+        _textViewportTop = 1;
+        _textViewportBottom = IsScreenZeroMode ? ScreenTextCellRows : GetVisibleTextRows();
+        if (resetCursor)
+        {
+            _graphicsRow = _textViewportTop;
+            _graphicsColumn = 1;
+        }
+    }
+
+    private string BuildVisibleGraphicsText()
+    {
+        var (firstVisibleRow, visibleRows, visibleColumns) = GetGraphicsTextViewport();
+        return _graphicsTextBuffer.ToPlainText(firstVisibleRow, visibleRows, visibleColumns);
+    }
+
+    private (int FirstVisibleRow, int VisibleRows, int VisibleColumns) GetGraphicsTextViewport()
+    {
+        if (IsScreenZeroMode)
+        {
+            return (_screenTextFirstVisibleRow, ScreenTextCellRows, ScreenTextCellColumns);
+        }
+
+        var visibleRows = GetVisibleTextRows();
+        var visibleColumns = GetVisibleTextColumns();
+        return (1, visibleRows, visibleColumns);
+    }
+
+    private int ResolveGraphicsTextBufferRow(int logicalRow)
+    {
+        logicalRow = Math.Max(1, logicalRow);
+        if (!IsScreenZeroMode)
+        {
+            return logicalRow;
+        }
+
+        return GetScreenZeroLiveWindowFirstRow() + logicalRow - 1;
+    }
+
+    private int GetScreenZeroLiveWindowFirstRow() =>
+        Math.Max(1, _graphicsTextBuffer.LineCount - ScreenTextCellRows + 1);
+
+    private int GetScreenZeroBottomFirstVisibleRow() =>
+        Math.Max(1, Math.Max(1, _graphicsTextBuffer.LineCount) - ScreenTextCellRows + 1);
+
+    private int GetVisibleTextRows() =>
+        Math.Max(1, _screenHeight / ScreenTextRasterizer.CellHeight);
+
+    private int GetVisibleTextColumns() =>
+        Math.Max(1, _screenWidth / ScreenTextRasterizer.CellWidth);
+
+    private bool IsViewingScreenZeroBottom() =>
+        _screenTextFirstVisibleRow >= GetScreenZeroBottomFirstVisibleRow();
+
+    private bool IsScreenZeroMode =>
+        _isScreenOutputActive && !_isScreenActive && _screenMode == 0;
 
     private void SetPixelCore(long x, long y, int color)
     {
@@ -1531,13 +1822,20 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void PublishGraphicsFrame(bool coalesced = false)
     {
-        var frame = _framebuffer?.CreateSnapshot(
+        var (firstVisibleRow, visibleRows, visibleColumns) = GetGraphicsTextViewport();
+        var inputRow = ResolveGraphicsTextBufferRow(_graphicsRow);
+        GraphicsText = BuildVisibleGraphicsText();
+        var displayFramebuffer = _isScreenActive ? _screenPages[_visualScreenPage] : _framebuffer;
+        var frame = displayFramebuffer?.CreateSnapshot(
             _graphicsTextBuffer,
             _graphicsForeground,
             _graphicsBackground,
             _isWaitingForInput ? CurrentPromptText + CurrentInputText : null,
-            _graphicsRow,
-            _graphicsColumn);
+            inputRow,
+            _graphicsColumn,
+            firstVisibleRow,
+            visibleRows,
+            visibleColumns);
         GraphicsFrame = frame;
         _graphicsWindow?.PresentFrame(frame);
         RecordGraphicsFramePublished(coalesced);

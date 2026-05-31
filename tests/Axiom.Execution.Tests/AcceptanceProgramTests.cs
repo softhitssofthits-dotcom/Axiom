@@ -1778,7 +1778,7 @@ public sealed class AcceptanceProgramTests
     public void ScreenModeInfoAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/screen/mode_info.axm");
-        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
@@ -1817,6 +1817,54 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void ScreenZeroTextScrollAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/graphics/screen/text_scroll.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "SCREEN 0 text scroll",
+                "line 1",
+                "line 2",
+                "line 3",
+                "line 4",
+                "line 5",
+                "line 6",
+                "line 7",
+                "line 8",
+                "line 9",
+                "line 10",
+                "line 11",
+                "line 12",
+                "line 13",
+                "line 14",
+                "line 15",
+                "line 16",
+                "line 17",
+                "line 18",
+                "line 19",
+                "line 20",
+                "line 21",
+                "line 22",
+                "line 23",
+                "line 24",
+                "line 25",
+                "line 26",
+                "line 27",
+                "visible after scroll"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenTextAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/text/print_locate_color.axm");
@@ -1836,7 +1884,7 @@ public sealed class AcceptanceProgramTests
     public void ScreenTransparentTextAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/text/transparent_text.axm");
-        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
@@ -1884,7 +1932,7 @@ public sealed class AcceptanceProgramTests
     public void ScreenPrimitivesAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/pset_line_circle.axm");
-        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "ESC"], pressedKeys: []);
 
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
@@ -1969,6 +2017,22 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void ViewPrintAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/view-print/scrolling_region.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Contains("VIEW PRINT sample finished", inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
     public void ScreenWindowAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/window/cartesian_and_screen.axm");
@@ -2018,6 +2082,73 @@ public sealed class AcceptanceProgramTests
                 "cart=3,3",
                 "cart back=105,205",
                 "PMAP sample finished"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void PaletteAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/palette/change_and_reset_colors.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "default index=1",
+                "changed index=1",
+                "reset index=1",
+                "PALETTE sample finished"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void PaletteUsingAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/palette/using_array_colors.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "before using=1",
+                "after using=1",
+                "after reset=1",
+                "PALETTE USING sample finished"
+            ],
+            inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void PCopyAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/pcopy/page_copy_buffer.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "visible page=1",
+                "PCOPY sample finished"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -2084,6 +2215,41 @@ public sealed class AcceptanceProgramTests
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["PAINT STEP sample finished"], inputProvider.GraphicsOutput);
+    }
+
+[Theory]
+[InlineData("samples/operators/view/invalid_bounds_error.axm", "MB3007")]
+[InlineData("samples/operators/window/zero_size_error.axm", "MB3007")]
+[InlineData("samples/operators/paint/empty_pattern_error.axm", "MB3007")]
+[InlineData("samples/operators/view-print/invalid_rows_error.axm", "MB3007")]
+[InlineData("samples/functions/pmap/invalid_selector_error.axm", "MB3007")]
+[InlineData("samples/graphics/screen/invalid_page_error.axm", "MB3007")]
+[InlineData("samples/operators/pcopy/invalid_page_error.axm", "MB3007")]
+[InlineData("samples/operators/pcopy/text_screen_error.axm", "MB3010")]
+public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string relativePath, string expectedCode)
+{
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var bytecodeInputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+        var interpreterInputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var bytecodeResult = Run(sourceText, bytecodeInputProvider, ExecutionMode.Bytecode);
+        var interpreterResult = Run(sourceText, interpreterInputProvider, ExecutionMode.Interpreter);
+
+        Assert.Equal(ExecutionStatus.RuntimeFailure, bytecodeResult.Status);
+        Assert.Equal(ExecutionStatus.RuntimeFailure, interpreterResult.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, bytecodeResult.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.Interpreter, interpreterResult.ActualEngine);
+        Assert.False(bytecodeResult.UsedInterpreterFallback);
+        Assert.False(interpreterResult.UsedInterpreterFallback);
+
+        var bytecodeDiagnostic = Assert.Single(bytecodeResult.Diagnostics);
+        var interpreterDiagnostic = Assert.Single(interpreterResult.Diagnostics);
+        Assert.Equal(expectedCode, bytecodeDiagnostic.Code);
+        Assert.Equal(expectedCode, interpreterDiagnostic.Code);
+        Assert.True(bytecodeDiagnostic.Location.Line > 0);
+        Assert.True(bytecodeDiagnostic.Location.Column > 0);
+        Assert.True(interpreterDiagnostic.Location.Line > 0);
+        Assert.True(interpreterDiagnostic.Location.Column > 0);
     }
 
     [Theory]
@@ -2382,9 +2548,17 @@ public sealed class AcceptanceProgramTests
             return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada", "7"]);
         }
 
+        if (relativePath.Equals("samples/operators/palette/change_and_reset_colors.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
+        }
+
         if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/view/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/view-print/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/window/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/palette/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("samples/operators/pcopy/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/get/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/put/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/paint/", StringComparison.OrdinalIgnoreCase)
@@ -2553,9 +2727,12 @@ public sealed class AcceptanceProgramTests
         private readonly long _mouseX;
         private readonly long _mouseY;
         private readonly Dictionary<(long X, long Y), int> _pixels = [];
+        private readonly Dictionary<int, Dictionary<(long X, long Y), int>> _screenPages = [];
         private bool _isScreenActive;
         private bool _isScreenOutputActive;
         private int _screenMode;
+        private int _activeScreenPage;
+        private int _visualScreenPage;
         private int _screenWidth;
         private int _screenHeight;
         private int _currentForegroundColor = 15;
@@ -2628,6 +2805,10 @@ public sealed class AcceptanceProgramTests
 
         public int ScreenMode => _screenMode;
 
+        public int ActiveScreenPage => _activeScreenPage;
+
+        public int VisualScreenPage => _visualScreenPage;
+
         public int ScreenWidth => _screenWidth;
 
         public int ScreenHeight => _screenHeight;
@@ -2668,9 +2849,17 @@ public sealed class AcceptanceProgramTests
 
         public void ActivateScreen(int mode)
         {
+            ActivateScreen(mode, activePage: 0, visualPage: 0);
+        }
+
+        public void ActivateScreen(int mode, int activePage, int visualPage)
+        {
+            var sameMode = _screenMode == mode;
             _isScreenActive = mode != 0;
             _isScreenOutputActive = true;
             _screenMode = mode;
+            _activeScreenPage = _isScreenActive ? activePage : 0;
+            _visualScreenPage = _isScreenActive ? visualPage : 0;
             (_screenWidth, _screenHeight) = mode switch
             {
                 0 => (640, 300),
@@ -2687,6 +2876,21 @@ public sealed class AcceptanceProgramTests
                 _ => (0, 0)
             };
             _pixels.Clear();
+            if (!_isScreenActive || !sameMode)
+            {
+                _screenPages.Clear();
+            }
+
+            if (_isScreenActive)
+            {
+                _screenPages.TryAdd(_activeScreenPage, []);
+                _screenPages.TryAdd(_visualScreenPage, []);
+                foreach (var item in _screenPages[_activeScreenPage])
+                {
+                    _pixels[item.Key] = item.Value;
+                }
+            }
+
             GraphicsOutput.Clear();
             _pendingGraphicsLine = string.Empty;
             _currentForegroundColor = 15;
@@ -2703,9 +2907,12 @@ public sealed class AcceptanceProgramTests
             _isScreenActive = false;
             _isScreenOutputActive = false;
             _screenMode = 0;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
             _screenWidth = 0;
             _screenHeight = 0;
             _pixels.Clear();
+            _screenPages.Clear();
             _currentGraphicsX = 0;
             _currentGraphicsY = 0;
             ResetViewport();
@@ -2715,6 +2922,10 @@ public sealed class AcceptanceProgramTests
         public void ClearGraphics()
         {
             _pixels.Clear();
+            if (_isScreenActive)
+            {
+                _screenPages[_activeScreenPage] = [];
+            }
             GraphicsOutput.Clear();
             _pendingGraphicsLine = string.Empty;
             _currentGraphicsX = 0;
@@ -2739,6 +2950,26 @@ public sealed class AcceptanceProgramTests
         }
 
         public void LocateText(int row, int column)
+        {
+        }
+
+        public bool SetTextViewport(int topRow, int bottomRow)
+        {
+            if (!_isScreenActive)
+            {
+                return false;
+            }
+
+            var visibleRows = Math.Max(1, _screenHeight / 12);
+            if (topRow < 1 || bottomRow < topRow || bottomRow > visibleRows)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public void ResetTextViewport()
         {
         }
 
@@ -2783,6 +3014,11 @@ public sealed class AcceptanceProgramTests
             }
 
             _pixels[(absoluteX, absoluteY)] = color;
+            if (_isScreenActive)
+            {
+                _screenPages.TryAdd(_activeScreenPage, []);
+                _screenPages[_activeScreenPage][(absoluteX, absoluteY)] = color;
+            }
             _currentGraphicsX = x;
             _currentGraphicsY = y;
         }
@@ -2792,7 +3028,33 @@ public sealed class AcceptanceProgramTests
             if (IsInsideScreen(x, y))
             {
                 _pixels[(x, y)] = color;
+                if (_isScreenActive)
+                {
+                    _screenPages.TryAdd(_activeScreenPage, []);
+                    _screenPages[_activeScreenPage][(x, y)] = color;
+                }
             }
+        }
+
+        public bool CopyScreenPage(int sourcePage, int destinationPage)
+        {
+            if (!_isScreenActive || sourcePage is < 0 or > 3 || destinationPage is < 0 or > 3)
+            {
+                return false;
+            }
+
+            _screenPages.TryAdd(sourcePage, []);
+            _screenPages[destinationPage] = new Dictionary<(long X, long Y), int>(_screenPages[sourcePage]);
+            if (destinationPage == _activeScreenPage)
+            {
+                _pixels.Clear();
+                foreach (var item in _screenPages[destinationPage])
+                {
+                    _pixels[item.Key] = item.Value;
+                }
+            }
+
+            return true;
         }
 
         public void SetGraphicsCurrentPosition(long x, long y)

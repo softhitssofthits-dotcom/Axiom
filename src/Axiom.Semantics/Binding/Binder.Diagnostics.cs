@@ -45,6 +45,11 @@ public sealed partial class Binder
         _diagnostics.Report(TypeMismatchCode, $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.", location);
     }
 
+    private void ReportUnsupportedScreenColorSwitch(TextLocation location)
+    {
+        _diagnostics.Report(TypeMismatchCode, "Параметр colorSwitch в SCREEN сейчас не поддерживается; используйте пустое место перед activePage.", location);
+    }
+
     private void ReportScalarAssignedToArray(string targetName, TextLocation location)
     {
         _diagnostics.Report(

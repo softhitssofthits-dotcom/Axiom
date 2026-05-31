@@ -58,7 +58,25 @@ public sealed partial class Binder
 
     private BoundStatement BindScreenStatement(ScreenStatementSyntax statement)
     {
-        return new BoundScreenStatement(GetLocation(statement), BindExpression(statement.ModeExpression, TypeSymbol.Integer));
+        if (statement.ColorSwitchExpression is not null)
+        {
+            ReportUnsupportedScreenColorSwitch(GetLocation(statement.ColorSwitchExpression));
+        }
+
+        return new BoundScreenStatement(
+            GetLocation(statement),
+            BindExpression(statement.ModeExpression, TypeSymbol.Integer),
+            statement.ColorSwitchExpression is null ? null : BindExpression(statement.ColorSwitchExpression, TypeSymbol.Integer),
+            statement.ActivePageExpression is null ? null : BindExpression(statement.ActivePageExpression, TypeSymbol.Integer),
+            statement.VisualPageExpression is null ? null : BindExpression(statement.VisualPageExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindPCopyStatement(PCopyStatementSyntax statement)
+    {
+        return new BoundPCopyStatement(
+            GetLocation(statement),
+            BindExpression(statement.SourcePageExpression, TypeSymbol.Integer),
+            BindExpression(statement.DestinationPageExpression, TypeSymbol.Integer));
     }
 
     private BoundStatement BindViewStatement(ViewStatementSyntax statement)
@@ -85,6 +103,19 @@ public sealed partial class Binder
             BindExpression(statement.BottomRightPoint.YExpression, TypeSymbol.Long),
             statement.FillColorExpression is null ? null : BindExpression(statement.FillColorExpression, TypeSymbol.Integer),
             statement.BorderColorExpression is null ? null : BindExpression(statement.BorderColorExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindViewPrintStatement(ViewPrintStatementSyntax statement)
+    {
+        if (statement.IsReset)
+        {
+            return new BoundViewPrintStatement(GetLocation(statement), null, null);
+        }
+
+        return new BoundViewPrintStatement(
+            GetLocation(statement),
+            BindExpression(statement.TopExpression!, TypeSymbol.Integer),
+            BindExpression(statement.BottomExpression!, TypeSymbol.Integer));
     }
 
     private BoundStatement BindWindowStatement(WindowStatementSyntax statement)
@@ -133,6 +164,58 @@ public sealed partial class Binder
             GetLocation(statement),
             BindExpression(statement.RowExpression, TypeSymbol.Integer),
             BindExpression(statement.ColumnExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindPaletteStatement(PaletteStatementSyntax statement)
+    {
+        if (statement.IsReset)
+        {
+            return new BoundPaletteStatement(GetLocation(statement), null, null, null);
+        }
+
+        if (statement.IsUsing)
+        {
+            return new BoundPaletteStatement(
+                GetLocation(statement),
+                null,
+                null,
+                BindPaletteUsingExpression(statement.ValuesExpression!));
+        }
+
+        return new BoundPaletteStatement(
+            GetLocation(statement),
+            BindExpression(statement.IndexExpression!, TypeSymbol.Integer),
+            BindExpression(statement.ColorExpression!, TypeSymbol.Integer),
+            null);
+    }
+
+    private BoundExpression BindPaletteUsingExpression(ExpressionSyntax expression)
+    {
+        var boundExpression = BindExpression(expression);
+        if (boundExpression.Type == TypeSymbol.Error)
+        {
+            return boundExpression;
+        }
+
+        if (boundExpression.Type is not ArrayTypeSymbol arrayType)
+        {
+            ReportExpectedArrayType(boundExpression.Type, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
+
+        if (arrayType.Rank != 1)
+        {
+            ReportOneDimensionalArrayRequired("PALETTE USING", arrayType.Rank, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
+
+        if (!IsNumeric(arrayType.ElementType))
+        {
+            ReportNumericArrayElementRequired("PALETTE USING", arrayType.ElementType, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
+
+        return boundExpression;
     }
 
     private BoundStatement BindPSetStatement(PSetStatementSyntax statement)

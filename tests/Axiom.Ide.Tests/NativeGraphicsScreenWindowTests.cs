@@ -8,6 +8,8 @@ public sealed class NativeGraphicsScreenWindowTests
 {
     private const int WmPaint = 0x000F;
     private const int WmMouseMove = 0x0200;
+    private const int WmVScroll = 0x0115;
+    private const int SbTop = 6;
 
     [Theory]
     [InlineData(0x25)] // LEFT
@@ -68,6 +70,29 @@ public sealed class NativeGraphicsScreenWindowTests
 
         Assert.Equal(11, service.GetMouseX());
         Assert.Equal(22, service.GetMouseY());
+    }
+
+    [Fact]
+    public void ScreenZeroVerticalScrollMessage_ShowsOlderHistoryInVisibleWindow()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateScreen(0);
+        for (var index = 1; index <= 27; index++)
+        {
+            service.WriteGraphicsText($"line {index:00}", newLine: true);
+        }
+
+        var hwnd = service.ScreenWindowHandle;
+        Assert.NotEqual(IntPtr.Zero, hwnd);
+
+        SendMessage(hwnd, WmVScroll, new IntPtr(SbTop), IntPtr.Zero);
+
+        var lines = service.GraphicsText.Split(Environment.NewLine);
+        Assert.Equal("line 01", lines[0]);
+        Assert.Equal("line 25", lines[24]);
+
+        service.DeactivateScreen();
     }
 
     private static IntPtr MakeMouseLParam(short x, short y) =>

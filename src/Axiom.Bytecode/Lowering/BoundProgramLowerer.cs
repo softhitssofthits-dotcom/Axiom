@@ -275,7 +275,41 @@ public sealed class BoundProgramLowerer
                 break;
             case BoundScreenStatement screen:
                 LowerExpression(screen.ModeExpression, instructions);
-                instructions.Add(LoweredInstruction.Screen(screen.Location));
+                var screenValueCount = 1;
+                if (screen.ActivePageExpression is not null)
+                {
+                    LowerExpression(screen.ActivePageExpression, instructions);
+                    screenValueCount = 2;
+                }
+
+                if (screen.ActivePageExpression is null)
+                {
+                    instructions.Add(LoweredInstruction.LoadLiteral(screen.Location, 0, TypeSymbol.Integer));
+                }
+
+                if (screen.VisualPageExpression is not null)
+                {
+                    if (screen.ActivePageExpression is null)
+                    {
+                        screenValueCount = 2;
+                    }
+
+                    LowerExpression(screen.VisualPageExpression, instructions);
+                    screenValueCount = 3;
+                }
+
+                if (screen.VisualPageExpression is null)
+                {
+                    instructions.Add(LoweredInstruction.LoadLiteral(screen.Location, 0, TypeSymbol.Integer));
+                }
+
+                instructions.Add(LoweredInstruction.LoadLiteral(screen.Location, screenValueCount, TypeSymbol.Integer));
+                instructions.Add(LoweredInstruction.Screen(screen.Location, screenValueCount));
+                break;
+            case BoundPCopyStatement pcopy:
+                LowerExpression(pcopy.SourcePageExpression, instructions);
+                LowerExpression(pcopy.DestinationPageExpression, instructions);
+                instructions.Add(LoweredInstruction.PCopy(pcopy.Location));
                 break;
             case BoundViewStatement view:
                 if (!view.IsReset)
@@ -301,6 +335,15 @@ public sealed class BoundProgramLowerer
                     hasCoordinates: !view.IsReset,
                     hasFillColor: view.FillColorExpression is not null,
                     hasBorderColor: view.BorderColorExpression is not null));
+                break;
+            case BoundViewPrintStatement viewPrint:
+                if (!viewPrint.IsReset)
+                {
+                    LowerExpression(viewPrint.TopExpression!, instructions);
+                    LowerExpression(viewPrint.BottomExpression!, instructions);
+                }
+
+                instructions.Add(LoweredInstruction.ViewPrint(viewPrint.Location, hasRows: !viewPrint.IsReset));
                 break;
             case BoundWindowStatement window:
                 if (!window.IsReset)
@@ -331,6 +374,19 @@ public sealed class BoundProgramLowerer
                 LowerExpression(locate.RowExpression, instructions);
                 LowerExpression(locate.ColumnExpression, instructions);
                 instructions.Add(LoweredInstruction.Locate(locate.Location));
+                break;
+            case BoundPaletteStatement palette:
+                if (palette.IsUsing)
+                {
+                    LowerExpression(palette.ValuesExpression!, instructions);
+                }
+                else if (!palette.IsReset)
+                {
+                    LowerExpression(palette.IndexExpression!, instructions);
+                    LowerExpression(palette.ColorExpression!, instructions);
+                }
+
+                instructions.Add(LoweredInstruction.Palette(palette.Location, palette.IsUsing ? 1 : !palette.IsReset ? 2 : 0));
                 break;
             case BoundPSetStatement pset:
                 LowerExpression(pset.XExpression, instructions);

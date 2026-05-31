@@ -22,13 +22,15 @@
             </nav>
             <p class="eyebrow">Оператор</p>
             <h1 class="page-title">VIEW</h1>
-            <p class="lead"><code>VIEW</code> задаёт прямоугольную область графического экрана, внутри которой работают графические примитивы, <code>PAINT</code>, <code>DRAW</code> и функция <code>POINT</code>. Это удобно, когда программе нужно рисовать в ограниченной части экрана и при необходимости перейти к локальной системе координат.</p>
+            <p class="lead"><code>VIEW</code> задаёт прямоугольную область графического экрана, внутри которой работают графические примитивы, <code>PAINT</code>, <code>DRAW</code> и функция <code>POINT</code>. Родственная форма <code>VIEW PRINT</code> ограничивает не графику, а строки текстового вывода на активном графическом экране.</p>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
 <pre><code>VIEW
 VIEW SCREEN (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;заливка&gt;][, &lt;рамка&gt;]]
-VIEW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;заливка&gt;][, &lt;рамка&gt;]]</code></pre>
+VIEW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;заливка&gt;][, &lt;рамка&gt;]]
+VIEW PRINT
+VIEW PRINT &lt;верх&gt; TO &lt;низ&gt;</code></pre>
             </section>
 
             <section class="article-section">
@@ -43,6 +45,8 @@ VIEW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;зали
                         <tr><td><code>&lt;left&gt;, &lt;top&gt;, &lt;right&gt;, &lt;bottom&gt;</code></td><td>Координаты углов viewport. Прямоугольник включителен: обе границы входят в область.</td></tr>
                         <tr><td><code>&lt;заливка&gt;</code></td><td>Необязательный цвет внутренней области viewport. Если аргумент опущен, существующие пиксели внутри области не меняются.</td></tr>
                         <tr><td><code>&lt;рамка&gt;</code></td><td>Необязательный цвет рамки viewport. Если аргумент опущен, рамка не рисуется.</td></tr>
+                        <tr><td><code>VIEW PRINT &lt;верх&gt; TO &lt;низ&gt;</code></td><td>Задаёт включительный диапазон строк, в котором прокручиваются последующие <code>PRINT</code>, <code>PRINT USING</code> и подтверждённый <code>INPUT</code> на графическом экране.</td></tr>
+                        <tr><td><code>VIEW PRINT</code></td><td>Сбрасывает текстовое окно вывода и возвращает текстовый вывод к полной текстовой сетке текущего графического режима.</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -57,6 +61,23 @@ VIEW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)[, [&lt;зали
                 <p>При смене viewport Axiom сохраняет физическую точку текущей графической позиции и просто пересчитывает её в новую систему координат. После <code>VIEW</code> без аргументов текущая графическая позиция снова читается в абсолютных координатах экрана.</p>
                 <p><code>VIEW</code> не меняет поведение <code>LOCATE</code> и текстового курсора. Текстовые операторы продолжают работать по общему экранному режиму <code>SCREEN</code>.</p>
                 <p>Если прямоугольник выходит за пределы активного экрана или если левая граница больше правой либо верхняя больше нижней, выполнение сообщает <code>MB3007</code>.</p>
+            </section>
+
+            <section class="article-section" id="view-print">
+                <h2>Оператор VIEW PRINT</h2>
+                <p><code>VIEW PRINT</code> задаёт текстовое окно вывода внутри активного графического режима <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Это окно измеряется строками текстовой сетки, а не пикселями, и не зависит от графического viewport, заданного обычным <code>VIEW</code>.</p>
+                <p>После <code>VIEW PRINT верх TO низ</code> последующие строки <code>PRINT</code>, <code>PRINT USING</code> и подтверждённого <code>INPUT</code> прокручиваются только внутри выбранного диапазона. Строки выше и ниже этого диапазона остаются на месте, поэтому их удобно использовать для заголовков, подсказок и строки состояния.</p>
+                <p>Форма <code>VIEW PRINT</code> без границ сбрасывает ограничение и снова разрешает текстовый вывод по всей текстовой сетке текущего графического режима. Команда работает только при активном графическом <code>SCREEN</code>; в <code>SCREEN 0</code> используется отдельный договор текстового окна с историей и полосой прокрутки.</p>
+                <p>Значения <code>верх</code> и <code>низ</code> должны образовывать корректный включительный диапазон строк текущего режима: <code>верх &gt;= 1</code>, <code>низ &gt;= верх</code>, <code>низ</code> не выходит за последнюю строку <code>LOCATE</code>. Нарушение даёт <code>MB3007</code>, а вызов без графического режима даёт <code>MB3010</code>.</p>
+<pre><code>SCREEN 1
+VIEW PRINT 10 TO 12
+FOR i = 1 TO 5
+    PRINT "line"; i
+NEXT
+
+VIEW PRINT
+LOCATE 1, 1
+PRINT "VIEW PRINT reset"</code></pre>
             </section>
 
             <section class="article-section">
@@ -79,14 +100,16 @@ VIEW</code></pre>
                 <ul>
                     <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
                     <li><code>MB3007</code>: прямоугольник viewport некорректен или выходит за пределы активного экрана.</li>
+                    <li><code>MB3007</code>: строки <code>VIEW PRINT</code> не образуют допустимый диапазон внутри текущей текстовой сетки.</li>
                 </ul>
             </section>
 
             <section class="article-section">
                 <h2>Проверочная программа</h2>
-                <p>Готовый пример для ручной проверки абсолютного и относительного viewport находится в <code>samples/operators/view/screen_and_relative.axm</code>.</p>
+                <p>Готовые примеры можно открыть в <code>Axiom.Ide</code> и запустить для ручной проверки графического viewport и текстового окна вывода.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
+                    <li><a href="../../samples/operators/view-print/scrolling_region.axm">VIEW PRINT: прокрутка внутри строкового диапазона</a></li>
                 </ul>
             </section>
 
@@ -97,6 +120,7 @@ VIEW</code></pre>
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="window.html">Оператор WINDOW</a>
                     <a href="pmap.html">Функция PMAP</a>
+                    <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                 </div>

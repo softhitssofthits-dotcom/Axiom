@@ -803,6 +803,11 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.ViewPrint:
+                ExecuteViewPrintInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.Window:
                 ExecuteWindowInstruction(frame, instruction, instructionIndex);
                 InvalidateReverseExecutionHistory();
@@ -819,6 +824,16 @@ public sealed partial class BytecodeVm
 
             case Opcode.Locate:
                 ExecuteLocateInstruction(frame, instructionIndex);
+                break;
+
+            case Opcode.Palette:
+                ExecutePaletteInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.PCopy:
+                ExecutePCopyInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
                 break;
 
             case Opcode.PSet:

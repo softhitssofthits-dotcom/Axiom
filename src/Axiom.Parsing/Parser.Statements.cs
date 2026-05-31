@@ -34,6 +34,8 @@ public sealed partial class Parser
             SyntaxKind.ClsKeyword => ParseClsStatement(),
             SyntaxKind.ColorKeyword => ParseColorStatement(),
             SyntaxKind.LocateKeyword => ParseLocateStatement(),
+            SyntaxKind.PaletteKeyword => ParsePaletteStatement(),
+            SyntaxKind.PCopyKeyword => ParsePCopyStatement(),
             SyntaxKind.PSetKeyword => ParsePSetStatement(reset: false),
             SyntaxKind.PresetKeyword => ParsePSetStatement(reset: true),
             SyntaxKind.LineKeyword => Peek(1).Kind is SyntaxKind.OpenParenToken or SyntaxKind.StepKeyword or SyntaxKind.MinusToken ? ParseLineStatement() : ParseIdentifierLeadingStatement(),
@@ -205,12 +207,77 @@ public sealed partial class Parser
     {
         var screenKeyword = Match(SyntaxKind.ScreenKeyword, "SCREEN");
         var modeExpression = ParseExpression();
-        return new ScreenStatementSyntax(screenKeyword, modeExpression);
+        SyntaxToken? colorSwitchCommaToken = null;
+        ExpressionSyntax? colorSwitchExpression = null;
+        SyntaxToken? activePageCommaToken = null;
+        ExpressionSyntax? activePageExpression = null;
+        SyntaxToken? visualPageCommaToken = null;
+        ExpressionSyntax? visualPageExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            colorSwitchCommaToken = NextToken();
+            if (Current.Kind != SyntaxKind.CommaToken && !IsStatementTerminator(Current.Kind))
+            {
+                colorSwitchExpression = ParseExpression();
+            }
+        }
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            activePageCommaToken = NextToken();
+            if (Current.Kind != SyntaxKind.CommaToken && !IsStatementTerminator(Current.Kind))
+            {
+                activePageExpression = ParseExpression();
+            }
+        }
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            visualPageCommaToken = NextToken();
+            if (!IsStatementTerminator(Current.Kind))
+            {
+                visualPageExpression = ParseExpression();
+            }
+        }
+
+        return new ScreenStatementSyntax(
+            screenKeyword,
+            modeExpression,
+            colorSwitchCommaToken,
+            colorSwitchExpression,
+            activePageCommaToken,
+            activePageExpression,
+            visualPageCommaToken,
+            visualPageExpression);
     }
 
-    private ViewStatementSyntax ParseViewStatement()
+    private PCopyStatementSyntax ParsePCopyStatement()
+    {
+        var pcopyKeyword = Match(SyntaxKind.PCopyKeyword, "PCOPY");
+        var sourcePageExpression = ParseExpression();
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после исходной страницы PCOPY");
+        var destinationPageExpression = ParseExpression();
+        return new PCopyStatementSyntax(pcopyKeyword, sourcePageExpression, commaToken, destinationPageExpression);
+    }
+
+    private StatementSyntax ParseViewStatement()
     {
         var viewKeyword = Match(SyntaxKind.ViewKeyword, "VIEW");
+        if (Current.Kind == SyntaxKind.PrintKeyword)
+        {
+            var printKeyword = NextToken();
+            if (IsStatementTerminator(Current.Kind))
+            {
+                return new ViewPrintStatementSyntax(viewKeyword, printKeyword, null, null, null);
+            }
+
+            var topExpression = ParseExpression();
+            var toKeyword = Match(SyntaxKind.ToKeyword, "TO в VIEW PRINT");
+            var bottomExpression = ParseExpression();
+            return new ViewPrintStatementSyntax(viewKeyword, printKeyword, topExpression, toKeyword, bottomExpression);
+        }
+
         if (IsStatementTerminator(Current.Kind))
         {
             return new ViewStatementSyntax(viewKeyword, null, null, null, null, null, null, null, null);
@@ -311,6 +378,27 @@ public sealed partial class Parser
         var commaToken = Match(SyntaxKind.CommaToken, "',' после строки LOCATE");
         var columnExpression = ParseExpression();
         return new LocateStatementSyntax(locateKeyword, rowExpression, commaToken, columnExpression);
+    }
+
+    private PaletteStatementSyntax ParsePaletteStatement()
+    {
+        var paletteKeyword = Match(SyntaxKind.PaletteKeyword, "PALETTE");
+        if (IsStatementTerminator(Current.Kind))
+        {
+            return new PaletteStatementSyntax(paletteKeyword, null, null, null, null, null);
+        }
+
+        if (Current.Kind == SyntaxKind.UsingKeyword)
+        {
+            var usingKeyword = Match(SyntaxKind.UsingKeyword, "USING");
+            var valuesExpression = ParseExpression();
+            return new PaletteStatementSyntax(paletteKeyword, usingKeyword, valuesExpression, null, null, null);
+        }
+
+        var indexExpression = ParseExpression();
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после индекса PALETTE");
+        var colorExpression = ParseExpression();
+        return new PaletteStatementSyntax(paletteKeyword, null, null, indexExpression, commaToken, colorExpression);
     }
 
     private PSetStatementSyntax ParsePSetStatement(bool reset)

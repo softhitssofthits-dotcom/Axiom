@@ -9,6 +9,8 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteScreen(BoundScreenStatement statement)
     {
         var mode = EvaluateExpression(statement.ModeExpression).AsInteger();
+        var activePage = statement.ActivePageExpression is null ? 0 : EvaluateExpression(statement.ActivePageExpression).AsInteger();
+        var visualPage = statement.VisualPageExpression is null ? activePage : EvaluateExpression(statement.VisualPageExpression).AsInteger();
         if (mode == 0)
         {
             FlushPendingOutput(forceEmptyLine: false);
@@ -22,8 +24,34 @@ public sealed partial class Interpreter
             throw new RuntimeFailureException();
         }
 
+        if (activePage is < 0 or > 3)
+        {
+            ReportBuiltInArgumentError("SCREEN", "activePage", "должен быть в диапазоне 0..3.", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
+        if (visualPage is < 0 or > 3)
+        {
+            ReportBuiltInArgumentError("SCREEN", "visualPage", "должен быть в диапазоне 0..3.", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
         FlushPendingOutput(forceEmptyLine: false);
-        _host.ActivateScreen(mode);
+        _host.ActivateScreen(mode, activePage, visualPage);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecutePCopy(BoundPCopyStatement statement)
+    {
+        RequireScreenActive("PCOPY", statement.Location);
+        var sourcePage = EvaluateExpression(statement.SourcePageExpression).AsInteger();
+        var destinationPage = EvaluateExpression(statement.DestinationPageExpression).AsInteger();
+        if (!_host.CopyScreenPage(sourcePage, destinationPage))
+        {
+            ReportBuiltInArgumentError("PCOPY", "page", "должна быть в диапазоне 0..3.", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
         return ExecutionSignal.None;
     }
 
@@ -45,6 +73,26 @@ public sealed partial class Interpreter
         if (!TryApplyViewport(left, top, right, bottom, fillColor, borderColor, statement.UseScreenCoordinates))
         {
             ReportInvalidViewport("VIEW", statement.Location);
+            throw new RuntimeFailureException();
+        }
+
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteViewPrint(BoundViewPrintStatement statement)
+    {
+        RequireScreenActive("VIEW PRINT", statement.Location);
+        if (statement.IsReset)
+        {
+            _host.ResetTextViewport();
+            return ExecutionSignal.None;
+        }
+
+        var topRow = EvaluateExpression(statement.TopExpression!).AsInteger();
+        var bottomRow = EvaluateExpression(statement.BottomExpression!).AsInteger();
+        if (!_host.SetTextViewport(topRow, bottomRow))
+        {
+            ReportInvalidTextViewport("VIEW PRINT", statement.Location);
             throw new RuntimeFailureException();
         }
 
@@ -103,6 +151,65 @@ public sealed partial class Interpreter
         RequireScreenActive("LOCATE", statement.Location);
         _host.LocateText(EvaluateExpression(statement.RowExpression).AsInteger(), EvaluateExpression(statement.ColumnExpression).AsInteger());
         return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecutePalette(BoundPaletteStatement statement)
+    {
+        RequireScreenActive("PALETTE", statement.Location);
+        if (statement.IsReset)
+        {
+            _host.ResetPalette();
+            return ExecutionSignal.None;
+        }
+
+        if (statement.IsUsing)
+        {
+            ApplyPaletteUsing(EvaluateExpression(statement.ValuesExpression!).AsArray(), statement.Location);
+            return ExecutionSignal.None;
+        }
+
+        var index = EvaluateExpression(statement.IndexExpression!).AsInteger();
+        var color = EvaluateExpression(statement.ColorExpression!).AsInteger();
+        _host.SetPaletteColor(index, color);
+        return ExecutionSignal.None;
+    }
+
+    private void ApplyPaletteUsing(RuntimeArrayValue array, TextLocation location)
+    {
+        if (!array.IsAllocated)
+        {
+            ReportInvalidRuntimeState("Массив 'PALETTE USING' объявлен, но ещё не выделен.", location);
+            return;
+        }
+
+        if (array.Rank != 1)
+        {
+            ReportRuntimeDiagnostic(BuiltinArgumentCode, "PALETTE USING: ожидается одномерный массив.", location);
+            return;
+        }
+
+        var paletteIndex = 0;
+        array.ForEachVisibleIndexSetAscending(indices =>
+        {
+            if (paletteIndex < 256)
+            {
+                _host.SetPaletteColor(paletteIndex, ToPaletteColor(array.GetValue(indices), location));
+            }
+
+            paletteIndex++;
+        });
+    }
+
+    private int ToPaletteColor(RuntimeValue value, TextLocation location)
+    {
+        return value.Type switch
+        {
+            var type when type == TypeSymbol.Integer => value.AsInteger(),
+            var type when type == TypeSymbol.Long => ToInt32Checked(value.AsLong(), location, "Элемент массива PALETTE USING"),
+            var type when type == TypeSymbol.Double => ToInt32Checked(Math.Truncate(value.AsDouble()), location, "Элемент массива PALETTE USING"),
+            var type when type == TypeSymbol.Decimal => ToInt32Checked(decimal.Truncate(value.AsDecimal()), location, "Элемент массива PALETTE USING"),
+            _ => ReportInvalidRuntimeState<int>($"PALETTE USING не поддерживает элемент типа '{value.Type.Name}'.", location)
+        };
     }
 
     private ExecutionSignal ExecutePSet(BoundPSetStatement statement)
@@ -425,6 +532,15 @@ public sealed partial class Interpreter
             instructionName,
             "x/y",
             "координаты WINDOW должны задавать ненулевой логический прямоугольник в допустимом диапазоне, а текущий VIEW должен оставлять минимум два пикселя по каждой оси.",
+            location);
+    }
+
+    private void ReportInvalidTextViewport(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "row",
+            "верхняя и нижняя строки VIEW PRINT должны задавать корректную текстовую область внутри текущего SCREEN.",
             location);
     }
 

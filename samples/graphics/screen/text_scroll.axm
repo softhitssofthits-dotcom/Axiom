@@ -1,0 +1,12 @@
+﻿' Ожидается: SCREEN 0 после 25-й строки прокручивает окно вверх,
+' справа показывает вертикальную полосу прокрутки
+' и позволяет вручную вернуться к ранним строкам.
+SCREEN 0
+PRINT "SCREEN 0 text scroll"
+
+DIM i AS INTEGER
+FOR i = 1 TO 27
+    PRINT "line "; i
+NEXT
+
+PRINT "visible after scroll"

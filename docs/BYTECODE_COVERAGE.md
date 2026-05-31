@@ -656,6 +656,18 @@
 - Негативный паритет: частично, `MB3010` для вызова без графического режима сохраняется; отдельный отрицательный sample для этого среза не добавлялся;
 - Профиль: не приоритет, потому что это интерактивная графическая операция, а не горячий вычислительный сценарий.
 
+## Обновление реестра - 2026-05-28 - прокрутка SCREEN 0
+
+Дополнение к области `SCREEN` и текстового слоя:
+- VM: да, `BytecodeVm` проходит сценарий прокрутки `SCREEN 0` через тот же host-договор экранного текстового вывода;
+- Интерпретатор: да, использует тот же путь `WriteGraphicsText` и тот же договор перехода на новую строку;
+- Автотесты: да, добавлены IDE-проверки `ScreenZero_ScrollsVisibleTextWhenNewLinePassesLastRow`, `ScreenZero_ManualScrollShowsOlderHistoryAndReturnsToBottom`, `ScreenZero_EmptyPrintOnLastRowScrollsToBlankLastRow`, `ScreenZero_ClipsLongTextWithoutVerticalScroll`, `GraphicsScreen_DoesNotAutoScrollTextPastVisibleRows`, оконная проверка `ScreenZeroVerticalScrollMessage_ShowsOlderHistoryInVisibleWindow`, end-to-end проверка `Run_ScreenZeroScrollAcceptanceProgram_KeepsLatestVisibleLinesOnBytecodeVm` и acceptance-проверка `ScreenZeroTextScrollAcceptanceSample_RunsOnBytecodeVm`;
+- Runnable sample: да, добавлен `samples/graphics/screen/text_scroll.axm`;
+- Manual: да, обновлены `docs/manual/screen.html`, `docs/manual/graphics-text.html` и `docs/manual/scripts/search-index.js` под историю `SCREEN 0` и правую полосу прокрутки в окне IDE;
+- Сквозной VM: да, новый sample выполняется через `ExecutionMode.Bytecode` без отката на интерпретатор;
+- Негативный паритет: частично, новая runtime-диагностика не вводилась, а сохранённый договор отсутствия прокрутки в `SCREEN 1..10` закреплён IDE-регрессией;
+- Профиль: не приоритет, потому что шаг меняет пользовательский договор текстового окна, а не горячий вычислительный участок VM.
+
 ## Обновление реестра - 2026-05-14 - полный PAINT
 
 Дополнение к области `SCREEN` и операторов рисования:
@@ -778,3 +790,89 @@
 - Сквозной VM: да, адресные IDE- и execution-проверки проходят, а `Axiom.Ide.SmokeHarness` получил отдельный маршрут `--screen10-only`, который подтверждает фактические `SCREENWIDTH()` / `SCREENHEIGHT()`, расчёт `LOCATE` и финальный вывод через реальный `Axiom.Ide.exe`;
 - Профиль: не приоритет, потому что шаг уточняет host-геометрию режима `SCREEN 10`, а не добавляет новый вычислительно горячий сценарий;
 - Проектное решение Axiom: `SCREEN 10` выбирает рабочую область монитора по центру главного окна IDE, строит в ней максимально возможный клиентский прямоугольник `16:9`, не подгоняет размеры под кратность текстовой ячейки `8 x 12`, а `LOCATE` рассчитывает видимую сетку от фактических пикселей.
+
+## Обновление реестра - 2026-05-28 - аудит графического покрытия
+
+Уточнение после адресного аудита графической ветки:
+- `SCREEN 10`, `GET` / `PUT`, `VIEW`, `WINDOW`, `PMAP`, `DRAW`, `CIRCLE` и мышиный координатный договор повторно подтверждены через адресные runtime-, IDE- и execution-проверки, а также через smoke-маршруты `--screen10-only` и `--get-put-only` реального `Axiom.Ide`;
+- для `GET` / `PUT` негативный сценарий несовпадения формы буфера уже явно покрыт в interpreter- и `BytecodeVm`-проверках `Execute_GetRejectsBufferShapeMismatch()` и `Execute_CompiledGetRejectsBufferShapeMismatch()`;
+- для `PMAP` негативный сценарий селектора вне `0..3` уже явно покрыт в interpreter- и `BytecodeVm`-проверках `Execute_PMapRejectsSelectorOutsideRange()` и `Execute_CompiledPMapRejectsSelectorOutsideRange()`;
+- для `DRAW` негативный паритет уже доведён до `да` предыдущим приёмочным аудитом: проверены неизвестные команды, отрицательные длины, неверные форматы, историческая форма `X/VARPTR$`, dangling `B`/`N`, strict `B`/`N` перед немув-командами и controlled overflow;
+- для `VIEW`, `WINDOW` и полного `PAINT` остаётся честный статус `частично`: позитивные и общие runtime-диагностики покрыты, но отдельные отрицательные `.axm`-samples для некорректного viewport/window и недопустимых шаблонных аргументов `PAINT` пока не добавлялись;
+- новых пользовательских форм или нового покрытия VM этот аудит не вводит, поэтому статус профиля для графики остаётся `не приоритет`.
+
+## Обновление реестра - 2026-05-28 - отрицательные sample для VIEW, WINDOW и PAINT
+
+Дополнение к областям `VIEW`, `WINDOW` и полного `PAINT`:
+- Runnable sample: да, добавлены `samples/operators/view/invalid_bounds_error.axm`, `samples/operators/window/zero_size_error.axm` и `samples/operators/paint/empty_pattern_error.axm`;
+- Автотесты: да, добавлена acceptance-проверка `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity`, которая запускает эти три sample в режимах `Bytecode` и `Interpreter`;
+- Сквозной VM: да, для всех трёх sample подтверждён запуск через `ExecutionEngineKind.BytecodeVm` без fallback;
+- Негативный паритет: да для выбранных отрицательных сценариев `VIEW`, `WINDOW` и полного `PAINT`: `VIEW` с недопустимыми границами, `WINDOW` с нулевой шириной и `PAINT` с пустым строковым образцом одинаково дают `MB3007` в interpreter и `BytecodeVm`;
+- Manual: без изменений, потому что страницы `docs/manual/view.html`, `docs/manual/window.html` и `docs/manual/graphics-primitives.html` уже описывают соответствующие ограничения; этот шаг добавил недостающие runnable-проверки, а не новый пользовательский договор.
+
+## Обновление реестра - 2026-05-28 - оператор VIEW PRINT
+
+Дополнение к области `SCREEN`, `VIEW` и текстового слоя:
+- VM: да, `BytecodeVm` выполняет отдельную инструкцию `ViewPrint`, различает сброс `VIEW PRINT` и форму `VIEW PRINT top TO bottom`;
+- Интерпретатор: да, использует тот же host-договор `SetTextViewport(...)` / `ResetTextViewport()`;
+- Автотесты: да, есть parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-проверки для сброса, установки строкового диапазона, прокрутки внутри него и ошибок некорректных строк;
+- Runnable sample: да, добавлен `samples/operators/view-print/scrolling_region.axm`;
+- Manual: да, обновлены `docs/manual/view.html`, `docs/manual/graphics.html`, `docs/manual/graphics-text.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, добавлена acceptance-проверка `ViewPrintAcceptanceSample_RunsOnBytecodeVm`, а общий audit-путь получает `ESC` для `samples/operators/view-print/`;
+- Негативный паритет: частично, interpreter и `BytecodeVm` уже покрывают `MB3010` без графического режима и `MB3007` для неверного диапазона в runtime-тестах, но отдельный отрицательный `.axm`-sample для `VIEW PRINT` пока не добавлялся;
+- Профиль: не приоритет, потому что оператор меняет текстовое окно вывода, а не горячий вычислительный участок VM.
+
+## Обновление реестра - 2026-05-28 - VIEW PRINT получил отрицательный sample-паритет
+
+Дополнение к области `SCREEN`, `VIEW` и текстового слоя:
+- Runnable sample: да, добавлен `samples/operators/view-print/invalid_rows_error.axm` для неверного диапазона строк;
+- Автотесты: да, `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` теперь включает `VIEW PRINT` рядом с отрицательными sample для `VIEW`, `WINDOW` и `PAINT`;
+- Сквозной VM: да, новый negative sample прогоняется через `ExecutionEngineKind.BytecodeVm` без fallback в том же execution-теcте;
+- Негативный паритет: да, неверный диапазон строк в `VIEW PRINT` теперь подтверждён отдельным runnable sample и одинаковой диагностикой `MB3007` в interpreter и `BytecodeVm`;
+- Manual: без изменений, потому что пользовательский договор оператора уже был отражён в `docs/manual/view.html`, а этот шаг добавил недостающую runnable-негативную проверку.
+
+## Обновление реестра - 2026-05-28 - PMAP получил отрицательный sample-паритет
+
+Дополнение к области `SCREEN`, `VIEW`, `WINDOW` и `PMAP`:
+- Runnable sample: да, добавлен `samples/functions/pmap/invalid_selector_error.axm` для селектора вне диапазона `0..3`;
+- Автотесты: да, `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` теперь включает этот sample рядом с отрицательными графическими sample;
+- Сквозной VM: да, sample прогоняется через `ExecutionEngineKind.BytecodeVm` без fallback в той же паритетной execution-проверке;
+- Негативный паритет: да, неверный селектор `PMAP` теперь подтверждён отдельным runnable sample и одинаковой диагностикой `MB3007` в interpreter и `BytecodeVm`;
+- Manual: без изменений, потому что `docs/manual/pmap.html` уже описывает диагностику селектора вне диапазона, а этот шаг добавил недостающую runnable-негативную проверку.
+
+## Обновление реестра - 2026-05-28 - оператор PALETTE
+
+Дополнение к области `SCREEN` и палитры:
+- VM: да, `BytecodeVm` выполняет отдельную инструкцию `Palette`, различает сброс палитры и форму `PALETTE index, color`;
+- Интерпретатор: да, использует тот же договор хоста `ResetPalette()` / `SetPaletteColor(index, color)`;
+- Автотесты: да, добавлены проверки парсера, связывателя, интерпретатора, `BytecodeVm`, IDE и слоя запуска для сброса, переназначения одного индекса, диагностики без графического `SCREEN` и переназначения цветов уже нарисованных пикселей в `ProgramConsoleService`;
+- Запускаемый пример: да, добавлен `samples/operators/palette/change_and_reset_colors.axm`;
+- Справочник: да, добавлен `docs/manual/palette.html`, обновлены `docs/manual/graphics.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `PaletteAcceptanceSample_RunsOnBytecodeVm` запускает пример через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор, а общий позитивный аудит получает `ESC` для `samples/operators/palette/`;
+- Негативный паритет: частично, диагностика времени выполнения `MB3010` для отсутствующего графического режима покрыта тестами интерпретатора и `BytecodeVm`, отдельный отрицательный `.axm`-пример для `PALETTE` пока не добавлялся;
+- Профиль: не приоритет, потому что `PALETTE` меняет таблицу отображения цветов, а не вводит горячий вычислительный цикл VM;
+- Проектное решение Axiom: пиксели кадрового буфера хранят цветовые индексы, поэтому `PALETTE index, color` немедленно меняет вид уже нарисованных пикселей, а `POINT(x, y)` продолжает возвращать сохранённый индекс.
+
+## Обновление реестра - 2026-05-31 - форма PALETTE USING
+
+Дополнение к оператору `PALETTE`:
+- VM: да, та же инструкция `Palette` теперь различает `0` значений для сброса, `2` значения для `PALETTE index, color` и `1` значение для `PALETTE USING array`;
+- Интерпретатор: да, применяет видимые элементы одномерного числового массива к индексам палитры `0..255` через существующий договор хоста `SetPaletteColor(index, color)`;
+- Автотесты: да, добавлены проверки парсера, связывателя, интерпретатора, `BytecodeVm` и слоя запуска для формы `PALETTE USING`;
+- Запускаемый пример: да, добавлен `samples/operators/palette/using_array_colors.axm`;
+- Справочник: да, обновлены `docs/manual/palette.html`, `docs/manual/graphics.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `PaletteUsingAcceptanceSample_RunsOnBytecodeVm` запускает пример через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: частично, невыделенный массив и отсутствие `SCREEN` используют существующие диагностики времени выполнения, отдельный отрицательный `.axm`-пример для `PALETTE USING` пока не добавлялся;
+- Профиль: не приоритет, потому что операция ограничена максимум первыми `256` элементами палитры.
+
+## Обновление реестра - 2026-05-31 - оператор PCOPY
+
+Дополнение к области `SCREEN` и экранных страниц:
+- VM: да, `BytecodeVm` выполняет отдельную инструкцию `PCopy` и делегирует копирование страниц договору хоста `CopyScreenPage(sourcePage, destinationPage)`;
+- Интерпретатор: да, использует тот же договор хоста и ту же проверку активного графического `SCREEN`;
+- Автотесты: да, есть проверки парсера, связывателя, интерпретатора, `BytecodeVm`, IDE и слоя запуска для `SCREEN` с активной/видимой страницей, копирования пикселей и палитры страницы, диагностики без графического `SCREEN` и неверного номера страницы;
+- Запускаемые примеры: да, позитивный пример `samples/operators/pcopy/page_copy_buffer.axm`, отрицательный пример `samples/graphics/screen/invalid_page_error.axm`, а также отрицательные примеры `samples/operators/pcopy/invalid_page_error.axm` и `samples/operators/pcopy/text_screen_error.axm`;
+- Справочник: да, добавлен `docs/manual/pcopy.html`, обновлены `docs/manual/screen.html`, `docs/manual/graphics.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `PCopyAcceptanceSample_RunsOnBytecodeVm` запускает позитивный пример через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор, а `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` включает неверный номер страницы;
+- Негативный паритет: да, неверная страница `SCREEN 1, , 4, 0`, неверная страница `PCOPY 4, 0` и `PCOPY` в текстовом `SCREEN 0` подтверждены отдельными запускаемыми примерами и одинаковыми диагностиками в интерпретаторе и `BytecodeVm`;
+- Профиль: не приоритет, потому что `PCOPY` является копированием целой графической страницы через хост, а не горячим вычислительным циклом VM.

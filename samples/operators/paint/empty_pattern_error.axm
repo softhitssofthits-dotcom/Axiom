@@ -1,0 +1,4 @@
+' Ожидаемая диагностика: MB3007, строковый образец PAINT не может быть пустым.
+SCREEN 1
+DIM pattern AS STRING = ""
+PAINT (10, 10), pattern, 9

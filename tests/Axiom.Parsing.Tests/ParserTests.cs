@@ -323,6 +323,30 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_ScreenStatementSupportsPages()
+    {
+        var program = ParseProgram("SCREEN 1, , 2, 3", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<ScreenStatementSyntax>(program);
+        Assert.NotNull(statement.ColorSwitchCommaToken);
+        Assert.Null(statement.ColorSwitchExpression);
+        Assert.Equal(2, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(statement.ActivePageExpression).LiteralToken.Value));
+        Assert.Equal(3, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(statement.VisualPageExpression).LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_PCopyStatement()
+    {
+        var program = ParseProgram("PCOPY 1, 0", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<PCopyStatementSyntax>(program);
+        Assert.Equal(1, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(statement.SourcePageExpression).LiteralToken.Value));
+        Assert.Equal(0, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(statement.DestinationPageExpression).LiteralToken.Value));
+    }
+
+    [Fact]
     public void Parse_SleepStatementWithDuration()
     {
         var program = ParseProgram("SLEEP 500", out var diagnostics);
@@ -372,6 +396,44 @@ public sealed class ParserTests
         Assert.Null(color.BackgroundExpression);
         Assert.NotNull(color.TransparentKeyword);
         Assert.Equal(SyntaxKind.TransparentKeyword, color.TransparentKeyword!.Kind);
+    }
+
+    [Fact]
+    public void Parse_PaletteResetStatement()
+    {
+        var program = ParseProgram("PALETTE", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var palette = AssertGlobalStatement<PaletteStatementSyntax>(program);
+        Assert.True(palette.IsReset);
+        Assert.Null(palette.IndexExpression);
+        Assert.Null(palette.ColorExpression);
+    }
+
+    [Fact]
+    public void Parse_PaletteColorStatement()
+    {
+        var program = ParseProgram("PALETTE 1, 196", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var palette = AssertGlobalStatement<PaletteStatementSyntax>(program);
+        Assert.False(palette.IsReset);
+        Assert.Equal(1, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(palette.IndexExpression).LiteralToken.Value));
+        Assert.Equal(SyntaxKind.CommaToken, palette.CommaToken?.Kind);
+        Assert.Equal(196, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(palette.ColorExpression).LiteralToken.Value));
+    }
+
+    [Fact]
+    public void Parse_PaletteUsingStatement()
+    {
+        var program = ParseProgram("PALETTE USING colors", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var palette = AssertGlobalStatement<PaletteStatementSyntax>(program);
+        Assert.False(palette.IsReset);
+        Assert.True(palette.IsUsing);
+        Assert.Equal(SyntaxKind.UsingKeyword, palette.UsingKeyword?.Kind);
+        Assert.Equal("colors", Assert.IsType<NameExpressionSyntax>(palette.ValuesExpression).IdentifierToken.Text);
     }
 
     [Fact]
@@ -452,6 +514,31 @@ public sealed class ParserTests
         Assert.NotNull(view.BottomRightPoint);
         Assert.Null(view.FillColorExpression);
         Assert.NotNull(view.BorderColorExpression);
+    }
+
+    [Fact]
+    public void Parse_ViewPrintResetStatement()
+    {
+        var program = ParseProgram("VIEW PRINT", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var viewPrint = AssertGlobalStatement<ViewPrintStatementSyntax>(program);
+        Assert.True(viewPrint.IsReset);
+        Assert.Null(viewPrint.TopExpression);
+        Assert.Null(viewPrint.BottomExpression);
+    }
+
+    [Fact]
+    public void Parse_ViewPrintStatementSupportsTopAndBottomRows()
+    {
+        var program = ParseProgram("VIEW PRINT 10 TO 20", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var viewPrint = AssertGlobalStatement<ViewPrintStatementSyntax>(program);
+        Assert.False(viewPrint.IsReset);
+        Assert.NotNull(viewPrint.TopExpression);
+        Assert.NotNull(viewPrint.ToKeyword);
+        Assert.NotNull(viewPrint.BottomExpression);
     }
 
     [Fact]
