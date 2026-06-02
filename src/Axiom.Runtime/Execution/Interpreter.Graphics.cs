@@ -383,6 +383,165 @@ public sealed partial class Interpreter
         }
     }
 
+    private ExecutionSignal ExecuteDrawImage(BoundDrawImageStatement statement)
+    {
+        RequireScreenActive("DRAWIMAGE", statement.Location);
+        var image = RequireImage("DRAWIMAGE", EvaluateExpression(statement.ImageExpression), statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        var width = statement.WidthExpression is null ? image.Width : EvaluateExpression(statement.WidthExpression).AsLong();
+        var height = statement.HeightExpression is null ? image.Height : EvaluateExpression(statement.HeightExpression).AsLong();
+        ValidateDrawImageSize(width, height, statement.Location);
+        _host.DrawImage(
+            image,
+            x,
+            y,
+            ToInt32Checked(width, statement.Location, "Ширина DRAWIMAGE"),
+            ToInt32Checked(height, statement.Location, "Высота DRAWIMAGE"));
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteDrawSprite(BoundDrawSpriteStatement statement)
+    {
+        RequireScreenActive("DRAWSPRITE", statement.Location);
+        var sprite = RequireSprite("DRAWSPRITE", EvaluateExpression(statement.SpriteExpression), statement.Location);
+        var frame = EvaluateExpression(statement.FrameExpression).AsLong();
+        ValidateSpriteFrame(sprite, frame, statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        var width = statement.WidthExpression is null ? sprite.FrameWidth : EvaluateExpression(statement.WidthExpression).AsLong();
+        var height = statement.HeightExpression is null ? sprite.FrameHeight : EvaluateExpression(statement.HeightExpression).AsLong();
+        ValidateDrawSpriteSize(width, height, statement.Location);
+        _host.DrawSprite(
+            sprite,
+            ToInt32Checked(frame, statement.Location, "Номер кадра DRAWSPRITE"),
+            x,
+            y,
+            ToInt32Checked(width, statement.Location, "Ширина DRAWSPRITE"),
+            ToInt32Checked(height, statement.Location, "Высота DRAWSPRITE"));
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private RuntimeValue EvaluateLoadImage(BoundCallExpression expression, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            ReportBuiltInArgumentError("LOADIMAGE", "path", "не должен быть пустым.", expression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        var image = _host.LoadImage(path);
+        if (image is null)
+        {
+            ReportInvalidRuntimeState($"LOADIMAGE: не удалось загрузить изображение '{path}'.", expression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        return RuntimeValue.FromImage(image);
+    }
+
+    private RuntimeValue EvaluateLoadSprite(BoundCallExpression expression, string path, long frameWidth, long frameHeight)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            ReportBuiltInArgumentError("LOADSPRITE", "path", "не должен быть пустым.", expression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        ValidateSpriteFrameSize(frameWidth, frameHeight, expression.Location);
+        var sprite = _host.LoadSprite(
+            path,
+            ToInt32Checked(frameWidth, expression.Location, "Ширина кадра LOADSPRITE"),
+            ToInt32Checked(frameHeight, expression.Location, "Высота кадра LOADSPRITE"));
+        if (sprite is null)
+        {
+            ReportInvalidRuntimeState($"LOADSPRITE: не удалось загрузить спрайт '{path}'.", expression.Location);
+            throw new RuntimeFailureException();
+        }
+
+        return RuntimeValue.FromSprite(sprite);
+    }
+
+    private RuntimeImageValue RequireImage(string operationName, RuntimeValue value, TextLocation location)
+    {
+        var image = value.AsImage();
+        if (image is not null)
+        {
+            return image;
+        }
+
+        ReportInvalidRuntimeState($"{operationName}: значение IMAGE пустое.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private RuntimeSpriteValue RequireSprite(string operationName, RuntimeValue value, TextLocation location)
+    {
+        var sprite = value.AsSprite();
+        if (sprite is not null && sprite.HasFrames)
+        {
+            return sprite;
+        }
+
+        ReportInvalidRuntimeState($"{operationName}: значение SPRITE пустое или не содержит доступных кадров.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private static int GetImageWidth(RuntimeValue value) => value.AsImage()?.Width ?? 0;
+
+    private static int GetImageHeight(RuntimeValue value) => value.AsImage()?.Height ?? 0;
+
+    private static int GetSpriteWidth(RuntimeValue value) => value.AsSprite()?.FrameWidth ?? 0;
+
+    private static int GetSpriteHeight(RuntimeValue value) => value.AsSprite()?.FrameHeight ?? 0;
+
+    private static int GetSpriteCount(RuntimeValue value) => value.AsSprite()?.FrameCount ?? 0;
+
+    private void ValidateDrawImageSize(long width, long height, TextLocation location)
+    {
+        if (width > 0 && height > 0)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError("DRAWIMAGE", "width/height", "должны быть положительными целыми значениями.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateSpriteFrameSize(long width, long height, TextLocation location)
+    {
+        if (width > 0 && height > 0)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError("LOADSPRITE", "frameWidth/frameHeight", "должны быть положительными целыми значениями.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateDrawSpriteSize(long width, long height, TextLocation location)
+    {
+        if (width > 0 && height > 0)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError("DRAWSPRITE", "width/height", "должны быть положительными целыми значениями.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateSpriteFrame(RuntimeSpriteValue sprite, long frame, TextLocation location)
+    {
+        if (frame >= 0 && frame < sprite.FrameCount)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError("DRAWSPRITE", "frame", "должен указывать существующий кадр спрайта.", location);
+        throw new RuntimeFailureException();
+    }
+
     private GraphicsPaintRequest CreatePaintRequest(
         long x,
         long y,

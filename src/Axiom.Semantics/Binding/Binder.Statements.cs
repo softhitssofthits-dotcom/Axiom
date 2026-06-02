@@ -45,6 +45,8 @@ public sealed partial class Binder
             CircleStatementSyntax circleStatement => BindCircleStatement(circleStatement),
             PaintStatementSyntax paintStatement => BindPaintStatement(paintStatement),
             DrawStatementSyntax drawStatement => BindDrawStatement(drawStatement),
+            DrawImageStatementSyntax drawImageStatement => BindDrawImageStatement(drawImageStatement),
+            DrawSpriteStatementSyntax drawSpriteStatement => BindDrawSpriteStatement(drawSpriteStatement),
             OnKeyStatementSyntax onKeyStatement => BindOnKeyStatement(onKeyStatement),
             OnMouseStatementSyntax onMouseStatement => BindOnMouseStatement(onMouseStatement),
             OpenStatementSyntax openStatement => BindOpenStatement(openStatement),

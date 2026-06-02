@@ -486,6 +486,30 @@ public sealed class BoundProgramLowerer
                 LowerExpression(draw.CommandExpression, instructions);
                 instructions.Add(LoweredInstruction.Draw(draw.Location));
                 break;
+            case BoundDrawImageStatement drawImage:
+                LowerExpression(drawImage.ImageExpression, instructions);
+                LowerExpression(drawImage.XExpression, instructions);
+                LowerExpression(drawImage.YExpression, instructions);
+                if (drawImage.HasScale)
+                {
+                    LowerExpression(drawImage.WidthExpression!, instructions);
+                    LowerExpression(drawImage.HeightExpression!, instructions);
+                }
+                instructions.Add(LoweredInstruction.DrawImage(drawImage.Location, drawImage.HasScale));
+                break;
+
+            case BoundDrawSpriteStatement drawSprite:
+                LowerExpression(drawSprite.SpriteExpression, instructions);
+                LowerExpression(drawSprite.FrameExpression, instructions);
+                LowerExpression(drawSprite.XExpression, instructions);
+                LowerExpression(drawSprite.YExpression, instructions);
+                if (drawSprite.HasScale)
+                {
+                    LowerExpression(drawSprite.WidthExpression!, instructions);
+                    LowerExpression(drawSprite.HeightExpression!, instructions);
+                }
+                instructions.Add(LoweredInstruction.DrawSprite(drawSprite.Location, drawSprite.HasScale));
+                break;
 
             case BoundOnKeyStatement onKey:
                 LowerOnKey(onKey, instructions);
@@ -1727,7 +1751,7 @@ public sealed class BoundProgramLowerer
 
     private static bool CanUseImplicitDefaultSlotValue(TypeSymbol type)
     {
-        return type is UserDefinedTypeSymbol or FunctionTypeSymbol || type == TypeSymbol.File;
+        return type is UserDefinedTypeSymbol or FunctionTypeSymbol || type == TypeSymbol.File || type == TypeSymbol.Image || type == TypeSymbol.Sprite;
     }
 
     private void ReportUnsupported(BoundNode node, string category)

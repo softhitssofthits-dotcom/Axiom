@@ -77,6 +77,18 @@ public sealed class BinderTests
     }
 
     [Fact]
+    public void Bind_ImageVariableDeclaration()
+    {
+        var program = BindProgram("DIM hero AS IMAGE", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal("hero", declaration.Variable.Name);
+        Assert.Equal(TypeSymbol.Image, declaration.Variable.Type);
+        Assert.Null(declaration.Initializer);
+    }
+
+    [Fact]
     public void Bind_InKeyFunction_ReturnsString()
     {
         var program = BindProgram("PRINT INKEY()", out var diagnostics);
@@ -265,6 +277,134 @@ DRAW "C" + STR(penColor) + "R20"
         _ = BindProgram("DRAW TRUE", out var diagnostics);
 
         Assert.Contains(diagnostics, static d => d.Code == "MB2003");
+    }
+
+    [Fact]
+    public void Bind_ImageFunctionsReturnExpectedTypes()
+    {
+        const string text = """
+DIM hero AS IMAGE
+hero = LOADIMAGE("assets/hero.png")
+PRINT IMAGEWIDTH(hero)
+PRINT IMAGEHEIGHT(hero)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
+        var loadCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        Assert.Equal(TypeSymbol.Image, loadCall.Type);
+        Assert.Equal(BuiltinFunctionId.LoadImage, AssertCalledFunction(loadCall).BuiltinId);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.ImageWidth);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Integer, BuiltinFunctionId.ImageHeight);
+    }
+
+    [Fact]
+    public void Bind_DrawImageBindsImageCoordinatesAndScale()
+    {
+        const string text = """
+DIM hero AS IMAGE
+DRAWIMAGE hero, 10, 20
+DRAWIMAGE hero, 10, 20, 32, 16
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var natural = Assert.IsType<BoundDrawImageStatement>(program.GlobalStatements[1]);
+        var scaled = Assert.IsType<BoundDrawImageStatement>(program.GlobalStatements[2]);
+        Assert.Equal(TypeSymbol.Image, natural.ImageExpression.Type);
+        Assert.Equal(TypeSymbol.Long, natural.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, natural.YExpression.Type);
+        Assert.False(natural.HasScale);
+        Assert.True(scaled.HasScale);
+        Assert.Equal(TypeSymbol.Long, scaled.WidthExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, scaled.HeightExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_ImageFeaturesRejectWrongTypes()
+    {
+        const string text = """
+DIM text AS STRING = "x"
+DIM count AS INTEGER = 1
+PRINT LOADIMAGE(1)
+PRINT IMAGEWIDTH(text)
+PRINT IMAGEHEIGHT(count)
+DRAWIMAGE text, "x", 20, 32, FALSE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.True(diagnostics.Count >= 5);
+        Assert.All(diagnostics, static diagnostic => Assert.Equal("MB2003", diagnostic.Code));
+    }
+
+    [Fact]
+    public void Bind_SpriteFunctionsReturnExpectedTypes()
+    {
+        const string text = """
+DIM hero AS SPRITE
+hero = LOADSPRITE("assets/walk.png", 16, 24)
+PRINT SPRITEWIDTH(hero)
+PRINT SPRITEHEIGHT(hero)
+PRINT SPRITECOUNT(hero)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
+        var loadCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        Assert.Equal(TypeSymbol.Sprite, loadCall.Type);
+        Assert.Equal(BuiltinFunctionId.LoadSprite, AssertCalledFunction(loadCall).BuiltinId);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.SpriteWidth);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Integer, BuiltinFunctionId.SpriteHeight);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Integer, BuiltinFunctionId.SpriteCount);
+    }
+
+    [Fact]
+    public void Bind_DrawSpriteBindsSpriteFrameCoordinatesAndScale()
+    {
+        const string text = """
+DIM hero AS SPRITE
+DRAWSPRITE hero, 1, 10, 20
+DRAWSPRITE hero, 1, 10, 20, 32, 16
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var natural = Assert.IsType<BoundDrawSpriteStatement>(program.GlobalStatements[1]);
+        var scaled = Assert.IsType<BoundDrawSpriteStatement>(program.GlobalStatements[2]);
+        Assert.Equal(TypeSymbol.Sprite, natural.SpriteExpression.Type);
+        Assert.Equal(TypeSymbol.Long, natural.FrameExpression.Type);
+        Assert.Equal(TypeSymbol.Long, natural.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, natural.YExpression.Type);
+        Assert.False(natural.HasScale);
+        Assert.True(scaled.HasScale);
+        Assert.Equal(TypeSymbol.Long, scaled.WidthExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, scaled.HeightExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_SpriteFeaturesRejectWrongTypes()
+    {
+        const string text = """
+DIM text AS STRING = "x"
+DIM count AS INTEGER = 1
+PRINT LOADSPRITE(1, "w", FALSE)
+PRINT SPRITEWIDTH(text)
+PRINT SPRITEHEIGHT(count)
+PRINT SPRITECOUNT(text)
+DRAWSPRITE text, "frame", "x", 20, 32, FALSE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.True(diagnostics.Count >= 8);
+        Assert.All(diagnostics, static diagnostic => Assert.Equal("MB2003", diagnostic.Code));
     }
 
     [Fact]

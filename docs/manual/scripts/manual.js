@@ -154,6 +154,8 @@
         { id: "pmap", href: "pmap.html", label: "Функция PMAP" },
         { id: "palette", href: "palette.html", label: "Оператор PALETTE" },
         { id: "pcopy", href: "pcopy.html", label: "Оператор PCOPY" },
+        { id: "images", href: "images.html", label: "Изображения IMAGE" },
+        { id: "sprites", href: "sprites.html", label: "Спрайты SPRITE" },
         { id: "graphics-text", href: "graphics-text.html", label: "Текст на экране" },
         { id: "graphics-primitives", href: "graphics-primitives.html", label: "Операторы рисования" },
         { id: "get-put", href: "get-put.html", label: "Операторы GET и PUT" },

@@ -755,6 +755,32 @@ public sealed class BytecodeModuleValidator
                     }
                     break;
 
+                case Opcode.DrawImage:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.GetOperand(0) is not 0 and not 1)
+                    {
+                        Report(
+                            "BC4130",
+                            $"Инструкция DrawImage в процедуре '{routine.Name}' ожидает флаг масштабирования 0 или 1, получено {instruction.GetOperand(0)}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                    break;
+
+                case Opcode.DrawSprite:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.GetOperand(0) is not 0 and not 1)
+                    {
+                        Report(
+                            "BC4131",
+                            $"Инструкция DrawSprite в процедуре '{routine.Name}' ожидает флаг масштабирования 0 или 1, получено {instruction.GetOperand(0)}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+                    break;
+
                 case Opcode.StatementBoundary:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
@@ -1638,6 +1664,48 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                break;
+            }
+
+            case Opcode.DrawImage:
+            {
+                var hasScale = instruction.GetOperand(0) != 0;
+                if (hasScale)
+                {
+                    var heightType = Pop();
+                    var widthType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина DRAWIMAGE");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота DRAWIMAGE");
+                }
+
+                var yType = Pop();
+                var xType = Pop();
+                var imageType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, imageType, TypeSymbol.Image, "изображение DRAWIMAGE");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X DRAWIMAGE");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y DRAWIMAGE");
+                break;
+            }
+
+            case Opcode.DrawSprite:
+            {
+                var hasScale = instruction.GetOperand(0) != 0;
+                if (hasScale)
+                {
+                    var heightType = Pop();
+                    var widthType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина DRAWSPRITE");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота DRAWSPRITE");
+                }
+
+                var yType = Pop();
+                var xType = Pop();
+                var frameType = Pop();
+                var spriteType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, spriteType, TypeSymbol.Sprite, "спрайт DRAWSPRITE");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, frameType, TypeSymbol.Long, "номер кадра DRAWSPRITE");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X DRAWSPRITE");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y DRAWSPRITE");
                 break;
             }
 
@@ -3338,6 +3406,14 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.ViewPrint:
                 popCount = instruction.GetOperand(0);
+                return true;
+
+            case Opcode.DrawImage:
+                popCount = instruction.GetOperand(0) == 0 ? 3 : 5;
+                return true;
+
+            case Opcode.DrawSprite:
+                popCount = instruction.GetOperand(0) == 0 ? 4 : 6;
                 return true;
 
             case Opcode.JumpIfTrue:

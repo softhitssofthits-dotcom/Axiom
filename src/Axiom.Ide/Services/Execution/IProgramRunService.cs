@@ -12,7 +12,8 @@ public interface IProgramRunService
         string sourceText,
         ExecutionMode mode = ExecutionMode.Bytecode,
         IEnumerable<int>? sourceBreakpointLines = null,
-        bool stopBeforeFirstInstruction = false);
+        bool stopBeforeFirstInstruction = false,
+        string? sourceFilePath = null);
 
     ProgramRunResult Continue(BytecodeVmStopState stopState);
 

@@ -42,6 +42,8 @@ public sealed partial class Parser
             SyntaxKind.CircleKeyword => ParseCircleStatement(),
             SyntaxKind.PaintKeyword => ParsePaintStatement(),
             SyntaxKind.DrawKeyword => ParseDrawStatement(),
+            SyntaxKind.DrawImageKeyword => ParseDrawImageStatement(),
+            SyntaxKind.DrawSpriteKeyword => ParseDrawSpriteStatement(),
             SyntaxKind.GetKeyword => ParseGetStatement(),
             SyntaxKind.PutKeyword => ParsePutStatement(),
             SyntaxKind.OnKeyword => ParseOnStatement(),
@@ -576,6 +578,78 @@ public sealed partial class Parser
         var drawKeyword = Match(SyntaxKind.DrawKeyword, "DRAW");
         var commandExpression = ParseExpression();
         return new DrawStatementSyntax(drawKeyword, commandExpression);
+    }
+
+    private DrawImageStatementSyntax ParseDrawImageStatement()
+    {
+        var drawImageKeyword = Match(SyntaxKind.DrawImageKeyword, "DRAWIMAGE");
+        var imageExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после изображения DRAWIMAGE");
+        var xExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после координаты X DRAWIMAGE");
+        var yExpression = ParseExpression();
+        SyntaxToken? widthCommaToken = null;
+        ExpressionSyntax? widthExpression = null;
+        SyntaxToken? heightCommaToken = null;
+        ExpressionSyntax? heightExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            widthCommaToken = NextToken();
+            widthExpression = ParseExpression();
+            heightCommaToken = Match(SyntaxKind.CommaToken, "',' после ширины DRAWIMAGE");
+            heightExpression = ParseExpression();
+        }
+
+        return new DrawImageStatementSyntax(
+            drawImageKeyword,
+            imageExpression,
+            xCommaToken,
+            xExpression,
+            yCommaToken,
+            yExpression,
+            widthCommaToken,
+            widthExpression,
+            heightCommaToken,
+            heightExpression);
+    }
+
+    private DrawSpriteStatementSyntax ParseDrawSpriteStatement()
+    {
+        var drawSpriteKeyword = Match(SyntaxKind.DrawSpriteKeyword, "DRAWSPRITE");
+        var spriteExpression = ParseExpression();
+        var frameCommaToken = Match(SyntaxKind.CommaToken, "',' после спрайта DRAWSPRITE");
+        var frameExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после номера кадра DRAWSPRITE");
+        var xExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после координаты X DRAWSPRITE");
+        var yExpression = ParseExpression();
+        SyntaxToken? widthCommaToken = null;
+        ExpressionSyntax? widthExpression = null;
+        SyntaxToken? heightCommaToken = null;
+        ExpressionSyntax? heightExpression = null;
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            widthCommaToken = NextToken();
+            widthExpression = ParseExpression();
+            heightCommaToken = Match(SyntaxKind.CommaToken, "',' после ширины DRAWSPRITE");
+            heightExpression = ParseExpression();
+        }
+
+        return new DrawSpriteStatementSyntax(
+            drawSpriteKeyword,
+            spriteExpression,
+            frameCommaToken,
+            frameExpression,
+            xCommaToken,
+            xExpression,
+            yCommaToken,
+            yExpression,
+            widthCommaToken,
+            widthExpression,
+            heightCommaToken,
+            heightExpression);
     }
 
     private GetStatementSyntax ParseGetStatement()

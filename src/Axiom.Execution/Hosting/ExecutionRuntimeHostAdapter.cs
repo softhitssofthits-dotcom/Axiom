@@ -238,6 +238,28 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         }
     }
 
+    public RuntimeImageValue? LoadImage(string path) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadImage(path) : null;
+
+    public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadSprite(path, frameWidth, frameHeight) : null;
+
+    public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawImage(image, x, y, width, height);
+        }
+    }
+
+    public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawSprite(sprite, frame, x, y, width, height);
+        }
+    }
+
     public bool SetTextViewport(int topRow, int bottomRow) =>
         _inputProvider is IGraphicsHost graphicsHost &&
         graphicsHost.SetTextViewport(topRow, bottomRow);

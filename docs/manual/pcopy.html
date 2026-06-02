@@ -68,6 +68,7 @@ PCOPY 1, 0
 SCREEN 1, , 0, 0
 PRINT "visible page="; POINT(20, 40)</code></pre>
                 <p>Программа рисует линию на активной странице <code>1</code>, пока видимой остаётся страница <code>0</code>, и меняет вид индекса <code>1</code> через <code>PALETTE</code>. Оператор <code>PCOPY 1, 0</code> переносит готовое изображение и палитру на страницу <code>0</code>. После переключения активной страницы на <code>0</code> функция <code>POINT</code> подтверждает тот же цветовой индекс.</p>
+                <p>Тот же приём подходит для кадрового вывода спрайтов: программа может рисовать <code>DRAWSPRITE</code> на скрытой странице, а затем переносить готовый кадр на видимую страницу через <code>PCOPY</code>.</p>
             </section>
 
             <section class="article-section">
@@ -83,6 +84,7 @@ PRINT "visible page="; POINT(20, 40)</code></pre>
                 <p>Готовые примеры для ручной и отрицательной проверки находятся в <code>samples/operators/pcopy/</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование скрытой страницы на видимую</a></li>
+                    <li><a href="../../samples/graphics/sprites/page_flip_walk.axm">SPRITE и PCOPY: кадр на скрытой странице</a></li>
                     <li><a href="../../samples/operators/pcopy/invalid_page_error.axm">PCOPY: ошибка неверного номера страницы</a></li>
                     <li><a href="../../samples/operators/pcopy/text_screen_error.axm">PCOPY: ошибка в текстовом SCREEN 0</a></li>
                 </ul>

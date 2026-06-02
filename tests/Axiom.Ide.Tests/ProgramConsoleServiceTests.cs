@@ -596,6 +596,114 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void LoadImage_DecodesRepositoryIcon()
+    {
+        var service = new ProgramConsoleService
+        {
+            ResourceBaseDirectory = FindRepositoryRoot()
+        };
+
+        var image = service.LoadImage("src/Axiom.Ide/Assets/axiom.ico");
+
+        Assert.NotNull(image);
+        Assert.True(image.Width > 0);
+        Assert.True(image.Height > 0);
+        Assert.Equal(image.Width * image.Height, image.BgraPixels.Count);
+    }
+
+    [Fact]
+    public void LoadImage_ResolvesRelativePathAgainstResourceBaseDirectory()
+    {
+        var service = new ProgramConsoleService
+        {
+            ResourceBaseDirectory = Path.Combine(FindRepositoryRoot(), "samples", "graphics", "images")
+        };
+
+        var image = service.LoadImage("../../../src/Axiom.Ide/Assets/axiom.ico");
+
+        Assert.NotNull(image);
+        Assert.True(image.Width > 0);
+        Assert.True(image.Height > 0);
+    }
+
+    [Fact]
+    public void LoadSprite_ResolvesRelativePathAndCountsFrames()
+    {
+        var service = new ProgramConsoleService
+        {
+            ResourceBaseDirectory = Path.Combine(FindRepositoryRoot(), "samples", "graphics", "sprites")
+        };
+
+        var sprite = service.LoadSprite("assets/walk_sheet.png", 16, 16);
+
+        Assert.NotNull(sprite);
+        Assert.Equal(16, sprite.FrameWidth);
+        Assert.Equal(16, sprite.FrameHeight);
+        Assert.Equal(4, sprite.FrameCount);
+    }
+
+    [Fact]
+    public void DrawImage_ComposesTrueColorPixelsAndPointReturnsNearestPaletteIndex()
+    {
+        var service = new ProgramConsoleService();
+        var image = new RuntimeImageValue(1, 1, [0x80FF0000u]);
+
+        service.ActivateScreen(1);
+        service.SetPixel(20, 40, 0);
+        service.DrawImage(image, 20, 40, 1, 1);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var pixelIndex = (40 * frame.Width) + 20;
+        Assert.Equal(0xFF800000u, frame.BgraPixels[pixelIndex]);
+        Assert.Equal(88, service.GetPixel(20, 40));
+
+        service.SetPixel(20, 40, 3);
+
+        frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(3), frame.BgraPixels[pixelIndex]);
+        Assert.Equal(3, service.GetPixel(20, 40));
+    }
+
+    [Fact]
+    public void DrawSprite_ComposesSelectedFrameAndPointReturnsNearestPaletteIndex()
+    {
+        var service = new ProgramConsoleService();
+        var image = new RuntimeImageValue(
+            2,
+            1,
+            [
+                0xFFFF0000u,
+                0xFF00FF00u
+            ]);
+        var sprite = new RuntimeSpriteValue(image, 1, 1);
+
+        service.ActivateScreen(1);
+        service.DrawSprite(sprite, 1, 20, 40, 1, 1);
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var pixelIndex = (40 * frame.Width) + 20;
+        Assert.Equal(0xFF00FF00u, frame.BgraPixels[pixelIndex]);
+        Assert.NotEqual(0, service.GetPixel(20, 40));
+    }
+
+    [Fact]
+    public void ScreenPages_CopyScreenPageCopiesTrueColorLayer()
+    {
+        var service = new ProgramConsoleService();
+        var image = new RuntimeImageValue(1, 1, [ScreenFramebuffer.MapColorToBgra(12)]);
+
+        service.ActivateScreen(1, activePage: 1, visualPage: 0);
+        service.DrawImage(image, 20, 40, 1, 1);
+
+        Assert.True(service.CopyScreenPage(1, 0));
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        var pixelIndex = (40 * frame.Width) + 20;
+        Assert.Equal(ScreenFramebuffer.MapColorToBgra(12), frame.BgraPixels[pixelIndex]);
+        Assert.Equal(12, service.GetPixel(20, 40));
+    }
+
+    [Fact]
     public void WriteGraphicsText_RendersRussianLetters()
     {
         var service = new ProgramConsoleService();
@@ -748,6 +856,23 @@ public sealed class ProgramConsoleServiceTests
             ScreenFramebuffer.MapColorToBgra(15),
             null);
         return pixels;
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Axiom.sln")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Repository root was not found from the current test output directory.");
     }
 
     [Fact]

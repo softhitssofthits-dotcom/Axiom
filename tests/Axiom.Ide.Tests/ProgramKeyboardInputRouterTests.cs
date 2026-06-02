@@ -74,6 +74,8 @@ public sealed class ProgramKeyboardInputRouterTests
 
         public int OutputCheckpoint => 0;
 
+        public string? ResourceBaseDirectory { get; set; }
+
         public void BeginSession()
         {
         }

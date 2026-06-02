@@ -1,0 +1,5 @@
+' Ожидается: DRAWSPRITE сообщает MB3007 для номера кадра за пределами листа.
+SCREEN 1
+DIM walk AS SPRITE
+walk = LOADSPRITE("assets/walk_sheet.png", 16, 16)
+DRAWSPRITE walk, 4, 0, 0

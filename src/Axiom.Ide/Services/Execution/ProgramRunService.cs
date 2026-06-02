@@ -6,6 +6,7 @@ using Axiom.Ide.Services.Input;
 using Axiom.Ide.Services.Shell;
 using Axiom.Runtime;
 using System.Diagnostics;
+using System.IO;
 
 namespace Axiom.Ide.Services.Execution;
 
@@ -96,12 +97,14 @@ public sealed class ProgramRunService : IProgramRunService
         string sourceText,
         ExecutionMode mode = ExecutionMode.Bytecode,
         IEnumerable<int>? sourceBreakpointLines = null,
-        bool stopBeforeFirstInstruction = false)
+        bool stopBeforeFirstInstruction = false,
+        string? sourceFilePath = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
 
         try
         {
+            _consoleService.ResourceBaseDirectory = ResolveResourceBaseDirectory(sourceFilePath);
             _consoleService.BeginSession();
             var inputProvider = new IdeInputProvider(_consoleService);
             var usesCompiledCache = _compiledProgram is not null
@@ -423,6 +426,16 @@ public sealed class ProgramRunService : IProgramRunService
         return _consoleService is ProgramConsoleService consoleService
             ? consoleService.OutputText
             : string.Empty;
+    }
+
+    private static string ResolveResourceBaseDirectory(string? sourceFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourceFilePath))
+        {
+            return Environment.CurrentDirectory;
+        }
+
+        return Path.GetDirectoryName(Path.GetFullPath(sourceFilePath)) ?? Environment.CurrentDirectory;
     }
 
     private static string BuildOutputText(IReadOnlyList<string> output, string pendingOutput)

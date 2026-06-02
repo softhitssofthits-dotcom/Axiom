@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Графика</p>
             <h1 class="page-title">Графика</h1>
-            <p class="lead">Графический раздел Axiom строится слоями поверх <code>SCREEN</code>. Сначала программа выбирает экранный режим и узнаёт его фактические размеры, затем размещает текст или рисует примитивы, при необходимости задаёт область вывода через <code>VIEW</code> и логическую систему координат через <code>WINDOW</code>, переводит координаты функцией <code>PMAP</code>, управляет палитрой и экранными страницами через <code>PALETTE</code> и <code>PCOPY</code>, переносит прямоугольные блоки через <code>GET</code> / <code>PUT</code> и только поверх этого читает клавиатуру и мышь активной поверхности.</p>
+            <p class="lead">Графический раздел Axiom строится слоями поверх <code>SCREEN</code>. Сначала программа выбирает экранный режим и узнаёт его фактические размеры, затем размещает текст или рисует примитивы, при необходимости задаёт область вывода через <code>VIEW</code> и логическую систему координат через <code>WINDOW</code>, переводит координаты функцией <code>PMAP</code>, управляет палитрой и экранными страницами через <code>PALETTE</code> и <code>PCOPY</code>, переносит прямоугольные блоки через <code>GET</code> / <code>PUT</code>, выводит полноцветные файлы через <code>IMAGE</code> / <code>DRAWIMAGE</code>, выводит кадры спрайтовых листов через <code>SPRITE</code> / <code>DRAWSPRITE</code> и только поверх этого читает клавиатуру и мышь активной поверхности.</p>
 
             <section class="article-section">
                 <h2>Для чего нужен оператор SCREEN</h2>
@@ -45,6 +45,8 @@
                         <tr><td><a href="pmap.html"><code>PMAP</code></a></td><td>Функция, переводящая координату между областью вывода и логической системой активного <code>WINDOW</code>.</td></tr>
                         <tr><td><a href="palette.html"><code>PALETTE</code></a></td><td>Оператор, меняющий отображение одного цветового индекса или нескольких индексов через <code>PALETTE USING</code>.</td></tr>
                         <tr><td><a href="pcopy.html"><code>PCOPY</code></a></td><td>Оператор, копирующий одну графическую экранную страницу в другую.</td></tr>
+                        <tr><td><a href="images.html"><code>IMAGE</code>, <code>LOADIMAGE</code>, <code>DRAWIMAGE</code></a></td><td>Тип, функции загрузки и оператор вывода полноцветного изображения на графический экран.</td></tr>
+                        <tr><td><a href="sprites.html"><code>SPRITE</code>, <code>LOADSPRITE</code>, <code>DRAWSPRITE</code></a></td><td>Тип спрайтового листа, функции кадра и оператор вывода выбранного кадра.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>CLS</code></a></td><td>Оператор, очищающий экран и возвращающий текстовый курсор в начало.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>COLOR</code></a></td><td>Оператор, задающий цвет символов и, при необходимости, цвет фона.</td></tr>
                         <tr><td><a href="graphics-text.html"><code>LOCATE</code></a></td><td>Оператор, помещающий текстовый курсор в указанную строку и столбец.</td></tr>
@@ -108,7 +110,8 @@
                 <p>Цвет задаётся числом от <code>0</code> до <code>255</code>. Значения <code>0..15</code> соответствуют классическим цветам BASIC, значения <code>16..231</code> образуют цветовой куб, а значения <code>232..255</code> дают оттенки серого. Если передано число вне этого диапазона, Axiom приводит его к палитре по правилу <code>ABS(color) MOD 256</code>.</p>
                 <p>Оператор <code>COLOR</code> задаёт цвет символов и, если указан второй аргумент, цвет фона. Операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code> используют те же номера цветов для рисования на графическом экране.</p>
                 <p>Оператор <code>PALETTE</code> работает на уровень ниже: пиксели продолжают хранить номера цветов, но выбранный индекс можно временно связать с другим видимым цветом. Поэтому уже нарисованная линия может изменить внешний вид после <code>PALETTE index, color</code> или после групповой формы <code>PALETTE USING array</code>, а <code>POINT(x, y)</code> всё равно вернёт исходный индекс пикселя.</p>
-                <p>Оператор <code>PCOPY</code> переносит между экранными страницами эти же цветовые индексы вместе с палитрой страницы, поэтому скрытую страницу можно подготовить заранее и затем скопировать на видимую.</p>
+                <p>Операторы <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code> добавляют поверх индексного экрана полноцветные пиксели с альфа-каналом. <code>PALETTE</code> не перекрашивает такие пиксели, а <code>POINT(x, y)</code> и <code>GET</code> для них возвращают ближайший индекс стандартной палитры Axiom.</p>
+                <p>Оператор <code>PCOPY</code> переносит между экранными страницами цветовые индексы, полноцветные пиксели и палитру страницы, поэтому скрытую страницу можно подготовить заранее и затем скопировать на видимую.</p>
                 <table>
                     <thead>
                         <tr><th>Номер</th><th>Цвет</th></tr>
@@ -163,6 +166,8 @@ SCREEN 0</code></pre>
                     <li><a href="../../samples/operators/palette/change_and_reset_colors.axm">PALETTE: изменение и сброс цветов</a></li>
                     <li><a href="../../samples/operators/palette/using_array_colors.axm">PALETTE USING: цвета из массива</a></li>
                     <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование пикселей и палитры на видимую страницу</a></li>
+                    <li><a href="../../samples/graphics/sprites/page_flip_walk.axm">SPRITE и PCOPY: кадр на скрытой странице</a></li>
+                    <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
                     <li><a href="../../samples/graphics/text/print_locate_color.axm">Текст, позиция курсора и цвета</a></li>
                     <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Операторы рисования: PSET, LINE и CIRCLE</a></li>
                     <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: чтение прямоугольника в буфер</a></li>
@@ -181,6 +186,7 @@ SCREEN 0</code></pre>
                     <a href="pmap.html">Функция PMAP</a>
                     <a href="palette.html">Оператор PALETTE</a>
                     <a href="pcopy.html">Оператор PCOPY</a>
+                    <a href="images.html">Изображения IMAGE</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="get-put.html">Операторы GET и PUT</a>
@@ -196,7 +202,7 @@ SCREEN 0</code></pre>
                     <li>Если сначала нужен сам режим экрана и его размеры, начните со страницы <a href="screen.html"><code>SCREEN</code></a> и блока <a href="screen-functions.html">функций состояния SCREEN</a>.</li>
                     <li>Если программа печатает в экранном окне, переходите к <a href="graphics-text.html">текстовому слою</a> с <code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code>.</li>
                     <li>Если программа рисует фигуры, открывайте <a href="graphics-primitives.html">операторы рисования</a>; если ей нужно ограничить или переопределить систему координат, дальше идите к <a href="view.html"><code>VIEW</code></a>, <a href="window.html"><code>WINDOW</code></a> и <a href="pmap.html"><code>PMAP</code></a>.</li>
-                    <li>Если программе нужно переносить участок изображения, переходите к <a href="get-put.html"><code>GET</code> и <code>PUT</code></a>; если нужно скопировать целую экранную страницу, используйте <a href="pcopy.html"><code>PCOPY</code></a>.</li>
+                    <li>Если программе нужно переносить участок экрана, переходите к <a href="get-put.html"><code>GET</code> и <code>PUT</code></a>; если нужно скопировать целую экранную страницу, используйте <a href="pcopy.html"><code>PCOPY</code></a>; если нужно загрузить файл PNG, JPEG, BMP или ICO, открывайте <a href="images.html"><code>IMAGE</code> и <code>DRAWIMAGE</code></a>.</li>
                     <li>Если нужна интерактивность поверх активного экрана, открывайте страницы клавиатуры и мыши, начиная с <a href="mousex.html"><code>MOUSEX()</code> / <code>MOUSEY()</code></a> и <a href="on-mouse.html"><code>ON MOUSE</code></a>.</li>
                 </ol>
             </section>

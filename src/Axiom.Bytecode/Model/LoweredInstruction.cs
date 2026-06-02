@@ -577,6 +577,16 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Draw, location, valueCount: 1);
     }
 
+    public static LoweredInstruction DrawImage(TextLocation location, bool hasScale)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawImage, location, valueCount: hasScale ? 1 : 0);
+    }
+
+    public static LoweredInstruction DrawSprite(TextLocation location, bool hasScale)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawSprite, location, valueCount: hasScale ? 1 : 0);
+    }
+
     public static LoweredInstruction PrintUsing(TextLocation location, int valueCount, PrintSeparatorKind? separatorKind)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(valueCount);

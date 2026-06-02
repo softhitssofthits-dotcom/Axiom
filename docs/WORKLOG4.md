@@ -2771,3 +2771,488 @@
 
 Следующий точный шаг:
 - начать реализацию первого современного графического среза по договору `IMAGE` / `DRAWIMAGE`: лексер, синтаксис, парсер, семантика, runtime, байткод, слой запуска, хост IDE, автоматические проверки, запускаемый пример, справочник и реестр покрытия байткодной виртуальной машины.
+
+## Session 916 - 2026-06-01 23:40 - реализован IMAGE и DRAWIMAGE
+
+Что сделано:
+- реализован первый современный графический срез: тип `IMAGE`, функции `LOADIMAGE`, `IMAGEWIDTH`, `IMAGEHEIGHT` и оператор `DRAWIMAGE`;
+- лексер, синтаксис, парсер, связыватель, интерпретатор, `BytecodeVm`, понижение, компиляция байткода, проверка байткодного модуля, слой запуска и хост IDE синхронизированы;
+- добавлен `RuntimeImageValue` для ширины, высоты и неизменяемых BGRA-пикселей изображения;
+- `ProgramConsoleService` загружает изображения средствами Windows/WPF, разрешает относительные пути от каталога сохранённого `.axm`-файла и рисует изображение в полноцветный слой кадрового буфера;
+- `ScreenFramebuffer` теперь хранит индексный слой, палитру и полноцветный слой, применяет альфа-канал при `DRAWIMAGE`, возвращает ближайший индекс стандартной палитры через `POINT` и копирует полноцветный слой через `PCOPY`;
+- добавлены запускаемые примеры `samples/graphics/images/load_and_draw_image.axm` и `samples/graphics/images/missing_image_error.axm`;
+- добавлена страница справочника `docs/manual/images.html`, обновлены обзор графики, страница `SCREEN`, страница типов, навигация и поиск справочника;
+- обновлены `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md` и `docs/BYTECODE_COVERAGE.md`.
+
+Изменённые файлы:
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Symbols/Symbols.cs`
+- `src/Axiom.Semantics/Symbols/BuiltinFunctionId.cs`
+- `src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.Input.cs`
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/Binding/Binder.SyntaxHelpers.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundNodeKind.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Runtime/Values/RuntimeImageValue.cs`
+- `src/Axiom.Runtime/Values/RuntimeValue.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Model/Opcode.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Graphics/ScreenFramebuffer.cs`
+- `src/Axiom.Ide/Services/Input/IProgramConsoleService.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `src/Axiom.Ide/Services/Execution/IProgramRunService.cs`
+- `src/Axiom.Ide/Services/Execution/ProgramRunService.cs`
+- `src/Axiom.Ide/ViewModels/MainWindowViewModel.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `tests/Axiom.Ide.Tests/MainWindowViewModelTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramKeyboardInputRouterTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramMouseInputRouterTests.cs`
+- `samples/graphics/images/load_and_draw_image.axm`
+- `samples/graphics/images/missing_image_error.axm`
+- `docs/manual/images.html`
+- `docs/manual/graphics.html`
+- `docs/manual/screen.html`
+- `docs/manual/data-types.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `README.md`
+- `docs/SPECIFICATION3.md`
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- `LOADIMAGE` и `DRAWIMAGE` оставлены как Axiom-имена без QB64-подчёркивания и без числовых дескрипторов;
+- `DRAWIMAGE` пишет полноцветные пиксели в отдельный слой кадрового буфера, а старые индексные операторы при записи в точку снова делают её индексной;
+- `PALETTE` не влияет на полноцветные пиксели, а `POINT` и `GET` по ним возвращают ближайший индекс стандартной палитры;
+- относительные пути к изображениям при запуске из IDE считаются от каталога сохранённого файла программы;
+- производительный сценарий в `samples/smoke/engine-compare/` не добавлялся, поэтому `docs/BYTECODE_PERF_MATRIX.md` не менялся.
+
+Проверки:
+- `dotnet build Axiom.sln --no-restore` проходит;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~Image|FullyQualifiedName~DrawImage" --logger "trx;LogFileName=image-parsing.trx"` проходит: 3 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~Image|FullyQualifiedName~DrawImage" --logger "trx;LogFileName=image-semantics.trx"` проходит: 4 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Image|FullyQualifiedName~DrawImage" --logger "trx;LogFileName=image-runtime.trx"` проходит: 6 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Image|FullyQualifiedName~DrawImage|FullyQualifiedName~ResourceBaseDirectory|FullyQualifiedName~SourceFilePath" --logger "trx;LogFileName=image-ide-rerun.trx"` проходит: 5 тестов;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --no-build --results-directory .artifacts/test-results/Axiom.Execution.Tests --filter "FullyQualifiedName~DrawImageAcceptanceSample|FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity" --logger "trx;LogFileName=image-execution-rerun.trx"` проходит: 10 тестов;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj --no-restore` проходит: 45 проверок;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` проходит;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Ограничения проверки:
+- первый широкий запуск группы `Axiom.Execution.Tests` с фильтром `DrawImageAcceptanceSample|GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` завис из-за нехватки одной клавиши в scripted-вводе позитивного примера; после добавления `SPACE` перед `ESC` повторный запуск прошёл;
+- ручная визуальная проверка в `Axiom.Ide` ещё не выполнена.
+
+Следующий точный шаг:
+- вручную открыть `samples/graphics/images/load_and_draw_image.axm` в `Axiom.Ide`, запустить и подтвердить, что значок IDE выводится в натуральном размере и в масштабе `64 x 64`; затем вручную проверить `samples/graphics/images/missing_image_error.axm` как отрицательный пример `LOADIMAGE`.
+
+## Session 917 - 2026-06-01 23:49 - закрыта ручная приёмка IMAGE и открыт договор SPRITE
+
+Что сделано:
+- пользователь подтвердил ручную проверку `samples/graphics/images/load_and_draw_image.axm` в `Axiom.Ide`: пример правильно выводит две картинки;
+- пользователь подтвердил ручную проверку `samples/graphics/images/missing_image_error.axm` в `Axiom.Ide`: отрицательный пример показывает сообщение об ошибке;
+- в `docs/SPECIFICATION3.md` статус `IMAGE` / `DRAWIMAGE` дополнен ручной приёмкой;
+- открыт следующий проектный договор для спрайтового среза: `SPRITE`, `LOADSPRITE`, `SPRITEWIDTH`, `SPRITEHEIGHT`, `SPRITECOUNT` и `DRAWSPRITE`;
+- в `docs/PLANS3.md` зафиксировано, что `IMAGE` закрыт, а следующим кодовым шагом становится реализация `SPRITE` / `DRAWSPRITE`.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- считать первый современный графический срез `IMAGE` / `DRAWIMAGE` закрытым на текущем уровне;
+- первый спрайтовый срез должен работать как спрайтовый лист с одинаковыми кадрами, нулевой нумерацией кадров и обходом кадров слева направо и сверху вниз;
+- физика, столкновения, тайловые карты, объектная модель, поворот, зеркальное отражение, фильтры и именованные анимации не входят в ближайший срез.
+
+Проверки:
+- код не менялся;
+- после записи документов нужно выполнить `git diff --check` по затронутым документам.
+
+Следующий точный шаг:
+- реализовать договор `SPRITE` / `DRAWSPRITE` по цепочке лексер, синтаксис, парсер, семантика, runtime, байткод, слой запуска, хост IDE, автоматические проверки, запускаемый пример, справочник и реестр покрытия байткодной виртуальной машины.
+
+## Session 918 - 2026-06-01 23:59 - исправлена IDE-поддержка IMAGE-слов
+
+Что сделано:
+- по замечанию пользователя найден пропущенный IDE-слой нового `IMAGE`-среза;
+- в `Axiom.xshd` и `Axiom.Dark.xshd` добавлен `DRAWIMAGE` как ключевое слово;
+- в эти же словари добавлен тип `IMAGE`;
+- в список встроенных функций подсветки добавлены `LOADIMAGE`, `IMAGEWIDTH` и `IMAGEHEIGHT`;
+- тест покрытия словаря подсветки обновлён так, чтобы `IMAGE` больше не считался отсутствующим типом;
+- добавлен отдельный тест на наличие `DRAWIMAGE`, `IMAGE`, `LOADIMAGE`, `IMAGEWIDTH` и `IMAGEHEIGHT` в словаре подсветки;
+- добавлен тест форматирования, который проверяет классическое и современное отображение новых слов.
+
+Изменённые файлы:
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- это исправление IDE-поддержки уже реализованного языка, а не изменение пользовательской семантики `IMAGE` / `DRAWIMAGE`;
+- новые `.axm`-примеры, справочная страница языка и реестр покрытия `BytecodeVm` не требуются, потому что runtime-поведение не менялось;
+- будущий `SPRITE`-срез должен обновлять IDE-словарь подсветки и форматирования сразу вместе с лексером и семантикой.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Highlighting_VocabularyContainsImageWords|FullyQualifiedName~Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes|FullyQualifiedName~Highlighting_VocabularyCoversAllBuiltInFunctions|FullyQualifiedName~FormatLine_FormatsImageKeywordsTypesAndBuiltIns" --logger "trx;LogFileName=image-ide-vocabulary-formatting.trx"` проходит: 4 теста;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `git diff --check` по изменённым IDE-словарям и тестам не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- продолжить реализацию `SPRITE` / `DRAWSPRITE`, начиная с лексера, синтаксиса и IDE-словарей одновременно, чтобы новый пользовательский словарь сразу был виден в редакторе.
+
+## Session 919 - 2026-06-02 00:55 - реализован первый срез SPRITE / DRAWSPRITE
+
+Что сделано:
+- реализован договор спрайтового листа: тип `SPRITE`, функции `LOADSPRITE`, `SPRITEWIDTH`, `SPRITEHEIGHT`, `SPRITECOUNT` и оператор `DRAWSPRITE`;
+- добавлены ключевые слова `SPRITE` и `DRAWSPRITE` в лексер, синтаксис, парсер, типовую систему и IDE-словарь;
+- интерпретатор и `BytecodeVm` получили общий runtime-договор пустого спрайта, подсчёта кадров, проверки номера кадра, натурального вывода и масштабирования;
+- host-слой IDE загружает спрайтовый лист через тот же путь, что `LOADIMAGE`, и рисует выбранный кадр в полноцветный слой кадрового буфера;
+- добавлены проверки парсера, связывателя, интерпретатора, `BytecodeVm`, слоя запуска, IDE-хоста, подсветки и форматирования;
+- добавлены runnable-примеры `samples/graphics/sprites/walk_cycle.axm`, `samples/graphics/sprites/invalid_frame_error.axm` и постоянный ресурс `samples/graphics/sprites/assets/walk_sheet.png`;
+- добавлена страница справочника `docs/manual/sprites.html`, обновлены графический обзор, страница типов, навигация, поисковый индекс, план и реестр покрытия bytecode.
+
+Изменённые файлы:
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Parsing/Parser.Helpers.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Symbols/Symbols.cs`
+- `src/Axiom.Semantics/Symbols/BuiltinFunctionId.cs`
+- `src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.Input.cs`
+- `src/Axiom.Semantics/Binding/Binder.IoStatements.cs`
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.SyntaxHelpers.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundNodeKind.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Runtime/Values/RuntimeSpriteValue.cs`
+- `src/Axiom.Runtime/Values/RuntimeValue.cs`
+- `src/Axiom.Runtime/Host/IGraphicsHost.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs`
+- `src/Axiom.Bytecode/Model/Opcode.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Execution/Hosting/ExecutionRuntimeHostAdapter.cs`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `src/Axiom.Ide/Graphics/ScreenFramebuffer.cs`
+- `src/Axiom.Ide/Services/Input/IdeInputProvider.cs`
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `samples/graphics/sprites/walk_cycle.axm`
+- `samples/graphics/sprites/invalid_frame_error.axm`
+- `samples/graphics/sprites/assets/walk_sheet.png`
+- `docs/manual/sprites.html`
+- `docs/manual/graphics.html`
+- `docs/manual/data-types.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- кадры `SPRITE` нумеруются с нуля и обходятся слева направо, сверху вниз;
+- лист меньше размера кадра считается загруженным, но без доступных кадров: `SPRITEWIDTH` / `SPRITEHEIGHT` сохраняют заданный размер, `SPRITECOUNT` возвращает `0`, а `DRAWSPRITE` сообщает `MB3005`;
+- `DRAWSPRITE` использует тот же полноцветный слой, альфа-наложение, `VIEW`, `WINDOW`, `POINT`, `GET` и `PCOPY` договор, что `DRAWIMAGE`;
+- `docs/BYTECODE_PERF_MATRIX.md` не обновлялся, потому что отдельный производительный сценарий не добавлялся.
+
+Проверки:
+- `dotnet build src/Axiom.Runtime/Axiom.Runtime.csproj --no-restore /m:1` проходит;
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj --no-restore /m:1` проходит;
+- `dotnet build tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore /m:1` проходит;
+- `dotnet build tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore /m:1` проходит;
+- `dotnet build tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore /m:1` проходит;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSprite" --logger "trx;LogFileName=sprite-parsing.trx"` проходит: 2 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~Sprite" --logger "trx;LogFileName=sprite-semantics.trx"` проходит: 3 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Sprite" --logger "trx;LogFileName=sprite-runtime.trx"` проходит: 6 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSprite|FullyQualifiedName~GraphicsNegativeAcceptanceSamples" --logger "trx;LogFileName=sprite-execution.trx"` проходит: 11 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Sprite|FullyQualifiedName~Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes|FullyQualifiedName~Highlighting_VocabularyCoversAllBuiltInFunctions" --logger "trx;LogFileName=sprite-ide.trx"` проходит: 6 тестов;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `dotnet build Axiom.sln --no-restore /m:1` проходит;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF;
+- широкий `dotnet build Axiom.sln --no-restore` был остановлен по таймауту 120 секунд с `MSB4166` на дочерних узлах MSBuild; после этого затронутые проекты собраны последовательно с `/m:1`.
+
+Следующий точный шаг:
+- вручную открыть `samples/graphics/sprites/walk_cycle.axm` в `Axiom.Ide`, запустить в режиме `Bytecode` и подтвердить два кадра спрайта и финальную строку вывода; после ручной приёмки решить следующий графический договор поверх `IMAGE` / `SPRITE`.
+
+## Session 920 - 2026-06-02 06:57 - SPRITE проверки доведены до зелёного состояния
+
+Что сделано:
+- по команде пользователя продолжена проверка уже реализованного среза `SPRITE` / `DRAWSPRITE`;
+- исправлен пропуск в bytecode-lowering: объявление переменной `SPRITE` без инициализатора теперь использует неявное пустое значение слота так же, как `IMAGE`;
+- повторены адресные тесты парсера, семантики, runtime, execution и IDE;
+- полный последовательный `dotnet build Axiom.sln --no-restore /m:1` проходит;
+- проверены `manual.js`, `search-index.js` и `git diff --check`.
+
+Изменённые файлы:
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSprite" --logger "trx;LogFileName=sprite-parsing.trx"` проходит: 2 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~Sprite" --logger "trx;LogFileName=sprite-semantics.trx"` проходит: 3 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Sprite" --logger "trx;LogFileName=sprite-runtime.trx"` сначала выявил проблему bytecode-lowering для пустого `SPRITE`, после исправления проходит: 6 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSprite|FullyQualifiedName~GraphicsNegativeAcceptanceSamples" --logger "trx;LogFileName=sprite-execution.trx"` проходит: 11 тестов;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Sprite|FullyQualifiedName~Highlighting_VocabularyCoversAllLanguageKeywordsAndTypes|FullyQualifiedName~Highlighting_VocabularyCoversAllBuiltInFunctions" --logger "trx;LogFileName=sprite-ide.trx"` проходит: 6 тестов;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `dotnet build Axiom.sln --no-restore /m:1` проходит;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Решение:
+- считать автоматическую проверку первого среза `SPRITE` / `DRAWSPRITE` закрытой; ручная приёмка в живой IDE остаётся отдельным следующим шагом.
+
+Следующий точный шаг:
+- вручную открыть `samples/graphics/sprites/walk_cycle.axm` в `Axiom.Ide`, выбрать режим `Bytecode`, запустить пример и подтвердить два кадра спрайта и финальную строку `DRAWSPRITE sample finished`; после подтверждения зафиксировать ручную приёмку и выбирать следующий графический договор.
+
+## Session 921 - 2026-06-02 09:18 - закрыта IDE-приёмка SPRITE
+
+Что сделано:
+- продолжена работа от последнего стопа: автоматические проверки `SPRITE` уже были зелёными, оставалась живая приёмка `walk_cycle.axm` в IDE;
+- в `Axiom.Ide.SmokeHarness` добавлен узкий маршрут `--sprite-only`;
+- маршрут копирует `samples/graphics/sprites/walk_cycle.axm` и `samples/graphics/sprites/assets/walk_sheet.png` во временную рабочую область `.artifacts/ui-smoke/`, открывает пример в реальном `Axiom.Ide.exe`, запускает его в режиме `Bytecode`, отправляет клавишу продолжения для `SLEEP` и `ESC` для выхода;
+- проверочный маршрут подтверждает `screen.output | sprite frames=4`, `screen.output | DRAWSPRITE sample finished`, закрытие `SCREEN` и трассу `run.pipeline` с `requestedMode=Bytecode` и `actualEngine=BytecodeVm`;
+- обновлены `README.md`, `docs/ARCHITECTURE.md`, `docs/SPECIFICATION3.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `src/Axiom.Ide.SmokeHarness/Program.cs`
+- `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore /m:1` проходит;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --sprite-only` проходит;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1` проходит;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Ограничения проверки:
+- первый повтор `--sprite-only` после добавления проверки движка не прошёл из-за неверного ожидания формата трассы `run.completed`; фактическая строка статуса пишется как `run.pipeline`, после синхронизации проверки повторный прогон прошёл.
+
+Решение:
+- считать первый срез `SPRITE` / `DRAWSPRITE` закрытым также на уровне живой IDE-приёмки;
+- отдельный производительный сценарий не добавлялся, поэтому `docs/BYTECODE_PERF_MATRIX.md` не менялся.
+
+Следующий точный шаг:
+- выбрать следующий графический договор поверх `IMAGE` / `SPRITE`: либо удобство игрового кадра на базе существующих страниц `SCREEN` и `PCOPY`, либо следующий минимальный спрайтовый срез вроде именованных анимаций; сначала зафиксировать договор в `docs/SPECIFICATION3.md`, только затем переходить к коду.
+
+## Session 922 - 2026-06-02 13:35 - выбран договор игрового кадра на страницах SCREEN
+
+Что сделано:
+- продолжена работа от последнего зафиксированного стопа: первый срез `SPRITE` / `DRAWSPRITE` уже закрыт по коду, автоматическим проверкам, запускаемым примерам, справочнику, реестру покрытия и живой IDE-приёмке;
+- следующим графическим шагом выбран не новый оператор и не именованные анимации, а минимальный договор игрового кадра на уже существующих страницах `SCREEN` и `PCOPY`;
+- в `docs/SPECIFICATION3.md` зафиксирован пользовательский маршрут: готовить кадр на скрытой странице, рисовать `DRAWIMAGE` / `DRAWSPRITE`, затем публиковать страницу через `PCOPY`;
+- в договоре явно отложены `BEGINFRAME`, `ENDFRAME`, `FLIP`, `BUFFER`, `CANVAS`, именованные анимации, объектная модель спрайтов, столкновения, тайловые карты и сценовая модель;
+- `docs/PLANS3.md` обновлён так, чтобы следующий кодовый шаг был проверочным примером и приёмкой этого кадрового маршрута, а не преждевременным расширением языка.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- сначала проверить существующую BASIC-подобную модель `SCREEN`-страниц и `PCOPY` вместе с современными `IMAGE` / `SPRITE`;
+- новые пользовательские имена для кадрового цикла не вводить до подтверждённого недостатка текущей модели.
+
+Проверки:
+- код, поведение языка и запускаемые примеры в этом шаге не менялись;
+- после записи документов нужно выполнить `git diff --check` по затронутым файлам.
+
+Следующий точный шаг:
+- добавить короткий запускаемый пример игрового кадра на скрытой странице с `DRAWSPRITE` и `PCOPY`, подключить его к сквозной проверке `BytecodeVm`, затем обновить справочник и `docs/BYTECODE_COVERAGE.md` по факту добавленной приёмки.
+
+## Session 923 - 2026-06-02 13:49 - проверочный кадр SPRITE через PCOPY
+
+Что сделано:
+- продолжена работа от зафиксированного стопа по игровому кадру на существующих страницах `SCREEN`;
+- добавлен запускаемый пример `samples/graphics/sprites/page_flip_walk.axm`, который готовит кадры спрайта на скрытой странице `1`, переносит их на видимую страницу `0` через `PCOPY` и ждёт `ESC`;
+- добавлен сквозной acceptance-тест `DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm` для запуска нового примера через `ExecutionMode.Bytecode` без отката на интерпретатор;
+- `Axiom.Ide.SmokeHarness --sprite-only` расширен копированием `page_flip_walk.axm` и проверкой второго спрайтового сценария;
+- чтение журнала в `Axiom.Ide.SmokeHarness` синхронизировано с текущим JSONL-каталогом `%LOCALAPPDATA%\Axiom\Logs\Events`, потому что старый поиск рядом с `Axiom.Ide.exe` больше не видел события IDE;
+- обновлены `README.md`, `docs/ARCHITECTURE.md`, `docs/manual/pcopy.html`, `docs/manual/sprites.html`, `docs/manual/graphics.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+
+Изменённые файлы:
+- `samples/graphics/sprites/page_flip_walk.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/manual/pcopy.html`
+- `docs/manual/sprites.html`
+- `docs/manual/graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- новый пользовательский сценарий не требует новых операторов: достаточно существующих `SCREEN`-страниц, `DRAWSPRITE` и `PCOPY`;
+- сквозная байткодная приёмка считается закрытой на уровне `Axiom.Execution`, но живая IDE-приёмка нового сценария отложена до стабилизации первого сценария `walk_cycle.axm` в `--sprite-only`.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm" --logger "trx;LogFileName=sprite-page-flip-execution.trx"` проходит: 1 тест;
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj --no-restore /m:1` проходит;
+- `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore /m:1` проходит;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `git diff --check` не нашёл ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Ограничения проверки:
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --sprite-only` пока не проходит: маршрут блокируется на первом, уже существующем примере `walk_cycle.axm` до перехода к новому `page_flip_walk.axm`;
+- свежие журналы `%LOCALAPPDATA%\Axiom\Logs\Events\ide-events-20260602-142213.jsonl` и `ide-events-20260602-142414.jsonl` показывают `command.executed` и `screen.activated` для `walk_cycle.axm`, но не содержат ожидаемый `screen.output` за время ожидания.
+
+Следующий точный шаг:
+- стабилизировать живой `Axiom.Ide.SmokeHarness --sprite-only`: выяснить, почему `walk_cycle.axm` в реальном IDE-хосте иногда останавливается после `screen.activated`, затем повторить маршрут и подтвердить новый `page_flip_walk.axm` через строки `page flip frames=4` и `SPRITE PCOPY sample finished`.
+
+## Session 924 - 2026-06-02 17:54 - правило русскоязычных пошаговых примеров
+
+Что сделано:
+- пользователь вручную проверил `samples/graphics/sprites/page_flip_walk.axm` в `Axiom.Ide` и подтвердил, что пример работает нормально;
+- по замечанию пользователя в `AGENTS.md` добавлено постоянное правило: новые и обновляемые `.axm`-примеры должны использовать русские пользовательские строки и пояснения, локальные комментарии рядом с ключевыми операторами и паузы для визуальных или пошаговых сценариев;
+- `samples/graphics/sprites/page_flip_walk.axm` переписан под это правило: английские строки `page flip frames=` и `SPRITE PCOPY sample finished` заменены русскими сообщениями, добавлены две паузы `SLEEP`, а ключевые операторы снабжены русскими пояснениями;
+- `DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm` обновлён под две паузы и русские итоговые строки;
+- ожидания `Axiom.Ide.SmokeHarness --sprite-only` для второго сценария обновлены под русские строки и пошаговое продвижение после `SLEEP`.
+
+Изменённые файлы:
+- `AGENTS.md`
+- `samples/graphics/sprites/page_flip_walk.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- правило русскоязычных пошаговых `.axm`-примеров считается незыблемым рабочим правилом проекта;
+- старые примеры приводятся к нему при ближайшей содержательной правке соответствующего файла, без отдельного массового переписывания прямо сейчас.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm"` проходит: 1 тест;
+- `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore /m:1` проходит;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит.
+
+Следующий точный шаг:
+- продолжить со стабилизации живого `Axiom.Ide.SmokeHarness --sprite-only`: выяснить, почему первый сценарий `walk_cycle.axm` иногда не доходит от `screen.activated` до `screen.output`, затем повторить полный маршрут с новым `page_flip_walk.axm`.
+
+## Session 925 - 2026-06-02 18:49 - живой smoke SPRITE стабилизирован
+
+Что сделано:
+- продолжена работа с зафиксированного блокера `Axiom.Ide.SmokeHarness --sprite-only`;
+- `samples/graphics/sprites/walk_cycle.axm` приведён к новому правилу примеров: русские сообщения, локальные комментарии рядом с ключевыми операторами, `SCREEN 1` вместо полноразмерного `SCREEN 8`, две пошаговые паузы для просмотра кадров;
+- acceptance-тест `DrawSpriteAcceptanceSample_RunsOnBytecodeVm` обновлён под русские строки и две паузы;
+- `Axiom.Ide.SmokeHarness` научен читать текущий JSONL-журнал IDE из `%LOCALAPPDATA%\Axiom\Logs\Events`, не ломаясь на старом текстовом `.log` с Windows-путями;
+- для живого smoke harness постоянные ручные sample копируются во временную область `.artifacts/ui-smoke/` с отключёнными ручными паузами, чтобы автоматизация не зависела от ручного фокуса native-окна `SCREEN`;
+- `--sprite-only` теперь проходит оба сценария: `walk_cycle.axm` и `page_flip_walk.axm`, включая проверку `DRAWSPRITE` + `PCOPY` через реальный IDE-хост.
+
+Изменённые файлы:
+- `samples/graphics/sprites/walk_cycle.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `src/Axiom.Ide.SmokeHarness/IdeSmokeHarness.cs`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- постоянные `.axm`-примеры остаются удобными для ручного просмотра с `SLEEP`;
+- smoke harness может использовать временную копию без ручного ожидания клавиши, если это нужно для автоматизации живого IDE-хоста.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawSpriteAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm"` проходит: 2 теста;
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj --no-restore /m:1` проходит;
+- `dotnet build src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore /m:1` проходит;
+- `dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --no-restore -- --sprite-only` проходит;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит.
+
+Следующий точный шаг:
+- не вводить новые графические имена без отдельного договора; следующим рабочим действием может быть либо новый спроектированный графический срез поверх `IMAGE` / `SPRITE`, либо постепенное приведение старых визуальных `.axm`-примеров к правилу русскоязычных пошаговых примеров при ближайших содержательных правках.
+
+## Session 926 - 2026-06-02 19:33 - большой план современной графики
+
+Что сделано:
+- по решению пользователя создан отдельный документ `docs/MODERN_GRAPHICS_PLAN.md`;
+- в документе зафиксирована концепция двух графических слоёв: совместимый BASIC-слой и современный графический слой;
+- совместимый слой оставляет `SCREEN`, `PSET`, `LINE`, `CIRCLE`, `PAINT`, `DRAW`, `GET`, `PUT`, `PALETTE`, `PCOPY`, `POINT` и связанный текстовый вывод как поддерживаемую историческую линию;
+- современный слой выбран главным направлением для будущих 2D-игр и визуальных программ на Axiom;
+- в план внесены будущие срезы: современный кадр, `RGB`, очистка цветом, прямоугольники, текст, камера, анимации, столкновения и тайловые карты;
+- `IMAGE` / `DRAWIMAGE` и `SPRITE` / `DRAWSPRITE` отмечены как уже реализованные первые части современного направления;
+- `README.md`, `docs/ARCHITECTURE.md`, `docs/SPECIFICATION3.md` и `docs/PLANS3.md` подключены к новому документу, чтобы следующий графический код начинался с выбора пункта этого плана.
+
+Изменённые файлы:
+- `docs/MODERN_GRAPHICS_PLAN.md`
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- исторические BASIC-операторы пока не удаляются и не объявляются устаревшими как поведение;
+- их роль в новых игровых материалах понижается: новый основной путь должен идти через современный графический слой;
+- новые пользовательские графические имена вроде `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `DRAWRECT` и `FILLRECT` пока считаются кандидатами плана, а не утверждённым синтаксисом;
+- перед кодом нужно отдельное уточнение договора в `docs/SPECIFICATION3.md`.
+
+Проверки:
+- код не менялся;
+- после записи документов нужно выполнить проверку пробелов через `git diff --check`.
+
+Следующий точный шаг:
+- выбрать первый современный графический срез из `docs/MODERN_GRAPHICS_PLAN.md` и зафиксировать в `docs/SPECIFICATION3.md` точный договор имён, синтаксиса, диагностики, tests, manual и samples; основной кандидат: современное окно или режим рисования, начало кадра, показ кадра, `RGB`, очистка цветом, `DRAWRECT` и `FILLRECT` с интеграцией `DRAWIMAGE` и `DRAWSPRITE`.

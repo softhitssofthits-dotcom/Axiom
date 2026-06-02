@@ -11,9 +11,11 @@ namespace Axiom.Ide.SmokeHarness;
 
 internal sealed class IdeSmokeHarness
 {
-    private const int TimeoutMilliseconds = 30000;
+    private const int TimeoutMilliseconds = 60000;
     private const int PollDelayMilliseconds = 100;
     private const uint WmClose = 0x0010;
+    private const uint WmKeyDown = 0x0100;
+    private const uint WmKeyUp = 0x0101;
     private const uint WmAppSmokeHarnessShowFindReplace = 0x8001;
     private const uint WmAppSmokeHarnessCloseTab = 0x8002;
     private const uint WmAppSmokeHarnessRun = 0x8003;
@@ -26,6 +28,7 @@ internal sealed class IdeSmokeHarness
     private const int SystemMetricVirtualScreenWidth = 78;
     private const int SystemMetricVirtualScreenHeight = 79;
     private const uint InputMouse = 0;
+    private const int MaxWindowTextLength = 256;
     private const uint MouseeventfMove = 0x0001;
     private const uint MouseeventfLeftDown = 0x0002;
     private const uint MouseeventfLeftUp = 0x0004;
@@ -54,6 +57,8 @@ internal sealed class IdeSmokeHarness
     private readonly string _getProgramPath;
     private readonly string _putProgramPath;
     private readonly string _screen10ProgramPath;
+    private readonly string _spriteProgramPath;
+    private readonly string _spritePageFlipProgramPath;
     private Process? _ideProcess;
     private byte[]? _originalStateBytes;
     private bool _stateFileExisted;
@@ -86,6 +91,8 @@ internal sealed class IdeSmokeHarness
         _getProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "get", "rectangle_capture.axm");
         _putProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "put", "default_xor_and_preset.axm");
         _screen10ProgramPath = Path.Combine(_workspaceRootPath, "samples", "graphics", "screen", "best_fit_dimensions.axm");
+        _spriteProgramPath = Path.Combine(_workspaceRootPath, "samples", "graphics", "sprites", "walk_cycle.axm");
+        _spritePageFlipProgramPath = Path.Combine(_workspaceRootPath, "samples", "graphics", "sprites", "page_flip_walk.axm");
     }
 
     public void Run()
@@ -142,6 +149,14 @@ internal sealed class IdeSmokeHarness
                 RunScreen10OnlySmoke(mainWindow);
                 Console.WriteLine();
                 Console.WriteLine("Axiom IDE SCREEN 10 smoke completed successfully.");
+                return;
+            }
+
+            if (_options.SpriteOnly)
+            {
+                RunSpriteOnlySmoke(mainWindow);
+                Console.WriteLine();
+                Console.WriteLine("Axiom IDE SPRITE smoke completed successfully.");
                 return;
             }
 
@@ -394,6 +409,77 @@ internal sealed class IdeSmokeHarness
         ReportStepCompleted();
     }
 
+    private void RunSpriteOnlySmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Initial shell state");
+        RequireElement(mainWindow, "MainMenu");
+        RequireElement(mainWindow, "FilesTreeView");
+        RequireElement(mainWindow, "OutputTextBox");
+        ReportStepCompleted();
+
+        ReportStep("Run SPRITE sample -> SCREEN trace");
+        OpenWorkspaceFileFromTree(mainWindow, _spriteProgramPath);
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+
+        var documentName = Path.GetFileName(_spriteProgramPath);
+        WaitForLatestIdeLogText(text =>
+            text.Contains($"\"documentName\":\"{documentName}\"", StringComparison.Ordinal)
+            && text.Contains("\"eventName\":\"screen.activated\"", StringComparison.Ordinal)
+            && text.Contains("\"textPreview\":\"mode=1 | size=320x200\"", StringComparison.Ordinal)
+            && text.Contains("Количество кадров в листе: 4", StringComparison.Ordinal));
+
+        var outputTextBox = RequireElement(mainWindow, "OutputTextBox");
+        var screenWindow = WaitForNativeScreenWindow();
+        PressVirtualKey(screenWindow, VkReturn);
+
+        WaitForLatestIdeLogText(static text => text.Contains(
+            "Второй кадр показан. Нажмите любую клавишу.",
+            StringComparison.Ordinal));
+
+        PressVirtualKey(screenWindow, VkEscape);
+        WaitForLatestIdeLogText(static text =>
+            text.Contains("\"eventName\":\"screen.deactivated\"", StringComparison.Ordinal)
+            && text.Contains("\"textPreview\":\"mode=1 | size=320x200\"", StringComparison.Ordinal));
+        WaitForLatestIdeLogText(static text =>
+            text.Contains("\"eventName\":\"run.completed\"", StringComparison.Ordinal)
+            && text.Contains("\"status\":\"Success\"", StringComparison.Ordinal)
+            && text.Contains("\"requestedMode\":\"Bytecode\"", StringComparison.Ordinal)
+            && text.Contains("\"actualEngine\":\"BytecodeVm\"", StringComparison.Ordinal));
+        ReportStepCompleted();
+
+        ReportStep("Run SPRITE PCOPY sample -> SCREEN trace");
+        OpenWorkspaceFileFromTree(mainWindow, _spritePageFlipProgramPath);
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
+
+        documentName = Path.GetFileName(_spritePageFlipProgramPath);
+        WaitForLatestIdeLogText(text =>
+            text.Contains($"\"documentName\":\"{documentName}\"", StringComparison.Ordinal)
+            && text.Contains("\"eventName\":\"screen.activated\"", StringComparison.Ordinal)
+            && text.Contains("\"textPreview\":\"mode=1 | size=320x200\"", StringComparison.Ordinal)
+            && text.Contains("Первый кадр готов. Нажмите любую клавишу.", StringComparison.Ordinal));
+
+        screenWindow = WaitForNativeScreenWindow();
+        PressVirtualKey(screenWindow, VkReturn);
+        WaitForLatestIdeLogText(static text => text.Contains(
+            "Второй кадр готов. Нажмите любую клавишу.",
+            StringComparison.Ordinal));
+
+        PressVirtualKey(screenWindow, VkEscape);
+        WaitForLatestIdeLogText(static text =>
+            text.Contains("\"eventName\":\"screen.deactivated\"", StringComparison.Ordinal)
+            && text.Contains("\"textPreview\":\"mode=1 | size=320x200\"", StringComparison.Ordinal));
+        WaitForLatestIdeLogText(static text =>
+            text.Contains("\"eventName\":\"run.completed\"", StringComparison.Ordinal)
+            && text.Contains("\"status\":\"Success\"", StringComparison.Ordinal)
+            && text.Contains("\"requestedMode\":\"Bytecode\"", StringComparison.Ordinal)
+            && text.Contains("\"actualEngine\":\"BytecodeVm\"", StringComparison.Ordinal));
+        ReportStepCompleted();
+
+        ReportStep("Close IDE after SPRITE smoke");
+        CloseWindow(mainWindow, expectProcessExit: true);
+        ReportStepCompleted();
+    }
+
     private void RunGraphicsSampleSmoke(
         AutomationElement mainWindow,
         string workspacePath,
@@ -582,6 +668,68 @@ internal sealed class IdeSmokeHarness
                         new PropertyCondition(AutomationElement.AutomationIdProperty, automationId)));
             },
             $"Timed out waiting for window '{automationId}'.");
+    }
+
+    private IntPtr WaitForNativeScreenWindow()
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        while (stopwatch.ElapsedMilliseconds < TimeoutMilliseconds)
+        {
+            var handle = FindNativeScreenWindowForProcess(GetProcessId());
+
+            if (handle != IntPtr.Zero)
+            {
+                return handle;
+            }
+
+            Thread.Sleep(PollDelayMilliseconds);
+        }
+
+        throw new TimeoutException("Timed out waiting for native Axiom SCREEN window.");
+    }
+
+    private static IntPtr FindNativeScreenWindowForProcess(int processId)
+    {
+        var result = IntPtr.Zero;
+
+        EnumWindows(
+            (handle, _) =>
+            {
+                GetWindowThreadProcessId(handle, out var windowProcessId);
+                if (windowProcessId != processId)
+                {
+                    return true;
+                }
+
+                var className = GetWindowClassName(handle);
+                var title = GetWindowTitle(handle);
+                if (string.Equals(className, "AxiomNativeScreenWindow", StringComparison.Ordinal)
+                    || string.Equals(title, "Axiom SCREEN", StringComparison.Ordinal))
+                {
+                    result = handle;
+                    return false;
+                }
+
+                return true;
+            },
+            IntPtr.Zero);
+
+        return result;
+    }
+
+    private static string GetWindowClassName(IntPtr handle)
+    {
+        var builder = new StringBuilder(MaxWindowTextLength);
+        _ = GetClassName(handle, builder, builder.Capacity);
+        return builder.ToString();
+    }
+
+    private static string GetWindowTitle(IntPtr handle)
+    {
+        var builder = new StringBuilder(MaxWindowTextLength);
+        _ = GetWindowText(handle, builder, builder.Capacity);
+        return builder.ToString();
     }
 
     private AutomationElement WaitForMessageBox(string title)
@@ -1175,6 +1323,15 @@ internal sealed class IdeSmokeHarness
         Thread.Sleep(150);
     }
 
+    private static void PressVirtualKey(IntPtr windowHandle, byte virtualKey)
+    {
+        SetForegroundWindow(windowHandle);
+        Thread.Sleep(100);
+        PostMessage(windowHandle, WmKeyDown, new IntPtr(virtualKey), IntPtr.Zero);
+        PostMessage(windowHandle, WmKeyUp, new IntPtr(virtualKey), IntPtr.Zero);
+        Thread.Sleep(150);
+    }
+
     private static void TryWaitForWindowClosed(AutomationElement window)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -1227,13 +1384,20 @@ internal sealed class IdeSmokeHarness
 
     private string ReadLatestIdeLogText()
     {
-        var logsDirectory = Path.Combine(Path.GetDirectoryName(_ideExecutablePath) ?? _repositoryRoot, "Logs");
-        if (!Directory.Exists(logsDirectory))
+        var logsDirectories = new[]
         {
-            return string.Empty;
-        }
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Axiom",
+                "Logs",
+                "Events"),
+            Path.Combine(Path.GetDirectoryName(_ideExecutablePath) ?? _repositoryRoot, "Logs", "Events"),
+            Path.Combine(Path.GetDirectoryName(_ideExecutablePath) ?? _repositoryRoot, "Logs")
+        };
 
-        var latestLog = Directory.EnumerateFiles(logsDirectory, "*.log")
+        var latestLog = logsDirectories
+            .Where(Directory.Exists)
+            .SelectMany(static directory => Directory.EnumerateFiles(directory, "*.log").Concat(Directory.EnumerateFiles(directory, "*.jsonl")))
             .Select(static path => new FileInfo(path))
             .OrderByDescending(static file => file.LastWriteTimeUtc)
             .FirstOrDefault();
@@ -1251,11 +1415,26 @@ internal sealed class IdeSmokeHarness
                 FileAccess.Read,
                 FileShare.ReadWrite | FileShare.Delete);
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-            return reader.ReadToEnd();
+            var text = reader.ReadToEnd();
+            return string.Equals(latestLog.Extension, ".jsonl", StringComparison.OrdinalIgnoreCase)
+                ? text + Environment.NewLine + DecodeJsonLogText(text)
+                : text;
         }
         catch (IOException)
         {
             return string.Empty;
+        }
+    }
+
+    private static string DecodeJsonLogText(string text)
+    {
+        try
+        {
+            return Regex.Unescape(text);
+        }
+        catch (ArgumentException)
+        {
+            return text;
         }
     }
 
@@ -1637,6 +1816,17 @@ internal sealed class IdeSmokeHarness
         CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "get", "rectangle_capture.axm"), _getProgramPath);
         CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "put", "default_xor_and_preset.axm"), _putProgramPath);
         CopyRepositoryFileToWorkspace(Path.Combine("samples", "graphics", "screen", "best_fit_dimensions.axm"), _screen10ProgramPath);
+        CopyRepositoryFileToWorkspaceForSmoke(
+            Path.Combine("samples", "graphics", "sprites", "walk_cycle.axm"),
+            _spriteProgramPath,
+            static text => text.Replace("SLEEP ' Даём время рассмотреть", "' Smoke harness: пауза отключена. Даём время рассмотреть", StringComparison.Ordinal));
+        CopyRepositoryFileToWorkspaceForSmoke(
+            Path.Combine("samples", "graphics", "sprites", "page_flip_walk.axm"),
+            _spritePageFlipProgramPath,
+            static text => text.Replace("SLEEP ' Даём время рассмотреть", "' Smoke harness: пауза отключена. Даём время рассмотреть", StringComparison.Ordinal));
+        CopyRepositoryFileToWorkspace(
+            Path.Combine("samples", "graphics", "sprites", "assets", "walk_sheet.png"),
+            Path.Combine(_workspaceRootPath, "samples", "graphics", "sprites", "assets", "walk_sheet.png"));
     }
 
     private void CopyRepositoryFileToWorkspace(string repositoryRelativePath, string workspacePath)
@@ -1644,6 +1834,14 @@ internal sealed class IdeSmokeHarness
         var sourcePath = Path.Combine(_repositoryRoot, repositoryRelativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(workspacePath) ?? _workspaceRootPath);
         File.Copy(sourcePath, workspacePath, overwrite: true);
+    }
+
+    private void CopyRepositoryFileToWorkspaceForSmoke(string repositoryRelativePath, string workspacePath, Func<string, string> transform)
+    {
+        var sourcePath = Path.Combine(_repositoryRoot, repositoryRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(workspacePath) ?? _workspaceRootPath);
+        var text = File.ReadAllText(sourcePath, Encoding.UTF8);
+        File.WriteAllText(workspacePath, transform(text), Encoding.UTF8);
     }
 
     private void BackupStateFile()
@@ -1857,6 +2055,23 @@ internal sealed class IdeSmokeHarness
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
+
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint inputCount, Input[] inputs, int inputSize);

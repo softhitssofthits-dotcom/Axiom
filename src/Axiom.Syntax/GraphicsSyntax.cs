@@ -664,3 +664,129 @@ public sealed class DrawStatementSyntax : StatementSyntax
 
     public ExpressionSyntax CommandExpression { get; }
 }
+
+public sealed class DrawImageStatementSyntax : StatementSyntax
+{
+    public DrawImageStatementSyntax(
+        SyntaxToken drawImageKeyword,
+        ExpressionSyntax imageExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax xExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken? widthCommaToken,
+        ExpressionSyntax? widthExpression,
+        SyntaxToken? heightCommaToken,
+        ExpressionSyntax? heightExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawImageKeyword);
+        ArgumentNullException.ThrowIfNull(imageExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        DrawImageKeyword = drawImageKeyword;
+        ImageExpression = imageExpression;
+        XCommaToken = xCommaToken;
+        XExpression = xExpression;
+        YCommaToken = yCommaToken;
+        YExpression = yExpression;
+        WidthCommaToken = widthCommaToken;
+        WidthExpression = widthExpression;
+        HeightCommaToken = heightCommaToken;
+        HeightExpression = heightExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawImageStatement;
+
+    public SyntaxToken DrawImageKeyword { get; }
+
+    public ExpressionSyntax ImageExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken? WidthCommaToken { get; }
+
+    public ExpressionSyntax? WidthExpression { get; }
+
+    public SyntaxToken? HeightCommaToken { get; }
+
+    public ExpressionSyntax? HeightExpression { get; }
+
+    public bool HasScale => WidthExpression is not null || HeightExpression is not null;
+}
+
+public sealed class DrawSpriteStatementSyntax : StatementSyntax
+{
+    public DrawSpriteStatementSyntax(
+        SyntaxToken drawSpriteKeyword,
+        ExpressionSyntax spriteExpression,
+        SyntaxToken frameCommaToken,
+        ExpressionSyntax frameExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax xExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken? widthCommaToken,
+        ExpressionSyntax? widthExpression,
+        SyntaxToken? heightCommaToken,
+        ExpressionSyntax? heightExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawSpriteKeyword);
+        ArgumentNullException.ThrowIfNull(spriteExpression);
+        ArgumentNullException.ThrowIfNull(frameCommaToken);
+        ArgumentNullException.ThrowIfNull(frameExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        DrawSpriteKeyword = drawSpriteKeyword;
+        SpriteExpression = spriteExpression;
+        FrameCommaToken = frameCommaToken;
+        FrameExpression = frameExpression;
+        XCommaToken = xCommaToken;
+        XExpression = xExpression;
+        YCommaToken = yCommaToken;
+        YExpression = yExpression;
+        WidthCommaToken = widthCommaToken;
+        WidthExpression = widthExpression;
+        HeightCommaToken = heightCommaToken;
+        HeightExpression = heightExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawSpriteStatement;
+
+    public SyntaxToken DrawSpriteKeyword { get; }
+
+    public ExpressionSyntax SpriteExpression { get; }
+
+    public SyntaxToken FrameCommaToken { get; }
+
+    public ExpressionSyntax FrameExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken? WidthCommaToken { get; }
+
+    public ExpressionSyntax? WidthExpression { get; }
+
+    public SyntaxToken? HeightCommaToken { get; }
+
+    public ExpressionSyntax? HeightExpression { get; }
+
+    public bool HasScale => WidthExpression is not null || HeightExpression is not null;
+}

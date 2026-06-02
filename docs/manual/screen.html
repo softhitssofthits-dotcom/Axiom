@@ -87,7 +87,7 @@ SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;, &lt;ви
 <pre><code>SCREEN 1, , 1, 0
 LINE (20, 40)-(180, 40), 12
 PCOPY 1, 0</code></pre>
-                <p>Текст, выведенный через <code>PRINT</code> в графическом режиме, не становится отдельной страницей <code>PCOPY</code> в текущем срезе. Страницы относятся к графическому кадровому буферу и палитре.</p>
+                <p>Текст, выведенный через <code>PRINT</code> в графическом режиме, не становится отдельной страницей <code>PCOPY</code> в текущем срезе. Страницы относятся к графическому кадровому буферу и палитре. Если страница содержит полноцветные пиксели от <code>DRAWIMAGE</code>, <code>PCOPY</code> переносит и этот слой.</p>
             </section>
 
             <section class="article-section">
@@ -125,6 +125,7 @@ PRINT "text mode screen"</code></pre>
                     <li><a href="../../samples/graphics/screen/text_scroll.axm">SCREEN 0: вертикальная прокрутка и полоса прокрутки</a></li>
                     <li><a href="../../samples/graphics/screen/invalid_page_error.axm">SCREEN: ошибка номера страницы</a></li>
                     <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование скрытой страницы на видимую</a></li>
+                    <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
                     <li><a href="../../samples/graphics/screen/close_window_stops_run.axm">Закрытие окна останавливает запуск</a></li>
                     <li><a href="../../samples/graphics/input/text_screen_input.axm">Ввод в текстовом окне SCREEN 0</a></li>
                 </ul>
@@ -138,6 +139,7 @@ PRINT "text mode screen"</code></pre>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="pcopy.html">Оператор PCOPY</a>
+                    <a href="images.html">Изображения IMAGE</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
                     <a href="mousex.html">Функция MOUSEX</a>
                     <a href="inkey.html">Функция INKEY</a>

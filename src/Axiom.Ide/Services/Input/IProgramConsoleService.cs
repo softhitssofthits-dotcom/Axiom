@@ -4,6 +4,8 @@ namespace Axiom.Ide.Services.Input;
 
 public interface IProgramConsoleService : IProgramInputPromptService, IKeyboardInputProvider, IMouseInputProvider, IReversibleOutputWriter, IGraphicsHost
 {
+    string? ResourceBaseDirectory { get; set; }
+
     void BeginSession();
 
     void EndSession();

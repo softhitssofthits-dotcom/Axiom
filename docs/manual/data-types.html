@@ -10,7 +10,7 @@
 <header class="topbar">
     <div class="topbar__inner">
         <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Числа, строки, логические значения, FILE, TYPE и массивы</div>
+        <div class="topbar__meta">Числа, строки, логические значения, FILE, IMAGE, TYPE и массивы</div>
         <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
 </header>
@@ -42,7 +42,7 @@
             <ul>
                 <li>Каждая переменная и константа имеет определённый тип.</li>
                 <li>Тип задаётся явно через <code>AS</code> или выводится из инициализатора там, где такая форма поддержана.</li>
-                <li>Базовые скалярные типы Axiom: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code> и <code>FILE</code>.</li>
+                <li>Базовые скалярные типы Axiom: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code>, <code>FILE</code> и <code>IMAGE</code>.</li>
                 <li>Пользовательские записи объявляются через <code>TYPE ... END TYPE</code>.</li>
                 <li>Массивный тип строится из типа элемента и ранга: <code>INTEGER()</code>, <code>STRING(,)</code>, <code>Record(,,)</code>.</li>
                 <li>Если операция требует <code>BOOLEAN</code>, числовое значение не заменяет логическое автоматически.</li>
@@ -96,6 +96,18 @@ END IF</code></pre>
             <p>Файловые переменные не предназначены для арифметики, строковой конкатенации или сравнения как обычные скалярные данные. Их область — ввод-вывод и функции открытых файлов.</p>
         </section>
 
+        <section class="article-section" id="image">
+            <h2>Тип изображения</h2>
+            <p><code>IMAGE</code> обозначает загруженное полноцветное изображение для графического <code>SCREEN</code>. Значение появляется через <code>LOADIMAGE(path)</code>, его размеры читаются функциями <code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code>, а вывод выполняется оператором <code>DRAWIMAGE</code>.</p>
+            <p>Переменная типа <code>IMAGE</code> хранит ссылку на изображение. Пустое значение допустимо: функции размера возвращают <code>0</code>, а попытка нарисовать пустое изображение даёт ошибку времени выполнения.</p>
+        </section>
+
+        <section class="article-section" id="sprite">
+            <h2>Тип спрайта</h2>
+            <p><code>SPRITE</code> обозначает загруженный спрайтовый лист для графического <code>SCREEN</code>. Значение появляется через <code>LOADSPRITE(path, frameWidth, frameHeight)</code>, размер одного кадра читается функциями <code>SPRITEWIDTH</code> и <code>SPRITEHEIGHT</code>, число полных кадров — функцией <code>SPRITECOUNT</code>, а вывод выполняется оператором <code>DRAWSPRITE</code>.</p>
+            <p>Переменная типа <code>SPRITE</code> хранит ссылку на лист и параметры кадра. Пустое значение допустимо: функции размера и числа кадров возвращают <code>0</code>, а попытка нарисовать пустой спрайт даёт ошибку времени выполнения.</p>
+        </section>
+
         <section class="article-section" id="records">
             <h2>Пользовательские типы TYPE</h2>
             <p>Если несколько значений описывают один предмет, их удобно объединить в запись. В Axiom такая запись объявляется через <code>TYPE ... END TYPE</code>, а её поля получают собственные имена и типы.</p>
@@ -135,6 +147,7 @@ DIM board(,) AS INTEGER</code></pre>
                     <tr><td>Строковые</td><td><code>STRING</code>, <code>STRING * N</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
                     <tr><td>Логические</td><td><code>BOOLEAN</code>, <code>TRUE</code>, <code>FALSE</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
                     <tr><td>Файловые</td><td><code>FILE</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
+                    <tr><td>Изображения</td><td><code>IMAGE</code></td><td><a href="images.html">Изображения IMAGE</a></td></tr>
                     <tr><td>Записи</td><td><code>TYPE ... END TYPE</code></td><td><a href="type.html">Тип TYPE</a></td></tr>
                     <tr><td>Массивы</td><td><code>INTEGER()</code>, <code>STRING(,)</code>, <code>Record(,,)</code></td><td><a href="arrays.html">Массивы</a></td></tr>
                     <tr><td>Функции как значения</td><td><code>FUNCTION(...) AS ...</code></td><td><a href="function.html">Функция FUNCTION</a></td></tr>
@@ -174,6 +187,7 @@ DIM board(,) AS INTEGER</code></pre>
                 <a href="data-types-scalars.html">Скалярные типы и литералы</a>
                 <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
                 <a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a>
+                <a href="images.html">Изображения IMAGE</a>
                 <a href="data-types-records-and-arrays.html">TYPE, массивы и групповые объявления</a>
                 <a href="data-types-conversions.html">Вывод типа и преобразования</a>
                 <a href="arrays.html">Массивы</a>

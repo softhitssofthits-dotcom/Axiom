@@ -79,6 +79,8 @@ public sealed class ProgramMouseInputRouterTests
     {
         public int OutputCheckpoint => 0;
 
+        public string? ResourceBaseDirectory { get; set; }
+
         public long MouseX { get; set; } = -1;
 
         public long MouseY { get; set; } = -1;

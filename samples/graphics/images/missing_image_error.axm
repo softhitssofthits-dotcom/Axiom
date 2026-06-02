@@ -1,0 +1,4 @@
+' Ожидается: LOADIMAGE сообщает MB3005 для отсутствующего файла изображения.
+DIM logo AS IMAGE
+logo = LOADIMAGE("../../../src/Axiom.Ide/Assets/missing-image-file.png")
+PRINT IMAGEWIDTH(logo)

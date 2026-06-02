@@ -656,6 +656,214 @@ PRINT POINT(5, 5)
     }
 
     [Fact]
+    public void Execute_ImageWidthAndHeightReturnLoadedAndEmptySizes()
+    {
+        const string text = """
+DIM hero AS IMAGE
+PRINT IMAGEWIDTH(hero)
+PRINT IMAGEHEIGHT(hero)
+hero = LOADIMAGE("hero")
+PRINT IMAGEWIDTH(hero)
+PRINT IMAGEHEIGHT(hero)
+""";
+
+        var host = new TestRuntimeHost([]);
+        host.Images["hero"] = CreateTestImage(width: 3, height: 2);
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["0", "0", "3", "2"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_DrawImageCallsGraphicsHostAndUpdatesCurrentPosition()
+    {
+        const string text = """
+SCREEN 1
+DIM hero AS IMAGE
+hero = LOADIMAGE("hero")
+DRAWIMAGE hero, 1, 2
+DRAWIMAGE hero, 5, 6, 7, 8
+""";
+
+        var image = CreateTestImage(width: 3, height: 2);
+        var host = new TestRuntimeHost([]);
+        host.Images["hero"] = image;
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            [
+                new DrawImageCall(image, 1, 2, 3, 2),
+                new DrawImageCall(image, 5, 6, 7, 8)
+            ],
+            host.DrawImages);
+        Assert.Equal(5, host.CurrentGraphicsX);
+        Assert.Equal(6, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_ImageOperationsReportDocumentedDiagnostics()
+    {
+        var (_, _, emptyPathResult) = ExecuteProgram("PRINT LOADIMAGE(\"\")");
+        Assert.False(emptyPathResult.Succeeded);
+        Assert.Contains(emptyPathResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingImageResult) = ExecuteProgram("PRINT LOADIMAGE(\"missing\")");
+        Assert.False(missingImageResult.Succeeded);
+        Assert.Contains(missingImageResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var (_, _, emptyDrawResult) = ExecuteProgram("""
+SCREEN 1
+DIM hero AS IMAGE
+DRAWIMAGE hero, 0, 0
+""");
+        Assert.False(emptyDrawResult.Succeeded);
+        Assert.Contains(emptyDrawResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var invalidSizeHost = new TestRuntimeHost([]);
+        invalidSizeHost.Images["hero"] = CreateTestImage(width: 3, height: 2);
+        var (_, _, invalidSizeResult) = ExecuteProgram("""
+SCREEN 1
+DIM hero AS IMAGE
+hero = LOADIMAGE("hero")
+DRAWIMAGE hero, 0, 0, 0, 2
+""", invalidSizeHost);
+        Assert.False(invalidSizeResult.Succeeded);
+        Assert.Contains(invalidSizeResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var noScreenHost = new TestRuntimeHost([]);
+        noScreenHost.Images["hero"] = CreateTestImage(width: 3, height: 2);
+        var (_, _, noScreenResult) = ExecuteProgram("""
+DIM hero AS IMAGE
+hero = LOADIMAGE("hero")
+DRAWIMAGE hero, 0, 0
+""", noScreenHost);
+        Assert.False(noScreenResult.Succeeded);
+        Assert.Contains(noScreenResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_SpriteWidthHeightAndCountReturnLoadedAndEmptySizes()
+    {
+        const string text = """
+DIM walk AS SPRITE
+PRINT SPRITEWIDTH(walk)
+PRINT SPRITEHEIGHT(walk)
+PRINT SPRITECOUNT(walk)
+walk = LOADSPRITE("walk", 16, 24)
+PRINT SPRITEWIDTH(walk)
+PRINT SPRITEHEIGHT(walk)
+PRINT SPRITECOUNT(walk)
+""";
+
+        var host = new TestRuntimeHost([]);
+        host.Images["walk"] = CreateTestImage(width: 48, height: 48);
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["0", "0", "0", "16", "24", "6"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_DrawSpriteCallsGraphicsHostAndUpdatesCurrentPosition()
+    {
+        const string text = """
+SCREEN 1
+DIM walk AS SPRITE
+walk = LOADSPRITE("walk", 16, 24)
+DRAWSPRITE walk, 1, 10, 20
+DRAWSPRITE walk, 5, 30, 40, 32, 48
+""";
+
+        var sprite = CreateTestSprite(imageWidth: 48, imageHeight: 48, frameWidth: 16, frameHeight: 24);
+        var host = new TestRuntimeHost([]);
+        host.Sprites["walk"] = sprite;
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            [
+                new DrawSpriteCall(sprite, 1, 10, 20, 16, 24),
+                new DrawSpriteCall(sprite, 5, 30, 40, 32, 48)
+            ],
+            host.DrawSprites);
+        Assert.Equal(30, host.CurrentGraphicsX);
+        Assert.Equal(40, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_SpriteOperationsReportDocumentedDiagnostics()
+    {
+        var (_, _, emptyPathResult) = ExecuteProgram("PRINT LOADSPRITE(\"\", 16, 24)");
+        Assert.False(emptyPathResult.Succeeded);
+        Assert.Contains(emptyPathResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, invalidFrameSizeResult) = ExecuteProgram("PRINT LOADSPRITE(\"walk\", 0, 24)");
+        Assert.False(invalidFrameSizeResult.Succeeded);
+        Assert.Contains(invalidFrameSizeResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingSpriteResult) = ExecuteProgram("PRINT LOADSPRITE(\"missing\", 16, 24)");
+        Assert.False(missingSpriteResult.Succeeded);
+        Assert.Contains(missingSpriteResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var (_, _, emptyDrawResult) = ExecuteProgram("""
+SCREEN 1
+DIM walk AS SPRITE
+DRAWSPRITE walk, 0, 0, 0
+""");
+        Assert.False(emptyDrawResult.Succeeded);
+        Assert.Contains(emptyDrawResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var invalidFrameHost = new TestRuntimeHost([]);
+        invalidFrameHost.Sprites["walk"] = CreateTestSprite(imageWidth: 48, imageHeight: 48, frameWidth: 16, frameHeight: 24);
+        var (_, _, invalidFrameResult) = ExecuteProgram("""
+SCREEN 1
+DIM walk AS SPRITE
+walk = LOADSPRITE("walk", 16, 24)
+DRAWSPRITE walk, 6, 0, 0
+""", invalidFrameHost);
+        Assert.False(invalidFrameResult.Succeeded);
+        Assert.Contains(invalidFrameResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var emptySheetHost = new TestRuntimeHost([]);
+        emptySheetHost.Images["walk"] = CreateTestImage(width: 8, height: 8);
+        var (_, _, emptySheetResult) = ExecuteProgram("""
+SCREEN 1
+DIM walk AS SPRITE
+walk = LOADSPRITE("walk", 16, 24)
+DRAWSPRITE walk, 0, 0, 0
+""", emptySheetHost);
+        Assert.False(emptySheetResult.Succeeded);
+        Assert.Contains(emptySheetResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var invalidSizeHost = new TestRuntimeHost([]);
+        invalidSizeHost.Sprites["walk"] = CreateTestSprite(imageWidth: 48, imageHeight: 48, frameWidth: 16, frameHeight: 24);
+        var (_, _, invalidSizeResult) = ExecuteProgram("""
+SCREEN 1
+DIM walk AS SPRITE
+walk = LOADSPRITE("walk", 16, 24)
+DRAWSPRITE walk, 0, 0, 0, 0, 24
+""", invalidSizeHost);
+        Assert.False(invalidSizeResult.Succeeded);
+        Assert.Contains(invalidSizeResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var noScreenHost = new TestRuntimeHost([]);
+        noScreenHost.Sprites["walk"] = CreateTestSprite(imageWidth: 48, imageHeight: 48, frameWidth: 16, frameHeight: 24);
+        var (_, _, noScreenResult) = ExecuteProgram("""
+DIM walk AS SPRITE
+walk = LOADSPRITE("walk", 16, 24)
+DRAWSPRITE walk, 0, 0, 0
+""", noScreenHost);
+        Assert.False(noScreenResult.Succeeded);
+        Assert.Contains(noScreenResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
     public void Execute_WindowSupportsDrawPointSelectorsAndViewRebase()
     {
         const string text = """
@@ -9633,6 +9841,18 @@ END TRY
         return (program, host, result);
     }
 
+    private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(string text, TestRuntimeHost host)
+    {
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var result = Interpreter.Execute(program, host);
+        return (program, host, result);
+    }
+
     private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgramWithKeys(string text, params string[] keys)
     {
         var syntax = Parser.Parse(text, out var parserDiagnostics);
@@ -9857,6 +10077,15 @@ END TRY
         return timeZones.ToDictionary(static timeZone => timeZone.Id, StringComparer.OrdinalIgnoreCase);
     }
 
+    private static RuntimeImageValue CreateTestImage(int width, int height)
+    {
+        var pixels = Enumerable.Repeat(0xFF0000FFu, width * height).ToArray();
+        return new RuntimeImageValue(width, height, pixels);
+    }
+
+    private static RuntimeSpriteValue CreateTestSprite(int imageWidth, int imageHeight, int frameWidth, int frameHeight) =>
+        new(CreateTestImage(imageWidth, imageHeight), frameWidth, frameHeight);
+
     private sealed class TestRuntimeHost : IRuntimeHost
     {
         private const int VisibleTextColumns = 40;
@@ -9949,6 +10178,14 @@ END TRY
         public List<GraphicsPaintRequest> PaintRequests { get; } = [];
 
         public List<(int Index, int Color)> PaletteColors { get; } = [];
+
+        public Dictionary<string, RuntimeImageValue> Images { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public Dictionary<string, RuntimeSpriteValue> Sprites { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public List<DrawImageCall> DrawImages { get; } = [];
+
+        public List<DrawSpriteCall> DrawSprites { get; } = [];
 
         public int PaletteResets { get; private set; }
 
@@ -10114,6 +10351,25 @@ END TRY
         public void SetPaletteColor(int index, int color)
         {
             PaletteColors.Add((index, color));
+        }
+
+        public RuntimeImageValue? LoadImage(string path) => Images.TryGetValue(path, out var image) ? image : null;
+
+        public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight) =>
+            Sprites.TryGetValue(path, out var sprite)
+                ? sprite
+                : Images.TryGetValue(path, out var image)
+                    ? new RuntimeSpriteValue(image, frameWidth, frameHeight)
+                    : null;
+
+        public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+        {
+            DrawImages.Add(new DrawImageCall(image, x, y, width, height));
+        }
+
+        public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+        {
+            DrawSprites.Add(new DrawSpriteCall(sprite, frame, x, y, width, height));
         }
 
         public bool SetTextViewport(int topRow, int bottomRow)
@@ -10522,4 +10778,19 @@ END TRY
         long Y2,
         int Color,
         GraphicsLineKind Kind);
+
+    private sealed record DrawImageCall(
+        RuntimeImageValue Image,
+        long X,
+        long Y,
+        int Width,
+        int Height);
+
+    private sealed record DrawSpriteCall(
+        RuntimeSpriteValue Sprite,
+        int Frame,
+        long X,
+        long Y,
+        int Width,
+        int Height);
 }

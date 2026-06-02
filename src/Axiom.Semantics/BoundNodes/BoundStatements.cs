@@ -716,6 +716,85 @@ public sealed class BoundDrawStatement : BoundStatement
     public BoundExpression CommandExpression { get; }
 }
 
+public sealed class BoundDrawImageStatement : BoundStatement
+{
+    public BoundDrawImageStatement(
+        TextLocation location,
+        BoundExpression imageExpression,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression? widthExpression,
+        BoundExpression? heightExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(imageExpression);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        ImageExpression = imageExpression;
+        XExpression = xExpression;
+        YExpression = yExpression;
+        WidthExpression = widthExpression;
+        HeightExpression = heightExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawImageStatement;
+
+    public BoundExpression ImageExpression { get; }
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression? WidthExpression { get; }
+
+    public BoundExpression? HeightExpression { get; }
+
+    public bool HasScale => WidthExpression is not null || HeightExpression is not null;
+}
+
+public sealed class BoundDrawSpriteStatement : BoundStatement
+{
+    public BoundDrawSpriteStatement(
+        TextLocation location,
+        BoundExpression spriteExpression,
+        BoundExpression frameExpression,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression? widthExpression,
+        BoundExpression? heightExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(spriteExpression);
+        ArgumentNullException.ThrowIfNull(frameExpression);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        SpriteExpression = spriteExpression;
+        FrameExpression = frameExpression;
+        XExpression = xExpression;
+        YExpression = yExpression;
+        WidthExpression = widthExpression;
+        HeightExpression = heightExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawSpriteStatement;
+
+    public BoundExpression SpriteExpression { get; }
+
+    public BoundExpression FrameExpression { get; }
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression? WidthExpression { get; }
+
+    public BoundExpression? HeightExpression { get; }
+
+    public bool HasScale => WidthExpression is not null || HeightExpression is not null;
+}
+
 public sealed class BoundOnKeyStatement : BoundStatement
 {
     public BoundOnKeyStatement(

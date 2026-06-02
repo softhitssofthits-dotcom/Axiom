@@ -1,9 +1,13 @@
+using Axiom.Runtime;
+
 namespace Axiom.Ide.Graphics;
 
 public sealed class ScreenFramebuffer
 {
     private readonly int[] _colorIndices;
     private readonly uint[] _palette;
+    private readonly uint[] _trueColorPixels;
+    private readonly bool[] _hasTrueColor;
 
     public ScreenFramebuffer(int width, int height)
     {
@@ -21,6 +25,8 @@ public sealed class ScreenFramebuffer
         Height = height;
         _colorIndices = new int[width * height];
         _palette = CreateDefaultPalette();
+        _trueColorPixels = new uint[width * height];
+        _hasTrueColor = new bool[width * height];
     }
 
     public int Width { get; }
@@ -30,6 +36,8 @@ public sealed class ScreenFramebuffer
     public void Clear()
     {
         Array.Clear(_colorIndices);
+        Array.Clear(_trueColorPixels);
+        Array.Clear(_hasTrueColor);
     }
 
     public void ResetPalette()
@@ -53,6 +61,8 @@ public sealed class ScreenFramebuffer
 
         Array.Copy(source._colorIndices, _colorIndices, _colorIndices.Length);
         Array.Copy(source._palette, _palette, _palette.Length);
+        Array.Copy(source._trueColorPixels, _trueColorPixels, _trueColorPixels.Length);
+        Array.Copy(source._hasTrueColor, _hasTrueColor, _hasTrueColor.Length);
     }
 
     public void SetPixel(long x, long y, int color)
@@ -62,7 +72,10 @@ public sealed class ScreenFramebuffer
             return;
         }
 
-        _colorIndices[GetOffset((int)x, (int)y)] = NormalizeColorIndex(color);
+        var offset = GetOffset((int)x, (int)y);
+        _colorIndices[offset] = NormalizeColorIndex(color);
+        _trueColorPixels[offset] = 0;
+        _hasTrueColor[offset] = false;
     }
 
     public int GetPixel(long x, long y)
@@ -72,7 +85,10 @@ public sealed class ScreenFramebuffer
             return 0;
         }
 
-        return _colorIndices[GetOffset((int)x, (int)y)];
+        var offset = GetOffset((int)x, (int)y);
+        return _hasTrueColor[offset]
+            ? FindNearestDefaultPaletteIndex(_trueColorPixels[offset])
+            : _colorIndices[offset];
     }
 
     public void FillRectangle(long left, long top, long right, long bottom, int color)
@@ -93,7 +109,130 @@ public sealed class ScreenFramebuffer
             var rowOffset = y * Width;
             for (var x = (int)clippedLeft; x <= clippedRight; x++)
             {
-                _colorIndices[rowOffset + x] = colorIndex;
+                var offset = rowOffset + x;
+                _colorIndices[offset] = colorIndex;
+                _trueColorPixels[offset] = 0;
+                _hasTrueColor[offset] = false;
+            }
+        }
+    }
+
+    public void DrawImage(
+        RuntimeImageValue image,
+        long left,
+        long top,
+        int width,
+        int height,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        if (width <= 0 || height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), width, "Image target size must be positive.");
+        }
+
+        var clippedLeft = Math.Max(Math.Max(0, left), clipLeft);
+        var clippedTop = Math.Max(Math.Max(0, top), clipTop);
+        var clippedRight = Math.Min(Math.Min(Width - 1L, SaturatingAdd(left, width - 1L)), clipRight);
+        var clippedBottom = Math.Min(Math.Min(Height - 1L, SaturatingAdd(top, height - 1L)), clipBottom);
+
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        for (var destinationY = (int)clippedTop; destinationY <= clippedBottom; destinationY++)
+        {
+            var targetY = destinationY - top;
+            var sourceY = checked((int)(targetY * image.Height / height));
+            var sourceRowOffset = sourceY * image.Width;
+            var destinationRowOffset = destinationY * Width;
+
+            for (var destinationX = (int)clippedLeft; destinationX <= clippedRight; destinationX++)
+            {
+                var targetX = destinationX - left;
+                var sourceX = checked((int)(targetX * image.Width / width));
+                var sourcePixel = image.BgraPixels[sourceRowOffset + sourceX];
+                var alpha = (int)(sourcePixel >> 24);
+                if (alpha == 0)
+                {
+                    continue;
+                }
+
+                var destinationOffset = destinationRowOffset + destinationX;
+                var destinationPixel = GetVisiblePixel(destinationOffset);
+                _trueColorPixels[destinationOffset] = alpha == 255
+                    ? ForceOpaque(sourcePixel)
+                    : BlendOverOpaque(sourcePixel, destinationPixel, alpha);
+                _hasTrueColor[destinationOffset] = true;
+            }
+        }
+    }
+
+    public void DrawSprite(
+        RuntimeSpriteValue sprite,
+        int frame,
+        long left,
+        long top,
+        int width,
+        int height,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom)
+    {
+        ArgumentNullException.ThrowIfNull(sprite);
+        if (frame < 0 || frame >= sprite.FrameCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(frame), frame, "Sprite frame index must reference an existing frame.");
+        }
+
+        if (width <= 0 || height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), width, "Sprite target size must be positive.");
+        }
+
+        var clippedLeft = Math.Max(Math.Max(0, left), clipLeft);
+        var clippedTop = Math.Max(Math.Max(0, top), clipTop);
+        var clippedRight = Math.Min(Math.Min(Width - 1L, SaturatingAdd(left, width - 1L)), clipRight);
+        var clippedBottom = Math.Min(Math.Min(Height - 1L, SaturatingAdd(top, height - 1L)), clipBottom);
+
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        var sourceFrameLeft = frame % sprite.Columns * sprite.FrameWidth;
+        var sourceFrameTop = frame / sprite.Columns * sprite.FrameHeight;
+        var sourceImage = sprite.Image;
+
+        for (var destinationY = (int)clippedTop; destinationY <= clippedBottom; destinationY++)
+        {
+            var targetY = destinationY - top;
+            var sourceY = sourceFrameTop + checked((int)(targetY * sprite.FrameHeight / height));
+            var sourceRowOffset = sourceY * sourceImage.Width;
+            var destinationRowOffset = destinationY * Width;
+
+            for (var destinationX = (int)clippedLeft; destinationX <= clippedRight; destinationX++)
+            {
+                var targetX = destinationX - left;
+                var sourceX = sourceFrameLeft + checked((int)(targetX * sprite.FrameWidth / width));
+                var sourcePixel = sourceImage.BgraPixels[sourceRowOffset + sourceX];
+                var alpha = (int)(sourcePixel >> 24);
+                if (alpha == 0)
+                {
+                    continue;
+                }
+
+                var destinationOffset = destinationRowOffset + destinationX;
+                var destinationPixel = GetVisiblePixel(destinationOffset);
+                _trueColorPixels[destinationOffset] = alpha == 255
+                    ? ForceOpaque(sourcePixel)
+                    : BlendOverOpaque(sourcePixel, destinationPixel, alpha);
+                _hasTrueColor[destinationOffset] = true;
             }
         }
     }
@@ -103,7 +242,7 @@ public sealed class ScreenFramebuffer
         var pixels = new uint[_colorIndices.Length];
         for (var index = 0; index < _colorIndices.Length; index++)
         {
-            pixels[index] = MapPaletteColor(_colorIndices[index]);
+            pixels[index] = GetVisiblePixel(index);
         }
 
         return new ScreenFramebufferSnapshot(Width, Height, pixels);
@@ -218,9 +357,80 @@ public sealed class ScreenFramebuffer
 
     private int GetOffset(int x, int y) => y * Width + x;
 
+    private uint GetVisiblePixel(int offset) => _hasTrueColor[offset]
+        ? _trueColorPixels[offset]
+        : MapPaletteColor(_colorIndices[offset]);
+
     public static int NormalizeColorIndex(int color) => (int)(Math.Abs((long)color) % 256);
 
     private uint MapPaletteColor(int color) => _palette[NormalizeColorIndex(color)];
+
+    private static uint ForceOpaque(uint pixel) => 0xFF000000u | (pixel & 0x00FFFFFFu);
+
+    private static uint BlendOverOpaque(uint source, uint destination, int alpha)
+    {
+        var inverseAlpha = 255 - alpha;
+        var sourceRed = (int)((source >> 16) & 0xFF);
+        var sourceGreen = (int)((source >> 8) & 0xFF);
+        var sourceBlue = (int)(source & 0xFF);
+        var destinationRed = (int)((destination >> 16) & 0xFF);
+        var destinationGreen = (int)((destination >> 8) & 0xFF);
+        var destinationBlue = (int)(destination & 0xFF);
+
+        var red = ((sourceRed * alpha) + (destinationRed * inverseAlpha) + 127) / 255;
+        var green = ((sourceGreen * alpha) + (destinationGreen * inverseAlpha) + 127) / 255;
+        var blue = ((sourceBlue * alpha) + (destinationBlue * inverseAlpha) + 127) / 255;
+        return ToBgra(red, green, blue);
+    }
+
+    private static int FindNearestDefaultPaletteIndex(uint pixel)
+    {
+        var red = (int)((pixel >> 16) & 0xFF);
+        var green = (int)((pixel >> 8) & 0xFF);
+        var blue = (int)(pixel & 0xFF);
+        var bestIndex = 0;
+        var bestDistance = int.MaxValue;
+
+        for (var index = 0; index < 256; index++)
+        {
+            var palettePixel = MapColorToBgra(index);
+            var paletteRed = (int)((palettePixel >> 16) & 0xFF);
+            var paletteGreen = (int)((palettePixel >> 8) & 0xFF);
+            var paletteBlue = (int)(palettePixel & 0xFF);
+            var distance = SquaredDistance(red, paletteRed) + SquaredDistance(green, paletteGreen) + SquaredDistance(blue, paletteBlue);
+            if (distance >= bestDistance)
+            {
+                continue;
+            }
+
+            bestDistance = distance;
+            bestIndex = index;
+            if (distance == 0)
+            {
+                break;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    private static int SquaredDistance(int left, int right)
+    {
+        var delta = left - right;
+        return delta * delta;
+    }
+
+    private static long SaturatingAdd(long left, long right)
+    {
+        try
+        {
+            return checked(left + right);
+        }
+        catch (OverflowException)
+        {
+            return right >= 0 ? long.MaxValue : long.MinValue;
+        }
+    }
 
     private static uint[] CreateDefaultPalette()
     {

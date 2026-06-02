@@ -75,6 +75,8 @@ public sealed partial class Parser
             or SyntaxKind.DecimalKeyword
             or SyntaxKind.StringKeyword
             or SyntaxKind.BooleanKeyword
+            or SyntaxKind.ImageKeyword
+            or SyntaxKind.SpriteKeyword
             or SyntaxKind.FileKeyword)
         {
             return NextToken();
@@ -294,6 +296,8 @@ public sealed partial class Parser
             TokenKind.DoKeyword => SyntaxKind.DoKeyword,
             TokenKind.DoubleKeyword => SyntaxKind.DoubleKeyword,
             TokenKind.DrawKeyword => SyntaxKind.DrawKeyword,
+            TokenKind.DrawImageKeyword => SyntaxKind.DrawImageKeyword,
+            TokenKind.DrawSpriteKeyword => SyntaxKind.DrawSpriteKeyword,
             TokenKind.ElseKeyword => SyntaxKind.ElseKeyword,
             TokenKind.ElseIfKeyword => SyntaxKind.ElseIfKeyword,
             TokenKind.EndKeyword => SyntaxKind.EndKeyword,
@@ -307,6 +311,7 @@ public sealed partial class Parser
             TokenKind.FunctionKeyword => SyntaxKind.FunctionKeyword,
             TokenKind.GetKeyword => SyntaxKind.GetKeyword,
             TokenKind.IfKeyword => SyntaxKind.IfKeyword,
+            TokenKind.ImageKeyword => SyntaxKind.ImageKeyword,
             TokenKind.ImpKeyword => SyntaxKind.ImpKeyword,
             TokenKind.InputKeyword => SyntaxKind.InputKeyword,
             TokenKind.IntegerKeyword => SyntaxKind.IntegerKeyword,
@@ -341,6 +346,7 @@ public sealed partial class Parser
             TokenKind.SleepKeyword => SyntaxKind.SleepKeyword,
             TokenKind.StepKeyword => SyntaxKind.StepKeyword,
             TokenKind.StopKeyword => SyntaxKind.StopKeyword,
+            TokenKind.SpriteKeyword => SyntaxKind.SpriteKeyword,
             TokenKind.StringKeyword => SyntaxKind.StringKeyword,
             TokenKind.SubKeyword => SyntaxKind.SubKeyword,
             TokenKind.ThenKeyword => SyntaxKind.ThenKeyword,

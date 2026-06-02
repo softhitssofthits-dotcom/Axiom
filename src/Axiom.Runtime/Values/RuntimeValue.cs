@@ -126,6 +126,10 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
     public static RuntimeValue FromFile(RuntimeTextFile? value) => new(TypeSymbol.File, value);
 
+    public static RuntimeValue FromImage(RuntimeImageValue? value) => new(TypeSymbol.Image, value);
+
+    public static RuntimeValue FromSprite(RuntimeSpriteValue? value) => new(TypeSymbol.Sprite, value);
+
     public static RuntimeValue FromRuntimeError(RuntimeErrorValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -313,6 +317,26 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (RuntimeTextFile?)Value;
     }
 
+    public RuntimeImageValue? AsImage()
+    {
+        if (Type != TypeSymbol.Image)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not IMAGE.");
+        }
+
+        return (RuntimeImageValue?)Value;
+    }
+
+    public RuntimeSpriteValue? AsSprite()
+    {
+        if (Type != TypeSymbol.Sprite)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not SPRITE.");
+        }
+
+        return (RuntimeSpriteValue?)Value;
+    }
+
     public RuntimeArrayValue AsArray()
     {
         if (Type is not ArrayTypeSymbol)
@@ -435,6 +459,18 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         {
             var file = AsFile();
             return file is not null && file.IsOpen ? "<FILE>" : "<ЗАКРЫТЫЙ FILE>";
+        }
+
+        if (Type == TypeSymbol.Image)
+        {
+            var image = AsImage();
+            return image is null ? "<ПУСТОЙ IMAGE>" : $"<IMAGE {image.Width}x{image.Height}>";
+        }
+
+        if (Type == TypeSymbol.Sprite)
+        {
+            var sprite = AsSprite();
+            return sprite is null ? "<ПУСТОЙ SPRITE>" : $"<SPRITE {sprite.FrameWidth}x{sprite.FrameHeight}x{sprite.FrameCount}>";
         }
 
         if (Type is FunctionTypeSymbol functionType)

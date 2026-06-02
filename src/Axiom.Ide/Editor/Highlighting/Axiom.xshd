@@ -38,6 +38,8 @@
             <Word>DIM</Word>
             <Word>DO</Word>
             <Word>DRAW</Word>
+            <Word>DRAWIMAGE</Word>
+            <Word>DRAWSPRITE</Word>
             <Word>ELSE</Word>
             <Word>ELSEIF</Word>
             <Word>END</Word>
@@ -103,8 +105,10 @@
             <Word>DECIMAL</Word>
             <Word>DOUBLE</Word>
             <Word>FILE</Word>
+            <Word>IMAGE</Word>
             <Word>INTEGER</Word>
             <Word>LONG</Word>
+            <Word>SPRITE</Word>
             <Word>STRING</Word>
         </Keywords>
 
@@ -209,6 +213,8 @@
             <Word>GETDIRS</Word>
             <Word>GETFILES</Word>
             <Word>HOUR</Word>
+            <Word>IMAGEHEIGHT</Word>
+            <Word>IMAGEWIDTH</Word>
             <Word>INKEY</Word>
             <Word>INSERT</Word>
             <Word>INSTR</Word>
@@ -228,6 +234,8 @@
             <Word>LEN</Word>
             <Word>LINENUMBER</Word>
             <Word>LBOUND</Word>
+            <Word>LOADIMAGE</Word>
+            <Word>LOADSPRITE</Word>
             <Word>LOG</Word>
             <Word>LOG10</Word>
             <Word>LOG2</Word>
@@ -295,6 +303,9 @@
             <Word>SKIPLINE</Word>
             <Word>SPACE</Word>
             <Word>SPLIT</Word>
+            <Word>SPRITECOUNT</Word>
+            <Word>SPRITEHEIGHT</Word>
+            <Word>SPRITEWIDTH</Word>
             <Word>SQR</Word>
             <Word>STARTOFMONTH</Word>
             <Word>STARTOFYEAR</Word>

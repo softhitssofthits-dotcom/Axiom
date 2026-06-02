@@ -56,6 +56,8 @@ public sealed partial class Interpreter
             BoundCircleStatement circle => ExecuteCircle(circle),
             BoundPaintStatement paint => ExecutePaint(paint),
             BoundDrawStatement draw => ExecuteDraw(draw),
+            BoundDrawImageStatement drawImage => ExecuteDrawImage(drawImage),
+            BoundDrawSpriteStatement drawSprite => ExecuteDrawSprite(drawSprite),
             BoundOnKeyStatement onKey => ExecuteOnKey(onKey),
             BoundOnMouseStatement onMouse => ExecuteOnMouse(onMouse),
             BoundOpenStatement open => ExecuteOpen(open),

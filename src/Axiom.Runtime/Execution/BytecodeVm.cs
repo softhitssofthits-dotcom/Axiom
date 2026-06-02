@@ -871,6 +871,16 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.DrawImage:
+                ExecuteDrawImageInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.DrawSprite:
+                ExecuteDrawSpriteInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.StatementBoundary:
                 ExecuteStatementBoundary(instructionIndex);
                 InvalidateReverseExecutionHistory();

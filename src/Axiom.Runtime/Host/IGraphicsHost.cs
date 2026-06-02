@@ -125,6 +125,22 @@ public interface IGraphicsHost
     {
     }
 
+    RuntimeImageValue? LoadImage(string path) => null;
+
+    RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight)
+    {
+        var image = LoadImage(path);
+        return image is null ? null : new RuntimeSpriteValue(image, frameWidth, frameHeight);
+    }
+
+    void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+    }
+
+    void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+    {
+    }
+
     bool SetTextViewport(int topRow, int bottomRow) => false;
 
     void ResetTextViewport()

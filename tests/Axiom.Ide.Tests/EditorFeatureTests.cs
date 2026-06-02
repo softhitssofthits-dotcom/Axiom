@@ -232,14 +232,14 @@ public sealed class EditorFeatureTests
         var expectedKeywords = Enum.GetValues<SyntaxKind>()
             .Where(static kind => kind.ToString().EndsWith("Keyword", StringComparison.Ordinal))
             .Select(static kind => kind.ToString()[..^"Keyword".Length].ToUpperInvariant())
-            .Except(["BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "INTEGER", "LONG", "STRING"], StringComparer.OrdinalIgnoreCase)
+            .Except(["BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING"], StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var missingKeywords = expectedKeywords
             .Where(keyword => !AxiomHighlightingVocabulary.Keywords.Contains(keyword))
             .ToArray();
 
-        var expectedTypes = new[] { "BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "INTEGER", "LONG", "STRING" };
+        var expectedTypes = new[] { "BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING" };
         var missingTypes = expectedTypes
             .Where(typeName => !AxiomHighlightingVocabulary.TypeNames.Contains(typeName))
             .ToArray();
@@ -248,6 +248,27 @@ public sealed class EditorFeatureTests
         Assert.Empty(missingTypes);
         Assert.Contains("TRUE", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("FALSE", AxiomHighlightingVocabulary.Keywords);
+    }
+
+    [Fact]
+    public void Highlighting_VocabularyContainsImageWords()
+    {
+        Assert.Contains("DRAWIMAGE", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("IMAGE", AxiomHighlightingVocabulary.TypeNames);
+        Assert.Contains("LOADIMAGE", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("IMAGEWIDTH", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("IMAGEHEIGHT", AxiomHighlightingVocabulary.BuiltIns);
+    }
+
+    [Fact]
+    public void Highlighting_VocabularyContainsSpriteWords()
+    {
+        Assert.Contains("DRAWSPRITE", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("SPRITE", AxiomHighlightingVocabulary.TypeNames);
+        Assert.Contains("LOADSPRITE", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("SPRITEWIDTH", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("SPRITEHEIGHT", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("SPRITECOUNT", AxiomHighlightingVocabulary.BuiltIns);
     }
 
     [Fact]

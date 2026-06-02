@@ -803,6 +803,8 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.Circle => new BytecodeInstruction(Opcode.Circle, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.Paint => new BytecodeInstruction(Opcode.Paint, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.Draw => new BytecodeInstruction(Opcode.Draw, [instruction.ValueCount]),
+            LoweredInstructionKind.DrawImage => new BytecodeInstruction(Opcode.DrawImage, [instruction.ValueCount]),
+            LoweredInstructionKind.DrawSprite => new BytecodeInstruction(Opcode.DrawSprite, [instruction.ValueCount]),
             LoweredInstructionKind.PrintValue => new BytecodeInstruction(Opcode.PrintValue),
             LoweredInstructionKind.PrintUsing => EmitPrintUsing(instruction),
             LoweredInstructionKind.PrintSeparator => EmitPrintSeparator(instruction),

@@ -243,6 +243,19 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_DimStatementWithImageType()
+    {
+        var program = ParseProgram("DIM hero AS IMAGE", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var dim = AssertGlobalStatement<DimStatementSyntax>(program);
+        var declaration = Assert.Single(dim.Declarations);
+        var typeClause = Assert.IsType<TypeClauseSyntax>(declaration.TypeClause);
+
+        AssertNamedType(typeClause.Type, SyntaxKind.ImageKeyword);
+    }
+
+    [Fact]
     public void Parse_OnKeyStatement()
     {
         var program = ParseProgram("ON KEY(\"LEFT\"), HandleLeft", out var diagnostics);
@@ -607,6 +620,61 @@ public sealed class ParserTests
         Assert.Empty(diagnostics);
         var draw = AssertGlobalStatement<DrawStatementSyntax>(program);
         Assert.IsType<BinaryExpressionSyntax>(draw.CommandExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawImageStatementNaturalSize()
+    {
+        var program = ParseProgram("DRAWIMAGE hero, 10, 20", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawImage = AssertGlobalStatement<DrawImageStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(drawImage.ImageExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawImage.XExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawImage.YExpression);
+        Assert.False(drawImage.HasScale);
+        Assert.Null(drawImage.WidthExpression);
+        Assert.Null(drawImage.HeightExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawImageStatementWithTargetSize()
+    {
+        var program = ParseProgram("DRAWIMAGE hero, 10, 20, 32, 16", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawImage = AssertGlobalStatement<DrawImageStatementSyntax>(program);
+        Assert.True(drawImage.HasScale);
+        Assert.NotNull(drawImage.WidthExpression);
+        Assert.NotNull(drawImage.HeightExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawSpriteStatementNaturalSize()
+    {
+        var program = ParseProgram("DRAWSPRITE hero, 1, 10, 20", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawSprite = AssertGlobalStatement<DrawSpriteStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(drawSprite.SpriteExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawSprite.FrameExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawSprite.XExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawSprite.YExpression);
+        Assert.False(drawSprite.HasScale);
+        Assert.Null(drawSprite.WidthExpression);
+        Assert.Null(drawSprite.HeightExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawSpriteStatementWithTargetSize()
+    {
+        var program = ParseProgram("DRAWSPRITE hero, 1, 10, 20, 32, 16", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawSprite = AssertGlobalStatement<DrawSpriteStatementSyntax>(program);
+        Assert.True(drawSprite.HasScale);
+        Assert.NotNull(drawSprite.WidthExpression);
+        Assert.NotNull(drawSprite.HeightExpression);
     }
 
     [Fact]

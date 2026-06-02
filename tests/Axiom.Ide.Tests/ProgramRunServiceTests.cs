@@ -67,6 +67,18 @@ PRINT 1 + 2
     }
 
     [Fact]
+    public void Run_SetsResourceBaseDirectoryFromSourceFilePath()
+    {
+        var consoleService = new FakeProgramConsoleService(new FakeProgramInputPromptService());
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+
+        var result = service.Run("PRINT 1", sourceFilePath: @"C:\temp\samples\program.axm");
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(@"C:\temp\samples", consoleService.ResourceBaseDirectory);
+    }
+
+    [Fact]
     public void Run_AfterCompile_UsesCompiledCache()
     {
         var traceService = new FakeIdeTraceService();
@@ -1025,6 +1037,8 @@ PRINT 1 + 2
 
         public int OutputCheckpoint => WrittenOutput.Count;
 
+        public string? ResourceBaseDirectory { get; set; }
+
         public bool SessionStarted { get; private set; }
 
         public bool SessionEnded { get; private set; }
@@ -1247,6 +1261,8 @@ PRINT 1 + 2
         public MouseInputEvent ReadMouseEvent() => default;
 
         public int OutputCheckpoint => 0;
+
+        public string? ResourceBaseDirectory { get; set; }
 
         public string RequestInput(ProgramInputRequest request) => string.Empty;
 

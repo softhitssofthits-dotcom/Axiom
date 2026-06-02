@@ -876,3 +876,38 @@
 - Сквозной VM: да, `PCopyAcceptanceSample_RunsOnBytecodeVm` запускает позитивный пример через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор, а `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity` включает неверный номер страницы;
 - Негативный паритет: да, неверная страница `SCREEN 1, , 4, 0`, неверная страница `PCOPY 4, 0` и `PCOPY` в текстовом `SCREEN 0` подтверждены отдельными запускаемыми примерами и одинаковыми диагностиками в интерпретаторе и `BytecodeVm`;
 - Профиль: не приоритет, потому что `PCOPY` является копированием целой графической страницы через хост, а не горячим вычислительным циклом VM.
+
+## Обновление реестра - 2026-06-01 - IMAGE и DRAWIMAGE
+
+Дополнение к области `SCREEN` и современных графических изображений:
+- VM: да, `BytecodeVm` поддерживает тип `IMAGE`, встроенные функции `LOADIMAGE`, `IMAGEWIDTH`, `IMAGEHEIGHT` и отдельную инструкцию `DrawImage` без отката на интерпретатор;
+- Интерпретатор: да, использует тот же договор хоста `LoadImage(...)` / `DrawImage(...)` и ту же диагностику, что VM;
+- Автотесты: да, добавлены проверки парсера, связывателя, интерпретатора, `BytecodeVm`, слоя запуска, хоста IDE и передачи базового каталога ресурса из IDE-запуска;
+- Запускаемые примеры: да, позитивный пример `samples/graphics/images/load_and_draw_image.axm` и отрицательный пример `samples/graphics/images/missing_image_error.axm`;
+- Справочник: да, добавлен `docs/manual/images.html`, обновлены `docs/manual/graphics.html`, `docs/manual/screen.html`, `docs/manual/data-types.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `DrawImageAcceptanceSample_RunsOnBytecodeVm` запускает позитивный пример через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, отсутствующий файл изображения подтверждён отдельным запускаемым примером и одинаковой диагностикой `MB3005` в интерпретаторе и `BytecodeVm`; пустой путь, пустой `IMAGE`, неверный размер и отсутствие `SCREEN` покрыты runtime- и VM-проверками;
+- Профиль: не приоритет, потому что первый срез проверяет функциональную интеграцию загрузки и вывода изображения через хост, а отдельный производительный сценарий не добавлялся.
+
+## Обновление реестра - 2026-06-02 - SPRITE и DRAWSPRITE
+
+Дополнение к области `SCREEN` и современных графических спрайтов:
+- VM: да, `BytecodeVm` поддерживает тип `SPRITE`, встроенные функции `LOADSPRITE`, `SPRITEWIDTH`, `SPRITEHEIGHT`, `SPRITECOUNT` и отдельную инструкцию `DrawSprite` без отката на интерпретатор;
+- Интерпретатор: да, использует тот же договор хоста `LoadSprite(...)` / `DrawSprite(...)`, общий полноцветный слой кадрового буфера и те же диагностики, что VM;
+- Автотесты: да, добавлены проверки парсера, связывателя, интерпретатора, `BytecodeVm`, слоя запуска, хоста IDE, IDE-словаря подсветки и форматирования для новых имён;
+- Запускаемые примеры: да, позитивный пример `samples/graphics/sprites/walk_cycle.axm`, отрицательный пример `samples/graphics/sprites/invalid_frame_error.axm` и постоянный ресурс `samples/graphics/sprites/assets/walk_sheet.png`;
+- Справочник: да, добавлен `docs/manual/sprites.html`, обновлены `docs/manual/graphics.html`, `docs/manual/data-types.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `DrawSpriteAcceptanceSample_RunsOnBytecodeVm` запускает позитивный пример через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, неверный номер кадра подтверждён отдельным запускаемым примером и одинаковой диагностикой `MB3007` в интерпретаторе и `BytecodeVm`; пустой путь, неверный размер кадра, отсутствующий файл, пустой `SPRITE`, лист без доступных кадров, неверный размер вывода и отсутствие `SCREEN` покрыты runtime- и VM-проверками;
+- Профиль: не приоритет, потому что срез проверяет функциональную интеграцию спрайтового листа через хост, а отдельный производительный сценарий не добавлялся.
+
+## Обновление реестра - 2026-06-02 - кадровый сценарий SPRITE через PCOPY
+
+Дополнение к областям `SPRITE` / `DRAWSPRITE` и `PCOPY`:
+- VM: да, новый пользовательский сценарий не вводит новую инструкцию, а подтверждает совместную работу уже поддержанных `DrawSprite` и `PCopy` в одном байткодном запуске;
+- Автотесты: да, `DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm` запускает `samples/graphics/sprites/page_flip_walk.axm` через `ExecutionMode.Bytecode`, проверяет `ExecutionEngineKind.BytecodeVm`, отсутствие отката на интерпретатор, графический вывод и два вызова `DRAWSPRITE`;
+- Запускаемые примеры: да, добавлен `samples/graphics/sprites/page_flip_walk.axm`, который готовит кадр спрайта на скрытой странице `1`, переносит его на видимую страницу `0` через `PCOPY` и завершается по `ESC`;
+- Справочник: да, обновлены `docs/manual/pcopy.html`, `docs/manual/sprites.html`, `docs/manual/graphics.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, acceptance-тест фиксирует байткодный запуск, а живой маршрут `Axiom.Ide.SmokeHarness --sprite-only` дополнительно проверяет этот сценарий в реальном IDE-хосте, где `PCOPY` переносит полноцветный слой кадрового буфера;
+- Негативный паритет: не менялся, потому что сценарий положительный и новых диагностик не вводит;
+- Профиль: не приоритет, отдельный производительный сценарий не добавлялся.

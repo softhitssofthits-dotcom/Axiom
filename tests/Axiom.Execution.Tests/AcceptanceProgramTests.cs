@@ -2217,20 +2217,98 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(["PAINT STEP sample finished"], inputProvider.GraphicsOutput);
     }
 
-[Theory]
-[InlineData("samples/operators/view/invalid_bounds_error.axm", "MB3007")]
-[InlineData("samples/operators/window/zero_size_error.axm", "MB3007")]
-[InlineData("samples/operators/paint/empty_pattern_error.axm", "MB3007")]
-[InlineData("samples/operators/view-print/invalid_rows_error.axm", "MB3007")]
-[InlineData("samples/functions/pmap/invalid_selector_error.axm", "MB3007")]
-[InlineData("samples/graphics/screen/invalid_page_error.axm", "MB3007")]
-[InlineData("samples/operators/pcopy/invalid_page_error.axm", "MB3007")]
-[InlineData("samples/operators/pcopy/text_screen_error.axm", "MB3010")]
-public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string relativePath, string expectedCode)
-{
+    [Fact]
+    public void DrawImageAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/images/load_and_draw_image.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
-        var bytecodeInputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
-        var interpreterInputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+        var inputProvider = CreateGraphicsImageSampleInputProvider(relativePath);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(["image size=16x16", "DRAWIMAGE sample finished"], inputProvider.GraphicsOutput);
+
+        Assert.Equal(2, inputProvider.DrawImages.Count);
+        Assert.Equal((16L, 24L, 16, 16), ToDrawImageShape(inputProvider.DrawImages[0]));
+        Assert.Equal((96L, 24L, 64, 64), ToDrawImageShape(inputProvider.DrawImages[1]));
+    }
+
+    [Fact]
+    public void DrawSpriteAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/sprites/walk_cycle.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsSpriteSampleInputProvider(relativePath, ["SPACE", "SPACE", "ESC"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "Количество кадров в листе: 4",
+                "Первый кадр показан. Нажмите любую клавишу.",
+                "Второй кадр показан. Нажмите любую клавишу.",
+                "Проверка DRAWSPRITE завершена. Нажмите ESC."
+            ],
+            inputProvider.GraphicsOutput);
+
+        Assert.Equal(2, inputProvider.DrawSprites.Count);
+        Assert.Equal((1, 16L, 24L, 16, 16), ToDrawSpriteShape(inputProvider.DrawSprites[0]));
+        Assert.Equal((3, 64L, 24L, 32, 32), ToDrawSpriteShape(inputProvider.DrawSprites[1]));
+    }
+
+    [Fact]
+    public void DrawSpritePageFlipAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/sprites/page_flip_walk.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsSpriteSampleInputProvider(relativePath, ["SPACE", "SPACE", "ESC"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal(
+            [
+                "Второй кадр готов. Нажмите любую клавишу.",
+                "Количество кадров в листе: 4",
+                "Проверка спрайта через PCOPY завершена. Нажмите ESC."
+            ],
+            inputProvider.GraphicsOutput);
+
+        Assert.Equal(2, inputProvider.DrawSprites.Count);
+        Assert.Equal((0, 20L, 24L, 16, 16), ToDrawSpriteShape(inputProvider.DrawSprites[0]));
+        Assert.Equal((1, 44L, 24L, 16, 16), ToDrawSpriteShape(inputProvider.DrawSprites[1]));
+    }
+
+    [Theory]
+    [InlineData("samples/operators/view/invalid_bounds_error.axm", "MB3007")]
+    [InlineData("samples/operators/window/zero_size_error.axm", "MB3007")]
+    [InlineData("samples/operators/paint/empty_pattern_error.axm", "MB3007")]
+    [InlineData("samples/operators/view-print/invalid_rows_error.axm", "MB3007")]
+    [InlineData("samples/functions/pmap/invalid_selector_error.axm", "MB3007")]
+    [InlineData("samples/graphics/screen/invalid_page_error.axm", "MB3007")]
+    [InlineData("samples/operators/pcopy/invalid_page_error.axm", "MB3007")]
+    [InlineData("samples/operators/pcopy/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/graphics/images/missing_image_error.axm", "MB3005")]
+    [InlineData("samples/graphics/sprites/invalid_frame_error.axm", "MB3007")]
+    public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string relativePath, string expectedCode)
+    {
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var bytecodeInputProvider = CreateGraphicsNegativeInputProvider(relativePath);
+        var interpreterInputProvider = CreateGraphicsNegativeInputProvider(relativePath);
 
         var bytecodeResult = Run(sourceText, bytecodeInputProvider, ExecutionMode.Bytecode);
         var interpreterResult = Run(sourceText, interpreterInputProvider, ExecutionMode.Interpreter);
@@ -2251,6 +2329,12 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
         Assert.True(interpreterDiagnostic.Location.Line > 0);
         Assert.True(interpreterDiagnostic.Location.Column > 0);
     }
+
+    private static (long X, long Y, int Width, int Height) ToDrawImageShape(DrawImageCall call) =>
+        (call.X, call.Y, call.Width, call.Height);
+
+    private static (int Frame, long X, long Y, int Width, int Height) ToDrawSpriteShape(DrawSpriteCall call) =>
+        (call.Frame, call.X, call.Y, call.Width, call.Height);
 
     [Theory]
     [InlineData("samples/operators/draw/square.axm", "DRAW square sample finished")]
@@ -2548,6 +2632,16 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
             return new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada", "7"]);
         }
 
+        if (relativePath.StartsWith("samples/graphics/images/", StringComparison.OrdinalIgnoreCase))
+        {
+            return CreateGraphicsImageSampleInputProvider(relativePath);
+        }
+
+        if (relativePath.StartsWith("samples/graphics/sprites/", StringComparison.OrdinalIgnoreCase))
+        {
+            return CreateGraphicsSpriteSampleInputProvider(relativePath);
+        }
+
         if (relativePath.Equals("samples/operators/palette/change_and_reset_colors.axm", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
@@ -2657,6 +2751,32 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
         return new QueueInputProvider("Ника", "7", "TRUE");
     }
 
+    private static QueueKeyboardInputProvider CreateGraphicsNegativeInputProvider(string relativePath) =>
+        relativePath.StartsWith("samples/graphics/images/", StringComparison.OrdinalIgnoreCase)
+            ? CreateGraphicsImageSampleInputProvider(relativePath)
+            : relativePath.StartsWith("samples/graphics/sprites/", StringComparison.OrdinalIgnoreCase)
+                ? CreateGraphicsSpriteSampleInputProvider(relativePath)
+            : new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+    private static QueueKeyboardInputProvider CreateGraphicsImageSampleInputProvider(string relativePath)
+    {
+        var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
+        return new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: [], resourceBaseDirectory: sampleDirectory);
+    }
+
+    private static QueueKeyboardInputProvider CreateGraphicsSpriteSampleInputProvider(string relativePath)
+    {
+        return CreateGraphicsSpriteSampleInputProvider(relativePath, ["SPACE", "ESC"]);
+    }
+
+    private static QueueKeyboardInputProvider CreateGraphicsSpriteSampleInputProvider(string relativePath, IEnumerable<string> keys)
+    {
+        var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
+        return new QueueKeyboardInputProvider(keys: keys, pressedKeys: [], resourceBaseDirectory: sampleDirectory);
+    }
+
     private static string[] CreateInputRecordIntakeLines()
     {
         var lines = new string[180];
@@ -2726,8 +2846,11 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
         private readonly HashSet<int> _pressedMouseButtons;
         private readonly long _mouseX;
         private readonly long _mouseY;
+        private readonly string? _resourceBaseDirectory;
         private readonly Dictionary<(long X, long Y), int> _pixels = [];
         private readonly Dictionary<int, Dictionary<(long X, long Y), int>> _screenPages = [];
+        private readonly List<DrawImageCall> _drawImages = [];
+        private readonly List<DrawSpriteCall> _drawSprites = [];
         private bool _isScreenActive;
         private bool _isScreenOutputActive;
         private int _screenMode;
@@ -2767,7 +2890,8 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
             IEnumerable<int>? pressedMouseButtons = null,
             IEnumerable<int>? mousePresses = null,
             IEnumerable<MouseInputEvent>? mouseEvents = null,
-            IEnumerable<string>? inputs = null)
+            IEnumerable<string>? inputs = null,
+            string? resourceBaseDirectory = null)
         {
             _inputs = new Queue<string>(inputs ?? []);
             _keys = new Queue<string>(keys ?? []);
@@ -2779,9 +2903,14 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
             _mouseX = mouseX;
             _mouseY = mouseY;
             _pressedMouseButtons = new HashSet<int>(pressedMouseButtons ?? []);
+            _resourceBaseDirectory = resourceBaseDirectory;
         }
 
         public List<string> GraphicsOutput { get; } = [];
+
+        public IReadOnlyList<DrawImageCall> DrawImages => _drawImages;
+
+        public IReadOnlyList<DrawSpriteCall> DrawSprites => _drawSprites;
 
         public string ReadInput(InputRequest request) => _inputs.Count > 0 ? _inputs.Dequeue() : string.Empty;
 
@@ -2991,6 +3120,46 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
             var text = ReadInput(request);
             WriteGraphicsText(CreateGraphicsPrompt(request) + text, newLine: true);
             return text;
+        }
+
+        public RuntimeImageValue? LoadImage(string path)
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            return File.Exists(resolvedPath)
+                ? new RuntimeImageValue(16, 16, Enumerable.Repeat(0xFFFF00FFu, 16 * 16).ToArray())
+                : null;
+        }
+
+        public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight)
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            return File.Exists(resolvedPath)
+                ? new RuntimeSpriteValue(new RuntimeImageValue(32, 32, Enumerable.Repeat(0xFFFF00FFu, 32 * 32).ToArray()), frameWidth, frameHeight)
+                : null;
+        }
+
+        public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+        {
+            _drawImages.Add(new DrawImageCall(image, x, y, width, height));
+        }
+
+        public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+        {
+            _drawSprites.Add(new DrawSpriteCall(sprite, frame, x, y, width, height));
+        }
+
+        private string ResolveResourcePath(string path)
+        {
+            var expandedPath = Environment.ExpandEnvironmentVariables(path);
+            if (Path.IsPathFullyQualified(expandedPath))
+            {
+                return expandedPath;
+            }
+
+            var baseDirectory = string.IsNullOrWhiteSpace(_resourceBaseDirectory)
+                ? Environment.CurrentDirectory
+                : _resourceBaseDirectory!;
+            return Path.GetFullPath(Path.Combine(baseDirectory, expandedPath));
         }
 
         private static string CreateGraphicsPrompt(InputRequest request)
@@ -3211,5 +3380,9 @@ public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string 
 
         private bool IsInsideScreen(long x, long y) => x >= 0 && y >= 0 && x < _screenWidth && y < _screenHeight;
     }
+
+    private sealed record DrawImageCall(RuntimeImageValue Image, long X, long Y, int Width, int Height);
+
+    private sealed record DrawSpriteCall(RuntimeSpriteValue Sprite, int Frame, long X, long Y, int Width, int Height);
 }
 

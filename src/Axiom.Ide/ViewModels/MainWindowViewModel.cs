@@ -853,7 +853,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             });
 
         var result = await ExecuteRunOperationAsync(
-            () => _programRunService.Run(documentContent.SourceText, SelectedExecutionMode, sourceBreakpointLines));
+            () => _programRunService.Run(
+                documentContent.SourceText,
+                SelectedExecutionMode,
+                sourceBreakpointLines,
+                sourceFilePath: runDocument?.FilePath));
 
         ApplyRunOutputFromResult(result, "run.output-sync");
 
@@ -1030,7 +1034,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 documentContent.SourceText,
                 ExecutionMode.Bytecode,
                 SourceBreakpointLines,
-                stopBeforeFirstInstruction: true));
+                stopBeforeFirstInstruction: true,
+                sourceFilePath: runDocument?.FilePath));
 
         ApplyRunOutputFromResult(result, "run.output-sync");
 

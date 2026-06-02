@@ -39,6 +39,10 @@ public class TypeSymbol : Symbol
 
     public static TypeSymbol Boolean { get; } = new("BOOLEAN");
 
+    public static TypeSymbol Image { get; } = new("IMAGE");
+
+    public static TypeSymbol Sprite { get; } = new("SPRITE");
+
     public static TypeSymbol File { get; } = new("FILE");
 
     public static RuntimeErrorTypeSymbol RuntimeError { get; } = new();
@@ -80,6 +84,8 @@ public class TypeSymbol : Symbol
             SyntaxKind.DecimalKeyword => Decimal,
             SyntaxKind.StringKeyword => String,
             SyntaxKind.BooleanKeyword => Boolean,
+            SyntaxKind.ImageKeyword => Image,
+            SyntaxKind.SpriteKeyword => Sprite,
             SyntaxKind.FileKeyword => File,
             _ => Error
         };

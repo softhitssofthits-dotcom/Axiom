@@ -324,6 +324,29 @@ public sealed partial class Binder
             BindExpression(statement.CommandExpression, TypeSymbol.String));
     }
 
+    private BoundStatement BindDrawImageStatement(DrawImageStatementSyntax statement)
+    {
+        return new BoundDrawImageStatement(
+            GetLocation(statement),
+            BindExpression(statement.ImageExpression, TypeSymbol.Image),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            statement.WidthExpression is null ? null : BindExpression(statement.WidthExpression, TypeSymbol.Long),
+            statement.HeightExpression is null ? null : BindExpression(statement.HeightExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindDrawSpriteStatement(DrawSpriteStatementSyntax statement)
+    {
+        return new BoundDrawSpriteStatement(
+            GetLocation(statement),
+            BindExpression(statement.SpriteExpression, TypeSymbol.Sprite),
+            BindExpression(statement.FrameExpression, TypeSymbol.Long),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            statement.WidthExpression is null ? null : BindExpression(statement.WidthExpression, TypeSymbol.Long),
+            statement.HeightExpression is null ? null : BindExpression(statement.HeightExpression, TypeSymbol.Long));
+    }
+
     private BoundExpression BindPaintFillExpression(ExpressionSyntax expression)
     {
         var boundExpression = BindExpression(expression);

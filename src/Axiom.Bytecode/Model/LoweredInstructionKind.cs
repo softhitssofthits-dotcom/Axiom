@@ -51,6 +51,8 @@ public enum LoweredInstructionKind
     Circle,
     Paint,
     Draw,
+    DrawImage,
+    DrawSprite,
     PrintValue,
     PrintUsing,
     PrintSeparator,

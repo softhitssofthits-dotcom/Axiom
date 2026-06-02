@@ -83,6 +83,8 @@ public sealed partial class Binder
             CircleStatementSyntax circleStatement => circleStatement.CircleKeyword.Location,
             PaintStatementSyntax paintStatement => paintStatement.PaintKeyword.Location,
             DrawStatementSyntax drawStatement => drawStatement.DrawKeyword.Location,
+            DrawImageStatementSyntax drawImageStatement => drawImageStatement.DrawImageKeyword.Location,
+            DrawSpriteStatementSyntax drawSpriteStatement => drawSpriteStatement.DrawSpriteKeyword.Location,
             OnKeyStatementSyntax onKeyStatement => onKeyStatement.OnKeyword.Location,
             OnMouseStatementSyntax onMouseStatement => onMouseStatement.OnKeyword.Location,
             OpenStatementSyntax openStatement => openStatement.OpenKeyword.Location,

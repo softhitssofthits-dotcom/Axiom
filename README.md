@@ -33,6 +33,7 @@
 - ветка интерактивного ввода уже включает клавиатурные функции и обработчики, а также мышиные формы `MOUSEX()`, `MOUSEY()`, `MOUSEBUTTON()`, `MOUSEPRESS()` и `ON MOUSE`;
 - в `samples/acceptance/` зафиксированы официальный позитивный проверочный пример `smoke_v0_1.axm` с ожидаемым выводом и набор коротких отрицательных программ для базовых ошибок;
 - ручная стабилизация вспомогательного слоя оболочки в живом WPF-окне завершена: сценарии недавних файлов, отсутствующей записи в списке недавних файлов и последнего использованного пути проверены и работают штатно.
+- в графическом слое добавлен первый современный срез изображений: тип `IMAGE`, функции `LOADIMAGE`, `IMAGEWIDTH`, `IMAGEHEIGHT` и оператор `DRAWIMAGE` работают через интерпретатор, `BytecodeVm` и хост IDE.
 
 ## Рабочий каталог и расширение
 
@@ -101,6 +102,13 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 ```
 
 - этот режим копирует `samples/graphics/screen/best_fit_dimensions.axm` во временный workspace, запускает его через реальный `Axiom.Ide.exe` и проверяет по IDE trace фактические `SCREENWIDTH()` / `SCREENHEIGHT()`, расчёт `LOCATE` и выбор наибольшего вписываемого размера с отношением `16:9`;
+- для отдельной приёмки `SPRITE` / `DRAWSPRITE` есть узкий smoke-маршрут:
+
+```powershell
+dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj -- --sprite-only
+```
+
+- этот режим копирует `samples/graphics/sprites/walk_cycle.axm`, `samples/graphics/sprites/page_flip_walk.axm` и `samples/graphics/sprites/assets/walk_sheet.png` во временную рабочую область, в копиях заменяет ручные паузы на автоматический smoke-вариант, запускает примеры в режиме `Bytecode`, проверяет строки `screen.output`, включая кадровый сценарий `DRAWSPRITE` + `PCOPY`, и трассу завершения с фактическим `BytecodeVm`;
 - для отладки workspace можно оставить:
 
 ```powershell
@@ -125,6 +133,8 @@ dotnet run --project src/Axiom.Ide.SmokeHarness/Axiom.Ide.SmokeHarness.csproj --
 Человекочитаемая документация поддерживается только в `docs/manual/`.
 
 Для разработчиков графического runtime-слоя есть отдельная сводка по внутренним флагам, параметрам и значениям по умолчанию операторов `LINE`, `CIRCLE` и `PAINT`: `docs/GRAPHICS_OPERATORS_FLAGS.md`.
+
+Долгосрочный план развития графики вынесен в `docs/MODERN_GRAPHICS_PLAN.md`. Он фиксирует разделение на совместимый BASIC-слой и современный графический слой для 2D-игр, а также очередь будущих срезов вроде `CANVAS`, кадрового цикла, полноцветных примитивов, камеры, анимаций, столкновений и тайловых карт.
 
 ## Чистота сборки
 

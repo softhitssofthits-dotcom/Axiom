@@ -19,7 +19,14 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.ScreenHeight, "SCREENHEIGHT", TypeSymbol.Integer, []),
             CreateDefault(BuiltinFunctionId.PointPosition, "POINT", TypeSymbol.Integer, [Parameter("number", TypeSymbol.Integer)]),
             CreateDefault(BuiltinFunctionId.Point, "POINT", TypeSymbol.Integer, [Parameter("x", TypeSymbol.Long), Parameter("y", TypeSymbol.Long)]),
-            CreateDefault(BuiltinFunctionId.PMap, "PMAP", TypeSymbol.Double, [Parameter("coordinate", TypeSymbol.Double), Parameter("selector", TypeSymbol.Integer)])
+            CreateDefault(BuiltinFunctionId.PMap, "PMAP", TypeSymbol.Double, [Parameter("coordinate", TypeSymbol.Double), Parameter("selector", TypeSymbol.Integer)]),
+            CreateDefault(BuiltinFunctionId.LoadImage, "LOADIMAGE", TypeSymbol.Image, [Parameter("path", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.ImageWidth, "IMAGEWIDTH", TypeSymbol.Integer, [Parameter("image", TypeSymbol.Image)]),
+            CreateDefault(BuiltinFunctionId.ImageHeight, "IMAGEHEIGHT", TypeSymbol.Integer, [Parameter("image", TypeSymbol.Image)]),
+            CreateDefault(BuiltinFunctionId.LoadSprite, "LOADSPRITE", TypeSymbol.Sprite, [Parameter("path", TypeSymbol.String), Parameter("frameWidth", TypeSymbol.Long), Parameter("frameHeight", TypeSymbol.Long)]),
+            CreateDefault(BuiltinFunctionId.SpriteWidth, "SPRITEWIDTH", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
+            CreateDefault(BuiltinFunctionId.SpriteHeight, "SPRITEHEIGHT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
+            CreateDefault(BuiltinFunctionId.SpriteCount, "SPRITECOUNT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)])
         ];
     }
 }

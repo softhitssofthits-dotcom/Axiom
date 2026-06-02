@@ -1674,6 +1674,22 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public void RunProgram_PassesSourceFilePathToRunService()
+    {
+        var documentService = new FakeDocumentFileService
+        {
+            DocumentToLoad = new DocumentFileContent(@"C:\temp\program.axm", "PRINT 1", false)
+        };
+        var runService = new FakeProgramRunService();
+        var viewModel = CreateViewModel(documentService: documentService, runService: runService);
+        PrepareSavedActiveDocument(viewModel, @"C:\temp\program.axm", "PRINT 1");
+
+        viewModel.RunCommand.Execute(null);
+
+        Assert.Equal(@"C:\temp\program.axm", runService.LastSourceFilePath);
+    }
+
+    [Fact]
     public void RunProgram_IgnoresSourceBreakpointLines()
     {
         var documentService = new FakeDocumentFileService
@@ -2647,6 +2663,7 @@ public sealed class MainWindowViewModelTests
         public Axiom.Execution.ExecutionMode LastExecutionMode { get; private set; } = Axiom.Execution.ExecutionMode.Bytecode;
         public IReadOnlyList<int> LastSourceBreakpointLines { get; private set; } = [];
         public bool LastStopBeforeFirstInstruction { get; private set; }
+        public string? LastSourceFilePath { get; private set; }
 
         public ProgramCompilationResult Compile(string sourceText, IProgress<int>? progress = null)
         {
@@ -2660,13 +2677,15 @@ public sealed class MainWindowViewModelTests
             string sourceText,
             Axiom.Execution.ExecutionMode mode = Axiom.Execution.ExecutionMode.Bytecode,
             IEnumerable<int>? sourceBreakpointLines = null,
-            bool stopBeforeFirstInstruction = false)
+            bool stopBeforeFirstInstruction = false,
+            string? sourceFilePath = null)
         {
             CallCount++;
             LastSourceText = sourceText;
             LastExecutionMode = mode;
             LastSourceBreakpointLines = sourceBreakpointLines?.ToArray() ?? [];
             LastStopBeforeFirstInstruction = stopBeforeFirstInstruction;
+            LastSourceFilePath = sourceFilePath;
             return OnRun?.Invoke(sourceText) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
 

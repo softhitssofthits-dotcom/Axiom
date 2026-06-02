@@ -1,5 +1,8 @@
+using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Axiom.Ide.Graphics;
 using Axiom.Ide.Services.Diagnostics;
@@ -116,6 +119,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             }
         }
     }
+
+    public string? ResourceBaseDirectory { get; set; }
 
     public string CurrentPromptText
     {
@@ -570,6 +575,117 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         {
             _framebuffer?.SetPaletteColor(index, color);
             PublishGraphicsFrame();
+        });
+    }
+
+    public RuntimeImageValue? LoadImage(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            if (!File.Exists(resolvedPath))
+            {
+                return null;
+            }
+
+            using var stream = File.OpenRead(resolvedPath);
+            var decoder = BitmapDecoder.Create(
+                stream,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+            if (decoder.Frames.Count == 0)
+            {
+                return null;
+            }
+
+            BitmapSource source = decoder.Frames[0];
+            if (source.Format != PixelFormats.Bgra32)
+            {
+                source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0d);
+            }
+
+            var width = source.PixelWidth;
+            var height = source.PixelHeight;
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            var pixels = new uint[checked(width * height)];
+            source.CopyPixels(pixels, width * sizeof(uint), offset: 0);
+            return new RuntimeImageValue(width, height, pixels);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException)
+        {
+            return null;
+        }
+    }
+
+    public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight)
+    {
+        if (frameWidth <= 0 || frameHeight <= 0)
+        {
+            return null;
+        }
+
+        var image = LoadImage(path);
+        return image is null ? null : new RuntimeSpriteValue(image, frameWidth, frameHeight);
+    }
+
+    public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        InvokeOnDispatcher(() =>
+        {
+            if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            if (viewport.IsEmpty)
+            {
+                return;
+            }
+
+            _framebuffer.DrawImage(image, absoluteX, absoluteY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(sprite);
+        InvokeOnDispatcher(() =>
+        {
+            if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            if (viewport.IsEmpty)
+            {
+                return;
+            }
+
+            _framebuffer.DrawSprite(sprite, frame, absoluteX, absoluteY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom);
+            ScheduleGraphicsVisualRefresh();
         });
     }
 
@@ -1126,6 +1242,20 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             .Replace("\r", "\\r", StringComparison.Ordinal)
             .Replace("\n", "\\n", StringComparison.Ordinal)
             .Trim();
+    }
+
+    private string ResolveResourcePath(string path)
+    {
+        var expandedPath = Environment.ExpandEnvironmentVariables(path);
+        if (Path.IsPathFullyQualified(expandedPath))
+        {
+            return expandedPath;
+        }
+
+        var baseDirectory = string.IsNullOrWhiteSpace(ResourceBaseDirectory)
+            ? Environment.CurrentDirectory
+            : ResourceBaseDirectory!;
+        return Path.GetFullPath(Path.Combine(baseDirectory, expandedPath));
     }
 
     private void EnqueueMouseEventCore(MouseInputEvent mouseEvent)

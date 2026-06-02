@@ -113,6 +113,42 @@ public sealed class CodeFormattingServiceTests
     }
 
     [Fact]
+    public void FormatLine_FormatsImageKeywordsTypesAndBuiltIns()
+    {
+        var classicDeclaration = _service.FormatLine("dim logo as image", CodeFormattingStyle.Classic);
+        var classicLoad = _service.FormatLine("logo=loadimage(path)", CodeFormattingStyle.Classic);
+        var classicDraw = _service.FormatLine("drawimage logo,16,24,64,64", CodeFormattingStyle.Classic);
+        var modernDeclaration = _service.FormatLine("dim logo as image", CodeFormattingStyle.Modern);
+        var modernSize = _service.FormatLine("print imagewidth(logo),imageheight(logo)", CodeFormattingStyle.Modern);
+        var modernDraw = _service.FormatLine("drawimage logo,16,24", CodeFormattingStyle.Modern);
+
+        Assert.Equal("DIM logo AS IMAGE", classicDeclaration);
+        Assert.Equal("logo = LOADIMAGE(path)", classicLoad);
+        Assert.Equal("DRAWIMAGE logo, 16, 24, 64, 64", classicDraw);
+        Assert.Equal("Dim logo As Image", modernDeclaration);
+        Assert.Equal("Print Imagewidth(logo), Imageheight(logo)", modernSize);
+        Assert.Equal("Drawimage logo, 16, 24", modernDraw);
+    }
+
+    [Fact]
+    public void FormatLine_FormatsSpriteKeywordsTypesAndBuiltIns()
+    {
+        var classicDeclaration = _service.FormatLine("dim walk as sprite", CodeFormattingStyle.Classic);
+        var classicLoad = _service.FormatLine("walk=loadsprite(path,16,24)", CodeFormattingStyle.Classic);
+        var classicDraw = _service.FormatLine("drawsprite walk,1,16,24,32,48", CodeFormattingStyle.Classic);
+        var modernDeclaration = _service.FormatLine("dim walk as sprite", CodeFormattingStyle.Modern);
+        var modernSize = _service.FormatLine("print spritewidth(walk),spriteheight(walk),spritecount(walk)", CodeFormattingStyle.Modern);
+        var modernDraw = _service.FormatLine("drawsprite walk,1,16,24", CodeFormattingStyle.Modern);
+
+        Assert.Equal("DIM walk AS SPRITE", classicDeclaration);
+        Assert.Equal("walk = LOADSPRITE(path, 16, 24)", classicLoad);
+        Assert.Equal("DRAWSPRITE walk, 1, 16, 24, 32, 48", classicDraw);
+        Assert.Equal("Dim walk As Sprite", modernDeclaration);
+        Assert.Equal("Print Spritewidth(walk), Spriteheight(walk), Spritecount(walk)", modernSize);
+        Assert.Equal("Drawsprite walk, 1, 16, 24", modernDraw);
+    }
+
+    [Fact]
     public void FormatLine_Classic_FormatsShiftPowerAndIntegerDivisionOperators()
     {
         var result = _service.FormatLine("print(a<<2)+(b>>1)+2^3+7\\2", CodeFormattingStyle.Classic);

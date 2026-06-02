@@ -95,6 +95,8 @@ public enum Opcode
     Circle,
     Paint,
     Draw,
+    DrawImage,
+    DrawSprite,
     AdvanceForLoopLocal,
     PrintValue,
     PrintUsing,
