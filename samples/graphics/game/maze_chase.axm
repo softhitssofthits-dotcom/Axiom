@@ -1,624 +1,712 @@
-' maze_chase — живой пример современного графического слоя Axiom.
-' В одном файле собраны CANVAS, кадровый цикл, камера, спрайты, примитивы и HUD.
-' Управление: стрелки ведут героя по лабиринту, ESC завершает пример.
+' maze_chase — живой пример современного графического слоя Axiom.                              ' Этот пример показывает камеру, спрайты, HUD и игровой цикл.
+' В одном файле собраны CANVAS, кадровый цикл, камера, спрайты, примитивы и HUD.              ' Так удобнее видеть всю игровую механику целиком.
+' Управление: стрелки ведут героя по лабиринту, ESC завершает пример.                         ' Подсказка сразу объясняет, как запускать и проверять программу.
 
-DIM TILE AS INTEGER = 16
-DIM VIEW_WIDTH AS INTEGER = 480
-DIM VIEW_HEIGHT AS INTEGER = 270
-DIM HUD_HEIGHT AS INTEGER = 30
+DIM TILE AS INTEGER = 16                                                                        ' Размер одной логической клетки лабиринта в пикселях.
+DIM VIEW_WIDTH AS INTEGER = 480                                                                 ' Ширина видимой области камеры в пикселях.
+DIM VIEW_HEIGHT AS INTEGER = 270                                                                ' Высота видимой области камеры в пикселях.
+DIM HUD_HEIGHT AS INTEGER = 30                                                                  ' Высота верхней панели со счётом и подсказкой.
 
-DIM PLAYER_SPEED AS INTEGER = 4
-DIM GHOST_SPEED AS INTEGER = 3
+DIM PLAYER_SPEED AS INTEGER = 4                                                                 ' Скорость героя в пикселях за кадр.
+DIM GHOST_SPEED AS INTEGER = 3                                                                  ' Скорость призрака в пикселях за кадр.
 
-DIM DIR_LEFT AS INTEGER = 1
-DIM DIR_RIGHT AS INTEGER = 2
-DIM DIR_UP AS INTEGER = 3
-DIM DIR_DOWN AS INTEGER = 4
+DIM DIR_LEFT AS INTEGER = 1                                                                     ' Код направления влево.
+DIM DIR_RIGHT AS INTEGER = 2                                                                    ' Код направления вправо.
+DIM DIR_UP AS INTEGER = 3                                                                       ' Код направления вверх.
+DIM DIR_DOWN AS INTEGER = 4                                                                     ' Код направления вниз.
 
-DIM WALL_FILL_COLOR AS INTEGER = RGB(12, 40, 118)
-DIM WALL_LIGHT_COLOR AS INTEGER = RGB(90, 214, 255)
-DIM WALL_SHADOW_COLOR AS INTEGER = RGB(7, 18, 62)
-DIM BACKGROUND_COLOR AS INTEGER = RGB(1, 4, 14)
-DIM POWER_PELLET_COLOR AS INTEGER = RGB(255, 240, 176)
-DIM HUD_BACKGROUND_COLOR AS INTEGER = RGB(4, 8, 18)
-DIM HUD_TEXT_COLOR AS INTEGER = RGB(255, 244, 180)
-DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)
+DIM WALL_FILL_COLOR AS INTEGER = RGB(12, 40, 118)                                              ' Цвет заливки стен, оставлен как часть палитры примера.
+DIM WALL_LIGHT_COLOR AS INTEGER = RGB(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.
+DIM WALL_SHADOW_COLOR AS INTEGER = RGB(7, 18, 62)                                              ' Тёмный оттенок палитры стен, оставлен для возможных доработок.
+DIM BACKGROUND_COLOR AS INTEGER = RGB(1, 4, 14)                                                ' Почти чёрный фон за пределами картинки лабиринта.
+DIM POWER_PELLET_COLOR AS INTEGER = RGB(255, 240, 176)                                         ' Цвет обычных и крупных точек.
+DIM HUD_BACKGROUND_COLOR AS INTEGER = RGB(4, 8, 18)                                            ' Фон информационной панели сверху.
+DIM HUD_TEXT_COLOR AS INTEGER = RGB(255, 244, 180)                                             ' Цвет строки со счётом и числом жизней.
+DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)                                           ' Цвет строки статуса с подсказками игроку.
 
-DIM maze(1 TO 23) AS STRING
-DIM mazeRows AS INTEGER = 23
-DIM mazeCols AS INTEGER = 0
+DIM maze(1 TO 36) AS STRING                                                                     ' Массив строк, в котором хранится логическая карта лабиринта.
+DIM mazeRows AS INTEGER = 36                                                                    ' Количество строк логической карты.
+DIM mazeCols AS INTEGER = 0                                                                     ' Количество столбцов логической карты, вычисляется после загрузки.
 
-DIM playerFrames(1 TO 12) AS SPRITE
-DIM ghostSprite AS SPRITE
+DIM mazeBackground AS IMAGE                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
+DIM playerFrames(1 TO 12) AS SPRITE                                                            ' Набор кадров героя: 4 направления по 3 кадра.
+DIM ghostSprite AS SPRITE                                                                       ' Спрайт призрака, который гонится за героем.
 
-DIM playerStartCol AS INTEGER
-DIM playerStartRow AS INTEGER
-DIM ghostStartCol AS INTEGER
-DIM ghostStartRow AS INTEGER
+DIM pelletCenterRows(1 TO 36) AS INTEGER                                                        ' Таблица вертикальных центров проходов по строкам лабиринта.
+DIM pelletCenterCols(1 TO 28) AS INTEGER                                                        ' Таблица горизонтальных центров проходов по столбцам лабиринта.
 
-DIM playerCol AS INTEGER
-DIM playerRow AS INTEGER
-DIM playerDir AS INTEGER
-DIM playerWantDir AS INTEGER
-DIM playerFacing AS INTEGER
-DIM playerTravel AS INTEGER
-DIM playerAnimStep AS INTEGER
+DIM playerStartCol AS INTEGER                                                                   ' Стартовый столбец героя на логической сетке.
+DIM playerStartRow AS INTEGER                                                                   ' Стартовая строка героя на логической сетке.
+DIM ghostStartCol AS INTEGER                                                                    ' Стартовый столбец призрака на логической сетке.
+DIM ghostStartRow AS INTEGER                                                                    ' Стартовая строка призрака на логической сетке.
 
-DIM ghostCol AS INTEGER
-DIM ghostRow AS INTEGER
-DIM ghostDir AS INTEGER
-DIM ghostWantDir AS INTEGER
-DIM ghostTravel AS INTEGER
+DIM playerCol AS INTEGER                                                                        ' Текущий столбец героя.
+DIM playerRow AS INTEGER                                                                        ' Текущая строка героя.
+DIM playerDir AS INTEGER                                                                        ' Текущее фактическое направление героя.
+DIM playerWantDir AS INTEGER                                                                    ' Желаемое направление героя, выбранное клавишами.
+DIM playerFacing AS INTEGER                                                                     ' Направление, куда герой смотрит спрайтом.
+DIM playerTravel AS INTEGER                                                                     ' Сколько пикселей герой уже прошёл внутри текущей клетки.
+DIM playerAnimStep AS INTEGER                                                                   ' Текущий шаг анимации рта героя.
 
-DIM pelletsLeft AS INTEGER
-DIM score AS INTEGER
-DIM lives AS INTEGER = 3
-DIM worldWidthPixels AS INTEGER
-DIM worldHeightPixels AS INTEGER
-DIM exitRequested AS BOOLEAN = FALSE
-DIM finished AS BOOLEAN = FALSE
-DIM statusText AS STRING = "Стрелки ведут героя. ESC завершает игру."
+DIM ghostCol AS INTEGER                                                                         ' Текущий столбец призрака.
+DIM ghostRow AS INTEGER                                                                         ' Текущая строка призрака.
+DIM ghostDir AS INTEGER                                                                         ' Текущее фактическое направление призрака.
+DIM ghostWantDir AS INTEGER                                                                     ' Желаемое направление призрака, которое выбирает простая логика погони.
+DIM ghostTravel AS INTEGER                                                                      ' Сколько пикселей призрак уже прошёл внутри текущей клетки.
 
-LoadResources()
-InitMaze()
-ResetActors()
+DIM pelletsLeft AS INTEGER                                                                      ' Сколько точек осталось на карте.
+DIM score AS INTEGER                                                                            ' Сколько очков уже набрал игрок.
+DIM lives AS INTEGER = 3                                                                        ' Сколько жизней осталось у игрока.
+DIM worldWidthPixels AS INTEGER                                                                 ' Полная ширина мира в пикселях.
+DIM worldHeightPixels AS INTEGER                                                                ' Полная высота мира в пикселях.
+DIM exitRequested AS BOOLEAN = FALSE                                                            ' Флаг ручного выхода из программы по ESC.
+DIM finished AS BOOLEAN = FALSE                                                                 ' Флаг завершения партии по победе или проигрышу.
+DIM statusText AS STRING = "Стрелки ведут героя. ESC завершает игру."                          ' Текст подсказки и игровых сообщений в HUD.
 
-worldWidthPixels = mazeCols * TILE
-worldHeightPixels = mazeRows * TILE
+LoadResources()                                                                                 ' Загружаем фон лабиринта и спрайты персонажей.
+InitPelletAlignment()                                                                           ' Настраиваем реальные центры проходов, чтобы точки легли в тоннели картинки.
+InitMaze()                                                                                      ' Загружаем текстовую схему карты и считаем стартовые точки.
+ResetActors()                                                                                   ' Ставим героя и призрака в их начальные позиции.
 
-CANVAS VIEW_WIDTH, VIEW_HEIGHT
+worldWidthPixels = mazeCols * TILE                                                              ' Переводим ширину карты из клеток в пиксели.
+worldHeightPixels = mazeRows * TILE                                                             ' Переводим высоту карты из клеток в пиксели.
 
-DO WHILE NOT exitRequested
-    BEGINFRAME
-    CLS BACKGROUND_COLOR
+CANVAS VIEW_WIDTH, VIEW_HEIGHT                                                                  ' Открываем современный холст нужного размера.
 
-    IF NOT finished THEN
-        ' Сначала принимаем направление игрока, затем двигаем его по сетке.
-        UpdatePlayerInput()
-        StepWalker(playerCol, playerRow, playerDir, playerWantDir, playerTravel, PLAYER_SPEED)
+DO WHILE NOT exitRequested                                                                      ' Главный игровой цикл продолжается, пока игрок не попросит выход.
+    BEGINFRAME                                                                                  ' Начинаем новый кадр современного графического холста.
+    CLS BACKGROUND_COLOR                                                                        ' Очищаем фон кадра перед рисованием.
 
-        IF playerDir <> 0 THEN
-            playerFacing = playerDir
-        END IF
+    IF NOT finished THEN                                                                        ' Пока игра не закончилась, обновляем всю игровую механику.
+        UpdatePlayerInput()                                                                     ' Считываем клавиши и записываем желаемое направление героя.
+        StepWalker(playerCol, playerRow, playerDir, playerWantDir, playerTravel, PLAYER_SPEED) ' Двигаем героя по сетке с учётом стены и пиксельного остатка.
 
-        UpdatePlayerAnimation()
-        EatPelletIfNeeded()
+        IF playerDir <> 0 THEN                                                                  ' Если герой реально движется...
+            playerFacing = playerDir                                                            ' ...поворачиваем его спрайт в это направление.
+        END IF                                                                                  ' Завершаем обновление направления взгляда.
 
-        ' Призрак остаётся частью примера, а не частью языкового API.
-        UpdateGhostDecision()
-        StepWalker(ghostCol, ghostRow, ghostDir, ghostWantDir, ghostTravel, GHOST_SPEED)
+        UpdatePlayerAnimation()                                                                 ' Обновляем фазу анимации рта героя.
+        EatPelletIfNeeded()                                                                     ' Проверяем, стоит ли герой на точке, и съедаем её.
 
-        IF EntitiesOverlap() THEN
-            lives = lives - 1
-            IF lives <= 0 THEN
-                finished = TRUE
-                statusText = "Жизни закончились. Нажмите ESC."
-            ELSE
-                statusText = "Призрак догнал героя. Позиции сброшены."
-                ResetActors()
-            END IF
-        END IF
+        UpdateGhostDecision()                                                                   ' В узлах карты выбираем новое направление для призрака.
+        StepWalker(ghostCol, ghostRow, ghostDir, ghostWantDir, ghostTravel, GHOST_SPEED)       ' Двигаем призрака той же общей процедурой.
 
-        IF pelletsLeft = 0 THEN
-            finished = TRUE
-            statusText = "Все точки собраны. Нажмите ESC."
-        END IF
-    ELSE
-        playerAnimStep = 0
-    END IF
+        IF EntitiesOverlap() THEN                                                               ' Если герой и призрак подошли слишком близко...
+            lives = lives - 1                                                                   ' ...уменьшаем число жизней.
+            IF lives <= 0 THEN                                                                  ' Если жизней больше не осталось...
+                finished = TRUE                                                                 ' ...завершаем партию поражением.
+                statusText = "Жизни закончились. Нажмите ESC."                                 ' Показываем сообщение о проигрыше.
+            ELSE                                                                                ' Иначе у игрока ещё есть шанс продолжить.
+                statusText = "Призрак догнал героя. Позиции сброшены."                         ' Сообщаем о столкновении и новом старте.
+                ResetActors()                                                                   ' Возвращаем обоих персонажей на стартовые позиции.
+            END IF                                                                              ' Завершаем обработку потери жизни.
+        END IF                                                                                  ' Завершаем проверку столкновения.
 
-    DrawMazeWorld()
-    DrawHud()
-    PRESENT
-    SLEEP 16
+        IF pelletsLeft = 0 THEN                                                                 ' Если на карте не осталось точек...
+            finished = TRUE                                                                     ' ...завершаем партию победой.
+            statusText = "Все точки собраны. Нажмите ESC."                                     ' Показываем сообщение о победе.
+        END IF                                                                                  ' Завершаем проверку победы.
+    ELSE                                                                                        ' Если партия уже завершена...
+        playerAnimStep = 0                                                                      ' ...останавливаем анимацию героя, чтобы он не жевал в паузе.
+    END IF                                                                                      ' Завершаем обновление логики кадра.
 
-    IF KEYPRESS("ESC") THEN
-        exitRequested = TRUE
-    END IF
-LOOP
+    DrawMazeWorld()                                                                             ' Рисуем лабиринт, точки и персонажей в мировых координатах.
+    DrawHud()                                                                                   ' Рисуем верхнюю информационную панель в экранных координатах.
+    PRESENT                                                                                     ' Показываем собранный кадр на экране.
+    SLEEP 16                                                                                    ' Делаем короткую паузу, чтобы цикл шёл спокойно и предсказуемо.
 
-SCREEN 0
+    IF KEYPRESS("ESC") THEN                                                                     ' Если в этом кадре нажали ESC...
+        exitRequested = TRUE                                                                    ' ...запрашиваем выход из главного цикла.
+    END IF                                                                                      ' Завершаем проверку клавиши ESC.
+LOOP                                                                                            ' Возвращаемся к следующему кадру.
 
-SUB LoadResources()
-    ' У героя отдельные кадры на каждое направление, поэтому рот действительно
-    ' открывается и закрывается во время движения, а голова смотрит в нужную сторону.
-    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = LOADSPRITE("art/pacman-right/1.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = LOADSPRITE("art/pacman-right/2.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = LOADSPRITE("art/pacman-right/3.png", 16, 16)
+SCREEN 0                                                                                        ' Возвращаем обычный текстовый экран после выхода из игры.
 
-    playerFrames(SpriteSlot(DIR_LEFT, 1)) = LOADSPRITE("art/pacman-left/1.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_LEFT, 2)) = LOADSPRITE("art/pacman-left/2.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_LEFT, 3)) = LOADSPRITE("art/pacman-left/3.png", 16, 16)
+SUB LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
+    mazeBackground = LOADIMAGE("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
 
-    playerFrames(SpriteSlot(DIR_UP, 1)) = LOADSPRITE("art/pacman-up/1.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_UP, 2)) = LOADSPRITE("art/pacman-up/2.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_UP, 3)) = LOADSPRITE("art/pacman-up/3.png", 16, 16)
+    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = LOADSPRITE("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = LOADSPRITE("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = LOADSPRITE("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
 
-    playerFrames(SpriteSlot(DIR_DOWN, 1)) = LOADSPRITE("art/pacman-down/1.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_DOWN, 2)) = LOADSPRITE("art/pacman-down/2.png", 16, 16)
-    playerFrames(SpriteSlot(DIR_DOWN, 3)) = LOADSPRITE("art/pacman-down/3.png", 16, 16)
+    playerFrames(SpriteSlot(DIR_LEFT, 1)) = LOADSPRITE("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 2)) = LOADSPRITE("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 3)) = LOADSPRITE("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
 
-    ghostSprite = LOADSPRITE("art/ghosts/blinky.png", 16, 16)
-END SUB
+    playerFrames(SpriteSlot(DIR_UP, 1)) = LOADSPRITE("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 2)) = LOADSPRITE("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 3)) = LOADSPRITE("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
 
-SUB InitMaze()
-    ' Карта сделана шире окна, чтобы пример сразу показывал работу камеры.
-    ' В ней есть длинные горизонтальные и вертикальные проходы, поэтому герой
-    ' может идти не только по коротким локальным петлям.
-    maze(1) = "###################################"
-    maze(2) = "#P...............#.........#.....o.#"
-    maze(3) = "#.###.#.#######.#.#######.#.###.#.#"
-    maze(4) = "#...#.#.....#...#...#.....#...#.#.#"
-    maze(5) = "###.#.#####.#.#####.#.#####.#.#.#.#"
-    maze(6) = "#...#.....#.#...#...#.....#.#.#...#"
-    maze(7) = "#.#######.#.###.#.###.###.#.#.###.#"
-    maze(8) = "#.......#.#.....#.....#...#.#.....#"
-    maze(9) = "#####.#.#.#############.#.#.#####.#"
-    maze(10) = "#.....#.#...............#.#.....#.#"
-    maze(11) = "#.#####.#####.#####.#####.#####.#.#"
-    maze(12) = "#.............#...#.............#.#"
-    maze(13) = "#####.#########.#.#########.#####.#"
-    maze(14) = "#.....#.........#.........#.....#.#"
-    maze(15) = "#.###.#.#####.#####.#####.#.###.#.#"
-    maze(16) = "#.#...#.....#...#...#.....#...#.#.#"
-    maze(17) = "#.#.#######.###.#.###.#######.#.#.#"
-    maze(18) = "#.#.......#.....#.....#.......#.#.#"
-    maze(19) = "#.#######.#####.#####.#####.###.#.#"
-    maze(20) = "#.......#........G........#.....#.#"
-    maze(21) = "#.#####.#################.#.#####.#"
-    maze(22) = "#o...............................o#"
-    maze(23) = "###################################"
+    playerFrames(SpriteSlot(DIR_DOWN, 1)) = LOADSPRITE("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 2)) = LOADSPRITE("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 3)) = LOADSPRITE("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
 
-    mazeCols = LEN(maze(1))
-    pelletsLeft = 0
+    ghostSprite = LOADSPRITE("art/ghosts/blinky.png", 16, 16)                                  ' Загружаем спрайт красного призрака.
+END SUB                                                                                         ' Завершаем загрузку ресурсов.
 
-    DIM rowIndex AS INTEGER
-    DIM columnIndex AS INTEGER
-    DIM tileText AS STRING
+SUB InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
+    ' Важно: точки нельзя ставить просто в TILE \ 2.                                           ' На эталонной картинке тоннели внутри клетки чуть смещены.
+    ' Эти центры подобраны по реальному фону Background.gif.                                    ' Поэтому точки ложатся в середину проходов, а не в стены.
+    pelletCenterRows(1) = 8                                                                     ' Верхняя техническая строка не используется, оставляем обычный центр.
+    pelletCenterRows(2) = 8                                                                     ' Вторая техническая строка тоже остаётся с обычным центром.
+    pelletCenterRows(3) = 8                                                                     ' Третья техническая строка тоже остаётся с обычным центром.
+    pelletCenterRows(4) = 8                                                                     ' Четвёртая техническая строка тоже остаётся с обычным центром.
+    pelletCenterRows(5) = 7                                                                     ' Верхний длинный коридор проходит чуть выше математического центра клетки.
+    pelletCenterRows(6) = 7                                                                     ' Следующая строка с точками тоже слегка поднята.
+    pelletCenterRows(7) = 7                                                                     ' Здесь проход идёт почти по той же оси.
+    pelletCenterRows(8) = 8                                                                     ' В этой строке визуальный тоннель ближе к обычному центру клетки.
+    pelletCenterRows(9) = 6                                                                     ' Длинный горизонтальный коридор сверху на фоне заметно поднят.
+    pelletCenterRows(10) = 7                                                                    ' Следующая строка снова ближе к оси 7.
+    pelletCenterRows(11) = 6                                                                    ' Узкий горизонтальный проход лежит выше центра.
+    pelletCenterRows(12) = 6                                                                    ' Тот же сдвиг нужен и здесь.
+    pelletCenterRows(13) = 6                                                                    ' Коридор под верхними блоками тоже выше центра.
+    pelletCenterRows(14) = 7                                                                    ' Здесь проход возвращается ближе к оси 7.
+    pelletCenterRows(15) = 7                                                                    ' Центральный коридор над домиком держим по той же оси.
+    pelletCenterRows(16) = 7                                                                    ' Эта строка использует тот же реальный центр тоннеля.
+    pelletCenterRows(17) = 8                                                                    ' Внизу домика проход визуально опускается.
+    pelletCenterRows(18) = 6                                                                    ' Туннельная строка по центру карты заметно выше математического центра.
+    pelletCenterRows(19) = 7                                                                    ' После туннеля тоннель вновь смещается к оси 7.
+    pelletCenterRows(20) = 6                                                                    ' Следующая узкая линия снова идёт выше.
+    pelletCenterRows(21) = 6                                                                    ' Строка возле стартовой зоны призрака тоже поднята.
+    pelletCenterRows(22) = 6                                                                    ' Нижняя часть домика держится по той же оси.
+    pelletCenterRows(23) = 7                                                                    ' Дальше проход чуть опускается.
+    pelletCenterRows(24) = 7                                                                    ' Длинный средний горизонтальный коридор здесь держится на оси 7.
+    pelletCenterRows(25) = 7                                                                    ' Следующая строка с одиночными точками использует ту же ось.
+    pelletCenterRows(26) = 8                                                                    ' Здесь визуальный тоннель уходит немного ниже.
+    pelletCenterRows(27) = 7                                                                    ' Строка старта героя выравнивается по оси 7.
+    pelletCenterRows(28) = 7                                                                    ' Нижняя узкая линия возле боковых блоков остаётся на оси 7.
+    pelletCenterRows(29) = 6                                                                    ' Ещё одна тонкая полоса снова лежит выше.
+    pelletCenterRows(30) = 6                                                                    ' Нижний горизонтальный проход тоже выше центра клетки.
+    pelletCenterRows(31) = 8                                                                    ' Перед самым нижним коридором тоннель опускается.
+    pelletCenterRows(32) = 7                                                                    ' Предпоследняя игровая строка возвращается к оси 7.
+    pelletCenterRows(33) = 7                                                                    ' Нижний длинный коридор тоже держим по оси 7.
+    pelletCenterRows(34) = 8                                                                    ' Нижние технические строки снова не используют специальные смещения.
+    pelletCenterRows(35) = 8                                                                    ' Техническая строка без точек.
+    pelletCenterRows(36) = 8                                                                    ' Последняя техническая строка без точек.
 
-    FOR rowIndex = 1 TO mazeRows
-        FOR columnIndex = 1 TO mazeCols
-            tileText = MID(maze(rowIndex), columnIndex, 1)
+    pelletCenterCols(1) = 7                                                                     ' Левый крайний проход чуть левее математического центра клетки.
+    pelletCenterCols(2) = 6                                                                     ' Следующий столбец проходит ещё левее.
+    pelletCenterCols(3) = 6                                                                     ' Для соседнего столбца оставляем ту же ось.
+    pelletCenterCols(4) = 7                                                                     ' Этот проход чуть возвращается вправо.
+    pelletCenterCols(5) = 7                                                                     ' Центр коридора здесь близок к оси 7.
+    pelletCenterCols(6) = 7                                                                     ' Следующий столбец тоже держим на оси 7.
+    pelletCenterCols(7) = 7                                                                     ' Вертикальный проход в этой колонке проходит по оси 7.
+    pelletCenterCols(8) = 7                                                                     ' И здесь тоннель находится примерно там же.
+    pelletCenterCols(9) = 6                                                                     ' Этот столбец заметно уходит влево.
+    pelletCenterCols(10) = 6                                                                    ' Для соседнего вертикального прохода нужен тот же сдвиг.
+    pelletCenterCols(11) = 6                                                                    ' И этот столбец проходит по оси 6.
+    pelletCenterCols(12) = 7                                                                    ' Здесь коридор уходит чуть правее.
+    pelletCenterCols(13) = 7                                                                    ' Ещё один столбец с осью 7.
+    pelletCenterCols(14) = 6                                                                    ' Центральный соседний столбец смещён влево.
+    pelletCenterCols(15) = 7                                                                    ' Следующий центральный столбец чуть правее.
+    pelletCenterCols(16) = 6                                                                    ' Здесь проход снова уходит влево.
+    pelletCenterCols(17) = 6                                                                    ' И соседний столбец повторяет это смещение.
+    pelletCenterCols(18) = 7                                                                    ' Дальше тоннель возвращается к оси 7.
+    pelletCenterCols(19) = 7                                                                    ' Этот столбец также проходит по оси 7.
+    pelletCenterCols(20) = 8                                                                    ' Здесь реальный проход правее обычного центра клетки.
+    pelletCenterCols(21) = 6                                                                    ' Следующий столбец уходит влево.
+    pelletCenterCols(22) = 5                                                                    ' Проблемная правая внутренняя колонка на фоне заметно смещена влево.
+    pelletCenterCols(23) = 6                                                                    ' После неё проход снова возвращается к оси 6.
+    pelletCenterCols(24) = 6                                                                    ' Для соседнего столбца держим ту же ось.
+    pelletCenterCols(25) = 7                                                                    ' Ближе к правому краю проход идёт по оси 7.
+    pelletCenterCols(26) = 7                                                                    ' И здесь оставляем ту же ось.
+    pelletCenterCols(27) = 7                                                                    ' Крайняя внутренняя правая колонка также держится на оси 7.
+    pelletCenterCols(28) = 6                                                                    ' Самый правый столбец тоннеля чуть левее центра клетки.
+END SUB                                                                                         ' Завершаем настройку центров точек.
 
-            IF tileText = "." OR tileText = "o" THEN
-                pelletsLeft = pelletsLeft + 1
-            END IF
+SUB InitMaze()                                                                                  ' Процедура загружает текстовую карту и стартовые метки.
+    maze(1) = "############################"                                                    ' Верхняя рамка лабиринта.
+    maze(2) = "############################"                                                    ' Вторая верхняя строка рамки.
+    maze(3) = "############################"                                                    ' Третья верхняя строка рамки.
+    maze(4) = "############################"                                                    ' Четвёртая верхняя строка рамки.
+    maze(5) = "#o...........##...........o#"                                                    ' Верхний длинный коридор с крупными точками по краям.
+    maze(6) = "#.####.#####.##.#####.####.#"                                                    ' Верхний блок коридоров и стен.
+    maze(7) = "#.####.#####.##.#####.####.#"                                                    ' Следующая строка той же геометрии.
+    maze(8) = "#.####.#####.##.#####.####.#"                                                    ' Ещё одна строка верхней геометрии.
+    maze(9) = "#..........................#"                                                    ' Длинный свободный верхний горизонтальный проход.
+    maze(10) = "#.####.##.########.##.####.#"                                                   ' Коридоры вокруг верхнего центрального блока.
+    maze(11) = "#.####.##.########.##.####.#"                                                   ' Повтор геометрии предыдущей строки.
+    maze(12) = "#......##....##....##......#"                                                   ' Несколько разветвлений перед домиком.
+    maze(13) = "######.#####.##.#####.######"                                                   ' Верхняя рамка вокруг центральной зоны.
+    maze(14) = "######.#####.##.#####.######"                                                   ' Ещё одна строка рамки центральной зоны.
+    maze(15) = "######.##..........##.######"                                                   ' Коридор над центральным домиком.
+    maze(16) = "######.##.########.##.######"                                                   ' Верхняя стенка домика призраков.
+    maze(17) = "######.##.########.##.######"                                                   ' Нижняя стенка домика призраков.
+    maze(18) = "..........########.........."                                                   ' Горизонтальный туннель сквозь середину карты.
+    maze(19) = "######.##.########.##.######"                                                   ' Симметричная нижняя часть после туннеля.
+    maze(20) = "######.##.########.##.######"                                                   ' Повтор геометрии над стартовой зоной призрака.
+    maze(21) = "######.##.....G....##.######"                                                   ' Строка со стартом призрака.
+    maze(22) = "######.##.########.##.######"                                                   ' Нижняя часть центральной зоны.
+    maze(23) = "######.##.########.##.######"                                                   ' Повтор этой геометрии.
+    maze(24) = "#............##............#"                                                   ' Длинный средний горизонтальный коридор.
+    maze(25) = "#.####.#####.##.#####.####.#"                                                   ' Нижний блок развилок.
+    maze(26) = "#.####.#####.##.#####.####.#"                                                   ' Повтор нижнего блока развилок.
+    maze(27) = "#o..##.......P........##..o#"                                                   ' Строка старта героя и крупных нижних точек.
+    maze(28) = "###.##.##.########.##.##.###"                                                   ' Нижние узкие коридоры и центральный блок.
+    maze(29) = "###.##.##.########.##.##.###"                                                   ' Повтор предыдущей строки.
+    maze(30) = "#......##....##....##......#"                                                   ' Нижние разветвления перед последним коридором.
+    maze(31) = "#.##########.##.##########.#"                                                   ' Предпоследняя рамка нижней части.
+    maze(32) = "#.##########.##.##########.#"                                                   ' Повтор предпоследней рамки.
+    maze(33) = "#..........................#"                                                   ' Нижний длинный коридор с точками.
+    maze(34) = "############################"                                                   ' Нижняя рамка лабиринта.
+    maze(35) = "############################"                                                   ' Предпоследняя строка нижней рамки.
+    maze(36) = "############################"                                                   ' Последняя строка нижней рамки.
 
-            IF tileText = "P" THEN
-                playerStartCol = columnIndex
-                playerStartRow = rowIndex
-                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
-            END IF
+    mazeCols = LEN(maze(1))                                                                     ' Вычисляем число столбцов по длине первой строки.
+    pelletsLeft = 0                                                                             ' Перед пересчётом начинаем с нуля точек.
 
-            IF tileText = "G" THEN
-                ghostStartCol = columnIndex
-                ghostStartRow = rowIndex
-                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
-            END IF
-        NEXT
-    NEXT
-END SUB
+    DIM rowIndex AS INTEGER                                                                     ' Номер текущей строки при обходе карты.
+    DIM columnIndex AS INTEGER                                                                  ' Номер текущего столбца при обходе карты.
+    DIM tileText AS STRING                                                                      ' Символ текущей клетки карты.
 
-SUB ResetActors()
-    ' При потере жизни оба актёра возвращаются на узлы сетки,
-    ' чтобы следующий цикл был сразу читаемым и предсказуемым.
-    playerCol = playerStartCol
-    playerRow = playerStartRow
-    playerDir = 0
-    playerWantDir = 0
-    playerFacing = DIR_RIGHT
-    playerTravel = 0
-    playerAnimStep = 0
+    FOR rowIndex = 1 TO mazeRows                                                                ' Проходим все строки карты.
+        FOR columnIndex = 1 TO mazeCols                                                         ' Проходим все столбцы в текущей строке.
+            tileText = MID(maze(rowIndex), columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
 
-    ghostCol = ghostStartCol
-    ghostRow = ghostStartRow
-    ghostDir = DIR_LEFT
-    ghostWantDir = DIR_LEFT
-    ghostTravel = 0
-END SUB
+            IF tileText = "." OR tileText = "o" THEN                                            ' Если клетка содержит обычную или крупную точку...
+                pelletsLeft = pelletsLeft + 1                                                   ' ...увеличиваем общий счётчик точек.
+            END IF                                                                              ' Завершаем подсчёт точки.
 
-SUB UpdatePlayerInput()
-    ' Удержание ведёт героя по коридору, а KEYPRESS ловит короткие касания.
-    ' Это особенно важно для интерпретатора, где быстрый тап стрелки мог быть
-    ' незаметен при тяжёлом кадре.
-    IF KEYDOWN("LEFT") THEN
-        playerWantDir = DIR_LEFT
-    END IF
+            IF tileText = "P" THEN                                                              ' Если нашли старт героя...
+                playerStartCol = columnIndex                                                    ' ...запоминаем его столбец.
+                playerStartRow = rowIndex                                                       ' ...запоминаем его строку.
+                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем клетку, чтобы герой не считался стеной или точкой.
+            END IF                                                                              ' Завершаем обработку старта героя.
 
-    IF KEYDOWN("RIGHT") THEN
-        playerWantDir = DIR_RIGHT
-    END IF
+            IF tileText = "G" THEN                                                              ' Если нашли старт призрака...
+                ghostStartCol = columnIndex                                                     ' ...запоминаем его столбец.
+                ghostStartRow = rowIndex                                                        ' ...запоминаем его строку.
+                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем логическую клетку карты.
+            END IF                                                                              ' Завершаем обработку старта призрака.
+        NEXT                                                                                    ' Переходим к следующему столбцу.
+    NEXT                                                                                        ' Переходим к следующей строке.
+END SUB                                                                                         ' Завершаем инициализацию карты.
 
-    IF KEYDOWN("UP") THEN
-        playerWantDir = DIR_UP
-    END IF
+SUB ResetActors()                                                                               ' Процедура возвращает героя и призрака в стартовые точки.
+    playerCol = playerStartCol                                                                  ' Возвращаем героя в стартовый столбец.
+    playerRow = playerStartRow                                                                  ' Возвращаем героя в стартовую строку.
+    playerDir = 0                                                                               ' Герой сразу после сброса ещё не движется.
+    playerWantDir = 0                                                                           ' Желаемое направление тоже очищаем.
+    playerFacing = DIR_RIGHT                                                                    ' По умолчанию герой смотрит вправо.
+    playerTravel = 0                                                                            ' Внутриклеточный пройденный путь обнуляем.
+    playerAnimStep = 0                                                                          ' Анимацию рта начинаем с закрытого состояния.
 
-    IF KEYDOWN("DOWN") THEN
-        playerWantDir = DIR_DOWN
-    END IF
+    ghostCol = ghostStartCol                                                                    ' Возвращаем призрака в стартовый столбец.
+    ghostRow = ghostStartRow                                                                    ' Возвращаем призрака в стартовую строку.
+    ghostDir = DIR_LEFT                                                                         ' По умолчанию призрак стартует движением влево.
+    ghostWantDir = DIR_LEFT                                                                     ' И желаемое направление у него тоже влево.
+    ghostTravel = 0                                                                             ' Внутриклеточный путь призрака также обнуляем.
+END SUB                                                                                         ' Завершаем сброс актёров.
 
-    IF KEYPRESS("LEFT") THEN
-        playerWantDir = DIR_LEFT
-    END IF
+SUB UpdatePlayerInput()                                                                         ' Процедура читает клавиши и выбирает желаемое направление.
+    IF KEYDOWN("LEFT") THEN                                                                     ' Если зажата стрелка влево...
+        playerWantDir = DIR_LEFT                                                                ' ...просим героя повернуть влево.
+    END IF                                                                                      ' Завершаем проверку удержания влево.
 
-    IF KEYPRESS("RIGHT") THEN
-        playerWantDir = DIR_RIGHT
-    END IF
+    IF KEYDOWN("RIGHT") THEN                                                                    ' Если зажата стрелка вправо...
+        playerWantDir = DIR_RIGHT                                                               ' ...просим героя повернуть вправо.
+    END IF                                                                                      ' Завершаем проверку удержания вправо.
 
-    IF KEYPRESS("UP") THEN
-        playerWantDir = DIR_UP
-    END IF
+    IF KEYDOWN("UP") THEN                                                                       ' Если зажата стрелка вверх...
+        playerWantDir = DIR_UP                                                                  ' ...просим героя повернуть вверх.
+    END IF                                                                                      ' Завершаем проверку удержания вверх.
 
-    IF KEYPRESS("DOWN") THEN
-        playerWantDir = DIR_DOWN
-    END IF
-END SUB
+    IF KEYDOWN("DOWN") THEN                                                                     ' Если зажата стрелка вниз...
+        playerWantDir = DIR_DOWN                                                                ' ...просим героя повернуть вниз.
+    END IF                                                                                      ' Завершаем проверку удержания вниз.
 
-SUB UpdatePlayerAnimation()
-    IF playerDir = 0 THEN
-        playerAnimStep = 0
-        RETURN
-    END IF
+    IF KEYPRESS("LEFT") THEN                                                                    ' Если стрелку влево нажали коротким тапом...
+        playerWantDir = DIR_LEFT                                                                ' ...тоже фиксируем желание повернуть влево.
+    END IF                                                                                      ' Завершаем проверку короткого нажатия влево.
 
-    playerAnimStep = playerAnimStep + 1
-    IF playerAnimStep > 4 THEN
-        playerAnimStep = 1
-    END IF
-END SUB
+    IF KEYPRESS("RIGHT") THEN                                                                   ' Если стрелку вправо нажали коротким тапом...
+        playerWantDir = DIR_RIGHT                                                               ' ...фиксируем желание повернуть вправо.
+    END IF                                                                                      ' Завершаем проверку короткого нажатия вправо.
 
-SUB UpdateGhostDecision()
-    ' Призрак выбирает направление только на узлах.
-    IF ghostTravel <> 0 THEN
-        RETURN
-    END IF
+    IF KEYPRESS("UP") THEN                                                                      ' Если стрелку вверх нажали коротким тапом...
+        playerWantDir = DIR_UP                                                                  ' ...фиксируем желание повернуть вверх.
+    END IF                                                                                      ' Завершаем проверку короткого нажатия вверх.
 
-    ghostWantDir = ChooseGhostDirection()
-END SUB
+    IF KEYPRESS("DOWN") THEN                                                                    ' Если стрелку вниз нажали коротким тапом...
+        playerWantDir = DIR_DOWN                                                                ' ...фиксируем желание повернуть вниз.
+    END IF                                                                                      ' Завершаем проверку короткого нажатия вниз.
+END SUB                                                                                         ' Завершаем чтение управления игрока.
+
+SUB UpdatePlayerAnimation()                                                                     ' Процедура обновляет шаг анимации героя.
+    IF playerDir = 0 THEN                                                                       ' Если герой стоит на месте...
+        playerAnimStep = 0                                                                      ' ...держим рот в спокойном состоянии.
+        RETURN                                                                                  ' И выходим из процедуры сразу.
+    END IF                                                                                      ' Завершаем обработку неподвижного героя.
+
+    playerAnimStep = playerAnimStep + 1                                                         ' Переходим к следующему шагу анимации.
+    IF playerAnimStep > 4 THEN                                                                  ' Если вышли за число шагов цикла...
+        playerAnimStep = 1                                                                      ' ...возвращаемся в начало цикла.
+    END IF                                                                                      ' Завершаем циклическую анимацию.
+END SUB                                                                                         ' Завершаем обновление анимации героя.
+
+SUB UpdateGhostDecision()                                                                       ' Процедура выбирает новое направление призрака только в узлах.
+    IF ghostTravel <> 0 THEN                                                                    ' Если призрак ещё не дошёл до центра следующей клетки...
+        RETURN                                                                                  ' ...не меняем его решение на полпути.
+    END IF                                                                                      ' Завершаем защиту от поворота посреди коридора.
+
+    ghostWantDir = ChooseGhostDirection()                                                       ' Вычисляем новое желаемое направление погони.
+END SUB                                                                                         ' Завершаем обновление решения призрака.
 
 SUB StepWalker(BYREF tileCol AS INTEGER, BYREF tileRow AS INTEGER, BYREF dir AS INTEGER, BYREF wantedDir AS INTEGER, BYREF travel AS INTEGER, speed AS INTEGER)
-    DIM remaining AS INTEGER = speed
-    DIM chunk AS INTEGER
+    DIM remaining AS INTEGER = speed                                                            ' Сколько пикселей ещё нужно пройти в этом кадре.
+    DIM chunk AS INTEGER                                                                        ' Размер текущего куска движения внутри одной клетки.
 
-    DO WHILE remaining > 0
-        IF travel = 0 THEN
-            IF wantedDir <> 0 THEN
-                IF CanMove(tileCol, tileRow, wantedDir) THEN
-                    dir = wantedDir
-                END IF
-            END IF
+    DO WHILE remaining > 0                                                                      ' Пока в кадре ещё остались пиксели движения...
+        IF travel = 0 THEN                                                                      ' ...и мы находимся ровно в центре клетки...
+            IF wantedDir <> 0 THEN                                                              ' ...сначала пробуем повернуть в желаемую сторону.
+                IF CanMove(tileCol, tileRow, wantedDir) THEN                                    ' Если поворот возможен по карте...
+                    dir = wantedDir                                                             ' ...принимаем новое направление.
+                END IF                                                                          ' Завершаем проверку поворота.
+            END IF                                                                              ' Завершаем обработку желаемого направления.
 
-            IF dir <> 0 THEN
-                IF NOT CanMove(tileCol, tileRow, dir) THEN
-                    dir = 0
-                END IF
-            END IF
-        END IF
+            IF dir <> 0 THEN                                                                    ' Если у шага есть текущее направление...
+                IF NOT CanMove(tileCol, tileRow, dir) THEN                                      ' ...но впереди неожиданно стена...
+                    dir = 0                                                                     ' ...останавливаем движение в этом кадре.
+                END IF                                                                          ' Завершаем проверку стены.
+            END IF                                                                              ' Завершаем проверку текущего направления.
+        END IF                                                                                  ' Завершаем блок работы в узле сетки.
 
-        IF dir = 0 THEN
-            remaining = 0
-        ELSE
-            chunk = TILE - travel
-            IF chunk > remaining THEN
-                chunk = remaining
-            END IF
+        IF dir = 0 THEN                                                                         ' Если направление всё ещё равно нулю...
+            remaining = 0                                                                       ' ...прекращаем остаток движения в кадре.
+        ELSE                                                                                    ' Иначе можно продвигаться дальше по коридору.
+            chunk = TILE - travel                                                               ' Считаем, сколько пикселей осталось до следующего узла.
+            IF chunk > remaining THEN                                                           ' Если до узла дальше, чем осталось шагов в кадре...
+                chunk = remaining                                                               ' ...ограничиваем шаг остатком этого кадра.
+            END IF                                                                              ' Завершаем ограничение размера шага.
 
-            travel = travel + chunk
-            remaining = remaining - chunk
+            travel = travel + chunk                                                             ' Увеличиваем внутриклеточный пройденный путь.
+            remaining = remaining - chunk                                                       ' Уменьшаем остаток шагов в текущем кадре.
 
-            IF travel >= TILE THEN
-                tileCol = tileCol + DirX(dir)
-                tileRow = tileRow + DirY(dir)
-                travel = 0
-            END IF
-        END IF
-    LOOP
-END SUB
+            IF travel >= TILE THEN                                                              ' Если дошли до следующей клетки...
+                tileCol = tileCol + DirX(dir)                                                   ' ...смещаем столбец по направлению движения.
+                tileRow = tileRow + DirY(dir)                                                   ' ...смещаем строку по направлению движения.
+                tileCol = WrapTunnelColumn(tileCol, tileRow)                                    ' ...обрабатываем телепорт в боковом туннеле.
+                travel = 0                                                                      ' ...и начинаем следующий отрезок с нулевого смещения.
+            END IF                                                                              ' Завершаем переход между клетками.
+        END IF                                                                                  ' Завершаем движение в пределах текущего кадра.
+    LOOP                                                                                        ' Продолжаем, пока не израсходуем скорость кадра.
+END SUB                                                                                         ' Завершаем общую процедуру движения героя и призрака.
 
-SUB EatPelletIfNeeded()
-    DIM tileText AS STRING
+SUB EatPelletIfNeeded()                                                                         ' Процедура проверяет, стоит ли герой на точке.
+    DIM tileText AS STRING                                                                      ' В этой переменной читаем символ клетки под героем.
 
-    IF playerTravel <> 0 THEN
-        RETURN
-    END IF
+    IF playerTravel <> 0 THEN                                                                   ' Если герой ещё идёт внутри клетки...
+        RETURN                                                                                  ' ...не едим точку, пока не дойдём до центра клетки.
+    END IF                                                                                      ' Завершаем защиту от преждевременного съедания.
 
-    tileText = CellAt(playerRow, playerCol)
+    tileText = CellAt(playerRow, playerCol)                                                     ' Читаем символ клетки, на которой сейчас стоит герой.
 
-    IF tileText = "." THEN
-        score = score + 10
-        pelletsLeft = pelletsLeft - 1
-        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")
-    END IF
+    IF tileText = "." THEN                                                                      ' Если это обычная маленькая точка...
+        score = score + 10                                                                      ' ...добавляем десять очков.
+        pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
+        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")                          ' ...и очищаем клетку карты от точки.
+    END IF                                                                                      ' Завершаем съедание обычной точки.
 
-    IF tileText = "o" THEN
-        score = score + 50
-        pelletsLeft = pelletsLeft - 1
-        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")
-        statusText = "Крупная точка принесла больше очков."
-    END IF
-END SUB
+    IF tileText = "o" THEN                                                                      ' Если это крупная точка...
+        score = score + 50                                                                      ' ...даём больше очков.
+        pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
+        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")                          ' ...очищаем клетку карты.
+        statusText = "Крупная точка принесла больше очков."                                    ' ...и выводим поясняющее сообщение в HUD.
+    END IF                                                                                      ' Завершаем съедание крупной точки.
+END SUB                                                                                         ' Завершаем проверку съедания точки.
 
-SUB DrawMazeWorld()
-    DIM cameraX AS INTEGER = ClampInt(PlayerPixelX() - (VIEW_WIDTH \ 2), 0, MaxInt(0, worldWidthPixels - VIEW_WIDTH))
-    DIM cameraY AS INTEGER = ClampInt(PlayerPixelY() - (VIEW_HEIGHT \ 2), 0, MaxInt(0, worldHeightPixels - VIEW_HEIGHT))
-    DIM firstCol AS INTEGER = MaxInt(1, (cameraX \ TILE) + 1)
-    DIM lastCol AS INTEGER = MinInt(mazeCols, ((cameraX + VIEW_WIDTH - 1) \ TILE) + 2)
-    DIM firstRow AS INTEGER = MaxInt(1, (cameraY \ TILE) + 1)
-    DIM lastRow AS INTEGER = MinInt(mazeRows, ((cameraY + VIEW_HEIGHT - 1) \ TILE) + 2)
+SUB DrawMazeWorld()                                                                             ' Процедура рисует мир в координатах камеры.
+    DIM cameraX AS INTEGER = ClampInt(PlayerPixelX() - (VIEW_WIDTH \ 2), 0, MaxInt(0, worldWidthPixels - VIEW_WIDTH))   ' Ставим камеру так, чтобы герой был ближе к центру по X.
+    DIM cameraY AS INTEGER = ClampInt(PlayerPixelY() - (VIEW_HEIGHT \ 2), 0, MaxInt(0, worldHeightPixels - VIEW_HEIGHT)) ' Ставим камеру так, чтобы герой был ближе к центру по Y.
+    DIM firstCol AS INTEGER = MaxInt(1, (cameraX \ TILE) + 1)                                   ' Первый видимый столбец карты с небольшим запасом.
+    DIM lastCol AS INTEGER = MinInt(mazeCols, ((cameraX + VIEW_WIDTH - 1) \ TILE) + 2)         ' Последний видимый столбец карты с небольшим запасом.
+    DIM firstRow AS INTEGER = MaxInt(1, (cameraY \ TILE) + 1)                                   ' Первая видимая строка карты с запасом.
+    DIM lastRow AS INTEGER = MinInt(mazeRows, ((cameraY + VIEW_HEIGHT - 1) \ TILE) + 2)        ' Последняя видимая строка карты с запасом.
 
-    CAMERA cameraX, cameraY
+    CAMERA cameraX, cameraY                                                                     ' Включаем камеру мира для последующего рисования.
 
-    ' Каждый кадр рисует только видимую часть мира.
-    DrawVisibleWalls(firstRow, lastRow, firstCol, lastCol)
-    DrawVisiblePellets(firstRow, lastRow, firstCol, lastCol)
+    DrawVisibleWalls(firstRow, lastRow, firstCol, lastCol)                                      ' Рисуем фон лабиринта.
+    DrawVisiblePellets(firstRow, lastRow, firstCol, lastCol)                                    ' Рисуем оставшиеся точки.
 
-    DRAWSPRITE playerFrames(CurrentPlayerSpriteSlot()), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2)
-    DRAWSPRITE ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)
-END SUB
+    DRAWSPRITE playerFrames(CurrentPlayerSpriteSlot()), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
+    DRAWSPRITE ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
+END SUB                                                                                         ' Завершаем рисование мира.
 
 SUB DrawVisibleWalls(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
-    DIM rowIndex AS INTEGER
-    DIM columnIndex AS INTEGER
-    DIM runStartCol AS INTEGER
-    DIM runWidth AS INTEGER
-    DIM tileY AS INTEGER
-    DIM tileX AS INTEGER
-
-    FOR rowIndex = firstRow TO lastRow
-        columnIndex = firstCol
-        tileY = (rowIndex - 1) * TILE
-
-        DO WHILE columnIndex <= lastCol
-            IF CellAt(rowIndex, columnIndex) = "#" THEN
-                runStartCol = columnIndex
-
-                DO WHILE columnIndex <= lastCol AND CellAt(rowIndex, columnIndex) = "#"
-                    columnIndex = columnIndex + 1
-                LOOP
-
-                runWidth = (columnIndex - runStartCol) * TILE
-                tileX = (runStartCol - 1) * TILE
-
-                FILLRECT tileX, tileY, runWidth, TILE, WALL_FILL_COLOR
-                DRAWLINE tileX, tileY, tileX + runWidth - 1, tileY, WALL_LIGHT_COLOR
-                DRAWLINE tileX, tileY + TILE - 1, tileX + runWidth - 1, tileY + TILE - 1, WALL_SHADOW_COLOR
-            ELSE
-                columnIndex = columnIndex + 1
-            END IF
-        LOOP
-    NEXT
-END SUB
+    DRAWIMAGE mazeBackground, WorldOffsetX(), 0, mazeCols * TILE, mazeRows * TILE               ' Рисуем эталонную картинку лабиринта на всю карту целиком.
+END SUB                                                                                         ' Завершаем рисование стен.
 
 SUB DrawVisiblePellets(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
-    DIM rowIndex AS INTEGER
-    DIM columnIndex AS INTEGER
-    DIM tileText AS STRING
-    DIM tileX AS INTEGER
-    DIM tileY AS INTEGER
+    DIM rowIndex AS INTEGER                                                                     ' Номер строки точки, которую сейчас рисуем.
+    DIM columnIndex AS INTEGER                                                                  ' Номер столбца точки, которую сейчас рисуем.
+    DIM tileText AS STRING                                                                      ' Символ клетки, чтобы понять, есть ли здесь точка.
 
-    FOR rowIndex = firstRow TO lastRow
-        FOR columnIndex = firstCol TO lastCol
-            tileText = CellAt(rowIndex, columnIndex)
-            tileX = (columnIndex - 1) * TILE
-            tileY = (rowIndex - 1) * TILE
+    FOR rowIndex = firstRow TO lastRow                                                          ' Проходим все видимые строки.
+        FOR columnIndex = firstCol TO lastCol                                                   ' Проходим все видимые столбцы.
+            tileText = CellAt(rowIndex, columnIndex)                                            ' Считываем символ текущей клетки.
 
-            IF tileText = "." THEN
-                ' Малые точки оставляем кругами: так пример продолжает проверять
-                ' современные примитивы даже после перехода на спрайтового героя.
-                FILLCIRCLE tileX + (TILE \ 2), tileY + (TILE \ 2), 2, POWER_PELLET_COLOR
-            END IF
+            IF tileText = "." THEN                                                              ' Если клетка содержит обычную точку...
+                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 2, POWER_PELLET_COLOR ' ...рисуем маленькую точку в реальном центре коридора.
+            END IF                                                                              ' Завершаем рисование обычной точки.
 
-            IF tileText = "o" THEN
-                FILLCIRCLE tileX + (TILE \ 2), tileY + (TILE \ 2), 5, POWER_PELLET_COLOR
-            END IF
-        NEXT
-    NEXT
-END SUB
+            IF tileText = "o" THEN                                                              ' Если клетка содержит крупную точку...
+                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 5, POWER_PELLET_COLOR ' ...рисуем крупную точку в том же реальном центре тоннеля.
+            END IF                                                                              ' Завершаем рисование крупной точки.
+        NEXT                                                                                    ' Переходим к следующему столбцу.
+    NEXT                                                                                        ' Переходим к следующей строке.
+END SUB                                                                                         ' Завершаем рисование точек.
 
-SUB DrawHud()
-    RESETCAMERA
-    FILLRECT 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR
-    DRAWLINE 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, WALL_LIGHT_COLOR
+SUB DrawHud()                                                                                   ' Процедура рисует верхнюю панель интерфейса.
+    RESETCAMERA                                                                                 ' Возвращаемся из мировых координат в экранные.
+    FILLRECT 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR                                 ' Рисуем фон верхней панели.
+    DRAWLINE 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, WALL_LIGHT_COLOR               ' Проводим светлую разделительную линию под HUD.
 
-    DRAWTEXT "Очки: " + TRIM(STR(score)) + "   Жизни: " + TRIM(STR(lives)) + "   Точек осталось: " + TRIM(STR(pelletsLeft)), 8, 7, HUD_TEXT_COLOR
-    DRAWTEXT statusText, 8, 19, HUD_STATUS_COLOR
-END SUB
+    DRAWTEXT "Очки: " + TRIM(STR(score)) + "   Жизни: " + TRIM(STR(lives)) + "   Точек осталось: " + TRIM(STR(pelletsLeft)), 8, 7, HUD_TEXT_COLOR ' Печатаем счёт, жизни и число оставшихся точек.
+    DRAWTEXT statusText, 8, 19, HUD_STATUS_COLOR                                                ' Печатаем текущую подсказку или игровое сообщение.
+END SUB                                                                                         ' Завершаем рисование HUD.
 
-FUNCTION CurrentPlayerSpriteSlot() AS INTEGER
-    DIM animationFrame AS INTEGER = 3
+FUNCTION CurrentPlayerSpriteSlot() AS INTEGER                                                   ' Функция выбирает индекс текущего спрайта героя.
+    DIM animationFrame AS INTEGER = 3                                                           ' По умолчанию берём кадр с самым открытым ртом.
 
-    IF playerAnimStep = 1 THEN
-        animationFrame = 1
-    END IF
+    IF playerAnimStep = 1 THEN                                                                  ' Если сейчас первый шаг анимации...
+        animationFrame = 1                                                                      ' ...берём первый кадр.
+    END IF                                                                                      ' Завершаем выбор первого кадра.
 
-    IF playerAnimStep = 2 OR playerAnimStep = 4 THEN
-        animationFrame = 2
-    END IF
+    IF playerAnimStep = 2 OR playerAnimStep = 4 THEN                                            ' Если сейчас средняя фаза открытия или закрытия рта...
+        animationFrame = 2                                                                      ' ...берём промежуточный кадр.
+    END IF                                                                                      ' Завершаем выбор промежуточного кадра.
 
-    RETURN SpriteSlot(playerFacing, animationFrame)
-END FUNCTION
+    RETURN SpriteSlot(playerFacing, animationFrame)                                             ' Возвращаем общий индекс кадра по направлению и фазе анимации.
+END FUNCTION                                                                                    ' Завершаем выбор текущего кадра героя.
 
-FUNCTION SpriteSlot(dir AS INTEGER, frameNumber AS INTEGER) AS INTEGER
-    RETURN ((dir - 1) * 3) + frameNumber
-END FUNCTION
+FUNCTION SpriteSlot(dir AS INTEGER, frameNumber AS INTEGER) AS INTEGER                          ' Функция переводит направление и номер кадра в индекс массива спрайтов.
+    RETURN ((dir - 1) * 3) + frameNumber                                                        ' Считаем смещение по три кадра на каждое направление.
+END FUNCTION                                                                                    ' Завершаем вычисление индекса спрайта.
 
-FUNCTION ChooseGhostDirection() AS INTEGER
-    DIM candidate AS INTEGER
-    DIM bestDirection AS INTEGER = 0
-    DIM bestScore AS INTEGER = 1000000
-    DIM availableMoves AS INTEGER = CountAvailableMoves(ghostCol, ghostRow)
-    DIM nextCol AS INTEGER
-    DIM nextRow AS INTEGER
-    DIM distance AS INTEGER
+FUNCTION ChooseGhostDirection() AS INTEGER                                                      ' Функция выбирает, куда призраку идти дальше.
+    DIM candidate AS INTEGER                                                                    ' Кандидат на новое направление.
+    DIM bestDirection AS INTEGER = 0                                                            ' Лучшее найденное направление.
+    DIM bestScore AS INTEGER = 1000000                                                          ' Лучшая оценка расстояния до героя.
+    DIM availableMoves AS INTEGER = CountAvailableMoves(ghostCol, ghostRow)                     ' Сколько путей доступно призраку в текущем узле.
+    DIM nextCol AS INTEGER                                                                      ' Временный столбец для оценки следующей клетки.
+    DIM nextRow AS INTEGER                                                                      ' Временная строка для оценки следующей клетки.
+    DIM distance AS INTEGER                                                                     ' Манхэттенское расстояние от следующей клетки до героя.
 
-    FOR candidate = 1 TO 4
-        IF CanMove(ghostCol, ghostRow, candidate) THEN
-            IF availableMoves = 1 OR candidate <> OppositeDirection(ghostDir) THEN
-                nextCol = ghostCol + DirX(candidate)
-                nextRow = ghostRow + DirY(candidate)
-                distance = AbsInt(nextCol - playerCol) + AbsInt(nextRow - playerRow)
+    FOR candidate = 1 TO 4                                                                     ' Пробуем все четыре направления.
+        IF CanMove(ghostCol, ghostRow, candidate) THEN                                          ' Сначала фильтруем только реально проходимые направления.
+            IF availableMoves = 1 OR candidate <> OppositeDirection(ghostDir) THEN              ' На развилке стараемся не разворачиваться без необходимости.
+                nextCol = ghostCol + DirX(candidate)                                            ' Считаем столбец следующей клетки.
+                nextRow = ghostRow + DirY(candidate)                                            ' Считаем строку следующей клетки.
+                nextCol = WrapTunnelColumn(nextCol, nextRow)                                    ' Учитываем телепорт через боковой туннель.
+                distance = AbsInt(nextCol - playerCol) + AbsInt(nextRow - playerRow)            ' Оцениваем, приблизит ли ход призрака к герою.
 
-                IF distance < bestScore THEN
-                    bestScore = distance
-                    bestDirection = candidate
-                END IF
-            END IF
-        END IF
-    NEXT
+                IF distance < bestScore THEN                                                    ' Если это направление лучше предыдущих...
+                    bestScore = distance                                                        ' ...сохраняем новую лучшую оценку.
+                    bestDirection = candidate                                                   ' ...и запоминаем это направление.
+                END IF                                                                          ' Завершаем сравнение качества хода.
+            END IF                                                                              ' Завершаем защиту от лишнего разворота.
+        END IF                                                                                  ' Завершаем проверку проходимости кандидата.
+    NEXT                                                                                        ' Переходим к следующему направлению.
 
-    IF bestDirection = 0 THEN
-        FOR candidate = 1 TO 4
-            IF CanMove(ghostCol, ghostRow, candidate) THEN
-                RETURN candidate
-            END IF
-        NEXT
-    END IF
+    IF bestDirection = 0 THEN                                                                   ' Если подходящее направление так и не нашли...
+        FOR candidate = 1 TO 4                                                                  ' ...делаем запасной проход по всем направлениям.
+            IF CanMove(ghostCol, ghostRow, candidate) THEN                                      ' Берём первое доступное направление...
+                RETURN candidate                                                                ' ...и сразу возвращаем его.
+            END IF                                                                              ' Завершаем запасную проверку проходимости.
+        NEXT                                                                                    ' Переходим к следующему кандидату в запасном цикле.
+    END IF                                                                                      ' Завершаем обработку запасного случая.
 
-    RETURN bestDirection
-END FUNCTION
+    RETURN bestDirection                                                                        ' Возвращаем лучшее найденное направление.
+END FUNCTION                                                                                    ' Завершаем выбор направления призрака.
 
-FUNCTION CountAvailableMoves(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER
-    DIM candidate AS INTEGER
-    DIM total AS INTEGER = 0
+FUNCTION CountAvailableMoves(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER                 ' Функция считает, сколько ходов доступно из текущей клетки.
+    DIM candidate AS INTEGER                                                                    ' Кандидат на направление движения.
+    DIM total AS INTEGER = 0                                                                    ' Счётчик доступных направлений.
 
-    FOR candidate = 1 TO 4
-        IF CanMove(tileCol, tileRow, candidate) THEN
-            total = total + 1
-        END IF
-    NEXT
+    FOR candidate = 1 TO 4                                                                     ' Проверяем все четыре стороны.
+        IF CanMove(tileCol, tileRow, candidate) THEN                                            ' Если в эту сторону можно идти...
+            total = total + 1                                                                   ' ...увеличиваем счётчик.
+        END IF                                                                                  ' Завершаем проверку одного направления.
+    NEXT                                                                                        ' Переходим к следующему направлению.
 
-    RETURN total
-END FUNCTION
+    RETURN total                                                                                ' Возвращаем число доступных ходов.
+END FUNCTION                                                                                    ' Завершаем подсчёт доступных ходов.
 
-FUNCTION EntitiesOverlap() AS BOOLEAN
-    RETURN ABS(PlayerPixelX() - GhostPixelX()) < 12 AND ABS(PlayerPixelY() - GhostPixelY()) < 12
-END FUNCTION
+FUNCTION EntitiesOverlap() AS BOOLEAN                                                           ' Функция проверяет близость героя и призрака.
+    RETURN ABS(PlayerPixelX() - GhostPixelX()) < 12 AND ABS(PlayerPixelY() - GhostPixelY()) < 12 ' Столкновение считаем по близости центров спрайтов.
+END FUNCTION                                                                                    ' Завершаем проверку столкновения.
 
-FUNCTION PlayerPixelX() AS INTEGER
-    RETURN EntityPixelX(playerCol, playerDir, playerTravel)
-END FUNCTION
+FUNCTION PlayerPixelX() AS INTEGER                                                              ' Функция возвращает текущую X-координату героя в пикселях.
+    RETURN EntityPixelX(playerCol, playerDir, playerTravel)                                     ' Считаем её общей функцией для любого актёра.
+END FUNCTION                                                                                    ' Завершаем вычисление X героя.
 
-FUNCTION PlayerPixelY() AS INTEGER
-    RETURN EntityPixelY(playerRow, playerDir, playerTravel)
-END FUNCTION
+FUNCTION PlayerPixelY() AS INTEGER                                                              ' Функция возвращает текущую Y-координату героя в пикселях.
+    RETURN EntityPixelY(playerRow, playerDir, playerTravel)                                     ' Считаем её общей функцией для любого актёра.
+END FUNCTION                                                                                    ' Завершаем вычисление Y героя.
 
-FUNCTION GhostPixelX() AS INTEGER
-    RETURN EntityPixelX(ghostCol, ghostDir, ghostTravel)
-END FUNCTION
+FUNCTION GhostPixelX() AS INTEGER                                                               ' Функция возвращает текущую X-координату призрака в пикселях.
+    RETURN EntityPixelX(ghostCol, ghostDir, ghostTravel)                                        ' Используем ту же общую формулу.
+END FUNCTION                                                                                    ' Завершаем вычисление X призрака.
 
-FUNCTION GhostPixelY() AS INTEGER
-    RETURN EntityPixelY(ghostRow, ghostDir, ghostTravel)
-END FUNCTION
+FUNCTION GhostPixelY() AS INTEGER                                                               ' Функция возвращает текущую Y-координату призрака в пикселях.
+    RETURN EntityPixelY(ghostRow, ghostDir, ghostTravel)                                        ' Используем ту же общую формулу.
+END FUNCTION                                                                                    ' Завершаем вычисление Y призрака.
 
-FUNCTION EntityPixelX(tileCol AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER
-    RETURN (tileCol - 1) * TILE + (TILE \ 2) + DirX(dir) * travel
-END FUNCTION
+FUNCTION EntityPixelX(tileCol AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER        ' Функция переводит логический столбец и смещение в мировую X-координату.
+    RETURN WorldOffsetX() + (tileCol - 1) * TILE + (TILE \ 2) + DirX(dir) * travel             ' Берём центр клетки и добавляем внутриклеточное смещение по X.
+END FUNCTION                                                                                    ' Завершаем вычисление мировой X-координаты.
 
-FUNCTION EntityPixelY(tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER
-    RETURN (tileRow - 1) * TILE + (TILE \ 2) + DirY(dir) * travel
-END FUNCTION
+FUNCTION EntityPixelY(tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER        ' Функция переводит логическую строку и смещение в мировую Y-координату.
+    RETURN (tileRow - 1) * TILE + (TILE \ 2) + DirY(dir) * travel                               ' Берём центр клетки и добавляем внутриклеточное смещение по Y.
+END FUNCTION                                                                                    ' Завершаем вычисление мировой Y-координаты.
 
-FUNCTION CanMove(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER) AS BOOLEAN
-    DIM nextCol AS INTEGER = tileCol + DirX(dir)
-    DIM nextRow AS INTEGER = tileRow + DirY(dir)
-    RETURN CellAt(nextRow, nextCol) <> "#"
-END FUNCTION
+FUNCTION PelletPixelX(tileCol AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную X-координату точки внутри клетки.
+    RETURN WorldOffsetX() + (tileCol - 1) * TILE + pelletCenterCols(tileCol)                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+END FUNCTION                                                                                    ' Завершаем вычисление X точки.
 
-FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING
-    IF rowIndex < 1 OR rowIndex > mazeRows THEN
-        RETURN "#"
-    END IF
+FUNCTION PelletPixelY(tileRow AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
+    RETURN (tileRow - 1) * TILE + pelletCenterRows(tileRow)                                     ' Добавляем к строке измеренный центр прохода.
+END FUNCTION                                                                                    ' Завершаем вычисление Y точки.
 
-    IF columnIndex < 1 OR columnIndex > mazeCols THEN
-        RETURN "#"
-    END IF
+FUNCTION CanMove(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER) AS BOOLEAN            ' Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
+    DIM nextCol AS INTEGER = tileCol + DirX(dir)                                                ' Вычисляем столбец следующей клетки.
+    DIM nextRow AS INTEGER = tileRow + DirY(dir)                                                ' Вычисляем строку следующей клетки.
 
-    RETURN MID(maze(rowIndex), columnIndex, 1)
-END FUNCTION
+    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN                      ' Если идём влево из левого края туннеля...
+        RETURN CellAt(tileRow, mazeCols) <> "#"                                                 ' ...смотрим на правый край той же туннельной строки.
+    END IF                                                                                      ' Завершаем специальную проверку левого телепорта.
 
-FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING
-    DIM leftPart AS STRING = ""
-    DIM rightPart AS STRING = ""
+    IF dir = DIR_RIGHT AND tileCol = mazeCols AND IsTunnelPassageRow(tileRow) THEN              ' Если идём вправо из правого края туннеля...
+        RETURN CellAt(tileRow, 1) <> "#"                                                        ' ...смотрим на левый край той же строки.
+    END IF                                                                                      ' Завершаем специальную проверку правого телепорта.
 
-    IF position > 1 THEN
-        leftPart = LEFT(lineText, position - 1)
-    END IF
+    RETURN CellAt(nextRow, nextCol) <> "#"                                                      ' В обычном случае достаточно проверить, что впереди не стена.
+END FUNCTION                                                                                    ' Завершаем проверку возможности движения.
 
-    IF position < LEN(lineText) THEN
-        rightPart = MID(lineText, position + 1, LEN(lineText) - position)
-    END IF
+FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING                          ' Функция безопасно читает символ клетки карты.
+    IF rowIndex < 1 OR rowIndex > mazeRows THEN                                                 ' Если строка вышла за карту...
+        RETURN "#"                                                                              ' ...возвращаем стену как безопасный барьер.
+    END IF                                                                                      ' Завершаем проверку строки.
 
-    RETURN leftPart + replacement + rightPart
-END FUNCTION
+    IF columnIndex < 1 OR columnIndex > mazeCols THEN                                           ' Если столбец вышел за карту...
+        RETURN "#"                                                                              ' ...тоже возвращаем стену.
+    END IF                                                                                      ' Завершаем проверку столбца.
 
-FUNCTION DirX(dir AS INTEGER) AS INTEGER
-    SELECT CASE dir
-        CASE DIR_LEFT
-            RETURN -1
-        CASE DIR_RIGHT
-            RETURN 1
-        CASE ELSE
-            RETURN 0
-    END SELECT
-END FUNCTION
+    RETURN MID(maze(rowIndex), columnIndex, 1)                                                  ' Возвращаем один символ из нужной клетки карты.
+END FUNCTION                                                                                    ' Завершаем чтение клетки.
 
-FUNCTION DirY(dir AS INTEGER) AS INTEGER
-    SELECT CASE dir
-        CASE DIR_UP
-            RETURN -1
-        CASE DIR_DOWN
-            RETURN 1
-        CASE ELSE
-            RETURN 0
-    END SELECT
-END FUNCTION
+FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING  ' Функция заменяет один символ в строке карты.
+    DIM leftPart AS STRING = ""                                                                 ' Левая часть строки до изменяемой позиции.
+    DIM rightPart AS STRING = ""                                                                ' Правая часть строки после изменяемой позиции.
 
-FUNCTION OppositeDirection(dir AS INTEGER) AS INTEGER
-    SELECT CASE dir
-        CASE DIR_LEFT
-            RETURN DIR_RIGHT
-        CASE DIR_RIGHT
-            RETURN DIR_LEFT
-        CASE DIR_UP
-            RETURN DIR_DOWN
-        CASE DIR_DOWN
-            RETURN DIR_UP
-        CASE ELSE
-            RETURN 0
-    END SELECT
-END FUNCTION
+    IF position > 1 THEN                                                                        ' Если слева что-то есть...
+        leftPart = LEFT(lineText, position - 1)                                                 ' ...берём левую часть строки.
+    END IF                                                                                      ' Завершаем выделение левой части.
 
-FUNCTION MaxInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER
-    IF leftValue > rightValue THEN
-        RETURN leftValue
-    END IF
+    IF position < LEN(lineText) THEN                                                            ' Если справа что-то есть...
+        rightPart = MID(lineText, position + 1, LEN(lineText) - position)                       ' ...берём правую часть строки.
+    END IF                                                                                      ' Завершаем выделение правой части.
 
-    RETURN rightValue
-END FUNCTION
+    RETURN leftPart + replacement + rightPart                                                   ' Склеиваем обновлённую строку обратно.
+END FUNCTION                                                                                    ' Завершаем замену символа.
 
-FUNCTION MinInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER
-    IF leftValue < rightValue THEN
-        RETURN leftValue
-    END IF
+FUNCTION DirX(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает горизонтальную составляющую направления.
+    SELECT CASE dir                                                                             ' Выбираем код направления.
+        CASE DIR_LEFT                                                                           ' Для движения влево...
+            RETURN -1                                                                           ' ...смещение по X равно минус один столбец.
+        CASE DIR_RIGHT                                                                          ' Для движения вправо...
+            RETURN 1                                                                            ' ...смещение по X равно плюс один столбец.
+        CASE ELSE                                                                               ' Для вертикального движения или нулевого направления...
+            RETURN 0                                                                            ' ...горизонтального смещения нет.
+    END SELECT                                                                                  ' Завершаем выбор горизонтальной компоненты.
+END FUNCTION                                                                                    ' Завершаем вычисление DirX.
 
-    RETURN rightValue
-END FUNCTION
+FUNCTION DirY(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает вертикальную составляющую направления.
+    SELECT CASE dir                                                                             ' Выбираем код направления.
+        CASE DIR_UP                                                                             ' Для движения вверх...
+            RETURN -1                                                                           ' ...смещение по Y равно минус одна строка.
+        CASE DIR_DOWN                                                                           ' Для движения вниз...
+            RETURN 1                                                                            ' ...смещение по Y равно плюс одна строка.
+        CASE ELSE                                                                               ' Для горизонтального движения или нулевого направления...
+            RETURN 0                                                                            ' ...вертикального смещения нет.
+    END SELECT                                                                                  ' Завершаем выбор вертикальной компоненты.
+END FUNCTION                                                                                    ' Завершаем вычисление DirY.
 
-FUNCTION AbsInt(value AS INTEGER) AS INTEGER
-    IF value < 0 THEN
-        RETURN -value
-    END IF
+FUNCTION OppositeDirection(dir AS INTEGER) AS INTEGER                                           ' Функция возвращает противоположное направление.
+    SELECT CASE dir                                                                             ' Разбираем текущее направление.
+        CASE DIR_LEFT                                                                           ' Если сейчас влево...
+            RETURN DIR_RIGHT                                                                    ' ...противоположное направление вправо.
+        CASE DIR_RIGHT                                                                          ' Если сейчас вправо...
+            RETURN DIR_LEFT                                                                     ' ...противоположное направление влево.
+        CASE DIR_UP                                                                             ' Если сейчас вверх...
+            RETURN DIR_DOWN                                                                     ' ...противоположное направление вниз.
+        CASE DIR_DOWN                                                                           ' Если сейчас вниз...
+            RETURN DIR_UP                                                                       ' ...противоположное направление вверх.
+        CASE ELSE                                                                               ' Если направление нулевое или неизвестное...
+            RETURN 0                                                                            ' ...возвращаем ноль.
+    END SELECT                                                                                  ' Завершаем выбор противоположного направления.
+END FUNCTION                                                                                    ' Завершаем вычисление OppositeDirection.
 
-    RETURN value
-END FUNCTION
+FUNCTION MaxInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER                         ' Функция возвращает максимум из двух целых чисел.
+    IF leftValue > rightValue THEN                                                              ' Если левое значение больше...
+        RETURN leftValue                                                                        ' ...возвращаем его.
+    END IF                                                                                      ' Завершаем сравнение на максимум.
 
-FUNCTION ClampInt(value AS INTEGER, lowValue AS INTEGER, highValue AS INTEGER) AS INTEGER
-    IF value < lowValue THEN
-        RETURN lowValue
-    END IF
+    RETURN rightValue                                                                           ' Иначе возвращаем правое значение.
+END FUNCTION                                                                                    ' Завершаем вычисление максимума.
 
-    IF value > highValue THEN
-        RETURN highValue
-    END IF
+FUNCTION MinInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER                         ' Функция возвращает минимум из двух целых чисел.
+    IF leftValue < rightValue THEN                                                              ' Если левое значение меньше...
+        RETURN leftValue                                                                        ' ...возвращаем его.
+    END IF                                                                                      ' Завершаем сравнение на минимум.
 
-    RETURN value
-END FUNCTION
+    RETURN rightValue                                                                           ' Иначе возвращаем правое значение.
+END FUNCTION                                                                                    ' Завершаем вычисление минимума.
+
+FUNCTION AbsInt(value AS INTEGER) AS INTEGER                                                    ' Функция возвращает модуль целого числа.
+    IF value < 0 THEN                                                                           ' Если число отрицательное...
+        RETURN -value                                                                           ' ...меняем знак и возвращаем положительное значение.
+    END IF                                                                                      ' Завершаем проверку знака.
+
+    RETURN value                                                                                ' Для неотрицательного числа возвращаем его как есть.
+END FUNCTION                                                                                    ' Завершаем вычисление модуля.
+
+FUNCTION ClampInt(value AS INTEGER, lowValue AS INTEGER, highValue AS INTEGER) AS INTEGER      ' Функция ограничивает число диапазоном.
+    IF value < lowValue THEN                                                                    ' Если число меньше нижней границы...
+        RETURN lowValue                                                                         ' ...возвращаем нижнюю границу.
+    END IF                                                                                      ' Завершаем проверку нижней границы.
+
+    IF value > highValue THEN                                                                   ' Если число больше верхней границы...
+        RETURN highValue                                                                        ' ...возвращаем верхнюю границу.
+    END IF                                                                                      ' Завершаем проверку верхней границы.
+
+    RETURN value                                                                                ' Если число внутри диапазона, возвращаем его без изменений.
+END FUNCTION                                                                                    ' Завершаем ограничение диапазоном.
+
+FUNCTION WorldOffsetX() AS INTEGER                                                              ' Функция вычисляет горизонтальный сдвиг мира внутри окна.
+    RETURN MaxInt(0, (VIEW_WIDTH - (mazeCols * TILE)) \ 2)                                      ' Центрируем карту в окне, если она уже, чем видимая область.
+END FUNCTION                                                                                    ' Завершаем вычисление смещения мира по X.
+
+FUNCTION IsTunnelPassageRow(rowIndex AS INTEGER) AS BOOLEAN                                     ' Функция проверяет, является ли строка сквозным туннелем.
+    IF rowIndex < 1 OR rowIndex > mazeRows THEN                                                 ' Если строка вне карты...
+        RETURN FALSE                                                                            ' ...туннелем она быть не может.
+    END IF                                                                                      ' Завершаем проверку диапазона строки.
+
+    RETURN CellAt(rowIndex, 1) <> "#" AND CellAt(rowIndex, mazeCols) <> "#"                    ' Туннельная строка открыта и слева, и справа.
+END FUNCTION                                                                                    ' Завершаем проверку туннельной строки.
+
+FUNCTION WrapTunnelColumn(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER                    ' Функция переносит актёра через боковой туннель.
+    IF NOT IsTunnelPassageRow(tileRow) THEN                                                     ' Если строка не является туннелем...
+        RETURN tileCol                                                                          ' ...ничего не переносим и оставляем столбец как есть.
+    END IF                                                                                      ' Завершаем проверку туннеля.
+
+    IF tileCol < 1 THEN                                                                         ' Если актёр вышел левее карты...
+        RETURN mazeCols                                                                         ' ...переносим его на правый край.
+    END IF                                                                                      ' Завершаем обработку выхода слева.
+
+    IF tileCol > mazeCols THEN                                                                  ' Если актёр вышел правее карты...
+        RETURN 1                                                                                ' ...переносим его на левый край.
+    END IF                                                                                      ' Завершаем обработку выхода справа.
+
+    RETURN tileCol                                                                              ' Если столбец в норме, возвращаем его без изменений.
+END FUNCTION                                                                                    ' Завершаем перенос через туннель.
