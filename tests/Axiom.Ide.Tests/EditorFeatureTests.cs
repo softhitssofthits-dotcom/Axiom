@@ -272,6 +272,17 @@ public sealed class EditorFeatureTests
     }
 
     [Fact]
+    public void Highlighting_VocabularyContainsCanvasWords()
+    {
+        Assert.Contains("CANVAS", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("BEGINFRAME", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("PRESENT", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("DRAWRECT", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("FILLRECT", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("RGB", AxiomHighlightingVocabulary.BuiltIns);
+    }
+
+    [Fact]
     public void Highlighting_VocabularyCoversAllBuiltInFunctions()
     {
         var missingBuiltIns = BuiltinFunctions.All

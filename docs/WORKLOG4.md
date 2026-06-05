@@ -3256,3 +3256,184 @@
 
 Следующий точный шаг:
 - выбрать первый современный графический срез из `docs/MODERN_GRAPHICS_PLAN.md` и зафиксировать в `docs/SPECIFICATION3.md` точный договор имён, синтаксиса, диагностики, tests, manual и samples; основной кандидат: современное окно или режим рисования, начало кадра, показ кадра, `RGB`, очистка цветом, `DRAWRECT` и `FILLRECT` с интеграцией `DRAWIMAGE` и `DRAWSPRITE`.
+
+## Session 927 - 2026-06-02 21:13 - договор первого современного графического среза
+
+Что сделано:
+- продолжена работа от последнего стопа: большой план современной графики уже был создан, но первый конкретный кодовый договор ещё не был выбран;
+- в `docs/SPECIFICATION3.md` зафиксирован первый современный графический срез: `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT`, `FILLRECT`, а также работа `DRAWIMAGE` и `DRAWSPRITE` внутри современного кадра;
+- закреплено, что `CANVAS` и исторический `SCREEN` в первом срезе являются взаимоисключающими режимами, а `PCOPY`, `PALETTE`, `VIEW`, `WINDOW`, `GET`, `PUT`, `POINT` и старые примитивы остаются частью `SCREEN`;
+- в `docs/PLANS3.md` добавлен следующий точный шаг реализации по слоям языка, runtime, `BytecodeVm`, IDE, справочника и запускаемых примеров.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- `RGB` выбран как BASIC-узнаваемое имя для полноцветного значения `0xRRGGBB`;
+- `CANVAS`, `BEGINFRAME` и `PRESENT` записаны как проектное решение Axiom из `docs/MODERN_GRAPHICS_PLAN.md`, а не как исторические QuickBASIC-имена;
+- `CLS color` разрешается только в современном `CANVAS`, чтобы не менять палитровый договор исторического `SCREEN`.
+
+Проверки:
+- код и наблюдаемое поведение языка в этом шаге не менялись;
+- `git diff --check -- docs/SPECIFICATION3.md docs/PLANS3.md docs/WORKLOG4.md` проходит; Git выводит только предупреждения о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- начать реализацию первого современного графического среза с лексера, синтаксиса, парсера, IDE-словарей и семантических контрактов для `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT` и `FILLRECT`.
+
+## Session 928 - 2026-06-04 21:11 - локальный AI-контекст и пилот Headroom
+
+Что сделано:
+- после обязательного перечитывания активных документов проекта отдельно разобрана идея внешнего сжатия контекста для агентных сессий над `Axiom`;
+- напрямую проверены актуальные источники `Headroom`: README проекта, документация по proxy, MCP, ограничениям и оптимизации кэша;
+- для репозитория добавлен локальный скрипт `scripts/ai-context.ps1`, который собирает компактный бриф из активных документов и умеет добавлять тематические фрагменты по ключевым словам;
+- добавлен документ `docs/agent/HEADROOM_PILOT.md` с конкретным планом пилота `Headroom` в двух режимах: `headroom wrap codex` и MCP-инструменты;
+- обновлён `docs/agent/CURRENT_STATE.md`, чтобы короткий ручной снимок состояния больше не вёл в старую ветку date/time и отражал реальный современный графический шаг;
+- `docs/agent/README.md` и `README.md` дополнены инструкциями по локальному AI-контексту и связанным агентным документам.
+
+Изменённые файлы:
+- `scripts/ai-context.ps1`
+- `docs/agent/HEADROOM_PILOT.md`
+- `docs/agent/CURRENT_STATE.md`
+- `docs/agent/README.md`
+- `README.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- `Headroom` рассматривается для `Axiom` как внешний слой агентной разработки, а не как часть продуктового roadmap языка и IDE;
+- даже без внешней зависимости в репозитории должен быть локальный минимальный аналог: короткий бриф по активным документам и быстрый тематический срез по ключевым словам;
+- временный вывод скрипта должен жить только в `.artifacts/`, поэтому путь по умолчанию выбран как `.artifacts/ai-context/session-brief.md`.
+
+Проверки:
+- целевой запуск `powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1` ещё предстоит выполнить после добавления файлов;
+- целевой запуск `powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -Topic CANVAS,RGB,DRAWRECT` тоже запланирован как ближайшая проверка;
+- внешние продуктовые тесты не запускались, потому что этот шаг не меняет язык, runtime или IDE.
+
+Следующий точный шаг:
+- прогнать оба варианта `scripts/ai-context.ps1`, проверить формат и полезность брифа, затем зафиксировать результат;
+- после этого вернуться к активной продуктовой задаче по реализации `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT` и `FILLRECT`.
+
+## Session 929 - 2026-06-04 21:23 - проверен запуск AI-контекста
+
+Что сделано:
+- `scripts/ai-context.ps1` прогнан в основном режиме и подтвердил запись файла `.artifacts/ai-context/session-brief.md`;
+- отдельно прогнан тематический режим `-Topic CANVAS,RGB,DRAWRECT`;
+- по результатам первых прогонов исправлены практические проблемы совместимости с Windows PowerShell: скрипт пересохранён в UTF-8 с BOM, убран вызов `Path.GetRelativePath`, недопустимый для текущего окружения, и переписаны строки markdown с обратными кавычками, которые ломали парсер;
+- итоговый бриф теперь остаётся компактным, а тематический режим действительно добавляет выборочные фрагменты вместо полного перечитывания документов.
+
+Изменённые файлы:
+- `scripts/ai-context.ps1`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- локальный AI-контекст считается рабочим вспомогательным слоем и может использоваться отдельно от внешнего `Headroom`;
+- обязательный путь вывода через `.artifacts/` подтверждён реальным запуском и остаётся договором по умолчанию.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1` проходит и пишет `.artifacts/ai-context/session-brief.md`;
+- `powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -StdoutOnly -Topic CANVAS,RGB,DRAWRECT` проходит;
+- `git diff --check` не показал ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF и о посторонних изменениях рабочего дерева вне этой задачи.
+
+Следующий точный шаг:
+- если продолжаем линию внешнего сжатия контекста, запускать пилот `Headroom` по сценарию из `docs/agent/HEADROOM_PILOT.md`;
+- по основной продуктовой линии вернуться к реализации `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT` и `FILLRECT`.
+
+## Session 930 - 2026-06-05 02:52 - синхронизация второго CANVAS-среза и maze_chase
+
+Что сделано:
+- после обязательного перечитывания активных документов и сверки кода подтверждено, что второй современный графический срез уже реализован в языке, runtime, `BytecodeVm` и IDE-хосте;
+- исправлен главный игровой sample `samples/graphics/game/maze_chase.axm`: локальная `Clamp(...)` была убрана, а вызовы переведены на встроенную `CLAMP(...)`, чтобы не конфликтовать с регистронезависимым именованием языка;
+- синхронизированы manual и проектные документы под фактический договор второго среза: линии, круги, HUD-текст, камера и роль `maze_chase` как флагманского современного примера;
+- подготовлен повторный адресный acceptance-прогон для `hud_text`, `camera_world`, `lines_and_circles` и `maze_chase`.
+
+Изменённые файлы:
+- `docs/manual/modern-graphics.html`
+- `docs/manual/graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/PLANS3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/WORKLOG4.md`
+- `samples/graphics/game/maze_chase.axm`
+
+Решения:
+- исторические графические операторы не удаляются и не «осовремениваются» по месту; они остаются отдельным совместимым слоем;
+- современный путь развивается отдельно вокруг `CANVAS`, кадров, примитивов, текста и камеры;
+- `maze_chase` становится главным живым примером современного графического слоя и практической опорой для дальнейших игровых шагов.
+
+Проверки:
+- после документной синхронизации нужно повторить адресный `dotnet test` для четырёх acceptance-примеров второго среза;
+- `node --check docs/manual/scripts/manual.js` и `node --check docs/manual/scripts/search-index.js` должны подтвердить корректность manual-скриптов;
+- затем стоит отдельно прогнать `git diff --check` по затронутым файлам.
+
+Следующий точный шаг:
+- завершить адресный acceptance-прогон `ModernHudTextAcceptanceSample_RunsOnBytecodeVm`, `ModernCameraAcceptanceSample_RunsOnBytecodeVm`, `ModernLinesAndCirclesAcceptanceSample_RunsOnBytecodeVm` и `MazeChaseAcceptanceSample_RunsOnBytecodeVm`;
+- если всё проходит, отдельным следующим решением решить, нужен ли короткий `samples/smoke/engine-compare/` сценарий на основе того же современного графического цикла.
+
+## Session 931 - 2026-06-05 03:13 - приёмка второго CANVAS-среза завершена
+
+Что сделано:
+- повторён адресный `dotnet test` для `ModernHudTextAcceptanceSample_RunsOnBytecodeVm`, `ModernCameraAcceptanceSample_RunsOnBytecodeVm`, `ModernLinesAndCirclesAcceptanceSample_RunsOnBytecodeVm` и `MazeChaseAcceptanceSample_RunsOnBytecodeVm`;
+- по результатам первого прогона найден и исправлен типовой конфликт в `samples/graphics/game/maze_chase.axm`: локальные значения камеры и ghost-distance больше не зависят от built-in `CLAMP(...)` и `ABS(...)`, а вычисляются через явные целочисленные helper-функции `ClampInt(...)` и `AbsInt(...)`;
+- после исправления sample все четыре acceptance-сценария прошли через `BytecodeVm`;
+- отдельно подтверждено, что `node --check docs/manual/scripts/manual.js` и `node --check docs/manual/scripts/search-index.js` проходят;
+- `git diff --check` по затронутым файлам не показал ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- считать второй современный графический срез принятым не только по документам, но и по адресной байткодной приёмке;
+- `maze_chase` остаётся главным живым примером современного графического слоя и теперь проходит адресную acceptance-проверку без типовых обходов и без отката на интерпретатор.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -v minimal --filter "FullyQualifiedName~ModernHudTextAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ModernCameraAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ModernLinesAndCirclesAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~MazeChaseAcceptanceSample_RunsOnBytecodeVm"` проходит: 4 из 4;
+- `node --check docs/manual/scripts/manual.js` проходит;
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `git diff --check -- docs/manual/modern-graphics.html docs/manual/graphics.html docs/manual/scripts/search-index.js docs/SPECIFICATION3.md docs/MODERN_GRAPHICS_PLAN.md docs/PLANS3.md docs/BYTECODE_COVERAGE.md docs/WORKLOG4.md samples/graphics/game/maze_chase.axm` не находит ошибок пробелов, выводит только предупреждения Git о будущей нормализации LF/CRLF.
+
+Следующий точный шаг:
+- отдельным решением выбрать, нужен ли короткий детерминированный `samples/smoke/engine-compare/` сценарий на основе `maze_chase`;
+- если такой сценарий пока не нужен, следующую продуктовую задачу брать уже поверх готового современного слоя `CANVAS`, а не возвращаться к базовому кадровому договору.
+
+## Session 932 - 2026-06-05 07:16 - исправлен BYREF скаляра и подтверждён паритет maze_chase
+
+Что сделано:
+- найден и исправлен дефект интерпретатора в `BYREF` для простой переменной: путь разрешения аргумента теперь поднимает owning-scope исходной переменной и создаёт настоящую ссылку на её хранилище, а не локальную копию;
+- в `Interpreter.Helpers` добавлены перегрузки чтения и присваивания переменной с явным `RuntimeScope`, чтобы `BYREF` мог менять исходный scope вызывающей стороны;
+- добавлен runnable-пример `samples/operators/sub/byref_scalar_argument.axm` и ссылка на него в `docs/manual/sub.html`;
+- добавлены адресные runtime-тесты `Execute_ByRefScalarParameterMutatesCallerVariable()` и `Execute_CompiledByRefScalarParameterMutatesCallerVariable()`;
+- acceptance-цепочка пополнена примером `samples/operators/sub/byref_scalar_argument.axm`;
+- адресный прогон `MazeChaseAcceptanceSample_MovesPlayerInBothEngines` подтвердил, что после исправления герой двигается и в `Interpreter`, и в `BytecodeVm`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/Interpreter.Helpers.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/sub/byref_scalar_argument.axm`
+- `docs/manual/sub.html`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- считать корневой дефект интерпретаторного `BYREF` для простых скалярных переменных закрытым;
+- считать подтверждённым практический эффект исправления на живом игровом сценарии `samples/graphics/game/maze_chase.axm`;
+- не расширять этот шаг на поля, элементы массива и вызовы через function-value по `BYREF`: они остаются отдельным следующим договором.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~MazeChaseAcceptanceSample_MovesPlayerInBothEngines" --logger "trx;LogFileName=maze-chase-both-engines.trx"` проходит: 2 теста;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~TypeDefaultAndEqualityAcceptanceSamples_RunOnBytecodeVm&DisplayName~byref_scalar_argument" --logger "trx;LogFileName=byref-scalar-acceptance.trx"` проходит: 1 тест;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~ByRefScalar|FullyQualifiedName~ByRefRecord" --logger "trx;LogFileName=byref-runtime-parity.trx"` проходит: 4 теста.
+
+Следующий точный шаг:
+- решить, выделять ли из `samples/graphics/game/maze_chase.axm` отдельный детерминированный `samples/smoke/engine-compare/` сценарий современного графического цикла;
+- если производительный сценарий пока не нужен, следующим отдельным продуктовым решением выбирать уже не базовую графику, а следующий общий игровой helper или следующий живой игровой пример поверх `CANVAS`.

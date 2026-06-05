@@ -44,6 +44,101 @@ public sealed class ScreenStatementSyntax : StatementSyntax
     public ExpressionSyntax? VisualPageExpression { get; }
 }
 
+public sealed class CanvasStatementSyntax : StatementSyntax
+{
+    public CanvasStatementSyntax(SyntaxToken canvasKeyword, ExpressionSyntax widthExpression, SyntaxToken commaToken, ExpressionSyntax heightExpression)
+    {
+        ArgumentNullException.ThrowIfNull(canvasKeyword);
+        ArgumentNullException.ThrowIfNull(widthExpression);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(heightExpression);
+
+        CanvasKeyword = canvasKeyword;
+        WidthExpression = widthExpression;
+        CommaToken = commaToken;
+        HeightExpression = heightExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.CanvasStatement;
+
+    public SyntaxToken CanvasKeyword { get; }
+
+    public ExpressionSyntax WidthExpression { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public ExpressionSyntax HeightExpression { get; }
+}
+
+public sealed class BeginFrameStatementSyntax : StatementSyntax
+{
+    public BeginFrameStatementSyntax(SyntaxToken beginFrameKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(beginFrameKeyword);
+        BeginFrameKeyword = beginFrameKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.BeginFrameStatement;
+
+    public SyntaxToken BeginFrameKeyword { get; }
+}
+
+public sealed class PresentStatementSyntax : StatementSyntax
+{
+    public PresentStatementSyntax(SyntaxToken presentKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(presentKeyword);
+        PresentKeyword = presentKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.PresentStatement;
+
+    public SyntaxToken PresentKeyword { get; }
+}
+
+public sealed class CameraStatementSyntax : StatementSyntax
+{
+    public CameraStatementSyntax(
+        SyntaxToken cameraKeyword,
+        ExpressionSyntax xExpression,
+        SyntaxToken commaToken,
+        ExpressionSyntax yExpression)
+    {
+        ArgumentNullException.ThrowIfNull(cameraKeyword);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        CameraKeyword = cameraKeyword;
+        XExpression = xExpression;
+        CommaToken = commaToken;
+        YExpression = yExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.CameraStatement;
+
+    public SyntaxToken CameraKeyword { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+}
+
+public sealed class ResetCameraStatementSyntax : StatementSyntax
+{
+    public ResetCameraStatementSyntax(SyntaxToken resetCameraKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(resetCameraKeyword);
+        ResetCameraKeyword = resetCameraKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ResetCameraStatement;
+
+    public SyntaxToken ResetCameraKeyword { get; }
+}
+
 public sealed class PCopyStatementSyntax : StatementSyntax
 {
     public PCopyStatementSyntax(SyntaxToken pcopyKeyword, ExpressionSyntax sourcePageExpression, SyntaxToken commaToken, ExpressionSyntax destinationPageExpression)
@@ -188,15 +283,18 @@ public sealed class WindowStatementSyntax : StatementSyntax
 
 public sealed class ClsStatementSyntax : StatementSyntax
 {
-    public ClsStatementSyntax(SyntaxToken clsKeyword)
+    public ClsStatementSyntax(SyntaxToken clsKeyword, ExpressionSyntax? colorExpression)
     {
         ArgumentNullException.ThrowIfNull(clsKeyword);
         ClsKeyword = clsKeyword;
+        ColorExpression = colorExpression;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ClsStatement;
 
     public SyntaxToken ClsKeyword { get; }
+
+    public ExpressionSyntax? ColorExpression { get; }
 }
 
 public sealed class ColorStatementSyntax : StatementSyntax
@@ -665,6 +763,216 @@ public sealed class DrawStatementSyntax : StatementSyntax
     public ExpressionSyntax CommandExpression { get; }
 }
 
+public sealed class DrawLineStatementSyntax : StatementSyntax
+{
+    public DrawLineStatementSyntax(
+        SyntaxToken drawLineKeyword,
+        ExpressionSyntax x1Expression,
+        SyntaxToken x1CommaToken,
+        ExpressionSyntax y1Expression,
+        SyntaxToken y1CommaToken,
+        ExpressionSyntax x2Expression,
+        SyntaxToken x2CommaToken,
+        ExpressionSyntax y2Expression,
+        SyntaxToken y2CommaToken,
+        ExpressionSyntax colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawLineKeyword);
+        ArgumentNullException.ThrowIfNull(x1Expression);
+        ArgumentNullException.ThrowIfNull(x1CommaToken);
+        ArgumentNullException.ThrowIfNull(y1Expression);
+        ArgumentNullException.ThrowIfNull(y1CommaToken);
+        ArgumentNullException.ThrowIfNull(x2Expression);
+        ArgumentNullException.ThrowIfNull(x2CommaToken);
+        ArgumentNullException.ThrowIfNull(y2Expression);
+        ArgumentNullException.ThrowIfNull(y2CommaToken);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        DrawLineKeyword = drawLineKeyword;
+        X1Expression = x1Expression;
+        X1CommaToken = x1CommaToken;
+        Y1Expression = y1Expression;
+        Y1CommaToken = y1CommaToken;
+        X2Expression = x2Expression;
+        X2CommaToken = x2CommaToken;
+        Y2Expression = y2Expression;
+        Y2CommaToken = y2CommaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawLineStatement;
+
+    public SyntaxToken DrawLineKeyword { get; }
+
+    public ExpressionSyntax X1Expression { get; }
+
+    public SyntaxToken X1CommaToken { get; }
+
+    public ExpressionSyntax Y1Expression { get; }
+
+    public SyntaxToken Y1CommaToken { get; }
+
+    public ExpressionSyntax X2Expression { get; }
+
+    public SyntaxToken X2CommaToken { get; }
+
+    public ExpressionSyntax Y2Expression { get; }
+
+    public SyntaxToken Y2CommaToken { get; }
+
+    public ExpressionSyntax ColorExpression { get; }
+}
+
+public sealed class DrawCircleStatementSyntax : StatementSyntax
+{
+    public DrawCircleStatementSyntax(
+        SyntaxToken drawCircleKeyword,
+        ExpressionSyntax xExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax radiusExpression,
+        SyntaxToken radiusCommaToken,
+        ExpressionSyntax colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawCircleKeyword);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(radiusExpression);
+        ArgumentNullException.ThrowIfNull(radiusCommaToken);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        DrawCircleKeyword = drawCircleKeyword;
+        XExpression = xExpression;
+        XCommaToken = xCommaToken;
+        YExpression = yExpression;
+        YCommaToken = yCommaToken;
+        RadiusExpression = radiusExpression;
+        RadiusCommaToken = radiusCommaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawCircleStatement;
+
+    public SyntaxToken DrawCircleKeyword { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax RadiusExpression { get; }
+
+    public SyntaxToken RadiusCommaToken { get; }
+
+    public ExpressionSyntax ColorExpression { get; }
+}
+
+public sealed class FillCircleStatementSyntax : StatementSyntax
+{
+    public FillCircleStatementSyntax(
+        SyntaxToken fillCircleKeyword,
+        ExpressionSyntax xExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax radiusExpression,
+        SyntaxToken radiusCommaToken,
+        ExpressionSyntax colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(fillCircleKeyword);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(radiusExpression);
+        ArgumentNullException.ThrowIfNull(radiusCommaToken);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        FillCircleKeyword = fillCircleKeyword;
+        XExpression = xExpression;
+        XCommaToken = xCommaToken;
+        YExpression = yExpression;
+        YCommaToken = yCommaToken;
+        RadiusExpression = radiusExpression;
+        RadiusCommaToken = radiusCommaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.FillCircleStatement;
+
+    public SyntaxToken FillCircleKeyword { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax RadiusExpression { get; }
+
+    public SyntaxToken RadiusCommaToken { get; }
+
+    public ExpressionSyntax ColorExpression { get; }
+}
+
+public sealed class DrawTextStatementSyntax : StatementSyntax
+{
+    public DrawTextStatementSyntax(
+        SyntaxToken drawTextKeyword,
+        ExpressionSyntax textExpression,
+        SyntaxToken textCommaToken,
+        ExpressionSyntax xExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawTextKeyword);
+        ArgumentNullException.ThrowIfNull(textExpression);
+        ArgumentNullException.ThrowIfNull(textCommaToken);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        DrawTextKeyword = drawTextKeyword;
+        TextExpression = textExpression;
+        TextCommaToken = textCommaToken;
+        XExpression = xExpression;
+        XCommaToken = xCommaToken;
+        YExpression = yExpression;
+        YCommaToken = yCommaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawTextStatement;
+
+    public SyntaxToken DrawTextKeyword { get; }
+
+    public ExpressionSyntax TextExpression { get; }
+
+    public SyntaxToken TextCommaToken { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax ColorExpression { get; }
+}
+
 public sealed class DrawImageStatementSyntax : StatementSyntax
 {
     public DrawImageStatementSyntax(
@@ -721,6 +1029,126 @@ public sealed class DrawImageStatementSyntax : StatementSyntax
     public ExpressionSyntax? HeightExpression { get; }
 
     public bool HasScale => WidthExpression is not null || HeightExpression is not null;
+}
+
+public sealed class DrawRectStatementSyntax : StatementSyntax
+{
+    public DrawRectStatementSyntax(
+        SyntaxToken drawRectKeyword,
+        ExpressionSyntax xExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax widthExpression,
+        SyntaxToken widthCommaToken,
+        ExpressionSyntax heightExpression,
+        SyntaxToken heightCommaToken,
+        ExpressionSyntax colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawRectKeyword);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(widthExpression);
+        ArgumentNullException.ThrowIfNull(widthCommaToken);
+        ArgumentNullException.ThrowIfNull(heightExpression);
+        ArgumentNullException.ThrowIfNull(heightCommaToken);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        DrawRectKeyword = drawRectKeyword;
+        XExpression = xExpression;
+        XCommaToken = xCommaToken;
+        YExpression = yExpression;
+        YCommaToken = yCommaToken;
+        WidthExpression = widthExpression;
+        WidthCommaToken = widthCommaToken;
+        HeightExpression = heightExpression;
+        HeightCommaToken = heightCommaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawRectStatement;
+
+    public SyntaxToken DrawRectKeyword { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax WidthExpression { get; }
+
+    public SyntaxToken WidthCommaToken { get; }
+
+    public ExpressionSyntax HeightExpression { get; }
+
+    public SyntaxToken HeightCommaToken { get; }
+
+    public ExpressionSyntax ColorExpression { get; }
+}
+
+public sealed class FillRectStatementSyntax : StatementSyntax
+{
+    public FillRectStatementSyntax(
+        SyntaxToken fillRectKeyword,
+        ExpressionSyntax xExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax yExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax widthExpression,
+        SyntaxToken widthCommaToken,
+        ExpressionSyntax heightExpression,
+        SyntaxToken heightCommaToken,
+        ExpressionSyntax colorExpression)
+    {
+        ArgumentNullException.ThrowIfNull(fillRectKeyword);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(widthExpression);
+        ArgumentNullException.ThrowIfNull(widthCommaToken);
+        ArgumentNullException.ThrowIfNull(heightExpression);
+        ArgumentNullException.ThrowIfNull(heightCommaToken);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        FillRectKeyword = fillRectKeyword;
+        XExpression = xExpression;
+        XCommaToken = xCommaToken;
+        YExpression = yExpression;
+        YCommaToken = yCommaToken;
+        WidthExpression = widthExpression;
+        WidthCommaToken = widthCommaToken;
+        HeightExpression = heightExpression;
+        HeightCommaToken = heightCommaToken;
+        ColorExpression = colorExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.FillRectStatement;
+
+    public SyntaxToken FillRectKeyword { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax WidthExpression { get; }
+
+    public SyntaxToken WidthCommaToken { get; }
+
+    public ExpressionSyntax HeightExpression { get; }
+
+    public SyntaxToken HeightCommaToken { get; }
+
+    public ExpressionSyntax ColorExpression { get; }
 }
 
 public sealed class DrawSpriteStatementSyntax : StatementSyntax

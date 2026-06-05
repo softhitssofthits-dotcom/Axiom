@@ -728,7 +728,32 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.PCopy:
+                case Opcode.Canvas:
+                case Opcode.BeginFrame:
+                case Opcode.Present:
+                case Opcode.Camera:
+                case Opcode.ResetCamera:
+                case Opcode.DrawLine:
+                case Opcode.DrawCircle:
+                case Opcode.DrawRect:
+                case Opcode.FillCircle:
+                case Opcode.FillRect:
+                case Opcode.DrawText:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.Cls:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.GetOperand(0) is not 0 and not 1)
+                    {
+                        Report(
+                            "BC4132",
+                            $"Инструкция Cls в процедуре '{routine.Name}' ожидает флаг цвета 0 или 1, получено {instruction.GetOperand(0)}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+
                     break;
 
                 case Opcode.PSet:
@@ -865,7 +890,6 @@ public sealed class BytecodeModuleValidator
                 case Opcode.EraseArray:
                 case Opcode.PrintValue:
                 case Opcode.PrintLine:
-                case Opcode.Cls:
                 case Opcode.Locate:
                 case Opcode.CloseFile:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
@@ -1295,6 +1319,27 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
+            case Opcode.Canvas:
+            {
+                var heightType = Pop();
+                var widthType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина CANVAS");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота CANVAS");
+                break;
+            }
+
+            case Opcode.Camera:
+            {
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X CAMERA");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y CAMERA");
+                break;
+            }
+
+            case Opcode.ResetCamera:
+                break;
+
             case Opcode.PCopy:
             {
                 var destinationPageType = Pop();
@@ -1421,6 +1466,12 @@ public sealed class BytecodeModuleValidator
             }
 
             case Opcode.Cls:
+                if (instruction.GetOperand(0) == 1)
+                {
+                    var colorType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет CLS");
+                }
+
                 break;
 
             case Opcode.Color:
@@ -1664,6 +1715,64 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                break;
+            }
+
+            case Opcode.DrawRect:
+            case Opcode.FillRect:
+            {
+                var colorType = Pop();
+                var heightType = Pop();
+                var widthType = Pop();
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                break;
+            }
+
+            case Opcode.DrawLine:
+            {
+                var colorType = Pop();
+                var y2Type = Pop();
+                var x2Type = Pop();
+                var y1Type = Pop();
+                var x1Type = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, TypeSymbol.Long, "координата X1");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, TypeSymbol.Long, "координата Y1");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, TypeSymbol.Long, "координата X2");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, TypeSymbol.Long, "координата Y2");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                break;
+            }
+
+            case Opcode.DrawCircle:
+            case Opcode.FillCircle:
+            {
+                var colorType = Pop();
+                var radiusType = Pop();
+                var yType = Pop();
+                var xType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, TypeSymbol.Long, "радиус");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                break;
+            }
+
+            case Opcode.DrawText:
+            {
+                var colorType = Pop();
+                var yType = Pop();
+                var xType = Pop();
+                var textType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, textType, TypeSymbol.String, "текст");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
                 break;
             }
 
@@ -3408,6 +3517,30 @@ public sealed class BytecodeModuleValidator
                 popCount = instruction.GetOperand(0);
                 return true;
 
+            case Opcode.Cls:
+                popCount = instruction.GetOperand(0);
+                return true;
+
+            case Opcode.Canvas:
+                popCount = 2;
+                return true;
+
+            case Opcode.Camera:
+                popCount = 2;
+                return true;
+
+            case Opcode.DrawCircle:
+            case Opcode.FillCircle:
+            case Opcode.DrawText:
+                popCount = 4;
+                return true;
+
+            case Opcode.DrawLine:
+            case Opcode.DrawRect:
+            case Opcode.FillRect:
+                popCount = 5;
+                return true;
+
             case Opcode.DrawImage:
                 popCount = instruction.GetOperand(0) == 0 ? 3 : 5;
                 return true;
@@ -3435,6 +3568,9 @@ public sealed class BytecodeModuleValidator
             case Opcode.PrintSeparator:
             case Opcode.PrintLine:
             case Opcode.Input:
+            case Opcode.BeginFrame:
+            case Opcode.Present:
+            case Opcode.ResetCamera:
             case Opcode.Sleep when instruction.GetOperand(0) == 0:
             case Opcode.PushErrorHandler:
             case Opcode.PopErrorHandler:

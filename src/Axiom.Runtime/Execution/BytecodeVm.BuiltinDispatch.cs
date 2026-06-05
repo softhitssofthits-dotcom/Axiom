@@ -157,6 +157,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.SpriteWidth => BuiltinExecution.UnaryNoLocation(static (vm, sprite) => RuntimeValue.FromInteger(BytecodeVm.GetSpriteWidth(sprite))),
             BuiltinFunctionId.SpriteHeight => BuiltinExecution.UnaryNoLocation(static (vm, sprite) => RuntimeValue.FromInteger(BytecodeVm.GetSpriteHeight(sprite))),
             BuiltinFunctionId.SpriteCount => BuiltinExecution.UnaryNoLocation(static (vm, sprite) => RuntimeValue.FromInteger(BytecodeVm.GetSpriteCount(sprite))),
+            BuiltinFunctionId.Rgb => BuiltinExecution.Ternary(static (vm, red, green, blue, location) => RuntimeValue.FromInteger(vm.EvaluateRgbBuiltin(GetLongUnchecked(red), GetLongUnchecked(green), GetLongUnchecked(blue), location))),
             BuiltinFunctionId.Int => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateIntBuiltin(value, location))),
             BuiltinFunctionId.Str => BuiltinExecution.UnaryNoLocation(static (vm, value) => value.ToDisplayRuntimeValue()),
             BuiltinFunctionId.Val => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromDouble(ParseVal(GetStringUnchecked(value)))),

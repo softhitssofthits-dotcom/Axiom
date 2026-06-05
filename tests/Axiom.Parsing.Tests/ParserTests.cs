@@ -400,6 +400,69 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_CanvasFrameAndModernRectangles()
+    {
+        var program = ParseProgram("""
+            CANVAS 320, 180
+            BEGINFRAME
+            CLS RGB(18, 22, 30)
+            DRAWRECT 10, 20, 30, 40, RGB(255, 0, 0)
+            FILLRECT 50, 60, 70, 80, RGB(0, 255, 0)
+            PRESENT
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.IsType<CanvasStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[0]).Statement);
+        Assert.IsType<BeginFrameStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        var cls = Assert.IsType<ClsStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
+        Assert.IsType<CallExpressionSyntax>(cls.ColorExpression);
+        var drawRect = Assert.IsType<DrawRectStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
+        Assert.IsType<CallExpressionSyntax>(drawRect.ColorExpression);
+        var fillRect = Assert.IsType<FillRectStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[4]).Statement);
+        Assert.IsType<CallExpressionSyntax>(fillRect.ColorExpression);
+        Assert.IsType<PresentStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[5]).Statement);
+    }
+
+    [Fact]
+    public void Parse_CanvasCameraAndModernPrimitives()
+    {
+        var program = ParseProgram("""
+            CANVAS 320, 180
+            CAMERA 16, 24
+            DRAWLINE 16, 24, 80, 24, RGB(255, 255, 0)
+            DRAWCIRCLE 48, 52, 10, RGB(255, 0, 0)
+            FILLCIRCLE 96, 52, 6, RGB(0, 255, 0)
+            RESETCAMERA
+            DRAWTEXT "Очки: 12", 8, 8, RGB(255, 255, 255)
+            PRESENT
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.IsType<CanvasStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[0]).Statement);
+
+        var camera = Assert.IsType<CameraStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        Assert.Equal(16, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(camera.XExpression).LiteralToken.Value));
+        Assert.Equal(24, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(camera.YExpression).LiteralToken.Value));
+
+        var drawLine = Assert.IsType<DrawLineStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
+        Assert.IsType<CallExpressionSyntax>(drawLine.ColorExpression);
+
+        var drawCircle = Assert.IsType<DrawCircleStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
+        Assert.IsType<CallExpressionSyntax>(drawCircle.ColorExpression);
+
+        var fillCircle = Assert.IsType<FillCircleStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[4]).Statement);
+        Assert.IsType<CallExpressionSyntax>(fillCircle.ColorExpression);
+
+        Assert.IsType<ResetCameraStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[5]).Statement);
+
+        var drawText = Assert.IsType<DrawTextStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[6]).Statement);
+        Assert.Equal("Очки: 12", Assert.IsType<string>(Assert.IsType<LiteralExpressionSyntax>(drawText.TextExpression).LiteralToken.Value));
+        Assert.IsType<CallExpressionSyntax>(drawText.ColorExpression);
+
+        Assert.IsType<PresentStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[7]).Statement);
+    }
+
+    [Fact]
     public void Parse_ColorTransparentStatement()
     {
         var program = ParseProgram("COLOR 15, TRANSPARENT", out var diagnostics);

@@ -572,9 +572,69 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Paint, location, valueCount: valueCount, mouseEventKind: flags);
     }
 
+    public static LoweredInstruction Canvas(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Canvas, location, valueCount: 2);
+    }
+
+    public static LoweredInstruction BeginFrame(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.BeginFrame, location);
+    }
+
+    public static LoweredInstruction Present(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Present, location);
+    }
+
+    public static LoweredInstruction Camera(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Camera, location, valueCount: 2);
+    }
+
+    public static LoweredInstruction ResetCamera(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.ResetCamera, location);
+    }
+
+    public static LoweredInstruction Cls(TextLocation location, bool hasColor)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Cls, location, valueCount: hasColor ? 1 : 0);
+    }
+
     public static LoweredInstruction Draw(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.Draw, location, valueCount: 1);
+    }
+
+    public static LoweredInstruction DrawRect(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawRect, location, valueCount: 5);
+    }
+
+    public static LoweredInstruction FillRect(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.FillRect, location, valueCount: 5);
+    }
+
+    public static LoweredInstruction DrawLine(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawLine, location, valueCount: 5);
+    }
+
+    public static LoweredInstruction DrawCircle(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawCircle, location, valueCount: 4);
+    }
+
+    public static LoweredInstruction FillCircle(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.FillCircle, location, valueCount: 4);
+    }
+
+    public static LoweredInstruction DrawText(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawText, location, valueCount: 4);
     }
 
     public static LoweredInstruction DrawImage(TextLocation location, bool hasScale)

@@ -805,6 +805,143 @@ DRAWSPRITE walk, 0, 0, 0
     }
 
     [Fact]
+    public void Execute_CompiledCanvasFrameAndRectanglesCallGraphicsHost()
+    {
+        const string text = """
+CANVAS 160, 90
+BEGINFRAME
+CLS RGB(18, 22, 30)
+DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)
+FILLRECT 5, 6, 7, 8, RGB(0, 255, 0)
+PRESENT
+""";
+
+        var host = new TestRuntimeHost();
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.Canvas);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.BeginFrame);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.Present);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawRect);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.FillRect);
+        Assert.Equal([(160L, 90L)], host.CanvasActivations);
+        Assert.Equal(1, host.BeginFrameCount);
+        Assert.Equal([0x12161E], host.FrameClears);
+        Assert.Equal([new DrawRectCall(1, 2, 3, 4, 0xFF0000)], host.DrawRects);
+        Assert.Equal([new FillRectCall(5, 6, 7, 8, 0x00FF00)], host.FillRects);
+        Assert.Equal(1, host.PresentFrameCount);
+        Assert.Equal(5, host.CurrentGraphicsX);
+        Assert.Equal(6, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_CompiledCanvasImageAndSpriteUseModernGraphicsHost()
+    {
+        const string text = """
+CANVAS 160, 90
+DIM hero AS IMAGE
+DIM walk AS SPRITE
+hero = LOADIMAGE("hero")
+walk = LOADSPRITE("walk", 16, 16)
+DRAWIMAGE hero, 10, 20
+DRAWSPRITE walk, 1, 30, 40
+PRESENT
+""";
+
+        var image = CreateTestImage(width: 3, height: 2);
+        var sprite = CreateTestSprite(imageWidth: 32, imageHeight: 32, frameWidth: 16, frameHeight: 16);
+        var host = new TestRuntimeHost();
+        host.Images["hero"] = image;
+        host.Sprites["walk"] = sprite;
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal([new DrawImageCall(image, 10, 20, 3, 2)], host.DrawImages);
+        Assert.Equal([new DrawSpriteCall(sprite, 1, 30, 40, 16, 16)], host.DrawSprites);
+        Assert.Equal(1, host.PresentFrameCount);
+    }
+
+    [Fact]
+    public void Execute_CompiledCanvasCameraAndModernPrimitivesCallGraphicsHost()
+    {
+        const string text = """
+CANVAS 160, 90
+CAMERA 16, 24
+DRAWLINE 16, 24, 28, 24, RGB(255, 255, 0)
+DRAWCIRCLE 32, 40, 6, RGB(255, 0, 0)
+FILLCIRCLE 52, 40, 4, RGB(0, 255, 0)
+RESETCAMERA
+DRAWTEXT "Очки: 12", 8, 6, RGB(255, 255, 255)
+PRESENT
+""";
+
+        var host = new TestRuntimeHost();
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.Camera);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawLine);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawCircle);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.FillCircle);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.ResetCamera);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawText);
+        Assert.Equal([new CanvasCameraCall(16, 24)], host.CanvasCameraCalls);
+        Assert.Equal([new CanvasLineCall(16, 24, 28, 24, 0xFFFF00)], host.CanvasDrawLines);
+        Assert.Equal([new CanvasCircleCall(32, 40, 6, 0xFF0000)], host.CanvasDrawCircles);
+        Assert.Equal([new CanvasCircleCall(52, 40, 4, 0x00FF00)], host.CanvasFillCircles);
+        Assert.Equal(1, host.ResetCanvasCameraCount);
+        Assert.Equal([new CanvasTextCall("Очки: 12", 8, 6, 0xFFFFFF)], host.CanvasDrawTexts);
+        Assert.Equal(1, host.PresentFrameCount);
+        Assert.Equal(8, host.CurrentGraphicsX);
+        Assert.Equal(6, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_CompiledCanvasOperationsReportDocumentedDiagnostics()
+    {
+        var (_, _, invalidCanvasResult) = ExecuteProgram("CANVAS 0, 90");
+        Assert.False(invalidCanvasResult.Succeeded);
+        Assert.Contains(invalidCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, invalidRgbResult) = ExecuteProgram("PRINT RGB(256, 0, 0)");
+        Assert.False(invalidRgbResult.Succeeded);
+        Assert.Contains(invalidRgbResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingCanvasResult) = ExecuteProgram("DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)");
+        Assert.False(missingCanvasResult.Succeeded);
+        Assert.Contains(missingCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+
+        var (_, _, invalidRectangleResult) = ExecuteProgram("""
+CANVAS 160, 90
+FILLRECT 1, 2, 0, 4, RGB(255, 0, 0)
+""");
+        Assert.False(invalidRectangleResult.Succeeded);
+        Assert.Contains(invalidRectangleResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingCameraResult) = ExecuteProgram("CAMERA 1, 2");
+        Assert.False(missingCameraResult.Succeeded);
+        Assert.Contains(missingCameraResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+
+        var (_, _, invalidCircleResult) = ExecuteProgram("""
+CANVAS 160, 90
+FILLCIRCLE 10, 10, -1, RGB(0, 255, 0)
+""");
+        Assert.False(invalidCircleResult.Succeeded);
+        Assert.Contains(invalidCircleResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, invalidTextResult) = ExecuteProgram("""
+CANVAS 160, 90
+DRAWTEXT "x", 1000000001, 0, RGB(255, 255, 255)
+""");
+        Assert.False(invalidTextResult.Succeeded);
+        Assert.Contains(invalidTextResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
     public void Execute_CompiledWindowSupportsDrawPointSelectorsAndViewRebase()
     {
         const string text = """
@@ -5421,6 +5558,26 @@ PRINT user.Age
     }
 
     [Fact]
+    public void Execute_CompiledByRefScalarParameterMutatesCallerVariable()
+    {
+        const string text = """
+SUB AddOne(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+DIM count AS INTEGER
+count = 10
+AddOne(count)
+PRINT count
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["11"], host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledByValRecordParameterKeepsCallerVariableIndependent()
     {
         const string text = """
@@ -5810,6 +5967,9 @@ PRINT Person(-1).Age
         private int _readKeyCalls;
         private int _cancellationPolls;
         private bool _isScreenActive;
+        private bool _isCanvasActive;
+        private long _canvasWidth;
+        private long _canvasHeight;
         private int _activeScreenPage;
         private int _visualScreenPage;
         private int _foreground = 15;
@@ -5834,6 +5994,7 @@ PRINT Person(-1).Age
         private int _textCursorColumn = 1;
         private int _textViewportTop = 1;
         private int _textViewportBottom = VisibleTextRows;
+        private bool _pendingTextViewportScroll;
 
         public TestRuntimeHost(
             DateTimeOffset? localNow = null,
@@ -5892,6 +6053,30 @@ PRINT Person(-1).Age
 
         public List<DrawSpriteCall> DrawSprites { get; } = [];
 
+        public List<(long Width, long Height)> CanvasActivations { get; } = [];
+
+        public List<int> FrameClears { get; } = [];
+
+        public List<DrawRectCall> DrawRects { get; } = [];
+
+        public List<FillRectCall> FillRects { get; } = [];
+
+        public List<CanvasCameraCall> CanvasCameraCalls { get; } = [];
+
+        public List<CanvasLineCall> CanvasDrawLines { get; } = [];
+
+        public List<CanvasCircleCall> CanvasDrawCircles { get; } = [];
+
+        public List<CanvasCircleCall> CanvasFillCircles { get; } = [];
+
+        public List<CanvasTextCall> CanvasDrawTexts { get; } = [];
+
+        public int BeginFrameCount { get; private set; }
+
+        public int PresentFrameCount { get; private set; }
+
+        public int ResetCanvasCameraCount { get; private set; }
+
         public int PaletteResets { get; private set; }
 
         public string GetVisibleTextLine(int row)
@@ -5938,15 +6123,17 @@ PRINT Person(-1).Age
 
         public bool IsScreenActive => _isScreenActive;
 
+        public bool IsCanvasActive => _isCanvasActive;
+
         public int ActiveScreenPage => _activeScreenPage;
 
         public int VisualScreenPage => _visualScreenPage;
 
         public int ScreenMode => _isScreenActive ? 1 : 0;
 
-        public int ScreenWidth => _isScreenActive ? 320 : 0;
+        public int ScreenWidth => _isScreenActive ? 320 : _isCanvasActive ? (int)_canvasWidth : 0;
 
-        public int ScreenHeight => _isScreenActive ? 200 : 0;
+        public int ScreenHeight => _isScreenActive ? 200 : _isCanvasActive ? (int)_canvasHeight : 0;
 
         public int CurrentForegroundColor => _foreground;
 
@@ -5990,6 +6177,9 @@ PRINT Person(-1).Age
         public void ActivateScreen(int mode, int activePage, int visualPage)
         {
             _isScreenActive = mode != 0;
+            _isCanvasActive = false;
+            _canvasWidth = 0;
+            _canvasHeight = 0;
             _activeScreenPage = _isScreenActive ? activePage : 0;
             _visualScreenPage = _isScreenActive ? visualPage : 0;
             if (_isScreenActive)
@@ -6010,9 +6200,83 @@ PRINT Person(-1).Age
             _textCursorColumn = 1;
         }
 
+        public void ActivateCanvas(long width, long height)
+        {
+            _isScreenActive = false;
+            _isCanvasActive = true;
+            _canvasWidth = width;
+            _canvasHeight = height;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
+            _pixels.Clear();
+            _screenPages.Clear();
+            ResetViewport();
+            ResetWindow();
+            ResetTextViewport();
+            CanvasActivations.Add((width, height));
+        }
+
+        public void BeginFrame()
+        {
+            BeginFrameCount++;
+        }
+
+        public void PresentFrame()
+        {
+            PresentFrameCount++;
+        }
+
+        public void ClearFrame(int color)
+        {
+            FrameClears.Add(color);
+        }
+
+        public void DrawRect(long x, long y, long width, long height, int color)
+        {
+            DrawRects.Add(new DrawRectCall(x, y, width, height, color));
+        }
+
+        public void FillRect(long x, long y, long width, long height, int color)
+        {
+            FillRects.Add(new FillRectCall(x, y, width, height, color));
+        }
+
+        public void SetCanvasCamera(long x, long y)
+        {
+            CanvasCameraCalls.Add(new CanvasCameraCall(x, y));
+        }
+
+        public void ResetCanvasCamera()
+        {
+            ResetCanvasCameraCount++;
+        }
+
+        public void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
+        {
+            CanvasDrawLines.Add(new CanvasLineCall(x1, y1, x2, y2, color));
+        }
+
+        public void DrawCanvasCircle(long x, long y, long radius, int color)
+        {
+            CanvasDrawCircles.Add(new CanvasCircleCall(x, y, radius, color));
+        }
+
+        public void FillCanvasCircle(long x, long y, long radius, int color)
+        {
+            CanvasFillCircles.Add(new CanvasCircleCall(x, y, radius, color));
+        }
+
+        public void DrawCanvasText(string text, long x, long y, int color)
+        {
+            CanvasDrawTexts.Add(new CanvasTextCall(text, x, y, color));
+        }
+
         public void DeactivateScreen()
         {
             _isScreenActive = false;
+            _isCanvasActive = false;
+            _canvasWidth = 0;
+            _canvasHeight = 0;
             _activeScreenPage = 0;
             _visualScreenPage = 0;
             ResetViewport();
@@ -6054,6 +6318,7 @@ PRINT Person(-1).Age
         {
             _textCursorRow = Math.Max(1, row);
             _textCursorColumn = Math.Max(1, column);
+            _pendingTextViewportScroll = false;
         }
 
         public void ResetPalette()
@@ -6096,6 +6361,7 @@ PRINT Person(-1).Age
             _textViewportBottom = bottomRow;
             _textCursorRow = topRow;
             _textCursorColumn = 1;
+            _pendingTextViewportScroll = false;
             return true;
         }
 
@@ -6105,6 +6371,7 @@ PRINT Person(-1).Age
             _textViewportBottom = VisibleTextRows;
             _textCursorRow = 1;
             _textCursorColumn = 1;
+            _pendingTextViewportScroll = false;
         }
 
         public void SetPixel(long x, long y, int color)
@@ -6334,6 +6601,7 @@ PRINT Person(-1).Age
 
         public void WriteGraphicsText(string text, bool newLine)
         {
+            NormalizeViewportCursorBeforeWrite();
             WriteVisibleText(text);
             if (newLine)
             {
@@ -6450,15 +6718,17 @@ PRINT Person(-1).Age
                 if (_textCursorRow < _textViewportBottom)
                 {
                     _textCursorRow++;
+                    _pendingTextViewportScroll = false;
                     return;
                 }
 
-                ScrollViewportUp();
-                _textCursorRow = _textViewportBottom;
+                _textCursorRow = _textViewportBottom + 1;
+                _pendingTextViewportScroll = true;
                 return;
             }
 
             _textCursorRow++;
+            _pendingTextViewportScroll = false;
         }
 
         private void ScrollViewportUp()
@@ -6478,6 +6748,19 @@ PRINT Person(-1).Age
             {
                 _visibleTextLines.Add(string.Empty);
             }
+        }
+
+        private void NormalizeViewportCursorBeforeWrite()
+        {
+            if (!_pendingTextViewportScroll)
+            {
+                return;
+            }
+
+            ScrollViewportUp();
+            _textCursorRow = _textViewportBottom;
+            _textCursorColumn = 1;
+            _pendingTextViewportScroll = false;
         }
 
         private (long X, long Y) ResolveCurrentAbsolutePosition()
@@ -6527,4 +6810,16 @@ PRINT Person(-1).Age
         long Y,
         int Width,
         int Height);
+
+    private sealed record DrawRectCall(long X, long Y, long Width, long Height, int Color);
+
+    private sealed record FillRectCall(long X, long Y, long Width, long Height, int Color);
+
+    private sealed record CanvasCameraCall(long X, long Y);
+
+    private sealed record CanvasLineCall(long X1, long Y1, long X2, long Y2, int Color);
+
+    private sealed record CanvasCircleCall(long X, long Y, long Radius, int Color);
+
+    private sealed record CanvasTextCall(string Text, long X, long Y, int Color);
 }

@@ -250,6 +250,72 @@ public sealed class BoundScreenStatement : BoundStatement
     public BoundExpression? VisualPageExpression { get; }
 }
 
+public sealed class BoundCanvasStatement : BoundStatement
+{
+    public BoundCanvasStatement(TextLocation location, BoundExpression widthExpression, BoundExpression heightExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(widthExpression);
+        ArgumentNullException.ThrowIfNull(heightExpression);
+        WidthExpression = widthExpression;
+        HeightExpression = heightExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.CanvasStatement;
+
+    public BoundExpression WidthExpression { get; }
+
+    public BoundExpression HeightExpression { get; }
+}
+
+public sealed class BoundBeginFrameStatement : BoundStatement
+{
+    public BoundBeginFrameStatement(TextLocation location)
+        : base(location)
+    {
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.BeginFrameStatement;
+}
+
+public sealed class BoundPresentStatement : BoundStatement
+{
+    public BoundPresentStatement(TextLocation location)
+        : base(location)
+    {
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.PresentStatement;
+}
+
+public sealed class BoundCameraStatement : BoundStatement
+{
+    public BoundCameraStatement(TextLocation location, BoundExpression xExpression, BoundExpression yExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        XExpression = xExpression;
+        YExpression = yExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.CameraStatement;
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+}
+
+public sealed class BoundResetCameraStatement : BoundStatement
+{
+    public BoundResetCameraStatement(TextLocation location)
+        : base(location)
+    {
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ResetCameraStatement;
+}
+
 public sealed class BoundPCopyStatement : BoundStatement
 {
     public BoundPCopyStatement(TextLocation location, BoundExpression sourcePageExpression, BoundExpression destinationPageExpression)
@@ -363,12 +429,15 @@ public sealed class BoundWindowStatement : BoundStatement
 
 public sealed class BoundClsStatement : BoundStatement
 {
-    public BoundClsStatement(TextLocation location)
+    public BoundClsStatement(TextLocation location, BoundExpression? colorExpression)
         : base(location)
     {
+        ColorExpression = colorExpression;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.ClsStatement;
+
+    public BoundExpression? ColorExpression { get; }
 }
 
 public enum BoundColorBackgroundMode
@@ -716,6 +785,139 @@ public sealed class BoundDrawStatement : BoundStatement
     public BoundExpression CommandExpression { get; }
 }
 
+public sealed class BoundDrawLineStatement : BoundStatement
+{
+    public BoundDrawLineStatement(
+        TextLocation location,
+        BoundExpression x1Expression,
+        BoundExpression y1Expression,
+        BoundExpression x2Expression,
+        BoundExpression y2Expression,
+        BoundExpression colorExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(x1Expression);
+        ArgumentNullException.ThrowIfNull(y1Expression);
+        ArgumentNullException.ThrowIfNull(x2Expression);
+        ArgumentNullException.ThrowIfNull(y2Expression);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        X1Expression = x1Expression;
+        Y1Expression = y1Expression;
+        X2Expression = x2Expression;
+        Y2Expression = y2Expression;
+        ColorExpression = colorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawLineStatement;
+
+    public BoundExpression X1Expression { get; }
+
+    public BoundExpression Y1Expression { get; }
+
+    public BoundExpression X2Expression { get; }
+
+    public BoundExpression Y2Expression { get; }
+
+    public BoundExpression ColorExpression { get; }
+}
+
+public sealed class BoundDrawCircleStatement : BoundStatement
+{
+    public BoundDrawCircleStatement(
+        TextLocation location,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression radiusExpression,
+        BoundExpression colorExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(radiusExpression);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        XExpression = xExpression;
+        YExpression = yExpression;
+        RadiusExpression = radiusExpression;
+        ColorExpression = colorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawCircleStatement;
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression RadiusExpression { get; }
+
+    public BoundExpression ColorExpression { get; }
+}
+
+public sealed class BoundFillCircleStatement : BoundStatement
+{
+    public BoundFillCircleStatement(
+        TextLocation location,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression radiusExpression,
+        BoundExpression colorExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(radiusExpression);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        XExpression = xExpression;
+        YExpression = yExpression;
+        RadiusExpression = radiusExpression;
+        ColorExpression = colorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.FillCircleStatement;
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression RadiusExpression { get; }
+
+    public BoundExpression ColorExpression { get; }
+}
+
+public sealed class BoundDrawTextStatement : BoundStatement
+{
+    public BoundDrawTextStatement(
+        TextLocation location,
+        BoundExpression textExpression,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression colorExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(textExpression);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        TextExpression = textExpression;
+        XExpression = xExpression;
+        YExpression = yExpression;
+        ColorExpression = colorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawTextStatement;
+
+    public BoundExpression TextExpression { get; }
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression ColorExpression { get; }
+}
+
 public sealed class BoundDrawImageStatement : BoundStatement
 {
     public BoundDrawImageStatement(
@@ -751,6 +953,80 @@ public sealed class BoundDrawImageStatement : BoundStatement
     public BoundExpression? HeightExpression { get; }
 
     public bool HasScale => WidthExpression is not null || HeightExpression is not null;
+}
+
+public sealed class BoundDrawRectStatement : BoundStatement
+{
+    public BoundDrawRectStatement(
+        TextLocation location,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression widthExpression,
+        BoundExpression heightExpression,
+        BoundExpression colorExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(widthExpression);
+        ArgumentNullException.ThrowIfNull(heightExpression);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        XExpression = xExpression;
+        YExpression = yExpression;
+        WidthExpression = widthExpression;
+        HeightExpression = heightExpression;
+        ColorExpression = colorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawRectStatement;
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression WidthExpression { get; }
+
+    public BoundExpression HeightExpression { get; }
+
+    public BoundExpression ColorExpression { get; }
+}
+
+public sealed class BoundFillRectStatement : BoundStatement
+{
+    public BoundFillRectStatement(
+        TextLocation location,
+        BoundExpression xExpression,
+        BoundExpression yExpression,
+        BoundExpression widthExpression,
+        BoundExpression heightExpression,
+        BoundExpression colorExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+        ArgumentNullException.ThrowIfNull(widthExpression);
+        ArgumentNullException.ThrowIfNull(heightExpression);
+        ArgumentNullException.ThrowIfNull(colorExpression);
+
+        XExpression = xExpression;
+        YExpression = yExpression;
+        WidthExpression = widthExpression;
+        HeightExpression = heightExpression;
+        ColorExpression = colorExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.FillRectStatement;
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+
+    public BoundExpression WidthExpression { get; }
+
+    public BoundExpression HeightExpression { get; }
+
+    public BoundExpression ColorExpression { get; }
 }
 
 public sealed class BoundDrawSpriteStatement : BoundStatement

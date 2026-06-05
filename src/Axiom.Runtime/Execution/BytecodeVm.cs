@@ -798,6 +798,31 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.Canvas:
+                ExecuteCanvasInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.BeginFrame:
+                ExecuteBeginFrameInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.Present:
+                ExecutePresentInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.Camera:
+                ExecuteCameraInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.ResetCamera:
+                ExecuteResetCameraInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.View:
                 ExecuteViewInstruction(frame, instruction, instructionIndex);
                 InvalidateReverseExecutionHistory();
@@ -814,7 +839,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.Cls:
-                ExecuteClsInstruction(frame, instructionIndex);
+                ExecuteClsInstruction(frame, instruction, instructionIndex);
                 InvalidateReverseExecutionHistory();
                 break;
 
@@ -871,6 +896,31 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.DrawRect:
+                ExecuteDrawRectInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.FillRect:
+                ExecuteFillRectInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.DrawLine:
+                ExecuteDrawLineInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.DrawCircle:
+                ExecuteDrawCircleInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.FillCircle:
+                ExecuteFillCircleInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.DrawImage:
                 ExecuteDrawImageInstruction(frame, instruction, instructionIndex);
                 InvalidateReverseExecutionHistory();
@@ -878,6 +928,11 @@ public sealed partial class BytecodeVm
 
             case Opcode.DrawSprite:
                 ExecuteDrawSpriteInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.DrawText:
+                ExecuteDrawTextInstruction(frame, instructionIndex);
                 InvalidateReverseExecutionHistory();
                 break;
 

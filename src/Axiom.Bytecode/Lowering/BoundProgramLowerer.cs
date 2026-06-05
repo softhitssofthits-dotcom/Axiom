@@ -306,6 +306,25 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.LoadLiteral(screen.Location, screenValueCount, TypeSymbol.Integer));
                 instructions.Add(LoweredInstruction.Screen(screen.Location, screenValueCount));
                 break;
+            case BoundCanvasStatement canvas:
+                LowerExpression(canvas.WidthExpression, instructions);
+                LowerExpression(canvas.HeightExpression, instructions);
+                instructions.Add(LoweredInstruction.Canvas(canvas.Location));
+                break;
+            case BoundBeginFrameStatement beginFrame:
+                instructions.Add(LoweredInstruction.BeginFrame(beginFrame.Location));
+                break;
+            case BoundPresentStatement present:
+                instructions.Add(LoweredInstruction.Present(present.Location));
+                break;
+            case BoundCameraStatement camera:
+                LowerExpression(camera.XExpression, instructions);
+                LowerExpression(camera.YExpression, instructions);
+                instructions.Add(LoweredInstruction.Camera(camera.Location));
+                break;
+            case BoundResetCameraStatement resetCamera:
+                instructions.Add(LoweredInstruction.ResetCamera(resetCamera.Location));
+                break;
             case BoundPCopyStatement pcopy:
                 LowerExpression(pcopy.SourcePageExpression, instructions);
                 LowerExpression(pcopy.DestinationPageExpression, instructions);
@@ -360,7 +379,12 @@ public sealed class BoundProgramLowerer
                     hasCoordinates: !window.IsReset));
                 break;
             case BoundClsStatement cls:
-                instructions.Add(LoweredInstruction.Cls(cls.Location));
+                if (cls.ColorExpression is not null)
+                {
+                    LowerExpression(cls.ColorExpression, instructions);
+                }
+
+                instructions.Add(LoweredInstruction.Cls(cls.Location, cls.ColorExpression is not null));
                 break;
             case BoundColorStatement color:
                 LowerExpression(color.ForegroundExpression, instructions);
@@ -485,6 +509,51 @@ public sealed class BoundProgramLowerer
             case BoundDrawStatement draw:
                 LowerExpression(draw.CommandExpression, instructions);
                 instructions.Add(LoweredInstruction.Draw(draw.Location));
+                break;
+            case BoundDrawRectStatement drawRect:
+                LowerExpression(drawRect.XExpression, instructions);
+                LowerExpression(drawRect.YExpression, instructions);
+                LowerExpression(drawRect.WidthExpression, instructions);
+                LowerExpression(drawRect.HeightExpression, instructions);
+                LowerExpression(drawRect.ColorExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawRect(drawRect.Location));
+                break;
+            case BoundFillRectStatement fillRect:
+                LowerExpression(fillRect.XExpression, instructions);
+                LowerExpression(fillRect.YExpression, instructions);
+                LowerExpression(fillRect.WidthExpression, instructions);
+                LowerExpression(fillRect.HeightExpression, instructions);
+                LowerExpression(fillRect.ColorExpression, instructions);
+                instructions.Add(LoweredInstruction.FillRect(fillRect.Location));
+                break;
+            case BoundDrawLineStatement drawLine:
+                LowerExpression(drawLine.X1Expression, instructions);
+                LowerExpression(drawLine.Y1Expression, instructions);
+                LowerExpression(drawLine.X2Expression, instructions);
+                LowerExpression(drawLine.Y2Expression, instructions);
+                LowerExpression(drawLine.ColorExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawLine(drawLine.Location));
+                break;
+            case BoundDrawCircleStatement drawCircle:
+                LowerExpression(drawCircle.XExpression, instructions);
+                LowerExpression(drawCircle.YExpression, instructions);
+                LowerExpression(drawCircle.RadiusExpression, instructions);
+                LowerExpression(drawCircle.ColorExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawCircle(drawCircle.Location));
+                break;
+            case BoundFillCircleStatement fillCircle:
+                LowerExpression(fillCircle.XExpression, instructions);
+                LowerExpression(fillCircle.YExpression, instructions);
+                LowerExpression(fillCircle.RadiusExpression, instructions);
+                LowerExpression(fillCircle.ColorExpression, instructions);
+                instructions.Add(LoweredInstruction.FillCircle(fillCircle.Location));
+                break;
+            case BoundDrawTextStatement drawText:
+                LowerExpression(drawText.TextExpression, instructions);
+                LowerExpression(drawText.XExpression, instructions);
+                LowerExpression(drawText.YExpression, instructions);
+                LowerExpression(drawText.ColorExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawText(drawText.Location));
                 break;
             case BoundDrawImageStatement drawImage:
                 LowerExpression(drawImage.ImageExpression, instructions);

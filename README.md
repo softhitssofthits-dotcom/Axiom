@@ -207,6 +207,41 @@ powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1
 - `docs/WORKLOG2.md` — историческая вторая часть журнала (Session 169-309)
 - `docs/WORKLOG.md` — историческая первая часть журнала до Session 168 включительно
 
+## AI-контекст для агентных сессий
+
+В репозитории есть локальный вспомогательный слой для быстрых обзоров без полного ручного перечитывания тяжёлых документов.
+
+Быстрый запуск:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1
+```
+
+По умолчанию скрипт:
+- собирает краткий бриф по активным документам проекта;
+- пишет результат в `.artifacts/ai-context/session-brief.md`;
+- выводит тот же текст в консоль.
+
+Для тематического обзора можно передать ключевые слова:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -Topic CANVAS,RGB,DRAWRECT
+```
+
+В этом режиме в бриф добавляются найденные фрагменты из:
+- `README.md`
+- `docs/SPECIFICATION3.md`
+- `docs/ARCHITECTURE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+- `docs/agent/`
+
+Связанные документы:
+- `docs/agent/CURRENT_STATE.md` — короткий ручной снимок текущего состояния;
+- `docs/agent/ARCHITECTURE_MAP.md` — карта горячих зон кода;
+- `docs/agent/PLAYBOOKS.md` — повторяемые сценарии работы;
+- `docs/agent/HEADROOM_PILOT.md` — отдельный план пилота `Headroom` для внешнего сжатия контекста.
+
 ## Структура репозитория
 
 ```text

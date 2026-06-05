@@ -41,6 +41,48 @@ public sealed partial class Interpreter
         return ExecutionSignal.None;
     }
 
+    private ExecutionSignal ExecuteCanvas(BoundCanvasStatement statement)
+    {
+        var width = EvaluateExpression(statement.WidthExpression).AsLong();
+        var height = EvaluateExpression(statement.HeightExpression).AsLong();
+        ValidateCanvasSize(width, height, statement.Location);
+
+        FlushPendingOutput(forceEmptyLine: false);
+        _host.ActivateCanvas(width, height);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteBeginFrame(BoundBeginFrameStatement statement)
+    {
+        RequireCanvasActive("BEGINFRAME", statement.Location);
+        _host.BeginFrame();
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecutePresent(BoundPresentStatement statement)
+    {
+        RequireCanvasActive("PRESENT", statement.Location);
+        _host.PresentFrame();
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteCamera(BoundCameraStatement statement)
+    {
+        RequireCanvasActive("CAMERA", statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        ValidateCanvasPoint("CAMERA", x, y, statement.Location);
+        _host.SetCanvasCamera(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteResetCamera(BoundResetCameraStatement statement)
+    {
+        RequireCanvasActive("RESETCAMERA", statement.Location);
+        _host.ResetCanvasCamera();
+        return ExecutionSignal.None;
+    }
+
     private ExecutionSignal ExecutePCopy(BoundPCopyStatement statement)
     {
         RequireScreenActive("PCOPY", statement.Location);
@@ -123,6 +165,19 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecuteCls(BoundClsStatement statement)
     {
+        if (statement.ColorExpression is not null)
+        {
+            RequireCanvasActive("CLS", statement.Location);
+            _host.ClearFrame(EvaluateExpression(statement.ColorExpression).AsInteger());
+            return ExecutionSignal.None;
+        }
+
+        if (_host.IsCanvasActive)
+        {
+            _host.ClearFrame(0);
+            return ExecutionSignal.None;
+        }
+
         if (_host.IsScreenOutputActive)
         {
             _host.ClearGraphics();
@@ -383,9 +438,84 @@ public sealed partial class Interpreter
         }
     }
 
+    private ExecutionSignal ExecuteDrawRect(BoundDrawRectStatement statement)
+    {
+        RequireCanvasActive("DRAWRECT", statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        var width = EvaluateExpression(statement.WidthExpression).AsLong();
+        var height = EvaluateExpression(statement.HeightExpression).AsLong();
+        ValidateCanvasRectangle("DRAWRECT", width, height, statement.Location);
+        _host.DrawRect(x, y, width, height, EvaluateExpression(statement.ColorExpression).AsInteger());
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteFillRect(BoundFillRectStatement statement)
+    {
+        RequireCanvasActive("FILLRECT", statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        var width = EvaluateExpression(statement.WidthExpression).AsLong();
+        var height = EvaluateExpression(statement.HeightExpression).AsLong();
+        ValidateCanvasRectangle("FILLRECT", width, height, statement.Location);
+        _host.FillRect(x, y, width, height, EvaluateExpression(statement.ColorExpression).AsInteger());
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteDrawLine(BoundDrawLineStatement statement)
+    {
+        RequireCanvasActive("DRAWLINE", statement.Location);
+        var x1 = EvaluateExpression(statement.X1Expression).AsLong();
+        var y1 = EvaluateExpression(statement.Y1Expression).AsLong();
+        var x2 = EvaluateExpression(statement.X2Expression).AsLong();
+        var y2 = EvaluateExpression(statement.Y2Expression).AsLong();
+        ValidateCanvasLine("DRAWLINE", x1, y1, x2, y2, statement.Location);
+        _host.DrawCanvasLine(x1, y1, x2, y2, EvaluateExpression(statement.ColorExpression).AsInteger());
+        _host.SetGraphicsCurrentPosition(x2, y2);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteDrawCircle(BoundDrawCircleStatement statement)
+    {
+        RequireCanvasActive("DRAWCIRCLE", statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        var radius = EvaluateExpression(statement.RadiusExpression).AsLong();
+        ValidateCanvasCircle("DRAWCIRCLE", x, y, radius, statement.Location);
+        _host.DrawCanvasCircle(x, y, radius, EvaluateExpression(statement.ColorExpression).AsInteger());
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteFillCircle(BoundFillCircleStatement statement)
+    {
+        RequireCanvasActive("FILLCIRCLE", statement.Location);
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        var radius = EvaluateExpression(statement.RadiusExpression).AsLong();
+        ValidateCanvasCircle("FILLCIRCLE", x, y, radius, statement.Location);
+        _host.FillCanvasCircle(x, y, radius, EvaluateExpression(statement.ColorExpression).AsInteger());
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
+    private ExecutionSignal ExecuteDrawText(BoundDrawTextStatement statement)
+    {
+        RequireCanvasActive("DRAWTEXT", statement.Location);
+        var text = EvaluateExpression(statement.TextExpression).AsString();
+        var x = EvaluateExpression(statement.XExpression).AsLong();
+        var y = EvaluateExpression(statement.YExpression).AsLong();
+        ValidateCanvasPoint("DRAWTEXT", x, y, statement.Location);
+        _host.DrawCanvasText(text, x, y, EvaluateExpression(statement.ColorExpression).AsInteger());
+        _host.SetGraphicsCurrentPosition(x, y);
+        return ExecutionSignal.None;
+    }
+
     private ExecutionSignal ExecuteDrawImage(BoundDrawImageStatement statement)
     {
-        RequireScreenActive("DRAWIMAGE", statement.Location);
+        RequireDrawableSurfaceActive("DRAWIMAGE", statement.Location);
         var image = RequireImage("DRAWIMAGE", EvaluateExpression(statement.ImageExpression), statement.Location);
         var x = EvaluateExpression(statement.XExpression).AsLong();
         var y = EvaluateExpression(statement.YExpression).AsLong();
@@ -404,7 +534,7 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecuteDrawSprite(BoundDrawSpriteStatement statement)
     {
-        RequireScreenActive("DRAWSPRITE", statement.Location);
+        RequireDrawableSurfaceActive("DRAWSPRITE", statement.Location);
         var sprite = RequireSprite("DRAWSPRITE", EvaluateExpression(statement.SpriteExpression), statement.Location);
         var frame = EvaluateExpression(statement.FrameExpression).AsLong();
         ValidateSpriteFrame(sprite, frame, statement.Location);
@@ -498,6 +628,17 @@ public sealed partial class Interpreter
 
     private static int GetSpriteCount(RuntimeValue value) => value.AsSprite()?.FrameCount ?? 0;
 
+    private int EvaluateRgb(BoundCallExpression expression, long red, long green, long blue)
+    {
+        if (IsRgbComponent(red) && IsRgbComponent(green) && IsRgbComponent(blue))
+        {
+            return ((int)red << 16) | ((int)green << 8) | (int)blue;
+        }
+
+        ReportBuiltInArgumentError("RGB", "red/green/blue", "должны быть в диапазоне 0..255.", expression.Location);
+        throw new RuntimeFailureException();
+    }
+
     private void ValidateDrawImageSize(long width, long height, TextLocation location)
     {
         if (width > 0 && height > 0)
@@ -528,6 +669,64 @@ public sealed partial class Interpreter
         }
 
         ReportBuiltInArgumentError("DRAWSPRITE", "width/height", "должны быть положительными целыми значениями.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private static bool IsRgbComponent(long value) => value is >= 0 and <= 255;
+
+    private void ValidateCanvasSize(long width, long height, TextLocation location)
+    {
+        if (width > 0 && height > 0 && width <= int.MaxValue && height <= int.MaxValue)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError("CANVAS", "width/height", $"должны быть положительными целыми значениями не больше {int.MaxValue}.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateCanvasRectangle(string operationName, long width, long height, TextLocation location)
+    {
+        if (width > 0 && height > 0)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError(operationName, "width/height", "должны быть положительными целыми значениями.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateCanvasPoint(string operationName, long x, long y, TextLocation location)
+    {
+        if (GraphicsCoordinateValidation.IsSupportedCoordinate(x) &&
+            GraphicsCoordinateValidation.IsSupportedCoordinate(y))
+        {
+            return;
+        }
+
+        ReportInvalidGraphicsCoordinates(operationName, location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateCanvasLine(string operationName, long x1, long y1, long x2, long y2, TextLocation location)
+    {
+        if (GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
+        {
+            return;
+        }
+
+        ReportInvalidGraphicsCoordinates(operationName, location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateCanvasCircle(string operationName, long x, long y, long radius, TextLocation location)
+    {
+        if (radius >= 0 && GraphicsCoordinateValidation.IsSupportedCircleCenter(x, y))
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError(operationName, "x/y/radius", "координаты должны оставаться в допустимом диапазоне, а радиус должен быть неотрицательным.", location);
         throw new RuntimeFailureException();
     }
 
@@ -819,6 +1018,28 @@ public sealed partial class Interpreter
         }
 
         ReportRuntimeDiagnostic("MB3010", $"{operationName} требует активного графического режима SCREEN.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void RequireCanvasActive(string operationName, TextLocation location)
+    {
+        if (_host.IsCanvasActive)
+        {
+            return;
+        }
+
+        ReportRuntimeDiagnostic("MB3010", $"{operationName} требует активного графического режима CANVAS.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void RequireDrawableSurfaceActive(string operationName, TextLocation location)
+    {
+        if (_host.IsScreenActive || _host.IsCanvasActive)
+        {
+            return;
+        }
+
+        ReportRuntimeDiagnostic("MB3010", $"{operationName} требует активного графического режима SCREEN или CANVAS.", location);
         throw new RuntimeFailureException();
     }
 }

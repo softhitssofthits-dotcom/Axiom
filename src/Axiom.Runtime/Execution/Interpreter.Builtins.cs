@@ -243,6 +243,7 @@ public sealed partial class Interpreter
             BuiltinFunctionId.SpriteWidth => RuntimeValue.FromInteger(GetSpriteWidth(arguments[0])),
             BuiltinFunctionId.SpriteHeight => RuntimeValue.FromInteger(GetSpriteHeight(arguments[0])),
             BuiltinFunctionId.SpriteCount => RuntimeValue.FromInteger(GetSpriteCount(arguments[0])),
+            BuiltinFunctionId.Rgb => RuntimeValue.FromInteger(EvaluateRgb(expression, arguments[0].AsLong(), arguments[1].AsLong(), arguments[2].AsLong())),
             BuiltinFunctionId.Date => EvaluateDateBuiltin(),
             BuiltinFunctionId.DateInZone => EvaluateDateBuiltin(expression, arguments[0].AsString()),
             BuiltinFunctionId.Time => EvaluateTimeBuiltin(),
@@ -592,11 +593,26 @@ public sealed partial class Interpreter
 
     private IRuntimeStoredValue ResolveByRefStoredArgument(BoundExpression argument, TextLocation callSiteLocation)
     {
-        if (argument is BoundVariableExpression variableExpression
-            && CurrentScope.TryLookup(variableExpression.Variable, out var storedValue)
-            && storedValue is not null)
+        if (argument is BoundVariableExpression variableExpression)
         {
-            return storedValue;
+            if (!CurrentScope.TryLookupStorage(variableExpression.Variable, out var ownerScope, out var storedValue)
+                || ownerScope is null
+                || storedValue is null)
+            {
+                ReportInvalidRuntimeState(
+                    $"Для аргумента BYREF '{variableExpression.Variable.Name}' отсутствует хранилище времени выполнения.",
+                    callSiteLocation);
+                throw new RuntimeFailureException();
+            }
+
+            if (storedValue is RuntimeReferenceStoredValue reference)
+            {
+                return reference;
+            }
+
+            return new RuntimeReferenceStoredValue(
+                () => GetVariableValue(ownerScope, variableExpression.Variable),
+                value => AssignVariable(ownerScope, variableExpression.Variable, value));
         }
 
         if (argument is BoundFieldAccessExpression fieldAccess)

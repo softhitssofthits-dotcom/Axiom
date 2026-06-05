@@ -57,6 +57,7 @@ public enum BuiltinFunctionId
     SpriteWidth,
     SpriteHeight,
     SpriteCount,
+    Rgb,
     Len,
     Left,
     Right,

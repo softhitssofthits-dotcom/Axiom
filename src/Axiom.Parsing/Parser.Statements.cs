@@ -29,6 +29,11 @@ public sealed partial class Parser
             SyntaxKind.InputKeyword => ParseInputStatement(),
             SyntaxKind.SleepKeyword => ParseSleepStatement(),
             SyntaxKind.ScreenKeyword => ParseScreenStatement(),
+            SyntaxKind.CanvasKeyword => ParseCanvasStatement(),
+            SyntaxKind.BeginFrameKeyword => new BeginFrameStatementSyntax(Match(SyntaxKind.BeginFrameKeyword, "BEGINFRAME")),
+            SyntaxKind.PresentKeyword => new PresentStatementSyntax(Match(SyntaxKind.PresentKeyword, "PRESENT")),
+            SyntaxKind.CameraKeyword => ParseCameraStatement(),
+            SyntaxKind.ResetCameraKeyword => ParseResetCameraStatement(),
             SyntaxKind.ViewKeyword => ParseViewStatement(),
             SyntaxKind.WindowKeyword => ParseWindowStatement(),
             SyntaxKind.ClsKeyword => ParseClsStatement(),
@@ -42,7 +47,13 @@ public sealed partial class Parser
             SyntaxKind.CircleKeyword => ParseCircleStatement(),
             SyntaxKind.PaintKeyword => ParsePaintStatement(),
             SyntaxKind.DrawKeyword => ParseDrawStatement(),
+            SyntaxKind.DrawLineKeyword => ParseDrawLineStatement(),
+            SyntaxKind.DrawCircleKeyword => ParseDrawCircleStatement(),
+            SyntaxKind.FillCircleKeyword => ParseFillCircleStatement(),
+            SyntaxKind.DrawTextKeyword => ParseDrawTextStatement(),
             SyntaxKind.DrawImageKeyword => ParseDrawImageStatement(),
+            SyntaxKind.DrawRectKeyword => ParseDrawRectStatement(),
+            SyntaxKind.FillRectKeyword => ParseFillRectStatement(),
             SyntaxKind.DrawSpriteKeyword => ParseDrawSpriteStatement(),
             SyntaxKind.GetKeyword => ParseGetStatement(),
             SyntaxKind.PutKeyword => ParsePutStatement(),
@@ -254,6 +265,30 @@ public sealed partial class Parser
             visualPageExpression);
     }
 
+    private CanvasStatementSyntax ParseCanvasStatement()
+    {
+        var canvasKeyword = Match(SyntaxKind.CanvasKeyword, "CANVAS");
+        var widthExpression = ParseExpression();
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после ширины CANVAS");
+        var heightExpression = ParseExpression();
+        return new CanvasStatementSyntax(canvasKeyword, widthExpression, commaToken, heightExpression);
+    }
+
+    private CameraStatementSyntax ParseCameraStatement()
+    {
+        var cameraKeyword = Match(SyntaxKind.CameraKeyword, "CAMERA");
+        var xExpression = ParseExpression();
+        var commaToken = Match(SyntaxKind.CommaToken, "',' после X CAMERA");
+        var yExpression = ParseExpression();
+        return new CameraStatementSyntax(cameraKeyword, xExpression, commaToken, yExpression);
+    }
+
+    private ResetCameraStatementSyntax ParseResetCameraStatement()
+    {
+        var resetCameraKeyword = Match(SyntaxKind.ResetCameraKeyword, "RESETCAMERA");
+        return new ResetCameraStatementSyntax(resetCameraKeyword);
+    }
+
     private PCopyStatementSyntax ParsePCopyStatement()
     {
         var pcopyKeyword = Match(SyntaxKind.PCopyKeyword, "PCOPY");
@@ -346,7 +381,8 @@ public sealed partial class Parser
     private ClsStatementSyntax ParseClsStatement()
     {
         var clsKeyword = Match(SyntaxKind.ClsKeyword, "CLS");
-        return new ClsStatementSyntax(clsKeyword);
+        var colorExpression = IsStatementTerminator(Current.Kind) ? null : ParseExpression();
+        return new ClsStatementSyntax(clsKeyword, colorExpression);
     }
 
     private ColorStatementSyntax ParseColorStatement()
@@ -580,6 +616,94 @@ public sealed partial class Parser
         return new DrawStatementSyntax(drawKeyword, commandExpression);
     }
 
+    private DrawLineStatementSyntax ParseDrawLineStatement()
+    {
+        var drawLineKeyword = Match(SyntaxKind.DrawLineKeyword, "DRAWLINE");
+        var x1Expression = ParseExpression();
+        var x1CommaToken = Match(SyntaxKind.CommaToken, "',' после X1 DRAWLINE");
+        var y1Expression = ParseExpression();
+        var y1CommaToken = Match(SyntaxKind.CommaToken, "',' после Y1 DRAWLINE");
+        var x2Expression = ParseExpression();
+        var x2CommaToken = Match(SyntaxKind.CommaToken, "',' после X2 DRAWLINE");
+        var y2Expression = ParseExpression();
+        var y2CommaToken = Match(SyntaxKind.CommaToken, "',' после Y2 DRAWLINE");
+        var colorExpression = ParseExpression();
+        return new DrawLineStatementSyntax(
+            drawLineKeyword,
+            x1Expression,
+            x1CommaToken,
+            y1Expression,
+            y1CommaToken,
+            x2Expression,
+            x2CommaToken,
+            y2Expression,
+            y2CommaToken,
+            colorExpression);
+    }
+
+    private DrawCircleStatementSyntax ParseDrawCircleStatement()
+    {
+        var drawCircleKeyword = Match(SyntaxKind.DrawCircleKeyword, "DRAWCIRCLE");
+        var xExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после X DRAWCIRCLE");
+        var yExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после Y DRAWCIRCLE");
+        var radiusExpression = ParseExpression();
+        var radiusCommaToken = Match(SyntaxKind.CommaToken, "',' после радиуса DRAWCIRCLE");
+        var colorExpression = ParseExpression();
+        return new DrawCircleStatementSyntax(
+            drawCircleKeyword,
+            xExpression,
+            xCommaToken,
+            yExpression,
+            yCommaToken,
+            radiusExpression,
+            radiusCommaToken,
+            colorExpression);
+    }
+
+    private FillCircleStatementSyntax ParseFillCircleStatement()
+    {
+        var fillCircleKeyword = Match(SyntaxKind.FillCircleKeyword, "FILLCIRCLE");
+        var xExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после X FILLCIRCLE");
+        var yExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после Y FILLCIRCLE");
+        var radiusExpression = ParseExpression();
+        var radiusCommaToken = Match(SyntaxKind.CommaToken, "',' после радиуса FILLCIRCLE");
+        var colorExpression = ParseExpression();
+        return new FillCircleStatementSyntax(
+            fillCircleKeyword,
+            xExpression,
+            xCommaToken,
+            yExpression,
+            yCommaToken,
+            radiusExpression,
+            radiusCommaToken,
+            colorExpression);
+    }
+
+    private DrawTextStatementSyntax ParseDrawTextStatement()
+    {
+        var drawTextKeyword = Match(SyntaxKind.DrawTextKeyword, "DRAWTEXT");
+        var textExpression = ParseExpression();
+        var textCommaToken = Match(SyntaxKind.CommaToken, "',' после текста DRAWTEXT");
+        var xExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после X DRAWTEXT");
+        var yExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после Y DRAWTEXT");
+        var colorExpression = ParseExpression();
+        return new DrawTextStatementSyntax(
+            drawTextKeyword,
+            textExpression,
+            textCommaToken,
+            xExpression,
+            xCommaToken,
+            yExpression,
+            yCommaToken,
+            colorExpression);
+    }
+
     private DrawImageStatementSyntax ParseDrawImageStatement()
     {
         var drawImageKeyword = Match(SyntaxKind.DrawImageKeyword, "DRAWIMAGE");
@@ -612,6 +736,56 @@ public sealed partial class Parser
             widthExpression,
             heightCommaToken,
             heightExpression);
+    }
+
+    private DrawRectStatementSyntax ParseDrawRectStatement()
+    {
+        var drawRectKeyword = Match(SyntaxKind.DrawRectKeyword, "DRAWRECT");
+        var xExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после X DRAWRECT");
+        var yExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после Y DRAWRECT");
+        var widthExpression = ParseExpression();
+        var widthCommaToken = Match(SyntaxKind.CommaToken, "',' после ширины DRAWRECT");
+        var heightExpression = ParseExpression();
+        var heightCommaToken = Match(SyntaxKind.CommaToken, "',' после высоты DRAWRECT");
+        var colorExpression = ParseExpression();
+        return new DrawRectStatementSyntax(
+            drawRectKeyword,
+            xExpression,
+            xCommaToken,
+            yExpression,
+            yCommaToken,
+            widthExpression,
+            widthCommaToken,
+            heightExpression,
+            heightCommaToken,
+            colorExpression);
+    }
+
+    private FillRectStatementSyntax ParseFillRectStatement()
+    {
+        var fillRectKeyword = Match(SyntaxKind.FillRectKeyword, "FILLRECT");
+        var xExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после X FILLRECT");
+        var yExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после Y FILLRECT");
+        var widthExpression = ParseExpression();
+        var widthCommaToken = Match(SyntaxKind.CommaToken, "',' после ширины FILLRECT");
+        var heightExpression = ParseExpression();
+        var heightCommaToken = Match(SyntaxKind.CommaToken, "',' после высоты FILLRECT");
+        var colorExpression = ParseExpression();
+        return new FillRectStatementSyntax(
+            fillRectKeyword,
+            xExpression,
+            xCommaToken,
+            yExpression,
+            yCommaToken,
+            widthExpression,
+            widthCommaToken,
+            heightExpression,
+            heightCommaToken,
+            colorExpression);
     }
 
     private DrawSpriteStatementSyntax ParseDrawSpriteStatement()

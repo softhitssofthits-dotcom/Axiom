@@ -1,0 +1,31 @@
+' Пример проверяет первый современный кадр CANVAS.
+' Используется существующий лист спрайтов из соседней папки samples/graphics/sprites/assets/.
+
+DIM sheet AS IMAGE
+DIM hero AS SPRITE
+
+sheet = LOADIMAGE("../sprites/assets/walk_sheet.png")
+hero = LOADSPRITE("../sprites/assets/walk_sheet.png", 16, 16)
+
+CANVAS 320, 180
+
+BEGINFRAME
+' Очищаем рабочий кадр тёмным полноцветным фоном.
+CLS RGB(18, 22, 30)
+' Рисуем залитый прямоугольник и светлую рамку.
+FILLRECT 24, 28, 120, 64, RGB(54, 132, 210)
+DRAWRECT 22, 26, 124, 68, RGB(255, 255, 255)
+' Выводим уже существующие IMAGE и SPRITE на современную поверхность.
+DRAWIMAGE sheet, 210, 22, 64, 64
+DRAWSPRITE hero, 1, 58, 96, 32, 32
+PRESENT
+SLEEP
+
+BEGINFRAME
+' Второй кадр показывает, что BEGINFRAME начинает новый рабочий кадр.
+CLS RGB(8, 10, 16)
+FILLRECT 32, 42, 96, 44, RGB(220, 158, 46)
+DRAWRECT 30, 40, 100, 48, RGB(35, 35, 35)
+DRAWSPRITE hero, 3, 140, 86, 48, 48
+PRESENT
+SLEEP

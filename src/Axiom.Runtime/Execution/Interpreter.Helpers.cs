@@ -9,9 +9,16 @@ public sealed partial class Interpreter
 {
     private static readonly TextLocation FallbackRuntimeLocation = new(new TextSpan(0, 0), 1, 1);
 
-    private RuntimeValue GetVariableValue(VariableSymbol variable)
+    private RuntimeValue GetVariableValue(RuntimeScope scope, VariableSymbol variable)
     {
-        var storedValue = LookupStorage(variable);
+        ArgumentNullException.ThrowIfNull(scope);
+        ArgumentNullException.ThrowIfNull(variable);
+
+        if (!scope.TryLookup(variable, out var storedValue) || storedValue is null)
+        {
+            return ReportInvalidRuntimeState<RuntimeValue>(
+                $"Для имени '{variable.Name}' отсутствует хранилище времени выполнения.");
+        }
 
         if (storedValue is RuntimeReferenceStoredValue reference)
         {
@@ -30,6 +37,11 @@ public sealed partial class Interpreter
 
         return ReportInvalidRuntimeState<RuntimeValue>(
             $"Имя '{variable.Name}' ссылается на массив и не может использоваться как скалярное значение.");
+    }
+
+    private RuntimeValue GetVariableValue(VariableSymbol variable)
+    {
+        return GetVariableValue(CurrentScope, variable);
     }
 
     private RuntimeArrayValue GetArrayValue(VariableSymbol variable, TextLocation? location = null)
@@ -88,7 +100,16 @@ public sealed partial class Interpreter
 
     private void AssignVariable(VariableSymbol variable, RuntimeValue value)
     {
-        if (!CurrentScope.TryLookup(variable, out var storedValue) || storedValue is null)
+        AssignVariable(CurrentScope, variable, value);
+    }
+
+    private void AssignVariable(RuntimeScope scope, VariableSymbol variable, RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        ArgumentNullException.ThrowIfNull(variable);
+        ArgumentNullException.ThrowIfNull(value);
+
+        if (!scope.TryLookup(variable, out var storedValue) || storedValue is null)
         {
             ReportInvalidRuntimeState(
                 $"Не удалось присвоить значение имени '{variable.Name}'.");
@@ -109,7 +130,7 @@ public sealed partial class Interpreter
                     ? value.AsArray().Clone(fixedStringLength)
                     : value.AsArray();
 
-                if (!CurrentScope.TryAssign(variable, storedArray))
+                if (!scope.TryAssign(variable, storedArray))
                 {
                     ReportInvalidRuntimeState(
                         $"Не удалось присвоить значение имени '{variable.Name}'.");
@@ -124,7 +145,7 @@ public sealed partial class Interpreter
             throw new RuntimeFailureException();
         }
 
-        if (!CurrentScope.TryAssign(variable, value.CopyForStorage(variable.FixedStringLength)))
+        if (!scope.TryAssign(variable, value.CopyForStorage(variable.FixedStringLength)))
         {
             ReportInvalidRuntimeState(
                 $"Не удалось присвоить значение имени '{variable.Name}'.");

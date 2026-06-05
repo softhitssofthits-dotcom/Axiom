@@ -30,7 +30,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private string _outputText = string.Empty;
     private string _submittedText = string.Empty;
     private bool _isScreenActive;
+    private bool _isCanvasActive;
     private bool _isScreenOutputActive;
+    private long _canvasCameraX;
+    private long _canvasCameraY;
     private int _screenMode;
     private int _screenWidth;
     private int _screenHeight;
@@ -44,9 +47,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private int _graphicsLastBackgroundColor;
     private int _textViewportTop = 1;
     private int _textViewportBottom = ScreenTextCellRows;
+    private bool _textViewportExplicit;
     private int _screenTextFirstVisibleRow = 1;
     private int _graphicsRow = 1;
     private int _graphicsColumn = 1;
+    private bool _pendingGraphicsViewportScroll;
     private long _graphicsCurrentX;
     private long _graphicsCurrentY;
     private bool _viewportEnabled;
@@ -167,6 +172,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     public IntPtr ScreenWindowHandle => _graphicsWindow?.Hwnd ?? IntPtr.Zero;
 
     public bool IsScreenActive => _inputSnapshot.IsScreenActive;
+
+    public bool IsCanvasActive => _isCanvasActive;
 
     public bool IsScreenOutputActive => _inputSnapshot.IsScreenOutputActive;
 
@@ -418,7 +425,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
             var preservePages = _screenMode == mode && _screenWidth == width && _screenHeight == height && _screenPages.Length == 4;
             _isScreenActive = mode != 0;
+            _isCanvasActive = false;
             _isScreenOutputActive = true;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
             _screenMode = mode;
             _screenWidth = width;
             _screenHeight = height;
@@ -457,11 +467,13 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenTextFirstVisibleRow = 1;
             _graphicsRow = 1;
             _graphicsColumn = 1;
+            _pendingGraphicsViewportScroll = false;
             _graphicsCurrentX = 0;
             _graphicsCurrentY = 0;
             ResetGraphicsFrameMetrics();
             PublishGraphicsFrame();
             OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsCanvasActive));
             OnPropertyChanged(nameof(IsScreenOutputActive));
             OnPropertyChanged(nameof(ScreenMode));
             OnPropertyChanged(nameof(ScreenWidth));
@@ -473,6 +485,63 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         });
     }
 
+    public void ActivateCanvas(long width, long height)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            WriteGraphicsFrameSummary(final: true);
+            WriteGraphicsInputSummary(final: true);
+
+            if (width <= 0 || height <= 0 || width > int.MaxValue || height > int.MaxValue)
+            {
+                return;
+            }
+
+            _isScreenActive = false;
+            _isCanvasActive = true;
+            _isScreenOutputActive = false;
+            _screenMode = 0;
+            _screenWidth = (int)width;
+            _screenHeight = (int)height;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
+            _inputSnapshot.SetScreenState(isScreenActive: false, isScreenOutputActive: false, _screenMode, _screenWidth, _screenHeight);
+            ResetViewportCore();
+            ResetWindowCore();
+            _screenPages = new ScreenFramebuffer?[4];
+            _framebuffer = new ScreenFramebuffer(_screenWidth, _screenHeight);
+            _framebuffer.ClearTrueColor(0);
+            _graphicsTextBuffer.Clear();
+            _pendingGraphicsTraceLine.Clear();
+            GraphicsText = string.Empty;
+            CancelScheduledGraphicsVisualRefresh();
+            _graphicsForeground = 15;
+            _graphicsBackground = null;
+            _graphicsLastBackgroundColor = 0;
+            ResetTextViewportCore(resetCursor: false);
+            _screenTextFirstVisibleRow = 1;
+            _graphicsRow = 1;
+            _graphicsColumn = 1;
+            _pendingGraphicsViewportScroll = false;
+            _graphicsCurrentX = 0;
+            _graphicsCurrentY = 0;
+            ResetGraphicsFrameMetrics();
+            PublishGraphicsFrame();
+            OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsCanvasActive));
+            OnPropertyChanged(nameof(IsScreenOutputActive));
+            OnPropertyChanged(nameof(ScreenMode));
+            OnPropertyChanged(nameof(ScreenWidth));
+            OnPropertyChanged(nameof(ScreenHeight));
+            EnsureGraphicsWindow();
+            WriteGraphicsEvent(
+                "canvas.activated",
+                $"size={width}x{height}");
+        });
+    }
+
     public void DeactivateScreen()
     {
         InvokeOnDispatcher(() =>
@@ -481,12 +550,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             var previousWidth = _screenWidth;
             var previousHeight = _screenHeight;
             _isScreenActive = false;
+            var wasCanvasActive = _isCanvasActive;
+            _isCanvasActive = false;
             _isScreenOutputActive = false;
             _screenMode = 0;
             _screenWidth = 0;
             _screenHeight = 0;
             _activeScreenPage = 0;
             _visualScreenPage = 0;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
@@ -502,14 +575,171 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             WriteGraphicsFrameSummary(final: true);
             WriteGraphicsInputSummary(final: true);
             OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsCanvasActive));
             OnPropertyChanged(nameof(IsScreenOutputActive));
             OnPropertyChanged(nameof(ScreenMode));
             OnPropertyChanged(nameof(ScreenWidth));
             OnPropertyChanged(nameof(ScreenHeight));
             CloseGraphicsWindow();
             WriteGraphicsEvent(
-                "screen.deactivated",
+                wasCanvasActive ? "canvas.deactivated" : "screen.deactivated",
                 $"mode={previousMode} | size={previousWidth}x{previousHeight}");
+        });
+    }
+
+    public void BeginFrame()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            _framebuffer.ClearTrueColor(0);
+        });
+    }
+
+    public void PresentFrame()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            PublishGraphicsFrame();
+        });
+    }
+
+    public void ClearFrame(int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            _framebuffer.ClearTrueColor(color);
+        });
+    }
+
+    public void SetCanvasCamera(long x, long y)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            _canvasCameraX = x;
+            _canvasCameraY = y;
+        });
+    }
+
+    public void ResetCanvasCamera()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
+        });
+    }
+
+    public void DrawRect(long x, long y, long width, long height, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            var left = x - _canvasCameraX;
+            var top = y - _canvasCameraY;
+            _framebuffer.DrawTrueColorRectangle(left, top, left + width - 1, top + height - 1, color);
+        });
+    }
+
+    public void FillRect(long x, long y, long width, long height, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            var left = x - _canvasCameraX;
+            var top = y - _canvasCameraY;
+            _framebuffer.FillTrueColorRectangle(left, top, left + width - 1, top + height - 1, color);
+        });
+    }
+
+    public void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            DrawAbsoluteLineCore(
+                x1 - _canvasCameraX,
+                y1 - _canvasCameraY,
+                x2 - _canvasCameraX,
+                y2 - _canvasCameraY,
+                color,
+                trueColor: true);
+        });
+    }
+
+    public void DrawCanvasCircle(long x, long y, long radius, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            DrawCanvasCircleCore(x, y, radius, color, filled: false);
+        });
+    }
+
+    public void FillCanvasCircle(long x, long y, long radius, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            DrawCanvasCircleCore(x, y, radius, color, filled: true);
+        });
+    }
+
+    public void DrawCanvasText(string text, long x, long y, int color)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            _framebuffer.DrawTrueColorText(x - _canvasCameraX, y - _canvasCameraY, text, color);
         });
     }
 
@@ -524,6 +754,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _framebuffer?.Clear();
             _graphicsRow = _textViewportTop;
             _graphicsColumn = 1;
+            _pendingGraphicsViewportScroll = false;
             _graphicsCurrentX = 0;
             _graphicsCurrentY = 0;
             PublishGraphicsFrame();
@@ -557,6 +788,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         {
             _graphicsRow = Math.Max(1, row);
             _graphicsColumn = Math.Max(1, column);
+            _pendingGraphicsViewportScroll = false;
         });
     }
 
@@ -642,6 +874,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         ArgumentNullException.ThrowIfNull(image);
         InvokeOnDispatcher(() =>
         {
+            if (_isCanvasActive)
+            {
+                DrawImageOnCanvas(image, x, y, width, height);
+                return;
+            }
+
             if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
             {
                 return;
@@ -668,6 +906,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         ArgumentNullException.ThrowIfNull(sprite);
         InvokeOnDispatcher(() =>
         {
+            if (_isCanvasActive)
+            {
+                DrawSpriteOnCanvas(sprite, frame, x, y, width, height);
+                return;
+            }
+
             if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
             {
                 return;
@@ -687,6 +931,45 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _framebuffer.DrawSprite(sprite, frame, absoluteX, absoluteY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom);
             ScheduleGraphicsVisualRefresh();
         });
+    }
+
+    private void DrawImageOnCanvas(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        {
+            return;
+        }
+
+        _framebuffer.DrawImage(
+            image,
+            x - _canvasCameraX,
+            y - _canvasCameraY,
+            width,
+            height,
+            0,
+            0,
+            _screenWidth - 1L,
+            _screenHeight - 1L);
+    }
+
+    private void DrawSpriteOnCanvas(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        {
+            return;
+        }
+
+        _framebuffer.DrawSprite(
+            sprite,
+            frame,
+            x - _canvasCameraX,
+            y - _canvasCameraY,
+            width,
+            height,
+            0,
+            0,
+            _screenWidth - 1L,
+            _screenHeight - 1L);
     }
 
     public bool CopyScreenPage(int sourcePage, int destinationPage)
@@ -1156,11 +1439,14 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _inputSnapshot.Reset();
         _isScreenActive = false;
         _isScreenOutputActive = false;
+        _isCanvasActive = false;
         _screenMode = 0;
         _screenWidth = 0;
         _screenHeight = 0;
         _activeScreenPage = 0;
         _visualScreenPage = 0;
+        _canvasCameraX = 0;
+        _canvasCameraY = 0;
         _framebuffer = null;
         _screenPages = new ScreenFramebuffer?[4];
         GraphicsFrame = null;
@@ -1175,6 +1461,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _screenTextFirstVisibleRow = 1;
         _graphicsRow = 1;
         _graphicsColumn = 1;
+        _pendingGraphicsViewportScroll = false;
         _graphicsCurrentX = 0;
         _graphicsCurrentY = 0;
         ResetViewportCore();
@@ -1182,6 +1469,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         OutputText = string.Empty;
         ResetInputState();
         OnPropertyChanged(nameof(IsScreenActive));
+        OnPropertyChanged(nameof(IsCanvasActive));
         OnPropertyChanged(nameof(IsScreenOutputActive));
         OnPropertyChanged(nameof(ScreenMode));
         OnPropertyChanged(nameof(ScreenWidth));
@@ -1395,6 +1683,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private void WriteGraphicsTextCore(string text, bool newLine)
     {
         var followScreenZeroBottom = IsScreenZeroMode && IsViewingScreenZeroBottom();
+        NormalizeGraphicsViewportCursorBeforeWrite();
         var targetRow = ResolveGraphicsTextBufferRow(_graphicsRow);
         _graphicsTextBuffer.Write(
             targetRow,
@@ -1420,6 +1709,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             {
                 _graphicsRow++;
                 _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                _pendingGraphicsViewportScroll = false;
             }
 
             FlushPendingGraphicsTraceLine(logEmpty: true);
@@ -1448,23 +1738,47 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void AdvanceGraphicsViewportCursorAfterNewLine()
     {
+        if (!_textViewportExplicit)
+        {
+            _graphicsRow++;
+            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            _pendingGraphicsViewportScroll = false;
+            return;
+        }
+
         if (_graphicsRow >= _textViewportTop && _graphicsRow <= _textViewportBottom)
         {
             if (_graphicsRow < _textViewportBottom)
             {
                 _graphicsRow++;
                 _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                _pendingGraphicsViewportScroll = false;
                 return;
             }
 
-            _graphicsTextBuffer.ScrollRowsUp(_textViewportTop, _textViewportBottom);
-            _graphicsTextBuffer.EnsureRow(_textViewportBottom);
-            _graphicsRow = _textViewportBottom;
+            _graphicsRow = _textViewportBottom + 1;
+            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            _pendingGraphicsViewportScroll = true;
             return;
         }
 
         _graphicsRow++;
         _graphicsTextBuffer.EnsureRow(_graphicsRow);
+        _pendingGraphicsViewportScroll = false;
+    }
+
+    private void NormalizeGraphicsViewportCursorBeforeWrite()
+    {
+        if (!_pendingGraphicsViewportScroll || !IsScreenActive)
+        {
+            return;
+        }
+
+        _graphicsTextBuffer.ScrollRowsUp(_textViewportTop, _textViewportBottom);
+        _graphicsTextBuffer.EnsureRow(_textViewportBottom);
+        _graphicsRow = _textViewportBottom;
+        _graphicsColumn = 1;
+        _pendingGraphicsViewportScroll = false;
     }
 
     private bool TrySetTextViewportCore(int topRow, int bottomRow)
@@ -1482,8 +1796,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _textViewportTop = topRow;
         _textViewportBottom = bottomRow;
+        _textViewportExplicit = true;
         _graphicsRow = topRow;
         _graphicsColumn = 1;
+        _pendingGraphicsViewportScroll = false;
         PublishGraphicsFrame();
         return true;
     }
@@ -1492,6 +1808,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     {
         _textViewportTop = 1;
         _textViewportBottom = IsScreenZeroMode ? ScreenTextCellRows : GetVisibleTextRows();
+        _textViewportExplicit = false;
+        _pendingGraphicsViewportScroll = false;
         if (resetCursor)
         {
             _graphicsRow = _textViewportTop;
@@ -1557,6 +1875,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsBatchHasChanges = true;
     }
 
+    private void SetTrueColorPixelCore(long x, long y, int color)
+    {
+        if (!IsInsideScreen(x, y))
+        {
+            return;
+        }
+
+        _framebuffer?.SetTrueColorPixel(x, y, color);
+        _graphicsBatchHasChanges = true;
+    }
+
     private void SetLogicalPixelCore(long x, long y, int color)
     {
         if (!TryTranslateLogicalToAbsoluteCore(x, y, out var absoluteX, out var absoluteY))
@@ -1611,7 +1940,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     }
 
     private bool IsInsideScreen(long x, long y) =>
-        _inputSnapshot.IsScreenActive &&
+        (_isScreenActive || _isCanvasActive) &&
         x >= 0 &&
         y >= 0 &&
         x < _screenWidth &&
@@ -1788,7 +2117,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         SetGraphicsCurrentPositionCore(x2, y2);
     }
 
-    private void DrawAbsoluteLineCore(long x1, long y1, long x2, long y2, int color)
+    private void DrawAbsoluteLineCore(long x1, long y1, long x2, long y2, int color, bool trueColor = false)
     {
         var dx = Math.Abs(x2 - x1);
         var sx = x1 < x2 ? 1 : -1;
@@ -1798,7 +2127,15 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         while (true)
         {
-            SetPixelCore(x1, y1, color);
+            if (trueColor)
+            {
+                SetTrueColorPixelCore(x1, y1, color);
+            }
+            else
+            {
+                SetPixelCore(x1, y1, color);
+            }
+
             if (x1 == x2 && y1 == y2)
             {
                 break;
@@ -1817,6 +2154,56 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 y1 += sy;
             }
         }
+    }
+
+    private long TranslateCanvasX(long x) => x - _canvasCameraX;
+
+    private long TranslateCanvasY(long y) => y - _canvasCameraY;
+
+    private void DrawCanvasCircleCore(long worldX, long worldY, long radius, int color, bool filled)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0 || radius < 0)
+        {
+            return;
+        }
+
+        var centerX = TranslateCanvasX(worldX);
+        var centerY = TranslateCanvasY(worldY);
+        if (radius == 0)
+        {
+            SetTrueColorPixelCore(centerX, centerY, color);
+            return;
+        }
+
+        if (filled)
+        {
+            var radiusSquared = (double)radius * radius;
+            for (long dy = -radius; dy <= radius; dy++)
+            {
+                var span = (long)Math.Floor(Math.Sqrt(Math.Max(0d, radiusSquared - ((double)dy * dy))));
+                _framebuffer.FillTrueColorRectangle(
+                    centerX - span,
+                    centerY + dy,
+                    centerX + span,
+                    centerY + dy,
+                    color);
+            }
+
+            _graphicsBatchHasChanges = true;
+            return;
+        }
+
+        GraphicsEllipseRasterizer.Rasterize(
+            centerX,
+            centerY,
+            radius,
+            radius,
+            true,
+            0d,
+            Math.Tau,
+            _screenWidth,
+            _screenHeight,
+            (x, y) => SetTrueColorPixelCore(x, y, color));
     }
 
     private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)

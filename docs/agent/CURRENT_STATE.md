@@ -1,64 +1,44 @@
 # Current State
 
-## Project
+## Проект
 
-`Axiom IDE` is a custom BASIC-like language, interpreter, and WPF desktop IDE on C#/.NET.
+`Axiom IDE` — собственный BASIC-подобный язык, интерпретатор, `BytecodeVm` и настольная IDE на C# / .NET.
 
-## Stable Baseline
+## Стабильная база
 
-- Language core, interpreter, execution pipeline, and minimal IDE shell are already working.
-- The repository follows a document-driven workflow.
-- User-facing manual lives in `docs/manual/`.
-- Runnable `.axm` acceptance samples are mandatory for language-behavior changes.
+- Ядро языка, интерпретатор, пайплайн выполнения и WPF-оболочка IDE уже работают.
+- Репозиторий живёт по документному процессу: активные источники правды — `PROJECT.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`.
+- Пользовательский справочник живёт в `docs/manual/`.
+- Для новых наблюдаемых изменений языка обязательны тесты, runnable `.axm`-пример и обновление manual.
 
-## Current Product Status
+## Где работа остановилась
 
-- Axiom v0.1 baseline is stabilized.
-- IDE redesign baseline is also stabilized enough for the current scope.
-- Stage 1 and Stage 2 of the date/time built-in package are implemented.
+Последний зафиксированный проектный шаг:
+- выбран и документирован первый современный графический срез;
+- утверждены `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT`, `FILLRECT`;
+- закреплено, что `DRAWIMAGE` и `DRAWSPRITE` должны работать и внутри `CANVAS`.
 
-## Where Work Stopped
+## Следующий продуктовый шаг
 
-The last completed language slice added:
+Следующий официальный шаг из активного плана:
+- начать реализацию `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT`, `FILLRECT`;
+- идти по слоям с лексера, синтаксиса, парсера, IDE-словарей и семантических контрактов;
+- затем продолжить в runtime, `BytecodeVm`, `Axiom.Execution`, `Axiom.Ide`, tests, samples и manual.
 
-- `DATE()`
-- `TIME()`
-- `NOW()`
-- `TIMER()`
-- `DATESERIAL()`
-- `TIMESERIAL()`
-- `YEAR()`
-- `MONTH()`
-- `DAY()`
-- `HOUR()`
-- `MINUTE()`
-- `SECOND()`
-- `WEEKDAY()`
+## Что особенно важно не сломать
 
-## Next Product Step
+- Интерпретаторная архитектура остаётся базовой.
+- Стек остаётся на C# / .NET.
+- Слои lexer / syntax / parser / semantics / runtime / IDE не смешиваются.
+- Парсер остаётся разбитым по зонам ответственности.
+- Любое новое наблюдаемое поведение должно синхронно обновлять tests, manual, samples, `docs/WORKLOG4.md` и `docs/PLANS3.md`.
 
-Before more code, the next date/time contract should be fixed in docs for:
+## Что читать первым делом
 
-- `DATEADD`
-- `DATEDIFF`
-- `DATEPART`
-- `DATEVALUE`
-- `TIMEVALUE`
-- `ISDATE`
-
-## Do-Not-Break Constraints
-
-- Interpreter-first architecture stays in place.
-- C# / .NET stays the stack.
-- Frontend layers stay separated: lexer, syntax, parser, semantics, runtime, IDE.
-- Parser remains split by responsibility zones.
-- New user-visible language behavior must update tests, manual pages, samples, worklog, and plans.
-
-## First Files To Read For Most Tasks
-
-- `docs/PLANS3.md` for the active next step
-- `docs/WORKLOG4.md` for the latest completed slice
-- `docs/SPECIFICATION3.md` for behavior contracts
-- `docs/ARCHITECTURE.md` for layer boundaries
-- `docs/manual/` if behavior is user-visible
+- `docs/PLANS3.md` — активный следующий шаг.
+- `docs/WORKLOG4.md` — последний завершённый срез.
+- `docs/SPECIFICATION3.md` — точный договор поведения.
+- `docs/ARCHITECTURE.md` — границы слоёв и технические решения.
+- `docs/manual/` — если поведение пользовательское.
+- `scripts/ai-context.ps1` — если нужен короткий бриф и тематические фрагменты вместо полного ручного перечитывания.
 

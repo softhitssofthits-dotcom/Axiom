@@ -389,6 +389,83 @@ DRAWSPRITE hero, 1, 10, 20, 32, 16
     }
 
     [Fact]
+    public void Bind_CanvasFrameAndModernRectangles()
+    {
+        const string text = """
+CANVAS 320, 180
+BEGINFRAME
+CLS RGB(18, 22, 30)
+DRAWRECT 10, 20, 30, 40, RGB(255, 0, 0)
+FILLRECT 50, 60, 70, 80, RGB(0, 255, 0)
+PRESENT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var canvas = Assert.IsType<BoundCanvasStatement>(program.GlobalStatements[0]);
+        Assert.Equal(TypeSymbol.Long, canvas.WidthExpression.Type);
+        Assert.Equal(TypeSymbol.Long, canvas.HeightExpression.Type);
+        Assert.IsType<BoundBeginFrameStatement>(program.GlobalStatements[1]);
+        var cls = Assert.IsType<BoundClsStatement>(program.GlobalStatements[2]);
+        var clsColor = Assert.IsType<BoundCallExpression>(cls.ColorExpression);
+        Assert.Equal(TypeSymbol.Integer, clsColor.Type);
+        Assert.Equal(BuiltinFunctionId.Rgb, AssertCalledFunction(clsColor).BuiltinId);
+        var drawRect = Assert.IsType<BoundDrawRectStatement>(program.GlobalStatements[3]);
+        Assert.Equal(TypeSymbol.Long, drawRect.XExpression.Type);
+        Assert.Equal(TypeSymbol.Integer, drawRect.ColorExpression.Type);
+        var fillRect = Assert.IsType<BoundFillRectStatement>(program.GlobalStatements[4]);
+        Assert.Equal(TypeSymbol.Long, fillRect.WidthExpression.Type);
+        Assert.Equal(TypeSymbol.Integer, fillRect.ColorExpression.Type);
+        Assert.IsType<BoundPresentStatement>(program.GlobalStatements[5]);
+    }
+
+    [Fact]
+    public void Bind_CanvasCameraAndModernPrimitives()
+    {
+        const string text = """
+CANVAS 320, 180
+CAMERA 16, 24
+DRAWLINE 16, 24, 80, 24, RGB(255, 255, 0)
+DRAWCIRCLE 48, 52, 10, RGB(255, 0, 0)
+FILLCIRCLE 96, 52, 6, RGB(0, 255, 0)
+RESETCAMERA
+DRAWTEXT "Очки: 12", 8, 8, RGB(255, 255, 255)
+PRESENT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var camera = Assert.IsType<BoundCameraStatement>(program.GlobalStatements[1]);
+        Assert.Equal(TypeSymbol.Long, camera.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, camera.YExpression.Type);
+
+        var drawLine = Assert.IsType<BoundDrawLineStatement>(program.GlobalStatements[2]);
+        Assert.Equal(TypeSymbol.Long, drawLine.X1Expression.Type);
+        Assert.Equal(TypeSymbol.Long, drawLine.Y2Expression.Type);
+        Assert.Equal(TypeSymbol.Integer, drawLine.ColorExpression.Type);
+
+        var drawCircle = Assert.IsType<BoundDrawCircleStatement>(program.GlobalStatements[3]);
+        Assert.Equal(TypeSymbol.Long, drawCircle.RadiusExpression.Type);
+        Assert.Equal(TypeSymbol.Integer, drawCircle.ColorExpression.Type);
+
+        var fillCircle = Assert.IsType<BoundFillCircleStatement>(program.GlobalStatements[4]);
+        Assert.Equal(TypeSymbol.Long, fillCircle.RadiusExpression.Type);
+        Assert.Equal(TypeSymbol.Integer, fillCircle.ColorExpression.Type);
+
+        Assert.IsType<BoundResetCameraStatement>(program.GlobalStatements[5]);
+
+        var drawText = Assert.IsType<BoundDrawTextStatement>(program.GlobalStatements[6]);
+        Assert.Equal(TypeSymbol.String, drawText.TextExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawText.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawText.YExpression.Type);
+        Assert.Equal(TypeSymbol.Integer, drawText.ColorExpression.Type);
+
+        Assert.IsType<BoundPresentStatement>(program.GlobalStatements[7]);
+    }
+
+    [Fact]
     public void Bind_SpriteFeaturesRejectWrongTypes()
     {
         const string text = """

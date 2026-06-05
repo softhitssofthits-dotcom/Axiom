@@ -28,6 +28,9 @@
             <Word>AS</Word>
             <Word>BYREF</Word>
             <Word>BYVAL</Word>
+            <Word>BEGINFRAME</Word>
+            <Word>CAMERA</Word>
+            <Word>CANVAS</Word>
             <Word>CASE</Word>
             <Word>CATCH</Word>
             <Word>CIRCLE</Word>
@@ -38,8 +41,12 @@
             <Word>DIM</Word>
             <Word>DO</Word>
             <Word>DRAW</Word>
+            <Word>DRAWCIRCLE</Word>
             <Word>DRAWIMAGE</Word>
+            <Word>DRAWLINE</Word>
+            <Word>DRAWRECT</Word>
             <Word>DRAWSPRITE</Word>
+            <Word>DRAWTEXT</Word>
             <Word>ELSE</Word>
             <Word>ELSEIF</Word>
             <Word>END</Word>
@@ -48,6 +55,8 @@
             <Word>ERASE</Word>
             <Word>EXIT</Word>
             <Word>FALSE</Word>
+            <Word>FILLCIRCLE</Word>
+            <Word>FILLRECT</Word>
             <Word>FINALLY</Word>
             <Word>FOR</Word>
             <Word>FUNCTION</Word>
@@ -75,9 +84,11 @@
             <Word>PRESERVE</Word>
             <Word>PRINT</Word>
             <Word>PRESET</Word>
+            <Word>PRESENT</Word>
             <Word>PSET</Word>
             <Word>PUT</Word>
             <Word>REDIM</Word>
+            <Word>RESETCAMERA</Word>
             <Word>RETURN</Word>
             <Word>SCREEN</Word>
             <Word>SELF</Word>
@@ -287,6 +298,7 @@
             <Word>REVERSE</Word>
             <Word>REWIND</Word>
             <Word>RIGHT</Word>
+            <Word>RGB</Word>
             <Word>RND</Word>
             <Word>ROUND</Word>
             <Word>RTRIM</Word>

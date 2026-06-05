@@ -1140,6 +1140,7 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/operators/type/default_field_values.axm", new[] { "Ada", "36", "TRUE" })]
     [InlineData("samples/operators/type/partial_named_literal_defaults.axm", new[] { "Grace", "36", "TRUE" })]
     [InlineData("samples/operators/type/structural_equality.axm", new[] { "TRUE", "FALSE", "FALSE", "TRUE" })]
+    [InlineData("samples/operators/sub/byref_scalar_argument.axm", new[] { "11" })]
     [InlineData("samples/operators/sub/byref_record_argument.axm", new[] { "37" })]
     [InlineData("samples/operators/sub/byval_record_copy.axm", new[] { "Ada", "36" })]
     public void TypeDefaultAndEqualityAcceptanceSamples_RunOnBytecodeVm(string relativePath, string[] expectedOutput)
@@ -2293,6 +2294,90 @@ public sealed class AcceptanceProgramTests
         Assert.Equal((1, 44L, 24L, 16, 16), ToDrawSpriteShape(inputProvider.DrawSprites[1]));
     }
 
+    [Fact]
+    public void CanvasFrameAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/modern/rectangles_frame.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
+        Assert.Equal(2, inputProvider.BeginFrameCount);
+        Assert.Equal([0x12161E, 0x080A10], inputProvider.FrameClears);
+        Assert.Equal(2, inputProvider.FillRects.Count);
+        Assert.Equal(2, inputProvider.DrawRects.Count);
+        Assert.Single(inputProvider.DrawImages);
+        Assert.Equal(2, inputProvider.DrawSprites.Count);
+        Assert.Equal(2, inputProvider.PresentFrameCount);
+    }
+
+    [Fact]
+    public void ModernHudTextAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/modern/hud_text.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
+        Assert.True(inputProvider.CanvasDrawTexts.Count >= 2);
+        Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
+        Assert.True(inputProvider.FillRects.Count >= 1);
+        Assert.True(inputProvider.PresentFrameCount >= 2);
+    }
+
+    [Fact]
+    public void ModernCameraAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/modern/camera_world.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
+        Assert.True(inputProvider.CanvasCameraCalls.Count >= 1);
+        Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
+        Assert.True(inputProvider.DrawRects.Count >= 1 || inputProvider.FillRects.Count >= 1);
+        Assert.True(inputProvider.CanvasDrawTexts.Count >= 1);
+        Assert.True(inputProvider.PresentFrameCount >= 2);
+    }
+
+    [Fact]
+    public void ModernLinesAndCirclesAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/modern/lines_and_circles.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
+        Assert.True(inputProvider.CanvasDrawLines.Count >= 2);
+        Assert.True(inputProvider.CanvasDrawCircles.Count >= 1);
+        Assert.True(inputProvider.CanvasFillCircles.Count >= 1);
+        Assert.True(inputProvider.PresentFrameCount >= 2);
+    }
+
     [Theory]
     [InlineData("samples/operators/view/invalid_bounds_error.axm", "MB3007")]
     [InlineData("samples/operators/window/zero_size_error.axm", "MB3007")]
@@ -2399,6 +2484,53 @@ public sealed class AcceptanceProgramTests
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Paddle ball sample finished: esc"], inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void MazeChaseAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/graphics/game/maze_chase.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["ESC"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal([(480L, 270L)], inputProvider.CanvasActivations);
+        Assert.True(inputProvider.CanvasCameraCalls.Count >= 1);
+        Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
+        Assert.True(inputProvider.FillRects.Count > 0);
+        Assert.True(inputProvider.CanvasFillCircles.Count > 0);
+        Assert.True(inputProvider.CanvasDrawTexts.Count > 0);
+        Assert.True(inputProvider.DrawSprites.Count >= 2);
+        Assert.True(inputProvider.PresentFrameCount >= 1);
+    }
+
+    [Theory]
+    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
+    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
+    public void MazeChaseAcceptanceSample_MovesPlayerInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    {
+        var relativePath = "samples/graphics/game/maze_chase.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["RIGHT", "ESC"]);
+
+        var result = Run(sourceText, inputProvider, mode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(expectedEngine, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+
+        var playerDraws = inputProvider.DrawSprites
+            .Where((_, index) => index % 2 == 0)
+            .ToArray();
+
+        Assert.True(playerDraws.Length >= 1);
+        Assert.True(playerDraws[0].X > 16L);
     }
 
     [Fact]
@@ -2777,6 +2909,13 @@ public sealed class AcceptanceProgramTests
         return new QueueKeyboardInputProvider(keys: keys, pressedKeys: [], resourceBaseDirectory: sampleDirectory);
     }
 
+    private static QueueKeyboardInputProvider CreateGraphicsModernSampleInputProvider(string relativePath, IEnumerable<string> keys)
+    {
+        var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
+        return new QueueKeyboardInputProvider(keys: keys, pressedKeys: [], resourceBaseDirectory: sampleDirectory);
+    }
+
     private static string[] CreateInputRecordIntakeLines()
     {
         var lines = new string[180];
@@ -2851,7 +2990,15 @@ public sealed class AcceptanceProgramTests
         private readonly Dictionary<int, Dictionary<(long X, long Y), int>> _screenPages = [];
         private readonly List<DrawImageCall> _drawImages = [];
         private readonly List<DrawSpriteCall> _drawSprites = [];
+        private readonly List<DrawRectCall> _drawRects = [];
+        private readonly List<FillRectCall> _fillRects = [];
+        private readonly List<CanvasCameraCall> _canvasCameraCalls = [];
+        private readonly List<CanvasLineCall> _canvasDrawLines = [];
+        private readonly List<CanvasCircleCall> _canvasDrawCircles = [];
+        private readonly List<CanvasCircleCall> _canvasFillCircles = [];
+        private readonly List<CanvasTextCall> _canvasDrawTexts = [];
         private bool _isScreenActive;
+        private bool _isCanvasActive;
         private bool _isScreenOutputActive;
         private int _screenMode;
         private int _activeScreenPage;
@@ -2912,6 +3059,30 @@ public sealed class AcceptanceProgramTests
 
         public IReadOnlyList<DrawSpriteCall> DrawSprites => _drawSprites;
 
+        public IReadOnlyList<DrawRectCall> DrawRects => _drawRects;
+
+        public IReadOnlyList<FillRectCall> FillRects => _fillRects;
+
+        public IReadOnlyList<CanvasCameraCall> CanvasCameraCalls => _canvasCameraCalls;
+
+        public IReadOnlyList<CanvasLineCall> CanvasDrawLines => _canvasDrawLines;
+
+        public IReadOnlyList<CanvasCircleCall> CanvasDrawCircles => _canvasDrawCircles;
+
+        public IReadOnlyList<CanvasCircleCall> CanvasFillCircles => _canvasFillCircles;
+
+        public IReadOnlyList<CanvasTextCall> CanvasDrawTexts => _canvasDrawTexts;
+
+        public List<(long Width, long Height)> CanvasActivations { get; } = [];
+
+        public List<int> FrameClears { get; } = [];
+
+        public int BeginFrameCount { get; private set; }
+
+        public int PresentFrameCount { get; private set; }
+
+        public int ResetCanvasCameraCount { get; private set; }
+
         public string ReadInput(InputRequest request) => _inputs.Count > 0 ? _inputs.Dequeue() : string.Empty;
 
         public string ReadKey() => _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
@@ -2929,6 +3100,8 @@ public sealed class AcceptanceProgramTests
         public MouseInputEvent ReadMouseEvent() => _mouseEvents.Count > 0 ? _mouseEvents.Dequeue() : default;
 
         public bool IsScreenActive => _isScreenActive;
+
+        public bool IsCanvasActive => _isCanvasActive;
 
         public bool IsScreenOutputActive => _isScreenOutputActive;
 
@@ -2985,6 +3158,7 @@ public sealed class AcceptanceProgramTests
         {
             var sameMode = _screenMode == mode;
             _isScreenActive = mode != 0;
+            _isCanvasActive = false;
             _isScreenOutputActive = true;
             _screenMode = mode;
             _activeScreenPage = _isScreenActive ? activePage : 0;
@@ -3031,9 +3205,86 @@ public sealed class AcceptanceProgramTests
             ResetWindow();
         }
 
+        public void ActivateCanvas(long width, long height)
+        {
+            _isScreenActive = false;
+            _isCanvasActive = true;
+            _isScreenOutputActive = false;
+            _screenMode = 0;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
+            _screenWidth = (int)width;
+            _screenHeight = (int)height;
+            _pixels.Clear();
+            _screenPages.Clear();
+            GraphicsOutput.Clear();
+            _pendingGraphicsLine = string.Empty;
+            _currentGraphicsX = 0;
+            _currentGraphicsY = 0;
+            ResetViewport();
+            ResetWindow();
+            CanvasActivations.Add((width, height));
+        }
+
+        public void BeginFrame()
+        {
+            BeginFrameCount++;
+        }
+
+        public void PresentFrame()
+        {
+            PresentFrameCount++;
+        }
+
+        public void ClearFrame(int color)
+        {
+            FrameClears.Add(color);
+        }
+
+        public void DrawRect(long x, long y, long width, long height, int color)
+        {
+            _drawRects.Add(new DrawRectCall(x, y, width, height, color));
+        }
+
+        public void FillRect(long x, long y, long width, long height, int color)
+        {
+            _fillRects.Add(new FillRectCall(x, y, width, height, color));
+        }
+
+        public void SetCanvasCamera(long x, long y)
+        {
+            _canvasCameraCalls.Add(new CanvasCameraCall(x, y));
+        }
+
+        public void ResetCanvasCamera()
+        {
+            ResetCanvasCameraCount++;
+        }
+
+        public void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
+        {
+            _canvasDrawLines.Add(new CanvasLineCall(x1, y1, x2, y2, color));
+        }
+
+        public void DrawCanvasCircle(long x, long y, long radius, int color)
+        {
+            _canvasDrawCircles.Add(new CanvasCircleCall(x, y, radius, color));
+        }
+
+        public void FillCanvasCircle(long x, long y, long radius, int color)
+        {
+            _canvasFillCircles.Add(new CanvasCircleCall(x, y, radius, color));
+        }
+
+        public void DrawCanvasText(string text, long x, long y, int color)
+        {
+            _canvasDrawTexts.Add(new CanvasTextCall(text, x, y, color));
+        }
+
         public void DeactivateScreen()
         {
             _isScreenActive = false;
+            _isCanvasActive = false;
             _isScreenOutputActive = false;
             _screenMode = 0;
             _activeScreenPage = 0;
@@ -3384,5 +3635,17 @@ public sealed class AcceptanceProgramTests
     private sealed record DrawImageCall(RuntimeImageValue Image, long X, long Y, int Width, int Height);
 
     private sealed record DrawSpriteCall(RuntimeSpriteValue Sprite, int Frame, long X, long Y, int Width, int Height);
+
+    private sealed record DrawRectCall(long X, long Y, long Width, long Height, int Color);
+
+    private sealed record FillRectCall(long X, long Y, long Width, long Height, int Color);
+
+    private sealed record CanvasCameraCall(long X, long Y);
+
+    private sealed record CanvasLineCall(long X1, long Y1, long X2, long Y2, int Color);
+
+    private sealed record CanvasCircleCall(long X, long Y, long Radius, int Color);
+
+    private sealed record CanvasTextCall(string Text, long X, long Y, int Color);
 }
 

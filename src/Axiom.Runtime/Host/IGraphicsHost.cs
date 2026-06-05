@@ -18,6 +18,8 @@ public interface IGraphicsHost
 {
     bool IsScreenActive => false;
 
+    bool IsCanvasActive => false;
+
     bool IsScreenOutputActive => IsScreenActive;
 
     int ScreenMode => 0;
@@ -91,6 +93,54 @@ public interface IGraphicsHost
     }
 
     void ActivateScreen(int mode)
+    {
+    }
+
+    void ActivateCanvas(long width, long height)
+    {
+    }
+
+    void BeginFrame()
+    {
+    }
+
+    void PresentFrame()
+    {
+    }
+
+    void SetCanvasCamera(long x, long y)
+    {
+    }
+
+    void ResetCanvasCamera()
+    {
+    }
+
+    void ClearFrame(int color)
+    {
+    }
+
+    void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
+    {
+    }
+
+    void DrawCanvasCircle(long x, long y, long radius, int color)
+    {
+    }
+
+    void FillCanvasCircle(long x, long y, long radius, int color)
+    {
+    }
+
+    void DrawCanvasText(string text, long x, long y, int color)
+    {
+    }
+
+    void DrawRect(long x, long y, long width, long height, int color)
+    {
+    }
+
+    void FillRect(long x, long y, long width, long height, int color)
     {
     }
 

@@ -40,6 +40,14 @@ public sealed class ScreenFramebuffer
         Array.Clear(_hasTrueColor);
     }
 
+    public void ClearTrueColor(int color)
+    {
+        var pixel = MapRgbToBgra(color);
+        Array.Clear(_colorIndices);
+        Array.Fill(_trueColorPixels, pixel);
+        Array.Fill(_hasTrueColor, true);
+    }
+
     public void ResetPalette()
     {
         var defaultPalette = CreateDefaultPalette();
@@ -78,6 +86,18 @@ public sealed class ScreenFramebuffer
         _hasTrueColor[offset] = false;
     }
 
+    public void SetTrueColorPixel(long x, long y, int color)
+    {
+        if (!IsInside(x, y))
+        {
+            return;
+        }
+
+        var offset = GetOffset((int)x, (int)y);
+        _trueColorPixels[offset] = MapRgbToBgra(color);
+        _hasTrueColor[offset] = true;
+    }
+
     public int GetPixel(long x, long y)
     {
         if (!IsInside(x, y))
@@ -113,6 +133,80 @@ public sealed class ScreenFramebuffer
                 _colorIndices[offset] = colorIndex;
                 _trueColorPixels[offset] = 0;
                 _hasTrueColor[offset] = false;
+            }
+        }
+    }
+
+    public void FillTrueColorRectangle(long left, long top, long right, long bottom, int color)
+    {
+        var clippedLeft = Math.Max(0, left);
+        var clippedTop = Math.Max(0, top);
+        var clippedRight = Math.Min(Width - 1L, right);
+        var clippedBottom = Math.Min(Height - 1L, bottom);
+
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        var pixel = MapRgbToBgra(color);
+        for (var y = (int)clippedTop; y <= clippedBottom; y++)
+        {
+            var rowOffset = y * Width;
+            for (var x = (int)clippedLeft; x <= clippedRight; x++)
+            {
+                var offset = rowOffset + x;
+                _trueColorPixels[offset] = pixel;
+                _hasTrueColor[offset] = true;
+            }
+        }
+    }
+
+    public void DrawTrueColorRectangle(long left, long top, long right, long bottom, int color)
+    {
+        FillTrueColorRectangle(left, top, right, top, color);
+        FillTrueColorRectangle(left, bottom, right, bottom, color);
+        FillTrueColorRectangle(left, top, left, bottom, color);
+        FillTrueColorRectangle(right, top, right, bottom, color);
+    }
+
+    public void DrawTrueColorText(long x, long y, string text, int color)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        var startX = checked((int)x);
+        var startY = checked((int)y);
+        var width = Math.Max(0, MeasureTextColumns(text) * ScreenTextRasterizer.CellWidth);
+        var height = Math.Max(ScreenTextRasterizer.CellHeight, MeasureTextRows(text) * ScreenTextRasterizer.CellHeight);
+        if (width == 0)
+        {
+            return;
+        }
+
+        var clippedLeft = Math.Max(0, startX);
+        var clippedTop = Math.Max(0, startY);
+        var clippedRight = Math.Min(Width - 1, startX + width - 1);
+        var clippedBottom = Math.Min(Height - 1, startY + height - 1);
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        ScreenTextRasterizer.DrawText(
+            _trueColorPixels,
+            Width,
+            Height,
+            startX,
+            startY,
+            text,
+            MapRgbToBgra(color));
+
+        for (var row = clippedTop; row <= clippedBottom; row++)
+        {
+            var rowOffset = row * Width;
+            for (var column = clippedLeft; column <= clippedRight; column++)
+            {
+                _hasTrueColor[rowOffset + column] = true;
             }
         }
     }
@@ -363,6 +457,9 @@ public sealed class ScreenFramebuffer
 
     public static int NormalizeColorIndex(int color) => (int)(Math.Abs((long)color) % 256);
 
+    public static uint MapRgbToBgra(int color) =>
+        ToBgra((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
+
     private uint MapPaletteColor(int color) => _palette[NormalizeColorIndex(color)];
 
     private static uint ForceOpaque(uint pixel) => 0xFF000000u | (pixel & 0x00FFFFFFu);
@@ -486,6 +583,44 @@ public sealed class ScreenFramebuffer
 
     private static uint ToBgra(int red, int green, int blue) =>
         0xFF000000u | ((uint)red << 16) | ((uint)green << 8) | (uint)blue;
+
+    private static int MeasureTextRows(string text)
+    {
+        var rows = 1;
+        foreach (var ch in text)
+        {
+            if (ch == '\n')
+            {
+                rows++;
+            }
+        }
+
+        return rows;
+    }
+
+    private static int MeasureTextColumns(string text)
+    {
+        var max = 0;
+        var current = 0;
+        foreach (var ch in text)
+        {
+            if (ch == '\r')
+            {
+                continue;
+            }
+
+            if (ch == '\n')
+            {
+                max = Math.Max(max, current);
+                current = 0;
+                continue;
+            }
+
+            current++;
+        }
+
+        return Math.Max(max, current);
+    }
 }
 
 public sealed record ScreenFramebufferSnapshot(int Width, int Height, uint[] BgraPixels);

@@ -704,6 +704,83 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void Canvas_PublishesWorkingFrameOnlyAfterPresent()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateCanvas(8, 8);
+        var initialFrame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        service.FillRect(1, 1, 2, 2, 0xFF0000);
+
+        var beforePresent = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Same(initialFrame, beforePresent);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0), beforePresent.BgraPixels[(1 * beforePresent.Width) + 1]);
+
+        service.PresentFrame();
+
+        var afterPresent = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0xFF0000), afterPresent.BgraPixels[(1 * afterPresent.Width) + 1]);
+    }
+
+    [Fact]
+    public void Canvas_DrawImageAndSpriteComposeIntoModernFrame()
+    {
+        var service = new ProgramConsoleService();
+        var image = new RuntimeImageValue(1, 1, [0xFFFF0000u]);
+        var sprite = new RuntimeSpriteValue(
+            new RuntimeImageValue(2, 1, [0xFFFF0000u, 0xFF00FF00u]),
+            frameWidth: 1,
+            frameHeight: 1);
+
+        service.ActivateCanvas(8, 8);
+        service.DrawImage(image, 1, 1, 1, 1);
+        service.DrawSprite(sprite, 1, 3, 1, 1, 1);
+        service.PresentFrame();
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(0xFFFF0000u, frame.BgraPixels[(1 * frame.Width) + 1]);
+        Assert.Equal(0xFF00FF00u, frame.BgraPixels[(1 * frame.Width) + 3]);
+    }
+
+    [Fact]
+    public void Canvas_DrawLineAndCirclesRenderIntoModernFrame()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateCanvas(40, 40);
+        service.DrawCanvasLine(0, 0, 12, 0, 0xFFFF00);
+        service.DrawCanvasCircle(16, 16, 4, 0xFF0000);
+        service.FillCanvasCircle(28, 28, 3, 0x00FF00);
+        service.PresentFrame();
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0xFFFF00), frame.BgraPixels[0]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0xFFFF00), frame.BgraPixels[10]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0xFF0000), frame.BgraPixels[(12 * frame.Width) + 16]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0x00FF00), frame.BgraPixels[(28 * frame.Width) + 28]);
+    }
+
+    [Fact]
+    public void Canvas_CameraAndResetCameraSupportWorldSceneAndHud()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateCanvas(64, 32);
+        service.SetCanvasCamera(16, 16);
+        service.FillRect(32, 32, 6, 6, 0xCC3300);
+        service.DrawCanvasLine(16, 32, 32, 32, 0x3366FF);
+        service.ResetCanvasCamera();
+        service.FillRect(0, 0, 20, 12, 0x111111);
+        service.DrawCanvasText("HUD", 1, 1, 0xFFFFFF);
+        service.PresentFrame();
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0x3366FF), frame.BgraPixels[(16 * frame.Width) + 8]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0xCC3300), frame.BgraPixels[(18 * frame.Width) + 18]);
+        Assert.Contains(GetCellPixels(frame, row: 1, column: 1), pixel => pixel == ScreenFramebuffer.MapRgbToBgra(0xFFFFFF));
+    }
+
+    [Fact]
     public void WriteGraphicsText_RendersRussianLetters()
     {
         var service = new ProgramConsoleService();

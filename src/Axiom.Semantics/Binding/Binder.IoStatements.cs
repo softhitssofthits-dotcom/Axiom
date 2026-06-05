@@ -71,6 +71,34 @@ public sealed partial class Binder
             statement.VisualPageExpression is null ? null : BindExpression(statement.VisualPageExpression, TypeSymbol.Integer));
     }
 
+    private BoundStatement BindCanvasStatement(CanvasStatementSyntax statement)
+    {
+        return new BoundCanvasStatement(
+            GetLocation(statement),
+            BindExpression(statement.WidthExpression, TypeSymbol.Long),
+            BindExpression(statement.HeightExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindCameraStatement(CameraStatementSyntax statement)
+    {
+        return new BoundCameraStatement(
+            GetLocation(statement),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindResetCameraStatement(ResetCameraStatementSyntax statement)
+    {
+        return new BoundResetCameraStatement(GetLocation(statement));
+    }
+
+    private BoundStatement BindClsStatement(ClsStatementSyntax statement)
+    {
+        return new BoundClsStatement(
+            GetLocation(statement),
+            statement.ColorExpression is null ? null : BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
     private BoundStatement BindPCopyStatement(PCopyStatementSyntax statement)
     {
         return new BoundPCopyStatement(
@@ -324,6 +352,47 @@ public sealed partial class Binder
             BindExpression(statement.CommandExpression, TypeSymbol.String));
     }
 
+    private BoundStatement BindDrawLineStatement(DrawLineStatementSyntax statement)
+    {
+        return new BoundDrawLineStatement(
+            GetLocation(statement),
+            BindExpression(statement.X1Expression, TypeSymbol.Long),
+            BindExpression(statement.Y1Expression, TypeSymbol.Long),
+            BindExpression(statement.X2Expression, TypeSymbol.Long),
+            BindExpression(statement.Y2Expression, TypeSymbol.Long),
+            BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindDrawCircleStatement(DrawCircleStatementSyntax statement)
+    {
+        return new BoundDrawCircleStatement(
+            GetLocation(statement),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            BindExpression(statement.RadiusExpression, TypeSymbol.Long),
+            BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindFillCircleStatement(FillCircleStatementSyntax statement)
+    {
+        return new BoundFillCircleStatement(
+            GetLocation(statement),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            BindExpression(statement.RadiusExpression, TypeSymbol.Long),
+            BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindDrawTextStatement(DrawTextStatementSyntax statement)
+    {
+        return new BoundDrawTextStatement(
+            GetLocation(statement),
+            BindExpression(statement.TextExpression, TypeSymbol.String),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
     private BoundStatement BindDrawImageStatement(DrawImageStatementSyntax statement)
     {
         return new BoundDrawImageStatement(
@@ -333,6 +402,28 @@ public sealed partial class Binder
             BindExpression(statement.YExpression, TypeSymbol.Long),
             statement.WidthExpression is null ? null : BindExpression(statement.WidthExpression, TypeSymbol.Long),
             statement.HeightExpression is null ? null : BindExpression(statement.HeightExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindDrawRectStatement(DrawRectStatementSyntax statement)
+    {
+        return new BoundDrawRectStatement(
+            GetLocation(statement),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            BindExpression(statement.WidthExpression, TypeSymbol.Long),
+            BindExpression(statement.HeightExpression, TypeSymbol.Long),
+            BindExpression(statement.ColorExpression, TypeSymbol.Integer));
+    }
+
+    private BoundStatement BindFillRectStatement(FillRectStatementSyntax statement)
+    {
+        return new BoundFillRectStatement(
+            GetLocation(statement),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long),
+            BindExpression(statement.WidthExpression, TypeSymbol.Long),
+            BindExpression(statement.HeightExpression, TypeSymbol.Long),
+            BindExpression(statement.ColorExpression, TypeSymbol.Integer));
     }
 
     private BoundStatement BindDrawSpriteStatement(DrawSpriteStatementSyntax statement)

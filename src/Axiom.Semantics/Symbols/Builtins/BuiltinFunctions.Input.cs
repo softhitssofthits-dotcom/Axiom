@@ -26,7 +26,8 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.LoadSprite, "LOADSPRITE", TypeSymbol.Sprite, [Parameter("path", TypeSymbol.String), Parameter("frameWidth", TypeSymbol.Long), Parameter("frameHeight", TypeSymbol.Long)]),
             CreateDefault(BuiltinFunctionId.SpriteWidth, "SPRITEWIDTH", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
             CreateDefault(BuiltinFunctionId.SpriteHeight, "SPRITEHEIGHT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
-            CreateDefault(BuiltinFunctionId.SpriteCount, "SPRITECOUNT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)])
+            CreateDefault(BuiltinFunctionId.SpriteCount, "SPRITECOUNT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
+            CreateDefault(BuiltinFunctionId.Rgb, "RGB", TypeSymbol.Integer, [Parameter("red", TypeSymbol.Long), Parameter("green", TypeSymbol.Long), Parameter("blue", TypeSymbol.Long)])
         ];
     }
 }

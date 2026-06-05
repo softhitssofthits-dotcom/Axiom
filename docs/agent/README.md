@@ -1,17 +1,17 @@
 # Agent Layer
 
-## Purpose
+## Назначение
 
-This folder is a small OMX-inspired retrieval layer for agent work in this repository.
+Эта папка — маленький retrieval-слой для агентной работы по репозиторию.
 
-It does not replace the main project documents.
-It exists to make routine project context cheaper to load and safer to resume.
+Она не заменяет основные документы проекта.
+Её задача — удешевить повторный вход в контекст и ускорить обзор активного состояния.
 
-## Source Of Truth
+## Источник правды
 
-If this folder conflicts with the main repository documents, the main documents win.
+Если содержимое этой папки расходится с основными документами репозитория, побеждают основные документы.
 
-Primary sources of truth:
+Главные источники правды:
 
 1. `AGENTS.md`
 2. `PROJECT.md`
@@ -21,32 +21,48 @@ Primary sources of truth:
 6. `docs/WORKLOG4.md`
 7. `docs/manual/`
 
-## What Lives Here
+## Что здесь хранится
 
-- `CURRENT_STATE.md` - compact project snapshot for session startup
-- `ARCHITECTURE_MAP.md` - search-first map of code hotspots and test ownership
-- `PLAYBOOKS.md` - short repeatable workflows for common task shapes
+- `CURRENT_STATE.md` — короткий ручной снимок текущего состояния проекта
+- `ARCHITECTURE_MAP.md` — карта горячих зон кода и тестов
+- `PLAYBOOKS.md` — короткие повторяемые сценарии работы
+- `HEADROOM_PILOT.md` — план внешнего пилота `Headroom` для агентных сессий
 
-## Update Rules
+## Как использовать вместе со скриптом
 
-- Keep this layer compact and retrieval-oriented.
-- Do not duplicate large chunks of `SPECIFICATION3.md` or `ARCHITECTURE.md`.
-- Prefer links and summaries over long restatements.
-- Update this layer when repeated agent work would benefit from faster project re-entry.
-- Do not store temporary chat-only decisions here unless they were accepted into repository docs.
+Для быстрого старта поверх этого слоя есть локальный скрипт:
 
-## Intended Workflow
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1
+powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -Topic CANVAS,RGB,DRAWRECT
+```
 
-1. Read the mandatory project documents from `AGENTS.md`.
-2. Use this folder as a fast re-entry layer.
-3. Follow the relevant playbook.
-4. Make changes in code and canonical docs.
-5. Record outcomes in `docs/WORKLOG4.md`.
+Скрипт:
+- собирает компактный свежий бриф из активных документов;
+- по умолчанию пишет его в `.artifacts/ai-context/session-brief.md`;
+- умеет добавлять тематические фрагменты по ключевым словам без чтения всех больших документов подряд.
 
-## Non-Goals
+## Правила обновления
 
-- No hidden runtime state.
-- No generated agent metadata.
-- No replacement for `docs/PLANS3.md` or `docs/WORKLOG4.md`.
-- No automatic orchestration layer or platform-specific hook dependency.
+- Держать этот слой компактным и ориентированным на быстрый поиск.
+- Не дублировать большие куски `docs/SPECIFICATION3.md` и `docs/ARCHITECTURE.md`.
+- Предпочитать ссылки, короткие выводы и указатели.
+- Обновлять этот слой, когда повторная агентная работа выигрывает от более быстрого входа в контекст.
+- Не хранить здесь временные чатовые решения, если они не закреплены в основных документах.
+
+## Целевой поток работы
+
+1. Прочитать обязательные документы из `AGENTS.md`.
+2. При необходимости запустить `scripts/ai-context.ps1`.
+3. Использовать эту папку как быстрый слой повторного входа.
+4. Следовать подходящему playbook.
+5. Менять код и канонические документы.
+6. Записывать результат в `docs/WORKLOG4.md`.
+
+## Что это не делает
+
+- Не хранит скрытое runtime-состояние.
+- Не заменяет `docs/PLANS3.md` и `docs/WORKLOG4.md`.
+- Не вводит автоматическую оркестрацию поверх репозитория.
+- Не требует внешней зависимости: это локальный вспомогательный слой, который полезен и без `Headroom`.
 

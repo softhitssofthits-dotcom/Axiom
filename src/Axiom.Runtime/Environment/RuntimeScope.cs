@@ -41,6 +41,26 @@ public sealed class RuntimeScope
         return false;
     }
 
+    public bool TryLookupStorage(VariableSymbol variable, out RuntimeScope? ownerScope, out IRuntimeStoredValue? value)
+    {
+        ArgumentNullException.ThrowIfNull(variable);
+
+        if (_values.TryGetValue(variable, out value))
+        {
+            ownerScope = this;
+            return true;
+        }
+
+        if (Parent is not null)
+        {
+            return Parent.TryLookupStorage(variable, out ownerScope, out value);
+        }
+
+        ownerScope = null;
+        value = null;
+        return false;
+    }
+
     public bool TryAssign(VariableSymbol variable, IRuntimeStoredValue value)
     {
         ArgumentNullException.ThrowIfNull(variable);

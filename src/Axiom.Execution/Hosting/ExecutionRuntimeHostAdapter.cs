@@ -75,6 +75,9 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public bool IsScreenActive =>
         _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsScreenActive;
 
+    public bool IsCanvasActive =>
+        _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsCanvasActive;
+
     public bool IsScreenOutputActive =>
         _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsScreenOutputActive;
 
@@ -183,6 +186,102 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
             graphicsHost.ActivateScreen(mode, activePage, visualPage);
+        }
+    }
+
+    public void ActivateCanvas(long width, long height)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ActivateCanvas(width, height);
+        }
+    }
+
+    public void BeginFrame()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.BeginFrame();
+        }
+    }
+
+    public void PresentFrame()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.PresentFrame();
+        }
+    }
+
+    public void SetCanvasCamera(long x, long y)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetCanvasCamera(x, y);
+        }
+    }
+
+    public void ResetCanvasCamera()
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ResetCanvasCamera();
+        }
+    }
+
+    public void ClearFrame(int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.ClearFrame(color);
+        }
+    }
+
+    public void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawCanvasLine(x1, y1, x2, y2, color);
+        }
+    }
+
+    public void DrawCanvasCircle(long x, long y, long radius, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawCanvasCircle(x, y, radius, color);
+        }
+    }
+
+    public void FillCanvasCircle(long x, long y, long radius, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.FillCanvasCircle(x, y, radius, color);
+        }
+    }
+
+    public void DrawCanvasText(string text, long x, long y, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawCanvasText(text, x, y, color);
+        }
+    }
+
+    public void DrawRect(long x, long y, long width, long height, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawRect(x, y, width, height, color);
+        }
+    }
+
+    public void FillRect(long x, long y, long width, long height, int color)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.FillRect(x, y, width, height, color);
         }
     }
 

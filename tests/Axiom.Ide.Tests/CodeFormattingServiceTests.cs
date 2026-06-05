@@ -149,6 +149,24 @@ public sealed class CodeFormattingServiceTests
     }
 
     [Fact]
+    public void FormatLine_FormatsCanvasKeywordsAndRgbBuiltIn()
+    {
+        var canvas = _service.FormatLine("canvas 320,180", CodeFormattingStyle.Classic);
+        var frame = _service.FormatLine("beginframe", CodeFormattingStyle.Classic);
+        var clear = _service.FormatLine("cls rgb(18,22,30)", CodeFormattingStyle.Classic);
+        var draw = _service.FormatLine("drawrect 1,2,3,4,rgb(255,0,0)", CodeFormattingStyle.Classic);
+        var fill = _service.FormatLine("fillrect 5,6,7,8,rgb(0,255,0)", CodeFormattingStyle.Modern);
+        var present = _service.FormatLine("present", CodeFormattingStyle.Modern);
+
+        Assert.Equal("CANVAS 320, 180", canvas);
+        Assert.Equal("BEGINFRAME", frame);
+        Assert.Equal("CLS RGB(18, 22, 30)", clear);
+        Assert.Equal("DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)", draw);
+        Assert.Equal("Fillrect 5, 6, 7, 8, Rgb(0, 255, 0)", fill);
+        Assert.Equal("Present", present);
+    }
+
+    [Fact]
     public void FormatLine_Classic_FormatsShiftPowerAndIntegerDivisionOperators()
     {
         var result = _service.FormatLine("print(a<<2)+(b>>1)+2^3+7\\2", CodeFormattingStyle.Classic);
