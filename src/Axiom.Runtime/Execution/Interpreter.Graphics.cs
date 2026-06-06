@@ -594,6 +594,18 @@ public sealed partial class Interpreter
         return RuntimeValue.FromSprite(sprite);
     }
 
+    private RuntimeValue EvaluateTextWidth(BoundCallExpression expression, string text)
+    {
+        RequireCanvasActive("TEXTWIDTH", expression.Location);
+        return RuntimeValue.FromInteger(CanvasTextMetrics.MeasureWidth(text));
+    }
+
+    private RuntimeValue EvaluateTextHeight(BoundCallExpression expression, string text)
+    {
+        RequireCanvasActive("TEXTHEIGHT", expression.Location);
+        return RuntimeValue.FromInteger(CanvasTextMetrics.MeasureHeight(text));
+    }
+
     private RuntimeImageValue RequireImage(string operationName, RuntimeValue value, TextLocation location)
     {
         var image = value.AsImage();

@@ -310,6 +310,8 @@
             <Word>SCREENISACTIVE</Word>
             <Word>SCREENMODE</Word>
             <Word>SCREENWIDTH</Word>
+            <Word>TEXTHEIGHT</Word>
+            <Word>TEXTWIDTH</Word>
             <Word>SIN</Word>
             <Word>SINH</Word>
             <Word>SKIPLINE</Word>

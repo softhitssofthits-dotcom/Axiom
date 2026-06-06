@@ -386,7 +386,23 @@ public sealed partial class BytecodeVm
             or BuiltinFunctionId.ImageHeight
             or BuiltinFunctionId.SpriteWidth
             or BuiltinFunctionId.SpriteHeight
-            or BuiltinFunctionId.SpriteCount;
+            or BuiltinFunctionId.SpriteCount
+            or BuiltinFunctionId.CombinePath
+            or BuiltinFunctionId.DirSize
+            or BuiltinFunctionId.WriteFile
+            or BuiltinFunctionId.DeleteFile
+            or BuiltinFunctionId.DeleteDirRecursive
+            or BuiltinFunctionId.CurrentDir
+            or BuiltinFunctionId.ChangeDir
+            or BuiltinFunctionId.CopyFile
+            or BuiltinFunctionId.CopyFileOverwrite
+            or BuiltinFunctionId.MoveFile
+            or BuiltinFunctionId.MoveFileOverwrite
+            or BuiltinFunctionId.RenameFile
+            or BuiltinFunctionId.CopyDir
+            or BuiltinFunctionId.CopyDirOverwrite
+            or BuiltinFunctionId.MoveDir
+            or BuiltinFunctionId.RenameDir;
     }
 
     private BytecodeCallFrame CreateFrame(
@@ -2948,7 +2964,7 @@ public sealed partial class BytecodeVm
         }
 
         if (executionInfo.HasFastHandler
-            && TryExecuteFastGraphicsBuiltin(frame, executionInfo, out var fastResult))
+            && TryExecuteFastBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
         {
             if (executionInfo.ReturnsValue)
             {
@@ -2977,6 +2993,20 @@ public sealed partial class BytecodeVm
         {
             InvalidateReverseExecutionHistory();
         }
+    }
+
+    private bool TryExecuteFastBuiltin(
+        BytecodeCallFrame frame,
+        BuiltinExecutionInfo executionInfo,
+        int instructionIndex,
+        out RuntimeValue result)
+    {
+        if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, out result))
+        {
+            return true;
+        }
+
+        return TryExecuteFastFileSystemBuiltin(frame, executionInfo, instructionIndex, out result);
     }
 
     private bool TryExecuteFastGraphicsBuiltin(
@@ -3209,6 +3239,583 @@ public sealed partial class BytecodeVm
 
             default:
                 return false;
+        }
+    }
+
+    private bool TryExecuteFastFileSystemBuiltin(
+        BytecodeCallFrame frame,
+        BuiltinExecutionInfo executionInfo,
+        int instructionIndex,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+        var stack = frame.EvaluationStack;
+
+        switch (executionInfo.CanonicalId)
+        {
+            case BuiltinFunctionId.CombinePath:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var rightValue = stack.PeekUnchecked();
+                var leftValue = stack.PeekUnchecked(1);
+                if (leftValue.Type != TypeSymbol.String || rightValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    stack.PopUnchecked();
+                    stack.PopUnchecked();
+                    result = RuntimeValue.FromString(Path.Combine(GetStringUnchecked(leftValue), GetStringUnchecked(rightValue)));
+                    return true;
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("COMBINEPATH", "left", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.DirSize:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var pathValue = stack.PeekUnchecked();
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    if (!Directory.Exists(fullPath))
+                    {
+                        ReportBuiltInArgumentError("DIRSIZE", "path", "указывает на папку, которая не существует.", ResolveLocation(frame.Routine.Id, instructionIndex));
+                        throw new RuntimeFailureException();
+                    }
+
+                    stack.PopUnchecked();
+                    result = RuntimeValue.FromLong(GetDirectorySize(fullPath));
+                    return true;
+                }
+                catch (RuntimeFailureException)
+                {
+                    throw;
+                }
+                catch (OverflowException)
+                {
+                    ReportNumericOverflow("Суммарный размер папки в функции DIRSIZE", TypeSymbol.Long, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("DIRSIZE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.WriteFile:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var textValue = stack.PeekUnchecked();
+                var pathValue = stack.PeekUnchecked(1);
+                if (pathValue.Type != TypeSymbol.String || textValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    File.WriteAllText(NormalizeFileSystemPath(GetStringUnchecked(pathValue)), GetStringUnchecked(textValue), FileSystemTextEncoding);
+                    stack.PopUnchecked();
+                    stack.PopUnchecked();
+                    result = RuntimeValue.FromBoolean(true);
+                    return true;
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("WRITEFILE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.DeleteFile:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var pathValue = stack.PeekUnchecked();
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    if (!File.Exists(fullPath))
+                    {
+                        stack.PopUnchecked();
+                        result = RuntimeValue.FromBoolean(false);
+                        return true;
+                    }
+
+                    File.Delete(fullPath);
+                    stack.PopUnchecked();
+                    result = RuntimeValue.FromBoolean(true);
+                    return true;
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("DELETEFILE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.DeleteDirRecursive:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var pathValue = stack.PeekUnchecked();
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    try
+                    {
+                        Directory.Delete(fullPath, recursive: true);
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        stack.PopUnchecked();
+                        result = RuntimeValue.FromBoolean(false);
+                        return true;
+                    }
+                    catch (IOException) when (!Directory.Exists(fullPath))
+                    {
+                        stack.PopUnchecked();
+                        result = RuntimeValue.FromBoolean(false);
+                        return true;
+                    }
+
+                    stack.PopUnchecked();
+                    result = RuntimeValue.FromBoolean(true);
+                    return true;
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("DELETEDIRRECURSIVE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.CurrentDir:
+            {
+                try
+                {
+                    result = RuntimeValue.FromString(Environment.CurrentDirectory);
+                    return true;
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("CURRENTDIR", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.ChangeDir:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var pathValue = stack.PeekUnchecked();
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    Directory.SetCurrentDirectory(fullPath);
+                    stack.PopUnchecked();
+                    result = RuntimeValue.FromBoolean(true);
+                    return true;
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    return false;
+                }
+                catch (Exception ex) when (IsFileSystemException(ex))
+                {
+                    ReportFileSystemFailure("CHANGEDIR", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+                    throw new RuntimeFailureException();
+                }
+            }
+
+            case BuiltinFunctionId.CopyFile:
+            case BuiltinFunctionId.MoveFile:
+            case BuiltinFunctionId.CopyDir:
+            case BuiltinFunctionId.MoveDir:
+            case BuiltinFunctionId.RenameFile:
+            case BuiltinFunctionId.RenameDir:
+            case BuiltinFunctionId.CopyFileOverwrite:
+            case BuiltinFunctionId.MoveFileOverwrite:
+            case BuiltinFunctionId.CopyDirOverwrite:
+                return TryExecuteFastFileSystemMutationBuiltin(frame, executionInfo.CanonicalId, instructionIndex, out result);
+
+            default:
+                return false;
+        }
+    }
+
+    private bool TryExecuteFastFileSystemMutationBuiltin(
+        BytecodeCallFrame frame,
+        BuiltinFunctionId builtinId,
+        int instructionIndex,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+        var stack = frame.EvaluationStack;
+
+        switch (builtinId)
+        {
+            case BuiltinFunctionId.CopyFile:
+            case BuiltinFunctionId.MoveFile:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var destinationValue = stack.PeekUnchecked();
+                var sourceValue = stack.PeekUnchecked(1);
+                if (sourceValue.Type != TypeSymbol.String || destinationValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                return ExecuteFastTwoPathFileMutation(
+                    frame,
+                    instructionIndex,
+                    builtinId == BuiltinFunctionId.CopyFile ? "COPYFILE" : "MOVEFILE",
+                    GetStringUnchecked(sourceValue),
+                    GetStringUnchecked(destinationValue),
+                    hasOverwriteArgument: false,
+                    overwrite: false,
+                    isMove: builtinId == BuiltinFunctionId.MoveFile,
+                    out result);
+            }
+
+            case BuiltinFunctionId.CopyFileOverwrite:
+            case BuiltinFunctionId.MoveFileOverwrite:
+            {
+                if (stack.Count < 3)
+                {
+                    return false;
+                }
+
+                var overwriteValue = stack.PeekUnchecked();
+                var destinationValue = stack.PeekUnchecked(1);
+                var sourceValue = stack.PeekUnchecked(2);
+                if (sourceValue.Type != TypeSymbol.String
+                    || destinationValue.Type != TypeSymbol.String
+                    || overwriteValue.Type != TypeSymbol.Boolean)
+                {
+                    return false;
+                }
+
+                return ExecuteFastTwoPathFileMutation(
+                    frame,
+                    instructionIndex,
+                    builtinId == BuiltinFunctionId.CopyFileOverwrite ? "COPYFILE" : "MOVEFILE",
+                    GetStringUnchecked(sourceValue),
+                    GetStringUnchecked(destinationValue),
+                    hasOverwriteArgument: true,
+                    GetBooleanUnchecked(overwriteValue),
+                    isMove: builtinId == BuiltinFunctionId.MoveFileOverwrite,
+                    out result);
+            }
+
+            case BuiltinFunctionId.RenameFile:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var newNameValue = stack.PeekUnchecked();
+                var pathValue = stack.PeekUnchecked(1);
+                if (pathValue.Type != TypeSymbol.String || newNameValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                return ExecuteFastRenameFileSystemEntry(
+                    frame,
+                    instructionIndex,
+                    "RENAMEFILE",
+                    GetStringUnchecked(pathValue),
+                    GetStringUnchecked(newNameValue),
+                    isDirectory: false,
+                    out result);
+            }
+
+            case BuiltinFunctionId.CopyDir:
+            case BuiltinFunctionId.MoveDir:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var destinationValue = stack.PeekUnchecked();
+                var sourceValue = stack.PeekUnchecked(1);
+                if (sourceValue.Type != TypeSymbol.String || destinationValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                return ExecuteFastTwoPathDirectoryMutation(
+                    frame,
+                    instructionIndex,
+                    builtinId == BuiltinFunctionId.CopyDir ? "COPYDIR" : "MOVEDIR",
+                    GetStringUnchecked(sourceValue),
+                    GetStringUnchecked(destinationValue),
+                    hasOverwriteArgument: false,
+                    overwrite: false,
+                    isMove: builtinId == BuiltinFunctionId.MoveDir,
+                    out result);
+            }
+
+            case BuiltinFunctionId.CopyDirOverwrite:
+            {
+                if (stack.Count < 3)
+                {
+                    return false;
+                }
+
+                var overwriteValue = stack.PeekUnchecked();
+                var destinationValue = stack.PeekUnchecked(1);
+                var sourceValue = stack.PeekUnchecked(2);
+                if (sourceValue.Type != TypeSymbol.String
+                    || destinationValue.Type != TypeSymbol.String
+                    || overwriteValue.Type != TypeSymbol.Boolean)
+                {
+                    return false;
+                }
+
+                return ExecuteFastTwoPathDirectoryMutation(
+                    frame,
+                    instructionIndex,
+                    "COPYDIR",
+                    GetStringUnchecked(sourceValue),
+                    GetStringUnchecked(destinationValue),
+                    hasOverwriteArgument: true,
+                    GetBooleanUnchecked(overwriteValue),
+                    isMove: false,
+                    out result);
+            }
+
+            case BuiltinFunctionId.RenameDir:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var newNameValue = stack.PeekUnchecked();
+                var pathValue = stack.PeekUnchecked(1);
+                if (pathValue.Type != TypeSymbol.String || newNameValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                return ExecuteFastRenameFileSystemEntry(
+                    frame,
+                    instructionIndex,
+                    "RENAMEDIR",
+                    GetStringUnchecked(pathValue),
+                    GetStringUnchecked(newNameValue),
+                    isDirectory: true,
+                    out result);
+            }
+
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecuteFastTwoPathFileMutation(
+        BytecodeCallFrame frame,
+        int instructionIndex,
+        string functionName,
+        string source,
+        string destination,
+        bool hasOverwriteArgument,
+        bool overwrite,
+        bool isMove,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        try
+        {
+            var sourcePath = NormalizeFileSystemPath(source);
+            var destinationPath = NormalizeFileSystemPath(destination);
+            if (!File.Exists(sourcePath))
+            {
+                return false;
+            }
+
+            if (isMove)
+            {
+                File.Move(sourcePath, destinationPath, overwrite);
+            }
+            else
+            {
+                File.Copy(sourcePath, destinationPath, overwrite);
+            }
+
+            var stack = frame.EvaluationStack;
+            stack.PopUnchecked();
+            stack.PopUnchecked();
+            if (hasOverwriteArgument)
+            {
+                stack.PopUnchecked();
+            }
+
+            result = RuntimeValue.FromBoolean(true);
+            return true;
+        }
+        catch (Exception ex) when (IsFileSystemException(ex))
+        {
+            ReportFileSystemFailure(functionName, "destination", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private bool ExecuteFastRenameFileSystemEntry(
+        BytecodeCallFrame frame,
+        int instructionIndex,
+        string functionName,
+        string source,
+        string newName,
+        bool isDirectory,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        try
+        {
+            var sourcePath = NormalizeFileSystemPath(source);
+            var exists = isDirectory ? Directory.Exists(sourcePath) : File.Exists(sourcePath);
+            if (!exists
+                || string.IsNullOrWhiteSpace(newName)
+                || newName != Path.GetFileName(newName)
+                || newName is "." or "..")
+            {
+                return false;
+            }
+
+            var parent = Path.GetDirectoryName(sourcePath);
+            if (string.IsNullOrEmpty(parent))
+            {
+                return false;
+            }
+
+            var destinationPath = Path.Combine(parent, newName);
+            if (isDirectory)
+            {
+                Directory.Move(sourcePath, destinationPath);
+            }
+            else
+            {
+                File.Move(sourcePath, destinationPath);
+            }
+
+            frame.EvaluationStack.PopUnchecked();
+            frame.EvaluationStack.PopUnchecked();
+            result = RuntimeValue.FromBoolean(true);
+            return true;
+        }
+        catch (Exception ex) when (IsFileSystemException(ex))
+        {
+            ReportFileSystemFailure(functionName, "newName", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private bool ExecuteFastTwoPathDirectoryMutation(
+        BytecodeCallFrame frame,
+        int instructionIndex,
+        string functionName,
+        string source,
+        string destination,
+        bool hasOverwriteArgument,
+        bool overwrite,
+        bool isMove,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        try
+        {
+            var sourcePath = NormalizeFileSystemPath(source);
+            var destinationPath = NormalizeFileSystemPath(destination);
+            if (!Directory.Exists(sourcePath))
+            {
+                return false;
+            }
+
+            if (isMove)
+            {
+                Directory.Move(sourcePath, destinationPath);
+            }
+            else
+            {
+                CopyDirectory(sourcePath, destinationPath, overwrite);
+            }
+
+            var stack = frame.EvaluationStack;
+            stack.PopUnchecked();
+            stack.PopUnchecked();
+            if (hasOverwriteArgument)
+            {
+                stack.PopUnchecked();
+            }
+
+            result = RuntimeValue.FromBoolean(true);
+            return true;
+        }
+        catch (Exception ex) when (IsFileSystemException(ex))
+        {
+            ReportFileSystemFailure(functionName, "destination", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
         }
     }
 

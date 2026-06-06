@@ -233,6 +233,8 @@ public sealed partial class Interpreter
             BuiltinFunctionId.ScreenMode => RuntimeValue.FromInteger(_host.ScreenMode),
             BuiltinFunctionId.ScreenWidth => RuntimeValue.FromInteger(_host.ScreenWidth),
             BuiltinFunctionId.ScreenHeight => RuntimeValue.FromInteger(_host.ScreenHeight),
+            BuiltinFunctionId.TextWidth => EvaluateTextWidth(expression, arguments[0].AsString()),
+            BuiltinFunctionId.TextHeight => EvaluateTextHeight(expression, arguments[0].AsString()),
             BuiltinFunctionId.PointPosition => EvaluatePoint(expression, arguments),
             BuiltinFunctionId.Point => EvaluatePoint(expression, arguments),
             BuiltinFunctionId.PMap => EvaluatePMap(expression, arguments),

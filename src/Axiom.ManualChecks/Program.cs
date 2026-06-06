@@ -425,13 +425,24 @@ static void WarmUpBenchmarkRuns(string sourceText, BenchmarkCase benchmark, Exec
 static ExecutionResult ExecuteBenchmarkRun(string sourceText, BenchmarkCase benchmark, ExecutionMode mode)
 {
     var pipeline = new AxiomExecutionPipeline();
-    IInputProvider? inputProvider = benchmark.UseGraphicsHost
-        ? new BenchmarkGraphicsHost()
-        : benchmark.InputLines.Count == 0
-            ? null
-            : new QueueInputProvider(benchmark.InputLines);
+    IInputProvider? inputProvider = benchmark.InputProviderFactory is not null
+        ? benchmark.InputProviderFactory()
+        : benchmark.UseGraphicsHost
+            ? new BenchmarkGraphicsHost()
+            : benchmark.InputLines.Count == 0
+                ? null
+                : new QueueInputProvider(benchmark.InputLines);
     var runtimeRandom = benchmark.RuntimeRandomFactory?.Invoke();
-    return pipeline.Run(new ExecutionRequest(sourceText, inputProvider: inputProvider, runtimeClock: benchmark.RuntimeClock, runtimeRandom: runtimeRandom, mode: mode));
+    var originalCurrentDirectory = Environment.CurrentDirectory;
+
+    try
+    {
+        return pipeline.Run(new ExecutionRequest(sourceText, inputProvider: inputProvider, runtimeClock: benchmark.RuntimeClock, runtimeRandom: runtimeRandom, mode: mode));
+    }
+    finally
+    {
+        Environment.CurrentDirectory = originalCurrentDirectory;
+    }
 }
 
 static OpcodeProfileResult ProfileBytecodeBenchmark(string root, BenchmarkCase benchmark)
@@ -448,11 +459,13 @@ static OpcodeProfileResult ProfileBytecodeBenchmark(string root, BenchmarkCase b
             compilation.Diagnostics.Concat(compilation.BackendDiagnostics).ToArray());
     }
 
-    IInputProvider inputProvider = benchmark.UseGraphicsHost
-        ? new BenchmarkGraphicsHost()
-        : benchmark.InputLines.Count == 0
-            ? NullRuntimeHost.Instance
-            : new QueueInputProvider(benchmark.InputLines);
+    IInputProvider inputProvider = benchmark.InputProviderFactory is not null
+        ? benchmark.InputProviderFactory()
+        : benchmark.UseGraphicsHost
+            ? new BenchmarkGraphicsHost()
+            : benchmark.InputLines.Count == 0
+                ? NullRuntimeHost.Instance
+                : new QueueInputProvider(benchmark.InputLines);
     var runtimeClock = benchmark.RuntimeClock ?? NullRuntimeHost.Instance;
     var runtimeRandom = benchmark.RuntimeRandomFactory?.Invoke() ?? NullRuntimeHost.Instance;
     var host = new ProfilingRuntimeHost(inputProvider, runtimeClock, runtimeRandom);
@@ -683,7 +696,19 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("Файлы: потоковое чтение и запись", @"samples/smoke/engine-compare/open_file_stream_cycle.axm"),
         new BenchmarkCase("Файлы: path/info sweep", @"samples/smoke/engine-compare/file_path_metadata_sweep.axm"),
         new BenchmarkCase("Файлы: управление и roundtrip", @"samples/smoke/engine-compare/file_management_roundtrip.axm"),
+        new BenchmarkCase("Файлы: очистка и навигация", @"samples/smoke/engine-compare/file_cleanup_navigation_probe.axm"),
         new BenchmarkCase("Файлы: диск и temp sweep", @"samples/smoke/engine-compare/drive_temp_storage_sweep.axm"),
+        new BenchmarkCase("Файлы: сведения о диске и корне пути", @"samples/smoke/engine-compare/drive_volume_metadata_sweep.axm"),
+        new BenchmarkCase("Файлы: временное хранилище и roundtrip", @"samples/smoke/engine-compare/temp_storage_roundtrip.axm"),
+        new BenchmarkCase("Файлы: создание temp и запись", @"samples/smoke/engine-compare/temp_creation_write_cycle.axm"),
+        new BenchmarkCase("Файлы: создание temp-путей", @"samples/smoke/engine-compare/temp_path_creation_probe.axm"),
+        new BenchmarkCase("Файлы: probe WRITEFILE temp", @"samples/smoke/engine-compare/temp_writefile_probe.axm"),
+        new BenchmarkCase("Файлы: размеры temp и очистка", @"samples/smoke/engine-compare/temp_size_cleanup_cycle.axm"),
+        new BenchmarkCase("Файлы: probe размеров temp", @"samples/smoke/engine-compare/temp_size_probe.axm"),
+        new BenchmarkCase("Файлы: probe очистки temp", @"samples/smoke/engine-compare/temp_cleanup_probe.axm"),
+        new BenchmarkCase("Файлы: probe FILESIZE temp", @"samples/smoke/engine-compare/temp_filesize_probe.axm"),
+        new BenchmarkCase("Файлы: probe DIRSIZE temp", @"samples/smoke/engine-compare/temp_dirsize_probe.axm"),
+        new BenchmarkCase("Массивы: staging двухфазного roundtrip", @"samples/smoke/engine-compare/array_staging_roundtrip.axm"),
         new BenchmarkCase("Регулярные выражения: журнал", @"samples/smoke/engine-compare/regex_log_analysis.axm"),
         new BenchmarkCase("Регекс: режимы и цепочка замен", @"samples/smoke/engine-compare/regex_modes_pipeline.axm"),
         new BenchmarkCase("Регекс: массивные результаты", @"samples/smoke/engine-compare/regex_array_result_mesh.axm"),
@@ -705,11 +730,14 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("PRINT / PRINT USING: output gallery", @"samples/smoke/engine-compare/print_output_gallery.axm"),
         new BenchmarkCase("Управляющий слой: ветвления и циклы", @"samples/smoke/engine-compare/control_flow_branch_maze.axm"),
         new BenchmarkCase("Процедуры и замыкания: routine pipeline", @"samples/smoke/engine-compare/routine_closure_pipeline.axm"),
+        new BenchmarkCase("Игровая логика: сетка maze_chase без графики", @"samples/smoke/engine-compare/maze_chase_grid_logic.axm"),
+        new BenchmarkCase("Игровой ввод: maze_chase без графики", @"samples/smoke/engine-compare/maze_chase_input_polling.axm", CreateMazeChaseInputPollingProvider),
         new BenchmarkCase("Многомерный ранг: metadata-проверка", @"samples/smoke/engine-compare/high_rank_metadata.axm"),
         new BenchmarkCase("Пользовательский TYPE: records и поля", @"samples/smoke/engine-compare/type_record_roundtrip.axm"),
         new BenchmarkCase("Современная графика: metadata image/sprite", @"samples/smoke/engine-compare/modern_graphics_metadata_sweep.axm", useGraphicsHost: true),
         new BenchmarkCase("Современная графика: burst примитивов CANVAS", @"samples/smoke/engine-compare/modern_canvas_primitive_burst.axm", useGraphicsHost: true),
         new BenchmarkCase("Современная графика: burst изображений и спрайтов", @"samples/smoke/engine-compare/modern_canvas_sprite_burst.axm", useGraphicsHost: true),
+        new BenchmarkCase("Современная графика: смешанный кадр maze_chase", @"samples/smoke/engine-compare/maze_chase_mixed_frame.axm", useGraphicsHost: true),
         new BenchmarkCase("Ввод: пакетный приём анкет", @"samples/smoke/engine-compare/input_record_intake.axm", BuildInputRecordIntakeLines())
     ];
 }
@@ -728,6 +756,24 @@ static string[] BuildInputRecordIntakeLines()
     }
 
     return lines;
+}
+
+static IInputProvider CreateMazeChaseInputPollingProvider()
+{
+    return new QueueKeyboardInputProvider(BuildMazeChaseInputPollingKeys(), ["LEFT"]);
+}
+
+static string[] BuildMazeChaseInputPollingKeys()
+{
+    var pattern = new[] { "K", "A", "SPACE", "ESC", "k", "B", "Л", "л" };
+    var keys = new string[pattern.Length * 220];
+
+    for (var repeat = 0; repeat < 220; repeat++)
+    {
+        Array.Copy(pattern, 0, keys, repeat * pattern.Length, pattern.Length);
+    }
+
+    return keys;
 }
 
 static IRuntimeClock CreateCurrentTimeBenchmarkClock()
@@ -930,35 +976,41 @@ sealed record BenchmarkCase(
     IReadOnlyList<string> InputLines,
     IRuntimeClock? RuntimeClock,
     Func<IRuntimeRandom>? RuntimeRandomFactory,
+    Func<IInputProvider>? InputProviderFactory,
     bool UseGraphicsHost)
 {
     public BenchmarkCase(string name, string relativePath)
-        : this(name, relativePath, Array.Empty<string>(), null, null, false)
+        : this(name, relativePath, Array.Empty<string>(), null, null, null, false)
     {
     }
 
     public BenchmarkCase(string name, string relativePath, IReadOnlyList<string> inputLines)
-        : this(name, relativePath, inputLines, null, null, false)
+        : this(name, relativePath, inputLines, null, null, null, false)
     {
     }
 
     public BenchmarkCase(string name, string relativePath, IReadOnlyList<string> inputLines, IRuntimeClock? runtimeClock)
-        : this(name, relativePath, inputLines, runtimeClock, null, false)
+        : this(name, relativePath, inputLines, runtimeClock, null, null, false)
     {
     }
 
     public BenchmarkCase(string name, string relativePath, IReadOnlyList<string> inputLines, IRuntimeClock? runtimeClock, Func<IRuntimeRandom>? runtimeRandomFactory)
-        : this(name, relativePath, inputLines, runtimeClock, runtimeRandomFactory, false)
+        : this(name, relativePath, inputLines, runtimeClock, runtimeRandomFactory, null, false)
     {
     }
 
     public BenchmarkCase(string name, string relativePath, bool useGraphicsHost)
-        : this(name, relativePath, Array.Empty<string>(), null, null, useGraphicsHost)
+        : this(name, relativePath, Array.Empty<string>(), null, null, null, useGraphicsHost)
     {
     }
 
     public BenchmarkCase(string name, string relativePath, IReadOnlyList<string> inputLines, IRuntimeClock? runtimeClock, bool useGraphicsHost)
-        : this(name, relativePath, inputLines, runtimeClock, null, useGraphicsHost)
+        : this(name, relativePath, inputLines, runtimeClock, null, null, useGraphicsHost)
+    {
+    }
+
+    public BenchmarkCase(string name, string relativePath, Func<IInputProvider> inputProviderFactory)
+        : this(name, relativePath, Array.Empty<string>(), null, null, inputProviderFactory, false)
     {
     }
 
@@ -975,6 +1027,26 @@ sealed class QueueInputProvider : IInputProvider
     }
 
     public string ReadInput(InputRequest request) => _values.Count > 0 ? _values.Dequeue() : string.Empty;
+}
+
+sealed class QueueKeyboardInputProvider : IInputProvider, IKeyboardInputProvider
+{
+    private readonly Queue<string> _keys;
+    private readonly HashSet<string> _pressedKeys;
+
+    public QueueKeyboardInputProvider(IEnumerable<string> keys, IEnumerable<string>? pressedKeys = null)
+    {
+        _keys = new Queue<string>(keys);
+        _pressedKeys = new HashSet<string>(
+            (pressedKeys ?? []).Select(KeyboardInputNormalizer.Normalize),
+            StringComparer.Ordinal);
+    }
+
+    public string ReadInput(InputRequest request) => string.Empty;
+
+    public string ReadKey() => _keys.Count > 0 ? _keys.Dequeue() : string.Empty;
+
+    public bool IsKeyDown(string keyText) => _pressedKeys.Contains(KeyboardInputNormalizer.Normalize(keyText));
 }
 
 sealed class ProfilingRuntimeHost : IRuntimeHost, IReversibleOutputWriter

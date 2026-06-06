@@ -47,6 +47,8 @@ public enum BuiltinFunctionId
     ScreenMode,
     ScreenWidth,
     ScreenHeight,
+    TextWidth,
+    TextHeight,
     PointPosition,
     Point,
     PMap,

@@ -625,6 +625,23 @@ PALETTE USING colors
     }
 
     [Fact]
+    public void Execute_PaletteUsingRequiresGraphicsScreen()
+    {
+        const string text = """
+DIM colors(0 TO 2) AS INTEGER
+colors(0) = 16
+colors(1) = 196
+colors(2) = 46
+PALETTE USING colors
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
     public void Execute_PCopyCopiesBetweenScreenPages()
     {
         const string text = """
@@ -674,6 +691,23 @@ PRINT IMAGEHEIGHT(hero)
 
         Assert.True(result.Succeeded);
         Assert.Equal(["0", "0", "3", "2"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TextMetricsReturnCanvasPixelSize()
+    {
+        const string text = """
+CANVAS 160, 90
+PRINT TEXTWIDTH("HUD")
+PRINT TEXTHEIGHT("HUD")
+PRINT TEXTWIDTH("A" + CHR(10) + "BC")
+PRINT TEXTHEIGHT("A" + CHR(10) + "BC")
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["24", "12", "16", "24"], host.Output);
     }
 
     [Fact]
@@ -958,6 +992,14 @@ PRESENT
         var (_, _, invalidRgbResult) = ExecuteProgram("PRINT RGB(256, 0, 0)");
         Assert.False(invalidRgbResult.Succeeded);
         Assert.Contains(invalidRgbResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingTextWidthCanvasResult) = ExecuteProgram("PRINT TEXTWIDTH(\"HUD\")");
+        Assert.False(missingTextWidthCanvasResult.Succeeded);
+        Assert.Contains(missingTextWidthCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+
+        var (_, _, missingTextHeightCanvasResult) = ExecuteProgram("PRINT TEXTHEIGHT(\"HUD\")");
+        Assert.False(missingTextHeightCanvasResult.Succeeded);
+        Assert.Contains(missingTextHeightCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
 
         var (_, _, missingCanvasResult) = ExecuteProgram("DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)");
         Assert.False(missingCanvasResult.Succeeded);

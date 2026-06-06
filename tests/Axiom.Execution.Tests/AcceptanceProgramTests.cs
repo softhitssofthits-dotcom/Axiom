@@ -54,6 +54,8 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/type_method_overload_ambiguous.axm", ExecutionStatus.SemanticFailure, "MB2033")]
     [InlineData("samples/acceptance/negative/type_constructor_invariant_false.axm", ExecutionStatus.RuntimeFailure, "MB3005")]
     [InlineData("samples/acceptance/negative/select_case_invalid_types.axm", ExecutionStatus.SemanticFailure, "MB2003")]
+    [InlineData("samples/control-flow/for/predeclared_counter_invalid_type.axm", ExecutionStatus.SemanticFailure, "MB2009")]
+    [InlineData("samples/operators/on-key/invalid_handler_parameter.axm", ExecutionStatus.SemanticFailure, "MB2034")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -105,6 +107,30 @@ public sealed class AcceptanceProgramTests
         Assert.True(bytecodeDiagnostic.Location.Column > 0);
         Assert.True(interpreterDiagnostic.Location.Line > 0);
         Assert.True(interpreterDiagnostic.Location.Column > 0);
+    }
+
+    [Theory]
+    [InlineData("samples/control-flow/for/predeclared_counter_invalid_type.axm", "MB2009")]
+    [InlineData("samples/operators/on-key/invalid_handler_parameter.axm", "MB2034")]
+    public void NegativeSemanticAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter(
+        string relativePath,
+        string expectedCode)
+    {
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+
+        var bytecodeResult = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var interpreterResult = Run(sourceText, mode: ExecutionMode.Interpreter);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, bytecodeResult.Status);
+        Assert.Equal(ExecutionStatus.SemanticFailure, interpreterResult.Status);
+        Assert.Equal(bytecodeResult.Output, interpreterResult.Output);
+
+        var bytecodeDiagnostic = Assert.Single(bytecodeResult.Diagnostics);
+        var interpreterDiagnostic = Assert.Single(interpreterResult.Diagnostics);
+        Assert.Equal(expectedCode, bytecodeDiagnostic.Code);
+        Assert.Equal(expectedCode, interpreterDiagnostic.Code);
+        Assert.Equal(bytecodeDiagnostic.Location.Line, interpreterDiagnostic.Location.Line);
+        Assert.Equal(bytecodeDiagnostic.Location.Column, interpreterDiagnostic.Location.Column);
     }
 
     [Fact]
@@ -2338,6 +2364,46 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void TextWidthAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/functions/textwidth/hud_metrics.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["72"], result.Output);
+        Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
+        Assert.Single(inputProvider.CanvasDrawTexts);
+        Assert.True(inputProvider.FillRects.Count >= 1);
+        Assert.True(inputProvider.DrawRects.Count >= 1);
+    }
+
+    [Fact]
+    public void TextHeightAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/functions/textheight/multiline_label.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["24"], result.Output);
+        Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
+        Assert.Single(inputProvider.CanvasDrawTexts);
+        Assert.True(inputProvider.FillRects.Count >= 1);
+        Assert.True(inputProvider.DrawRects.Count >= 1);
+    }
+
+    [Fact]
     public void ModernCameraAcceptanceSample_RunsOnBytecodeVm()
     {
         var relativePath = "samples/graphics/modern/camera_world.axm";
@@ -2379,6 +2445,10 @@ public sealed class AcceptanceProgramTests
     }
 
     [Theory]
+    [InlineData("samples/operators/circle/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/functions/point/invalid_selector_error.axm", "MB3007")]
+    [InlineData("samples/operators/color/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/operators/paint/text_screen_error.axm", "MB3010")]
     [InlineData("samples/operators/view/invalid_bounds_error.axm", "MB3007")]
     [InlineData("samples/operators/window/zero_size_error.axm", "MB3007")]
     [InlineData("samples/operators/paint/empty_pattern_error.axm", "MB3007")]
@@ -2387,8 +2457,13 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/graphics/screen/invalid_page_error.axm", "MB3007")]
     [InlineData("samples/operators/pcopy/invalid_page_error.axm", "MB3007")]
     [InlineData("samples/operators/pcopy/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/operators/palette/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/operators/palette/using_without_screen_error.axm", "MB3010")]
     [InlineData("samples/graphics/images/missing_image_error.axm", "MB3005")]
     [InlineData("samples/graphics/sprites/invalid_frame_error.axm", "MB3007")]
+    [InlineData("samples/graphics/modern/missing_canvas_error.axm", "MB3010")]
+    [InlineData("samples/graphics/modern/negative_radius_error.axm", "MB3007")]
+    [InlineData("samples/graphics/modern/invalid_text_position_error.axm", "MB3007")]
     public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string relativePath, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);

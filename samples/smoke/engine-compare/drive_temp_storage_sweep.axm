@@ -4,6 +4,9 @@
 
 DIM driveTarget AS STRING = CURRENTDIR()
 DIM checksum AS LONG = 0
+DIM tempFilePayload AS STRING = "drive-temp-file-content"
+DIM rootFilePayload AS STRING = "drive-temp-root-content"
+DIM nestedFilePayload AS STRING = "drive-temp-nested-content"
 
 FOR passIndex = 1 TO 60
     DIM tempFile AS STRING = MAKETEMPFILE("drive-temp-file_")
@@ -16,15 +19,15 @@ FOR passIndex = 1 TO 60
         checksum = checksum + 1
     END IF
 
-    IF WRITEFILE(tempFile, BuildPayload(passIndex)) THEN
+    IF WRITEFILE(tempFile, tempFilePayload) THEN
         checksum = checksum + 1
     END IF
 
-    IF WRITEFILE(rootFile, BuildPayload(passIndex + 100)) THEN
+    IF WRITEFILE(rootFile, rootFilePayload) THEN
         checksum = checksum + 1
     END IF
 
-    IF WRITEFILE(nestedFile, BuildPayload(passIndex + 200)) THEN
+    IF WRITEFILE(nestedFile, nestedFilePayload) THEN
         checksum = checksum + 1
     END IF
 
@@ -58,7 +61,3 @@ FOR passIndex = 1 TO 60
 NEXT
 
 PRINT checksum
-
-FUNCTION BuildPayload(seed AS INTEGER) AS STRING
-    RETURN "payload-" + TRIM(STR(seed)) + CHR(13) + CHR(10) + "drive-temp-" + TRIM(STR(seed * 37))
-END FUNCTION

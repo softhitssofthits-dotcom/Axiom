@@ -1,0 +1,7 @@
+' Ожидаемая диагностика: MB2034, ON KEY принимает только SUB без параметров
+' или SUB с одним параметром STRING.
+
+SUB HandleKey(keyCode AS INTEGER)
+END SUB
+
+ON KEY("ANY"), HandleKey

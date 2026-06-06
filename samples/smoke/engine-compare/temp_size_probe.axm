@@ -1,0 +1,41 @@
+' Сравнительный сценарий: размеры временного файла и каталога.
+' Нагружает прежде всего FILESIZE и DIRSIZE, а создание и очистка
+' служат только подготовкой одного и того же временного дерева.
+
+DIM checksum AS LONG = 0
+DIM rootFilePayload AS STRING = "temp-root-content"
+DIM nestedFilePayload AS STRING = "temp-nested-content"
+
+FOR passIndex = 1 TO 80
+    DIM tempDir AS STRING = MAKETEMPDIR("temp-size-probe-dir_")
+    DIM nestedDir AS STRING = COMBINEPATH(tempDir, "nested")
+    DIM rootFile AS STRING = COMBINEPATH(tempDir, "root.txt")
+    DIM nestedFile AS STRING = COMBINEPATH(nestedDir, "nested.txt")
+
+    IF MAKEDIR(nestedDir) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF WRITEFILE(rootFile, rootFilePayload) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF WRITEFILE(nestedFile, nestedFilePayload) THEN
+        checksum = checksum + 1
+    END IF
+
+    FOR probeIndex = 1 TO 8
+        checksum = checksum + FILESIZE(rootFile)
+        checksum = checksum + DIRSIZE(tempDir)
+    NEXT
+
+    IF DELETEFILE(rootFile) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF DELETEDIRRECURSIVE(tempDir) THEN
+        checksum = checksum + 1
+    END IF
+NEXT
+
+PRINT checksum

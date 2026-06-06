@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Графика</p>
             <h1 class="page-title">Современная графика CANVAS</h1>
-            <p class="lead"><code>CANVAS</code> даёт отдельную полноцветную поверхность для современных 2D-сценариев. Программа собирает рабочий кадр через <code>CLS</code>, прямоугольники, линии, круги, изображения, спрайты и <code>DRAWTEXT</code>, при необходимости смещает мир камерой через <code>CAMERA</code>, а затем показывает готовый результат оператором <code>PRESENT</code>.</p>
+            <p class="lead"><code>CANVAS</code> даёт отдельную полноцветную поверхность для современных 2D-сценариев. Программа собирает рабочий кадр через <code>CLS</code>, прямоугольники, линии, круги, изображения, спрайты и <code>DRAWTEXT</code>, может заранее измерить HUD-подпись через <code>TEXTWIDTH</code> и <code>TEXTHEIGHT</code>, при необходимости смещает мир камерой через <code>CAMERA</code>, а затем показывает готовый результат оператором <code>PRESENT</code>.</p>
 
             <section class="article-section">
                 <h2>Назначение</h2>
@@ -52,6 +52,8 @@ DRAWCIRCLE &lt;x&gt;, &lt;y&gt;, &lt;радиус&gt;, &lt;цвет&gt;
 FILLCIRCLE &lt;x&gt;, &lt;y&gt;, &lt;радиус&gt;, &lt;цвет&gt;
 
 DRAWTEXT &lt;текст&gt;, &lt;x&gt;, &lt;y&gt;, &lt;цвет&gt;
+TEXTWIDTH(&lt;текст&gt;)
+TEXTHEIGHT(&lt;текст&gt;)
 
 DRAWIMAGE &lt;image&gt;, &lt;x&gt;, &lt;y&gt;
 DRAWIMAGE &lt;image&gt;, &lt;x&gt;, &lt;y&gt;, &lt;ширина&gt;, &lt;высота&gt;
@@ -99,6 +101,7 @@ DRAWSPRITE &lt;sprite&gt;, &lt;кадр&gt;, &lt;x&gt;, &lt;y&gt;, &lt;шири�
                 <p><code>RGB(red, green, blue)</code> возвращает полноцветный код <code>0xRRGGBB</code>. При активном <code>CANVAS</code> оператор <code>CLS</code> очищает рабочий кадр чёрным цветом, а форма <code>CLS color</code> очищает его указанным полноцветным значением.</p>
                 <p><code>DRAWRECT</code> и <code>FILLRECT</code> рисуют контурный и заполненный прямоугольник. <code>DRAWLINE</code> рисует отрезок между двумя точками. <code>DRAWCIRCLE</code> и <code>FILLCIRCLE</code> вводятся как прямые игровые примитивы: они удобны для маркеров, снарядов, точек лабиринта и простых индикаторов.</p>
                 <p><code>DRAWTEXT</code> в текущем срезе рисует короткий пиксельный текст. Выбор шрифта, размера, выравнивания, переноса строк и масштабирования здесь ещё не поддерживается: оператор предназначен прежде всего для счёта, жизней и кратких сообщений поверх кадра.</p>
+                <p><code>TEXTWIDTH</code> и <code>TEXTHEIGHT</code> измеряют тот же текстовый договор до рисования. Сейчас используется фиксированная ячейка <code>8 x 12</code> пикселей на символ, <code>CHR(10)</code> начинает новую строку, <code>CHR(13)</code> игнорируется, поэтому этими функциями удобно рассчитывать рамку, подложку и выравнивание HUD перед вызовом <code>DRAWTEXT</code>.</p>
                 <p><code>DRAWIMAGE</code> и <code>DRAWSPRITE</code> используют те же формы, что и на <code>SCREEN</code>, но в окружении <code>CANVAS</code> их координаты тоже подчиняются камере, пока не выполнен <code>RESETCAMERA</code>.</p>
             </section>
 
@@ -129,7 +132,7 @@ SLEEP</code></pre>
                     <li><code>MB3007</code>: ширина или высота <code>DRAWRECT</code> / <code>FILLRECT</code> меньше либо равна нулю.</li>
                     <li><code>MB3007</code>: радиус <code>DRAWCIRCLE</code> / <code>FILLCIRCLE</code> отрицателен.</li>
                     <li><code>MB3007</code>: координаты <code>CAMERA</code>, <code>DRAWLINE</code>, <code>DRAWTEXT</code> и других современных примитивов выходят за поддерживаемый диапазон <code>-1000000000..1000000000</code>.</li>
-                    <li><code>MB3010</code>: <code>BEGINFRAME</code>, <code>PRESENT</code>, <code>CLS color</code>, <code>CAMERA</code>, <code>RESETCAMERA</code>, <code>DRAWRECT</code>, <code>FILLRECT</code>, <code>DRAWLINE</code>, <code>DRAWCIRCLE</code>, <code>FILLCIRCLE</code> или <code>DRAWTEXT</code> вызваны без активного <code>CANVAS</code>.</li>
+                    <li><code>MB3010</code>: <code>BEGINFRAME</code>, <code>PRESENT</code>, <code>CLS color</code>, <code>CAMERA</code>, <code>RESETCAMERA</code>, <code>DRAWRECT</code>, <code>FILLRECT</code>, <code>DRAWLINE</code>, <code>DRAWCIRCLE</code>, <code>FILLCIRCLE</code>, <code>DRAWTEXT</code>, <code>TEXTWIDTH</code> или <code>TEXTHEIGHT</code> вызваны без активного <code>CANVAS</code>.</li>
                     <li><code>MB3010</code>: <code>DRAWIMAGE</code> или <code>DRAWSPRITE</code> вызваны без активного <code>SCREEN</code> или <code>CANVAS</code>.</li>
                 </ul>
             </section>
@@ -140,6 +143,8 @@ SLEEP</code></pre>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/modern/rectangles_frame.axm">CANVAS: прямоугольники, IMAGE и SPRITE в двух кадрах</a></li>
                     <li><a href="../../samples/graphics/modern/hud_text.axm">CANVAS: HUD-текст после RESETCAMERA</a></li>
+                    <li><a href="../../samples/functions/textwidth/hud_metrics.axm">TEXTWIDTH: ширина HUD-подписи в CANVAS</a></li>
+                    <li><a href="../../samples/functions/textheight/multiline_label.axm">TEXTHEIGHT: высота многострочной подписи в CANVAS</a></li>
                     <li><a href="../../samples/graphics/modern/camera_world.axm">CANVAS: мировые координаты и камера</a></li>
                     <li><a href="../../samples/graphics/modern/lines_and_circles.axm">CANVAS: линии и круги</a></li>
                     <li><a href="../../samples/graphics/game/maze_chase.axm">maze_chase: флагманский игровой пример современного слоя</a></li>

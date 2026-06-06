@@ -4093,3 +4093,769 @@
 Следующий точный шаг:
 - если продолжать оптимизацию modern graphics, смотреть уже только на новый измеримый хвост из живого игрового сценария или на отдельную горячую арифметику вокруг sprite/image-циклов;
 - иначе переключаться на следующий производительный долг VM вне уже ускоренного слоя современной графики.
+
+## Session 956 - 2026-06-06 07:20 - maze_chase разложен до отдельного benchmark-а логики сетки
+
+Что сделано:
+- добавлен новый сценарий `samples/smoke/engine-compare/maze_chase_grid_logic.axm`, который выделяет из `samples/graphics/game/maze_chase.axm` только строковую карту, движение по клеткам, тоннели, выбор хода призрака и съедание точек без `CANVAS`, спрайтов и клавиатуры;
+- `src/Axiom.ManualChecks/Program.cs` расширен новым benchmark-case `Игровая логика: сетка maze_chase без графики`;
+- `docs/BYTECODE_PERF_MATRIX.md` и `docs/PLANS3.md` обновлены под новый выделенный игровой сценарий и новый вывод по долгу VM.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/maze_chase_grid_logic.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать сеточную игровую логику `maze_chase` подтверждённо не являющейся текущим долгом `BytecodeVm`, потому что в выделенном сценарии VM уже заметно быстрее интерпретатора;
+- не искать причину возможной медлительности живой игры внутри `CanMove`, `ChooseGhostDirection`, `StepWalker` и съедания точек без нового сигнала, потому что их адресный прогон уже хороший;
+- следующий шаг по `maze_chase`, если он понадобится, направлять уже в сторону смешанного графического кадра или ввода, а не обратно в чистую логику лабиринта.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 3 --warmup 1 --filter "maze_chase_grid_logic.axm"`:
+  - около `0.683x` runtime / `0.694x` total.
+
+Следующий точный шаг:
+- если брать ближайший долг вне графики, перейти к `samples/smoke/engine-compare/bitwise_shift_mesh.axm`;
+- если продолжать именно по `maze_chase`, выделить уже отдельный детерминированный сценарий на смешанный графический кадр без живой клавиатуры.
+
+## Session 957 - 2026-06-06 07:37 - смешанный кадр maze_chase подтверждён быстрым в BytecodeVm
+
+Что сделано:
+- доведён до рабочего состояния новый адресный сценарий `samples/smoke/engine-compare/maze_chase_mixed_frame.axm`: исправлены вызовы процедур `SUB` на форме с `()`, а цикл benchmark-а переведён на базовую форму `NEXT`, чтобы сценарий корректно проходил frontend;
+- подтверждено, что benchmark-case `Современная графика: смешанный кадр maze_chase` в `src/Axiom.ManualChecks/Program.cs` теперь реально исполняется и даёт успешный замер;
+- `docs/BYTECODE_PERF_MATRIX.md` и `docs/PLANS3.md` обновлены по новому игровому графическому срезу.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/maze_chase_mixed_frame.axm`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать `maze_chase` уже дважды проверенным адресными сценариями: и по сеточной логике, и по смешанному кадру без ввода `BytecodeVm` сейчас быстрее интерпретатора;
+- не держать `maze_chase` в ближайшем долге VM без нового живого сигнала, потому что подтверждённого проигрывающего среза в игре сейчас нет;
+- следующий практический шаг снова смещается к `bitwise_shift_mesh.axm` или к другому семейству без отдельного benchmark-а.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 3 --warmup 1 --filter "maze_chase_mixed_frame.axm"`:
+  - около `0.732x` runtime / `0.735x` total.
+
+Следующий точный шаг:
+- если брать ближайший долг вне графики, перейти к `samples/smoke/engine-compare/bitwise_shift_mesh.axm`;
+- если продолжать именно по игровым сценариям, искать уже новый живой пример, у которого ещё нет отдельного адресного `engine-compare`.
+
+## Session 958 - 2026-06-06 07:41 - bitwise_shift_mesh снят с ближайшего долга VM
+
+Что сделано:
+- перепроверен уже снятый длинный benchmark `samples/smoke/engine-compare/bitwise_shift_mesh.axm` по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-073910.txt`;
+- подтверждено, что длинний прогон `20` итераций с `3` прогревами держит около `0.855x` runtime / `0.856x` total, то есть побитовый подслой уже вошёл в целевой диапазон;
+- `docs/BYTECODE_PERF_MATRIX.md` и `docs/PLANS3.md` синхронизированы с новым фактическим числом вместо старого `0.968x` / `0.968x`.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать `bitwise_shift_mesh.axm` уже не просто рабочим паритетом, а подтверждённо хорошим адресным результатом `BytecodeVm`;
+- не держать побитовые операции и сдвиги ближайшим внеигровым долгом VM;
+- считать, что и `maze_chase`, и `bitwise_shift_mesh` сейчас закрыты как кандидаты на ближайший разгон.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "bitwise_shift_mesh.axm"`:
+  - около `0.855x` runtime / `0.856x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- profile-bytecode-opcodes --filter "bitwise_shift_mesh.axm"`:
+  - профиль подтверждает низкоуровневую нагрузку в `LoadLocal`, `StoreLocal`, `PushConst`, `And`, `ShiftLeft`, `Xor`, `Or`, `Convert`, `Modulo` и `ShiftRight`.
+
+Следующий точный шаг:
+- искать следующий производительный долг `BytecodeVm` уже в другом семействе языка, у которого ещё нет отдельного адресного benchmark-а или у которого есть только косвенное участие в смешанных сценариях;
+- к `maze_chase` и к побитовому подслою возвращаться только по новому измеримому сигналу.
+
+## Session 959 - 2026-06-06 07:44 - string_concat_accumulator подтверждён длинным прогоном
+
+Что сделано:
+- снят длинный benchmark `samples/smoke/engine-compare/string_concat_accumulator.axm` по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-074415.txt`;
+- подтверждено, что прогон `20` итераций с `3` прогревами держит около `0.522x` runtime / `0.534x` total;
+- `docs/BYTECODE_PERF_MATRIX.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы с новым устойчивым числом вместо старых коротких ориентиров.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать строковое накопление через `s = s & expr` и `s = s + expr` уже подтверждённо быстрым слоем `BytecodeVm`;
+- не держать `string_concat_accumulator.axm` новым кандидатом на разгон VM;
+- если смотреть только на уже измеренные адресные семейства, то ближе всего к следующему measured-шагу теперь остаются хостовые файловые сценарии около `0.985x .. 0.994x`.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "string_concat_accumulator.axm"`:
+  - около `0.522x` runtime / `0.534x` total.
+
+Следующий точный шаг:
+- либо искать следующий ещё невыделенный benchmark-family;
+- либо брать `samples/smoke/engine-compare/drive_temp_storage_sweep.axm` или `samples/smoke/engine-compare/file_management_roundtrip.axm` как ближайшие уже измеренные слои к границе `1.000x`.
+
+## Session 960 - 2026-06-06 07:48 - drive_temp_storage_sweep очищен от строкового шума
+
+Что сделано:
+- снят опкодный профиль старой версии `samples/smoke/engine-compare/drive_temp_storage_sweep.axm`, который показал лишнюю нагрузку не на disk/temp built-in, а на строковую сборку payload через `CHR`, `STR` и `TRIM`;
+- сам сценарий упрощён: запись временных файлов переведена на заранее подготовленные строки без локальной функции `BuildPayload(...)`;
+- после этого повторный профиль `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-opcode-profile-20260606-074737.txt` показал уже ожидаемый верх по `WRITEFILE`, `DIRSIZE`, `FREESPACE`, `MAKETEMPFILE`, `MAKETEMPDIR`, `DRIVENAME`, `DRIVEFORMAT`, `DRIVETYPE` и `PATHROOT`;
+- повторный длинный benchmark `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-074752.txt` дал около `0.921x` runtime / `0.921x` total вместо старых `0.992x` / `0.994x`.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/drive_temp_storage_sweep.axm`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать старое число `drive_temp_storage_sweep.axm` завышенным из-за нечистого benchmark-а, а не из-за явного долга `BytecodeVm`;
+- считать этот disk/temp-подслой уже заметно лучше прежней серой зоны и не брать его следующим объектом слепой микрооптимизации;
+- считать, что среди уже измеренных файловых семейств ближе всего к следующему measured-шагу теперь остаётся `file_management_roundtrip.axm`.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- profile-bytecode-opcodes --filter "drive_temp_storage_sweep.axm"`:
+  - старый профиль показал строковый шум в `CHR`, `STR`, `TRIM`;
+  - новый профиль после правки показал уже реальные disk/temp built-in;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "drive_temp_storage_sweep.axm"`:
+  - около `0.921x` runtime / `0.921x` total.
+
+Следующий точный шаг:
+- если брать ближайший measured-кандидат среди уже выделенных семейств, перейти к `samples/smoke/engine-compare/file_management_roundtrip.axm`;
+- если снова расширять матрицу, искать следующий ещё невыделенный benchmark-family.
+
+## Session 961 - 2026-06-06 08:57 - file_management_roundtrip переведён в рабочий паритет
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен прямой fast-path для file-management built-in, чтобы успешный путь шёл прямо со стека `BytecodeEvaluationStack` без общего `CallBuiltin`-dispatch;
+- адресные runtime-проверки по файловым built-in прошли успешно;
+- повторный длинный benchmark `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-085758.txt` дал около `0.969x` runtime / `0.969x` total вместо прежних `1.075x` / `1.074x`;
+- `docs/BYTECODE_PERF_MATRIX.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы с новым статусом.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать management-срез файловых built-in больше не прямым долгом, а рабочим паритетом;
+- считать, что среди уже выделенных неграфических адресных benchmark-семейств прямого долга `> 1.000x` сейчас не осталось;
+- не возвращаться к `file_management_roundtrip.axm` без нового профильного сигнала или отдельного решения дожимать его уже от `0.969x` к `<= 0.900x`.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~WriteFile|FullyQualifiedName~DeleteFile|FullyQualifiedName~CopyFile|FullyQualifiedName~MoveFile|FullyQualifiedName~RenameFile|FullyQualifiedName~DeleteDirRecursive|FullyQualifiedName~CopyDir|FullyQualifiedName~MoveDir|FullyQualifiedName~RenameDir|FullyQualifiedName~CurrentDir|FullyQualifiedName~ChangeDir"`:
+  - пройдено `4`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_management_roundtrip.axm"`:
+  - около `0.969x` runtime / `0.969x` total.
+
+Следующий точный шаг:
+- если нужен ближайший measured-шаг вне графики, перейти к `samples/smoke/engine-compare/drive_temp_storage_sweep.axm` как к ближайшему серому слою;
+- если важнее новый сигнал, искать ещё неразложенное неграфическое benchmark-family.
+
+## Session 962 - 2026-06-06 09:18 - disk/temp слой разложен на два честных адресных benchmark-а
+
+Что сделано:
+- в `samples/smoke/engine-compare/` добавлены два новых сценария: `drive_volume_metadata_sweep.axm` и `temp_storage_roundtrip.axm`;
+- `src/Axiom.ManualChecks/Program.cs` обновлён, чтобы новые файловые сценарии участвовали в `compare-engines` и `profile-bytecode-opcodes`;
+- длинний прогон `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-091634.txt` показал около `0.724x` runtime / `0.736x` total для `drive_volume_metadata_sweep.axm`;
+- длинний прогон `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-091651.txt` показал около `0.961x` runtime / `0.960x` total для `temp_storage_roundtrip.axm`;
+- отдельный профиль `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-opcode-profile-20260606-091743.txt` показал, что внутри `temp_storage_roundtrip.axm` верх сидит в `COMBINEPATH` и `WRITEFILE`.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/drive_volume_metadata_sweep.axm`
+- `samples/smoke/engine-compare/temp_storage_roundtrip.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- не считать старый mixed `drive_temp_storage_sweep.axm` главным ориентиром для следующего measured-дожима;
+- считать drive/volume-подслой уже снятым с повестки, потому что отдельный benchmark показал уверенное `0.724x`;
+- считать новым ближайшим файловым серым слоем уже `temp_storage_roundtrip.axm`, а не весь прежний смешанный disk/temp-сценарий.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "drive_volume_metadata_sweep.axm"`:
+  - около `0.724x` runtime / `0.736x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "temp_storage_roundtrip.axm"`:
+  - около `0.961x` runtime / `0.960x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- profile-bytecode-opcodes --filter "temp_storage_roundtrip.axm"`:
+  - верхние built-in: `COMBINEPATH`, `WRITEFILE`, затем `DELETEDIRRECURSIVE`, `DELETEFILE`, `DIRSIZE`, `FILESIZE`, `MAKEDIR`, `MAKETEMPDIR`, `MAKETEMPFILE`.
+
+Следующий точный шаг:
+- если продолжать measured-разгон вне графики, идти в `samples/smoke/engine-compare/temp_storage_roundtrip.axm`;
+- если нужен другой сигнал, искать ещё неразложенное неграфическое benchmark-family.
+
+## Session 963 - 2026-06-06 09:18 - `COMBINEPATH` отдельно дожал temp_storage_roundtrip
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` оставлен прямой fast-path для `COMBINEPATH` поверх уже существующего file-management fast-path;
+- более широкая temp/file-пачка fast-path проверялась отдельно, но не дала устойчивого подтверждения и не была зафиксирована как итоговое решение;
+- длинний контроль `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-093207.txt` по `samples/smoke/engine-compare/temp_storage_roundtrip.axm` (`40` итераций, `5` прогревов) дал около `0.960x` runtime / `0.960x` total;
+- `docs/BYTECODE_PERF_MATRIX.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы под этот устойчивый ориентир.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать `COMBINEPATH` полезным локальным дожимом именно для честного temp/file-среза;
+- не считать более широкий temp/file fast-path подтверждённым улучшением без устойчивого числа;
+- считать, что ближайший measured-кандидат внутри `temp_storage_roundtrip.axm` теперь уже `WRITEFILE`.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~CombinePath|FullyQualifiedName~WriteFile|FullyQualifiedName~DeleteFile|FullyQualifiedName~DeleteDirRecursive|FullyQualifiedName~CurrentDir|FullyQualifiedName~ChangeDir"`:
+  - пройдено `3`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 40 --warmup 5 --filter "temp_storage_roundtrip.axm"`:
+  - около `0.960x` runtime / `0.960x` total.
+
+Следующий точный шаг:
+- если продолжать measured-разгон вне графики, идти в `samples/smoke/engine-compare/temp_storage_roundtrip.axm` и адресно смотреть `WRITEFILE`;
+- если нужен другой сигнал, искать ещё неразложенное неграфическое benchmark-family.
+
+## Session 964 - 2026-06-06 09:48 - `DIRSIZE` вытянул temp size/cleanup-подслой в паритет
+
+Что сделано:
+- temp/file-семейство дополнительно разложено на новые сценарии `temp_creation_write_cycle.axm`, `temp_size_cleanup_cycle.axm`, `temp_size_probe.axm`, `temp_cleanup_probe.axm`, `temp_filesize_probe.axm` и `temp_dirsize_probe.axm`;
+- замеры показали такой срез: `temp_creation_write_cycle.axm` около `0.925x` / `0.920x`, `temp_cleanup_probe.axm` около `0.924x` / `0.923x`, `temp_size_probe.axm` около `0.942x` / `0.942x`, `temp_filesize_probe.axm` около `0.884x` / `0.885x`;
+- длинный контроль `temp_size_cleanup_cycle.axm` (`40/5`) сначала подтвердил прямой долг около `1.058x` / `1.064x`;
+- после этого в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен прямой fast-path для `DIRSIZE`;
+- новый `temp_dirsize_probe.axm` после правки стал держаться около `0.923x` / `0.923x`, а `temp_size_cleanup_cycle.axm` на повторном длинном контроле `40/5` ушёл до примерно `0.983x` / `0.982x`.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/temp_creation_write_cycle.axm`
+- `samples/smoke/engine-compare/temp_size_cleanup_cycle.axm`
+- `samples/smoke/engine-compare/temp_size_probe.axm`
+- `samples/smoke/engine-compare/temp_cleanup_probe.axm`
+- `samples/smoke/engine-compare/temp_filesize_probe.axm`
+- `samples/smoke/engine-compare/temp_dirsize_probe.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать, что size/cleanup-половина temp/file-семейства больше не является прямым долгом VM;
+- считать `DIRSIZE` закрытым как ближайший узкий measured-кандидат;
+- перенести следующий точный шаг к creation/write-половине, где сверху остаются `COMBINEPATH` и `WRITEFILE`, но `COMBINEPATH` уже частично дожат.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~DirSize|FullyQualifiedName~FreeSpace|FullyQualifiedName~FileSystemReturnsCurrentDirectorySizeAndFreeSpace|FullyQualifiedName~WriteFile|FullyQualifiedName~DeleteDirRecursive|FullyQualifiedName~CombinePath"`:
+  - пройдено `2`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "temp_dirsize_probe.axm"`:
+  - около `0.923x` runtime / `0.923x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 40 --warmup 5 --filter "temp_size_cleanup_cycle.axm"`:
+  - около `0.983x` runtime / `0.982x` total.
+
+Следующий точный шаг:
+- если продолжать measured-разгон вне графики, идти в `samples/smoke/engine-compare/temp_creation_write_cycle.axm`;
+- следующим узким кандидатом внутри него брать `WRITEFILE`.
+
+## Session 965 - 2026-06-06 10:05 - длинный контроль снял ложный хвост у `WRITEFILE`
+
+Что сделано:
+- проверен более длинний контроль `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-100158.txt` для `samples/smoke/engine-compare/temp_writefile_probe.axm` с `40` итерациями и `5` прогревами;
+- этот контроль показал уже около `0.929x` runtime / `0.929x` total, хотя короткий прогон `20/3` один раз шумел около `1.015x`;
+- дополнительно подтверждено, что `samples/smoke/engine-compare/temp_path_creation_probe.axm` держится около `0.998x` runtime / `0.996x` total;
+- `docs/BYTECODE_PERF_MATRIX.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы под этот более честный вывод.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать короткий серый результат у `temp_writefile_probe.axm` шумом, а не подтверждённым долгом VM;
+- считать, что отдельного прямого хвоста у `WRITEFILE` на текущем temp/file-разрезе сейчас не видно;
+- не продолжать слепой дожим temp/file-половины без нового устойчивого профильного сигнала.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "temp_writefile_probe.axm"`:
+  - один шумный прогон дал около `1.015x` runtime / `1.015x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 40 --warmup 5 --filter "temp_writefile_probe.axm"`:
+  - около `0.929x` runtime / `0.929x` total.
+
+Следующий точный шаг:
+- если продолжать measured-разгон вне графики, искать уже другой ещё невыделенный неграфический benchmark-family;
+- к temp/file-слою возвращаться только по новому устойчивому сигналу, а не по старой гипотезе про `WRITEFILE`.
+
+## Session 966 - 2026-06-06 10:15 - `array_staging_roundtrip` снял гипотезу про скрытый массивный хвост
+
+Что сделано:
+- доведена синхронизация реестров вокруг `samples/smoke/engine-compare/array_staging_roundtrip.axm`, который уже был подключён в `Axiom.ManualChecks`, но ещё не был отражён в активных документах;
+- по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-094149.txt` зафиксирован результат около `0.474x` runtime / `0.580x` total;
+- этим отдельным срезом подтверждено, что двухфазный staging через массивы строк и чисел сам по себе не является хвостом VM и не скрывает старый temp/file-долг.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать массивный staging-подслой уже уверенно быстрым;
+- не возвращаться к гипотезе о скрытом массивном хвосте внутри temp/file-семейства;
+- следующий measured-поиск долга вести уже в другом неграфическом family или по новому профильному сигналу.
+
+Проверки:
+- использован уже полученный длинный замер `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-094149.txt` для `samples/smoke/engine-compare/array_staging_roundtrip.axm`:
+  - около `0.474x` runtime / `0.580x` total.
+
+Следующий точный шаг:
+- если продолжать measured-разгон вне графики, искать следующую отдельную дыру в coverage/perf-матрице, а не дожимать уже снятые temp/file и staging-гипотезы;
+- к коду `BytecodeVm` возвращаться только под новый устойчивый замер или новый опкодный профиль.
+
+## Session 967 - 2026-06-06 10:24 - верхние строки реестров досинхронизированы со строковым и процедурным слоями
+
+Что сделано:
+- верхняя строка строкового семейства в `docs/BYTECODE_PERF_MATRIX.md` дополнена отдельным адресным сценарием `samples/smoke/engine-compare/string_concat_accumulator.axm` и его устойчивым числом около `0.522x` runtime / `0.534x` total;
+- строка `Процедуры и функции` в `docs/BYTECODE_COVERAGE.md` согласована с уже существующим адресным benchmark `samples/smoke/engine-compare/routine_closure_pipeline.axm`, который держится около `0.861x` runtime / `0.874x` total;
+- `docs/PLANS3.md` синхронизирован так, чтобы следующий шаг уже искал новую дыру, а не старый документный несинхрон.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать, что верхние строки реестров теперь честно отражают уже измеренные строковый и процедурный подслои;
+- не тратить следующий шаг на повторную досинхронизацию этих уже закрытых областей;
+- искать новый внеграфический measured-долг уже по отдельному family или по новому профильному сигналу.
+
+Проверки:
+- использованы уже зафиксированные длинные замеры:
+  - `samples/smoke/engine-compare/string_concat_accumulator.axm`: около `0.522x` runtime / `0.534x` total;
+  - `samples/smoke/engine-compare/routine_closure_pipeline.axm`: около `0.861x` runtime / `0.874x` total.
+
+Следующий точный шаг:
+- если продолжать работу по VM вне графики, искать family без собственного адресного `engine-compare`-сценария;
+- если по матрице явной новой дыры не видно, переходить к точечной досверке строк `Негативный паритет`, где пока ещё стоит `частично`.
+
+## Session 968 - 2026-06-06 10:29 - shortcut нормализации путей отклонён после длинного temp/file-контроля
+
+Что сделано:
+- после документной синхронизации отдельно проверен внутренний shortcut в `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.FileSystem.cs`, который должен был пропускать `ExpandEnvironmentVariables + GetFullPath` на уже абсолютных канонических путях;
+- точечные runtime-тесты файлового слоя прошли успешно: `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~FileSystemPathHelpersReturnExpectedValues|FullyQualifiedName~BuiltinFileSystemCopiesMovesRenamesAndDeletesFiles|FullyQualifiedName~BuiltinFileSystemCopiesMovesRenamesAndDeletesDirectories|FullyQualifiedName~BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively|FullyQualifiedName~BuiltinFileSystemCreatesTemporaryFileAndDirectory|FullyQualifiedName~BuiltinFileSystemReturnsExtendedPathAndDriveInfo"` дал `6/6`;
+- длинный `file_management_roundtrip.axm` после этой локальной правки показал около `0.960x` runtime / `0.960x` total;
+- длинный `temp_path_creation_probe.axm` показал сначала около `0.907x` / `0.904x`, а повторно около `0.922x` / `0.923x`;
+- но решающий длинный `temp_storage_roundtrip.axm` на чистом последовательном контроле `40/5` по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-102811.txt` дал уже около `1.011x` runtime / `1.012x` total;
+- после этого shortcut из `BytecodeVm.Builtins.FileSystem.cs` сразу убран и не оставлен в итоговом состоянии дерева.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.FileSystem.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать shortcut нормализации путей ложным локальным следом, а не подтверждённым улучшением VM;
+- не держать его как рабочую оптимизацию, потому что честный temp/file-контроль ушёл обратно в прямой долг;
+- следующий measured-шаг внутри файлового слоя искать уже не в `NormalizeFileSystemPath(...)`, а в другом узком подслое.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~FileSystemPathHelpersReturnExpectedValues|FullyQualifiedName~BuiltinFileSystemCopiesMovesRenamesAndDeletesFiles|FullyQualifiedName~BuiltinFileSystemCopiesMovesRenamesAndDeletesDirectories|FullyQualifiedName~BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively|FullyQualifiedName~BuiltinFileSystemCreatesTemporaryFileAndDirectory|FullyQualifiedName~BuiltinFileSystemReturnsExtendedPathAndDriveInfo"`:
+  - пройдено `6`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_management_roundtrip.axm"`:
+  - около `0.960x` runtime / `0.960x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 40 --warmup 5 --filter "temp_path_creation_probe.axm"`:
+  - около `0.907x` runtime / `0.904x` total, повторно около `0.922x` / `0.923x`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 40 --warmup 5 --filter "temp_storage_roundtrip.axm"`:
+  - около `1.011x` runtime / `1.012x` total на чистом последовательном контроле.
+
+Следующий точный шаг:
+- если продолжать разгон файлового слоя, снимать новый адресный профиль уже для `DELETEFILE`, `DELETEDIRRECURSIVE`, `CHANGEDIR` и `CURRENTDIR` как верхних built-in в `file_management_roundtrip`;
+- если уходить от файлового слоя, брать новую внеграфическую дыру в матрице или досверять строки `Негативный паритет` со статусом `частично`.
+
+## Session 969 - 2026-06-06 10:32 - cleanup/navigation-подслой файлов выделен в отдельный probe
+
+Что сделано:
+- добавлен новый сценарий `samples/smoke/engine-compare/file_cleanup_navigation_probe.axm`, который нагружает прежде всего `DELETEFILE`, `DELETEDIRRECURSIVE`, `CHANGEDIR` и `CURRENTDIR` с минимальной примесью `COPY*`/`MOVE*`;
+- `src/Axiom.ManualChecks/Program.cs` обновлён, чтобы этот сценарий участвовал в `compare-engines`;
+- длинный прогон `20` итераций с `3` прогревами по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-103142.txt` дал около `0.968x` runtime / `0.969x` total;
+- `docs/BYTECODE_PERF_MATRIX.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md` синхронизированы под новый подслой.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/file_cleanup_navigation_probe.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать cleanup/navigation-подслой файлов теперь выделенным отдельно и честно измеренным;
+- считать, что этот подслой уже в рабочем паритете, но всё ещё не в целевом диапазоне `<= 0.900x`;
+- использовать его как следующую чистую точку для опкодного профиля, если продолжать дожимать файловый слой.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_cleanup_navigation_probe.axm"`:
+  - около `0.968x` runtime / `0.969x` total.
+
+Следующий точный шаг:
+- если продолжать measured-разгон файлового слоя, снять `profile-bytecode-opcodes --filter "file_cleanup_navigation_probe.axm"` и уже по нему решать, что дожимать первым: `DELETEFILE`, `DELETEDIRRECURSIVE`, `CHANGEDIR` или `CURRENTDIR`;
+- если уйти от файлового слоя, брать другую внеграфическую дыру в матрице или точечно досверять `Негативный паритет`.
+
+## Session 970 - 2026-06-06 10:38 - `CURRENTDIR` заметно подтянул cleanup/navigation-подслой
+
+Что сделано:
+- новый `file_cleanup_navigation_probe.axm` дополнительно упрощён, чтобы меньше шумели `COMBINEPATH`, `STR`, `TRIM`, лишняя запись и лишние файловые пути;
+- повторный опкодный профиль `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-opcode-profile-20260606-103510.txt` показал уже куда более честный верх по `CURRENTDIR`, `CHANGEDIR`, `DELETEDIRRECURSIVE`, `DELETEFILE`, при том что `MAKEDIR` и `WRITEFILE` остались только как поддерживающий фон сценария;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` для fast-path `CURRENTDIR` убрана лишняя повторная нормализация `Environment.CurrentDirectory`;
+- точечные runtime-тесты `CURRENTDIR`/`CHANGEDIR` прошли: `3/3`;
+- новый длинный прогон `20/3` по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-103726.txt` дал около `0.917x` runtime / `0.918x` total вместо прежних примерно `0.968x` / `0.969x` у старой версии cleanup/navigation-среза.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/file_cleanup_navigation_probe.axm`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать узкий fast-path `CURRENTDIR` подтверждённым улучшением VM;
+- считать cleanup/navigation-подслой файлов заметно подтянутым и почти доведённым до целевого диапазона;
+- следующий measured-кандидат внутри этого же подслоя переносится на `CHANGEDIR`.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~BuiltinFileSystemReturnsCurrentDirectorySizeAndFreeSpace|FullyQualifiedName~BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively|FullyQualifiedName~BuiltinFileSystemReportsMissingDirectoryForChangeDir"`:
+  - пройдено `3`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_cleanup_navigation_probe.axm"`:
+  - около `0.917x` runtime / `0.918x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- profile-bytecode-opcodes --filter "file_cleanup_navigation_probe.axm"`:
+  - верхние built-in: `CURRENTDIR`, `MAKEDIR`, `CHANGEDIR`, `DELETEDIRRECURSIVE`, `DELETEFILE`, `WRITEFILE`.
+
+Следующий точный шаг:
+- если продолжать разгон файлового слоя, адресно дожимать `CHANGEDIR` в `file_cleanup_navigation_probe.axm`;
+- если менять направление, брать другую внеграфическую дыру или точечно досверять `Негативный паритет`.
+
+## Session 971 - 2026-06-06 10:44 - `CHANGEDIR` довёл cleanup/navigation-срез почти до цели
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` для fast-path `CHANGEDIR` убрана отдельная предварительная `Directory.Exists(...)`; успешный путь теперь сразу идёт в `Directory.SetCurrentDirectory(...)`, а отсутствие каталога отличаем через `DirectoryNotFoundException`;
+- точечные runtime-тесты файлового слоя снова прошли: `3/3`;
+- новый длинный прогон `file_cleanup_navigation_probe.axm` (`20/3`) по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-104234.txt` дал уже около `0.900x` runtime / `0.901x` total;
+- отдельный широкий контроль `file_management_roundtrip.axm` (`20/3`) по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-104325.txt` дал около `0.975x` runtime / `0.974x` total, то есть локальный выигрыш пока не поднял весь management-срез.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать узкий fast-path `CHANGEDIR` подтверждённым улучшением внутри cleanup/navigation-подслоя;
+- считать этот подслой практически доведённым до целевого диапазона;
+- не считать весь `file_management_roundtrip` автоматически подтянутым, пока это не подтверждено отдельным честным замером.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively|FullyQualifiedName~BuiltinFileSystemReportsMissingDirectoryForChangeDir|FullyQualifiedName~BuiltinFileSystemReturnsCurrentDirectorySizeAndFreeSpace"`:
+  - пройдено `3`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_cleanup_navigation_probe.axm"`:
+  - около `0.900x` runtime / `0.901x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_management_roundtrip.axm"`:
+  - около `0.975x` runtime / `0.974x` total.
+
+Следующий точный шаг:
+- если продолжать дожим именно этого подслоя, смотреть `DELETEFILE` и `DELETEDIRRECURSIVE`;
+- если уходить на другой фронт, брать новую внеграфическую дыру или точечно досверять `Негативный паритет`.
+
+## Session 972 - 2026-06-06 10:51 - `DELETEFILE` и `DELETEDIRRECURSIVE` сняли узкий cleanup/navigation-хвост
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` для fast-path `DELETEFILE` и `DELETEDIRRECURSIVE` убраны лишние предварительные проверки `File.Exists(...)` и `Directory.Exists(...)`;
+- отсутствие файла или каталога на пользовательском пути по-прежнему возвращает `FALSE`, но теперь определяется уже через `FileNotFoundException`, `DirectoryNotFoundException` и безопасный `IOException`-фильтр;
+- точечные runtime-тесты файлового слоя снова прошли: `3/3`;
+- новый длинный прогон `file_cleanup_navigation_probe.axm` (`20/3`) по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-104930.txt` дал около `0.816x` runtime / `0.818x` total;
+- отдельный широкий контроль `file_management_roundtrip.axm` (`20/3`) по отчёту `C:\Axiom\.artifacts\manual-checks\axiom-engine-compare-20260606-105022.txt` дал только около `0.996x` runtime / `0.996x` total.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать узкий cleanup/navigation-подслой файлов больше не производительным долгом `BytecodeVm`;
+- не считать весь `file_management_roundtrip` ускоренным этим же шагом, потому что широкий management-срез остался только около паритета;
+- следующий measured-поиск долга переносить либо на другой файловый подслой, либо уже вне файлового семейства.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --filter "Execute_CompiledFileSystemBuiltinReportsMissingFile|Execute_BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively|Execute_BuiltinFileSystemReturnsCurrentDirectorySizeAndFreeSpace"`:
+  - пройдено `3`, не пройдено `0`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_cleanup_navigation_probe.axm"`:
+  - около `0.816x` runtime / `0.818x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "file_management_roundtrip.axm"`:
+  - около `0.996x` runtime / `0.996x` total.
+
+Следующий точный шаг:
+- если оставаться в файловом слое, дробить уже не cleanup/navigation, а другой смешанный подслой внутри `file_management_roundtrip` или `temp_storage_roundtrip`;
+- если уходить из файлового слоя, брать следующую внеграфическую дыру из матрицы или строки `Негативный паритет` со статусом `частично`.
+
+## Session 973 - 2026-06-06 11:20 - файловый cleanup/navigation-хвост закрыт и синхронизирован в реестрах
+
+Что сделано:
+- досинхронизированы `docs/BYTECODE_PERF_MATRIX.md` и `docs/BYTECODE_COVERAGE.md` под финальные измерения файлового слоя: `file_cleanup_navigation_probe.axm` около `0.816x` runtime / `0.818x` total, `file_management_roundtrip.axm` около `0.996x` / `0.996x`, `temp_creation_write_cycle.axm` около `0.937x` / `0.939x`, `temp_writefile_probe.axm` около `0.923x` / `0.923x`;
+- в реестрах явно зафиксировано, что полезные file fast-path для `CURRENTDIR`, `CHANGEDIR`, `DELETEFILE` и `DELETEDIRRECURSIVE` оставлены в коде, а два ложных пути отвергнуты: снятие `Exists` у `COPYFILE` / `MOVEFILE` / `RENAMEFILE` и отдельный byte-cache для `WRITEFILE`;
+- в `docs/BYTECODE_COVERAGE.md` добавлен адресный bytecode-тест `Run_WithBytecodeMode_ReportsCopyFileMissingSourceFromVm()` как подтверждение негативного договора VM для отсутствующего исходника `COPYFILE`;
+- в `docs/PLANS3.md` добавлена новая точка остановки: cleanup/navigation-хвост закрыт, а следующий measured-поиск нужно переносить уже не на слепой файловый дожим.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать файловый cleanup/navigation-хвост закрытым не только в коде, но и в проектных реестрах;
+- считать широкий management-срез и temp/file-семейство текущим рабочим паритетом, а не отдельным подтверждённым долгом VM;
+- не продолжать микрооптимизации файлового слоя без нового устойчивого профиля хуже `1.000x`.
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_BuiltinFileSystemReportsCopyFileMissingSource|FullyQualifiedName~Execute_BuiltinFileSystemChangesCurrentDirectoryAndDeletesDirectoryRecursively|FullyQualifiedName~Execute_BuiltinFileSystemReturnsCurrentDirectorySizeAndFreeSpace|FullyQualifiedName~Execute_BuiltinFileSystemReportsMissingDirectoryForChangeDir"`:
+  - пройдено `4`, не пройдено `0`;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~Run_WithBytecodeMode_ReportsCopyFileMissingSourceFromVm"`:
+  - пройдено `1`, не пройдено `0`.
+
+Следующий точный шаг:
+- искать следующий долг VM уже вне закрытого cleanup/navigation-подслоя: либо по новой внеграфической benchmark-семье, либо по строкам `Негативный паритет` со статусом `частично`;
+- если возвращаться к файловому слою, сначала снимать новый адресный профиль другого смешанного подслоя, а не продолжать дожим уже закрытого хвоста.
+
+## Session 974 - 2026-06-06 11:26 - modern graphics получил runnable negative-parity для второго среза
+
+Что сделано:
+- добавлены три отрицательных runnable sample для современного `CANVAS`: `samples/graphics/modern/missing_canvas_error.axm`, `samples/graphics/modern/negative_radius_error.axm`, `samples/graphics/modern/invalid_text_position_error.axm`;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` расширен: `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(...)` теперь прогоняет эти три сценария через interpreter и `BytecodeVm` с проверкой одинаковых `MB3010` / `MB3007`;
+- `docs/BYTECODE_COVERAGE.md` обновлён: строка второго modern-graphics-среза переведена с `Негативный паритет: частично` на `да`.
+
+Изменённые файлы:
+- `samples/graphics/modern/missing_canvas_error.axm`
+- `samples/graphics/modern/negative_radius_error.axm`
+- `samples/graphics/modern/invalid_text_position_error.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать negative-parity хвост второго современного графического среза закрытым;
+- не возвращаться к этой области ради новых отрицательных sample, пока не появится новый пользовательский договор или новая диагностика;
+- следующий короткий долг брать уже из других строк `Негативный паритет: частично`.
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity"`:
+  - пройдено `13`, не пройдено `0`;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Execute_CanvasOperationsReportDocumentedDiagnostics|FullyQualifiedName~Execute_CompiledCanvasOperationsReportDocumentedDiagnostics"`:
+  - пройдено `2`, не пройдено `0`.
+
+Следующий точный шаг:
+- взять следующую строку `Негативный паритет: частично`, где уже есть runtime/VM-покрытие, но ещё не хватает runnable negative sample;
+- если такой короткий хвост не найдётся без новой семантики, переключаться на новую benchmark-семью вне графики.
+
+## Session 975 - 2026-06-06 22:01 - закреплён строгий компактный агентный режим
+
+Что сделано:
+- после обязательного перечитывания `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` отдельно разобран запрос на экономию токенов через внешние агентные репозитории;
+- проверено, что линия `Headroom` у проекта уже частично есть: `docs/agent/HEADROOM_PILOT.md`, `docs/agent/README.md`, `README.md` и локальный `scripts/ai-context.ps1`;
+- в `AGENTS.md` добавлен постоянный раздел `Правило компактного агентного режима и экономии токенов`, который закрепляет приоритет локального `docs/agent/`-слоя, обязательное тематическое сужение контекста и запрет превращать внешние task/memory-инструменты во второй источник правды;
+- устаревший `docs/agent/CURRENT_STATE.md` переписан под реальное текущее состояние проекта вместо старого шага с первым modern-graphics-срезом;
+- добавлен `docs/agent/EXTERNAL_TOOLS_EVALUATION.md` с проектным решением по `Headroom`, `RTK`, `Task Master` и `Caveman`;
+- `docs/agent/README.md`, `docs/agent/PLAYBOOKS.md` и `README.md` синхронизированы с новым агентным контуром.
+
+Изменённые файлы:
+- `AGENTS.md`
+- `README.md`
+- `docs/agent/CURRENT_STATE.md`
+- `docs/agent/EXTERNAL_TOOLS_EVALUATION.md`
+- `docs/agent/PLAYBOOKS.md`
+- `docs/agent/README.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать локальный `docs/agent/`-слой главным практическим способом экономии контекста для `Axiom`;
+- считать `Headroom` полезным внешним ускорителем для тяжёлых логов и сводок, но не обязательной частью проекта;
+- считать `RTK` для `Axiom` полезным только частично, потому что его сильный Bash-hook путь плохо совпадает с Windows/PowerShell-контуром проекта;
+- не принимать `Task Master` как основной task-контур проекта, чтобы не создавать второй активный журнал рядом с `docs/PLANS3.md` и `docs/WORKLOG4.md`;
+- адаптировать из `Caveman` только принцип краткости agent-файлов, а не его стиль как готовую persona.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -StdoutOnly` проходит;
+- `git diff --check` не нашёл ошибок пробелов.
+
+Следующий точный шаг:
+- при следующем process-oriented проходе дополнительно выровнять agent-файлы, где ещё осталась старая английская или избыточная форма;
+- по продуктовой линии проекта продолжать активный технический шаг из `docs/PLANS3.md`: брать следующую строку `Негативный паритет: частично` или новую внеграфическую benchmark-семью.
+
+## Session 976 - 2026-06-06 22:42 - maze_chase досинхронизирован по отдельному игровому вводу
+
+Что сделано:
+- досинхронизированы `docs/BYTECODE_PERF_MATRIX.md` и `docs/BYTECODE_COVERAGE.md` под новый адресный сценарий `samples/smoke/engine-compare/maze_chase_input_polling.axm`;
+- в матрице производительности отдельно зафиксировано, что у `maze_chase` теперь есть три адресных среза: `maze_chase_grid_logic.axm`, `maze_chase_input_polling.axm` и `maze_chase_mixed_frame.axm`;
+- в реестре покрытия отдельно зафиксирован игровой клавиатурный подслой `KEYPRESS` / `KEYDOWN` / `UCASE` / `LCASE` поверх `maze_chase`, включая benchmark-case `Игровой ввод: maze_chase без графики` из `src/Axiom.ManualChecks/Program.cs`;
+- в `docs/PLANS3.md` добавлена новая точка остановки: и сетка, и ввод, и смешанный кадр `maze_chase` уже быстрее интерпретатора, поэтому слепой разгон игры больше не является честным следующим шагом.
+
+Изменённые файлы:
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать текущий measured-разбор `maze_chase` завершённым на трёх адресных срезах;
+- не продолжать микроразгон modern graphics или игрового ввода без нового живого профильного сигнала;
+- следующий долг VM искать уже либо в ещё невыделенном подслое рядом с игрой, либо в новой benchmark-семье вне `maze_chase`.
+
+Проверки:
+- новые проверки не запускались, потому что в этом ходе менялась только документация;
+- зафиксированы уже полученные числа из последних отчётов: `maze_chase_input_polling.axm` около `0.739x` runtime / `0.742x` total, опкодный профиль `C:\Axiom\.artifacts\manual-checks\axiom-bytecode-opcode-profile-20260606-224029.txt`.
+
+Следующий точный шаг:
+- если продолжать именно игровую линию, сначала искать ещё невыделенный адресный подслой `maze_chase`, а не возвращаться к уже быстрым сетке, вводу или смешанному кадру;
+- если такого подслоя нет, переносить следующий measured-поиск на новую внеграфическую benchmark-семью или другой свежий профильный сигнал.
+
+## Session 977 - 2026-06-06 22:50 - `FOR` получил отдельный отрицательный sample для неподдерживаемого типа счётчика
+
+Что сделано:
+- добавлен runnable negative sample `samples/control-flow/for/predeclared_counter_invalid_type.axm` для ошибки `MB2009`, когда заранее объявленный счётчик `FOR` имеет тип `STRING`;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` дополнен двумя адресными проверками: sample включён в общий `NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(...)`, а также добавлена отдельная parity-проверка одинаковой семантической диагностики между режимами `Interpreter` и `Bytecode`;
+- `docs/BYTECODE_COVERAGE.md` обновлён: строка заранее объявленного счётчика `FOR` переведена с `Негативный паритет: частично` на `да`;
+- `docs/PLANS3.md` досинхронизирован под новую точку остановки и следующий короткий parity-хвост.
+
+Изменённые файлы:
+- `samples/control-flow/for/predeclared_counter_invalid_type.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать отрицательный parity-хвост по заранее объявленному счётчику `FOR` закрытым;
+- следующий короткий шаг брать уже из другой строки `Негативный паритет: частично`.
+
+Проверки:
+- запланирован адресный прогон `tests/Axiom.Execution.Tests` по новому negative sample и semantic parity.
+
+Следующий точный шаг:
+- закрывать следующую короткую строку `Негативный паритет: частично`, где уже есть тесты и пользовательский договор, но ещё не хватает отдельного runnable negative sample.
+
+## Session 978 - 2026-06-06 22:57 - `ON KEY` получил отдельный отрицательный sample для неверного обработчика
+
+Что сделано:
+- добавлен runnable negative sample `samples/operators/on-key/invalid_handler_parameter.axm` для ошибки `MB2034`, когда `ON KEY` получает `SUB` с параметром `INTEGER`;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` дополнен двумя адресными проверками: sample включён в общий `NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(...)`, а также добавлена отдельная parity-проверка одинаковой семантической диагностики между режимами `Interpreter` и `Bytecode`;
+- `docs/BYTECODE_COVERAGE.md` обновлён: строка `ON KEY` переведена с `Негативный паритет: частично` на `да`;
+- `docs/PLANS3.md` досинхронизирован под новую точку остановки и следующий короткий parity-хвост.
+
+Изменённые файлы:
+- `samples/operators/on-key/invalid_handler_parameter.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать отрицательный parity-хвост по `ON KEY` закрытым;
+- следующий короткий шаг брать уже из другой строки `Негативный паритет: частично`.
+
+Проверки:
+- запланирован адресный прогон `tests/Axiom.Execution.Tests` по новому negative sample и semantic parity.
+
+Следующий точный шаг:
+- закрывать следующую короткую строку `Негативный паритет: частично`, где уже есть тесты и пользовательский договор, но ещё не хватает отдельного runnable negative sample.
+
+## Session 979 - 2026-06-06 23:23 - графические negative-parity хвосты реестра закрыты
+
+Что сделано:
+- добавлены runnable negative sample `samples/operators/circle/text_screen_error.axm`, `samples/functions/point/invalid_selector_error.axm`, `samples/operators/color/text_screen_error.axm` и `samples/operators/paint/text_screen_error.axm`;
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` расширен: `GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(...)` теперь проверяет эти четыре графических сценария вместе с уже существующими отрицательными sample;
+- `docs/BYTECODE_COVERAGE.md` досинхронизирован по графическому срезу: старые строки `частично` для `CIRCLE`, `POINT(number)`, `COLOR`, базового и полного `PAINT`, `SCREEN 0`, `DRAW`, `VIEW`, `WINDOW` и `VIEW PRINT` переведены на фактический статус `да`, где долг был уже закрыт поздними блоками или новым runnable sample.
+
+Изменённые файлы:
+- `samples/operators/circle/text_screen_error.axm`
+- `samples/functions/point/invalid_selector_error.axm`
+- `samples/operators/color/text_screen_error.axm`
+- `samples/operators/paint/text_screen_error.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать именно графическую десятку хвостов из реестра закрытой;
+- не продолжать слепой обход старых графических строк `частично`, пока не появится новый пользовательский договор, новая диагностика или новый графический оператор.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity"`
+- результат: `19/19` тестов пройдено.
+
+Следующий точный шаг:
+- возвращаться к основной линии развития современного графического слоя и новых операторов, а не к уже закрытому графическому parity-хвосту.
+## Session 980 - 2026-06-06 23:54 - текстовые helper-функции CANVAS доведены до документации и реестров
+
+Что сделано:
+- доведена спецификация современного графического слоя: в `docs/SPECIFICATION3.md` добавлены `TEXTWIDTH(text)` и `TEXTHEIGHT(text)`, общий договор активного `CANVAS`, фиксированная сетка текста `8 x 12` и отдельный раздел по текстовым метрикам;
+- обновлён user-facing manual `docs/manual/modern-graphics.html`: синтаксис, описание текстового договора, диагностика `MB3010` и ссылки на новые runnable-примеры;
+- обновлены `docs/manual/scripts/search-index.js` и `docs/manual/scripts/manual.js`, чтобы `TEXTWIDTH` и `TEXTHEIGHT` находились через указатель и поиск;
+- в `docs/BYTECODE_COVERAGE.md` добавлена отдельная запись по текстовым helper-функциям современного `CANVAS`;
+- подготовлены к приёмке новые примеры `samples/functions/textwidth/hud_metrics.axm` и `samples/functions/textheight/multiline_label.axm` как опорные acceptance-сценарии этого шага.
+
+Изменённые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/manual/scripts/manual.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать `TEXTWIDTH` и `TEXTHEIGHT` частью основного современного `CANVAS`-договора, а не внутренним helper без пользовательской документации;
+- фиксировать текущую текстовую модель как намеренно простую: моноширинная ячейка `8 x 12`, `CHR(10)` как новая строка, `CHR(13)` игнорируется.
+
+Проверки:
+- запланирован последовательный адресный прогон `tests/Axiom.Runtime.Tests`, `tests/Axiom.Execution.Tests` и `tests/Axiom.Ide.Tests` по текстовым метрикам и подсветке built-in;
+- binder-проверки `TEXTWIDTH` / `TEXTHEIGHT` уже пройдены отдельным адресным прогоном.
+
+Следующий точный шаг:
+- брать следующий компактный helper поверх `CANVAS` для HUD и экранных подложек;
+- не уводить следующий шаг обратно в старые неграфические долги без нового прямого сигнала по продуктовой линии графики.
+
+## Session 981 - 2026-06-07 00:03 - адресные тесты text metrics дочищены
+
+Что сделано:
+- исправлены четыре тестовых утверждения после изменения тестового контракта вывода: в двух runtime-тестах проверка возвращена на `host.Output`, а в двух acceptance-тестах оставлена на `result.Output`;
+- подтверждён адресный контур для `TEXTWIDTH` и `TEXTHEIGHT` без новых правок runtime-кода и без изменения пользовательского договора функций.
+
+Изменённые файлы:
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~TextMetrics|FullyQualifiedName~CanvasOperationsReportDocumentedDiagnostics"` -> `4/4`
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~TextWidthAcceptanceSample|FullyQualifiedName~TextHeightAcceptanceSample"` -> `2/2`
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Highlighting_VocabularyContainsCanvasWords|FullyQualifiedName~Highlighting_VocabularyCoversAllBuiltInFunctions"` -> `2/2`
+
+Следующий точный шаг:
+- брать следующий маленький helper поверх `CANVAS` для HUD и экранных подложек, не возвращаясь в старые неграфические хвосты.

@@ -766,6 +766,18 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromSprite(sprite);
     }
 
+    private RuntimeValue EvaluateTextWidthBuiltin(string text, TextLocation location)
+    {
+        RequireCanvasActive("TEXTWIDTH", location);
+        return RuntimeValue.FromInteger(CanvasTextMetrics.MeasureWidth(text));
+    }
+
+    private RuntimeValue EvaluateTextHeightBuiltin(string text, TextLocation location)
+    {
+        RequireCanvasActive("TEXTHEIGHT", location);
+        return RuntimeValue.FromInteger(CanvasTextMetrics.MeasureHeight(text));
+    }
+
     private RuntimeImageValue RequireImage(string operationName, RuntimeValue value, TextLocation location)
     {
         var image = value.AsImage();

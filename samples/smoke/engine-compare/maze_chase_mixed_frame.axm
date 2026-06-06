@@ -1,0 +1,578 @@
+' Сравнительный сценарий: смешанный кадр maze_chase без живой клавиатуры.
+' Нагружает фон лабиринта, точки, спрайты, HUD и базовую игровую механику
+' в одном повторяемом графическом цикле.
+
+DIM TILE AS INTEGER = 16
+DIM VIEW_WIDTH AS INTEGER = 1024
+DIM VIEW_HEIGHT AS INTEGER = 660
+DIM HUD_HEIGHT AS INTEGER = 30
+DIM BACKGROUND_OFFSET_Y AS INTEGER = 45
+
+DIM PLAYER_SPEED AS INTEGER = 4
+DIM GHOST_SPEED AS INTEGER = 3
+DIM FRAMES AS INTEGER = 36
+DIM LAPS AS INTEGER = 10
+
+DIM DIR_LEFT AS INTEGER = 1
+DIM DIR_RIGHT AS INTEGER = 2
+DIM DIR_UP AS INTEGER = 3
+DIM DIR_DOWN AS INTEGER = 4
+
+DIM BACKGROUND_COLOR AS INTEGER = RGB(1, 4, 14)
+DIM POWER_PELLET_COLOR AS INTEGER = RGB(255, 240, 176)
+DIM HUD_BACKGROUND_COLOR AS INTEGER = RGB(4, 8, 18)
+DIM HUD_TEXT_COLOR AS INTEGER = RGB(255, 244, 180)
+DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)
+DIM HUD_LINE_COLOR AS INTEGER = RGB(90, 214, 255)
+
+DIM maze(1 TO 36) AS STRING
+DIM mazeRows AS INTEGER = 36
+DIM mazeCols AS INTEGER = 0
+
+DIM mazeBackground AS IMAGE
+DIM playerFrames(1 TO 4) AS SPRITE
+DIM ghostSprite AS SPRITE
+
+DIM playerStartCol AS INTEGER
+DIM playerStartRow AS INTEGER
+DIM ghostStartCol AS INTEGER
+DIM ghostStartRow AS INTEGER
+
+DIM playerCol AS INTEGER
+DIM playerRow AS INTEGER
+DIM playerDir AS INTEGER
+DIM playerWantDir AS INTEGER
+DIM playerFacing AS INTEGER
+DIM playerTravel AS INTEGER
+
+DIM ghostCol AS INTEGER
+DIM ghostRow AS INTEGER
+DIM ghostDir AS INTEGER
+DIM ghostWantDir AS INTEGER
+DIM ghostTravel AS INTEGER
+
+DIM pelletsLeft AS INTEGER = 0
+DIM score AS LONG = 0
+DIM lives AS INTEGER = 3
+DIM statusText AS STRING = "Идёт детерминированный кадр maze_chase."
+DIM frameChecksum AS LONG = 0
+DIM worldWidthPixels AS INTEGER = 0
+DIM worldHeightPixels AS INTEGER = 0
+
+LoadResources()
+InitMaze()
+ResetActors()
+
+worldWidthPixels = mazeCols * TILE
+worldHeightPixels = mazeRows * TILE
+
+CANVAS VIEW_WIDTH, VIEW_HEIGHT
+
+FOR lapIndex = 1 TO LAPS
+    FOR frameIndex = 1 TO FRAMES
+        UpdateScriptedGame(lapIndex, frameIndex)
+
+        BEGINFRAME
+        CLS BACKGROUND_COLOR
+        DrawMazeWorld()
+        DrawHud(lapIndex, frameIndex)
+        PRESENT
+
+        frameChecksum = frameChecksum + score + pelletsLeft + playerCol + playerRow + ghostCol + ghostRow
+    NEXT
+NEXT
+
+PRINT score
+PRINT pelletsLeft
+PRINT frameChecksum
+PRINT lives
+
+SUB LoadResources()
+    mazeBackground = LOADIMAGE("samples/graphics/game/art/Background.gif")
+    playerFrames(DIR_RIGHT) = LOADSPRITE("samples/graphics/game/art/pacman-right/1.png", 16, 16)
+    playerFrames(DIR_LEFT) = LOADSPRITE("samples/graphics/game/art/pacman-left/1.png", 16, 16)
+    playerFrames(DIR_UP) = LOADSPRITE("samples/graphics/game/art/pacman-up/1.png", 16, 16)
+    playerFrames(DIR_DOWN) = LOADSPRITE("samples/graphics/game/art/pacman-down/1.png", 16, 16)
+    ghostSprite = LOADSPRITE("samples/graphics/game/art/ghosts/blinky.png", 16, 16)
+END SUB
+
+SUB InitMaze()
+    maze(1) = "############################"
+    maze(2) = "############################"
+    maze(3) = "############################"
+    maze(4) = "############################"
+    maze(5) = "#o...........##...........o#"
+    maze(6) = "#.####.#####.##.#####.####.#"
+    maze(7) = "#.####.#####.##.#####.####.#"
+    maze(8) = "#.####.#####.##.#####.####.#"
+    maze(9) = "#..........................#"
+    maze(10) = "#.####.##.########.##.####.#"
+    maze(11) = "#.####.##.########.##.####.#"
+    maze(12) = "#......##....##....##......#"
+    maze(13) = "######.#####.##.#####.######"
+    maze(14) = "######.#####.##.#####.######"
+    maze(15) = "######.##..........##.######"
+    maze(16) = "######.##.########.##.######"
+    maze(17) = "######.##.########.##.######"
+    maze(18) = "..........########.........."
+    maze(19) = "######.##.########.##.######"
+    maze(20) = "######.##.########.##.######"
+    maze(21) = "######.##.....G....##.######"
+    maze(22) = "######.##.########.##.######"
+    maze(23) = "######.##.########.##.######"
+    maze(24) = "#............##............#"
+    maze(25) = "#.####.#####.##.#####.####.#"
+    maze(26) = "#.####.#####.##.#####.####.#"
+    maze(27) = "#o..##.......P........##..o#"
+    maze(28) = "###.##.##.########.##.##.###"
+    maze(29) = "###.##.##.########.##.##.###"
+    maze(30) = "#......##....##....##......#"
+    maze(31) = "#.##########.##.##########.#"
+    maze(32) = "#.##########.##.##########.#"
+    maze(33) = "#..........................#"
+    maze(34) = "############################"
+    maze(35) = "############################"
+    maze(36) = "############################"
+
+    mazeCols = LEN(maze(1))
+    pelletsLeft = 0
+
+    FOR rowIndex = 1 TO mazeRows
+        FOR columnIndex = 1 TO mazeCols
+            DIM tileText AS STRING = MID(maze(rowIndex), columnIndex, 1)
+
+            IF tileText = "." OR tileText = "o" THEN
+                pelletsLeft = pelletsLeft + 1
+            END IF
+
+            IF tileText = "P" THEN
+                playerStartCol = columnIndex
+                playerStartRow = rowIndex
+                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
+            END IF
+
+            IF tileText = "G" THEN
+                ghostStartCol = columnIndex
+                ghostStartRow = rowIndex
+                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
+            END IF
+        NEXT
+    NEXT
+END SUB
+
+SUB ResetActors()
+    playerCol = playerStartCol
+    playerRow = playerStartRow
+    playerDir = 0
+    playerWantDir = 0
+    playerFacing = DIR_RIGHT
+    playerTravel = 0
+
+    ghostCol = ghostStartCol
+    ghostRow = ghostStartRow
+    ghostDir = DIR_LEFT
+    ghostWantDir = DIR_LEFT
+    ghostTravel = 0
+END SUB
+
+SUB UpdateScriptedGame(lapIndex AS INTEGER, frameIndex AS INTEGER)
+    playerWantDir = ChoosePlayerScriptDirection(lapIndex, frameIndex)
+
+    IF ghostTravel = 0 THEN
+        ghostWantDir = ChooseGhostDirection()
+    END IF
+
+    StepWalker(playerCol, playerRow, playerDir, playerWantDir, playerTravel, PLAYER_SPEED)
+    IF playerDir <> 0 THEN
+        playerFacing = playerDir
+    END IF
+    EatPelletIfNeeded()
+
+    StepWalker(ghostCol, ghostRow, ghostDir, ghostWantDir, ghostTravel, GHOST_SPEED)
+
+    IF EntitiesOverlapOnGrid() THEN
+        lives = lives - 1
+        statusText = "Призрак догнал героя. Идёт сброс позиции."
+        ResetActors()
+        IF lives <= 0 THEN
+            lives = 3
+        END IF
+    ELSE
+        statusText = "Кадр игры рисуется без живой клавиатуры."
+    END IF
+
+    IF pelletsLeft <= 12 THEN
+        statusText = "Точки почти кончились. Карта перезапускается."
+        InitMaze()
+        ResetActors()
+    END IF
+END SUB
+
+SUB DrawMazeWorld()
+    CAMERA 0, 0
+    DRAWIMAGE mazeBackground, WorldOffsetX(), WorldOffsetY(), worldWidthPixels, worldHeightPixels
+    DrawVisiblePellets()
+    DRAWSPRITE playerFrames(playerFacing), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2)
+    DRAWSPRITE ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)
+END SUB
+
+SUB DrawVisiblePellets()
+    FOR rowIndex = 1 TO mazeRows
+        FOR columnIndex = 1 TO mazeCols
+            DIM tileText AS STRING = CellAt(rowIndex, columnIndex)
+
+            IF tileText = "." THEN
+                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 2, POWER_PELLET_COLOR
+            END IF
+
+            IF tileText = "o" THEN
+                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 5, POWER_PELLET_COLOR
+            END IF
+        NEXT
+    NEXT
+END SUB
+
+SUB DrawHud(lapIndex AS INTEGER, frameIndex AS INTEGER)
+    RESETCAMERA
+    FILLRECT 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR
+    DRAWLINE 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, HUD_LINE_COLOR
+    DRAWTEXT "Круг " + TRIM(STR(lapIndex)) + "   Кадр " + TRIM(STR(frameIndex)) + "   Очки " + TRIM(STR(score)) + "   Точек " + TRIM(STR(pelletsLeft)), 8, 7, HUD_TEXT_COLOR
+    DRAWTEXT statusText, 8, 19, HUD_STATUS_COLOR
+END SUB
+
+SUB EatPelletIfNeeded()
+    IF playerTravel <> 0 THEN
+        RETURN
+    END IF
+
+    DIM tileText AS STRING = CellAt(playerRow, playerCol)
+
+    IF tileText = "." THEN
+        score = score + 10
+        pelletsLeft = pelletsLeft - 1
+        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")
+    END IF
+
+    IF tileText = "o" THEN
+        score = score + 50
+        pelletsLeft = pelletsLeft - 1
+        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")
+    END IF
+END SUB
+
+FUNCTION ChoosePlayerScriptDirection(lapIndex AS INTEGER, frameIndex AS INTEGER) AS INTEGER
+    DIM phase AS INTEGER = (lapIndex * 3 + frameIndex) MOD 24
+
+    IF phase < 6 THEN
+        RETURN DIR_LEFT
+    END IF
+
+    IF phase < 10 THEN
+        RETURN DIR_UP
+    END IF
+
+    IF phase < 16 THEN
+        RETURN DIR_RIGHT
+    END IF
+
+    IF phase < 20 THEN
+        RETURN DIR_DOWN
+    END IF
+
+    IF playerCol <= mazeCols \ 2 THEN
+        RETURN DIR_RIGHT
+    END IF
+
+    RETURN DIR_LEFT
+END FUNCTION
+
+FUNCTION ChooseGhostDirection() AS INTEGER
+    DIM candidate AS INTEGER
+    DIM bestDirection AS INTEGER = 0
+    DIM bestScore AS INTEGER = 1000000
+    DIM availableMoves AS INTEGER = CountAvailableMoves(ghostCol, ghostRow)
+    DIM nextCol AS INTEGER
+    DIM nextRow AS INTEGER
+    DIM distance AS INTEGER
+
+    FOR candidate = 1 TO 4
+        IF CanMove(ghostCol, ghostRow, candidate) THEN
+            IF availableMoves = 1 OR candidate <> OppositeDirection(ghostDir) THEN
+                nextCol = ghostCol + DirX(candidate)
+                nextRow = ghostRow + DirY(candidate)
+                nextCol = WrapTunnelColumn(nextCol, nextRow)
+                distance = AbsInt(nextCol - playerCol) + AbsInt(nextRow - playerRow)
+
+                IF distance < bestScore THEN
+                    bestScore = distance
+                    bestDirection = candidate
+                END IF
+            END IF
+        END IF
+    NEXT
+
+    IF bestDirection = 0 THEN
+        FOR candidate = 1 TO 4
+            IF CanMove(ghostCol, ghostRow, candidate) THEN
+                RETURN candidate
+            END IF
+        NEXT
+    END IF
+
+    RETURN bestDirection
+END FUNCTION
+
+FUNCTION CountAvailableMoves(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER
+    DIM total AS INTEGER = 0
+
+    FOR candidate = 1 TO 4
+        IF CanMove(tileCol, tileRow, candidate) THEN
+            total = total + 1
+        END IF
+    NEXT
+
+    RETURN total
+END FUNCTION
+
+FUNCTION EntitiesOverlapOnGrid() AS BOOLEAN
+    IF playerCol <> ghostCol OR playerRow <> ghostRow THEN
+        RETURN FALSE
+    END IF
+
+    RETURN AbsInt(playerTravel - ghostTravel) <= 8
+END FUNCTION
+
+SUB StepWalker(BYREF tileCol AS INTEGER, BYREF tileRow AS INTEGER, BYREF dir AS INTEGER, BYREF wantedDir AS INTEGER, BYREF travel AS INTEGER, speed AS INTEGER)
+    DIM remaining AS INTEGER = speed
+    DIM chunk AS INTEGER
+
+    DO WHILE remaining > 0
+        IF travel = 0 THEN
+            IF wantedDir <> 0 THEN
+                IF CanMove(tileCol, tileRow, wantedDir) THEN
+                    dir = wantedDir
+                END IF
+            END IF
+
+            IF dir <> 0 THEN
+                IF NOT CanMove(tileCol, tileRow, dir) THEN
+                    dir = 0
+                END IF
+            END IF
+        END IF
+
+        IF dir = 0 THEN
+            remaining = 0
+        ELSE
+            chunk = TILE - travel
+            IF chunk > remaining THEN
+                chunk = remaining
+            END IF
+
+            travel = travel + chunk
+            remaining = remaining - chunk
+
+            IF travel >= TILE THEN
+                tileCol = tileCol + DirX(dir)
+                tileRow = tileRow + DirY(dir)
+                tileCol = WrapTunnelColumn(tileCol, tileRow)
+                travel = 0
+            END IF
+        END IF
+    LOOP
+END SUB
+
+FUNCTION PlayerPixelX() AS INTEGER
+    RETURN EntityPixelX(playerCol, playerRow, playerDir, playerTravel)
+END FUNCTION
+
+FUNCTION PlayerPixelY() AS INTEGER
+    RETURN EntityPixelY(playerCol, playerRow, playerDir, playerTravel)
+END FUNCTION
+
+FUNCTION GhostPixelX() AS INTEGER
+    RETURN EntityPixelX(ghostCol, ghostRow, ghostDir, ghostTravel)
+END FUNCTION
+
+FUNCTION GhostPixelY() AS INTEGER
+    RETURN EntityPixelY(ghostCol, ghostRow, ghostDir, ghostTravel)
+END FUNCTION
+
+FUNCTION EntityPixelX(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER
+    DIM startX AS INTEGER = PelletPixelX(tileCol)
+    DIM nextCol AS INTEGER = WrapTunnelColumn(tileCol + DirX(dir), tileRow + DirY(dir))
+    DIM targetX AS INTEGER = PelletPixelX(nextCol)
+
+    IF dir = 0 OR travel = 0 THEN
+        RETURN startX
+    END IF
+
+    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN
+        RETURN startX - travel
+    END IF
+
+    IF dir = DIR_RIGHT AND tileCol = mazeCols AND IsTunnelPassageRow(tileRow) THEN
+        RETURN startX + travel
+    END IF
+
+    RETURN startX + ((targetX - startX) * travel) \ TILE
+END FUNCTION
+
+FUNCTION EntityPixelY(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER
+    DIM startY AS INTEGER = PelletPixelY(tileRow)
+    DIM nextRow AS INTEGER = tileRow + DirY(dir)
+    DIM targetY AS INTEGER = PelletPixelY(ClampInt(nextRow, 1, mazeRows))
+
+    IF dir = 0 OR travel = 0 THEN
+        RETURN startY
+    END IF
+
+    RETURN startY + ((targetY - startY) * travel) \ TILE
+END FUNCTION
+
+FUNCTION PelletPixelX(tileCol AS INTEGER) AS INTEGER
+    RETURN WorldOffsetX() + (tileCol - 1) * TILE + (TILE \ 2)
+END FUNCTION
+
+FUNCTION PelletPixelY(tileRow AS INTEGER) AS INTEGER
+    RETURN WorldOffsetY() + (tileRow - 1) * TILE + (TILE \ 2)
+END FUNCTION
+
+FUNCTION CanMove(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER) AS BOOLEAN
+    DIM nextCol AS INTEGER = tileCol + DirX(dir)
+    DIM nextRow AS INTEGER = tileRow + DirY(dir)
+
+    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN
+        RETURN CellAt(tileRow, mazeCols) <> "#"
+    END IF
+
+    IF dir = DIR_RIGHT AND tileCol = mazeCols AND IsTunnelPassageRow(tileRow) THEN
+        RETURN CellAt(tileRow, 1) <> "#"
+    END IF
+
+    RETURN CellAt(nextRow, nextCol) <> "#"
+END FUNCTION
+
+FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING
+    IF rowIndex < 1 OR rowIndex > mazeRows THEN
+        RETURN "#"
+    END IF
+
+    IF columnIndex < 1 OR columnIndex > mazeCols THEN
+        RETURN "#"
+    END IF
+
+    RETURN MID(maze(rowIndex), columnIndex, 1)
+END FUNCTION
+
+FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING
+    DIM leftPart AS STRING = ""
+    DIM rightPart AS STRING = ""
+
+    IF position > 1 THEN
+        leftPart = LEFT(lineText, position - 1)
+    END IF
+
+    IF position < LEN(lineText) THEN
+        rightPart = MID(lineText, position + 1, LEN(lineText) - position)
+    END IF
+
+    RETURN leftPart + replacement + rightPart
+END FUNCTION
+
+FUNCTION DirX(dir AS INTEGER) AS INTEGER
+    SELECT CASE dir
+        CASE DIR_LEFT
+            RETURN -1
+        CASE DIR_RIGHT
+            RETURN 1
+        CASE ELSE
+            RETURN 0
+    END SELECT
+END FUNCTION
+
+FUNCTION DirY(dir AS INTEGER) AS INTEGER
+    SELECT CASE dir
+        CASE DIR_UP
+            RETURN -1
+        CASE DIR_DOWN
+            RETURN 1
+        CASE ELSE
+            RETURN 0
+    END SELECT
+END FUNCTION
+
+FUNCTION OppositeDirection(dir AS INTEGER) AS INTEGER
+    SELECT CASE dir
+        CASE DIR_LEFT
+            RETURN DIR_RIGHT
+        CASE DIR_RIGHT
+            RETURN DIR_LEFT
+        CASE DIR_UP
+            RETURN DIR_DOWN
+        CASE DIR_DOWN
+            RETURN DIR_UP
+        CASE ELSE
+            RETURN 0
+    END SELECT
+END FUNCTION
+
+FUNCTION AbsInt(value AS INTEGER) AS INTEGER
+    IF value < 0 THEN
+        RETURN -value
+    END IF
+
+    RETURN value
+END FUNCTION
+
+FUNCTION ClampInt(value AS INTEGER, lowValue AS INTEGER, highValue AS INTEGER) AS INTEGER
+    IF value < lowValue THEN
+        RETURN lowValue
+    END IF
+
+    IF value > highValue THEN
+        RETURN highValue
+    END IF
+
+    RETURN value
+END FUNCTION
+
+FUNCTION MaxInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER
+    IF leftValue > rightValue THEN
+        RETURN leftValue
+    END IF
+
+    RETURN rightValue
+END FUNCTION
+
+FUNCTION WorldOffsetX() AS INTEGER
+    RETURN MaxInt(0, (VIEW_WIDTH - worldWidthPixels) \ 2)
+END FUNCTION
+
+FUNCTION WorldOffsetY() AS INTEGER
+    RETURN HUD_HEIGHT + BACKGROUND_OFFSET_Y
+END FUNCTION
+
+FUNCTION IsTunnelPassageRow(rowIndex AS INTEGER) AS BOOLEAN
+    IF rowIndex < 1 OR rowIndex > mazeRows THEN
+        RETURN FALSE
+    END IF
+
+    RETURN CellAt(rowIndex, 1) <> "#" AND CellAt(rowIndex, mazeCols) <> "#"
+END FUNCTION
+
+FUNCTION WrapTunnelColumn(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER
+    IF NOT IsTunnelPassageRow(tileRow) THEN
+        RETURN tileCol
+    END IF
+
+    IF tileCol < 1 THEN
+        RETURN mazeCols
+    END IF
+
+    IF tileCol > mazeCols THEN
+        RETURN 1
+    END IF
+
+    RETURN tileCol
+END FUNCTION

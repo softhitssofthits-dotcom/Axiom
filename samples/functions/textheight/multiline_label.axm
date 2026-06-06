@@ -1,0 +1,22 @@
+' Этот пример показывает, как TEXTHEIGHT помогает отмерить высоту многострочного текста.
+' Высота нужна, чтобы подложка под подпись перекрывала обе строки целиком.
+
+CANVAS 320, 180
+
+DIM caption AS STRING
+caption = "Жизни: 3" + CHR(10) + "Уровень: 2"
+
+DIM textHeightPx AS INTEGER
+textHeightPx = TEXTHEIGHT(caption)
+
+BEGINFRAME
+CLS RGB(10, 14, 22)
+
+' Рисуем подложку строго по вычисленной высоте многострочной подписи.
+FILLRECT 12, 12, 120, textHeightPx + 8, RGB(24, 38, 58)
+DRAWRECT 12, 12, 120, textHeightPx + 8, RGB(170, 220, 255)
+DRAWTEXT caption, 18, 16, RGB(230, 238, 255)
+
+PRESENT
+PRINT textHeightPx
+SLEEP

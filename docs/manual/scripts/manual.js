@@ -157,6 +157,7 @@
         { id: "images", href: "images.html", label: "Изображения IMAGE" },
         { id: "sprites", href: "sprites.html", label: "Спрайты SPRITE" },
         { id: "modern-graphics", href: "modern-graphics.html", label: "Современная графика CANVAS" },
+        { id: "modern-graphics-text-metrics", href: "modern-graphics.html", label: "TEXTWIDTH и TEXTHEIGHT" },
         { id: "graphics-text", href: "graphics-text.html", label: "Текст на экране" },
         { id: "graphics-primitives", href: "graphics-primitives.html", label: "Операторы рисования" },
         { id: "get-put", href: "get-put.html", label: "Операторы GET и PUT" },

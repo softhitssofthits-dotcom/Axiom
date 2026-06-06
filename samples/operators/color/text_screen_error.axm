@@ -1,0 +1,3 @@
+' Ожидается: `MB3010`, `COLOR ..., TRANSPARENT` требует графический режим `SCREEN 1..10`.
+SCREEN 0
+COLOR 15, TRANSPARENT

@@ -157,6 +157,32 @@ public sealed class BinderTests
     }
 
     [Fact]
+    public void Bind_TextMetricsFunctions_ReturnInteger()
+    {
+        var textWidthProgram = BindProgram("PRINT TEXTWIDTH(\"HUD\")", out var textWidthDiagnostics);
+        var textHeightProgram = BindProgram("PRINT TEXTHEIGHT(\"HUD\")", out var textHeightDiagnostics);
+
+        Assert.Empty(textWidthDiagnostics);
+        Assert.Empty(textHeightDiagnostics);
+        AssertBuiltinCall(Assert.Single(textWidthProgram.GlobalStatements), TypeSymbol.Integer, BuiltinFunctionId.TextWidth);
+        AssertBuiltinCall(Assert.Single(textHeightProgram.GlobalStatements), TypeSymbol.Integer, BuiltinFunctionId.TextHeight);
+    }
+
+    [Fact]
+    public void Bind_TextMetricsFunctions_RequireOneStringArgument()
+    {
+        _ = BindProgram("PRINT TEXTWIDTH()", out var missingWidthDiagnostics);
+        _ = BindProgram("PRINT TEXTWIDTH(1)", out var wrongWidthTypeDiagnostics);
+        _ = BindProgram("PRINT TEXTHEIGHT()", out var missingHeightDiagnostics);
+        _ = BindProgram("PRINT TEXTHEIGHT(1)", out var wrongHeightTypeDiagnostics);
+
+        Assert.Equal("MB2004", Assert.Single(missingWidthDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(wrongWidthTypeDiagnostics, static d => d.Code == "MB2003").Code);
+        Assert.Equal("MB2004", Assert.Single(missingHeightDiagnostics, static d => d.Code == "MB2004").Code);
+        Assert.Equal("MB2003", Assert.Single(wrongHeightTypeDiagnostics, static d => d.Code == "MB2003").Code);
+    }
+
+    [Fact]
     public void Bind_MouseCoordinatesFunctions_RejectArguments()
     {
         _ = BindProgram("PRINT MOUSEX(1)", out var mouseXDiagnostics);

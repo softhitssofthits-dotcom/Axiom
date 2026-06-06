@@ -2,67 +2,92 @@
 ' Нагружает MAKEDIR, COPYFILE, MOVEFILE, RENAMEFILE, DELETEFILE,
 ' COPYDIR, MOVEDIR, RENAMEDIR, DELETEDIRRECURSIVE, CHANGEDIR и CURRENTDIR.
 
-DIM artifactsRoot AS STRING = COMBINEPATH(CURRENTDIR(), ".artifacts")
-DIM compareRoot AS STRING = COMBINEPATH(artifactsRoot, "manual-checks")
-DIM scenarioRoot AS STRING = COMBINEPATH(compareRoot, "file-management-roundtrip")
+DIM scenarioRoot AS STRING = MAKETEMPDIR("file-management-roundtrip_")
 DIM sourceRoot AS STRING = COMBINEPATH(scenarioRoot, "source")
-DIM copyRoot AS STRING = COMBINEPATH(scenarioRoot, "copy")
-DIM movedRoot AS STRING = COMBINEPATH(scenarioRoot, "moved")
-DIM renamedRoot AS STRING = COMBINEPATH(scenarioRoot, "renamed")
+DIM passCopyRoot AS STRING = COMBINEPATH(scenarioRoot, "copy")
+DIM passMovedRoot AS STRING = COMBINEPATH(scenarioRoot, "moved")
+DIM passRenamedRoot AS STRING = COMBINEPATH(scenarioRoot, "renamed")
 DIM originalDir AS STRING = CURRENTDIR()
 DIM checksum AS LONG = 0
+DIM sourcePayload AS STRING = "managed-source-content"
+DIM tempPayload AS STRING = "managed-temp-content"
+DIM tempFile AS STRING = COMBINEPATH(sourceRoot, "temp.txt")
+DIM copiedFile AS STRING = COMBINEPATH(sourceRoot, "temp_copy.txt")
+DIM movedFile AS STRING = COMBINEPATH(sourceRoot, "temp_moved.txt")
+DIM renamedFile AS STRING = COMBINEPATH(sourceRoot, "temp_renamed.txt")
+DIM renamedFileName AS STRING = "temp_renamed.txt"
+DIM renamedDirName AS STRING = "renamed"
 
-PRINT MAKEDIR(artifactsRoot)
-PRINT MAKEDIR(compareRoot)
-IF DIREXISTS(scenarioRoot) THEN
-    PRINT DELETEDIRRECURSIVE(scenarioRoot)
-END IF
-PRINT MAKEDIR(scenarioRoot)
-PRINT MAKEDIR(sourceRoot)
+MAKEDIR(sourceRoot)
 
 FOR fileIndex = 1 TO 16
     DIM filePath AS STRING = COMBINEPATH(sourceRoot, "part_" + TRIM(STR(fileIndex)) + ".txt")
-    PRINT WRITEFILE(filePath, BuildPayload(fileIndex))
+    IF WRITEFILE(filePath, sourcePayload) THEN
+        checksum = checksum + 1
+    END IF
 NEXT
 
 FOR passIndex = 1 TO 45
-    DIM passCopyRoot AS STRING = COMBINEPATH(scenarioRoot, "copy_" + TRIM(STR(passIndex)))
-    DIM passMovedRoot AS STRING = COMBINEPATH(scenarioRoot, "moved_" + TRIM(STR(passIndex)))
-    DIM passRenamedRoot AS STRING = COMBINEPATH(scenarioRoot, "renamed_" + TRIM(STR(passIndex)))
-    DIM tempFile AS STRING = COMBINEPATH(sourceRoot, "temp_" + TRIM(STR(passIndex)) + ".txt")
-    DIM copiedFile AS STRING = COMBINEPATH(sourceRoot, "temp_copy_" + TRIM(STR(passIndex)) + ".txt")
-    DIM movedFile AS STRING = COMBINEPATH(sourceRoot, "temp_moved_" + TRIM(STR(passIndex)) + ".txt")
-    DIM renamedFile AS STRING = COMBINEPATH(sourceRoot, "temp_renamed_" + TRIM(STR(passIndex)) + ".txt")
-    DIM renamedFileName AS STRING = "temp_renamed_" + TRIM(STR(passIndex)) + ".txt"
-    DIM renamedDirName AS STRING = "renamed_" + TRIM(STR(passIndex))
+    DELETEDIRRECURSIVE(passCopyRoot)
+    DELETEDIRRECURSIVE(passMovedRoot)
+    DELETEDIRRECURSIVE(passRenamedRoot)
 
-    PRINT WRITEFILE(tempFile, "temp-" + TRIM(STR(passIndex)))
-    PRINT COPYFILE(tempFile, copiedFile)
-    PRINT MOVEFILE(copiedFile, movedFile)
-    PRINT RENAMEFILE(movedFile, renamedFileName)
+    DELETEFILE(tempFile)
+    DELETEFILE(copiedFile)
+    DELETEFILE(movedFile)
+    DELETEFILE(renamedFile)
 
-    checksum = checksum + FILESIZE(renamedFile)
-    checksum = checksum + LEN(FILENAME(renamedFile))
+    IF WRITEFILE(tempFile, tempPayload) THEN
+        checksum = checksum + 1
+    END IF
 
-    PRINT COPYDIR(sourceRoot, passCopyRoot)
-    PRINT MOVEDIR(passCopyRoot, passMovedRoot)
-    PRINT RENAMEDIR(passMovedRoot, renamedDirName)
+    IF COPYFILE(tempFile, copiedFile) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF MOVEFILE(copiedFile, movedFile) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF RENAMEFILE(movedFile, renamedFileName) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF COPYDIR(sourceRoot, passCopyRoot) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF MOVEDIR(passCopyRoot, passMovedRoot) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF RENAMEDIR(passMovedRoot, renamedDirName) THEN
+        checksum = checksum + 1
+    END IF
 
     CHANGEDIR(passRenamedRoot)
-    checksum = checksum + LEN(CURRENTDIR())
+    IF CURRENTDIR() = passRenamedRoot THEN
+        checksum = checksum + 2
+    ELSE
+        checksum = checksum + 1
+    END IF
     CHANGEDIR(originalDir)
 
-    checksum = checksum + ARRAYLENGTH(GETFILES(passRenamedRoot, "*.txt"))
+    IF DELETEFILE(tempFile) THEN
+        checksum = checksum + 1
+    END IF
 
-    PRINT DELETEFILE(tempFile)
-    PRINT DELETEFILE(renamedFile)
-    PRINT DELETEDIRRECURSIVE(passRenamedRoot)
+    IF DELETEFILE(renamedFile) THEN
+        checksum = checksum + 1
+    END IF
+
+    IF DELETEDIRRECURSIVE(passRenamedRoot) THEN
+        checksum = checksum + 1
+    END IF
 NEXT
+
+DELETEDIRRECURSIVE(scenarioRoot)
 
 PRINT checksum
 PRINT DIREXISTS(sourceRoot)
 PRINT FILEEXISTS(COMBINEPATH(sourceRoot, "part_1.txt"))
-
-FUNCTION BuildPayload(fileIndex AS INTEGER) AS STRING
-    RETURN "managed-file-" + TRIM(STR(fileIndex)) + CHR(13) + CHR(10) + "payload-" + TRIM(STR(fileIndex * 101))
-END FUNCTION

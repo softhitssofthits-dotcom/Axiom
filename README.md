@@ -240,7 +240,8 @@ powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -Topic CANVAS,RG
 - `docs/agent/CURRENT_STATE.md` — короткий ручной снимок текущего состояния;
 - `docs/agent/ARCHITECTURE_MAP.md` — карта горячих зон кода;
 - `docs/agent/PLAYBOOKS.md` — повторяемые сценарии работы;
-- `docs/agent/HEADROOM_PILOT.md` — отдельный план пилота `Headroom` для внешнего сжатия контекста.
+- `docs/agent/HEADROOM_PILOT.md` — отдельный план пилота `Headroom` для внешнего сжатия контекста;
+- `docs/agent/EXTERNAL_TOOLS_EVALUATION.md` — зафиксированное проектное решение по `Headroom`, `RTK`, `Task Master` и `Caveman`.
 
 ## Структура репозитория
 

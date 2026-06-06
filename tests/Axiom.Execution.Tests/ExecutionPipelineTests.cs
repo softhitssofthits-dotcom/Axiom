@@ -2763,6 +2763,33 @@ PRINT READFILE("{{EscapePath(missingPath)}}")
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_ReportsCopyFileMissingSourceFromVm()
+    {
+        var workspace = CreateTemporaryWorkspace();
+        try
+        {
+            var missingPath = Path.Combine(workspace, "missing.txt");
+            var targetPath = Path.Combine(workspace, "copy.txt");
+            var text = $$"""
+PRINT COPYFILE("{{EscapePath(missingPath)}}", "{{EscapePath(targetPath)}}")
+""";
+
+            var pipeline = new AxiomExecutionPipeline();
+            var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+            Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+            var diagnostic = Assert.Single(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+            Assert.Contains("COPYFILE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("source", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            DeleteTemporaryWorkspace(workspace);
+        }
+    }
+
+    [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForOpenTextFile()
     {
         var workspace = CreateTemporaryWorkspace();

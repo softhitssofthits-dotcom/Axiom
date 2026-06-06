@@ -177,8 +177,8 @@ public sealed class ScreenFramebuffer
 
         var startX = checked((int)x);
         var startY = checked((int)y);
-        var width = Math.Max(0, MeasureTextColumns(text) * ScreenTextRasterizer.CellWidth);
-        var height = Math.Max(ScreenTextRasterizer.CellHeight, MeasureTextRows(text) * ScreenTextRasterizer.CellHeight);
+        var width = CanvasTextMetrics.MeasureWidth(text);
+        var height = CanvasTextMetrics.MeasureHeight(text);
         if (width == 0)
         {
             return;
@@ -655,44 +655,6 @@ public sealed class ScreenFramebuffer
 
     private static uint ToBgra(int red, int green, int blue) =>
         0xFF000000u | ((uint)red << 16) | ((uint)green << 8) | (uint)blue;
-
-    private static int MeasureTextRows(string text)
-    {
-        var rows = 1;
-        foreach (var ch in text)
-        {
-            if (ch == '\n')
-            {
-                rows++;
-            }
-        }
-
-        return rows;
-    }
-
-    private static int MeasureTextColumns(string text)
-    {
-        var max = 0;
-        var current = 0;
-        foreach (var ch in text)
-        {
-            if (ch == '\r')
-            {
-                continue;
-            }
-
-            if (ch == '\n')
-            {
-                max = Math.Max(max, current);
-                current = 0;
-                continue;
-            }
-
-            current++;
-        }
-
-        return Math.Max(max, current);
-    }
 
     private readonly record struct ScaleMapKey(int SourceLength, int TargetLength);
 }

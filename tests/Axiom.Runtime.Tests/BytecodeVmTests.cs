@@ -556,6 +556,23 @@ PALETTE USING colors
     }
 
     [Fact]
+    public void Execute_CompiledPaletteUsingRequiresGraphicsScreen()
+    {
+        const string text = """
+DIM colors(0 TO 2) AS INTEGER
+colors(0) = 16
+colors(1) = 196
+colors(2) = 46
+PALETTE USING colors
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
     public void Execute_CompiledPCopyCopiesBetweenScreenPages()
     {
         const string text = """
@@ -609,6 +626,25 @@ PRINT IMAGEHEIGHT(hero)
         Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.LoadImage);
         Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.ImageWidth);
         Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.ImageHeight);
+    }
+
+    [Fact]
+    public void Execute_CompiledTextMetricsReturnCanvasPixelSize()
+    {
+        const string text = """
+CANVAS 160, 90
+PRINT TEXTWIDTH("HUD")
+PRINT TEXTHEIGHT("HUD")
+PRINT TEXTWIDTH("A" + CHR(10) + "BC")
+PRINT TEXTHEIGHT("A" + CHR(10) + "BC")
+""";
+
+        var (module, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["24", "12", "16", "24"], host.Output);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.TextWidth);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.TextHeight);
     }
 
     [Fact]
@@ -910,6 +946,14 @@ PRESENT
         var (_, _, invalidRgbResult) = ExecuteProgram("PRINT RGB(256, 0, 0)");
         Assert.False(invalidRgbResult.Succeeded);
         Assert.Contains(invalidRgbResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingTextWidthCanvasResult) = ExecuteProgram("PRINT TEXTWIDTH(\"HUD\")");
+        Assert.False(missingTextWidthCanvasResult.Succeeded);
+        Assert.Contains(missingTextWidthCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+
+        var (_, _, missingTextHeightCanvasResult) = ExecuteProgram("PRINT TEXTHEIGHT(\"HUD\")");
+        Assert.False(missingTextHeightCanvasResult.Succeeded);
+        Assert.Contains(missingTextHeightCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
 
         var (_, _, missingCanvasResult) = ExecuteProgram("DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)");
         Assert.False(missingCanvasResult.Succeeded);
@@ -5374,6 +5418,30 @@ PRINT FILESIZE("{{EscapePath(missingPath)}}")
             var diagnostic = Assert.Single(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
             Assert.Contains("FILESIZE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("не существует", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            DeleteTemporaryWorkspace(workspace);
+        }
+    }
+
+    [Fact]
+    public void Execute_CompiledDeleteFileReturnsFalseForMissingFile()
+    {
+        var workspace = CreateTemporaryWorkspace();
+        try
+        {
+            var targetPath = Path.Combine(workspace, "ghost.txt");
+            var text = $$"""
+PRINT WRITEFILE("{{EscapePath(targetPath)}}", "alpha")
+PRINT DELETEFILE("{{EscapePath(targetPath)}}")
+PRINT DELETEFILE("{{EscapePath(targetPath)}}")
+""";
+
+            var (_, host, result) = ExecuteProgram(text);
+
+            Assert.True(result.Succeeded);
+            Assert.Equal(["TRUE", "TRUE", "FALSE"], host.Output);
         }
         finally
         {

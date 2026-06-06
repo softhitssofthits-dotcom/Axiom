@@ -1,0 +1,6 @@
+' Ожидается: MB3010, PALETTE USING требует активный графический SCREEN.
+DIM colors(0 TO 2) AS INTEGER
+colors(0) = 16
+colors(1) = 196
+colors(2) = 17
+PALETTE USING colors

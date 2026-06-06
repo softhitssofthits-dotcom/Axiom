@@ -1,0 +1,22 @@
+' Этот пример показывает, как TEXTWIDTH помогает выровнять подпись HUD в CANVAS.
+' Сначала вычисляем ширину строки, затем рисуем рамку и сам текст поверх кадра.
+
+CANVAS 320, 180
+
+DIM caption AS STRING
+caption = "Очки: 128"
+
+DIM textWidthPx AS INTEGER
+textWidthPx = TEXTWIDTH(caption)
+
+BEGINFRAME
+CLS RGB(12, 18, 28)
+
+' Рисуем фон под подпись, используя вычисленную ширину текста.
+FILLRECT 12, 12, textWidthPx + 12, 20, RGB(30, 44, 66)
+DRAWRECT 12, 12, textWidthPx + 12, 20, RGB(180, 210, 255)
+DRAWTEXT caption, 18, 16, RGB(255, 242, 170)
+
+PRESENT
+PRINT textWidthPx
+SLEEP

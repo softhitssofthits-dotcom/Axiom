@@ -1,0 +1,2 @@
+' Ожидается: MB3010, рисование modern graphics требует активный CANVAS.
+DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)
