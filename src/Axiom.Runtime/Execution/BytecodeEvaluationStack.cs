@@ -59,6 +59,12 @@ internal sealed class BytecodeEvaluationStack
         return _items[--Count];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RuntimeValue PeekUnchecked(int depthFromTop = 0)
+    {
+        return _items[Count - 1 - depthFromTop];
+    }
+
     public RuntimeValue[] ToBottomToTopArray()
     {
         if (Count == 0)

@@ -48,6 +48,7 @@
 | `PRINT` и `PRINT USING` | `samples/operators/print`, `samples/operators/print-using` | `samples/smoke/engine-compare/print_output_gallery.axm`, `mixed_workload_pipeline.axm`, `document_batch_repair.axm`, `string_array_loop_pipeline.axm` | выделенный | После прямой записи `PRINT`, кэша форматов `PRINT USING`, прямой записи строковых полей и fast-path числовых масок, а затем общих ускорений VM длинный контрольный прогон `print_output_gallery.axm` (`20` итераций, `3` прогрева) держится около `0.860x` runtime / `0.877x` total, то есть слой уже вышел из серой зоны и закреплён в целевом диапазоне. |
 | `INPUT` | `samples/operators/input`, `samples/functions/isdate` и другие смежные примеры ввода | `samples/smoke/engine-compare/input_record_intake.axm` | выделенный | После быстрого пути для `INPUT` на 1/2/3 целей без промежуточного массива результатов и длинного прогона `40` итераций с `5` прогревами `input_record_intake.axm` держится около `0.879x` runtime / `0.889x` total, то есть ввод тоже уже выведен в целевой диапазон по обеим метрикам. |
 | Процедуры, функции и замыкания | `samples/operators/sub`, `samples/operators/function` | `samples/smoke/engine-compare/routine_closure_pipeline.axm` | выделенный | Адресный сценарий нагружает прямые вызовы `SUB`/`FUNCTION`, вызовы через function-value, returned closure, shared-state closure и nested `SUB` с захватом внешнего локаля. После кэша привязки захватов, покадрового кэша capture-slot массивов, шаблонов локалов и повторного использования `BytecodeCallFrame` длинный прогон `20` итераций с `3` прогревами держится около `0.861x` runtime / `0.874x` total, то есть слой уже уверенно вошёл в целевой диапазон `<= 0.900x`. |
+| Современная графика `CANVAS` и частые примитивы кадра | `samples/graphics/modern/hud_text`, `camera_world`, `lines_and_circles`, `samples/graphics/game/maze_chase` | `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm` | выделенный | Добавлен первый адресный сценарий современного графического цикла без ручного ввода. После перевода частых графических опкодов VM на прямой `PopUnchecked()`-путь без общего `PopValue(...)` короткий прогон `3` итерации с `1` прогревом держится около `0.793x` runtime / `0.812x` total, то есть байткод уже заметно быстрее интерпретатора и на современном `CANVAS`-пути. |
 | Многомерные массивы и metadata built-in | `samples/smoke/multidimensional-arrays`, `samples/functions/arrayrank`, `arraybounds`, `lbound`, `ubound`, `arrayreshape`, `arrayflatten` | `samples/smoke/engine-compare/array_cube_rollup.axm`, `high_rank_metadata.axm` | выделенный | Есть и сценарий на плотную многомерную обработку, и отдельный усиленный сценарий на metadata. По `high_rank_metadata.axm` VM держится около `0.540x` runtime / `0.563x` total. |
 | Пользовательские `TYPE` и доступ к полям | `samples/operators/type/field_access`, `array_fields`, `fixed_array_fields`, `fixed_string_fields`, `grouped_fields` | `samples/smoke/engine-compare/type_record_roundtrip.axm` | выделенный | Для записей, вложенных полей, фиксированных строковых полей и фиксированных массивных полей теперь есть отдельный сценарий. После перевода `RuntimeRecordValue` на ordinal-слоты и кэша record-полей в VM `type_record_roundtrip.axm` держится около `0.891x` runtime / `0.888x` total, то есть record-слой уже переведён из рабочей серой зоны в целевой диапазон. |
 
@@ -71,3 +72,83 @@
 Для строкового слоя добавлен пользовательский производительный рычаг `REPLACEMANY(text, oldItems, newItems)`: он не является отдельным `engine-compare`-сценарием, но закрывает реальный профильный сигнал из `samples/smoke/repair_plans_mojibake.axm`. Вместо сотен последовательных `REPLACE`, каждый из которых заново проходит по документу, восстановитель теперь применяет одну таблицу правил за один проход по строке.
 
 Следующий полезный замер: повторить `samples/smoke/repair_plans_mojibake.axm` на полном рабочем документе и сравнить с предыдущими ручными числами около `40+` секунд в IDE. Если этот сценарий снова станет узким местом, следующим кандидатом будет кэширование подготовленных правил `REPLACEMANY` между вызовами одной и той же таблицы.
+
+## Обновление - 2026-06-06 - современная графика изображений и спрайтов
+
+Для современного графического слоя добавлен второй отдельный сценарий `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm`. Он детерминированно нагружает `LOADIMAGE`, `LOADSPRITE`, `DRAWIMAGE`, `DRAWSPRITE`, `CAMERA`, `RESETCAMERA`, `BEGINFRAME`, `PRESENT` и HUD-текст без ручного ввода.
+
+Короткий прогон `compare-engines --iterations 3 --warmup 1 --filter "modern_canvas_sprite_burst.axm"` сначала показал рабочий паритет около `0.947x` runtime / `0.960x` total, но длинный контрольный прогон `20` итераций с `3` прогревами дал уже устойчивое число около `1.056x` runtime / `1.032x` total. Значит, примитивный `CANVAS`-путь уже находится в целевом диапазоне, а спрайтовый и image-путь пока ещё остаётся отдельным прямым долгом VM.
+
+Практический вывод по матрице теперь такой:
+- `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm` закрывает быстрые примитивы кадра и подтверждает заметное преимущество `BytecodeVm`;
+- `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm` закрывает отдельную семью `DRAWIMAGE` / `DRAWSPRITE`, но пока оставляет её в зоне следующей оптимизации;
+- следующий профильный шаг для современной графики должен идти уже не через ещё один benchmark, а через измерение и ускорение именно VM/host-пути изображений и спрайтов.
+
+## Обновление - 2026-06-06 - современная графика подтянута на image/sprite-пути
+
+Для `BytecodeVm` добавлен безопасный быстрый путь для графических built-in `RGB`, `LOADIMAGE` и `LOADSPRITE`: теперь VM сначала смотрит аргументы через `PeekUnchecked()`, а снимает их со стека только на успешном пути. Для самих `DRAWIMAGE` и `DRAWSPRITE` добавлен прямой integer/long-путь без лишних общих `AsLong()`-конверсий на типичном случае benchmark-сценария.
+
+Параллельно benchmark-host `BenchmarkGraphicsHost` получил более быстрый растеризатор `DrawImageRegion(...)`: отдельный прямой путь 1:1 без масштабирования и инкрементальный fixed-point путь для масштабирования вместо деления на каждом пикселе.
+
+После этих правок длинный контрольный прогон `compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_"` дал такие числа:
+- `modern_canvas_primitive_burst.axm`: около `0.980x` runtime / `0.976x` total;
+- `modern_canvas_sprite_burst.axm`: около `1.033x` runtime / `1.031x` total.
+
+Практический вывод теперь такой:
+- быстрые примитивы современного `CANVAS` остаются в рабочем целевом диапазоне и после новых правок;
+- отдельный image/sprite-путь заметно подтянут относительно прежних `1.056x` / `1.032x`, но длинный прогон всё ещё оставляет небольшой хвост около трёх процентов;
+- следующим шагом уже не нужен новый benchmark-сценарий: надо профилировать оставшуюся разницу именно в цепочке `BytecodeVm.Graphics -> DrawImage/DrawSprite`.
+
+## Обновление - 2026-06-06 - добавлен профиль опкодов и ускорен горячий `Convert`
+
+Для `Axiom.ManualChecks` добавлена отдельная команда `profile-bytecode-opcodes`. Она компилирует выбранный `engine-compare`-сценарий в байткод, запускает его через `BytecodeVm` с наблюдателем инструкций и пишет отдельный отчёт по частотам опкодов, built-in и процедур.
+
+Профиль `modern_canvas_sprite_burst.axm` показал, что текущий хвост сидит не в самих вызовах `DRAWIMAGE` / `DRAWSPRITE`, а в окружающей арифметике benchmark-сценария:
+- `PushConst`: `26211` наблюдений;
+- `LoadLocal`: `23969`;
+- `Add`: `14160`;
+- `Convert`: `9762`;
+- `Multiply`: `9520`;
+- `Modulo`: `8120`;
+- `DrawSprite`: `1440`;
+- `DrawImage`: `960`.
+
+После этого в `BytecodeVm` ускорен `Opcode.Convert`: успешные преобразования `INTEGER`, `LONG`, `DOUBLE` и `DECIMAL` теперь идут через прямой `PopUnchecked()` и без раннего `ResolveLocation(...)` на типичном успешном пути.
+
+Контрольные числа после этой правки получились такими:
+- отдельный длинный прогон `modern_canvas_sprite_burst.axm` один раз дал около `0.988x` runtime / `0.979x` total;
+- повторный длинный одиночный прогон того же сценария дал около `1.060x` runtime / `1.054x` total;
+- полный длинный прогон `modern_canvas_` дал около `0.874x` runtime / `0.899x` total для `modern_canvas_primitive_burst.axm` и около `1.044x` runtime / `1.040x` total для `modern_canvas_sprite_burst.axm`.
+
+Практический вывод на текущем шаге такой:
+- ускорение `Convert` полезно и локально подтверждается адресным прогоном;
+- примитивный `CANVAS`-путь уже уверенно быстрее интерпретатора;
+- image/sprite-путь всё ещё шумный и пока не даёт устойчиво повторяемого выигрыша на каждом длинном прогоне, поэтому остаётся отдельным производительным долгом;
+- следующим шагом нужно профилировать уже не семейство `DRAWIMAGE` / `DRAWSPRITE` в целом, а конкретные частые формы `Convert`, `Add`, `Multiply` и `Modulo`, которые окружают спрайтовый цикл.
+
+## Обновление - 2026-06-06 - лишний Convert(Long) вокруг modern graphics снят
+
+Профиль `modern_canvas_sprite_burst.axm` после целочисленного lowering для modern graphics и согласования `BytecodeVm` с контрактом `INTEGER|LONG` резко очистился:
+- `Convert` упал с `9762` до `80`;
+- в hot-path остались в основном `PushConst`, `LoadLocal`, `Add`, `Multiply`, `Modulo`, `DrawSprite` и `DrawImage`.
+
+Длинные контрольные прогоны `20` итераций с `3` прогревами после этой правки дали такой срез:
+- `modern_canvas_primitive_burst.axm`: около `0.823x` runtime / `0.826x` total;
+- `modern_canvas_sprite_burst.axm`: около `0.932x` runtime / `0.934x` total;
+- отдельный длинний прогон только `modern_canvas_sprite_burst.axm`: около `0.981x` runtime / `1.013x` total.
+
+Практический вывод теперь такой:
+- быстрые примитивы `CANVAS` подтверждённо остаются в целевом диапазоне;
+- отдельный image/sprite-путь больше не является прямым долгом VM, потому что на полном адресном прогоне `modern_canvas_` он уже быстрее интерпретатора;
+- следующий возможный шаг по современной графике лежит уже не в `DRAWIMAGE` / `DRAWSPRITE` и не в `Convert(Long)`, а в окружающей арифметике sprite/image-цикла.
+
+## Обновление - 2026-06-06 - metadata built-in современной графики выделен в отдельный быстрый подслой
+
+Для современного графического слоя добавлен третий адресный сценарий `samples/smoke/engine-compare/modern_graphics_metadata_sweep.axm`. Он детерминированно нагружает `IMAGEWIDTH`, `IMAGEHEIGHT`, `SPRITEWIDTH`, `SPRITEHEIGHT` и `SPRITECOUNT` поверх пустых и загруженных `IMAGE` / `SPRITE`.
+
+В `BytecodeVm` эти metadata built-in переведены на прямой fast-path без общего `CallBuiltin`-dispatch. Длинный прогон `20` итераций с `3` прогревами дал около `0.447x` runtime / `0.455x` total, то есть подслой оказался одним из самых быстрых во всей современной графике.
+
+Практический вывод теперь такой:
+- современная графика больше не состоит только из двух адресных семей: теперь отдельно измерены быстрые примитивы кадра, image/sprite-рисование и metadata built-in;
+- metadata built-in `IMAGE` / `SPRITE` подтверждённо не являются новым долгом VM;
+- по текущему набору modern graphics уже не осталось подтверждённого адресным benchmark-ом подслоя, который стабильно проигрывает интерпретатору.

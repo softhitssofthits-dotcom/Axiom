@@ -1465,6 +1465,38 @@ public sealed class BoundProgramLowererTests
         Assert.Empty(result.Diagnostics);
     }
 
+    [Fact]
+    public void Lower_ModernGraphicsIntegerArguments_SkipsRedundantLongConversions()
+    {
+        var result = Lower("""
+            DIM frameIndex AS INTEGER
+            DIM spriteIndex AS INTEGER
+            DIM background AS IMAGE
+            DIM walker AS SPRITE
+
+            CANVAS 320, 180
+            CAMERA (frameIndex MOD 6) * 3, (frameIndex MOD 4) * 2
+            DRAWIMAGE background, 10 + spriteIndex * 2, 20 + spriteIndex, 48 + (spriteIndex MOD 4) * 10, 24 + (spriteIndex MOD 5) * 8
+            DRAWSPRITE walker, (frameIndex + spriteIndex) MOD 4, 12 + spriteIndex * 16, 92 + (spriteIndex MOD 3) * 20
+            DRAWTEXT "кадр", 8 + spriteIndex, 12 + frameIndex, 15
+            """);
+
+        Assert.True(result.Succeeded);
+        Assert.NotNull(result.Program);
+
+        var instructions = result.Program.EntryPoint.Instructions;
+        Assert.Contains(instructions, static instruction => instruction.Kind == LoweredInstructionKind.Canvas);
+        Assert.Contains(instructions, static instruction => instruction.Kind == LoweredInstructionKind.Camera);
+        Assert.Contains(instructions, static instruction => instruction.Kind == LoweredInstructionKind.DrawImage);
+        Assert.Contains(instructions, static instruction => instruction.Kind == LoweredInstructionKind.DrawSprite);
+        Assert.Contains(instructions, static instruction => instruction.Kind == LoweredInstructionKind.DrawText);
+
+        Assert.DoesNotContain(
+            instructions,
+            static instruction => instruction.Kind == LoweredInstructionKind.Convert
+                && instruction.ValueType == TypeSymbol.Long);
+    }
+
     private static LoweringResult Lower(string source)
     {
         var pipeline = new AxiomExecutionPipeline();

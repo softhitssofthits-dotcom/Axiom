@@ -71,11 +71,52 @@ PRINT 1 + 2
     {
         var consoleService = new FakeProgramConsoleService(new FakeProgramInputPromptService());
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+        var runDirectory = Path.Combine(Path.GetTempPath(), "axiom-ide-resource-base-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(runDirectory);
 
-        var result = service.Run("PRINT 1", sourceFilePath: @"C:\temp\samples\program.axm");
+        try
+        {
+            var result = service.Run("PRINT 1", sourceFilePath: Path.Combine(runDirectory, "program.axm"));
 
-        Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.Equal(@"C:\temp\samples", consoleService.ResourceBaseDirectory);
+            Assert.Equal(ProgramRunStatus.Success, result.Status);
+            Assert.Equal(runDirectory, consoleService.ResourceBaseDirectory);
+        }
+        finally
+        {
+            Directory.Delete(runDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Run_SetsCurrentDirToSourceFileDirectoryDuringExecution()
+    {
+        var originalCurrentDirectory = Environment.CurrentDirectory;
+        var runDirectory = Path.Combine(Path.GetTempPath(), "axiom-ide-currentdir-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(runDirectory);
+        var sourceFilePath = Path.Combine(runDirectory, "program.axm");
+        var expectedPath = Path.Combine(runDirectory, "currentdir.txt");
+
+        try
+        {
+            var service = CreateService();
+            var sourceText = """
+DIM ok AS BOOLEAN = WRITEFILE("currentdir.txt", CURRENTDIR())
+PRINT ok
+""";
+
+            var result = service.Run(sourceText, sourceFilePath: sourceFilePath);
+
+            Assert.Equal(ProgramRunStatus.Success, result.Status);
+            Assert.Equal("TRUE", result.OutputText);
+            Assert.True(File.Exists(expectedPath));
+            Assert.Equal(runDirectory, File.ReadAllText(expectedPath));
+            Assert.Equal(originalCurrentDirectory, Environment.CurrentDirectory);
+        }
+        finally
+        {
+            Environment.CurrentDirectory = originalCurrentDirectory;
+            Directory.Delete(runDirectory, recursive: true);
+        }
     }
 
     [Fact]

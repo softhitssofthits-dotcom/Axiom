@@ -8,6 +8,7 @@ public sealed class ScreenFramebuffer
     private readonly uint[] _palette;
     private readonly uint[] _trueColorPixels;
     private readonly bool[] _hasTrueColor;
+    private readonly Dictionary<ScaleMapKey, int[]> _scaleMapCache = [];
 
     public ScreenFramebuffer(int width, int height)
     {
@@ -238,32 +239,21 @@ public sealed class ScreenFramebuffer
             return;
         }
 
-        for (var destinationY = (int)clippedTop; destinationY <= clippedBottom; destinationY++)
-        {
-            var targetY = destinationY - top;
-            var sourceY = checked((int)(targetY * image.Height / height));
-            var sourceRowOffset = sourceY * image.Width;
-            var destinationRowOffset = destinationY * Width;
-
-            for (var destinationX = (int)clippedLeft; destinationX <= clippedRight; destinationX++)
-            {
-                var targetX = destinationX - left;
-                var sourceX = checked((int)(targetX * image.Width / width));
-                var sourcePixel = image.BgraPixels[sourceRowOffset + sourceX];
-                var alpha = (int)(sourcePixel >> 24);
-                if (alpha == 0)
-                {
-                    continue;
-                }
-
-                var destinationOffset = destinationRowOffset + destinationX;
-                var destinationPixel = GetVisiblePixel(destinationOffset);
-                _trueColorPixels[destinationOffset] = alpha == 255
-                    ? ForceOpaque(sourcePixel)
-                    : BlendOverOpaque(sourcePixel, destinationPixel, alpha);
-                _hasTrueColor[destinationOffset] = true;
-            }
-        }
+        DrawTrueColorRegion(
+            image.BgraPixels,
+            image.Width,
+            0,
+            0,
+            image.Width,
+            image.Height,
+            left,
+            top,
+            width,
+            height,
+            clippedLeft,
+            clippedTop,
+            clippedRight,
+            clippedBottom);
     }
 
     public void DrawSprite(
@@ -299,36 +289,118 @@ public sealed class ScreenFramebuffer
             return;
         }
 
-        var sourceFrameLeft = frame % sprite.Columns * sprite.FrameWidth;
-        var sourceFrameTop = frame / sprite.Columns * sprite.FrameHeight;
         var sourceImage = sprite.Image;
+        DrawTrueColorRegion(
+            sourceImage.BgraPixels,
+            sourceImage.Width,
+            sprite.GetFrameLeft(frame),
+            sprite.GetFrameTop(frame),
+            sprite.FrameWidth,
+            sprite.FrameHeight,
+            left,
+            top,
+            width,
+            height,
+            clippedLeft,
+            clippedTop,
+            clippedRight,
+            clippedBottom);
+    }
 
-        for (var destinationY = (int)clippedTop; destinationY <= clippedBottom; destinationY++)
+    private void DrawTrueColorRegion(
+        uint[] pixels,
+        int sourceImageWidth,
+        int sourceLeft,
+        int sourceTop,
+        int sourceWidth,
+        int sourceHeight,
+        long destinationLeft,
+        long destinationTop,
+        int destinationWidth,
+        int destinationHeight,
+        long clippedLeft,
+        long clippedTop,
+        long clippedRight,
+        long clippedBottom)
+    {
+        if (destinationWidth == sourceWidth && destinationHeight == sourceHeight)
         {
-            var targetY = destinationY - top;
-            var sourceY = sourceFrameTop + checked((int)(targetY * sprite.FrameHeight / height));
-            var sourceRowOffset = sourceY * sourceImage.Width;
-            var destinationRowOffset = destinationY * Width;
-
-            for (var destinationX = (int)clippedLeft; destinationX <= clippedRight; destinationX++)
+            var sourceRowStart = sourceTop + checked((int)(clippedTop - destinationTop));
+            var sourceColumnStart = sourceLeft + checked((int)(clippedLeft - destinationLeft));
+            for (var destinationY = (int)clippedTop; destinationY <= clippedBottom; destinationY++)
             {
-                var targetX = destinationX - left;
-                var sourceX = sourceFrameLeft + checked((int)(targetX * sprite.FrameWidth / width));
-                var sourcePixel = sourceImage.BgraPixels[sourceRowOffset + sourceX];
-                var alpha = (int)(sourcePixel >> 24);
-                if (alpha == 0)
+                var sourceOffset = sourceRowStart * sourceImageWidth;
+                var destinationRowOffset = destinationY * Width;
+                var sourceColumn = sourceColumnStart;
+
+                for (var destinationX = (int)clippedLeft; destinationX <= clippedRight; destinationX++, sourceColumn++)
                 {
-                    continue;
+                    WriteTrueColorPixel(pixels[sourceOffset + sourceColumn], destinationRowOffset + destinationX);
                 }
 
-                var destinationOffset = destinationRowOffset + destinationX;
-                var destinationPixel = GetVisiblePixel(destinationOffset);
-                _trueColorPixels[destinationOffset] = alpha == 255
-                    ? ForceOpaque(sourcePixel)
-                    : BlendOverOpaque(sourcePixel, destinationPixel, alpha);
-                _hasTrueColor[destinationOffset] = true;
+                sourceRowStart++;
+            }
+
+            return;
+        }
+
+        var rowMap = GetScaleMap(sourceHeight, destinationHeight);
+        var columnMap = GetScaleMap(sourceWidth, destinationWidth);
+        var rowStart = checked((int)(clippedTop - destinationTop));
+        var rowEnd = checked((int)(clippedBottom - destinationTop));
+        var columnStart = checked((int)(clippedLeft - destinationLeft));
+        var columnEnd = checked((int)(clippedRight - destinationLeft));
+
+        for (var targetRow = rowStart; targetRow <= rowEnd; targetRow++)
+        {
+            var destinationY = checked((int)(destinationTop + targetRow));
+            var sourceOffset = (sourceTop + rowMap[targetRow]) * sourceImageWidth;
+            var destinationRowOffset = destinationY * Width;
+
+            for (var targetColumn = columnStart; targetColumn <= columnEnd; targetColumn++)
+            {
+                var destinationX = checked((int)(destinationLeft + targetColumn));
+                var sourceColumn = sourceLeft + columnMap[targetColumn];
+                WriteTrueColorPixel(pixels[sourceOffset + sourceColumn], destinationRowOffset + destinationX);
             }
         }
+    }
+
+    private void WriteTrueColorPixel(uint sourcePixel, int destinationOffset)
+    {
+        var alpha = (int)(sourcePixel >> 24);
+        if (alpha == 0)
+        {
+            return;
+        }
+
+        var destinationPixel = GetVisiblePixel(destinationOffset);
+        _trueColorPixels[destinationOffset] = alpha == 255
+            ? ForceOpaque(sourcePixel)
+            : BlendOverOpaque(sourcePixel, destinationPixel, alpha);
+        _hasTrueColor[destinationOffset] = true;
+    }
+
+    private int[] GetScaleMap(int sourceLength, int targetLength)
+    {
+        var key = new ScaleMapKey(sourceLength, targetLength);
+        if (_scaleMapCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var map = new int[targetLength];
+        const int fractionBits = 16;
+        var sourceFixed = 0L;
+        var step = ((long)sourceLength << fractionBits) / targetLength;
+        for (var index = 0; index < targetLength; index++)
+        {
+            map[index] = (int)(sourceFixed >> fractionBits);
+            sourceFixed += step;
+        }
+
+        _scaleMapCache[key] = map;
+        return map;
     }
 
     public ScreenFramebufferSnapshot CreateSnapshot()
@@ -621,6 +693,8 @@ public sealed class ScreenFramebuffer
 
         return Math.Max(max, current);
     }
+
+    private readonly record struct ScaleMapKey(int SourceLength, int TargetLength);
 }
 
 public sealed record ScreenFramebufferSnapshot(int Width, int Height, uint[] BgraPixels);

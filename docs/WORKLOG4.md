@@ -3468,3 +3468,628 @@
 Следующий точный шаг:
 - открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и вручную проверить выравнивание точек на фоне `Background.gif`;
 - после визуальной приёмки вернуться к решению, нужен ли отдельный `samples/smoke/engine-compare/` сценарий современного графического цикла.
+
+## Session 934 - 2026-06-05 11:23 - комментарии InitPelletAlignment упрощены для ручной подгонки
+
+Что сделано:
+- по просьбе пользователя переписаны комментарии внутри `SUB InitPelletAlignment()` в `samples/graphics/game/maze_chase.axm`;
+- вместо технических формулировок комментарии теперь коротко объясняют, какой именно ряд или столбец тоннелей вы сейчас двигаете руками;
+- рядом с таблицами добавлены прямые подсказки по направлению подбора: для `pelletCenterRows(...)` большее число опускает точку ниже, а для `pelletCenterCols(...)` большее число сдвигает точку правее;
+- сами числовые значения выравнивания не менялись, чтобы не сбить текущую ручную настройку пользователя.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `docs/WORKLOG4.md`
+
+Решения:
+- в этой зоне примера полезнее комментарии-навигация по лабиринту, чем комментарии про абстрактную геометрию клетки;
+- ручная подгонка pellet-точек должна опираться на быстрые и короткие подписи в стиле строк `maze(...)`.
+
+Проверки:
+- кодовая логика не менялась, поэтому тесты не запускались;
+- рекомендуется открыть `samples/graphics/game/maze_chase.axm` в IDE и продолжить ручную настройку уже по новым комментариям.
+
+Следующий точный шаг:
+- вручную подогнать нужные `pelletCenterRows(...)` и `pelletCenterCols(...)` по визуальному результату в `Axiom.Ide`;
+- после визуальной приёмки решить, нужен ли отдельный `samples/smoke/engine-compare/` сценарий современного графического цикла.
+
+## Session 935 - 2026-06-05 11:36 - maze_chase переведён на полный обзор лабиринта
+
+Что сделано:
+- по новому замечанию пользователя выяснено, что ручная настройка точек неудобна из-за прежнего окна `CANVAS 480 x 270`: лабиринт не помещался целиком, а часть сдвигов уходила за пределы видимой области;
+- в `samples/graphics/game/maze_chase.axm` размеры холста изменены на полный обзор карты: ширина теперь равна полной ширине лабиринта, а высота вмещает весь лабиринт и HUD без обрезания;
+- процедура `DrawMazeWorld()` переведена в статичный режим без прокрутки по камере, чтобы все строки и все столбцы карты были видны одновременно;
+- весь игровой мир сдвинут ниже HUD через новый `WorldOffsetY()`, поэтому верхние ряды лабиринта больше не перекрываются текстовой панелью;
+- расчёт Y-координат для персонажей, точек и фоновой картинки приведён к тому же вертикальному смещению.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- в текущем этапе важнее удобная визуальная подгонка pellet-точек, чем сохранение прокрутки камеры в этом конкретном sample;
+- полный статичный обзор лучше подходит для ручной правки `pelletCenterRows(...)` и `pelletCenterCols(...)`, потому что результат любой цифры виден сразу на всём поле.
+
+Проверки:
+- нужно повторить адресный acceptance-прогон `MazeChaseAcceptanceSample`, чтобы подтвердить, что sample по-прежнему исполняется штатно;
+- после этого sample стоит снова открыть в `Axiom.Ide` и уже по новому полному обзору вручную довести точки.
+
+Следующий точный шаг:
+- вручную подогнать `pelletCenterRows(...)` и `pelletCenterCols(...)` в `Axiom.Ide`, пока точки не лягут в нужные тоннели;
+- после завершения подгонки решить, нужно ли возвращать камеру в `maze_chase` или вынести прокрутку в отдельный демонстрационный пример.
+
+## Session 936 - 2026-06-05 11:40 - acceptance maze_chase синхронизирован с полным обзором
+
+Что сделано:
+- после перевода `samples/graphics/game/maze_chase.axm` на полный обзор лабиринта адресный тест `MazeChaseAcceptanceSample_RunsOnBytecodeVm` упал не по логике игры, а по жёстко зашитому старому размеру окна `480 x 270`;
+- в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` ожидание `CanvasActivations` обновлено на новый фактический размер `448 x 606`;
+- пользовательский договор примера при этом не менялся: тест просто приведён в соответствие с новым режимом показа без прокрутки.
+
+Изменённые файлы:
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/WORKLOG4.md`
+
+Решения:
+- считать новую геометрию окна частью текущего sample-договора для ручной подгонки pellet-точек;
+- не возвращать старое ожидание теста, потому что именно большой полный обзор сейчас нужен пользователю для визуальной настройки.
+
+Проверки:
+- после этой синхронизации нужно повторить `MazeChaseAcceptanceSample`, чтобы подтвердить, что acceptance снова зелёный.
+
+Следующий точный шаг:
+- повторить адресный `MazeChaseAcceptanceSample`;
+- затем открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и продолжить ручную подгонку точек по полному обзору поля.
+## Session 937 - 2026-06-05 12:33 - maze_chase актёры привязаны к центрам точек
+
+Что сделано:
+- в `samples/graphics/game/maze_chase.axm` добавлена пауза по `SPACE`: повторное нажатие снимает паузу, а HUD показывает строку `Пауза. Нажмите SPACE, чтобы продолжить.`;
+- размер холста примера изменён на `1024 x 660`, чтобы лабиринт оставался целиком видимым в более нормальном широком окне;
+- функции `PlayerPixelX()`, `PlayerPixelY()`, `GhostPixelX()` и `GhostPixelY()` теперь считают координаты через общие функции `EntityPixelX(...)` и `EntityPixelY(...)` с передачей строки и столбца актёра;
+- `EntityPixelX(...)` и `EntityPixelY(...)` больше не используют простой центр клетки `TILE \ 2`, а берут старт и цель из `PelletPixelX(...)` и `PelletPixelY(...)`, то есть герой и призрак двигаются по тем же ручным центрам тоннелей, что и точки;
+- для бокового туннеля сохранён отдельный плавный выход за край, чтобы актёр не пролетал визуально через всю карту при переносе;
+- в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` обновлён ожидаемый размер `CanvasActivations` и добавлен acceptance-тест `MazeChaseAcceptanceSample_SpaceShowsPauseHud()`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- не переносить автоматически пиксельную эвристику в `pelletCenterRows(...)` и `pelletCenterCols(...)`: для текущего `Background.gif` автоматический анализ тонких голубых стен даёт нестабильные крайние значения, поэтому окончательная настройка точек остаётся ручной визуальной операцией;
+- оставить `BACKGROUND_OFFSET_Y = 45` как ручной сдвиг фоновой подложки, найденный пользователем, но синхронизировать персонажей именно с точками, чтобы герой не ходил ниже визуального ряда, который он съедает.
+
+Проверки:
+- первая попытка `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~MazeChaseAcceptanceSample"` упёрлась в локальную MSBuild/NuGet-проблему отсутствующего fallback-каталога `C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages`;
+- повторный адресный прогон с обходом `/p:DisableImplicitNuGetFallbackFolder=true` прошёл: `MazeChaseAcceptanceSample` — 4 теста, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и глазами проверить верхний ряд, второй горизонтальный ряд, центральный тоннель и строку старта героя уже с новой логикой движения по центрам точек;
+- если отдельные ряды или столбцы всё ещё попадают в стенки, дальше менять только соответствующие `pelletCenterRows(...)` и `pelletCenterCols(...)`, потому что актёры теперь автоматически используют те же координаты.
+
+## Session 938 - 2026-06-05 13:10 - maze_chase получил режим записи ручной калибровки
+
+Что сделано:
+- в `samples/graphics/game/maze_chase.axm` добавлен режим ручной калибровки по клавише `K`;
+- в калибровочном режиме игра замораживает механику, а стрелки двигают выбранную строку или столбец точек вместо героя;
+- прямо поверх лабиринта выводятся подсказки: `K` выключает режим, `C` переключает строку и столбец, `W/S` выбирают номер, стрелки двигают выбранную линию, `R` записывает текущее значение;
+- оверлей рисует направляющую линию по выбранной строке или столбцу и показывает точную строку присваивания, которую можно перенести в `InitPelletAlignment()`;
+- по `R` текущая строка присваивания дописывается во временный файл `.artifacts/maze_chase_pellet_calibration.txt`;
+- в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлен тест `MazeChaseAcceptanceSample_KShowsCalibrationHints()`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- временные результаты калибровки не записывать в корень репозитория, а хранить только в `.artifacts/`;
+- не менять автоматически значения `pelletCenterRows(...)` и `pelletCenterCols(...)` без визуальной приёмки пользователя;
+- после ручной калибровки переносить сохранённые строки из временного файла в `SUB InitPelletAlignment()` отдельной точечной правкой.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 5 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- запустить `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, включить калибровку клавишей `K`, сохранить удачные значения клавишей `R`, затем перенести содержимое `.artifacts/maze_chase_pellet_calibration.txt` в `SUB InitPelletAlignment()`.
+
+## Session 939 - 2026-06-05 13:21 - вход в калибровку maze_chase принимает маленькую k
+
+Что сделано:
+- по пользовательскому замечанию проверен вход в режим калибровки `samples/graphics/game/maze_chase.axm`;
+- найден практический источник сбоя: в живом графическом окне обычное нажатие латинской `k` приходит как маленький символ, а sample проверял только `KEYPRESS("K")`;
+- добавлена локальная функция `CalibrationHotKeyPressed(...)`, которая для буквенных команд калибровки принимает и заглавную, и маленькую букву;
+- вход в калибровку и команды `C`, `W`, `S`, `R` переведены на эту функцию, поэтому теперь работают также `k`, `c`, `w`, `s`, `r`;
+- acceptance-тест калибровки переименован и теперь подаёт именно маленькую `k`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- не менять глобальную семантику `KEYPRESS()` для всего языка, потому что одиночные символы могут быть регистрозависимыми;
+- исправить конкретный игровой sample локальным helper-слоем для горячих клавиш калибровки.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 5 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, нажать обычную латинскую `k` без `Shift` и проверить появление оверлея калибровки;
+- после подтверждения продолжить ручную подгонку строк и столбцов точек, сохраняя удачные значения клавишей `r`.
+
+## Session 940 - 2026-06-05 14:01 - maze_chase получил боковую панель, сетку и Shift+R
+
+Что сделано:
+- из `.artifacts/maze_chase_pellet_calibration.txt` прочитан первый пользовательский проход центрирования точек;
+- в `SUB InitPelletAlignment()` перенесены последние сохранённые значения для строк `pelletCenterRows(4..33)` и столбцов `pelletCenterCols(1)`, `pelletCenterCols(2)`, `pelletCenterCols(3)`, `pelletCenterCols(13)`;
+- калибровочная панель подсказок перенесена из верхней части экрана в боковую область слева от лабиринта, чтобы больше не закрывать верхний ряд точек;
+- добавлена тонкая калибровочная сетка поверх игрового поля с постоянным шагом `8` пикселей;
+- добавлен режим `Shift+R`, который дописывает во временный файл полный снимок всех текущих `pelletCenterRows(...)` и `pelletCenterCols(...)`;
+- в боковую панель добавлена строка статуса, чтобы после `R` или `Shift+R` было видно, что именно записалось;
+- acceptance-проверка `MazeChaseAcceptanceSample` расширена тестом полной записи по `Shift+R` и проверкой боковой панели/сетки.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- при переносе дублирующихся строк калибровки использовать последнее значение в файле как наиболее свежее;
+- оставить файл `.artifacts/maze_chase_pellet_calibration.txt` временным журналом ручной работы, а постоянные значения вносить в `InitPelletAlignment()` отдельными проходами.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, включить калибровку клавишей `k`, выполнить следующий визуальный проход по точкам и после него нажать `Shift+R`;
+- затем прочитать свежий полный снимок из `.artifacts/maze_chase_pellet_calibration.txt` и перенести новые значения в `SUB InitPelletAlignment()`.
+
+## Session 941 - 2026-06-05 18:13 - сетка maze_chase доведена до реальных границ фона
+
+Что сделано:
+- по пользовательскому замечанию проверен калибровочный оверлей `samples/graphics/game/maze_chase.axm`;
+- найдено, что сетка рисовалась от логического `WorldOffsetY()`, а не от фактического положения `Background.gif`, поэтому сверху и снизу не совпадала с подложкой;
+- сетка и вертикальная направляющая переведены на новые helper-функции `BackgroundDrawTop()` и `BackgroundDrawBottom()`, которые используют реальное положение фоновой картинки;
+- цвет сетки сделан более приглушённым;
+- длинные статусные сообщения калибровки переведены на двухстрочный вывод через `SetCalibrationStatusText(...)`, чтобы не наползать на игровое поле;
+- acceptance-проверка `MazeChaseAcceptanceSample` синхронизирована с новым двухстрочным статусом после `Shift+R`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- в калибровочном оверлее ориентироваться на фактические границы фоновой подложки, а не на абстрактный мир без ручного сдвига `BACKGROUND_OFFSET_Y`;
+- длинные сообщения панели калибровки всегда держать в двух строках, чтобы она оставалась читаемой.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и проверить глазами, что сетка теперь покрывает поле сверху донизу;
+- затем продолжить ручную подгонку точек и при необходимости снова сохранить полный снимок через `Shift+R`.
+
+## Session 942 - 2026-06-05 18:56 - maze_chase перенёс свежую калибровку и убрал догоняющие повороты
+
+Что сделано:
+- повторно прочитан `.artifacts/maze_chase_pellet_calibration.txt` и в `samples/graphics/game/maze_chase.axm` перенесены последние сохранённые значения `pelletCenterRows(5) = 12`, `pelletCenterRows(13) = 47`, `pelletCenterCols(6) = 15`, `pelletCenterCols(21) = 0`, `pelletCenterCols(27) = 5`;
+- в `UpdatePlayerInput()` оставлено только чтение стрелок через `KEYDOWN(...)`, а стрелочные `KEYPRESS(...)` убраны из обычного игрового управления;
+- acceptance-проверка `MazeChaseAcceptanceSample_LowerKShowsCalibrationHints()` обновлена под новое значение строки 5;
+- acceptance-проверка движения героя переведена на удержание `RIGHT`, чтобы проверять именно живое управление, а не старую очередь одиночных событий.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- корень запаздывания поворотов для `maze_chase` найден в сочетании двух механизмов: sample одновременно читал стрелки через `KEYDOWN(...)` и через `KEYPRESS(...)`, а рантайм при `KEYPRESS()` честно сохраняет несъеденные клавиши обратно в очередь;
+- глобальную семантику клавиатуры для всего языка в этой задаче не менять, а исправить именно игровой sample, где для поворота в коридоре нужен приоритет актуально зажатой стрелки.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и продолжить ручную подгонку точек уже после переноса этих значений;
+- после следующего прохода снова нажать `Shift+R`, чтобы сохранить полный снимок, и затем перенести новые числа в `InitPelletAlignment()`;
+- если запаздывание клавиш проявится и в других интерактивных программах, вынести это уже в отдельную задачу на пересмотр общей очереди клавиатуры.
+
+## Session 943 - 2026-06-05 19:23 - maze_chase перенёс второй пакет свежих координат
+
+Что сделано:
+- повторно прочитан `.artifacts/maze_chase_pellet_calibration.txt` и из него взяты именно последние значения по каждому индексу;
+- в `samples/graphics/game/maze_chase.axm` дополнительно перенесены `pelletCenterRows(23) = 66`, `pelletCenterCols(1) = 12`, `pelletCenterCols(2) = 13`, `pelletCenterCols(18) = 3`, `pelletCenterCols(28) = 6`;
+- адресный прогон `MazeChaseAcceptanceSample` выполнен после переноса координат.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- причиной того, что в прошлый раз часть чисел могла не примениться визуально, оказался не пропуск самой процедуры переноса, а то, что в файле калибровки были более новые записи для некоторых индексов, появившиеся уже после предыдущего переноса;
+- для `maze_chase` дальше нужно каждый раз переносить не весь журнал подряд, а последнюю запись по каждому индексу.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и проверить глазами области, связанные с новыми значениями `pelletCenterRows(23)`, `pelletCenterCols(1)`, `pelletCenterCols(2)`, `pelletCenterCols(18)` и `pelletCenterCols(28)`;
+- после следующего прохода снова сохранить полный снимок через `Shift+R` и ещё раз перенести последние значения из `.artifacts/maze_chase_pellet_calibration.txt`.
+
+## Session 944 - 2026-06-05 20:33 - калибровка maze_chase перенесена рядом с файлом игры
+
+Что сделано:
+- найден последний полный файл калибровки `maze_chase_pellet_calibration.txt` и помещён рядом с игрой: `samples/graphics/game/maze_chase_pellet_calibration.txt`;
+- проверено, что значения из этого файла совпадают с текущими присваиваниями `pelletCenterRows(...)` и `pelletCenterCols(...)` в `SUB InitPelletAlignment()`;
+- `samples/graphics/game/maze_chase.axm` теперь сохраняет калибровку через `COMBINEPATH(CURRENTDIR(), "maze_chase_pellet_calibration.txt")`, без `.artifacts`;
+- `ProgramRunService` на время запуска программы выставляет `Environment.CurrentDirectory` в папку открытого `.axm` и затем восстанавливает прежнюю рабочую папку;
+- acceptance-проверки `MazeChaseAcceptanceSample` запускают пример из папки игры, чтобы тестовая запись `Shift+R` работала с тем же путём, что и живой запуск IDE;
+- добавлен IDE-тест, который проверяет, что `CURRENTDIR()` во время запуска из IDE указывает на папку `sourceFilePath`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `samples/graphics/game/maze_chase_pellet_calibration.txt`
+- `src/Axiom.Ide/Services/Execution/ProgramRunService.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- рабочий файл ручной калибровки `maze_chase` теперь хранится рядом с `maze_chase.axm`, а не в `.artifacts`;
+- для программ, запущенных из IDE с известным `sourceFilePath`, `CURRENTDIR()` должен быть папкой открытого `.axm`, чтобы относительные файловые операции были предсказуемыми для пользователя.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~Run_SetsCurrentDirToSourceFileDirectoryDuringExecution|FullyQualifiedName~Run_SetsResourceBaseDirectoryFromSourceFilePath" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 2 теста, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, выполнить следующий проход ручной калибровки и после `Shift+R` проверять файл `samples/graphics/game/maze_chase_pellet_calibration.txt`.
+
+## Session 945 - 2026-06-05 21:39 - цепочка калибровки maze_chase защищена от тестовой перезаписи и растяжения окна
+
+Что сделано:
+- по пользовательскому замечанию проверена вся цепочка координат `samples/graphics/game/maze_chase.axm`: фон, точки, герой, призрак, сетка и калибровочные направляющие сейчас используют общий `WorldOffsetY()`;
+- подтверждено, что `samples/graphics/game/maze_chase_pellet_calibration.txt` после `Shift+R` сам по себе не читается программой при старте: значения применяются только после переноса в `SUB InitPelletAlignment()`;
+- найден реальный дефект в acceptance-цепочке: `MazeChaseAcceptanceSample_ShiftRWritesAllCalibrationValues()` запускал `Shift+R` из папки игры и мог перезаписывать рабочий файл ручной калибровки рядом с `maze_chase.axm`;
+- тест `Shift+R` переведён на временный рабочий каталог `.artifacts/tests/...`, поэтому автотест больше не трогает `samples/graphics/game/maze_chase_pellet_calibration.txt`;
+- после запуска `MazeChaseAcceptanceSample` проверено, что живой файл калибровки остался с прежними `Length = 1768` и `LastWriteTime = 05.06.2026 21:20:43`;
+- найден второй визуальный дефект: `Direct3D11SwapChainRenderer.ScaleFramePixels(...)` растягивал кадр до размера окна независимо по X и Y, из-за чего `CANVAS` мог вытягивать лабиринт, героя и призрака;
+- renderer исправлен: кадр теперь масштабируется с сохранением пропорций и центрируется с чёрными полями, если окно имеет другую форму;
+- добавлен тест `ScreenRenderer_PreservesFrameAspectRatioWhenBackBufferIsWider()`;
+- в комментариях `maze_chase.axm` старые упоминания временного файла калибровки заменены на описание файла рядом с игрой.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `src/Axiom.Ide/Graphics/Direct3D11SwapChainRenderer.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- рабочий файл ручной калибровки `samples/graphics/game/maze_chase_pellet_calibration.txt` должен изменяться только при живом запуске пользователя, а не при acceptance-тестах;
+- для ручной пиксельной калибровки современный графический хост IDE обязан сохранять пропорции кадра, иначе пользователь видит не те координаты, которые реально рисует программа;
+- автоматическое чтение файла калибровки при старте пока не добавлялось, по текущему пользовательскому решению перенос чисел в `InitPelletAlignment()` остаётся ручным шагом Codex после сохранения снимка.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~ScreenRenderer" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 4 теста, 0 ошибок;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок;
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --filter "FullyQualifiedName~Run_SetsCurrentDirToSourceFileDirectoryDuringExecution|FullyQualifiedName~Run_SetsResourceBaseDirectoryFromSourceFilePath" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 2 теста, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и проверить глазами, что поле, герой и призрак больше не вытянуты;
+- выполнить новый ручной проход калибровки, нажать `Shift+R`, убедиться, что изменился `samples/graphics/game/maze_chase_pellet_calibration.txt`;
+- после этого перенести полный свежий снимок из этого файла в `SUB InitPelletAlignment()`.
+
+## Session 946 - 2026-06-05 21:54 - перенесён контрольный сдвиг столбца maze_chase
+
+Что сделано:
+- по пользовательскому сигналу после `Shift+R` прочитан свежий файл `samples/graphics/game/maze_chase_pellet_calibration.txt`;
+- подтверждено, что файл изменён в `2026-06-05 21:51:15` и содержит полный снимок калибровки;
+- найдено последнее значение для проверочной правки: `pelletCenterCols(26) = 2`;
+- в `samples/graphics/game/maze_chase.axm` в `SUB InitPelletAlignment()` перенесено это значение вместо прежнего `pelletCenterCols(26) = 7`;
+- выполнена адресная acceptance-проверка `MazeChaseAcceptanceSample`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- при переносе сохраняется правило «последняя запись для индекса побеждает», поэтому повторное `pelletCenterCols(26) = 2` в конце файла считается финальным значением;
+- если визуальный сдвиг не проявится после запуска обновлённого `maze_chase.axm`, следующим шагом нужно проверять не путь сохранения файла, а фактическую цепочку от `pelletCenterCols(...)` до `PelletPixelX(...)`, отрисовки точек и отображения кадра IDE.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть обновлённый `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и визуально проверить, сдвинулся ли столбец 26;
+- если он не сдвинулся, проверить, не запускает ли IDE старое содержимое открытой вкладки, а затем разобрать цепочку вычисления `PelletPixelX(...)` и отрисовки точек.
+
+## Session 947 - 2026-06-05 22:08 - полная запись калибровки maze_chase переведена на t
+
+Что сделано:
+- по пользовательскому замечанию подтверждено, что прежний `Shift+R` мог восприниматься как обычная запись `R`, из-за чего в рабочий файл уходила только одна выбранная линия;
+- в `samples/graphics/game/maze_chase.axm` полная запись таблицы калибровки перенесена на отдельную клавишу `t`;
+- одиночная запись выбранной линии оставлена на отдельной клавише `r`;
+- боковые подсказки калибровочного режима обновлены: `r: записать линию`, `t: записать всё`;
+- значение `pelletCenterCols(26)` возвращено к `7`, потому что `pelletCenterCols(26) = 2` было одиночной допиской, а не настоящим полным снимком калибровки;
+- acceptance-проверка полной записи переименована и переведена на нажатие `t` без `SHIFT`.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- `Shift+R` больше не использовать в ручной калибровке `maze_chase`;
+- новая рабочая схема: `r` дописывает текущую линию, `t` перезаписывает файл полным снимком всей таблицы;
+- после следующего ручного прохода переносить значения в `InitPelletAlignment()` только из файла, сохранённого клавишей `t`.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 6 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, включить калибровку клавишей `k`, сделать ручные правки и нажать `t`;
+- затем проверить, что `samples/graphics/game/maze_chase_pellet_calibration.txt` перезаписан полным снимком, и перенести значения в `SUB InitPelletAlignment()`.
+## Session 948 - 2026-06-05 22:52 - перенос калибровки maze_chase вынесен в отдельный Axiom-скрипт
+
+Что сделано:
+- добавлен новый файл `samples/graphics/game/maze_chase_apply_calibration.axm`, который считывает `samples/graphics/game/maze_chase_pellet_calibration.txt`, полностью пересобирает `SUB InitPelletAlignment()` и перезаписывает `samples/graphics/game/maze_chase.axm`;
+- в скрипте оставлены подробные русские комментарии почти после каждой строки, чтобы его можно было читать как временный служебный инструмент;
+- добавлен acceptance-тест `MazeChaseApplyCalibrationSample_RewritesInitPelletAlignmentFromCalibrationFile` в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`;
+- в скрипте исправлены две реальные проблемы первого прогона: конфликт имени `StartsWith` со встроенной функцией `STARTSWITH` и некорректное приведение `FIX(VAL(...))` к `INTEGER`;
+- после исправлений адресный прогон нового сценария и существующих проверок `MazeChaseAcceptanceSample` прошёл успешно.
+
+Изменённые файлы:
+- `samples/graphics/game/maze_chase_apply_calibration.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- автоматическую подгрузку `maze_chase_pellet_calibration.txt` при старте `maze_chase.axm` не добавлять;
+- для дальнейшей работы принята новая цепочка: в игре нажать `t`, потом отдельно запустить `maze_chase_apply_calibration.axm`;
+- новый скрипт переписывает весь блок `InitPelletAlignment()` целиком, чтобы не искать «реальные отличия» по отдельным строкам.
+
+Проверки:
+- `powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --filter "FullyQualifiedName~MazeChaseApplyCalibrationSample_RewritesInitPelletAlignmentFromCalibrationFile|FullyQualifiedName~MazeChaseAcceptanceSample" /p:DisableImplicitNuGetFallbackFolder=true` проходит: 7 тестов, 0 ошибок.
+
+Следующий точный шаг:
+- открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, включить калибровку клавишей `k`, сделать новые правки и нажать `t`;
+- после этого запустить `samples/graphics/game/maze_chase_apply_calibration.axm`, чтобы обновить `InitPelletAlignment()` по свежему файлу калибровки;
+- затем снова запустить игру и визуально проверить новый проход.
+
+## Session 949 - 2026-06-05 23:32 - ручная приёмка maze_chase подтверждена пользователем
+
+Что сделано:
+- по сообщению пользователя зафиксировано, что `samples/graphics/game/maze_chase.axm` вручную проверен в `Axiom.Ide` и работает корректно;
+- активный следующий шаг в документах переведён с ручной калибровки `maze_chase` на продуктовый выбор следующего направления для современного графического слоя.
+
+Изменённые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- считать текущую визуальную доводку и ручную приёмку `maze_chase` завершённой;
+- не держать ручную калибровку точек активной задачей, пока не появится новое замечание по самому примеру;
+- следующую развилку выбирать уже на уровне продукта: отдельный детерминированный `samples/smoke/engine-compare/` для сравнения движков или новый общий игровой helper поверх `CANVAS`.
+
+Проверки:
+- новых автоматических проверок не запускалось, потому что изменение было только документным и основано на ручной пользовательской приёмке.
+
+Следующий точный шаг:
+- решить, нужен ли сейчас отдельный сценарий `samples/smoke/engine-compare/` на основе современного графического цикла `maze_chase`;
+- если нет, выбрать следующий общий игровой helper или следующий живой игровой пример для развития современного графического слоя.
+
+## Session 950 - 2026-06-05 23:57 - современная графика получила адресный engine-compare и быстрый путь VM
+
+Что сделано:
+- добавлен новый производительный сценарий `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm`, который детерминированно нагружает `CANVAS`, `BEGINFRAME`, `PRESENT`, `CAMERA`, `RESETCAMERA`, `DRAWRECT`, `FILLRECT`, `DRAWLINE`, `DRAWCIRCLE`, `FILLCIRCLE` и `DRAWTEXT`;
+- `src/Axiom.ManualChecks/Program.cs` расширен графическим benchmark-host, чтобы `compare-engines` мог честно исполнять современные графические сценарии через `IGraphicsHost`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` частые современные графические опкоды переведены на прямой путь `frame.EvaluationStack.PopUnchecked()` вместо общего `PopValue(...)`;
+- сначала первый адресный прогон показал почти полный паритет современного графического runtime (`1.006x`), после локального fast-path повторный прогон дал уже заметное преимущество `BytecodeVm`.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- современный графический цикл `CANVAS` больше не считать непроверенной производительной зоной: теперь у него есть собственный адресный `engine-compare`;
+- первым быстрым путём для графики считать не переписывание host-рендерера, а снижение накладных расходов VM на частых графических опкодах;
+- следующим кандидатом на отдельный графический замер считать уже не примитивы кадра, а спрайтовый и image-путь `DRAWIMAGE` / `DRAWSPRITE`.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 3 --warmup 1 --filter "modern_canvas_primitive_burst.axm"`:
+  - первый прогон до fast-path: runtime ratio `1.006x`, total ratio `0.984x`;
+  - повторный прогон после fast-path: runtime ratio `0.793x`, total ratio `0.812x`.
+
+Следующий точный шаг:
+- решить, нужен ли отдельный `engine-compare` сценарий для `DRAWIMAGE` / `DRAWSPRITE` и спрайтовой нагрузки;
+- если да, добавить короткий детерминированный сценарий со спрайтами и снова снять сравнение `Interpreter` против `BytecodeVm`.
+
+## Session 951 - 2026-06-06 00:12 - добавлен отдельный sprite/image engine-compare для современной графики
+
+Что сделано:
+- добавлен новый сценарий `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm`, который детерминированно нагружает `LOADIMAGE`, `LOADSPRITE`, `DRAWIMAGE`, `DRAWSPRITE`, `CAMERA`, `RESETCAMERA`, `BEGINFRAME`, `PRESENT` и HUD-текст без ручного ввода;
+- `src/Axiom.ManualChecks/Program.cs` расширен вторым modern-graphics benchmark-case и поддержкой синтетической image/sprite-растеризации в `BenchmarkGraphicsHost`, чтобы `compare-engines` мерил не пустые графические вызовы, а реальную запись пикселей;
+- адресный короткий прогон `compare-engines --iterations 3 --warmup 1 --filter "modern_canvas_sprite_burst.axm"` сначала показал рабочий паритет около `0.947x` runtime / `0.960x` total;
+- затем длинный контрольный прогон `compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_sprite_burst.axm"` показал уже устойчивое число около `1.056x` runtime / `1.032x` total, то есть на спрайтовой и image-нагрузке `BytecodeVm` пока ещё чуть медленнее интерпретатора;
+- быстрая локальная попытка дополнительно ужать `DRAWIMAGE` / `DRAWSPRITE` в `BytecodeVm.Graphics` была проверена отдельным повторным длинным прогоном и не дала улучшения, поэтому она откатана и в рабочем дереве оставлен только уже подтверждённый fast-path для частых примитивов кадра.
+
+Изменённые файлы:
+- `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- второй отдельный benchmark для современной графики считать добавленным и рабочим;
+- современную графику больше не считать одной неделимой зоной: быстрые примитивы кадра уже закрыты, а `DRAWIMAGE` / `DRAWSPRITE` теперь выделены как отдельный производительный долг;
+- не держать в коде непроверенную микрооптимизацию, если длинный прогон не подтверждает её пользу.
+
+Проверки:
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 3 --warmup 1 --filter "modern_canvas_sprite_burst.axm"`: runtime ratio `0.947x`, total ratio `0.960x`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_sprite_burst.axm"`: runtime ratio `1.056x`, total ratio `1.032x`;
+- повторный длинный прогон после локальной попытки ужать `DRAWIMAGE` / `DRAWSPRITE` подтвердил, что эта попытка не улучшает результат, поэтому правка откатана до обновления документов.
+
+Следующий точный шаг:
+- профилировать путь `DRAWIMAGE` / `DRAWSPRITE` на `modern_canvas_sprite_burst.axm` уже как отдельную задачу;
+- затем найти измеримый быстрый путь в VM или в benchmark-host-растеризации и повторить длинный адресный прогон.
+
+## Session 952 - 2026-06-06 00:54 - image/sprite-путь современной графики дополнительно ускорен
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs` добавлен `PeekUnchecked()`, чтобы безопасно смотреть аргументы fast-path без преждевременного разрушения стека;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен безопасный fast-path для built-in `RGB`, `LOADIMAGE` и `LOADSPRITE`, а таблица `BuiltinExecutionInfo` теперь хранит `CanonicalId` для такого адресного пути;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` `DRAWIMAGE` и `DRAWSPRITE` переведены на прямой integer/long-путь для координат, размеров и номера кадра без лишних общих `AsLong()`-конверсий на успешном случае;
+- в `src/Axiom.ManualChecks/Program.cs` `BenchmarkGraphicsHost.DrawImageRegion(...)` переписан на отдельный 1:1 путь без масштабирования и на инкрементальный fixed-point путь для масштабирования вместо деления на каждом пикселе;
+- короткий адресный прогон по `modern_canvas_sprite_burst.axm` дал рабочее ускорение до примерно `0.957x` runtime / `0.984x` total, а длинный контрольный прогон `modern_canvas_` закрепил итог около `1.033x` runtime / `1.031x` total для sprite/image-пути и около `0.980x` runtime / `0.976x` total для fast-primitive-пути.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.ManualChecks/Program.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- не откатывать fast-path built-in: после перевода на `PeekUnchecked()` он стал безопасным и не ломает обычный путь VM;
+- считать текущий шаг полезным и измеримым, потому что отдельный sprite/image benchmark сдвинут вниз от прежних `1.056x` / `1.032x` до примерно `1.033x` / `1.031x` на длинном прогоне;
+- не объявлять `DRAWIMAGE` / `DRAWSPRITE` полностью закрытыми по производительности, пока длинный контрольный прогон ещё оставляет небольшой хвост около трёх процентов.
+
+Проверки:
+- `dotnet build Axiom.sln`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 10 --warmup 2 --filter "modern_canvas_"`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 10 --warmup 2 --filter "modern_canvas_sprite_burst.axm"`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_"`
+
+Следующий точный шаг:
+- снять более точечный профиль остатка в `modern_canvas_sprite_burst.axm`, чтобы разложить хвост между VM-диспетчеризацией `DRAWIMAGE` / `DRAWSPRITE` и хостовым `DrawImageRegion(...)`;
+- после этого делать уже только следующую измеримую правку, а не ещё одну слепую серию микрооптимизаций.
+
+## Session 953 - 2026-06-06 02:10 - modern_canvas_sprite_burst разложен до уровня опкодов
+
+Что сделано:
+- в `src/Axiom.ManualChecks/Program.cs` добавлена отдельная команда `profile-bytecode-opcodes`, которая компилирует выбранный `engine-compare`-сценарий в байткод, запускает его через `BytecodeVm` с наблюдателем инструкций и пишет отчёт по частотам опкодов, built-in и процедур;
+- профиль `modern_canvas_sprite_burst.axm` показал, что основной хвост идёт не от самих `DrawImage` / `DrawSprite`, а от окружающих `PushConst`, `LoadLocal`, `Add`, `Convert`, `Multiply` и `Modulo`;
+- после этого в `src/Axiom.Runtime/Execution/BytecodeVm.cs` ускорен успешный путь `Opcode.Convert`: он теперь снимает значение через `frame.EvaluationStack.PopUnchecked()` и не делает ранний `ResolveLocation(...)`, пока не нужен медленный откат;
+- спорный integer fast-path для самих `DRAWIMAGE` / `DRAWSPRITE` дополнительно не возвращался: длинный прогон до этого уже показал, что он не даёт устойчивого выигрыша.
+
+Изменённые файлы:
+- `src/Axiom.ManualChecks/Program.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решения:
+- считать новый опкодный профиль рабочим инструментом для следующих шагов по современной графике;
+- считать быстрые примитивы `CANVAS` уже устойчиво ускоренными;
+- не считать image/sprite-путь закрытым, пока длинные прогоны по `modern_canvas_sprite_burst.axm` не дадут повторяемое значение ниже `1.000x`.
+
+Проверки:
+- `dotnet build Axiom.sln`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- profile-bytecode-opcodes --filter "modern_canvas_sprite_burst.axm"`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_sprite_burst.axm"`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_"`
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_sprite_burst.axm"`
+
+Итоги измерений:
+- опкодный профиль `modern_canvas_sprite_burst.axm`: `PushConst = 26211`, `LoadLocal = 23969`, `Add = 14160`, `Convert = 9762`, `Multiply = 9520`, `Modulo = 8120`, `DrawSprite = 1440`, `DrawImage = 960`;
+- отдельный длинный прогон после ускорения `Convert` один раз дал около `0.988x` runtime / `0.979x` total;
+- полный длинный прогон `modern_canvas_` на той же версии дал около `0.874x` runtime / `0.899x` total для `modern_canvas_primitive_burst.axm` и около `1.044x` runtime / `1.040x` total для `modern_canvas_sprite_burst.axm`;
+- повторный длинный одиночный прогон `modern_canvas_sprite_burst.axm` дал около `1.060x` runtime / `1.054x` total, поэтому устойчивый выигрыш для image/sprite-пути пока не подтверждён.
+
+Следующий точный шаг:
+- расширить `profile-bytecode-opcodes` для `modern_canvas_sprite_burst.axm` до разбивки по видам `Convert` и по смешанным числовым комбинациям вокруг `Add`, `Multiply` и `Modulo`;
+- затем сделать только одну следующую измеримую правку в горячей арифметике спрайтового цикла и снова повторить длинный контрольный прогон.
+
+## Session 954 - 2026-06-06 02:38 - modern graphics переведён на целочисленный bytecode-путь
+
+Что сделано:
+- в `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs` modern graphics lowering переведён на `LowerModernGraphicsIntegralExpression(...)`, чтобы не оставлять лишний `Convert(Long)` там, где исходное выражение уже `INTEGER` или `LONG`;
+- в `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` modern graphics опкоды `CANVAS`, `CAMERA`, `DRAWRECT`, `FILLRECT`, `DRAWLINE`, `DRAWCIRCLE`, `FILLCIRCLE`, `DRAWTEXT`, `DRAWIMAGE` и `DRAWSPRITE` переведены на проверку целочисленного стека `INTEGER|LONG`;
+- в `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` тот же modern graphics путь VM доведён до контракта `INTEGER|LONG`, чтобы runtime не требовал жёстко `LONG` там, где lowering уже отдаёт `INTEGER`;
+- в `tests/Axiom.Bytecode.Tests/BoundProgramLowererTests.cs` добавлен адресный тест на отсутствие лишних `Convert(Long)` в modern graphics lowering.
+
+Изменённые файлы:
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `tests/Axiom.Bytecode.Tests/BoundProgramLowererTests.cs`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Bytecode.Tests/Axiom.Bytecode.Tests.csproj --filter "FullyQualifiedName~BoundProgramLowererTests"`: пройдено `39/39`;
+- `dotnet build Axiom.sln`: успешно;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Execute_CompiledCanvas"`: пройдено `4/4`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- profile-bytecode-opcodes --filter "modern_canvas_sprite_burst.axm"`: `Convert` упал с `9762` до `80`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_sprite_burst.axm"`: около `0.981x` runtime / `1.013x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_"`: `modern_canvas_primitive_burst.axm` около `0.823x` runtime / `0.826x` total, `modern_canvas_sprite_burst.axm` около `0.932x` runtime / `0.934x` total.
+
+Решения:
+- считать лишние `Convert(Long)` вокруг modern graphics снятым системным долгом lowering/validator/runtime;
+- считать modern sprite/image-путь больше не отстающим от интерпретатора на полном адресном прогоне `modern_canvas_`;
+- не возвращать экспериментальный integer fast-path для самих `DRAWIMAGE` / `DRAWSPRITE`, потому что устойчивый выигрыш пришёл от вычищения лишних конверсий и согласования стека.
+
+Следующий точный шаг:
+- если продолжать разгон современной графики, смотреть уже не на `Convert(Long)`, а на горячую арифметику `Add` / `Multiply` / `Modulo` в sprite/image-сценарии;
+- иначе переходить к следующему производительному долгу VM вне уже выровненного modern graphics-пути.
+
+## Session 955 - 2026-06-06 02:54 - metadata built-in современной графики получили быстрый bytecode-путь
+
+Что сделано:
+- в `src/Axiom.Runtime/Execution/BytecodeVm.cs` добавлен прямой fast-path для built-in `IMAGEWIDTH`, `IMAGEHEIGHT`, `SPRITEWIDTH`, `SPRITEHEIGHT` и `SPRITECOUNT`, чтобы они не шли через общий `CallBuiltin` и не собирали лишний общий dispatch;
+- там же добавлены узкие helper-методы `GetImageWidthFast`, `GetImageHeightFast`, `GetSpriteWidthFast`, `GetSpriteHeightFast`, `GetSpriteCountFast` поверх уже хранимых runtime-значений `IMAGE` и `SPRITE`;
+- добавлен новый адресный benchmark `samples/smoke/engine-compare/modern_graphics_metadata_sweep.axm`, который детерминированно нагружает metadata built-in современной графики без ручного ввода;
+- `src/Axiom.ManualChecks/Program.cs` расширен новым benchmark-case для этого metadata-сценария.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs`
+- `src/Axiom.ManualChecks/Program.cs`
+- `samples/smoke/engine-compare/modern_graphics_metadata_sweep.axm`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/BYTECODE_PERF_MATRIX.md`
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --filter "FullyQualifiedName~Execute_CompiledImageWidthAndHeightReturnLoadedAndEmptySizes|FullyQualifiedName~Execute_CompiledSpriteWidthHeightAndCountReturnLoadedAndEmptySizes"`: пройдено `2/2`;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_graphics_metadata_sweep.axm"`: около `0.447x` runtime / `0.455x` total;
+- `dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_"`: `modern_canvas_primitive_burst.axm` около `0.896x` runtime / `0.907x` total, `modern_canvas_sprite_burst.axm` около `1.003x` runtime / `1.011x` total;
+- два отдельных повторных длинных прогона `modern_canvas_sprite_burst.axm` дали около `0.834x` / `0.846x` и около `0.911x` / `0.936x`, то есть image/sprite-путь снова вернулся в рабочую зону быстрее интерпретатора;
+- `dotnet build Axiom.sln`: успешно.
+
+Решения:
+- считать metadata built-in современной графики отдельным горячим подслоем, который теперь тоже ускорен и измерен адресным сценарием;
+- считать текущий набор modern graphics операторов и связанных built-in в `BytecodeVm` доведённым до рабочего ускоренного состояния: примитивы, image/sprite-путь и metadata-путь все имеют отдельные быстрые ветки и отдельные измерения;
+- не добавлять сейчас ещё один спекулятивный fast-path для `DRAWIMAGE` / `DRAWSPRITE`, пока следующий профильный сигнал не покажет новый устойчивый хвост.
+
+Следующий точный шаг:
+- если продолжать оптимизацию modern graphics, смотреть уже только на новый измеримый хвост из живого игрового сценария или на отдельную горячую арифметику вокруг sprite/image-циклов;
+- иначе переключаться на следующий производительный долг VM вне уже ускоренного слоя современной графики.

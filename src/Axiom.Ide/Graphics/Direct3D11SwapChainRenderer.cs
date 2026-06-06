@@ -144,16 +144,23 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
             return frame.BgraPixels;
         }
 
+        var scale = Math.Min((double)targetWidth / frame.Width, (double)targetHeight / frame.Height);
+        var scaledWidth = Math.Max(1, (int)Math.Floor(frame.Width * scale));
+        var scaledHeight = Math.Max(1, (int)Math.Floor(frame.Height * scale));
+        var offsetX = (targetWidth - scaledWidth) / 2;
+        var offsetY = (targetHeight - scaledHeight) / 2;
         var scaled = new uint[targetWidth * targetHeight];
-        for (var y = 0; y < targetHeight; y++)
+        Array.Fill(scaled, 0xFF000000u);
+
+        for (var y = 0; y < scaledHeight; y++)
         {
-            var sourceY = y * frame.Height / targetHeight;
+            var sourceY = y * frame.Height / scaledHeight;
             var sourceRow = sourceY * frame.Width;
-            var targetRow = y * targetWidth;
-            for (var x = 0; x < targetWidth; x++)
+            var targetRow = (offsetY + y) * targetWidth;
+            for (var x = 0; x < scaledWidth; x++)
             {
-                var sourceX = x * frame.Width / targetWidth;
-                scaled[targetRow + x] = frame.BgraPixels[sourceRow + sourceX];
+                var sourceX = x * frame.Width / scaledWidth;
+                scaled[targetRow + offsetX + x] = frame.BgraPixels[sourceRow + sourceX];
             }
         }
 

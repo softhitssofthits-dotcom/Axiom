@@ -307,8 +307,8 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.Screen(screen.Location, screenValueCount));
                 break;
             case BoundCanvasStatement canvas:
-                LowerExpression(canvas.WidthExpression, instructions);
-                LowerExpression(canvas.HeightExpression, instructions);
+                LowerModernGraphicsIntegralExpression(canvas.WidthExpression, instructions);
+                LowerModernGraphicsIntegralExpression(canvas.HeightExpression, instructions);
                 instructions.Add(LoweredInstruction.Canvas(canvas.Location));
                 break;
             case BoundBeginFrameStatement beginFrame:
@@ -318,8 +318,8 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.Present(present.Location));
                 break;
             case BoundCameraStatement camera:
-                LowerExpression(camera.XExpression, instructions);
-                LowerExpression(camera.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(camera.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(camera.YExpression, instructions);
                 instructions.Add(LoweredInstruction.Camera(camera.Location));
                 break;
             case BoundResetCameraStatement resetCamera:
@@ -511,71 +511,71 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.Draw(draw.Location));
                 break;
             case BoundDrawRectStatement drawRect:
-                LowerExpression(drawRect.XExpression, instructions);
-                LowerExpression(drawRect.YExpression, instructions);
-                LowerExpression(drawRect.WidthExpression, instructions);
-                LowerExpression(drawRect.HeightExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawRect.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawRect.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawRect.WidthExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawRect.HeightExpression, instructions);
                 LowerExpression(drawRect.ColorExpression, instructions);
                 instructions.Add(LoweredInstruction.DrawRect(drawRect.Location));
                 break;
             case BoundFillRectStatement fillRect:
-                LowerExpression(fillRect.XExpression, instructions);
-                LowerExpression(fillRect.YExpression, instructions);
-                LowerExpression(fillRect.WidthExpression, instructions);
-                LowerExpression(fillRect.HeightExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillRect.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillRect.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillRect.WidthExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillRect.HeightExpression, instructions);
                 LowerExpression(fillRect.ColorExpression, instructions);
                 instructions.Add(LoweredInstruction.FillRect(fillRect.Location));
                 break;
             case BoundDrawLineStatement drawLine:
-                LowerExpression(drawLine.X1Expression, instructions);
-                LowerExpression(drawLine.Y1Expression, instructions);
-                LowerExpression(drawLine.X2Expression, instructions);
-                LowerExpression(drawLine.Y2Expression, instructions);
+                LowerModernGraphicsIntegralExpression(drawLine.X1Expression, instructions);
+                LowerModernGraphicsIntegralExpression(drawLine.Y1Expression, instructions);
+                LowerModernGraphicsIntegralExpression(drawLine.X2Expression, instructions);
+                LowerModernGraphicsIntegralExpression(drawLine.Y2Expression, instructions);
                 LowerExpression(drawLine.ColorExpression, instructions);
                 instructions.Add(LoweredInstruction.DrawLine(drawLine.Location));
                 break;
             case BoundDrawCircleStatement drawCircle:
-                LowerExpression(drawCircle.XExpression, instructions);
-                LowerExpression(drawCircle.YExpression, instructions);
-                LowerExpression(drawCircle.RadiusExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawCircle.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawCircle.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawCircle.RadiusExpression, instructions);
                 LowerExpression(drawCircle.ColorExpression, instructions);
                 instructions.Add(LoweredInstruction.DrawCircle(drawCircle.Location));
                 break;
             case BoundFillCircleStatement fillCircle:
-                LowerExpression(fillCircle.XExpression, instructions);
-                LowerExpression(fillCircle.YExpression, instructions);
-                LowerExpression(fillCircle.RadiusExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillCircle.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillCircle.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(fillCircle.RadiusExpression, instructions);
                 LowerExpression(fillCircle.ColorExpression, instructions);
                 instructions.Add(LoweredInstruction.FillCircle(fillCircle.Location));
                 break;
             case BoundDrawTextStatement drawText:
                 LowerExpression(drawText.TextExpression, instructions);
-                LowerExpression(drawText.XExpression, instructions);
-                LowerExpression(drawText.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawText.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawText.YExpression, instructions);
                 LowerExpression(drawText.ColorExpression, instructions);
                 instructions.Add(LoweredInstruction.DrawText(drawText.Location));
                 break;
             case BoundDrawImageStatement drawImage:
                 LowerExpression(drawImage.ImageExpression, instructions);
-                LowerExpression(drawImage.XExpression, instructions);
-                LowerExpression(drawImage.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawImage.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawImage.YExpression, instructions);
                 if (drawImage.HasScale)
                 {
-                    LowerExpression(drawImage.WidthExpression!, instructions);
-                    LowerExpression(drawImage.HeightExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(drawImage.WidthExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(drawImage.HeightExpression!, instructions);
                 }
                 instructions.Add(LoweredInstruction.DrawImage(drawImage.Location, drawImage.HasScale));
                 break;
 
             case BoundDrawSpriteStatement drawSprite:
                 LowerExpression(drawSprite.SpriteExpression, instructions);
-                LowerExpression(drawSprite.FrameExpression, instructions);
-                LowerExpression(drawSprite.XExpression, instructions);
-                LowerExpression(drawSprite.YExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawSprite.FrameExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawSprite.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawSprite.YExpression, instructions);
                 if (drawSprite.HasScale)
                 {
-                    LowerExpression(drawSprite.WidthExpression!, instructions);
-                    LowerExpression(drawSprite.HeightExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(drawSprite.WidthExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(drawSprite.HeightExpression!, instructions);
                 }
                 instructions.Add(LoweredInstruction.DrawSprite(drawSprite.Location, drawSprite.HasScale));
                 break;
@@ -1572,6 +1572,19 @@ public sealed class BoundProgramLowerer
         }
 
         instructions.Add(LoweredInstruction.CallValue(call.Location, call.Arguments.Count, call.Type));
+    }
+
+    private void LowerModernGraphicsIntegralExpression(BoundExpression expression, List<LoweredInstruction> instructions)
+    {
+        if (expression is BoundConversionExpression conversion
+            && conversion.Type == TypeSymbol.Long
+            && (conversion.Expression.Type == TypeSymbol.Integer || conversion.Expression.Type == TypeSymbol.Long))
+        {
+            LowerExpression(conversion.Expression, instructions);
+            return;
+        }
+
+        LowerExpression(expression, instructions);
     }
 
     private static bool IsTemporaryTypeMethodSelfArgument(

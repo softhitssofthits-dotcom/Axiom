@@ -923,3 +923,46 @@
 - Сквозной VM: да, используются acceptance-тесты `ModernHudTextAcceptanceSample_RunsOnBytecodeVm`, `ModernCameraAcceptanceSample_RunsOnBytecodeVm`, `ModernLinesAndCirclesAcceptanceSample_RunsOnBytecodeVm` и `MazeChaseAcceptanceSample_RunsOnBytecodeVm`;
 - Негативный паритет: частично, отсутствие `CANVAS`, отрицательный радиус и выход координат за поддерживаемый диапазон уже покрыты runtime- и VM-проверками; отдельные отрицательные runnable sample для второго современного среза пока не добавлялись;
 - Профиль: не приоритет, пока не выделен отдельный `engine-compare` сценарий для современного графического цикла.
+
+## Обновление реестра - 2026-06-06 - профиль IMAGE, SPRITE и современного CANVAS подтянут
+
+Дополнение к областям `IMAGE` / `DRAWIMAGE`, `SPRITE` / `DRAWSPRITE` и современного `CANVAS`:
+- VM: да, `BytecodeVm` получил безопасный быстрый путь для built-in `RGB`, `LOADIMAGE`, `LOADSPRITE`, прямой просмотр аргументов через `PeekUnchecked()` и быстрый integer/long-путь в `DRAWIMAGE` / `DRAWSPRITE` без лишних общих конверсий на успешном пути;
+- Интерпретатор: да, поведение не менялось, паритет по пользовательскому договору сохраняется;
+- Автотесты: да, существующие parser-, binder-, execution- и acceptance-проверки не требовали смены, потому что правка была только производительной;
+- Запускаемые примеры: да, для современного графического профиля теперь опорными runnable-сценариями остаются `samples/graphics/modern/hud_text.axm`, `camera_world.axm`, `lines_and_circles.axm`, `samples/graphics/game/maze_chase.axm` и оба производительных smoke-сценария `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm`, `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm`;
+- Сквозной VM: да, длинный контрольный прогон `compare-engines --iterations 20 --warmup 3 --filter "modern_canvas_"` прошёл успешно без отката на интерпретатор;
+- Негативный паритет: не менялся;
+- Профиль: да, область больше не является слепой зоной. По длинному прогону быстрые примитивы `CANVAS` держатся около `0.980x` runtime / `0.976x` total, а image/sprite-путь после ускорений подтянут до примерно `1.033x` runtime / `1.031x` total. Значит, `DRAWIMAGE` / `DRAWSPRITE` уже почти доведены до паритета, но ещё остаются отдельным небольшим производительным долгом VM.
+
+## Обновление реестра - 2026-06-06 - профиль современной графики стал опкодным
+
+Дополнение к областям `IMAGE` / `DRAWIMAGE`, `SPRITE` / `DRAWSPRITE` и современного `CANVAS`:
+- VM: да, в `BytecodeVm` добавлен быстрый успешный путь для `Opcode.Convert`, который снимает значение через `PopUnchecked()` и не делает ранний `ResolveLocation(...)`, пока не нужен медленный диагностический откат;
+- Интерпретатор: да, пользовательский договор не менялся, правка затронула только байткодный быстрый путь;
+- Автотесты: да, существующие parser-, binder-, execution- и acceptance-проверки продолжают проходить без изменения поведения;
+- Запускаемые примеры: да, основными runnable-сценариями для этой области остаются `samples/graphics/modern/hud_text.axm`, `camera_world.axm`, `lines_and_circles.axm`, `samples/graphics/game/maze_chase.axm`, `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm` и `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm`;
+- Сквозной VM: да, новый служебный профиль `profile-bytecode-opcodes --filter "modern_canvas_sprite_burst.axm"` проходит через реальный `BytecodeVm` без отката на интерпретатор и даёт частоты инструкций поверх того же smoke-сценария;
+- Негативный паритет: не менялся;
+- Профиль: да, область теперь видна на уровне отдельных опкодов. Для `modern_canvas_sprite_burst.axm` основная нагрузка пришлась на `PushConst`, `LoadLocal`, `Add`, `Convert`, `Multiply` и `Modulo`, тогда как сами `DrawSprite` и `DrawImage` заняли лишь небольшую долю общего числа инструкций. Значит, следующий шаг должен дожимать не только графические вызовы, но и окружающую арифметику спрайтового цикла.
+
+## Обновление реестра - 2026-06-06 - modern graphics согласован по стеку и ускорен на целочисленном пути
+
+Дополнение к областям `IMAGE` / `DRAWIMAGE`, `SPRITE` / `DRAWSPRITE` и современного `CANVAS`:
+- VM: да, `BytecodeVm` теперь согласован с lowering по контракту `INTEGER|LONG` для `CANVAS`, `CAMERA`, `DRAWRECT`, `FILLRECT`, `DRAWLINE`, `DRAWCIRCLE`, `FILLCIRCLE`, `DRAWTEXT`, `DRAWIMAGE` и `DRAWSPRITE`; лишний жёсткий `AsLong()` для modern graphics пути убран;
+- Валидатор байткода: да, `BytecodeModuleValidator` теперь принимает для этих modern graphics опкодов не только `LONG`, но и целочисленно совместимый стек `INTEGER|LONG`;
+- Автотесты: да, добавлен адресный lowering-тест `Lower_ModernGraphicsIntegerArguments_SkipsRedundantLongConversions`, а адресные bytecode runtime-тесты modern canvas продолжают проходить на том же пользовательском договоре;
+- Запускаемые примеры: да, опорные runnable и performance-сценарии не менялись и остаются `samples/graphics/modern/hud_text.axm`, `camera_world.axm`, `lines_and_circles.axm`, `samples/graphics/game/maze_chase.axm`, `samples/smoke/engine-compare/modern_canvas_primitive_burst.axm`, `samples/smoke/engine-compare/modern_canvas_sprite_burst.axm`;
+- Сквозной VM: да, `profile-bytecode-opcodes` и длинние прогоны `compare-engines` проходят через реальный `BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: не менялся;
+- Профиль: да, после новой правки `Convert` в `modern_canvas_sprite_burst.axm` упал с `9762` до `80`, а длинний прогон `modern_canvas_` теперь держит примерно `0.823x` / `0.826x` для примитивов и `0.932x` / `0.934x` для sprite/image-пути. Значит, современная графика больше не является слоем, где bytecode VM отстаёт от интерпретатора на адресном benchmark-срезе.
+
+## Обновление реестра - 2026-06-06 - metadata built-in IMAGE и SPRITE тоже ускорены адресным fast-path
+
+Дополнение к областям `IMAGE` / `DRAWIMAGE`, `SPRITE` / `DRAWSPRITE` и современного `CANVAS`:
+- VM: да, `BytecodeVm` теперь имеет отдельный fast-path не только для `LOADIMAGE` / `LOADSPRITE`, но и для `IMAGEWIDTH`, `IMAGEHEIGHT`, `SPRITEWIDTH`, `SPRITEHEIGHT`, `SPRITECOUNT`;
+- Автотесты: да, адресные bytecode runtime-тесты размеров `IMAGE` и `SPRITE` продолжают проходить после перевода этих built-in на прямой путь;
+- Запускаемые примеры: да, к прежним адресным performance-сценариям добавлен `samples/smoke/engine-compare/modern_graphics_metadata_sweep.axm`;
+- Сквозной VM: да, новый metadata-сценарий проходит через реальный `BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: не менялся;
+- Профиль: да, metadata built-in современной графики теперь тоже измерены отдельно. По длиннему прогону `20` итераций с `3` прогревами `modern_graphics_metadata_sweep.axm` держится около `0.447x` runtime / `0.455x` total. Значит, и metadata-подслой современной графики больше не является долгом VM.

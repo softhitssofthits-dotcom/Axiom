@@ -29,5 +29,5 @@ public sealed class RuntimeImageValue
 
     public int Height { get; }
 
-    public IReadOnlyList<uint> BgraPixels { get; }
+    public uint[] BgraPixels { get; }
 }

@@ -5,6 +5,8 @@ namespace Axiom.Bytecode;
 
 public sealed class BytecodeRoutine
 {
+    private readonly BytecodeInstruction[] _instructionArray;
+
     public BytecodeRoutine(
         int id,
         string name,
@@ -29,8 +31,9 @@ public sealed class BytecodeRoutine
         ResultType = resultType;
         ParameterCount = parameterCount;
         LocalSlotCount = localSlotCount;
-        Instructions = instructions;
-        MaxEvaluationStackDepth = EstimateMaxEvaluationStackDepth(instructions);
+        _instructionArray = instructions as BytecodeInstruction[] ?? instructions.ToArray();
+        Instructions = _instructionArray;
+        MaxEvaluationStackDepth = EstimateMaxEvaluationStackDepth(_instructionArray);
         IsEntryPoint = isEntryPoint;
         Symbol = symbol;
         ParameterVariables = parameterVariables ?? Array.Empty<VariableSymbol>();
@@ -51,6 +54,10 @@ public sealed class BytecodeRoutine
     public int LocalSlotCount { get; }
 
     public IReadOnlyList<BytecodeInstruction> Instructions { get; }
+
+    public BytecodeInstruction[] InstructionArray => _instructionArray;
+
+    public int InstructionCount => _instructionArray.Length;
 
     public int MaxEvaluationStackDepth { get; }
 

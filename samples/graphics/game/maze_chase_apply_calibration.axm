@@ -1,0 +1,222 @@
+' Отдельный служебный скрипт для переноса калибровки точек в код игры.
+' Запускать его нужно вручную после того, как в `maze_chase.axm`
+' в режиме калибровки нажата клавиша `t` и рядом с игрой обновился
+' файл `maze_chase_pellet_calibration.txt`.
+
+DIM gameFilePath AS STRING = COMBINEPATH(CURRENTDIR(), "maze_chase.axm")                         ' Путь к самой игре рядом с этим скриптом.
+DIM calibrationFilePath AS STRING = COMBINEPATH(CURRENTDIR(), "maze_chase_pellet_calibration.txt") ' Путь к полному снимку калибровки рядом с игрой.
+DIM gameText AS STRING = ""                                                                        ' Здесь будет исходный текст `maze_chase.axm`.
+DIM calibrationText AS STRING = ""                                                                 ' Здесь будет текст файла калибровки.
+DIM updatedGameText AS STRING = ""                                                                 ' Сюда соберём обновлённый текст игры после замены процедуры.
+DIM replacementText AS STRING = ""                                                                 ' Сюда соберём новую версию `SUB InitPelletAlignment()`.
+DIM writeResult AS BOOLEAN = FALSE                                                                 ' Результат записи обновлённого файла игры.
+DIM parseErrorMessage AS STRING = ""                                                               ' Здесь храним причину ошибки разбора файла калибровки.
+DIM replaceErrorMessage AS STRING = ""                                                             ' Здесь храним причину ошибки замены процедуры в коде игры.
+DIM parsedRowValues(1 TO 36) AS INTEGER                                                            ' Здесь копим значения `pelletCenterRows(...)` из файла калибровки.
+DIM parsedColValues(1 TO 28) AS INTEGER                                                            ' Здесь копим значения `pelletCenterCols(...)` из файла калибровки.
+DIM parsedRowSeen(1 TO 36) AS INTEGER                                                              ' Флаг 1 означает, что строка с таким индексом уже найдена в файле.
+DIM parsedColSeen(1 TO 28) AS INTEGER                                                              ' Флаг 1 означает, что столбец с таким индексом уже найден в файле.
+
+IF NOT FILEEXISTS(gameFilePath) THEN                                                               ' Сначала убеждаемся, что игра лежит рядом со скриптом.
+    PRINT "Не найден файл maze_chase.axm рядом со скриптом."                                      ' Если файла игры нет, дальше работать нельзя.
+ELSEIF NOT FILEEXISTS(calibrationFilePath) THEN                                                    ' Потом убеждаемся, что рядом уже есть полный снимок калибровки.
+    PRINT "Не найден файл maze_chase_pellet_calibration.txt рядом со скриптом."                  ' Без файла калибровки нечего переносить в код.
+ELSE                                                                                               ' Если оба файла на месте, можно выполнять перенос.
+    gameText = READFILE(gameFilePath)                                                              ' Читаем весь исходный текст игры.
+    calibrationText = READFILE(calibrationFilePath)                                                ' Читаем весь снимок калибровки.
+
+    ResetParsedCalibration()                                                                       ' Перед новым разбором очищаем все прошлые значения и флаги.
+    ParseCalibrationText(calibrationText)                                                          ' Разбираем строки вида `pelletCenterRows(...) = ...`.
+
+    IF parseErrorMessage <> "" THEN                                                                ' Если разбор нашёл проблему, ничего не переписываем.
+        PRINT parseErrorMessage                                                                    ' Показываем понятную русскую причину остановки.
+    ELSE                                                                                           ' Если калибровка разобрана успешно, можно собирать новую процедуру.
+        replacementText = BuildPelletAlignmentProcedure()                                          ' Полностью пересобираем `InitPelletAlignment()` из файла калибровки.
+        updatedGameText = ReplacePelletAlignmentProcedure(gameText, replacementText)               ' Подменяем в тексте игры только одну нужную процедуру.
+
+        IF replaceErrorMessage <> "" THEN                                                          ' Если процедура в игре не найдена или не заменена, запись запрещаем.
+            PRINT replaceErrorMessage                                                              ' Сообщаем, где именно оборвалась цепочка.
+        ELSE                                                                                       ' Если процедура найдена и обновлена, сохраняем игру обратно.
+            writeResult = WRITEFILE(gameFilePath, updatedGameText)                                 ' Записываем новый текст прямо в `maze_chase.axm`.
+
+            IF writeResult THEN                                                                    ' При успешной записи сообщаем, что перенос завершён.
+                PRINT "Калибровка перенесена в maze_chase.axm."                                   ' Главное короткое сообщение об успехе.
+                PRINT "Процедура InitPelletAlignment() полностью обновлена из файла калибровки." ' Уточняем, что заменён весь блок, а не отдельные строки.
+            ELSE                                                                                   ' Если запись не удалась, тоже печатаем понятный статус.
+                PRINT "Не удалось записать обновлённый maze_chase.axm."                           ' Это значит, что файл игры не был обновлён.
+            END IF                                                                                 ' Завершаем разбор результата записи файла.
+        END IF                                                                                     ' Завершаем разбор результата замены процедуры.
+    END IF                                                                                         ' Завершаем разбор результата чтения и разбора калибровки.
+END IF                                                                                             ' Завершаем главный управляющий блок скрипта.
+
+SUB ResetParsedCalibration()                                                                       ' Эта процедура очищает старые значения перед новым разбором файла.
+    parseErrorMessage = ""                                                                         ' Старую ошибку разбора тоже обязательно сбрасываем.
+
+    FOR rowIndex = 1 TO 36                                                                         ' Проходим по всем строкам калибровки по порядку.
+        parsedRowValues(rowIndex) = 0                                                              ' Сбрасываем старое значение строки.
+        parsedRowSeen(rowIndex) = 0                                                                ' Помечаем, что строка пока не встретилась в файле.
+    NEXT                                                                                           ' Переходим к следующему индексу строки.
+
+    FOR colIndex = 1 TO 28                                                                         ' Проходим по всем столбцам калибровки по порядку.
+        parsedColValues(colIndex) = 0                                                              ' Сбрасываем старое значение столбца.
+        parsedColSeen(colIndex) = 0                                                                ' Помечаем, что столбец пока не встретился в файле.
+    NEXT                                                                                           ' Переходим к следующему индексу столбца.
+END SUB                                                                                            ' Завершаем полную очистку служебных таблиц.
+
+SUB ParseCalibrationText(sourceText AS STRING)                                                     ' Эта процедура читает полный снимок калибровки построчно.
+    DIM lines() AS STRING                                                                          ' Сюда разобьём весь файл калибровки по строкам.
+    DIM currentLine AS STRING = ""                                                                 ' Здесь временно держим одну очищенную строку.
+
+    lines = SPLIT(sourceText, CHR(10))                                                             ' Разбиваем текст по символу LF на отдельные строки.
+
+    FOR lineIndex = 1 TO ARRAYLENGTH(lines)                                                        ' Идём по всем строкам файла сверху вниз.
+        currentLine = TRIM(TrimTrailingCr(lines(lineIndex)))                                       ' Убираем CR справа и лишние пробелы по краям строки.
+
+        IF currentLine <> "" THEN                                                                  ' Пустые строки файла нам не нужны.
+            IF LEFT(currentLine, 1) <> "'" THEN                                                    ' Комментарии в файле калибровки тоже разбирать не нужно.
+                IF STARTSWITH(currentLine, "pelletCenterRows(") THEN                               ' Это строка с вертикальным центром тоннеля.
+                    ApplyCalibrationLine(currentLine, 36, TRUE)                                    ' Сохраняем число в таблицу строк.
+                ELSEIF STARTSWITH(currentLine, "pelletCenterCols(") THEN                           ' Это строка с горизонтальным центром тоннеля.
+                    ApplyCalibrationLine(currentLine, 28, FALSE)                                   ' Сохраняем число в таблицу столбцов.
+                END IF                                                                             ' Завершаем разбор содержательной строки файла.
+            END IF                                                                                 ' Завершаем пропуск комментариев.
+        END IF                                                                                     ' Завершаем пропуск пустых строк.
+    NEXT                                                                                           ' Переходим к следующей строке файла калибровки.
+
+    IF parseErrorMessage = "" THEN                                                                 ' Проверку полноты делаем только если сам разбор не упал.
+        EnsureAllCalibrationValuesExist()                                                          ' Убеждаемся, что в файле есть все 36 строк и все 28 столбцов.
+    END IF                                                                                         ' Завершаем финальную проверку разбора.
+END SUB                                                                                            ' Завершаем построчный разбор файла калибровки.
+
+SUB ApplyCalibrationLine(lineText AS STRING, maxIndex AS INTEGER, isRowLine AS BOOLEAN)           ' Эта процедура разбирает одну строку вида `name(index) = value`.
+    DIM openPos AS INTEGER = 0                                                                     ' Здесь найдём открывающую круглую скобку.
+    DIM closePos AS INTEGER = 0                                                                    ' Здесь найдём закрывающую круглую скобку.
+    DIM equalPos AS INTEGER = 0                                                                    ' Здесь найдём знак равенства.
+    DIM indexText AS STRING = ""                                                                   ' Сюда вырежем текст индекса между скобками.
+    DIM valueText AS STRING = ""                                                                   ' Сюда вырежем текст значения после знака равенства.
+    DIM parsedIndex AS INTEGER = 0                                                                 ' Здесь будет готовый индекс строки или столбца.
+    DIM parsedValue AS INTEGER = 0                                                                 ' Здесь будет готовое числовое значение смещения.
+
+    IF parseErrorMessage = "" THEN                                                                 ' Если ошибка уже была раньше, повторно разбирать строку не надо.
+        openPos = INSTR(lineText, "(")                                                             ' Ищем начало индекса в круглых скобках.
+        closePos = INSTR(lineText, ")")                                                            ' Ищем конец индекса в круглых скобках.
+        equalPos = INSTR(lineText, "=")                                                            ' Ищем начало числового значения справа.
+
+        IF openPos = 0 OR closePos = 0 OR equalPos = 0 THEN                                       ' Без этих символов строку нельзя считать корректной.
+            parseErrorMessage = "Файл калибровки содержит повреждённую строку: " + lineText      ' Сохраняем понятное сообщение с проблемной строкой.
+        ELSE                                                                                       ' Если опорные символы на месте, можно разбирать индекс и число.
+            indexText = TRIM(MID(lineText, openPos + 1, closePos - openPos - 1))                  ' Берём индекс между `(` и `)`.
+            valueText = TRIM(MID(lineText, equalPos + 1, LEN(lineText) - equalPos))               ' Берём значение справа от `=`.
+            parsedIndex = INT(VAL(indexText))                                                      ' Превращаем индекс из текста в целое число.
+            parsedValue = INT(VAL(valueText))                                                      ' Превращаем смещение из текста в целое число.
+
+            IF parsedIndex < 1 OR parsedIndex > maxIndex THEN                                      ' Индекс обязан лежать в ожидаемых границах таблицы.
+                parseErrorMessage = "В файле калибровки найден индекс вне диапазона: " + lineText ' Сообщаем точную строку с неверным индексом.
+            ELSE                                                                                   ' Если индекс допустим, можно записывать его в таблицу.
+                IF isRowLine THEN                                                                  ' Здесь обрабатываем строку `pelletCenterRows(...)`.
+                    parsedRowValues(parsedIndex) = parsedValue                                     ' Сохраняем новое значение строки.
+                    parsedRowSeen(parsedIndex) = 1                                                 ' Помечаем, что эта строка уже присутствует в файле.
+                ELSE                                                                               ' Здесь обрабатываем строку `pelletCenterCols(...)`.
+                    parsedColValues(parsedIndex) = parsedValue                                     ' Сохраняем новое значение столбца.
+                    parsedColSeen(parsedIndex) = 1                                                 ' Помечаем, что этот столбец уже присутствует в файле.
+                END IF                                                                             ' Завершаем запись разобранного числа в нужную таблицу.
+            END IF                                                                                 ' Завершаем проверку допустимого диапазона индекса.
+        END IF                                                                                     ' Завершаем разбор структуры строки `name(index) = value`.
+    END IF                                                                                         ' Завершаем защиту от повторного разбора после ошибки.
+END SUB                                                                                            ' Завершаем разбор одной строки калибровки.
+
+SUB EnsureAllCalibrationValuesExist()                                                              ' Эта процедура проверяет, что файл `t` действительно полный.
+    IF parseErrorMessage = "" THEN                                                                 ' Проверяем строки только если более ранней ошибки нет.
+        FOR rowIndex = 1 TO 36                                                                     ' Проверяем все строки таблицы по порядку.
+            IF parsedRowSeen(rowIndex) = 0 THEN                                                    ' Если хотя бы одна строка отсутствует, снимок неполный.
+                parseErrorMessage = "В файле калибровки отсутствует pelletCenterRows(" + TRIM(STR(rowIndex)) + ")." ' Показываем точный пропущенный индекс.
+            END IF                                                                                 ' Если строка найдена, идём к следующей.
+        NEXT                                                                                       ' Переходим к следующей строке таблицы.
+    END IF                                                                                         ' Завершаем проверку таблицы строк.
+
+    IF parseErrorMessage = "" THEN                                                                 ' Проверяем столбцы только если таблица строк полная.
+        FOR colIndex = 1 TO 28                                                                     ' Проверяем все столбцы таблицы по порядку.
+            IF parsedColSeen(colIndex) = 0 THEN                                                    ' Если хотя бы один столбец отсутствует, снимок неполный.
+                parseErrorMessage = "В файле калибровки отсутствует pelletCenterCols(" + TRIM(STR(colIndex)) + ")." ' Показываем точный пропущенный индекс.
+            END IF                                                                                 ' Если столбец найден, идём к следующему.
+        NEXT                                                                                       ' Переходим к следующему столбцу таблицы.
+    END IF                                                                                         ' Завершаем проверку таблицы столбцов.
+END SUB                                                                                            ' Завершаем проверку полноты снимка калибровки.
+
+FUNCTION BuildPelletAlignmentProcedure() AS STRING                                                 ' Эта функция полностью пересобирает код `InitPelletAlignment()`.
+    DIM resultText AS STRING = ""                                                                  ' Сюда будем построчно собирать новую процедуру.
+
+    AppendLine(resultText, "SUB InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.") ' Пишем заголовок процедуры.
+    AppendLine(resultText, "    ' Здесь мы задаём высоту точек по строкам карты.                                            ' Больше число = точка ниже. Меньше число = точка выше.") ' Пишем пояснение к таблице строк.
+    AppendLine(resultText, "    ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.") ' Пишем вторую поясняющую строку.
+
+    FOR rowIndex = 1 TO 36                                                                         ' Добавляем в код все строки `pelletCenterRows(...)`.
+        AppendLine(resultText, "    pelletCenterRows(" + TRIM(STR(rowIndex)) + ") = " + TRIM(STR(parsedRowValues(rowIndex))) + "                                                                   ' Значение строки " + TRIM(STR(rowIndex)) + " полностью перенесено из файла калибровки.") ' Формируем строку присваивания с русским комментарием.
+    NEXT                                                                                           ' Переходим к следующей строке таблицы.
+
+    AppendLine(resultText, "")                                                                     ' Добавляем пустую строку между строками и столбцами.
+    AppendLine(resultText, "    ' Здесь мы задаём положение точек по столбцам карты.                                        ' Больше число = точка правее. Меньше число = точка левее.") ' Пишем пояснение к таблице столбцов.
+
+    FOR colIndex = 1 TO 28                                                                         ' Добавляем в код все строки `pelletCenterCols(...)`.
+        AppendLine(resultText, "    pelletCenterCols(" + TRIM(STR(colIndex)) + ") = " + TRIM(STR(parsedColValues(colIndex))) + "                                                                    ' Значение столбца " + TRIM(STR(colIndex)) + " полностью перенесено из файла калибровки.") ' Формируем строку присваивания с русским комментарием.
+    NEXT                                                                                           ' Переходим к следующему столбцу таблицы.
+
+    AppendLine(resultText, "END SUB                                                                                         ' Завершаем настройку центров точек.") ' Закрываем процедуру тем же понятным комментарием.
+    RETURN resultText                                                                              ' Возвращаем готовый блок текста для подстановки в игру.
+END FUNCTION                                                                                       ' Завершаем сборку новой процедуры.
+
+FUNCTION ReplacePelletAlignmentProcedure(sourceText AS STRING, newProcedureText AS STRING) AS STRING ' Эта функция заменяет старую процедуру в тексте игры новой версией.
+    DIM startPos AS INTEGER = 0                                                                    ' Здесь найдём начало `SUB InitPelletAlignment()`.
+    DIM endPos AS INTEGER = 0                                                                      ' Здесь найдём `END SUB` этой процедуры.
+    DIM afterPos AS INTEGER = 0                                                                    ' Здесь определим позицию текста сразу после старого блока.
+    DIM beforeText AS STRING = ""                                                                  ' Сюда попадёт весь текст игры до нужной процедуры.
+    DIM afterText AS STRING = ""                                                                   ' Сюда попадёт весь текст игры после старой процедуры.
+
+    replaceErrorMessage = ""                                                                       ' Перед новой заменой сбрасываем старую ошибку поиска.
+    startPos = INSTR(sourceText, "SUB InitPelletAlignment()")                                      ' Ищем точное начало нужной процедуры.
+
+    IF startPos = 0 THEN                                                                           ' Если заголовок процедуры не найден, переписывать файл нельзя.
+        replaceErrorMessage = "В maze_chase.axm не найдена процедура InitPelletAlignment()."     ' Даём понятное сообщение, что именно не найдено.
+        RETURN sourceText                                                                          ' Возвращаем исходный текст без изменений.
+    END IF                                                                                         ' Если начало найдено, продолжаем поиск конца процедуры.
+
+    endPos = INSTR(startPos, sourceText, "END SUB")                                                ' Ищем первое `END SUB` после найденного заголовка.
+
+    IF endPos = 0 THEN                                                                             ' Если конец процедуры не найден, переписывать файл нельзя.
+        replaceErrorMessage = "В maze_chase.axm не найден конец процедуры InitPelletAlignment()." ' Даём понятное сообщение, что блок оборван.
+        RETURN sourceText                                                                          ' Возвращаем исходный текст без изменений.
+    END IF                                                                                         ' Если конец найден, можно собирать новый текст файла.
+
+    beforeText = LEFT(sourceText, startPos - 1)                                                    ' Берём весь текст игры до начала старой процедуры.
+    afterPos = endPos + LEN("END SUB")                                                             ' Ставим указатель сразу после текста `END SUB`.
+
+    IF afterPos <= LEN(sourceText) - 1 AND MID(sourceText, afterPos, 2) = CHR(13) + CHR(10) THEN ' Если после процедуры стоит обычный CRLF, тоже пропускаем его.
+        afterPos = afterPos + 2                                                                    ' Сдвигаем указатель за перевод строки.
+    ELSEIF afterPos <= LEN(sourceText) AND MID(sourceText, afterPos, 1) = CHR(10) THEN            ' На случай одиночного LF поддерживаем и такой хвост.
+        afterPos = afterPos + 1                                                                    ' Сдвигаем указатель за перевод строки.
+    END IF                                                                                         ' После этого `afterPos` указывает на текст после старого блока.
+
+    IF afterPos > LEN(sourceText) THEN                                                             ' Если старая процедура была в самом конце файла.
+        afterText = ""                                                                             ' Хвост после неё пустой.
+    ELSE                                                                                           ' Если после процедуры ещё есть код.
+        afterText = MID(sourceText, afterPos, LEN(sourceText) - afterPos + 1)                     ' Берём весь оставшийся хвост файла.
+    END IF                                                                                         ' Завершаем подготовку хвоста после старой процедуры.
+
+    RETURN beforeText + newProcedureText + afterText                                               ' Склеиваем исходный префикс, новую процедуру и остальной файл.
+END FUNCTION                                                                                       ' Завершаем замену блока в тексте игры.
+
+SUB AppendLine(BYREF textBuffer AS STRING, lineText AS STRING)                                    ' Эта процедура добавляет одну строку и перевод строки в буфер текста.
+    textBuffer = textBuffer + lineText + CHR(13) + CHR(10)                                         ' Склеиваем старый буфер с новой строкой через CRLF.
+END SUB                                                                                            ' Завершаем добавление строки в текстовый буфер.
+
+FUNCTION TrimTrailingCr(inputText AS STRING) AS STRING                                             ' Эта функция убирает хвостовой CR после `SPLIT(..., CHR(10))`.
+    IF LEN(inputText) = 0 THEN                                                                     ' Пустую строку обрабатывать дальше не нужно.
+        RETURN inputText                                                                           ' Просто возвращаем её как есть.
+    END IF                                                                                         ' Если строка не пустая, проверяем последний символ.
+
+    IF ASC(RIGHT(inputText, 1)) = 13 THEN                                                          ' Код 13 означает символ CR из пары CRLF.
+        RETURN LEFT(inputText, LEN(inputText) - 1)                                                 ' Отрезаем этот последний CR и оставляем остальной текст.
+    END IF                                                                                         ' Если хвостового CR нет, строку трогать не надо.
+
+    RETURN inputText                                                                               ' Возвращаем исходную строку без изменений.
+END FUNCTION                                                                                       ' Завершаем очистку хвостового CR.

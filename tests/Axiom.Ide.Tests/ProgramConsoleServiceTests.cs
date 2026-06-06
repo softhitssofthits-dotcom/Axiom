@@ -608,7 +608,7 @@ public sealed class ProgramConsoleServiceTests
         Assert.NotNull(image);
         Assert.True(image.Width > 0);
         Assert.True(image.Height > 0);
-        Assert.Equal(image.Width * image.Height, image.BgraPixels.Count);
+        Assert.Equal(image.Width * image.Height, image.BgraPixels.Length);
     }
 
     [Fact]
@@ -876,6 +876,23 @@ public sealed class ProgramConsoleServiceTests
                 1u, 1u, 2u, 2u,
                 3u, 3u, 4u, 4u,
                 3u, 3u, 4u, 4u
+            ],
+            scaled);
+    }
+
+    [Fact]
+    public void ScreenRenderer_PreservesFrameAspectRatioWhenBackBufferIsWider()
+    {
+        var frame = new ScreenFramebufferSnapshot(2, 2, [1u, 2u, 3u, 4u]);
+
+        var scaled = Direct3D11SwapChainRenderer.ScaleFramePixels(frame, 6, 4);
+
+        Assert.Equal(
+            [
+                0xFF000000u, 1u, 1u, 2u, 2u, 0xFF000000u,
+                0xFF000000u, 1u, 1u, 2u, 2u, 0xFF000000u,
+                0xFF000000u, 3u, 3u, 4u, 4u, 0xFF000000u,
+                0xFF000000u, 3u, 3u, 4u, 4u, 0xFF000000u
             ],
             scaled);
     }

@@ -45,10 +45,13 @@ public sealed partial class BytecodeVm
 
     private void ExecuteCanvasInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        var height = PopValue(frame, instructionIndex).AsLong();
-        var width = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasSize(width, height, location);
+        var stack = frame.EvaluationStack;
+        var height = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var width = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (width <= 0 || height <= 0 || width > int.MaxValue || height > int.MaxValue)
+        {
+            ValidateCanvasSize(width, height, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
 
         FlushPendingOutput(forceEmptyLine: false);
         _host.ActivateCanvas(width, height);
@@ -56,32 +59,50 @@ public sealed partial class BytecodeVm
 
     private void ExecuteBeginFrameInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("BEGINFRAME", location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("BEGINFRAME", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.BeginFrame();
     }
 
     private void ExecutePresentInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("PRESENT", location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("PRESENT", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.PresentFrame();
     }
 
     private void ExecuteCameraInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("CAMERA", location);
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasPoint("CAMERA", x, y, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("CAMERA", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var y = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (!GraphicsCoordinateValidation.IsSupportedCoordinate(x)
+            || !GraphicsCoordinateValidation.IsSupportedCoordinate(y))
+        {
+            ValidateCanvasPoint("CAMERA", x, y, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.SetCanvasCamera(x, y);
     }
 
     private void ExecuteResetCameraInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("RESETCAMERA", location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("RESETCAMERA", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.ResetCanvasCamera();
     }
 
@@ -170,11 +191,14 @@ public sealed partial class BytecodeVm
 
     private void ExecuteClsInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         if (instruction.GetOperand(0) == 1)
         {
-            RequireCanvasActive("CLS", location);
-            _host.ClearFrame(PopValue(frame, instructionIndex).AsInteger());
+            if (!_host.IsCanvasActive)
+            {
+                RequireCanvasActive("CLS", ResolveLocation(frame.Routine.Id, instructionIndex));
+            }
+
+            _host.ClearFrame(frame.EvaluationStack.PopUnchecked().AsInteger());
             return;
         }
 
@@ -471,129 +495,234 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDrawRectInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("DRAWRECT", location);
-        var color = PopValue(frame, instructionIndex).AsInteger();
-        var height = PopValue(frame, instructionIndex).AsLong();
-        var width = PopValue(frame, instructionIndex).AsLong();
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasRectangle("DRAWRECT", width, height, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWRECT", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var color = stack.PopUnchecked().AsInteger();
+        var height = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var width = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var y = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (width <= 0 || height <= 0)
+        {
+            ValidateCanvasRectangle("DRAWRECT", width, height, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.DrawRect(x, y, width, height, color);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private void ExecuteFillRectInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("FILLRECT", location);
-        var color = PopValue(frame, instructionIndex).AsInteger();
-        var height = PopValue(frame, instructionIndex).AsLong();
-        var width = PopValue(frame, instructionIndex).AsLong();
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasRectangle("FILLRECT", width, height, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("FILLRECT", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var color = stack.PopUnchecked().AsInteger();
+        var height = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var width = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var y = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (width <= 0 || height <= 0)
+        {
+            ValidateCanvasRectangle("FILLRECT", width, height, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.FillRect(x, y, width, height, color);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private void ExecuteDrawLineInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("DRAWLINE", location);
-        var color = PopValue(frame, instructionIndex).AsInteger();
-        var y2 = PopValue(frame, instructionIndex).AsLong();
-        var x2 = PopValue(frame, instructionIndex).AsLong();
-        var y1 = PopValue(frame, instructionIndex).AsLong();
-        var x1 = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasLine("DRAWLINE", x1, y1, x2, y2, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWLINE", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var color = stack.PopUnchecked().AsInteger();
+        var y2 = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x2 = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var y1 = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x1 = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(x1, y1, x2, y2))
+        {
+            ValidateCanvasLine("DRAWLINE", x1, y1, x2, y2, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.DrawCanvasLine(x1, y1, x2, y2, color);
         _host.SetGraphicsCurrentPosition(x2, y2);
     }
 
     private void ExecuteDrawCircleInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("DRAWCIRCLE", location);
-        var color = PopValue(frame, instructionIndex).AsInteger();
-        var radius = PopValue(frame, instructionIndex).AsLong();
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasCircle("DRAWCIRCLE", x, y, radius, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWCIRCLE", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var color = stack.PopUnchecked().AsInteger();
+        var radius = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var y = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (radius < 0 || !GraphicsCoordinateValidation.IsSupportedCircleCenter(x, y))
+        {
+            ValidateCanvasCircle("DRAWCIRCLE", x, y, radius, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.DrawCanvasCircle(x, y, radius, color);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private void ExecuteFillCircleInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("FILLCIRCLE", location);
-        var color = PopValue(frame, instructionIndex).AsInteger();
-        var radius = PopValue(frame, instructionIndex).AsLong();
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        ValidateCanvasCircle("FILLCIRCLE", x, y, radius, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("FILLCIRCLE", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var color = stack.PopUnchecked().AsInteger();
+        var radius = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var y = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        if (radius < 0 || !GraphicsCoordinateValidation.IsSupportedCircleCenter(x, y))
+        {
+            ValidateCanvasCircle("FILLCIRCLE", x, y, radius, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.FillCanvasCircle(x, y, radius, color);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private void ExecuteDrawTextInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireCanvasActive("DRAWTEXT", location);
-        var color = PopValue(frame, instructionIndex).AsInteger();
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        var text = PopValue(frame, instructionIndex).AsString();
-        ValidateCanvasPoint("DRAWTEXT", x, y, location);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWTEXT", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
+        var stack = frame.EvaluationStack;
+        var color = stack.PopUnchecked().AsInteger();
+        var y = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var text = stack.PopUnchecked().AsString();
+        if (!GraphicsCoordinateValidation.IsSupportedCoordinate(x)
+            || !GraphicsCoordinateValidation.IsSupportedCoordinate(y))
+        {
+            ValidateCanvasPoint("DRAWTEXT", x, y, ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         _host.DrawCanvasText(text, x, y, color);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private void ExecuteDrawImageInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireDrawableSurfaceActive("DRAWIMAGE", location);
+        if (!_host.IsScreenActive && !_host.IsCanvasActive)
+        {
+            RequireDrawableSurfaceActive("DRAWIMAGE", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         var hasScale = instruction.GetOperand(0) != 0;
-        var height = hasScale ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
-        var width = hasScale ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        var image = RequireImage("DRAWIMAGE", PopValue(frame, instructionIndex), location);
+        var stack = frame.EvaluationStack;
+        var heightValue = hasScale ? stack.PopUnchecked() : null;
+        var widthValue = hasScale ? stack.PopUnchecked() : null;
+        var yValue = stack.PopUnchecked();
+        var xValue = stack.PopUnchecked();
+        var imageValue = stack.PopUnchecked();
+        var height = heightValue is null
+            ? (long?)null
+            : TryGetFastWholeNumber(heightValue, out var fastHeight) ? fastHeight : heightValue.AsLong();
+        var width = widthValue is null
+            ? (long?)null
+            : TryGetFastWholeNumber(widthValue, out var fastWidth) ? fastWidth : widthValue.AsLong();
+        var y = TryGetFastWholeNumber(yValue, out var fastY) ? fastY : yValue.AsLong();
+        var x = TryGetFastWholeNumber(xValue, out var fastX) ? fastX : xValue.AsLong();
+        if (imageValue.Type != TypeSymbol.Image || imageValue.Value is not RuntimeImageValue image)
+        {
+            RequireImage("DRAWIMAGE", imageValue, ResolveLocation(frame.Routine.Id, instructionIndex));
+            return;
+        }
+
         var targetWidth = width ?? image.Width;
         var targetHeight = height ?? image.Height;
-        ValidateDrawImageSize(targetWidth, targetHeight, location);
+        if (targetWidth <= 0 || targetHeight <= 0 || targetWidth > int.MaxValue || targetHeight > int.MaxValue)
+        {
+            var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+            ValidateDrawImageSize(targetWidth, targetHeight, location);
+            return;
+        }
+
         _host.DrawImage(
             image,
             x,
             y,
-            ToInt32Checked(targetWidth, location, "Ширина DRAWIMAGE"),
-            ToInt32Checked(targetHeight, location, "Высота DRAWIMAGE"));
+            (int)targetWidth,
+            (int)targetHeight);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
     private void ExecuteDrawSpriteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireDrawableSurfaceActive("DRAWSPRITE", location);
+        if (!_host.IsScreenActive && !_host.IsCanvasActive)
+        {
+            RequireDrawableSurfaceActive("DRAWSPRITE", ResolveLocation(frame.Routine.Id, instructionIndex));
+        }
+
         var hasScale = instruction.GetOperand(0) != 0;
-        var height = hasScale ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
-        var width = hasScale ? PopValue(frame, instructionIndex).AsLong() : (long?)null;
-        var y = PopValue(frame, instructionIndex).AsLong();
-        var x = PopValue(frame, instructionIndex).AsLong();
-        var spriteFrame = PopValue(frame, instructionIndex).AsLong();
-        var sprite = RequireSprite("DRAWSPRITE", PopValue(frame, instructionIndex), location);
-        ValidateSpriteFrame(sprite, spriteFrame, location);
+        var stack = frame.EvaluationStack;
+        var heightValue = hasScale ? stack.PopUnchecked() : null;
+        var widthValue = hasScale ? stack.PopUnchecked() : null;
+        var yValue = stack.PopUnchecked();
+        var xValue = stack.PopUnchecked();
+        var spriteFrameValue = stack.PopUnchecked();
+        var spriteValue = stack.PopUnchecked();
+        var height = heightValue is null
+            ? (long?)null
+            : TryGetFastWholeNumber(heightValue, out var fastHeight) ? fastHeight : heightValue.AsLong();
+        var width = widthValue is null
+            ? (long?)null
+            : TryGetFastWholeNumber(widthValue, out var fastWidth) ? fastWidth : widthValue.AsLong();
+        var y = TryGetFastWholeNumber(yValue, out var fastY) ? fastY : yValue.AsLong();
+        var x = TryGetFastWholeNumber(xValue, out var fastX) ? fastX : xValue.AsLong();
+        var spriteFrame = TryGetFastWholeNumber(spriteFrameValue, out var fastSpriteFrame) ? fastSpriteFrame : spriteFrameValue.AsLong();
+        if (spriteValue.Type != TypeSymbol.Sprite
+            || spriteValue.Value is not RuntimeSpriteValue sprite
+            || !sprite.HasFrames)
+        {
+            RequireSprite("DRAWSPRITE", spriteValue, ResolveLocation(frame.Routine.Id, instructionIndex));
+            return;
+        }
+
         var targetWidth = width ?? sprite.FrameWidth;
         var targetHeight = height ?? sprite.FrameHeight;
-        ValidateDrawSpriteSize(targetWidth, targetHeight, location);
+        if (targetWidth <= 0
+            || targetHeight <= 0
+            || targetWidth > int.MaxValue
+            || targetHeight > int.MaxValue
+            || spriteFrame < 0
+            || spriteFrame >= sprite.FrameCount)
+        {
+            var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+            ValidateDrawSpriteSize(targetWidth, targetHeight, location);
+            ValidateSpriteFrame(sprite, spriteFrame, location);
+            return;
+        }
+
         _host.DrawSprite(
             sprite,
-            ToInt32Checked(spriteFrame, location, "Номер кадра DRAWSPRITE"),
+            (int)spriteFrame,
             x,
             y,
-            ToInt32Checked(targetWidth, location, "Ширина DRAWSPRITE"),
-            ToInt32Checked(targetHeight, location, "Высота DRAWSPRITE"));
+            (int)targetWidth,
+            (int)targetHeight);
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
@@ -895,6 +1024,13 @@ public sealed partial class BytecodeVm
     {
         ReportBuiltInArgumentError("PAINT", argumentName, "должен быть числовым значением.", location);
         throw new RuntimeFailureException();
+    }
+
+    private long GetWholeNumberUnchecked(RuntimeValue value)
+    {
+        return TryGetFastWholeNumber(value, out var result)
+            ? result
+            : value.AsLong();
     }
 
     private void ValidateCircleArguments(double radius, double? startAngle, double? endAngle, double aspect, TextLocation location)

@@ -2493,13 +2493,13 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["ESC"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.Empty(result.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal([(480L, 270L)], inputProvider.CanvasActivations);
+        Assert.Equal([(1024L, 660L)], inputProvider.CanvasActivations);
         Assert.True(inputProvider.CanvasCameraCalls.Count >= 1);
         Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
         Assert.True(inputProvider.FillRects.Count > 0);
@@ -2507,6 +2507,137 @@ public sealed class AcceptanceProgramTests
         Assert.True(inputProvider.CanvasDrawTexts.Count > 0);
         Assert.True(inputProvider.DrawSprites.Count >= 2);
         Assert.True(inputProvider.PresentFrameCount >= 1);
+
+        Assert.Single(inputProvider.DrawImages);
+        Assert.Equal((288L, 75L, 448, 576), ToDrawImageShape(inputProvider.DrawImages[0]));
+
+        var firstPowerPellet = Assert.Single(inputProvider.CanvasFillCircles.Where(static circle => circle.Radius == 5).Take(1));
+        Assert.Equal(315L, firstPowerPellet.X);
+        Assert.Equal(106L, firstPowerPellet.Y);
+
+        var playerSprite = inputProvider.DrawSprites[0];
+        Assert.Equal(494L, playerSprite.X);
+        Assert.Equal(510L, playerSprite.Y);
+    }
+
+    [Fact]
+    public void MazeChaseAcceptanceSample_SpaceShowsPauseHud()
+    {
+        var relativePath = "samples/graphics/game/maze_chase.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
+
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Contains(
+            inputProvider.CanvasDrawTexts,
+            text => text.Text.Contains("Пауза. Нажмите SPACE, чтобы продолжить.", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void MazeChaseAcceptanceSample_LowerKShowsCalibrationHints()
+    {
+        var relativePath = "samples/graphics/game/maze_chase.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["k", "", "", "", "", "", "", "", "ESC"]);
+
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Contains(
+            inputProvider.CanvasDrawTexts,
+            text => text.Text.Contains("t: записать всё", StringComparison.Ordinal));
+        Assert.Contains(
+            inputProvider.CanvasDrawTexts,
+            text => text.Text.Contains("строка 5, значение -33", StringComparison.Ordinal));
+        Assert.True(inputProvider.CanvasDrawLines.Count > 70);
+    }
+
+    [Fact]
+    public void MazeChaseAcceptanceSample_TWritesAllCalibrationValues()
+    {
+        var relativePath = "samples/graphics/game/maze_chase.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var calibrationDirectory = CreateArtifactsTestDirectory("maze-chase-calibration-");
+        var inputProvider = CreateGraphicsModernSampleInputProvider(
+            relativePath,
+            keys: ["k", "t", "", "", "", "", "ESC"],
+            pressedKeys: []);
+
+        try
+        {
+            var result = RunFromWorkingDirectory(calibrationDirectory, sourceText, inputProvider, ExecutionMode.Bytecode);
+
+            Assert.True(result.Succeeded, FormatDiagnostics(result));
+            Assert.Empty(result.Diagnostics);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+            Assert.Contains(
+                inputProvider.CanvasDrawTexts,
+                text => text.Text.Contains("Записана вся таблица.", StringComparison.Ordinal));
+            Assert.Contains(
+                inputProvider.CanvasDrawTexts,
+                text => text.Text.Contains("Строки и столбцы.", StringComparison.Ordinal));
+
+            var calibrationPath = Path.Combine(calibrationDirectory, "maze_chase_pellet_calibration.txt");
+            var calibrationText = File.ReadAllText(calibrationPath);
+            Assert.StartsWith("' Полный снимок текущей калибровки maze_chase", calibrationText, StringComparison.Ordinal);
+            Assert.Contains("pelletCenterRows(5) = -33", calibrationText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletCenterRows(5) = 12", calibrationText, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(calibrationDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void MazeChaseApplyCalibrationSample_RewritesInitPelletAlignmentFromCalibrationFile()
+    {
+        var relativePath = "samples/graphics/game/maze_chase_apply_calibration.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var workingDirectory = CreateArtifactsTestDirectory("maze-chase-apply-");
+        var repositoryRoot = FindRepositoryRoot();
+        var sourceGamePath = Path.Combine(repositoryRoot, "samples", "graphics", "game", "maze_chase.axm");
+        var targetGamePath = Path.Combine(workingDirectory, "maze_chase.axm");
+        var targetCalibrationPath = Path.Combine(workingDirectory, "maze_chase_pellet_calibration.txt");
+
+        try
+        {
+            File.Copy(sourceGamePath, targetGamePath, overwrite: true);
+
+            var calibrationText = File.ReadAllText(Path.Combine(repositoryRoot, "samples", "graphics", "game", "maze_chase_pellet_calibration.txt"));
+            calibrationText = calibrationText.Replace("pelletCenterRows(5) = -33", "pelletCenterRows(5) = -44", StringComparison.Ordinal);
+            calibrationText = calibrationText.Replace("pelletCenterCols(26) = 2", "pelletCenterCols(26) = 9", StringComparison.Ordinal);
+            File.WriteAllText(targetCalibrationPath, calibrationText);
+
+            var result = RunFromWorkingDirectory(workingDirectory, sourceText, mode: ExecutionMode.Bytecode);
+
+            Assert.True(result.Succeeded, FormatDiagnostics(result));
+            Assert.Empty(result.Diagnostics);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+            Assert.False(result.UsedInterpreterFallback);
+            Assert.Equal(
+                [
+                    "Калибровка перенесена в maze_chase.axm.",
+                    "Процедура InitPelletAlignment() полностью обновлена из файла калибровки."
+                ],
+                result.Output);
+
+            var updatedGameText = File.ReadAllText(targetGamePath);
+            Assert.Contains("pelletCenterRows(5) = -44", updatedGameText, StringComparison.Ordinal);
+            Assert.Contains("pelletCenterCols(26) = 9", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletCenterRows(5) = -33", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletCenterCols(26) = 2", updatedGameText, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(workingDirectory, recursive: true);
+        }
     }
 
     [Theory]
@@ -2516,9 +2647,9 @@ public sealed class AcceptanceProgramTests
     {
         var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
-        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["RIGHT", "ESC"]);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, keys: ["", "", "", "", "ESC"], pressedKeys: ["RIGHT"]);
 
-        var result = Run(sourceText, inputProvider, mode);
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, mode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.Empty(result.Diagnostics);
@@ -2911,9 +3042,17 @@ public sealed class AcceptanceProgramTests
 
     private static QueueKeyboardInputProvider CreateGraphicsModernSampleInputProvider(string relativePath, IEnumerable<string> keys)
     {
+        return CreateGraphicsModernSampleInputProvider(relativePath, keys, pressedKeys: []);
+    }
+
+    private static QueueKeyboardInputProvider CreateGraphicsModernSampleInputProvider(
+        string relativePath,
+        IEnumerable<string> keys,
+        IEnumerable<string> pressedKeys)
+    {
         var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
         var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
-        return new QueueKeyboardInputProvider(keys: keys, pressedKeys: [], resourceBaseDirectory: sampleDirectory);
+        return new QueueKeyboardInputProvider(keys: keys, pressedKeys: pressedKeys, resourceBaseDirectory: sampleDirectory);
     }
 
     private static string[] CreateInputRecordIntakeLines()
@@ -2939,6 +3078,49 @@ public sealed class AcceptanceProgramTests
     {
         var pipeline = new AxiomExecutionPipeline();
         return pipeline.Run(new ExecutionRequest(sourceText, inputProvider, mode: mode));
+    }
+
+    private static ExecutionResult RunFromSampleDirectory(
+        string relativePath,
+        string sourceText,
+        IInputProvider? inputProvider = null,
+        ExecutionMode mode = ExecutionMode.Bytecode)
+    {
+        var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
+        return RunFromWorkingDirectory(sampleDirectory, sourceText, inputProvider, mode);
+    }
+
+    private static ExecutionResult RunFromWorkingDirectory(
+        string workingDirectory,
+        string sourceText,
+        IInputProvider? inputProvider = null,
+        ExecutionMode mode = ExecutionMode.Bytecode)
+    {
+        lock (WorkingDirectoryLock)
+        {
+            var originalDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                Environment.CurrentDirectory = workingDirectory;
+                return Run(sourceText, inputProvider, mode);
+            }
+            finally
+            {
+                Environment.CurrentDirectory = originalDirectory;
+            }
+        }
+    }
+
+    private static string CreateArtifactsTestDirectory(string prefix)
+    {
+        var artifactsDirectory = Path.Combine(FindRepositoryRoot(), ".artifacts", "tests");
+        Directory.CreateDirectory(artifactsDirectory);
+
+        var testDirectory = Path.Combine(artifactsDirectory, prefix + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testDirectory);
+        return testDirectory;
     }
 
     private static string FormatDiagnostics(ExecutionResult result) =>

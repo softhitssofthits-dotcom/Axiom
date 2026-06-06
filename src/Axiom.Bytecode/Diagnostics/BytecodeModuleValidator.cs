@@ -1323,8 +1323,8 @@ public sealed class BytecodeModuleValidator
             {
                 var heightType = Pop();
                 var widthType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина CANVAS");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота CANVAS");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина CANVAS");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота CANVAS");
                 break;
             }
 
@@ -1332,8 +1332,8 @@ public sealed class BytecodeModuleValidator
             {
                 var yType = Pop();
                 var xType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X CAMERA");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y CAMERA");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X CAMERA");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y CAMERA");
                 break;
             }
 
@@ -1726,10 +1726,10 @@ public sealed class BytecodeModuleValidator
                 var widthType = Pop();
                 var yType = Pop();
                 var xType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
                 break;
             }
@@ -1741,10 +1741,10 @@ public sealed class BytecodeModuleValidator
                 var x2Type = Pop();
                 var y1Type = Pop();
                 var x1Type = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, TypeSymbol.Long, "координата X1");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, TypeSymbol.Long, "координата Y1");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, TypeSymbol.Long, "координата X2");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, TypeSymbol.Long, "координата Y2");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, "координата X1");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, "координата Y1");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, "координата X2");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, "координата Y2");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
                 break;
             }
@@ -1756,9 +1756,9 @@ public sealed class BytecodeModuleValidator
                 var radiusType = Pop();
                 var yType = Pop();
                 var xType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, TypeSymbol.Long, "радиус");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, "радиус");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
                 break;
             }
@@ -1770,8 +1770,8 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 var textType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, textType, TypeSymbol.String, "текст");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
                 break;
             }
@@ -1783,16 +1783,16 @@ public sealed class BytecodeModuleValidator
                 {
                     var heightType = Pop();
                     var widthType = Pop();
-                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина DRAWIMAGE");
-                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота DRAWIMAGE");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина DRAWIMAGE");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота DRAWIMAGE");
                 }
 
                 var yType = Pop();
                 var xType = Pop();
                 var imageType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, imageType, TypeSymbol.Image, "изображение DRAWIMAGE");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X DRAWIMAGE");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y DRAWIMAGE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWIMAGE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWIMAGE");
                 break;
             }
 
@@ -1803,8 +1803,8 @@ public sealed class BytecodeModuleValidator
                 {
                     var heightType = Pop();
                     var widthType = Pop();
-                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, widthType, TypeSymbol.Long, "ширина DRAWSPRITE");
-                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, heightType, TypeSymbol.Long, "высота DRAWSPRITE");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина DRAWSPRITE");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота DRAWSPRITE");
                 }
 
                 var yType = Pop();
@@ -1812,9 +1812,9 @@ public sealed class BytecodeModuleValidator
                 var frameType = Pop();
                 var spriteType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, spriteType, TypeSymbol.Sprite, "спрайт DRAWSPRITE");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, frameType, TypeSymbol.Long, "номер кадра DRAWSPRITE");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X DRAWSPRITE");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y DRAWSPRITE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, frameType, "номер кадра DRAWSPRITE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWSPRITE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWSPRITE");
                 break;
             }
 
@@ -2478,6 +2478,27 @@ public sealed class BytecodeModuleValidator
         Report(
             "BC4111",
             $"Инструкция '{opcode}' в процедуре '{routine.Name}' ожидает {role} типа {expectedType.Name}, но получила {actualType.Name}.",
+            module,
+            routine.Id,
+            instructionIndex);
+    }
+
+    private void ValidateExpectedIntegralStackType(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        Opcode opcode,
+        TypeSymbol? actualType,
+        string role)
+    {
+        if (actualType is null || actualType == TypeSymbol.Integer || actualType == TypeSymbol.Long)
+        {
+            return;
+        }
+
+        Report(
+            "BC4111",
+            $"Инструкция '{opcode}' в процедуре '{routine.Name}' ожидает {role} типа INTEGER или LONG, но получила {actualType.Name}.",
             module,
             routine.Id,
             instructionIndex);

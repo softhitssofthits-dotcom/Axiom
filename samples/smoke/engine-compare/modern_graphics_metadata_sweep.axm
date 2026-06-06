@@ -1,0 +1,34 @@
+' Детерминированная нагрузка на metadata built-in современной графики без ручного ввода.
+' Сценарий нужен для сравнения Interpreter и BytecodeVm на IMAGEWIDTH, IMAGEHEIGHT, SPRITEWIDTH, SPRITEHEIGHT и SPRITECOUNT.
+
+DIM PASSES AS INTEGER = 3000
+DIM index AS INTEGER
+DIM total AS LONG
+
+DIM background AS IMAGE
+DIM icon AS IMAGE
+DIM walker AS SPRITE
+DIM emptyImage AS IMAGE
+DIM emptySprite AS SPRITE
+
+background = LOADIMAGE("samples/graphics/game/art/Background.gif")
+icon = LOADIMAGE("src/Axiom.Ide/Assets/axiom.ico")
+walker = LOADSPRITE("samples/graphics/sprites/assets/walk_sheet.png", 16, 16)
+
+FOR index = 1 TO PASSES
+    total = total + IMAGEWIDTH(emptyImage)
+    total = total + IMAGEHEIGHT(emptyImage)
+    total = total + IMAGEWIDTH(background)
+    total = total + IMAGEHEIGHT(background)
+    total = total + IMAGEWIDTH(icon)
+    total = total + IMAGEHEIGHT(icon)
+
+    total = total + SPRITEWIDTH(emptySprite)
+    total = total + SPRITEHEIGHT(emptySprite)
+    total = total + SPRITECOUNT(emptySprite)
+    total = total + SPRITEWIDTH(walker)
+    total = total + SPRITEHEIGHT(walker)
+    total = total + SPRITECOUNT(walker)
+NEXT
+
+PRINT total

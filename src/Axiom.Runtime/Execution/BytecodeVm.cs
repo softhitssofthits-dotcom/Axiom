@@ -377,6 +377,18 @@ public sealed partial class BytecodeVm
         };
     }
 
+    private static bool HasFastBuiltinHandler(BuiltinFunctionId builtinId)
+    {
+        return builtinId is BuiltinFunctionId.Rgb
+            or BuiltinFunctionId.LoadImage
+            or BuiltinFunctionId.LoadSprite
+            or BuiltinFunctionId.ImageWidth
+            or BuiltinFunctionId.ImageHeight
+            or BuiltinFunctionId.SpriteWidth
+            or BuiltinFunctionId.SpriteHeight
+            or BuiltinFunctionId.SpriteCount;
+    }
+
     private BytecodeCallFrame CreateFrame(
         BytecodeRoutine routine,
         ReadOnlySpan<RuntimeValue> arguments,
@@ -446,17 +458,19 @@ public sealed partial class BytecodeVm
     private void ExecuteCurrentInstruction()
     {
         var frame = CurrentFrame;
+        var instructions = frame.Routine.InstructionArray;
+        var instructionCount = instructions.Length;
 
-        if (frame.InstructionPointer < 0 || frame.InstructionPointer >= frame.Routine.Instructions.Count)
+        if (frame.InstructionPointer < 0 || frame.InstructionPointer >= instructionCount)
         {
             ReportInvalidRuntimeState(
                 $"Instruction pointer {frame.InstructionPointer} вышел за пределы процедуры '{frame.Routine.Name}'.",
-                ResolveLocation(frame.Routine.Id, Math.Max(0, frame.Routine.Instructions.Count - 1)));
+                ResolveLocation(frame.Routine.Id, Math.Max(0, instructionCount - 1)));
             throw new RuntimeFailureException();
         }
 
         var instructionIndex = frame.InstructionPointer;
-        var instruction = frame.Routine.Instructions[instructionIndex];
+        var instruction = instructions[instructionIndex];
         if (CanUseFastInstructionPath())
         {
             frame.InstructionPointer++;
@@ -2295,6 +2309,46 @@ public sealed partial class BytecodeVm
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool GetBooleanUnchecked(RuntimeValue value) => (bool)value.Value!;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static RuntimeImageValue? GetImageUnchecked(RuntimeValue value) => (RuntimeImageValue?)value.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static RuntimeSpriteValue? GetSpriteUnchecked(RuntimeValue value) => (RuntimeSpriteValue?)value.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetImageWidthFast(RuntimeValue value) => GetImageUnchecked(value)?.Width ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetImageHeightFast(RuntimeValue value) => GetImageUnchecked(value)?.Height ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetSpriteWidthFast(RuntimeValue value) => GetSpriteUnchecked(value)?.FrameWidth ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetSpriteHeightFast(RuntimeValue value) => GetSpriteUnchecked(value)?.FrameHeight ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetSpriteCountFast(RuntimeValue value) => GetSpriteUnchecked(value)?.FrameCount ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryGetFastWholeNumber(RuntimeValue value, out long result)
+    {
+        if (value.Type == TypeSymbol.Integer)
+        {
+            result = GetIntegerUnchecked(value);
+            return true;
+        }
+
+        if (value.Type == TypeSymbol.Long)
+        {
+            result = GetLongUnchecked(value);
+            return true;
+        }
+
+        result = default;
+        return false;
+    }
+
     private static bool TryEvaluateFastBooleanBinaryInstruction(
         Opcode opcode,
         bool left,
@@ -2893,6 +2947,22 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
+        if (executionInfo.HasFastHandler
+            && TryExecuteFastGraphicsBuiltin(frame, executionInfo, out var fastResult))
+        {
+            if (executionInfo.ReturnsValue)
+            {
+                frame.EvaluationStack.PushUnchecked(fastResult);
+            }
+
+            if (!executionInfo.IsReverseExecutionSafe)
+            {
+                InvalidateReverseExecutionHistory();
+            }
+
+            return;
+        }
+
         var location = executionInfo.Execution.RequiresLocation
             ? ResolveLocation(frame.Routine.Id, instructionIndex)
             : FallbackRuntimeLocation;
@@ -2906,6 +2976,239 @@ public sealed partial class BytecodeVm
         if (!executionInfo.IsReverseExecutionSafe)
         {
             InvalidateReverseExecutionHistory();
+        }
+    }
+
+    private bool TryExecuteFastGraphicsBuiltin(
+        BytecodeCallFrame frame,
+        BuiltinExecutionInfo executionInfo,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        switch (executionInfo.CanonicalId)
+        {
+            case BuiltinFunctionId.Rgb:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 3)
+                {
+                    return false;
+                }
+
+                var blue = stack.PeekUnchecked();
+                var green = stack.PeekUnchecked(1);
+                var red = stack.PeekUnchecked(2);
+                if (red.Type != TypeSymbol.Integer && red.Type != TypeSymbol.Long)
+                {
+                    return false;
+                }
+
+                if (green.Type != TypeSymbol.Integer && green.Type != TypeSymbol.Long)
+                {
+                    return false;
+                }
+
+                if (blue.Type != TypeSymbol.Integer && blue.Type != TypeSymbol.Long)
+                {
+                    return false;
+                }
+
+                var redValue = red.Type == TypeSymbol.Integer ? GetIntegerUnchecked(red) : GetLongUnchecked(red);
+                var greenValue = green.Type == TypeSymbol.Integer ? GetIntegerUnchecked(green) : GetLongUnchecked(green);
+                var blueValue = blue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(blue) : GetLongUnchecked(blue);
+                if (!IsRgbComponent(redValue) || !IsRgbComponent(greenValue) || !IsRgbComponent(blueValue))
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(((int)redValue << 16) | ((int)greenValue << 8) | (int)blueValue);
+                return true;
+            }
+
+            case BuiltinFunctionId.LoadImage:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var pathValue = stack.PeekUnchecked();
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                var path = GetStringUnchecked(pathValue);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                var image = _host.LoadImage(path);
+                if (image is null)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromImage(image);
+                return true;
+            }
+
+            case BuiltinFunctionId.LoadSprite:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 3)
+                {
+                    return false;
+                }
+
+                var frameHeightValue = stack.PeekUnchecked();
+                var frameWidthValue = stack.PeekUnchecked(1);
+                var pathValue = stack.PeekUnchecked(2);
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                var path = GetStringUnchecked(pathValue);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                if (frameWidthValue.Type != TypeSymbol.Integer && frameWidthValue.Type != TypeSymbol.Long)
+                {
+                    return false;
+                }
+
+                if (frameHeightValue.Type != TypeSymbol.Integer && frameHeightValue.Type != TypeSymbol.Long)
+                {
+                    return false;
+                }
+
+                var frameWidth = frameWidthValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(frameWidthValue) : GetLongUnchecked(frameWidthValue);
+                var frameHeight = frameHeightValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(frameHeightValue) : GetLongUnchecked(frameHeightValue);
+                if (frameWidth <= 0 || frameHeight <= 0 || frameWidth > int.MaxValue || frameHeight > int.MaxValue)
+                {
+                    return false;
+                }
+
+                var sprite = _host.LoadSprite(path, (int)frameWidth, (int)frameHeight);
+                if (sprite is null)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromSprite(sprite);
+                return true;
+            }
+
+            case BuiltinFunctionId.ImageWidth:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var imageValue = stack.PeekUnchecked();
+                if (imageValue.Type != TypeSymbol.Image)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetImageWidthFast(imageValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.ImageHeight:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var imageValue = stack.PeekUnchecked();
+                if (imageValue.Type != TypeSymbol.Image)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetImageHeightFast(imageValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.SpriteWidth:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var spriteValue = stack.PeekUnchecked();
+                if (spriteValue.Type != TypeSymbol.Sprite)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetSpriteWidthFast(spriteValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.SpriteHeight:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var spriteValue = stack.PeekUnchecked();
+                if (spriteValue.Type != TypeSymbol.Sprite)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetSpriteHeightFast(spriteValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.SpriteCount:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var spriteValue = stack.PeekUnchecked();
+                if (spriteValue.Type != TypeSymbol.Sprite)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetSpriteCountFast(spriteValue));
+                return true;
+            }
+
+            default:
+                return false;
         }
     }
 
@@ -3109,7 +3412,9 @@ public sealed partial class BytecodeVm
             infos[builtin.Id] = new BuiltinExecutionInfo(
                 executions[builtin.Id],
                 builtin.ReturnsValue,
-                IsBuiltinReverseExecutionSafe(builtin.CanonicalId));
+                IsBuiltinReverseExecutionSafe(builtin.CanonicalId),
+                builtin.CanonicalId,
+                HasFastBuiltinHandler(builtin.CanonicalId));
         }
 
         return infos;
@@ -3143,11 +3448,13 @@ public sealed partial class BytecodeVm
 
     private sealed class BuiltinExecutionInfo
     {
-        public BuiltinExecutionInfo(BuiltinExecution execution, bool returnsValue, bool isReverseExecutionSafe)
+        public BuiltinExecutionInfo(BuiltinExecution execution, bool returnsValue, bool isReverseExecutionSafe, BuiltinFunctionId canonicalId, bool hasFastHandler)
         {
             Execution = execution;
             ReturnsValue = returnsValue;
             IsReverseExecutionSafe = isReverseExecutionSafe;
+            CanonicalId = canonicalId;
+            HasFastHandler = hasFastHandler;
         }
 
         public BuiltinExecution Execution { get; }
@@ -3155,6 +3462,10 @@ public sealed partial class BytecodeVm
         public bool ReturnsValue { get; }
 
         public bool IsReverseExecutionSafe { get; }
+
+        public BuiltinFunctionId CanonicalId { get; }
+
+        public bool HasFastHandler { get; }
     }
 
     private void ExecutePrintSeparator(int separatorKind, int instructionIndex)
@@ -4064,8 +4375,78 @@ public sealed partial class BytecodeVm
 
     private void ExecuteConvert(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var value = PopValue(frame, instructionIndex);
+        var value = frame.EvaluationStack.PopUnchecked();
         var typeCode = (BytecodeScalarTypeCode)instruction.GetOperand(0);
+
+        if (typeCode == BytecodeScalarTypeCode.Integer && value.Type == TypeSymbol.Integer)
+        {
+            frame.EvaluationStack.PushUnchecked(value);
+            return;
+        }
+
+        if (typeCode == BytecodeScalarTypeCode.Long)
+        {
+            if (value.Type == TypeSymbol.Long)
+            {
+                frame.EvaluationStack.PushUnchecked(value);
+                return;
+            }
+
+            if (value.Type == TypeSymbol.Integer)
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromLong(GetIntegerUnchecked(value)));
+                return;
+            }
+        }
+
+        if (typeCode == BytecodeScalarTypeCode.Double)
+        {
+            if (value.Type == TypeSymbol.Double)
+            {
+                frame.EvaluationStack.PushUnchecked(value);
+                return;
+            }
+
+            if (value.Type == TypeSymbol.Integer)
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDouble(GetIntegerUnchecked(value)));
+                return;
+            }
+
+            if (value.Type == TypeSymbol.Long)
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDouble(GetLongUnchecked(value)));
+                return;
+            }
+
+            if (value.Type == TypeSymbol.Decimal)
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDouble((double)GetDecimalUnchecked(value)));
+                return;
+            }
+        }
+
+        if (typeCode == BytecodeScalarTypeCode.Decimal)
+        {
+            if (value.Type == TypeSymbol.Decimal)
+            {
+                frame.EvaluationStack.PushUnchecked(value);
+                return;
+            }
+
+            if (value.Type == TypeSymbol.Integer)
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDecimal(GetIntegerUnchecked(value)));
+                return;
+            }
+
+            if (value.Type == TypeSymbol.Long)
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDecimal(GetLongUnchecked(value)));
+                return;
+            }
+        }
+
         frame.EvaluationStack.PushUnchecked(ConvertValue(value, typeCode, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
