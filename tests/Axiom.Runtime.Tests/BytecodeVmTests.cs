@@ -1083,6 +1083,100 @@ PRESENT
     }
 
     [Fact]
+    public void Execute_CompiledPointReadsPhysicalCanvasPixelsWithoutViewportOrCameraReprojection()
+    {
+        const string text = """
+CANVAS 16, 16
+CLS RGB(0, 0, 0)
+VIEWPORT (8, 8)-(16, 16)
+CAMERA 4, 4
+FILLRECT 8, 8, 1, 1, RGB(255, 255, 255)
+PRINT POINT(8, 8)
+PRINT POINT(12, 12)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["0", "15"], host.Output);
+        Assert.Equal(0, host.GetAbsolutePixel(8, 8));
+        Assert.Equal(15, host.GetAbsolutePixel(12, 12));
+    }
+
+    [Fact]
+    public void Execute_CompiledPointSelectorStillRequiresScreenWhenCanvasIsActive()
+    {
+        var (_, _, result) = ExecuteProgram("""
+CANVAS 16, 16
+PRINT POINT(0)
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_CompiledPSetWritesCanvasPixelAtPhysicalViewportPoint()
+    {
+        const string text = """
+CANVAS 16, 16
+CLS RGB(0, 0, 0)
+PSET (2, 3), 12
+PRINT POINT(2, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["12"], host.Output);
+        Assert.Equal(12, host.GetAbsolutePixel(2, 3));
+    }
+
+    [Fact]
+    public void Execute_CompiledPSetUsesCanvasWorldCoordinatesWithViewportAndCamera()
+    {
+        const string text = """
+CANVAS 24, 18
+CLS RGB(0, 0, 0)
+VIEWPORT (10, 6)-(14, 10)
+CAMERA 100, 50
+PSET (100, 50), 12
+PRINT POINT(10, 6)
+PRINT POINT(9, 6)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["12", "0"], host.Output);
+        Assert.Equal(12, host.GetAbsolutePixel(10, 6));
+        Assert.Equal(0, host.GetAbsolutePixel(9, 6));
+    }
+
+    [Fact]
+    public void Execute_CompiledPSetStillRequiresScreenOrCanvas()
+    {
+        var (_, _, result) = ExecuteProgram("""
+PSET (2, 3), 12
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_CompiledPResetStillRequiresScreenWhenCanvasIsActive()
+    {
+        var (_, _, result) = ExecuteProgram("""
+CANVAS 16, 16
+PRESET (2, 3)
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
     public void Execute_CompiledWindowSupportsDrawPointSelectorsAndViewRebase()
     {
         const string text = """
@@ -6135,6 +6229,8 @@ PRINT Person(-1).Age
         private bool _isCanvasActive;
         private long _canvasWidth;
         private long _canvasHeight;
+        private long _canvasCameraX;
+        private long _canvasCameraY;
         private int _activeScreenPage;
         private int _visualScreenPage;
         private int _foreground = 15;
@@ -6371,6 +6467,8 @@ PRINT Person(-1).Age
             _isCanvasActive = true;
             _canvasWidth = width;
             _canvasHeight = height;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
             _activeScreenPage = 0;
             _visualScreenPage = 0;
             _pixels.Clear();
@@ -6394,6 +6492,20 @@ PRINT Person(-1).Age
         public void ClearFrame(int color)
         {
             FrameClears.Add(color);
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            var paletteIndex = MapCanvasColorToPaletteIndex(color);
+            _pixels.Clear();
+            for (var y = 0L; y < _canvasHeight; y++)
+            {
+                for (var x = 0L; x < _canvasWidth; x++)
+                {
+                    _pixels[(x, y)] = paletteIndex;
+                }
+            }
         }
 
         public void DrawRect(long x, long y, long width, long height, int color)
@@ -6404,16 +6516,24 @@ PRINT Person(-1).Age
         public void FillRect(long x, long y, long width, long height, int color)
         {
             FillRects.Add(new FillRectCall(x, y, width, height, color));
+            if (_isCanvasActive)
+            {
+                RasterizeCanvasFillRect(x, y, width, height, color);
+            }
         }
 
         public void SetCanvasCamera(long x, long y)
         {
             CanvasCameraCalls.Add(new CanvasCameraCall(x, y));
+            _canvasCameraX = x;
+            _canvasCameraY = y;
         }
 
         public void ResetCanvasCamera()
         {
             ResetCanvasCameraCount++;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
         }
 
         public void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
@@ -6442,6 +6562,8 @@ PRINT Person(-1).Age
             _isCanvasActive = false;
             _canvasWidth = 0;
             _canvasHeight = 0;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
             _activeScreenPage = 0;
             _visualScreenPage = 0;
             ResetViewport();
@@ -6541,6 +6663,19 @@ PRINT Person(-1).Age
 
         public void SetPixel(long x, long y, int color)
         {
+            if (_isCanvasActive)
+            {
+                if (!TryTranslateCanvasWorldRectangleToScreen(x, y, 1, 1, out var left, out var top, out _, out _))
+                {
+                    return;
+                }
+
+                _pixels[(left, top)] = Math.Abs(color) % 256;
+                _currentGraphicsX = x;
+                _currentGraphicsY = y;
+                return;
+            }
+
             if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out var absoluteX, out var absoluteY))
             {
                 return;
@@ -6601,6 +6736,11 @@ PRINT Person(-1).Age
 
         public int GetPixel(long x, long y)
         {
+            if (_isCanvasActive)
+            {
+                return _pixels.TryGetValue((x, y), out var canvasColor) ? canvasColor : 0;
+            }
+
             if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out var absoluteX, out var absoluteY))
             {
                 return 0;
@@ -6937,6 +7077,129 @@ PRINT Person(-1).Age
 
             return (_currentGraphicsX, _currentGraphicsY);
         }
+
+        private void RasterizeCanvasFillRect(long x, long y, long width, long height, int color)
+        {
+            if (!TryTranslateCanvasWorldRectangleToScreen(x, y, width, height, out var left, out var top, out var right, out var bottom))
+            {
+                return;
+            }
+
+            var paletteIndex = MapCanvasColorToPaletteIndex(color);
+            for (var pixelY = top; pixelY <= bottom; pixelY++)
+            {
+                for (var pixelX = left; pixelX <= right; pixelX++)
+                {
+                    _pixels[(pixelX, pixelY)] = paletteIndex;
+                }
+            }
+        }
+
+        private bool TryTranslateCanvasWorldRectangleToScreen(long x, long y, long width, long height, out long left, out long top, out long right, out long bottom)
+        {
+            left = 0;
+            top = 0;
+            right = -1;
+            bottom = -1;
+            if (!_isCanvasActive || width <= 0 || height <= 0)
+            {
+                return false;
+            }
+
+            var viewportLeft = _viewportEnabled ? _viewportLeft : 0L;
+            var viewportTop = _viewportEnabled ? _viewportTop : 0L;
+            var viewportRight = _viewportEnabled ? _viewportRight : _canvasWidth - 1;
+            var viewportBottom = _viewportEnabled ? _viewportBottom : _canvasHeight - 1;
+            left = viewportLeft + (x - _canvasCameraX);
+            top = viewportTop + (y - _canvasCameraY);
+            right = left + width - 1;
+            bottom = top + height - 1;
+            left = Math.Max(left, viewportLeft);
+            top = Math.Max(top, viewportTop);
+            right = Math.Min(right, viewportRight);
+            bottom = Math.Min(bottom, viewportBottom);
+            left = Math.Max(left, 0);
+            top = Math.Max(top, 0);
+            right = Math.Min(right, _canvasWidth - 1);
+            bottom = Math.Min(bottom, _canvasHeight - 1);
+            return left <= right && top <= bottom;
+        }
+
+        private static int MapCanvasColorToPaletteIndex(int color)
+        {
+            var red = (color >> 16) & 0xFF;
+            var green = (color >> 8) & 0xFF;
+            var blue = color & 0xFF;
+            var bestIndex = 0;
+            var bestDistance = int.MaxValue;
+
+            for (var index = 0; index < 256; index++)
+            {
+                var (paletteRed, paletteGreen, paletteBlue) = MapPaletteIndexToRgb(index);
+                var distance =
+                    Square(red - paletteRed) +
+                    Square(green - paletteGreen) +
+                    Square(blue - paletteBlue);
+                if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                bestIndex = index;
+                if (distance == 0)
+                {
+                    break;
+                }
+            }
+
+            return bestIndex;
+        }
+
+        private static (int Red, int Green, int Blue) MapPaletteIndexToRgb(int colorIndex)
+        {
+            var normalized = Math.Abs(colorIndex) % 256;
+            return normalized switch
+            {
+                0 => (0, 0, 0),
+                1 => (0, 0, 170),
+                2 => (0, 170, 0),
+                3 => (0, 170, 170),
+                4 => (170, 0, 0),
+                5 => (170, 0, 170),
+                6 => (170, 85, 0),
+                7 => (170, 170, 170),
+                8 => (85, 85, 85),
+                9 => (85, 85, 255),
+                10 => (85, 255, 85),
+                11 => (85, 255, 255),
+                12 => (255, 85, 85),
+                13 => (255, 85, 255),
+                14 => (255, 255, 85),
+                15 => (255, 255, 255),
+                >= 16 and <= 231 => MapRgbCubeIndexToRgb(normalized),
+                _ => MapGrayIndexToRgb(normalized)
+            };
+        }
+
+        private static (int Red, int Green, int Blue) MapRgbCubeIndexToRgb(int colorIndex)
+        {
+            var cubeIndex = colorIndex - 16;
+            var red = cubeIndex / 36;
+            var green = cubeIndex / 6 % 6;
+            var blue = cubeIndex % 6;
+            return (MapRgbCubeComponent(red), MapRgbCubeComponent(green), MapRgbCubeComponent(blue));
+        }
+
+        private static (int Red, int Green, int Blue) MapGrayIndexToRgb(int colorIndex)
+        {
+            var component = 8 + ((colorIndex - 232) * 10);
+            return (component, component, component);
+        }
+
+        private static int MapRgbCubeComponent(int component) => component == 0 ? 0 : 55 + (component * 40);
+
+        private static int Square(int value) => value * value;
 
         private bool IsInsideScreen(long x, long y) => x >= 0 && y >= 0 && x < ScreenWidth && y < ScreenHeight;
 

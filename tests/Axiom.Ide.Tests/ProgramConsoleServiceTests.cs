@@ -781,6 +781,72 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void Canvas_ViewportAndCameraProjectWorldIntoViewportOrigin()
+    {
+        var service = new ProgramConsoleService();
+        var image = new RuntimeImageValue(1, 1, [0xFFFF0000u]);
+
+        service.ActivateCanvas(24, 18);
+        Assert.True(service.SetViewport(10, 6, 14, 10, fillColor: null, borderColor: null, useScreenCoordinates: true));
+        service.SetCanvasCamera(100, 50);
+        service.FillRect(100, 50, 2, 2, 0x224466);
+        service.DrawImage(image, 104, 54, 1, 1);
+        service.PresentFrame();
+
+        var frame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0x224466), frame.BgraPixels[(6 * frame.Width) + 10]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0x224466), frame.BgraPixels[(7 * frame.Width) + 11]);
+        Assert.Equal(0xFFFF0000u, frame.BgraPixels[(10 * frame.Width) + 14]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0), frame.BgraPixels[0]);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0), frame.BgraPixels[(5 * frame.Width) + 9]);
+    }
+
+    [Fact]
+    public void Canvas_BeginFrameKeepsPublishedFrameStableUntilPresent()
+    {
+        var service = new ProgramConsoleService();
+        var bluePixel = new RuntimeImageValue(1, 1, [0xFF0000FFu]);
+
+        service.ActivateCanvas(8, 8);
+        service.FillRect(0, 0, 8, 8, 0x112233);
+        service.PresentFrame();
+
+        var publishedBeforeFrame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0x112233), publishedBeforeFrame.BgraPixels[0]);
+
+        service.BeginFrame();
+        service.DrawImage(bluePixel, 2, 3, 1, 1);
+
+        var publishedDuringFrame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.Same(publishedBeforeFrame, publishedDuringFrame);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0x112233), publishedDuringFrame.BgraPixels[0]);
+
+        service.PresentFrame();
+
+        var publishedAfterPresent = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.NotSame(publishedBeforeFrame, publishedAfterPresent);
+        Assert.Equal(ScreenFramebuffer.MapRgbToBgra(0), publishedAfterPresent.BgraPixels[0]);
+        Assert.Equal(0xFF0000FFu, publishedAfterPresent.BgraPixels[(3 * publishedAfterPresent.Width) + 2]);
+    }
+
+    [Fact]
+    public void Canvas_PSetProjectsWorldPixelIntoViewport()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateCanvas(24, 18);
+        Assert.True(service.SetViewport(10, 6, 14, 10, fillColor: null, borderColor: null, useScreenCoordinates: true));
+        service.SetCanvasCamera(100, 50);
+        service.SetPixel(100, 50, 12);
+        service.PresentFrame();
+
+        Assert.Equal(12, service.GetPixel(10, 6));
+        Assert.Equal(0, service.GetPixel(9, 6));
+        Assert.Equal(100, service.CurrentGraphicsX);
+        Assert.Equal(50, service.CurrentGraphicsY);
+    }
+
+    [Fact]
     public void WriteGraphicsText_RendersRussianLetters()
     {
         var service = new ProgramConsoleService();

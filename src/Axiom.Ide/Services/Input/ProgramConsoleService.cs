@@ -73,6 +73,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private bool _graphicsVisualRefreshPending;
     private DispatcherTimer? _graphicsVisualRefreshTimer;
     private NativeGraphicsScreenWindow? _graphicsWindow;
+    private bool _canvasFrameInProgress;
     private int _graphicsBatchDepth;
     private bool _graphicsBatchHasChanges;
     private DateTimeOffset? _graphicsFrameMetricsStartedAt;
@@ -507,6 +508,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _visualScreenPage = 0;
             _canvasCameraX = 0;
             _canvasCameraY = 0;
+            _canvasFrameInProgress = false;
             _inputSnapshot.SetScreenState(isScreenActive: false, isScreenOutputActive: false, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
@@ -560,6 +562,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _visualScreenPage = 0;
             _canvasCameraX = 0;
             _canvasCameraY = 0;
+            _canvasFrameInProgress = false;
             _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
@@ -596,6 +599,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
+            _canvasFrameInProgress = true;
+            CancelScheduledGraphicsVisualRefresh();
             _framebuffer.ClearTrueColor(0);
         });
     }
@@ -609,6 +614,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
+            _canvasFrameInProgress = false;
+            CancelScheduledGraphicsVisualRefresh();
             PublishGraphicsFrame();
         });
     }
@@ -663,9 +670,9 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
-            var left = x - _canvasCameraX;
-            var top = y - _canvasCameraY;
             var viewport = GetEffectiveViewportCore();
+            var left = TranslateCanvasX(x, viewport);
+            var top = TranslateCanvasY(y, viewport);
             DrawAbsoluteLineCore(left, top, left + width - 1, top, color, trueColor: true, viewport);
             DrawAbsoluteLineCore(left + width - 1, top, left + width - 1, top + height - 1, color, trueColor: true, viewport);
             DrawAbsoluteLineCore(left + width - 1, top + height - 1, left, top + height - 1, color, trueColor: true, viewport);
@@ -682,9 +689,9 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
-            var left = x - _canvasCameraX;
-            var top = y - _canvasCameraY;
             var viewport = GetEffectiveViewportCore();
+            var left = TranslateCanvasX(x, viewport);
+            var top = TranslateCanvasY(y, viewport);
             var clippedLeft = Math.Max(left, viewport.Left);
             var clippedTop = Math.Max(top, viewport.Top);
             var clippedRight = Math.Min(left + width - 1, viewport.Right);
@@ -702,14 +709,15 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
+            var viewport = GetEffectiveViewportCore();
             DrawAbsoluteLineCore(
-                x1 - _canvasCameraX,
-                y1 - _canvasCameraY,
-                x2 - _canvasCameraX,
-                y2 - _canvasCameraY,
+                TranslateCanvasX(x1, viewport),
+                TranslateCanvasY(y1, viewport),
+                TranslateCanvasX(x2, viewport),
+                TranslateCanvasY(y2, viewport),
                 color,
                 trueColor: true,
-                GetEffectiveViewportCore());
+                viewport);
         });
     }
 
@@ -751,8 +759,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
             var viewport = GetEffectiveViewportCore();
             _framebuffer.DrawTrueColorText(
-                x - _canvasCameraX,
-                y - _canvasCameraY,
+                TranslateCanvasX(x, viewport),
+                TranslateCanvasY(y, viewport),
                 text,
                 color,
                 viewport.Left,
@@ -959,16 +967,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
+        var viewport = GetEffectiveViewportCore();
         _framebuffer.DrawImage(
             image,
-            x - _canvasCameraX,
-            y - _canvasCameraY,
+            TranslateCanvasX(x, viewport),
+            TranslateCanvasY(y, viewport),
             width,
             height,
-            GetEffectiveViewportCore().Left,
-            GetEffectiveViewportCore().Top,
-            GetEffectiveViewportCore().Right,
-            GetEffectiveViewportCore().Bottom);
+            viewport.Left,
+            viewport.Top,
+            viewport.Right,
+            viewport.Bottom);
     }
 
     private void DrawSpriteOnCanvas(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
@@ -978,17 +987,18 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
+        var viewport = GetEffectiveViewportCore();
         _framebuffer.DrawSprite(
             sprite,
             frame,
-            x - _canvasCameraX,
-            y - _canvasCameraY,
+            TranslateCanvasX(x, viewport),
+            TranslateCanvasY(y, viewport),
             width,
             height,
-            GetEffectiveViewportCore().Left,
-            GetEffectiveViewportCore().Top,
-            GetEffectiveViewportCore().Right,
-            GetEffectiveViewportCore().Bottom);
+            viewport.Left,
+            viewport.Top,
+            viewport.Right,
+            viewport.Bottom);
     }
 
     public bool CopyScreenPage(int sourcePage, int destinationPage)
@@ -1907,6 +1917,20 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void SetLogicalPixelCore(long x, long y, int color)
     {
+        if (_isCanvasActive)
+        {
+            var viewport = GetEffectiveViewportCore();
+            var canvasAbsoluteX = TranslateCanvasX(x, viewport);
+            var canvasAbsoluteY = TranslateCanvasY(y, viewport);
+            if (!viewport.IsInsideAbsolute(canvasAbsoluteX, canvasAbsoluteY))
+            {
+                return;
+            }
+
+            SetPixelCore(canvasAbsoluteX, canvasAbsoluteY, color);
+            return;
+        }
+
         if (!TryTranslateLogicalToAbsoluteCore(x, y, out var absoluteX, out var absoluteY))
         {
             return;
@@ -1928,6 +1952,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private int GetLogicalPixelCore(long x, long y)
     {
+        if (_isCanvasActive)
+        {
+            return GetPixelCore(x, y);
+        }
+
         return TryTranslateLogicalToAbsoluteCore(x, y, out var absoluteX, out var absoluteY)
             ? GetPixelCore(absoluteX, absoluteY)
             : 0;
@@ -2179,9 +2208,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
     }
 
-    private long TranslateCanvasX(long x) => x - _canvasCameraX;
+    private long TranslateCanvasX(long x, GraphicsViewport viewport) =>
+        GraphicsLineMath.SaturatingAdd(viewport.Left, x - _canvasCameraX);
 
-    private long TranslateCanvasY(long y) => y - _canvasCameraY;
+    private long TranslateCanvasY(long y, GraphicsViewport viewport) =>
+        GraphicsLineMath.SaturatingAdd(viewport.Top, y - _canvasCameraY);
 
     private void DrawCanvasCircleCore(long worldX, long worldY, long radius, int color, bool filled)
     {
@@ -2190,9 +2221,9 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        var centerX = TranslateCanvasX(worldX);
-        var centerY = TranslateCanvasY(worldY);
         var viewport = GetEffectiveViewportCore();
+        var centerX = TranslateCanvasX(worldX, viewport);
+        var centerY = TranslateCanvasY(worldY, viewport);
         if (radius == 0)
         {
             if (viewport.IsInsideAbsolute(centerX, centerY))
@@ -2373,6 +2404,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void RefreshGraphicsVisuals()
     {
+        if (_isCanvasActive && _canvasFrameInProgress)
+        {
+            return;
+        }
+
         PublishGraphicsFrame(coalesced: true);
     }
 
@@ -2400,6 +2436,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private void ScheduleGraphicsVisualRefresh()
     {
         RecordGraphicsCommandQueued();
+
+        if (_isCanvasActive && _canvasFrameInProgress)
+        {
+            return;
+        }
 
         if (Application.Current is null)
         {

@@ -1010,3 +1010,27 @@
 - Сквозной VM: да, `MazeChaseAcceptanceSample_RunsOnBytecodeVm`, `MazeChaseAcceptanceSample_SpaceShowsPauseHud`, `MazeChaseAcceptanceSample_LowerKShowsCalibrationHints`, `MazeChaseAcceptanceSample_TWritesAllCalibrationValues` и `MazeChaseApplyCalibrationSample_RewritesInitPelletAlignmentFromCalibrationFile` проходят через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
 - Негативный паритет: да, `VIEWPORT` сохраняет те же диагностики `MB3010` и `MB3007`, а acceptance-хост синхронизирован с договором modern `CANVAS`, чтобы тестовая среда больше не жила по старому `SCREEN`-ограничителю;
 - Профиль: не приоритет, потому что текущий шаг закрывал не производительность, а интеграционную координатную согласованность `VIEWPORT` на флагманском примере.
+
+## Обновление реестра - 2026-06-07 - POINT(x, y) перенесён в CANVAS
+
+Дополнение к областям `POINT` и современного `CANVAS`:
+- VM: да, `BytecodeVm` теперь выполняет форму `POINT(x, y)` и при активном `SCREEN`, и при активном `CANVAS`, без отката на интерпретатор;
+- Интерпретатор: да, форма `POINT(x, y)` теперь требует не только `SCREEN`, а любую активную рисуемую поверхность `SCREEN` или `CANVAS`; форма `POINT(selector)` остаётся screen-only;
+- Автотесты: да, добавлены interpreter- и `BytecodeVm`-проверки `Execute_PointReadsPhysicalCanvasPixelsWithoutViewportOrCameraReprojection`, `Execute_CompiledPointReadsPhysicalCanvasPixelsWithoutViewportOrCameraReprojection`, `Execute_PointSelectorStillRequiresScreenWhenCanvasIsActive`, `Execute_CompiledPointSelectorStillRequiresScreenWhenCanvasIsActive`;
+- Запускаемые примеры: да, добавлен runnable sample `samples/functions/point/canvas_pixel_read.axm`;
+- Справочник: да, обновлены `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `PointCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, `POINT(selector)` при активном `CANVAS` по-прежнему даёт `MB3010`, а `POINT(x, y)` без активного `SCREEN` и без активного `CANVAS` сохраняет ту же диагностику отсутствия подходящей поверхности;
+- Профиль: не приоритет, потому что это адресное чтение пикселя для отладки и простых проверок, а не отдельный горячий benchmark.
+
+## Обновление реестра - 2026-06-07 - PSET перенесён в CANVAS
+
+Дополнение к областям `PSET`, `PRESET` и современного `CANVAS`:
+- VM: да, `BytecodeVm` теперь выполняет `PSET` и при активном `SCREEN`, и при активном `CANVAS`, без отката на интерпретатор;
+- Интерпретатор: да, форма `PSET` теперь требует не только `SCREEN`, а любую активную рисуемую поверхность `SCREEN` или `CANVAS`; `PRESET` остаётся screen-only;
+- Автотесты: да, добавлены interpreter- и `BytecodeVm`-проверки `Execute_PSetWritesCanvasPixelAtPhysicalViewportPoint`, `Execute_PSetUsesCanvasWorldCoordinatesWithViewportAndCamera`, `Execute_PSetStillRequiresScreenOrCanvas`, `Execute_PResetStillRequiresScreenWhenCanvasIsActive`, `Execute_CompiledPSetWritesCanvasPixelAtPhysicalViewportPoint`, `Execute_CompiledPSetUsesCanvasWorldCoordinatesWithViewportAndCamera`, `Execute_CompiledPSetStillRequiresScreenOrCanvas`, `Execute_CompiledPResetStillRequiresScreenWhenCanvasIsActive`, а в IDE добавлен тест `Canvas_PSetProjectsWorldPixelIntoViewport`;
+- Запускаемые примеры: да, добавлен runnable sample `samples/operators/pset/canvas_world_pixel.axm`;
+- Справочник: да, обновлены `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `PSetCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, `PSET` без активного `SCREEN` и без активного `CANVAS` сообщает `MB3010`, а `PRESET` при активном `CANVAS` по-прежнему сохраняет ту же диагностику screen-only формы;
+- Профиль: не приоритет, потому что это точечная пиксельная запись для отладки и простых процедурных эффектов, а не отдельный горячий benchmark.

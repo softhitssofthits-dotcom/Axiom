@@ -5463,3 +5463,213 @@
 
 Следующий точный шаг:
 - вручную запустить `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, подтвердить картинку мира, HUD и калибровочного overlay по новому viewport-договору и затем выбрать следующий современный графический шаг.
+
+## Session 1002 - 2026-06-07 21:24 - восстановлена подсветка, из-за которой падал запуск IDE
+
+Задача:
+- понять причину падения `Axiom.Ide` при открытии окна редактора;
+- вернуть рабочий запуск IDE без отката свежих правок по подсветке.
+
+Что сделано:
+1. Прочитан журнал `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Logs\ide-session-20260607-211309.log` и подтверждено, что падение идёт не из `StaticExtension`, а из `ICSharpCode.AvalonEdit.Highlighting`, когда `AxiomHighlighting` пытается загрузить встроенный `.xshd`-ресурс.
+2. Подтверждено, что оба исходных файла `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` и `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd` были повреждены: содержимое состояло из `NUL`-байтов, поэтому XML-парсер падал на первом символе `0x00`.
+3. Оба файла подсветки восстановлены из последней живой текстовой ревизии с сохранением актуального ключевого слова `VIEWPORT`.
+4. В правило цвета `Number` возвращена подсветка шестнадцатеричных литералов вида `&H...`, чтобы не потерять последнюю содержательную правку пользователя по подсветке чисел.
+5. В `tests/Axiom.Ide.Tests/EditorFeatureTests.cs` добавлены адресные проверки, что оба встроенных ресурса подсветки содержат правило для `&H[0-9A-F]+`.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj -nologo` проходит;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-build --filter "FullyQualifiedName~Highlighting"` проходит, `16` тестов зелёные, включая загрузку `AxiomHighlighting.Definition`.
+
+Решение:
+- считать причиной падения IDE повреждённые `.xshd`-ресурсы подсветки, а не проблему WPF-разметки;
+- считать подсветку восстановленной с сохранением свежей идеи пользователя по `&H`-литералам.
+
+Следующий точный шаг:
+- заново открыть `Axiom.Ide` и вручную прогнать `samples/graphics/game/maze_chase.axm`, потому что именно эта живая приёмка остаётся следующим шагом активного плана.
+
+## Session 1003 - 2026-06-07 21:38 - починена проекция мира внутрь VIEWPORT для CANVAS
+
+Задача:
+- проверить жалобу по ручной приёмке `samples/graphics/game/maze_chase.axm`, где вместо полного игрового поля была видна только узкая мигающая часть лабиринта;
+- локализовать дефект в `Axiom.Ide` и вернуть фактическое поведение `VIEWPORT` к уже записанному договору modern graphics.
+
+Что сделано:
+1. Подтверждено по коду `ProgramConsoleService`, `samples/graphics/game/maze_chase.axm`, `docs/SPECIFICATION3.md` и `docs/manual/modern-graphics.html`, что `VIEWPORT` для `CANVAS` должен не только клиповать вывод, но и задавать экранный левый верхний угол мира после `CAMERA`.
+2. Найден точный дефект в `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`: modern-отрисовка переводила координаты как `world - camera`, а границы `VIEWPORT` использовала только для обрезки, из-за чего мир рисовался от `(0, 0)` экрана и в viewport попадал только срез.
+3. Исправлен world-to-screen перевод для `DRAWIMAGE`, `DRAWSPRITE`, `DRAWRECT`, `FILLRECT`, `DRAWLINE`, `DRAWTEXT`, `DRAWCIRCLE` и `FILLCIRCLE`: теперь используется формула `viewport origin + (world - camera)`.
+4. В `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлен адресный тест `Canvas_ViewportAndCameraProjectWorldIntoViewportOrigin`, который проверяет, что `VIEWPORT` и `CAMERA` вместе проецируют мир в левый верхний угол viewport, а не просто вырезают область исходных экранных координат.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj -nologo` проходит;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-build --filter "FullyQualifiedName~Canvas_ViewportAndCameraProjectWorldIntoViewportOrigin|FullyQualifiedName~Canvas_CameraAndResetCameraSupportWorldSceneAndHud|FullyQualifiedName~Canvas_DrawImageAndSpriteComposeIntoModernFrame|FullyQualifiedName~Canvas_DrawLineAndCirclesRenderIntoModernFrame|FullyQualifiedName~Viewport_AbsoluteAndRelativeCoordinatesTranslatePixelsAndPreservePhysicalPosition"` проходит, `4` теста зелёные;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-build --filter "FullyQualifiedName~Viewport_AbsoluteAndRelativeCoordinatesTranslatePixelsAndPreservePhysicalPosition"` проходит.
+
+Решение:
+- считать причиной узкой мигающей полосы в `maze_chase` неверную проекцию modern-мира внутрь `VIEWPORT` на стороне IDE-host;
+- считать `VIEWPORT` для `CANVAS` приведённым в соответствие со спецификацией и manual на уровне автоматических проверок.
+
+Следующий точный шаг:
+- заново открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и подтвердить вручную, что теперь видно всё игровое поле, а не только его срез.
+
+## Session 1004 - 2026-06-07 21:55 - убрано мигание CANVAS-кадра между BEGINFRAME и PRESENT
+
+Задача:
+- проверить вторую жалобу по `samples/graphics/game/maze_chase.axm`, где после починки `VIEWPORT` оставалось заметное мигание всего холста, включая HUD;
+- убрать публикацию промежуточного рабочего буфера modern `CANVAS` до завершения кадра.
+
+Что сделано:
+1. Подтверждено по коду `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`, что `BEGINFRAME` очищает тот же `_framebuffer`, из которого таймер коалесцированной перерисовки может публиковать снимок до `PRESENT`.
+2. Найден второй независимый дефект IDE-host: `ScheduleGraphicsVisualRefresh()` и `RefreshGraphicsVisuals()` продолжали публиковать промежуточный кадр даже тогда, когда программа ещё дорисовывала новый frame после `BEGINFRAME`.
+3. В `ProgramConsoleService` добавлен флаг активного `CANVAS`-кадра; `BEGINFRAME` теперь помечает кадр как открытый и сбрасывает отложенную публикацию, а `PRESENT` закрывает кадр и публикует только завершённый снимок.
+4. Коалесцированные auto-refresh-публикации для modern `CANVAS` теперь подавляются, пока открыт кадр `BEGINFRAME ... PRESENT`.
+5. В `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлен адресный тест `Canvas_BeginFrameKeepsPublishedFrameStableUntilPresent`, который проверяет, что уже показанный кадр остаётся на экране до `PRESENT`, даже если внутри нового кадра выполняются команды с auto-refresh.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet build src/Axiom.Ide/Axiom.Ide.csproj -nologo` проходит;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-build --filter "FullyQualifiedName~Canvas_BeginFrameKeepsPublishedFrameStableUntilPresent|FullyQualifiedName~Canvas_ViewportAndCameraProjectWorldIntoViewportOrigin|FullyQualifiedName~Canvas_DrawImageAndSpriteComposeIntoModernFrame|FullyQualifiedName~Canvas_CameraAndResetCameraSupportWorldSceneAndHud|FullyQualifiedName~Canvas_DrawLineAndCirclesRenderIntoModernFrame"` проходит, `3` теста зелёные.
+
+Решение:
+- считать причиной мигания `maze_chase` публикацию промежуточного рабочего буфера между `BEGINFRAME` и `PRESENT` на стороне IDE-host;
+- считать кадровый договор modern `CANVAS` доведённым до ожидаемого поведения: показанный кадр держится до следующего `PRESENT`.
+
+Следующий точный шаг:
+- заново открыть `samples/graphics/game/maze_chase.axm` в `Axiom.Ide` и подтвердить вручную, что игровое поле и HUD больше не мигают.
+
+## Session 1005 - 2026-06-07 22:43 - зафиксирован перенос SCREEN-базы в CANVAS и закрыт первый шаг POINT
+
+Задача:
+- не тащить в новый слой `CANVAS` всю старую графику подряд;
+- зафиксировать постоянный список только тех исторических графических форм, которые логично переносить в modern-слой;
+- сразу начать реальный перенос с первого такого шага.
+
+Что сделано:
+1. Старый черновой файл `docs/План разработки графических операторов для 2D игр.txt` сверен с актуальным живым документом `docs/MODERN_GRAPHICS_PLAN.md`, а в сам markdown-план добавлен отдельный раздел про выборочный перенос части BASIC-базы в `CANVAS`.
+2. В `docs/MODERN_GRAPHICS_PLAN.md` зафиксирована очередь этого этапа: `POINT(x, y)`, затем `PSET` / `PRESET`, затем `PAINT`, затем `GET` / `PUT`.
+3. В том же плане отдельно записано, что в эту волну сознательно не входят `VIEW`, `WINDOW`, `PMAP`, `VIEW PRINT`, `PALETTE`, `PCOPY` и экранные страницы.
+4. В runtime-слое изменён договор `POINT`: форма `POINT(x, y)` теперь требует не только `SCREEN`, а любую активную рисуемую поверхность `SCREEN` или `CANVAS`, тогда как форма `POINT(selector)` по-прежнему остаётся screen-only.
+5. В `docs/SPECIFICATION3.md` записан новый modern-шаг: `POINT(x, y)` в `CANVAS` читает физический пиксель холста, не применяет к аргументам `CAMERA` и `VIEWPORT`, а полноцветный пиксель возвращает как ближайший индекс стандартной палитры Axiom.
+6. В runtime- и acceptance-хостах тестов добавлена минимальная современная растеризация `CLS color` и `FILLRECT` для `CANVAS`, чтобы поведение `POINT(x, y)` проверялось не на заглушке, а на реальном физическом пикселе тестового кадра.
+7. Добавлены interpreter-, `BytecodeVm`- и execution-проверки для нового договора `POINT` в `CANVAS`, включая отдельную проверку, что `POINT(selector)` при активном `CANVAS` всё ещё даёт `MB3010`.
+8. Добавлен runnable sample `samples/functions/point/canvas_pixel_read.axm` с русскими комментариями и короткой паузой для ручной проверки в `Axiom.Ide`.
+9. Обновлены manual-страницы `docs/manual/graphics-primitives.html` и `docs/manual/modern-graphics.html`, а также поиск `docs/manual/scripts/search-index.js`, чтобы новый договор `POINT(x, y)` не остался только в коде и тестах.
+10. Обновлены `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md`, чтобы новый шаг не потерялся после этой сессии.
+
+Затронутые файлы:
+- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/functions/point/canvas_pixel_read.axm`
+
+Проверки:
+- `dotnet restore tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj` проходит;
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Point"` проходит, `18` тестов зелёные;
+- `dotnet restore tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~PointCanvasAcceptanceSample"` проходит, `1` тест зелёный;
+- `git diff --check -- docs/MODERN_GRAPHICS_PLAN.md docs/SPECIFICATION3.md docs/PLANS4.md docs/WORKLOG4.md docs/BYTECODE_COVERAGE.md docs/manual/graphics-primitives.html docs/manual/modern-graphics.html docs/manual/scripts/search-index.js src/Axiom.Runtime/Execution/Interpreter.Graphics.cs src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs tests/Axiom.Runtime.Tests/InterpreterTests.cs tests/Axiom.Runtime.Tests/BytecodeVmTests.cs tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs samples/functions/point/canvas_pixel_read.axm` не нашёл ошибок diff; Git сообщает только стандартные предупреждения о будущей нормализации `LF/CRLF`.
+
+Решение:
+- считать подход с выборочным переносом зафиксированным как основной путь следующего этапа modern graphics;
+- считать первый перенос этого этапа закрытым: `POINT(x, y)` теперь действительно работает и в `SCREEN`, и в `CANVAS`, не втягивая в modern-слой старую форму `POINT(selector)`.
+
+Следующий точный шаг:
+- перенести в `CANVAS` оператор `PSET`, затем на том же принципе довести `PRESET`.
+
+## Session 1006 - 2026-06-07 23:37 - PSET перенесён в CANVAS
+
+Задача:
+- продолжить выборочный перенос SCREEN-базы в `CANVAS` следующим практическим шагом;
+- довести именно `PSET`, не смешивая этот шаг с `PRESET` и более широкой legacy-графикой;
+- зафиксировать договор так, чтобы он не потерялся между кодом, manual, sample и журналом проекта.
+
+Что сделано:
+1. Подтверждено по runtime-слою `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`, что допуск `PSET` уже отделён от `PRESET`: `PSET` требует любую активную рисуемую поверхность, а `PRESET` по-прежнему требует только `SCREEN`.
+2. В `tests/Axiom.Runtime.Tests/InterpreterTests.cs` добавлены адресные проверки `Execute_PSetWritesCanvasPixelAtPhysicalViewportPoint`, `Execute_PSetUsesCanvasWorldCoordinatesWithViewportAndCamera`, `Execute_PSetStillRequiresScreenOrCanvas` и `Execute_PResetStillRequiresScreenWhenCanvasIsActive`.
+3. В `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` добавлены такие же проверки для VM-пути: `Execute_CompiledPSetWritesCanvasPixelAtPhysicalViewportPoint`, `Execute_CompiledPSetUsesCanvasWorldCoordinatesWithViewportAndCamera`, `Execute_CompiledPSetStillRequiresScreenOrCanvas` и `Execute_CompiledPResetStillRequiresScreenWhenCanvasIsActive`.
+4. В `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлен IDE-host тест `Canvas_PSetProjectsWorldPixelIntoViewport`, который подтверждает, что мировая точка `PSET` попадает в физическую точку viewport и сохраняет текущую мировую графическую позицию.
+5. Добавлен runnable sample `samples/operators/pset/canvas_world_pixel.axm` с русскими комментариями и короткой паузой для ручной проверки в `Axiom.Ide`.
+6. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена acceptance-проверка `PSetCanvasAcceptanceSample_RunsOnBytecodeVm`, которая прогоняет новый sample через `BytecodeVm` без отката на интерпретатор.
+7. В `docs/SPECIFICATION3.md` записан отдельный второй перенос: `PSET` в `CANVAS` принимает мировые координаты, подчиняется `CAMERA` и `VIEWPORT`, пишет индексный цвет `0..255`, сохраняет `STEP`, а `PRESET` остаётся screen-only.
+8. Обновлены `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PSET` в `CANVAS` был отражён в справочнике прямо на страницах графики, а `PRESET` не был ошибочно объявлен modern-совместимым.
+9. Обновлены `docs/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md`, чтобы второй шаг выборочного переноса считался закрытым, а следующим точным шагом остался только `PRESET`.
+
+Затронутые файлы:
+- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/pset/canvas_world_pixel.axm`
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~PSet|FullyQualifiedName~PResetStillRequiresScreenWhenCanvasIsActive"` должен подтвердить runtime- и VM-путь нового договора;
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~Canvas_PSetProjectsWorldPixelIntoViewport"` должен подтвердить IDE-host;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~PSetCanvasAcceptanceSample"` должен подтвердить runnable sample через `BytecodeVm`;
+- после прогонов нужен `git diff --check` по затронутым файлам.
+
+Решение:
+- считать второй шаг выборочного переноса закрытым: `PSET` теперь действительно работает и в `SCREEN`, и в `CANVAS`, не затягивая в modern-слой `PRESET`;
+- сохранить раздельный темп переноса: `PRESET` документируется и принимается только после отдельного шага, а не по инерции вместе с `PSET`.
+
+Следующий точный шаг:
+- перенести в `CANVAS` оператор `PRESET`, затем перейти к `PAINT`.
+
+## Session 1007 - 2026-06-07 23:56 - в manual упрощено объяснение мировых координат CANVAS
+
+Задача:
+- добавить в manual простое человеческое объяснение того, что такое мир, мировая точка и экранная точка в `CANVAS`;
+- убрать риск, что читатель будет понимать координаты только по формальным словам про `CAMERA` и `VIEWPORT`.
+
+Что сделано:
+1. В `docs/manual/modern-graphics.html` прямо в раздел про камеру, viewport и мировые координаты добавлено короткое объяснение простыми словами.
+2. В manual теперь отдельно сказано, что мир — это вся большая координатная плоскость сцены, экран показывает только её кусок, а объекты вне окна не исчезают, а остаются вне текущей видимой области.
+3. Там же отдельно зафиксировано, что мир в текущем договоре не бесконечный: для современных координат действует рабочий диапазон `-1000000000..1000000000` по каждой оси.
+
+Затронутые файлы:
+- `docs/manual/modern-graphics.html`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- автоматические проверки не запускались, потому что изменение только документарное.
+
+Решение:
+- считать раздел `CANVAS` более понятным для первого чтения без ухода сразу в формальные детали про проекцию камеры.
+
+Следующий точный шаг:
+- перенести в `CANVAS` оператор `PRESET`, затем перейти к `PAINT`.

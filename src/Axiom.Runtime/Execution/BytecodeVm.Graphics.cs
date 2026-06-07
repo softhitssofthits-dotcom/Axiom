@@ -330,7 +330,15 @@ public sealed partial class BytecodeVm
         var reset = (flags & 1) != 0;
         var relative = (flags & 2) != 0;
         var count = instruction.GetOperand(1);
-        RequireScreenActive(reset ? "PRESET" : "PSET", location);
+        if (reset)
+        {
+            RequireScreenActive("PRESET", location);
+        }
+        else
+        {
+            RequireDrawableSurfaceActive("PSET", location);
+        }
+
         var color = count == 3
             ? PopValue(frame, instructionIndex).AsInteger()
             : reset ? _host.CurrentBackgroundColor : _host.CurrentForegroundColor;
@@ -1211,13 +1219,24 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluatePointBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        RequireScreenActive("POINT", location);
         return arguments.Count switch
         {
-            1 => RuntimeValue.FromInteger(EvaluatePointCoordinate(arguments[0].AsInteger(), location)),
-            2 => RuntimeValue.FromInteger(_host.GetPixel(arguments[0].AsLong(), arguments[1].AsLong())),
+            1 => RuntimeValue.FromInteger(EvaluatePointCoordinateWithScreen(arguments[0].AsInteger(), location)),
+            2 => RuntimeValue.FromInteger(EvaluatePointPixelWithDrawableSurface(arguments[0].AsLong(), arguments[1].AsLong(), location)),
             _ => RuntimeValue.FromInteger(0)
         };
+    }
+
+    private int EvaluatePointCoordinateWithScreen(int selector, TextLocation location)
+    {
+        RequireScreenActive("POINT", location);
+        return EvaluatePointCoordinate(selector, location);
+    }
+
+    private int EvaluatePointPixelWithDrawableSurface(long x, long y, TextLocation location)
+    {
+        RequireDrawableSurfaceActive("POINT", location);
+        return _host.GetPixel(x, y);
     }
 
     private RuntimeValue EvaluatePMapBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)

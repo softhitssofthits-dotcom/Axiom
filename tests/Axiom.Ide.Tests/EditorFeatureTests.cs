@@ -128,6 +128,34 @@ public sealed class EditorFeatureTests
     }
 
     [Fact]
+    public void Highlighting_NumberRuleContainsHexLiteralPattern()
+    {
+        const string resourceName = "Axiom.Ide.Editor.Highlighting.Axiom.xshd";
+        using var stream = typeof(AxiomHighlighting).Assembly.GetManifestResourceStream(resourceName);
+
+        Assert.NotNull(stream);
+
+        using var reader = new StreamReader(stream!, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        var xshd = reader.ReadToEnd();
+
+        Assert.Contains(@"<Rule color=""Number"">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>", xshd, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Highlighting_DarkNumberRuleContainsHexLiteralPattern()
+    {
+        const string resourceName = "Axiom.Ide.Editor.Highlighting.Axiom.Dark.xshd";
+        using var stream = typeof(AxiomHighlighting).Assembly.GetManifestResourceStream(resourceName);
+
+        Assert.NotNull(stream);
+
+        using var reader = new StreamReader(stream!, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        var xshd = reader.ReadToEnd();
+
+        Assert.Contains(@"<Rule color=""Number"">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>", xshd, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Highlighting_KeywordResourceContainsSelectCaseAndIs()
     {
         const string resourceName = "Axiom.Ide.Editor.Highlighting.Axiom.xshd";

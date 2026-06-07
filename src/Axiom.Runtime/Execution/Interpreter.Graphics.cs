@@ -291,7 +291,15 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecutePSet(BoundPSetStatement statement)
     {
-        RequireScreenActive(statement.Reset ? "PRESET" : "PSET", statement.Location);
+        if (statement.Reset)
+        {
+            RequireScreenActive("PRESET", statement.Location);
+        }
+        else
+        {
+            RequireDrawableSurfaceActive("PSET", statement.Location);
+        }
+
         var color = statement.ColorExpression is null
             ? statement.Reset ? _host.CurrentBackgroundColor : _host.CurrentForegroundColor
             : EvaluateExpression(statement.ColorExpression).AsInteger();
@@ -1020,13 +1028,24 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluatePoint(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)
     {
-        RequireScreenActive("POINT", expression.Location);
         return arguments.Count switch
         {
-            1 => RuntimeValue.FromInteger(EvaluatePointCoordinate(arguments[0].AsInteger(), expression.Location)),
-            2 => RuntimeValue.FromInteger(_host.GetPixel(arguments[0].AsLong(), arguments[1].AsLong())),
+            1 => RuntimeValue.FromInteger(EvaluatePointCoordinateWithScreen(arguments[0].AsInteger(), expression.Location)),
+            2 => RuntimeValue.FromInteger(EvaluatePointPixelWithDrawableSurface(arguments[0].AsLong(), arguments[1].AsLong(), expression.Location)),
             _ => RuntimeValue.FromInteger(0)
         };
+    }
+
+    private int EvaluatePointCoordinateWithScreen(int selector, TextLocation location)
+    {
+        RequireScreenActive("POINT", location);
+        return EvaluatePointCoordinate(selector, location);
+    }
+
+    private int EvaluatePointPixelWithDrawableSurface(long x, long y, TextLocation location)
+    {
+        RequireDrawableSurfaceActive("POINT", location);
+        return _host.GetPixel(x, y);
     }
 
     private RuntimeValue EvaluatePMap(BoundCallExpression expression, IReadOnlyList<RuntimeValue> arguments)
