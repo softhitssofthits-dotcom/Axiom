@@ -21,85 +21,81 @@
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор WINDOW</span>
             </nav>
             <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">WINDOW</h1>
-            <p class="lead"><code>WINDOW</code> задаёт логическую систему координат внутри текущего viewport. Это позволяет рисовать графики, оси и фигуры не по физическим пикселям экрана, а в собственной шкале программы, сохраняя один и тот же код для разных размеров области вывода.</p>
+            <h1 class="page-title">Оператор WINDOW</h1>
+            <p class="lead"><code>WINDOW</code> — оператор языка Axiom, который задаёт логическую систему координат внутри текущего viewport. После оператора <code>WINDOW</code> программа может рисовать не по физическим пикселям экрана, а по собственной числовой шкале.</p>
 
             <section class="article-section">
-                <h2>Синтаксис</h2>
-<pre><code>WINDOW
-WINDOW SCREEN (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)
-WINDOW (&lt;left&gt;, &lt;top&gt;)-(&lt;right&gt;, &lt;bottom&gt;)</code></pre>
+                <h2>Для чего нужен оператор WINDOW</h2>
+                <p>Оператор <code>WINDOW</code> нужен тогда, когда программе требуется рисовать графики, оси, фигуры или схемы не в пиксельных координатах, а в собственной логической системе координат.</p>
             </section>
 
             <section class="article-section">
-                <h2>Части синтаксиса</h2>
+                <h2>Где работает оператор WINDOW</h2>
+                <p>Оператор <code>WINDOW</code> работает только после выбора графического режима <code>SCREEN 1..10</code>.</p>
+                <p>Оператор <code>WINDOW</code> не открывает графический режим сам по себе. Перед оператором <code>WINDOW</code> программа должна вызвать оператор <code>SCREEN</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code class="language-basic">WINDOW
+WINDOW SCREEN (left, top)-(right, bottom)
+WINDOW (left, top)-(right, bottom)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Параметры</h2>
                 <table>
                     <thead>
-                        <tr><th>Часть</th><th>Описание</th></tr>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>WINDOW</code> без аргументов</td><td>Сбрасывает логическое окно и возвращает графические координаты к текущей системе viewport.</td></tr>
-                        <tr><td><code>SCREEN</code></td><td>Оставляет направление оси <code>Y</code> экранным: вниз.</td></tr>
-                        <tr><td><code>&lt;left&gt;, &lt;top&gt;, &lt;right&gt;, &lt;bottom&gt;</code></td><td>Две противоположные вершины логического прямоугольника. Axiom сам нормализует порядок углов и принимает любые числовые выражения.</td></tr>
+                        <tr><td><code>left</code>, <code>top</code>, <code>right</code>, <code>bottom</code></td><td>Две противоположные вершины логического прямоугольника.</td></tr>
+                        <tr><td><code>SCREEN</code></td><td>Слово <code>SCREEN</code> сохраняет экранное направление оси <code>Y</code>, то есть увеличение <code>Y</code> вниз.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
-                <p><code>WINDOW</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Без активного графического режима оператор сообщает ошибку времени выполнения <code>MB3010</code>.</p>
-                <p><code>VIEW</code> и <code>WINDOW</code> выполняют разные задачи. <code>VIEW</code> выбирает физическую область экрана, в которой разрешено рисование, а <code>WINDOW</code> задаёт логическую шкалу внутри этой области. Сначала программа обычно определяет viewport через <code>VIEW</code>, а затем, если нужно, включает поверх него логическое окно через <code>WINDOW</code>.</p>
-                <p>Форма <code>WINDOW SCREEN</code> создаёт логические координаты с экранным направлением оси <code>Y</code>: большее значение означает более низкую точку. Форма <code>WINDOW</code> без слова <code>SCREEN</code> создаёт декартову систему координат, где <code>Y</code> растёт вверх.</p>
-                <p>После <code>WINDOW</code> логические координаты используют <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>. Текущая графическая позиция остаётся общей для всех этих операторов.</p>
-                <p>Для явного перевода между логическими координатами окна и физическими координатами viewport используйте <code>PMAP</code>. Это полезно, когда программе нужно совместить логический рисунок с экранными измерениями.</p>
-                <p>Форма <code>POINT(number)</code> делится на две пары селекторов. <code>POINT(0)</code> и <code>POINT(1)</code> возвращают текущую физическую координату в системе viewport. <code>POINT(2)</code> и <code>POINT(3)</code> возвращают текущую логическую координату активного <code>WINDOW</code>. Если логическое окно не активно, все четыре селектора работают как координаты viewport.</p>
-                <p>Когда программа меняет <code>VIEW</code> или <code>WINDOW</code>, Axiom сохраняет физическую точку текущей графической позиции и заново вычисляет её логические координаты. Если при пересчёте получается нецелое значение, используется ближайшее целое.</p>
-                <p><code>WINDOW</code> не влияет на <code>LOCATE</code>, текстовый курсор и текстовые координаты <code>SCREEN</code>. Для текста продолжает работать общий экранный режим.</p>
-                <p>Оператор сообщает <code>MB3007</code>, если логический прямоугольник вырождается, содержит нечисловые или слишком большие границы либо если текущий effective viewport после <code>VIEW</code> меньше <code>2 x 2</code> пикселей и потому не может задать масштаб окна.</p>
+                <h2>Что делает оператор WINDOW</h2>
+                <p>Форма <code>WINDOW</code> без аргументов сбрасывает логическое окно и возвращает координаты к текущей системе viewport.</p>
+                <p>Форма <code>WINDOW SCREEN (...)</code> включает логическую систему координат с экранным направлением оси <code>Y</code>.</p>
+                <p>Форма <code>WINDOW (...)</code> включает логическую систему координат с математическим направлением оси <code>Y</code>, то есть увеличение <code>Y</code> вверх.</p>
             </section>
 
             <section class="article-section">
-                <h2>Примеры</h2>
-<pre><code>SCREEN 1
-VIEW SCREEN (10, 10)-(20, 20)
-
-WINDOW SCREEN (100, 200)-(110, 210)
-PSET (104, 205), 6
-DRAW "R1"
-PRINT POINT(0), POINT(1)
-PRINT POINT(2), POINT(3)
-
-WINDOW (100, 210)-(110, 200)
-PSET (104, 205), 7
-PRINT POINT(104, 205)</code></pre>
-                <p>В первой форме логические координаты ведут себя как экранные: точка <code>(104, 205)</code> попадает внутрь viewport и <code>DRAW</code> продолжает движение в той же логической системе. Во второй форме верхняя логическая граница больше нижней, поэтому координата <code>Y</code> начинает расти вверх, как на обычной декартовой плоскости.</p>
+                <h2>Правила работы</h2>
+                <p>Оператор <code>VIEW</code> выбирает физическую область экрана, а оператор <code>WINDOW</code> задаёт логическую шкалу внутри этой области. Обычно программа сначала настраивает оператор <code>VIEW</code>, а затем при необходимости включает оператор <code>WINDOW</code>.</p>
+                <p>После оператора <code>WINDOW</code> логические координаты используют операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>.</p>
+                <p>Для явного перевода между логическими координатами <code>WINDOW</code> и физическими координатами viewport программа использует функцию <code>PMAP</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
-                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3007</code>: логический прямоугольник <code>WINDOW</code> некорректен или текущий viewport слишком мал для его масштабирования.</li>
+                    <li><code>MB3010</code>: оператор <code>WINDOW</code> вызван без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: границы логического окна имеют недопустимое значение или вырождают логический прямоугольник.</li>
                 </ul>
             </section>
 
             <section class="article-section">
-                <h2>Проверочная программа</h2>
-                <p>Готовый пример для ручной проверки экранной и декартовой форм <code>WINDOW</code> находится в <code>samples/operators/window/cartesian_and_screen.axm</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/window/cartesian_and_screen.axm">WINDOW: экранные и декартовы координаты</a></li>
-                </ul>
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1
+VIEW SCREEN (10, 10)-(20, 20)
+WINDOW SCREEN (100, 200)-(110, 210)
+
+PSET (100, 200), 12
+PRINT PMAP(100, 0); ","; PMAP(200, 1)
+SLEEP</code></pre>
+                <p>В этом примере оператор <code>WINDOW</code> связывает логические координаты <code>100..110</code> и <code>200..210</code> с физическим viewport. После этого оператор <code>PSET</code> рисует не по сырым пикселям, а по логической шкале.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="graphics.html">Графика и экран</a>
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="view.html">Оператор VIEW</a>
                     <a href="pmap.html">Функция PMAP</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
-                    <a href="screen-functions.html">Функции состояния SCREEN</a>
                 </div>
             </section>
 

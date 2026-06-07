@@ -45,6 +45,7 @@ public sealed partial class Interpreter
             BoundBeginFrameStatement beginFrame => ExecuteBeginFrame(beginFrame),
             BoundPresentStatement present => ExecutePresent(present),
             BoundCameraStatement camera => ExecuteCamera(camera),
+            BoundViewportStatement viewport => ExecuteViewport(viewport),
             BoundResetCameraStatement resetCamera => ExecuteResetCamera(resetCamera),
             BoundViewStatement view => ExecuteView(view),
             BoundViewPrintStatement viewPrint => ExecuteViewPrint(viewPrint),

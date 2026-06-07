@@ -20,9 +20,9 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a><span>/</span><a href="string-functions.html">Строковые функции</a><span>/</span><span>Символы CHR, ASC, CHRW и ASCW</span>
             </nav>
-            <p class="eyebrow">Строковые функции</p>
-            <h1 class="page-title">Символы CHR, ASC, CHRW и ASCW</h1>
-            <p class="lead"><code>CHR()</code> строит строку из числового кода, а <code>ASC()</code> возвращает код первого символа строки. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы из BASIC/DOS-программ имели устойчивые числовые коды. Пара <code>CHRW()</code> и <code>ASCW()</code> нужна для прямой работы с Unicode-кодами без этой совместимой подмены.</p>
+<p class="eyebrow">Встроенные функции</p>
+<h1 class="page-title">Символы CHR, ASC, CHRW и ASCW</h1>
+<p class="lead">Функции <code>CHR()</code>, <code>ASC()</code>, <code>CHRW()</code> и <code>ASCW()</code> — встроенные функции языка Axiom, которые переводят числовые коды в строки и обратно. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы из BASIC/DOS-программ имели устойчивые числовые коды. Пара <code>CHRW()</code> и <code>ASCW()</code> нужна для прямой работы с Unicode-кодами без этой совместимой подмены.</p>
 
             <section class="article-section" id="rules">
                 <h2>Правила кодирования</h2>
@@ -147,7 +147,7 @@ PRINT CHRW(1071) ' Я</code></pre>
                         <tr><td><code>93</code></td><td><code>5Dh</code></td><td>]</td><td>Печатный ASCII-символ.</td></tr>
                         <tr><td><code>94</code></td><td><code>5Eh</code></td><td>^</td><td>Печатный ASCII-символ.</td></tr>
                         <tr><td><code>95</code></td><td><code>5Fh</code></td><td>_</td><td>Печатный ASCII-символ.</td></tr>
-                        <tr><td><code>96</code></td><td><code>60h</code></td><td>`</td><td>Печатный ASCII-символ.</td></tr>
+                        <tr><td><code>96</code></td><td><code>60h</code></td><td><code>`</code></td><td>Печатный ASCII-символ.</td></tr>
                         <tr><td><code>97</code></td><td><code>61h</code></td><td>a</td><td>Печатный ASCII-символ.</td></tr>
                         <tr><td><code>98</code></td><td><code>62h</code></td><td>b</td><td>Печатный ASCII-символ.</td></tr>
                         <tr><td><code>99</code></td><td><code>63h</code></td><td>c</td><td>Печатный ASCII-символ.</td></tr>

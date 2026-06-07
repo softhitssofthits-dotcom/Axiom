@@ -988,4 +988,25 @@
 - Справочник: да, согласованы `docs/manual/modern-graphics.html`, `docs/manual/scripts/search-index.js` и `docs/manual/scripts/manual.js`;
 - Сквозной VM: да, оба acceptance-сценария запускаются через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
 - Негативный паритет: да, отсутствие `CANVAS` для `TEXTWIDTH` и `TEXTHEIGHT` отдельно подтверждено одинаковой диагностикой `MB3010` в interpreter и `BytecodeVm`;
+
+## Обновление реестра - 2026-06-07 - VIEWPORT для современного CANVAS
+
+Дополнение к области современного `CANVAS`:
+- VM: да, `BytecodeVm` выполняет `VIEWPORT` без отката на интерпретатор;
+- Интерпретатор: да, использует тот же host-договор `SetViewport(...)` / `ResetViewport()` и тот же modern-only helper обрезки прямоугольника по `CANVAS`;
+- Автотесты: да, добавлены parser-, binder-, lowering-, emission-, interpreter-, `BytecodeVm`- и IDE-проверки для форм `VIEWPORT` и `VIEWPORT (left, top)-(right, bottom)`;
+- Запускаемые примеры: да, добавлен runnable-пример `samples/graphics/modern/viewport_hud.axm`;
+- Справочник: да, обновлены `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`;
+- Негативный паритет: да, interpreter и VM одинаково сообщают `MB3010` без активного `CANVAS` и `MB3007`, если после обрезки по холсту viewport становится пустым.
 - Профиль: не приоритет, потому что это короткие helper-вызовы для HUD-разметки, а не отдельный горячий benchmark-сценарий.
+
+## Обновление реестра - 2026-06-07 - VIEWPORT доведён до флагманского примера maze_chase
+
+Дополнение к области современного `CANVAS` и к интеграционному примеру `maze_chase`:
+- VM: да, `BytecodeVm` теперь принимает для `VIEWPORT` тот же целочисленный стек `INTEGER|LONG`, что и остальные modern-graphics операторы, без лишнего жёсткого `AsLong()` на успешном пути;
+- Интерпретатор: да, пользовательский договор не менялся, а интеграционный пример `samples/graphics/game/maze_chase.axm` теперь использует тот же viewport-договор, что и standalone sample `viewport_hud.axm`;
+- Автотесты: да, добавлен адресный runtime-тест `Execute_CompiledViewportAcceptsIntegerExpressionsFromProgramState`, а acceptance-набор `MazeChaseAcceptanceSample_*` снова проходит после перевода игры на `VIEWPORT`;
+- Запускаемые примеры: да, главным runnable-примером для живого viewport-сценария теперь являются и `samples/graphics/modern/viewport_hud.axm`, и `samples/graphics/game/maze_chase.axm`;
+- Сквозной VM: да, `MazeChaseAcceptanceSample_RunsOnBytecodeVm`, `MazeChaseAcceptanceSample_SpaceShowsPauseHud`, `MazeChaseAcceptanceSample_LowerKShowsCalibrationHints`, `MazeChaseAcceptanceSample_TWritesAllCalibrationValues` и `MazeChaseApplyCalibrationSample_RewritesInitPelletAlignmentFromCalibrationFile` проходят через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, `VIEWPORT` сохраняет те же диагностики `MB3010` и `MB3007`, а acceptance-хост синхронизирован с договором modern `CANVAS`, чтобы тестовая среда больше не жила по старому `SCREEN`-ограничителю;
+- Профиль: не приоритет, потому что текущий шаг закрывал не производительность, а интеграционную координатную согласованность `VIEWPORT` на флагманском примере.

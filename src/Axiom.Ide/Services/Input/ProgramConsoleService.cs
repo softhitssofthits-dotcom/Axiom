@@ -665,7 +665,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
             var left = x - _canvasCameraX;
             var top = y - _canvasCameraY;
-            _framebuffer.DrawTrueColorRectangle(left, top, left + width - 1, top + height - 1, color);
+            var viewport = GetEffectiveViewportCore();
+            DrawAbsoluteLineCore(left, top, left + width - 1, top, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left + width - 1, top, left + width - 1, top + height - 1, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left + width - 1, top + height - 1, left, top + height - 1, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left, top + height - 1, left, top, color, trueColor: true, viewport);
         });
     }
 
@@ -680,7 +684,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
             var left = x - _canvasCameraX;
             var top = y - _canvasCameraY;
-            _framebuffer.FillTrueColorRectangle(left, top, left + width - 1, top + height - 1, color);
+            var viewport = GetEffectiveViewportCore();
+            var clippedLeft = Math.Max(left, viewport.Left);
+            var clippedTop = Math.Max(top, viewport.Top);
+            var clippedRight = Math.Min(left + width - 1, viewport.Right);
+            var clippedBottom = Math.Min(top + height - 1, viewport.Bottom);
+            _framebuffer.FillTrueColorRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
         });
     }
 
@@ -699,7 +708,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 x2 - _canvasCameraX,
                 y2 - _canvasCameraY,
                 color,
-                trueColor: true);
+                trueColor: true,
+                GetEffectiveViewportCore());
         });
     }
 
@@ -739,7 +749,16 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
-            _framebuffer.DrawTrueColorText(x - _canvasCameraX, y - _canvasCameraY, text, color);
+            var viewport = GetEffectiveViewportCore();
+            _framebuffer.DrawTrueColorText(
+                x - _canvasCameraX,
+                y - _canvasCameraY,
+                text,
+                color,
+                viewport.Left,
+                viewport.Top,
+                viewport.Right,
+                viewport.Bottom);
         });
     }
 
@@ -946,10 +965,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             y - _canvasCameraY,
             width,
             height,
-            0,
-            0,
-            _screenWidth - 1L,
-            _screenHeight - 1L);
+            GetEffectiveViewportCore().Left,
+            GetEffectiveViewportCore().Top,
+            GetEffectiveViewportCore().Right,
+            GetEffectiveViewportCore().Bottom);
     }
 
     private void DrawSpriteOnCanvas(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
@@ -966,10 +985,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             y - _canvasCameraY,
             width,
             height,
-            0,
-            0,
-            _screenWidth - 1L,
-            _screenHeight - 1L);
+            GetEffectiveViewportCore().Left,
+            GetEffectiveViewportCore().Top,
+            GetEffectiveViewportCore().Right,
+            GetEffectiveViewportCore().Bottom);
     }
 
     public bool CopyScreenPage(int sourcePage, int destinationPage)
@@ -2117,23 +2136,27 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         SetGraphicsCurrentPositionCore(x2, y2);
     }
 
-    private void DrawAbsoluteLineCore(long x1, long y1, long x2, long y2, int color, bool trueColor = false)
+    private void DrawAbsoluteLineCore(long x1, long y1, long x2, long y2, int color, bool trueColor = false, GraphicsViewport? clipViewport = null)
     {
         var dx = Math.Abs(x2 - x1);
         var sx = x1 < x2 ? 1 : -1;
         var dy = -Math.Abs(y2 - y1);
         var sy = y1 < y2 ? 1 : -1;
         var error = dx + dy;
+        var viewport = clipViewport ?? new GraphicsViewport(0, 0, _screenWidth - 1L, _screenHeight - 1L, UsesRelativeCoordinates: false);
 
         while (true)
         {
-            if (trueColor)
+            if (viewport.IsInsideAbsolute(x1, y1))
             {
-                SetTrueColorPixelCore(x1, y1, color);
-            }
-            else
-            {
-                SetPixelCore(x1, y1, color);
+                if (trueColor)
+                {
+                    SetTrueColorPixelCore(x1, y1, color);
+                }
+                else
+                {
+                    SetPixelCore(x1, y1, color);
+                }
             }
 
             if (x1 == x2 && y1 == y2)
@@ -2169,9 +2192,13 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         var centerX = TranslateCanvasX(worldX);
         var centerY = TranslateCanvasY(worldY);
+        var viewport = GetEffectiveViewportCore();
         if (radius == 0)
         {
-            SetTrueColorPixelCore(centerX, centerY, color);
+            if (viewport.IsInsideAbsolute(centerX, centerY))
+            {
+                SetTrueColorPixelCore(centerX, centerY, color);
+            }
             return;
         }
 
@@ -2181,11 +2208,17 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             for (long dy = -radius; dy <= radius; dy++)
             {
                 var span = (long)Math.Floor(Math.Sqrt(Math.Max(0d, radiusSquared - ((double)dy * dy))));
+                var rowY = centerY + dy;
+                if (rowY < viewport.Top || rowY > viewport.Bottom)
+                {
+                    continue;
+                }
+
                 _framebuffer.FillTrueColorRectangle(
-                    centerX - span,
-                    centerY + dy,
-                    centerX + span,
-                    centerY + dy,
+                    Math.Max(centerX - span, viewport.Left),
+                    rowY,
+                    Math.Min(centerX + span, viewport.Right),
+                    rowY,
                     color);
             }
 
@@ -2203,7 +2236,13 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             Math.Tau,
             _screenWidth,
             _screenHeight,
-            (x, y) => SetTrueColorPixelCore(x, y, color));
+            (x, y) =>
+            {
+                if (viewport.IsInsideAbsolute(x, y))
+                {
+                    SetTrueColorPixelCore(x, y, color);
+                }
+            });
     }
 
     private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)

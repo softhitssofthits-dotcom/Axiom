@@ -21,43 +21,72 @@
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор PALETTE</span>
             </nav>
             <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">PALETTE</h1>
-            <p class="lead"><code>PALETTE</code> меняет соответствие между номером цвета и видимым цветом на графическом экране. Как в классическом BASIC, графические операторы продолжают хранить в пикселях цветовые индексы, а палитра определяет, каким цветом эти индексы показываются.</p>
+            <h1 class="page-title">Оператор PALETTE</h1>
+            <p class="lead"><code>PALETTE</code> — оператор языка Axiom, который меняет соответствие между индексом палитры и видимым цветом на графическом экране <code>SCREEN</code>. Оператор <code>PALETTE</code> нужен для палитровой графики исторического пути <code>SCREEN</code>, где пиксели хранят цветовые индексы, а палитра определяет, каким цветом эти индексы показываются пользователю.</p>
 
             <section class="article-section">
-                <h2>Синтаксис</h2>
-<pre><code>PALETTE
-PALETTE &lt;index&gt;, &lt;color&gt;
-PALETTE USING &lt;array&gt;</code></pre>
+                <h2>Для чего нужен оператор PALETTE</h2>
+                <p>Оператор <code>PALETTE</code> нужен тогда, когда программа хочет изменить вид уже нарисованных индексных пикселей без их перерисовки.</p>
+                <p>Оператор <code>PALETTE</code> позволяет временно сменить цветовую схему экрана, выделить важный объект, показать эффект тревоги или вернуть стандартную палитру после временной настройки цветов.</p>
             </section>
 
             <section class="article-section">
-                <h2>Части синтаксиса</h2>
+                <h2>Где работает оператор PALETTE</h2>
+                <p>Оператор <code>PALETTE</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>.</p>
+                <p>Оператор <code>PALETTE</code> не относится к современному полноцветному слою <code>CANVAS</code>. В слое <code>CANVAS</code> программа задаёт цвет напрямую через функцию <code>RGB</code>, а не через палитровое переназначение индексов.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code class="language-basic">PALETTE
+PALETTE index, color
+PALETTE USING array</code></pre>
+                <p>На этой странице показаны три разные формы одного оператора <code>PALETTE</code>. Это не одна общая запись, где нужно указывать все части сразу.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Параметры</h2>
                 <table>
                     <thead>
-                        <tr><th>Часть</th><th>Описание</th></tr>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>PALETTE</code> без аргументов</td><td>Сбрасывает палитру текущего графического экрана к стандартному отображению цветов Axiom.</td></tr>
-                        <tr><td><code>&lt;index&gt;</code></td><td>Индекс палитры, который нужно переопределить. Значение вычисляется как целое и нормализуется по правилу <code>ABS(value) MOD 256</code>.</td></tr>
-                        <tr><td><code>&lt;color&gt;</code></td><td>Новый цвет для указанного индекса. Значение вычисляется как целое и нормализуется по тому же правилу <code>ABS(value) MOD 256</code>.</td></tr>
-                        <tr><td><code>&lt;array&gt;</code></td><td>Одномерный числовой массив. Его видимые элементы задают цвета для индексов палитры, начиная с индекса <code>0</code>.</td></tr>
+                        <tr><td><code>index</code></td><td>Индекс палитры, который оператор <code>PALETTE</code> должен переназначить. Значение приводится к целому и нормализуется по правилу <code>ABS(value) MOD 256</code>.</td></tr>
+                        <tr><td><code>color</code></td><td>Новый видимый цвет для указанного индекса. Значение приводится к целому и нормализуется по тому же правилу <code>ABS(value) MOD 256</code>.</td></tr>
+                        <tr><td><code>array</code></td><td>Одномерный числовой массив. Видимые элементы массива задают цвета для индексов палитры, начиная с индекса <code>0</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
-                <p><code>PALETTE</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Без активного графического режима оператор сообщает ошибку времени выполнения <code>MB3010</code>.</p>
-                <p>Оператор не перерисовывает пиксели и не меняет их сохранённые индексы. Если программа уже нарисовала линию цветом <code>1</code>, затем выполнила <code>PALETTE 1, 196</code>, эта линия начнёт отображаться как цвет <code>196</code>, но <code>POINT(x, y)</code> по-прежнему вернёт индекс <code>1</code>.</p>
-                <p>Сброс <code>PALETTE</code> возвращает стандартное отображение всех индексов. Это удобно для демонстраций и для программ, которые временно меняют цветовую схему экрана.</p>
-                <p>Форма <code>PALETTE USING</code> изменяет сразу несколько индексов. Первый видимый элемент массива задаёт цвет для индекса <code>0</code>, второй — для индекса <code>1</code>, и так далее. Нижняя граница массива не становится индексом палитры: она только определяет порядок обхода видимых элементов.</p>
-                <p>Если в массиве больше <code>256</code> видимых элементов, Axiom применяет только первые <code>256</code>. Если элементов меньше, остальные индексы палитры остаются как были. Неинициализированный динамический массив в <code>PALETTE USING</code> даёт ошибку времени выполнения <code>MB3005</code>.</p>
+                <h2>Что делает оператор PALETTE</h2>
+                <p>Оператор <code>PALETTE</code> без аргументов сбрасывает палитру текущего графического экрана к стандартному отображению цветов Axiom.</p>
+                <p>Оператор <code>PALETTE index, color</code> переназначает один индекс палитры на другой видимый цвет.</p>
+                <p>Оператор <code>PALETTE USING array</code> переназначает несколько индексов палитры по значениям одномерного числового массива.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Правила работы</h2>
+                <p>Оператор <code>PALETTE</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Если графический режим не активен, оператор <code>PALETTE</code> сообщает ошибку времени выполнения <code>MB3010</code>.</p>
+                <p>Оператор <code>PALETTE</code> не перерисовывает пиксели и не меняет сохранённые индексы пикселей. Если программа нарисовала линию цветом <code>1</code>, а затем выполнила <code>PALETTE 1, 196</code>, линия начнёт отображаться как цвет <code>196</code>, но функция <code>POINT(x, y)</code> по-прежнему вернёт индекс <code>1</code>.</p>
+                <p>Оператор <code>PALETTE USING</code> читает видимые элементы массива по порядку. Первый видимый элемент массива задаёт цвет для индекса <code>0</code>, второй элемент задаёт цвет для индекса <code>1</code>, и так далее. Нижняя граница массива не становится номером индекса палитры.</p>
+                <p>Элементы массива в операторе <code>PALETTE USING</code> приводятся к целому значению, а затем нормализуются по тому же правилу <code>ABS(value) MOD 256</code>, что и обычные аргументы <code>index</code> и <code>color</code>.</p>
+                <p>Если массив для оператора <code>PALETTE USING</code> содержит больше <code>256</code> видимых элементов, оператор <code>PALETTE</code> использует только первые <code>256</code> элементов. Если элементов меньше, остальные индексы палитры сохраняют прежние значения.</p>
+                <p>Оператор <code>PALETTE</code> не меняет текущую графическую позицию, область <code>VIEW</code>, систему координат <code>WINDOW</code>, область <code>VIEW PRINT</code>, текстовый курсор и состояние мышиного ввода.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3005</code>: массив для <code>PALETTE USING</code> объявлен, но ещё не выделен.</li>
+                    <li><code>MB2003</code>: форма <code>PALETTE USING</code> получила не одномерный числовой массив.</li>
+                </ul>
             </section>
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code>SCREEN 1
+<pre><code class="language-basic">SCREEN 1
 LINE (20, 40)-(180, 40), 1
 PRINT POINT(20, 40)
 
@@ -66,12 +95,12 @@ PRINT POINT(20, 40)
 
 PALETTE
 PRINT POINT(20, 40)</code></pre>
-                <p>Обе строки <code>PRINT</code> выводят индекс <code>1</code>, потому что цвет пикселя хранится как индекс палитры. Вид линии меняется после <code>PALETTE 1, 196</code> и возвращается к стандартному цвету после <code>PALETTE</code>.</p>
+                <p>В этом примере функция <code>POINT</code> каждый раз возвращает индекс <code>1</code>, потому что оператор <code>PALETTE</code> меняет только видимый цвет, а не сохранённый индекс пикселя.</p>
             </section>
 
             <section class="article-section">
                 <h2>Пример PALETTE USING</h2>
-<pre><code>SCREEN 1
+<pre><code class="language-basic">SCREEN 1
 DIM colors(0 TO 2) AS INTEGER
 colors(0) = 16
 colors(1) = 196
@@ -82,34 +111,27 @@ PRINT POINT(20, 40)
 
 PALETTE USING colors
 PRINT POINT(20, 40)</code></pre>
-                <p>Массив задаёт новые видимые цвета для индексов <code>0</code>, <code>1</code> и <code>2</code>. Линия по-прежнему хранит индекс <code>1</code>, но после <code>PALETTE USING colors</code> этот индекс показывается цветом <code>196</code>.</p>
+                <p>В этом примере оператор <code>PALETTE USING</code> берёт новые цвета для индексов <code>0</code>, <code>1</code> и <code>2</code> из массива <code>colors</code>. При этом линия по-прежнему хранит индекс <code>1</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3005</code>: массив для <code>PALETTE USING</code> объявлен, но ещё не выделен.</li>
-                    <li><code>MB3007</code>: форма <code>PALETTE USING</code> получила не одномерный числовой массив.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Проверочная программа</h2>
-                <p>Готовые примеры для ручной проверки палитры находятся в <code>samples/operators/palette/</code>.</p>
+                <h2>Проверочные программы</h2>
+                <p>Готовые примеры для ручной проверки оператора <code>PALETTE</code> находятся в <code>samples/operators/palette/</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/palette/change_and_reset_colors.axm">PALETTE: изменение и сброс цветов</a></li>
                     <li><a href="../../samples/operators/palette/using_array_colors.axm">PALETTE USING: цвета из массива</a></li>
+                    <li><a href="../../samples/operators/palette/text_screen_error.axm">PALETTE: ошибка вне графического SCREEN</a></li>
+                    <li><a href="../../samples/operators/palette/using_without_screen_error.axm">PALETTE USING: ошибка без SCREEN</a></li>
                 </ul>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="graphics.html">Графика и экран</a>
+                    <a href="graphics.html">Графика</a>
                     <a href="screen.html">Оператор SCREEN</a>
+                    <a href="pcopy.html">Оператор PCOPY</a>
                     <a href="graphics-text.html#color">Оператор COLOR</a>
-                    <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="graphics-primitives.html#point">Функция POINT</a>
                 </div>
             </section>

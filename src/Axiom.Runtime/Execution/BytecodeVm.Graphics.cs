@@ -96,6 +96,32 @@ public sealed partial class BytecodeVm
         _host.SetCanvasCamera(x, y);
     }
 
+    private void ExecuteViewportInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("VIEWPORT", location);
+        }
+
+        var valueCount = instruction.GetOperand(0);
+        if (valueCount == 0)
+        {
+            _host.ResetViewport();
+            return;
+        }
+
+        var bottomExclusive = GetWholeNumberUnchecked(PopValue(frame, instructionIndex));
+        var rightExclusive = GetWholeNumberUnchecked(PopValue(frame, instructionIndex));
+        var top = GetWholeNumberUnchecked(PopValue(frame, instructionIndex));
+        var left = GetWholeNumberUnchecked(PopValue(frame, instructionIndex));
+        if (!TryApplyCanvasViewport(left, top, rightExclusive, bottomExclusive))
+        {
+            ReportInvalidCanvasViewport("VIEWPORT", location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private void ExecuteResetCameraInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         if (!_host.IsCanvasActive)
@@ -1136,6 +1162,51 @@ public sealed partial class BytecodeVm
         }
 
         return _host.SetWindow(left, top, right, bottom, useScreenCoordinates);
+    }
+
+    private bool TryApplyCanvasViewport(long left, long top, long rightExclusive, long bottomExclusive)
+    {
+        if (!GraphicsCoordinateValidation.AreSupportedLineCoordinates(left, top, rightExclusive, bottomExclusive))
+        {
+            return false;
+        }
+
+        if (_host.ScreenWidth <= 0 || _host.ScreenHeight <= 0)
+        {
+            return false;
+        }
+
+        if (rightExclusive <= left || bottomExclusive <= top)
+        {
+            return false;
+        }
+
+        var clippedLeft = Math.Max(0L, left);
+        var clippedTop = Math.Max(0L, top);
+        var clippedRightExclusive = Math.Min((long)_host.ScreenWidth, rightExclusive);
+        var clippedBottomExclusive = Math.Min((long)_host.ScreenHeight, bottomExclusive);
+        if (clippedRightExclusive <= clippedLeft || clippedBottomExclusive <= clippedTop)
+        {
+            return false;
+        }
+
+        return _host.SetViewport(
+            clippedLeft,
+            clippedTop,
+            clippedRightExclusive - 1,
+            clippedBottomExclusive - 1,
+            fillColor: null,
+            borderColor: null,
+            useScreenCoordinates: true);
+    }
+
+    private void ReportInvalidCanvasViewport(string instructionName, TextLocation location)
+    {
+        ReportBuiltInArgumentError(
+            instructionName,
+            "x/y",
+            "координаты VIEWPORT должны задавать непустой прямоугольник CANVAS; после обрезки по холсту он не должен становиться пустым.",
+            location);
     }
 
     private RuntimeValue EvaluatePointBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)

@@ -287,6 +287,7 @@ public sealed partial class Parser
             TokenKind.ByValKeyword => SyntaxKind.ByValKeyword,
             TokenKind.CanvasKeyword => SyntaxKind.CanvasKeyword,
             TokenKind.CameraKeyword => SyntaxKind.CameraKeyword,
+            TokenKind.ViewportKeyword => SyntaxKind.ViewportKeyword,
             TokenKind.CaseKeyword => SyntaxKind.CaseKeyword,
             TokenKind.CatchKeyword => SyntaxKind.CatchKeyword,
             TokenKind.CircleKeyword => SyntaxKind.CircleKeyword,

@@ -18,26 +18,31 @@
         <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
         <main class="content">
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>SCREEN</span>
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор SCREEN</span>
             </nav>
             <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">SCREEN</h1>
-            <p class="lead"><code>SCREEN</code> — оператор, который выбирает экранный режим программы. Если оператор <code>SCREEN</code> не указан, программа пишет обычный текст во вкладку <code>Output</code>. После <code>SCREEN 0</code> открывается отдельное текстовое окно с видимой сеткой <code>80 x 25</code> и вертикальной прокруткой, а после <code>SCREEN 1</code> ... <code>SCREEN 10</code> — графический экран фиксированного или адаптивно выбранного размера. В графическом режиме можно выбрать активную и видимую страницу для <code>PCOPY</code>.</p>
+            <h1 class="page-title">Оператор SCREEN</h1>
+            <p class="lead"><code>SCREEN</code> — оператор языка Axiom, который выбирает экранный режим программы. Оператор <code>SCREEN</code> может открыть текстовое окно <code>SCREEN 0</code> или графический экран <code>SCREEN 1..10</code>. После оператора <code>SCREEN</code> текстовый вывод и графика идут уже не во вкладку <code>Output</code>, а в отдельное окно программы.</p>
 
             <section class="article-section">
                 <h2>Для чего нужен оператор SCREEN</h2>
-                <p>Оператор <code>SCREEN</code> применяют тогда, когда программе нужен собственный экран: текстовая область, положение строк, цвет, простая графика, клавиатура или мышь. В обычном режиме без <code>SCREEN</code> вывод идёт во вкладку <code>Output</code>, которую можно понимать как консоль Axiom.</p>
-                <p>После выбора экранного режима операторы <code>PRINT</code>, <code>PRINT USING</code> и <code>INPUT</code> работают уже в окне <code>SCREEN</code>. В графических режимах там же работают операторы рисования: <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code> и функция <code>POINT</code>.</p>
-                <p>Для <code>SCREEN 0</code> действует консольный договор: подтверждённый переход на новую строку из последней видимой строки прокручивает окно вверх на одну строку. Для графических режимов <code>SCREEN 1</code> ... <code>SCREEN 10</code> такой автопрокрутки нет.</p>
-                <p>В текущем окне <code>SCREEN 0</code> в <code>Axiom.Ide</code> ранние строки не теряются сразу. Когда история становится длиннее видимых <code>25</code> строк, справа появляется вертикальная полоса прокрутки, и по ней можно вернуться к предыдущим строкам.</p>
+                <p>Оператор <code>SCREEN</code> нужен тогда, когда программе требуется собственное экранное окно с текстовой сеткой, палитровыми цветами, пиксельной графикой, экранными страницами и классическими графическими операторами BASIC.</p>
+                <p>Если программа не вызвала оператор <code>SCREEN</code>, операторы <code>PRINT</code> и <code>INPUT</code> работают во вкладке <code>Output</code>. Если программа вызвала оператор <code>SCREEN</code>, текст и графика переносятся в отдельное экранное окно.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Где работает оператор SCREEN</h2>
+                <p>Оператор <code>SCREEN</code> относится к историческому экранному пути Axiom. Этот оператор включает текстовый или графический режим <code>SCREEN</code> и управляет им.</p>
+                <p>Оператор <code>SCREEN</code> и оператор <code>CANVAS</code> относятся к разным графическим договорам. Если программа вызвала оператор <code>CANVAS</code>, последующий оператор <code>SCREEN</code> закрывает современный холст и возвращает программу к историческому экранному договору.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code>SCREEN &lt;режим&gt;
+<pre><code class="language-basic">SCREEN mode
 SCREEN 0
-SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;
-SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;, &lt;видимая_страница&gt;</code></pre>
+SCREEN mode, , activePage
+SCREEN mode, , activePage, visiblePage</code></pre>
+                <p>На этой странице показаны четыре поддерживаемые формы оператора <code>SCREEN</code>. Это разные формы одного оператора, а не одна общая запись, где нужно указывать всё сразу.</p>
             </section>
 
             <section class="article-section">
@@ -47,23 +52,29 @@ SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;, &lt;ви
                         <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>&lt;режим&gt;</code></td><td>Целое значение от <code>0</code> до <code>10</code>. Значение <code>0</code> выбирает текстовое окно. Значения <code>1..10</code> выбирают размер графического экрана.</td></tr>
-                        <tr><td><code>0</code></td><td>Текстовый режим окна <code>SCREEN</code>. Графические команды в нём недоступны, но обычный текстовый вывод и <code>INPUT</code> идут в это окно.</td></tr>
-                        <tr><td><code>&lt;активная_страница&gt;</code></td><td>Необязательная графическая страница <code>0..3</code>, куда идут команды рисования и чтение <code>POINT(x, y)</code>. Если не указана, используется страница <code>0</code>.</td></tr>
-                        <tr><td><code>&lt;видимая_страница&gt;</code></td><td>Необязательная графическая страница <code>0..3</code>, которая показывается в окне. Если активная страница указана, а видимая нет, видимой становится та же страница.</td></tr>
+                        <tr><td><code>mode</code></td><td>Целое число от <code>0</code> до <code>10</code>. Значение <code>0</code> выбирает текстовый режим. Значения <code>1..10</code> выбирают графический режим.</td></tr>
+                        <tr><td><code>activePage</code></td><td>Необязательный номер активной графической страницы от <code>0</code> до <code>3</code>. Именно в эту страницу идут операторы рисования и чтение цвета через функцию <code>POINT(x, y)</code>.</td></tr>
+                        <tr><td><code>visiblePage</code></td><td>Необязательный номер видимой графической страницы от <code>0</code> до <code>3</code>. Именно эта страница показывается в окне программы.</td></tr>
                     </tbody>
                 </table>
-                <p>Пустое место после первой запятой оставлено под исторический параметр <code>colorSwitch</code>. В Axiom этот параметр сейчас не поддерживается, поэтому для страниц используйте форму с пустым полем: <code>SCREEN 1, , 1, 0</code>.</p>
+                <p>Пустое место после первой запятой оставлено под исторический параметр <code>colorSwitch</code>. В Axiom этот параметр сейчас не поддерживается, поэтому для выбора страниц используется форма с пустым полем: <code>SCREEN 1, , 1, 0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Экранные режимы</h2>
+                <h2>Что делает оператор SCREEN</h2>
+                <p>Форма <code>SCREEN 0</code> открывает текстовое окно с видимой сеткой <code>80 x 25</code>. В этом режиме графические операторы рисования недоступны, но текстовый вывод, <code>INPUT</code> и работа курсора идут через отдельное экранное окно.</p>
+                <p>Формы <code>SCREEN 1..10</code> открывают графический экран. После этого становятся доступны графические операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code>, а также экранные операторы <code>VIEW</code>, <code>WINDOW</code>, <code>PCOPY</code>, <code>GET</code>, <code>PUT</code>, <code>COLOR</code>, <code>LOCATE</code> и связанные функции.</p>
+                <p>Если указаны <code>activePage</code> и <code>visiblePage</code>, оператор <code>SCREEN</code> одновременно выбирает страницу для рисования и страницу для показа. Это позволяет собирать кадр на скрытой странице, а затем показывать его через <code>PCOPY</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Режимы SCREEN</h2>
                 <table>
                     <thead>
-                        <tr><th>Команда</th><th>Размер в пикселях</th><th>Столбцы <code>LOCATE</code></th><th>Строки <code>LOCATE</code></th><th>Назначение</th></tr>
+                        <tr><th>Форма</th><th>Размер в пикселях</th><th>Столбцы текста</th><th>Строки текста</th><th>Назначение</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td><code>80</code></td><td><code>25</code></td><td>Текстовое окно без операторов рисования.</td></tr>
+                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td><code>80</code></td><td><code>25</code></td><td>Текстовое окно без графических операторов рисования.</td></tr>
                         <tr><td><code>SCREEN 1</code></td><td><code>320 x 200</code></td><td><code>40</code></td><td><code>16</code></td><td>Малый графический экран.</td></tr>
                         <tr><td><code>SCREEN 2</code></td><td><code>640 x 480</code></td><td><code>80</code></td><td><code>40</code></td><td>Графический экран 4:3.</td></tr>
                         <tr><td><code>SCREEN 3</code></td><td><code>800 x 600</code></td><td><code>100</code></td><td><code>50</code></td><td>Увеличенный графический экран 4:3.</td></tr>
@@ -76,73 +87,52 @@ SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;, &lt;ви
                         <tr><td><code>SCREEN 10</code></td><td><code>адаптивный 16:9</code></td><td><code>SCREENWIDTH() \ 8</code></td><td><code>SCREENHEIGHT() \ 12</code></td><td>Адаптивный широкий экран по рабочей области текущего монитора.</td></tr>
                     </tbody>
                 </table>
-                <p>Оператор <code>LOCATE</code> работает не с пикселями, а со строками и столбцами текстовой сетки. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей.</p>
-                <p>Режим <code>SCREEN 10</code> не привязан к одному заранее записанному разрешению. При каждом входе он выбирает максимально возможную клиентскую область с отношением сторон <code>16:9</code>, которая помещается в рабочую область монитора без системных панелей. Поэтому фактические значения надо читать через <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Экранные страницы</h2>
-                <p>В графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code> Axiom держит четыре страницы с номерами <code>0..3</code>. Активная страница получает графические команды, а видимая страница показывается пользователю. Обычно обе страницы равны <code>0</code>.</p>
-                <p>Разделение страниц нужно для оператора <a href="pcopy.html"><code>PCOPY</code></a>: программа может подготовить рисунок на скрытой активной странице, а затем скопировать его на видимую страницу одним оператором.</p>
-<pre><code>SCREEN 1, , 1, 0
-LINE (20, 40)-(180, 40), 12
-PCOPY 1, 0</code></pre>
-                <p>Текст, выведенный через <code>PRINT</code> в графическом режиме, не становится отдельной страницей <code>PCOPY</code> в текущем срезе. Страницы относятся к графическому кадровому буферу и палитре. Если страница содержит полноцветные пиксели от <code>DRAWIMAGE</code>, <code>PCOPY</code> переносит и этот слой.</p>
+                <h2>Правила работы</h2>
+                <p>В режиме <code>SCREEN 0</code> действует текстовый договор. Новая строка из последней видимой строки прокручивает окно вверх на одну строку. В <code>Axiom.Ide</code> предыдущие строки не исчезают сразу: их можно просмотреть через вертикальную полосу прокрутки.</p>
+                <p>В режимах <code>SCREEN 1..10</code> действует графический договор. Текст выводится поверх графического экрана по ячейкам <code>8 x 12</code> пикселей. Количество доступных строк и столбцов зависит от выбранного режима.</p>
+                <p>Режим <code>SCREEN 10</code> выбирает максимально возможную клиентскую область с соотношением сторон <code>16:9</code>, которая помещается в рабочую область текущего монитора. Поэтому функции <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> в этом режиме возвращают фактические размеры окна, а не заранее фиксированное значение.</p>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
-                <p>Значения режима меньше <code>0</code> или больше <code>10</code> дают ошибку времени выполнения.</p>
-                <p>Номера активной и видимой страницы меньше <code>0</code> или больше <code>3</code> дают ошибку времени выполнения.</p>
-                <p>В <code>SCREEN 0</code> функция <code>SCREENISACTIVE()</code> возвращает <code>FALSE</code>, потому что графический экран не включён. При этом <code>SCREENMODE()</code> возвращает <code>0</code>, а <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> возвращают размер текстового окна.</p>
-                <p>В текстовом режиме <code>SCREEN 0</code> одновременно видимы только <code>25</code> строк. Новый перевод строки из нижней строки поднимает видимое окно вверх и очищает новую строку <code>25</code>. Горизонтального автопереноса нет: символы правее столбца <code>80</code> не показываются.</p>
-                <p>Если пользователь оставил окно внизу истории, новый вывод продолжает автоматически показывать последние строки. Если пользователь вручную прокрутил историю вверх, последующий вывод остаётся внизу буфера и не обязан немедленно возвращать окно к последним строкам.</p>
-                <p>Для <code>SCREEN 10</code> монитор выбирается по экрану, в котором находится центр главного окна <code>Axiom.Ide</code> в момент запуска режима. Если эту привязку определить нельзя, используется основной монитор.</p>
-                <p>Вкладка <code>Output</code> используется только программами, которые не выбирали <code>SCREEN</code> явно. После <code>SCREEN 0</code> или графического <code>SCREEN</code> приглашение <code>INPUT</code> появляется в экранном окне.</p>
-                <p>Если пользователь закрывает окно <code>SCREEN</code> системной кнопкой закрытия во время выполнения программы, запуск прерывается. Следующие операторы программы не выполняются, а команды IDE снова становятся доступными.</p>
+                <h2>Ограничения и пограничные случаи</h2>
+                <p>Оператор <code>SCREEN</code> принимает только режимы <code>0..10</code>.</p>
+                <p>Номера <code>activePage</code> и <code>visiblePage</code> должны находиться в диапазоне <code>0..3</code>.</p>
+                <p>Если программа указывает только <code>activePage</code>, а <code>visiblePage</code> не указывает, видимой становится та же страница.</p>
+                <p>Если программа переключает графический режим, прежние настройки <code>VIEW</code>, <code>WINDOW</code>, палитры и страниц сбрасываются в договор нового режима.</p>
             </section>
 
             <section class="article-section">
-                <h2>Пример выбора режима</h2>
-<pre><code>SCREEN 5
-PRINT "active="; SCREENISACTIVE()
-PRINT "mode="; SCREENMODE()
-PRINT "size="; SCREENWIDTH(); "x"; SCREENHEIGHT()
-
-DO WHILE NOT KEYPRESS("ESC")
-LOOP
-
-SCREEN 0
-PRINT "text mode screen"</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Проверочные программы</h2>
-                <p>Эти программы можно открыть в <code>Axiom.Ide</code> и запустить для проверки работы оператора <code>SCREEN</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/graphics/screen/mode_info.axm">Сведения о выбранном режиме</a></li>
-                    <li><a href="../../samples/graphics/screen/best_fit_dimensions.axm">SCREEN 10: фактические размеры и сетка LOCATE</a></li>
-                    <li><a href="../../samples/graphics/screen/text_scroll.axm">SCREEN 0: вертикальная прокрутка и полоса прокрутки</a></li>
-                    <li><a href="../../samples/graphics/screen/invalid_page_error.axm">SCREEN: ошибка номера страницы</a></li>
-                    <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование скрытой страницы на видимую</a></li>
-                    <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
-                    <li><a href="../../samples/graphics/screen/close_window_stops_run.axm">Закрытие окна останавливает запуск</a></li>
-                    <li><a href="../../samples/graphics/input/text_screen_input.axm">Ввод в текстовом окне SCREEN 0</a></li>
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3007</code>: режим <code>SCREEN</code>, активная страница или видимая страница имеют недопустимое значение.</li>
+                    <li><code>MB3005</code>: хост не смог создать экранное окно или выбранный экранный режим недоступен.</li>
                 </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1, , 1, 0
+COLOR 15, 1
+CLS
+PRINT "Рисуем на скрытой странице 1"
+PSET (20, 20), 12
+PCOPY 1, 0
+SLEEP</code></pre>
+                <p>В этом примере оператор <code>SCREEN</code> открывает графический режим, делает страницу <code>1</code> активной для рисования и страницу <code>0</code> видимой для показа.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="data-and-input.html">Клавиатура, мышь и события</a>
-                    <a href="graphics.html">Графика и экран</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
+                    <a href="view.html">Оператор VIEW</a>
+                    <a href="window.html">Оператор WINDOW</a>
                     <a href="pcopy.html">Оператор PCOPY</a>
-                    <a href="images.html">Изображения IMAGE</a>
                     <a href="screen-functions.html">Функции состояния SCREEN</a>
-                    <a href="mousex.html">Функция MOUSEX</a>
-                    <a href="inkey.html">Функция INKEY</a>
                 </div>
             </section>
 

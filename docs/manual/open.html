@@ -8,15 +8,21 @@
 </head>
 <body data-page="open">
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Открытие текстового файла в переменную FILE</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор OPEN</p><p class="sidebar__subtitle">Открытие файла для чтения, записи или дописывания.</p></div><nav id="manual-nav"></nav></div></aside>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content">
 <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Файлы и файловая система</span><span>/</span><span>OPEN</span></nav>
-<p class="eyebrow">Файлы и файловая система</p>
+<p class="eyebrow">Оператор</p>
 <h1 class="page-title">Оператор OPEN</h1>
+<p class="lead"><code>OPEN</code> — оператор языка Axiom, который открывает файл для чтения, записи или дописывания. Оператор создаёт переменную типа <code>FILE</code>, через которую далее работают все файловые операции.</p>
 
 <section class="article-section">
 <h2>Как OPEN связывает файл с переменной</h2>
 <p>Оператор <code>OPEN</code> открывает текстовый файл и связывает его с переменной типа <code>FILE</code>. В Axiom файл открывается не по историческому номеру, а сразу в именованную переменную.</p>
+</section>
+
+<section class="article-section">
+<h2>Где работает оператор OPEN</h2>
+<p>Оператор <code>OPEN</code> работает в любом контексте программы и не зависит от графического режима <code>SCREEN</code>. Файловые операции доступны в текстовом, графическом и консольном режимах одинаково.</p>
 </section>
 
 <section class="article-section">

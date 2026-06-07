@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Клавиатура, мышь и события</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="keyboard-mouse-events">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Клавиатура, мышь и события</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span>
+        </nav>
+
+        <p class="eyebrow">Раздел</p>
+        <h1 class="page-title">Клавиатура, мышь и события</h1>
+        <p class="lead">Раздел клавиатуры, мыши и событий описывает встроенные функции и операторы языка Axiom, через которые программа получает пользовательский ввод во время выполнения. На этой странице собраны разные сущности: функции опроса клавиатуры, оператор <code>ON KEY</code>, функции мыши и оператор <code>ON MOUSE</code>.</p>
+
+        <section class="article-section">
+            <h2>Что входит в раздел</h2>
+            <p>Этот раздел не описывает одну общую команду. Синтаксис отдельных страниц относится к разным встроенным функциям и операторам.</p>
+            <ul>
+                <li>встроенная функция <code>INKEY</code> читает следующую клавишу как строку;</li>
+                <li>встроенная функция <code>KEYDOWN</code> проверяет текущее удержание клавиши или сочетания клавиш;</li>
+                <li>встроенная функция <code>KEYPRESS</code> проверяет одно событие нажатия клавиши;</li>
+                <li>оператор <code>ON KEY</code> регистрирует обработчик клавиатурного события;</li>
+                <li>встроенные функции <code>MOUSEX</code>, <code>MOUSEY</code>, <code>MOUSEBUTTON</code> и <code>MOUSEPRESS</code> читают состояние мыши;</li>
+                <li>оператор <code>ON MOUSE</code> регистрирует обработчик события мыши.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Клавиатура</h2>
+            <p>Клавиатурные встроенные функции работают как опрос. Программа сама вызывает нужную функцию в нужный момент и получает либо строку, либо логическое значение. Эти функции могут работать через обычную поверхность ввода IDE, через текстовый режим <code>SCREEN 0</code> и через графическое окно <code>SCREEN 1..10</code>.</p>
+            <table>
+                <thead><tr><th>Страница</th><th>Что описывает</th></tr></thead>
+                <tbody>
+                    <tr><td><a href="inkey.html"><code>INKEY</code></a></td><td>Неблокирующее чтение одной клавиши из очереди.</td></tr>
+                    <tr><td><a href="keydown.html"><code>KEYDOWN</code></a></td><td>Проверка текущего удержания клавиши или строкового сочетания через <code>+</code>.</td></tr>
+                    <tr><td><a href="keypress.html"><code>KEYPRESS</code></a></td><td>Одноразовая проверка события нажатия клавиши.</td></tr>
+                    <tr><td><a href="on-key.html"><code>ON KEY</code></a></td><td>Регистрация, пауза, возобновление и отключение обработчика клавиатурного события.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="article-section">
+            <h2>Мышь</h2>
+            <p>Мышиные функции и оператор <code>ON MOUSE</code> работают только при активном графическом режиме <code>SCREEN 1..10</code>. Координаты мыши измеряются в пикселях клиентской области активного окна <code>SCREEN</code> и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>.</p>
+            <table>
+                <thead><tr><th>Страница</th><th>Что описывает</th></tr></thead>
+                <tbody>
+                    <tr><td><a href="mousex.html"><code>MOUSEX</code></a></td><td>Текущая горизонтальная координата указателя.</td></tr>
+                    <tr><td><a href="mousey.html"><code>MOUSEY</code></a></td><td>Текущая вертикальная координата указателя.</td></tr>
+                    <tr><td><a href="mousebutton.html"><code>MOUSEBUTTON</code></a></td><td>Текущее удержание левой, правой или средней кнопки.</td></tr>
+                    <tr><td><a href="mousepress.html"><code>MOUSEPRESS</code></a></td><td>Одноразовое чтение события нажатия кнопки.</td></tr>
+                    <tr><td><a href="on-mouse.html"><code>ON MOUSE</code></a></td><td>Обработчики нажатия, отпускания, перемещения и колеса мыши.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="article-section">
+            <h2>Опрос и обработчики</h2>
+            <p>Функции опроса подходят для циклов, где программа сама регулярно проверяет состояние ввода. Операторы <code>ON KEY</code> и <code>ON MOUSE</code> подходят для случаев, когда нужно выполнить процедуру между обычными операторами программы, как только подходящее событие появилось в очереди.</p>
+            <p>Обработчики не выполняются посреди вычисления выражения. Среда выполнения проверяет очереди клавиатуры и мыши на границах операторов и на границах итераций циклов.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Проверочные программы</h2>
+            <p>Короткие runnable-примеры для ручной проверки находятся в тематических каталогах <code>samples/functions/</code> и <code>samples/operators/</code>.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li>
+                <li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификаторов</a></li>
+                <li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие</a></li>
+                <li><a href="../../samples/operators/on-key/left_handler.axm">ON KEY: обработчик клавиши</a></li>
+                <li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: нажатия кнопок мыши</a></li>
+                <li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик мыши</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="input.html">Оператор INPUT</a>
+                <a href="screen.html">Оператор SCREEN</a>
+                <a href="graphics.html">Графика</a>
+                <a href="loops.html">Циклы</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

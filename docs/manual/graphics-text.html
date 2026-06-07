@@ -21,179 +21,102 @@
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Текст на экране</span>
             </nav>
             <p class="eyebrow">Операторы</p>
-            <h1 class="page-title">CLS, COLOR и LOCATE</h1>
-            <p class="lead">Операторы <code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code> управляют текстом в окне <code>SCREEN</code>. <code>CLS</code> очищает экран, <code>COLOR</code> задаёт цвет символов, а <code>LOCATE</code> переносит текстовый курсор в нужную строку и столбец.</p>
+            <h1 class="page-title">Текст на экране</h1>
+            <p class="lead">Эта страница описывает три оператора языка Axiom для экранного текста в режимах <code>SCREEN</code>: оператор <code>CLS</code>, оператор <code>COLOR</code> и оператор <code>LOCATE</code>. Оператор <code>CLS</code> очищает экран, оператор <code>COLOR</code> задаёт цвета последующего текста, а оператор <code>LOCATE</code> переносит текстовый курсор в нужную строку и нужный столбец.</p>
 
             <section class="article-section">
-                <h2>Текст на экране</h2>
-                <p>После выбора экранного режима оператор <code>PRINT</code> выводит текст не во вкладку <code>Output</code>, а в окно программы. В <code>SCREEN 0</code> это текстовое окно без операторов рисования. В режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code> текст выводится поверх графического экрана.</p>
-                <p>Текстовый <code>SCREEN 0</code> ведёт себя как короткое консольное окно: одновременно видимы только последние <code>25</code> строк, а новый перевод строки из нижней строки прокручивает окно вверх. Графические режимы такой общей автопрокрутки не делают: текст за нижней границей просто не виден, если программа не задала отдельное текстовое окно через <code>VIEW PRINT</code>.</p>
-                <p>В текущем окне <code>SCREEN 0</code> в <code>Axiom.Ide</code> ранние строки сохраняются в истории текущего запуска. Когда история становится длиннее видимой области, справа появляется вертикальная полоса прокрутки, и пользователь может вручную просмотреть более ранние строки.</p>
-                <p>Оператор <code>LOCATE</code> считает не пиксели, а строки и столбцы. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей. Поэтому количество строк и столбцов зависит от выбранного режима <code>SCREEN</code>. Для <code>SCREEN 10</code> эти числа вычисляются от фактически выбранных размеров адаптивного режима <code>16:9</code> для текущего монитора.</p>
+                <h2>Где работают эти операторы</h2>
+                <p>Операторы <code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code> относятся к экранному договору <code>SCREEN</code>.</p>
+                <p>Оператор <code>CLS</code> работает и без оператора <code>SCREEN</code>, потому что этот оператор умеет очищать и обычный вывод во вкладке <code>Output</code>. Оператор <code>COLOR</code> в описанном на этой странице виде относится только к графическим режимам <code>SCREEN 1..10</code>. Оператор <code>LOCATE</code> относится к текстовой сетке экранного окна <code>SCREEN</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="cls">Оператор CLS</h2>
-<pre><code>CLS</code></pre>
-                <p><code>CLS</code> очищает экран программы и возвращает текстовый курсор в позицию <code>1, 1</code>. В графическом режиме очищаются и выведенный текст, и нарисованные точки, линии и окружности.</p>
-                <p>В <code>SCREEN 0</code> команда также сбрасывает накопленную прокрутку и историю: после <code>CLS</code> снова видна пустая сетка <code>80 x 25</code>, и следующий вывод начинается с первой строки.</p>
-                <p>Если программа не выбирала <code>SCREEN</code>, <code>CLS</code> относится к обычному выводу во вкладке <code>Output</code>.</p>
-<pre><code>SCREEN 3
-PRINT "old text"
-PSET (10, 10), 12
+                <h2>Текстовая сетка SCREEN</h2>
+                <p>Экранный текст в Axiom выводится не по пикселям, а по текстовым ячейкам. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей.</p>
+                <p>В режиме <code>SCREEN 0</code> видимая сетка имеет размер <code>80 x 25</code>. В режимах <code>SCREEN 1..9</code> размер сетки зависит от размеров графического окна. В режиме <code>SCREEN 10</code> количество столбцов и строк вычисляется как <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Оператор CLS</h2>
+                <p><code>CLS</code> — оператор языка Axiom, который очищает экранный вывод.</p>
+<pre><code class="language-basic">CLS</code></pre>
+                <p>Если программа работает в режиме <code>SCREEN</code>, оператор <code>CLS</code> очищает текущее экранное окно и возвращает текстовый курсор в позицию <code>1, 1</code>.</p>
+                <p>Если программа не вызвала оператор <code>SCREEN</code>, оператор <code>CLS</code> очищает обычный вывод во вкладке <code>Output</code>.</p>
+                <p>Если программа работает в графическом режиме <code>SCREEN</code>, оператор <code>CLS</code> очищает и экранный текст, и нарисованные пиксели.</p>
+<pre><code class="language-basic">SCREEN 3
+PRINT "Старая надпись"
 CLS
-PRINT "Экран очищен"
-SCREEN 0</code></pre>
+PRINT "Экран очищен"</code></pre>
             </section>
 
             <section class="article-section">
-                <h2 id="color">Оператор COLOR</h2>
-<pre><code>COLOR &lt;цвет символов&gt;
-COLOR &lt;цвет символов&gt;, &lt;цвет фона&gt;
-COLOR &lt;цвет символов&gt;, TRANSPARENT</code></pre>
-                <p><code>COLOR</code> задаёт текущее оформление текста на графическом экране <code>SCREEN</code>. Команда может только сменить цвет символов, включить непрозрачный фон ячеек или явно переключить последующий вывод в прозрачный режим поверх уже нарисованной графики.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>&lt;цвет символов&gt;</code></td><td>Номер цвета, которым будут выводиться следующие символы.</td></tr>
-                        <tr><td><code>&lt;цвет фона&gt;</code></td><td>Необязательный номер непрозрачного фона за следующими символами.</td></tr>
-                        <tr><td><code>TRANSPARENT</code></td><td>Явно отключает закраску фона у следующих символов и оставляет видимой графику под текстом.</td></tr>
-                    </tbody>
-                </table>
-                <p><code>COLOR foreground, background</code> меняет цвет символов и задаёт новый непрозрачный фон. <code>COLOR foreground</code> меняет только цвет символов и сохраняет текущий режим фона. <code>COLOR foreground, TRANSPARENT</code> меняет цвет символов и включает прозрачный фон для следующего <code>PRINT</code> или <code>INPUT</code>.</p>
-                <p>Текстовый слой остаётся ячеечным: каждая уже напечатанная ячейка хранит свой символ, цвет символа и режим фона на момент вывода. Последующие вызовы <code>COLOR</code> не перекрашивают ранее выведенный текст.</p>
-                <p>Команда требует активный графический режим <code>SCREEN 1</code> ... <code>SCREEN 10</code>. В текстовом <code>SCREEN 0</code> этот договор цвета пока недоступен.</p>
-<pre><code>SCREEN 3
+                <h2>Оператор COLOR</h2>
+                <p><code>COLOR</code> — оператор языка Axiom, который задаёт оформление последующего текста на графическом экране <code>SCREEN</code>.</p>
+<pre><code class="language-basic">COLOR foreground
+COLOR foreground, background
+COLOR foreground, TRANSPARENT</code></pre>
+                <p><code>foreground</code> — номер цвета символов.</p>
+                <p><code>background</code> — номер непрозрачного цвета фона под символами.</p>
+                <p><code>TRANSPARENT</code> — специальное слово, которое включает прозрачный фон под последующим текстом.</p>
+                <p>Оператор <code>COLOR foreground</code> меняет только цвет символов и сохраняет текущий режим фона. Оператор <code>COLOR foreground, background</code> меняет цвет символов и цвет непрозрачного фона. Оператор <code>COLOR foreground, TRANSPARENT</code> меняет цвет символов и включает прозрачный фон.</p>
+                <p>Оператор <code>COLOR</code> в этом договоре работает только после выбора графического режима <code>SCREEN 1..10</code>. В режиме <code>SCREEN 0</code> этот экранный цветовой договор не действует.</p>
+<pre><code class="language-basic">SCREEN 3
 COLOR 14, 1
 PRINT "Жёлтый текст на синем фоне"
-COLOR 15
-PRINT "Белый текст на прежнем фоне"
 COLOR 15, TRANSPARENT
-PRINT "Прозрачная подпись поверх графики"
-COLOR 46
-PRINT "Русский текст в графическом режиме"
-COLOR 226
-PRINT "Цвет с номером 226"
-SCREEN 0</code></pre>
-                <p>Для цветовых таблиц удобно использовать блочные символы. Функция <code>CHR()</code> для кодов <code>0..255</code> использует таблицу IBM CP866, поэтому <code>CHR(219)</code>, <code>CHR(178)</code>, <code>CHR(177)</code> и <code>CHR(176)</code> возвращают <code>█</code>, <code>▓</code>, <code>▒</code> и <code>░</code>.</p>
-<pre><code>SCREEN 10
-DIM r AS INTEGER
-DIM c AS INTEGER
-FOR i = 16 TO 255
-    r = ((i - 16) \ 16) + 1
-    c = (((i - 16) MOD 16) * 2) + 1
-    LOCATE r, c
-    COLOR i, 0
-    PRINT CHR(219)
-NEXT
-SCREEN 0</code></pre>
+PRINT "Белый текст поверх графики"</code></pre>
             </section>
 
             <section class="article-section">
-                <h2 id="locate">Оператор LOCATE</h2>
-<pre><code>LOCATE &lt;строка&gt;, &lt;столбец&gt;</code></pre>
-                <p><code>LOCATE</code> переносит текстовый курсор в указанную строку и столбец графического экрана. Следующий <code>PRINT</code> начнёт вывод с этой позиции.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>&lt;строка&gt;</code></td><td>Номер строки текстовой сетки. Строки считаются с <code>1</code>.</td></tr>
-                        <tr><td><code>&lt;столбец&gt;</code></td><td>Номер столбца текстовой сетки. Столбцы считаются с <code>1</code>.</td></tr>
-                    </tbody>
-                </table>
-                <p>Значения меньше <code>1</code> приводятся к <code>1</code>. Если строка или столбец находятся дальше видимой сетки, текст записывается за пределами видимой области и не отображается.</p>
-                <p>Число столбцов равно <code>SCREENWIDTH() \ 8</code>, а число строк равно <code>SCREENHEIGHT() \ 12</code>.</p>
-                <p>Если ширина или высота режима не делится на размер ячейки без остатка, оставшиеся пиксели справа или снизу не образуют отдельную текстовую позицию.</p>
-                <table>
-                    <thead>
-                        <tr><th>Режим</th><th>Размер</th><th>Столбцы <code>LOCATE</code></th><th>Строки <code>LOCATE</code></th><th>Остаток</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td><code>80</code></td><td><code>25</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 1</code></td><td><code>320 x 200</code></td><td><code>40</code></td><td><code>16</code></td><td><code>8</code> пикселей снизу.</td></tr>
-                        <tr><td><code>SCREEN 2</code></td><td><code>640 x 480</code></td><td><code>80</code></td><td><code>40</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 3</code></td><td><code>800 x 600</code></td><td><code>100</code></td><td><code>50</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 4</code></td><td><code>1024 x 768</code></td><td><code>128</code></td><td><code>64</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 5</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 6</code></td><td><code>1366 x 768</code></td><td><code>170</code></td><td><code>64</code></td><td><code>6</code> пикселей справа.</td></tr>
-                        <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td><code>200</code></td><td><code>75</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td><code>240</code></td><td><code>90</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td><code>320</code></td><td><code>120</code></td><td>Нет.</td></tr>
-                        <tr><td><code>SCREEN 10</code></td><td><code>адаптивный 16:9</code></td><td><code>SCREENWIDTH() \ 8</code></td><td><code>SCREENHEIGHT() \ 12</code></td><td>Зависит от фактического размера режима.</td></tr>
-                    </tbody>
-                </table>
-                <p>В <code>SCREEN 10</code> ширина и высота подбираются по рабочей области монитора, поэтому и последняя видимая позиция <code>LOCATE</code> определяется только во время запуска.</p>
-                <p>Последующий <code>PRINT</code> перезаписывает символы с указанной позиции, а не вставляет их в строку. Если новый текст короче старого, хвост старой строки остаётся на экране.</p>
-                <p>Сам по себе <code>LOCATE</code> не прокручивает <code>SCREEN 0</code>. Прокрутка происходит только тогда, когда <code>PRINT</code>, <code>PRINT USING</code> или подтверждённый <code>INPUT</code> завершают строку ниже строки <code>25</code>.</p>
-                <p>Ручная прокрутка полосой прокрутки не меняет текущую позицию <code>LOCATE</code> и не переставляет текстовый курсор программы. Она меняет только то, какую часть истории сейчас видит пользователь.</p>
-                <p>В графических режимах <code>VIEW PRINT верх TO низ</code> может ограничить прокрутку текстового вывода выбранным диапазоном строк. Обычный <code>VIEW</code> для графики на <code>LOCATE</code> не влияет.</p>
-<pre><code>SCREEN 3
-LOCATE 2, 4
-PRINT "score=120"
-LOCATE 2, 4
-PRINT "score=9  "
-SCREEN 0</code></pre>
+                <h2>Оператор LOCATE</h2>
+                <p><code>LOCATE</code> — оператор языка Axiom, который переносит текстовый курсор в указанную строку и в указанный столбец экранной сетки.</p>
+<pre><code class="language-basic">LOCATE row, column</code></pre>
+                <p><code>row</code> — номер строки экранной сетки, начиная с <code>1</code>.</p>
+                <p><code>column</code> — номер столбца экранной сетки, начиная с <code>1</code>.</p>
+                <p>После оператора <code>LOCATE</code> следующий текстовый вывод начинается в указанной ячейке.</p>
+                <p>Оператор <code>LOCATE</code> работает по текстовой сетке, а не по пикселям. Поэтому значения <code>row</code> и <code>column</code> должны укладываться в количество строк и столбцов текущего режима <code>SCREEN</code>.</p>
+<pre><code class="language-basic">SCREEN 1
+LOCATE 3, 5
+PRINT "Текст начинается с третьей строки и пятого столбца"</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Палитра</h2>
-                <p>Цвета имеют индексы <code>0..255</code>. Индексы <code>0..15</code> сохраняют классическую BASIC-палитру, <code>16..231</code> образуют RGB-куб 6x6x6, а <code>232..255</code> дают серую шкалу. Значения вне диапазона приводятся к палитре по правилу <code>ABS(color) MOD 256</code>.</p>
-                <table>
-                    <thead>
-                        <tr><th>Индекс</th><th>Цвет</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>0</code></td><td>чёрный</td></tr>
-                        <tr><td><code>1</code></td><td>тёмно-синий</td></tr>
-                        <tr><td><code>2</code></td><td>тёмно-зелёный</td></tr>
-                        <tr><td><code>3</code></td><td>тёмно-голубой</td></tr>
-                        <tr><td><code>4</code></td><td>тёмно-красный</td></tr>
-                        <tr><td><code>5</code></td><td>тёмно-пурпурный</td></tr>
-                        <tr><td><code>6</code></td><td>коричневый</td></tr>
-                        <tr><td><code>7</code></td><td>светло-серый</td></tr>
-                        <tr><td><code>8</code></td><td>тёмно-серый</td></tr>
-                        <tr><td><code>9</code></td><td>светло-синий</td></tr>
-                        <tr><td><code>10</code></td><td>светло-зелёный</td></tr>
-                        <tr><td><code>11</code></td><td>светло-голубой</td></tr>
-                        <tr><td><code>12</code></td><td>светло-красный</td></tr>
-                        <tr><td><code>13</code></td><td>светло-пурпурный</td></tr>
-                        <tr><td><code>14</code></td><td>жёлтый</td></tr>
-                        <tr><td><code>15</code></td><td>белый</td></tr>
-                        <tr><td><code>16..231</code></td><td>RGB-куб 6x6x6</td></tr>
-                        <tr><td><code>232..255</code></td><td>серая шкала</td></tr>
-                    </tbody>
-                </table>
-            </section>
-            <section class="article-section">
-                <h2>Экранные символы</h2>
-                <p><code>CHR()</code> и <code>ASC()</code> используют общий строковый договор Axiom: коды <code>0..255</code> соответствуют ASCII/IBM CP866, а коды выше <code>255</code> остаются Unicode-кодами. Поэтому русские буквы, рамки и блочные символы работают одинаково в обычном выводе и в активном <code>SCREEN</code>. Для прямой Unicode-работы без CP866-подмены есть <code>CHRW()</code> и <code>ASCW()</code>.</p>
-                <p>Полная таблица кодов вынесена на отдельную страницу <a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>.</p>
+                <h2>Правила работы</h2>
+                <p>В режиме <code>SCREEN 0</code> подтверждённый вывод из последней видимой строки прокручивает окно вверх на одну строку.</p>
+                <p>В графических режимах <code>SCREEN 1..10</code> текст рисуется по ячейкам поверх графического экрана. Если программа выводит текст ниже доступной сетки и не использует отдельное текстовое окно <code>VIEW PRINT</code>, текст ниже нижней границы не становится видимым.</p>
+                <p>Оператор <code>COLOR</code> меняет только последующий текст. Этот оператор не перекрашивает символы, которые уже были выведены раньше.</p>
             </section>
 
             <section class="article-section">
-                <h2>Проверочная программа</h2>
-                <p>Программы можно открыть в <code>Axiom.Ide</code> и запустить для проверки <code>PRINT</code>, <code>LOCATE</code>, <code>COLOR</code>, прокрутки <code>SCREEN 0</code>, полосы прокрутки, палитры и прозрачного текстового фона.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/graphics/screen/text_scroll.axm">SCREEN 0: вертикальная прокрутка и полоса прокрутки</a></li>
-                    <li><a href="../../samples/graphics/text/print_locate_color.axm">Текст, позиция курсора и цвета</a></li>
-                    <li><a href="../../samples/graphics/text/transparent_text.axm">Прозрачный и непрозрачный текст поверх графики</a></li>
-                    <li><a href="../../samples/operators/view-print/scrolling_region.axm">VIEW PRINT: прокрутка внутри строкового диапазона</a></li>
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>COLOR</code> вызван без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: оператор <code>LOCATE</code> получил строку или столбец вне допустимого диапазона текущей экранной сетки.</li>
                 </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 3
+CLS
+COLOR 14, 1
+LOCATE 3, 5
+PRINT "Жёлтый текст на синем фоне"
+
+COLOR 15, TRANSPARENT
+LOCATE 5, 5
+PRINT "Белый текст поверх графики"
+SLEEP</code></pre>
+                <p>В этом примере оператор <code>CLS</code> очищает экран, оператор <code>COLOR</code> сначала включает непрозрачный фон, а затем прозрачный фон, а оператор <code>LOCATE</code> управляет положением экранного текста по строкам и столбцам.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="graphics.html">Графика и экран</a>
                     <a href="screen.html">Оператор SCREEN</a>
-                    <a href="view.html#view-print">Оператор VIEW PRINT</a>
+                    <a href="view.html">Оператор VIEW</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
-                    <a href="screen-functions.html">Функции состояния SCREEN</a>
-                    <a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>
-                    <a href="print.html">Оператор PRINT</a>
+                    <a href="modern-graphics.html">Современная графика CANVAS</a>
                 </div>
             </section>
 

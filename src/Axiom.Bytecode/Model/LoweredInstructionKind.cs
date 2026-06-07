@@ -40,6 +40,7 @@ public enum LoweredInstructionKind
     BeginFrame,
     Present,
     Camera,
+    Viewport,
     ResetCamera,
     View,
     ViewPrint,

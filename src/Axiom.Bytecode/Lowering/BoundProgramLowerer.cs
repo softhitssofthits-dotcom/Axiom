@@ -322,6 +322,16 @@ public sealed class BoundProgramLowerer
                 LowerModernGraphicsIntegralExpression(camera.YExpression, instructions);
                 instructions.Add(LoweredInstruction.Camera(camera.Location));
                 break;
+            case BoundViewportStatement viewport:
+                if (!viewport.IsReset)
+                {
+                    LowerModernGraphicsIntegralExpression(viewport.LeftExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(viewport.TopExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(viewport.RightExpression!, instructions);
+                    LowerModernGraphicsIntegralExpression(viewport.BottomExpression!, instructions);
+                }
+                instructions.Add(LoweredInstruction.Viewport(viewport.Location, !viewport.IsReset));
+                break;
             case BoundResetCameraStatement resetCamera:
                 instructions.Add(LoweredInstruction.ResetCamera(resetCamera.Location));
                 break;

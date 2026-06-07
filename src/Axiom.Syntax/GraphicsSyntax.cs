@@ -126,6 +126,35 @@ public sealed class CameraStatementSyntax : StatementSyntax
     public ExpressionSyntax YExpression { get; }
 }
 
+public sealed class ViewportStatementSyntax : StatementSyntax
+{
+    public ViewportStatementSyntax(
+        SyntaxToken viewportKeyword,
+        GraphicsPointSyntax? topLeftPoint,
+        SyntaxToken? minusToken,
+        GraphicsPointSyntax? bottomRightPoint)
+    {
+        ArgumentNullException.ThrowIfNull(viewportKeyword);
+
+        ViewportKeyword = viewportKeyword;
+        TopLeftPoint = topLeftPoint;
+        MinusToken = minusToken;
+        BottomRightPoint = bottomRightPoint;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ViewportStatement;
+
+    public SyntaxToken ViewportKeyword { get; }
+
+    public GraphicsPointSyntax? TopLeftPoint { get; }
+
+    public SyntaxToken? MinusToken { get; }
+
+    public GraphicsPointSyntax? BottomRightPoint { get; }
+
+    public bool IsReset => TopLeftPoint is null || BottomRightPoint is null;
+}
+
 public sealed class ResetCameraStatementSyntax : StatementSyntax
 {
     public ResetCameraStatementSyntax(SyntaxToken resetCameraKeyword)

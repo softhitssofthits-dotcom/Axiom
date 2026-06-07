@@ -4,10 +4,8 @@
 
 DIM TILE AS INTEGER = 16                                                                        ' Размер одной логической клетки лабиринта в пикселях.
 DIM VIEW_WIDTH AS INTEGER = 1024                                                                ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
-DIM VIEW_HEIGHT AS INTEGER = 660                                                                ' Высота холста вмещает весь лабиринт, HUD и ручной сдвиг подложки.
+DIM VIEW_HEIGHT AS INTEGER = 660                                                                ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
 DIM HUD_HEIGHT AS INTEGER = 30 ' Высота верхней панели со счётом и подсказкой.
-
-DIM BACKGROUND_OFFSET_Y AS INTEGER = 45 ' Ручной вертикальный сдвиг всего игрового поля ниже HUD, чтобы фон, точки и герои жили в одной системе.
 
 DIM PLAYER_SPEED AS INTEGER = 4                                                                 ' Скорость героя в пикселях за кадр.
 DIM GHOST_SPEED AS INTEGER = 3                                                                  ' Скорость призрака в пикселях за кадр.
@@ -451,7 +449,7 @@ SUB EatPelletIfNeeded()                                                         
     END IF                                                                                      ' Завершаем съедание крупной точки.
 END SUB                                                                                         ' Завершаем проверку съедания точки.
 
-SUB DrawMazeWorld()                                                                             ' Процедура рисует весь мир сразу без прокрутки камеры.
+SUB DrawMazeWorld()                                                                             ' Процедура рисует весь мир внутри viewport без ручных экранных смещений.
     DIM cameraX AS INTEGER = 0                                                                   ' По X больше не прокручиваем карту: весь лабиринт уже помещается целиком.
     DIM cameraY AS INTEGER = 0                                                                   ' По Y тоже не прокручиваем карту: весь лабиринт виден сразу.
     DIM firstCol AS INTEGER = 1                                                                  ' Рисуем карту с самого первого столбца.
@@ -459,6 +457,7 @@ SUB DrawMazeWorld()                                                             
     DIM firstRow AS INTEGER = 1                                                                  ' Рисуем карту с самой первой строки.
     DIM lastRow AS INTEGER = mazeRows                                                            ' Рисуем карту до самой последней строки.
 
+    VIEWPORT (WorldViewportLeft(), WorldViewportTop())-(WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
     CAMERA cameraX, cameraY                                                                     ' Включаем камеру мира для последующего рисования.
 
     DrawVisibleWalls(firstRow, lastRow, firstCol, lastCol)                                      ' Рисуем фон лабиринта.
@@ -469,7 +468,7 @@ SUB DrawMazeWorld()                                                             
 END SUB                                                                                         ' Завершаем рисование мира.
 
 SUB DrawVisibleWalls(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
-    DRAWIMAGE mazeBackground, WorldOffsetX(), WorldOffsetY(), mazeCols * TILE, mazeRows * TILE ' Рисуем эталонную картинку лабиринта из того же общего начала, что и точки.
+    DRAWIMAGE mazeBackground, 0, 0, mazeCols * TILE, mazeRows * TILE                            ' Рисуем эталонную картинку лабиринта от начала мировых координат viewport.
 END SUB                                                                                         ' Завершаем рисование стен.
 
 SUB DrawVisiblePellets(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
@@ -494,6 +493,7 @@ END SUB                                                                         
 
 SUB DrawHud()                                                                                   ' Процедура рисует верхнюю панель интерфейса.
     RESETCAMERA                                                                                 ' Возвращаемся из мировых координат в экранные.
+    VIEWPORT                                                                                     ' Сбрасываем viewport на весь CANVAS, чтобы HUD жил поверх мира.
     FILLRECT 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR                                 ' Рисуем фон верхней панели.
     DRAWLINE 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, WALL_LIGHT_COLOR               ' Проводим светлую разделительную линию под HUD.
 
@@ -567,16 +567,18 @@ END SUB                                                                         
 
 SUB DrawCalibrationOverlay()                                                                    ' Процедура рисует подсказки и направляющую линию калибровки.
     RESETCAMERA                                                                                 ' Рисуем оверлей в экранных координатах, чтобы он не зависел от камеры.
+    VIEWPORT (WorldViewportLeft(), WorldViewportTop())-(WorldViewportRight(), WorldViewportBottom()) ' Ограничиваем сетку и направляющие только областью игрового поля.
     DrawCalibrationGrid()                                                                       ' Сначала рисуем тонкую сетку поверх поля для точной ручной подгонки.
 
     IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
         DIM selectedY AS INTEGER = PelletPixelY(calibrationRow)                                  ' Считаем фактическую Y-координату выбранного ряда точек.
-        DRAWLINE WorldOffsetX(), selectedY, WorldOffsetX() + worldWidthPixels - 1, selectedY, CALIBRATION_LINE_COLOR ' Проводим горизонтальную линию через выбранный ряд.
+        DRAWLINE 0, selectedY, worldWidthPixels - 1, selectedY, CALIBRATION_LINE_COLOR         ' Проводим горизонтальную линию через выбранный ряд внутри viewport.
     ELSE                                                                                        ' Иначе выбран столбец.
         DIM selectedX AS INTEGER = PelletPixelX(calibrationCol)                                  ' Считаем фактическую X-координату выбранного столбца точек.
-        DRAWLINE selectedX, BackgroundDrawTop(), selectedX, BackgroundDrawBottom(), CALIBRATION_LINE_COLOR ' Проводим вертикальную линию через выбранный столбец по тем же границам, что и сетка.
+        DRAWLINE selectedX, 0, selectedX, worldHeightPixels - 1, CALIBRATION_LINE_COLOR        ' Проводим вертикальную линию через выбранный столбец по тем же границам, что и сетка.
     END IF                                                                                      ' Завершаем рисование направляющей.
 
+    VIEWPORT                                                                                     ' Возвращаем полный холст, чтобы боковая панель не обрезалась viewport-ом мира.
     FILLRECT CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, HUD_BACKGROUND_COLOR ' Рисуем боковую плашку в пустом поле слева от лабиринта.
     DRAWRECT CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, CALIBRATION_LINE_COLOR ' Обводим боковую плашку, чтобы она читалась как отдельный режим.
     DRAWTEXT "КАЛИБРОВКА", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 8, CALIBRATION_TEXT_COLOR ' Заголовок режима калибровки.
@@ -592,18 +594,18 @@ SUB DrawCalibrationOverlay()                                                    
 END SUB                                                                                         ' Завершаем рисование калибровочного оверлея.
 
 SUB DrawCalibrationGrid()                                                                       ' Процедура рисует мелкую сетку поверх игрового поля.
-    DIM gridX AS INTEGER = WorldOffsetX()                                                       ' Текущая X-координата вертикальной линии сетки.
-    DIM gridY AS INTEGER = BackgroundDrawTop()                                                  ' Текущая Y-координата горизонтальной линии сетки стартует по фактическому верху фоновой подложки.
-    DIM gridRight AS INTEGER = WorldOffsetX() + worldWidthPixels                                ' Правая граница сетки по ширине лабиринта.
-    DIM gridBottom AS INTEGER = BackgroundDrawBottom()                                          ' Нижняя граница сетки по высоте берётся по той же подложке, что и лабиринт.
+    DIM gridX AS INTEGER = 0                                                                    ' Текущая X-координата вертикальной линии сетки в мировых координатах viewport.
+    DIM gridY AS INTEGER = 0                                                                    ' Текущая Y-координата горизонтальной линии сетки стартует от верха мира.
+    DIM gridRight AS INTEGER = worldWidthPixels - 1                                             ' Правая граница сетки по ширине лабиринта.
+    DIM gridBottom AS INTEGER = worldHeightPixels - 1                                           ' Нижняя граница сетки по высоте мира.
 
     DO WHILE gridX <= gridRight                                                                 ' Идём по всем вертикальным линиям сетки.
-        DRAWLINE gridX, BackgroundDrawTop(), gridX, gridBottom, CALIBRATION_GRID_COLOR          ' Рисуем одну тонкую вертикальную линию по точным границам игрового поля.
+        DRAWLINE gridX, 0, gridX, gridBottom, CALIBRATION_GRID_COLOR                            ' Рисуем одну тонкую вертикальную линию по точным границам игрового поля.
         gridX = gridX + CALIBRATION_GRID_STEP                                                   ' Переходим к следующей вертикальной линии с постоянным шагом.
     LOOP                                                                                        ' Завершаем вертикальные линии сетки.
 
     DO WHILE gridY <= gridBottom                                                                ' Идём по всем горизонтальным линиям сетки.
-        DRAWLINE WorldOffsetX(), gridY, gridRight, gridY, CALIBRATION_GRID_COLOR                ' Рисуем одну тонкую горизонтальную линию.
+        DRAWLINE 0, gridY, gridRight, gridY, CALIBRATION_GRID_COLOR                             ' Рисуем одну тонкую горизонтальную линию.
         gridY = gridY + CALIBRATION_GRID_STEP                                                   ' Переходим к следующей горизонтальной линии с постоянным шагом.
     LOOP                                                                                        ' Завершаем горизонтальные линии сетки.
 END SUB                                                                                         ' Завершаем рисование мелкой сетки.
@@ -889,11 +891,11 @@ FUNCTION EntityPixelY(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, tr
 END FUNCTION                                                                                    ' Завершаем вычисление мировой Y-координаты.
 
 FUNCTION PelletPixelX(tileCol AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную X-координату точки внутри клетки.
-    RETURN WorldOffsetX() + (tileCol - 1) * TILE + pelletCenterCols(tileCol)                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+    RETURN (tileCol - 1) * TILE + pelletCenterCols(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
 END FUNCTION                                                                                    ' Завершаем вычисление X точки.
 
 FUNCTION PelletPixelY(tileRow AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
-    RETURN WorldOffsetY() + (tileRow - 1) * TILE + pelletCenterRows(tileRow)                    ' Берём общий верх фона и добавляем к строке измеренный центр прохода.
+    RETURN (tileRow - 1) * TILE + pelletCenterRows(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
 END FUNCTION                                                                                    ' Завершаем вычисление Y точки.
 
 FUNCTION CanMove(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER) AS BOOLEAN            ' Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
@@ -1011,21 +1013,21 @@ FUNCTION ClampInt(value AS INTEGER, lowValue AS INTEGER, highValue AS INTEGER) A
     RETURN value                                                                                ' Если число внутри диапазона, возвращаем его без изменений.
 END FUNCTION                                                                                    ' Завершаем ограничение диапазоном.
 
-FUNCTION WorldOffsetX() AS INTEGER ' Функция вычисляет горизонтальный сдвиг мира внутри окна.
-    RETURN MaxInt(0, (VIEW_WIDTH - (mazeCols * TILE)) \ 2)                                      ' Центрируем карту в окне, если она уже, чем видимая область.
-END FUNCTION                                                                                    ' Завершаем вычисление смещения мира по X.
+FUNCTION WorldViewportLeft() AS INTEGER                                                         ' Функция вычисляет левую экранную границу viewport мира.
+    RETURN MaxInt(0, (VIEW_WIDTH - worldWidthPixels) \ 2)                                       ' Центрируем лабиринт по ширине окна, если свободное место есть.
+END FUNCTION                                                                                    ' Завершаем вычисление левой границы viewport.
 
-FUNCTION WorldOffsetY() AS INTEGER ' Функция вычисляет вертикальный сдвиг мира внутри окна.
-    RETURN HUD_HEIGHT + BACKGROUND_OFFSET_Y                                                       ' Фон, точки, герои, сетка и калибровочные линии используют один общий верх поля.
-END FUNCTION ' Завершаем вычисление смещения мира по Y.
+FUNCTION WorldViewportTop() AS INTEGER                                                          ' Функция вычисляет верхнюю экранную границу viewport мира.
+    RETURN HUD_HEIGHT                                                                           ' Мир начинается сразу под HUD без дополнительного ручного сдвига.
+END FUNCTION                                                                                    ' Завершаем вычисление верхней границы viewport.
 
-FUNCTION BackgroundDrawTop() AS INTEGER                                                         ' Функция возвращает фактический верх фоновой картинки лабиринта.
-    RETURN WorldOffsetY()                                                                         ' Фактический верх фона теперь совпадает с общим верхом мира.
-END FUNCTION                                                                                    ' Завершаем вычисление верхней границы фоновой подложки.
+FUNCTION WorldViewportRight() AS INTEGER                                                        ' Функция вычисляет правую исключающую границу viewport мира.
+    RETURN WorldViewportLeft() + worldWidthPixels                                               ' Правая граница равна левой плюс полная ширина мира.
+END FUNCTION                                                                                    ' Завершаем вычисление правой границы viewport.
 
-FUNCTION BackgroundDrawBottom() AS INTEGER                                                      ' Функция возвращает фактический низ фоновой картинки лабиринта.
-    RETURN BackgroundDrawTop() + worldHeightPixels - 1                                          ' Нижняя граница находится на высоте лабиринта от фактического верха подложки.
-END FUNCTION                                                                                    ' Завершаем вычисление нижней границы фоновой подложки.
+FUNCTION WorldViewportBottom() AS INTEGER                                                       ' Функция вычисляет нижнюю исключающую границу viewport мира.
+    RETURN WorldViewportTop() + worldHeightPixels                                               ' Нижняя граница равна верху плюс полная высота мира.
+END FUNCTION                                                                                    ' Завершаем вычисление нижней границы viewport.
 
 FUNCTION IsTunnelPassageRow(rowIndex AS INTEGER) AS BOOLEAN                                     ' Функция проверяет, является ли строка сквозным туннелем.
     IF rowIndex < 1 OR rowIndex > mazeRows THEN                                                 ' Если строка вне карты...

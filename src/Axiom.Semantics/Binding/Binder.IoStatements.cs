@@ -87,6 +87,21 @@ public sealed partial class Binder
             BindExpression(statement.YExpression, TypeSymbol.Long));
     }
 
+    private BoundStatement BindViewportStatement(ViewportStatementSyntax statement)
+    {
+        if (statement.IsReset)
+        {
+            return new BoundViewportStatement(GetLocation(statement), null, null, null, null);
+        }
+
+        return new BoundViewportStatement(
+            GetLocation(statement),
+            BindExpression(statement.TopLeftPoint!.XExpression, TypeSymbol.Long),
+            BindExpression(statement.TopLeftPoint.YExpression, TypeSymbol.Long),
+            BindExpression(statement.BottomRightPoint!.XExpression, TypeSymbol.Long),
+            BindExpression(statement.BottomRightPoint.YExpression, TypeSymbol.Long));
+    }
+
     private BoundStatement BindResetCameraStatement(ResetCameraStatementSyntax statement)
     {
         return new BoundResetCameraStatement(GetLocation(statement));

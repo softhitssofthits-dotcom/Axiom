@@ -120,7 +120,19 @@ public static class ScreenTextRasterizer
         ['¤'] = ["     ", "#   #", " ### ", "# # #", " ### ", "#   #", "     "]
     };
 
-    public static void DrawText(Span<uint> pixels, int width, int height, int x, int y, string text, uint foreground, uint? background = null)
+    public static void DrawText(
+        Span<uint> pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        string text,
+        uint foreground,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom,
+        uint? background = null)
     {
         ArgumentNullException.ThrowIfNull(text);
 
@@ -140,25 +152,37 @@ public static class ScreenTextRasterizer
                 continue;
             }
 
-            DrawGlyph(pixels, width, height, cursorX, cursorY, ch, foreground, background);
+            DrawGlyph(pixels, width, height, cursorX, cursorY, ch, foreground, clipLeft, clipTop, clipRight, clipBottom, background);
             cursorX += CellWidth;
         }
     }
 
-    public static void DrawGlyph(Span<uint> pixels, int width, int height, int x, int y, char ch, uint foreground, uint? background)
+    public static void DrawGlyph(
+        Span<uint> pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        char ch,
+        uint foreground,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom,
+        uint? background)
     {
         if (IsFullBlock(ch))
         {
-            FillCell(pixels, width, height, x, y, foreground);
+            FillCell(pixels, width, height, x, y, foreground, clipLeft, clipTop, clipRight, clipBottom);
             return;
         }
 
-        if (TryDrawPartialBlock(pixels, width, height, x, y, ch, foreground, background))
+        if (TryDrawPartialBlock(pixels, width, height, x, y, ch, foreground, clipLeft, clipTop, clipRight, clipBottom, background))
         {
             return;
         }
 
-        if (TryDrawBoxGlyph(pixels, width, height, x, y, ch, foreground, background))
+        if (TryDrawBoxGlyph(pixels, width, height, x, y, ch, foreground, clipLeft, clipTop, clipRight, clipBottom, background))
         {
             return;
         }
@@ -175,7 +199,7 @@ public static class ScreenTextRasterizer
             for (var xx = 0; xx < CellWidth; xx++)
             {
                 var px = x + xx;
-                if (px < 0 || px >= width)
+                if (px < 0 || px >= width || px < clipLeft || px > clipRight || py < clipTop || py > clipBottom)
                 {
                     continue;
                 }
@@ -200,12 +224,12 @@ public static class ScreenTextRasterizer
         }
     }
 
-    private static void FillCell(Span<uint> pixels, int width, int height, int x, int y, uint color)
+    private static void FillCell(Span<uint> pixels, int width, int height, int x, int y, uint color, long clipLeft, long clipTop, long clipRight, long clipBottom)
     {
         for (var yy = 0; yy < CellHeight; yy++)
         {
             var py = y + yy;
-            if (py < 0 || py >= height)
+            if (py < 0 || py >= height || py < clipTop || py > clipBottom)
             {
                 continue;
             }
@@ -213,7 +237,7 @@ public static class ScreenTextRasterizer
             for (var xx = 0; xx < CellWidth; xx++)
             {
                 var px = x + xx;
-                if (px < 0 || px >= width)
+                if (px < 0 || px >= width || px < clipLeft || px > clipRight)
                 {
                     continue;
                 }
@@ -226,7 +250,19 @@ public static class ScreenTextRasterizer
     private static bool IsFullBlock(char ch) =>
         ch is '\u2588' or '\u25A0';
 
-    private static bool TryDrawPartialBlock(Span<uint> pixels, int width, int height, int x, int y, char ch, uint foreground, uint? background)
+    private static bool TryDrawPartialBlock(
+        Span<uint> pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        char ch,
+        uint foreground,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom,
+        uint? background)
     {
         if (ch is not ('\u2580' or '\u2584' or '\u258C' or '\u2590'))
         {
@@ -246,14 +282,26 @@ public static class ScreenTextRasterizer
                     _ => false
                 };
 
-                PutCellPixel(pixels, width, height, x, y, xx, yy, isGlyphPixel, foreground, background);
+                PutCellPixel(pixels, width, height, x, y, xx, yy, isGlyphPixel, foreground, clipLeft, clipTop, clipRight, clipBottom, background);
             }
         }
 
         return true;
     }
 
-    private static bool TryDrawBoxGlyph(Span<uint> pixels, int width, int height, int x, int y, char ch, uint foreground, uint? background)
+    private static bool TryDrawBoxGlyph(
+        Span<uint> pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        char ch,
+        uint foreground,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom,
+        uint? background)
     {
         var (left, right, up, down, thick) = ch switch
         {
@@ -306,7 +354,7 @@ public static class ScreenTextRasterizer
                 var onVertical = Math.Abs(xx - centerX) <= halfThickness &&
                     ((up && yy <= centerY) || (down && yy >= centerY));
 
-                PutCellPixel(pixels, width, height, x, y, xx, yy, onHorizontal || onVertical, foreground, background);
+                PutCellPixel(pixels, width, height, x, y, xx, yy, onHorizontal || onVertical, foreground, clipLeft, clipTop, clipRight, clipBottom, background);
             }
         }
 
@@ -326,11 +374,25 @@ public static class ScreenTextRasterizer
         return ch is '\u2593' or '\u2592' or '\u2591';
     }
 
-    private static void PutCellPixel(Span<uint> pixels, int width, int height, int x, int y, int cellX, int cellY, bool isGlyphPixel, uint foreground, uint? background)
+    private static void PutCellPixel(
+        Span<uint> pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        int cellX,
+        int cellY,
+        bool isGlyphPixel,
+        uint foreground,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom,
+        uint? background)
     {
         var px = x + cellX;
         var py = y + cellY;
-        if (px < 0 || px >= width || py < 0 || py >= height)
+        if (px < 0 || px >= width || py < 0 || py >= height || px < clipLeft || px > clipRight || py < clipTop || py > clipBottom)
         {
             return;
         }

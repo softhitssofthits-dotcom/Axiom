@@ -171,7 +171,7 @@ public sealed class ScreenFramebuffer
         FillTrueColorRectangle(right, top, right, bottom, color);
     }
 
-    public void DrawTrueColorText(long x, long y, string text, int color)
+    public void DrawTrueColorText(long x, long y, string text, int color, long clipLeft, long clipTop, long clipRight, long clipBottom)
     {
         ArgumentNullException.ThrowIfNull(text);
 
@@ -184,10 +184,10 @@ public sealed class ScreenFramebuffer
             return;
         }
 
-        var clippedLeft = Math.Max(0, startX);
-        var clippedTop = Math.Max(0, startY);
-        var clippedRight = Math.Min(Width - 1, startX + width - 1);
-        var clippedBottom = Math.Min(Height - 1, startY + height - 1);
+        var clippedLeft = (int)Math.Max(Math.Max(0, startX), clipLeft);
+        var clippedTop = (int)Math.Max(Math.Max(0, startY), clipTop);
+        var clippedRight = (int)Math.Min(Math.Min(Width - 1, startX + width - 1), clipRight);
+        var clippedBottom = (int)Math.Min(Math.Min(Height - 1, startY + height - 1), clipBottom);
         if (clippedLeft > clippedRight || clippedTop > clippedBottom)
         {
             return;
@@ -200,7 +200,11 @@ public sealed class ScreenFramebuffer
             startX,
             startY,
             text,
-            MapRgbToBgra(color));
+            MapRgbToBgra(color),
+            clipLeft,
+            clipTop,
+            clipRight,
+            clipBottom);
 
         for (var row = clippedTop; row <= clippedBottom; row++)
         {
@@ -432,6 +436,10 @@ public sealed class ScreenFramebuffer
             0,
             graphicsText,
             foreground,
+            0,
+            0,
+            snapshot.Width - 1L,
+            snapshot.Height - 1L,
             background);
 
         if (!string.IsNullOrEmpty(inputText))
@@ -445,6 +453,10 @@ public sealed class ScreenFramebuffer
                 inputY,
                 inputText,
                 foreground,
+                0,
+                0,
+                snapshot.Width - 1L,
+                snapshot.Height - 1L,
                 MapPaletteColor(0));
         }
 
@@ -489,6 +501,10 @@ public sealed class ScreenFramebuffer
                     visibleRow * ScreenTextRasterizer.CellHeight,
                     cell.Character,
                     MapPaletteColor(cell.Foreground),
+                    0,
+                    0,
+                    snapshot.Width - 1L,
+                    snapshot.Height - 1L,
                     cell.Background.HasValue ? MapPaletteColor(cell.Background.Value) : null);
             }
         }
@@ -508,6 +524,10 @@ public sealed class ScreenFramebuffer
                     inputY,
                     inputText,
                     MapPaletteColor(inputForeground),
+                    0,
+                    0,
+                    snapshot.Width - 1L,
+                    snapshot.Height - 1L,
                     inputBackground.HasValue ? MapPaletteColor(inputBackground.Value) : null);
             }
         }

@@ -21,6 +21,7 @@ public sealed class Lexer
         ["BYVAL"] = TokenKind.ByValKeyword,
         ["CANVAS"] = TokenKind.CanvasKeyword,
         ["CAMERA"] = TokenKind.CameraKeyword,
+        ["VIEWPORT"] = TokenKind.ViewportKeyword,
         ["CASE"] = TokenKind.CaseKeyword,
         ["CATCH"] = TokenKind.CatchKeyword,
         ["CIRCLE"] = TokenKind.CircleKeyword,

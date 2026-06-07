@@ -7,16 +7,41 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="on-mouse">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Обработчик событий мыши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор ON MOUSE</p><p class="sidebar__subtitle">Регистрация, пауза и отключение обработчика мыши.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>ON MOUSE</span></nav>
-<p class="eyebrow">Мышь</p>
-<h1 class="page-title">Оператор ON MOUSE</h1>
-<p class="lead"><code>ON MOUSE</code> связывает событие мыши с процедурой <code>SUB</code>. Оператор нужен для интерактивных программ, которым удобнее реагировать на нажатие, отпускание или перемещение между обычными операторами, а не постоянно опрашивать состояние мыши.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Обработчик событий мыши</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Оператор ON MOUSE</span>
+        </nav>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
+        <p class="eyebrow">Оператор</p>
+        <h1 class="page-title">Оператор ON MOUSE</h1>
+        <p class="lead"><code>ON MOUSE</code> — оператор языка Axiom, который связывает событие мыши с процедурой <code>SUB</code>. Оператор нужен для интерактивных программ, которым удобнее реагировать на нажатие, отпускание или перемещение между обычными операторами, а не постоянно опрашивать состояние мыши через <a href="mousex.html"><code>MOUSEX</code></a>, <a href="mousey.html"><code>MOUSEY</code></a> и <a href="mousebutton.html"><code>MOUSEBUTTON</code></a>.</p>
+
+        <section class="article-section">
+            <h2>Для чего нужен оператор ON MOUSE</h2>
+            <p>Оператор <code>ON MOUSE</code> подходит для интерактивных программ, где нужно реагировать на нажатие кнопки, отпускание кнопки, перемещение указателя или прокрутку колеса между обычными операторами. Оператор работает только при активном графическом режиме <code>SCREEN</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Где работает оператор ON MOUSE</h2>
+            <p>Оператор <code>ON MOUSE</code> работает только при активном графическом режиме <code>SCREEN 1..10</code>. Без него выполнение сообщает диагностику <code>MB3010</code>. Координаты событий мыши измеряются в пикселях клиентской области активного окна <code>SCREEN</code> и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>.</p>
+            <p>Оператор <code>ON MOUSE</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
 <pre><code class="language-basic">ON MOUSE(buttonNumber), HandlerName
 ON MOUSE(buttonNumber), ON
 ON MOUSE(buttonNumber), STOP
@@ -36,62 +61,62 @@ ON MOUSE("WHEEL"), HandlerName
 ON MOUSE("WHEEL"), ON
 ON MOUSE("WHEEL"), STOP
 ON MOUSE("WHEEL"), OFF</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Аргументы</h2>
-<p><code>buttonNumber</code> и <code>HandlerName</code> в синтаксисе — метапеременные. В реальном коде вместо <code>buttonNumber</code> пишут выражение с номером кнопки, а вместо <code>HandlerName</code> — имя своей процедуры <code>SUB</code>. Строки <code>"UP"</code>, <code>"MOVE"</code> и <code>"WHEEL"</code> — имена событий мыши.</p>
-<table>
-<thead><tr><th>Часть</th><th>Описание</th></tr></thead>
-<tbody>
-<tr><td><code>buttonNumber</code></td><td>Номер кнопки мыши: <code>1</code> - левая, <code>2</code> - правая, <code>3</code> - средняя. Без второго аргумента цель означает нажатие кнопки.</td></tr>
-<tr><td><code>"UP"</code></td><td>Строковое имя события отпускания кнопки. Допустимы также формы <code>"RELEASE"</code> и <code>"RELEASED"</code>.</td></tr>
-<tr><td><code>"MOVE"</code></td><td>Строковое имя события перемещения указателя. Для него номер кнопки не указывается.</td></tr>
-<tr><td><code>"WHEEL"</code></td><td>Строковое имя события прокрутки колеса мыши. Допустимы также формы <code>"MOUSEWHEEL"</code>, <code>"SCROLL"</code> и <code>"SCROLLED"</code>.</td></tr>
-<tr><td><code>HandlerName</code></td><td>Имя процедуры <code>SUB</code>, которая будет вызвана при подходящем событии.</td></tr>
-</tbody>
-</table>
-</section>
+        <section class="article-section">
+            <h2>Части оператора</h2>
+            <p><code>buttonNumber</code> и <code>HandlerName</code> в синтаксисе — метапеременные. В реальном коде вместо <code>buttonNumber</code> пишут выражение с номером кнопки, а вместо <code>HandlerName</code> — имя своей процедуры <code>SUB</code>. Строки <code>"UP"</code>, <code>"MOVE"</code> и <code>"WHEEL"</code> — имена событий мыши.</p>
+            <table>
+                <thead><tr><th>Часть</th><th>Описание</th></tr></thead>
+                <tbody>
+                    <tr><td><code>buttonNumber</code></td><td>Номер кнопки мыши: <code>1</code> — левая, <code>2</code> — правая, <code>3</code> — средняя. Без второго аргумента цель означает нажатие кнопки.</td></tr>
+                    <tr><td><code>"UP"</code></td><td>Строковое имя события отпускания кнопки. Допустимы также формы <code>"RELEASE"</code> и <code>"RELEASED"</code>.</td></tr>
+                    <tr><td><code>"MOVE"</code></td><td>Строковое имя события перемещения указателя. Для него номер кнопки не указывается.</td></tr>
+                    <tr><td><code>"WHEEL"</code></td><td>Строковое имя события прокрутки колеса мыши. Допустимы также формы <code>"MOUSEWHEEL"</code>, <code>"SCROLL"</code> и <code>"SCROLLED"</code>.</td></tr>
+                    <tr><td><code>HandlerName</code></td><td>Имя процедуры <code>SUB</code>, которая будет вызвана при подходящем событии.</td></tr>
+                </tbody>
+            </table>
+        </section>
 
-<section class="article-section">
-<h2>Обработчик</h2>
-<p>Процедура-обработчик может быть объявлена без параметров или с тремя параметрами события:</p>
+        <section class="article-section">
+            <h2>Процедура-обработчик</h2>
+            <p>Процедура-обработчик может быть объявлена без параметров или с тремя параметрами события:</p>
 <pre><code class="language-basic">SUB HandleMouse()
 END SUB
 
 SUB HandleMouse(value AS INTEGER, x AS LONG, y AS LONG)
 END SUB</code></pre>
-<p>Во второй форме первый параметр получает числовое значение события. Для нажатия и отпускания это номер фактической кнопки. Для <code>ON MOUSE("MOVE")</code> передаётся <code>0</code>. Для <code>ON MOUSE("WHEEL")</code> передаётся величина прокрутки: положительное значение означает прокрутку вверх, отрицательное - вниз. Параметры <code>x</code> и <code>y</code> получают текущие координаты указателя на активной поверхности программы в момент обработки события.</p>
-</section>
+            <p>Во второй форме первый параметр получает числовое значение события. Для нажатия и отпускания это номер фактической кнопки. Для <code>ON MOUSE("MOVE")</code> передаётся <code>0</code>. Для <code>ON MOUSE("WHEEL")</code> передаётся величина прокрутки: положительное значение означает прокрутку вверх, отрицательное — вниз. Параметры <code>x</code> и <code>y</code> получают текущие координаты указателя на активной поверхности программы в момент обработки события.</p>
+        </section>
 
-<section class="article-section">
-<h2>Режимы</h2>
-<p><code>ON</code>, <code>STOP</code> и <code>OFF</code> после запятой задают состояние уже зарегистрированного обработчика. Эти формы доступны для нажатия кнопки, отпускания <code>"UP"</code>, перемещения <code>"MOVE"</code> и колеса <code>"WHEEL"</code>. В этой записи они являются режимами <code>ON MOUSE</code>, а не самостоятельными операторами.</p>
-<ul>
-<li><code>ON MOUSE(buttonNumber), HandlerName</code> регистрирует и включает обработчик;</li>
-<li><code>ON MOUSE(...), STOP</code> временно ставит существующий обработчик на паузу для выбранной цели события;</li>
-<li><code>ON MOUSE(...), ON</code> возобновляет ранее зарегистрированный обработчик для той же формы <code>ON MOUSE</code>;</li>
-<li><code>ON MOUSE(...), OFF</code> полностью снимает регистрацию для выбранной цели события.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Режимы</h2>
+            <p>Слова <code>ON</code>, <code>STOP</code> и <code>OFF</code> после запятой задают состояние уже зарегистрированного обработчика. Эти формы доступны для нажатия кнопки, отпускания <code>"UP"</code>, перемещения <code>"MOVE"</code> и колеса <code>"WHEEL"</code>. В этой записи они являются режимами оператора <code>ON MOUSE</code>, а не самостоятельными операторами.</p>
+            <ul>
+                <li><code>ON MOUSE(buttonNumber), HandlerName</code> регистрирует и включает обработчик.</li>
+                <li><code>ON MOUSE(...), STOP</code> временно ставит существующий обработчик на паузу для выбранной цели события.</li>
+                <li><code>ON MOUSE(...), ON</code> возобновляет ранее зарегистрированный обработчик для той же формы <code>ON MOUSE</code>.</li>
+                <li><code>ON MOUSE(...), OFF</code> полностью снимает регистрацию для выбранной цели события.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Порядок обработки событий мыши</h2>
-<ul>
-<li><code>ON MOUSE</code> проверяет очередь мышиных событий на границах операторов, как <code>ON KEY</code>; в циклах обработчики также получают шанс выполниться на каждой итерации, даже если тело цикла пустое;</li>
-<li>если обработчик включён, совпавшее нажатие считается обработанным и не попадёт в последующий <code>MOUSEPRESS()</code>;</li>
-<li>если обработчик на паузе или не зарегистрирован, нажатие остаётся доступным для <code>MOUSEPRESS()</code>;</li>
-<li>отпускание, перемещение и колесо не читаются функцией <code>MOUSEPRESS()</code>, но доступны обработчикам <code>ON MOUSE(..., "UP")</code>, <code>ON MOUSE("MOVE")</code> и <code>ON MOUSE("WHEEL")</code>;</li>
-<li>при активном <code>SCREEN</code> координаты <code>x</code> и <code>y</code> совпадают с теми же «сырыми» чтениями, которые в этот момент дают <code>MOUSEX()</code> и <code>MOUSEY()</code>;</li>
-<li><code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют координаты события: обработчик получает клиентские координаты активной поверхности ввода, а не логические координаты графических примитивов;</li>
-<li>в панели <code>Output</code> среды разработки уход указателя за пределы поверхности сбрасывает состояние мыши: координаты становятся <code>-1/-1</code>, очередь событий очищается, удержание кнопок снимается;</li>
-<li>в нативном графическом окне <code>SCREEN</code> уход указателя за видимую область сам по себе не создаёт отдельного сброса координат: без нового события ввода сохраняется последняя известная точка;</li>
-<li>в текущем срезе нет обработчиков двойного клика и захвата указателя.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Порядок обработки событий мыши</h2>
+            <ul>
+                <li>Оператор <code>ON MOUSE</code> проверяет очередь мышиных событий на границах операторов, как <code>ON KEY</code>; в циклах обработчики также получают шанс выполниться на каждой итерации, даже если тело цикла пустое.</li>
+                <li>Если обработчик включён, совпавшее нажатие считается обработанным и не попадёт в последующий <a href="mousepress.html"><code>MOUSEPRESS</code></a>.</li>
+                <li>Если обработчик на паузе или не зарегистрирован, нажатие остаётся доступным для <code>MOUSEPRESS</code>.</li>
+                <li>Отпускание, перемещение и колесо не читаются функцией <code>MOUSEPRESS</code>, но доступны обработчикам <code>ON MOUSE(..., "UP")</code>, <code>ON MOUSE("MOVE")</code> и <code>ON MOUSE("WHEEL")</code>.</li>
+                <li>При активном <code>SCREEN</code> координаты <code>x</code> и <code>y</code> совпадают с теми же «сырыми» чтениями, которые в этот момент дают <code>MOUSEX</code> и <code>MOUSEY</code>.</li>
+                <li>Операторы <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют координаты события: обработчик получает клиентские координаты активной поверхности ввода, а не логические координаты графических примитивов.</li>
+                <li>В панели <code>Output</code> среды разработки уход указателя за пределы поверхности сбрасывает состояние мыши: координаты становятся <code>-1/-1</code>, очередь событий очищается, удержание кнопок снимается.</li>
+                <li>В нативном графическом окне <code>SCREEN</code> уход указателя за видимую область сам по себе не создаёт отдельного сброса координат: без нового события ввода сохраняется последняя известная точка.</li>
+                <li>В текущем срезе нет обработчиков двойного клика и захвата указателя.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Пример обработчика мыши</h2>
+        <section class="article-section">
+            <h2>Пример обработчика мыши</h2>
 <pre><code class="language-basic">ON MOUSE(1), HandleMouse
 ON MOUSE(1, "UP"), HandleMouse
 ON MOUSE("MOVE"), HandleMouse
@@ -104,21 +129,24 @@ SUB HandleMouse(value AS INTEGER, x AS LONG, y AS LONG)
     PRINT x
     PRINT y
 END SUB</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши</a></li><li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li><li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <ul class="resource-list"><li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши</a></li><li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li><li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li></ul>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика <code>MB2035</code> возникает, если обработчик не является подходящей процедурой <code>SUB</code>. Для обработчика события допустимы только формы без параметров или с параметрами <code>INTEGER, LONG, LONG</code>.</p>
-</section>
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2035</code>: обработчик оператора <code>ON MOUSE</code> не является подходящей процедурой <code>SUB</code>. Для обработчика события допустимы только формы без параметров или с параметрами <code>INTEGER, LONG, LONG</code>.</li>
+                <li><code>MB3010</code>: оператор <code>ON MOUSE</code> вызван без активного графического режима <code>SCREEN</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="screen.html">Оператор SCREEN</a></div>
-</section>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="on-key.html">Оператор ON KEY</a><a href="screen.html">Оператор SCREEN</a></div>
+        </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

@@ -955,6 +955,38 @@ public sealed class BytecodeCompilerTests
             instruction => Assert.Equal(Opcode.Return, instruction.Opcode));
     }
 
+    [Fact]
+    public void Compile_Viewport_EmitsViewportOpcodeWithExpectedOperandCount()
+    {
+        var entryPoint = new LoweredRoutine(
+            id: 0,
+            name: LoweredProgram.EntryPointName,
+            location: Location(1),
+            resultType: TypeSymbol.Void,
+            instructions:
+            [
+                LoweredInstruction.Viewport(Location(2), hasCoordinates: false),
+                LoweredInstruction.LoadLiteral(Location(3), 1, TypeSymbol.Integer),
+                LoweredInstruction.LoadLiteral(Location(3), 2, TypeSymbol.Integer),
+                LoweredInstruction.LoadLiteral(Location(3), 10, TypeSymbol.Integer),
+                LoweredInstruction.LoadLiteral(Location(3), 20, TypeSymbol.Integer),
+                LoweredInstruction.Viewport(Location(3), hasCoordinates: true),
+                LoweredInstruction.Return(Location(4))
+            ],
+            isEntryPoint: true);
+
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+
+        Assert.True(result.Succeeded);
+        var viewportInstructions = result.Module!.Routines.Single().Instructions
+            .Where(static instruction => instruction.Opcode == Opcode.Viewport)
+            .ToArray();
+
+        Assert.Equal(2, viewportInstructions.Length);
+        Assert.Equal(0, viewportInstructions[0].GetOperand(0));
+        Assert.Equal(4, viewportInstructions[1].GetOperand(0));
+    }
+
     private static TextLocation Location(int line)
     {
         return new TextLocation(new TextSpan((line - 1) * 10, 1), line, 1);

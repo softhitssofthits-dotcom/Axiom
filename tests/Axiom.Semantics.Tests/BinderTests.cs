@@ -6226,6 +6226,42 @@ PRINT value.Text
         Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Bind_ViewportResetStatement()
+    {
+        const string text = """
+CANVAS 320, 180
+VIEWPORT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var viewport = Assert.IsType<BoundViewportStatement>(program.GlobalStatements[1]);
+        Assert.True(viewport.IsReset);
+        Assert.Null(viewport.LeftExpression);
+        Assert.Null(viewport.BottomExpression);
+    }
+
+    [Fact]
+    public void Bind_ViewportRectangleStatement()
+    {
+        const string text = """
+CANVAS 320, 180
+VIEWPORT (1, 2)-(10, 20)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var viewport = Assert.IsType<BoundViewportStatement>(program.GlobalStatements[1]);
+        Assert.False(viewport.IsReset);
+        Assert.Equal(TypeSymbol.Long, viewport.LeftExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, viewport.TopExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, viewport.RightExpression!.Type);
+        Assert.Equal(TypeSymbol.Long, viewport.BottomExpression!.Type);
+    }
+
     private static BoundProgram BindProgram(string text, out DiagnosticBag diagnostics)
     {
         var syntax = Parser.Parse(text, out var parserDiagnostics);

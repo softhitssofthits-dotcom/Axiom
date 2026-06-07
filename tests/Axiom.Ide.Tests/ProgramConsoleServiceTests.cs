@@ -825,6 +825,10 @@ public sealed class ProgramConsoleServiceTests
             0,
             character,
             foreground,
+            0,
+            0,
+            ScreenTextRasterizer.CellWidth - 1L,
+            ScreenTextRasterizer.CellHeight - 1L,
             background);
 
         Assert.Contains(foreground, pixels);
@@ -948,6 +952,10 @@ public sealed class ProgramConsoleServiceTests
             0,
             character,
             ScreenFramebuffer.MapColorToBgra(15),
+            0,
+            0,
+            ScreenTextRasterizer.CellWidth - 1L,
+            ScreenTextRasterizer.CellHeight - 1L,
             null);
         return pixels;
     }

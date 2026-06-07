@@ -7,59 +7,91 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="mousey">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Текущая вертикальная координата указателя</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEY</p><p class="sidebar__subtitle">Опрос текущей Y-координаты указателя без событийной очереди.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>MOUSEY</span></nav>
-<p class="eyebrow">Мышь</p>
-<h1 class="page-title">Функция MOUSEY</h1>
-<p class="lead"><code>MOUSEY()</code> возвращает текущую вертикальную координату указателя в активном графическом режиме <code>SCREEN</code>. Функция нужна для тех же опросных сценариев, что и <code>MOUSEX()</code>, когда программа сама решает, в какой момент ей нужен снимок текущего состояния мыши.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Текущая вертикальная координата указателя</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция MOUSEY</span>
+        </nav>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
+        <p class="eyebrow">Встроенная функция</p>
+        <h1 class="page-title">Функция MOUSEY</h1>
+        <p class="lead"><code>MOUSEY</code> — встроенная функция языка Axiom, которая возвращает текущую вертикальную координату указателя в активном графическом режиме <code>SCREEN</code>. Встроенная функция <code>MOUSEY</code> нужна для тех же опросных сценариев, что и <a href="mousex.html"><code>MOUSEX</code></a>, когда программа сама решает, в какой момент ей нужен снимок текущего состояния мыши.</p>
+
+        <section class="article-section">
+            <h2>Для чего нужна функция MOUSEY</h2>
+            <p>Встроенная функция <code>MOUSEY</code> нужна для чтения текущей Y-координаты указателя мыши. Функция возвращает координату в пикселях клиентской области активной поверхности <code>SCREEN</code> и не создаёт очередь мышиных событий и не хранит историю перемещений.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Где работает функция MOUSEY</h2>
+            <p>Встроенная функция <code>MOUSEY</code> работает только при активном графическом режиме <code>SCREEN</code>. Без него выполнение сообщает диагностику <code>MB3010</code>. Операторы <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют возвращаемую координату: она остаётся в клиентской системе координат активной поверхности ввода, а не в логической системе графических примитивов.</p>
+            <p>Встроенная функция <code>MOUSEY</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
 <pre><code class="language-basic">MOUSEY()</code></pre>
-</section>
+            <p>Встроенная функция <code>MOUSEY</code> поддерживает только форму без аргументов.</p>
+        </section>
 
-<section class="article-section">
-<h2>Возвращаемое значение</h2>
-<p>Тип результата: <code>LONG</code>.</p>
-<ul>
-<li>если среда выполнения знает положение указателя, возвращается текущая Y-координата в клиентской области активной поверхности <code>SCREEN</code>;</li>
-<li>если положение указателя недоступно, возвращается <code>-1</code>.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Аргументы</h2>
+            <p>У встроенной функции <code>MOUSEY</code> нет аргументов. Пустые скобки остаются частью вызова функции.</p>
+        </section>
 
-<section class="article-section">
-<h2>Замечания</h2>
-<ul>
-<li><code>MOUSEY()</code> не принимает аргументов;</li>
-<li>функция читает только текущее состояние и не сообщает отдельные события перемещения;</li>
-<li><code>MOUSEY()</code> работает только при активном графическом режиме <code>SCREEN</code>; без него выполнение сообщает <code>MB3010</code>;</li>
-<li><code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют возвращаемую координату: она остаётся в клиентской системе координат активной поверхности ввода, а не в логической системе графических примитивов;</li>
-<li>если среда не знает текущее положение указателя, функция возвращает <code>-1</code>;</li>
-<li>для горизонтальной координаты используйте <a href="mousex.html"><code>MOUSEX()</code></a>.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Что возвращает функция MOUSEY</h2>
+            <p>Тип результата: <code>LONG</code>.</p>
+            <ul>
+                <li>Если среда выполнения знает положение указателя, возвращается текущая Y-координата в клиентской области активной поверхности <code>SCREEN</code>.</li>
+                <li>Если положение указателя недоступно, возвращается <code>-1</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Пример чтения координат</h2>
+        <section class="article-section">
+            <h2>Правила работы</h2>
+            <ul>
+                <li>Встроенная функция <code>MOUSEY</code> не принимает аргументов.</li>
+                <li>Функция читает только текущее состояние и не сообщает отдельные события перемещения.</li>
+                <li>Если среда не знает текущее положение указателя, функция возвращает <code>-1</code>.</li>
+                <li>Для горизонтальной координаты используется встроенная функция <a href="mousex.html"><code>MOUSEX</code></a>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример чтения координат</h2>
 <pre><code class="language-basic">PRINT MOUSEY()
 PRINT MOUSEX()</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/functions/mousey/current_position.axm">MOUSEY: текущее положение указателя</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <ul class="resource-list"><li><a href="../../samples/functions/mousey/current_position.axm">MOUSEY: текущее положение указателя</a></li></ul>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика <code>MB2004</code> возникает, если передать аргументы в <code>MOUSEY()</code>. Диагностика <code>MB3010</code> возникает, если вызвать функцию без активного графического режима <code>SCREEN</code>.</p>
-</section>
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2004</code>: в встроенную функцию <code>MOUSEY</code> переданы аргументы.</li>
+                <li><code>MB3010</code>: встроенная функция <code>MOUSEY</code> вызвана без активного графического режима <code>SCREEN</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="mousex.html">Функция MOUSEX</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
-</section>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="mousex.html">Функция MOUSEX</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
+        </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

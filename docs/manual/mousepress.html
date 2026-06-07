@@ -7,67 +7,97 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="mousepress">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Одноразовая проверка нажатия кнопки мыши</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция MOUSEPRESS</p><p class="sidebar__subtitle">Читает одно событие нажатия кнопки мыши без полной событийной модели.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>MOUSEPRESS</span></nav>
-<p class="eyebrow">Мышь</p>
-<h1 class="page-title">Функция MOUSEPRESS</h1>
-<p class="lead"><code>MOUSEPRESS(buttonNumber)</code> проверяет, было ли в очереди мыши ещё не прочитанное нажатие указанной кнопки. Функция подходит для опросного сценария, когда программе нужно один раз заметить факт нажатия, а не только текущее удержание кнопки.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Одноразовая проверка нажатия кнопки мыши</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция MOUSEPRESS</span>
+        </nav>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
+        <p class="eyebrow">Встроенная функция</p>
+        <h1 class="page-title">Функция MOUSEPRESS</h1>
+        <p class="lead"><code>MOUSEPRESS</code> — встроенная функция языка Axiom, которая проверяет, было ли в очереди мыши ещё не прочитанное нажатие указанной кнопки. Встроенная функция <code>MOUSEPRESS</code> подходит для опросного сценария, когда программе нужно один раз заметить факт нажатия, а не только текущее удержание кнопки, как у <a href="mousebutton.html"><code>MOUSEBUTTON</code></a>.</p>
+
+        <section class="article-section">
+            <h2>Для чего нужна функция MOUSEPRESS</h2>
+            <p>Встроенная функция <code>MOUSEPRESS</code> нужна для чтения одного события нажатия кнопки мыши из очереди. Функция удаляет только первое подходящее событие, поэтому повторный вызов вернёт <code>FALSE</code>, пока пользователь не нажмёт кнопку снова.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Где работает функция MOUSEPRESS</h2>
+            <p>Встроенная функция <code>MOUSEPRESS</code> работает только при активном графическом режиме <code>SCREEN</code>. Без него выполнение сообщает диагностику <code>MB3010</code>.</p>
+            <p>Встроенная функция <code>MOUSEPRESS</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
 <pre><code class="language-basic">MOUSEPRESS(buttonNumber)</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Аргументы</h2>
-<ul>
-<li><code>buttonNumber</code> - номер кнопки мыши типа <code>INTEGER</code>.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Параметры</h2>
+            <table>
+                <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                <tbody>
+                    <tr><td><code>buttonNumber</code></td><td><code>INTEGER</code></td><td>Номер кнопки мыши: <code>1</code> — левая, <code>2</code> — правая, <code>3</code> — средняя.</td></tr>
+                </tbody>
+            </table>
+        </section>
 
-<section class="article-section">
-<h2>Возвращаемое значение</h2>
-<p>Тип результата: <code>BOOLEAN</code>.</p>
-<ul>
-<li><code>1</code> - левая кнопка;</li>
-<li><code>2</code> - правая кнопка;</li>
-<li><code>3</code> - средняя кнопка;</li>
-<li>для неподдерживаемого номера функция возвращает <code>FALSE</code>.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Что возвращает функция MOUSEPRESS</h2>
+            <p>Тип результата: <code>BOOLEAN</code>.</p>
+            <ul>
+                <li><code>TRUE</code>, если в очереди есть ещё не прочитанное нажатие указанной кнопки. Это нажатие удаляется из очереди.</li>
+                <li><code>FALSE</code>, если такого нажатия сейчас нет или передан неподдерживаемый номер кнопки.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Очередь нажатий мыши</h2>
-<ul>
-<li><code>MOUSEPRESS()</code> удаляет только первое подходящее событие нажатия, поэтому повторный вызов вернёт <code>FALSE</code>, пока пользователь не нажмёт кнопку снова;</li>
-<li>неподходящие нажатия не теряются и остаются доступными для следующих вызовов <code>MOUSEPRESS()</code>;</li>
-<li>это именно нажатие кнопки, а не проверка удержания: для текущего состояния используйте <a href="mousebutton.html"><code>MOUSEBUTTON()</code></a>;</li>
-<li>в текущем срезе у мыши нет отдельного пользовательского обработчика <code>ON MOUSE</code>, кликов, колеса и захвата указателя.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Очередь нажатий мыши</h2>
+            <ul>
+                <li>Встроенная функция <code>MOUSEPRESS</code> удаляет только первое подходящее событие нажатия, поэтому повторный вызов вернёт <code>FALSE</code>, пока пользователь не нажмёт кнопку снова.</li>
+                <li>Неподходящие нажатия не теряются и остаются доступными для следующих вызовов <code>MOUSEPRESS</code>.</li>
+                <li>Это именно нажатие кнопки, а не проверка удержания: для текущего состояния используется встроенная функция <a href="mousebutton.html"><code>MOUSEBUTTON</code></a>.</li>
+                <li>Отпускание, перемещение и колесо не читаются функцией <code>MOUSEPRESS</code>, но доступны обработчикам оператора <a href="on-mouse.html"><code>ON MOUSE</code></a>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Пример одноразового нажатия</h2>
+        <section class="article-section">
+            <h2>Пример одноразового нажатия</h2>
 <pre><code class="language-basic">IF MOUSEPRESS(1) THEN
     PRINT "LEFT ONCE"
 END IF</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: одноразовые нажатия кнопок мыши</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <ul class="resource-list"><li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: одноразовые нажатия кнопок мыши</a></li></ul>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика <code>MB2004</code> возникает, если аргумент не передан, а <code>MB2003</code> - если передан аргумент неподходящего типа.</p>
-</section>
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2004</code>: в встроенную функцию <code>MOUSEPRESS</code> аргумент не передан.</li>
+                <li><code>MB2003</code>: в встроенную функцию <code>MOUSEPRESS</code> передан аргумент неподходящего типа.</li>
+                <li><code>MB3010</code>: встроенная функция <code>MOUSEPRESS</code> вызвана без активного графического режима <code>SCREEN</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
-</section>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
+        </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

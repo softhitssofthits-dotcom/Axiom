@@ -792,6 +792,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.BeginFrame => new BytecodeInstruction(Opcode.BeginFrame),
             LoweredInstructionKind.Present => new BytecodeInstruction(Opcode.Present),
             LoweredInstructionKind.Camera => new BytecodeInstruction(Opcode.Camera),
+            LoweredInstructionKind.Viewport => new BytecodeInstruction(Opcode.Viewport, [instruction.ValueCount]),
             LoweredInstructionKind.ResetCamera => new BytecodeInstruction(Opcode.ResetCamera),
             LoweredInstructionKind.View => new BytecodeInstruction(Opcode.View, [instruction.MouseEventKind, instruction.ValueCount]),
             LoweredInstructionKind.ViewPrint => new BytecodeInstruction(Opcode.ViewPrint, [instruction.ValueCount]),

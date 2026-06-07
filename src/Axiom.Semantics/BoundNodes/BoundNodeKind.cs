@@ -18,6 +18,7 @@ public enum BoundNodeKind
     BeginFrameStatement,
     PresentStatement,
     CameraStatement,
+    ViewportStatement,
     ResetCameraStatement,
     ViewStatement,
     ViewPrintStatement,

@@ -17,10 +17,6 @@
     <div class="layout">
         <aside class="sidebar">
             <div class="sidebar__inner">
-                <div class="sidebar__head">
-                    <p class="sidebar__title">Функция FUNCTION</p>
-                    <p class="sidebar__subtitle">Объявление функции, параметры, тип результата и RETURN.</p>
-                </div>
                 <nav id="manual-nav"></nav>
             </div>
         </aside>
@@ -30,9 +26,9 @@
                 <span>/</span>
                 <a href="procedures-and-functions.html">Процедуры и функции</a>
                 <span>/</span>
-                <span>FUNCTION</span>
+                <span>Функция FUNCTION</span>
             </nav>
-            <p class="eyebrow">Процедуры и функции</p>
+            <p class="eyebrow">Функция</p>
             <h1 class="page-title">Функция FUNCTION</h1>
             <p class="lead">Функция <code>FUNCTION</code> описывает именованное вычисление. Она принимает параметры, выполняет инструкции и возвращает одно значение заданного типа. Поэтому функцию можно использовать в выражении: напечатать результат, присвоить его переменной, передать дальше или проверить в условии.</p>
 
@@ -61,6 +57,11 @@ END FUNCTION</code></pre>
                 <p><code>&lt;тип результата&gt;</code> - тип значения, которое функция должна вернуть.</p>
                 <p><code>&lt;выражение&gt;</code> - значение, возвращаемое оператором <code>RETURN</code>. Его тип должен быть совместим с типом результата функции.</p>
                 <p><code>&lt;типы параметров&gt;</code> в функциональном типе перечисляют только типы, без имён параметров.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Где работает функция FUNCTION</h2>
+                <p>Объявление <code>FUNCTION</code> допустимо в любом контексте программы: на верхнем уровне, внутри процедуры <code>SUB</code> или другой функции. Функция не зависит от графического режима <code>SCREEN</code> и может работать в текстовом, графическом и консольном режимах одинаково.</p>
             </section>
 
             <section class="article-section">

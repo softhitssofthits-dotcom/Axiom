@@ -592,6 +592,11 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Camera, location, valueCount: 2);
     }
 
+    public static LoweredInstruction Viewport(TextLocation location, bool hasCoordinates)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Viewport, location, valueCount: hasCoordinates ? 4 : 0);
+    }
+
     public static LoweredInstruction ResetCamera(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.ResetCamera, location);

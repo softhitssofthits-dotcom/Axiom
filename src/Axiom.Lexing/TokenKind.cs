@@ -42,6 +42,7 @@ public enum TokenKind
     ByValKeyword,
     CanvasKeyword,
     CameraKeyword,
+    ViewportKeyword,
     CaseKeyword,
     CatchKeyword,
     CircleKeyword,

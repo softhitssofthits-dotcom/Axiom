@@ -986,6 +986,103 @@ DRAWTEXT "x", 1000000001, 0, RGB(255, 255, 255)
     }
 
     [Fact]
+    public void Execute_CompiledViewportRectangleClipsModernDrawingAndPreservesCamera()
+    {
+        const string text = """
+CANVAS 160, 90
+VIEWPORT (10, 12)-(30, 28)
+CAMERA 5, 7
+DRAWLINE 5, 7, 40, 40, RGB(255, 255, 0)
+RESETCAMERA
+PRESENT
+""";
+
+        var host = new TestRuntimeHost();
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.Viewport);
+        Assert.True(host.ViewportEnabled);
+        Assert.Equal(10, host.ViewportLeft);
+        Assert.Equal(12, host.ViewportTop);
+        Assert.Equal(29, host.ViewportRight);
+        Assert.Equal(27, host.ViewportBottom);
+        Assert.Equal([new CanvasCameraCall(5, 7)], host.CanvasCameraCalls);
+        Assert.Equal(1, host.ResetCanvasCameraCount);
+        Assert.Equal([new CanvasLineCall(5, 7, 40, 40, 0xFFFF00)], host.CanvasDrawLines);
+    }
+
+    [Fact]
+    public void Execute_CompiledViewportResetRestoresFullCanvas()
+    {
+        const string text = """
+CANVAS 160, 90
+VIEWPORT (10, 12)-(30, 28)
+VIEWPORT
+PRESENT
+""";
+
+        var host = new TestRuntimeHost();
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.False(host.ViewportEnabled);
+        Assert.Equal(0, host.ViewportLeft);
+        Assert.Equal(0, host.ViewportTop);
+        Assert.Equal(159, host.ViewportRight);
+        Assert.Equal(89, host.ViewportBottom);
+    }
+
+    [Fact]
+    public void Execute_CompiledViewportWithoutCanvasReportsRuntimeDiagnostic()
+    {
+        var (_, _, result) = ExecuteProgram("VIEWPORT (1, 2)-(10, 20)");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_CompiledViewportRejectsEmptyRectangleAfterCanvasClipping()
+    {
+        var (_, _, result) = ExecuteProgram("""
+CANVAS 160, 90
+VIEWPORT (200, 10)-(210, 20)
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
+    public void Execute_CompiledViewportAcceptsIntegerExpressionsFromProgramState()
+    {
+        const string text = """
+DIM leftEdge AS INTEGER = 10
+DIM topEdge AS INTEGER = 12
+DIM worldWidth AS INTEGER = 20
+DIM worldHeight AS INTEGER = 16
+
+CANVAS 160, 90
+VIEWPORT (leftEdge, topEdge)-(leftEdge + worldWidth, topEdge + worldHeight)
+PRESENT
+""";
+
+        var host = new TestRuntimeHost();
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.True(host.ViewportEnabled);
+        Assert.Equal(10, host.ViewportLeft);
+        Assert.Equal(12, host.ViewportTop);
+        Assert.Equal(29, host.ViewportRight);
+        Assert.Equal(27, host.ViewportBottom);
+    }
+
+    [Fact]
     public void Execute_CompiledWindowSupportsDrawPointSelectorsAndViewRebase()
     {
         const string text = """
@@ -6517,7 +6614,7 @@ PRINT Person(-1).Age
 
         public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates)
         {
-            if (!_isScreenActive || left > right || top > bottom)
+            if ((!_isScreenActive && !_isCanvasActive) || left > right || top > bottom)
             {
                 return false;
             }
@@ -6528,7 +6625,7 @@ PRINT Person(-1).Age
             var absoluteTop = useScreenCoordinates ? top : GraphicsLineMath.SaturatingAdd(baseTop, top);
             var absoluteRight = useScreenCoordinates ? right : GraphicsLineMath.SaturatingAdd(baseLeft, right);
             var absoluteBottom = useScreenCoordinates ? bottom : GraphicsLineMath.SaturatingAdd(baseTop, bottom);
-            if (!IsInsideScreen(absoluteLeft, absoluteTop) || !IsInsideScreen(absoluteRight, absoluteBottom))
+            if (!IsInsideActiveGraphicsSurface(absoluteLeft, absoluteTop) || !IsInsideActiveGraphicsSurface(absoluteRight, absoluteBottom))
             {
                 return false;
             }
@@ -6842,6 +6939,8 @@ PRINT Person(-1).Age
         }
 
         private bool IsInsideScreen(long x, long y) => x >= 0 && y >= 0 && x < ScreenWidth && y < ScreenHeight;
+
+        private bool IsInsideActiveGraphicsSurface(long x, long y) => x >= 0 && y >= 0 && x < ScreenWidth && y < ScreenHeight;
     }
 
     private sealed record CircleCall(

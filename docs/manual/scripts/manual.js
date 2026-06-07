@@ -166,6 +166,9 @@
     },
     {
       title: "Клавиатура, мышь и события",
+      items: [
+        { id: "keyboard-mouse-events", href: "keyboard-mouse-events.html", label: "Клавиатура, мышь и события" }
+      ],
       groups: [
         {
           title: "Клавиатура",

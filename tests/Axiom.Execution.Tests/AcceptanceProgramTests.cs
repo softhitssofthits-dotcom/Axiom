@@ -2584,15 +2584,15 @@ public sealed class AcceptanceProgramTests
         Assert.True(inputProvider.PresentFrameCount >= 1);
 
         Assert.Single(inputProvider.DrawImages);
-        Assert.Equal((288L, 75L, 448, 576), ToDrawImageShape(inputProvider.DrawImages[0]));
+        Assert.Equal((0L, 0L, 448, 576), ToDrawImageShape(inputProvider.DrawImages[0]));
 
         var firstPowerPellet = Assert.Single(inputProvider.CanvasFillCircles.Where(static circle => circle.Radius == 5).Take(1));
-        Assert.Equal(315L, firstPowerPellet.X);
-        Assert.Equal(106L, firstPowerPellet.Y);
+        Assert.Equal(27L, firstPowerPellet.X);
+        Assert.Equal(31L, firstPowerPellet.Y);
 
         var playerSprite = inputProvider.DrawSprites[0];
-        Assert.Equal(494L, playerSprite.X);
-        Assert.Equal(510L, playerSprite.Y);
+        Assert.Equal(211L, playerSprite.X);
+        Assert.Equal(435L, playerSprite.Y);
     }
 
     [Fact]
@@ -2687,7 +2687,7 @@ public sealed class AcceptanceProgramTests
 
             var calibrationText = File.ReadAllText(Path.Combine(repositoryRoot, "samples", "graphics", "game", "maze_chase_pellet_calibration.txt"));
             calibrationText = calibrationText.Replace("pelletCenterRows(5) = -33", "pelletCenterRows(5) = -44", StringComparison.Ordinal);
-            calibrationText = calibrationText.Replace("pelletCenterCols(26) = 2", "pelletCenterCols(26) = 9", StringComparison.Ordinal);
+            calibrationText = calibrationText.Replace("pelletCenterCols(26) = 0", "pelletCenterCols(26) = 9", StringComparison.Ordinal);
             File.WriteAllText(targetCalibrationPath, calibrationText);
 
             var result = RunFromWorkingDirectory(workingDirectory, sourceText, mode: ExecutionMode.Bytecode);
@@ -2707,7 +2707,7 @@ public sealed class AcceptanceProgramTests
             Assert.Contains("pelletCenterRows(5) = -44", updatedGameText, StringComparison.Ordinal);
             Assert.Contains("pelletCenterCols(26) = 9", updatedGameText, StringComparison.Ordinal);
             Assert.DoesNotContain("pelletCenterRows(5) = -33", updatedGameText, StringComparison.Ordinal);
-            Assert.DoesNotContain("pelletCenterCols(26) = 2", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletCenterCols(26) = 0", updatedGameText, StringComparison.Ordinal);
         }
         finally
         {
@@ -3755,7 +3755,7 @@ public sealed class AcceptanceProgramTests
 
         public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates)
         {
-            if (!_isScreenActive || left > right || top > bottom)
+            if ((!_isScreenActive && !_isCanvasActive) || left > right || top > bottom)
             {
                 return false;
             }
@@ -3766,7 +3766,7 @@ public sealed class AcceptanceProgramTests
             var absoluteTop = useScreenCoordinates ? top : GraphicsLineMath.SaturatingAdd(baseTop, top);
             var absoluteRight = useScreenCoordinates ? right : GraphicsLineMath.SaturatingAdd(baseLeft, right);
             var absoluteBottom = useScreenCoordinates ? bottom : GraphicsLineMath.SaturatingAdd(baseTop, bottom);
-            if (!IsInsideScreen(absoluteLeft, absoluteTop) || !IsInsideScreen(absoluteRight, absoluteBottom))
+            if (!IsInsideActiveGraphicsSurface(absoluteLeft, absoluteTop) || !IsInsideActiveGraphicsSurface(absoluteRight, absoluteBottom))
             {
                 return false;
             }
@@ -3885,6 +3885,8 @@ public sealed class AcceptanceProgramTests
 
             return (_currentGraphicsX, _currentGraphicsY);
         }
+
+        private bool IsInsideActiveGraphicsSurface(long x, long y) => x >= 0 && y >= 0 && x < ScreenWidth && y < ScreenHeight;
 
         private bool IsInsideScreen(long x, long y) => x >= 0 && y >= 0 && x < _screenWidth && y < _screenHeight;
     }

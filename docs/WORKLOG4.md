@@ -4859,3 +4859,607 @@
 
 Следующий точный шаг:
 - брать следующий маленький helper поверх `CANVAS` для HUD и экранных подложек, не возвращаясь в старые неграфические хвосты.
+
+## Session 982 - 2026-06-07 00:20 - страница modern graphics переписана как справка
+
+Что сделано:
+- страница `docs/manual/modern-graphics.html` переписана из конспектного вида в нормальную справочную страницу по договору `CANVAS`;
+- добавлено простое пояснение термина `HUD` и расшифровка `Heads-Up Display`;
+- уточнены и выровнены описания `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, камеры, современных примитивов, `DRAWTEXT`, `TEXTWIDTH`, `TEXTHEIGHT`, а также роли `DRAWIMAGE` и `DRAWSPRITE` внутри современного кадрового цикла;
+- разделы страницы приведены к более строгой справочной структуре: сводка, синтаксис, части синтаксиса, рабочий кадр, примитивы, текст и HUD, камера, замечания, примеры, диагностика и проверочные программы.
+
+Изменённые файлы:
+- `docs/manual/modern-graphics.html`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `git diff --check -- docs/manual/modern-graphics.html`
+
+Следующий точный шаг:
+- при следующем проходе по современному графическому слою держать тот же справочный стиль и, если появится новый высокоуровневый графический оператор, сразу описывать его не как заметку, а как полноценную manual-страницу или явный раздел существующей страницы.
+
+## Session 983 - 2026-06-07 00:33 - modern graphics уточнена по замечаниям к структуре
+
+Что сделано:
+- `docs/manual/modern-graphics.html` переписан ещё раз уже не только как справка, но и как страница с прямыми определениями сущностей;
+- в самом начале теперь прямо сказано, что `CANVAS` — это оператор языка Axiom;
+- добавлен отдельный вводный раздел, где объясняется, что страница описывает группу операторов и функций современного слоя, а не один общий синтаксис;
+- синтаксис разнесён по отдельным разделам `CANVAS`, `BEGINFRAME` / `PRESENT`, `RGB`, `CLS color`, примитивам, `DRAWTEXT`, `TEXTWIDTH` / `TEXTHEIGHT`, `CAMERA` / `RESETCAMERA`, `DRAWIMAGE` / `DRAWSPRITE`;
+- убран эффект общей кучи команд: теперь у каждой формы сразу рядом есть короткое объяснение, что это такое и для чего она нужна;
+- термин `HUD` сохранён, но дан простым языком и с явной расшифровкой.
+
+Изменённые файлы:
+- `docs/manual/modern-graphics.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- для обзорных manual-страниц по графике первым предложением нужно называть сущность прямо: оператор это, функция, тип или раздел;
+- если на одной странице собирается несколько операторов, надо заранее проговаривать это читателю и не показывать единый блок синтаксиса так, будто это одна конструкция.
+
+Проверки:
+- `rg -n "оператор|Это не одна общая запись|Оператор CANVAS|BEGINFRAME и PRESENT|DRAWTEXT|Heads-Up Display|HUD" docs/manual/modern-graphics.html`
+
+Следующий точный шаг:
+- при следующей содержательной правке графического manual держать тот же принцип и при необходимости дочистить соседние страницы `graphics.html` и другие обзорные страницы, где ещё не хватает прямого определения сущности в первом абзаце.
+
+## Session 984 - 2026-06-07 09:01 - для manual закреплён единый шаблон и переработан каркас раздела графики
+
+Что сделано:
+- в `AGENTS.md` закреплено новое постоянное правило для `docs/manual/`: каждая страница по оператору, встроенной функции, типу или тесной группе сущностей теперь обязана идти по жёсткому шаблону с явным определением сущности, раздельным синтаксисом, параметрами, правилами работы, ограничениями, диагностикой и примером;
+- в том же правиле отдельно закреплено требование писать полноценные предложения и явно называть сущность, например `оператор SCREEN`, `оператор FOR`, `встроенная функция PMAP`, вместо безличных сокращённых форм;
+- переработана обзорная страница `docs/manual/graphics.html`: теперь она сначала объясняет, что такое графический раздел, как он делится на исторический путь `SCREEN` и современный путь `CANVAS`, и какие страницы входят в раздел;
+- переработаны ключевые страницы исторического графического пути: `docs/manual/screen.html`, `docs/manual/graphics-text.html`, `docs/manual/graphics-primitives.html`, `docs/manual/get-put.html`, `docs/manual/view.html`, `docs/manual/window.html`, `docs/manual/pmap.html`, `docs/manual/screen-functions.html`;
+- переработаны ресурсные страницы `docs/manual/images.html` и `docs/manual/sprites.html`, чтобы там были явно разделены тип, функции и оператор вывода;
+- все перечисленные страницы переведены из конспектной подачи в более однообразную справочную подачу, где сначала прямо сказано, что именно является оператором, функцией, типом или обзорным разделом.
+
+Изменённые файлы:
+- `AGENTS.md`
+- `docs/manual/graphics.html`
+- `docs/manual/screen.html`
+- `docs/manual/graphics-text.html`
+- `docs/manual/graphics-primitives.html`
+- `docs/manual/get-put.html`
+- `docs/manual/images.html`
+- `docs/manual/sprites.html`
+- `docs/manual/view.html`
+- `docs/manual/window.html`
+- `docs/manual/pmap.html`
+- `docs/manual/screen-functions.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать единый шаблон manual не пожеланием, а обязательным редакционным договором репозитория;
+- для графики первым делом объяснять, что именно перед читателем: оператор, функция, тип или обзорная страница раздела;
+- не смешивать на одной странице несколько синтаксических форм без явного предупреждения, что это разные формы или разные сущности.
+
+Проверки:
+- `git diff --check -- AGENTS.md docs/manual/graphics.html docs/manual/screen.html docs/manual/graphics-text.html docs/manual/graphics-primitives.html docs/manual/get-put.html docs/manual/images.html docs/manual/sprites.html docs/manual/view.html docs/manual/window.html docs/manual/pmap.html docs/manual/screen-functions.html`
+
+Следующий точный шаг:
+- продолжить переработку оставшихся графических страниц по тому же шаблону, в первую очередь `docs/manual/modern-graphics.html`, а затем более узких страниц графического и экранного ввода, чтобы весь раздел `Графика` был оформлен единообразно.
+
+## Session 985 - 2026-06-07 09:05 - раздел графики manual доведён до единого шаблона
+
+Что сделано:
+- восстановлена и переписана страница `docs/manual/pcopy.html`, которая в незавершённой правке была удалена;
+- страница `docs/manual/pcopy.html` приведена к полному справочному шаблону: прямо сказано, что `PCOPY` — это оператор языка Axiom, для чего нужен оператор `PCOPY`, где работает оператор `PCOPY`, что значат его параметры и какие ограничения действуют для страниц `0..3`;
+- страница `docs/manual/palette.html` переписана по тому же шаблону: теперь там прямо сказано, что `PALETTE` — это оператор языка Axiom для палитрового пути `SCREEN`, а не для полноцветного пути `CANVAS`;
+- на странице `docs/manual/palette.html` разнесены по отдельным смысловым разделам формы `PALETTE`, `PALETTE index, color` и `PALETTE USING array`, а также уточнена фактическая диагностика `MB2003` для неподходящего массива;
+- страница `docs/manual/modern-graphics.html` переписана как обзорная страница группы сущностей: теперь она явно объясняет, что это раздел современного графического слоя, а не одна команда, и отдельно называет оператор `CANVAS`, операторы кадрового цикла, современные примитивы, текст, камеру и связанные встроенные функции;
+- для оставшихся графических страниц больше не остаётся смешанной подачи вида «сначала куча синтаксиса, а потом непонятно чего»: весь навигационный раздел `Графика` теперь доведён до одного редакционного алгоритма.
+
+Изменённые файлы:
+- `docs/manual/pcopy.html`
+- `docs/manual/palette.html`
+- `docs/manual/modern-graphics.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Графика` в `docs/manual/` доведённым до единого справочного шаблона;
+- для следующих разделов manual использовать тот же порядок: сначала прямо называть сущность, затем объяснять назначение, область работы, синтаксис, параметры, правила, диагностику, пример и ссылки.
+
+Проверки:
+- `git diff --check -- docs/manual/pcopy.html docs/manual/palette.html docs/manual/modern-graphics.html`
+
+Следующий точный шаг:
+- перенести тот же жёсткий шаблон на следующий крупный тематический раздел manual вне графики, где ещё остаётся конспектная или смешанная подача.
+
+## Session 986 - 2026-06-07 09:18 - полный аудит раздела графики manual завершён
+
+Что сделано:
+- выполнен не точечный, а полный повторный аудит всех страниц раздела `Графика и экран` из `docs/manual/scripts/manual.js`;
+- подтверждено по текущему состоянию, что все графические страницы теперь начинаются с явного объяснения сущности или группы сущностей и больше не оставляют читателя в неясности, оператор это, встроенная функция, тип или обзорная страница;
+- после аудита добиты последние хвосты по полноте справочного шаблона: в `docs/manual/view.html`, `docs/manual/window.html`, `docs/manual/pmap.html`, `docs/manual/graphics-text.html` добавлены короткие примеры, а в `docs/manual/screen-functions.html` добавлены разделы `Диагностика` и `Пример`;
+- по итоговому срезу раздел `Графика` больше не имеет атомарных страниц без вводного определения сущности и больше не имеет внутренних страниц без примера, кроме общей обзорной страницы `docs/manual/graphics.html`, для которой обзорный жанр признан достаточным.
+
+Изменённые файлы:
+- `docs/manual/view.html`
+- `docs/manual/window.html`
+- `docs/manual/pmap.html`
+- `docs/manual/graphics-text.html`
+- `docs/manual/screen-functions.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать пользовательскую цель по переработке всего раздела `Графика` выполненной в полном объёме;
+- дальше применять тот же алгоритм уже к следующему тематическому разделу manual, а не возвращаться к графике без нового изменения пользовательского договора.
+
+Проверки:
+- адресная проверка всех графических страниц по наличию вводного `lead` и по полноте разделов `Пример` и `Диагностика`;
+- `git diff --check -- docs/manual/graphics.html docs/manual/screen.html docs/manual/view.html docs/manual/window.html docs/manual/pmap.html docs/manual/palette.html docs/manual/pcopy.html docs/manual/images.html docs/manual/sprites.html docs/manual/modern-graphics.html docs/manual/graphics-text.html docs/manual/graphics-primitives.html docs/manual/get-put.html docs/manual/screen-functions.html docs/WORKLOG4.md docs/PLANS3.md`
+
+Следующий точный шаг:
+- выбрать следующий крупный раздел manual вне графики и провести по нему такой же сквозной редакционный проход.
+
+## Session 987 - 2026-06-07 12:30 - раздел клавиатуры и мыши manual доведён до единого шаблона
+
+Что сделано:
+- все оставшиеся страницы раздела `Клавиатура, мышь и события` в `docs/manual/` переписаны по единому справочному шаблону: `keydown.html`, `keypress.html`, `on-key.html`, `mousex.html`, `mousey.html`, `mousebutton.html`, `mousepress.html`, `on-mouse.html`;
+- каждая страница теперь прямо называет сущность в первом предложении: «встроенная функция X — оператор языка Axiom, который ...»;
+- удалены `sidebar__head` блоки со всех страниц раздела (ранее уже удалены из `inkey.html` и `keyboard-mouse-events.html`);
+- хлебные крошки на всех страницах теперь ссылаются на обзорную страницу `keyboard-mouse-events.html` и используют полные имена сущностей: `Функция KEYDOWN`, `Оператор ON KEY`, `Функция MOUSEX` и так далее;
+- добавлен обзорный пункт навигации `{ id: "keyboard-mouse-events", href: "keyboard-mouse-events.html", label: "Клавиатура, мышь и события" }` в `manual.js` как первый элемент секции;
+- в `search-index.js` добавлена обзорная запись для `keyboard-mouse-events.html` перед индивидуальными записями функций и операторов;
+- на главной странице `index.html` карточка клавиатуры и мыши теперь ведёт на `keyboard-mouse-events.html` вместо `inkey.html`;
+- в `reference.html` две отдельные ссылки `Клавиатура` и `Мышь` объединены в одну ссылку `Клавиатура, мышь и события`, ведущую на `keyboard-mouse-events.html`;
+- в разделе `Порядок первого чтения` на `reference.html` объединены ссылки на клавиатуру и мышь.
+
+Изменённые файлы:
+- `docs/manual/keydown.html`
+- `docs/manual/keypress.html`
+- `docs/manual/on-key.html`
+- `docs/manual/mousex.html`
+- `docs/manual/mousey.html`
+- `docs/manual/mousebutton.html`
+- `docs/manual/mousepress.html`
+- `docs/manual/on-mouse.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/manual/index.html`
+- `docs/manual/reference.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Клавиатура, мышь и события` в `docs/manual/` доведённым до единого справочного шаблона;
+- для следующих разделов manual использовать тот же порядок: сначала прямо называть сущность, затем объяснять назначение, область работы, синтаксис, параметры, правила, диагностику, пример и ссылки.
+
+Проверки:
+- `node --check docs\manual\scripts\manual.js` проходит;
+- `node --check docs\manual\scripts\search-index.js` проходит;
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- провести редакционный проход по разделу `Процедуры и функции`: переписать `return.html` и `procedures-and-functions.html` по шаблону, проверить `sub.html` и `function.html`, синхронизировать навигацию и поиск.
+
+## Session 988 - 2026-06-07 13:15 - раздел процедуры и функции manual доведён до единого шаблона
+
+Что сделано:
+- `docs/manual/return.html` переписан по шаблону: lead теперь начинается с «Оператор RETURN — оператор языка Axiom, который завершает...», удалён `sidebar__head`, хлебные крошки исправлены на полное имя `Оператор RETURN`, добавлены разделы `Для чего нужен оператор RETURN`, `Где работает оператор RETURN`, `Параметры`, `Правила работы`, `Диагностика`;
+- `docs/manual/procedures-and-functions.html` переписан по шаблону: lead теперь начинается с «Раздел процедур и функций описывает...», удалён `sidebar__head`, добавлен раздел `Что входит в раздел` с перечислением сущностей, исправлен eyebrow на `Раздел`;
+- `docs/manual/sub.html` удалён `sidebar__head`, исправлен breadcrumb с bare `SUB` на `Процедура SUB`, исправлен eyebrow на `Процедура`;
+- `docs/manual/function.html` удалён `sidebar__head`, исправлен breadcrumb с bare `FUNCTION` на `Функция FUNCTION`, исправлен eyebrow на `Функция`.
+
+Изменённые файлы:
+- `docs/manual/return.html`
+- `docs/manual/procedures-and-functions.html`
+- `docs/manual/sub.html`
+- `docs/manual/function.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Процедуры и функции` в `docs/manual/` доведённым до единого справочного шаблона;
+- считать три раздела — `Графика`, `Клавиатура, мышь и события`, `Процедуры и функции` — полностью выровненными по шаблону.
+
+Проверки:
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- провести редакционный проход по разделу `Операторы описания и объявления` (3 страницы: `dim.html`, `const.html`, `type.html`) или по разделу `Операторы передачи управления` (8+ страниц).
+
+## Session 989 - 2026-06-07 13:30 - раздел операторы описания manual доведён до единого шаблона
+
+Что сделано:
+- `docs/manual/dim.html` переписан по шаблону: lead теперь начинается с «Оператор DIM — оператор языка Axiom, который...», удалён `sidebar__head`, eyebrow исправлен на `Оператор`;
+- `docs/manual/const.html` переписан по шаблону: lead теперь начинается с «Оператор CONST — оператор языка Axiom, который...», удалён `sidebar__head`, eyebrow исправлен на `Оператор`;
+- `docs/manual/type.html` переписан по шаблону: lead теперь начинается с «Оператор TYPE ... END TYPE — оператор языка Axiom, который объявляет...», удалён `sidebar__head`, eyebrow исправлен на `Оператор`.
+
+Изменённые файлы:
+- `docs/manual/dim.html`
+- `docs/manual/const.html`
+- `docs/manual/type.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Операторы описания и объявления` в `docs/manual/` доведённым до единого справочного шаблона;
+- считать четыре раздела — `Графика`, `Клавиатура, мышь и события`, `Процедуры и функции`, `Операторы описания и объявления` — полностью выровненными по шаблону.
+
+Проверки:
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- провести редакционный проход по разделу `Операторы передачи управления` (8+ страниц, самая тяжёлая секция).
+
+## Session 990 - 2026-06-07 13:50 - раздел операторы передачи управления manual доведён до единого шаблона
+
+Что сделано:
+- все 8 страниц раздела `Операторы передачи управления` переписаны по единому справочному шаблону: `if.html`, `select-case.html`, `for.html`, `while.html`, `do-loop.html`, `loops.html`, `sleep.html`, `expressions-and-branching.html`;
+- для каждой атомарной страницы lead теперь начинается с явного называния сущности: `Оператор IF — оператор языка Axiom, который...`, `Оператор SELECT CASE — оператор языка Axiom, который...`, `Оператор FOR — оператор языка Axiom, который...`, `Оператор WHILE — оператор языка Axiom, который...`, `Оператор DO ... LOOP — оператор языка Axiom, который...`, `Оператор SLEEP — оператор языка Axiom, который...`;
+- для обзорных страниц `loops.html` и `expressions-and-branching.html` lead теперь начинается с `Раздел циклов описывает...` и `Раздел выражений и ветвления описывает...`;
+- удалены `sidebar__head` блоки со всех 8 страниц;
+- исправлены eyebrow: атомарные страницы получили `Оператор`, обзорные — `Раздел`;
+- исправлены breadcrumbs: `WHILE` → `Оператор WHILE`, `DO ... LOOP` → `Оператор DO ... LOOP`, `SLEEP` → `Оператор SLEEP`;
+- исправлены заголовки страниц: `Оператор цикла WHILE ... END WHILE` → `Оператор WHILE`, `Оператор цикла DO ... LOOP` → `Оператор DO ... LOOP`.
+
+Изменённые файлы:
+- `docs/manual/if.html`
+- `docs/manual/select-case.html`
+- `docs/manual/for.html`
+- `docs/manual/while.html`
+- `docs/manual/do-loop.html`
+- `docs/manual/loops.html`
+- `docs/manual/sleep.html`
+- `docs/manual/expressions-and-branching.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Операторы передачи управления` в `docs/manual/` доведённым до единого справочного шаблона;
+- считать пять разделов — `Графика`, `Клавиатура, мышь и события`, `Процедуры и функции`, `Операторы описания и объявления`, `Операторы передачи управления` — полностью выровненными по шаблону.
+
+Проверки:
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- провести редакционный проход по разделу `Ввод и вывод` (3 страницы: `data-and-input.html`, `print.html`, `input.html`) или по разделу `Встроенные функции` (15+ страниц).
+
+## Session 991 - 2026-06-07 14:05 - раздел ввод и вывод manual доведён до единого шаблона
+
+Что сделано:
+- все 3 страницы раздела `Ввод и вывод` переписаны по единому справочному шаблону: `data-and-input.html`, `print.html`, `input.html`;
+- для обзорной страницы `data-and-input.html` lead теперь начинается с `Раздел данных, ввода и вывода описывает...`, eyebrow → `Раздел`;
+- для атомарных страниц `print.html` и `input.html` lead теперь начинается с явного называния: `<code>PRINT</code> — оператор языка Axiom, который...`, `<code>INPUT</code> — оператор языка Axiom, который...`, eyebrow → `Оператор`;
+- удалены `sidebar__head` блоки со всех 3 страниц.
+
+Изменённые файлы:
+- `docs/manual/data-and-input.html`
+- `docs/manual/print.html`
+- `docs/manual/input.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Ввод и вывод` доведённым до единого справочного шаблона;
+- считать шесть разделов — `Графика`, `Клавиатура, мышь и события`, `Процедуры и функции`, `Операторы описания и объявлений`, `Операторы передачи управления`, `Ввод и вывод` — полностью выровненными по шаблону.
+
+Проверки:
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- провести редакционный проход по разделу `Встроенные функции` (15+ страниц, самая большая оставшаяся секция).
+
+## Session 992 - 2026-06-07 14:25 - раздел встроенные функции manual доведён до единого шаблона
+
+Что сделано:
+- все 20 страниц раздела `Встроенные функции` переписаны по единому справочному шаблону;
+- группы `Строки и символы` (6 страниц), `Числа` (5 страниц), `Дата и время` (5 страниц), `Регулярные выражения` (4 страницы);
+- удалены `sidebar__head` блоки со всех 20 страниц;
+- для обзорных страниц добавлены lead с явным называнием: `Раздел строковых функций описывает...`, `Раздел числовых функций описывает...`, `Раздел функций даты и времени описывает...`, `Раздел функций регулярных выражений описывает...`;
+- для подстраниц добавлены lead с перечислением функций: `Раздел длины строки и фрагментов описывает функции LEN, LEFT, RIGHT и MID...` и так далее;
+- исправлены eyebrow: обзорные страницы получили `Раздел`, подстраницы также получили `Раздел` (как подразделы раздела);
+- исправлен lead на `characters.html`: добавлено явное называние `<code>CHR()</code>, <code>ASC()</code>, <code>CHRW()</code> и <code>ASCW()</code> — встроенные функции языка Axiom...`.
+
+Изменённые файлы:
+- `docs/manual/string-functions.html`
+- `docs/manual/string-functions-slices-and-length.html`
+- `docs/manual/string-functions-trim-and-case.html`
+- `docs/manual/string-functions-search-and-replace.html`
+- `docs/manual/string-functions-build-and-split.html`
+- `docs/manual/characters.html`
+- `docs/manual/numeric-functions.html`
+- `docs/manual/numeric-functions-conversion-and-legacy.html`
+- `docs/manual/numeric-functions-core.html`
+- `docs/manual/numeric-functions-trigonometry.html`
+- `docs/manual/numeric-functions-roots-rounding.html`
+- `docs/manual/date-time-functions.html`
+- `docs/manual/date-time-functions-current.html`
+- `docs/manual/date-time-functions-parts-and-serial.html`
+- `docs/manual/date-time-functions-arithmetic-and-validation.html`
+- `docs/manual/date-time-functions-time-zones.html`
+- `docs/manual/regex-functions.html`
+- `docs/manual/regex-functions-match-and-extract.html`
+- `docs/manual/regex-functions-arrays-and-split.html`
+- `docs/manual/regex-functions-replace-and-count.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать раздел `Встроенные функции` доведённым до единого справочного шаблона;
+- считать семь разделов полностью выровненными: `Графика`, `Клавиатура, мышь и события`, `Процедуры и функции`, `Операторы описания и объявлений`, `Операторы передачи управления`, `Ввод и вывод`, `Встроенные функции`.
+
+Проверки:
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- проверить, какие разделы ещё не выровнены, и провести редакционный проход по ним.
+
+## Session 993 - 2026-06-07 14:50 - все оставшиеся разделы manual доведены до единого шаблона
+
+Что сделано:
+- все оставшиеся страницы `docs/manual/` переписаны по единому справочному шаблону: `error-handling.html`, `try.html`, `error.html`, `diagnostics.html`, `arithmetic-and-logic.html`, `data-types.html`, `data-types-scalars.html`, `data-types-strings-and-files.html`, `data-types-records-and-arrays.html`, `data-types-conversions.html`, `variables-and-constants.html`, `arrays.html`, `arrays-1d.html`, `arrays-2d.html`, `arrays-multidimensional.html`, `arrays-dynamic.html`, `arrays-indexing.html`, `arrays-slices.html`, `arrays-functions.html`, `arrays-and-builtins.html`, `arrays-diagnostics.html`, `arrays-1d-visual.html`, `arrays-2d-visual.html`, `open.html`, `close.html`, `file-system-functions-open-files.html`, `file-system-functions.html`, `file-system-functions-text.html`, `file-system-functions-paths.html`, `file-system-functions-management.html`, `reference.html`, `examples.html`, `cheat-sheet.html`, `data-type-limits.html` (34 страницы);
+- удалены `sidebar__head` блоки со всех 34 страниц;
+- добавлены lead с явным называнием сущности на страницы, где их не было: `arrays-1d.html`, `arrays-2d.html`, `arrays-multidimensional.html`, `arrays-dynamic.html`, `arrays-1d-visual.html`, `arrays-2d-visual.html`, `open.html`, `close.html`;
+- исправлены eyebrow на всех страницах: `Основы языка` → `Раздел`, `Типы данных` → `Раздел`, `Массивы` → `Раздел`, `Файлы и файловая система` → `Оператор`/`Раздел`, `Встроенные функции` → `Раздел`, `Обработка ошибок и диагностика` → `Раздел`/`Оператор`, `Выражения` → `Раздел`, `Справочник`/`Практика и справка`/`Диагностика` → `Раздел`, `Справочное приложение` → `Раздел`.
+
+Изменённые файлы:
+- `docs/manual/error-handling.html`
+- `docs/manual/try.html`
+- `docs/manual/error.html`
+- `docs/manual/diagnostics.html`
+- `docs/manual/arithmetic-and-logic.html`
+- `docs/manual/data-types.html`
+- `docs/manual/data-types-scalars.html`
+- `docs/manual/data-types-strings-and-files.html`
+- `docs/manual/data-types-records-and-arrays.html`
+- `docs/manual/data-types-conversions.html`
+- `docs/manual/variables-and-constants.html`
+- `docs/manual/arrays.html` и все 11 страниц `arrays-*.html`
+- `docs/manual/open.html`
+- `docs/manual/close.html`
+- `docs/manual/file-system-functions-open-files.html`
+- `docs/manual/file-system-functions.html`
+- `docs/manual/file-system-functions-text.html`
+- `docs/manual/file-system-functions-paths.html`
+- `docs/manual/file-system-functions-management.html`
+- `docs/manual/reference.html`
+- `docs/manual/examples.html`
+- `docs/manual/cheat-sheet.html`
+- `docs/manual/data-type-limits.html`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать все страницы `docs/manual/` доведёнными до единого справочного шаблона;
+- считать редакционный проход по всему manual завершённым.
+
+Проверки:
+- `git diff --check` не показывает ошибок пробельных символов.
+
+Следующий точный шаг:
+- обновить `docs/PLANS3.md` и зафиксировать завершение редакционного прохода по manual.
+
+## Session 994 - 2026-06-07 11:30 - аудит и точечные правки editorial pass по manual
+
+Задача:
+- провести глубокий аудит всех 98 страниц `docs/manual/` на соответствие редакционному стандарту из `промт для переработки мануала.md`;
+- исправить найденные проблемы.
+
+Что сделано:
+1. Полный аудит 38 ключевых страниц (операторы, функции, обзоры) по 7 критериям: именование сущности в lead, полные русские предложения, визуальное разделение синтаксиса, раздел «Где работает», примеры, отсутствие backtick-символов.
+2. Исправлена критическая ошибка кодировки: китайский символ `事件` заменён на `событий` в `on-mouse.html` (строка 39).
+3. Исправлены h1-заголовки: `palette.html` и `pcopy.html` получили префикс «Оператор» в h1 для согласованности с eyebrow.
+4. Переписан lead `search.html`: вместо императивной инструкции страница теперь явно называет раздел.
+5. Добавлен раздел «Где работает» в 4 страницы:
+   - `function.html` — «работает в любом контексте программы, не зависит от SCREEN»
+   - `sub.html` — аналогично
+   - `open.html` — аналогично
+   - `sleep.html` — аналогично
+6. Проверены все оставшиеся обзорные и тематические страницы (data-types, arrays, string/numeric/date-time/regex/file-system functions, error handling, expressions, graphics) — существенных проблем не обнаружено.
+
+Затронутые файлы:
+- `docs/manual/on-mouse.html` — исправление кодировки
+- `docs/manual/palette.html` — h1 заголовок
+- `docs/manual/pcopy.html` — h1 заголовок
+- `docs/manual/search.html` — lead paragraph
+- `docs/manual/function.html` — добавлен «Где работает»
+- `docs/manual/sub.html` — добавлен «Где работает»
+- `docs/manual/open.html` — добавлен «Где работает»
+- `docs/manual/sleep.html` — добавлен «Где работает»
+
+Проверки:
+- все 98 страниц проверены на наличие lead и eyebrow;
+- все 98 страниц проверены на отсутствие backtick-символов (кроме легитимного символа в `characters.html`);
+- все страницы с операторами и функциями именуют сущность в первом предложении.
+
+Следующий точный шаг:
+- определить следующий крупный этап работы над проектом (новые операторы, функции, улучшения IDE или другие задачи из `docs/PLANS3.md`).
+
+## Session 995 - 2026-06-07 15:19 - сверка хвоста плана и журнала после manual pass
+
+Задача:
+- проверить, не потерялся ли реальный следующий шаг проекта за хвостом редакционных записей по `docs/manual/`;
+- выровнять текущее понимание состояния без переписывания истории в append-only документах.
+
+Что сделано:
+1. Перечитаны хвосты `docs/PLANS3.md` и `docs/WORKLOG4.md` вместе с актуальными опорными документами `docs/SPECIFICATION3.md` и `docs/MODERN_GRAPHICS_PLAN.md`.
+2. Подтверждено, что последние реальные работы шли по одной большой ветке: редакционный проход по `docs/manual/`, а не по нескольким несвязанным направлениям.
+3. Зафиксировано, что хвост `docs/WORKLOG4.md` читается неоднозначно из-за того, что `Session 994 - 2026-06-07 11:30` была добавлена в конец файла уже после `Session 992 - 14:25` и `Session 993 - 14:50`: порядок записей append-only сохранён, но временная последовательность в хвосте нарушена.
+4. Уточнён следующий шаг в `docs/PLANS3.md`: после завершения manual фокус нужно возвращать не к абстрактному выбору нового этапа, а к modern graphics и флагманскому примеру `samples/graphics/game/maze_chase.axm`.
+
+Затронутые файлы:
+- `docs/PLANS3.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать ощущение «переключались на другое» следствием неточного хвоста документов, а не смены продуктового направления;
+- считать manual-проход завершённой веткой;
+- считать ближайшей рабочей точкой стабилизацию и дальнейшую практическую доводку `samples/graphics/game/maze_chase.axm` как главного живого примера современного графического слоя.
+
+Следующий точный шаг:
+- отдельно просмотреть `samples/graphics/game/maze_chase.axm` и связанные документы modern graphics, чтобы выбрать первую конкретную задачу следующего продуктового хода.
+
+## Session 996 - 2026-06-07 15:20 - переход с PLANS3 на PLANS4
+
+Задача:
+- перевести `docs/PLANS3.md` в исторический статус;
+- открыть новый активный плановый файл `docs/PLANS4.md` и зафиксировать это как новое правило проекта.
+
+Что сделано:
+1. Обновлены проектные правила в `AGENTS.md`: активным планом теперь считается `docs/PLANS4.md`, а `docs/PLANS3.md` переведён в историческую третью часть планирования.
+2. Обновлён `README.md`, чтобы входная документация репозитория указывала на `docs/PLANS4.md` как на текущий план и отдельно называла `docs/PLANS3.md` историческим.
+3. Обновлён `docs/промт для переработки мануала.md`, чтобы служебный документ тоже ссылался уже на новый активный плановый файл.
+4. В хвост `docs/PLANS3.md` добавлена закрывающая запись о переводе файла в исторический статус.
+5. Создан новый активный файл `docs/PLANS4.md` с текущей точкой продолжения проекта после завершения manual-прохода.
+
+Затронутые файлы:
+- `AGENTS.md`
+- `README.md`
+- `docs/промт для переработки мануала.md`
+- `docs/PLANS3.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать `docs/PLANS4.md` единственным активным планом проекта;
+- считать `docs/PLANS3.md` историческим томом и больше не пополнять его новыми шагами;
+- продолжать следующий продуктовый этап через modern graphics и `samples/graphics/game/maze_chase.axm`, но фиксировать это уже только в `docs/PLANS4.md`.
+
+Следующий точный шаг:
+- открыть следующую содержательную запись уже в `docs/PLANS4.md` и от неё продолжить сверку `maze_chase` с текущим договором modern graphics.
+
+## Session 997 - 2026-06-07 16:00 - определён следующий modern-graphics оператор и аудит canvas-слоя
+
+Задача:
+- определить, какой следующий современный графический оператор логичнее всего делать после уже закрытых двух срезов;
+- одновременно проверить, не требуют ли уже реализованные canvas-операторы отдельного улучшения по итогам просмотра `maze_chase`.
+
+Что сделано:
+1. Перечитаны активные проектные документы `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS4.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md` и `docs/MODERN_GRAPHICS_PLAN.md`.
+2. Просмотрен флагманский пример `samples/graphics/game/maze_chase.axm` именно как практический тест современного графического слоя, а не как изолированная игра.
+3. Подтверждено, что главный текущий зазор находится не в отсутствии анимаций, столкновений или тайловой карты, а в отсутствии прямоугольной области вывода для мира внутри `CANVAS`.
+4. Зафиксировано, что `maze_chase` сейчас компенсирует этот зазор вручную через `BACKGROUND_OFFSET_Y`, `WorldOffsetX()`, `WorldOffsetY()`, отдельные функции границ подложки и явные переключения `RESETCAMERA` между миром, HUD и калибровочным оверлеем.
+5. В `docs/PLANS4.md` записано решение, что следующим содержательным modern-graphics шагом нужно считать viewport для `CANVAS`, с рабочим проектным именем `VIEWPORT`.
+
+Затронутые файлы:
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать следующим modern-graphics оператором viewport для `CANVAS`, а не новый игровой helper;
+- считать уже реализованные `DRAWRECT`, `FILLRECT`, `DRAWLINE`, `DRAWCIRCLE`, `FILLCIRCLE`, `DRAWTEXT`, `DRAWIMAGE`, `DRAWSPRITE`, `CAMERA`, `RESETCAMERA` в целом рабочими по форме, но требующими общей координатной доводки через viewport;
+- считать главным практическим улучшением существующего слоя не добавление новых аргументов в каждый оператор по отдельности, а единый договор: viewport задаёт экранную область, камера задаёт мировое смещение внутри неё, а рисование обрезается по viewport.
+
+Следующий точный шаг:
+- сформулировать и записать в `docs/SPECIFICATION3.md` проектный договор viewport для `CANVAS`, чтобы следующая кодовая задача уже шла не от рассуждения, а от зафиксированной спецификации.
+
+## Session 998 - 2026-06-07 16:18 - проектный договор VIEWPORT записан в спецификацию
+
+Задача:
+- записать в активную спецификацию проектный договор viewport для `CANVAS`, чтобы следующий шаг modern graphics уже опирался на документированный пользовательский контракт, а не на устное описание.
+
+Что сделано:
+1. В `docs/SPECIFICATION3.md` добавлен отдельный раздел `Modern Graphics - viewport для CANVAS`.
+2. Зафиксировано, что viewport вводится как новый современный оператор поверх `CANVAS`, а не как продолжение исторического `VIEW`.
+3. Записаны минимальные формы первого среза: `VIEWPORT` и `VIEWPORT (left, top)-(right, bottom)`.
+4. Явно описана связь с `CAMERA` и `RESETCAMERA`: viewport задаёт экранную область, камера задаёт мировое смещение внутри неё, а `RESETCAMERA` не сбрасывает viewport.
+5. Зафиксировано правило геометрии и обрезки: viewport задаётся в пикселях `CANVAS`, нормализуется по границам холста и обрезает `DRAWIMAGE`, `DRAWSPRITE`, `DRAWRECT`, `FILLRECT`, `DRAWLINE`, `DRAWCIRCLE`, `FILLCIRCLE`, `DRAWTEXT`.
+6. В `docs/PLANS4.md` добавлена новая запись, что проектный договор viewport уже записан и следующим рабочим этапом теперь считается его реализация.
+
+Затронутые файлы:
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать рабочее проектное имя нового оператора `VIEWPORT` зафиксированным в спецификации до отдельного решения о переименовании;
+- считать первый viewport-срез намеренно узким: без современного `WINDOW`, без рамки и заливки исторического `VIEW`, без вложенных viewport и без отдельного режима логических координат;
+- считать ожидаемым практическим эффектом упрощение `samples/graphics/game/maze_chase.axm`, прежде всего за счёт вытеснения ручного `BACKGROUND_OFFSET_Y` и самодельных мировых смещений.
+
+Следующий точный шаг:
+- реализовать `VIEWPORT` в языке и runtime, затем добавить проверки интерпретатора и `BytecodeVm`, runnable sample viewport+HUD и начать упрощение `samples/graphics/game/maze_chase.axm` под новый договор.
+
+## Session 999 - 2026-06-07 17:05 - VIEWPORT для CANVAS доведён до рабочего состояния
+
+Задача:
+- довести `VIEWPORT` как новый modern-graphics оператор до полного рабочего состояния по критериям проекта: тесты, runnable sample, manual, IDE-подсветка и активные реестры.
+
+Что сделано:
+1. Добавлены parser- и binder-проверки для обеих форм `VIEWPORT`: сброс на весь `CANVAS` и прямоугольная форма `VIEWPORT (left, top)-(right, bottom)`.
+2. Добавлены lowering- и emission-проверки: отдельный `LoweredInstructionKind.Viewport`, `Opcode.Viewport` и ожидаемые счётчики операндов для reset- и rectangle-форм.
+3. Добавлены runtime-проверки interpreter и `BytecodeVm` для modern-only сценариев `VIEWPORT`: установка прямоугольника, сброс на весь холст, сохранение отдельного поведения `CAMERA` / `RESETCAMERA`, диагностика `MB3010` без `CANVAS` и `MB3007` для пустого viewport после обрезки.
+4. IDE-подсветка синхронизирована: `VIEWPORT` добавлен в `Axiom.xshd`, `Axiom.Dark.xshd` и проверяется через `EditorFeatureTests`.
+5. Добавлен runnable-пример `samples/graphics/modern/viewport_hud.axm`, который показывает HUD, отдельную область мира, работу `CAMERA`, `RESETCAMERA` и сброс `VIEWPORT`.
+6. Обновлён manual: `docs/manual/modern-graphics.html` теперь явно описывает `VIEWPORT`, его формы, правило исключающих `right` / `bottom`, связь с камерой, диагностики и пример использования.
+7. Обновлены `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md`.
+
+Затронутые файлы:
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Bytecode.Tests/BoundProgramLowererTests.cs`
+- `tests/Axiom.Bytecode.Tests/BytecodeCompilerTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `samples/graphics/modern/viewport_hud.axm`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Решение:
+- считать базовый первый срез `VIEWPORT` для `CANVAS` завершённым;
+- считать следующей практической задачей перенос `samples/graphics/game/maze_chase.axm` на новый viewport-договор без изменения игровой логики.
+
+Проверки:
+- запланирован адресный последовательный прогон `dotnet test` по parsing, semantics, bytecode, runtime и IDE-проектам после этой волны правок.
+
+Следующий точный шаг:
+- упростить `samples/graphics/game/maze_chase.axm` через `VIEWPORT`, вытеснив ручной `BACKGROUND_OFFSET_Y` и самодельные мировые смещения там, где они теперь больше не нужны.
+
+## Session 1000 - 2026-06-07 18:38 - восстановлена страница modern graphics manual
+
+Что сделано:
+1. Проверено текущее состояние `docs/manual/modern-graphics.html` после сообщения о том, что страница перестала открываться.
+2. Подтверждено, что файл был повреждён на уровне содержимого: вместо HTML в рабочем дереве оказался массив `NUL`-байтов.
+3. Страница `docs/manual/modern-graphics.html` восстановлена как нормальный HTML-документ на основе последней рабочей версии с сохранением актуального содержимого про `VIEWPORT`, `TEXTWIDTH` и `TEXTHEIGHT`.
+4. Сохранены ссылки на runnable-примеры `viewport_hud.axm`, `hud_metrics.axm`, `multiline_label.axm`, а также связка с `docs/manual/scripts/search-index.js`.
+
+Затронутые файлы:
+- `docs/manual/modern-graphics.html`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `node --check docs/manual/scripts/search-index.js` проходит;
+- `git diff --check -- docs/manual/modern-graphics.html docs/manual/scripts/search-index.js docs/manual/scripts/manual.js` не нашёл ошибок diff, кроме предупреждений Git о будущей нормализации LF/CRLF;
+- адресная проверка по тексту подтвердила, что в `docs/manual/modern-graphics.html` снова присутствуют `VIEWPORT`, `TEXTWIDTH`, `TEXTHEIGHT` и ссылки на соответствующие примеры.
+
+Решение:
+- считать проблему пользовательской страницы manual локально устранённой: `docs/manual/modern-graphics.html` снова является обычной HTML-страницей, а не повреждённым бинарным файлом;
+- дальнейший шаг по проекту не менять: после этой починки активным остаётся перенос `maze_chase` на `VIEWPORT`.
+
+Следующий точный шаг:
+- упростить `samples/graphics/game/maze_chase.axm` через `VIEWPORT`, вытеснив ручной `BACKGROUND_OFFSET_Y` и самодельные мировые смещения там, где они теперь больше не нужны.
+
+## Session 1001 - 2026-06-07 19:21 - maze_chase переведён на VIEWPORT и синхронизирован с байткодным путём
+
+Задача:
+- довести перенос `samples/graphics/game/maze_chase.axm` на `VIEWPORT` до реально проходящего состояния;
+- закрыть найденные по acceptance-прогону хвосты в `BytecodeVm` и тестовом графическом хосте.
+
+Что сделано:
+1. `samples/graphics/game/maze_chase.axm` переведён на viewport-договор мира: удалён `BACKGROUND_OFFSET_Y`, мир теперь рисуется от `(0, 0)`, а экранное размещение делает `VIEWPORT`.
+2. HUD и калибровочный overlay разделены по новому правилу: мир ограничивается `VIEWPORT`, затем `VIEWPORT` без аргументов возвращает весь `CANVAS` для HUD и боковой панели.
+3. `BytecodeVm` исправлен для `VIEWPORT`: байткодный путь больше не требует только `LONG` и принимает обычные целочисленные выражения `INTEGER|LONG`.
+4. Добавлен адресный runtime-тест `Execute_CompiledViewportAcceptsIntegerExpressionsFromProgramState`, чтобы этот регресс не вернулся.
+5. Acceptance-хост в `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` синхронизирован с modern `CANVAS`-viewport, а координатные ожидания `maze_chase` обновлены под новый мировой договор.
+6. Восстановлен активный плановый файл `docs/PLANS4.md`, потому что в рабочем дереве он оказался повреждённым массивом `NUL`-байтов и перестал быть читаемым.
+7. Обновлён `docs/BYTECODE_COVERAGE.md`, чтобы реестр явно отражал перенос `maze_chase` на `VIEWPORT` и закрытие acceptance-хвоста для `BytecodeVm`.
+
+Затронутые файлы:
+- `samples/graphics/game/maze_chase.axm`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS4.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "Execute_CompiledViewport"` проходит;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "MazeChase"` проходит.
+
+Решение:
+- считать перенос `samples/graphics/game/maze_chase.axm` на `VIEWPORT` завершённым на уровне acceptance-покрытия;
+- считать найденный байткодный дефект `VIEWPORT` закрытым;
+- считать следующим содержательным шагом уже не сам перенос, а живую ручную приёмку `maze_chase` в `Axiom.Ide` и выбор следующего modern-graphics шага по фактической боли примера.
+
+Следующий точный шаг:
+- вручную запустить `samples/graphics/game/maze_chase.axm` в `Axiom.Ide`, подтвердить картинку мира, HUD и калибровочного overlay по новому viewport-договору и затем выбрать следующий современный графический шаг.

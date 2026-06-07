@@ -20,115 +20,116 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Изображения IMAGE</span>
             </nav>
-            <p class="eyebrow">Графика</p>
+            <p class="eyebrow">Тип, функции и оператор</p>
             <h1 class="page-title">Изображения IMAGE</h1>
-            <p class="lead">Тип <code>IMAGE</code> хранит уже загруженное полноцветное изображение, а функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> позволяют загрузить файл и узнать его размеры. Оператор <code>DRAWIMAGE</code> выводит изображение на активный графический <code>SCREEN</code> в натуральном размере или с масштабированием.</p>
+            <p class="lead">Эта страница описывает встроенный тип данных <code>IMAGE</code>, встроенные функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code>, <code>IMAGEHEIGHT</code> и оператор <code>DRAWIMAGE</code>. Тип <code>IMAGE</code> хранит уже загруженное полноцветное изображение, а оператор <code>DRAWIMAGE</code> выводит это изображение на графический экран или на современный холст.</p>
 
-            <section class="article-section" id="type">
-                <h2>Назначение</h2>
-                <p>Исторические операторы <code>GET</code> и <code>PUT</code> работают с прямоугольным блоком экранных индексов и обычным числовым массивом. Новый слой <code>IMAGE</code> решает другую задачу: он загружает готовый файл изображения и рисует его как полноцветный рисунок с альфа-каналом. Это удобно для фонов, заставок, логотипов и первых игровых заготовок.</p>
-                <p>В QuickBASIC 4.5 не было встроенной загрузки PNG, JPEG или BMP. Axiom использует современный договор с явным типом <code>IMAGE</code>, но сохраняет BASIC-подобную запись операторов и функций.</p>
+            <section class="article-section">
+                <h2>Что такое тип IMAGE</h2>
+                <p><code>IMAGE</code> — встроенный ссылочный тип данных языка Axiom.</p>
+                <p>Значение типа <code>IMAGE</code> содержит загруженное изображение. Программа обычно получает такое значение через функцию <code>LOADIMAGE</code> и затем передаёт его в оператор <code>DRAWIMAGE</code>.</p>
             </section>
 
-            <section class="article-section" id="loadimage">
+            <section class="article-section">
+                <h2>Где работают функции и оператор</h2>
+                <p>Функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> работают с самим значением типа <code>IMAGE</code>.</p>
+                <p>Оператор <code>DRAWIMAGE</code> работает только при активном графическом выводе. Этот оператор можно использовать либо в историческом графическом режиме <code>SCREEN 1..10</code>, либо в современном графическом режиме <code>CANVAS</code>.</p>
+            </section>
+
+            <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code>DIM &lt;имя&gt; AS IMAGE
-&lt;имя&gt; = LOADIMAGE(&lt;путь&gt;)
+<pre><code class="language-basic">DIM name AS IMAGE
+name = LOADIMAGE(path)
 
-IMAGEWIDTH(&lt;image&gt;)
-IMAGEHEIGHT(&lt;image&gt;)
+IMAGEWIDTH(image)
+IMAGEHEIGHT(image)
 
-DRAWIMAGE &lt;image&gt;, &lt;x&gt;, &lt;y&gt;
-DRAWIMAGE &lt;image&gt;, &lt;x&gt;, &lt;y&gt;, &lt;ширина&gt;, &lt;высота&gt;</code></pre>
+DRAWIMAGE image, x, y
+DRAWIMAGE image, x, y, width, height</code></pre>
             </section>
 
-            <section class="article-section" id="size">
-                <h2>Части синтаксиса</h2>
+            <section class="article-section">
+                <h2>Параметры</h2>
                 <table>
                     <thead>
-                        <tr><th>Часть</th><th>Описание</th></tr>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>&lt;имя&gt;</code></td><td>Переменная типа <code>IMAGE</code>. До загрузки она содержит пустое значение изображения.</td></tr>
-                        <tr><td><code>&lt;путь&gt;</code></td><td>Строка с путём к файлу изображения. Абсолютный путь используется как есть, относительный путь у сохранённой программы считается от каталога файла <code>.axm</code>.</td></tr>
-                        <tr><td><code>&lt;image&gt;</code></td><td>Выражение типа <code>IMAGE</code>: обычно переменная, получившая результат <code>LOADIMAGE</code>.</td></tr>
-                        <tr><td><code>&lt;x&gt;</code>, <code>&lt;y&gt;</code></td><td>Координаты левого верхнего угла вывода. Если включён <code>WINDOW</code>, координата привязки переводится через текущую логическую систему.</td></tr>
-                        <tr><td><code>&lt;ширина&gt;</code>, <code>&lt;высота&gt;</code></td><td>Положительные размеры итогового вывода в пикселях. Если они не указаны, изображение рисуется в натуральном размере.</td></tr>
+                        <tr><td><code>name</code></td><td>Переменная типа <code>IMAGE</code>.</td></tr>
+                        <tr><td><code>path</code></td><td>Строковый путь к файлу изображения.</td></tr>
+                        <tr><td><code>image</code></td><td>Выражение типа <code>IMAGE</code>.</td></tr>
+                        <tr><td><code>x</code>, <code>y</code></td><td>Координаты левого верхнего угла вывода.</td></tr>
+                        <tr><td><code>width</code>, <code>height</code></td><td>Положительные размеры итогового вывода в пикселях.</td></tr>
                     </tbody>
                 </table>
             </section>
 
-            <section class="article-section" id="drawimage">
-                <h2>Тип IMAGE</h2>
-                <p><code>IMAGE</code> — ссылочный встроенный тип. Присваивание переменной типа <code>IMAGE</code> копирует ссылку на то же загруженное изображение, а не создаёт новую копию пикселей. Значение можно передавать в <code>SUB</code> и <code>FUNCTION</code> по обычным правилам языка.</p>
-                <p>Пустое значение <code>IMAGE</code> не содержит пикселей. Для него <code>IMAGEWIDTH(image)</code> и <code>IMAGEHEIGHT(image)</code> возвращают <code>0</code>, а <code>DRAWIMAGE</code> сообщает ошибку времени выполнения <code>MB3005</code>.</p>
+            <section class="article-section">
+                <h2>Функция LOADIMAGE</h2>
+                <p><code>LOADIMAGE</code> — встроенная функция языка Axiom, которая загружает файл изображения и возвращает значение типа <code>IMAGE</code>.</p>
+<pre><code class="language-basic">LOADIMAGE(path)</code></pre>
+                <p>Аргумент <code>path</code> должен быть строкой.</p>
+                <p>Если путь абсолютный, функция использует его как есть. Если путь относительный и программа сохранена, путь считается от каталога файла <code>.axm</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>LOADIMAGE</h2>
-                <p><code>LOADIMAGE(path)</code> загружает файл изображения и возвращает значение типа <code>IMAGE</code>. В <code>Axiom.Ide</code> загрузка выполняется средствами Windows/WPF и приводит изображение к 32-битному формату с альфа-каналом.</p>
-                <p>Для ручных примеров можно использовать переносимые относительные пути. Если файл программы сохранён, путь считается от папки этой программы. Если программа ещё безымянная, путь считается от текущего рабочего каталога процесса.</p>
-                <p>Первый срез ориентирован на форматы, которые штатно декодирует хост IDE: PNG, JPEG, BMP и ICO. Если файл отсутствует, недоступен, повреждён или формат не поддержан текущим декодером, <code>LOADIMAGE</code> сообщает <code>MB3005</code>.</p>
+                <h2>Функции IMAGEWIDTH и IMAGEHEIGHT</h2>
+                <p><code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> — встроенные функции языка Axiom, которые возвращают размеры изображения в пикселях.</p>
+<pre><code class="language-basic">IMAGEWIDTH(image)
+IMAGEHEIGHT(image)</code></pre>
+                <p>Функция <code>IMAGEWIDTH</code> возвращает ширину изображения.</p>
+                <p>Функция <code>IMAGEHEIGHT</code> возвращает высоту изображения.</p>
+                <p>Если значение <code>IMAGE</code> пустое, обе функции возвращают <code>0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>DRAWIMAGE</h2>
-                <p><code>DRAWIMAGE</code> работает только после выбора графического режима <code>SCREEN 1</code> ... <code>SCREEN 10</code>. В <code>SCREEN 0</code> и без активного графического экрана оператор сообщает <code>MB3010</code>.</p>
-                <p>Оператор выводит изображение в текущую область рисования. <code>VIEW</code> обрезает итоговый прямоугольник, а <code>WINDOW</code> влияет на точку привязки <code>x, y</code>. Ширина и высота в форме с масштабированием остаются пиксельными размерами, а не логическими величинами <code>WINDOW</code>.</p>
-                <p>Альфа-канал изображения учитывается при наложении: полностью прозрачные пиксели не меняют экран, полностью непрозрачные заменяют пиксель, промежуточная прозрачность смешивает цвет изображения с текущим видимым цветом экрана. После успешного вывода текущая графическая позиция становится равной точке привязки.</p>
+                <h2>Оператор DRAWIMAGE</h2>
+                <p><code>DRAWIMAGE</code> — оператор языка Axiom, который выводит изображение на активную графическую поверхность.</p>
+<pre><code class="language-basic">DRAWIMAGE image, x, y
+DRAWIMAGE image, x, y, width, height</code></pre>
+                <p>Первая форма выводит изображение в его натуральном размере.</p>
+                <p>Вторая форма выводит изображение с масштабированием до размера <code>width x height</code> пикселей.</p>
+                <p>В режиме <code>SCREEN</code> координаты читаются по экранному договору <code>SCREEN</code>, <code>VIEW</code> и <code>WINDOW</code>. В режиме <code>CANVAS</code> координаты читаются по договору современного слоя и могут зависеть от оператора <code>CAMERA</code>.</p>
+                <p>Альфа-канал изображения учитывается при наложении на текущую поверхность.</p>
             </section>
 
             <section class="article-section">
-                <h2>Палитра, POINT, GET и PCOPY</h2>
-                <p><code>DRAWIMAGE</code> записывает полноцветные пиксели поверх существующего индексного экрана. Оператор <code>PALETTE</code> меняет только вид индексных пикселей и не перекрашивает уже нарисованное полноцветное изображение.</p>
-                <p>Если после <code>DRAWIMAGE</code> прочитать точку через <code>POINT(x, y)</code>, Axiom возвращает ближайший индекс стандартной палитры, а не исходное RGB-значение. Оператор <code>GET</code> работает так же: область с полноцветными пикселями сохраняется в массив как ближайшие индексы. Такой результат удобен для совместимости с <code>GET</code> / <code>PUT</code>, но он не восстанавливает исходный цвет без потерь.</p>
-                <p><code>PCOPY</code> копирует между экранными страницами и индексный слой, и полноцветный слой, поэтому страница с уже нарисованным изображением переносится вместе с ним.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример</h2>
-<pre><code>SCREEN 1
-DIM logo AS IMAGE
-logo = LOADIMAGE("../../../src/Axiom.Ide/Assets/axiom.ico")
-
-PRINT "image size="; IMAGEWIDTH(logo); "x"; IMAGEHEIGHT(logo)
-DRAWIMAGE logo, 16, 24
-DRAWIMAGE logo, 96, 24, 64, 64
-
-DO WHILE NOT KEYPRESS("ESC")
-LOOP</code></pre>
-                <p>Программа загружает значок IDE, печатает его размер, выводит изображение один раз в натуральном размере и второй раз с масштабированием до <code>64 x 64</code> пикселей.</p>
+                <h2>Правила работы</h2>
+                <p>Значение типа <code>IMAGE</code> копируется как ссылка на одно и то же загруженное изображение, а не как отдельная копия пикселей.</p>
+                <p>Оператор <code>DRAWIMAGE</code> в режиме <code>SCREEN</code> рисует на активную страницу графического экрана. Оператор <code>DRAWIMAGE</code> в режиме <code>CANVAS</code> рисует в рабочий кадр современного холста.</p>
+                <p>Если часть изображения выходит за границы доступной поверхности, результат обрезается по границе экрана или холста.</p>
             </section>
 
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
-                    <li><code>MB3007</code>: путь в <code>LOADIMAGE("")</code> пустой.</li>
-                    <li><code>MB3005</code>: файл изображения отсутствует, недоступен, повреждён или не поддержан декодером.</li>
-                    <li><code>MB3005</code>: <code>DRAWIMAGE</code> получил пустое значение <code>IMAGE</code>.</li>
+                    <li><code>MB3007</code>: путь в функции <code>LOADIMAGE</code> пустой.</li>
+                    <li><code>MB3005</code>: файл изображения отсутствует, недоступен, повреждён или не поддерживается текущим декодером.</li>
+                    <li><code>MB3005</code>: оператор <code>DRAWIMAGE</code> получил пустое значение <code>IMAGE</code>.</li>
                     <li><code>MB3007</code>: ширина или высота в масштабированной форме <code>DRAWIMAGE</code> меньше либо равна нулю.</li>
-                    <li><code>MB3010</code>: <code>DRAWIMAGE</code> вызван без активного графического <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3010</code>: оператор <code>DRAWIMAGE</code> вызван без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
                 </ul>
             </section>
 
             <section class="article-section">
-                <h2>Проверочные программы</h2>
-                <p>Готовые примеры для ручной и отрицательной проверки находятся в <code>samples/graphics/images/</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
-                    <li><a href="../../samples/graphics/images/missing_image_error.axm">LOADIMAGE: ошибка отсутствующего файла</a></li>
-                </ul>
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1
+DIM logo AS IMAGE
+logo = LOADIMAGE("../../../src/Axiom.Ide/Assets/axiom.ico")
+
+PRINT "Ширина="; IMAGEWIDTH(logo)
+PRINT "Высота="; IMAGEHEIGHT(logo)
+DRAWIMAGE logo, 16, 24
+DRAWIMAGE logo, 96, 24, 64, 64
+SLEEP</code></pre>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="graphics.html">Графика и экран</a>
+                    <a href="sprites.html">Спрайты SPRITE</a>
                     <a href="screen.html">Оператор SCREEN</a>
-                    <a href="graphics-primitives.html">Операторы рисования</a>
-                    <a href="get-put.html">Операторы GET и PUT</a>
-                    <a href="palette.html">Оператор PALETTE</a>
-                    <a href="pcopy.html">Оператор PCOPY</a>
+                    <a href="modern-graphics.html">Современная графика CANVAS</a>
                 </div>
             </section>
 

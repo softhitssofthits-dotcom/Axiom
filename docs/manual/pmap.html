@@ -21,91 +21,91 @@
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Функция PMAP</span>
             </nav>
             <p class="eyebrow">Функция</p>
-            <h1 class="page-title">PMAP</h1>
-            <p class="lead"><code>PMAP</code> переводит одну координату между физической системой текущего viewport и логической системой активного <code>WINDOW</code>. Эта функция нужна, когда программа одновременно работает и с логической шкалой рисунка, и с пиксельными координатами экрана.</p>
+            <h1 class="page-title">Функция PMAP</h1>
+            <p class="lead"><code>PMAP</code> — встроенная функция языка Axiom, которая переводит одну координату между логической системой координат оператора <code>WINDOW</code> и физической системой координат текущего viewport.</p>
 
             <section class="article-section">
-                <h2>Синтаксис</h2>
-<pre><code>PMAP(&lt;coordinate&gt;, &lt;selector&gt;)</code></pre>
+                <h2>Для чего нужна функция PMAP</h2>
+                <p>Функция <code>PMAP</code> нужна тогда, когда программе одновременно требуется логическая шкала <code>WINDOW</code> и реальные пиксельные координаты viewport.</p>
             </section>
 
             <section class="article-section">
-                <h2>Части синтаксиса</h2>
+                <h2>Где работает функция PMAP</h2>
+                <p>Функция <code>PMAP</code> работает только после выбора графического режима <code>SCREEN 1..10</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code class="language-basic">PMAP(coordinate, selector)</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Параметры</h2>
                 <table>
                     <thead>
-                        <tr><th>Часть</th><th>Описание</th></tr>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>&lt;coordinate&gt;</code></td><td>Числовая координата, которую нужно преобразовать. Аргумент вычисляется как <code>DOUBLE</code>.</td></tr>
-                        <tr><td><code>&lt;selector&gt;</code></td><td>Направление преобразования. Значения <code>0</code> и <code>1</code> переводят координату из логического <code>WINDOW</code> в физический viewport, значения <code>2</code> и <code>3</code> выполняют обратное преобразование.</td></tr>
+                        <tr><td><code>coordinate</code></td><td>Числовая координата, которую функция <code>PMAP</code> должна преобразовать.</td></tr>
+                        <tr><td><code>selector</code></td><td>Число, которое задаёт направление преобразования.</td></tr>
                     </tbody>
                 </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Что возвращает функция PMAP</h2>
+                <p>Функция <code>PMAP</code> возвращает одну преобразованную координату. Для оси <code>X</code> и для оси <code>Y</code> используются разные селекторы.</p>
             </section>
 
             <section class="article-section">
                 <h2>Селекторы</h2>
                 <table>
                     <thead>
-                        <tr><th>Селектор</th><th>Результат</th></tr>
+                        <tr><th>Селектор</th><th>Преобразование</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>0</code></td><td>Логическая <code>X</code>-координата <code>WINDOW</code> превращается в физическую <code>X</code>-координату текущего viewport.</td></tr>
-                        <tr><td><code>1</code></td><td>Логическая <code>Y</code>-координата <code>WINDOW</code> превращается в физическую <code>Y</code>-координату текущего viewport.</td></tr>
-                        <tr><td><code>2</code></td><td>Физическая <code>X</code>-координата текущего viewport превращается в логическую <code>X</code>-координату активного <code>WINDOW</code>.</td></tr>
-                        <tr><td><code>3</code></td><td>Физическая <code>Y</code>-координата текущего viewport превращается в логическую <code>Y</code>-координату активного <code>WINDOW</code>.</td></tr>
+                        <tr><td><code>0</code></td><td>Преобразование логической координаты <code>X</code> в физическую координату viewport.</td></tr>
+                        <tr><td><code>1</code></td><td>Преобразование логической координаты <code>Y</code> в физическую координату viewport.</td></tr>
+                        <tr><td><code>2</code></td><td>Преобразование физической координаты <code>X</code> viewport в логическую координату.</td></tr>
+                        <tr><td><code>3</code></td><td>Преобразование физической координаты <code>Y</code> viewport в логическую координату.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
-                <p><code>PMAP</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Без активного графического режима функция сообщает ошибку времени выполнения <code>MB3010</code>.</p>
-                <p>Физическая сторона преобразования всегда берётся из текущего viewport. После <code>VIEW SCREEN</code> это абсолютные координаты экрана. После <code>VIEW</code> без слова <code>SCREEN</code> это локальные координаты viewport, где левый верхний угол равен <code>(0, 0)</code>.</p>
-                <p>Если <code>WINDOW</code> не активен, <code>PMAP</code> возвращает переданное значение без изменений. В этот момент логическая система координат совпадает с физической системой viewport, и дополнительного пересчёта не требуется.</p>
-                <p><code>PMAP</code> не клиппирует координаты по границам viewport или окна. Если значение лежит вне видимой области, функция всё равно выполняет линейное преобразование и возвращает соответствующую координату.</p>
-                <p>Результат имеет тип <code>DOUBLE</code> и не округляется до пикселя. Если масштаб между <code>WINDOW</code> и viewport не совпадает с целым числом пикселей, дробная часть сохраняется.</p>
-                <p><code>PMAP</code> не меняет текущую графическую позицию, framebuffer, настройки <code>VIEW</code> или <code>WINDOW</code>. Для чтения текущей позиции используйте <code>POINT(number)</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Примеры</h2>
-<pre><code>SCREEN 1
-VIEW SCREEN (10, 10)-(20, 20)
-WINDOW SCREEN (100, 200)-(110, 210)
-
-PRINT PMAP(104, 0), PMAP(205, 1)
-PRINT PMAP(14, 2), PMAP(15, 3)
-
-VIEW (2, 3)-(8, 9)
-WINDOW SCREEN (100, 200)-(110, 210)
-PRINT PMAP(102.5, 0), PMAP(1.5, 2)</code></pre>
-                <p>Первые две строки переводят координаты между логическим окном и физической областью viewport. В последней строке видно, что <code>PMAP</code> сохраняет дробную часть, если масштаб viewport и окна не совпадает с целыми пикселями.</p>
+                <h2>Правила работы</h2>
+                <p>Если программа не включила оператор <code>WINDOW</code>, функция <code>PMAP</code> работает относительно текущего договора viewport.</p>
+                <p>Если программа изменила оператор <code>VIEW</code> или оператор <code>WINDOW</code>, результат функции <code>PMAP</code> тоже меняется, потому что меняется связь между логическими и физическими координатами.</p>
             </section>
 
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
-                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3007</code>: селектор вне диапазона <code>0..3</code>, координата не является конечным числом или текущий viewport слишком мал для активного <code>WINDOW</code>.</li>
+                    <li><code>MB3010</code>: функция <code>PMAP</code> вызвана без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: селектор функции <code>PMAP</code> имеет недопустимое значение.</li>
                 </ul>
             </section>
 
             <section class="article-section">
-                <h2>Проверочная программа</h2>
-                <p>Готовый пример для ручной проверки прямого, обратного и дробного преобразования координат находится в <code>samples/functions/pmap/window_and_viewport_conversion.axm</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/pmap/window_and_viewport_conversion.axm">PMAP: преобразование между WINDOW и viewport</a></li>
-                </ul>
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1
+VIEW SCREEN (10, 10)-(20, 20)
+WINDOW SCREEN (100, 200)-(110, 210)
+
+PRINT PMAP(100, 0)
+PRINT PMAP(200, 1)
+PRINT PMAP(10, 2)
+PRINT PMAP(10, 3)
+SLEEP</code></pre>
+                <p>В этом примере функция <code>PMAP</code> сначала переводит логические координаты <code>WINDOW</code> в физические координаты viewport, а затем переводит координаты viewport обратно в логическую шкалу.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="graphics.html">Графика и экран</a>
                     <a href="view.html">Оператор VIEW</a>
                     <a href="window.html">Оператор WINDOW</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
-                    <a href="screen-functions.html">Функции состояния SCREEN</a>
                 </div>
             </section>
 

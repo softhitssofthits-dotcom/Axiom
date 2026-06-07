@@ -463,6 +463,38 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_ViewportResetStatement()
+    {
+        var program = ParseProgram("""
+            CANVAS 320, 180
+            VIEWPORT
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var viewport = Assert.IsType<ViewportStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        Assert.Null(viewport.TopLeftPoint);
+        Assert.Null(viewport.BottomRightPoint);
+    }
+
+    [Fact]
+    public void Parse_ViewportRectangleStatement()
+    {
+        var program = ParseProgram("""
+            CANVAS 320, 180
+            VIEWPORT (1, 2)-(10, 20)
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var viewport = Assert.IsType<ViewportStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[1]).Statement);
+        Assert.NotNull(viewport.TopLeftPoint);
+        Assert.NotNull(viewport.BottomRightPoint);
+        Assert.Equal(1, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(viewport.TopLeftPoint!.XExpression).LiteralToken.Value));
+        Assert.Equal(2, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(viewport.TopLeftPoint.YExpression).LiteralToken.Value));
+        Assert.Equal(10, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(viewport.BottomRightPoint!.XExpression).LiteralToken.Value));
+        Assert.Equal(20, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(viewport.BottomRightPoint.YExpression).LiteralToken.Value));
+    }
+
+    [Fact]
     public void Parse_ColorTransparentStatement()
     {
         var program = ParseProgram("COLOR 15, TRANSPARENT", out var diagnostics);

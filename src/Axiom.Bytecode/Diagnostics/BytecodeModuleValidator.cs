@@ -742,6 +742,10 @@ public sealed class BytecodeModuleValidator
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
 
+                case Opcode.Viewport:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    break;
+
                 case Opcode.Cls:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     if (instruction.GetOperand(0) is not 0 and not 1)
@@ -1334,6 +1338,35 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X CAMERA");
                 ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y CAMERA");
+                break;
+            }
+
+            case Opcode.Viewport:
+            {
+                var valueCount = instruction.GetOperand(0);
+                if (valueCount != 0 && valueCount != 4)
+                {
+                    Report(
+                        "BC4124",
+                        $"Инструкция Viewport в процедуре '{routine.Name}' ожидает 0 или 4 значений, но содержит {valueCount}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                    break;
+                }
+
+                if (valueCount == 4)
+                {
+                    var bottomType = Pop();
+                    var rightType = Pop();
+                    var topType = Pop();
+                    var leftType = Pop();
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, leftType, "левая граница VIEWPORT");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, topType, "верхняя граница VIEWPORT");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, rightType, "правая граница VIEWPORT");
+                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, "нижняя граница VIEWPORT");
+                }
+
                 break;
             }
 
@@ -3548,6 +3581,10 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.Camera:
                 popCount = 2;
+                return true;
+
+            case Opcode.Viewport:
+                popCount = instruction.GetOperand(0);
                 return true;
 
             case Opcode.DrawCircle:

@@ -7,72 +7,108 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="inkey">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Неблокирующее чтение клавиатуры</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Функция INKEY</p><p class="sidebar__subtitle">Чтение одной клавиши без остановки программы.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>INKEY</span></nav>
-<p class="eyebrow">Клавиатура</p>
-<h1 class="page-title">Функция INKEY</h1>
-<p class="lead"><code>INKEY()</code> читает одну клавишу из очереди клавиатуры и сразу возвращает управление программе. Если клавиши пока нет, функция возвращает пустую строку, поэтому её удобно использовать в циклах опроса, а не в блокирующем пользовательском вводе.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Клавиатура</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция INKEY</span>
+        </nav>
 
-<section class="article-section">
-<h2>Как INKEY читает очередь клавиатуры</h2>
-<p><code>INKEY()</code> не показывает приглашение и не ждёт подтверждения Enter. Обычная печатная клавиша возвращается как символ, а специальная клавиша возвращается как строковое имя, например <code>"LEFT"</code> или <code>"ESC"</code>.</p>
-</section>
+        <p class="eyebrow">Встроенная функция</p>
+        <h1 class="page-title">Функция INKEY</h1>
+        <p class="lead"><code>INKEY</code> — встроенная функция языка Axiom, которая читает одну клавишу из очереди клавиатуры и сразу возвращает управление программе. Если очередная клавиша отсутствует, встроенная функция <code>INKEY</code> возвращает пустую строку.</p>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
+        <section class="article-section">
+            <h2>Для чего нужна функция INKEY</h2>
+            <p>Встроенная функция <code>INKEY</code> нужна для неблокирующего опроса клавиатуры. Программа может вызывать эту функцию внутри игрового цикла, цикла ожидания или короткой интерактивной проверки и не останавливаться до тех пор, пока пользователь не нажмёт <code>Enter</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Где работает функция INKEY</h2>
+            <p>Встроенная функция <code>INKEY</code> читает активную клавиатурную очередь программы. Если программа работает без оператора <code>SCREEN</code>, ввод приходит из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, ввод приходит из окна <code>SCREEN</code>.</p>
+            <p>Встроенная функция <code>INKEY</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
 <pre><code class="language-basic">INKEY()</code></pre>
-</section>
+            <p>Встроенная функция <code>INKEY</code> поддерживает только форму без аргументов.</p>
+        </section>
 
-<section class="article-section">
-<h2>Возвращаемое значение</h2>
-<p>Тип результата: <code>STRING</code>.</p>
-<ul>
-<li>Если в очереди есть обычная клавиша, возвращается её символ, например <code>"A"</code>.</li>
-<li>Если клавиши нет, возвращается пустая строка <code>""</code>.</li>
-<li>Для специальных клавиш возвращаются имена вроде <code>"LEFT"</code>, <code>"RIGHT"</code>, <code>"UP"</code>, <code>"DOWN"</code>, <code>"F1"</code>, <code>"ESC"</code>, <code>"ENTER"</code>, <code>"BACKSPACE"</code>.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Аргументы</h2>
+            <p>У встроенной функции <code>INKEY</code> нет аргументов. Пустые скобки остаются частью вызова функции.</p>
+        </section>
 
-<section class="article-section">
-<h2>Ограничения опроса клавиатуры</h2>
-<ul>
-<li><code>INKEY()</code> не принимает аргументы.</li>
-<li>Имя функции записывается без суффикса <code>$</code>; алиасы для этой функции не поддерживаются.</li>
-<li>Функция поддерживается и в интерпретаторе, и в режиме байткода.</li>
-<li>Для специальных клавиш <code>INKEY()</code> возвращает канонические имена из <a href="keydown.html#key-names">общей таблицы имён клавиш</a>; алиасы нужны при сравнении с пользовательским текстом в <code>KEYDOWN()</code> и <code>ON KEY</code>.</li>
-<li>Если для клавиши зарегистрирован обработчик через <a href="on-key.html"><code>ON KEY</code></a>, совпавшая клавиша может быть перехвачена обработчиком раньше, чем до неё дойдёт вызов <code>INKEY()</code>.</li>
-<li>Если среда выполнения не предоставляет источник клавиатуры, функция не блокирует программу и возвращает <code>""</code>.</li>
-<li><code>INKEY()</code> не даёт состояния удержания клавиш, модификаторов и мышиных событий.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Что возвращает функция INKEY</h2>
+            <p>Встроенная функция <code>INKEY</code> возвращает значение типа <code>STRING</code>.</p>
+            <table>
+                <thead><tr><th>Ситуация</th><th>Результат</th></tr></thead>
+                <tbody>
+                    <tr><td>В очереди есть обычная печатная клавиша.</td><td>Возвращается её символ, например <code>"A"</code>.</td></tr>
+                    <tr><td>В очереди есть специальная клавиша.</td><td>Возвращается каноническое имя, например <code>"LEFT"</code>, <code>"ESC"</code> или <code>"F1"</code>.</td></tr>
+                    <tr><td>В очереди нет клавиши.</td><td>Возвращается пустая строка <code>""</code>.</td></tr>
+                </tbody>
+            </table>
+        </section>
 
-<section class="article-section">
-<h2>Пример чтения одной клавиши</h2>
+        <section class="article-section">
+            <h2>Правила работы</h2>
+            <p>Встроенная функция <code>INKEY</code> не показывает приглашение, не ждёт подтверждения <code>Enter</code> и не читает строку целиком. Для обычного пользовательского ввода строки или нескольких значений используется оператор <code>INPUT</code>.</p>
+            <p>Если для клавиши зарегистрирован обработчик через оператор <code>ON KEY</code>, совпавшая клавиша может быть обработана раньше, чем программа дойдёт до вызова встроенной функции <code>INKEY</code>. В этом случае обработанная клавиша не возвращается функцией <code>INKEY</code>.</p>
+            <p>Встроенная функция <code>INKEY</code> не сообщает текущее удержание клавиш. Для проверки удержания используется встроенная функция <code>KEYDOWN</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2004</code>: вызов встроенной функции <code>INKEY</code> получил один или несколько аргументов.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример</h2>
 <pre><code class="language-basic">DIM pressedKey AS STRING
 
 pressedKey = INKEY()
 IF pressedKey = "" THEN
-    PRINT "NO KEY"
+    PRINT "Клавиша пока не нажата"
 ELSE
-    PRINT pressedKey
+    PRINT "Нажата клавиша: "; pressedKey
 END IF</code></pre>
-</section>
+            <p>В этом примере встроенная функция <code>INKEY</code> делает один неблокирующий опрос клавиатуры. Если клавиши нет, программа всё равно продолжает выполнение.</p>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Проверочные программы</h2>
+            <ul class="resource-list">
+                <li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика <code>MB2004</code> возникает, если передать аргументы в <code>INKEY()</code>.</p>
-</section>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a>
+                <a href="keydown.html">Функция KEYDOWN</a>
+                <a href="keypress.html">Функция KEYPRESS</a>
+                <a href="on-key.html">Оператор ON KEY</a>
+                <a href="input.html">Оператор INPUT</a>
+                <a href="screen.html">Оператор SCREEN</a>
+            </div>
+        </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="keydown.html">Функция KEYDOWN</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="screen.html">Оператор SCREEN</a></div>
-</section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -848,6 +848,11 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.Viewport:
+                ExecuteViewportInstruction(frame, instruction, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.ResetCamera:
                 ExecuteResetCameraInstruction(frame, instructionIndex);
                 InvalidateReverseExecutionHistory();

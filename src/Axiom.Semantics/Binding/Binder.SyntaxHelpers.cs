@@ -72,6 +72,7 @@ public sealed partial class Binder
             BeginFrameStatementSyntax beginFrameStatement => beginFrameStatement.BeginFrameKeyword.Location,
             PresentStatementSyntax presentStatement => presentStatement.PresentKeyword.Location,
             CameraStatementSyntax cameraStatement => cameraStatement.CameraKeyword.Location,
+            ViewportStatementSyntax viewportStatement => viewportStatement.ViewportKeyword.Location,
             ResetCameraStatementSyntax resetCameraStatement => resetCameraStatement.ResetCameraKeyword.Location,
             ViewStatementSyntax viewStatement => viewStatement.ViewKeyword.Location,
             ViewPrintStatementSyntax viewPrintStatement => viewPrintStatement.ViewKeyword.Location,

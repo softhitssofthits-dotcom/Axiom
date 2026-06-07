@@ -8,16 +8,21 @@
 </head>
 <body data-page="sleep">
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Временная остановка программы</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор SLEEP</p><p class="sidebar__subtitle">Пауза на заданное число миллисекунд или ожидание любой клавиши.</p></div><nav id="manual-nav"></nav></div></aside>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Операторы передачи управления</span><span>/</span><span>SLEEP</span></nav>
-<p class="eyebrow">Операторы передачи управления</p>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Операторы передачи управления</a><span>/</span><span>Оператор SLEEP</span></nav>
+<p class="eyebrow">Оператор</p>
 <h1 class="page-title">Оператор SLEEP</h1>
-<p class="lead">Оператор <code>SLEEP</code> временно приостанавливает выполнение программы. Его используют, когда программе нужно сделать короткую задержку, дать пользователю время увидеть результат или дождаться нажатия любой клавиши без ручного цикла ожидания.</p>
+<p class="lead"><code>SLEEP</code> — оператор языка Axiom, который временно приостанавливает выполнение программы. Оператор используют, когда программе нужно сделать короткую задержку, дать пользователю время увидеть результат или дождаться нажатия любой клавиши без ручного цикла ожидания.</p>
 
 <section class="article-section">
 <h2>Два режима ожидания</h2>
 <p><code>SLEEP</code> с числовым аргументом ждёт указанное число миллисекунд. <code>SLEEP</code> без аргумента ждёт, пока в очереди клавиатуры появится любая клавиша, и забирает эту клавишу из очереди ввода.</p>
+</section>
+
+<section class="article-section">
+<h2>Где работает оператор SLEEP</h2>
+<p>Оператор <code>SLEEP</code> работает в любом контексте программы и не зависит от графического режима <code>SCREEN</code>. Задержка и ожидание клавиши доступны в текстовом, графическом и консольном режимах одинаково.</p>
 </section>
 
 <section class="article-section">

@@ -10,7 +10,7 @@
     <header class="topbar">
         <div class="topbar__inner">
             <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графический режим программы</div>
+            <div class="topbar__meta">Графика</div>
             <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
         </div>
     </header>
@@ -20,167 +20,89 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a><span>/</span><span>Графика</span>
             </nav>
-            <p class="eyebrow">Графика</p>
+            <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Графика</h1>
-            <p class="lead">Графический раздел Axiom строится из двух слоёв. Совместимый BASIC-слой работает через <code>SCREEN</code>, палитры, страницы и классические примитивы. Современный слой начинается с <code>CANVAS</code>: полноцветного рабочего кадра с <code>RGB</code>, прямоугольниками, линиями, кругами, HUD-текстом, изображениями, спрайтами, камерой и явной публикацией через <code>PRESENT</code>.</p>
+            <p class="lead">Раздел графики описывает графические операторы, встроенные функции и типы данных языка Axiom. В этом разделе собраны исторический путь <code>SCREEN</code> для палитровой графики и текстового окна, а также современный путь <code>CANVAS</code> для полноцветного кадра, изображений и спрайтов.</p>
 
             <section class="article-section">
-                <h2>Для чего нужен оператор SCREEN</h2>
-                <p>Если в программе нет оператора <code>SCREEN</code>, ввод и вывод выполняются во вкладке <code>Output</code>. Её можно рассматривать как обычную консоль Axiom: оператор <code>PRINT</code> печатает строки, оператор <code>INPUT</code> ждёт ввод, а результат остаётся внутри среды разработки.</p>
-                <p>При использовании экранного режима операторы <code>PRINT</code> и <code>INPUT</code>, а также команды, работающие с текстом на экране, переносятся в отдельное окно программы. В графических режимах к текстовому выводу добавляется рисование по точкам экрана. Поэтому <code>SCREEN</code> применяют в программах, где важна не только строка вывода, но и расположение текста, цвет, простая графика или интерактивное управление.</p>
-                <p>Дальнейшие страницы этого раздела описывают уже не один общий «графический режим», а несколько отдельных договоров: выбор режима и размеров, текстовый слой, примитивы, преобразование координат, блочный перенос пикселей и слой ввода поверх активной поверхности <code>SCREEN</code>.</p>
+                <h2>Что входит в раздел</h2>
+                <p>Раздел графики включает несколько разных групп сущностей. Это не один общий оператор и не одна общая форма записи. Сначала полезно понять, к какому графическому пути относится нужная конструкция, а уже потом переходить на отдельную страницу.</p>
+                <ul>
+                    <li>оператор <code>SCREEN</code> и связанные с ним режимы, страницы и функции состояния;</li>
+                    <li>операторы <code>VIEW</code>, <code>WINDOW</code>, <code>PMAP</code>, <code>PCOPY</code> и экранный текст <code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code>;</li>
+                    <li>классические операторы рисования <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функция <code>POINT</code>;</li>
+                    <li>операторы <code>GET</code> и <code>PUT</code> для переноса прямоугольного блока пикселей;</li>
+                    <li>типы <code>IMAGE</code> и <code>SPRITE</code> с функциями загрузки, измерения и вывода;</li>
+                    <li>современный графический раздел <code>CANVAS</code> с кадровым циклом, полноцветными примитивами и камерой.</li>
+                </ul>
             </section>
 
             <section class="article-section">
-                <h2>Основные операторы работы с экраном</h2>
+                <h2>Два графических пути</h2>
+                <p>Исторический графический путь начинается с оператора <code>SCREEN</code>. Этот путь нужен для текстового окна <code>SCREEN 0</code>, палитровой графики <code>SCREEN 1..10</code>, экранных страниц, операторов <code>VIEW</code>, <code>WINDOW</code>, <code>PCOPY</code>, <code>GET</code>, <code>PUT</code> и классических примитивов.</p>
+                <p>Современный графический путь начинается с оператора <code>CANVAS</code>. Этот путь нужен для полноцветного рабочего кадра, явной публикации через <code>PRESENT</code>, современных примитивов, вывода изображений и спрайтов, экранного текста HUD и камеры.</p>
+                <p>Оператор <code>SCREEN</code> и оператор <code>CANVAS</code> описывают разные графические договоры. Их нельзя считать разными именами одного и того же режима.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Когда нужен оператор SCREEN</h2>
+                <p>Оператор <code>SCREEN</code> нужен тогда, когда программе требуется собственное экранное окно в классическом стиле BASIC: текстовая сетка, палитровые цвета, координаты в пикселях, экранные страницы и совместимые графические операторы.</p>
+                <p>Если программа не вызвала оператор <code>SCREEN</code>, текстовый вывод идёт во вкладку <code>Output</code>. Если программа вызвала оператор <code>SCREEN</code>, вывод и графика переносятся в отдельное окно программы.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Когда нужен оператор CANVAS</h2>
+                <p>Оператор <code>CANVAS</code> нужен тогда, когда программе требуется современный полноцветный кадр для 2D-игры, анимации, спрайтов, камеры и экранных подписей поверх сцены.</p>
+                <p>После оператора <code>CANVAS</code> становятся доступны <code>BEGINFRAME</code>, <code>PRESENT</code>, <code>RGB</code>, современные прямоугольники, линии, круги, <code>DRAWTEXT</code>, <code>TEXTWIDTH</code>, <code>TEXTHEIGHT</code>, <code>CAMERA</code> и <code>RESETCAMERA</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Страницы исторического пути SCREEN</h2>
                 <table>
                     <thead>
-                        <tr><th>Оператор или функция</th><th>Назначение</th></tr>
+                        <tr><th>Страница</th><th>Что описывает</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Оператор, выбирающий текстовый или графический режим и задающий размер экранного окна.</td></tr>
-                        <tr><td><a href="view.html"><code>VIEW</code></a></td><td>Оператор, задающий физическую область вывода для графических примитивов и функции <code>POINT</code>.</td></tr>
-                        <tr><td><a href="view.html#view-print"><code>VIEW PRINT</code></a></td><td>Оператор, ограничивающий строки текстового вывода на графическом экране.</td></tr>
-                        <tr><td><a href="window.html"><code>WINDOW</code></a></td><td>Оператор, задающий логическое окно координат внутри текущей области вывода.</td></tr>
-                        <tr><td><a href="pmap.html"><code>PMAP</code></a></td><td>Функция, переводящая координату между областью вывода и логической системой активного <code>WINDOW</code>.</td></tr>
-                        <tr><td><a href="palette.html"><code>PALETTE</code></a></td><td>Оператор, меняющий отображение одного цветового индекса или нескольких индексов через <code>PALETTE USING</code>.</td></tr>
-                        <tr><td><a href="pcopy.html"><code>PCOPY</code></a></td><td>Оператор, копирующий одну графическую экранную страницу в другую.</td></tr>
-                        <tr><td><a href="images.html"><code>IMAGE</code>, <code>LOADIMAGE</code>, <code>DRAWIMAGE</code></a></td><td>Тип, функции загрузки и оператор вывода полноцветного изображения на графический экран.</td></tr>
-                        <tr><td><a href="sprites.html"><code>SPRITE</code>, <code>LOADSPRITE</code>, <code>DRAWSPRITE</code></a></td><td>Тип спрайтового листа, функции кадра и оператор вывода выбранного кадра.</td></tr>
-                        <tr><td><a href="modern-graphics.html"><code>CANVAS</code>, <code>BEGINFRAME</code>, <code>PRESENT</code>, <code>RGB</code>, <code>DRAWTEXT</code>, <code>CAMERA</code></a></td><td>Современная полноцветная поверхность с рабочим кадром, примитивами, изображениями, спрайтами, камерой и HUD.</td></tr>
-                        <tr><td><a href="graphics-text.html"><code>CLS</code></a></td><td>Оператор, очищающий экран и возвращающий текстовый курсор в начало.</td></tr>
-                        <tr><td><a href="graphics-text.html"><code>COLOR</code></a></td><td>Оператор, задающий цвет символов и, при необходимости, цвет фона.</td></tr>
-                        <tr><td><a href="graphics-text.html"><code>LOCATE</code></a></td><td>Оператор, помещающий текстовый курсор в указанную строку и столбец.</td></tr>
-                        <tr><td><a href="graphics-primitives.html"><code>PSET</code></a></td><td>Оператор, закрашивающий одну точку графического экрана.</td></tr>
-                        <tr><td><a href="graphics-primitives.html"><code>PRESET</code></a></td><td>Оператор, стирающий одну точку или закрашивающий её указанным цветом.</td></tr>
-                        <tr><td><a href="graphics-primitives.html"><code>LINE</code></a></td><td>Оператор, рисующий линию, рамку или закрашенный прямоугольник.</td></tr>
-                        <tr><td><a href="graphics-primitives.html"><code>CIRCLE</code></a></td><td>Оператор, рисующий окружность.</td></tr>
-                        <tr><td><a href="graphics-primitives.html"><code>POINT</code></a></td><td>Возвращает цвет точки на графическом экране.</td></tr>
-                        <tr><td><a href="get-put.html"><code>GET</code>, <code>PUT</code></a></td><td>Операторы чтения и возврата прямоугольного блока пикселей через двумерный числовой буфер.</td></tr>
-                        <tr><td><a href="screen-functions.html"><code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code>, <code>SCREENHEIGHT</code></a></td><td>Сообщают, включён ли графический экран, какой режим выбран и каковы его размеры.</td></tr>
-                        <tr><td><a href="mousex.html"><code>MOUSEX</code>, <code>MOUSEY</code>, <code>MOUSEBUTTON</code>, <code>MOUSEPRESS</code>, <code>ON MOUSE</code></a></td><td>Читают или обрабатывают мышь поверх активной поверхности ввода; этот слой не переводится через <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code>.</td></tr>
+                        <tr><td><a href="screen.html"><code>SCREEN</code></a></td><td>Оператор выбора экранного режима, размеров окна и экранных страниц.</td></tr>
+                        <tr><td><a href="graphics-text.html"><code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code></a></td><td>Операторы экранного текста в режимах <code>SCREEN</code>.</td></tr>
+                        <tr><td><a href="graphics-primitives.html"><code>PSET</code>, <code>LINE</code>, <code>CIRCLE</code> и другие</a></td><td>Классические операторы рисования и функция <code>POINT</code>.</td></tr>
+                        <tr><td><a href="get-put.html"><code>GET</code> и <code>PUT</code></a></td><td>Операторы чтения и записи прямоугольного блока пикселей через двумерный массив.</td></tr>
+                        <tr><td><a href="view.html"><code>VIEW</code> и <code>VIEW PRINT</code></a></td><td>Операторы ограничения области рисования и текстового окна на графическом экране.</td></tr>
+                        <tr><td><a href="window.html"><code>WINDOW</code></a></td><td>Оператор логической системы координат внутри текущего viewport.</td></tr>
+                        <tr><td><a href="pmap.html"><code>PMAP</code></a></td><td>Функция перевода координат между <code>WINDOW</code> и физическими координатами viewport.</td></tr>
+                        <tr><td><a href="screen-functions.html">Функции состояния <code>SCREEN</code></a></td><td>Функции получения режима, размеров окна и текущей графической позиции.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Экранные режимы</h2>
-                <p>Режим <code>SCREEN 0</code> открывает текстовое окно размером <code>80 x 25</code> знакомест. В нём работают <code>PRINT</code>, <code>INPUT</code> и клавиатурный ввод, но операторы рисования недоступны.</p>
-                <p>Режимы <code>SCREEN 1</code> ... <code>SCREEN 10</code> открывают графический экран. Каждый режим имеет логическую ширину и высоту в пикселях, а текстовый оператор <code>LOCATE</code> делит этот экран на строки и столбцы. Одна текстовая ячейка занимает <code>8 x 12</code> пикселей.</p>
-                <p>Для графических режимов можно выбрать активную и видимую страницу. Это нужно для <code>PCOPY</code>: программа рисует на одной странице, а показывает другую, пока готовит следующий кадр.</p>
+                <h2>Страницы полноцветных ресурсов</h2>
                 <table>
                     <thead>
-                        <tr><th>Режим</th><th>Размер в пикселях</th><th>Столбцы LOCATE</th><th>Строки LOCATE</th></tr>
+                        <tr><th>Страница</th><th>Что описывает</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>SCREEN 0</code></td><td><code>640 x 300</code></td><td><code>80</code></td><td><code>25</code></td></tr>
-                        <tr><td><code>SCREEN 1</code></td><td><code>320 x 200</code></td><td><code>40</code></td><td><code>16</code></td></tr>
-                        <tr><td><code>SCREEN 2</code></td><td><code>640 x 480</code></td><td><code>80</code></td><td><code>40</code></td></tr>
-                        <tr><td><code>SCREEN 3</code></td><td><code>800 x 600</code></td><td><code>100</code></td><td><code>50</code></td></tr>
-                        <tr><td><code>SCREEN 4</code></td><td><code>1024 x 768</code></td><td><code>128</code></td><td><code>64</code></td></tr>
-                        <tr><td><code>SCREEN 5</code></td><td><code>1280 x 720</code></td><td><code>160</code></td><td><code>60</code></td></tr>
-                        <tr><td><code>SCREEN 6</code></td><td><code>1366 x 768</code></td><td><code>170</code></td><td><code>64</code></td></tr>
-                        <tr><td><code>SCREEN 7</code></td><td><code>1600 x 900</code></td><td><code>200</code></td><td><code>75</code></td></tr>
-                        <tr><td><code>SCREEN 8</code></td><td><code>1920 x 1080</code></td><td><code>240</code></td><td><code>90</code></td></tr>
-                        <tr><td><code>SCREEN 9</code></td><td><code>2560 x 1440</code></td><td><code>320</code></td><td><code>120</code></td></tr>
-                        <tr><td><code>SCREEN 10</code></td><td><code>адаптивный 16:9</code></td><td><code>SCREENWIDTH() \ 8</code></td><td><code>SCREENHEIGHT() \ 12</code></td></tr>
-                    </tbody>
-                </table>
-                <p>Если размер режима не делится на размер текстовой ячейки без остатка, оставшиеся пиксели справа или снизу не образуют отдельную позицию <code>LOCATE</code>.</p>
-                <p>Для <code>SCREEN 10</code> фактические числа зависят от рабочей области текущего монитора и поэтому определяются только во время запуска через <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Координаты на экране</h2>
-                <p>На графическом экране положение точки задаётся двумя числами: <code>x</code> и <code>y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Если ширина экрана равна <code>w</code>, последняя видимая координата по горизонтали равна <code>w - 1</code>; если высота равна <code>h</code>, последняя видимая координата по вертикали равна <code>h - 1</code>.</p>
-                <p>Оператор <code>VIEW</code> может ограничить работу графики прямоугольной областью. Форма <code>VIEW SCREEN</code> оставляет координаты абсолютными, но клиппирует рисование по границам прямоугольника. Форма <code>VIEW</code> без слова <code>SCREEN</code> переводит графические примитивы и <code>POINT(x, y)</code> в локальные координаты viewport. Отдельная форма <code>VIEW PRINT</code> относится не к пикселям, а к строкам текстового вывода.</p>
-                <p>Оператор <code>WINDOW</code> работает поверх текущего viewport и задаёт уже не физическую, а логическую шкалу. Форма <code>WINDOW SCREEN</code> сохраняет экранное направление оси <code>Y</code>, а форма <code>WINDOW</code> без слова <code>SCREEN</code> даёт декартову систему координат с ростом <code>Y</code> вверх.</p>
-                <p>Если программе нужно явно перевести координату между этими двумя системами, используйте <code>PMAP</code>. Функция не рисует сама по себе, а только возвращает соответствующую координату для текущего сочетания <code>VIEW</code> и <code>WINDOW</code>.</p>
-                <p>Текст на экране располагается иначе. Оператор <code>LOCATE</code> работает со строками и столбцами, которые считаются с единицы. Команда <code>LOCATE 1, 1</code> помещает текстовый курсор в начало первой строки.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Мышь и клавиатура поверх SCREEN</h2>
-                <p>Экранное окно <code>SCREEN</code> служит не только поверхностью рисования, но и активной поверхностью ввода. Клавиатурные функции и обработчики работают здесь в том же окне, где программа печатает текст и рисует графику.</p>
-                <p>Для мыши важно не смешивать два соседних договора. Графические примитивы могут работать в локальной или логической системе координат через <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code>, а <code>MOUSEX()</code>, <code>MOUSEY()</code> и параметры <code>x/y</code> в <code>ON MOUSE</code> остаются в клиентской системе координат активной поверхности ввода. Они не клиппируются к <code>VIEW</code> и не переводятся в систему <code>WINDOW</code>.</p>
-                <p>Если программе нужна текущая позиция указателя или удержание кнопки, используйте <code>MOUSEX()</code>, <code>MOUSEY()</code> и <code>MOUSEBUTTON()</code>. Если нужно одноразово снять нажатие из очереди, используйте <code>MOUSEPRESS()</code>. Если реакция должна запускаться между обычными операторами программы, переходите к <code>ON MOUSE</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Цвета экрана</h2>
-                <p>Цвет задаётся числом от <code>0</code> до <code>255</code>. Значения <code>0..15</code> соответствуют классическим цветам BASIC, значения <code>16..231</code> образуют цветовой куб, а значения <code>232..255</code> дают оттенки серого. Если передано число вне этого диапазона, Axiom приводит его к палитре по правилу <code>ABS(color) MOD 256</code>.</p>
-                <p>Оператор <code>COLOR</code> задаёт цвет символов и, если указан второй аргумент, цвет фона. Операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code> используют те же номера цветов для рисования на графическом экране.</p>
-                <p>Оператор <code>PALETTE</code> работает на уровень ниже: пиксели продолжают хранить номера цветов, но выбранный индекс можно временно связать с другим видимым цветом. Поэтому уже нарисованная линия может изменить внешний вид после <code>PALETTE index, color</code> или после групповой формы <code>PALETTE USING array</code>, а <code>POINT(x, y)</code> всё равно вернёт исходный индекс пикселя.</p>
-                <p>Операторы <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code> добавляют поверх индексного экрана полноцветные пиксели с альфа-каналом. <code>PALETTE</code> не перекрашивает такие пиксели, а <code>POINT(x, y)</code> и <code>GET</code> для них возвращают ближайший индекс стандартной палитры Axiom.</p>
-                <p>В современном <code>CANVAS</code> цвет задаётся иначе: функция <code>RGB(red, green, blue)</code> собирает значение <code>0xRRGGBB</code>, а <code>CLS color</code>, <code>DRAWRECT</code>, <code>FILLRECT</code>, <code>DRAWLINE</code>, <code>DRAWCIRCLE</code>, <code>FILLCIRCLE</code> и <code>DRAWTEXT</code> работают с таким полноцветным кодом напрямую.</p>
-                <p>Оператор <code>PCOPY</code> переносит между экранными страницами цветовые индексы, полноцветные пиксели и палитру страницы, поэтому скрытую страницу можно подготовить заранее и затем скопировать на видимую.</p>
-                <table>
-                    <thead>
-                        <tr><th>Номер</th><th>Цвет</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>0</code></td><td>чёрный</td></tr>
-                        <tr><td><code>1</code></td><td>тёмно-синий</td></tr>
-                        <tr><td><code>2</code></td><td>тёмно-зелёный</td></tr>
-                        <tr><td><code>3</code></td><td>тёмно-голубой</td></tr>
-                        <tr><td><code>4</code></td><td>тёмно-красный</td></tr>
-                        <tr><td><code>5</code></td><td>тёмно-пурпурный</td></tr>
-                        <tr><td><code>6</code></td><td>коричневый</td></tr>
-                        <tr><td><code>7</code></td><td>светло-серый</td></tr>
-                        <tr><td><code>8</code></td><td>тёмно-серый</td></tr>
-                        <tr><td><code>9</code></td><td>светло-синий</td></tr>
-                        <tr><td><code>10</code></td><td>светло-зелёный</td></tr>
-                        <tr><td><code>11</code></td><td>светло-голубой</td></tr>
-                        <tr><td><code>12</code></td><td>светло-красный</td></tr>
-                        <tr><td><code>13</code></td><td>светло-пурпурный</td></tr>
-                        <tr><td><code>14</code></td><td>жёлтый</td></tr>
-                        <tr><td><code>15</code></td><td>белый</td></tr>
+                        <tr><td><a href="images.html"><code>IMAGE</code></a></td><td>Тип изображения, функции загрузки и размеров, а также оператор <code>DRAWIMAGE</code>.</td></tr>
+                        <tr><td><a href="sprites.html"><code>SPRITE</code></a></td><td>Тип спрайтового листа, функции загрузки и размеров, а также оператор <code>DRAWSPRITE</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 3
-COLOR 14, 1
-LOCATE 2, 4
-PRINT "Axiom SCREEN"
-
-LINE (40, 80)-(260, 160), 10, B
-CIRCLE (150, 120), 35, 12
-
-DO WHILE NOT KEYPRESS("ESC")
-LOOP
-
-SCREEN 0</code></pre>
-                <p>Программа открывает графический экран, выводит строку в заданной позиции, рисует прямоугольник и окружность, а затем ждёт нажатия <code>ESC</code>. В конце включается текстовый режим <code>SCREEN 0</code>.</p>
+                <h2>Страница современного слоя CANVAS</h2>
+                <p>Страница <a href="modern-graphics.html"><code>CANVAS</code></a> описывает отдельную группу операторов и функций современного графического слоя. На этой странице собраны оператор <code>CANVAS</code>, операторы кадрового цикла, современные примитивы, экранный текст HUD, измерение текста и камера.</p>
             </section>
 
             <section class="article-section">
-                <h2>Проверочные примеры</h2>
-                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как ручные проверки экрана, текста, мыши и операторов рисования.</p>
+                <h2>Проверочные программы</h2>
+                <p>Готовые графические примеры находятся в следующих каталогах:</p>
                 <ul class="resource-list">
-                    <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: сведения о режиме</a></li>
-                    <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
-                    <li><a href="../../samples/operators/view-print/scrolling_region.axm">VIEW PRINT: прокрутка в строковом диапазоне</a></li>
-                    <li><a href="../../samples/operators/window/cartesian_and_screen.axm">WINDOW: экранные и декартовы координаты</a></li>
-                    <li><a href="../../samples/functions/pmap/window_and_viewport_conversion.axm">PMAP: преобразование между WINDOW и viewport</a></li>
-                    <li><a href="../../samples/operators/palette/change_and_reset_colors.axm">PALETTE: изменение и сброс цветов</a></li>
-                    <li><a href="../../samples/operators/palette/using_array_colors.axm">PALETTE USING: цвета из массива</a></li>
-                    <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование пикселей и палитры на видимую страницу</a></li>
-                    <li><a href="../../samples/graphics/sprites/page_flip_walk.axm">SPRITE и PCOPY: кадр на скрытой странице</a></li>
-                    <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
-                    <li><a href="../../samples/graphics/modern/rectangles_frame.axm">CANVAS: прямоугольники, IMAGE и SPRITE в современном кадре</a></li>
-                    <li><a href="../../samples/graphics/modern/hud_text.axm">CANVAS: HUD-текст и RESETCAMERA</a></li>
-                    <li><a href="../../samples/graphics/modern/camera_world.axm">CANVAS: мировые координаты и камера</a></li>
-                    <li><a href="../../samples/graphics/modern/lines_and_circles.axm">CANVAS: линии и круги</a></li>
-                    <li><a href="../../samples/graphics/game/maze_chase.axm">maze_chase: живой игровой пример современного слоя</a></li>
-                    <li><a href="../../samples/graphics/text/print_locate_color.axm">Текст, позиция курсора и цвета</a></li>
-                    <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Операторы рисования: PSET, LINE и CIRCLE</a></li>
-                    <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: чтение прямоугольника в буфер</a></li>
-                    <li><a href="../../samples/operators/put/default_xor_and_preset.axm">PUT: возврат буфера через XOR и PRESET</a></li>
-                    <li><a href="../../samples/graphics/mouse/mouse_events.axm">Мышь в графическом окне</a></li>
-                    <li><a href="../../samples/graphics/input/input_on_screen.axm">INPUT в экранном окне</a></li>
+                    <li><a href="../../samples/graphics/screen/best_fit_dimensions.axm">SCREEN 10: выбор фактического размера окна</a></li>
+                    <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: чтение прямоугольника в двумерный массив</a></li>
+                    <li><a href="../../samples/operators/put/default_xor_and_preset.axm">PUT: наложение буфера на экран</a></li>
+                    <li><a href="../../samples/graphics/sprites/walk_cycle.axm">SPRITE: вывод кадров спрайтового листа</a></li>
+                    <li><a href="../../samples/graphics/modern/rectangles_frame.axm">CANVAS: современный кадровый цикл</a></li>
+                    <li><a href="../../samples/graphics/game/maze_chase.axm">maze_chase: игровой пример современного графического слоя</a></li>
                 </ul>
             </section>
 
@@ -188,32 +110,13 @@ SCREEN 0</code></pre>
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
-                    <a href="view.html">Оператор VIEW</a>
-                    <a href="window.html">Оператор WINDOW</a>
-                    <a href="pmap.html">Функция PMAP</a>
-                    <a href="palette.html">Оператор PALETTE</a>
-                    <a href="pcopy.html">Оператор PCOPY</a>
-                    <a href="images.html">Изображения IMAGE</a>
-                    <a href="modern-graphics.html">Современная графика CANVAS</a>
                     <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="get-put.html">Операторы GET и PUT</a>
-                    <a href="screen-functions.html">Функции состояния SCREEN</a>
-                    <a href="mousex.html">Мышь</a>
-                    <a href="inkey.html">Клавиатура</a>
+                    <a href="images.html">Изображения IMAGE</a>
+                    <a href="sprites.html">Спрайты SPRITE</a>
+                    <a href="modern-graphics.html">Современная графика CANVAS</a>
                 </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Куда идти дальше</h2>
-                <ol>
-                    <li>Если сначала нужен сам режим экрана и его размеры, начните со страницы <a href="screen.html"><code>SCREEN</code></a> и блока <a href="screen-functions.html">функций состояния SCREEN</a>.</li>
-                    <li>Если программа печатает в экранном окне, переходите к <a href="graphics-text.html">текстовому слою</a> с <code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code>.</li>
-                    <li>Если программа рисует фигуры, открывайте <a href="graphics-primitives.html">операторы рисования</a>; если ей нужно ограничить или переопределить систему координат, дальше идите к <a href="view.html"><code>VIEW</code></a>, <a href="window.html"><code>WINDOW</code></a> и <a href="pmap.html"><code>PMAP</code></a>.</li>
-                    <li>Если нужен современный полноцветный игровой цикл, переходите к <a href="modern-graphics.html">странице <code>CANVAS</code></a>, где собраны кадры, примитивы, HUD-текст и камера.</li>
-                    <li>Если программе нужно переносить участок экрана, переходите к <a href="get-put.html"><code>GET</code> и <code>PUT</code></a>; если нужно скопировать целую экранную страницу, используйте <a href="pcopy.html"><code>PCOPY</code></a>; если нужно загрузить файл PNG, JPEG, BMP или ICO, открывайте <a href="images.html"><code>IMAGE</code> и <code>DRAWIMAGE</code></a>.</li>
-                    <li>Если нужна интерактивность поверх активного экрана, открывайте страницы клавиатуры и мыши, начиная с <a href="mousex.html"><code>MOUSEX()</code> / <code>MOUSEY()</code></a> и <a href="on-mouse.html"><code>ON MOUSE</code></a>.</li>
-                </ol>
             </section>
 
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>

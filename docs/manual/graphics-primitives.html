@@ -21,268 +21,134 @@
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Операторы рисования</span>
             </nav>
             <p class="eyebrow">Операторы и функция</p>
-            <h1 class="page-title">PSET, PRESET, LINE, CIRCLE, PAINT, DRAW и POINT</h1>
-            <p class="lead">Операторы рисования работают с точками графического экрана <code>SCREEN</code>. <code>PSET</code> и <code>PRESET</code> закрашивают одну точку, <code>LINE</code> рисует линию или прямоугольник, <code>CIRCLE</code> рисует окружность, эллипс или дугу, <code>PAINT</code> заполняет замкнутую область, <code>DRAW</code> выполняет строку графических команд, а <code>POINT</code> читает цвет точки или текущую графическую позицию.</p>
+            <h1 class="page-title">Операторы рисования</h1>
+            <p class="lead">Эта страница описывает классические операторы рисования исторического графического пути <code>SCREEN</code>: операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функцию <code>POINT</code>. Все эти сущности работают с пикселями экранного режима <code>SCREEN 1..10</code>.</p>
+
+            <section class="article-section">
+                <h2>Где работают эти операторы</h2>
+                <p>Операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функция <code>POINT</code> работают только после выбора графического режима <code>SCREEN 1..10</code>.</p>
+                <p>Если программа не вызвала оператор <code>SCREEN</code> или если программа находится в режиме <code>SCREEN 0</code>, эти графические сущности не получают подходящего графического экрана.</p>
+            </section>
 
             <section class="article-section">
                 <h2>Координаты и цвета</h2>
-                <p>Перед использованием операторов рисования программа должна выбрать графический режим: <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Текстовый режим <code>SCREEN 0</code> не включает графический экран.</p>
-                <p>Координаты записываются как <code>x, y</code>. Начало координат находится в левом верхнем углу. Координата <code>x</code> увеличивается вправо, координата <code>y</code> увеличивается вниз. Цвет задаётся числом из палитры <code>0..255</code>.</p>
-                <p>Если активен <code>VIEW</code> без слова <code>SCREEN</code>, координаты графических примитивов, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code> считаются относительно текущего viewport. Форма <code>VIEW SCREEN</code> оставляет координаты абсолютными, но ограничивает вывод границами viewport.</p>
-                <p>Если поверх viewport включён <code>WINDOW</code>, те же операторы работают уже в логической системе координат окна. Форма <code>WINDOW SCREEN</code> оставляет ось <code>Y</code> направленной вниз, а форма <code>WINDOW</code> без слова <code>SCREEN</code> переводит <code>Y</code> вверх как в декартовой плоскости.</p>
+                <p>Во всех формах этой страницы координаты по умолчанию задаются в пикселях.</p>
+                <p>Координата <code>x</code> растёт слева направо. Координата <code>y</code> растёт сверху вниз.</p>
+                <p>Цвет задаётся номером палитрового цвета. В историческом графическом пути <code>SCREEN</code> это не полноцветное значение <code>RGB(...)</code>, а номер цвета из текущей палитры.</p>
+                <p>Если программа использует оператор <code>VIEW</code>, оператор <code>WINDOW</code> или слово <code>STEP</code>, смысл координат меняется согласно текущему экранному договору этих операторов.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="pset">Оператор PSET</h2>
-<pre><code>PSET [STEP] (&lt;x&gt;, &lt;y&gt;)[, &lt;цвет&gt;]</code></pre>
-                <p><code>PSET</code> закрашивает одну точку. Если цвет не указан, используется текущий foreground-цвет, установленный через <code>COLOR</code>. Координаты за пределами графического экрана игнорируются без ошибки.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>STEP</code></td><td>Если указано, координаты считаются смещением от текущей графической позиции.</td></tr>
-                        <tr><td><code>&lt;x&gt;</code></td><td>Горизонтальная координата точки или смещение по X.</td></tr>
-                        <tr><td><code>&lt;y&gt;</code></td><td>Вертикальная координата точки или смещение по Y.</td></tr>
-                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет точки. Если он не указан, используется текущий foreground-цвет.</td></tr>
-                    </tbody>
-                </table>
-<pre><code>SCREEN 1
-COLOR 6, 2
-PSET (10, 10), 12
-PSET STEP (5, 4)
-PRINT "Цвет точки:"; POINT(10, 10)
-SCREEN 0</code></pre>
+                <h2>Оператор PSET</h2>
+                <p><code>PSET</code> — оператор языка Axiom, который закрашивает одну точку графического экрана.</p>
+<pre><code class="language-basic">PSET (x, y)
+PSET (x, y), color
+PSET STEP (x, y)
+PSET STEP (x, y), color</code></pre>
+                <p>Оператор <code>PSET</code> принимает координаты точки и необязательный номер цвета.</p>
+                <p>Если цвет не указан, оператор <code>PSET</code> использует текущий цвет рисования.</p>
+                <p>Слово <code>STEP</code> означает, что координаты задаются как смещение от текущей графической позиции, а не как абсолютная точка экрана.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="preset">Оператор PRESET</h2>
-<pre><code>PRESET [STEP] (&lt;x&gt;, &lt;y&gt;)[, &lt;цвет&gt;]</code></pre>
-                <p><code>PRESET</code> работает с одной точкой так же, как <code>PSET</code>, но без явного цвета ставит текущий background-цвет. Обычно это используют, чтобы стереть отдельную точку или линию цветом фона.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>STEP</code></td><td>Если указано, координаты считаются смещением от текущей графической позиции.</td></tr>
-                        <tr><td><code>&lt;x&gt;</code></td><td>Горизонтальная координата точки или смещение по X.</td></tr>
-                        <tr><td><code>&lt;y&gt;</code></td><td>Вертикальная координата точки или смещение по Y.</td></tr>
-                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет точки. Если он не указан, используется текущий background-цвет.</td></tr>
-                    </tbody>
-                </table>
-<pre><code>SCREEN 1
-COLOR 14, 1
-PSET (10, 10), 12
-PRESET (10, 10)
-PRINT "После PRESET:"; POINT(10, 10)
-SCREEN 0</code></pre>
+                <h2>Оператор PRESET</h2>
+                <p><code>PRESET</code> — оператор языка Axiom, который работает как оператор <code>PSET</code>, но без явно указанного цвета использует фоновый цвет.</p>
+<pre><code class="language-basic">PRESET (x, y)
+PRESET (x, y), color
+PRESET STEP (x, y)
+PRESET STEP (x, y), color</code></pre>
+                <p>Оператор <code>PRESET</code> обычно используют для стирания отдельной точки или линии цветом фона.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="line">Оператор LINE</h2>
-<pre><code>LINE [[STEP](&lt;x1&gt;, &lt;y1&gt;)]-[STEP](&lt;x2&gt;, &lt;y2&gt;)[, &lt;цвет&gt;]
-LINE [[STEP](&lt;x1&gt;, &lt;y1&gt;)]-[STEP](&lt;x2&gt;, &lt;y2&gt;)[, &lt;цвет&gt;], B
-LINE [[STEP](&lt;x1&gt;, &lt;y1&gt;)]-[STEP](&lt;x2&gt;, &lt;y2&gt;)[, &lt;цвет&gt;], BF</code></pre>
-                <p><code>LINE</code> рисует отрезок между двумя точками. Если цвет не указан, используется текущий foreground-цвет. Форма с <code>B</code> рисует прямоугольную рамку по двум углам, а форма с <code>BF</code> рисует закрашенный прямоугольник.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>[STEP](&lt;x1&gt;, &lt;y1&gt;)</code></td><td>Первая точка. Если форма перед дефисом пропущена, линия начинается из текущей графической позиции. Если указан <code>STEP</code>, первая точка вычисляется как смещение от текущей графической позиции.</td></tr>
-                        <tr><td><code>[STEP](&lt;x2&gt;, &lt;y2&gt;)</code></td><td>Вторая точка. Если указан <code>STEP</code>, она вычисляется как смещение от первой точки линии.</td></tr>
-                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет линии, рамки или прямоугольника. Если цвет не указан, используется текущий foreground-цвет.</td></tr>
-                        <tr><td><code>B</code></td><td>Рисует прямоугольную рамку.</td></tr>
-                        <tr><td><code>BF</code></td><td>Рисует закрашенный прямоугольник.</td></tr>
-                    </tbody>
-                </table>
-                <p>После учёта формы <code>STEP</code> координаты начала и конца должны оставаться в диапазоне <code>-1000000000..1000000000</code>. Если хотя бы одна из них выходит за этот диапазон, <code>LINE</code> сообщает <code>MB3007</code>. Пиксели за пределами видимой области текущего <code>SCREEN</code> просто не попадают на экран, поэтому длинные линии и рамки могут быть частично невидимыми, не меняя общий договор оператора.</p>
-<pre><code>SCREEN 3
-COLOR 6, 2
-PSET (20, 20)
-LINE -(220, 80)
-LINE STEP (10, 20)-STEP (150, 60), 11, B
-LINE (220, 100)-(360, 180), 11, BF
-SCREEN 0</code></pre>
+                <h2>Оператор LINE</h2>
+                <p><code>LINE</code> — оператор языка Axiom, который рисует отрезок или прямоугольник.</p>
+<pre><code class="language-basic">LINE (x1, y1)-(x2, y2)
+LINE (x1, y1)-(x2, y2), color
+LINE (x1, y1)-(x2, y2), color, B
+LINE (x1, y1)-(x2, y2), color, BF</code></pre>
+                <p>Форма без суффикса рисует линию между двумя точками.</p>
+                <p>Форма с суффиксом <code>B</code> рисует только рамку прямоугольника.</p>
+                <p>Форма с суффиксом <code>BF</code> рисует заполненный прямоугольник.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="circle">Оператор CIRCLE</h2>
-<pre><code>CIRCLE [STEP] (&lt;x&gt;, &lt;y&gt;), &lt;радиус&gt;[, [&lt;цвет&gt;][, [&lt;начало&gt;][, [&lt;конец&gt;][, &lt;aspect&gt;]]]]</code></pre>
-                <p><code>CIRCLE</code> рисует контур окружности, эллипса или дуги. Центр задаётся точкой <code>x, y</code>, радиус задаётся в пикселях, а необязательные углы позволяют оставить только часть контура.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>STEP</code></td><td>Если указано, координаты центра считаются смещением от текущей графической позиции. После <code>PSET</code> текущая позиция равна этой точке, после <code>LINE</code> — конечной точке, после <code>CIRCLE</code> — центру окружности или дуги.</td></tr>
-                        <tr><td><code>&lt;x&gt;, &lt;y&gt;</code></td><td>Координаты центра или смещение центра при форме <code>STEP</code>. После учёта <code>STEP</code> центр должен оставаться в диапазоне <code>-1000000000..1000000000</code> по обеим осям.</td></tr>
-                        <tr><td><code>&lt;радиус&gt;</code></td><td>Неотрицательный конечный радиус. Для эллипса при <code>aspect &lt; 1</code> это радиус по X, при <code>aspect &gt; 1</code> — радиус по Y.</td></tr>
-                        <tr><td><code>&lt;цвет&gt;</code></td><td>Необязательный цвет контура. Если он не указан, используется <code>15</code>.</td></tr>
-                        <tr><td><code>&lt;начало&gt;</code></td><td>Необязательный начальный угол дуги в радианах. Если значение отрицательное, рисуется радиальная линия от центра к началу дуги, а сам угол берётся по модулю.</td></tr>
-                        <tr><td><code>&lt;конец&gt;</code></td><td>Необязательный конечный угол дуги в радианах. Если значение отрицательное, рисуется радиальная линия от центра к концу дуги, а сам угол берётся по модулю.</td></tr>
-                        <tr><td><code>&lt;aspect&gt;</code></td><td>Отношение радиуса по Y к радиусу по X. Значение <code>1</code> даёт обычную окружность, значения меньше или больше <code>1</code> дают эллипс. Допустимый диапазон: больше <code>0</code> и не больше <code>1000000</code>.</td></tr>
-                    </tbody>
-                </table>
-                <p>Параметры в середине списка можно пропускать, оставляя соответствующие запятые. Например, форма <code>CIRCLE (180, 180), 90, , 0, PI</code> использует обычный цвет <code>15</code>, но задаёт дугу от <code>0</code> до <code>PI</code>.</p>
-                <p>Если заданы оба угла и после нормализации они совпадают, <code>CIRCLE</code> рисует полный контур. Это относится и к форме <code>0</code> / <code>2 * PI</code>: такой вызов считается полным оборотом, а не пустой дугой.</p>
-                <p><code>Радиус</code>, <code>начало</code>, <code>конец</code> и <code>aspect</code> должны оставаться конечными числами. Неверный радиус, координаты центра вне диапазона, нулевой или слишком большой <code>aspect</code> и другие некорректные значения дают ошибку времени выполнения <code>MB3007</code>. После учёта <code>STEP</code> host вычисляет фактический центр, делает его текущей графической позицией и рисует только видимую часть контура; отрицательные углы дополнительно дорисовывают радиальные линии к началу или концу дуги.</p>
-<pre><code>SCREEN 3
-CIRCLE (420, 160), 50, 14
-CIRCLE (420, 160), 80, 10, 0, PI
-CIRCLE STEP (40, 0), 45, 11, -PI / 2, PI / 2, 0.5
-SCREEN 0</code></pre>
-                <p>Готовые запускаемые примеры: <code>samples/graphics/primitives/circle_arcs_step_aspect.axm</code> и <code>samples/graphics/primitives/circle_full_turn.axm</code>.</p>
-            </section>
-
-
-            <section class="article-section">
-                <h2 id="draw">Оператор DRAW</h2>
-<pre><code>DRAW &lt;строковое_выражение&gt;</code></pre>
-                <p><code>DRAW</code> читает строку графических команд и выполняет её из текущей графической позиции. Эта форма пришла из BASIC-линейки как компактный макроязык рисования: одна строка может менять цвет, масштаб и угол, двигать текущую точку, рисовать линии и запускать заливку.</p>
-                <p>В Axiom текущая графическая позиция для <code>DRAW</code> общая с <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code> и предыдущими вызовами <code>DRAW</code>. Поэтому оператор естественно продолжает уже начатый рисунок, а не заводит отдельное внутреннее состояние.</p>
-                <table>
-                    <thead>
-                        <tr><th>Команда</th><th>Что делает</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>U n</code>, <code>D n</code>, <code>L n</code>, <code>R n</code></td><td>Перемещение вверх, вниз, влево и вправо. Если длина не указана, берётся <code>1</code>.</td></tr>
-                        <tr><td><code>E n</code>, <code>F n</code>, <code>G n</code>, <code>H n</code></td><td>Диагональное движение: вверх-вправо, вниз-вправо, вниз-влево и вверх-влево.</td></tr>
-                        <tr><td><code>B</code></td><td>Применяется к следующей команде движения или <code>M</code>: перенести позицию без рисования.</td></tr>
-                        <tr><td><code>N</code></td><td>Применяется к следующей команде движения или <code>M</code>: выполнить действие и вернуть текущую позицию в исходную точку.</td></tr>
-                        <tr><td><code>C n</code></td><td>Локальный цвет линий внутри текущей DRAW-строки.</td></tr>
-                        <tr><td><code>S n</code></td><td>Масштаб DRAW. По умолчанию используется <code>4</code>.</td></tr>
-                        <tr><td><code>A n</code>, <code>TA n</code></td><td>Поворот на четверть оборота или на произвольный угол в градусах.</td></tr>
-                        <tr><td><code>M x,y</code>, <code>M +dx,+dy</code></td><td>Абсолютное или относительное перемещение. Без <code>B</code> рисует линию к новой точке.</td></tr>
-                        <tr><td><code>P f</code>, <code>P f,b</code></td><td>Заливка из текущей графической позиции через обычный host-<code>PAINT</code>.</td></tr>
-                    </tbody>
-                </table>
-                <p>Команды не чувствительны к регистру, пробелы внутри строки допустимы, а отрицательные длины движения запрещены диагностикой времени выполнения. Команды <code>B</code> и <code>N</code> можно сочетать: например, <code>BNR10</code> переносит позицию на десять пикселей вправо без рисования и затем возвращает её назад.</p>
-                <p><code>B</code> и <code>N</code> относятся только к следующей команде движения или <code>M</code>. Если поставить их перед <code>C</code>, <code>S</code>, <code>A</code>, <code>TA</code>, <code>P</code> или <code>X</code>, <code>DRAW</code> сообщает понятную runtime-диагностику вместо молчаливой потери модификатора.</p>
-                <p><code>C</code> меняет цвет только внутри текущей DRAW-строки. Цветовые аргументы <code>DRAW</code> нормализуются по тому же правилу, что и у остальных графических операторов: <code>ABS(color) MOD 256</code>. <code>S</code> задаёт масштаб, при котором длины направленных перемещений рассчитываются по правилу <code>n * scale / 4</code>. Команды <code>A</code> и <code>TA</code> управляют одним и тем же текущим углом: последняя из них задаёт новое направление для следующих перемещений. В экранной системе координат Axiom, где <code>Y</code> растёт вниз, положительный угол <code>TA</code> визуально поворачивает направление по часовой стрелке. Команда <code>TA0</code> возвращает обычное неповернутое направление.</p>
-                <p>Команда <code>M</code> без знаков у координат выполняет абсолютное перемещение в точку экрана, а форма со знаками выполняет относительное смещение от текущей графической позиции. Команда <code>P</code> не создаёт отдельную заливку специально для <code>DRAW</code>, а использует тот же договор, что и обычный оператор <code>PAINT</code>: форма <code>P f</code> берёт цвет границы по умолчанию из цвета заливки, а форма <code>P f,b</code> использует явный цвет границы.</p>
-                <blockquote>
-                    <p><em>В QuickBASIC историческая форма <code>X</code> могла вызывать другую DRAW-строку через <code>VARPTR$</code>. В Axiom форма <code>X</code> не поддерживается по проектному решению: небезопасная pointer-строка ради DRAW не вводится, а при встрече <code>X</code> выполнение сообщает понятную диагностику. Современная замена — собрать итоговую DRAW-строку обычными строковыми выражениями Axiom и передать результат в <code>DRAW</code>.</em></p>
-                </blockquote>
-<pre><code>SCREEN 1
-DRAW "R50 D50 L50 U50"
-
-DIM commands AS STRING = "C12 TA90 U60 R20"
-DRAW commands
-
-DIM penColor AS INTEGER = 10
-DIM angle AS INTEGER = 45
-DRAW "C" + STR(penColor) + " TA" + STR(angle) + " U40"</code></pre>
-                <p>Готовые запускаемые примеры: <code>samples/operators/draw/square.axm</code>, <code>octagon.axm</code>, <code>blind_and_return.axm</code>, <code>rotated_spokes.axm</code>, <code>paint_segments.axm</code> и <code>dynamic_string.axm</code>.</p>
+                <h2>Оператор CIRCLE</h2>
+                <p><code>CIRCLE</code> — оператор языка Axiom, который рисует окружность, дугу или эллипс.</p>
+<pre><code class="language-basic">CIRCLE (x, y), radius
+CIRCLE (x, y), radius, color
+CIRCLE (x, y), radius, color, startAngle, endAngle
+CIRCLE (x, y), radius, color, startAngle, endAngle, aspect</code></pre>
+                <p><code>x</code> и <code>y</code> задают центр фигуры.</p>
+                <p><code>radius</code> задаёт радиус.</p>
+                <p><code>startAngle</code> и <code>endAngle</code> ограничивают дугу.</p>
+                <p><code>aspect</code> управляет формой эллипса.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="point">Функция POINT</h2>
-<pre><code>POINT(&lt;x&gt;, &lt;y&gt;)
-POINT(&lt;number&gt;)</code></pre>
-                <p><code>POINT</code> имеет две формы. <code>POINT(x, y)</code> возвращает номер цвета в указанной точке. <code>POINT(number)</code> возвращает текущую графическую позицию. Без активного <code>SCREEN</code> функция сообщает <code>MB3010</code>.</p>
-                <p>Если активен только <code>VIEW</code>, селекторы <code>POINT(0)</code>, <code>POINT(1)</code>, <code>POINT(2)</code> и <code>POINT(3)</code> работают в текущей системе viewport. Если активен <code>WINDOW</code>, селекторы <code>0</code> и <code>1</code> возвращают физическую координату в системе viewport, а селекторы <code>2</code> и <code>3</code> возвращают логическую координату окна.</p>
-                <p>Если нужно преобразовать не текущую позицию, а произвольную координату между viewport и <code>WINDOW</code>, используйте функцию <code>PMAP</code>.</p>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>&lt;x&gt;</code></td><td>Горизонтальная координата точки в форме <code>POINT(x, y)</code>.</td></tr>
-                        <tr><td><code>&lt;y&gt;</code></td><td>Вертикальная координата точки в форме <code>POINT(x, y)</code>.</td></tr>
-                        <tr><td><code>&lt;number&gt;</code></td><td>Селектор текущей графической позиции в форме <code>POINT(number)</code>. Значения <code>0</code> и <code>1</code> возвращают физические координаты viewport, значения <code>2</code> и <code>3</code> возвращают логические координаты активного <code>WINDOW</code>; без <code>WINDOW</code> все четыре селектора работают как координаты viewport.</td></tr>
-                    </tbody>
-                </table>
-<pre><code>SCREEN 1
-PSET (10, 10), 12
-PRINT "Текущий X:"; POINT(0)
-PRINT "Текущий Y:"; POINT(1)
-PRINT "Цвет точки:"; POINT(10, 10)
-SCREEN 0</code></pre>
+                <h2>Оператор PAINT</h2>
+                <p><code>PAINT</code> — оператор языка Axiom, который заполняет замкнутую область, начиная от указанной точки.</p>
+<pre><code class="language-basic">PAINT (x, y)
+PAINT (x, y), fillColor
+PAINT (x, y), fillColor, borderColor</code></pre>
+                <p>Оператор <code>PAINT</code> начинает заполнение из точки <code>x, y</code>.</p>
+                <p>Если указан только цвет заливки, оператор <code>PAINT</code> заполняет область до естественной границы цвета.</p>
+                <p>Если указан <code>borderColor</code>, оператор <code>PAINT</code> использует этот цвет как цвет границы.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="paint">Оператор PAINT</h2>
-<pre><code>PAINT [STEP] (&lt;x&gt;, &lt;y&gt;)[, [&lt;краска&gt;][, [&lt;цвет-границы&gt;][, &lt;фон&gt;]]]</code></pre>
-                <p><code>PAINT</code> закрашивает ограниченную область цветом или повторяющимся образцом. Обычно этот оператор вызывают после <code>LINE</code>, <code>CIRCLE</code> и других примитивов, когда контур уже нарисован и его нужно заполнить.</p>
-                <p>Точка начала заливки может лежать внутри фигуры или вне неё, но не на самой границе. Если точка находится внутри, закрашивается внутренняя область. Если точка находится снаружи, закрашивается внешний фон, ограниченный рамкой указанного цвета.</p>
+                <h2>Оператор DRAW</h2>
+                <p><code>DRAW</code> — оператор языка Axiom, который выполняет строку графических команд в историческом стиле BASIC.</p>
+<pre><code class="language-basic">DRAW commandString</code></pre>
+                <p>Оператор <code>DRAW</code> принимает строку, внутри которой записаны команды перемещения, поворота и рисования.</p>
+                <p>Эта строка не является синтаксисом языка Axiom целиком. Это отдельный мини-язык, который понимает только оператор <code>DRAW</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Функция POINT</h2>
+                <p><code>POINT</code> — встроенная функция языка Axiom, которая читает цвет точки или сообщает текущую графическую позицию.</p>
+<pre><code class="language-basic">POINT(x, y)
+POINT(selector)</code></pre>
+                <p>Форма <code>POINT(x, y)</code> возвращает цвет точки в указанных координатах.</p>
+                <p>Форма <code>POINT(selector)</code> возвращает одну из координат текущей графической позиции. Точное значение зависит от селектора и от договоров <code>VIEW</code> и <code>WINDOW</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Правила работы</h2>
+                <p>Операторы рисования работают в пределах текущего графического экрана. Если часть фигуры выходит за границы экрана, результат обычно обрезается по границе доступной области, а не превращается в ошибку.</p>
+                <p>Оператор <code>VIEW</code> может ограничивать физическую область вывода. Оператор <code>WINDOW</code> может переводить координаты в логическую систему. Поэтому при чтении любой графической формы важно понимать, действуют ли в программе <code>VIEW</code>, <code>WINDOW</code> или <code>STEP</code>.</p>
+                <p>После выполнения графических операторов текущая графическая позиция может меняться. Это особенно важно для слова <code>STEP</code>, для оператора <code>DRAW</code> и для формы <code>POINT(selector)</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
                 <ul>
-                    <li><code>STEP</code> задаёт координаты как смещение от текущей графической позиции. После выполнения <code>PAINT</code> текущая графическая позиция становится равной фактической стартовой точке заливки.</li>
-                    <li><code>&lt;x&gt;, &lt;y&gt;</code> задают координаты стартовой точки или её смещение при форме <code>STEP</code>.</li>
-                    <li><code>&lt;краска&gt;</code> может быть пропущена, быть числом или строкой. Пропущенная <code>краска</code> означает текущий цвет фона графического режима. Число задаёт сплошную заливку. Строка задаёт образец заливки.</li>
-                    <li><code>&lt;цвет-границы&gt;</code> задаёт цвет рамки. Если этот аргумент опущен, для сплошной заливки по умолчанию берётся цвет самой заливки, а для строкового образца — текущий foreground-цвет.</li>
-                    <li><code>&lt;фон&gt;</code> задаёт прежний фоновый образец, который разрешено перекрашивать при повторной шаблонной заливке. Этот аргумент допустим только вместе со строковой <code>краской</code>.</li>
+                    <li><code>MB3010</code>: графический оператор или функция вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: оператор получил недопустимые координаты, радиус, селектор или другой числовой аргумент вне поддерживаемого договора.</li>
                 </ul>
-                <p><code>PAINT</code> использует связность по четырём соседям: влево, вправо, вверх и вниз. Граница не перекрашивается. Если стартовый пиксель уже является границей или в выбранной области не осталось точек, которые можно перекрасить по текущему договору, оператор завершается без изменений.</p>
-                <p>Строковая <code>краска</code> задаёт образец шириной 8 бит и длиной до 64 байтов. Каждый символ сначала преобразуется через <code>ASC</code> в байт IBM CP866, а затем этот байт образует одну строку маски вдоль оси X.</p>
-<pre><code>DIM pattern AS STRING = CHR(85) &amp; CHR(170)
-PAINT (30, 30), pattern, 9</code></pre>
-                <p>В такой маске бит <code>1</code> рисуется текущим foreground-цветом, а бит <code>0</code> — текущим background-цветом. Пустая строка, символы вне диапазона <code>0..255</code> и образцы длиннее 64 байтов дают ошибку времени выполнения <code>MB3007</code>.</p>
-                <p>Аргумент <code>фон</code> используют, когда нужно перекрасить область поверх уже нанесённого узора, не принимая этот старый узор за границу. В этом случае <code>PAINT</code> разрешает перекрашивать не только исходный цвет стартового пикселя, но и точки, совпадающие с переданным фоновым образцом.</p>
-<pre><code>CONST PI = 3.1415926536
-SCREEN 1
-CLS
-
-CIRCLE (90, 100), 40, 1, , , 0.45
-CIRCLE (74, 92), 3, 1, , , 0.7
-PAINT (90, 100), 2, 1
-
-LINE (50, 100)-STEP(-24, 18), 2
-LINE -STEP(0, -36), 2
-LINE -STEP(24, 18), 2
-PAINT (36, 100), 1, 2
-
-CIRCLE (58, 100), 14, 0, PI - 0.75, PI - 1.25, 1.5
-FOR Y = 90 TO 110 STEP 4
-    LINE (26, Y)-STEP(10, 0), 0
-NEXT</code></pre>
-                <p>Этот пример по мотивам книги Зельднера рисует рыбку: сначала закрашивается тело внутри овального контура, затем отдельным <code>PAINT</code> закрашивается хвост внутри треугольного контура.</p>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
-                <p>Все операторы рисования используют палитру <code>0..255</code>. Индексы <code>0..15</code> соответствуют классическим BASIC-цветам, <code>16..231</code> образуют RGB-куб 6x6x6, а <code>232..255</code> дают серую шкалу. Значения вне диапазона приводятся по правилу <code>ABS(color) MOD 256</code>.</p>
-                <p><code>DRAW</code> использует ту же текущую графическую позицию, что и остальные графические операторы. После рисующих команд и после <code>M</code> без <code>N</code> эта позиция смещается в новую точку, а формы с <code>N</code> возвращают её назад.</p>
-                <p>Операторы рисования работают только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Без активного графического экрана они сообщают ошибку времени выполнения <code>MB3010</code>.</p>
-                <p>Формы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code> и <code>CIRCLE</code> используют текущую графическую позицию в BASIC-стиле. После <code>PSET</code> и <code>PRESET</code> текущая позиция равна поставленной точке, после <code>LINE</code> — конечной точке, после <code>CIRCLE</code> — центру окружности или дуги.</p>
-                <p>Форма <code>CIRCLE</code> следует BASIC-линейке: углы задаются в радианах, отрицательный начальный или конечный угол добавляет радиус к центру, а <code>STEP</code> использует текущую графическую позицию.</p>
-                <p>Форма <code>PAINT</code> поддерживает как сплошную, так и шаблонную заливку. В отличие от старой краткой формы страницы, здесь важно учитывать две разные линии по умолчанию: без аргумента <code>краска</code> берётся текущий фон, а для строкового образца без аргумента <code>цвет-границы</code> используется текущий foreground-цвет.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Проверочная программа</h2>
-                <p>Программы можно открыть в <code>Axiom.Ide</code> и запустить для проверки точек, линий, окружностей, дуг, эллипсов, полной формы <code>PAINT</code> и строковых графических команд <code>DRAW</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/graphics/primitives/pset_line_circle.axm">Точки, линии и окружности</a></li>
-                    <li><a href="../../samples/graphics/primitives/step_and_point_position.axm">STEP и текущая графическая позиция</a></li>
-                    <li><a href="../../samples/graphics/primitives/circle_arcs_step_aspect.axm">Дуги, эллипсы и STEP у CIRCLE</a></li>
-                    <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: абсолютный и относительный viewport</a></li>
-                    <li><a href="../../samples/operators/window/cartesian_and_screen.axm">WINDOW: экранные и декартовы координаты</a></li>
-                    <li><a href="../../samples/operators/paint/fish_fill.axm">PAINT: рыбка по мотивам примера Зельднера</a></li>
-                    <li><a href="../../samples/operators/paint/step_default_fill.axm">PAINT STEP и заливка цветом фона по умолчанию</a></li>
-                    <li><a href="../../samples/operators/paint/pattern_repaint.axm">Шаблонная заливка и повторная перекраска через фон</a></li>
-                    <li><a href="../../samples/operators/draw/square.axm">DRAW: квадрат одной строкой команд</a></li>
-                    <li><a href="../../samples/operators/draw/octagon.axm">DRAW: восьмиугольник через масштаб и диагонали</a></li>
-                    <li><a href="../../samples/operators/draw/blind_and_return.axm">DRAW: модификаторы B и N</a></li>
-                    <li><a href="../../samples/operators/draw/rotated_spokes.axm">DRAW: поворот через TA</a></li>
-                    <li><a href="../../samples/operators/draw/paint_segments.axm">DRAW: сегменты с заливкой через P</a></li>
-                    <li><a href="../../samples/operators/draw/paint_default_border.axm">DRAW: заливка P с границей по умолчанию внутри рамки того же цвета</a></li>
-                    <li><a href="../../samples/operators/draw/dynamic_string.axm">DRAW: составная строка команд через STR(...)</a></li>
-                </ul>
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1
+PSET (10, 10), 12
+LINE (20, 20)-(120, 20), 14
+LINE (30, 30)-(90, 70), 11, B
+CIRCLE (160, 90), 24, 10
+PAINT (160, 90), 9, 10
+PRINT "Цвет точки:"; POINT(10, 10)
+SLEEP</code></pre>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
-                    <a href="graphics.html">Графика и экран</a>
                     <a href="screen.html">Оператор SCREEN</a>
+                    <a href="graphics-text.html">Текст на экране</a>
                     <a href="view.html">Оператор VIEW</a>
                     <a href="window.html">Оператор WINDOW</a>
                     <a href="pmap.html">Функция PMAP</a>
                     <a href="get-put.html">Операторы GET и PUT</a>
-                    <a href="graphics-text.html">Текст на экране</a>
-                    <a href="screen-functions.html">Функции состояния SCREEN</a>
-                    <a href="mousex.html">Мышь</a>
                 </div>
             </section>
 

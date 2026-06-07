@@ -34,6 +34,7 @@ public sealed partial class Binder
             BeginFrameStatementSyntax beginFrameStatement => new BoundBeginFrameStatement(GetLocation(beginFrameStatement)),
             PresentStatementSyntax presentStatement => new BoundPresentStatement(GetLocation(presentStatement)),
             CameraStatementSyntax cameraStatement => BindCameraStatement(cameraStatement),
+            ViewportStatementSyntax viewportStatement => BindViewportStatement(viewportStatement),
             ResetCameraStatementSyntax resetCameraStatement => BindResetCameraStatement(resetCameraStatement),
             ViewStatementSyntax viewStatement => BindViewStatement(viewStatement),
             ViewPrintStatementSyntax viewPrintStatement => BindViewPrintStatement(viewPrintStatement),

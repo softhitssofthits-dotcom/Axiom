@@ -306,6 +306,35 @@ public sealed class BoundCameraStatement : BoundStatement
     public BoundExpression YExpression { get; }
 }
 
+public sealed class BoundViewportStatement : BoundStatement
+{
+    public BoundViewportStatement(
+        TextLocation location,
+        BoundExpression? leftExpression,
+        BoundExpression? topExpression,
+        BoundExpression? rightExpression,
+        BoundExpression? bottomExpression)
+        : base(location)
+    {
+        LeftExpression = leftExpression;
+        TopExpression = topExpression;
+        RightExpression = rightExpression;
+        BottomExpression = bottomExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ViewportStatement;
+
+    public BoundExpression? LeftExpression { get; }
+
+    public BoundExpression? TopExpression { get; }
+
+    public BoundExpression? RightExpression { get; }
+
+    public BoundExpression? BottomExpression { get; }
+
+    public bool IsReset => LeftExpression is null || TopExpression is null || RightExpression is null || BottomExpression is null;
+}
+
 public sealed class BoundResetCameraStatement : BoundStatement
 {
     public BoundResetCameraStatement(TextLocation location)

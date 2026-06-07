@@ -33,6 +33,7 @@ public sealed partial class Parser
             SyntaxKind.BeginFrameKeyword => new BeginFrameStatementSyntax(Match(SyntaxKind.BeginFrameKeyword, "BEGINFRAME")),
             SyntaxKind.PresentKeyword => new PresentStatementSyntax(Match(SyntaxKind.PresentKeyword, "PRESENT")),
             SyntaxKind.CameraKeyword => ParseCameraStatement(),
+            SyntaxKind.ViewportKeyword => ParseViewportStatement(),
             SyntaxKind.ResetCameraKeyword => ParseResetCameraStatement(),
             SyntaxKind.ViewKeyword => ParseViewStatement(),
             SyntaxKind.WindowKeyword => ParseWindowStatement(),
@@ -281,6 +282,20 @@ public sealed partial class Parser
         var commaToken = Match(SyntaxKind.CommaToken, "',' после X CAMERA");
         var yExpression = ParseExpression();
         return new CameraStatementSyntax(cameraKeyword, xExpression, commaToken, yExpression);
+    }
+
+    private ViewportStatementSyntax ParseViewportStatement()
+    {
+        var viewportKeyword = Match(SyntaxKind.ViewportKeyword, "VIEWPORT");
+        if (IsStatementTerminator(Current.Kind))
+        {
+            return new ViewportStatementSyntax(viewportKeyword, null, null, null);
+        }
+
+        var topLeftPoint = ParseGraphicsPoint();
+        var minusToken = Match(SyntaxKind.MinusToken, "'-' между углами VIEWPORT");
+        var bottomRightPoint = ParseGraphicsPoint();
+        return new ViewportStatementSyntax(viewportKeyword, topLeftPoint, minusToken, bottomRightPoint);
     }
 
     private ResetCameraStatementSyntax ParseResetCameraStatement()

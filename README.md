@@ -199,7 +199,8 @@ powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1
 - `docs/SPECIFICATION.md` — историческая первая часть спецификации
 - `docs/ARCHITECTURE.md` — техническая структура
 - `docs/manual/index.html` — основной человекочитаемый справочник по Axiom
-- `docs/PLANS3.md` — текущий план
+- `docs/PLANS4.md` — текущий план
+- `docs/PLANS3.md` — историческая третья часть плана
 - `docs/PLANS2.md` — историческая вторая часть плана
 - `docs/PLANS.md` — историческая первая часть плана
 - `docs/WORKLOG4.md` — активный журнал состояния
@@ -232,7 +233,7 @@ powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -Topic CANVAS,RG
 - `README.md`
 - `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
-- `docs/PLANS3.md`
+- `docs/PLANS4.md`
 - `docs/WORKLOG4.md`
 - `docs/agent/`
 

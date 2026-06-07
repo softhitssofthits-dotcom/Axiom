@@ -173,6 +173,7 @@ public sealed class BytecodeRoutine
             Opcode.OpenFile => -1,
             Opcode.CloseFile => 0,
             Opcode.Convert => 0,
+            Opcode.Viewport => -instruction.GetOperand(0),
             _ => 0
         };
     }

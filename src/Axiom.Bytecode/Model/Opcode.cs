@@ -84,6 +84,7 @@ public enum Opcode
     BeginFrame,
     Present,
     Camera,
+    Viewport,
     ResetCamera,
     View,
     ViewPrint,

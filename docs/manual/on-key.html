@@ -7,64 +7,84 @@
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="on-key">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Обработчики клавиатурных событий</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><div class="sidebar__head"><p class="sidebar__title">Оператор ON KEY</p><p class="sidebar__subtitle">Регистрация и отключение обработчика для одной клавиши.</p></div><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span><span>/</span><span>ON KEY</span></nav>
-<p class="eyebrow">Клавиатура</p>
-<h1 class="page-title">Оператор ON KEY</h1>
-<p class="lead"><code>ON KEY</code> включает простой событийный обработчик клавиатуры внутри выполняющейся программы. Он связывает строковое имя клавиши с процедурой <code>SUB</code> и позволяет перехватывать нажатие до обычного опроса через <code>INKEY()</code>.</p>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Обработчики клавиатурных событий</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Оператор ON KEY</span>
+        </nav>
 
-<section class="article-section">
-<h2>Когда нужен обработчик клавиши</h2>
-<p>Оператор подходит для узких интерактивных сценариев, где программе нужно реагировать на отдельную клавишу между обычными операторами. На этом шаге <code>ON KEY</code> не строит общую систему сообщений и не отслеживает удержание клавиш: он включает или выключает обработчик для конкретного строкового имени либо запасной обработчик для любой клавиши.</p>
-</section>
+        <p class="eyebrow">Оператор</p>
+        <h1 class="page-title">Оператор ON KEY</h1>
+        <p class="lead"><code>ON KEY</code> — оператор языка Axiom, который включает простой событийный обработчик клавиатуры внутри выполняющейся программы. Оператор связывает строковое имя клавиши с процедурой <code>SUB</code> и позволяет перехватывать нажатие до обычного опроса через <a href="inkey.html"><code>INKEY</code></a>.</p>
 
-<section class="article-section">
-<h2>Синтаксис</h2>
+        <section class="article-section">
+            <h2>Для чего нужен оператор ON KEY</h2>
+            <p>Оператор <code>ON KEY</code> подходит для узких интерактивных сценариев, где программе нужно реагировать на отдельную клавишу между обычными операторами. На этом шаге оператор <code>ON KEY</code> не строит общую систему сообщений и не отслеживает удержание клавиш: он включает или выключает обработчик для конкретного строкового имени либо запасной обработчик для любой клавиши.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Где работает оператор ON KEY</h2>
+            <p>Оператор <code>ON KEY</code> работает в любой среде выполнения, где доступна клавиатурная очередь. Если программа работает без оператора <code>SCREEN</code>, события поступают из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, события поступают из окна <code>SCREEN</code>.</p>
+            <p>Оператор <code>ON KEY</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
 <pre><code class="language-basic">ON KEY(keyText), HandlerName
 ON KEY(keyText), ON
 ON KEY(keyText), STOP
 ON KEY(keyText), OFF</code></pre>
-<p>Процедура-обработчик может быть объявлена без параметров или с одним параметром <code>STRING</code>:</p>
+            <p>Процедура-обработчик может быть объявлена без параметров или с одним параметром <code>STRING</code>:</p>
 <pre><code class="language-basic">SUB HandlerName()
 END SUB
 
 SUB HandlerName(keyName AS STRING)
 END SUB</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Части оператора</h2>
-<p><code>keyText</code> и <code>HandlerName</code> в синтаксисе — метапеременные, то есть обозначения частей записи. В реальной программе вместо <code>HandlerName</code> пишут имя своей процедуры <code>SUB</code>, например <code>HandleLeft</code>. Слова <code>ON</code>, <code>STOP</code> и <code>OFF</code> в этих формах — режимы оператора <code>ON KEY</code>, а не отдельные операторы программы.</p>
-<ul>
-<li><code>keyText</code> - строковое выражение с именем клавиши, например <code>"LEFT"</code>, <code>"ESCAPE"</code> или <code>"A"</code>. Канонические имена и алиасы перечислены в <a href="keydown.html#key-names">общей таблице имён клавиш</a>. Специальная строка <code>"ANY"</code> задаёт обработчик любой клавиши.</li>
-<li><code>HandlerName</code> - видимая в текущем месте процедура <code>SUB</code> без параметров или с одним параметром <code>STRING</code>.</li>
-<li><code>ON</code> - возобновление ранее зарегистрированного обработчика.</li>
-<li><code>STOP</code> - пауза ранее зарегистрированного обработчика без удаления регистрации.</li>
-<li><code>OFF</code> - полное отключение обработчика для той же клавиши.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Части оператора</h2>
+            <p><code>keyText</code> и <code>HandlerName</code> в синтаксисе — метапеременные, то есть обозначения частей записи. В реальной программе вместо <code>HandlerName</code> пишут имя своей процедуры <code>SUB</code>, например <code>HandleLeft</code>. Слова <code>ON</code>, <code>STOP</code> и <code>OFF</code> в этих формах — режимы оператора <code>ON KEY</code>, а не отдельные операторы программы.</p>
+            <ul>
+                <li><code>keyText</code> — строковое выражение с именем клавиши, например <code>"LEFT"</code>, <code>"ESCAPE"</code> или <code>"A"</code>. Канонические имена и алиасы перечислены в <a href="keydown.html#key-names">общей таблице имён клавиш</a>. Специальная строка <code>"ANY"</code> задаёт обработчик любой клавиши.</li>
+                <li><code>HandlerName</code> — видимая в текущем месте процедура <code>SUB</code> без параметров или с одним параметром <code>STRING</code>.</li>
+                <li><code>ON</code> — возобновление ранее зарегистрированного обработчика.</li>
+                <li><code>STOP</code> — пауза ранее зарегистрированного обработчика без удаления регистрации.</li>
+                <li><code>OFF</code> — полное отключение обработчика для той же клавиши.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Порядок обработки клавиш</h2>
-<ul>
-<li>Обработчик вызывается между операторами, а не посреди вычисления выражения.</li>
-<li>Совпавшая клавиша считается обработанной и не попадает в последующий <a href="inkey.html"><code>INKEY()</code></a>.</li>
-<li>Если клавиша не подошла ни под один зарегистрированный обработчик, она остаётся в очереди и может быть прочитана через <code>INKEY()</code>.</li>
-<li>Повторная регистрация для той же клавиши заменяет предыдущий обработчик.</li>
-<li>Каноническое имя и алиас считаются одной клавишей: например, <code>ON KEY("ESCAPE"), HandleEsc</code> сработает на событие <code>"ESC"</code>.</li>
-<li><code>ON KEY("ANY"), HandlerName</code> вызывается для доступных клавиш, у которых нет более точного обработчика.</li>
-<li>Если для клавиши есть точный обработчик и одновременно зарегистрирован <code>"ANY"</code>, сначала применяется точный обработчик.</li>
-<li>Во время выполнения обработчика повторный вход в другой клавиатурный обработчик не делается.</li>
-<li><code>STOP</code> действует на события, которые приходят после паузы. Уже накопленная клавиша может быть обработана на ближайшей границе оператора до того, как программа выполнит строку <code>ON KEY(...), STOP</code>.</li>
-<li>Если обработчик объявлен с одним параметром <code>STRING</code>, в него передаётся нормализованное имя фактической клавиши. Для <code>ON KEY("ANY")</code> это не строка <code>"ANY"</code>, а имя сработавшей клавиши, например <code>"LEFT"</code> или <code>"ESC"</code>.</li>
-<li>Состояния модификаторов, удержание и мышь не входят в контракт <code>ON KEY</code>.</li>
-</ul>
-</section>
+        <section class="article-section">
+            <h2>Порядок обработки клавиш</h2>
+            <ul>
+                <li>Обработчик вызывается между операторами, а не посреди вычисления выражения.</li>
+                <li>Совпавшая клавиша считается обработанной и не попадает в последующий <a href="inkey.html"><code>INKEY</code></a>.</li>
+                <li>Если клавиша не подошла ни под один зарегистрированный обработчик, она остаётся в очереди и может быть прочитана через <code>INKEY</code>.</li>
+                <li>Повторная регистрация для той же клавиши заменяет предыдущий обработчик.</li>
+                <li>Каноническое имя и алиас считаются одной клавишей: например, <code>ON KEY("ESCAPE"), HandleEsc</code> сработает на событие <code>"ESC"</code>.</li>
+                <li><code>ON KEY("ANY"), HandlerName</code> вызывается для доступных клавиш, у которых нет более точного обработчика.</li>
+                <li>Если для клавиши есть точный обработчик и одновременно зарегистрирован <code>"ANY"</code>, сначала применяется точный обработчик.</li>
+                <li>Во время выполнения обработчика повторный вход в другой клавиатурный обработчик не делается.</li>
+                <li><code>STOP</code> действует на события, которые приходят после паузы. Уже накопленная клавиша может быть обработана на ближайшей границе оператора до того, как программа выполнит строку <code>ON KEY(...), STOP</code>.</li>
+                <li>Если обработчик объявлен с одним параметром <code>STRING</code>, в него передаётся нормализованное имя фактической клавиши. Для <code>ON KEY("ANY")</code> это не строка <code>"ANY"</code>, а имя сработавшей клавиши, например <code>"LEFT"</code> или <code>"ESC"</code>.</li>
+                <li>Состояния модификаторов, удержание и мышь не входят в контракт оператора <code>ON KEY</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>Пример обработчика клавиши</h2>
+        <section class="article-section">
+            <h2>Пример обработчика клавиши</h2>
 <pre><code class="language-basic">ON KEY("LEFT"), HandleLeft
 
 FOR i = 1 TO 200000
@@ -75,10 +95,10 @@ ON KEY("LEFT"), OFF
 SUB HandleLeft()
     PRINT "LEFT handler"
 END SUB</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Обработчик любой клавиши</h2>
+        <section class="article-section">
+            <h2>Обработчик любой клавиши</h2>
 <pre><code class="language-basic">ON KEY("ANY"), HandleAny
 
 FOR i = 1 TO 200000
@@ -89,10 +109,10 @@ ON KEY("ANY"), OFF
 SUB HandleAny()
     PRINT "any key"
 END SUB</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Имя клавиши в обработчике</h2>
+        <section class="article-section">
+            <h2>Имя клавиши в обработчике</h2>
 <pre><code class="language-basic">ON KEY("ANY"), HandleKey
 
 FOR i = 1 TO 200000
@@ -103,12 +123,12 @@ ON KEY("ANY"), OFF
 SUB HandleKey(keyName AS STRING)
     PRINT keyName
 END SUB</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Аккорд клавиш</h2>
-<p>В строке <code>keyText</code> можно указать несколько клавиш через <code>+</code>. Последняя часть строки считается основной клавишей события, а все предыдущие части должны быть удержаны.</p>
-<p>Проще говоря, <code>ON KEY("CTRL+LEFT"), Handler</code> сработает, когда <code>CTRL</code> уже удержан, а событием пришла последняя клавиша <code>LEFT</code>. Это тот же договор, что у <code>KEYPRESS("CTRL+LEFT")</code>.</p>
+        <section class="article-section">
+            <h2>Аккорд клавиш</h2>
+            <p>В строке <code>keyText</code> можно указать несколько клавиш через <code>+</code>. Последняя часть строки считается основной клавишей события, а все предыдущие части должны быть удержаны.</p>
+            <p>Проще говоря, <code>ON KEY("CTRL+LEFT"), Handler</code> сработает, когда <code>CTRL</code> уже удержан, а событием пришла последняя клавиша <code>LEFT</code>. Это тот же договор, что у <code>KEYPRESS("CTRL+LEFT")</code>.</p>
 <pre><code class="language-basic">ON KEY("CTRL+LEFT"), HandleChord
 
 FOR i = 1 TO 200000
@@ -119,19 +139,19 @@ ON KEY("CTRL+LEFT"), OFF
 SUB HandleChord(keyName AS STRING)
     PRINT keyName
 END SUB</code></pre>
-<p>Если обработчик принимает параметр <code>STRING</code>, для аккорда он получает каноническую строку аккорда, например <code>"CTRL+LEFT"</code>.</p>
-</section>
+            <p>Если обработчик принимает параметр <code>STRING</code>, для аккорда он получает каноническую строку аккорда, например <code>"CTRL+LEFT"</code>.</p>
+        </section>
 
-<section class="article-section">
-<h2>Отключение обработчика</h2>
+        <section class="article-section">
+            <h2>Отключение обработчика</h2>
 <pre><code class="language-basic">ON KEY("ESC"), HandleEsc
 ' ...
 ON KEY("ESC"), OFF</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Пауза и возобновление</h2>
-<p><code>STOP</code> временно выключает уже зарегистрированный обработчик, но не забывает его. <code>ON</code> снова разрешает вызов этого же обработчика.</p>
+        <section class="article-section">
+            <h2>Пауза и возобновление</h2>
+            <p>Оператор <code>STOP</code> временно выключает уже зарегистрированный обработчик, но не забывает его. Оператор <code>ON</code> снова разрешает вызов этого же обработчика.</p>
 <pre><code class="language-basic">ON KEY("LEFT"), HandleLeft
 ON KEY("LEFT"), STOP
 
@@ -141,21 +161,23 @@ ON KEY("LEFT"), STOP
 ON KEY("LEFT"), ON
 
 ' Следующее нажатие LEFT снова вызовет HandleLeft.</code></pre>
-</section>
+        </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/on-key/left_handler.axm">ON KEY: обработчик клавиши LEFT</a></li><li><a href="../../samples/operators/on-key/any_key_handler.axm">ON KEY: обработчик любой клавиши</a></li><li><a href="../../samples/operators/on-key/handler_key_name.axm">ON KEY: передача имени клавиши в обработчик</a></li><li><a href="../../samples/operators/on-key/chord_handler.axm">ON KEY: обработчик аккорда клавиш</a></li><li><a href="../../samples/operators/on-key/stop_resume_handler.axm">ON KEY: пауза и возобновление обработчика</a></li></ul>
-</section>
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <ul class="resource-list"><li><a href="../../samples/operators/on-key/left_handler.axm">ON KEY: обработчик клавиши LEFT</a></li><li><a href="../../samples/operators/on-key/any_key_handler.axm">ON KEY: обработчик любой клавиши</a></li><li><a href="../../samples/operators/on-key/handler_key_name.axm">ON KEY: передача имени клавиши в обработчик</a></li><li><a href="../../samples/operators/on-key/chord_handler.axm">ON KEY: обработчик аккорда клавиш</a></li><li><a href="../../samples/operators/on-key/stop_resume_handler.axm">ON KEY: пауза и возобновление обработчика</a></li></ul>
+        </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика <code>MB2034</code> возникает, если в обработчик передать не процедуру <code>SUB</code> без параметров или с одним параметром <code>STRING</code>.</p>
-</section>
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2034</code>: в обработчик оператора <code>ON KEY</code> передана не процедура <code>SUB</code> без параметров или с одним параметром <code>STRING</code>.</li>
+            </ul>
+        </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="data-and-input.html">Клавиатура, мышь и события</a><a href="inkey.html">Функция INKEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
-</section>
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="inkey.html">Функция INKEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
+        </section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

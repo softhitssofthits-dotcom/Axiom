@@ -21,83 +21,93 @@
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор PCOPY</span>
             </nav>
             <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">PCOPY</h1>
-            <p class="lead"><code>PCOPY</code> копирует одну экранную страницу графического <code>SCREEN</code> в другую. Эта форма полезна, когда программа сначала готовит изображение на скрытой странице, а затем переносит готовый кадр на видимую страницу без поэлементного рисования заново.</p>
+            <h1 class="page-title">Оператор PCOPY</h1>
+            <p class="lead"><code>PCOPY</code> — оператор языка Axiom, который копирует одну графическую страницу <code>SCREEN</code> в другую. Оператор <code>PCOPY</code> нужен для показа заранее подготовленного кадра, когда программа рисует на скрытой странице, а затем переносит готовый результат на видимую страницу.</p>
 
             <section class="article-section">
-                <h2>Синтаксис</h2>
-<pre><code>PCOPY &lt;источник&gt;, &lt;приёмник&gt;</code></pre>
+                <h2>Для чего нужен оператор PCOPY</h2>
+                <p>Оператор <code>PCOPY</code> нужен для работы с экранными страницами исторического графического пути <code>SCREEN</code>.</p>
+                <p>Обычный сценарий такой: оператор <code>SCREEN</code> делает страницу <code>1</code> активной для рисования и страницу <code>0</code> видимой для показа, программа собирает следующий кадр на странице <code>1</code>, а оператор <code>PCOPY 1, 0</code> переносит готовый кадр на страницу <code>0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Части синтаксиса</h2>
+                <h2>Где работает оператор PCOPY</h2>
+                <p>Оператор <code>PCOPY</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>.</p>
+                <p>Оператор <code>PCOPY</code> не работает в <code>SCREEN 0</code> и не относится к современному графическому слою <code>CANVAS</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис</h2>
+<pre><code class="language-basic">PCOPY sourcePage, destinationPage</code></pre>
+                <p>На этой странице показана одна форма оператора <code>PCOPY</code>. Оператор <code>PCOPY</code> всегда требует номер исходной страницы и номер страницы назначения.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Параметры</h2>
                 <table>
                     <thead>
-                        <tr><th>Часть</th><th>Описание</th></tr>
+                        <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>&lt;источник&gt;</code></td><td>Номер экранной страницы, из которой берётся копия. В текущем договоре Axiom допустимы страницы <code>0..3</code>.</td></tr>
-                        <tr><td><code>&lt;приёмник&gt;</code></td><td>Номер экранной страницы, куда помещается копия. Допустимый диапазон тот же: <code>0..3</code>.</td></tr>
+                        <tr><td><code>sourcePage</code></td><td>Номер исходной страницы от <code>0</code> до <code>3</code>. Оператор <code>PCOPY</code> читает кадр именно из этой страницы.</td></tr>
+                        <tr><td><code>destinationPage</code></td><td>Номер страницы назначения от <code>0</code> до <code>3</code>. Оператор <code>PCOPY</code> записывает копию кадра именно в эту страницу.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Экранные страницы</h2>
-                <p>Графический <code>SCREEN</code> может иметь активную страницу и видимую страницу. Активная страница получает команды рисования и чтение через <code>POINT(x, y)</code>. Видимая страница показывается в окне программы.</p>
-                <p>Страницы выбираются через расширенную форму оператора <code>SCREEN</code>:</p>
-<pre><code>SCREEN &lt;режим&gt;, , &lt;активная_страница&gt;, &lt;видимая_страница&gt;</code></pre>
-                <p>Пустое место после первой запятой оставлено под исторический параметр <code>colorSwitch</code>, который в Axiom не поддерживается. Чтобы задать страницы, оставляйте это место пустым.</p>
+                <h2>Что делает оператор PCOPY</h2>
+                <p>Оператор <code>PCOPY</code> копирует кадровый буфер исходной страницы в страницу назначения.</p>
+                <p>Оператор <code>PCOPY</code> копирует индексный слой, полноцветный слой и палитру исходной страницы. Поэтому кадр с <code>PSET</code>, <code>LINE</code>, <code>DRAWIMAGE</code>, <code>DRAWSPRITE</code> и <code>PALETTE</code> переносится как единое изображение.</p>
             </section>
 
             <section class="article-section">
-                <h2>Замечания</h2>
-                <p><code>PCOPY</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>. В текстовом <code>SCREEN 0</code> и без выбранного графического режима оператор сообщает <code>MB3010</code>.</p>
-                <p>Копируется графический кадровый буфер страницы: цветовые индексы пикселей и палитра этой страницы. После копирования <code>POINT(x, y)</code> на странице-приёмнике возвращает те же индексы, которые были в источнике.</p>
-                <p>Текст, выведенный через <code>PRINT</code> поверх графического экрана, в текущем срезе не является отдельной страницей <code>PCOPY</code>. Оператор не меняет текущий текстовый курсор, <code>VIEW PRINT</code>, обычный <code>VIEW</code>, <code>WINDOW</code>, текущую графическую позицию, активную страницу и видимую страницу.</p>
-                <p>Если источник и приёмник совпадают, состояние экрана остаётся тем же. Если страница-приёмник сейчас видима, окно программы обновляется сразу после копирования.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример</h2>
-<pre><code>SCREEN 1, , 1, 0
-LINE (20, 40)-(180, 40), 1
-PALETTE 1, 196
-
-PCOPY 1, 0
-SCREEN 1, , 0, 0
-PRINT "visible page="; POINT(20, 40)</code></pre>
-                <p>Программа рисует линию на активной странице <code>1</code>, пока видимой остаётся страница <code>0</code>, и меняет вид индекса <code>1</code> через <code>PALETTE</code>. Оператор <code>PCOPY 1, 0</code> переносит готовое изображение и палитру на страницу <code>0</code>. После переключения активной страницы на <code>0</code> функция <code>POINT</code> подтверждает тот же цветовой индекс.</p>
-                <p>Тот же приём подходит для кадрового вывода спрайтов: программа может рисовать <code>DRAWSPRITE</code> на скрытой странице, а затем переносить готовый кадр на видимую страницу через <code>PCOPY</code>.</p>
+                <h2>Правила работы</h2>
+                <p>Оператор <code>PCOPY</code> работает только после выбора графического режима <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Если графический режим не активен, оператор <code>PCOPY</code> сообщает ошибку времени выполнения <code>MB3010</code>.</p>
+                <p>Номера <code>sourcePage</code> и <code>destinationPage</code> должны находиться в диапазоне <code>0..3</code>. Если программа передаёт номер страницы вне этого диапазона, оператор <code>PCOPY</code> сообщает ошибку времени выполнения <code>MB3007</code>.</p>
+                <p>Оператор <code>PCOPY</code> не меняет активную страницу, видимую страницу, текущую графическую позицию, область <code>VIEW</code>, систему координат <code>WINDOW</code>, область <code>VIEW PRINT</code>, текстовый курсор и очереди ввода.</p>
+                <p>Текстовый слой графического режима <code>SCREEN</code>, выведенный через <code>PRINT</code> и <code>LOCATE</code>, относится к той же экранной странице. Поэтому оператор <code>PCOPY</code> переносит и такой текст вместе с остальным содержимым страницы.</p>
             </section>
 
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
                     <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3007</code>: номер страницы источника или приёмника находится вне диапазона <code>0..3</code>.</li>
+                    <li><code>MB3007</code>: номер исходной страницы или страницы назначения находится вне диапазона <code>0..3</code>.</li>
                 </ul>
             </section>
 
             <section class="article-section">
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1, , 1, 0
+CLS
+LINE (20, 40)-(180, 40), 1
+PALETTE 1, 196
+PCOPY 1, 0
+
+SCREEN 1, , 0, 0
+PRINT POINT(20, 40)</code></pre>
+                <p>В этом примере оператор <code>PCOPY</code> переносит со скрытой страницы <code>1</code> на видимую страницу <code>0</code> и линию, и изменённую палитру. После переключения активной страницы функция <code>POINT</code> всё равно возвращает индекс <code>1</code>, потому что оператор <code>PALETTE</code> меняет видимый цвет, а не сохранённый индекс пикселя.</p>
+            </section>
+
+            <section class="article-section">
                 <h2>Проверочные программы</h2>
-                <p>Готовые примеры для ручной и отрицательной проверки находятся в <code>samples/operators/pcopy/</code>.</p>
+                <p>Готовые примеры для ручной проверки оператора <code>PCOPY</code> находятся в <code>samples/operators/pcopy/</code>.</p>
                 <ul class="resource-list">
-                    <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: копирование скрытой страницы на видимую</a></li>
-                    <li><a href="../../samples/graphics/sprites/page_flip_walk.axm">SPRITE и PCOPY: кадр на скрытой странице</a></li>
-                    <li><a href="../../samples/operators/pcopy/invalid_page_error.axm">PCOPY: ошибка неверного номера страницы</a></li>
-                    <li><a href="../../samples/operators/pcopy/text_screen_error.axm">PCOPY: ошибка в текстовом SCREEN 0</a></li>
+                    <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: перенос страницы с палитрой</a></li>
+                    <li><a href="../../samples/operators/pcopy/invalid_page_error.axm">PCOPY: ошибка номера страницы</a></li>
+                    <li><a href="../../samples/operators/pcopy/text_screen_error.axm">PCOPY: ошибка в SCREEN 0</a></li>
                 </ul>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
+                    <a href="graphics.html">Графика</a>
                     <a href="screen.html">Оператор SCREEN</a>
                     <a href="palette.html">Оператор PALETTE</a>
-                    <a href="graphics-primitives.html">Операторы рисования</a>
-                    <a href="get-put.html">Операторы GET и PUT</a>
-                    <a href="screen-functions.html">Функции состояния SCREEN</a>
+                    <a href="graphics-primitives.html#point">Функция POINT</a>
+                    <a href="sprites.html">Спрайты SPRITE</a>
                 </div>
             </section>
 

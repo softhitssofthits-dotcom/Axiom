@@ -277,6 +277,7 @@ public sealed class EditorFeatureTests
         Assert.Contains("CANVAS", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("BEGINFRAME", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("PRESENT", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("VIEWPORT", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("DRAWRECT", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("FILLRECT", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("RGB", AxiomHighlightingVocabulary.BuiltIns);

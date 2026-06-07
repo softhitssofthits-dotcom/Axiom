@@ -18,73 +18,86 @@
         <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
         <main class="content">
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Состояние SCREEN</span>
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Функции состояния SCREEN</span>
             </nav>
             <p class="eyebrow">Функции</p>
             <h1 class="page-title">Функции состояния SCREEN</h1>
-            <p class="lead">Функции состояния позволяют программе узнать, включён ли графический режим, какой режим выбран, каковы текущие логические размеры окна <code>SCREEN</code> и где находится текущая графическая позиция.</p>
+            <p class="lead">Эта страница описывает встроенные функции языка Axiom, которые сообщают текущее состояние экранного режима <code>SCREEN</code>: активен ли графический экран, какой режим выбран, какие размеры имеет текущее окно и где находится текущая графическая позиция.</p>
 
             <section class="article-section">
-                <h2 id="screenisactive">SCREENISACTIVE</h2>
-<pre><code>SCREENISACTIVE()</code></pre>
-                <p>Возвращает <code>TRUE</code>, если активен графический режим <code>SCREEN 1..10</code>. В текстовом режиме <code>SCREEN 0</code> результат равен <code>FALSE</code>, потому что пиксельные графические команды недоступны.</p>
+                <h2>Где работают эти функции</h2>
+                <p>Эти функции относятся к экранному договору <code>SCREEN</code>.</p>
+                <p>Часть функций работает и в <code>SCREEN 0</code>, и в графических режимах <code>SCREEN 1..10</code>. Часть функций имеет смысл именно в графическом режиме.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="screenmode">SCREENMODE</h2>
-<pre><code>SCREENMODE()</code></pre>
-                <p>Возвращает номер текущего режима <code>SCREEN</code>. Для текстового режима результат равен <code>0</code>.</p>
+                <h2>Функция SCREENISACTIVE</h2>
+                <p><code>SCREENISACTIVE</code> — встроенная функция языка Axiom, которая сообщает, активен ли графический режим <code>SCREEN 1..10</code>.</p>
+<pre><code class="language-basic">SCREENISACTIVE()</code></pre>
+                <p>Функция возвращает <code>TRUE</code>, если активен графический режим <code>SCREEN 1..10</code>.</p>
+                <p>Функция возвращает <code>FALSE</code> в режиме <code>SCREEN 0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="screenwidth">SCREENWIDTH</h2>
-<pre><code>SCREENWIDTH()</code></pre>
-                <p>Возвращает ширину текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>640</code>. Для <code>SCREEN 10</code> функция возвращает фактически выбранную ширину адаптивного режима <code>16:9</code>, а не заранее зафиксированное историческое значение.</p>
+                <h2>Функция SCREENMODE</h2>
+                <p><code>SCREENMODE</code> — встроенная функция языка Axiom, которая возвращает номер текущего режима <code>SCREEN</code>.</p>
+<pre><code class="language-basic">SCREENMODE()</code></pre>
+                <p>В режиме <code>SCREEN 0</code> функция возвращает <code>0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="screenheight">SCREENHEIGHT</h2>
-<pre><code>SCREENHEIGHT()</code></pre>
-                <p>Возвращает высоту текущего окна <code>SCREEN</code> в пикселях. Для <code>SCREEN 0</code> текущий размер равен <code>300</code>. Для <code>SCREEN 10</code> функция возвращает фактически выбранную высоту адаптивного режима <code>16:9</code>, рассчитанную для того же клиентского прямоугольника, что и <code>SCREENWIDTH()</code>.</p>
+                <h2>Функция SCREENWIDTH</h2>
+                <p><code>SCREENWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину текущего окна <code>SCREEN</code> в пикселях.</p>
+<pre><code class="language-basic">SCREENWIDTH()</code></pre>
+                <p>Для режима <code>SCREEN 0</code> функция возвращает <code>640</code>.</p>
+                <p>Для режима <code>SCREEN 10</code> функция возвращает фактически выбранную ширину адаптивного окна.</p>
             </section>
 
             <section class="article-section">
-                <h2>Замечания о SCREEN 10</h2>
-                <p>Режим <code>SCREEN 10</code> выбирает максимально возможную клиентскую область с отношением сторон <code>16:9</code>, которая помещается в рабочую область текущего монитора. Поэтому результаты <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> зависят от того, на каком мониторе находится главное окно <code>Axiom.Ide</code> в момент входа в режим.</p>
-                <p>Текстовая сетка для <code>LOCATE</code> по-прежнему считается как <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>. Если после деления остаются пиксели справа или снизу, они не образуют дополнительную текстовую позицию.</p>
+                <h2>Функция SCREENHEIGHT</h2>
+                <p><code>SCREENHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту текущего окна <code>SCREEN</code> в пикселях.</p>
+<pre><code class="language-basic">SCREENHEIGHT()</code></pre>
+                <p>Для режима <code>SCREEN 0</code> функция возвращает <code>300</code>.</p>
+                <p>Для режима <code>SCREEN 10</code> функция возвращает фактически выбранную высоту адаптивного окна.</p>
             </section>
 
             <section class="article-section">
-                <h2 id="point-position">POINT(number)</h2>
-<pre><code>POINT(0)
-POINT(1)
-POINT(2)
-POINT(3)</code></pre>
-                <p>Форма <code>POINT(number)</code> возвращает текущую графическую позицию. Значения <code>0</code> и <code>1</code> дают физические координаты viewport. Значения <code>2</code> и <code>3</code> дают логические координаты активного <code>WINDOW</code>; если окно не активно, они совпадают с координатами viewport. Эту форму удобно использовать после <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code> и <code>DRAW</code>, когда следующая фигура строится относительно предыдущей.</p>
-                <p>Для преобразования произвольной координаты между viewport и <code>WINDOW</code> используйте <code>PMAP</code>.</p>
+                <h2>Функция POINT(selector)</h2>
+                <p>Форма <code>POINT(selector)</code> описана на странице классических операторов рисования, но она тоже относится к функциям состояния графического экрана, потому что может возвращать текущую графическую позицию.</p>
+                <p>Когда программе нужны координаты текущей графической позиции, следует читать страницу <a href="graphics-primitives.html">операторов рисования</a> вместе со страницами <a href="view.html">VIEW</a> и <a href="window.html">WINDOW</a>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Пример чтения состояния</h2>
-<pre><code>PRINT SCREENISACTIVE()
-SCREEN 5
+                <h2>Правила работы</h2>
+                <p>Режим <code>SCREEN 10</code> выбирает максимально возможную клиентскую область с соотношением сторон <code>16:9</code>, которая помещается в рабочую область текущего монитора. Поэтому результаты функций <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> в этом режиме зависят от фактического окна.</p>
+                <p>Текстовая сетка для операторов экранного текста в режиме <code>SCREEN 10</code> вычисляется как <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Функции <code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> сами по себе не требуют отдельной runtime-диагностики отсутствующего графического режима, потому что читают текущее состояние экранного договора <code>SCREEN</code>.</p>
+                <p>Форма <code>POINT(selector)</code> использует диагностику своей страницы: при недопустимом селекторе функция <code>POINT</code> сообщает <code>MB3007</code>, а при отсутствии графического режима <code>SCREEN 1..10</code> функция <code>POINT</code> сообщает <code>MB3010</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1
 PRINT SCREENISACTIVE()
 PRINT SCREENMODE()
-PRINT SCREENWIDTH(); "x"; SCREENHEIGHT()
-PSET (10, 20), 12
-PRINT POINT(0); ","; POINT(1)
-SCREEN 0
-PRINT SCREENMODE()</code></pre>
+PRINT SCREENWIDTH()
+PRINT SCREENHEIGHT()
+SLEEP</code></pre>
+                <p>В этом примере встроенные функции состояния <code>SCREEN</code> сообщают, что графический режим активен, какой режим выбран и какие фактические размеры имеет текущее экранное окно.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
-                    <a href="graphics.html">Графика и экран</a>
-                    <a href="graphics-text.html">Текст на экране</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
-                    <a href="pmap.html">Функция PMAP</a>
+                    <a href="graphics-text.html">Текст на экране</a>
+                    <a href="view.html">Оператор VIEW</a>
+                    <a href="window.html">Оператор WINDOW</a>
                 </div>
             </section>
 

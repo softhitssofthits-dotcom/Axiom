@@ -1497,6 +1497,27 @@ public sealed class BoundProgramLowererTests
                 && instruction.ValueType == TypeSymbol.Long);
     }
 
+    [Fact]
+    public void Lower_Viewport_EmitsViewportInstructionForResetAndRectangle()
+    {
+        var result = Lower("""
+            CANVAS 320, 180
+            VIEWPORT
+            VIEWPORT (1, 2)-(10, 20)
+            """);
+
+        Assert.True(result.Succeeded);
+        Assert.NotNull(result.Program);
+
+        var viewportInstructions = result.Program.EntryPoint.Instructions
+            .Where(static instruction => instruction.Kind == LoweredInstructionKind.Viewport)
+            .ToArray();
+
+        Assert.Equal(2, viewportInstructions.Length);
+        Assert.Equal(0, viewportInstructions[0].ValueCount);
+        Assert.Equal(4, viewportInstructions[1].ValueCount);
+    }
+
     private static LoweringResult Lower(string source)
     {
         var pipeline = new AxiomExecutionPipeline();

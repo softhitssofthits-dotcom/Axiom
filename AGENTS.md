@@ -30,11 +30,11 @@ At the beginning of every session, do this in order:
    - `README.md`
    - `docs/SPECIFICATION3.md`
    - `docs/ARCHITECTURE.md`
-   - `docs/PLANS3.md`
+   - `docs/PLANS4.md`
    - `docs/WORKLOG4.md`
    - `docs/BYTECODE_COVERAGE.md`
    - `docs/BYTECODE_PERF_MATRIX.md`
-   - `docs/SPECIFICATION2.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
+   - `docs/SPECIFICATION2.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
 
 Then:
 1. briefly summarize what this project is;
@@ -56,7 +56,7 @@ If the following files do not exist, create them:
 - `README.md`
 - `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
-- `docs/PLANS3.md`
+- `docs/PLANS4.md`
 - `docs/WORKLOG4.md`
 
 If the following folders do not exist, create them:
@@ -76,7 +76,7 @@ At the end of Bootstrap mode:
 1. show the created file tree;
 2. explain what each created file is for in brief;
 3. record the current state in `docs/WORKLOG4.md`;
-4. record the next step in `docs/PLANS3.md`.
+4. record the next step in `docs/PLANS4.md`.
 
 ---
 
@@ -87,7 +87,7 @@ Use Resume mode when the repository already contains project documents.
 Rules for Resume mode:
 - Read the required files first.
 - Continue from the latest plan instead of inventing a new direction.
-- Prefer the next unfinished item from `docs/PLANS3.md`.
+- Prefer the next unfinished item from `docs/PLANS4.md`.
 - If documentation is stale, update it before or together with code changes.
 
 ---
@@ -128,13 +128,18 @@ Technical structure and major decisions:
 - layer boundaries;
 - key architectural choices.
 
-### `docs/PLANS3.md`
+### `docs/PLANS4.md`
 Current work plan:
 - current milestone;
 - next tasks in order;
 - blockers;
 - deferred items;
 - append-only ordering from top to bottom for all evolving sections unless the document explicitly says otherwise.
+
+### `docs/PLANS3.md`
+Historical third part of planning:
+- kept for historical context before `docs/PLANS4.md` became active;
+- no new planning updates should be added there after the switch.
 
 ### `docs/SPECIFICATION2.md`
 Historical second part of specification:
@@ -153,7 +158,7 @@ Historical second part of planning:
 
 ### `docs/PLANS.md`
 Historical first part of planning:
-- kept for historical context before `docs/PLANS3.md` became active;
+- kept for historical context before `docs/PLANS2.md` became active;
 - no new planning updates should be added there after the switch.
 
 ### `docs/WORKLOG3.md`
@@ -283,6 +288,46 @@ If a suitable Russian Learn page is unavailable, prefer the nearest official Eng
 - книга Зельднера остаётся редакционным и примерным ориентиром, но не отменяет проверку фактов по `PROJECT.md`, `docs/SPECIFICATION3.md`, коду, тестам и уже подтверждённым `samples/`;
 - нельзя переносить из книги неподтверждённую семантику Axiom или большие дословные фрагменты текста; переносить нужно структуру объяснения и мотив примера, а не выдавать исторический текст за текущий договор проекта.
 
+### 4.1.b. Для операторов и встроенных функций manual обязан использовать единый жёсткий шаблон
+
+Для этого репозитория каждая manual-страница, которая описывает оператор, встроенную функцию, тип данных или небольшую тематическую группу тесно связанных операторов, должна строиться по одному и тому же алгоритму.
+
+Постоянные требования для страницы об одном операторе:
+- первая фраза обязана прямо называть сущность: `оператор`, `встроенная функция`, `тип данных` или `раздел`;
+- нельзя начинать страницу с абстрактной фразы вроде «открывает поверхность», «задаёт режим», «используется для работы» без явного называния сущности;
+- если страница описывает именно оператор, пиши в духе `DRAWRECT — оператор языка Axiom, который ...`;
+- если страница описывает именно функцию, пиши в духе `TEXTWIDTH — встроенная функция языка Axiom, которая ...`;
+- если страница описывает группу сущностей, в начале явно перечисли, что именно собрано на странице, и отдельно предупреди читателя, что синтаксис ниже относится к разным операторам или функциям, а не к одной общей конструкции.
+
+Обязательный порядок разделов для атомарной страницы по оператору или функции:
+1. что это такое;
+2. для чего сущность нужна;
+3. где она работает и от какого режима или контекста зависит;
+4. синтаксис каждой поддерживаемой формы отдельно;
+5. объяснение каждого параметра или аргумента;
+6. что именно делает оператор или что именно возвращает функция;
+7. правила работы, ограничения и пограничные случаи;
+8. диагностика;
+9. короткий runnable-пример;
+10. `См. также`, если есть связанные страницы.
+
+Дополнительные постоянные требования к содержанию:
+- использовать полноценные предложения, а не телеграфный стиль;
+- не писать фразы вида `при отсутствии SCREEN ...`; писать нужно явно: `при отсутствии оператора SCREEN ...` или `если программа не вызвала оператор SCREEN ...`;
+- не писать фразы вида `FOR нужен для того, чтобы ...`; писать нужно `оператор FOR нужен для того, чтобы ...` или `цикл FOR нужен для того, чтобы ...`;
+- в каждом месте, где читатель может потерять предмет разговора, повторно называть сущность явно, а не заменять её безличными словами `это`, `данный режим`, `данная форма`, если ссылка уже расплывается;
+- для графики обязательно явно объяснять, в каких единицах измеряются координаты, от какой точки они считаются, что означает цвет, как ведёт себя сущность на границах экрана или холста и когда результат становится видимым;
+- для файловых средств обязательно явно объяснять, с какими путями идёт работа, что происходит при отсутствии файла или каталога, что создаётся автоматически, а что нет;
+- для строковых функций обязательно явно объяснять единицу измерения результата, поведение на пустой строке и поведение на выходе за границы;
+- если есть несколько синтаксических форм, они должны быть визуально разделены и затем объяснены по отдельности; нельзя сваливать разные формы в один общий блок так, будто это одна конструкция;
+- если аргумент имеет важный типовой договор, это надо писать прямо: `аргумент должен быть строкой`, `координаты должны быть целыми числами`, `ширина задаётся в пикселях` и так далее;
+- если сущность выдаёт конкретные диагностики, они должны быть перечислены по случаям, а не только общим списком кодов.
+
+Требования для обзорной страницы раздела:
+- обзорная страница тоже обязана начинаться с прямого ответа, что это за раздел и какие группы сущностей в него входят;
+- обзорная страница не должна подменять атомарные страницы длинными смешанными списками синтаксиса;
+- обзорная страница должна сначала объяснить структуру раздела, а потом направить читателя к отдельным страницам операторов, функций и подсистем.
+
 ### 5. Validation after code changes
 After code changes, run the most relevant checks available:
 - tests
@@ -309,7 +354,7 @@ After every meaningful task, update `docs/WORKLOG4.md`.
 All repository documents must be maintained from top to bottom.
 
 Permanent requirements:
-- never prepend new records to the top of `docs/WORKLOG4.md`, `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
+- never prepend new records to the top of `docs/WORKLOG4.md`, `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS4.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
 - add new records only below the existing records in the same document;
 - preserve chronological reading order: earlier entries stay above later entries;
 - do not silently reorder old records unless the task is explicitly to normalize document chronology.
@@ -321,7 +366,7 @@ For `docs/WORKLOG4.md`, continuing the sequence from `docs/WORKLOG.md`, `docs/WO
 - historical entries created before this rule may remain in the legacy format, but they must not be renumbered with invented timestamps.
 
 ### 8. Plans must stay current
-If the next steps change, update `docs/PLANS3.md`.
+If the next steps change, update `docs/PLANS4.md`.
 
 ### 8.1. Bytecode coverage registry must stay current
 If a task changes bytecode coverage, parity, acceptance samples, manual coverage, or profiling status for a user-visible language form, update `docs/BYTECODE_COVERAGE.md` in the same task.
@@ -413,7 +458,7 @@ A task is complete only if:
 - relevant validation was run when possible;
 - relevant docs were updated;
 - `docs/WORKLOG4.md` was updated;
-- `docs/PLANS3.md` reflects the next step.
+- `docs/PLANS4.md` reflects the next step.
 
 If a task changes bytecode coverage, parity status, sample status, manual status, or profiling status for a user-visible language form, it is complete only if:
 - `docs/BYTECODE_COVERAGE.md` was updated too.
@@ -496,7 +541,7 @@ Required repository architecture rule for language frontend:
 - длинные выводы инструментов нельзя бездумно проталкивать в контекст целиком, если сначала можно получить более дешёвый срез через `rg`, `Select-String`, `Get-Content -Tail`, фильтр конкретного теста, конкретного sample или конкретного файла;
 - при работе с `git diff`, логами `dotnet test`, большими search-результатами и журналами IDE сначала нужно получить короткий ориентир: первый сбой, верхние совпадения, хвост файла, адресный проект, адресный sample или адресную строку `Негативный паритет`, а не весь массив сразу;
 - если внешний инструмент умеет сжимать контекст, это не даёт права сжимать пользовательский исходный код, договор языка или проектные решения без явной необходимости: в этом репозитории код, спецификация и пользовательские диагностические детали важнее номинальной экономии токенов;
-- внешние системы задач и памяти не должны становиться вторым источником правды рядом с `docs/PLANS3.md` и `docs/WORKLOG4.md`; если они используются, они могут только помогать извлекать или раскладывать уже существующий проектный договор;
+- внешние системы задач и памяти не должны становиться вторым источником правды рядом с `docs/PLANS4.md` и `docs/WORKLOG4.md`; если они используются, они могут только помогать извлекать или раскладывать уже существующий проектный договор;
 - если внешний инструмент имеет разные наборы MCP-инструментов или режимы загрузки, для `Axiom` нужно предпочитать минимальный достаточный набор, а не полный режим по умолчанию;
 - для Windows-нужд этого репозитория нельзя делать обязательным workflow, который полноценно работает только через Bash-хуки, Unix-shell или Linux-only interception; такие инструменты допустимы только как необязательный ускоритель или как отдельный WSL-контур;
 - перед добавлением в проект нового внешнего агентного слоя нужно явно ответить на четыре вопроса в документации: что он экономит, что он может исказить, почему локальный `docs/agent/`-слой этого уже не покрывает, и как он вписывается в правило единственного источника правды.
@@ -527,7 +572,7 @@ If the user says:
 “Start implementing feature X”
 then:
 - read project files first;
-- update `docs/SPECIFICATION3.md` or `docs/PLANS3.md` if needed;
+- update `docs/SPECIFICATION3.md` or `docs/PLANS4.md` if needed;
 - then implement.
 
 ---
