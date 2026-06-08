@@ -1184,10 +1184,49 @@ PSET (2, 3), 12
     }
 
     [Fact]
-    public void Execute_PResetStillRequiresScreenWhenCanvasIsActive()
+    public void Execute_PResetWritesCanvasBackgroundPixelAtPhysicalViewportPoint()
+    {
+        const string text = """
+CANVAS 16, 16
+CLS RGB(255, 255, 255)
+PRESET (2, 3)
+PRINT POINT(2, 3)
+PRINT POINT(1, 3)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["0", "15"], host.Output);
+        Assert.Equal(0, host.GetAbsolutePixel(2, 3));
+        Assert.Equal(15, host.GetAbsolutePixel(1, 3));
+    }
+
+    [Fact]
+    public void Execute_PResetUsesCanvasWorldCoordinatesWithViewportAndCamera()
+    {
+        const string text = """
+CANVAS 24, 18
+CLS RGB(0, 0, 0)
+VIEWPORT (10, 6)-(14, 10)
+CAMERA 100, 50
+PRESET (100, 50), 12
+PRINT POINT(10, 6)
+PRINT POINT(9, 6)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["12", "0"], host.Output);
+        Assert.Equal(12, host.GetAbsolutePixel(10, 6));
+        Assert.Equal(0, host.GetAbsolutePixel(9, 6));
+    }
+
+    [Fact]
+    public void Execute_PResetStillRequiresScreenOrCanvas()
     {
         var (_, _, result) = ExecuteProgram("""
-CANVAS 16, 16
 PRESET (2, 3)
 """);
 
@@ -1331,6 +1370,45 @@ PRINT POINT(105, 206)
     }
 
     [Fact]
+    public void Execute_GetAndPutSupportCanvasViewportAndCamera()
+    {
+        const string text = """
+CANVAS 24, 18
+CLS RGB(0, 0, 0)
+VIEWPORT (10, 6)-(15, 11)
+CAMERA 100, 50
+DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+PSET (100, 50), 6
+PSET (101, 50), 9
+PSET (100, 51), 12
+PSET (101, 51), 15
+GET (100, 50)-(101, 51), buffer
+PRESET (100, 50), 0
+PRESET (101, 50), 0
+PRESET (100, 51), 0
+PRESET (101, 51), 0
+PUT (100, 50), buffer, PSET
+PRINT buffer(1, 5)
+PRINT buffer(2, 5)
+PRINT buffer(1, 6)
+PRINT buffer(2, 6)
+PRINT POINT(10, 6)
+PRINT POINT(11, 6)
+PRINT POINT(10, 7)
+PRINT POINT(11, 7)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["6", "9", "12", "15", "6", "9", "12", "15"], host.Output);
+        Assert.Equal(6, host.GetAbsolutePixel(10, 6));
+        Assert.Equal(9, host.GetAbsolutePixel(11, 6));
+        Assert.Equal(12, host.GetAbsolutePixel(10, 7));
+        Assert.Equal(15, host.GetAbsolutePixel(11, 7));
+    }
+
+    [Fact]
     public void Execute_PutSupportsRelativePresetAndNormalizesBufferValues()
     {
         const string text = """
@@ -1373,6 +1451,30 @@ GET (10, 10)-(11, 11), buffer
         Assert.False(result.Succeeded);
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
         Assert.Contains("GET", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_GetStillRequiresScreenOrCanvas()
+    {
+        var (_, _, result) = ExecuteProgram("""
+DIM buffer(1 TO 2, 1 TO 2) AS INTEGER
+GET (0, 0)-(1, 1), buffer
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_PutStillRequiresScreenOrCanvas()
+    {
+        var (_, _, result) = ExecuteProgram("""
+DIM buffer(1 TO 2, 1 TO 1) AS INTEGER
+PUT (0, 0), buffer
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
     }
 
     [Fact]
@@ -1701,6 +1803,46 @@ PRINT POINT(2, 2)
         Assert.Equal(6, host.GetPixel(3, 3));
         Assert.Equal(9, host.GetPixel(2, 2));
         Assert.Equal(["6", "9"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PaintFillsCanvasRegionWithViewportAndCamera()
+    {
+        const string text = """
+CANVAS 24, 18
+CLS RGB(0, 0, 0)
+VIEWPORT (10, 6)-(15, 11)
+CAMERA 100, 50
+PSET (100, 50), 9
+PSET (101, 50), 9
+PSET (102, 50), 9
+PSET (100, 51), 9
+PSET (102, 51), 9
+PSET (100, 52), 9
+PSET (101, 52), 9
+PSET (102, 52), 9
+PAINT (101, 51), 6, 9
+PRINT POINT(11, 7)
+PRINT POINT(10, 6)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(6, host.GetAbsolutePixel(11, 7));
+        Assert.Equal(9, host.GetAbsolutePixel(10, 6));
+        Assert.Equal(["6", "9"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PaintStillRequiresScreenOrCanvas()
+    {
+        var (_, _, result) = ExecuteProgram("""
+PAINT (3, 3), 6, 9
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
     }
 
     [Fact]
@@ -10628,6 +10770,10 @@ END TRY
         public long CurrentGraphicsX => _currentGraphicsX;
 
         public long CurrentGraphicsY => _currentGraphicsY;
+
+        public long CanvasCameraX => _canvasCameraX;
+
+        public long CanvasCameraY => _canvasCameraY;
 
         public bool ViewportEnabled => _viewportEnabled;
 

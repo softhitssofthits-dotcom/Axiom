@@ -330,14 +330,7 @@ public sealed partial class BytecodeVm
         var reset = (flags & 1) != 0;
         var relative = (flags & 2) != 0;
         var count = instruction.GetOperand(1);
-        if (reset)
-        {
-            RequireScreenActive("PRESET", location);
-        }
-        else
-        {
-            RequireDrawableSurfaceActive("PSET", location);
-        }
+        RequireDrawableSurfaceActive(reset ? "PRESET" : "PSET", location);
 
         var color = count == 3
             ? PopValue(frame, instructionIndex).AsInteger()
@@ -356,7 +349,7 @@ public sealed partial class BytecodeVm
     private void ExecuteGetInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireScreenActive("GET", location);
+        RequireDrawableSurfaceActive("GET", location);
         var flags = instruction.GetOperand(0);
         var bufferValue = PopValue(frame, instructionIndex);
         var y2 = PopValue(frame, instructionIndex).AsLong();
@@ -387,7 +380,7 @@ public sealed partial class BytecodeVm
     private void ExecutePutInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireScreenActive("PUT", location);
+        RequireDrawableSurfaceActive("PUT", location);
         var flags = instruction.GetOperand(0);
         var bufferValue = PopValue(frame, instructionIndex);
         var y = PopValue(frame, instructionIndex).AsLong();
@@ -491,7 +484,7 @@ public sealed partial class BytecodeVm
     private void ExecutePaintInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
-        RequireScreenActive("PAINT", location);
+        RequireDrawableSurfaceActive("PAINT", location);
         var flags = instruction.GetOperand(0);
         var hasFillColor = HasPaintFill(flags);
         var hasBorderColor = HasPaintBorder(flags);

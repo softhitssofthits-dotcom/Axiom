@@ -706,6 +706,44 @@ PRINT "PUT sample finished"
     }
 
     [Fact]
+    public void Run_GetCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    {
+        var traceService = new FakeIdeTraceService();
+        var consoleService = new ProgramConsoleService(traceService);
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+        var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "operators", "get", "canvas_block_capture.axm")));
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var graphicsOutput = traceService.Entries
+            .Where(static entry => entry.Category == "screen.output")
+            .Select(static entry => entry.Message)
+            .ToArray();
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["6", "9", "12", "15"], graphicsOutput);
+    }
+
+    [Fact]
+    public void Run_PutCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    {
+        var traceService = new FakeIdeTraceService();
+        var consoleService = new ProgramConsoleService(traceService);
+        var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
+        var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "operators", "put", "canvas_block_restore.axm")));
+
+        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var graphicsOutput = traceService.Entries
+            .Where(static entry => entry.Category == "screen.output")
+            .Select(static entry => entry.Message)
+            .ToArray();
+
+        Assert.Equal(ProgramRunStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.Equal(["6", "9", "12", "15"], graphicsOutput);
+    }
+
+    [Fact]
     public void Run_Screen10BestFitAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
     {
         var traceService = new FakeIdeTraceService();

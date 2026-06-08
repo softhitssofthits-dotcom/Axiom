@@ -5673,3 +5673,90 @@
 
 Следующий точный шаг:
 - перенести в `CANVAS` оператор `PRESET`, затем перейти к `PAINT`.
+
+## Session 1008 - 2026-06-08 00:34 - PRESET перенесён в CANVAS
+
+Задача:
+- довести отдельный третий перенос legacy-пиксельной базы и открыть `PRESET` для `CANVAS`, не ломая его историческое поведение в `SCREEN`.
+
+Что сделано:
+1. В runtime-слое `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` допуск `PRESET` переведён на общий `RequireDrawableSurfaceActive(...)`, поэтому `PRESET` теперь выполняется и при активном `CANVAS`.
+2. Зафиксировано, что сам механизм записи не менялся: `PRESET` по-прежнему использует тот же `SetPixel(...)`, тот же индексный договор `0..255`, тот же `STEP` и тот же переход текущей графической позиции в фактическую мировую точку.
+3. В `tests/Axiom.Runtime.Tests/InterpreterTests.cs` добавлены проверки, что `PRESET` в `CANVAS` без явного цвета пишет фоновый индекс в физическую точку холста, что форма с явным цветом проходит через `CAMERA` и `VIEWPORT`, и что без `SCREEN` и без `CANVAS` остаётся `MB3010`.
+4. В `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` добавлены те же проверки для байткодного пути, а прежняя негативная проверка `PRESET` при активном `CANVAS` заменена на новый успешный договор.
+5. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена сквозная проверка `PResetCanvasAcceptanceSample_RunsOnBytecodeVm`, подтверждающая runnable sample без отката на интерпретатор.
+6. Добавлен runnable sample `samples/operators/preset/canvas_background_pixel.axm`, который показывает `PRESET` в мировых координатах `CANVAS`, работу `VIEWPORT` и использование фонового индекса по умолчанию.
+7. Обновлены `docs/SPECIFICATION3.md`, `docs/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`, `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PRESET` в `CANVAS` был отражён в спецификации, manual и активных реестрах как уже закрытый шаг.
+
+Проверки:
+- выполнить адресные `dotnet test` для `Axiom.Runtime.Tests` по `PReset`;
+- выполнить адресные `dotnet test` для `Axiom.Execution.Tests` по acceptance-sample `PRESET`.
+
+Решение:
+- считать третий перенос выборочной BASIC-базы закрытым: `PRESET` теперь работает и в `SCREEN`, и в `CANVAS`;
+- считать modern-договор `PRESET` зеркальным к `PSET` по координатам и viewport/camera-проекции, но отличающимся выбором цвета по умолчанию: без явного `color` оператор берёт текущий background-индекс;
+- следующим точным графическим шагом оставить только `PAINT` для `CANVAS`.
+
+## Session 1009 - 2026-06-08 11:22 - PAINT перенесён в CANVAS
+
+Задача:
+- довести следующий перенос legacy-графики и открыть базовую числовую форму `PAINT` для `CANVAS`, не ломая историческое поведение в `SCREEN`.
+
+Что сделано:
+1. В runtime-слое `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` допуск `PAINT` переведён на общий `RequireDrawableSurfaceActive(...)`, поэтому оператор теперь выполняется и при активном `CANVAS`.
+2. Зафиксировано, что сам механизм заливки не менялся: `PAINT` по-прежнему использует существующий host-договор, поэтому в `CANVAS` он проходит через `CAMERA` и `VIEWPORT`, работает индексными цветами и обновляет текущую графическую позицию в стартовую мировую точку.
+3. В `tests/Axiom.Runtime.Tests/InterpreterTests.cs` добавлены проверки, что `PAINT` в `CANVAS` заливает область внутри viewport под камерой и что без `SCREEN` и без `CANVAS` остаётся `MB3010`.
+4. В `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` добавлены те же проверки для байткодного пути.
+5. В `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлена проверка `Paint_FillsCanvasRegionInsideViewport`, подтверждающая тот же договор на IDE-host уровне.
+6. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена сквозная проверка `PaintCanvasAcceptanceSample_RunsOnBytecodeVm`, подтверждающая runnable sample без отката на интерпретатор.
+7. Добавлен runnable sample `samples/operators/paint/canvas_region_fill.axm`, который показывает заливку мировой области в `CANVAS` через `VIEWPORT` и `CAMERA`.
+8. Обновлены `docs/SPECIFICATION3.md`, `docs/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`, `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PAINT` в `CANVAS` был отражён в спецификации, manual и активных реестрах как уже закрытый шаг.
+
+Проверки:
+- выполнить адресные `dotnet test` для `Axiom.Runtime.Tests` по `Paint`;
+- выполнить адресные `dotnet test` для `Axiom.Execution.Tests` по acceptance-sample `PAINT`.
+
+Решение:
+- считать четвёртый перенос выборочной BASIC-базы закрытым: базовая числовая форма `PAINT` теперь работает и в `SCREEN`, и в `CANVAS`;
+- считать modern-договор `PAINT` индексной мировой заливкой поверх уже существующих `CAMERA` и `VIEWPORT`, без переноса в `CANVAS` старых координатных договоров `VIEW`, `WINDOW` и `PMAP`;
+- следующим точным графическим шагом оставить только `GET` / `PUT` для `CANVAS`.
+
+## Session 1010 - 2026-06-08 12:14 - GET и PUT перенесены в CANVAS
+
+Задача:
+- довести перенос `GET` / `PUT` в `CANVAS` до завершённого состояния;
+- добить IDE-проверки, runnable-примеры, manual и проектные журналы под новый договор.
+
+Что сделано:
+1. В `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлены проверки `Canvas_GetCapturesViewportPixelsFromWorldCoordinates` и `Canvas_PutProjectsBufferIntoViewportFromWorldCoordinates`. Они подтверждают, что helper-слой IDE читает и пишет блок `CANVAS` по мировым координатам через `CAMERA` и `VIEWPORT`.
+2. В `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs` добавлены сквозные IDE-проверки `Run_GetCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm` и `Run_PutCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm`.
+3. Добавлены runnable-примеры `samples/operators/get/canvas_block_capture.axm` и `samples/operators/put/canvas_block_restore.axm`. Оба примера русскоязычные, пошаговые и рассчитаны на ручной запуск в `Axiom.Ide`.
+4. Полностью переписана страница `docs/manual/get-put.html`: теперь она описывает `GET` и `PUT` и для `SCREEN`, и для `CANVAS`, прямо фиксирует мировой договор `CANVAS`, буфер `0..255`, форму `PUT STEP` и действие `PUT` по умолчанию `XOR`.
+5. В `docs/manual/modern-graphics.html` добавлено прямое упоминание `GET` / `PUT` как индексного блочного helper-слоя внутри `CANVAS`, а также ссылки на новые runnable-примеры.
+6. В `docs/manual/scripts/search-index.js` обновлены поисковые записи для `CANVAS`, `VIEWPORT`, `GET` и `PUT`, чтобы поиск находил новые формы по словам `canvas`, `viewport`, `camera`, `world`.
+7. В `docs/SPECIFICATION3.md` добавлен отдельный новый раздел про перенос `GET` / `PUT` в `CANVAS`, а в `docs/MODERN_GRAPHICS_PLAN.md`, `docs/PLANS4.md` и `docs/BYTECODE_COVERAGE.md` зафиксировано, что базовая выборочная волна `POINT`, `PSET`, `PRESET`, `PAINT`, `GET`, `PUT` теперь закрыта полностью.
+
+Затронутые файлы:
+- `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+- `samples/operators/get/canvas_block_capture.axm`
+- `samples/operators/put/canvas_block_restore.axm`
+- `docs/manual/get-put.html`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/PLANS4.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- выполнить адресные `dotnet test` для `Axiom.Runtime.Tests` по `Get` и `Put`;
+- выполнить адресные `dotnet test` для `Axiom.Execution.Tests` по acceptance-sample `GET` / `PUT`;
+- выполнить адресные `dotnet test` для `Axiom.Ide.Tests` по новым canvas- и run-проверкам `GET` / `PUT`;
+- выполнить `git diff --check`.
+
+Решение:
+- считать перенос `GET` / `PUT` в `CANVAS` закрытым;
+- считать базовую выборочную волну переноса части совместимого графического слоя в `CANVAS` завершённой;
+- следующий графический шаг выбирать уже не по старому списку операторов, а по следующей реальной потребности modern graphics.

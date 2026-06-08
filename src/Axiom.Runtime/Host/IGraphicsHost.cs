@@ -42,6 +42,10 @@ public interface IGraphicsHost
 
     long CurrentGraphicsY => 0;
 
+    long CanvasCameraX => 0;
+
+    long CanvasCameraY => 0;
+
     long CurrentViewportX =>
         GraphicsCoordinateSpaceMath.TryResolveCurrentViewportPosition(this, out var viewportX, out _)
             ? viewportX

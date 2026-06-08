@@ -87,6 +87,12 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public long CurrentGraphicsY =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
 
+    public long CanvasCameraX =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.CanvasCameraX : 0;
+
+    public long CanvasCameraY =>
+        _promptService is IGraphicsHost graphicsHost ? graphicsHost.CanvasCameraY : 0;
+
     public bool ViewportEnabled =>
         _promptService is IGraphicsHost graphicsHost && graphicsHost.ViewportEnabled;
 

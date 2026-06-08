@@ -247,6 +247,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public long CurrentGraphicsY => _graphicsCurrentY;
 
+    public long CanvasCameraX => _canvasCameraX;
+
+    public long CanvasCameraY => _canvasCameraY;
+
     public bool ViewportEnabled => _viewportEnabled;
 
     public bool ViewportRelativeCoordinates => _viewportRelativeCoordinates;

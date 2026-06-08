@@ -1345,6 +1345,31 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
+    public void Paint_FillsCanvasRegionInsideViewport()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateCanvas(24, 18);
+        Assert.True(service.SetViewport(10, 6, 15, 11, fillColor: null, borderColor: null, useScreenCoordinates: true));
+        service.SetCanvasCamera(100, 50);
+        service.SetPixel(100, 50, 9);
+        service.SetPixel(101, 50, 9);
+        service.SetPixel(102, 50, 9);
+        service.SetPixel(100, 51, 9);
+        service.SetPixel(102, 51, 9);
+        service.SetPixel(100, 52, 9);
+        service.SetPixel(101, 52, 9);
+        service.SetPixel(102, 52, 9);
+
+        service.Paint(101, 51, 6, 9);
+
+        Assert.Equal(6, service.GetPixel(11, 7));
+        Assert.Equal(9, service.GetPixel(10, 6));
+        Assert.Equal(101, service.CurrentGraphicsX);
+        Assert.Equal(51, service.CurrentGraphicsY);
+    }
+
+    [Fact]
     public void GraphicsState_TracksCurrentPositionAndColors()
     {
         var service = new ProgramConsoleService();

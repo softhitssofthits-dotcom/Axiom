@@ -1034,3 +1034,35 @@
 - Сквозной VM: да, `PSetCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
 - Негативный паритет: да, `PSET` без активного `SCREEN` и без активного `CANVAS` сообщает `MB3010`, а `PRESET` при активном `CANVAS` по-прежнему сохраняет ту же диагностику screen-only формы;
 - Профиль: не приоритет, потому что это точечная пиксельная запись для отладки и простых процедурных эффектов, а не отдельный горячий benchmark.
+
+## Обновление реестра - 2026-06-08 - PRESET перенесён в CANVAS
+
+Дополнение к областям `PRESET`, `PSET` и современного `CANVAS`:
+- VM: да, `BytecodeVm` теперь выполняет `PRESET` и при активном `SCREEN`, и при активном `CANVAS`, без отката на интерпретатор;
+- Интерпретатор: да, форма `PRESET` теперь требует не только `SCREEN`, а любую активную рисуемую поверхность `SCREEN` или `CANVAS`;
+- Автотесты: да, добавлены interpreter- и `BytecodeVm`-проверки `Execute_PResetWritesCanvasBackgroundPixelAtPhysicalViewportPoint`, `Execute_PResetUsesCanvasWorldCoordinatesWithViewportAndCamera`, `Execute_PResetStillRequiresScreenOrCanvas`, `Execute_CompiledPResetWritesCanvasBackgroundPixelAtPhysicalViewportPoint`, `Execute_CompiledPResetUsesCanvasWorldCoordinatesWithViewportAndCamera`, `Execute_CompiledPResetStillRequiresScreenOrCanvas`;
+- Запускаемые примеры: да, добавлен runnable sample `samples/operators/preset/canvas_background_pixel.axm`;
+- Справочник: да, обновлены `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `PResetCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, `PRESET` без активного `SCREEN` и без активного `CANVAS` сообщает `MB3010`;
+- Профиль: не приоритет, потому что это точечная пиксельная запись для стирания и простых процедурных эффектов, а не отдельный горячий benchmark.
+
+## Обновление реестра - 2026-06-08 - PAINT для CANVAS
+
+- VM: да, `BytecodeVm` теперь принимает базовую числовую форму `PAINT` не только на `SCREEN`, но и при активном `CANVAS`;
+- Автотесты: да, добавлены interpreter-, `BytecodeVm`-, IDE- и execution-проверки заливки области `CANVAS` под `CAMERA` и `VIEWPORT`, а также отдельные негативные проверки вызова без активной графической поверхности;
+- Runnable sample: да, добавлен `samples/operators/paint/canvas_region_fill.axm`;
+- Manual: да, обновлены `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`;
+- Негативный паритет: да, вызов `PAINT` без `SCREEN` и без `CANVAS` одинаково сообщает `MB3010` в interpreter и `BytecodeVm`;
+- Уточнение договора: в `CANVAS` оператор `PAINT` принимает мировые координаты, проходит через `CAMERA` и `VIEWPORT`, выполняет индексную заливку цветами `0..255`, сохраняет форму `STEP` и после выполнения обновляет текущую графическую позицию до стартовой мировой точки.
+
+## Обновление реестра - 2026-06-08 - GET и PUT для CANVAS
+
+- VM: да, `BytecodeVm` теперь выполняет `GET` и `PUT` и при активном `SCREEN`, и при активном `CANVAS`, без отката на интерпретатор;
+- Интерпретатор: да, обе формы теперь требуют любую активную рисуемую поверхность `SCREEN` или `CANVAS`, а не только `SCREEN`;
+- Автотесты: да, добавлены interpreter-, `BytecodeVm`-, IDE- и execution-проверки чтения и записи блока `CANVAS` под `CAMERA` и `VIEWPORT`, а также отдельные негативные проверки вызова без активной графической поверхности;
+- Runnable sample: да, добавлены `samples/operators/get/canvas_block_capture.axm` и `samples/operators/put/canvas_block_restore.axm`;
+- Manual: да, обновлены `docs/manual/get-put.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `GetCanvasAcceptanceSample_RunsOnBytecodeVm` и `PutCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждают оба sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, вызов `GET` или `PUT` без `SCREEN` и без `CANVAS` одинаково сообщает `MB3010` в interpreter и `BytecodeVm`;
+- Уточнение договора: в `CANVAS` операторы `GET` и `PUT` принимают мировые координаты, проходят через `CAMERA` и `VIEWPORT`, но пользовательский буфер остаётся обычным двумерным индексным массивом `0..255`, а действие `PUT` по умолчанию остаётся `XOR`.

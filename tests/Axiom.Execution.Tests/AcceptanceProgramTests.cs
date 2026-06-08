@@ -2480,6 +2480,78 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(1, inputProvider.PresentFrameCount);
     }
 
+    [Fact]
+    public void PResetCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/preset/canvas_background_pixel.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["0", "15"], result.Output);
+        Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
+        Assert.Equal([0xFFFFFF], inputProvider.FrameClears);
+        Assert.Equal(1, inputProvider.PresentFrameCount);
+    }
+
+    [Fact]
+    public void PaintCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/paint/canvas_region_fill.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["6", "9"], result.Output);
+        Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
+        Assert.Equal([0], inputProvider.FrameClears);
+        Assert.Equal(1, inputProvider.PresentFrameCount);
+    }
+
+    [Fact]
+    public void GetCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/get/canvas_block_capture.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["6", "9", "12", "15"], result.Output);
+        Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
+        Assert.Equal([0], inputProvider.FrameClears);
+        Assert.Equal(1, inputProvider.PresentFrameCount);
+    }
+
+    [Fact]
+    public void PutCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/put/canvas_block_restore.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["6", "9", "12", "15"], result.Output);
+        Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
+        Assert.Equal([0], inputProvider.FrameClears);
+        Assert.Equal(1, inputProvider.PresentFrameCount);
+    }
+
     [Theory]
     [InlineData("samples/operators/circle/text_screen_error.axm", "MB3010")]
     [InlineData("samples/functions/point/invalid_selector_error.axm", "MB3007")]
@@ -3419,6 +3491,10 @@ public sealed class AcceptanceProgramTests
         public long CurrentGraphicsX => _currentGraphicsX;
 
         public long CurrentGraphicsY => _currentGraphicsY;
+
+        public long CanvasCameraX => _canvasCameraX;
+
+        public long CanvasCameraY => _canvasCameraY;
 
         public bool ViewportEnabled => _viewportEnabled;
 

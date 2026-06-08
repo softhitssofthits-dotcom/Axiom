@@ -291,14 +291,7 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecutePSet(BoundPSetStatement statement)
     {
-        if (statement.Reset)
-        {
-            RequireScreenActive("PRESET", statement.Location);
-        }
-        else
-        {
-            RequireDrawableSurfaceActive("PSET", statement.Location);
-        }
+        RequireDrawableSurfaceActive(statement.Reset ? "PRESET" : "PSET", statement.Location);
 
         var color = statement.ColorExpression is null
             ? statement.Reset ? _host.CurrentBackgroundColor : _host.CurrentForegroundColor
@@ -317,7 +310,7 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecuteGet(BoundGetStatement statement)
     {
-        RequireScreenActive("GET", statement.Location);
+        RequireDrawableSurfaceActive("GET", statement.Location);
         if (!GraphicsBufferTransfer.TryResolveTwoDimensionalNumericBuffer(
                 EvaluateExpression(statement.BufferExpression),
                 out var buffer,
@@ -345,7 +338,7 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecutePut(BoundPutStatement statement)
     {
-        RequireScreenActive("PUT", statement.Location);
+        RequireDrawableSurfaceActive("PUT", statement.Location);
         if (!GraphicsBufferTransfer.TryResolveTwoDimensionalNumericBuffer(
                 EvaluateExpression(statement.BufferExpression),
                 out var buffer,
@@ -435,7 +428,7 @@ public sealed partial class Interpreter
 
     private ExecutionSignal ExecutePaint(BoundPaintStatement statement)
     {
-        RequireScreenActive("PAINT", statement.Location);
+        RequireDrawableSurfaceActive("PAINT", statement.Location);
         var x = EvaluateExpression(statement.XExpression).AsLong();
         var y = EvaluateExpression(statement.YExpression).AsLong();
         if (statement.IsRelative)

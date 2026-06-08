@@ -1,0 +1,27 @@
+' GET в CANVAS читает мировую область через CAMERA и VIEWPORT.
+CANVAS 24, 18
+CLS RGB(0, 0, 0)
+
+' Показываем мир только внутри этой экранной области.
+VIEWPORT (10, 6)-(15, 11)
+CAMERA 100, 50
+
+DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+
+' Рисуем блок в мировых координатах.
+PSET (100, 50), 6
+PSET (101, 50), 9
+PSET (100, 51), 12
+PSET (101, 51), 15
+
+' Читаем тот же мировой прямоугольник в массив.
+GET (100, 50)-(101, 51), buffer
+
+' Показываем значения, чтобы их было легко сверить в IDE.
+PRINT buffer(1, 5)
+PRINT buffer(2, 5)
+PRINT buffer(1, 6)
+PRINT buffer(2, 6)
+
+PRESENT
+SLEEP

@@ -22,12 +22,12 @@
             </nav>
             <p class="eyebrow">Операторы и функция</p>
             <h1 class="page-title">Операторы рисования</h1>
-            <p class="lead">Эта страница описывает классические операторы рисования исторического графического пути <code>SCREEN</code>: операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функцию <code>POINT</code>. Основной договор этой страницы относится к <code>SCREEN 1..10</code>, но форма <code>POINT(x, y)</code> и оператор <code>PSET</code> дополнительно получили отдельный согласованный договор и для современного <code>CANVAS</code>.</p>
+            <p class="lead">Эта страница описывает классические операторы рисования исторического графического пути <code>SCREEN</code>: операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функцию <code>POINT</code>. Основной договор этой страницы относится к <code>SCREEN 1..10</code>, но формы <code>POINT(x, y)</code>, <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> дополнительно получили отдельный согласованный договор и для современного <code>CANVAS</code>.</p>
 
             <section class="article-section">
                 <h2>Где работают эти операторы</h2>
-                <p>Операторы <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(selector)</code> работают только после выбора графического режима <code>SCREEN 1..10</code>.</p>
-                <p>Оператор <code>PSET</code> работает в тех же режимах <code>SCREEN</code>, а также при активном <code>CANVAS</code>, если программе нужна адресная запись индексного пикселя в современный кадр.</p>
+                <p>Операторы <code>LINE</code>, <code>CIRCLE</code>, <code>DRAW</code> и форма <code>POINT(selector)</code> работают только после выбора графического режима <code>SCREEN 1..10</code>.</p>
+                <p>Операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> работают в тех же режимах <code>SCREEN</code>, а также при активном <code>CANVAS</code>, если программе нужны адресная запись индексного пикселя или индексная заливка в современный кадр.</p>
                 <p>Форма <code>POINT(x, y)</code> работает в тех же режимах <code>SCREEN</code>, а также при активном <code>CANVAS</code>, если программе нужно прочитать уже нарисованный пиксель современного кадра.</p>
                 <p>Если программа не вызвала оператор <code>SCREEN</code> или если программа находится в режиме <code>SCREEN 0</code>, эти графические сущности не получают подходящего графического экрана.</p>
             </section>
@@ -72,7 +72,20 @@ PRESET (x, y), color
 PRESET STEP (x, y)
 PRESET STEP (x, y), color</code></pre>
                 <p>Оператор <code>PRESET</code> обычно используют для стирания отдельной точки или линии цветом фона.</p>
-                <p>В текущем срезе оператор <code>PRESET</code> остаётся только частью исторического <code>SCREEN</code> и ещё не переносится в <code>CANVAS</code>.</p>
+                <p>При активном <code>SCREEN</code> оператор <code>PRESET</code> работает по историческому экранному договору, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
+                <p>При активном <code>CANVAS</code> оператор <code>PRESET</code> принимает мировые координаты. Эти координаты проходят через <code>CAMERA</code> и затем попадают внутрь активного <code>VIEWPORT</code>.</p>
+                <p>При активном <code>CANVAS</code> оператор <code>PRESET</code> записывает индексный цвет <code>0..255</code>, а не полноцветное значение <code>RGB(...)</code>. Если цвет выходит за диапазон, применяется обычное графическое правило приведения индекса.</p>
+                <p>Если цвет не указан, оператор <code>PRESET</code> использует текущий фоновый индекс. После вызова <code>CANVAS</code> таким индексом по умолчанию считается <code>0</code>.</p>
+                <p>Слово <code>STEP</code> означает, что координаты задаются как смещение от текущей графической позиции. В режиме <code>CANVAS</code> это смещение считается от текущей мировой графической позиции.</p>
+<pre><code class="language-basic">CANVAS 24, 18
+CLS RGB(255, 255, 255)
+VIEWPORT (10, 6)-(14, 10)
+CAMERA 100, 50
+PRESET (100, 50)
+
+PRINT POINT(10, 6)
+PRINT POINT(9, 6)</code></pre>
+                <p>В этом примере оператор <code>PRESET</code> записывает фоновый индекс в мировую точку <code>100, 50</code>. На экране он становится видимым в физической точке <code>10, 6</code> внутри viewport.</p>
             </section>
 
             <section class="article-section">
@@ -105,10 +118,35 @@ CIRCLE (x, y), radius, color, startAngle, endAngle, aspect</code></pre>
                 <p><code>PAINT</code> — оператор языка Axiom, который заполняет замкнутую область, начиная от указанной точки.</p>
 <pre><code class="language-basic">PAINT (x, y)
 PAINT (x, y), fillColor
-PAINT (x, y), fillColor, borderColor</code></pre>
+PAINT (x, y), fillColor, borderColor
+PAINT STEP (x, y)
+PAINT STEP (x, y), fillColor
+PAINT STEP (x, y), fillColor, borderColor</code></pre>
                 <p>Оператор <code>PAINT</code> начинает заполнение из точки <code>x, y</code>.</p>
                 <p>Если указан только цвет заливки, оператор <code>PAINT</code> заполняет область до естественной границы цвета.</p>
                 <p>Если указан <code>borderColor</code>, оператор <code>PAINT</code> использует этот цвет как цвет границы.</p>
+                <p>При активном <code>SCREEN</code> оператор <code>PAINT</code> работает по историческому экранному договору, включая влияние <code>VIEW</code>, <code>WINDOW</code> и формы <code>STEP</code>.</p>
+                <p>При активном <code>CANVAS</code> оператор <code>PAINT</code> принимает мировые координаты. Эти координаты проходят через <code>CAMERA</code> и затем попадают внутрь активного <code>VIEWPORT</code>.</p>
+                <p>При активном <code>CANVAS</code> оператор <code>PAINT</code> остаётся индексной заливкой. Цвет заливки и цвет границы приводятся к диапазону <code>0..255</code> обычным графическим правилом. Полноцветная форма через <code>RGB(...)</code> сюда не входит.</p>
+                <p>Слово <code>STEP</code> сохраняется и в режиме <code>CANVAS</code>: смещение считается от текущей мировой графической позиции.</p>
+                <p>После выполнения оператор <code>PAINT</code> обновляет текущую графическую позицию до стартовой мировой точки заливки.</p>
+<pre><code class="language-basic">CANVAS 24, 18
+CLS RGB(0, 0, 0)
+VIEWPORT (10, 6)-(15, 11)
+CAMERA 100, 50
+PSET (100, 50), 9
+PSET (101, 50), 9
+PSET (102, 50), 9
+PSET (100, 51), 9
+PSET (102, 51), 9
+PSET (100, 52), 9
+PSET (101, 52), 9
+PSET (102, 52), 9
+PAINT (101, 51), 6, 9
+
+PRINT POINT(11, 7)
+PRINT POINT(10, 6)</code></pre>
+                <p>В этом примере мировая внутренняя точка <code>101, 51</code> после камеры и viewport попадает в экранную точку <code>11, 7</code> и заливается цветом <code>6</code>. Граница остаётся цветом <code>9</code>.</p>
             </section>
 
             <section class="article-section">
@@ -144,16 +182,16 @@ PRINT POINT(12, 12)</code></pre>
                 <h2>Правила работы</h2>
                 <p>Операторы рисования работают в пределах текущего графического экрана. Если часть фигуры выходит за границы экрана, результат обычно обрезается по границе доступной области, а не превращается в ошибку.</p>
                 <p>Оператор <code>VIEW</code> может ограничивать физическую область вывода. Оператор <code>WINDOW</code> может переводить координаты в логическую систему. Поэтому при чтении любой графической формы важно понимать, действуют ли в программе <code>VIEW</code>, <code>WINDOW</code> или <code>STEP</code>.</p>
-                <p>Для современного <code>CANVAS</code> из этой страницы работают форма <code>POINT(x, y)</code> и оператор <code>PSET</code>. Форма <code>POINT(x, y)</code> читает физическую точку холста и не использует правила <code>VIEW</code>, <code>WINDOW</code>, <code>CAMERA</code> и <code>VIEWPORT</code> для преобразования аргументов.</p>
-                <p>Оператор <code>PSET</code> в современном слое, наоборот, пишет в мировую точку и потому подчиняется <code>CAMERA</code> и <code>VIEWPORT</code>. Оператор <code>PRESET</code> в этот перенос ещё не входит.</p>
+                <p>Для современного <code>CANVAS</code> из этой страницы работают форма <code>POINT(x, y)</code> и операторы <code>PSET</code>, <code>PRESET</code>, <code>PAINT</code>. Форма <code>POINT(x, y)</code> читает физическую точку холста и не использует правила <code>VIEW</code>, <code>WINDOW</code>, <code>CAMERA</code> и <code>VIEWPORT</code> для преобразования аргументов.</p>
+                <p>Операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> в современном слое, наоборот, работают с мировыми координатами и потому подчиняются <code>CAMERA</code> и <code>VIEWPORT</code>.</p>
                 <p>После выполнения графических операторов текущая графическая позиция может меняться. Это особенно важно для слова <code>STEP</code>, для оператора <code>DRAW</code> и для формы <code>POINT(selector)</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
-                    <li><code>MB3010</code>: оператор <code>PSET</code> вызван без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
-                    <li><code>MB3010</code>: операторы <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(selector)</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3010</code>: операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> вызваны без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
+                    <li><code>MB3010</code>: операторы <code>LINE</code>, <code>CIRCLE</code>, <code>DRAW</code> и форма <code>POINT(selector)</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
                     <li><code>MB3010</code>: форма <code>POINT(x, y)</code> вызвана без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
                     <li><code>MB3007</code>: оператор получил недопустимые координаты, радиус, селектор или другой числовой аргумент вне поддерживаемого договора.</li>
                 </ul>

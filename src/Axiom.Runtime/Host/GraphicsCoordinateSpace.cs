@@ -68,6 +68,13 @@ public static class GraphicsCoordinateSpaceMath
             return false;
         }
 
+        if (host.IsCanvasActive)
+        {
+            viewportX = GraphicsLineMath.SaturatingAdd(viewport.Left, logicalX - host.CanvasCameraX);
+            viewportY = GraphicsLineMath.SaturatingAdd(viewport.Top, logicalY - host.CanvasCameraY);
+            return true;
+        }
+
         if (!TryGetWindow(host, out var window))
         {
             viewportX = logicalX;
@@ -139,6 +146,13 @@ public static class GraphicsCoordinateSpaceMath
             logicalX = 0;
             logicalY = 0;
             return false;
+        }
+
+        if (host.IsCanvasActive)
+        {
+            logicalX = host.CanvasCameraX + (absoluteX - viewport.Left);
+            logicalY = host.CanvasCameraY + (absoluteY - viewport.Top);
+            return true;
         }
 
         var viewportX = viewport.UsesRelativeCoordinates ? absoluteX - viewport.Left : absoluteX;

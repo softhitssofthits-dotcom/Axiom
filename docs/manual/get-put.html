@@ -22,84 +22,73 @@
             </nav>
             <p class="eyebrow">Операторы</p>
             <h1 class="page-title">Операторы GET и PUT</h1>
-            <p class="lead"><code>GET</code> и <code>PUT</code> — операторы языка Axiom, которые переносят прямоугольный блок пикселей между графическим экраном <code>SCREEN</code> и обычным двумерным числовым массивом. Оператор <code>GET</code> читает блок с экрана в массив, а оператор <code>PUT</code> возвращает содержимое массива обратно на экран.</p>
+            <p class="lead"><code>GET</code> и <code>PUT</code> — операторы языка Axiom, которые копируют прямоугольный блок пикселей между активной графической поверхностью и двумерным числовым массивом. Оператор <code>GET</code> читает блок в массив, а оператор <code>PUT</code> возвращает содержимое массива обратно на экран или на холст.</p>
+
+            <section class="article-section" id="get">
+                <h2>Что это такое</h2>
+                <p><code>GET</code> — оператор языка Axiom, который считывает прямоугольный блок пикселей из активной графической поверхности в двумерный числовой массив.</p>
+                <p><code>PUT</code> — оператор языка Axiom, который рисует такой буфер обратно на активной графической поверхности.</p>
+            </section>
 
             <section class="article-section">
                 <h2>Для чего нужны операторы GET и PUT</h2>
-                <p>Операторы <code>GET</code> и <code>PUT</code> нужны тогда, когда программе требуется сохранить часть экрана, временно убрать её, перенести в другое место или наложить на экран разными способами.</p>
-                <p>Эти операторы относятся к историческому графическому пути <code>SCREEN</code>. Они не работают с современным холстом <code>CANVAS</code>.</p>
+                <p>Операторы <code>GET</code> и <code>PUT</code> нужны для старого блочного обмена: сохранить кусок изображения, временно убрать его, вернуть позже, перенести в другое место или наложить разными побитовыми действиями.</p>
+                <p>В новых полноцветных сценах чаще удобнее использовать <code>IMAGE</code> и <code>SPRITE</code>, но для небольших индексных блоков, отладки и совместимых BASIC-приёмов операторы <code>GET</code> и <code>PUT</code> остаются полезными и в <code>SCREEN</code>, и в <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Где работают операторы GET и PUT</h2>
-                <p>Операторы <code>GET</code> и <code>PUT</code> работают только после выбора графического режима <code>SCREEN 1..10</code>.</p>
-                <p>Если программа не вызвала оператор <code>SCREEN</code> или если программа находится в режиме <code>SCREEN 0</code>, операторы <code>GET</code> и <code>PUT</code> не получают подходящего графического экрана.</p>
+                <p>Операторы <code>GET</code> и <code>PUT</code> работают, если программа уже вызвала оператор <code>SCREEN</code> с графическим режимом <code>1..10</code> или оператор <code>CANVAS</code>.</p>
+                <p>В графическом режиме <code>SCREEN</code> операторы <code>GET</code> и <code>PUT</code> используют тот же координатный договор, что и остальные screen-операторы: на них влияют <code>VIEW</code> и <code>WINDOW</code>.</p>
+                <p>В режиме <code>CANVAS</code> операторы <code>GET</code> и <code>PUT</code> принимают мировые координаты. Эти координаты проходят через <code>CAMERA</code>, а затем обрезаются активным <code>VIEWPORT</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Синтаксис оператора GET</h2>
+                <h2>Синтаксис</h2>
 <pre><code class="language-basic">GET (x1, y1)-(x2, y2), buffer
-GET STEP (x1, y1)-STEP (x2, y2), buffer</code></pre>
-                <p>Оператор <code>GET</code> читает прямоугольник экрана и записывает его в двумерный массив.</p>
-            </section>
+GET STEP (x1, y1)-STEP (x2, y2), buffer
 
-            <section class="article-section">
-                <h2>Синтаксис оператора PUT</h2>
-<pre><code class="language-basic">PUT (x, y), buffer
+PUT (x, y), buffer
+PUT STEP (x, y), buffer
 PUT (x, y), buffer, PSET
 PUT (x, y), buffer, PRESET
 PUT (x, y), buffer, AND
 PUT (x, y), buffer, OR
 PUT (x, y), buffer, XOR</code></pre>
-                <p>Оператор <code>PUT</code> берёт прямоугольный блок из двумерного массива и рисует его на экране.</p>
             </section>
 
-            <section class="article-section">
-                <h2>Что такое buffer</h2>
-                <p>В Axiom буфер операторов <code>GET</code> и <code>PUT</code> — это обычный двумерный числовой массив. Это не скрытый packed-формат старых видеорежимов.</p>
-                <p>Первая размерность массива задаёт ширину блока по оси <code>X</code>, а вторая размерность массива задаёт высоту блока по оси <code>Y</code>.</p>
-                <p>Буфер может быть массивом или двумерным представлением массива. Допустимы числовые элементы типов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Параметры оператора GET</h2>
+            <section class="article-section" id="put">
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Параметр</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>x1</code>, <code>y1</code></td><td>Первая вершина прямоугольника чтения.</td></tr>
-                        <tr><td><code>x2</code>, <code>y2</code></td><td>Вторая вершина прямоугольника чтения.</td></tr>
-                        <tr><td><code>STEP</code></td><td>Слово <code>STEP</code> означает, что координаты задаются как смещение от текущей графической позиции.</td></tr>
-                        <tr><td><code>buffer</code></td><td>Двумерный числовой массив, в который оператор <code>GET</code> записывает пиксели.</td></tr>
+                        <tr><td><code>x1</code>, <code>y1</code>, <code>x2</code>, <code>y2</code></td><td>Координаты двух углов прямоугольника для <code>GET</code>. В <code>SCREEN</code> это screen-координаты с учётом <code>VIEW</code> и <code>WINDOW</code>. В <code>CANVAS</code> это мировые координаты.</td></tr>
+                        <tr><td><code>x</code>, <code>y</code></td><td>Левая верхняя точка, куда оператор <code>PUT</code> начнёт выводить буфер. В <code>CANVAS</code> это тоже мировая точка.</td></tr>
+                        <tr><td><code>STEP</code></td><td>Слово <code>STEP</code> задаёт относительные координаты от текущей графической позиции. У <code>GET</code> вторая точка со словом <code>STEP</code> считается относительно уже вычисленной первой точки. У <code>PUT STEP</code> точка считается относительно текущей графической позиции.</td></tr>
+                        <tr><td><code>buffer</code></td><td>Двумерный числовой массив ранга <code>2</code>. Первая размерность задаёт ширину блока по оси <code>X</code>, вторая размерность задаёт высоту блока по оси <code>Y</code>.</td></tr>
+                        <tr><td><code>PSET</code>, <code>PRESET</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code></td><td>Действие оператора <code>PUT</code>. Если действие не указано, по умолчанию используется <code>XOR</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
-                <h2>Параметры оператора PUT</h2>
-                <table>
-                    <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>x</code>, <code>y</code></td><td>Левый верхний угол блока, который оператор <code>PUT</code> выводит на экран.</td></tr>
-                        <tr><td><code>buffer</code></td><td>Двумерный числовой массив, из которого оператор <code>PUT</code> читает пиксели.</td></tr>
-                        <tr><td><code>PSET</code>, <code>PRESET</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code></td><td>Способ наложения буфера на текущие пиксели экрана.</td></tr>
-                    </tbody>
-                </table>
-                <p>Если программа не указала действие, оператор <code>PUT</code> использует действие <code>XOR</code>.</p>
+                <h2>Что именно делает оператор</h2>
+                <p>Оператор <code>GET</code> сначала вычисляет прямоугольник чтения, затем считывает пиксели из активной поверхности и записывает их в видимую форму массива <code>buffer</code>.</p>
+                <p>Оператор <code>PUT</code> читает всю видимую форму массива <code>buffer</code> и выводит её в активную поверхность, начиная с указанной точки.</p>
+                <p>Буфер хранит не полноцветные значения, а индексные цвета <code>0..255</code>. Это один и тот же договор и для <code>SCREEN</code>, и для <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Что делают действия PUT</h2>
+                <h2>Действия PUT</h2>
                 <table>
                     <thead>
                         <tr><th>Действие</th><th>Результат</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>PSET</code></td><td>Экранный пиксель получает нормализованное значение из буфера без учёта прежнего цвета.</td></tr>
-                        <tr><td><code>PRESET</code></td><td>Экранный пиксель получает значение <code>255 - source</code> после нормализации значения буфера.</td></tr>
+                        <tr><td><code>PSET</code></td><td>Целевой пиксель получает цвет из буфера.</td></tr>
+                        <tr><td><code>PRESET</code></td><td>Целевой пиксель получает значение <code>255 - source</code>.</td></tr>
                         <tr><td><code>AND</code></td><td>Новый цвет равен <code>destination AND source</code>.</td></tr>
                         <tr><td><code>OR</code></td><td>Новый цвет равен <code>destination OR source</code>.</td></tr>
                         <tr><td><code>XOR</code></td><td>Новый цвет равен <code>destination XOR source</code>.</td></tr>
@@ -108,40 +97,52 @@ PUT (x, y), buffer, XOR</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Правила работы</h2>
-                <p>Операторы <code>GET</code> и <code>PUT</code> используют текущий экранный договор <code>SCREEN</code>, а также текущие договоры <code>VIEW</code> и <code>WINDOW</code>, если программа их включила.</p>
-                <p>Оператор <code>GET</code> читает именно видимые экранные значения выбранной активной страницы, а не исходные полноцветные данные из <code>IMAGE</code> или <code>SPRITE</code>.</p>
-                <p>Оператор <code>PUT</code> пишет блок на активную страницу экрана.</p>
-                <p>Если часть прямоугольника выходит за границы экрана, результат обрезается по границе доступной области.</p>
+                <h2>Правила работы и ограничения</h2>
+                <p>Буфер у операторов <code>GET</code> и <code>PUT</code> должен быть уже выделенным двумерным числовым массивом. Допустимы типы элементов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>.</p>
+                <p>Оператор <code>GET</code> требует, чтобы видимая ширина и высота массива точно совпадали с размерами прямоугольника чтения. Если размеры не совпадают, выполнение сообщает ошибку.</p>
+                <p>При записи оператор <code>PUT</code> приводит каждое значение буфера к индексному цвету по правилу <code>ABS(TRUNC(value)) MOD 256</code>.</p>
+                <p>Если часть прямоугольника выходит за границы активной поверхности или за пределы текущей области вывода, результат обрезается. Пиксели вне доступной области оператор <code>GET</code> читает как <code>0</code>, а оператор <code>PUT</code> туда ничего не рисует.</p>
+                <p>В режиме <code>CANVAS</code> операторы <code>GET</code> и <code>PUT</code> не вводят отдельную старую систему <code>VIEW</code> или <code>WINDOW</code>. Они подчиняются уже существующим <code>CAMERA</code> и <code>VIEWPORT</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
-                    <li><code>MB3010</code>: оператор <code>GET</code> или оператор <code>PUT</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3007</code>: буфер имеет неподходящую форму, неподходящий тип элементов или оператор получил недопустимые координаты.</li>
+                    <li><code>MB3010</code>: оператор <code>GET</code> или оператор <code>PUT</code> вызван без активного <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
+                    <li><code>MB3007</code>: массив <code>buffer</code> не является выделенным двумерным числовым массивом, размеры буфера не совпали с прямоугольником <code>GET</code>, координаты недопустимы или значение буфера у <code>PUT</code> не приводится к корректному числу.</li>
                 </ul>
             </section>
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
-DIM block(0 TO 31, 0 TO 31) AS INTEGER
+<pre><code class="language-basic">CANVAS 24, 18
+CLS RGB(0, 0, 0)
+VIEWPORT (10, 6)-(15, 11)
+CAMERA 100, 50
 
-LINE (20, 20)-(51, 51), 14, BF
-GET (20, 20)-(51, 51), block
-PUT (80, 20), block, XOR
+DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+
+PSET (100, 50), 6
+PSET (101, 50), 9
+PSET (100, 51), 12
+PSET (101, 51), 15
+
+GET (100, 50)-(101, 51), buffer
+PUT (102, 50), buffer, PSET
+
+PRESENT
 SLEEP</code></pre>
+                <p>Готовые runnable-примеры для ручной проверки лежат в <a href="../../samples/operators/get/canvas_block_capture.axm">samples/operators/get/canvas_block_capture.axm</a> и <a href="../../samples/operators/put/canvas_block_restore.axm">samples/operators/put/canvas_block_restore.axm</a>.</p>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
+                    <a href="modern-graphics.html">Современная графика CANVAS</a>
                     <a href="graphics-primitives.html">Операторы рисования</a>
                     <a href="view.html">Оператор VIEW</a>
                     <a href="window.html">Оператор WINDOW</a>
-                    <a href="images.html">Изображения IMAGE</a>
                 </div>
             </section>
 

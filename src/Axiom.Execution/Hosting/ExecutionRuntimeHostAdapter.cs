@@ -105,6 +105,12 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public long CurrentGraphicsY =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CurrentGraphicsY : 0;
 
+    public long CanvasCameraX =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CanvasCameraX : 0;
+
+    public long CanvasCameraY =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.CanvasCameraY : 0;
+
     public bool ViewportEnabled =>
         _inputProvider is IGraphicsHost graphicsHost && graphicsHost.ViewportEnabled;
 
