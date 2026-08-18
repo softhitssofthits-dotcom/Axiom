@@ -233,3 +233,28 @@
 - 3.4 (разбить InterpreterTests) — завершена, 12,015 → 11 файлов.
 
 Следующий шаг: 3.1 (разбить MainWindowViewModel) или закрытие сессии.
+
+## Session 1038 - 2026-08-18 22:00 - Волна 3.1: разбивка MainWindowViewModel
+
+Задача: разбить `MainWindowViewModel.cs` (3,354 строки, 53 команды) на partial-файлы.
+
+Что сделано:
+
+| Файл | Строк | Содержание |
+|------|-------|------------|
+| MainWindowViewModel.cs | 1,380 | поля, конструктор, свойства, документы, about, recent, shell state |
+| MainWindowViewModel.Debug.cs | 807 | запуск, отладка, breakpoint, step, compile, stopped run state |
+| MainWindowViewModel.FileTree.cs | 754 | файловое дерево: навигация, создание, копирование, переименование, удаление |
+| MainWindowViewModel.Preferences.cs | 323 | тема, язык, форматирование, режим выполнения, shell preferences |
+| MainWindowViewModel.EventLog.cs | 129 | IDE event log |
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+- `dotnet test tests/Axiom.Runtime.Tests` — 875/875 пройдено.
+
+Волна 3 плана улучшений завершена:
+- 3.1 (MainWindowViewModel) — завершена, 3,354 → 5 файлов.
+- 3.3 (Axiom.Syntax.Tests) — завершена, 64 теста.
+- 3.4 (InterpreterTests) — завершена, 12,015 → 11 файлов.
+
+Следующий шаг: продуктовая работа или волна 5 (тестирование графики).
