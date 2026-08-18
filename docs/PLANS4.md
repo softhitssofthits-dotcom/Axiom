@@ -182,3 +182,11 @@
 - `MainWindowViewModel.cs` (3,354 строк) разбит на 5 partial-файлов: основной (1,380), Debug (807), FileTree (754), Preferences (323), EventLog (129).
 - Волна 3.1 завершена. Волна 3 плана улучшений полностью закрыта.
 - Следующий шаг: продуктовая работа или волна 5 (тестирование графики).
+
+### 2026-08-18 - графическая baseline-инфраструктура тестирования
+
+- Создан `tests/Axiom.Runtime.Tests/Helpers/SoftwareFramebuffer.cs` с методами `ToBmp`, `CompareBmp`, `ComparePixels`.
+- Создан `tests/Axiom.Runtime.Tests/GraphicsBaselineTests.cs` с 9 baseline-тестами графики.
+- Покрыты: LINE (horizontal, diagonal), RECT (fill, box), CIRCLE, PSET, CLS, FILLRECT, VIEWPORT clipping.
+- 884/884 тестов пройдено.
+- Следующий шаг: расширять графические baseline-тесты (DRAW, PAINT, WINDOW, GET/PUT) или продуктовая работа.

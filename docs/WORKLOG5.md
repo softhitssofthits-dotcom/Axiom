@@ -319,3 +319,35 @@
 
 Волна 2 плана улучшений полностью закрыта.
 Следующий шаг: волна 5 (тестирование графики).
+
+## Session 1040 - 2026-08-18 23:30 - Волна 5: графическая baseline-инфраструктура
+
+Задача: добавить инфраструктуру baseline-тестирования графики в `Axiom.Runtime.Tests`.
+
+Что сделано:
+1. Создан `tests/Axiom.Runtime.Tests/Helpers/SoftwareFramebuffer.cs`:
+   - `ToBmp` — экспорт pixel dictionary в 24-bit BMP (bottom-up, no compression).
+   - `CompareBmp` — побайтовое сравнение двух BMP с координатами первого расхождения.
+   - `ComparePixels` — прямое сравнение pixel dictionaries с допуском по цвету (для anti-aliasing).
+   - `MapPaletteIndexToRgb` — маппинг палитрового индекса в RGB (дублирует логику TestRuntimeHost для независимости).
+2. Создан `tests/Axiom.Runtime.Tests/GraphicsBaselineTests.cs`:
+   - `ExecuteGraphicsProgram` — хелпер запуска Axiom-программы с возвратом pixel dictionary.
+   - `GetPixels` / `GetCanvasPixels` / `GetAllCanvasPixels` — извлечение пикселей из TestRuntimeHost.
+   - 9 baseline-тестов:
+     - `Baseline_Screen_Line_DrawsHorizontalLine` — горизонтальная линия, 11 пикселей, цвет 12.
+     - `Baseline_Screen_Line_DrawsDiagonalLine` — диагональ от (0,0) до (10,10), ≥11 пикселей.
+     - `Baseline_Screen_Rect_FillsRectangle` — заливка прямоугольника BF, 66 пикселей.
+     - `Baseline_Screen_Rect_DrawsBox` — контур прямоугольника B, только края, без interior.
+     - `Baseline_Screen_Circle_DrawsEllipse` — окружность радиуса 10, ≥30 пикселей.
+     - `Baseline_Screen_Pset_SetsPixels` — 4 индивидуальных пикселя в SCREEN 1.
+     - `Baseline_Canvas_ClearFrame_FillsAllPixels` — CLS заливает весь canvas.
+     - `Baseline_Canvas_FillRect_DrawsFilledRectangle` — FILLRECT на canvas с проверкой clipping.
+     - `Baseline_Viewport_ClipsDrawing` — VIEWPORT обрезает FILLRECT до своей области.
+
+Файлы:
+- `tests/Axiom.Runtime.Tests/Helpers/SoftwareFramebuffer.cs` (создан)
+- `tests/Axiom.Runtime.Tests/GraphicsBaselineTests.cs` (создан)
+
+Проверки:
+- `dotnet build tests/Axiom.Runtime.Tests` — 0 ошибок, 0 предупреждений.
+- `dotnet test tests/Axiom.Runtime.Tests` — 884/884 пройдено (включая 9 новых).
