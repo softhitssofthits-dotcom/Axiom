@@ -1,0 +1,23 @@
+' Ожидается: пример по очереди показывает первый и четвёртый тайлы
+' из одного тайлсета на современном холсте CANVAS.
+
+DIM tiles AS TILESET
+
+' Загружаем тот же лист, который уже используется в sprite-примерах.
+tiles = LOADTILESET("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
+
+CANVAS 160, 90
+
+BEGINFRAME
+' Очищаем первый кадр и рисуем первый тайл по 1-based номеру.
+CLS RGB(20, 24, 32)
+DRAWTILE tiles, 1, 24, 24
+PRESENT
+SLEEP
+
+BEGINFRAME
+' Во втором кадре рисуем четвёртый тайл из второй строки листа.
+CLS RGB(12, 16, 24)
+DRAWTILE tiles, 4, 88, 40
+PRESENT
+SLEEP

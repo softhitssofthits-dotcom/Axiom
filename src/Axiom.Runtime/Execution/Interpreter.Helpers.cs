@@ -485,13 +485,13 @@ public sealed partial class Interpreter
 
     private void ReportDivisionByZero(TextLocation location)
     {
-        ReportRuntimeDiagnostic(DivisionByZeroCode, "Деление на ноль.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.DivisionByZero, "Деление на ноль.", location);
     }
 
     private void ReportArrayIndicesOutOfBounds(string arrayName, IReadOnlyList<int> indices, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            ArrayBoundsCode,
+            DiagnosticCodes.ArrayBounds,
             $"Индексы {FormatArrayIndices(indices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
@@ -499,7 +499,7 @@ public sealed partial class Interpreter
     private void ReportArraySlicesOutOfBounds(string arrayName, IReadOnlyList<RuntimeArrayIndexSlice> slices, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            ArrayBoundsCode,
+            DiagnosticCodes.ArrayBounds,
             $"Индексы {FormatArraySlices(slices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
@@ -552,7 +552,7 @@ public sealed partial class Interpreter
     private void ReportInputConversionFailure(TypeSymbol type, string text, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            InputConversionCode,
+            DiagnosticCodes.InputConversion,
             $"Невозможно преобразовать ввод '{text}' к типу {type.Name}.",
             location);
     }
@@ -560,7 +560,7 @@ public sealed partial class Interpreter
     private void ReportInputValueCountFailure(int expectedCount, int actualCount, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            InputConversionCode,
+            DiagnosticCodes.InputConversion,
             $"Ожидалось {expectedCount} значений INPUT, но получено {actualCount}.",
             location);
     }
@@ -568,7 +568,7 @@ public sealed partial class Interpreter
     private void ReportStepZero(string variableName, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            StepZeroCode,
+            DiagnosticCodes.StepZero,
             $"В цикле FOR для переменной '{variableName}' недопустим STEP 0.",
             location);
     }
@@ -576,7 +576,7 @@ public sealed partial class Interpreter
     private void ReportMissingReturnValue(string functionName, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            MissingReturnValueCode,
+            DiagnosticCodes.RuntimeMissingReturnValue,
             $"Функция '{functionName}' завершилась без RETURN со значением.",
             location);
     }
@@ -584,7 +584,7 @@ public sealed partial class Interpreter
     private void ReportEmptyFunctionValue(TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            EmptyFunctionValueCode,
+            DiagnosticCodes.EmptyFunctionValue,
             "Значение функционального типа не содержит функции.",
             location);
     }
@@ -592,7 +592,7 @@ public sealed partial class Interpreter
     private void ReportBuiltInArgumentError(string functionName, string argumentName, string detail, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Функция {functionName}: аргумент '{argumentName}' {detail}",
             location);
     }
@@ -600,14 +600,14 @@ public sealed partial class Interpreter
     private void ReportNumericOverflow(string detail, TypeSymbol type, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            NumericOverflowCode,
+            DiagnosticCodes.NumericOverflow,
             $"{detail} выходит за диапазон {type.Name}.",
             location);
     }
 
     private void ReportInvalidRuntimeState(string message, TextLocation? location = null)
     {
-        ReportRuntimeDiagnostic(InvalidRuntimeStateCode, message, location ?? FallbackRuntimeLocation);
+        ReportRuntimeDiagnostic(DiagnosticCodes.InvalidRuntimeState, message, location ?? FallbackRuntimeLocation);
     }
 
     private T ReportInvalidRuntimeState<T>(string message, TextLocation? location = null)

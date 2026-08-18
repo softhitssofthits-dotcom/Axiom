@@ -590,6 +590,47 @@ public sealed class BoundProgramLowerer
                 instructions.Add(LoweredInstruction.DrawSprite(drawSprite.Location, drawSprite.HasScale));
                 break;
 
+            case BoundDrawTileStatement drawTile:
+                LowerExpression(drawTile.TilesetExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTile.TileIndexExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTile.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTile.YExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawTile(drawTile.Location));
+                break;
+
+            case BoundDrawTilemapStatement drawTilemap:
+                LowerExpression(drawTilemap.TilemapExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTilemap.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTilemap.YExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawTilemap(drawTilemap.Location));
+                break;
+
+            case BoundDrawTileLayerStatement drawTileLayer:
+                LowerExpression(drawTileLayer.TilemapExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTileLayer.LayerIndexExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTileLayer.XExpression, instructions);
+                LowerModernGraphicsIntegralExpression(drawTileLayer.YExpression, instructions);
+                instructions.Add(LoweredInstruction.DrawTileLayer(drawTileLayer.Location));
+                break;
+
+            case BoundSetMapTileStatement setMapTile:
+                LowerExpression(setMapTile.TilemapExpression, instructions);
+                LowerModernGraphicsIntegralExpression(setMapTile.LayerIndexExpression, instructions);
+                LowerModernGraphicsIntegralExpression(setMapTile.ColumnExpression, instructions);
+                LowerModernGraphicsIntegralExpression(setMapTile.RowExpression, instructions);
+                LowerModernGraphicsIntegralExpression(setMapTile.TilesetIndexExpression, instructions);
+                LowerModernGraphicsIntegralExpression(setMapTile.TileIndexExpression, instructions);
+                if (setMapTile.FlagsExpression is null)
+                {
+                    instructions.Add(LoweredInstruction.LoadLiteral(setMapTile.Location, 0L, TypeSymbol.Long));
+                }
+                else
+                {
+                    LowerModernGraphicsIntegralExpression(setMapTile.FlagsExpression, instructions);
+                }
+                instructions.Add(LoweredInstruction.SetMapTile(setMapTile.Location));
+                break;
+
             case BoundOnKeyStatement onKey:
                 LowerOnKey(onKey, instructions);
                 break;
@@ -1843,7 +1884,12 @@ public sealed class BoundProgramLowerer
 
     private static bool CanUseImplicitDefaultSlotValue(TypeSymbol type)
     {
-        return type is UserDefinedTypeSymbol or FunctionTypeSymbol || type == TypeSymbol.File || type == TypeSymbol.Image || type == TypeSymbol.Sprite;
+        return type is UserDefinedTypeSymbol or FunctionTypeSymbol
+            || type == TypeSymbol.File
+            || type == TypeSymbol.Image
+            || type == TypeSymbol.Sprite
+            || type == TypeSymbol.Tileset
+            || type == TypeSymbol.Tilemap;
     }
 
     private void ReportUnsupported(BoundNode node, string category)

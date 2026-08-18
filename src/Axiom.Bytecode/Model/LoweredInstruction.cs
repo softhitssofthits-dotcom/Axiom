@@ -652,6 +652,26 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.DrawSprite, location, valueCount: hasScale ? 1 : 0);
     }
 
+    public static LoweredInstruction DrawTile(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawTile, location, valueCount: 4);
+    }
+
+    public static LoweredInstruction DrawTilemap(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawTilemap, location, valueCount: 3);
+    }
+
+    public static LoweredInstruction DrawTileLayer(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.DrawTileLayer, location, valueCount: 4);
+    }
+
+    public static LoweredInstruction SetMapTile(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.SetMapTile, location, valueCount: 7);
+    }
+
     public static LoweredInstruction PrintUsing(TextLocation location, int valueCount, PrintSeparatorKind? separatorKind)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(valueCount);

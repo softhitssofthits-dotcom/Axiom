@@ -1066,3 +1066,56 @@
 - Сквозной VM: да, `GetCanvasAcceptanceSample_RunsOnBytecodeVm` и `PutCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждают оба sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
 - Негативный паритет: да, вызов `GET` или `PUT` без `SCREEN` и без `CANVAS` одинаково сообщает `MB3010` в interpreter и `BytecodeVm`;
 - Уточнение договора: в `CANVAS` операторы `GET` и `PUT` принимают мировые координаты, проходят через `CAMERA` и `VIEWPORT`, но пользовательский буфер остаётся обычным двумерным индексным массивом `0..255`, а действие `PUT` по умолчанию остаётся `XOR`.
+
+## Обновление реестра - 2026-06-08 - MOUSE для CANVAS
+
+Дополнение к строкам `MOUSEX()`, `MOUSEY()`, `MOUSEBUTTON()`, `MOUSEPRESS()` и `ON MOUSE`:
+- VM: да, `BytecodeVm` теперь принимает мышиные функции и `ON MOUSE` не только при активном `SCREEN`, но и при активном `CANVAS`;
+- Интерпретатор: да, runtime-слой переведён с `RequireScreenActive(...)` на общий договор активной рисуемой поверхности там, где это нужно для мыши;
+- Автотесты: да, добавлены interpreter- и `BytecodeVm`-проверки мировых координат `MOUSEX()` / `MOUSEY()` в `CANVAS`, передачи тех же координат в `ON MOUSE`, а также их совпадения с чтениями внутри обработчика;
+- Runnable sample: да, добавлены `samples/functions/mousex/canvas_world_position.axm`, `samples/functions/mousey/canvas_world_position.axm` и `samples/operators/on-mouse/canvas_world_handler.axm`; 2026-06-08 эти примеры укрупнены до `CANVAS 480, 270`, чтобы координаты и удержание кнопок были видны при ручной проверке;
+- Manual: да, обновлены `docs/manual/mousex.html`, `docs/manual/mousey.html`, `docs/manual/mousebutton.html`, `docs/manual/mousepress.html`, `docs/manual/on-mouse.html`, `docs/manual/keyboard-mouse-events.html`, `docs/manual/data-and-input.html` и `docs/manual/scripts/search-index.js`;
+- Сквозной VM: да, `MouseCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm`, `MouseYCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm` и `OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm` подтверждают mouse sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, вызов мышиных функций и `ON MOUSE` без `SCREEN` и без `CANVAS` по-прежнему сообщает `MB3010`;
+- Уточнение договора: в `SCREEN` координаты мыши остаются экранными, а в `CANVAS` `MOUSEX()` / `MOUSEY()` и параметры `x/y` обработчика `ON MOUSE` возвращают мировые координаты под `VIEWPORT` и `CAMERA`.
+
+## Обновление реестра - 2026-06-08 - TILESET, LOADTILESET и DRAWTILE
+
+Дополнение к областям `TILESET`, `LOADTILESET`, `TILECOUNT`, `TILEWIDTH`, `TILEHEIGHT` и `DRAWTILE`:
+- VM: да, `BytecodeVm` поддерживает тип `TILESET`, все три формы `LOADTILESET`, функции размеров тайла и отдельную инструкцию `DrawTile` без отката на интерпретатор;
+- Интерпретатор: да, runtime-слой поддерживает тот же пользовательский договор `TILESET` и те же диагностики, что и байткодный путь;
+- Автотесты: да, добавлены и проходят interpreter- и `BytecodeVm`-проверки `Execute_TilesetWidthHeightAndCountReturnLoadedAndEmptySizes`, `Execute_CompiledTilesetWidthHeightAndCountReturnLoadedAndEmptySizes`, `Execute_DrawTileCallsModernGraphicsHostAndUpdatesCurrentPosition`, `Execute_CompiledDrawTileCallsModernGraphicsHostAndUpdatesCurrentPosition`, `Execute_TilesetOperationsReportDocumentedDiagnostics` и `Execute_CompiledTilesetOperationsReportDocumentedDiagnostics`;
+- Runnable sample: да, используется `samples/operators/drawtile/basic_tileset.axm`;
+- Manual: да, добавлена страница `docs/manual/tilesets.html`, а навигация и обзорные страницы manual синхронизированы с этим срезом;
+- Сквозной VM: да, `DrawTileAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, ошибки `MB3005`, `MB3007` и `MB3010` покрыты interpreter- и `BytecodeVm`-проверками для пустого пути, неверной сетки, пустого тайлсета, неверного `tileIndex` и вызова `DRAWTILE` без `CANVAS`;
+- Уточнение договора: `tileIndex` в `DRAWTILE` является `1`-основанным, тайлы идут слева направо и сверху вниз, а `TILECOUNT`, `TILEWIDTH` и `TILEHEIGHT` для пустого значения `TILESET` возвращают `0`;
+- Профиль: не приоритет, потому что этот шаг закрывал пользовательский договор и документацию первого тайлового среза, а не отдельный горячий benchmark.
+
+## Обновление реестра - 2026-06-08 - TILEMAP, LOADTILEMAP и отрисовка карты
+
+Дополнение к областям `TILEMAP`, `LOADTILEMAP`, `MAPWIDTH`, `MAPHEIGHT`, `MAPPIXELWIDTH`, `MAPPIXELHEIGHT`, `MAPTILEWIDTH`, `MAPTILEHEIGHT`, `MAPLAYERCOUNT`, `DRAWTILEMAP` и `DRAWTILELAYER`:
+- VM: да, `BytecodeVm` поддерживает тип `TILEMAP`, загрузку карты, функции размеров и отдельные инструкции `DrawTilemap` / `DrawTileLayer` без отката на интерпретатор;
+- Интерпретатор: да, runtime-слой поддерживает тот же пользовательский договор `TILEMAP`, включая пустое значение для функций размеров и ошибку при попытке рисовать пустую карту;
+- Автотесты: да, добавлены и проходят parser-, binder-, interpreter- и `BytecodeVm`-проверки объявления `TILEMAP`, функций `MAP*`, отрисовки видимых слоёв, явной отрисовки скрытого слоя и ошибки объектного слоя;
+- Runnable sample: да, добавлены `samples/operators/drawtilemap/visible_and_layer.axm` и карта `samples/operators/drawtilemap/simple_map.tmj`;
+- Manual: да, добавлена страница `docs/manual/tilemaps.html`, обновлены `docs/manual/modern-graphics.html`, `docs/manual/graphics.html`, `docs/manual/data-types.html`, `docs/manual/reference.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`;
+- IDE-подсветка: да, `TILEMAP`, `DRAWTILEMAP`, `DRAWTILELAYER`, `LOADTILEMAP` и функции `MAP*` уже внесены в светлую и тёмную схемы подсветки и покрыты `tests/Axiom.Ide.Tests/`;
+- Сквозной VM: да, `DrawTilemapAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: частично закрыт в этом срезе для объектного слоя через interpreter- и `BytecodeVm`-проверки; полный набор ошибок загрузки внешних файлов будет расширяться вместе со следующими `TILEMAP`-функциями;
+- Уточнение договора: `DRAWTILEMAP` рисует только видимые тайловые слои, `DRAWTILELAYER` рисует указанный тайловый слой независимо от флага видимости, а оба оператора не меняют текущую графическую позицию;
+- Профиль: пока не приоритет, потому что этот шаг закрывал функциональный договор и сквозную VM-приёмку, а не отдельный горячий benchmark.
+
+## Обновление реестра - 2026-06-08 - MAPTILE, MAPTILESET, MAPTILEFLAGS и SETMAPTILE
+
+Дополнение к области `TILEMAP`:
+- VM: да, `BytecodeVm` выполняет функции `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и оператор `SETMAPTILE` без отката на интерпретатор;
+- Интерпретатор: да, runtime-слой поддерживает тот же пользовательский договор чтения, записи и очистки клетки карты;
+- Автотесты: да, добавлены parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-проверки для чтения клеток, записи клетки, очистки клетки и документированной диагностики записи;
+- Runnable sample: да, добавлен `samples/operators/setmaptile/cell_update.axm`;
+- Manual: да, обновлены `docs/manual/tilemaps.html`, обзорные страницы manual и `docs/manual/scripts/search-index.js`;
+- IDE-подсветка: да, `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и `SETMAPTILE` внесены в светлую и тёмную схемы подсветки и покрыты `tests/Axiom.Ide.Tests/`;
+- Сквозной VM: да, `SetMapTileAcceptanceSample_RunsOnBytecodeVm` подтверждает sample через `ExecutionEngineKind.BytecodeVm` без отката на интерпретатор;
+- Негативный паритет: да, запись в объектный слой, запись за пределы карты, неверный тайлсет, неверный тайл и недопустимые флаги покрываются одинаковым runtime-договором interpreter и `BytecodeVm`;
+- Уточнение договора: `MAPTILE*` при чтении пустой клетки, пустой карты, объектного слоя или координат вне карты возвращает `0`; `SETMAPTILE` для записи требует существующую клетку тайлового слоя, а пара `0, 0` очищает клетку;
+- Профиль: пока не приоритет, потому что шаг закрывает функциональный договор изменения карты, а не отдельный горячий benchmark.

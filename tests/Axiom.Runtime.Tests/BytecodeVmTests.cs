@@ -323,6 +323,25 @@ PRINT MOUSEBUTTON(99)
     }
 
     [Fact]
+    public void Execute_MouseFunctionsUseCanvasWorldCoordinates()
+    {
+        const string text = """
+CANVAS 160, 90
+VIEWPORT (10, 12)-(30, 28)
+CAMERA 100, 50
+PRINT MOUSEX()
+PRINT MOUSEY()
+PRINT MOUSEBUTTON(1)
+""";
+
+        var host = new TestRuntimeHost(mouseX: 15, mouseY: 16, pressedMouseButtons: [1]);
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["105", "54", "TRUE"], host.Output);
+    }
+
+    [Fact]
     public void Execute_MouseFunctionsReturnDefaultValuesWithoutMouseProviderState()
     {
         const string text = """
@@ -745,6 +764,44 @@ PRINT SPRITECOUNT(walk)
     }
 
     [Fact]
+    public void Execute_CompiledTilesetWidthHeightAndCountReturnLoadedAndEmptySizes()
+    {
+        const string text = """
+DIM emptyTiles AS TILESET
+PRINT TILECOUNT(emptyTiles)
+PRINT TILEWIDTH(emptyTiles)
+PRINT TILEHEIGHT(emptyTiles)
+DIM plainTiles AS TILESET
+DIM marginTiles AS TILESET
+DIM spacedTiles AS TILESET
+plainTiles = LOADTILESET("plain", 16, 8)
+marginTiles = LOADTILESET("margin", 16, 8, 1)
+spacedTiles = LOADTILESET("spaced", 16, 8, 1, 2)
+PRINT TILECOUNT(plainTiles)
+PRINT TILECOUNT(marginTiles)
+PRINT TILECOUNT(spacedTiles)
+PRINT TILEWIDTH(spacedTiles)
+PRINT TILEHEIGHT(spacedTiles)
+""";
+
+        var host = new TestRuntimeHost();
+        host.Images["plain"] = CreateTestImage(width: 32, height: 16);
+        host.Images["margin"] = CreateTestImage(width: 34, height: 18);
+        host.Images["spaced"] = CreateTestImage(width: 36, height: 20);
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["0", "0", "0", "4", "4", "4", "16", "8"], host.Output);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.LoadTileset);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.LoadTilesetMargin);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.LoadTilesetMarginSpacing);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.TileCount);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.TileWidth);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.TileHeight);
+    }
+
+    [Fact]
     public void Execute_CompiledDrawSpriteCallsGraphicsHostAndUpdatesCurrentPosition()
     {
         const string text = """
@@ -771,6 +828,213 @@ DRAWSPRITE walk, 5, 30, 40, 32, 48
             host.DrawSprites);
         Assert.Equal(30, host.CurrentGraphicsX);
         Assert.Equal(40, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawTileCallsModernGraphicsHostAndUpdatesCurrentPosition()
+    {
+        const string text = """
+CANVAS 160, 90
+DIM tiles AS TILESET
+tiles = LOADTILESET("terrain", 16, 10, 1, 2)
+DRAWTILE tiles, 4, 30, 40
+""";
+
+        var image = CreateTestImage(width: 36, height: 24);
+        var host = new TestRuntimeHost();
+        host.Images["terrain"] = image;
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(1, module.Routines.SelectMany(static routine => routine.Instructions).Count(static instruction => instruction.Opcode == Opcode.DrawTile));
+        Assert.Equal(
+            [
+                new DrawImageRegionCall(image, 19, 13, 16, 10, 30, 40, 16, 10)
+            ],
+            host.DrawImageRegions);
+        Assert.Equal(30, host.CurrentGraphicsX);
+        Assert.Equal(40, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_CompiledTilemapFunctionsReturnMapMetrics()
+    {
+        const string text = """
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+PRINT MAPWIDTH(level)
+PRINT MAPHEIGHT(level)
+PRINT MAPPIXELWIDTH(level)
+PRINT MAPPIXELHEIGHT(level)
+PRINT MAPTILEWIDTH(level)
+PRINT MAPTILEHEIGHT(level)
+PRINT MAPLAYERCOUNT(level)
+DIM empty AS TILEMAP
+PRINT MAPWIDTH(empty)
+""";
+
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(CreateTestImage(48, 8));
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.LoadTilemap);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.MapWidth);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.MapLayerCount);
+        Assert.Equal(["2", "2", "32", "16", "16", "8", "3", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledMapTileFunctionsReadCellsAndEmptyOutside()
+    {
+        const string text = """
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+PRINT MAPTILE(level, 1, 1, 1)
+PRINT MAPTILESET(level, 1, 1, 1)
+PRINT MAPTILEFLAGS(level, 1, 1, 1)
+PRINT MAPTILE(level, 1, 1, 2)
+PRINT MAPTILE(level, 1, 3, 1)
+PRINT MAPTILE(level, 3, 1, 1)
+DIM empty AS TILEMAP
+PRINT MAPTILE(empty, 1, 1, 1)
+""";
+
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(CreateTestImage(48, 8));
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.MapTile);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.MapTileset);
+        Assert.Contains(module.Builtins, static binding => binding.CanonicalId == BuiltinFunctionId.MapTileFlags);
+        Assert.Equal(["1", "1", "0", "0", "0", "0", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledSetMapTileWritesClearsAndStoresFlags()
+    {
+        const string text = """
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+SETMAPTILE level, 1, 1, 2, 1, 2, 3
+PRINT MAPTILE(level, 1, 1, 2)
+PRINT MAPTILESET(level, 1, 1, 2)
+PRINT MAPTILEFLAGS(level, 1, 1, 2)
+SETMAPTILE level, 1, 1, 2, 0, 0
+PRINT MAPTILE(level, 1, 1, 2)
+""";
+
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(CreateTestImage(48, 8));
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.SetMapTile);
+        Assert.Equal(["2", "1", "3", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledSetMapTileRejectsObjectLayerAndOutsideCell()
+    {
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(CreateTestImage(48, 8));
+
+        var (_, _, objectLayerResult) = ExecuteProgram("""
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+SETMAPTILE level, 3, 1, 1, 1, 1
+""", host);
+
+        Assert.False(objectLayerResult.Succeeded);
+        Assert.Contains(objectLayerResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(CreateTestImage(48, 8));
+        var (_, _, outsideResult) = ExecuteProgram("""
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+SETMAPTILE level, 1, 3, 1, 1, 1
+""", host);
+
+        Assert.False(outsideResult.Succeeded);
+        Assert.Contains(outsideResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawTilemapDrawsVisibleTileLayersAndPreservesCurrentPosition()
+    {
+        const string text = """
+CANVAS 160, 90
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+DRAWTILEMAP level, 10, 20
+""";
+
+        var image = CreateTestImage(48, 8);
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(image);
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawTilemap);
+        Assert.Equal(
+            [
+                new DrawImageRegionCall(image, 0, 0, 16, 8, 10, 20, 16, 8),
+                new DrawImageRegionCall(image, 16, 0, 16, 8, 26, 20, 16, 8),
+                new DrawImageRegionCall(image, 32, 0, 16, 8, 26, 28, 16, 8)
+            ],
+            host.DrawImageRegions);
+        Assert.Equal(0, host.CurrentGraphicsX);
+        Assert.Equal(0, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawTileLayerDrawsRequestedTileLayerEvenWhenHidden()
+    {
+        const string text = """
+CANVAS 160, 90
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+DRAWTILELAYER level, 2, 10, 20
+""";
+
+        var image = CreateTestImage(48, 8);
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(image);
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawTileLayer);
+        Assert.Equal(3, host.DrawImageRegions.Count);
+        Assert.Equal(new DrawImageRegionCall(image, 0, 0, 16, 8, 10, 20, 16, 8), host.DrawImageRegions[0]);
+        Assert.Equal(0, host.CurrentGraphicsX);
+        Assert.Equal(0, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_CompiledDrawTileLayerRejectsObjectLayer()
+    {
+        const string text = """
+CANVAS 160, 90
+DIM level AS TILEMAP
+level = LOADTILEMAP("level")
+DRAWTILELAYER level, 3, 10, 20
+""";
+
+        var host = new TestRuntimeHost();
+        host.Tilemaps["level"] = CreateTestTilemap(CreateTestImage(48, 8));
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
     }
 
     [Fact]
@@ -838,6 +1102,62 @@ DRAWSPRITE walk, 0, 0, 0
 """, noScreenHost);
         Assert.False(noScreenResult.Succeeded);
         Assert.Contains(noScreenResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_CompiledTilesetOperationsReportDocumentedDiagnostics()
+    {
+        var (_, _, emptyPathResult) = ExecuteProgram("PRINT LOADTILESET(\"\", 16, 8)");
+        Assert.False(emptyPathResult.Succeeded);
+        Assert.Contains(emptyPathResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, invalidSizeResult) = ExecuteProgram("PRINT LOADTILESET(\"terrain\", 0, 8)");
+        Assert.False(invalidSizeResult.Succeeded);
+        Assert.Contains(invalidSizeResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, invalidMarginResult) = ExecuteProgram("PRINT LOADTILESET(\"terrain\", 16, 8, -1)");
+        Assert.False(invalidMarginResult.Succeeded);
+        Assert.Contains(invalidMarginResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var (_, _, missingTilesetResult) = ExecuteProgram("PRINT LOADTILESET(\"missing\", 16, 8)");
+        Assert.False(missingTilesetResult.Succeeded);
+        Assert.Contains(missingTilesetResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var invalidGridHost = new TestRuntimeHost();
+        invalidGridHost.Images["bad-grid"] = CreateTestImage(width: 35, height: 24);
+        var (_, _, invalidGridResult) = ExecuteProgram("PRINT LOADTILESET(\"bad-grid\", 16, 10, 1, 2)", invalidGridHost);
+        Assert.False(invalidGridResult.Succeeded);
+        Assert.Contains(invalidGridResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var (_, _, emptyDrawResult) = ExecuteProgram("""
+CANVAS 160, 90
+DIM tiles AS TILESET
+DRAWTILE tiles, 1, 0, 0
+""");
+        Assert.False(emptyDrawResult.Succeeded);
+        Assert.Contains(emptyDrawResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3005");
+
+        var invalidTileHost = new TestRuntimeHost();
+        invalidTileHost.Images["terrain"] = CreateTestImage(width: 32, height: 16);
+        var (_, _, invalidTileResult) = ExecuteProgram("""
+CANVAS 160, 90
+DIM tiles AS TILESET
+tiles = LOADTILESET("terrain", 16, 8)
+DRAWTILE tiles, 5, 0, 0
+""", invalidTileHost);
+        Assert.False(invalidTileResult.Succeeded);
+        Assert.Contains(invalidTileResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+
+        var noCanvasHost = new TestRuntimeHost();
+        noCanvasHost.Images["terrain"] = CreateTestImage(width: 32, height: 16);
+        var (_, _, noCanvasResult) = ExecuteProgram("""
+SCREEN 1
+DIM tiles AS TILESET
+tiles = LOADTILESET("terrain", 16, 8)
+DRAWTILE tiles, 1, 0, 0
+""", noCanvasHost);
+        Assert.False(noCanvasResult.Succeeded);
+        Assert.Contains(noCanvasResult.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
     }
 
     [Fact]
@@ -1982,6 +2302,30 @@ END SUB
     }
 
     [Fact]
+    public void Execute_OnMousePassesCanvasWorldCoordinates()
+    {
+        const string text = """
+CANVAS 160, 90
+VIEWPORT (10, 12)-(30, 28)
+CAMERA 100, 50
+ON MOUSE(3), HandleMouse
+DIM marker AS INTEGER = 1
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    PRINT button
+    PRINT x
+    PRINT y
+END SUB
+""";
+
+        var host = new TestRuntimeHost(mouseX: 15, mouseY: 16, mousePresses: [3]);
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3", "105", "54"], host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledOnMouseCoordinatesMatchMouseFunctionsDuringActiveScreen()
     {
         const string text = """
@@ -2019,6 +2363,47 @@ END SUB
 
         Assert.True(result.Succeeded);
         Assert.Equal(["TRUE", "TRUE", "TRUE", "42", "42", "24", "24"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledOnMouseCoordinatesMatchMouseFunctionsDuringActiveCanvas()
+    {
+        const string text = """
+CANVAS 160, 90
+VIEWPORT (10, 12)-(30, 28)
+CAMERA 100, 50
+DIM handled AS BOOLEAN = FALSE
+DIM eventX AS LONG = 0
+DIM eventY AS LONG = 0
+DIM readX AS LONG = 0
+DIM readY AS LONG = 0
+ON MOUSE("MOVE"), HandleMouse
+DIM marker AS INTEGER = 1
+PRINT handled
+PRINT eventX = readX
+PRINT eventY = readY
+PRINT eventX
+PRINT readX
+PRINT eventY
+PRINT readY
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    handled = TRUE
+    eventX = x
+    eventY = y
+    readX = MOUSEX()
+    readY = MOUSEY()
+END SUB
+""";
+
+        var host = new TestRuntimeHost(
+            mouseX: 15,
+            mouseY: 16,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0)]);
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "TRUE", "TRUE", "105", "105", "54", "54"], host.Output);
     }
 
     [Fact]
@@ -6343,6 +6728,29 @@ PRINT Person(-1).Age
     private static RuntimeSpriteValue CreateTestSprite(int imageWidth, int imageHeight, int frameWidth, int frameHeight) =>
         new(CreateTestImage(imageWidth, imageHeight), frameWidth, frameHeight);
 
+    private static RuntimeTilemapValue CreateTestTilemap(RuntimeImageValue image)
+    {
+        var tileset = new RuntimeTilesetValue(image, tileWidth: 16, tileHeight: 8);
+        var cells = new[]
+        {
+            new RuntimeTilemapCell(1, 1, RuntimeTilemapFlipFlags.None),
+            new RuntimeTilemapCell(1, 2, RuntimeTilemapFlipFlags.None),
+            default,
+            new RuntimeTilemapCell(1, 3, RuntimeTilemapFlipFlags.None)
+        };
+        var visible = new RuntimeTilemapLayer("visible", RuntimeTilemapLayerKind.Tile, 2, 2, visible: true, opacity: 1d, offsetX: 0, offsetY: 0, parallaxX: 1d, parallaxY: 1d, cells);
+        var hidden = new RuntimeTilemapLayer("hidden", RuntimeTilemapLayerKind.Tile, 2, 2, visible: false, opacity: 1d, offsetX: 0, offsetY: 0, parallaxX: 1d, parallaxY: 1d, cells);
+        var objects = new RuntimeTilemapLayer("objects", RuntimeTilemapLayerKind.Object, 2, 2, visible: true, opacity: 1d, offsetX: 0, offsetY: 0, parallaxX: 1d, parallaxY: 1d, cells: null);
+        return new RuntimeTilemapValue(
+            2,
+            2,
+            16,
+            8,
+            RuntimeTilemapRenderOrder.RightDown,
+            [new RuntimeTilemapTilesetReference(1, tileset)],
+            [visible, hidden, objects]);
+    }
+
     private sealed class TestRuntimeHost : IRuntimeHost, IReversibleOutputWriter
     {
         private const int VisibleTextColumns = 40;
@@ -6452,7 +6860,11 @@ PRINT Person(-1).Age
 
         public Dictionary<string, RuntimeSpriteValue> Sprites { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+        public Dictionary<string, RuntimeTilemapValue> Tilemaps { get; } = new(StringComparer.OrdinalIgnoreCase);
+
         public List<DrawImageCall> DrawImages { get; } = [];
+
+        public List<DrawImageRegionCall> DrawImageRegions { get; } = [];
 
         public List<DrawSpriteCall> DrawSprites { get; } = [];
 
@@ -6777,6 +7189,13 @@ PRINT Person(-1).Age
         {
             DrawImages.Add(new DrawImageCall(image, x, y, width, height));
         }
+
+        public void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
+        {
+            DrawImageRegions.Add(new DrawImageRegionCall(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height));
+        }
+
+        public RuntimeTilemapValue? LoadTilemap(string path) => Tilemaps.TryGetValue(path, out var tilemap) ? tilemap : null;
 
         public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
         {
@@ -7374,6 +7793,17 @@ PRINT Person(-1).Age
 
     private sealed record DrawImageCall(
         RuntimeImageValue Image,
+        long X,
+        long Y,
+        int Width,
+        int Height);
+
+    private sealed record DrawImageRegionCall(
+        RuntimeImageValue Image,
+        int SourceX,
+        int SourceY,
+        int SourceWidth,
+        int SourceHeight,
         long X,
         long Y,
         int Width,

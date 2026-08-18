@@ -46,6 +46,9 @@
             <Word>DRAWLINE</Word>
             <Word>DRAWRECT</Word>
             <Word>DRAWSPRITE</Word>
+            <Word>DRAWTILE</Word>
+            <Word>DRAWTILELAYER</Word>
+            <Word>DRAWTILEMAP</Word>
             <Word>DRAWTEXT</Word>
             <Word>ELSE</Word>
             <Word>ELSEIF</Word>
@@ -93,6 +96,7 @@
             <Word>SCREEN</Word>
             <Word>SELF</Word>
             <Word>SELECT</Word>
+            <Word>SETMAPTILE</Word>
             <Word>SLEEP</Word>
             <Word>STEP</Word>
             <Word>STOP</Word>
@@ -121,6 +125,8 @@
             <Word>INTEGER</Word>
             <Word>LONG</Word>
             <Word>SPRITE</Word>
+            <Word>TILEMAP</Word>
+            <Word>TILESET</Word>
             <Word>STRING</Word>
         </Keywords>
 
@@ -248,6 +254,8 @@
             <Word>LBOUND</Word>
             <Word>LOADIMAGE</Word>
             <Word>LOADSPRITE</Word>
+            <Word>LOADTILEMAP</Word>
+            <Word>LOADTILESET</Word>
             <Word>LOG</Word>
             <Word>LOG10</Word>
             <Word>LOG2</Word>
@@ -256,6 +264,16 @@
             <Word>MAKETEMPDIR</Word>
             <Word>MAKETEMPFILE</Word>
             <Word>MAX</Word>
+            <Word>MAPHEIGHT</Word>
+            <Word>MAPLAYERCOUNT</Word>
+            <Word>MAPPIXELHEIGHT</Word>
+            <Word>MAPPIXELWIDTH</Word>
+            <Word>MAPTILE</Word>
+            <Word>MAPTILEFLAGS</Word>
+            <Word>MAPTILEHEIGHT</Word>
+            <Word>MAPTILESET</Word>
+            <Word>MAPTILEWIDTH</Word>
+            <Word>MAPWIDTH</Word>
             <Word>MID</Word>
             <Word>MIN</Word>
             <Word>MINUTE</Word>
@@ -313,6 +331,9 @@
             <Word>SCREENWIDTH</Word>
             <Word>TEXTHEIGHT</Word>
             <Word>TEXTWIDTH</Word>
+            <Word>TILECOUNT</Word>
+            <Word>TILEHEIGHT</Word>
+            <Word>TILEWIDTH</Word>
             <Word>SIN</Word>
             <Word>SINH</Word>
             <Word>SKIPLINE</Word>

@@ -1642,6 +1642,58 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void MouseCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/mousex/canvas_world_position.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 40, mouseY: 90);
+
+        var result = Run(
+            sourceText,
+            inputProvider: inputProvider,
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "110",
+                "60"
+            ],
+            result.Output);
+    }
+
+    [Fact]
+    public void MouseYCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/mousey/canvas_world_position.axm");
+        var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 40, mouseY: 90);
+
+        var result = Run(
+            sourceText,
+            inputProvider: inputProvider,
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "60",
+                "110"
+            ],
+            result.Output);
+    }
+
+    [Fact]
     public void MouseButtonAcceptanceSample_RunsOnBytecodeVm()
     {
         var sourceText = TestProgramLoader.LoadText("samples/functions/mousebutton/button_states.axm");
@@ -1728,6 +1780,41 @@ public sealed class AcceptanceProgramTests
                 "done"
             ],
             inputProvider.GraphicsOutput);
+    }
+
+    [Fact]
+    public void OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/on-mouse/canvas_world_handler.axm");
+        var inputProvider = new QueueKeyboardInputProvider(
+            keys: ["ESC"],
+            pressedKeys: [],
+            mouseX: 40,
+            mouseY: 90,
+            mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0)]);
+
+        var result = Run(
+            sourceText,
+            inputProvider: inputProvider,
+            mode: ExecutionMode.Bytecode);
+
+        Assert.True(
+            result.Status == ExecutionStatus.Success,
+            string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "TRUE",
+                "0",
+                "110",
+                "60",
+                "TRUE",
+                "TRUE"
+            ],
+            result.Output);
     }
 
     [Fact]
@@ -2321,6 +2408,72 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void DrawTileAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/operators/drawtile/basic_tileset.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal([(160L, 90L)], inputProvider.CanvasActivations);
+        Assert.Equal(2, inputProvider.PresentFrameCount);
+        Assert.Equal(2, inputProvider.DrawImageRegions.Count);
+        Assert.Equal((0, 0, 16, 16, 24L, 24L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[0]));
+        Assert.Equal((16, 16, 16, 16, 88L, 40L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[1]));
+    }
+
+    [Fact]
+    public void DrawTilemapAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/operators/drawtilemap/visible_and_layer.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal([(160L, 90L)], inputProvider.CanvasActivations);
+        Assert.Equal(2, inputProvider.PresentFrameCount);
+        Assert.Equal(6, inputProvider.DrawImageRegions.Count);
+        Assert.Equal((0, 0, 16, 16, 24L, 32L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[0]));
+        Assert.Equal((16, 0, 16, 16, 40L, 32L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[1]));
+        Assert.Equal((16, 16, 16, 16, 40L, 48L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[2]));
+        Assert.Equal((16, 0, 16, 16, 88L, 32L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[3]));
+    }
+
+    [Fact]
+    public void SetMapTileAcceptanceSample_RunsOnBytecodeVm()
+    {
+        var relativePath = "samples/operators/setmaptile/cell_update.axm";
+        var sourceText = TestProgramLoader.LoadText(relativePath);
+        var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE", "ESC"]);
+
+        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Output);
+        Assert.Equal([(160L, 90L)], inputProvider.CanvasActivations);
+        Assert.Equal(3, inputProvider.PresentFrameCount);
+        Assert.Equal(10, inputProvider.DrawImageRegions.Count);
+        Assert.Equal((0, 0, 16, 16, 24L, 32L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[0]));
+        Assert.Equal((16, 0, 16, 16, 24L, 48L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[5]));
+        Assert.Equal((0, 0, 16, 16, 24L, 32L, 16, 16), ToDrawImageRegionShape(inputProvider.DrawImageRegions[7]));
+    }
+
+    [Fact]
     public void CanvasFrameAcceptanceSample_RunsOnBytecodeVm()
     {
         var relativePath = "samples/graphics/modern/rectangles_frame.axm";
@@ -2600,6 +2753,9 @@ public sealed class AcceptanceProgramTests
 
     private static (long X, long Y, int Width, int Height) ToDrawImageShape(DrawImageCall call) =>
         (call.X, call.Y, call.Width, call.Height);
+
+    private static (int SourceX, int SourceY, int SourceWidth, int SourceHeight, long X, long Y, int Width, int Height) ToDrawImageRegionShape(DrawImageRegionCall call) =>
+        (call.SourceX, call.SourceY, call.SourceWidth, call.SourceHeight, call.X, call.Y, call.Width, call.Height);
 
     private static (int Frame, long X, long Y, int Width, int Height) ToDrawSpriteShape(DrawSpriteCall call) =>
         (call.Frame, call.X, call.Y, call.Width, call.Height);
@@ -3093,6 +3249,16 @@ public sealed class AcceptanceProgramTests
             return new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
         }
 
+        if (relativePath.StartsWith("samples/operators/drawtile/", StringComparison.OrdinalIgnoreCase))
+        {
+            return CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+        }
+
+        if (relativePath.StartsWith("samples/operators/drawtilemap/", StringComparison.OrdinalIgnoreCase))
+        {
+            return CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+        }
+
         if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/view/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/operators/view-print/", StringComparison.OrdinalIgnoreCase)
@@ -3134,6 +3300,16 @@ public sealed class AcceptanceProgramTests
             return new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "PAGEUP"]);
         }
 
+        if (relativePath.Equals("samples/functions/mousex/canvas_world_position.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 40, mouseY: 90);
+        }
+
+        if (relativePath.Equals("samples/functions/mousey/canvas_world_position.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], mouseX: 40, mouseY: 90);
+        }
+
         if (relativePath.StartsWith("samples/functions/mousex/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("samples/functions/mousey/", StringComparison.OrdinalIgnoreCase))
         {
@@ -3163,6 +3339,16 @@ public sealed class AcceptanceProgramTests
         if (relativePath.StartsWith("samples/operators/on-key/", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueKeyboardInputProvider(keys: ["LEFT", "ESC"], pressedKeys: []);
+        }
+
+        if (relativePath.Equals("samples/operators/on-mouse/canvas_world_handler.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueKeyboardInputProvider(
+                keys: ["ESC"],
+                pressedKeys: [],
+                mouseX: 40,
+                mouseY: 90,
+                mouseEvents: [new MouseInputEvent(MouseInputEventKind.Move, 0)]);
         }
 
         if (relativePath.StartsWith("samples/operators/on-mouse/", StringComparison.OrdinalIgnoreCase))
@@ -3354,6 +3540,7 @@ public sealed class AcceptanceProgramTests
         private readonly Dictionary<(long X, long Y), int> _pixels = [];
         private readonly Dictionary<int, Dictionary<(long X, long Y), int>> _screenPages = [];
         private readonly List<DrawImageCall> _drawImages = [];
+        private readonly List<DrawImageRegionCall> _drawImageRegions = [];
         private readonly List<DrawSpriteCall> _drawSprites = [];
         private readonly List<DrawRectCall> _drawRects = [];
         private readonly List<FillRectCall> _fillRects = [];
@@ -3423,6 +3610,8 @@ public sealed class AcceptanceProgramTests
         public List<string> GraphicsOutput { get; } = [];
 
         public IReadOnlyList<DrawImageCall> DrawImages => _drawImages;
+
+        public IReadOnlyList<DrawImageRegionCall> DrawImageRegions => _drawImageRegions;
 
         public IReadOnlyList<DrawSpriteCall> DrawSprites => _drawSprites;
 
@@ -3786,9 +3975,59 @@ public sealed class AcceptanceProgramTests
                 : null;
         }
 
+        public RuntimeTilesetValue? LoadTileset(string path, int tileWidth, int tileHeight, int margin = 0, int spacing = 0)
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            if (!File.Exists(resolvedPath))
+            {
+                return null;
+            }
+
+            var size = Path.GetFileName(resolvedPath).Equals("walk_sheet.png", StringComparison.OrdinalIgnoreCase)
+                ? 32
+                : 16;
+            var image = new RuntimeImageValue(size, size, Enumerable.Repeat(0xFFFF00FFu, size * size).ToArray());
+
+            try
+            {
+                return new RuntimeTilesetValue(image, tileWidth, tileHeight, margin, spacing);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        public RuntimeTilemapValue? LoadTilemap(string path)
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            if (!File.Exists(resolvedPath))
+            {
+                return null;
+            }
+
+            try
+            {
+                return RuntimeTilemapValue.LoadFromTiledJson(
+                    resolvedPath,
+                    resolvedImagePath => File.Exists(resolvedImagePath)
+                        ? CreateFakeImage(Path.GetFileName(resolvedImagePath).Equals("walk_sheet.png", StringComparison.OrdinalIgnoreCase) ? 32 : 16)
+                        : null);
+            }
+            catch (Exception exception) when (exception is IOException or InvalidDataException or System.Text.Json.JsonException or OverflowException)
+            {
+                return null;
+            }
+        }
+
         public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
         {
             _drawImages.Add(new DrawImageCall(image, x, y, width, height));
+        }
+
+        public void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
+        {
+            _drawImageRegions.Add(new DrawImageRegionCall(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height));
         }
 
         public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
@@ -3809,6 +4048,9 @@ public sealed class AcceptanceProgramTests
                 : _resourceBaseDirectory!;
             return Path.GetFullPath(Path.Combine(baseDirectory, expandedPath));
         }
+
+        private static RuntimeImageValue CreateFakeImage(int size) =>
+            new(size, size, Enumerable.Repeat(0xFFFF00FFu, size * size).ToArray());
 
         private static string CreateGraphicsPrompt(InputRequest request)
         {
@@ -4173,6 +4415,8 @@ public sealed class AcceptanceProgramTests
     }
 
     private sealed record DrawImageCall(RuntimeImageValue Image, long X, long Y, int Width, int Height);
+
+    private sealed record DrawImageRegionCall(RuntimeImageValue Image, int SourceX, int SourceY, int SourceWidth, int SourceHeight, long X, long Y, int Width, int Height);
 
     private sealed record DrawSpriteCall(RuntimeSpriteValue Sprite, int Frame, long X, long Y, int Width, int Height);
 

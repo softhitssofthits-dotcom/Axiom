@@ -256,6 +256,32 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void Parse_DimStatementWithTilesetType()
+    {
+        var program = ParseProgram("DIM tiles AS TILESET", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var dim = AssertGlobalStatement<DimStatementSyntax>(program);
+        var declaration = Assert.Single(dim.Declarations);
+        var typeClause = Assert.IsType<TypeClauseSyntax>(declaration.TypeClause);
+
+        AssertNamedType(typeClause.Type, SyntaxKind.TilesetKeyword);
+    }
+
+    [Fact]
+    public void Parse_DimStatementWithTilemapType()
+    {
+        var program = ParseProgram("DIM level AS TILEMAP", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var dim = AssertGlobalStatement<DimStatementSyntax>(program);
+        var declaration = Assert.Single(dim.Declarations);
+        var typeClause = Assert.IsType<TypeClauseSyntax>(declaration.TypeClause);
+
+        AssertNamedType(typeClause.Type, SyntaxKind.TilemapKeyword);
+    }
+
+    [Fact]
     public void Parse_OnKeyStatement()
     {
         var program = ParseProgram("ON KEY(\"LEFT\"), HandleLeft", out var diagnostics);
@@ -770,6 +796,70 @@ public sealed class ParserTests
         Assert.True(drawSprite.HasScale);
         Assert.NotNull(drawSprite.WidthExpression);
         Assert.NotNull(drawSprite.HeightExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawTileStatement()
+    {
+        var program = ParseProgram("DRAWTILE tiles, 1, 10, 20", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawTile = AssertGlobalStatement<DrawTileStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(drawTile.TilesetExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTile.TileIndexExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTile.XExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTile.YExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawTilemapStatement()
+    {
+        var program = ParseProgram("DRAWTILEMAP level, 32, 48", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawTilemap = AssertGlobalStatement<DrawTilemapStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(drawTilemap.TilemapExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTilemap.XExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTilemap.YExpression);
+    }
+
+    [Fact]
+    public void Parse_DrawTileLayerStatement()
+    {
+        var program = ParseProgram("DRAWTILELAYER level, 2, 32, 48", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawTileLayer = AssertGlobalStatement<DrawTileLayerStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(drawTileLayer.TilemapExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTileLayer.LayerIndexExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTileLayer.XExpression);
+        Assert.IsType<LiteralExpressionSyntax>(drawTileLayer.YExpression);
+    }
+
+    [Fact]
+    public void Parse_SetMapTileStatement()
+    {
+        var program = ParseProgram("SETMAPTILE level, 1, 2, 2, 1, 4", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var setMapTile = AssertGlobalStatement<SetMapTileStatementSyntax>(program);
+        Assert.IsType<NameExpressionSyntax>(setMapTile.TilemapExpression);
+        Assert.IsType<LiteralExpressionSyntax>(setMapTile.LayerIndexExpression);
+        Assert.IsType<LiteralExpressionSyntax>(setMapTile.ColumnExpression);
+        Assert.IsType<LiteralExpressionSyntax>(setMapTile.RowExpression);
+        Assert.IsType<LiteralExpressionSyntax>(setMapTile.TilesetIndexExpression);
+        Assert.IsType<LiteralExpressionSyntax>(setMapTile.TileIndexExpression);
+        Assert.Null(setMapTile.FlagsExpression);
+    }
+
+    [Fact]
+    public void Parse_SetMapTileStatementWithFlags()
+    {
+        var program = ParseProgram("SETMAPTILE level, 1, 2, 2, 1, 4, 3", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var setMapTile = AssertGlobalStatement<SetMapTileStatementSyntax>(program);
+        Assert.IsType<LiteralExpressionSyntax>(setMapTile.FlagsExpression);
     }
 
     [Fact]

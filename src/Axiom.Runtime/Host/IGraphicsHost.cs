@@ -187,7 +187,35 @@ public interface IGraphicsHost
         return image is null ? null : new RuntimeSpriteValue(image, frameWidth, frameHeight);
     }
 
+    RuntimeTilesetValue? LoadTileset(string path, int tileWidth, int tileHeight, int margin = 0, int spacing = 0)
+    {
+        var image = LoadImage(path);
+        if (image is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return new RuntimeTilesetValue(image, tileWidth, tileHeight, margin, spacing);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+        catch (OverflowException)
+        {
+            return null;
+        }
+    }
+
+    RuntimeTilemapValue? LoadTilemap(string path) => null;
+
     void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+    }
+
+    void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
     {
     }
 

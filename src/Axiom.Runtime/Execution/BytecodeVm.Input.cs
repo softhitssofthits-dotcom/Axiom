@@ -487,7 +487,7 @@ public sealed partial class BytecodeVm
     private void ReportInputConversionFailure(TypeSymbol type, string text, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            InputConversionCode,
+            DiagnosticCodes.InputConversion,
             $"Невозможно преобразовать ввод '{text}' к типу {type.Name}.",
             location);
     }
@@ -495,7 +495,7 @@ public sealed partial class BytecodeVm
     private void ReportInputValueCountFailure(int expectedCount, int actualCount, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            InputConversionCode,
+            DiagnosticCodes.InputConversion,
             $"Ожидалось {expectedCount} значений INPUT, но получено {actualCount}.",
             location);
     }

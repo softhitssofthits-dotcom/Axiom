@@ -56,6 +56,10 @@ public sealed partial class Parser
             SyntaxKind.DrawRectKeyword => ParseDrawRectStatement(),
             SyntaxKind.FillRectKeyword => ParseFillRectStatement(),
             SyntaxKind.DrawSpriteKeyword => ParseDrawSpriteStatement(),
+            SyntaxKind.DrawTileKeyword => ParseDrawTileStatement(),
+            SyntaxKind.DrawTilemapKeyword => ParseDrawTilemapStatement(),
+            SyntaxKind.DrawTileLayerKeyword => ParseDrawTileLayerStatement(),
+            SyntaxKind.SetMapTileKeyword => ParseSetMapTileStatement(),
             SyntaxKind.GetKeyword => ParseGetStatement(),
             SyntaxKind.PutKeyword => ParsePutStatement(),
             SyntaxKind.OnKeyword => ParseOnStatement(),
@@ -839,6 +843,105 @@ public sealed partial class Parser
             widthExpression,
             heightCommaToken,
             heightExpression);
+    }
+
+    private DrawTileStatementSyntax ParseDrawTileStatement()
+    {
+        var drawTileKeyword = Match(SyntaxKind.DrawTileKeyword, "DRAWTILE");
+        var tilesetExpression = ParseExpression();
+        var tileIndexCommaToken = Match(SyntaxKind.CommaToken, "',' после тайлсета DRAWTILE");
+        var tileIndexExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после номера тайла DRAWTILE");
+        var xExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после координаты X DRAWTILE");
+        var yExpression = ParseExpression();
+
+        return new DrawTileStatementSyntax(
+            drawTileKeyword,
+            tilesetExpression,
+            tileIndexCommaToken,
+            tileIndexExpression,
+            xCommaToken,
+            xExpression,
+            yCommaToken,
+            yExpression);
+    }
+
+    private DrawTilemapStatementSyntax ParseDrawTilemapStatement()
+    {
+        var drawTilemapKeyword = Match(SyntaxKind.DrawTilemapKeyword, "DRAWTILEMAP");
+        var tilemapExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после карты DRAWTILEMAP");
+        var xExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после координаты X DRAWTILEMAP");
+        var yExpression = ParseExpression();
+        return new DrawTilemapStatementSyntax(
+            drawTilemapKeyword,
+            tilemapExpression,
+            xCommaToken,
+            xExpression,
+            yCommaToken,
+            yExpression);
+    }
+
+    private DrawTileLayerStatementSyntax ParseDrawTileLayerStatement()
+    {
+        var drawTileLayerKeyword = Match(SyntaxKind.DrawTileLayerKeyword, "DRAWTILELAYER");
+        var tilemapExpression = ParseExpression();
+        var layerIndexCommaToken = Match(SyntaxKind.CommaToken, "',' после карты DRAWTILELAYER");
+        var layerIndexExpression = ParseExpression();
+        var xCommaToken = Match(SyntaxKind.CommaToken, "',' после номера слоя DRAWTILELAYER");
+        var xExpression = ParseExpression();
+        var yCommaToken = Match(SyntaxKind.CommaToken, "',' после координаты X DRAWTILELAYER");
+        var yExpression = ParseExpression();
+        return new DrawTileLayerStatementSyntax(
+            drawTileLayerKeyword,
+            tilemapExpression,
+            layerIndexCommaToken,
+            layerIndexExpression,
+            xCommaToken,
+            xExpression,
+            yCommaToken,
+            yExpression);
+    }
+
+    private SetMapTileStatementSyntax ParseSetMapTileStatement()
+    {
+        var setMapTileKeyword = Match(SyntaxKind.SetMapTileKeyword, "SETMAPTILE");
+        var tilemapExpression = ParseExpression();
+        var layerIndexCommaToken = Match(SyntaxKind.CommaToken, "',' после карты SETMAPTILE");
+        var layerIndexExpression = ParseExpression();
+        var columnCommaToken = Match(SyntaxKind.CommaToken, "',' после номера слоя SETMAPTILE");
+        var columnExpression = ParseExpression();
+        var rowCommaToken = Match(SyntaxKind.CommaToken, "',' после столбца SETMAPTILE");
+        var rowExpression = ParseExpression();
+        var tilesetIndexCommaToken = Match(SyntaxKind.CommaToken, "',' после строки SETMAPTILE");
+        var tilesetIndexExpression = ParseExpression();
+        var tileIndexCommaToken = Match(SyntaxKind.CommaToken, "',' после номера тайлсета SETMAPTILE");
+        var tileIndexExpression = ParseExpression();
+        SyntaxToken? flagsCommaToken = null;
+        ExpressionSyntax? flagsExpression = null;
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            flagsCommaToken = NextToken();
+            flagsExpression = ParseExpression();
+        }
+
+        return new SetMapTileStatementSyntax(
+            setMapTileKeyword,
+            tilemapExpression,
+            layerIndexCommaToken,
+            layerIndexExpression,
+            columnCommaToken,
+            columnExpression,
+            rowCommaToken,
+            rowExpression,
+            tilesetIndexCommaToken,
+            tilesetIndexExpression,
+            tileIndexCommaToken,
+            tileIndexExpression,
+            flagsCommaToken,
+            flagsExpression);
     }
 
     private GetStatementSyntax ParseGetStatement()

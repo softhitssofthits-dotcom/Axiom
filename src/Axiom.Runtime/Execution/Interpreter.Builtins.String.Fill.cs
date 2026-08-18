@@ -1,3 +1,4 @@
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -6,16 +7,12 @@ public sealed partial class Interpreter
 {
     private static string EvaluateRepeat(string text, int count)
     {
-        return count == 0 || text.Length == 0
-            ? string.Empty
-            : string.Concat(Enumerable.Repeat(text, count));
+        return BuiltinStringHelpers.EvaluateRepeat(text, count).AsString();
     }
 
     private static string EvaluateSpace(int count)
     {
-        return count == 0
-            ? string.Empty
-            : new string(' ', count);
+        return BuiltinStringHelpers.EvaluateSpace(count).AsString();
     }
 
     private string EvaluateStringFill(BoundCallExpression expression, int count, string fill)

@@ -14,7 +14,7 @@
 ## Зачем это нам
 
 У `Axiom` уже тяжёлый контекст для ИИ-сессий:
-- очень большие `docs/PLANS3.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/WORKLOG4.md`;
+- очень большие `docs/PLANS4.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/WORKLOG5.md`;
 - большой `docs/manual/`;
 - много `samples/`;
 - крупные `dotnet test`, smoke и acceptance-логи.
@@ -81,8 +81,8 @@ headroom mcp status
 - `README.md`
 - `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
-- `docs/PLANS3.md`
-- `docs/WORKLOG4.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG5.md`
 - `docs/BYTECODE_COVERAGE.md`
 - `docs/BYTECODE_PERF_MATRIX.md`
 
@@ -95,8 +95,8 @@ headroom mcp status
 Набор входов:
 - `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
-- `docs/PLANS3.md`
-- `docs/WORKLOG4.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG5.md`
 
 ### Сценарий C. Разбор длинного test output
 

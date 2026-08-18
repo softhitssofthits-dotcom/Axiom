@@ -1,6 +1,7 @@
 using System.Globalization;
 using Axiom.Bytecode;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -17,26 +18,23 @@ public sealed partial class BytecodeVm
         return builtin.CanonicalId switch
         {
             BuiltinFunctionId.Len => RuntimeValue.FromInteger(arguments[0].AsString().Length),
-            BuiltinFunctionId.Left => RuntimeValue.FromString(
-                EvaluateLeft(
+            BuiltinFunctionId.Left => EvaluateLeft(
                     arguments[0].AsString(),
-                    RequirePositiveCount("LEFT", "count", arguments[1].AsInteger(), location))),
-            BuiltinFunctionId.Right => RuntimeValue.FromString(
-                EvaluateRight(
+                    RequirePositiveCount("LEFT", "count", arguments[1].AsInteger(), location)),
+            BuiltinFunctionId.Right => EvaluateRight(
                     arguments[0].AsString(),
-                    RequirePositiveCount("RIGHT", "count", arguments[1].AsInteger(), location))),
-            BuiltinFunctionId.Mid => RuntimeValue.FromString(
-                EvaluateMid(
+                    RequirePositiveCount("RIGHT", "count", arguments[1].AsInteger(), location)),
+            BuiltinFunctionId.Mid => EvaluateMid(
                     arguments[0].AsString(),
                     RequirePositiveStart("MID", arguments[1].AsInteger(), location),
-                    RequirePositiveCount("MID", "count", arguments[2].AsInteger(), location))),
+                    RequirePositiveCount("MID", "count", arguments[2].AsInteger(), location)),
             BuiltinFunctionId.TrimWhitespace => RuntimeValue.FromString(EvaluateTrimWhitespace(arguments[0].AsString())),
             BuiltinFunctionId.TrimCharacters => RuntimeValue.FromString(EvaluateTrimCharacters(arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.LTrimWhitespace => RuntimeValue.FromString(EvaluateLeftTrimWhitespace(arguments[0].AsString())),
             BuiltinFunctionId.LTrimCharacters => RuntimeValue.FromString(EvaluateLeftTrimCharacters(arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.RTrimWhitespace => RuntimeValue.FromString(EvaluateRightTrimWhitespace(arguments[0].AsString())),
             BuiltinFunctionId.RTrimCharacters => RuntimeValue.FromString(EvaluateRightTrimCharacters(arguments[0].AsString(), arguments[1].AsString())),
-            BuiltinFunctionId.Reverse => RuntimeValue.FromString(EvaluateReverse(arguments[0].AsString())),
+            BuiltinFunctionId.Reverse => EvaluateReverse(arguments[0].AsString()),
             BuiltinFunctionId.Contains => RuntimeValue.FromBoolean(EvaluateContains(arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.StartsWith => RuntimeValue.FromBoolean(EvaluateStartsWith(arguments[0].AsString(), arguments[1].AsString())),
             BuiltinFunctionId.EndsWith => RuntimeValue.FromBoolean(EvaluateEndsWith(arguments[0].AsString(), arguments[1].AsString())),
@@ -60,13 +58,11 @@ public sealed partial class BytecodeVm
                     arguments[1].AsString(),
                     arguments[2].AsString())),
             BuiltinFunctionId.SubStrCount => RuntimeValue.FromInteger(EvaluateSubStrCount(arguments[0].AsString(), arguments[1].AsString(), location)),
-            BuiltinFunctionId.Repeat => RuntimeValue.FromString(
-                EvaluateRepeat(
+            BuiltinFunctionId.Repeat => EvaluateRepeat(
                     arguments[0].AsString(),
-                    RequireNonNegativeCount("REPEAT", "count", arguments[1].AsInteger(), location))),
-            BuiltinFunctionId.Space => RuntimeValue.FromString(
-                EvaluateSpace(
-                    RequireNonNegativeCount("SPACE", "count", arguments[0].AsInteger(), location))),
+                    RequireNonNegativeCount("REPEAT", "count", arguments[1].AsInteger(), location)),
+            BuiltinFunctionId.Space => EvaluateSpace(
+                    RequireNonNegativeCount("SPACE", "count", arguments[0].AsInteger(), location)),
             BuiltinFunctionId.StringFill => RuntimeValue.FromString(
                 EvaluateStringFill(
                     RequireNonNegativeCount("STRING", "count", arguments[0].AsInteger(), location),
@@ -160,7 +156,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.PMap => EvaluatePMapBuiltin(arguments, location),
             BuiltinFunctionId.Int => RuntimeValue.FromInteger(EvaluateIntBuiltin(arguments[0], location)),
             BuiltinFunctionId.Str => RuntimeValue.FromString(arguments[0].ToDisplayString()),
-            BuiltinFunctionId.Val => RuntimeValue.FromDouble(ParseVal(arguments[0].AsString())),
+            BuiltinFunctionId.Val => RuntimeValue.FromDouble(BuiltinStringHelpers.ParseVal(arguments[0].AsString())),
             BuiltinFunctionId.LCase => RuntimeValue.FromString(arguments[0].AsString().ToLowerInvariant()),
             BuiltinFunctionId.UCase => RuntimeValue.FromString(arguments[0].AsString().ToUpperInvariant()),
             BuiltinFunctionId.Rnd => EvaluateRndBuiltin(),
@@ -345,13 +341,6 @@ public sealed partial class BytecodeVm
                 $"Bytecode VM пока не поддерживает built-in '{builtin.Name}' ({builtin.CanonicalId}).",
                 location)
         };
-    }
-
-    private static double ParseVal(string text)
-    {
-        return double.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : 0d;
     }
 
     private RuntimeValue EvaluateAbsBuiltin(RuntimeValue value, TextLocation location)

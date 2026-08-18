@@ -31,7 +31,7 @@ At the beginning of every session, do this in order:
    - `docs/SPECIFICATION3.md`
    - `docs/ARCHITECTURE.md`
    - `docs/PLANS4.md`
-   - `docs/WORKLOG4.md`
+   - `docs/WORKLOG5.md`
    - `docs/BYTECODE_COVERAGE.md`
    - `docs/BYTECODE_PERF_MATRIX.md`
    - `docs/SPECIFICATION2.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
@@ -57,7 +57,7 @@ If the following files do not exist, create them:
 - `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
 - `docs/PLANS4.md`
-- `docs/WORKLOG4.md`
+- `docs/WORKLOG5.md`
 
 If the following folders do not exist, create them:
 
@@ -75,7 +75,7 @@ Rules for Bootstrap mode:
 At the end of Bootstrap mode:
 1. show the created file tree;
 2. explain what each created file is for in brief;
-3. record the current state in `docs/WORKLOG4.md`;
+3. record the current state in `docs/WORKLOG5.md`;
 4. record the next step in `docs/PLANS4.md`.
 
 ---
@@ -164,22 +164,28 @@ Historical first part of planning:
 ### `docs/WORKLOG3.md`
 Historical third part of session continuity:
 - kept for sessions from 310 to 480;
-- no new entries should be added there after `docs/WORKLOG4.md` is introduced;
+- no new entries should be added there after `docs/WORKLOG5.md` is introduced;
 - read it when context from sessions 310-480 is needed.
 
 ### `docs/WORKLOG2.md`
 Historical second part of session continuity:
 - kept for sessions from 169 to 309;
-- no new entries should be added there after `docs/WORKLOG4.md` is introduced;
+- no new entries should be added there after `docs/WORKLOG5.md` is introduced;
 - read it when context from sessions 169-309 is needed.
 
 ### `docs/WORKLOG.md`
 Historical session continuity log:
 - kept for sessions up to and including Session 168;
-- no new entries should be added there after `docs/WORKLOG4.md` is introduced;
+- no new entries should be added there after `docs/WORKLOG5.md` is introduced;
 - read it only when older historical context is needed.
 
 ### `docs/WORKLOG4.md`
+Historical fourth part of session continuity:
+- kept for sessions from 481 to 1031;
+- no new entries should be added there after `docs/WORKLOG5.md` is introduced;
+- read it when context from sessions 481-1031 is needed.
+
+### `docs/WORKLOG5.md`
 Active session continuity log:
 - what changed;
 - which files changed;
@@ -188,7 +194,7 @@ Active session continuity log:
 - exact next step;
 - strict chronological ordering from top to bottom;
 - new session entries must be appended only at the end of the file;
-- starting from `2026-04-23 09:53` (local project time), every new session entry must include a sequential session number plus exact local date and time in the heading.
+- starting from Session 1032, every new session entry must include a sequential session number plus exact local date and time in the heading.
 
 ### `docs/BYTECODE_COVERAGE.md`
 Active registry of bytecode coverage:
@@ -238,6 +244,16 @@ Minimum required manual follow-up:
 - do not leave the new behavior documented only in code comments, tests, `samples/`, `docs/SPECIFICATION3.md`, or chat output.
 - if an existing operator or built-in receives a new callable form, a new multidimensional mode, a new parameter contract, or another user-visible capability, reflect that capability directly on the manual page itself, not only through an external `.axm` sample link or a brief mention elsewhere;
 - when such a new callable form or multidimensional mode is important enough to confuse a reader without an example, add or update an inline manual example for that exact form on the same manual page.
+
+### 4.0. IDE-подсветка должна идти в ногу с языком
+Для этого репозитория каждая новая пользовательская языковая сущность должна в том же задании получать поддержку IDE-подсветки.
+
+Постоянные требования:
+- если задача добавляет или меняет оператор, встроенную функцию, тип данных или другой пользовательский синтаксический токен, в том же задании нужно обновить IDE-подсветку;
+- нужно синхронно править обе схемы подсветки: `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` и `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`;
+- сущность должна попасть в правильную категорию подсветки: операторы и ключевые слова, типы данных, встроенные функции;
+- нужно обновить или добавить проверки в `tests/Axiom.Ide.Tests/`, чтобы новые слова были покрыты и через словарь подсветки, и через форматирование кода;
+- нельзя оставлять runnable `.axm`-примеры в состоянии, где новый оператор или новая функция уже работает в языке, но не раскрашивается в IDE.
 
 ### 4.1. Manual style must follow current Microsoft Visual Basic references by genre
 For this repository, `docs/manual/` must be written not only from project facts, but also with an explicit editorial reference process.
@@ -348,18 +364,18 @@ Permanent requirements:
 - do not treat file-lock failures from shared `obj` as an acceptable normal workflow; prevent them by command ordering or true intermediate-directory isolation.
 
 ### 6. Worklog is mandatory
-After every meaningful task, update `docs/WORKLOG4.md`.
+After every meaningful task, update `docs/WORKLOG5.md`.
 
 ### 7. Repository documents are append-only
 All repository documents must be maintained from top to bottom.
 
 Permanent requirements:
-- never prepend new records to the top of `docs/WORKLOG4.md`, `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS4.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
+- never prepend new records to the top of `docs/WORKLOG5.md`, `docs/WORKLOG4.md`, `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS4.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
 - add new records only below the existing records in the same document;
 - preserve chronological reading order: earlier entries stay above later entries;
 - do not silently reorder old records unless the task is explicitly to normalize document chronology.
 
-For `docs/WORKLOG4.md`, continuing the sequence from `docs/WORKLOG.md`, `docs/WORKLOG2.md` and `docs/WORKLOG3.md`, every new entry:
+For `docs/WORKLOG5.md`, continuing the sequence from `docs/WORKLOG.md`, `docs/WORKLOG2.md`, `docs/WORKLOG3.md` and `docs/WORKLOG4.md`, every new entry:
 - every new entry must use a heading in the form `## Session <N> - YYYY-MM-DD HH:mm - <title>`;
 - `<N>` must be the next sequential session number after the highest existing numbered session;
 - date and time are mandatory and must use the local project time zone;
@@ -457,7 +473,7 @@ A task is complete only if:
 - the requested change is done;
 - relevant validation was run when possible;
 - relevant docs were updated;
-- `docs/WORKLOG4.md` was updated;
+- `docs/WORKLOG5.md` was updated;
 - `docs/PLANS4.md` reflects the next step.
 
 If a task changes bytecode coverage, parity status, sample status, manual status, or profiling status for a user-visible language form, it is complete only if:
@@ -541,7 +557,7 @@ Required repository architecture rule for language frontend:
 - длинные выводы инструментов нельзя бездумно проталкивать в контекст целиком, если сначала можно получить более дешёвый срез через `rg`, `Select-String`, `Get-Content -Tail`, фильтр конкретного теста, конкретного sample или конкретного файла;
 - при работе с `git diff`, логами `dotnet test`, большими search-результатами и журналами IDE сначала нужно получить короткий ориентир: первый сбой, верхние совпадения, хвост файла, адресный проект, адресный sample или адресную строку `Негативный паритет`, а не весь массив сразу;
 - если внешний инструмент умеет сжимать контекст, это не даёт права сжимать пользовательский исходный код, договор языка или проектные решения без явной необходимости: в этом репозитории код, спецификация и пользовательские диагностические детали важнее номинальной экономии токенов;
-- внешние системы задач и памяти не должны становиться вторым источником правды рядом с `docs/PLANS4.md` и `docs/WORKLOG4.md`; если они используются, они могут только помогать извлекать или раскладывать уже существующий проектный договор;
+- внешние системы задач и памяти не должны становиться вторым источником правды рядом с `docs/PLANS4.md` и `docs/WORKLOG5.md`; если они используются, они могут только помогать извлекать или раскладывать уже существующий проектный договор;
 - если внешний инструмент имеет разные наборы MCP-инструментов или режимы загрузки, для `Axiom` нужно предпочитать минимальный достаточный набор, а не полный режим по умолчанию;
 - для Windows-нужд этого репозитория нельзя делать обязательным workflow, который полноценно работает только через Bash-хуки, Unix-shell или Linux-only interception; такие инструменты допустимы только как необязательный ускоритель или как отдельный WSL-контур;
 - перед добавлением в проект нового внешнего агентного слоя нужно явно ответить на четыре вопроса в документации: что он экономит, что он может исказить, почему локальный `docs/agent/`-слой этого уже не покрывает, и как он вписывается в правило единственного источника правды.

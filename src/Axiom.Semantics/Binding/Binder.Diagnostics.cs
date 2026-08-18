@@ -7,19 +7,19 @@ public sealed partial class Binder
 {
     private void ReportUnknownName(string name, TextLocation location)
     {
-        _diagnostics.Report(UnknownNameCode, $"Имя '{name}' не объявлено.", location);
+        _diagnostics.Report(DiagnosticCodes.UnknownName, $"Имя '{name}' не объявлено.", location);
     }
 
     private void ReportDuplicateDeclaration(string name, TextLocation location)
     {
-        _diagnostics.Report(DuplicateDeclarationCode, $"Имя '{name}' уже объявлено в этой области видимости.", location);
+        _diagnostics.Report(DiagnosticCodes.DuplicateDeclaration, $"Имя '{name}' уже объявлено в этой области видимости.", location);
     }
 
     private void ReportShadowedDeclaration(string name, TextLocation location, string? context)
     {
         var normalizedContext = string.IsNullOrWhiteSpace(context) ? "этом месте" : context;
         _diagnostics.Report(
-            ShadowedDeclarationCode,
+            DiagnosticCodes.ShadowedDeclaration,
             $"Имя '{name}' уже объявлено во внешней области видимости. В {normalizedContext} нельзя объявить его повторно.",
             location);
     }
@@ -27,7 +27,7 @@ public sealed partial class Binder
     private void ReportMissingVariableType(string name, TextLocation location)
     {
         _diagnostics.Report(
-            MissingVariableTypeCode,
+            DiagnosticCodes.MissingVariableType,
             $"Для переменной '{name}' в DIM нужно указать тип через AS или инициализатор для вывода типа.",
             location);
     }
@@ -35,25 +35,25 @@ public sealed partial class Binder
     private void ReportConstantOutOfRange(TypeSymbol expectedType, TextLocation location)
     {
         _diagnostics.Report(
-            ConstantOutOfRangeCode,
+            DiagnosticCodes.ConstantOutOfRange,
             $"Константное числовое значение выходит за диапазон {expectedType.Name}.",
             location);
     }
 
     private void ReportTypeMismatch(TypeSymbol actualType, TypeSymbol expectedType, TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.", location);
     }
 
     private void ReportUnsupportedScreenColorSwitch(TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, "Параметр colorSwitch в SCREEN сейчас не поддерживается; используйте пустое место перед activePage.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, "Параметр colorSwitch в SCREEN сейчас не поддерживается; используйте пустое место перед activePage.", location);
     }
 
     private void ReportScalarAssignedToArray(string targetName, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Переменная '{targetName}' объявлена как массив. Нельзя присвоить ей одно скалярное значение целиком: укажите индекс элемента или присвойте справа другой массив.",
             location);
     }
@@ -61,14 +61,14 @@ public sealed partial class Binder
     private void ReportArrayAssignedToScalar(string targetName, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Переменная '{targetName}' не является массивом. Нельзя присвоить ей массив целиком.",
             location);
     }
 
     private void ReportWrongArgumentCount(string name, int expectedCount, int actualCount, TextLocation location)
     {
-        _diagnostics.Report(WrongArgumentCountCode, $"Неверное число аргументов у '{name}': ожидалось {expectedCount}, получено {actualCount}.", location);
+        _diagnostics.Report(DiagnosticCodes.WrongArgumentCount, $"Неверное число аргументов у '{name}': ожидалось {expectedCount}, получено {actualCount}.", location);
     }
 
     private void ReportWrongArgumentCount(string name, IReadOnlyList<int> expectedCounts, int actualCount, TextLocation location)
@@ -94,7 +94,7 @@ public sealed partial class Binder
 
         var expectedText = string.Join(" или ", distinctCounts);
         _diagnostics.Report(
-            WrongArgumentCountCode,
+            DiagnosticCodes.WrongArgumentCount,
             $"Неверное число аргументов у '{name}': ожидалось {expectedText}, получено {actualCount}.",
             location);
     }
@@ -117,7 +117,7 @@ public sealed partial class Binder
             }));
 
         _diagnostics.Report(
-            AmbiguousTypeConstructorCode,
+            DiagnosticCodes.AmbiguousTypeConstructor,
             $"Вызов '{typeName}(...)' неоднозначен: подходят несколько конструкторов: {constructorList}.",
             location);
     }
@@ -142,20 +142,20 @@ public sealed partial class Binder
             }));
 
         _diagnostics.Report(
-            AmbiguousTypeConstructorCode,
+            DiagnosticCodes.AmbiguousTypeConstructor,
             $"Вызов '{typeName}.{methodName}(...)' неоднозначен: подходят несколько перегруженных методов: {methodList}.",
             location);
     }
 
     private void ReportExpectedArrayType(TypeSymbol actualType, TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, $"Несовместимые типы: ожидался массив, получен {actualType.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Несовместимые типы: ожидался массив, получен {actualType.Name}.", location);
     }
 
     private void ReportOneDimensionalArrayRequired(string name, int actualRank, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Форма '{name}' пока поддерживает только одномерные массивы, а получен массив ранга {actualRank}.",
             location);
     }
@@ -163,7 +163,7 @@ public sealed partial class Binder
     private void ReportExpectedArrayRank(string name, int expectedRank, int actualRank, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Форма '{name}' требует массив ранга {expectedRank}, а получен массив ранга {actualRank}.",
             location);
     }
@@ -171,7 +171,7 @@ public sealed partial class Binder
     private void ReportNumericArrayElementRequired(string name, TypeSymbol actualElementType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Форма '{name}' требует числовой массив, а получен массив с элементами типа {actualElementType.Name}.",
             location);
     }
@@ -179,7 +179,7 @@ public sealed partial class Binder
     private void ReportArrayDimensionArgumentRequired(string name, int actualRank, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Форма '{name}' для массива ранга {actualRank} требует явно указать аргумент dimension.",
             location);
     }
@@ -187,7 +187,7 @@ public sealed partial class Binder
     private void ReportBinarySearchRequiresOrderedArray(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Функция 'ARRAYBINARYSEARCH' поддерживает только массивы с числовыми или строковыми элементами, получен {actualType.Name}.",
             location);
     }
@@ -195,7 +195,7 @@ public sealed partial class Binder
     private void ReportArrayToSortedRequiresOrderedArray(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Функция 'ARRAYTOSORTED' поддерживает только массивы с числовыми или строковыми элементами, получен {actualType.Name}.",
             location);
     }
@@ -203,25 +203,25 @@ public sealed partial class Binder
     private void ReportArraySortRequiresOrderedArray(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Функция 'ARRAYSORT' поддерживает только массивы с числовыми или строковыми элементами, получен {actualType.Name}.",
             location);
     }
 
     private void ReportUnknownCallable(string name, TextLocation location)
     {
-        _diagnostics.Report(UnknownCallableCode, $"Функция или процедура '{name}' не объявлена.", location);
+        _diagnostics.Report(DiagnosticCodes.UnknownCallable, $"Функция или процедура '{name}' не объявлена.", location);
     }
 
     private void ReportProcedureCannotBeUsedAsValue(string name, TextLocation location)
     {
-        _diagnostics.Report(ProcedureValueCode, $"Процедуру '{name}' нельзя использовать как значение.", location);
+        _diagnostics.Report(DiagnosticCodes.ProcedureValue, $"Процедуру '{name}' нельзя использовать как значение.", location);
     }
 
     private void ReportInvalidOnKeyHandler(string name, TextLocation location)
     {
         _diagnostics.Report(
-            InvalidOnKeyHandlerCode,
+            DiagnosticCodes.InvalidOnKeyHandler,
             $"В ON KEY нужно указать имя процедуры SUB без параметров или с одним параметром STRING, а не '{name}'.",
             location);
     }
@@ -229,7 +229,7 @@ public sealed partial class Binder
     private void ReportInvalidOnMouseHandler(string name, TextLocation location)
     {
         _diagnostics.Report(
-            InvalidOnMouseHandlerCode,
+            DiagnosticCodes.InvalidOnMouseHandler,
             $"В ON MOUSE нужно указать имя процедуры SUB без параметров или с параметрами INTEGER, LONG, LONG, а не '{name}'.",
             location);
     }
@@ -237,7 +237,7 @@ public sealed partial class Binder
     private void ReportInvalidOnMouseEvent(TextLocation location)
     {
         _diagnostics.Report(
-            InvalidOnMouseEventCode,
+            DiagnosticCodes.InvalidOnMouseEvent,
             "Цель ON MOUSE должна быть номером кнопки, номером кнопки с событием \"UP\"/\"DOWN\" либо событием \"MOVE\" или \"WHEEL\".",
             location);
     }
@@ -245,7 +245,7 @@ public sealed partial class Binder
     private void ReportInvalidPaintFillType(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Аргумент 'краска' у PAINT должен иметь числовой или строковый тип, получен {actualType.Name}.",
             location);
     }
@@ -253,7 +253,7 @@ public sealed partial class Binder
     private void ReportInvalidPaintBorderType(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Аргумент 'граница' у PAINT должен иметь числовой тип, получен {actualType.Name}.",
             location);
     }
@@ -261,7 +261,7 @@ public sealed partial class Binder
     private void ReportInvalidPaintBackgroundType(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Аргумент 'фон' у PAINT должен иметь тип STRING, получен {actualType.Name}.",
             location);
     }
@@ -269,55 +269,55 @@ public sealed partial class Binder
     private void ReportInvalidPaintBackgroundWithoutPattern(TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             "Аргумент 'фон' у PAINT допустим только вместе со строковой формой аргумента 'краска'.",
             location);
     }
 
     private void ReportValueIsNotCallable(TypeSymbol type, TextLocation location)
     {
-        _diagnostics.Report(ValueNotCallableCode, $"Значение типа {type.Name} нельзя вызывать как функцию.", location);
+        _diagnostics.Report(DiagnosticCodes.ValueNotCallable, $"Значение типа {type.Name} нельзя вызывать как функцию.", location);
     }
 
     private void ReportReturnValueInSub(string name, TextLocation location)
     {
-        _diagnostics.Report(ReturnValueInSubCode, $"В SUB '{name}' нельзя возвращать значение.", location);
+        _diagnostics.Report(DiagnosticCodes.ReturnValueInSub, $"В SUB '{name}' нельзя возвращать значение.", location);
     }
 
     private void ReportMissingReturnValue(string name, TextLocation location)
     {
-        _diagnostics.Report(MissingReturnValueCode, $"В FUNCTION '{name}' требуется RETURN со значением.", location);
+        _diagnostics.Report(DiagnosticCodes.MissingReturnValue, $"В FUNCTION '{name}' требуется RETURN со значением.", location);
     }
 
     private void ReportInvalidCondition(TypeSymbol actualType, TextLocation location)
     {
-        _diagnostics.Report(InvalidConditionCode, $"Условие должно иметь тип BOOLEAN, получен {actualType.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidCondition, $"Условие должно иметь тип BOOLEAN, получен {actualType.Name}.", location);
     }
 
     private void ReportInvalidForControlVariable(string name, TypeSymbol type, TextLocation location)
     {
-        _diagnostics.Report(InvalidForControlCode, $"Управляющая переменная FOR '{name}' должна иметь тип INTEGER, LONG или DOUBLE, получен {type.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidForControl, $"Управляющая переменная FOR '{name}' должна иметь тип INTEGER, LONG или DOUBLE, получен {type.Name}.", location);
     }
 
     private void ReportAssignToConst(string name, TextLocation location)
     {
-        _diagnostics.Report(AssignToConstCode, $"Нельзя присваивать значение константе '{name}'.", location);
+        _diagnostics.Report(DiagnosticCodes.AssignToConst, $"Нельзя присваивать значение константе '{name}'.", location);
     }
 
     private void ReportInvalidFileAssignment(TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, "Значения типа FILE нельзя присваивать напрямую. Для них используйте OPEN и CLOSE.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, "Значения типа FILE нельзя присваивать напрямую. Для них используйте OPEN и CLOSE.", location);
     }
 
     private void ReportUnknownType(string name, TextLocation location)
     {
-        _diagnostics.Report(UnknownTypeCode, $"Тип '{name}' не объявлен.", location);
+        _diagnostics.Report(DiagnosticCodes.UnknownType, $"Тип '{name}' не объявлен.", location);
     }
 
     private void ReportInvalidTypeMember(string name, TextLocation location)
     {
         _diagnostics.Report(
-            InvalidTypeMemberCode,
+            DiagnosticCodes.InvalidTypeMember,
             $"Поле '{name}' в TYPE может иметь только скалярный встроенный тип или другой пользовательский TYPE.",
             location);
     }
@@ -325,7 +325,7 @@ public sealed partial class Binder
     private void ReportTypeFieldMultidimensionalArrayNotSupported(string name, TextLocation location)
     {
         _diagnostics.Report(
-            InvalidTypeMemberCode,
+            DiagnosticCodes.InvalidTypeMember,
             $"Поле '{name}' в TYPE пока поддерживает только одномерную массивную форму.",
             location);
     }
@@ -336,7 +336,7 @@ public sealed partial class Binder
         ArgumentException.ThrowIfNullOrWhiteSpace(details);
 
         _diagnostics.Report(
-            InvalidTypeMemberCode,
+            DiagnosticCodes.InvalidTypeMember,
             $"Поле '{name}' в TYPE объявлено с недопустимыми границами массива. {details}",
             location);
     }
@@ -344,7 +344,7 @@ public sealed partial class Binder
     private void ReportCyclicType(string name, TextLocation location)
     {
         _diagnostics.Report(
-            InvalidTypeMemberCode,
+            DiagnosticCodes.InvalidTypeMember,
             $"TYPE '{name}' не может прямо или косвенно содержать поле своего же типа.",
             location);
     }
@@ -352,7 +352,7 @@ public sealed partial class Binder
     private void ReportInvalidTypeConstructorDeclaration(TextLocation location)
     {
         _diagnostics.Report(
-            InvalidTypeMemberCode,
+            DiagnosticCodes.InvalidTypeMember,
             "Конструктор TYPE должен объявляться только в форме `SUB New(...) ... END SUB` без типа результата.",
             location);
     }
@@ -360,20 +360,20 @@ public sealed partial class Binder
     private void ReportInvalidTypeInvariantDeclaration(TextLocation location)
     {
         _diagnostics.Report(
-            InvalidTypeMemberCode,
+            DiagnosticCodes.InvalidTypeMember,
             "Инвариант TYPE должен объявляться только в форме `FUNCTION IsValid() AS BOOLEAN ... END FUNCTION` без пользовательских параметров.",
             location);
     }
 
     private void ReportUnknownField(TypeSymbol type, string fieldName, TextLocation location)
     {
-        _diagnostics.Report(UnknownFieldCode, $"Тип {type.Name} не содержит поле '{fieldName}'.", location);
+        _diagnostics.Report(DiagnosticCodes.UnknownField, $"Тип {type.Name} не содержит поле '{fieldName}'.", location);
     }
 
     private void ReportInvalidByRefArgument(TextLocation location)
     {
         _diagnostics.Report(
-            InvalidByRefArgumentCode,
+            DiagnosticCodes.InvalidByRefArgument,
             "Аргумент параметра BYREF должен быть простой переменной того же типа без промежуточного преобразования.",
             location);
     }
@@ -381,20 +381,20 @@ public sealed partial class Binder
     private void ReportUnsupportedByRefCallableValue(string name, TextLocation location)
     {
         _diagnostics.Report(
-            UnsupportedByRefCallableValueCode,
+            DiagnosticCodes.UnsupportedByRefCallableValue,
             $"Функцию '{name}' с параметрами BYREF пока нельзя использовать как значение, callback или переменную FUNCTION.",
             location);
     }
 
     private void ReportInvalidFieldAccess(TypeSymbol type, TextLocation location)
     {
-        _diagnostics.Report(InvalidFieldAccessCode, $"Доступ к полям через точку возможен только для TYPE, получен {type.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidFieldAccess, $"Доступ к полям через точку возможен только для TYPE, получен {type.Name}.", location);
     }
 
     private void ReportNamedArgumentsOnlySupportedForTypeLiterals(TextLocation location)
     {
         _diagnostics.Report(
-            WrongArgumentCountCode,
+            DiagnosticCodes.WrongArgumentCount,
             "Форма `name := value` сейчас поддержана только в именованных литералах TYPE.",
             location);
     }
@@ -402,7 +402,7 @@ public sealed partial class Binder
     private void ReportTypeLiteralRequiresNamedFields(string typeName, TextLocation location)
     {
         _diagnostics.Report(
-            WrongArgumentCountCode,
+            DiagnosticCodes.WrongArgumentCount,
             $"Литерал TYPE '{typeName}' принимает только именованные поля в форме `Name := value`.",
             location);
     }
@@ -410,7 +410,7 @@ public sealed partial class Binder
     private void ReportDuplicateTypeLiteralField(string typeName, string fieldName, TextLocation location)
     {
         _diagnostics.Report(
-            DuplicateDeclarationCode,
+            DiagnosticCodes.DuplicateDeclaration,
             $"Литерал TYPE '{typeName}' повторно задаёт поле '{fieldName}'.",
             location);
     }
@@ -418,7 +418,7 @@ public sealed partial class Binder
     private void ReportMixedTypeLiteralInitialization(string typeName, TextLocation location)
     {
         _diagnostics.Report(
-            MixedTypeLiteralInitializationCode,
+            DiagnosticCodes.MixedTypeLiteralInitialization,
             $"Литерал TYPE '{typeName}' не допускает смешивания позиционных и именованных аргументов в одном вызове `TypeName(...)`.",
             location);
     }
@@ -426,7 +426,7 @@ public sealed partial class Binder
     private void ReportTypeLiteralPositionalArity(string typeName, int expectedCount, int actualCount, TextLocation location)
     {
         _diagnostics.Report(
-            TypeLiteralPositionalArityCode,
+            DiagnosticCodes.TypeLiteralPositionalArity,
             $"Позиционная форма TYPE '{typeName}' требует {expectedCount} аргумент(а/ов) по числу полей, получено {actualCount}.",
             location);
     }
@@ -437,7 +437,7 @@ public sealed partial class Binder
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
 
         _diagnostics.Report(
-            FixedTypeArrayFieldOperationCode,
+            DiagnosticCodes.FixedTypeArrayFieldOperation,
             $"Оператор {keyword} нельзя применять к фиксированному полю-массиву '{displayName}' в TYPE.",
             location);
     }
@@ -448,7 +448,7 @@ public sealed partial class Binder
         ArgumentException.ThrowIfNullOrWhiteSpace(details);
 
         _diagnostics.Report(
-            InvalidFixedStringDeclarationCode,
+            DiagnosticCodes.InvalidFixedStringDeclaration,
             $"Объявление '{name}' использует недопустимую форму фиксированной строки. {details}",
             location);
     }
@@ -459,63 +459,63 @@ public sealed partial class Binder
         ArgumentException.ThrowIfNullOrWhiteSpace(details);
 
         _diagnostics.Report(
-            InvalidTypeFieldDefaultValueCode,
+            DiagnosticCodes.InvalidTypeFieldDefaultValue,
             $"Поле '{name}' в TYPE использует недопустимое значение по умолчанию. {details}",
             location);
     }
     private void ReportInvalidArrayAccess(string name, TextLocation location)
     {
-        _diagnostics.Report(InvalidArrayAccessCode, $"Имя '{name}' не является массивом.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidArrayAccess, $"Имя '{name}' не является массивом.", location);
     }
 
     private void ReportInvalidArrayBoundsForm(string name, TextLocation location, string details)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Объявление массива '{name}' использует недопустимую форму измерений. {details}",
             location);
     }
 
     private void ReportInvalidReturnContext(TextLocation location)
     {
-        _diagnostics.Report(InvalidReturnContextCode, "RETURN допустим только внутри SUB или FUNCTION.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidReturnContext, "RETURN допустим только внутри SUB или FUNCTION.", location);
     }
 
     private void ReportInvalidExitForContext(TextLocation location)
     {
-        _diagnostics.Report(InvalidExitForContextCode, "EXIT FOR допустим только внутри FOR ... NEXT.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidExitForContext, "EXIT FOR допустим только внутри FOR ... NEXT.", location);
     }
 
     private void ReportInvalidExitDoContext(TextLocation location)
     {
-        _diagnostics.Report(InvalidExitDoContextCode, "EXIT DO допустим только внутри DO ... LOOP.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidExitDoContext, "EXIT DO допустим только внутри DO ... LOOP.", location);
     }
 
     private void ReportInvalidSelectCaseRange(TextLocation location)
     {
-        _diagnostics.Report(InvalidSelectCaseRangeCode, "Диапазон CASE ... TO допустим только для числовых или строковых значений.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidSelectCaseRange, "Диапазон CASE ... TO допустим только для числовых или строковых значений.", location);
     }
 
     private void ReportInvalidRangeExpression(TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, "Диапазон TO допустим только внутри индексирования массива.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, "Диапазон TO допустим только внутри индексирования массива.", location);
     }
 
     private BoundErrorExpression ReportInvalidUnaryOperator(SyntaxKind operatorKind, TypeSymbol operandType, TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типу {operandType.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типу {operandType.Name}.", location);
         return new BoundErrorExpression(location);
     }
 
     private BoundErrorExpression ReportInvalidBinaryOperator(SyntaxKind operatorKind, TypeSymbol leftType, TypeSymbol rightType, TextLocation location)
     {
-        _diagnostics.Report(TypeMismatchCode, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типам {leftType.Name} и {rightType.Name}.", location);
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типам {leftType.Name} и {rightType.Name}.", location);
         return new BoundErrorExpression(location);
     }
     private void ReportInvalidTypeMethodReceiver(string methodName, TextLocation location)
     {
         _diagnostics.Report(
-            InvalidTypeMethodReceiverCode,
+            DiagnosticCodes.InvalidTypeMethodReceiver,
             $"В текущем шаге метод '{methodName}' можно вызывать только у устойчивого получателя TYPE: переменной, поля записи или элемента массива. Временные значения и результаты выражений пока не поддерживаются.",
             location);
     }

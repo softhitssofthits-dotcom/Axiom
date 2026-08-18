@@ -1,0 +1,39 @@
+' Этот пример показывает мировые координаты мыши в CANVAS.
+' Двигайте мышь внутри светлой рамки: справа сверху будут меняться MOUSEX() и MOUSEY().
+' Для выхода нажмите ESC.
+
+CANVAS 480, 270
+
+DIM currentX AS LONG = -1
+DIM currentY AS LONG = -1
+DIM keyName AS STRING = ""
+
+DO
+    VIEWPORT (30, 80)-(450, 250)
+    CAMERA 100, 50
+    currentX = MOUSEX()
+    currentY = MOUSEY()
+
+    BEGINFRAME
+    CLS RGB(10, 14, 22)
+
+    ' Рисуем сам видимый кусок мира.
+    FILLRECT 100, 50, 420, 170, RGB(24, 48, 88)
+    DRAWRECT 100, 50, 420, 170, RGB(210, 230, 255)
+    DRAWLINE 100, 135, 519, 135, RGB(90, 140, 220)
+    DRAWLINE 310, 50, 310, 219, RGB(90, 140, 220)
+    PSET (currentX, currentY), RGB(255, 240, 120)
+
+    ' Поверх рамки рисуем HUD в экранных координатах.
+    RESETCAMERA
+    VIEWPORT
+    FILLRECT 0, 0, 480, 54, RGB(6, 8, 12)
+    DRAWTEXT "Мышь в рамке. ESC - выход.", 10, 8, RGB(240, 240, 255)
+    DRAWTEXT "X=" + TRIM(STR(currentX)) + " Y=" + TRIM(STR(currentY)), 10, 30, RGB(255, 242, 170)
+    PRESENT
+    
+    keyName = INKEY()
+LOOP WHILE keyName <> "ESC"
+
+PRINT currentX
+PRINT currentY

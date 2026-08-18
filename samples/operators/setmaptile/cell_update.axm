@@ -1,0 +1,36 @@
+' Ожидается: первый кадр показывает исходную карту, второй кадр меняет левую нижнюю клетку,
+' третий кадр очищает эту же клетку.
+
+DIM level AS TILEMAP
+
+' Загружаем маленькую карту Tiled из соседней папки примера DRAWTILEMAP.
+level = LOADTILEMAP("../drawtilemap/simple_map.tmj")
+
+CANVAS 160, 90
+
+BEGINFRAME
+CLS RGB(16, 20, 28)
+DRAWTEXT "Исходная карта", 8, 8, RGB(240, 240, 240)
+DRAWTILEMAP level, 24, 32
+PRESENT
+SLEEP
+
+' Меняем левую нижнюю клетку: слой 1, столбец 1, строка 2, тайлсет 1, тайл 2.
+SETMAPTILE level, 1, 1, 2, 1, 2
+
+BEGINFRAME
+CLS RGB(10, 14, 22)
+DRAWTEXT "Клетка изменена: " & MAPTILE(level, 1, 1, 2), 8, 8, RGB(240, 240, 240)
+DRAWTILEMAP level, 24, 32
+PRESENT
+SLEEP
+
+' Очищаем клетку парой 0, 0.
+SETMAPTILE level, 1, 1, 2, 0, 0
+
+BEGINFRAME
+CLS RGB(8, 10, 16)
+DRAWTEXT "Клетка очищена: " & MAPTILE(level, 1, 1, 2), 8, 8, RGB(240, 240, 240)
+DRAWTILEMAP level, 24, 32
+PRESENT
+SLEEP

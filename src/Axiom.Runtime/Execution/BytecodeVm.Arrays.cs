@@ -614,7 +614,7 @@ public sealed partial class BytecodeVm
                 ? string.Empty
                 : $" в измерении {dimension + 1}";
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Массив '{displayName}' не может иметь нижнюю границу {int.MinValue}{detailSuffix}, потому что значение слева от диапазона используется поисковыми функциями массива как признак отсутствия совпадения.",
                 location);
             throw new RuntimeFailureException();
@@ -624,7 +624,7 @@ public sealed partial class BytecodeVm
     private void ReportArrayIndicesOutOfBounds(string arrayName, IReadOnlyList<int> indices, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            ArrayBoundsCode,
+            DiagnosticCodes.ArrayBounds,
             $"Индексы {FormatArrayIndices(indices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
@@ -632,7 +632,7 @@ public sealed partial class BytecodeVm
     private void ReportArraySlicesOutOfBounds(string arrayName, IReadOnlyList<RuntimeArrayIndexSlice> slices, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            ArrayBoundsCode,
+            DiagnosticCodes.ArrayBounds,
             $"Индексы {FormatArraySlices(slices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
@@ -715,7 +715,7 @@ public sealed partial class BytecodeVm
     private void ReportArrayIndicesOutOfBounds(string arrayName, int[] indices, int count, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            ArrayBoundsCode,
+            DiagnosticCodes.ArrayBounds,
             $"Индексы {FormatArrayIndices(indices.AsSpan(0, count))} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }
@@ -723,7 +723,7 @@ public sealed partial class BytecodeVm
     private void ReportArrayIndicesOutOfBounds(string arrayName, ReadOnlySpan<int> indices, RuntimeArrayValue array, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            ArrayBoundsCode,
+            DiagnosticCodes.ArrayBounds,
             $"Индексы {FormatArrayIndices(indices)} выходят за границы массива '{arrayName}' ({FormatArrayBounds(array)}).",
             location);
     }

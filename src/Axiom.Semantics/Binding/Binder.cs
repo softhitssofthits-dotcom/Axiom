@@ -5,43 +5,6 @@ namespace Axiom.Semantics;
 
 public sealed partial class Binder
 {
-    private const string UnknownNameCode = "MB2001";
-    private const string DuplicateDeclarationCode = "MB2002";
-    private const string TypeMismatchCode = "MB2003";
-    private const string WrongArgumentCountCode = "MB2004";
-    private const string UnknownCallableCode = "MB2005";
-    private const string ReturnValueInSubCode = "MB2006";
-    private const string MissingReturnValueCode = "MB2007";
-    private const string InvalidConditionCode = "MB2008";
-    private const string InvalidForControlCode = "MB2009";
-    private const string AssignToConstCode = "MB2010";
-    private const string InvalidArrayAccessCode = "MB2011";
-    private const string InvalidReturnContextCode = "MB2012";
-    private const string InvalidExitForContextCode = "MB2013";
-    private const string InvalidExitDoContextCode = "MB2014";
-    private const string InvalidSelectCaseRangeCode = "MB2015";
-    private const string ShadowedDeclarationCode = "MB2016";
-    private const string MissingVariableTypeCode = "MB2017";
-    private const string ConstantOutOfRangeCode = "MB2018";
-    private const string ProcedureValueCode = "MB2019";
-    private const string ValueNotCallableCode = "MB2020";
-    private const string UnknownTypeCode = "MB2021";
-    private const string InvalidTypeMemberCode = "MB2022";
-    private const string UnknownFieldCode = "MB2023";
-    private const string InvalidFieldAccessCode = "MB2024";
-    private const string FixedTypeArrayFieldOperationCode = "MB2025";
-    private const string InvalidFixedStringDeclarationCode = "MB2026";
-    private const string InvalidTypeFieldDefaultValueCode = "MB2027";
-    private const string InvalidByRefArgumentCode = "MB2028";
-    private const string UnsupportedByRefCallableValueCode = "MB2029";
-    private const string InvalidTypeMethodReceiverCode = "MB2030";
-    private const string MixedTypeLiteralInitializationCode = "MB2031";
-    private const string TypeLiteralPositionalArityCode = "MB2032";
-    private const string AmbiguousTypeConstructorCode = "MB2033";
-    private const string InvalidOnKeyHandlerCode = "MB2034";
-    private const string InvalidOnMouseHandlerCode = "MB2035";
-    private const string InvalidOnMouseEventCode = "MB2036";
-
     // Human-facing block labels stay centralized so every future block scope
     // can reuse the same MB2016 template without inventing a new diagnostic.
     private static class DeclarationContexts

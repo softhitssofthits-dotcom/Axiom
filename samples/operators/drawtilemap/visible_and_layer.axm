@@ -1,0 +1,25 @@
+' Ожидается: первый кадр рисует только видимый тайловый слой,
+' второй кадр явно рисует скрытый слой по номеру.
+
+DIM level AS TILEMAP
+
+' Загружаем маленькую карту Tiled из этой же папки.
+level = LOADTILEMAP("simple_map.tmj")
+
+CANVAS 160, 90
+
+BEGINFRAME
+' Показываем размеры карты перед полной отрисовкой.
+CLS RGB(16, 20, 28)
+DRAWTEXT "Карта: " & MAPWIDTH(level) & "x" & MAPHEIGHT(level), 8, 8, RGB(240, 240, 240)
+DRAWTILEMAP level, 24, 32
+PRESENT
+SLEEP
+
+BEGINFRAME
+' Второй слой скрыт в файле карты, но DRAWTILELAYER рисует его явно.
+CLS RGB(10, 14, 22)
+DRAWTEXT "Слой: 2 из " & MAPLAYERCOUNT(level), 8, 8, RGB(240, 240, 240)
+DRAWTILELAYER level, 2, 88, 32
+PRESENT
+SLEEP

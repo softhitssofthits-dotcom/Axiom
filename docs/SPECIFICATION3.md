@@ -4097,3 +4097,207 @@ Viewport нужен для того, чтобы отделить мировую 
 - отдельная негативная проверка, что `PAINT` без `SCREEN` и без `CANVAS` по-прежнему сообщает `MB3010`;
 - runnable sample `samples/operators/paint/canvas_region_fill.axm`;
 - обновление manual и `docs/BYTECODE_COVERAGE.md`.
+
+## Обновление спецификации - 2026-06-08 - мышь в CANVAS
+
+Этот шаг закрывает перенос мышиного договора в современный слой `CANVAS`.
+Старый договор `SCREEN` сохраняется, но мышиные функции и `ON MOUSE` больше не считаются screen-only.
+
+Формы:
+- `MOUSEX()`;
+- `MOUSEY()`;
+- `MOUSEBUTTON(buttonNumber)`;
+- `MOUSEPRESS(buttonNumber)`;
+- `ON MOUSE(...)`.
+
+Общий договор:
+- все перечисленные формы требуют любую активную рисуемую поверхность: `SCREEN 1..10` или `CANVAS`;
+- без активного `SCREEN` и без активного `CANVAS` runtime сообщает `MB3010`;
+- `MOUSEBUTTON(buttonNumber)` и `MOUSEPRESS(buttonNumber)` не меняют свой смысл при переносе в `CANVAS`: первая форма проверяет текущее удержание, вторая читает одно нажатие из очереди.
+
+Договор координат:
+- при активном `SCREEN` `MOUSEX()` и `MOUSEY()` по-прежнему возвращают экранные координаты клиентской области активного окна;
+- при активном `SCREEN` параметры `x` и `y` обработчика `ON MOUSE` по-прежнему совпадают с теми же чтениями `MOUSEX()` и `MOUSEY()`;
+- при активном `CANVAS` `MOUSEX()` и `MOUSEY()` возвращают мировые координаты точки под указателем;
+- при активном `CANVAS` параметры `x` и `y` обработчика `ON MOUSE` совпадают с теми же чтениями `MOUSEX()` и `MOUSEY()` в момент вызова обработчика;
+- если host не знает текущую позицию указателя, `MOUSEX()` и `MOUSEY()` возвращают `-1`.
+
+Правила пересчёта для `CANVAS`:
+- абсолютная позиция указателя сначала трактуется как экранная точка активного холста;
+- затем runtime переводит её в мировую координату по текущим `VIEWPORT` и `CAMERA`;
+- если экранная точка не может быть переведена в логическую мировую координату, `MOUSEX()` и `MOUSEY()` возвращают `-1`;
+- этот пересчёт не вводит в `CANVAS` старые договоры `VIEW`, `WINDOW` и `PMAP`.
+
+Граница шага:
+- перенос в `CANVAS` не добавляет новых мышиных событий;
+- перенос не меняет очередь нажатий `MOUSEPRESS()` и не меняет уже принятые формы `ON MOUSE(..., "UP")`, `ON MOUSE("MOVE")`, `ON MOUSE("WHEEL")`;
+- `MOUSEBUTTON()` и `MOUSEPRESS()` в `CANVAS` используют тот же host-ввод, что и в `SCREEN`, только без требования именно screen-режима.
+
+Приёмка шага:
+- interpreter- и `BytecodeVm`-проверки, что `MOUSEX()` и `MOUSEY()` в `CANVAS` возвращают мировые координаты под `VIEWPORT` и `CAMERA`;
+- interpreter- и `BytecodeVm`-проверки, что `ON MOUSE` в `CANVAS` передаёт те же мировые `x/y`, которые в этот момент возвращают `MOUSEX()` и `MOUSEY()`;
+- проверки, что `MOUSEBUTTON()` и `MOUSEPRESS()` работают и при активном `CANVAS`;
+- runnable samples `samples/functions/mousex/canvas_world_position.axm` и `samples/operators/on-mouse/canvas_world_handler.axm`;
+- обновление manual и `docs/BYTECODE_COVERAGE.md`.
+
+## Обновление спецификации - 2026-06-08 - отдельный договор тайловых карт
+
+Следующий крупный слой современной графики больше не держится только на общем пункте плана.
+Полный договор тайловой карты вынесен в отдельный активный документ `docs/TILEMAP_CONTRACT.md`.
+
+Краткая фиксация в активной спецификации:
+- источником модели карты принят Tiled, а не произвольный самодельный формат;
+- пользовательские имена зафиксированы в BASIC-стиле: `TILESET`, `TILEMAP`, `LOADTILESET`, `LOADTILEMAP`, `DRAWTILE`, `DRAWTILEMAP`, `DRAWTILELAYER`, `MAPTILE`, `SETMAPTILE` и связанные функции слоя;
+- тайловый слой проектируется поверх уже принятого modern-координатного договора `CANVAS` + `CAMERA` + `VIEWPORT`;
+- отрисовка карты должна идти по видимой области, а не через обязательную полную перерисовку всей карты без отсечения;
+- свойства карты, слоёв, тайлов и объектов входят в первый утверждённый договор сразу, а не считаются неопределённым «дополнением потом»;
+- первый утверждённый объём сознательно ограничен ортогональными конечными картами Tiled на основе атласов, а всё остальное перечислено в отдельном документе как явно отложенное, но не забытое.
+
+До появления runtime-, bytecode-, IDE- и manual-реализации именно `docs/TILEMAP_CONTRACT.md` считается подробным рабочим договором тайловой карты для Axiom.
+
+## Обновление спецификации - 2026-06-08 - первый срез TILESET и DRAWTILE
+
+Этот шаг закрывает первый уже реализованный срез тайлового слоя, но ещё не вводит полноценный `TILEMAP`.
+
+Формы:
+- `DIM tiles AS TILESET`;
+- `LOADTILESET(path, tileWidth, tileHeight)`;
+- `LOADTILESET(path, tileWidth, tileHeight, margin)`;
+- `LOADTILESET(path, tileWidth, tileHeight, margin, spacing)`;
+- `TILECOUNT(tileset)`;
+- `TILEWIDTH(tileset)`;
+- `TILEHEIGHT(tileset)`;
+- `DRAWTILE tileset, tileIndex, x, y`.
+
+Общий договор:
+- `TILESET` хранит изображение-атлас и сетку одинаковых тайлов;
+- пользовательский `tileIndex` является `1`-основанным;
+- тайлы нумеруются слева направо и сверху вниз;
+- если `margin` и `spacing` не указаны, они считаются равными `0`;
+- `margin` и `spacing` должны быть неотрицательными целыми значениями;
+- `tileWidth` и `tileHeight` должны быть положительными целыми значениями.
+
+Правила загрузки и чтения свойств:
+- `LOADTILESET` загружает изображение и проверяет, что сетка тайлов точно укладывается в размеры атласа с учётом `margin` и `spacing`;
+- если сетка не совпадает с размерами изображения, загрузка считается runtime-ошибкой;
+- пустое значение `TILESET` допустимо как значение переменной после `DIM`;
+- для пустого значения `TILESET` функции `TILECOUNT`, `TILEWIDTH` и `TILEHEIGHT` возвращают `0`.
+
+Договор отрисовки:
+- `DRAWTILE` работает только при активном `CANVAS`;
+- `DRAWTILE` рисует тайл в его натуральном размере `tileWidth x tileHeight`;
+- координаты `x` и `y` подчиняются тому же договору modern-слоя, что и `DRAWIMAGE` / `DRAWSPRITE`: после `CAMERA` они становятся мировыми, а итоговая отрисовка ограничивается `VIEWPORT`;
+- попытка вызвать `DRAWTILE` для пустого значения `TILESET` считается runtime-ошибкой.
+
+Диагностика:
+- `MB3007`: пустой `path`;
+- `MB3007`: неположительные `tileWidth` / `tileHeight`;
+- `MB3007`: отрицательные `margin` / `spacing`;
+- `MB3007`: `tileIndex` не указывает существующий тайл;
+- `MB3005`: файл тайлсета не удалось загрузить;
+- `MB3005`: сетка тайлов не совпадает с размерами атласа;
+- `MB3005`: `DRAWTILE` получил пустое значение `TILESET`;
+- `MB3010`: `DRAWTILE` вызван без активного `CANVAS`.
+
+Граница шага:
+- в этот срез не входят `TILEMAP`, `LOADTILEMAP`, `DRAWTILEMAP`, `DRAWTILELAYER`, чтение клеток карты и Tiled-слои;
+- полный tilemap-договор по-прежнему живёт в `docs/TILEMAP_CONTRACT.md`, но кодовой и пользовательской реальностью этого шага является только срез `TILESET` / `LOADTILESET` / `DRAWTILE`.
+
+Приёмка шага:
+- interpreter- и `BytecodeVm`-проверки загрузки, чтения свойств, отрисовки и диагностик;
+- runnable sample `samples/operators/drawtile/basic_tileset.axm`;
+- отдельная manual-страница `docs/manual/tilesets.html`;
+- синхронизация `docs/BYTECODE_COVERAGE.md`.
+
+## Обновление спецификации - 2026-06-08 - первый срез TILEMAP
+
+Этот шаг вводит первый рабочий слой тайловых карт поверх уже закрытого `TILESET`.
+
+Формы:
+- `DIM level AS TILEMAP`;
+- `LOADTILEMAP(path)`;
+- `MAPWIDTH(tilemap)`;
+- `MAPHEIGHT(tilemap)`;
+- `MAPPIXELWIDTH(tilemap)`;
+- `MAPPIXELHEIGHT(tilemap)`;
+- `MAPTILEWIDTH(tilemap)`;
+- `MAPTILEHEIGHT(tilemap)`;
+- `MAPLAYERCOUNT(tilemap)`;
+- `DRAWTILEMAP tilemap, x, y`;
+- `DRAWTILELAYER tilemap, layerIndex, x, y`.
+
+Общий договор:
+- `TILEMAP` хранит конечную ортогональную карту Tiled JSON, её размеры, размер клетки, тайлсеты и слои;
+- `LOADTILEMAP` загружает файл `.tmj` или `.json`, связанные тайлсеты и изображения тайлсетов через тот же ресурсный путь запускаемой программы;
+- пользовательский `layerIndex` является `1`-основанным;
+- объектные слои загружаются как часть карты, но в этом срезе не рисуются автоматически.
+
+Правила чтения свойств:
+- `MAPWIDTH` и `MAPHEIGHT` возвращают размеры карты в клетках;
+- `MAPPIXELWIDTH` и `MAPPIXELHEIGHT` возвращают размеры карты в пикселях;
+- `MAPTILEWIDTH` и `MAPTILEHEIGHT` возвращают размер одной клетки в пикселях;
+- `MAPLAYERCOUNT` возвращает число слоёв;
+- для пустого значения `TILEMAP` все эти функции возвращают `0`.
+
+Договор отрисовки:
+- `DRAWTILEMAP` и `DRAWTILELAYER` работают только при активном `CANVAS`;
+- координаты `x` и `y` являются пиксельными координатами левого верхнего угла карты или слоя в мире `CANVAS`;
+- отрисовка проходит через `CAMERA` и `VIEWPORT`, рисует только видимую область и один защитный пояс тайлов по краям;
+- `DRAWTILEMAP` рисует только видимые тайловые слои и пропускает объектные слои;
+- `DRAWTILELAYER` рисует указанный тайловый слой даже тогда, когда слой помечен невидимым;
+- попытка нарисовать объектный слой через `DRAWTILELAYER` считается runtime-ошибкой;
+- операторы `DRAWTILEMAP` и `DRAWTILELAYER` не меняют текущую графическую позицию.
+
+Диагностика:
+- `MB3007`: пустой `path`;
+- `MB3007`: координаты выходят за поддерживаемый диапазон modern-graphics;
+- `MB3007`: `layerIndex` не указывает существующий слой;
+- `MB3005`: карту, тайлсет или изображение тайлсета не удалось загрузить;
+- `MB3005`: оператор получил пустое значение `TILEMAP`;
+- `MB3005`: `DRAWTILELAYER` получил объектный слой;
+- `MB3010`: `DRAWTILEMAP` или `DRAWTILELAYER` вызван без активного `CANVAS`.
+
+Граница шага:
+- в этот срез не входят `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS`, `SETMAPTILE`, свойства, объектные функции и перевод координат;
+- полный договор остаётся в `docs/TILEMAP_CONTRACT.md`, а этот шаг закрывает только загрузку, базовые размеры и отрисовку карты.
+
+Приёмка шага:
+- parser-, binder-, interpreter-, `BytecodeVm`- и execution-проверки;
+- runnable sample `samples/operators/drawtilemap/visible_and_layer.axm` с картой `samples/operators/drawtilemap/simple_map.tmj`;
+- отдельная manual-страница `docs/manual/tilemaps.html`;
+- IDE-подсветка уже синхронизирована в `Axiom.xshd`, `Axiom.Dark.xshd` и `tests/Axiom.Ide.Tests/`;
+- синхронизация `docs/BYTECODE_COVERAGE.md`.
+
+## Обновление спецификации - 2026-06-08 - чтение и запись клеток TILEMAP
+
+Этот шаг расширяет уже рабочий слой `TILEMAP` функциями чтения клеток карты и оператором записи одной клетки.
+
+Формы:
+- `MAPTILE(tilemap, layerIndex, column, row)`;
+- `MAPTILESET(tilemap, layerIndex, column, row)`;
+- `MAPTILEFLAGS(tilemap, layerIndex, column, row)`;
+- `SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex`;
+- `SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex, flags`.
+
+Общий договор:
+- `layerIndex`, `column` и `row` являются 1-based значениями;
+- `MAPTILE` возвращает номер тайла внутри тайлсета;
+- `MAPTILESET` возвращает номер тайлсета внутри карты;
+- `MAPTILEFLAGS` возвращает битовую маску отражения клетки: `1` - горизонтальное отражение, `2` - вертикальное отражение, `4` - диагональное отражение;
+- пустая клетка, пустое значение `TILEMAP`, координаты за пределами карты, отсутствующий слой или объектный слой при чтении возвращают `0`;
+- `SETMAPTILE` изменяет только существующую клетку тайлового слоя и не создаёт новые слои, строки, столбцы, тайлсеты или тайлы;
+- форма `SETMAPTILE tilemap, layerIndex, column, row, 0, 0` очищает клетку;
+- необязательный аргумент `flags` по умолчанию равен `0` и должен находиться в диапазоне `0..7`.
+
+Диагностика:
+- `MB3007`: `layerIndex` при записи не указывает существующий слой;
+- `MB3007`: `column` или `row` при записи не указывают существующую клетку тайлового слоя;
+- `MB3007`: `tilesetIndex`, `tileIndex` или `flags` при записи выходят за допустимый договор;
+- `MB3005`: `SETMAPTILE` получил пустое значение `TILEMAP` или объектный слой.
+
+Приёмка шага:
+- parser-, binder-, interpreter-, `BytecodeVm`-, IDE- и execution-проверки;
+- runnable sample `samples/operators/setmaptile/cell_update.axm`;
+- manual-страница `docs/manual/tilemaps.html`;
+- IDE-подсветка в `Axiom.xshd`, `Axiom.Dark.xshd` и проверках `tests/Axiom.Ide.Tests/`;
+- синхронизация `docs/BYTECODE_COVERAGE.md`.

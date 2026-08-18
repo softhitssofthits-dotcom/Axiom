@@ -101,7 +101,7 @@ PRINT "Возраст: " & age</code></pre>
                     </section>
                     <section class="card">
                         <h3><a href="mousex.html">MOUSEX и MOUSEY</a></h3>
-                        <p>Возвращают текущие клиентские координаты указателя на активной поверхности ввода и в графическом <code>SCREEN</code> не проходят через <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code>.</p>
+                        <p>Возвращают текущие координаты указателя: в <code>SCREEN</code> это клиентские координаты окна, а в <code>CANVAS</code> — мировые координаты по договору <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
                     </section>
                     <section class="card">
                         <h3><a href="mousebutton.html">MOUSEBUTTON</a></h3>
@@ -117,10 +117,10 @@ PRINT "Возраст: " & age</code></pre>
                     </section>
                     <section class="card">
                         <h3><a href="on-mouse.html">ON MOUSE</a></h3>
-                        <p>Назначает обработчик нажатия, отпускания, перемещения или колеса мыши и передаёт те же «сырые» координаты, которые в этот момент возвращают <code>MOUSEX()</code> и <code>MOUSEY()</code>.</p>
+                        <p>Назначает обработчик нажатия, отпускания, перемещения или колеса мыши и передаёт те же координаты, которые в этот момент возвращают <code>MOUSEX()</code> и <code>MOUSEY()</code>.</p>
                     </section>
                 </div>
-                <p>Для мыши это особенно важно в графическом окне. <code>MOUSEX()</code> и <code>MOUSEY()</code> работают только при активном графическом <code>SCREEN</code>, а их координаты принадлежат клиентской области активной поверхности ввода. Они не переводятся в логическую систему рисования через <code>VIEW</code>, <code>WINDOW</code> или <code>PMAP</code>. Поэтому опрос мыши и графические примитивы образуют соседние, но разные пользовательские договоры.</p>
+                <p>Для мыши это особенно важно в графическом окне. При активном <code>SCREEN</code> функции <code>MOUSEX()</code> и <code>MOUSEY()</code> возвращают координаты клиентской области окна и не переводятся в логическую систему рисования через <code>VIEW</code>, <code>WINDOW</code> или <code>PMAP</code>. При активном <code>CANVAS</code> те же функции и параметры <code>x/y</code> обработчика <code>ON MOUSE</code> уже возвращают мировые координаты по договору <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
             </section>
 
             <section class="article-section" id="output">

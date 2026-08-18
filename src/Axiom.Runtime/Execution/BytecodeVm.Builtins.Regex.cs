@@ -1,11 +1,11 @@
 using System.Text.RegularExpressions;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private static readonly TimeSpan RegexExecutionLimit = TimeSpan.FromSeconds(5);
     private readonly Dictionary<(string Pattern, RegexOptions Options), Regex> _regexCache = [];
     private readonly Dictionary<string, RegexOptions> _regexModesCache = [];
 
@@ -16,16 +16,7 @@ public sealed partial class BytecodeVm
         TextLocation location)
     {
         var regex = CreateRegex("REGEXISMATCH", pattern, modes, location);
-
-        try
-        {
-            return RuntimeValue.FromBoolean(regex.IsMatch(text));
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXISMATCH", location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinRegexHelpers.IsMatch(regex, text, location, ReportBuiltInArgumentError, "REGEXISMATCH");
     }
 
     private RuntimeValue EvaluateRegexMatchBuiltin(
@@ -35,17 +26,7 @@ public sealed partial class BytecodeVm
         TextLocation location)
     {
         var regex = CreateRegex("REGEXMATCH", pattern, modes, location);
-
-        try
-        {
-            var match = regex.Match(text);
-            return RuntimeValue.FromString(match.Success ? match.Value : string.Empty);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXMATCH", location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinRegexHelpers.Match(regex, text, location, ReportBuiltInArgumentError, "REGEXMATCH");
     }
 
     private RuntimeValue EvaluateRegexExtractBuiltin(
@@ -62,24 +43,7 @@ public sealed partial class BytecodeVm
         }
 
         var regex = CreateRegex("REGEXEXTRACT", pattern, modes, location);
-
-        try
-        {
-            var match = regex.Match(text);
-
-            if (!match.Success || group >= match.Groups.Count)
-            {
-                return RuntimeValue.FromString(string.Empty);
-            }
-
-            var capturedGroup = match.Groups[group];
-            return RuntimeValue.FromString(capturedGroup.Success ? capturedGroup.Value : string.Empty);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXEXTRACT", location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinRegexHelpers.Extract(regex, text, group, location, ReportBuiltInArgumentError, "REGEXEXTRACT", CreateStringArrayValue);
     }
 
     private RuntimeValue EvaluateRegexMatchesBuiltin(
@@ -89,21 +53,7 @@ public sealed partial class BytecodeVm
         TextLocation location)
     {
         var regex = CreateRegex("REGEXMATCHES", pattern, modes, location);
-
-        try
-        {
-            var values = regex
-                .Matches(text)
-                .Select(static match => match.Value)
-                .ToArray();
-
-            return CreateStringArrayValue(values);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXMATCHES", location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinRegexHelpers.Matches(regex, text, location, ReportBuiltInArgumentError, "REGEXMATCHES", CreateStringArrayValue);
     }
 
     private RuntimeValue EvaluateRegexExtractAllBuiltin(
@@ -120,30 +70,7 @@ public sealed partial class BytecodeVm
         }
 
         var regex = CreateRegex("REGEXEXTRACTALL", pattern, modes, location);
-
-        try
-        {
-            var values = regex
-                .Matches(text)
-                .Select(match =>
-                {
-                    if (group >= match.Groups.Count)
-                    {
-                        return string.Empty;
-                    }
-
-                    var capturedGroup = match.Groups[group];
-                    return capturedGroup.Success ? capturedGroup.Value : string.Empty;
-                })
-                .ToArray();
-
-            return CreateStringArrayValue(values);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXEXTRACTALL", location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinRegexHelpers.ExtractAll(regex, text, group, location, ReportBuiltInArgumentError, "REGEXEXTRACTALL", CreateStringArrayValue);
     }
 
     private RuntimeValue EvaluateRegexSplitBuiltin(
@@ -153,18 +80,7 @@ public sealed partial class BytecodeVm
         TextLocation location)
     {
         var regex = CreateRegex("REGEXSPLIT", pattern, modes, location);
-
-        try
-        {
-            return text.Length == 0
-                ? CreateStringArrayValue([])
-                : CreateStringArrayValue(regex.Split(text));
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXSPLIT", location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinRegexHelpers.Split(regex, text, location, ReportBuiltInArgumentError, "REGEXSPLIT", CreateStringArrayValue);
     }
 
     private RuntimeValue EvaluateRegexReplaceBuiltin(
@@ -227,9 +143,7 @@ public sealed partial class BytecodeVm
                 return textValue;
             }
 
-            var result = count is null
-                ? regex.Replace(text, replacement)
-                : ReplaceRegexMatches(regex, text, replacement, count.Value);
+            var result = BuiltinRegexHelpers.Replace(regex, text, replacement, count, location, ReportBuiltInArgumentError, "REGEXREPLACE");
 
             return string.Equals(result, text, StringComparison.Ordinal)
                 ? textValue
@@ -237,7 +151,7 @@ public sealed partial class BytecodeVm
         }
         catch (RegexMatchTimeoutException)
         {
-            ReportRegexTimeout("REGEXREPLACE", location);
+            ReportBuiltInArgumentError("REGEXREPLACE", "pattern", "выполняется слишком долго.", location);
             throw new RuntimeFailureException();
         }
         catch (ArgumentException ex)
@@ -262,13 +176,11 @@ public sealed partial class BytecodeVm
         {
             return IsRegexReplaceGuaranteedNoOp(text, regex, replacement, count)
                 ? text
-                : count is null
-                    ? regex.Replace(text, replacement)
-                    : ReplaceRegexMatches(regex, text, replacement, count.Value);
+                : BuiltinRegexHelpers.Replace(regex, text, replacement, count, location, ReportBuiltInArgumentError, "REGEXREPLACE");
         }
         catch (RegexMatchTimeoutException)
         {
-            ReportRegexTimeout("REGEXREPLACE", location);
+            ReportBuiltInArgumentError("REGEXREPLACE", "pattern", "выполняется слишком долго.", location);
             throw new RuntimeFailureException();
         }
         catch (ArgumentException ex)
@@ -289,16 +201,7 @@ public sealed partial class BytecodeVm
         TextLocation location)
     {
         var regex = CreateRegex("REGEXCOUNT", pattern, modes, location);
-
-        try
-        {
-            return RuntimeValue.FromInteger(regex.Matches(text).Count);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            ReportRegexTimeout("REGEXCOUNT", location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeValue.FromInteger(BuiltinRegexHelpers.Count(regex, text, location, ReportBuiltInArgumentError, "REGEXCOUNT"));
     }
 
     private RuntimeValue EvaluateRegexReplaceBuiltin(
@@ -331,21 +234,9 @@ public sealed partial class BytecodeVm
             return cachedRegex;
         }
 
-        try
-        {
-            var regex = new Regex(pattern, options, RegexExecutionLimit);
-            _regexCache[cacheKey] = regex;
-            return regex;
-        }
-        catch (ArgumentException ex)
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                "pattern",
-                $"содержит недопустимое регулярное выражение: {ex.Message}",
-                location);
-            throw new RuntimeFailureException();
-        }
+        var regex = BuiltinRegexHelpers.CreateRegex(pattern, options, location, functionName, ReportBuiltInArgumentError);
+        _regexCache[cacheKey] = regex;
+        return regex;
     }
 
     private RegexOptions ParseRegexModes(string functionName, string modes, TextLocation location)
@@ -360,63 +251,9 @@ public sealed partial class BytecodeVm
             return cachedOptions;
         }
 
-        var options = RegexOptions.CultureInvariant;
-
-        foreach (var mode in modes)
-        {
-            options |= char.ToLowerInvariant(mode) switch
-            {
-                'i' => RegexOptions.IgnoreCase,
-                'm' => RegexOptions.Multiline,
-                's' => RegexOptions.Singleline,
-                'x' => RegexOptions.IgnorePatternWhitespace,
-                _ => ReportInvalidRegexMode(functionName, mode, location)
-            };
-        }
-
+        var options = BuiltinRegexHelpers.ParseRegexModes(modes, location, functionName, ReportBuiltInArgumentError);
         _regexModesCache[modes] = options;
         return options;
-    }
-
-    private RegexOptions ReportInvalidRegexMode(string functionName, char mode, TextLocation location)
-    {
-        ReportBuiltInArgumentError(
-            functionName,
-            "modes",
-            $"содержит неизвестный режим '{mode}'. Допустимы только i, m, s, x.",
-            location);
-        throw new RuntimeFailureException();
-    }
-
-    private static string ReplaceRegexMatches(Regex regex, string text, string replacement, int count)
-    {
-        var matches = regex.Matches(text);
-
-        if (matches.Count == 0)
-        {
-            return text;
-        }
-
-        var builder = new System.Text.StringBuilder(text.Length);
-        var cursor = 0;
-        var replaced = 0;
-
-        foreach (Match match in matches)
-        {
-            if (replaced >= count)
-            {
-                break;
-            }
-
-            builder.Append(text, cursor, match.Index - cursor);
-            builder.Append(match.Result(replacement));
-
-            cursor = match.Index + match.Length;
-            replaced++;
-        }
-
-        builder.Append(text, cursor, text.Length - cursor);
-        return builder.ToString();
     }
 
     private static bool IsRegexReplaceGuaranteedNoOp(string text, Regex regex, string replacement, int? count)
@@ -454,9 +291,4 @@ public sealed partial class BytecodeVm
     }
 
     private static bool ReplacementDependsOnMatch(string replacement) => replacement.IndexOf('$') >= 0;
-
-    private void ReportRegexTimeout(string functionName, TextLocation location)
-    {
-        ReportBuiltInArgumentError(functionName, "pattern", "выполняется слишком долго.", location);
-    }
 }

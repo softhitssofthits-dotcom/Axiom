@@ -6,15 +6,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
-    private const string DivisionByZeroCode = "MB3001";
-    private const string ArrayBoundsCode = "MB3002";
-    private const string InputConversionCode = "MB3003";
-    private const string StepZeroCode = "MB3004";
-    private const string InvalidRuntimeStateCode = "MB3005";
-    private const string MissingReturnValueCode = "MB3006";
-    private const string BuiltinArgumentCode = "MB3007";
-    private const string NumericOverflowCode = "MB3008";
-    private const string EmptyFunctionValueCode = "MB3009";
+
 
     private readonly DiagnosticBag _diagnostics = new();
     private readonly Dictionary<FunctionSymbol, BoundRoutine> _routines;
@@ -23,6 +15,7 @@ public sealed partial class Interpreter
     private readonly Stack<RuntimeScope> _scopeStack = new();
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
+    private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private bool _hasPendingOutput;
     private readonly IRuntimeHost _host;
     private Diagnostic? _lastRuntimeFailureDiagnostic;

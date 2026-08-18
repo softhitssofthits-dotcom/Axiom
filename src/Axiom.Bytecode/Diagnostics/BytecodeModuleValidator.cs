@@ -810,6 +810,13 @@ public sealed class BytecodeModuleValidator
                     }
                     break;
 
+                case Opcode.DrawTile:
+                case Opcode.DrawTilemap:
+                case Opcode.DrawTileLayer:
+                case Opcode.SetMapTile:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
                 case Opcode.StatementBoundary:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
@@ -1848,6 +1855,62 @@ public sealed class BytecodeModuleValidator
                 ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, frameType, "номер кадра DRAWSPRITE");
                 ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWSPRITE");
                 ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWSPRITE");
+                break;
+            }
+
+            case Opcode.DrawTile:
+            {
+                var yType = Pop();
+                var xType = Pop();
+                var tileIndexType = Pop();
+                var tilesetType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilesetType, TypeSymbol.Tileset, "тайлсет DRAWTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, tileIndexType, "номер тайла DRAWTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWTILE");
+                break;
+            }
+
+            case Opcode.DrawTilemap:
+            {
+                var yType = Pop();
+                var xType = Pop();
+                var tilemapType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilemapType, TypeSymbol.Tilemap, "тайловая карта DRAWTILEMAP");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWTILEMAP");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWTILEMAP");
+                break;
+            }
+
+            case Opcode.DrawTileLayer:
+            {
+                var yType = Pop();
+                var xType = Pop();
+                var layerIndexType = Pop();
+                var tilemapType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilemapType, TypeSymbol.Tilemap, "тайловая карта DRAWTILELAYER");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, layerIndexType, "номер слоя DRAWTILELAYER");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWTILELAYER");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWTILELAYER");
+                break;
+            }
+
+            case Opcode.SetMapTile:
+            {
+                var flagsType = Pop();
+                var tileIndexType = Pop();
+                var tilesetIndexType = Pop();
+                var rowType = Pop();
+                var columnType = Pop();
+                var layerIndexType = Pop();
+                var tilemapType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilemapType, TypeSymbol.Tilemap, "тайловая карта SETMAPTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, layerIndexType, "номер слоя SETMAPTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, columnType, "столбец SETMAPTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, rowType, "строка SETMAPTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, tilesetIndexType, "номер тайлсета SETMAPTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, tileIndexType, "номер тайла SETMAPTILE");
+                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, flagsType, "флаги SETMAPTILE");
                 break;
             }
 
@@ -3605,6 +3668,22 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.DrawSprite:
                 popCount = instruction.GetOperand(0) == 0 ? 4 : 6;
+                return true;
+
+            case Opcode.DrawTile:
+                popCount = 4;
+                return true;
+
+            case Opcode.DrawTilemap:
+                popCount = 3;
+                return true;
+
+            case Opcode.DrawTileLayer:
+                popCount = 4;
+                return true;
+
+            case Opcode.SetMapTile:
+                popCount = 7;
                 return true;
 
             case Opcode.JumpIfTrue:

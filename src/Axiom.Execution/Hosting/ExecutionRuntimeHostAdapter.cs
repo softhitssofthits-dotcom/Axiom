@@ -349,6 +349,12 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadSprite(path, frameWidth, frameHeight) : null;
 
+    public RuntimeTilesetValue? LoadTileset(string path, int tileWidth, int tileHeight, int margin = 0, int spacing = 0) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadTileset(path, tileWidth, tileHeight, margin, spacing) : null;
+
+    public RuntimeTilemapValue? LoadTilemap(string path) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadTilemap(path) : null;
+
     public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -362,6 +368,14 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
             graphicsHost.DrawSprite(sprite, frame, x, y, width, height);
+        }
+    }
+
+    public void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawImageRegion(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
         }
     }
 

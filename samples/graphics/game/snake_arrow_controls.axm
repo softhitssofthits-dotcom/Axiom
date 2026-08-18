@@ -1,0 +1,261 @@
+﻿' Змейка для графического SCREEN.
+' Стрелки меняют направление, ESC завершает игру, пробел после проигрыша начинает заново.
+
+SCREEN 3, , 1, 0
+
+DIM cellSize AS INTEGER = 12
+DIM cols AS INTEGER = 26
+DIM rows AS INTEGER = 18
+DIM maxSegments AS INTEGER = 468
+DIM boardWidth AS INTEGER = cols * cellSize
+DIM boardHeight AS INTEGER = rows * cellSize
+DIM leftMargin AS INTEGER = (SCREENWIDTH() - boardWidth) \ 2
+DIM topMargin AS INTEGER = 44
+
+DIM snakeCol(1 TO 468) AS INTEGER
+DIM snakeRow(1 TO 468) AS INTEGER
+
+DIM snakeLength AS INTEGER
+DIM dirX AS INTEGER
+DIM dirY AS INTEGER
+DIM nextDirX AS INTEGER
+DIM nextDirY AS INTEGER
+DIM foodCol AS INTEGER
+DIM foodRow AS INTEGER
+DIM score AS INTEGER
+DIM bestScore AS INTEGER = 0
+DIM frameDelayMs AS INTEGER = 70
+DIM running AS BOOLEAN = TRUE
+DIM gameOver AS BOOLEAN = FALSE
+DIM won AS BOOLEAN = FALSE
+DIM hudForceRedraw AS BOOLEAN = TRUE
+DIM hudShownScore AS INTEGER = -1
+DIM hudShownBestScore AS INTEGER = -1
+DIM hudShownLength AS INTEGER = -1
+DIM hudShownGameOver AS BOOLEAN = TRUE
+DIM hudShownWon AS BOOLEAN = TRUE
+
+InitGame()
+
+DO WHILE running
+    IF KEYPRESS("ESC") THEN
+        running = FALSE
+    ELSE
+        IF gameOver THEN
+            IF KEYPRESS("SPACE") THEN
+                InitGame()
+            END IF
+        ELSE
+            ReadDirection()
+            StepSnake()
+        END IF
+
+        DrawFrame()
+        SLEEP frameDelayMs
+    END IF
+LOOP
+
+SCREEN 0
+PRINT "Змейка закрыта."
+PRINT "Лучший счёт:"; bestScore
+
+SUB InitGame()
+    DIM initStartCol AS INTEGER = cols \ 2
+    DIM initStartRow AS INTEGER = rows \ 2
+
+    snakeLength = 4
+    snakeCol(1) = initStartCol
+    snakeRow(1) = initStartRow
+    snakeCol(2) = initStartCol - 1
+    snakeRow(2) = initStartRow
+    snakeCol(3) = initStartCol - 2
+    snakeRow(3) = initStartRow
+    snakeCol(4) = initStartCol - 3
+    snakeRow(4) = initStartRow
+
+    dirX = 1
+    dirY = 0
+    nextDirX = 1
+    nextDirY = 0
+    score = 0
+    gameOver = FALSE
+    won = FALSE
+    hudForceRedraw = TRUE
+    hudShownScore = -1
+    hudShownBestScore = -1
+    hudShownLength = -1
+    hudShownGameOver = TRUE
+    hudShownWon = TRUE
+
+    SpawnFood()
+END SUB
+
+SUB ReadDirection()
+    ' Для живого управления читаем удержание стрелок, а не очередь нажатий.
+    IF KEYPRESS("UP") AND dirY = 0 THEN
+        nextDirX = 0
+        nextDirY = -1
+    END IF
+
+    IF KEYPRESS("DOWN") AND dirY = 0 THEN
+        nextDirX = 0
+        nextDirY = 1
+    END IF
+
+    IF KEYPRESS("LEFT") AND dirX = 0 THEN
+        nextDirX = -1
+        nextDirY = 0
+    END IF
+
+    IF KEYPRESS("RIGHT") AND dirX = 0 THEN
+        nextDirX = 1
+        nextDirY = 0
+    END IF
+END SUB
+
+SUB StepSnake()
+    DIM stepNewCol AS INTEGER
+    DIM stepNewRow AS INTEGER
+    DIM stepWillGrow AS BOOLEAN = FALSE
+    DIM stepCollisionLength AS INTEGER
+
+    dirX = nextDirX
+    dirY = nextDirY
+
+    stepNewCol = snakeCol(1) + dirX
+    stepNewRow = snakeRow(1) + dirY
+
+    IF stepNewCol < 1 OR stepNewCol > cols OR stepNewRow < 1 OR stepNewRow > rows THEN
+        gameOver = TRUE
+        RETURN
+    END IF
+
+    IF stepNewCol = foodCol AND stepNewRow = foodRow THEN
+        stepWillGrow = TRUE
+        stepCollisionLength = snakeLength
+    ELSE
+        stepCollisionLength = snakeLength - 1
+    END IF
+
+    IF HitsSnake(stepNewCol, stepNewRow, stepCollisionLength) THEN
+        gameOver = TRUE
+        RETURN
+    END IF
+
+    IF stepWillGrow AND snakeLength < maxSegments THEN
+        snakeLength = snakeLength + 1
+    END IF
+
+    FOR stepShiftIndex = snakeLength TO 2 STEP -1
+        snakeCol(stepShiftIndex) = snakeCol(stepShiftIndex - 1)
+        snakeRow(stepShiftIndex) = snakeRow(stepShiftIndex - 1)
+    NEXT
+
+    snakeCol(1) = stepNewCol
+    snakeRow(1) = stepNewRow
+
+    IF stepWillGrow THEN
+        score = score + 1
+
+        IF score > bestScore THEN
+            bestScore = score
+        END IF
+
+        IF snakeLength >= maxSegments THEN
+            won = TRUE
+            gameOver = TRUE
+        ELSE
+            SpawnFood()
+        END IF
+    END IF
+END SUB
+
+SUB SpawnFood()
+    DIM spawnPlaced AS BOOLEAN = FALSE
+    DIM spawnTryCol AS INTEGER
+    DIM spawnTryRow AS INTEGER
+
+    DO WHILE NOT spawnPlaced
+        spawnTryCol = INT(RND() * cols) + 1
+        spawnTryRow = INT(RND() * rows) + 1
+
+        IF NOT HitsSnake(spawnTryCol, spawnTryRow, snakeLength) THEN
+            foodCol = spawnTryCol
+            foodRow = spawnTryRow
+            spawnPlaced = TRUE
+        END IF
+    LOOP
+END SUB
+
+FUNCTION HitsSnake(hitCheckCol AS INTEGER, hitCheckRow AS INTEGER, hitSegmentCount AS INTEGER) AS BOOLEAN
+    FOR hitSegmentIndex = 1 TO hitSegmentCount
+        IF snakeCol(hitSegmentIndex) = hitCheckCol AND snakeRow(hitSegmentIndex) = hitCheckRow THEN
+            RETURN TRUE
+        END IF
+    NEXT
+
+    RETURN FALSE
+END FUNCTION
+
+SUB DrawFrame()
+    LINE (0, 0)-(SCREENWIDTH() - 1, SCREENHEIGHT() - 1), 0, BF
+    UpdateHud()
+
+    LINE (leftMargin - 2, topMargin - 2)-(leftMargin + boardWidth + 1, topMargin + boardHeight + 1), 9, B
+    LINE (leftMargin, topMargin)-(leftMargin + boardWidth - 1, topMargin + boardHeight - 1), 0, BF
+
+    DrawBlock(foodCol, foodRow, 12)
+
+    FOR drawSegmentIndex = snakeLength TO 2 STEP -1
+        DrawBlock(snakeCol(drawSegmentIndex), snakeRow(drawSegmentIndex), 2)
+    NEXT
+
+    DrawBlock(snakeCol(1), snakeRow(1), 10)
+
+    PCOPY 1, 0
+END SUB
+
+SUB DrawBlock(blockCol AS INTEGER, blockRow AS INTEGER, blockColorIndex AS INTEGER)
+    DIM blockX1 AS INTEGER = leftMargin + (blockCol - 1) * cellSize
+    DIM blockY1 AS INTEGER = topMargin + (blockRow - 1) * cellSize
+    DIM blockX2 AS INTEGER = blockX1 + cellSize - 2
+    DIM blockY2 AS INTEGER = blockY1 + cellSize - 2
+
+    LINE (blockX1, blockY1)-(blockX2, blockY2), (blockColorIndex), BF
+END SUB
+
+SUB UpdateHud()
+    COLOR 15, 0
+
+    IF hudForceRedraw THEN
+        LOCATE 1, 1
+        PRINT "Змейка в SCREEN: стрелки — движение, ESC — выход"
+    END IF
+
+    IF hudForceRedraw OR hudShownScore <> score OR hudShownBestScore <> bestScore OR hudShownLength <> snakeLength THEN
+        LOCATE 2, 1
+        PRINT "Счёт:"; score; "  Лучший:"; bestScore; "  Длина:"; snakeLength; "   "
+        hudShownScore = score
+        hudShownBestScore = bestScore
+        hudShownLength = snakeLength
+    END IF
+
+    IF hudForceRedraw OR hudShownGameOver <> gameOver OR hudShownWon <> won THEN
+        LOCATE 4, 1
+
+        IF gameOver THEN
+            IF won THEN
+                PRINT "Поле заполнено. Пробел — новая игра.                        "
+            ELSE
+                PRINT "Столкновение. Пробел — новая игра.                          "
+            END IF
+        ELSE
+            PRINT "Ведите змейку к красной еде и не врезайтесь в стены и себя. "
+        END IF
+
+        hudShownGameOver = gameOver
+        hudShownWon = won
+    END IF
+
+    hudForceRedraw = FALSE
+END SUB

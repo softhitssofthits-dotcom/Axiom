@@ -295,7 +295,7 @@ public sealed partial class BytecodeVm
 
         if (array.Rank != 1)
         {
-            ReportRuntimeDiagnostic(BuiltinArgumentCode, "PALETTE USING: ожидается одномерный массив.", location);
+            ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, "PALETTE USING: ожидается одномерный массив.", location);
             return;
         }
 
@@ -515,7 +515,7 @@ public sealed partial class BytecodeVm
         }
         catch (GraphicsDrawException exception)
         {
-            ReportRuntimeDiagnostic(BuiltinArgumentCode, $"DRAW: {exception.Message}", location);
+            ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, $"DRAW: {exception.Message}", location);
             throw new RuntimeFailureException();
         }
     }
@@ -753,6 +753,162 @@ public sealed partial class BytecodeVm
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
+    private void ExecuteDrawTileInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWTILE", location);
+        }
+
+        var stack = frame.EvaluationStack;
+        var yValue = stack.PopUnchecked();
+        var xValue = stack.PopUnchecked();
+        var tileIndexValue = stack.PopUnchecked();
+        var tilesetValue = stack.PopUnchecked();
+        var y = TryGetFastWholeNumber(yValue, out var fastY) ? fastY : yValue.AsLong();
+        var x = TryGetFastWholeNumber(xValue, out var fastX) ? fastX : xValue.AsLong();
+        var tileIndex = TryGetFastWholeNumber(tileIndexValue, out var fastTileIndex) ? fastTileIndex : tileIndexValue.AsLong();
+        if (tilesetValue.Type != TypeSymbol.Tileset || tilesetValue.Value is not RuntimeTilesetValue tileset)
+        {
+            RequireTileset("DRAWTILE", tilesetValue, location);
+            return;
+        }
+
+        if (!GraphicsCoordinateValidation.IsSupportedCoordinate(x)
+            || !GraphicsCoordinateValidation.IsSupportedCoordinate(y))
+        {
+            ValidateCanvasPoint("DRAWTILE", x, y, location);
+            return;
+        }
+
+        if (tileIndex < 1 || tileIndex > tileset.TileCount || tileIndex > int.MaxValue)
+        {
+            ValidateTileIndex(tileset, tileIndex, location);
+            return;
+        }
+
+        _host.DrawImageRegion(
+            tileset.Image,
+            tileset.GetTileLeft((int)tileIndex),
+            tileset.GetTileTop((int)tileIndex),
+            tileset.TileWidth,
+            tileset.TileHeight,
+            x,
+            y,
+            tileset.TileWidth,
+            tileset.TileHeight);
+        _host.SetGraphicsCurrentPosition(x, y);
+    }
+
+    private void ExecuteDrawTilemapInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWTILEMAP", location);
+        }
+
+        var stack = frame.EvaluationStack;
+        var yValue = stack.PopUnchecked();
+        var xValue = stack.PopUnchecked();
+        var tilemapValue = stack.PopUnchecked();
+        var y = TryGetFastWholeNumber(yValue, out var fastY) ? fastY : yValue.AsLong();
+        var x = TryGetFastWholeNumber(xValue, out var fastX) ? fastX : xValue.AsLong();
+        var tilemap = RequireTilemap("DRAWTILEMAP", tilemapValue, location);
+        if (!GraphicsCoordinateValidation.IsSupportedCoordinate(x)
+            || !GraphicsCoordinateValidation.IsSupportedCoordinate(y))
+        {
+            ValidateCanvasPoint("DRAWTILEMAP", x, y, location);
+        }
+
+        foreach (var layer in tilemap.Layers)
+        {
+            if (layer.IsTileLayer && layer.Visible)
+            {
+                DrawTilemapLayer(tilemap, layer, x, y);
+            }
+        }
+    }
+
+    private void ExecuteDrawTileLayerInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        if (!_host.IsCanvasActive)
+        {
+            RequireCanvasActive("DRAWTILELAYER", location);
+        }
+
+        var stack = frame.EvaluationStack;
+        var yValue = stack.PopUnchecked();
+        var xValue = stack.PopUnchecked();
+        var layerIndexValue = stack.PopUnchecked();
+        var tilemapValue = stack.PopUnchecked();
+        var y = TryGetFastWholeNumber(yValue, out var fastY) ? fastY : yValue.AsLong();
+        var x = TryGetFastWholeNumber(xValue, out var fastX) ? fastX : xValue.AsLong();
+        var layerIndex = TryGetFastWholeNumber(layerIndexValue, out var fastLayerIndex) ? fastLayerIndex : layerIndexValue.AsLong();
+        var tilemap = RequireTilemap("DRAWTILELAYER", tilemapValue, location);
+        if (!GraphicsCoordinateValidation.IsSupportedCoordinate(x)
+            || !GraphicsCoordinateValidation.IsSupportedCoordinate(y))
+        {
+            ValidateCanvasPoint("DRAWTILELAYER", x, y, location);
+        }
+
+        if (layerIndex < 1 || layerIndex > tilemap.LayerCount || layerIndex > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("DRAWTILELAYER", "layerIndex", "должен указывать существующий слой карты.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var layer = tilemap.GetLayer1Based((int)layerIndex);
+        if (!layer.IsTileLayer)
+        {
+            ReportInvalidRuntimeState("DRAWTILELAYER: объектный слой нельзя рисовать как тайловый слой.", location);
+            throw new RuntimeFailureException();
+        }
+
+        DrawTilemapLayer(tilemap, layer, x, y);
+    }
+
+    private void ExecuteSetMapTileInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var stack = frame.EvaluationStack;
+        var flags = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var tileIndex = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var tilesetIndex = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var row = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var column = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var layerIndex = GetWholeNumberUnchecked(stack.PopUnchecked());
+        var tilemap = RequireTilemap("SETMAPTILE", stack.PopUnchecked(), location);
+        SetMapTileCell(tilemap, layerIndex, column, row, tilesetIndex, tileIndex, flags, location);
+    }
+
+    private void DrawTilemapLayer(RuntimeTilemapValue tilemap, RuntimeTilemapLayer layer, long mapX, long mapY)
+    {
+        if (!TilemapRenderSupport.TryCreateVisibleRange(_host, tilemap, layer, mapX, mapY, out var range))
+        {
+            return;
+        }
+
+        TilemapRenderSupport.VisitCells(
+            tilemap.RenderOrder,
+            range,
+            (column, row) =>
+            {
+                var cell = layer.GetCell(column, row);
+                if (cell.IsEmpty)
+                {
+                    return;
+                }
+
+                var tileset = tilemap.GetTileset1Based(cell.TilesetIndex).Tileset;
+                var tileX = checked(range.AdjustedOriginX + ((long)column * tilemap.TileWidth) + tileset.TileOffsetX);
+                var tileY = checked(range.AdjustedOriginY + ((long)row * tilemap.TileHeight) + tileset.TileOffsetY);
+                TilemapRenderSupport.DrawTile(_host, tileset, cell.TileIndex, cell.Flags, tileX, tileY, _tileTransformCache);
+            });
+    }
+
     private RuntimeValue EvaluateLoadImageBuiltin(string path, TextLocation location)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -793,6 +949,48 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromSprite(sprite);
     }
 
+    private RuntimeValue EvaluateLoadTilesetBuiltin(string path, long tileWidth, long tileHeight, long margin, long spacing, TextLocation location)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            ReportBuiltInArgumentError("LOADTILESET", "path", "не должен быть пустым.", location);
+            throw new RuntimeFailureException();
+        }
+
+        ValidateTilesetGridParameters(tileWidth, tileHeight, margin, spacing, location);
+        var tileset = _host.LoadTileset(
+            path,
+            ToInt32Checked(tileWidth, location, "Ширина тайла LOADTILESET"),
+            ToInt32Checked(tileHeight, location, "Высота тайла LOADTILESET"),
+            ToInt32Checked(margin, location, "Отступ LOADTILESET"),
+            ToInt32Checked(spacing, location, "Интервал LOADTILESET"));
+        if (tileset is null)
+        {
+            ReportInvalidRuntimeState($"LOADTILESET: не удалось загрузить тайлсет '{path}'.", location);
+            throw new RuntimeFailureException();
+        }
+
+        return RuntimeValue.FromTileset(tileset);
+    }
+
+    private RuntimeValue EvaluateLoadTilemapBuiltin(string path, TextLocation location)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            ReportBuiltInArgumentError("LOADTILEMAP", "path", "не должен быть пустым.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var tilemap = _host.LoadTilemap(path);
+        if (tilemap is null)
+        {
+            ReportInvalidRuntimeState($"LOADTILEMAP: не удалось загрузить тайловую карту '{path}'.", location);
+            throw new RuntimeFailureException();
+        }
+
+        return RuntimeValue.FromTilemap(tilemap);
+    }
+
     private RuntimeValue EvaluateTextWidthBuiltin(string text, TextLocation location)
     {
         RequireCanvasActive("TEXTWIDTH", location);
@@ -829,6 +1027,29 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
+    private RuntimeTilesetValue RequireTileset(string operationName, RuntimeValue value, TextLocation location)
+    {
+        var tileset = value.AsTileset();
+        if (tileset is not null && tileset.HasTiles)
+        {
+            return tileset;
+        }
+
+        ReportInvalidRuntimeState($"{operationName}: значение TILESET пустое или не содержит доступных тайлов.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private RuntimeTilemapValue RequireTilemap(string operationName, RuntimeValue value, TextLocation location)
+    {
+        if (value.Type == TypeSymbol.Tilemap && value.Value is RuntimeTilemapValue tilemap)
+        {
+            return tilemap;
+        }
+
+        ReportInvalidRuntimeState($"{operationName}: значение TILEMAP пустое.", location);
+        throw new RuntimeFailureException();
+    }
+
     private static int GetImageWidth(RuntimeValue value) => value.AsImage()?.Width ?? 0;
 
     private static int GetImageHeight(RuntimeValue value) => value.AsImage()?.Height ?? 0;
@@ -838,6 +1059,124 @@ public sealed partial class BytecodeVm
     private static int GetSpriteHeight(RuntimeValue value) => value.AsSprite()?.FrameHeight ?? 0;
 
     private static int GetSpriteCount(RuntimeValue value) => value.AsSprite()?.FrameCount ?? 0;
+
+    private static int GetTileCount(RuntimeValue value) => value.AsTileset()?.TileCount ?? 0;
+
+    private static int GetTileWidth(RuntimeValue value) => value.AsTileset()?.TileWidth ?? 0;
+
+    private static int GetTileHeight(RuntimeValue value) => value.AsTileset()?.TileHeight ?? 0;
+
+    private static int GetMapWidth(RuntimeValue value) => value.AsTilemap()?.Width ?? 0;
+
+    private static int GetMapHeight(RuntimeValue value) => value.AsTilemap()?.Height ?? 0;
+
+    private static int GetMapPixelWidth(RuntimeValue value) => value.AsTilemap()?.PixelWidth ?? 0;
+
+    private static int GetMapPixelHeight(RuntimeValue value) => value.AsTilemap()?.PixelHeight ?? 0;
+
+    private static int GetMapTileWidth(RuntimeValue value) => value.AsTilemap()?.TileWidth ?? 0;
+
+    private static int GetMapTileHeight(RuntimeValue value) => value.AsTilemap()?.TileHeight ?? 0;
+
+    private static int GetMapLayerCount(RuntimeValue value) => value.AsTilemap()?.LayerCount ?? 0;
+
+    private static int GetMapTile(RuntimeValue value, long layerIndex, long column, long row)
+    {
+        return TryGetMapCell(value.AsTilemap(), layerIndex, column, row, out var cell) ? cell.TileIndex : 0;
+    }
+
+    private static int GetMapTileset(RuntimeValue value, long layerIndex, long column, long row)
+    {
+        return TryGetMapCell(value.AsTilemap(), layerIndex, column, row, out var cell) ? cell.TilesetIndex : 0;
+    }
+
+    private static int GetMapTileFlags(RuntimeValue value, long layerIndex, long column, long row)
+    {
+        return TryGetMapCell(value.AsTilemap(), layerIndex, column, row, out var cell) ? (int)cell.Flags : 0;
+    }
+
+    private static bool TryGetMapCell(RuntimeTilemapValue? tilemap, long layerIndex, long column, long row, out RuntimeTilemapCell cell)
+    {
+        cell = default;
+        if (tilemap is null ||
+            layerIndex < 1 ||
+            layerIndex > tilemap.LayerCount ||
+            column < 1 ||
+            row < 1)
+        {
+            return false;
+        }
+
+        var layer = tilemap.Layers[checked((int)layerIndex) - 1];
+        if (!layer.IsTileLayer ||
+            column > layer.Width ||
+            row > layer.Height)
+        {
+            return false;
+        }
+
+        cell = layer.GetCell(checked((int)column) - 1, checked((int)row) - 1);
+        return !cell.IsEmpty;
+    }
+
+    private void SetMapTileCell(
+        RuntimeTilemapValue tilemap,
+        long layerIndex,
+        long column,
+        long row,
+        long tilesetIndex,
+        long tileIndex,
+        long flags,
+        TextLocation location)
+    {
+        if (layerIndex < 1 || layerIndex > tilemap.LayerCount || layerIndex > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("SETMAPTILE", "layerIndex", "должен указывать существующий слой карты.", location);
+            throw new RuntimeFailureException();
+        }
+
+        var layer = tilemap.GetLayer1Based((int)layerIndex);
+        if (!layer.IsTileLayer)
+        {
+            ReportInvalidRuntimeState("SETMAPTILE получил объектный слой вместо тайлового слоя.", location);
+            throw new RuntimeFailureException();
+        }
+
+        if (column < 1 || column > layer.Width || row < 1 || row > layer.Height || column > int.MaxValue || row > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("SETMAPTILE", "column/row", "должны указывать существующую ячейку тайлового слоя.", location);
+            throw new RuntimeFailureException();
+        }
+
+        if (flags is < 0 or > 7)
+        {
+            ReportBuiltInArgumentError("SETMAPTILE", "flags", "должен быть битовой маской 0..7.", location);
+            throw new RuntimeFailureException();
+        }
+
+        if (tilesetIndex == 0 && tileIndex == 0)
+        {
+            layer.SetCell((int)column - 1, (int)row - 1, default);
+            return;
+        }
+
+        if (tilesetIndex < 1 || tilesetIndex > tilemap.TilesetCount || tilesetIndex > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("SETMAPTILE", "tilesetIndex", "должен указывать существующий тайлсет карты или быть 0 вместе с tileIndex.", location);
+            throw new RuntimeFailureException();
+        }
+
+        if (tileIndex < 1 || tileIndex > tilemap.GetTileset1Based((int)tilesetIndex).Tileset.TileCount || tileIndex > int.MaxValue)
+        {
+            ReportBuiltInArgumentError("SETMAPTILE", "tileIndex", "должен указывать существующий тайл выбранного тайлсета или быть 0 вместе с tilesetIndex.", location);
+            throw new RuntimeFailureException();
+        }
+
+        layer.SetCell(
+            (int)column - 1,
+            (int)row - 1,
+            new RuntimeTilemapCell((int)tilesetIndex, (int)tileIndex, (RuntimeTilemapFlipFlags)flags));
+    }
 
     private int EvaluateRgbBuiltin(long red, long green, long blue, TextLocation location)
     {
@@ -881,6 +1220,21 @@ public sealed partial class BytecodeVm
 
         ReportBuiltInArgumentError("DRAWSPRITE", "width/height", "должны быть положительными целыми значениями.", location);
         throw new RuntimeFailureException();
+    }
+
+    private void ValidateTilesetGridParameters(long tileWidth, long tileHeight, long margin, long spacing, TextLocation location)
+    {
+        if (tileWidth <= 0 || tileHeight <= 0)
+        {
+            ReportBuiltInArgumentError("LOADTILESET", "tileWidth/tileHeight", "должны быть положительными целыми значениями.", location);
+            throw new RuntimeFailureException();
+        }
+
+        if (margin < 0 || spacing < 0)
+        {
+            ReportBuiltInArgumentError("LOADTILESET", "margin/spacing", "должны быть неотрицательными целыми значениями.", location);
+            throw new RuntimeFailureException();
+        }
     }
 
     private static bool IsRgbComponent(long value) => value is >= 0 and <= 255;
@@ -949,6 +1303,17 @@ public sealed partial class BytecodeVm
         }
 
         ReportBuiltInArgumentError("DRAWSPRITE", "frame", "должен указывать существующий кадр спрайта.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private void ValidateTileIndex(RuntimeTilesetValue tileset, long tileIndex, TextLocation location)
+    {
+        if (tileIndex >= 1 && tileIndex <= tileset.TileCount)
+        {
+            return;
+        }
+
+        ReportBuiltInArgumentError("DRAWTILE", "tileIndex", "должен указывать существующий тайл тайлсета.", location);
         throw new RuntimeFailureException();
     }
 
@@ -1299,7 +1664,7 @@ public sealed partial class BytecodeVm
             return;
         }
 
-        ReportRuntimeDiagnostic("MB3010", $"{operationName} требует активного графического режима SCREEN.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.MissingGraphicsMode, $"{operationName} требует активного графического режима SCREEN.", location);
         throw new RuntimeFailureException();
     }
 
@@ -1310,7 +1675,7 @@ public sealed partial class BytecodeVm
             return;
         }
 
-        ReportRuntimeDiagnostic("MB3010", $"{operationName} требует активного графического режима CANVAS.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.MissingGraphicsMode, $"{operationName} требует активного графического режима CANVAS.", location);
         throw new RuntimeFailureException();
     }
 
@@ -1321,7 +1686,7 @@ public sealed partial class BytecodeVm
             return;
         }
 
-        ReportRuntimeDiagnostic("MB3010", $"{operationName} требует активного графического режима SCREEN или CANVAS.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.MissingGraphicsMode, $"{operationName} требует активного графического режима SCREEN или CANVAS.", location);
         throw new RuntimeFailureException();
     }
 }

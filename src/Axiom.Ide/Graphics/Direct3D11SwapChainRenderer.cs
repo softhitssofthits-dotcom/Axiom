@@ -17,6 +17,7 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
     private ID3D11RenderTargetView? _renderTargetView;
     private int _width;
     private int _height;
+    private bool _disposed;
 
     public Direct3D11SwapChainRenderer(IntPtr hwnd, int width, int height)
     {
@@ -169,11 +170,18 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
 
     public void Dispose()
     {
-        _renderTargetView?.Dispose();
-        _backBuffer?.Dispose();
-        _swapChain.Dispose();
-        _context.Dispose();
-        _device.Dispose();
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        try { _renderTargetView?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _backBuffer?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _swapChain.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _context.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _device.Dispose(); } catch { /* COM cleanup best-effort */ }
     }
 
     private void CreateRenderTargetView()

@@ -195,6 +195,7 @@ powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1
 
 - `PROJECT.md` — описание проекта и ограничений
 - `docs/SPECIFICATION3.md` — активная спецификация языка и среды
+- `docs/TILEMAP_CONTRACT.md` — отдельный полный договор тайловой карты поверх слоя современной графики
 - `docs/SPECIFICATION2.md` — историческая вторая часть спецификации
 - `docs/SPECIFICATION.md` — историческая первая часть спецификации
 - `docs/ARCHITECTURE.md` — техническая структура
@@ -203,7 +204,7 @@ powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1
 - `docs/PLANS3.md` — историческая третья часть плана
 - `docs/PLANS2.md` — историческая вторая часть плана
 - `docs/PLANS.md` — историческая первая часть плана
-- `docs/WORKLOG4.md` — активный журнал состояния
+- `docs/WORKLOG5.md` — активный журнал состояния
 - `docs/WORKLOG3.md` — историческая третья часть журнала (Session 310-480)
 - `docs/WORKLOG2.md` — историческая вторая часть журнала (Session 169-309)
 - `docs/WORKLOG.md` — историческая первая часть журнала до Session 168 включительно
@@ -234,7 +235,7 @@ powershell -ExecutionPolicy Bypass -File scripts/ai-context.ps1 -Topic CANVAS,RG
 - `docs/SPECIFICATION3.md`
 - `docs/ARCHITECTURE.md`
 - `docs/PLANS4.md`
-- `docs/WORKLOG4.md`
+- `docs/WORKLOG5.md`
 - `docs/agent/`
 
 Связанные документы:

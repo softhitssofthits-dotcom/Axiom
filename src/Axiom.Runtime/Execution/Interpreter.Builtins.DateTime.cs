@@ -1,63 +1,60 @@
 using System.Globalization;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
-    private const string CanonicalDateFormat = "yyyy-MM-dd";
-    private const string CanonicalTimeFormat = "HH:mm:ss";
-    private const string CanonicalDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-
     private RuntimeValue EvaluateDateBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToString(CanonicalDateFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromString(_host.GetLocalNow().ToString(BuiltinDateTimeHelpers.CanonicalDateFormat, CultureInfo.InvariantCulture));
     }
 
     private RuntimeValue EvaluateDateBuiltin(BoundCallExpression expression, string timeZoneId)
     {
         var timeZone = ResolveTimeZoneArgument(expression, "DATE", "timeZone", 0, timeZoneId);
         var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
-        return RuntimeValue.FromString(FormatCanonicalDate(DateOnly.FromDateTime(currentDateTime)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(DateOnly.FromDateTime(currentDateTime)));
     }
 
     private RuntimeValue EvaluateTimeBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToString(CanonicalTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromString(_host.GetLocalNow().ToString(BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture));
     }
 
     private RuntimeValue EvaluateTimeBuiltin(BoundCallExpression expression, string timeZoneId)
     {
         var timeZone = ResolveTimeZoneArgument(expression, "TIME", "timeZone", 0, timeZoneId);
         var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
-        return RuntimeValue.FromString(FormatCanonicalTime(TimeOnly.FromDateTime(currentDateTime)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTime(TimeOnly.FromDateTime(currentDateTime)));
     }
 
     private RuntimeValue EvaluateNowBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToString(CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromString(_host.GetLocalNow().ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
     }
 
     private RuntimeValue EvaluateNowBuiltin(BoundCallExpression expression, string timeZoneId)
     {
         var timeZone = ResolveTimeZoneArgument(expression, "NOW", "timeZone", 0, timeZoneId);
         var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
-        return RuntimeValue.FromString(FormatCanonicalDateTime(currentDateTime));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(currentDateTime));
     }
 
     private RuntimeValue EvaluateUtcDateBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(CanonicalDateFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(BuiltinDateTimeHelpers.CanonicalDateFormat, CultureInfo.InvariantCulture));
     }
 
     private RuntimeValue EvaluateUtcTimeBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(CanonicalTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture));
     }
 
     private RuntimeValue EvaluateUtcNowBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
     }
 
     private RuntimeValue EvaluateTimerBuiltin()
@@ -67,13 +64,13 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateDateSerialBuiltin(BoundCallExpression expression, int year, int month, int day)
     {
-        EnsureDateSerialYear(expression, year);
-        EnsureDateSerialMonth(expression, month);
+        EnsureCalendarYearArgument(expression, "DATESERIAL", "year", 0, year);
+        EnsureCalendarMonthArgument(expression, "DATESERIAL", "month", 1, month);
         EnsureDateSerialDay(expression, day);
 
         try
         {
-            return RuntimeValue.FromString(FormatCanonicalDate(new DateOnly(year, month, day)));
+            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(year, month, day)));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -92,7 +89,7 @@ public sealed partial class Interpreter
         EnsureTimeSerialMinute(expression, minute);
         EnsureTimeSerialSecond(expression, second);
 
-        return RuntimeValue.FromString(FormatCanonicalTime(new TimeOnly(hour, minute, second)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTime(new TimeOnly(hour, minute, second)));
     }
 
     private RuntimeValue EvaluateYearBuiltin(BoundCallExpression expression, string value)
@@ -107,8 +104,8 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateMonthNameBuiltin(BoundCallExpression expression, int month)
     {
-        EnsureMonthNameMonth(expression, month);
-        return RuntimeValue.FromString(CanonicalMonthNames[month - 1]);
+        EnsureCalendarMonthArgument(expression, "MONTHNAME", "month", 0, month);
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.CanonicalMonthNames[month - 1]);
     }
 
     private RuntimeValue EvaluateDayBuiltin(BoundCallExpression expression, string value)
@@ -133,13 +130,13 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateWeekdayBuiltin(BoundCallExpression expression, string value)
     {
-        return RuntimeValue.FromInteger(GetMondayFirstWeekdayNumber(ParseCanonicalDateArgument(expression, "WEEKDAY", value)));
+        return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.GetMondayFirstWeekdayNumber(ParseCanonicalDateArgument(expression, "WEEKDAY", value)));
     }
 
     private RuntimeValue EvaluateWeekdayNameBuiltin(BoundCallExpression expression, int weekday)
     {
         EnsureWeekdayNameWeekday(expression, weekday);
-        return RuntimeValue.FromString(CanonicalWeekdayNamesMondayFirst[weekday - 1]);
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.CanonicalWeekdayNamesMondayFirst[weekday - 1]);
     }
 
     private RuntimeValue EvaluateDateAddBuiltin(BoundCallExpression expression, string interval, int number, string value)
@@ -149,7 +146,7 @@ public sealed partial class Interpreter
             ? ParseCanonicalDateBasedArgument(expression, "DATEADD", "value", 2, value)
             : ParseCanonicalTimeBasedArgument(expression, "DATEADD", "value", 2, value);
 
-        return RuntimeValue.FromString(FormatCanonicalTemporal(AddTemporalValue(expression, "DATEADD", temporal, intervalToken.Kind, number)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTemporal(AddTemporalValue(expression, "DATEADD", temporal, intervalToken.Kind, number)));
     }
 
     private RuntimeValue EvaluateDateDiffBuiltin(BoundCallExpression expression, string interval, string fromValue, string toValue)
@@ -160,7 +157,7 @@ public sealed partial class Interpreter
         {
             var fromTemporal = ParseCanonicalDateBasedArgument(expression, "DATEDIFF", "fromValue", 1, fromValue);
             var toTemporal = ParseCanonicalDateBasedArgument(expression, "DATEDIFF", "toValue", 2, toValue);
-            return RuntimeValue.FromLong(EvaluateDateBasedDiff(intervalToken.Kind, fromTemporal.Date, toTemporal.Date));
+            return RuntimeValue.FromLong(BuiltinDateTimeHelpers.EvaluateDateBasedDiff(intervalToken.Kind, fromTemporal.Date, toTemporal.Date));
         }
 
         var fromTimeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEDIFF", "fromValue", 1, fromValue);
@@ -175,26 +172,26 @@ public sealed partial class Interpreter
         if (partToken.IsDateBased)
         {
             var temporal = ParseCanonicalDateBasedArgument(expression, "DATEPART", "value", 1, value);
-            return RuntimeValue.FromInteger(EvaluateDatePart(partToken.Kind, temporal.Date));
+            return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateDatePart(partToken.Kind, temporal.Date));
         }
 
         var timeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEPART", "value", 1, value);
-        return RuntimeValue.FromInteger(EvaluateTimePart(partToken.Kind, timeTemporal.Time));
+        return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateTimePart(partToken.Kind, timeTemporal.Time));
     }
 
     private RuntimeValue EvaluateDateValueBuiltin(BoundCallExpression expression, string value)
     {
-        return RuntimeValue.FromString(FormatCanonicalDate(ParseCanonicalDateBasedArgument(expression, "DATEVALUE", "value", 0, value).Date));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(ParseCanonicalDateBasedArgument(expression, "DATEVALUE", "value", 0, value).Date));
     }
 
     private RuntimeValue EvaluateTimeValueBuiltin(BoundCallExpression expression, string value)
     {
-        return RuntimeValue.FromString(FormatCanonicalTime(ParseCanonicalTimeBasedArgument(expression, "TIMEVALUE", "value", 0, value).Time));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTime(ParseCanonicalTimeBasedArgument(expression, "TIMEVALUE", "value", 0, value).Time));
     }
 
     private RuntimeValue EvaluateIsDateBuiltin(string value)
     {
-        return RuntimeValue.FromBoolean(IsCanonicalTemporalText(value));
+        return RuntimeValue.FromBoolean(BuiltinDateTimeHelpers.IsCanonicalTemporalText(value));
     }
 
     private RuntimeValue EvaluateUtcOffsetBuiltin()
@@ -225,7 +222,7 @@ public sealed partial class Interpreter
         {
             var offset = ResolveLocalUtcOffsetForLocalDateTime(expression, "TOUTC", "value", 0, dateTime);
             var utcDateTime = new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), offset).UtcDateTime;
-            return RuntimeValue.FromString(FormatCanonicalDateTime(utcDateTime));
+            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(utcDateTime));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -247,7 +244,7 @@ public sealed partial class Interpreter
         {
             var offset = ResolveUtcOffsetForLocalDateTime(expression, "TOUTC", "value", 0, timeZone, dateTime);
             var utcDateTime = new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), offset).UtcDateTime;
-            return RuntimeValue.FromString(FormatCanonicalDateTime(utcDateTime));
+            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(utcDateTime));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -267,7 +264,7 @@ public sealed partial class Interpreter
         try
         {
             var localDateTime = ConvertUtcToLocalDateTime(dateTime);
-            return RuntimeValue.FromString(FormatCanonicalDateTime(localDateTime));
+            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(localDateTime));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -288,7 +285,7 @@ public sealed partial class Interpreter
         try
         {
             var localDateTime = ConvertUtcToTimeZoneDateTime(dateTime, timeZone);
-            return RuntimeValue.FromString(FormatCanonicalDateTime(localDateTime));
+            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(localDateTime));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -317,77 +314,40 @@ public sealed partial class Interpreter
     private RuntimeValue EvaluateStartOfMonthBuiltin(BoundCallExpression expression, string value)
     {
         var date = ParseCanonicalDateArgument(expression, "STARTOFMONTH", value);
-        return RuntimeValue.FromString(FormatCanonicalDate(new DateOnly(date.Year, date.Month, 1)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, date.Month, 1)));
     }
 
     private RuntimeValue EvaluateEndOfMonthBuiltin(BoundCallExpression expression, string value)
     {
         var date = ParseCanonicalDateArgument(expression, "ENDOFMONTH", value);
         var lastDay = DateTime.DaysInMonth(date.Year, date.Month);
-        return RuntimeValue.FromString(FormatCanonicalDate(new DateOnly(date.Year, date.Month, lastDay)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, date.Month, lastDay)));
     }
 
     private RuntimeValue EvaluateStartOfYearBuiltin(BoundCallExpression expression, string value)
     {
         var date = ParseCanonicalDateArgument(expression, "STARTOFYEAR", value);
-        return RuntimeValue.FromString(FormatCanonicalDate(new DateOnly(date.Year, 1, 1)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, 1, 1)));
     }
 
     private RuntimeValue EvaluateEndOfYearBuiltin(BoundCallExpression expression, string value)
     {
         var date = ParseCanonicalDateArgument(expression, "ENDOFYEAR", value);
-        return RuntimeValue.FromString(FormatCanonicalDate(new DateOnly(date.Year, 12, 31)));
+        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, 12, 31)));
     }
 
-    private static long EvaluateDateBasedDiff(DateTimeIntervalKind interval, DateOnly fromDate, DateOnly toDate)
+    private long EvaluateTimeBasedDiff(BuiltinDateTimeHelpers.DateTimeIntervalKind interval, BuiltinDateTimeHelpers.CanonicalTemporalValue fromTemporal, BuiltinDateTimeHelpers.CanonicalTemporalValue toTemporal)
     {
-        return interval switch
+        if (fromTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.Time && toTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.Time)
         {
-            DateTimeIntervalKind.Year => toDate.Year - fromDate.Year,
-            DateTimeIntervalKind.Quarter => GetQuarterBoundaryIndex(toDate) - GetQuarterBoundaryIndex(fromDate),
-            DateTimeIntervalKind.Month => GetMonthBoundaryIndex(toDate) - GetMonthBoundaryIndex(fromDate),
-            DateTimeIntervalKind.Day => toDate.DayNumber - fromDate.DayNumber,
-            _ => throw new InvalidOperationException($"Interval '{interval}' is not date-based.")
-        };
-    }
-
-    private long EvaluateTimeBasedDiff(DateTimeIntervalKind interval, CanonicalTemporalValue fromTemporal, CanonicalTemporalValue toTemporal)
-    {
-        if (fromTemporal.Kind == TemporalValueKind.Time && toTemporal.Kind == TemporalValueKind.Time)
-        {
-            return GetTimeBoundaryIndex(toTemporal.Time, interval) - GetTimeBoundaryIndex(fromTemporal.Time, interval);
+            return BuiltinDateTimeHelpers.GetTimeBoundaryIndex(toTemporal.Time, interval) - BuiltinDateTimeHelpers.GetTimeBoundaryIndex(fromTemporal.Time, interval);
         }
 
-        if (fromTemporal.Kind == TemporalValueKind.DateTime && toTemporal.Kind == TemporalValueKind.DateTime)
+        if (fromTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.DateTime && toTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.DateTime)
         {
-            return GetDateTimeBoundaryIndex(toTemporal.ToDateTime(), interval) - GetDateTimeBoundaryIndex(fromTemporal.ToDateTime(), interval);
+            return BuiltinDateTimeHelpers.GetDateTimeBoundaryIndex(toTemporal.ToDateTime(), interval) - BuiltinDateTimeHelpers.GetDateTimeBoundaryIndex(fromTemporal.ToDateTime(), interval);
         }
 
-        return GetTimeBoundaryIndex(toTemporal.Time, interval) - GetTimeBoundaryIndex(fromTemporal.Time, interval);
-    }
-
-    private static int EvaluateDatePart(DateTimePartKind part, DateOnly date)
-    {
-        return part switch
-        {
-            DateTimePartKind.Year => date.Year,
-            DateTimePartKind.Quarter => ((date.Month - 1) / 3) + 1,
-            DateTimePartKind.Month => date.Month,
-            DateTimePartKind.Day => date.Day,
-            DateTimePartKind.DayOfYear => date.DayOfYear,
-            DateTimePartKind.Weekday => GetMondayFirstWeekdayNumber(date),
-            _ => throw new InvalidOperationException($"Part '{part}' is not date-based.")
-        };
-    }
-
-    private static int EvaluateTimePart(DateTimePartKind part, TimeOnly time)
-    {
-        return part switch
-        {
-            DateTimePartKind.Hour => time.Hour,
-            DateTimePartKind.Minute => time.Minute,
-            DateTimePartKind.Second => time.Second,
-            _ => throw new InvalidOperationException($"Part '{part}' is not time-based.")
-        };
+        return BuiltinDateTimeHelpers.GetTimeBoundaryIndex(toTemporal.Time, interval) - BuiltinDateTimeHelpers.GetTimeBoundaryIndex(fromTemporal.Time, interval);
     }
 }

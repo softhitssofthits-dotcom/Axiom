@@ -6,11 +6,6 @@ namespace Axiom.Parsing;
 
 public sealed partial class Parser
 {
-    private const string ExpectedTokenCode = "MB1001";
-    private const string ExpectedIdentifierCode = "MB1002";
-    private const string ExpectedExpressionCode = "MB1003";
-    private const string UnexpectedTokenCode = "MB1004";
-
     private readonly IReadOnlyList<SyntaxToken> _tokens;
     private int _position;
 

@@ -1100,6 +1100,143 @@ public sealed class BoundDrawSpriteStatement : BoundStatement
     public bool HasScale => WidthExpression is not null || HeightExpression is not null;
 }
 
+public sealed class BoundDrawTileStatement : BoundStatement
+{
+    public BoundDrawTileStatement(
+        TextLocation location,
+        BoundExpression tilesetExpression,
+        BoundExpression tileIndexExpression,
+        BoundExpression xExpression,
+        BoundExpression yExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(tilesetExpression);
+        ArgumentNullException.ThrowIfNull(tileIndexExpression);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        TilesetExpression = tilesetExpression;
+        TileIndexExpression = tileIndexExpression;
+        XExpression = xExpression;
+        YExpression = yExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawTileStatement;
+
+    public BoundExpression TilesetExpression { get; }
+
+    public BoundExpression TileIndexExpression { get; }
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+}
+
+public sealed class BoundDrawTilemapStatement : BoundStatement
+{
+    public BoundDrawTilemapStatement(
+        TextLocation location,
+        BoundExpression tilemapExpression,
+        BoundExpression xExpression,
+        BoundExpression yExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(tilemapExpression);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        TilemapExpression = tilemapExpression;
+        XExpression = xExpression;
+        YExpression = yExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawTilemapStatement;
+
+    public BoundExpression TilemapExpression { get; }
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+}
+
+public sealed class BoundDrawTileLayerStatement : BoundStatement
+{
+    public BoundDrawTileLayerStatement(
+        TextLocation location,
+        BoundExpression tilemapExpression,
+        BoundExpression layerIndexExpression,
+        BoundExpression xExpression,
+        BoundExpression yExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(tilemapExpression);
+        ArgumentNullException.ThrowIfNull(layerIndexExpression);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        TilemapExpression = tilemapExpression;
+        LayerIndexExpression = layerIndexExpression;
+        XExpression = xExpression;
+        YExpression = yExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.DrawTileLayerStatement;
+
+    public BoundExpression TilemapExpression { get; }
+
+    public BoundExpression LayerIndexExpression { get; }
+
+    public BoundExpression XExpression { get; }
+
+    public BoundExpression YExpression { get; }
+}
+
+public sealed class BoundSetMapTileStatement : BoundStatement
+{
+    public BoundSetMapTileStatement(
+        TextLocation location,
+        BoundExpression tilemapExpression,
+        BoundExpression layerIndexExpression,
+        BoundExpression columnExpression,
+        BoundExpression rowExpression,
+        BoundExpression tilesetIndexExpression,
+        BoundExpression tileIndexExpression,
+        BoundExpression? flagsExpression)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(tilemapExpression);
+        ArgumentNullException.ThrowIfNull(layerIndexExpression);
+        ArgumentNullException.ThrowIfNull(columnExpression);
+        ArgumentNullException.ThrowIfNull(rowExpression);
+        ArgumentNullException.ThrowIfNull(tilesetIndexExpression);
+        ArgumentNullException.ThrowIfNull(tileIndexExpression);
+
+        TilemapExpression = tilemapExpression;
+        LayerIndexExpression = layerIndexExpression;
+        ColumnExpression = columnExpression;
+        RowExpression = rowExpression;
+        TilesetIndexExpression = tilesetIndexExpression;
+        TileIndexExpression = tileIndexExpression;
+        FlagsExpression = flagsExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.SetMapTileStatement;
+
+    public BoundExpression TilemapExpression { get; }
+
+    public BoundExpression LayerIndexExpression { get; }
+
+    public BoundExpression ColumnExpression { get; }
+
+    public BoundExpression RowExpression { get; }
+
+    public BoundExpression TilesetIndexExpression { get; }
+
+    public BoundExpression TileIndexExpression { get; }
+
+    public BoundExpression? FlagsExpression { get; }
+}
+
 public sealed class BoundOnKeyStatement : BoundStatement
 {
     public BoundOnKeyStatement(

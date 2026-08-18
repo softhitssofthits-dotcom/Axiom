@@ -58,7 +58,7 @@
 
         <section class="article-section">
             <h2>Мышь</h2>
-            <p>Мышиные функции и оператор <code>ON MOUSE</code> работают только при активном графическом режиме <code>SCREEN 1..10</code>. Координаты мыши измеряются в пикселях клиентской области активного окна <code>SCREEN</code> и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>.</p>
+            <p>Мышиные функции и оператор <code>ON MOUSE</code> работают при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. В <code>SCREEN</code> координаты мыши измеряются в пикселях клиентской области активного окна и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>. В <code>CANVAS</code> функции <code>MOUSEX</code>, <code>MOUSEY</code> и параметры <code>x/y</code> обработчика <code>ON MOUSE</code> возвращают уже мировые координаты по договору <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
             <table>
                 <thead><tr><th>Страница</th><th>Что описывает</th></tr></thead>
                 <tbody>
@@ -86,7 +86,9 @@
                 <li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие</a></li>
                 <li><a href="../../samples/operators/on-key/left_handler.axm">ON KEY: обработчик клавиши</a></li>
                 <li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: нажатия кнопок мыши</a></li>
-                <li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик мыши</a></li>
+                <li><a href="../../samples/functions/mousex/canvas_world_position.axm">MOUSEX: мировая координата в CANVAS</a></li>
+                <li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик мыши в SCREEN</a></li>
+                <li><a href="../../samples/operators/on-mouse/canvas_world_handler.axm">ON MOUSE: мировые координаты в CANVAS</a></li>
             </ul>
         </section>
 

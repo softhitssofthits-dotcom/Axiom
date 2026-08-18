@@ -43,6 +43,10 @@ public class TypeSymbol : Symbol
 
     public static TypeSymbol Sprite { get; } = new("SPRITE");
 
+    public static TypeSymbol Tilemap { get; } = new("TILEMAP");
+
+    public static TypeSymbol Tileset { get; } = new("TILESET");
+
     public static TypeSymbol File { get; } = new("FILE");
 
     public static RuntimeErrorTypeSymbol RuntimeError { get; } = new();
@@ -86,6 +90,8 @@ public class TypeSymbol : Symbol
             SyntaxKind.BooleanKeyword => Boolean,
             SyntaxKind.ImageKeyword => Image,
             SyntaxKind.SpriteKeyword => Sprite,
+            SyntaxKind.TilemapKeyword => Tilemap,
+            SyntaxKind.TilesetKeyword => Tileset,
             SyntaxKind.FileKeyword => File,
             _ => Error
         };

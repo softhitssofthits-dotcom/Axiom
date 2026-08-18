@@ -453,6 +453,48 @@ public sealed partial class Binder
             statement.HeightExpression is null ? null : BindExpression(statement.HeightExpression, TypeSymbol.Long));
     }
 
+    private BoundStatement BindDrawTileStatement(DrawTileStatementSyntax statement)
+    {
+        return new BoundDrawTileStatement(
+            GetLocation(statement),
+            BindExpression(statement.TilesetExpression, TypeSymbol.Tileset),
+            BindExpression(statement.TileIndexExpression, TypeSymbol.Long),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindDrawTilemapStatement(DrawTilemapStatementSyntax statement)
+    {
+        return new BoundDrawTilemapStatement(
+            GetLocation(statement),
+            BindExpression(statement.TilemapExpression, TypeSymbol.Tilemap),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindDrawTileLayerStatement(DrawTileLayerStatementSyntax statement)
+    {
+        return new BoundDrawTileLayerStatement(
+            GetLocation(statement),
+            BindExpression(statement.TilemapExpression, TypeSymbol.Tilemap),
+            BindExpression(statement.LayerIndexExpression, TypeSymbol.Long),
+            BindExpression(statement.XExpression, TypeSymbol.Long),
+            BindExpression(statement.YExpression, TypeSymbol.Long));
+    }
+
+    private BoundStatement BindSetMapTileStatement(SetMapTileStatementSyntax statement)
+    {
+        return new BoundSetMapTileStatement(
+            GetLocation(statement),
+            BindExpression(statement.TilemapExpression, TypeSymbol.Tilemap),
+            BindExpression(statement.LayerIndexExpression, TypeSymbol.Long),
+            BindExpression(statement.ColumnExpression, TypeSymbol.Long),
+            BindExpression(statement.RowExpression, TypeSymbol.Long),
+            BindExpression(statement.TilesetIndexExpression, TypeSymbol.Long),
+            BindExpression(statement.TileIndexExpression, TypeSymbol.Long),
+            statement.FlagsExpression is null ? null : BindExpression(statement.FlagsExpression, TypeSymbol.Long));
+    }
+
     private BoundExpression BindPaintFillExpression(ExpressionSyntax expression)
     {
         var boundExpression = BindExpression(expression);

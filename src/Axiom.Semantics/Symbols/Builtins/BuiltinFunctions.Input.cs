@@ -29,6 +29,23 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.SpriteWidth, "SPRITEWIDTH", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
             CreateDefault(BuiltinFunctionId.SpriteHeight, "SPRITEHEIGHT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
             CreateDefault(BuiltinFunctionId.SpriteCount, "SPRITECOUNT", TypeSymbol.Integer, [Parameter("sprite", TypeSymbol.Sprite)]),
+            CreateDefault(BuiltinFunctionId.LoadTileset, "LOADTILESET", TypeSymbol.Tileset, [Parameter("path", TypeSymbol.String), Parameter("tileWidth", TypeSymbol.Long), Parameter("tileHeight", TypeSymbol.Long)]),
+            CreateDefault(BuiltinFunctionId.LoadTilesetMargin, "LOADTILESET", TypeSymbol.Tileset, [Parameter("path", TypeSymbol.String), Parameter("tileWidth", TypeSymbol.Long), Parameter("tileHeight", TypeSymbol.Long), Parameter("margin", TypeSymbol.Long)]),
+            CreateDefault(BuiltinFunctionId.LoadTilesetMarginSpacing, "LOADTILESET", TypeSymbol.Tileset, [Parameter("path", TypeSymbol.String), Parameter("tileWidth", TypeSymbol.Long), Parameter("tileHeight", TypeSymbol.Long), Parameter("margin", TypeSymbol.Long), Parameter("spacing", TypeSymbol.Long)]),
+            CreateDefault(BuiltinFunctionId.LoadTilemap, "LOADTILEMAP", TypeSymbol.Tilemap, [Parameter("path", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.TileCount, "TILECOUNT", TypeSymbol.Integer, [Parameter("tileset", TypeSymbol.Tileset)]),
+            CreateDefault(BuiltinFunctionId.TileWidth, "TILEWIDTH", TypeSymbol.Integer, [Parameter("tileset", TypeSymbol.Tileset)]),
+            CreateDefault(BuiltinFunctionId.TileHeight, "TILEHEIGHT", TypeSymbol.Integer, [Parameter("tileset", TypeSymbol.Tileset)]),
+            CreateDefault(BuiltinFunctionId.MapWidth, "MAPWIDTH", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapHeight, "MAPHEIGHT", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapPixelWidth, "MAPPIXELWIDTH", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapPixelHeight, "MAPPIXELHEIGHT", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapTileWidth, "MAPTILEWIDTH", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapTileHeight, "MAPTILEHEIGHT", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapLayerCount, "MAPLAYERCOUNT", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap)]),
+            CreateDefault(BuiltinFunctionId.MapTile, "MAPTILE", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap), Parameter("layerIndex", TypeSymbol.Long), Parameter("column", TypeSymbol.Long), Parameter("row", TypeSymbol.Long)]),
+            CreateDefault(BuiltinFunctionId.MapTileset, "MAPTILESET", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap), Parameter("layerIndex", TypeSymbol.Long), Parameter("column", TypeSymbol.Long), Parameter("row", TypeSymbol.Long)]),
+            CreateDefault(BuiltinFunctionId.MapTileFlags, "MAPTILEFLAGS", TypeSymbol.Integer, [Parameter("tilemap", TypeSymbol.Tilemap), Parameter("layerIndex", TypeSymbol.Long), Parameter("column", TypeSymbol.Long), Parameter("row", TypeSymbol.Long)]),
             CreateDefault(BuiltinFunctionId.Rgb, "RGB", TypeSymbol.Integer, [Parameter("red", TypeSymbol.Long), Parameter("green", TypeSymbol.Long), Parameter("blue", TypeSymbol.Long)])
         ];
     }

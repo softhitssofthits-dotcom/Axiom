@@ -36,7 +36,7 @@
 
         <section class="article-section">
             <h2>Где работает функция MOUSEBUTTON</h2>
-            <p>Встроенная функция <code>MOUSEBUTTON</code> работает только при активном графическом режиме <code>SCREEN</code>. Без него выполнение сообщает диагностику <code>MB3010</code>.</p>
+            <p>Встроенная функция <code>MOUSEBUTTON</code> работает при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. Без активной рисуемой поверхности выполнение сообщает диагностику <code>MB3010</code>.</p>
             <p>Встроенная функция <code>MOUSEBUTTON</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
         </section>
 
@@ -91,7 +91,7 @@ END IF</code></pre>
             <ul>
                 <li><code>MB2004</code>: в встроенную функцию <code>MOUSEBUTTON</code> аргумент не передан.</li>
                 <li><code>MB2003</code>: в встроенную функцию <code>MOUSEBUTTON</code> передан аргумент неподходящего типа.</li>
-                <li><code>MB3010</code>: встроенная функция <code>MOUSEBUTTON</code> вызвана без активного графического режима <code>SCREEN</code>.</li>
+                <li><code>MB3010</code>: встроенная функция <code>MOUSEBUTTON</code> вызвана без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
             </ul>
         </section>
 

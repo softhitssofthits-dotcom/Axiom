@@ -1,4 +1,5 @@
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -7,7 +8,7 @@ public sealed partial class BytecodeVm
 {
     private RuntimeValue EvaluateRndBuiltin()
     {
-        return RuntimeValue.FromDouble(_host.NextRandomDouble());
+        return BuiltinNumericHelpers.EvaluateRnd(() => _host.NextRandomDouble());
     }
 
     private int EvaluateIntBuiltin(RuntimeValue value, TextLocation location)
@@ -219,22 +220,9 @@ public sealed partial class BytecodeVm
 
     private double ToDoubleMathOperand(RuntimeValue value, TextLocation location, string functionName, string argumentName)
     {
-        var numericValue = value.Type switch
-        {
-            var type when type == TypeSymbol.Integer => value.AsInteger(),
-            var type when type == TypeSymbol.Long => value.AsLong(),
-            var type when type == TypeSymbol.Double => value.AsDouble(),
-            var type when type == TypeSymbol.Decimal => (double)value.AsDecimal(),
-            _ => ReportInvalidRuntimeState<double>($"Unsupported numeric argument type '{value.Type.Name}'.", location)
-        };
-
-        if (!double.IsFinite(numericValue))
-        {
-            ReportBuiltInArgumentError(functionName, argumentName, "must be a finite numeric value.", location);
-            throw new RuntimeFailureException();
-        }
-
-        return numericValue;
+        return BuiltinNumericHelpers.ToDoubleMathOperand(value, location, functionName, argumentName,
+            (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc),
+            ReportBuiltInArgumentError);
     }
 
     private int ToInt32Checked(double value, TextLocation location, string detail)
@@ -272,39 +260,26 @@ public sealed partial class BytecodeVm
 
     private bool HasNegativeSign(RuntimeValue value, TextLocation location)
     {
-        return value.Type switch
-        {
-            var type when type == TypeSymbol.Integer => value.AsInteger() < 0,
-            var type when type == TypeSymbol.Long => value.AsLong() < 0,
-            var type when type == TypeSymbol.Double => double.IsNegative(value.AsDouble()),
-            var type when type == TypeSymbol.Decimal => decimal.IsNegative(value.AsDecimal()),
-            _ => ReportInvalidRuntimeState<bool>($"Unsupported SETSIGN sign source type '{value.Type.Name}'.", location)
-        };
+        return BuiltinNumericHelpers.HasNegativeSign(value, location, (msg, loc) => ReportInvalidRuntimeState<bool>(msg, loc));
     }
 
     private static int ApplySign(int value, bool useNegativeSign)
     {
-        return useNegativeSign
-            ? value <= 0 ? value : checked(-value)
-            : checked(Math.Abs(value));
+        return BuiltinNumericHelpers.ApplySign(value, useNegativeSign);
     }
 
     private static long ApplySign(long value, bool useNegativeSign)
     {
-        return useNegativeSign
-            ? value <= 0 ? value : checked(-value)
-            : checked(Math.Abs(value));
+        return BuiltinNumericHelpers.ApplySign(value, useNegativeSign);
     }
 
     private static double ApplySign(double value, bool useNegativeSign)
     {
-        var magnitude = Math.Abs(value);
-        return useNegativeSign ? -magnitude : magnitude;
+        return BuiltinNumericHelpers.ApplySign(value, useNegativeSign);
     }
 
     private static decimal ApplySign(decimal value, bool useNegativeSign)
     {
-        var magnitude = decimal.Abs(value);
-        return useNegativeSign ? -magnitude : magnitude;
+        return BuiltinNumericHelpers.ApplySign(value, useNegativeSign);
     }
 }

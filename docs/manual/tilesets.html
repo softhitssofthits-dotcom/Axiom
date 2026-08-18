@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Тайлсеты TILESET</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="tilesets">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="index.html">Справочник Axiom</a>
+            <div class="topbar__meta">Графика</div>
+            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+        <main class="content">
+            <nav class="breadcrumbs" aria-label="Хлебные крошки">
+                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Тайлсеты TILESET</span>
+            </nav>
+            <p class="eyebrow">Тип, функции и оператор</p>
+            <h1 class="page-title">Тайлсеты TILESET</h1>
+            <p class="lead"><code>TILESET</code> — встроенный тип данных языка Axiom, который хранит атлас одинаковых тайлов. На этой странице собраны разные сущности: тип <code>TILESET</code>, встроенные функции <code>LOADTILESET</code>, <code>TILECOUNT</code>, <code>TILEWIDTH</code>, <code>TILEHEIGHT</code> и оператор <code>DRAWTILE</code>. Синтаксис ниже относится не к одной общей конструкции, а к нескольким разным формам работы с тайлсетом.</p>
+
+            <section class="article-section" id="type">
+                <h2>Что это такое</h2>
+                <p><code>TILESET</code> — встроенный тип данных языка Axiom, который хранит загруженное изображение-атлас и разметку одинаковых тайлов внутри этого атласа.</p>
+                <p>Каждый тайл в значении <code>TILESET</code> имеет одну и ту же ширину и одну и ту же высоту. Нумерация тайлов для пользователя начинается с <code>1</code>. Первый тайл берётся из левого верхнего угла сетки, затем тайлы идут слева направо и сверху вниз.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Для чего сущность нужна</h2>
+                <p>Тип <code>TILESET</code> нужен для тех случаев, когда одно изображение содержит набор повторно используемых клеток одинакового размера: фрагменты карты, декорации, панели, иконки или небольшие игровые блоки.</p>
+                <p>Функция <code>LOADTILESET</code> загружает такой атлас, функции <code>TILECOUNT</code>, <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> читают его свойства, а оператор <code>DRAWTILE</code> выводит выбранный тайл на современный холст.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Где сущность работает и от чего зависит</h2>
+                <p>Тип <code>TILESET</code> и функции <code>LOADTILESET</code>, <code>TILECOUNT</code>, <code>TILEWIDTH</code>, <code>TILEHEIGHT</code> работают со значением тайлсета как с данными.</p>
+                <p>Оператор <code>DRAWTILE</code> работает только при активном <code>CANVAS</code>. Координаты <code>x</code> и <code>y</code> подчиняются тому же договору, что и остальные современные графические операторы: без <code>CAMERA</code> это экранные координаты холста, после <code>CAMERA</code> это мировые координаты, а итоговая отрисовка обрезается активным <code>VIEWPORT</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Синтаксис каждой поддерживаемой формы</h2>
+<pre><code class="language-basic">DIM name AS TILESET
+
+name = LOADTILESET(path, tileWidth, tileHeight)
+name = LOADTILESET(path, tileWidth, tileHeight, margin)
+name = LOADTILESET(path, tileWidth, tileHeight, margin, spacing)
+
+TILECOUNT(tileset)
+TILEWIDTH(tileset)
+TILEHEIGHT(tileset)
+
+DRAWTILE tileset, tileIndex, x, y</code></pre>
+                <p id="loadtileset"><code>LOADTILESET</code> поддерживает три формы. Если аргументы <code>margin</code> и <code>spacing</code> не указаны, они считаются равными <code>0</code>.</p>
+                <p id="parts">Функции <code>TILECOUNT</code>, <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> читают уже загруженное или пустое значение <code>TILESET</code>.</p>
+                <p id="drawtile">Оператор <code>DRAWTILE</code> выводит один тайл в его натуральном размере. Отдельной формы масштабирования или поворота у этого оператора в текущем срезе нет.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Объяснение параметров и аргументов</h2>
+                <table>
+                    <thead>
+                        <tr><th>Аргумент</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>name</code></td><td>Переменная типа <code>TILESET</code>.</td></tr>
+                        <tr><td><code>path</code></td><td>Строковый путь к файлу изображения-атласа.</td></tr>
+                        <tr><td><code>tileWidth</code>, <code>tileHeight</code></td><td>Положительные целые размеры одного тайла в пикселях.</td></tr>
+                        <tr><td><code>margin</code></td><td>Неотрицательный внешний отступ в пикселях между краем атласа и первой линией тайлов.</td></tr>
+                        <tr><td><code>spacing</code></td><td>Неотрицательный промежуток в пикселях между соседними тайлами внутри атласа.</td></tr>
+                        <tr><td><code>tileset</code></td><td>Выражение типа <code>TILESET</code>.</td></tr>
+                        <tr><td><code>tileIndex</code></td><td>Номер тайла, начиная с <code>1</code>.</td></tr>
+                        <tr><td><code>x</code>, <code>y</code></td><td>Пиксельные координаты левого верхнего угла вывода тайла на <code>CANVAS</code>.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="article-section">
+                <h2>Что именно делает оператор и что именно возвращают функции</h2>
+                <p>Функция <code>LOADTILESET</code> загружает изображение, проверяет, что сетка тайлов точно укладывается в размеры атласа, и возвращает значение <code>TILESET</code>.</p>
+                <p>Функция <code>TILECOUNT</code> возвращает общее число тайлов в тайлсете. Функции <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> возвращают ширину и высоту одного тайла в пикселях.</p>
+                <p>Оператор <code>DRAWTILE</code> вырезает из атласа один тайл по номеру <code>tileIndex</code> и рисует его на активном <code>CANVAS</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Правила работы, ограничения и пограничные случаи</h2>
+                <ul>
+                    <li>Тип <code>TILESET</code> допускает пустое значение переменной. Например, после <code>DIM tiles AS TILESET</code> переменная уже существует, но ещё не содержит загруженного атласа.</li>
+                    <li>Для пустого значения <code>TILESET</code> функции <code>TILECOUNT</code>, <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> возвращают <code>0</code>.</li>
+                    <li>Попытка вызвать оператор <code>DRAWTILE</code> для пустого значения <code>TILESET</code> считается ошибкой времени выполнения.</li>
+                    <li>Сетка тайлов должна точно совпадать с размерами изображения с учётом <code>margin</code> и <code>spacing</code>. Частично заполненный последний ряд или последний столбец не допускается.</li>
+                    <li>Тайлсеты в текущем срезе работают только как источник одинаковых тайлов. На этой странице не описываются <code>TILEMAP</code>, слои тайловой карты и загрузка карт Tiled.</li>
+                    <li>Оператор <code>DRAWTILE</code> рисует тайл в натуральном размере <code>tileWidth x tileHeight</code>. Если нужна произвольная масштабируемая графика, для этого подходят <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3007</code>: путь <code>path</code> пустой.</li>
+                    <li><code>MB3007</code>: аргументы <code>tileWidth</code> или <code>tileHeight</code> не являются положительными целыми значениями.</li>
+                    <li><code>MB3007</code>: аргументы <code>margin</code> или <code>spacing</code> являются отрицательными.</li>
+                    <li><code>MB3007</code>: аргумент <code>tileIndex</code> не указывает существующий тайл тайлсета.</li>
+                    <li><code>MB3005</code>: файл тайлсета не удалось загрузить, изображение отсутствует или сетка тайлов не совпадает с размерами атласа.</li>
+                    <li><code>MB3005</code>: оператор <code>DRAWTILE</code> получил пустое значение <code>TILESET</code>.</li>
+                    <li><code>MB3010</code>: оператор <code>DRAWTILE</code> вызван без активного <code>CANVAS</code>.</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Короткий runnable-пример</h2>
+<pre><code class="language-basic">DIM tiles AS TILESET
+
+' Загружаем атлас из примеров и берём тайлы размером 16 x 16 пикселей.
+tiles = LOADTILESET("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
+
+CANVAS 160, 90
+
+BEGINFRAME
+' В первом кадре рисуем первый тайл.
+CLS RGB(20, 24, 32)
+DRAWTILE tiles, 1, 24, 24
+PRESENT
+SLEEP
+
+BEGINFRAME
+' Во втором кадре рисуем четвёртый тайл из того же атласа.
+CLS RGB(12, 16, 24)
+DRAWTILE tiles, 4, 88, 40
+PRESENT
+SLEEP</code></pre>
+                <p>Этот же пример лежит в runnable-файле <a href="../../samples/operators/drawtile/basic_tileset.axm">samples/operators/drawtile/basic_tileset.axm</a>. Его можно открыть в <code>Axiom.Ide</code> и запустить как ручную проверку.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
+                <div class="link-list">
+                    <a href="graphics.html">Графика</a>
+                    <a href="modern-graphics.html">Современная графика CANVAS</a>
+                    <a href="images.html">Изображения IMAGE</a>
+                    <a href="sprites.html">Спрайты SPRITE</a>
+                </div>
+            </section>
+
+            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
+        </main>
+    </div>
+    <script src="scripts/manual.js"></script>
+</body>
+</html>

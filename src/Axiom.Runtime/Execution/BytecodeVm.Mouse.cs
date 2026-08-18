@@ -12,25 +12,25 @@ public sealed partial class BytecodeVm
 
     private long ReadMouseX()
     {
-        RequireScreenActive("MOUSEX", FallbackRuntimeLocation);
-        return _host.GetMouseX();
+        RequireDrawableSurfaceActive("MOUSEX", FallbackRuntimeLocation);
+        return TranslateMouseXToRuntimeCoordinates(_host.GetMouseX(), _host.GetMouseY());
     }
 
     private long ReadMouseY()
     {
-        RequireScreenActive("MOUSEY", FallbackRuntimeLocation);
-        return _host.GetMouseY();
+        RequireDrawableSurfaceActive("MOUSEY", FallbackRuntimeLocation);
+        return TranslateMouseYToRuntimeCoordinates(_host.GetMouseX(), _host.GetMouseY());
     }
 
     private bool IsMouseButtonDown(int buttonNumber)
     {
-        RequireScreenActive("MOUSEBUTTON", FallbackRuntimeLocation);
+        RequireDrawableSurfaceActive("MOUSEBUTTON", FallbackRuntimeLocation);
         return _host.IsMouseButtonDown(buttonNumber);
     }
 
     private void DispatchMouseHandlers(TextLocation location)
     {
-        if (!_host.IsScreenActive)
+        if (!_host.IsScreenActive && !_host.IsCanvasActive)
         {
             return;
         }
@@ -114,7 +114,7 @@ public sealed partial class BytecodeVm
 
     private bool ConsumeMouseButtonPress(int buttonNumber)
     {
-        RequireScreenActive("MOUSEPRESS", FallbackRuntimeLocation);
+        RequireDrawableSurfaceActive("MOUSEPRESS", FallbackRuntimeLocation);
 
         if (!IsSupportedMouseButton(buttonNumber))
         {
@@ -161,12 +161,14 @@ public sealed partial class BytecodeVm
 
         try
         {
+            var mouseX = ReadMouseX();
+            var mouseY = ReadMouseY();
             var arguments = registration.PassEvent
                 ? new[]
                 {
                     RuntimeValue.FromInteger(mouseEvent.ButtonNumber),
-                    RuntimeValue.FromLong(ReadMouseX()),
-                    RuntimeValue.FromLong(ReadMouseY())
+                    RuntimeValue.FromLong(mouseX),
+                    RuntimeValue.FromLong(mouseY)
                 }
                 : Array.Empty<RuntimeValue>();
 
@@ -176,6 +178,42 @@ public sealed partial class BytecodeVm
         {
             _mouseHandlerDepth--;
         }
+    }
+
+    private long TranslateMouseXToRuntimeCoordinates(long absoluteMouseX, long absoluteMouseY)
+    {
+        if (!_host.IsCanvasActive)
+        {
+            return absoluteMouseX;
+        }
+
+        return TryTranslateMouseAbsoluteToLogical(absoluteMouseX, absoluteMouseY, out var logicalX, out _)
+            ? logicalX
+            : -1;
+    }
+
+    private long TranslateMouseYToRuntimeCoordinates(long absoluteMouseX, long absoluteMouseY)
+    {
+        if (!_host.IsCanvasActive)
+        {
+            return absoluteMouseY;
+        }
+
+        return TryTranslateMouseAbsoluteToLogical(absoluteMouseX, absoluteMouseY, out _, out var logicalY)
+            ? logicalY
+            : -1;
+    }
+
+    private bool TryTranslateMouseAbsoluteToLogical(long absoluteMouseX, long absoluteMouseY, out long logicalX, out long logicalY)
+    {
+        if (absoluteMouseX < 0 || absoluteMouseY < 0)
+        {
+            logicalX = -1;
+            logicalY = -1;
+            return false;
+        }
+
+        return GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(_host, absoluteMouseX, absoluteMouseY, out logicalX, out logicalY);
     }
 
     private static bool IsSupportedMouseButton(int buttonNumber) => buttonNumber is >= 1 and <= 3;

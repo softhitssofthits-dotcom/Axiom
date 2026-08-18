@@ -1252,6 +1252,9 @@ sealed class ProfilingRuntimeHost : IRuntimeHost, IReversibleOutputWriter
     public RuntimeImageValue? LoadImage(string path) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadImage(path) : null;
 
+    public RuntimeTilesetValue? LoadTileset(string path, int tileWidth, int tileHeight, int margin = 0, int spacing = 0) =>
+        _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.LoadTileset(path, tileWidth, tileHeight, margin, spacing) : null;
+
     public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -1265,6 +1268,14 @@ sealed class ProfilingRuntimeHost : IRuntimeHost, IReversibleOutputWriter
         if (_inputProvider is IGraphicsHost graphicsHost)
         {
             graphicsHost.DrawSprite(sprite, frame, x, y, width, height);
+        }
+    }
+
+    public void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.DrawImageRegion(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
         }
     }
 }
@@ -1419,6 +1430,28 @@ sealed class BenchmarkGraphicsHost : IInputProvider, IGraphicsHost
     {
         var image = LoadImage(path);
         return image is null ? null : new RuntimeSpriteValue(image, frameWidth, frameHeight);
+    }
+
+    public RuntimeTilesetValue? LoadTileset(string path, int tileWidth, int tileHeight, int margin = 0, int spacing = 0)
+    {
+        var image = LoadImage(path);
+        if (image is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return new RuntimeTilesetValue(image, tileWidth, tileHeight, margin, spacing);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+        catch (OverflowException)
+        {
+            return null;
+        }
     }
 
     public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
@@ -1589,7 +1622,7 @@ sealed class BenchmarkGraphicsHost : IInputProvider, IGraphicsHost
         _sink += color + x + y;
     }
 
-    private void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long targetX, long targetY, int targetWidth, int targetHeight)
+    public void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long targetX, long targetY, int targetWidth, int targetHeight)
     {
         var left = checked((int)TranslateX(targetX));
         var top = checked((int)TranslateY(targetY));

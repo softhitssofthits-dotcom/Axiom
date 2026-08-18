@@ -5,11 +5,6 @@ namespace Axiom.Lexing;
 
 public sealed class Lexer
 {
-    private const string InvalidCharacterCode = "MB0001";
-    private const string UnterminatedStringCode = "MB0002";
-    private const string InvalidNumericLiteralCode = "MB0003";
-    private const string NumericLiteralOutOfRangeCode = "MB0004";
-
     private static readonly Dictionary<string, TokenKind> Keywords = new(StringComparer.OrdinalIgnoreCase)
     {
         ["AND"] = TokenKind.AndKeyword,
@@ -39,6 +34,9 @@ public sealed class Lexer
         ["DRAWLINE"] = TokenKind.DrawLineKeyword,
         ["DRAWRECT"] = TokenKind.DrawRectKeyword,
         ["DRAWSPRITE"] = TokenKind.DrawSpriteKeyword,
+        ["DRAWTILE"] = TokenKind.DrawTileKeyword,
+        ["DRAWTILELAYER"] = TokenKind.DrawTileLayerKeyword,
+        ["DRAWTILEMAP"] = TokenKind.DrawTilemapKeyword,
         ["DRAWTEXT"] = TokenKind.DrawTextKeyword,
         ["ELSE"] = TokenKind.ElseKeyword,
         ["ELSEIF"] = TokenKind.ElseIfKeyword,
@@ -88,6 +86,7 @@ public sealed class Lexer
         ["RETURN"] = TokenKind.ReturnKeyword,
         ["SELF"] = TokenKind.SelfKeyword,
         ["SELECT"] = TokenKind.SelectKeyword,
+        ["SETMAPTILE"] = TokenKind.SetMapTileKeyword,
         ["SCREEN"] = TokenKind.ScreenKeyword,
         ["SLEEP"] = TokenKind.SleepKeyword,
         ["STEP"] = TokenKind.StepKeyword,
@@ -95,6 +94,8 @@ public sealed class Lexer
         ["SPRITE"] = TokenKind.SpriteKeyword,
         ["STRING"] = TokenKind.StringKeyword,
         ["SUB"] = TokenKind.SubKeyword,
+        ["TILEMAP"] = TokenKind.TilemapKeyword,
+        ["TILESET"] = TokenKind.TilesetKeyword,
         ["THEN"] = TokenKind.ThenKeyword,
         ["TO"] = TokenKind.ToKeyword,
         ["TRANSPARENT"] = TokenKind.TransparentKeyword,
@@ -303,7 +304,7 @@ public sealed class Lexer
                 ReportDiagnostic(
                     start,
                     text.Length,
-                    NumericLiteralOutOfRangeCode,
+                    DiagnosticCodes.NumericLiteralOutOfRange,
                     $"Литерал DOUBLE '{text}' выходит за диапазон DOUBLE.");
                 return CreateToken(TokenKind.DoubleLiteralToken, start, _position - start, 0d);
             }
@@ -324,7 +325,7 @@ public sealed class Lexer
         ReportDiagnostic(
             start,
             text.Length,
-            NumericLiteralOutOfRangeCode,
+            DiagnosticCodes.NumericLiteralOutOfRange,
             $"Целочисленный литерал '{text}' выходит за диапазон LONG.");
         return CreateToken(TokenKind.LongLiteralToken, start, _position - start, 0L);
     }
@@ -346,7 +347,7 @@ public sealed class Lexer
             ReportDiagnostic(
                 start,
                 text.Length,
-                InvalidNumericLiteralCode,
+                DiagnosticCodes.InvalidNumericLiteral,
                 $"Недопустимый шестнадцатеричный литерал '{text}': после &H должна идти хотя бы одна шестнадцатеричная цифра.");
             return CreateToken(TokenKind.IntegerLiteralToken, start, _position - start, 0);
         }
@@ -359,7 +360,7 @@ public sealed class Lexer
             ReportDiagnostic(
                 start,
                 literalText.Length,
-                NumericLiteralOutOfRangeCode,
+                DiagnosticCodes.NumericLiteralOutOfRange,
                 $"Шестнадцатеричный литерал '{literalText}' выходит за диапазон LONG.");
             return CreateToken(TokenKind.LongLiteralToken, start, _position - start, 0L);
         }
@@ -377,7 +378,7 @@ public sealed class Lexer
         ReportDiagnostic(
             start,
             literalText.Length,
-            NumericLiteralOutOfRangeCode,
+            DiagnosticCodes.NumericLiteralOutOfRange,
             $"Шестнадцатеричный литерал '{literalText}' выходит за диапазон LONG.");
         return CreateToken(TokenKind.LongLiteralToken, start, _position - start, 0L);
     }
@@ -392,7 +393,7 @@ public sealed class Lexer
         ReportDiagnostic(
             start,
             text.Length,
-            InvalidNumericLiteralCode,
+            DiagnosticCodes.InvalidNumericLiteral,
             $"Недопустимый числовой литерал '{text}': ведущие нули не допускаются.");
     }
 
@@ -431,7 +432,7 @@ public sealed class Lexer
 
         if (!terminated)
         {
-            ReportDiagnostic(start, _position - start, UnterminatedStringCode, "Незакрытая строковая литерала.");
+            ReportDiagnostic(start, _position - start, DiagnosticCodes.UnterminatedString, "Незакрытая строковая литерала.");
         }
 
         return CreateToken(TokenKind.StringLiteralToken, start, _position - start, content.ToString());
@@ -472,7 +473,7 @@ public sealed class Lexer
                 }
 
                 _position++;
-                ReportDiagnostic(start, 1, InvalidCharacterCode, $"Недопустимый символ: '{_text[start]}'.");
+                ReportDiagnostic(start, 1, DiagnosticCodes.InvalidCharacter, $"Недопустимый символ: '{_text[start]}'.");
                 return CreateToken(TokenKind.BadToken, start, 1);
             case '=':
                 _position++;
@@ -530,7 +531,7 @@ public sealed class Lexer
                 return CreateToken(TokenKind.GreaterToken, start, 1);
             default:
                 _position++;
-                ReportDiagnostic(start, 1, InvalidCharacterCode, $"Недопустимый символ: '{_text[start]}'.");
+                ReportDiagnostic(start, 1, DiagnosticCodes.InvalidCharacter, $"Недопустимый символ: '{_text[start]}'.");
                 return CreateToken(TokenKind.BadToken, start, 1);
         }
     }

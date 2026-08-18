@@ -1,22 +1,18 @@
-using System.Linq;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private static string EvaluateRepeat(string text, int count)
+    private static RuntimeValue EvaluateRepeat(string text, int count)
     {
-        return count == 0 || text.Length == 0
-            ? string.Empty
-            : string.Concat(Enumerable.Repeat(text, count));
+        return BuiltinStringHelpers.EvaluateRepeat(text, count);
     }
 
-    private static string EvaluateSpace(int count)
+    private static RuntimeValue EvaluateSpace(int count)
     {
-        return count == 0
-            ? string.Empty
-            : new string(' ', count);
+        return BuiltinStringHelpers.EvaluateSpace(count);
     }
 
     private string EvaluateStringFill(int count, string fill, TextLocation location)

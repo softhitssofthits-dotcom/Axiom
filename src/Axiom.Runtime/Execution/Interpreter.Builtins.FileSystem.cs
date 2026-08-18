@@ -1,23 +1,18 @@
 using System.Globalization;
-using System.Security;
-using System.Text;
 using Axiom.Semantics;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
-    private static readonly Encoding FileSystemTextEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-    private static readonly Encoding StrictUtf8TextEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-    private static readonly Encoding Windows1251TextEncoding = CreateWindows1251TextEncoding();
-
     private RuntimeValue EvaluateFileExists(BoundCallExpression expression, string path)
     {
         try
         {
-            return RuntimeValue.FromBoolean(File.Exists(NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromBoolean(File.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FILEEXISTS", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -28,9 +23,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromBoolean(Directory.Exists(NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromBoolean(Directory.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DIREXISTS", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -41,10 +36,10 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             return RuntimeValue.FromBoolean(File.Exists(fullPath) || Directory.Exists(fullPath));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "PATHEXISTS", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -55,9 +50,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(ReadTextFileWithFallback(NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.ReadTextFileWithFallback(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "READFILE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -68,71 +63,31 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureFileExists(expression, "READALLLINES", "path", 0, fullPath);
 
-            var lines = ReadDecodedLines(ReadTextFileWithFallback(fullPath));
+            var lines = BuiltinFileSystemHelpers.ReadDecodedLines(BuiltinFileSystemHelpers.ReadTextFileWithFallback(fullPath));
             return CreateStringArrayValue(lines);
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "READALLLINES", "path", 0, ex);
             throw new RuntimeFailureException();
         }
     }
 
-    private static string ReadTextFileWithFallback(string fullPath)
-    {
-        var bytes = File.ReadAllBytes(fullPath);
-
-        try
-        {
-            return StripUtf8Bom(StrictUtf8TextEncoding.GetString(bytes));
-        }
-        catch (DecoderFallbackException)
-        {
-            return Windows1251TextEncoding.GetString(bytes);
-        }
-    }
-
-    private static string StripUtf8Bom(string text)
-    {
-        return text.Length > 0 && text[0] == '\uFEFF'
-            ? text[1..]
-            : text;
-    }
-
-    private static Encoding CreateWindows1251TextEncoding()
-    {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        return Encoding.GetEncoding(1251);
-    }
-
-    private static string[] ReadDecodedLines(string text)
-    {
-        using var reader = new StringReader(text);
-        var lines = new List<string>();
-
-        while (reader.ReadLine() is { } line)
-        {
-            lines.Add(line);
-        }
-
-        return [.. lines];
-    }
-
     private RuntimeValue EvaluateWriteFile(BoundCallExpression expression, string path, string text)
     {
         try
         {
-            File.WriteAllText(NormalizeFileSystemPath(path), text, FileSystemTextEncoding);
+            File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             return RuntimeValue.FromBoolean(true);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "WRITEFILE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -143,10 +98,10 @@ public sealed partial class Interpreter
     {
         try
         {
-            File.AppendAllText(NormalizeFileSystemPath(path), text, FileSystemTextEncoding);
+            File.AppendAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             return RuntimeValue.FromBoolean(true);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "APPENDFILE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -157,21 +112,15 @@ public sealed partial class Interpreter
     {
         try
         {
-            var file = new FileInfo(NormalizeFileSystemPath(path));
-
-            if (!file.Exists)
-            {
-                ReportFileSystemMissingFile(expression, "FILESIZE", "path", 0);
-                throw new RuntimeFailureException();
-            }
-
-            return RuntimeValue.FromLong(file.Length);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            EnsureFileExists(expression, "FILESIZE", "path", 0, fullPath);
+            return RuntimeValue.FromLong(new FileInfo(fullPath).Length);
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FILESIZE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -182,21 +131,15 @@ public sealed partial class Interpreter
     {
         try
         {
-            var file = new FileInfo(NormalizeFileSystemPath(path));
-
-            if (!file.Exists)
-            {
-                ReportFileSystemMissingFile(expression, "FILEDATE", "path", 0);
-                throw new RuntimeFailureException();
-            }
-
-            return RuntimeValue.FromString(file.LastWriteTime.ToString(CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            EnsureFileExists(expression, "FILEDATE", "path", 0, fullPath);
+            return RuntimeValue.FromString(new FileInfo(fullPath).LastWriteTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FILEDATE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -207,21 +150,15 @@ public sealed partial class Interpreter
     {
         try
         {
-            var file = new FileInfo(NormalizeFileSystemPath(path));
-
-            if (!file.Exists)
-            {
-                ReportFileSystemMissingFile(expression, "FILECREATEDATE", "path", 0);
-                throw new RuntimeFailureException();
-            }
-
-            return RuntimeValue.FromString(file.CreationTime.ToString(CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            EnsureFileExists(expression, "FILECREATEDATE", "path", 0, fullPath);
+            return RuntimeValue.FromString(new FileInfo(fullPath).CreationTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FILECREATEDATE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -232,21 +169,15 @@ public sealed partial class Interpreter
     {
         try
         {
-            var file = new FileInfo(NormalizeFileSystemPath(path));
-
-            if (!file.Exists)
-            {
-                ReportFileSystemMissingFile(expression, "FILEACCESSEDDATE", "path", 0);
-                throw new RuntimeFailureException();
-            }
-
-            return RuntimeValue.FromString(file.LastAccessTime.ToString(CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            EnsureFileExists(expression, "FILEACCESSEDDATE", "path", 0, fullPath);
+            return RuntimeValue.FromString(new FileInfo(fullPath).LastAccessTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FILEACCESSEDDATE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -257,15 +188,15 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureDirectoryExists(expression, "DIRDATE", "path", 0, fullPath);
-            return RuntimeValue.FromString(new DirectoryInfo(fullPath).LastWriteTime.ToString(CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+            return RuntimeValue.FromString(new DirectoryInfo(fullPath).LastWriteTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DIRDATE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -280,7 +211,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureDirectoryExists(expression, "GETFILES", "path", 0, fullPath);
             EnsureSearchPattern(expression, "GETFILES", pattern, patternArgumentIndex);
 
@@ -294,7 +225,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "GETFILES", patternArgumentIndex < 0 ? "path" : "pattern", patternArgumentIndex < 0 ? 0 : patternArgumentIndex, ex);
             throw new RuntimeFailureException();
@@ -309,7 +240,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureDirectoryExists(expression, "GETDIRS", "path", 0, fullPath);
             EnsureSearchPattern(expression, "GETDIRS", pattern, patternArgumentIndex);
 
@@ -323,7 +254,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "GETDIRS", patternArgumentIndex < 0 ? "path" : "pattern", patternArgumentIndex < 0 ? 0 : patternArgumentIndex, ex);
             throw new RuntimeFailureException();
@@ -336,7 +267,7 @@ public sealed partial class Interpreter
         {
             return RuntimeValue.FromString(Path.Combine(left, right));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "COMBINEPATH", "left", 0, ex);
             throw new RuntimeFailureException();
@@ -347,9 +278,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetFileName(NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(Path.GetFileName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FILENAME", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -360,9 +291,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetDirectoryName(NormalizeFileSystemPath(path)) ?? string.Empty);
+            return RuntimeValue.FromString(Path.GetDirectoryName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)) ?? string.Empty);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DIRNAME", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -373,9 +304,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetExtension(NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(Path.GetExtension(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "EXTNAME", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -386,9 +317,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(NormalizeFileSystemPath(path));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FULLPATH", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -399,9 +330,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetPathRoot(NormalizeFileSystemPath(path)) ?? string.Empty);
+            return RuntimeValue.FromString(Path.GetPathRoot(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)) ?? string.Empty);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "PATHROOT", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -414,7 +345,7 @@ public sealed partial class Interpreter
         {
             return RuntimeValue.FromBoolean(Path.IsPathFullyQualified(Environment.ExpandEnvironmentVariables(path)));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "ISABSOLUTEPATH", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -425,10 +356,10 @@ public sealed partial class Interpreter
     {
         try
         {
-            Directory.CreateDirectory(NormalizeFileSystemPath(path));
+            Directory.CreateDirectory(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
             return RuntimeValue.FromBoolean(true);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "MAKEDIR", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -439,7 +370,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
 
             if (!File.Exists(fullPath))
             {
@@ -449,7 +380,7 @@ public sealed partial class Interpreter
             File.Delete(fullPath);
             return RuntimeValue.FromBoolean(true);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DELETEFILE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -460,8 +391,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
-            var destinationPath = NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
 
             EnsureFileExists(expression, "COPYFILE", "source", 0, sourcePath);
             File.Copy(sourcePath, destinationPath, overwrite);
@@ -471,7 +402,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "COPYFILE", "destination", 1, ex);
             throw new RuntimeFailureException();
@@ -482,8 +413,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
-            var destinationPath = NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
 
             EnsureFileExists(expression, "MOVEFILE", "source", 0, sourcePath);
             File.Move(sourcePath, destinationPath, overwrite);
@@ -493,7 +424,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "MOVEFILE", "destination", 1, ex);
             throw new RuntimeFailureException();
@@ -504,7 +435,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = NormalizeFileSystemPath(path);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureFileExists(expression, "RENAMEFILE", "path", 0, sourcePath);
             EnsureSimpleFileSystemName(expression, "RENAMEFILE", "newName", 1, newName);
 
@@ -526,7 +457,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "RENAMEFILE", "newName", 1, ex);
             throw new RuntimeFailureException();
@@ -537,7 +468,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
 
             if (!Directory.Exists(fullPath))
             {
@@ -547,7 +478,7 @@ public sealed partial class Interpreter
             Directory.Delete(fullPath, recursive: false);
             return RuntimeValue.FromBoolean(true);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DELETEDIR", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -558,7 +489,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
 
             if (!Directory.Exists(fullPath))
             {
@@ -568,7 +499,7 @@ public sealed partial class Interpreter
             Directory.Delete(fullPath, recursive: true);
             return RuntimeValue.FromBoolean(true);
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DELETEDIRRECURSIVE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -579,18 +510,18 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
-            var destinationPath = NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
 
             EnsureDirectoryExists(expression, "COPYDIR", "source", 0, sourcePath);
-            CopyDirectory(sourcePath, destinationPath, overwrite);
+            BuiltinFileSystemHelpers.CopyDirectory(sourcePath, destinationPath, overwrite);
             return RuntimeValue.FromBoolean(true);
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "COPYDIR", "destination", 1, ex);
             throw new RuntimeFailureException();
@@ -601,8 +532,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
-            var destinationPath = NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
 
             EnsureDirectoryExists(expression, "MOVEDIR", "source", 0, sourcePath);
             Directory.Move(sourcePath, destinationPath);
@@ -612,7 +543,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "MOVEDIR", "destination", 1, ex);
             throw new RuntimeFailureException();
@@ -623,7 +554,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = NormalizeFileSystemPath(path);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureDirectoryExists(expression, "RENAMEDIR", "path", 0, sourcePath);
             EnsureSimpleFileSystemName(expression, "RENAMEDIR", "newName", 1, newName);
 
@@ -645,7 +576,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "RENAMEDIR", "newName", 1, ex);
             throw new RuntimeFailureException();
@@ -656,9 +587,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(NormalizeFileSystemPath(Environment.CurrentDirectory));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(Environment.CurrentDirectory));
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "CURRENTDIR", "path", -1, ex);
             throw new RuntimeFailureException();
@@ -669,7 +600,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureDirectoryExists(expression, "CHANGEDIR", "path", 0, fullPath);
             Directory.SetCurrentDirectory(fullPath);
             return RuntimeValue.FromBoolean(true);
@@ -678,7 +609,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "CHANGEDIR", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -689,9 +620,9 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             EnsureDirectoryExists(expression, "DIRSIZE", "path", 0, fullPath);
-            return RuntimeValue.FromLong(GetDirectorySize(fullPath));
+            return RuntimeValue.FromLong(BuiltinFileSystemHelpers.GetDirectorySize(fullPath));
         }
         catch (RuntimeFailureException)
         {
@@ -702,7 +633,7 @@ public sealed partial class Interpreter
             ReportNumericOverflow("Суммарный размер папки в функции DIRSIZE", TypeSymbol.Long, expression.Location);
             throw new RuntimeFailureException();
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DIRSIZE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -713,7 +644,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
             var rootPath = Path.GetPathRoot(fullPath);
 
             if (string.IsNullOrWhiteSpace(rootPath))
@@ -732,7 +663,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "FREESPACE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -749,7 +680,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "TOTALFREESPACE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -766,7 +697,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "TOTALSPACE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -784,7 +715,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "ISREADONLY", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -802,7 +733,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "ISHIDDEN", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -819,7 +750,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DRIVENAME", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -836,7 +767,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DRIVEFORMAT", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -853,7 +784,7 @@ public sealed partial class Interpreter
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "DRIVETYPE", "path", 0, ex);
             throw new RuntimeFailureException();
@@ -865,13 +796,13 @@ public sealed partial class Interpreter
         try
         {
             EnsureSimpleTempPrefix(expression, "MAKETEMPFILE", 0, prefix);
-            return RuntimeValue.FromString(CreateTemporaryFile(prefix));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.CreateTemporaryFile(prefix));
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "MAKETEMPFILE", "prefix", 0, ex);
             throw new RuntimeFailureException();
@@ -883,22 +814,17 @@ public sealed partial class Interpreter
         try
         {
             EnsureSimpleTempPrefix(expression, "MAKETEMPDIR", 0, prefix);
-            return RuntimeValue.FromString(CreateTemporaryDirectory(prefix));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.CreateTemporaryDirectory(prefix));
         }
         catch (RuntimeFailureException)
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(expression, "MAKETEMPDIR", "prefix", 0, ex);
             throw new RuntimeFailureException();
         }
-    }
-
-    private static string NormalizeFileSystemPath(string path)
-    {
-        return Path.GetFullPath(Environment.ExpandEnvironmentVariables(path));
     }
 
     private void EnsureFileExists(
@@ -908,13 +834,11 @@ public sealed partial class Interpreter
         int argumentIndex,
         string path)
     {
-        if (File.Exists(path))
+        if (!BuiltinFileSystemHelpers.EnsureFileExists(functionName, argumentName, path,
+            GetBuiltInArgumentLocation(expression, argumentIndex), ReportBuiltInArgumentError))
         {
-            return;
+            throw new RuntimeFailureException();
         }
-
-        ReportFileSystemMissingFile(expression, functionName, argumentName, argumentIndex);
-        throw new RuntimeFailureException();
     }
 
     private void EnsureDirectoryExists(
@@ -924,17 +848,11 @@ public sealed partial class Interpreter
         int argumentIndex,
         string path)
     {
-        if (Directory.Exists(path))
+        if (!BuiltinFileSystemHelpers.EnsureDirectoryExists(functionName, argumentName, path,
+            GetBuiltInArgumentLocation(expression, argumentIndex), ReportBuiltInArgumentError))
         {
-            return;
+            throw new RuntimeFailureException();
         }
-
-        ReportBuiltInArgumentError(
-            functionName,
-            argumentName,
-            "указывает на папку, которая не существует.",
-            GetBuiltInArgumentLocation(expression, argumentIndex));
-        throw new RuntimeFailureException();
     }
 
     private void EnsureSearchPattern(
@@ -1006,7 +924,7 @@ public sealed partial class Interpreter
         int argumentIndex,
         string path)
     {
-        var fullPath = NormalizeFileSystemPath(path);
+        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
 
         if (File.Exists(fullPath))
         {
@@ -1033,7 +951,7 @@ public sealed partial class Interpreter
         int argumentIndex,
         string path)
     {
-        var fullPath = NormalizeFileSystemPath(path);
+        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
         var rootPath = Path.GetPathRoot(fullPath);
 
         if (string.IsNullOrWhiteSpace(rootPath))
@@ -1049,99 +967,6 @@ public sealed partial class Interpreter
         return new DriveInfo(rootPath);
     }
 
-    private static void CopyDirectory(string sourcePath, string destinationPath, bool overwrite)
-    {
-        Directory.CreateDirectory(destinationPath);
-
-        foreach (var filePath in Directory.EnumerateFiles(sourcePath))
-        {
-            var targetPath = Path.Combine(destinationPath, Path.GetFileName(filePath));
-            File.Copy(filePath, targetPath, overwrite);
-        }
-
-        foreach (var directoryPath in Directory.EnumerateDirectories(sourcePath))
-        {
-            var targetPath = Path.Combine(destinationPath, Path.GetFileName(directoryPath));
-            CopyDirectory(directoryPath, targetPath, overwrite);
-        }
-    }
-
-    private static long GetDirectorySize(string path)
-    {
-        long totalSize = 0;
-
-        foreach (var filePath in Directory.EnumerateFiles(path))
-        {
-            totalSize = checked(totalSize + new FileInfo(filePath).Length);
-        }
-
-        foreach (var directoryPath in Directory.EnumerateDirectories(path))
-        {
-            var attributes = File.GetAttributes(directoryPath);
-            if ((attributes & FileAttributes.ReparsePoint) != 0)
-            {
-                continue;
-            }
-
-            totalSize = checked(totalSize + GetDirectorySize(directoryPath));
-        }
-
-        return totalSize;
-    }
-
-    private static string CreateTemporaryFile(string prefix)
-    {
-        var tempRoot = NormalizeFileSystemPath(Path.GetTempPath());
-        Directory.CreateDirectory(tempRoot);
-
-        while (true)
-        {
-            var fullPath = Path.Combine(tempRoot, prefix + Guid.NewGuid().ToString("N") + ".tmp");
-
-            try
-            {
-                using var stream = new FileStream(fullPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                return fullPath;
-            }
-            catch (IOException) when (File.Exists(fullPath))
-            {
-            }
-        }
-    }
-
-    private static string CreateTemporaryDirectory(string prefix)
-    {
-        var tempRoot = NormalizeFileSystemPath(Path.GetTempPath());
-        Directory.CreateDirectory(tempRoot);
-
-        while (true)
-        {
-            var fullPath = Path.Combine(tempRoot, prefix + Guid.NewGuid().ToString("N"));
-            if (Directory.Exists(fullPath) || File.Exists(fullPath))
-            {
-                continue;
-            }
-
-            try
-            {
-                Directory.CreateDirectory(fullPath);
-                return fullPath;
-            }
-            catch (IOException) when (Directory.Exists(fullPath))
-            {
-            }
-        }
-    }
-
-    private void ReportFileSystemMissingFile(BoundCallExpression expression, string functionName, string argumentName, int argumentIndex)
-    {
-        ReportBuiltInArgumentError(
-            functionName,
-            argumentName,
-            "указывает на файл, который не существует.",
-            GetBuiltInArgumentLocation(expression, argumentIndex));
-    }
-
     private void ReportFileSystemFailure(
         BoundCallExpression expression,
         string functionName,
@@ -1149,19 +974,7 @@ public sealed partial class Interpreter
         int argumentIndex,
         Exception exception)
     {
-        ReportBuiltInArgumentError(
-            functionName,
-            argumentName,
-            $"не может быть обработан файловой системой: {exception.Message}",
-            GetBuiltInArgumentLocation(expression, argumentIndex));
-    }
-
-    private static bool IsFileSystemException(Exception exception)
-    {
-        return exception is ArgumentException
-            or IOException
-            or NotSupportedException
-            or UnauthorizedAccessException
-            or SecurityException;
+        BuiltinFileSystemHelpers.ReportFileSystemFailure(functionName, argumentName, exception,
+            GetBuiltInArgumentLocation(expression, argumentIndex), ReportBuiltInArgumentError);
     }
 }

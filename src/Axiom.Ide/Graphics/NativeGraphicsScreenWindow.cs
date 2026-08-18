@@ -57,7 +57,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private bool _isVerticalScrollBarVisible;
     private int _clientWidth;
     private int _clientHeight;
+    private int _capturedMouseButtons;
     private bool _closed;
+    private bool _disposed;
+    private GCHandle _windowGcHandle;
 
     public NativeGraphicsScreenWindow(ProgramConsoleService consoleService, int width, int height)
     {
@@ -95,10 +98,24 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to create native SCREEN HWND.");
         }
 
-        SetWindowLongPtr(Hwnd, -21, GCHandle.ToIntPtr(GCHandle.Alloc(this)));
-        ShowScrollBar(Hwnd, SbVert, false);
-        (_clientWidth, _clientHeight) = GetClientSize(Hwnd);
-        _renderer = new Direct3D11SwapChainRenderer(Hwnd, _clientWidth, _clientHeight);
+        _windowGcHandle = GCHandle.Alloc(this);
+        try
+        {
+            SetWindowLongPtr(Hwnd, -21, GCHandle.ToIntPtr(_windowGcHandle));
+            ShowScrollBar(Hwnd, SbVert, false);
+            (_clientWidth, _clientHeight) = GetClientSize(Hwnd);
+            _renderer = new Direct3D11SwapChainRenderer(Hwnd, _clientWidth, _clientHeight);
+        }
+        catch
+        {
+            if (_windowGcHandle.IsAllocated)
+            {
+                _windowGcHandle.Free();
+            }
+
+            DestroyWindow(Hwnd);
+            throw;
+        }
     }
 
     public event EventHandler? Closed;
@@ -142,7 +159,22 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
         Close();
+        GC.SuppressFinalize(this);
+    }
+
+    ~NativeGraphicsScreenWindow()
+    {
+        if (_windowGcHandle.IsAllocated)
+        {
+            _windowGcHandle.Free();
+        }
     }
 
     private IntPtr WindowProc(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam)
@@ -191,8 +223,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
             case WmMouseMove:
                 SetFocus(Hwnd);
-                _consoleService.SetMousePosition(GetX(lParam), GetY(lParam));
-                _consoleService.EnqueueMouseMove();
+                if (TryUpdateMousePositionFromClientPoint(GetX(lParam), GetY(lParam)))
+                {
+                    _consoleService.EnqueueMouseMove();
+                }
                 return IntPtr.Zero;
 
             case WmLButtonDown:
@@ -285,20 +319,38 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private void HandleMouseButton(IntPtr lParam, int button, bool down)
     {
         SetFocus(Hwnd);
-        _consoleService.SetMousePosition(GetX(lParam), GetY(lParam));
+        var hasMappedPosition = TryUpdateMousePositionFromClientPoint(GetX(lParam), GetY(lParam));
+        if (down && !hasMappedPosition)
+        {
+            return;
+        }
+
         if (down)
         {
             SetCapture(Hwnd);
+            _capturedMouseButtons |= GetMouseButtonMask(button);
             _consoleService.EnqueueMouseButtonPress(button);
             _consoleService.SetMouseButtonDown(button);
         }
         else
         {
+            _capturedMouseButtons &= ~GetMouseButtonMask(button);
             _consoleService.EnqueueMouseButtonRelease(button);
             _consoleService.SetMouseButtonUp(button);
-            ReleaseCapture();
+            if (_capturedMouseButtons == 0)
+            {
+                ReleaseCapture();
+            }
         }
     }
+
+    private static int GetMouseButtonMask(int button) => button switch
+    {
+        1 => 0b001,
+        2 => 0b010,
+        3 => 0b100,
+        _ => 0
+    };
 
     private void UpdateMousePositionFromScreenPoint(IntPtr lParam)
     {
@@ -310,8 +362,68 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         if (ScreenToClient(Hwnd, ref point))
         {
-            _consoleService.SetMousePosition(point.X, point.Y);
+            TryUpdateMousePositionFromClientPoint(point.X, point.Y);
         }
+    }
+
+    private bool TryUpdateMousePositionFromClientPoint(int clientX, int clientY)
+    {
+        var frameWidth = _lastFrame?.Width ?? _consoleService.ScreenWidth;
+        var frameHeight = _lastFrame?.Height ?? _consoleService.ScreenHeight;
+        if (frameWidth <= 0 || frameHeight <= 0)
+        {
+            frameWidth = _clientWidth;
+            frameHeight = _clientHeight;
+        }
+
+        if (!TryMapClientPointToFramebuffer(clientX, clientY, _clientWidth, _clientHeight, frameWidth, frameHeight, out var framebufferX, out var framebufferY))
+        {
+            _consoleService.SetMousePosition(-1, -1);
+            return false;
+        }
+
+        _consoleService.SetMousePosition(framebufferX, framebufferY);
+        return true;
+    }
+
+    internal static bool TryMapClientPointToFramebuffer(
+        int clientX,
+        int clientY,
+        int clientWidth,
+        int clientHeight,
+        int framebufferWidth,
+        int framebufferHeight,
+        out int framebufferX,
+        out int framebufferY)
+    {
+        framebufferX = -1;
+        framebufferY = -1;
+
+        if (clientWidth <= 0 ||
+            clientHeight <= 0 ||
+            framebufferWidth <= 0 ||
+            framebufferHeight <= 0)
+        {
+            return false;
+        }
+
+        var scale = Math.Min((double)clientWidth / framebufferWidth, (double)clientHeight / framebufferHeight);
+        var scaledWidth = Math.Max(1, (int)Math.Floor(framebufferWidth * scale));
+        var scaledHeight = Math.Max(1, (int)Math.Floor(framebufferHeight * scale));
+        var offsetX = (clientWidth - scaledWidth) / 2;
+        var offsetY = (clientHeight - scaledHeight) / 2;
+
+        if (clientX < offsetX ||
+            clientY < offsetY ||
+            clientX >= offsetX + scaledWidth ||
+            clientY >= offsetY + scaledHeight)
+        {
+            return false;
+        }
+
+        framebufferX = (clientX - offsetX) * framebufferWidth / scaledWidth;
+        framebufferY = (clientY - offsetY) * framebufferHeight / scaledHeight;
+        return true;
     }
 
     private void HandleVerticalScroll(int request)
@@ -431,15 +543,27 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         }
 
         _closed = true;
-        _renderer?.Dispose();
-        var handle = GCHandle.FromIntPtr(GetWindowLongPtr(Hwnd, -21));
-        if (handle.IsAllocated)
+        try
         {
-            handle.Free();
-        }
+            if (_capturedMouseButtons != 0)
+            {
+                ReleaseCapture();
+            }
 
-        Hwnd = IntPtr.Zero;
-        Closed?.Invoke(this, EventArgs.Empty);
+            _capturedMouseButtons = 0;
+            _renderer?.Dispose();
+            _renderer = null;
+        }
+        finally
+        {
+            if (_windowGcHandle.IsAllocated)
+            {
+                _windowGcHandle.Free();
+            }
+
+            Hwnd = IntPtr.Zero;
+            Closed?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private static void RegisterWindowClass()

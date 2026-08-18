@@ -89,6 +89,30 @@ public sealed class BinderTests
     }
 
     [Fact]
+    public void Bind_TilesetVariableDeclaration()
+    {
+        var program = BindProgram("DIM tiles AS TILESET", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal("tiles", declaration.Variable.Name);
+        Assert.Equal(TypeSymbol.Tileset, declaration.Variable.Type);
+        Assert.Null(declaration.Initializer);
+    }
+
+    [Fact]
+    public void Bind_TilemapVariableDeclaration()
+    {
+        var program = BindProgram("DIM level AS TILEMAP", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal("level", declaration.Variable.Name);
+        Assert.Equal(TypeSymbol.Tilemap, declaration.Variable.Type);
+        Assert.Null(declaration.Initializer);
+    }
+
+    [Fact]
     public void Bind_InKeyFunction_ReturnsString()
     {
         var program = BindProgram("PRINT INKEY()", out var diagnostics);
@@ -412,6 +436,162 @@ DRAWSPRITE hero, 1, 10, 20, 32, 16
         Assert.True(scaled.HasScale);
         Assert.Equal(TypeSymbol.Long, scaled.WidthExpression!.Type);
         Assert.Equal(TypeSymbol.Long, scaled.HeightExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_TilesetFunctionsReturnExpectedTypes()
+    {
+        const string text = """
+DIM plain AS TILESET
+DIM marginTiles AS TILESET
+DIM spacedTiles AS TILESET
+plain = LOADTILESET("assets/plain.png", 16, 8)
+marginTiles = LOADTILESET("assets/margin.png", 16, 8, 1)
+spacedTiles = LOADTILESET("assets/spaced.png", 16, 8, 1, 2)
+PRINT TILECOUNT(plain)
+PRINT TILEWIDTH(marginTiles)
+PRINT TILEHEIGHT(spacedTiles)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var plainAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[3]);
+        var plainCall = Assert.IsType<BoundCallExpression>(plainAssignment.Expression);
+        Assert.Equal(TypeSymbol.Tileset, plainCall.Type);
+        Assert.Equal(BuiltinFunctionId.LoadTileset, AssertCalledFunction(plainCall).BuiltinId);
+
+        var marginAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[4]);
+        var marginCall = Assert.IsType<BoundCallExpression>(marginAssignment.Expression);
+        Assert.Equal(TypeSymbol.Tileset, marginCall.Type);
+        Assert.Equal(BuiltinFunctionId.LoadTilesetMargin, AssertCalledFunction(marginCall).BuiltinId);
+
+        var spacedAssignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[5]);
+        var spacedCall = Assert.IsType<BoundCallExpression>(spacedAssignment.Expression);
+        Assert.Equal(TypeSymbol.Tileset, spacedCall.Type);
+        Assert.Equal(BuiltinFunctionId.LoadTilesetMarginSpacing, AssertCalledFunction(spacedCall).BuiltinId);
+
+        AssertBuiltinCall(program.GlobalStatements[6], TypeSymbol.Integer, BuiltinFunctionId.TileCount);
+        AssertBuiltinCall(program.GlobalStatements[7], TypeSymbol.Integer, BuiltinFunctionId.TileWidth);
+        AssertBuiltinCall(program.GlobalStatements[8], TypeSymbol.Integer, BuiltinFunctionId.TileHeight);
+    }
+
+    [Fact]
+    public void Bind_DrawTileBindsTilesetIndexAndCoordinates()
+    {
+        const string text = """
+DIM tiles AS TILESET
+DRAWTILE tiles, 1, 10, 20
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundDrawTileStatement>(program.GlobalStatements[1]);
+        Assert.Equal(TypeSymbol.Tileset, statement.TilesetExpression.Type);
+        Assert.Equal(TypeSymbol.Long, statement.TileIndexExpression.Type);
+        Assert.Equal(TypeSymbol.Long, statement.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, statement.YExpression.Type);
+    }
+
+    [Fact]
+    public void Bind_TilemapFunctionsReturnExpectedTypes()
+    {
+        const string text = """
+DIM level AS TILEMAP
+level = LOADTILEMAP("assets/level.tmj")
+PRINT MAPWIDTH(level)
+PRINT MAPHEIGHT(level)
+PRINT MAPPIXELWIDTH(level)
+PRINT MAPPIXELHEIGHT(level)
+PRINT MAPTILEWIDTH(level)
+PRINT MAPTILEHEIGHT(level)
+PRINT MAPLAYERCOUNT(level)
+PRINT MAPTILE(level, 1, 1, 1)
+PRINT MAPTILESET(level, 1, 1, 1)
+PRINT MAPTILEFLAGS(level, 1, 1, 1)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var assignment = Assert.IsType<BoundAssignmentStatement>(program.GlobalStatements[1]);
+        var loadCall = Assert.IsType<BoundCallExpression>(assignment.Expression);
+        Assert.Equal(TypeSymbol.Tilemap, loadCall.Type);
+        Assert.Equal(BuiltinFunctionId.LoadTilemap, AssertCalledFunction(loadCall).BuiltinId);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.MapWidth);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Integer, BuiltinFunctionId.MapHeight);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Integer, BuiltinFunctionId.MapPixelWidth);
+        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.Integer, BuiltinFunctionId.MapPixelHeight);
+        AssertBuiltinCall(program.GlobalStatements[6], TypeSymbol.Integer, BuiltinFunctionId.MapTileWidth);
+        AssertBuiltinCall(program.GlobalStatements[7], TypeSymbol.Integer, BuiltinFunctionId.MapTileHeight);
+        AssertBuiltinCall(program.GlobalStatements[8], TypeSymbol.Integer, BuiltinFunctionId.MapLayerCount);
+        AssertBuiltinCall(program.GlobalStatements[9], TypeSymbol.Integer, BuiltinFunctionId.MapTile);
+        AssertBuiltinCall(program.GlobalStatements[10], TypeSymbol.Integer, BuiltinFunctionId.MapTileset);
+        AssertBuiltinCall(program.GlobalStatements[11], TypeSymbol.Integer, BuiltinFunctionId.MapTileFlags);
+    }
+
+    [Fact]
+    public void Bind_DrawTilemapBindsTilemapAndCoordinates()
+    {
+        const string text = """
+DIM level AS TILEMAP
+DRAWTILEMAP level, 10, 20
+DRAWTILELAYER level, 2, 30, 40
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var drawTilemap = Assert.IsType<BoundDrawTilemapStatement>(program.GlobalStatements[1]);
+        var drawTileLayer = Assert.IsType<BoundDrawTileLayerStatement>(program.GlobalStatements[2]);
+        Assert.Equal(TypeSymbol.Tilemap, drawTilemap.TilemapExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawTilemap.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawTilemap.YExpression.Type);
+        Assert.Equal(TypeSymbol.Tilemap, drawTileLayer.TilemapExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawTileLayer.LayerIndexExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawTileLayer.XExpression.Type);
+        Assert.Equal(TypeSymbol.Long, drawTileLayer.YExpression.Type);
+    }
+
+    [Fact]
+    public void Bind_SetMapTileBindsCellArguments()
+    {
+        const string text = """
+DIM level AS TILEMAP
+SETMAPTILE level, 1, 2, 2, 1, 4, 3
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var setMapTile = Assert.IsType<BoundSetMapTileStatement>(program.GlobalStatements[1]);
+        Assert.Equal(TypeSymbol.Tilemap, setMapTile.TilemapExpression.Type);
+        Assert.Equal(TypeSymbol.Long, setMapTile.LayerIndexExpression.Type);
+        Assert.Equal(TypeSymbol.Long, setMapTile.ColumnExpression.Type);
+        Assert.Equal(TypeSymbol.Long, setMapTile.RowExpression.Type);
+        Assert.Equal(TypeSymbol.Long, setMapTile.TilesetIndexExpression.Type);
+        Assert.Equal(TypeSymbol.Long, setMapTile.TileIndexExpression.Type);
+        Assert.Equal(TypeSymbol.Long, setMapTile.FlagsExpression?.Type);
+    }
+
+    [Fact]
+    public void Bind_TilesetFeaturesRejectWrongTypes()
+    {
+        const string text = """
+DIM text AS STRING = "x"
+DIM count AS INTEGER = 1
+PRINT LOADTILESET(1, "w", FALSE)
+PRINT TILECOUNT(text)
+PRINT TILEWIDTH(count)
+PRINT TILEHEIGHT(text)
+DRAWTILE text, "frame", "x", FALSE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.True(diagnostics.Count >= 8);
+        Assert.All(diagnostics, static diagnostic => Assert.Equal("MB2003", diagnostic.Code));
     }
 
     [Fact]

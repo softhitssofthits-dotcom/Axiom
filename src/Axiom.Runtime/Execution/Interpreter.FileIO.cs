@@ -1,6 +1,7 @@
 using System.Security;
 using Axiom.Core;
 using Axiom.Semantics;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
@@ -14,7 +15,7 @@ public sealed partial class Interpreter
         if (existingFile is not null && existingFile.IsOpen)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Оператор OPEN: переменная '{statement.FileVariable.Name}' уже содержит открытый файл.",
                 statement.Location);
             throw new RuntimeFailureException();
@@ -30,15 +31,15 @@ public sealed partial class Interpreter
                 _ => throw new ArgumentOutOfRangeException(nameof(statement), statement.Mode, "Unsupported file mode.")
             };
 
-            var file = new RuntimeTextFile(NormalizeFileSystemPath(path), runtimeMode, FileSystemTextEncoding);
+            var file = new RuntimeTextFile(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), runtimeMode, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             _openFiles.Add(file);
             AssignVariable(statement.FileVariable, RuntimeValue.FromFile(file));
             return ExecutionSignal.None;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Оператор OPEN: путь не может быть открыт: {ex.Message}",
                 statement.PathExpression.Location);
             throw new RuntimeFailureException();
@@ -106,7 +107,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READTOEND: не удалось прочитать текст из файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -124,7 +125,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READTEXT: не удалось прочитать текст из файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -138,7 +139,7 @@ public sealed partial class Interpreter
         if (file.IsEndOfFile)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "Функция READLINE: достигнут конец файла.",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -151,7 +152,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READLINE: не удалось прочитать строку из файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -169,7 +170,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READLINES: не удалось прочитать строки из файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -183,7 +184,7 @@ public sealed partial class Interpreter
         if (file.IsEndOfFile)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "Функция SKIPLINE: достигнут конец файла.",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -197,7 +198,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция SKIPLINE: не удалось пропустить строку файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -217,7 +218,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция {operationName}: не удалось записать в файл: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -236,7 +237,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция NEWLINE: не удалось записать перевод строки в файл: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -255,7 +256,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция FLUSH: не удалось сбросить буфер файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -270,7 +271,7 @@ public sealed partial class Interpreter
         if (file.Mode == RuntimeTextFileMode.Append)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "Функция SEEKFILE: файл, открытый в режиме APPEND, не поддерживает явный переход по позиции.",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -304,7 +305,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция SEEKFILE: не удалось перейти к указанной позиции: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -318,7 +319,7 @@ public sealed partial class Interpreter
         if (file.Mode == RuntimeTextFileMode.Append)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "Функция REWIND: файл, открытый в режиме APPEND, не поддерживает переход в начало.",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -332,7 +333,7 @@ public sealed partial class Interpreter
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция REWIND: не удалось перейти в начало файла: {ex.Message}",
                 expression.Location);
             throw new RuntimeFailureException();
@@ -349,7 +350,7 @@ public sealed partial class Interpreter
         }
 
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Функция {operationName}: аргумент 'file' должен быть открыт для чтения.",
             location);
         throw new RuntimeFailureException();
@@ -365,7 +366,7 @@ public sealed partial class Interpreter
         }
 
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Функция {operationName}: аргумент 'file' должен быть открыт для записи.",
             location);
         throw new RuntimeFailureException();
@@ -386,7 +387,7 @@ public sealed partial class Interpreter
         }
 
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Операция {operationName}: нужен открытый файл.",
             location);
         throw new RuntimeFailureException();

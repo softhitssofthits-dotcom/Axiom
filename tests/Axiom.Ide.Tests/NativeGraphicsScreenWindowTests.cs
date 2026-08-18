@@ -8,6 +8,8 @@ public sealed class NativeGraphicsScreenWindowTests
 {
     private const int WmPaint = 0x000F;
     private const int WmMouseMove = 0x0200;
+    private const int WmLButtonDown = 0x0201;
+    private const int WmLButtonUp = 0x0202;
     private const int WmVScroll = 0x0115;
     private const int SbTop = 6;
 
@@ -70,6 +72,54 @@ public sealed class NativeGraphicsScreenWindowTests
 
         Assert.Equal(11, service.GetMouseX());
         Assert.Equal(22, service.GetMouseY());
+    }
+
+    [Fact]
+    public void MouseButtonReleaseOutsideFramebuffer_ReleasesPressedState()
+    {
+        var service = new ProgramConsoleService();
+        using var window = new NativeGraphicsScreenWindow(service, 64, 48);
+
+        SendMessage(window.Hwnd, WmLButtonDown, IntPtr.Zero, MakeMouseLParam(11, 22));
+        Assert.True(service.IsMouseButtonDown(1));
+
+        SendMessage(window.Hwnd, WmLButtonUp, IntPtr.Zero, MakeMouseLParam(200, 200));
+
+        Assert.False(service.IsMouseButtonDown(1));
+    }
+
+    [Fact]
+    public void TryMapClientPointToFramebuffer_ConvertsScaledCanvasCoordinates()
+    {
+        var mapped = NativeGraphicsScreenWindow.TryMapClientPointToFramebuffer(
+            clientX: 320,
+            clientY: 240,
+            clientWidth: 640,
+            clientHeight: 480,
+            framebufferWidth: 160,
+            framebufferHeight: 90,
+            out var framebufferX,
+            out var framebufferY);
+
+        Assert.True(mapped);
+        Assert.Equal(80, framebufferX);
+        Assert.Equal(45, framebufferY);
+    }
+
+    [Fact]
+    public void TryMapClientPointToFramebuffer_RejectsLetterboxArea()
+    {
+        var mapped = NativeGraphicsScreenWindow.TryMapClientPointToFramebuffer(
+            clientX: 100,
+            clientY: 20,
+            clientWidth: 640,
+            clientHeight: 480,
+            framebufferWidth: 160,
+            framebufferHeight: 90,
+            out _,
+            out _);
+
+        Assert.False(mapped);
     }
 
     [Fact]

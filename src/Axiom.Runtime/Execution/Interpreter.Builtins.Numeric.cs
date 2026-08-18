@@ -1,4 +1,5 @@
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -7,7 +8,7 @@ public sealed partial class Interpreter
 {
     private RuntimeValue EvaluateRndBuiltin()
     {
-        return RuntimeValue.FromDouble(_host.NextRandomDouble());
+        return BuiltinNumericHelpers.EvaluateRnd(() => _host.NextRandomDouble());
     }
 
     private RuntimeValue EvaluateAbsBuiltin(BoundCallExpression expression, RuntimeValue value)
@@ -36,26 +37,17 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateSgnBuiltin(RuntimeValue value, TextLocation location)
     {
-        var sign = value.Type switch
-        {
-            var type when type == TypeSymbol.Integer => Math.Sign(value.AsInteger()),
-            var type when type == TypeSymbol.Long => Math.Sign(value.AsLong()),
-            var type when type == TypeSymbol.Double => Math.Sign(value.AsDouble()),
-            var type when type == TypeSymbol.Decimal => Math.Sign(value.AsDecimal()),
-            _ => ReportInvalidRuntimeState<int>($"Unsupported SGN argument type '{value.Type.Name}'.", location)
-        };
-
-        return RuntimeValue.FromInteger(sign);
+        return BuiltinNumericHelpers.EvaluateSgn(value, location, (msg, loc) => ReportInvalidRuntimeState<int>(msg, loc));
     }
 
     private RuntimeValue EvaluateMinBuiltin(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
-        return CompareNumericValues(left, right, location) <= 0 ? left : right;
+        return BuiltinNumericHelpers.EvaluateMin(left, right, location, CompareNumericValues);
     }
 
     private RuntimeValue EvaluateMaxBuiltin(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
-        return CompareNumericValues(left, right, location) >= 0 ? left : right;
+        return BuiltinNumericHelpers.EvaluateMax(left, right, location, CompareNumericValues);
     }
 
     private RuntimeValue EvaluateClampBuiltin(
@@ -95,22 +87,22 @@ public sealed partial class Interpreter
         RuntimeValue value,
         Func<double, double> operation)
     {
-        var operand = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, argumentIndex), functionName, argumentName);
+        var operand = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, argumentIndex), functionName, argumentName, (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
         var result = operation(operand);
         return EnsureFiniteDoubleResult(result, $"Result of {functionName}({argumentName})", expression.Location);
     }
 
     private RuntimeValue EvaluateAtn2Builtin(BoundCallExpression expression, RuntimeValue y, RuntimeValue x)
     {
-        var left = ToDoubleMathOperand(y, GetBuiltInArgumentLocation(expression, 0), "ATN2", "y");
-        var right = ToDoubleMathOperand(x, GetBuiltInArgumentLocation(expression, 1), "ATN2", "x");
+        var left = BuiltinNumericHelpers.ToDoubleMathOperand(y, GetBuiltInArgumentLocation(expression, 0), "ATN2", "y", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
+        var right = BuiltinNumericHelpers.ToDoubleMathOperand(x, GetBuiltInArgumentLocation(expression, 1), "ATN2", "x", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
         var result = Math.Atan2(left, right);
         return EnsureFiniteDoubleResult(result, "Result of ATN2(y, x)", expression.Location);
     }
 
     private RuntimeValue EvaluateSqrBuiltin(BoundCallExpression expression, RuntimeValue value)
     {
-        var operand = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "SQR", "value");
+        var operand = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "SQR", "value", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
 
         if (operand < 0d)
         {
@@ -131,7 +123,7 @@ public sealed partial class Interpreter
         RuntimeValue value,
         Func<double, double> operation)
     {
-        var operand = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), functionName, "value");
+        var operand = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), functionName, "value", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
 
         if (operand <= 0d)
         {
@@ -152,7 +144,7 @@ public sealed partial class Interpreter
         RuntimeValue value,
         Func<double, double> operation)
     {
-        var operand = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), functionName, "value");
+        var operand = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), functionName, "value", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
 
         if (operand < -1d || operand > 1d)
         {
@@ -169,7 +161,7 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateAcoshBuiltin(BoundCallExpression expression, RuntimeValue value)
     {
-        var operand = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "ACOSH", "value");
+        var operand = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "ACOSH", "value", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
 
         if (operand < 1d)
         {
@@ -186,7 +178,7 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateAtanhBuiltin(BoundCallExpression expression, RuntimeValue value)
     {
-        var operand = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "ATANH", "value");
+        var operand = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "ATANH", "value", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
 
         if (operand <= -1d || operand >= 1d)
         {
@@ -203,8 +195,8 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluatePowBuiltin(BoundCallExpression expression, RuntimeValue value, RuntimeValue exponent)
     {
-        var left = ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "POW", "value");
-        var right = ToDoubleMathOperand(exponent, GetBuiltInArgumentLocation(expression, 1), "POW", "exponent");
+        var left = BuiltinNumericHelpers.ToDoubleMathOperand(value, GetBuiltInArgumentLocation(expression, 0), "POW", "value", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
+        var right = BuiltinNumericHelpers.ToDoubleMathOperand(exponent, GetBuiltInArgumentLocation(expression, 1), "POW", "exponent", (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
         var result = Math.Pow(left, right);
 
         if (double.IsNaN(result))
@@ -222,24 +214,24 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateSetSignBuiltin(BoundCallExpression expression, RuntimeValue value, RuntimeValue signFrom)
     {
-        var useNegativeSign = HasNegativeSign(signFrom, expression.Location);
+        var useNegativeSign = BuiltinNumericHelpers.HasNegativeSign(signFrom, expression.Location, (msg, loc) => ReportInvalidRuntimeState<bool>(msg, loc));
 
         return value.Type switch
         {
             var type when type == TypeSymbol.Integer => EvaluateCheckedIntegerOperation(
-                () => ApplySign(value.AsInteger(), useNegativeSign),
+                () => BuiltinNumericHelpers.ApplySign(value.AsInteger(), useNegativeSign),
                 "Result of SETSIGN(value, signFrom)",
                 GetBuiltInArgumentLocation(expression, 0)),
             var type when type == TypeSymbol.Long => EvaluateCheckedLongOperation(
-                () => ApplySign(value.AsLong(), useNegativeSign),
+                () => BuiltinNumericHelpers.ApplySign(value.AsLong(), useNegativeSign),
                 "Result of SETSIGN(value, signFrom)",
                 GetBuiltInArgumentLocation(expression, 0)),
             var type when type == TypeSymbol.Double => EnsureFiniteDoubleResult(
-                ApplySign(value.AsDouble(), useNegativeSign),
+                BuiltinNumericHelpers.ApplySign(value.AsDouble(), useNegativeSign),
                 "Result of SETSIGN(value, signFrom)",
                 GetBuiltInArgumentLocation(expression, 0)),
             var type when type == TypeSymbol.Decimal => EvaluateCheckedDecimalOperation(
-                () => ApplySign(value.AsDecimal(), useNegativeSign),
+                () => BuiltinNumericHelpers.ApplySign(value.AsDecimal(), useNegativeSign),
                 "Result of SETSIGN(value, signFrom)",
                 GetBuiltInArgumentLocation(expression, 0)),
             _ => ReportInvalidRuntimeState<RuntimeValue>($"Unsupported SETSIGN value type '{value.Type.Name}'.", expression.Location)
@@ -309,78 +301,16 @@ public sealed partial class Interpreter
 
     private int CompareNumericValues(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
-        if (left.Type != right.Type)
-        {
-            return ReportInvalidRuntimeState<int>(
-                $"Numeric comparison requires matching runtime types, but got '{left.Type.Name}' and '{right.Type.Name}'.",
-                location);
-        }
-
-        return left.Type switch
-        {
-            var type when type == TypeSymbol.Integer => left.AsInteger().CompareTo(right.AsInteger()),
-            var type when type == TypeSymbol.Long => left.AsLong().CompareTo(right.AsLong()),
-            var type when type == TypeSymbol.Double => left.AsDouble().CompareTo(right.AsDouble()),
-            var type when type == TypeSymbol.Decimal => left.AsDecimal().CompareTo(right.AsDecimal()),
-            _ => ReportInvalidRuntimeState<int>($"Unsupported numeric comparison type '{left.Type.Name}'.", location)
-        };
+        return BuiltinNumericHelpers.CompareNumericValues(left, right, location, (msg, loc) => ReportInvalidRuntimeState<int>(msg, loc));
     }
 
     private double ToDoubleMathOperand(RuntimeValue value, TextLocation location, string functionName, string argumentName)
     {
-        var numericValue = value.Type switch
-        {
-            var type when type == TypeSymbol.Integer => value.AsInteger(),
-            var type when type == TypeSymbol.Long => value.AsLong(),
-            var type when type == TypeSymbol.Double => value.AsDouble(),
-            var type when type == TypeSymbol.Decimal => (double)value.AsDecimal(),
-            _ => ReportInvalidRuntimeState<double>($"Unsupported numeric argument type '{value.Type.Name}'.", location)
-        };
-
-        if (!double.IsFinite(numericValue))
-        {
-            ReportBuiltInArgumentError(functionName, argumentName, "must be a finite numeric value.", location);
-            throw new RuntimeFailureException();
-        }
-
-        return numericValue;
+        return BuiltinNumericHelpers.ToDoubleMathOperand(value, location, functionName, argumentName, (msg, loc) => ReportInvalidRuntimeState<double>(msg, loc), ReportBuiltInArgumentError);
     }
 
     private bool HasNegativeSign(RuntimeValue value, TextLocation location)
     {
-        return value.Type switch
-        {
-            var type when type == TypeSymbol.Integer => value.AsInteger() < 0,
-            var type when type == TypeSymbol.Long => value.AsLong() < 0,
-            var type when type == TypeSymbol.Double => double.IsNegative(value.AsDouble()),
-            var type when type == TypeSymbol.Decimal => decimal.IsNegative(value.AsDecimal()),
-            _ => ReportInvalidRuntimeState<bool>($"Unsupported SETSIGN sign source type '{value.Type.Name}'.", location)
-        };
-    }
-
-    private static int ApplySign(int value, bool useNegativeSign)
-    {
-        return useNegativeSign
-            ? value <= 0 ? value : checked(-value)
-            : checked(Math.Abs(value));
-    }
-
-    private static long ApplySign(long value, bool useNegativeSign)
-    {
-        return useNegativeSign
-            ? value <= 0 ? value : checked(-value)
-            : checked(Math.Abs(value));
-    }
-
-    private static double ApplySign(double value, bool useNegativeSign)
-    {
-        var magnitude = Math.Abs(value);
-        return useNegativeSign ? -magnitude : magnitude;
-    }
-
-    private static decimal ApplySign(decimal value, bool useNegativeSign)
-    {
-        var magnitude = decimal.Abs(value);
-        return useNegativeSign ? -magnitude : magnitude;
+        return BuiltinNumericHelpers.HasNegativeSign(value, location, (msg, loc) => ReportInvalidRuntimeState<bool>(msg, loc));
     }
 }

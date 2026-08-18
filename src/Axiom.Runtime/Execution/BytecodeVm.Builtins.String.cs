@@ -1,22 +1,19 @@
 using System.Text;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private static string EvaluateLeft(string text, int count)
+    private static RuntimeValue EvaluateLeft(string text, int count)
     {
-        return count >= text.Length
-            ? text
-            : text.Substring(0, count);
+        return BuiltinStringHelpers.EvaluateLeft(text, count);
     }
 
-    private static string EvaluateRight(string text, int count)
+    private static RuntimeValue EvaluateRight(string text, int count)
     {
-        return count >= text.Length
-            ? text
-            : text.Substring(text.Length - count, count);
+        return BuiltinStringHelpers.EvaluateRight(text, count);
     }
 
     private static RuntimeValue EvaluateRightBuiltin(RuntimeValue value, int count)
@@ -27,17 +24,9 @@ public sealed partial class BytecodeVm
             : RuntimeValue.FromString(text.Substring(text.Length - count, count));
     }
 
-    private static string EvaluateMid(string text, int start, int count)
+    private static RuntimeValue EvaluateMid(string text, int start, int count)
     {
-        if (start > text.Length)
-        {
-            return string.Empty;
-        }
-
-        var zeroBasedStart = start - 1;
-        var available = text.Length - zeroBasedStart;
-        var length = Math.Min(count, available);
-        return text.Substring(zeroBasedStart, length);
+        return BuiltinStringHelpers.EvaluateMid(text, start, count);
     }
 
     private static string EvaluateTrimWhitespace(string text)
@@ -69,7 +58,7 @@ public sealed partial class BytecodeVm
             : RuntimeValue.FromString(text.Substring(start, end - start + 1));
     }
 
-    private static string EvaluateTrimCharacters(string text, string chars) => TrimByCharacters(text, chars, trimLeft: true, trimRight: true);
+    private static string EvaluateTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: true, trimEnd: true);
 
     private static string EvaluateLeftTrimWhitespace(string text)
     {
@@ -90,7 +79,7 @@ public sealed partial class BytecodeVm
             : RuntimeValue.FromString(start == text.Length ? string.Empty : text[start..]);
     }
 
-    private static string EvaluateLeftTrimCharacters(string text, string chars) => TrimByCharacters(text, chars, trimLeft: true, trimRight: false);
+    private static string EvaluateLeftTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: true, trimEnd: false);
 
     private static string EvaluateRightTrimWhitespace(string text)
     {
@@ -111,18 +100,11 @@ public sealed partial class BytecodeVm
             : RuntimeValue.FromString(end < 0 ? string.Empty : text[..(end + 1)]);
     }
 
-    private static string EvaluateRightTrimCharacters(string text, string chars) => TrimByCharacters(text, chars, trimLeft: false, trimRight: true);
+    private static string EvaluateRightTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: false, trimEnd: true);
 
-    private static string EvaluateReverse(string text)
+    private static RuntimeValue EvaluateReverse(string text)
     {
-        if (text.Length <= 1)
-        {
-            return text;
-        }
-
-        var buffer = text.ToCharArray();
-        Array.Reverse(buffer);
-        return new string(buffer);
+        return BuiltinStringHelpers.EvaluateReverse(text);
     }
 
     private static RuntimeValue EvaluateReverseBuiltin(RuntimeValue value)
@@ -359,31 +341,12 @@ public sealed partial class BytecodeVm
 
     private static int EvaluateInStr(int start, string text, string fragment)
     {
-        if (start > text.Length + 1)
-        {
-            return 0;
-        }
-
-        var index = text.IndexOf(fragment, start - 1, StringComparison.Ordinal);
-        return index < 0 ? 0 : index + 1;
+        return BuiltinStringHelpers.EvaluateInStr(start, text, fragment);
     }
 
     private static int EvaluateInStrRev(int start, string text, string fragment)
     {
-        var searchStart = Math.Min(start, text.Length);
-
-        if (fragment.Length == 0)
-        {
-            return searchStart + 1;
-        }
-
-        if (text.Length == 0)
-        {
-            return 0;
-        }
-
-        var index = text.LastIndexOf(fragment, searchStart - 1, StringComparison.Ordinal);
-        return index < 0 ? 0 : index + 1;
+        return BuiltinStringHelpers.EvaluateInStrRev(start, text, fragment);
     }
 
     private int EvaluateSubStrCount(string text, string fragment, TextLocation location)
@@ -394,23 +357,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var count = 0;
-        var startIndex = 0;
-
-        while (startIndex <= text.Length - fragment.Length)
-        {
-            var index = text.IndexOf(fragment, startIndex, StringComparison.Ordinal);
-
-            if (index < 0)
-            {
-                break;
-            }
-
-            count++;
-            startIndex = index + fragment.Length;
-        }
-
-        return count;
+        return BuiltinStringHelpers.EvaluateSubStrCount(text, fragment);
     }
 
     private int EvaluateAsc(string text, TextLocation location)

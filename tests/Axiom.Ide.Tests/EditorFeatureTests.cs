@@ -260,14 +260,14 @@ public sealed class EditorFeatureTests
         var expectedKeywords = Enum.GetValues<SyntaxKind>()
             .Where(static kind => kind.ToString().EndsWith("Keyword", StringComparison.Ordinal))
             .Select(static kind => kind.ToString()[..^"Keyword".Length].ToUpperInvariant())
-            .Except(["BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING"], StringComparer.OrdinalIgnoreCase)
+            .Except(["BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET"], StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var missingKeywords = expectedKeywords
             .Where(keyword => !AxiomHighlightingVocabulary.Keywords.Contains(keyword))
             .ToArray();
 
-        var expectedTypes = new[] { "BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING" };
+        var expectedTypes = new[] { "BOOLEAN", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET" };
         var missingTypes = expectedTypes
             .Where(typeName => !AxiomHighlightingVocabulary.TypeNames.Contains(typeName))
             .ToArray();
@@ -309,6 +309,37 @@ public sealed class EditorFeatureTests
         Assert.Contains("DRAWRECT", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("FILLRECT", AxiomHighlightingVocabulary.Keywords);
         Assert.Contains("RGB", AxiomHighlightingVocabulary.BuiltIns);
+    }
+
+    [Fact]
+    public void Highlighting_VocabularyContainsTilesetWords()
+    {
+        Assert.Contains("DRAWTILE", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("TILESET", AxiomHighlightingVocabulary.TypeNames);
+        Assert.Contains("LOADTILESET", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("TILECOUNT", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("TILEWIDTH", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("TILEHEIGHT", AxiomHighlightingVocabulary.BuiltIns);
+    }
+
+    [Fact]
+    public void Highlighting_VocabularyContainsTilemapWords()
+    {
+        Assert.Contains("DRAWTILEMAP", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("DRAWTILELAYER", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("SETMAPTILE", AxiomHighlightingVocabulary.Keywords);
+        Assert.Contains("TILEMAP", AxiomHighlightingVocabulary.TypeNames);
+        Assert.Contains("LOADTILEMAP", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPWIDTH", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPHEIGHT", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPPIXELWIDTH", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPPIXELHEIGHT", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPTILEWIDTH", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPTILEHEIGHT", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPLAYERCOUNT", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPTILE", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPTILESET", AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Contains("MAPTILEFLAGS", AxiomHighlightingVocabulary.BuiltIns);
     }
 
     [Fact]

@@ -42,27 +42,4 @@ public sealed partial class Interpreter
 
         return fill[0];
     }
-
-    private static string TrimByCharacters(string text, string chars, bool trimLeft, bool trimRight)
-    {
-        if (text.Length == 0 || chars.Length == 0)
-        {
-            return text;
-        }
-
-        var trimChars = chars.ToCharArray();
-        var result = text;
-
-        if (trimLeft)
-        {
-            result = result.TrimStart(trimChars);
-        }
-
-        if (trimRight)
-        {
-            result = result.TrimEnd(trimChars);
-        }
-
-        return result;
-    }
 }

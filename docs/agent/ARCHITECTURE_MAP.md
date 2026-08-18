@@ -84,5 +84,5 @@ Look at:
 
 - Prefer this file for orientation, not for detailed contracts.
 - For exact language behavior, always fall back to `docs/SPECIFICATION3.md`.
-- For exact session continuity, always fall back to `docs/WORKLOG4.md`.
+- For exact session continuity, always fall back to `docs/WORKLOG5.md`.
 

@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Графика</h1>
-            <p class="lead">Раздел графики описывает графические операторы, встроенные функции и типы данных языка Axiom. В этом разделе собраны исторический путь <code>SCREEN</code> для палитровой графики и текстового окна, а также современный путь <code>CANVAS</code> для полноцветного кадра, изображений и спрайтов.</p>
+            <p class="lead">Раздел графики описывает графические операторы, встроенные функции и типы данных языка Axiom. В этом разделе собраны исторический путь <code>SCREEN</code> для палитровой графики и текстового окна, а также современный путь <code>CANVAS</code> для полноцветного кадра, изображений, спрайтов, тайлсетов и тайловых карт.</p>
 
             <section class="article-section">
                 <h2>Что входит в раздел</h2>
@@ -32,8 +32,8 @@
                     <li>операторы <code>VIEW</code>, <code>WINDOW</code>, <code>PMAP</code>, <code>PCOPY</code> и экранный текст <code>CLS</code>, <code>COLOR</code>, <code>LOCATE</code>;</li>
                     <li>классические операторы рисования <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функция <code>POINT</code>;</li>
                     <li>операторы <code>GET</code> и <code>PUT</code> для переноса прямоугольного блока пикселей;</li>
-                    <li>типы <code>IMAGE</code> и <code>SPRITE</code> с функциями загрузки, измерения и вывода;</li>
-                    <li>современный графический раздел <code>CANVAS</code> с кадровым циклом, полноцветными примитивами и камерой.</li>
+                    <li>типы <code>IMAGE</code>, <code>SPRITE</code>, <code>TILESET</code> и <code>TILEMAP</code> с функциями загрузки, измерения, чтения клеток и вывода;</li>
+                    <li>современный графический раздел <code>CANVAS</code> с кадровым циклом, полноцветными примитивами, тайлами и камерой.</li>
                 </ul>
             </section>
 
@@ -53,7 +53,7 @@
             <section class="article-section">
                 <h2>Когда нужен оператор CANVAS</h2>
                 <p>Оператор <code>CANVAS</code> нужен тогда, когда программе требуется современный полноцветный кадр для 2D-игры, анимации, спрайтов, камеры и экранных подписей поверх сцены.</p>
-                <p>После оператора <code>CANVAS</code> становятся доступны <code>BEGINFRAME</code>, <code>PRESENT</code>, <code>RGB</code>, современные прямоугольники, линии, круги, <code>DRAWTEXT</code>, <code>TEXTWIDTH</code>, <code>TEXTHEIGHT</code>, <code>CAMERA</code> и <code>RESETCAMERA</code>.</p>
+                <p>После оператора <code>CANVAS</code> становятся доступны <code>BEGINFRAME</code>, <code>PRESENT</code>, <code>RGB</code>, современные прямоугольники, линии, круги, <code>DRAWTEXT</code>, <code>TEXTWIDTH</code>, <code>TEXTHEIGHT</code>, <code>DRAWTILE</code>, <code>DRAWTILEMAP</code>, <code>DRAWTILELAYER</code>, чтение клеток <code>MAPTILE</code>, <code>MAPTILESET</code>, <code>MAPTILEFLAGS</code>, запись клеток <code>SETMAPTILE</code>, <code>CAMERA</code> и <code>RESETCAMERA</code>.</p>
             </section>
 
             <section class="article-section">
@@ -84,13 +84,15 @@
                     <tbody>
                         <tr><td><a href="images.html"><code>IMAGE</code></a></td><td>Тип изображения, функции загрузки и размеров, а также оператор <code>DRAWIMAGE</code>.</td></tr>
                         <tr><td><a href="sprites.html"><code>SPRITE</code></a></td><td>Тип спрайтового листа, функции загрузки и размеров, а также оператор <code>DRAWSPRITE</code>.</td></tr>
+                        <tr><td><a href="tilesets.html"><code>TILESET</code></a></td><td>Тип тайлового атласа, функции загрузки и размеров, а также оператор <code>DRAWTILE</code>.</td></tr>
+                        <tr><td><a href="tilemaps.html"><code>TILEMAP</code></a></td><td>Тип тайловой карты, загрузка Tiled JSON, функции размеров, функции чтения клеток и операторы <code>DRAWTILEMAP</code>, <code>DRAWTILELAYER</code>, <code>SETMAPTILE</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
                 <h2>Страница современного слоя CANVAS</h2>
-                <p>Страница <a href="modern-graphics.html"><code>CANVAS</code></a> описывает отдельную группу операторов и функций современного графического слоя. На этой странице собраны оператор <code>CANVAS</code>, операторы кадрового цикла, современные примитивы, экранный текст HUD, измерение текста и камера.</p>
+                <p>Страница <a href="modern-graphics.html"><code>CANVAS</code></a> описывает отдельную группу операторов и функций современного графического слоя. На этой странице собраны оператор <code>CANVAS</code>, операторы кадрового цикла, современные примитивы, экранный текст HUD, измерение текста, тайлы и камера.</p>
             </section>
 
             <section class="article-section">
@@ -101,6 +103,8 @@
                     <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: чтение прямоугольника в двумерный массив</a></li>
                     <li><a href="../../samples/operators/put/default_xor_and_preset.axm">PUT: наложение буфера на экран</a></li>
                     <li><a href="../../samples/graphics/sprites/walk_cycle.axm">SPRITE: вывод кадров спрайтового листа</a></li>
+                    <li><a href="../../samples/operators/drawtile/basic_tileset.axm">DRAWTILE: вывод двух тайлов из одного атласа</a></li>
+                    <li><a href="../../samples/operators/drawtilemap/visible_and_layer.axm">DRAWTILEMAP: видимый слой и явный слой карты</a></li>
                     <li><a href="../../samples/graphics/modern/rectangles_frame.axm">CANVAS: современный кадровый цикл</a></li>
                     <li><a href="../../samples/graphics/game/maze_chase.axm">maze_chase: игровой пример современного графического слоя</a></li>
                 </ul>
@@ -115,6 +119,8 @@
                     <a href="get-put.html">Операторы GET и PUT</a>
                     <a href="images.html">Изображения IMAGE</a>
                     <a href="sprites.html">Спрайты SPRITE</a>
+                    <a href="tilesets.html">Тайлсеты TILESET</a>
+                    <a href="tilemaps.html">Тайловые карты TILEMAP</a>
                     <a href="modern-graphics.html">Современная графика CANVAS</a>
                 </div>
             </section>

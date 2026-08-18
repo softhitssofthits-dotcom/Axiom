@@ -311,6 +311,58 @@ public sealed class ScreenFramebuffer
             clippedBottom);
     }
 
+    public void DrawImageRegion(
+        RuntimeImageValue image,
+        int sourceX,
+        int sourceY,
+        int sourceWidth,
+        int sourceHeight,
+        long left,
+        long top,
+        int width,
+        int height,
+        long clipLeft,
+        long clipTop,
+        long clipRight,
+        long clipBottom)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        if (sourceWidth <= 0 || sourceHeight <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sourceWidth), sourceWidth, "Image source size must be positive.");
+        }
+
+        if (width <= 0 || height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), width, "Image target size must be positive.");
+        }
+
+        var clippedLeft = Math.Max(Math.Max(0, left), clipLeft);
+        var clippedTop = Math.Max(Math.Max(0, top), clipTop);
+        var clippedRight = Math.Min(Math.Min(Width - 1L, SaturatingAdd(left, width - 1L)), clipRight);
+        var clippedBottom = Math.Min(Math.Min(Height - 1L, SaturatingAdd(top, height - 1L)), clipBottom);
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        DrawTrueColorRegion(
+            image.BgraPixels,
+            image.Width,
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            left,
+            top,
+            width,
+            height,
+            clippedLeft,
+            clippedTop,
+            clippedRight,
+            clippedBottom);
+    }
+
     private void DrawTrueColorRegion(
         uint[] pixels,
         int sourceImageWidth,

@@ -156,6 +156,8 @@
         { id: "pcopy", href: "pcopy.html", label: "Оператор PCOPY" },
         { id: "images", href: "images.html", label: "Изображения IMAGE" },
         { id: "sprites", href: "sprites.html", label: "Спрайты SPRITE" },
+        { id: "tilesets", href: "tilesets.html", label: "Тайлсеты TILESET" },
+        { id: "tilemaps", href: "tilemaps.html", label: "Тайловые карты TILEMAP" },
         { id: "modern-graphics", href: "modern-graphics.html", label: "Современная графика CANVAS" },
         { id: "modern-graphics-text-metrics", href: "modern-graphics.html", label: "TEXTWIDTH и TEXTHEIGHT" },
         { id: "graphics-text", href: "graphics-text.html", label: "Текст на экране" },

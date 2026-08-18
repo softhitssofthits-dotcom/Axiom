@@ -84,6 +84,12 @@ public sealed class AxiomExecutionPipeline
         BuiltinFunctionId.LoadImage,
         BuiltinFunctionId.ImageWidth,
         BuiltinFunctionId.ImageHeight,
+        BuiltinFunctionId.LoadTileset,
+        BuiltinFunctionId.LoadTilesetMargin,
+        BuiltinFunctionId.LoadTilesetMarginSpacing,
+        BuiltinFunctionId.TileCount,
+        BuiltinFunctionId.TileWidth,
+        BuiltinFunctionId.TileHeight,
         BuiltinFunctionId.Int,
         BuiltinFunctionId.Str,
         BuiltinFunctionId.Val,
@@ -495,7 +501,7 @@ public sealed class AxiomExecutionPipeline
             || exception is NotSupportedException)
         {
             diagnostic = new Diagnostic(
-                "MB4003",
+                DiagnosticCodes.BytecodeJsonSnapshot,
                 $"Не удалось записать JSON-снимок байткода '{path}': {exception.Message}",
                 default);
             return false;
@@ -700,7 +706,7 @@ public sealed class AxiomExecutionPipeline
                 if (TryGetCapturedVariable(statement, ownVariables, out var capturedVariable, out var location))
                 {
                     diagnostic = new Diagnostic(
-                        "MB4002",
+                        DiagnosticCodes.BytecodeCapture,
                         $"Байт-кодный путь пока не поддерживает локальную процедуру или функцию '{routine.Symbol.Name}', захватывающую внешнюю переменную '{capturedVariable.Name}'.",
                         location);
                     return true;
@@ -1159,7 +1165,7 @@ public sealed class AxiomExecutionPipeline
     private static Diagnostic CreateGenericBytecodeCoverageDiagnostic(TextLocation location)
     {
         return new Diagnostic(
-            "MB4001",
+            DiagnosticCodes.BytecodeCoverage,
             "Байт-кодный режим запуска пока не покрывает текущую программу.",
             location);
     }

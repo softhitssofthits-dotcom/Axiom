@@ -1,4 +1,5 @@
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -67,10 +68,10 @@ public sealed partial class BytecodeVm
 
         if (count == 0)
         {
-            return CreateArrayWindowCopyBuiltin(
+            return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                CreateAdjustedBounds(array, dimension, start, start - 1));
+                BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, start, start - 1));
         }
 
         var end = (long)start + count - 1L;
@@ -84,10 +85,10 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        return CreateArrayWindowCopyBuiltin(
+        return BuiltinArrayHelpers.CreateArrayWindowCopy(
             arrayType,
             array,
-            CreateAdjustedBounds(array, dimension, start, (int)end));
+            BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, start, (int)end));
     }
 
     private RuntimeValue EvaluateArrayFlattenBuiltin(RuntimeValue argument, TextLocation location)
@@ -97,7 +98,7 @@ public sealed partial class BytecodeVm
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var values = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexSetAscending(array, indices => values.Add(array.GetValue(indices)));
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => values.Add(array.GetValue(indices)));
 
         return CreateCompactArrayValue(resultArrayType, values);
     }
@@ -120,10 +121,10 @@ public sealed partial class BytecodeVm
         var resultArrayType = (ArrayTypeSymbol)templateArgument.Type;
         var values = new List<RuntimeValue>(source.Length);
 
-        ForEachArrayIndexSetAscending(source, indices => values.Add(source.GetValue(indices)));
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(source, indices => values.Add(source.GetValue(indices)));
 
         var next = 0;
-        return CreateVisibleShapeArrayValue(
+        return BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             resultArrayType,
             template,
             _ => values[next++]);
@@ -143,14 +144,14 @@ public sealed partial class BytecodeVm
         {
             var dimension = ResolveTransformDimension("ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1, location);
             var clone = CloneArrayValue(arrayType, array).AsArray();
-            SortArrayAlongDimension(clone, dimension, location);
+            BuiltinArrayHelpers.SortArrayAlongDimension(clone, dimension, (l, r) => Compare(l, r, location));
             return RuntimeValue.FromArray(arrayType, clone);
         }
 
         var values = new List<(RuntimeValue Value, int OriginalOrder)>(array.Length);
         var originalOrder = 0;
 
-        ForEachArrayIndexAscending(array, index =>
+        BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index =>
         {
             values.Add((array.GetValue(index), originalOrder));
             originalOrder++;
@@ -180,13 +181,13 @@ public sealed partial class BytecodeVm
         {
             var values = new List<RuntimeValue>(array.Length);
 
-            ForEachArrayIndexDescending(array, index => values.Add(array.GetValue(index)));
+            BuiltinArrayHelpers.ForEachArrayIndexDescending(array, index => values.Add(array.GetValue(index)));
 
             return CreateCompactArrayValue(arrayType, values);
         }
 
         var dimension = ResolveTransformDimension("ARRAYTOREVERSED", array, arguments, dimensionArgumentIndex: 1, location);
-        return CreateReversedArrayCopyBuiltin(arrayType, array, dimension);
+        return BuiltinArrayHelpers.CreateReversedArrayCopy(arrayType, array, dimension);
     }
 
     private RuntimeValue EvaluateArrayTakeBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
@@ -202,16 +203,16 @@ public sealed partial class BytecodeVm
 
         var dimension = ResolveTransformDimension("ARRAYTAKE", array, arguments, dimensionArgumentIndex: 2, location);
         var lowerBound = array.GetLowerBound(dimension);
-        var extent = GetDimensionLength(array, dimension);
+        var extent = BuiltinArrayHelpers.GetDimensionLength(array, dimension);
         var takeCount = Math.Min(count, extent);
         var upperBound = takeCount == 0
             ? lowerBound - 1
             : lowerBound + takeCount - 1;
 
-        return CreateArrayWindowCopyBuiltin(
+        return BuiltinArrayHelpers.CreateArrayWindowCopy(
             arrayType,
             array,
-            CreateAdjustedBounds(array, dimension, lowerBound, upperBound));
+            BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, lowerBound, upperBound));
     }
 
     private RuntimeValue EvaluateArraySkipBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
@@ -228,28 +229,28 @@ public sealed partial class BytecodeVm
         var dimension = ResolveTransformDimension("ARRAYSKIP", array, arguments, dimensionArgumentIndex: 2, location);
         var lowerBound = array.GetLowerBound(dimension);
         var upperBound = array.GetUpperBound(dimension);
-        var extent = GetDimensionLength(array, dimension);
+        var extent = BuiltinArrayHelpers.GetDimensionLength(array, dimension);
 
         if (count <= 0)
         {
-            return CreateArrayWindowCopyBuiltin(
+            return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                CreateAdjustedBounds(array, dimension, lowerBound, upperBound));
+                BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, lowerBound, upperBound));
         }
 
         if (count >= extent)
         {
-            return CreateArrayWindowCopyBuiltin(
+            return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                CreateAdjustedBounds(array, dimension, upperBound + 1, upperBound));
+                BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, upperBound + 1, upperBound));
         }
 
-        return CreateArrayWindowCopyBuiltin(
+        return BuiltinArrayHelpers.CreateArrayWindowCopy(
             arrayType,
             array,
-            CreateAdjustedBounds(array, dimension, lowerBound + count, upperBound));
+            BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, lowerBound + count, upperBound));
     }
 
     private RuntimeValue EvaluateArrayDistinctBuiltin(RuntimeValue argument, TextLocation location)
@@ -259,7 +260,7 @@ public sealed partial class BytecodeVm
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var values = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             var candidate = array.GetValue(indices);
             var alreadyPresent = false;
@@ -309,26 +310,26 @@ public sealed partial class BytecodeVm
         var dimension = ResolveTransformDimension("ARRAYCONCAT", left, arguments, dimensionArgumentIndex: 2, location);
         EnsureCompatibleConcatShapes(left, right, dimension, location);
 
-        if (GetDimensionLength(left, dimension) == 0)
+        if (BuiltinArrayHelpers.GetDimensionLength(left, dimension) == 0)
         {
-            return CreateArrayWindowCopyBuiltin(arrayType, right, (right.LowerBounds.ToArray(), right.UpperBounds.ToArray()));
+            return BuiltinArrayHelpers.CreateArrayWindowCopy(arrayType, right, (right.LowerBounds.ToArray(), right.UpperBounds.ToArray()));
         }
 
-        if (GetDimensionLength(right, dimension) == 0)
+        if (BuiltinArrayHelpers.GetDimensionLength(right, dimension) == 0)
         {
-            return CreateArrayWindowCopyBuiltin(arrayType, left, (left.LowerBounds.ToArray(), left.UpperBounds.ToArray()));
+            return BuiltinArrayHelpers.CreateArrayWindowCopy(arrayType, left, (left.LowerBounds.ToArray(), left.UpperBounds.ToArray()));
         }
 
         var resultLowerBounds = left.LowerBounds.ToArray();
         var resultUpperBounds = left.UpperBounds.ToArray();
         var selectedIndex = dimension - 1;
-        resultUpperBounds[selectedIndex] = checked(resultLowerBounds[selectedIndex] + GetDimensionLength(left, dimension) + GetDimensionLength(right, dimension) - 1);
-        var leftLength = GetDimensionLength(left, dimension);
+        resultUpperBounds[selectedIndex] = checked(resultLowerBounds[selectedIndex] + BuiltinArrayHelpers.GetDimensionLength(left, dimension) + BuiltinArrayHelpers.GetDimensionLength(right, dimension) - 1);
+        var leftLength = BuiltinArrayHelpers.GetDimensionLength(left, dimension);
         var leftLowerBound = left.GetLowerBound(dimension);
         var rightLowerBound = right.GetLowerBound(dimension);
         var resultLowerBound = resultLowerBounds[selectedIndex];
 
-        return CreateVisibleShapeArrayValue(
+        return BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             arrayType,
             resultLowerBounds,
             resultUpperBounds,
@@ -409,7 +410,7 @@ public sealed partial class BytecodeVm
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYFILL", location);
 
-        ForEachArrayIndexSetAscending(array, indices => array.SetValue(indices, value));
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => array.SetValue(indices, value));
 
         return RuntimeValue.Void;
     }
@@ -420,12 +421,12 @@ public sealed partial class BytecodeVm
 
         if (array.Rank == 1)
         {
-            ReverseOneDimensionalArray(array);
+            BuiltinArrayHelpers.ReverseOneDimensionalArray(array);
             return RuntimeValue.Void;
         }
 
         var dimension = ResolveTransformDimension("ARRAYREVERSE", array, arguments, dimensionArgumentIndex: 1, location);
-        ReverseArrayAlongDimension(array, dimension);
+        BuiltinArrayHelpers.ReverseArrayAlongDimension(array, dimension);
         return RuntimeValue.Void;
     }
 
@@ -441,14 +442,14 @@ public sealed partial class BytecodeVm
         if (array.Rank != 1)
         {
             var dimension = ResolveTransformDimension("ARRAYSORT", array, arguments, dimensionArgumentIndex: 1, location);
-            SortArrayAlongDimension(array, dimension, location);
+            BuiltinArrayHelpers.SortArrayAlongDimension(array, dimension, (l, r) => Compare(l, r, location));
             return RuntimeValue.Void;
         }
 
         var values = new List<(RuntimeValue Value, int OriginalOrder)>(array.Length);
         var originalOrder = 0;
 
-        ForEachArrayIndexAscending(array, index =>
+        BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index =>
         {
             values.Add((array.GetValue(index), originalOrder));
             originalOrder++;
@@ -462,7 +463,7 @@ public sealed partial class BytecodeVm
                 : left.OriginalOrder.CompareTo(right.OriginalOrder);
         });
 
-        ForEachArrayIndexAscending(array, index => array.SetValue(index, values[index - array.LowerBound].Value));
+        BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index => array.SetValue(index, values[index - array.LowerBound].Value));
 
         return RuntimeValue.Void;
     }
@@ -493,11 +494,11 @@ public sealed partial class BytecodeVm
         nextUpperBounds[dimension - 1] = expandedUpperBound;
         array.AllocatePreserving(nextLowerBounds, nextUpperBounds);
 
-        ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
+        BuiltinArrayHelpers.ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
         {
             var targetIndices = baseIndices.ToArray();
             targetIndices[dimension - 1] = expandedUpperBound;
-            array.SetValue(targetIndices, valueArray.GetValue(RemoveSelectedDimensionIndices(baseIndices, dimension)));
+            array.SetValue(targetIndices, valueArray.GetValue(BuiltinArrayHelpers.RemoveSelectedDimensionIndices(baseIndices, dimension)));
         });
 
         return RuntimeValue.Void;
@@ -540,14 +541,14 @@ public sealed partial class BytecodeVm
         var removalIndex = RequireArrayRemovalIndex("ARRAYPOP", array, array.GetUpperBound(dimension), dimension, location, emptyParameterName: "array");
         var sourceType = (ArrayTypeSymbol)arguments[0].Type;
         var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceType.ElementType, sourceType.Rank - 1);
-        var resultBounds = CreateReducedBounds(array, dimension);
-        var removed = CreateVisibleShapeArrayValue(
+        var resultBounds = BuiltinArrayHelpers.CreateReducedBounds(array, dimension);
+        var removed = BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             resultType,
             resultBounds.LowerBounds,
             resultBounds.UpperBounds,
-            reducedIndices => array.GetValue(ExpandReducedIndices(reducedIndices, array.Rank, dimension, removalIndex)));
+            reducedIndices => array.GetValue(BuiltinArrayHelpers.ExpandReducedIndices(reducedIndices, array.Rank, dimension, removalIndex)));
 
-        var shrunkBounds = CreateBoundsAfterDimensionShrink(array, dimension);
+        var shrunkBounds = BuiltinArrayHelpers.CreateBoundsAfterDimensionShrink(array, dimension);
         array.AllocatePreserving(shrunkBounds.LowerBounds, shrunkBounds.UpperBounds);
         return removed;
     }
@@ -591,7 +592,7 @@ public sealed partial class BytecodeVm
         nextUpperBounds[dimension - 1] = expandedUpperBound;
         array.AllocatePreserving(nextLowerBounds, nextUpperBounds);
 
-        ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
+        BuiltinArrayHelpers.ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
         {
             for (var currentIndex = previousDimensionUpperBound; currentIndex >= insertionDimensionIndex; currentIndex--)
             {
@@ -604,7 +605,7 @@ public sealed partial class BytecodeVm
 
             var insertedIndices = baseIndices.ToArray();
             insertedIndices[dimension - 1] = insertionDimensionIndex;
-            array.SetValue(insertedIndices, valueArray.GetValue(RemoveSelectedDimensionIndices(baseIndices, dimension)));
+            array.SetValue(insertedIndices, valueArray.GetValue(BuiltinArrayHelpers.RemoveSelectedDimensionIndices(baseIndices, dimension)));
         });
 
         return RuntimeValue.Void;
@@ -645,15 +646,15 @@ public sealed partial class BytecodeVm
         var multidimensionalRemovalIndex = RequireArrayRemovalIndex("ARRAYREMOVE", array, index, dimension, location, emptyParameterName: "index");
         var sourceType = (ArrayTypeSymbol)arguments[0].Type;
         var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceType.ElementType, sourceType.Rank - 1);
-        var resultBounds = CreateReducedBounds(array, dimension);
-        var removed = CreateVisibleShapeArrayValue(
+        var resultBounds = BuiltinArrayHelpers.CreateReducedBounds(array, dimension);
+        var removed = BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             resultType,
             resultBounds.LowerBounds,
             resultBounds.UpperBounds,
-            reducedIndices => array.GetValue(ExpandReducedIndices(reducedIndices, array.Rank, dimension, multidimensionalRemovalIndex)));
+            reducedIndices => array.GetValue(BuiltinArrayHelpers.ExpandReducedIndices(reducedIndices, array.Rank, dimension, multidimensionalRemovalIndex)));
 
         var upperBound = array.GetUpperBound(dimension);
-        ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
+        BuiltinArrayHelpers.ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
         {
             for (var currentIndex = multidimensionalRemovalIndex; currentIndex < upperBound; currentIndex++)
             {
@@ -665,7 +666,7 @@ public sealed partial class BytecodeVm
             }
         });
 
-        var shrunkBounds = CreateBoundsAfterDimensionShrink(array, dimension);
+        var shrunkBounds = BuiltinArrayHelpers.CreateBoundsAfterDimensionShrink(array, dimension);
         array.AllocatePreserving(shrunkBounds.LowerBounds, shrunkBounds.UpperBounds);
         return removed;
     }
@@ -673,7 +674,7 @@ public sealed partial class BytecodeVm
     private bool EvaluateArrayContainsBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYCONTAINS", location);
-        return ArrayContainsValue(array, value);
+        return BuiltinArrayHelpers.ArrayContainsValue(array, value);
     }
 
     private RuntimeValue EvaluateArrayIndexOfBuiltin(RuntimeValue argument, RuntimeValue value, bool searchFromEnd, TextLocation location)
@@ -694,7 +695,7 @@ public sealed partial class BytecodeVm
         var array = RequireAllocatedArrayArgument(argument, "ARRAYCOUNT", location);
         var count = 0;
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             if (ValuesEqual(array.GetValue(indices), value))
             {
@@ -716,7 +717,7 @@ public sealed partial class BytecodeVm
 
         var indices = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexAscending(array, index =>
+        BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index =>
         {
             if (ValuesEqual(array.GetValue(index), value))
             {
@@ -731,7 +732,7 @@ public sealed partial class BytecodeVm
     {
         int[]? foundIndices = null;
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             if (!ValuesEqual(array.GetValue(indices), value))
             {
@@ -755,7 +756,7 @@ public sealed partial class BytecodeVm
     {
         var matches = new List<int[]>();
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             if (ValuesEqual(array.GetValue(indices), value))
             {
@@ -766,7 +767,7 @@ public sealed partial class BytecodeVm
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2);
         var lowerBounds = new[] { 1, 1 };
         var upperBounds = new[] { matches.Count == 0 ? 0 : matches.Count, array.Rank };
-        return CreateVisibleShapeArrayValue(
+        return BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             resultArrayType,
             lowerBounds,
             upperBounds,
@@ -780,34 +781,15 @@ public sealed partial class BytecodeVm
         if (array.Rank != 1)
         {
             var dimension = ResolveTransformDimension("ARRAYBINARYSEARCH", array, arguments, dimensionArgumentIndex: 2, location);
-            return FindArrayBinarySearchCoordinatesBuiltin("ARRAYBINARYSEARCH", array, arguments[1], dimension, location);
+            var foundCoords = BuiltinArrayHelpers.FindArrayBinarySearchCoordinateSet(array, arguments[1], dimension, (l, r) => Compare(l, r, location));
+            return foundCoords is null
+                ? CreateCompactArrayValue((ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer), [])
+                : CreateCompactArrayValue(
+                    (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer),
+                    foundCoords.Select(RuntimeValue.FromInteger).ToArray());
         }
 
-        long left = array.LowerBound;
-        long right = array.UpperBound;
-        int? foundIndex = null;
-
-        while (left <= right)
-        {
-            var middle = left + ((right - left) / 2);
-            var middleIndex = (int)middle;
-            var comparison = Compare(array.GetValue(middleIndex), arguments[1], location);
-
-            if (comparison < 0)
-            {
-                left = middle + 1;
-                continue;
-            }
-
-            if (comparison == 0)
-            {
-                foundIndex = middleIndex;
-            }
-
-            right = middle - 1;
-        }
-
-        return RuntimeValue.FromInteger(foundIndex ?? GetArrayNotFoundIndex("ARRAYBINARYSEARCH", array, location));
+        return RuntimeValue.FromInteger(BuiltinArrayHelpers.FindArrayBinarySearchIndex(array, arguments[1], (l, r) => Compare(l, r, location)));
     }
 
     private bool EvaluateArrayEveryBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
@@ -822,7 +804,7 @@ public sealed partial class BytecodeVm
 
         var every = true;
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             if (every && !InvokeArrayPredicate(predicate, array.GetValue(indices), location))
             {
@@ -845,7 +827,7 @@ public sealed partial class BytecodeVm
 
         var any = false;
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             if (!any && InvokeArrayPredicate(predicate, array.GetValue(indices), location))
             {
@@ -870,7 +852,7 @@ public sealed partial class BytecodeVm
 
         var values = new List<RuntimeValue>(array.Length);
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
         {
             var value = array.GetValue(indices);
             if (InvokeArrayPredicate(predicate, value, location))
@@ -893,7 +875,7 @@ public sealed partial class BytecodeVm
             return EvaluateOneDimensionalArrayMapBuiltin(array, resultType, selector, location);
         }
 
-        return CreateVisibleShapeArrayValue(
+        return BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             resultType,
             array,
             indices => InvokeArrayCallback(selector, array.GetValue(indices), location));
@@ -915,7 +897,7 @@ public sealed partial class BytecodeVm
 
         var accumulator = seed;
 
-        ForEachArrayIndexSetAscending(array, indices =>
+        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
             accumulator = InvokeArrayCallback(reducer, accumulator, array.GetValue(indices), location));
 
         return accumulator;
@@ -1123,7 +1105,7 @@ public sealed partial class BytecodeVm
 
     private int RequireArrayInsertionIndex(string functionName, RuntimeArrayValue array, int index, int dimension, TextLocation location)
     {
-        if (GetDimensionLength(array, dimension) == 0)
+        if (BuiltinArrayHelpers.GetDimensionLength(array, dimension) == 0)
         {
             if (index == 1)
             {
@@ -1158,7 +1140,7 @@ public sealed partial class BytecodeVm
 
     private int RequireArrayRemovalIndex(string functionName, RuntimeArrayValue array, int index, int dimension, TextLocation location, string emptyParameterName)
     {
-        if (GetDimensionLength(array, dimension) == 0)
+        if (BuiltinArrayHelpers.GetDimensionLength(array, dimension) == 0)
         {
             ReportBuiltInArgumentError(
                 functionName,
@@ -1228,106 +1210,6 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private static (int[] LowerBounds, int[] UpperBounds) CreateReducedBounds(RuntimeArrayValue array, int dimension)
-    {
-        var lowerBounds = new int[array.Rank - 1];
-        var upperBounds = new int[array.Rank - 1];
-        var next = 0;
-
-        for (var currentDimension = 1; currentDimension <= array.Rank; currentDimension++)
-        {
-            if (currentDimension == dimension)
-            {
-                continue;
-            }
-
-            lowerBounds[next] = array.GetLowerBound(currentDimension);
-            upperBounds[next] = array.GetUpperBound(currentDimension);
-            next++;
-        }
-
-        return (lowerBounds, upperBounds);
-    }
-
-    private static (int[] LowerBounds, int[] UpperBounds) CreateBoundsAfterDimensionShrink(RuntimeArrayValue array, int dimension)
-    {
-        var lowerBounds = array.LowerBounds.ToArray();
-        var upperBounds = array.UpperBounds.ToArray();
-        var selectedIndex = dimension - 1;
-
-        if (GetDimensionLength(array, dimension) == 1)
-        {
-            lowerBounds[selectedIndex] = 1;
-            upperBounds[selectedIndex] = 0;
-            return (lowerBounds, upperBounds);
-        }
-
-        upperBounds[selectedIndex]--;
-        return (lowerBounds, upperBounds);
-    }
-
-    private void ForEachArrayLineBaseIndicesForResize(RuntimeArrayValue array, int dimension, Action<IReadOnlyList<int>> action)
-    {
-        var selectedIndex = dimension - 1;
-        var fixedLowerBounds = array.LowerBounds.ToArray();
-        var fixedUpperBounds = array.UpperBounds.ToArray();
-        fixedLowerBounds[selectedIndex] = array.GetLowerBound(dimension);
-        fixedUpperBounds[selectedIndex] = array.GetLowerBound(dimension);
-        ForEachIndexSetAscending(fixedLowerBounds, fixedUpperBounds, action);
-    }
-
-    private static int[] RemoveSelectedDimensionIndices(IReadOnlyList<int> indices, int dimension)
-    {
-        var result = new int[indices.Count - 1];
-        var next = 0;
-
-        for (var index = 0; index < indices.Count; index++)
-        {
-            if (index == dimension - 1)
-            {
-                continue;
-            }
-
-            result[next++] = indices[index];
-        }
-
-        return result;
-    }
-
-    private static int[] ExpandReducedIndices(IReadOnlyList<int> reducedIndices, int rank, int dimension, int selectedValue)
-    {
-        var result = new int[rank];
-        var reducedIndex = 0;
-
-        for (var index = 0; index < rank; index++)
-        {
-            if (index == dimension - 1)
-            {
-                result[index] = selectedValue;
-                continue;
-            }
-
-            result[index] = reducedIndices[reducedIndex++];
-        }
-
-        return result;
-    }
-
-    private bool ArrayContainsValue(RuntimeArrayValue array, RuntimeValue value)
-    {
-        var found = false;
-
-        ForEachArrayIndexSetAscending(array, indices =>
-        {
-            if (!found && ValuesEqual(array.GetValue(indices), value))
-            {
-                found = true;
-            }
-        });
-
-        return found;
-    }
-
     private int FindArrayIndex(
         string functionName,
         RuntimeArrayValue array,
@@ -1339,7 +1221,7 @@ public sealed partial class BytecodeVm
 
         if (searchFromEnd)
         {
-            ForEachArrayIndexDescending(array, index =>
+            BuiltinArrayHelpers.ForEachArrayIndexDescending(array, index =>
             {
                 if (foundIndex is null && ValuesEqual(array.GetValue(index), value))
                 {
@@ -1349,7 +1231,7 @@ public sealed partial class BytecodeVm
         }
         else
         {
-            ForEachArrayIndexAscending(array, index =>
+            BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index =>
             {
                 if (foundIndex is null && ValuesEqual(array.GetValue(index), value))
                 {
@@ -1359,44 +1241,6 @@ public sealed partial class BytecodeVm
         }
 
         return foundIndex ?? GetArrayNotFoundIndex(functionName, array, location);
-    }
-
-    private int? FindArrayBinarySearchIndexBuiltin(
-        string functionName,
-        RuntimeArrayValue array,
-        RuntimeValue value,
-        int dimension,
-        IReadOnlyList<int> baseIndices,
-        TextLocation location)
-    {
-        var selectedIndex = dimension - 1;
-        long left = array.GetLowerBound(dimension);
-        long right = array.GetUpperBound(dimension);
-        int? foundIndex = null;
-
-        while (left <= right)
-        {
-            var middle = left + ((right - left) / 2);
-            var middleIndex = (int)middle;
-            var indices = baseIndices.ToArray();
-            indices[selectedIndex] = middleIndex;
-            var comparison = Compare(array.GetValue(indices), value, location);
-
-            if (comparison < 0)
-            {
-                left = middle + 1;
-                continue;
-            }
-
-            if (comparison == 0)
-            {
-                foundIndex = middleIndex;
-            }
-
-            right = middle - 1;
-        }
-
-        return foundIndex;
     }
 
     private int GetArrayNotFoundIndex(string functionName, RuntimeArrayValue array, TextLocation location)
@@ -1416,12 +1260,6 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private static RuntimeValue CreateUnallocatedArrayValue(ArrayTypeSymbol arrayType)
-    {
-        ArgumentNullException.ThrowIfNull(arrayType);
-        return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, rank: arrayType.Rank));
-    }
-
     private static RuntimeValue CreateArrayValue(
         ArrayTypeSymbol arrayType,
         int lowerBound,
@@ -1434,7 +1272,7 @@ public sealed partial class BytecodeVm
         var array = new RuntimeArrayValue(arrayType.ElementType);
         array.Allocate(lowerBound, upperBound);
 
-        ForEachIndexAscending(lowerBound, upperBound, index => array.SetValue(index, valueFactory(index)));
+        BuiltinArrayHelpers.ForEachIndexAscending(lowerBound, upperBound, index => array.SetValue(index, valueFactory(index)));
 
         return RuntimeValue.FromArray(arrayType, array);
     }
@@ -1452,36 +1290,6 @@ public sealed partial class BytecodeVm
                 values));
     }
 
-    private static RuntimeValue CreateVisibleShapeArrayValue(
-        ArrayTypeSymbol arrayType,
-        RuntimeArrayValue source,
-        Func<IReadOnlyList<int>, RuntimeValue> valueFactory)
-    {
-        return CreateVisibleShapeArrayValue(arrayType, source.LowerBounds, source.UpperBounds, valueFactory);
-    }
-
-    private static RuntimeValue CreateVisibleShapeArrayValue(
-        ArrayTypeSymbol arrayType,
-        IReadOnlyList<int> lowerBounds,
-        IReadOnlyList<int> upperBounds,
-        Func<IReadOnlyList<int>, RuntimeValue> valueFactory)
-    {
-        ArgumentNullException.ThrowIfNull(arrayType);
-        ArgumentNullException.ThrowIfNull(lowerBounds);
-        ArgumentNullException.ThrowIfNull(upperBounds);
-        ArgumentNullException.ThrowIfNull(valueFactory);
-
-        var array = RuntimeArrayValue.CreateVisibleShape(
-            arrayType.ElementType,
-            fixedStringLength: null,
-            lowerBounds,
-            upperBounds);
-
-        ForEachIndexSetAscending(lowerBounds, upperBounds, indices => array.SetValue(indices, valueFactory(indices)));
-
-        return RuntimeValue.FromArray(arrayType, array);
-    }
-
     private static RuntimeValue CloneArrayValue(ArrayTypeSymbol arrayType, RuntimeArrayValue source)
     {
         ArgumentNullException.ThrowIfNull(arrayType);
@@ -1489,7 +1297,7 @@ public sealed partial class BytecodeVm
 
         if (!source.IsAllocated)
         {
-            return CreateUnallocatedArrayValue(arrayType);
+            return BuiltinArrayHelpers.CreateUnallocatedArrayValue(arrayType);
         }
 
         return RuntimeValue.FromArray(arrayType, source.Clone());
@@ -1574,210 +1382,6 @@ public sealed partial class BytecodeVm
         return dimension;
     }
 
-    private RuntimeValue CreateArrayWindowCopyBuiltin(
-        ArrayTypeSymbol arrayType,
-        RuntimeArrayValue source,
-        (int[] LowerBounds, int[] UpperBounds) bounds)
-    {
-        return CreateVisibleShapeArrayValue(arrayType, bounds.LowerBounds, bounds.UpperBounds, source.GetValue);
-    }
-
-    private RuntimeValue CreateReversedArrayCopyBuiltin(
-        ArrayTypeSymbol arrayType,
-        RuntimeArrayValue source,
-        int dimension)
-    {
-        var selectedIndex = dimension - 1;
-        var lowerBounds = source.LowerBounds.ToArray();
-        var upperBounds = source.UpperBounds.ToArray();
-        var lowerBound = lowerBounds[selectedIndex];
-        var upperBound = upperBounds[selectedIndex];
-
-        return CreateVisibleShapeArrayValue(
-            arrayType,
-            lowerBounds,
-            upperBounds,
-            indices =>
-            {
-                var sourceIndices = indices.ToArray();
-                var offset = indices[selectedIndex] - lowerBound;
-                sourceIndices[selectedIndex] = upperBound - offset;
-                return source.GetValue(sourceIndices);
-            });
-    }
-
-    private RuntimeValue FindArrayBinarySearchCoordinatesBuiltin(
-        string functionName,
-        RuntimeArrayValue array,
-        RuntimeValue value,
-        int dimension,
-        TextLocation location)
-    {
-        var foundIndices = FindArrayBinarySearchCoordinateSetBuiltin(functionName, array, value, dimension, location);
-        return foundIndices is null
-            ? CreateCompactArrayValue((ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer), [])
-            : CreateCompactArrayValue(
-                (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer),
-                foundIndices.Select(RuntimeValue.FromInteger).ToArray());
-    }
-
-    private int[]? FindArrayBinarySearchCoordinateSetBuiltin(
-        string functionName,
-        RuntimeArrayValue array,
-        RuntimeValue value,
-        int dimension,
-        TextLocation location)
-    {
-        if (array.Length == 0 || GetDimensionLength(array, dimension) == 0)
-        {
-            return null;
-        }
-
-        int[]? foundIndices = null;
-        ForEachArrayLineBaseIndicesAscending(array, dimension, baseIndices =>
-        {
-            if (foundIndices is not null)
-            {
-                return;
-            }
-
-            var foundIndex = FindArrayBinarySearchIndexBuiltin(functionName, array, value, dimension, baseIndices, location);
-            if (foundIndex is null)
-            {
-                return;
-            }
-
-            foundIndices = baseIndices.ToArray();
-            foundIndices[dimension - 1] = foundIndex.Value;
-        });
-
-        return foundIndices;
-    }
-
-    private void SortArrayAlongDimension(RuntimeArrayValue array, int dimension, TextLocation location)
-    {
-        if (array.Length <= 1 || GetDimensionLength(array, dimension) <= 1)
-        {
-            return;
-        }
-
-        ForEachArrayLineBaseIndicesAscending(array, dimension, baseIndices =>
-        {
-            var sortedLine = GetStableSortedLine(array, dimension, baseIndices, location);
-            var selectedIndex = dimension - 1;
-            var lowerBound = array.GetLowerBound(dimension);
-
-            for (var offset = 0; offset < sortedLine.Count; offset++)
-            {
-                var indices = baseIndices.ToArray();
-                indices[selectedIndex] = lowerBound + offset;
-                array.SetValue(indices, sortedLine[offset]);
-            }
-        });
-    }
-
-    private List<RuntimeValue> GetStableSortedLine(
-        RuntimeArrayValue array,
-        int dimension,
-        IReadOnlyList<int> baseIndices,
-        TextLocation location)
-    {
-        var values = new List<(RuntimeValue Value, int OriginalOrder)>(GetDimensionLength(array, dimension));
-        var selectedIndex = dimension - 1;
-        var lowerBound = array.GetLowerBound(dimension);
-        var upperBound = array.GetUpperBound(dimension);
-        var originalOrder = 0;
-
-        for (var index = lowerBound; index <= upperBound; index++)
-        {
-            var indices = baseIndices.ToArray();
-            indices[selectedIndex] = index;
-            values.Add((array.GetValue(indices), originalOrder));
-            originalOrder++;
-        }
-
-        values.Sort((left, right) =>
-        {
-            var comparison = Compare(left.Value, right.Value, location);
-            return comparison != 0
-                ? comparison
-                : left.OriginalOrder.CompareTo(right.OriginalOrder);
-        });
-
-        return values.Select(static item => item.Value).ToList();
-    }
-
-    private void ForEachArrayLineBaseIndicesAscending(RuntimeArrayValue array, int dimension, Action<IReadOnlyList<int>> action)
-    {
-        if (array.Length == 0)
-        {
-            return;
-        }
-
-        var selectedIndex = dimension - 1;
-        var fixedLowerBounds = array.LowerBounds.ToArray();
-        var fixedUpperBounds = array.UpperBounds.ToArray();
-        fixedLowerBounds[selectedIndex] = array.GetLowerBound(dimension);
-        fixedUpperBounds[selectedIndex] = array.GetLowerBound(dimension);
-        ForEachIndexSetAscending(fixedLowerBounds, fixedUpperBounds, action);
-    }
-
-    private static void ReverseOneDimensionalArray(RuntimeArrayValue array)
-    {
-        var left = array.LowerBound;
-        var right = array.UpperBound;
-
-        while (left < right)
-        {
-            var leftValue = array.GetValue(left);
-            var rightValue = array.GetValue(right);
-            array.SetValue(left, rightValue);
-            array.SetValue(right, leftValue);
-            left++;
-            right--;
-        }
-    }
-
-    private static void ReverseArrayAlongDimension(RuntimeArrayValue array, int dimension)
-    {
-        var selectedIndex = dimension - 1;
-        var lowerBounds = array.LowerBounds.ToArray();
-        var upperBounds = array.UpperBounds.ToArray();
-        var lowerBound = lowerBounds[selectedIndex];
-        var upperBound = upperBounds[selectedIndex];
-
-        if (lowerBound >= upperBound)
-        {
-            return;
-        }
-
-        var fixedLowerBounds = lowerBounds.ToArray();
-        var fixedUpperBounds = upperBounds.ToArray();
-        fixedLowerBounds[selectedIndex] = lowerBound;
-        fixedUpperBounds[selectedIndex] = lowerBound;
-
-        ForEachIndexSetAscending(fixedLowerBounds, fixedUpperBounds, baseIndices =>
-        {
-            var left = lowerBound;
-            var right = upperBound;
-
-            while (left < right)
-            {
-                var leftIndices = baseIndices.ToArray();
-                var rightIndices = baseIndices.ToArray();
-                leftIndices[selectedIndex] = left;
-                rightIndices[selectedIndex] = right;
-
-                var leftValue = array.GetValue(leftIndices);
-                var rightValue = array.GetValue(rightIndices);
-                array.SetValue(leftIndices, rightValue);
-                array.SetValue(rightIndices, leftValue);
-                left++;
-                right--;
-            }
-        });
-    }
-
     private void EnsureCompatibleConcatShapes(RuntimeArrayValue left, RuntimeArrayValue right, int dimension, TextLocation location)
     {
         if (left.Rank != right.Rank)
@@ -1807,152 +1411,6 @@ public sealed partial class BytecodeVm
                     location);
                 throw new RuntimeFailureException();
             }
-        }
-    }
-
-    private static int GetDimensionLength(RuntimeArrayValue array, int dimension)
-    {
-        var lowerBound = array.GetLowerBound(dimension);
-        var upperBound = array.GetUpperBound(dimension);
-        return upperBound < lowerBound ? 0 : upperBound - lowerBound + 1;
-    }
-
-    private static (int[] LowerBounds, int[] UpperBounds) CreateAdjustedBounds(
-        RuntimeArrayValue array,
-        int dimension,
-        int selectedLowerBound,
-        int selectedUpperBound)
-    {
-        var lowerBounds = array.LowerBounds.ToArray();
-        var upperBounds = array.UpperBounds.ToArray();
-        var selectedIndex = dimension - 1;
-        lowerBounds[selectedIndex] = selectedLowerBound;
-        upperBounds[selectedIndex] = selectedUpperBound;
-        return (lowerBounds, upperBounds);
-    }
-
-    private static void ForEachArrayIndexAscending(RuntimeArrayValue array, Action<int> action)
-    {
-        ArgumentNullException.ThrowIfNull(array);
-        ArgumentNullException.ThrowIfNull(action);
-        ForEachIndexAscending(array.LowerBound, array.UpperBound, action);
-    }
-
-    private static void ForEachArrayIndexDescending(RuntimeArrayValue array, Action<int> action)
-    {
-        ArgumentNullException.ThrowIfNull(array);
-        ArgumentNullException.ThrowIfNull(action);
-        ForEachIndexDescending(array.UpperBound, array.LowerBound, action);
-    }
-
-    private static void ForEachArrayIndexSetAscending(RuntimeArrayValue array, Action<IReadOnlyList<int>> action)
-    {
-        ArgumentNullException.ThrowIfNull(array);
-        ArgumentNullException.ThrowIfNull(action);
-        array.ForEachVisibleIndexSetAscending(action);
-    }
-
-    private static void ForEachIndexAscending(int lowerBound, int upperBound, Action<int> action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-
-        if (upperBound < lowerBound)
-        {
-            return;
-        }
-
-        var index = lowerBound;
-
-        while (true)
-        {
-            action(index);
-
-            if (index == upperBound)
-            {
-                break;
-            }
-
-            index++;
-        }
-    }
-
-    private static void ForEachIndexDescending(int upperBound, int lowerBound, Action<int> action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-
-        if (upperBound < lowerBound)
-        {
-            return;
-        }
-
-        var index = upperBound;
-
-        while (true)
-        {
-            action(index);
-
-            if (index == lowerBound)
-            {
-                break;
-            }
-
-            index--;
-        }
-    }
-
-    private static void ForEachIndexSetAscending(
-        IReadOnlyList<int> lowerBounds,
-        IReadOnlyList<int> upperBounds,
-        Action<IReadOnlyList<int>> action)
-    {
-        ArgumentNullException.ThrowIfNull(lowerBounds);
-        ArgumentNullException.ThrowIfNull(upperBounds);
-        ArgumentNullException.ThrowIfNull(action);
-
-        if (lowerBounds.Count != upperBounds.Count)
-        {
-            throw new ArgumentException("Lower and upper bounds must have the same rank.");
-        }
-
-        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
-        {
-            if (upperBounds[dimension] < lowerBounds[dimension])
-            {
-                return;
-            }
-        }
-
-        var indices = new int[lowerBounds.Count];
-        ForEachIndexSetAscendingRecursive(lowerBounds, upperBounds, indices, dimension: 0, action);
-    }
-
-    private static void ForEachIndexSetAscendingRecursive(
-        IReadOnlyList<int> lowerBounds,
-        IReadOnlyList<int> upperBounds,
-        int[] indices,
-        int dimension,
-        Action<IReadOnlyList<int>> action)
-    {
-        if (dimension == indices.Length)
-        {
-            action(indices);
-            return;
-        }
-
-        var index = lowerBounds[dimension];
-        var upperBound = upperBounds[dimension];
-
-        while (true)
-        {
-            indices[dimension] = index;
-            ForEachIndexSetAscendingRecursive(lowerBounds, upperBounds, indices, dimension + 1, action);
-
-            if (index == upperBound)
-            {
-                break;
-            }
-
-            index++;
         }
     }
 }

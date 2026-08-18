@@ -1,3 +1,4 @@
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -33,7 +34,7 @@ public sealed partial class Interpreter
         var elements = values
             .Select(RuntimeValue.FromString)
             .ToArray();
-        return CreateCompactArrayValue(arrayType, elements);
+        return BuiltinArrayHelpers.CreateCompactArrayValue(arrayType, elements);
     }
 
     private static RuntimeValue EvaluateJoin(RuntimeArrayValue array, string separator)

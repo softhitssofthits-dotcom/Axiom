@@ -1,6 +1,7 @@
 using System.Security;
 using Axiom.Bytecode;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
@@ -17,7 +18,7 @@ public sealed partial class BytecodeVm
         if (existingFile is not null && existingFile.IsOpen)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Оператор OPEN: переменная '{variableName}' уже содержит открытый файл.",
                 location);
             throw new RuntimeFailureException();
@@ -26,9 +27,9 @@ public sealed partial class BytecodeVm
         try
         {
             var file = new RuntimeTextFile(
-                NormalizeFileSystemPath(path),
+                BuiltinFileSystemHelpers.NormalizeFileSystemPath(path),
                 ReadOpenMode(instruction.GetOperand(0), location),
-                FileSystemTextEncoding);
+                BuiltinFileSystemHelpers.FileSystemTextEncoding);
 
             _openFiles.Add(file);
             InvalidateReverseExecutionHistory();
@@ -38,10 +39,10 @@ public sealed partial class BytecodeVm
         {
             throw;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Оператор OPEN: путь не может быть открыт: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -111,7 +112,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READTOEND: не удалось прочитать текст из файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -129,7 +130,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READTEXT: не удалось прочитать текст из файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -142,7 +143,7 @@ public sealed partial class BytecodeVm
 
         if (file.IsEndOfFile)
         {
-            ReportRuntimeDiagnostic(BuiltinArgumentCode, "Функция READLINE: достигнут конец файла.", location);
+            ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, "Функция READLINE: достигнут конец файла.", location);
             throw new RuntimeFailureException();
         }
 
@@ -153,7 +154,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READLINE: не удалось прочитать строку из файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -171,7 +172,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция READLINES: не удалось прочитать строки из файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -184,7 +185,7 @@ public sealed partial class BytecodeVm
 
         if (file.IsEndOfFile)
         {
-            ReportRuntimeDiagnostic(BuiltinArgumentCode, "Функция SKIPLINE: достигнут конец файла.", location);
+            ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, "Функция SKIPLINE: достигнут конец файла.", location);
             throw new RuntimeFailureException();
         }
 
@@ -196,7 +197,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция SKIPLINE: не удалось пропустить строку файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -216,7 +217,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileWriteException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция {operationName}: не удалось записать в файл: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -235,7 +236,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileWriteException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция NEWLINE: не удалось записать перевод строки в файл: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -254,7 +255,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileWriteException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция FLUSH: не удалось сбросить буфер файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -269,7 +270,7 @@ public sealed partial class BytecodeVm
         if (file.Mode == RuntimeTextFileMode.Append)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "Функция SEEKFILE: файл, открытый в режиме APPEND, не поддерживает явный переход по позиции.",
                 location);
             throw new RuntimeFailureException();
@@ -295,7 +296,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция SEEKFILE: не удалось перейти к указанной позиции: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -309,7 +310,7 @@ public sealed partial class BytecodeVm
         if (file.Mode == RuntimeTextFileMode.Append)
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "Функция REWIND: файл, открытый в режиме APPEND, не поддерживает переход в начало.",
                 location);
             throw new RuntimeFailureException();
@@ -323,7 +324,7 @@ public sealed partial class BytecodeVm
         catch (Exception ex) when (IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Функция REWIND: не удалось перейти в начало файла: {ex.Message}",
                 location);
             throw new RuntimeFailureException();
@@ -340,7 +341,7 @@ public sealed partial class BytecodeVm
         }
 
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Функция {operationName}: аргумент 'file' должен быть открыт для чтения.",
             location);
         throw new RuntimeFailureException();
@@ -356,7 +357,7 @@ public sealed partial class BytecodeVm
         }
 
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Функция {operationName}: аргумент 'file' должен быть открыт для записи.",
             location);
         throw new RuntimeFailureException();
@@ -370,7 +371,7 @@ public sealed partial class BytecodeVm
             return file;
         }
 
-        ReportRuntimeDiagnostic(BuiltinArgumentCode, $"Операция {operationName}: нужен открытый файл.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, $"Операция {operationName}: нужен открытый файл.", location);
         throw new RuntimeFailureException();
     }
 

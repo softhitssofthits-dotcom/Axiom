@@ -1,0 +1,89 @@
+' Этот пример показывает, что ON MOUSE в CANVAS получает мировые координаты.
+' Двигайте мышь внутри светлой рамки и нажимайте кнопки.
+' EVT - кнопка последнего события, HOLD - текущее удержание кнопок.
+' Для выхода нажмите ESC.
+
+CANVAS 480, 270
+VIEWPORT (30, 80)-(450, 250)
+CAMERA 100, 50
+
+DIM handled AS BOOLEAN = FALSE
+DIM seenButton AS INTEGER = -1
+DIM seenX AS LONG = -1
+DIM seenY AS LONG = -1
+DIM readX AS LONG = -1
+DIM readY AS LONG = -1
+DIM holdLeft AS BOOLEAN = FALSE
+DIM holdRight AS BOOLEAN = FALSE
+DIM holdMiddle AS BOOLEAN = FALSE
+DIM holdLeftText AS STRING = "0"
+DIM holdRightText AS STRING = "0"
+DIM holdMiddleText AS STRING = "0"
+DIM keyName AS STRING = ""
+
+ON MOUSE("MOVE"), HandleMouse
+ON MOUSE(1), HandleMouse
+ON MOUSE(2), HandleMouse
+ON MOUSE(3), HandleMouse
+
+DO
+    VIEWPORT (30, 80)-(450, 250)
+    CAMERA 100, 50
+    holdLeft = MOUSEBUTTON(1)
+    holdRight = MOUSEBUTTON(2)
+    holdMiddle = MOUSEBUTTON(3)
+    holdLeftText = BoolText(holdLeft)
+    holdRightText = BoolText(holdRight)
+    holdMiddleText = BoolText(holdMiddle)
+
+    BEGINFRAME
+    CLS RGB(10, 14, 22)
+
+    FILLRECT 100, 50, 420, 170, RGB(24, 48, 88)
+    DRAWRECT 100, 50, 420, 170, RGB(210, 230, 255)
+    DRAWLINE 100, 135, 519, 135, RGB(90, 140, 220)
+    DRAWLINE 310, 50, 310, 219, RGB(90, 140, 220)
+
+    IF handled THEN
+        PSET (seenX, seenY), RGB(255, 240, 120)
+    END IF
+
+    RESETCAMERA
+    VIEWPORT
+    FILLRECT 0, 0, 480, 74, RGB(6, 8, 12)
+    DRAWTEXT "Мышь в рамке. ESC - выход.", 10, 8, RGB(240, 240, 255)
+    DRAWTEXT "EVT=" + TRIM(STR(seenButton)) + " X=" + TRIM(STR(seenX)) + " Y=" + TRIM(STR(seenY)), 10, 30, RGB(255, 242, 170)
+    DRAWTEXT "HOLD L=" + holdLeftText + " R=" + holdRightText + " M=" + holdMiddleText, 10, 54, RGB(220, 235, 255)
+    PRESENT
+
+    ' Возвращаем мировой режим до следующей границы оператора,
+    ' чтобы ON MOUSE продолжал видеть те же координаты, что и MOUSEX/MOUSEY().
+    VIEWPORT (30, 80)-(450, 250)
+    CAMERA 100, 50
+    
+    keyName = INKEY()
+LOOP WHILE keyName <> "ESC"
+
+PRINT handled
+PRINT seenButton
+PRINT seenX
+PRINT seenY
+PRINT seenX = readX
+PRINT seenY = readY
+
+SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
+    handled = TRUE
+    seenButton = button
+    seenX = x
+    seenY = y
+    readX = MOUSEX()
+    readY = MOUSEY()
+END SUB
+
+FUNCTION BoolText(flag AS BOOLEAN) AS STRING
+    IF flag THEN
+        RETURN "1"
+    END IF
+
+    RETURN "0"
+END FUNCTION

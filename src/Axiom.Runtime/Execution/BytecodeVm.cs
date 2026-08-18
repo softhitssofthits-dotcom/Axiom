@@ -4,21 +4,14 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Axiom.Bytecode;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private const string DivisionByZeroCode = "MB3001";
-    private const string ArrayBoundsCode = "MB3002";
-    private const string InputConversionCode = "MB3003";
-    private const string StepZeroCode = "MB3004";
-    private const string InvalidRuntimeStateCode = "MB3005";
-    private const string MissingReturnValueCode = "MB3006";
-    private const string BuiltinArgumentCode = "MB3007";
-    private const string NumericOverflowCode = "MB3008";
-    private const string EmptyFunctionValueCode = "MB3009";
+
     private static readonly TextLocation FallbackRuntimeLocation = new(new TextSpan(0, 0), 1, 1);
 
     private readonly DiagnosticBag _diagnostics = new();
@@ -36,6 +29,7 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol> _recordFieldCache = [];
     private readonly Dictionary<string, UserDefinedTypeSymbol> _recordTypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<PrintUsingFormatToken>> _printUsingFormatCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
     private readonly RuntimeValue?[] _constantValues;
     private readonly RuntimeValue?[] _globalsBySlot;
@@ -382,11 +376,28 @@ public sealed partial class BytecodeVm
         return builtinId is BuiltinFunctionId.Rgb
             or BuiltinFunctionId.LoadImage
             or BuiltinFunctionId.LoadSprite
+            or BuiltinFunctionId.LoadTileset
+            or BuiltinFunctionId.LoadTilesetMargin
+            or BuiltinFunctionId.LoadTilesetMarginSpacing
+            or BuiltinFunctionId.LoadTilemap
             or BuiltinFunctionId.ImageWidth
             or BuiltinFunctionId.ImageHeight
             or BuiltinFunctionId.SpriteWidth
             or BuiltinFunctionId.SpriteHeight
             or BuiltinFunctionId.SpriteCount
+            or BuiltinFunctionId.TileCount
+            or BuiltinFunctionId.TileWidth
+            or BuiltinFunctionId.TileHeight
+            or BuiltinFunctionId.MapWidth
+            or BuiltinFunctionId.MapHeight
+            or BuiltinFunctionId.MapPixelWidth
+            or BuiltinFunctionId.MapPixelHeight
+            or BuiltinFunctionId.MapTileWidth
+            or BuiltinFunctionId.MapTileHeight
+            or BuiltinFunctionId.MapLayerCount
+            or BuiltinFunctionId.MapTile
+            or BuiltinFunctionId.MapTileset
+            or BuiltinFunctionId.MapTileFlags
             or BuiltinFunctionId.CombinePath
             or BuiltinFunctionId.DirSize
             or BuiltinFunctionId.WriteFile
@@ -966,6 +977,26 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.DrawTile:
+                ExecuteDrawTileInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.DrawTilemap:
+                ExecuteDrawTilemapInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.DrawTileLayer:
+                ExecuteDrawTileLayerInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
+            case Opcode.SetMapTile:
+                ExecuteSetMapTileInstruction(frame, instructionIndex);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.DrawText:
                 ExecuteDrawTextInstruction(frame, instructionIndex);
                 InvalidateReverseExecutionHistory();
@@ -1075,7 +1106,7 @@ public sealed partial class BytecodeVm
         if (string.IsNullOrWhiteSpace(code))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "ERROR: код пользовательской ошибки не должен быть пустым.",
                 location);
             throw new RuntimeFailureException();
@@ -1155,7 +1186,7 @@ public sealed partial class BytecodeVm
 
         if (diagnostic is null)
         {
-            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(InvalidRuntimeStateCode, "Runtime failure.", 0, 0));
+            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(DiagnosticCodes.InvalidRuntimeState, "Runtime failure.", 0, 0));
         }
 
         _diagnostics.Remove(diagnostic);
@@ -1648,7 +1679,7 @@ public sealed partial class BytecodeVm
         if (IsZero(step))
         {
             ReportRuntimeDiagnostic(
-                StepZeroCode,
+                DiagnosticCodes.StepZero,
                 "В цикле FOR недопустим STEP 0.",
                 ResolveLocation(frame.Routine.Id, instructionIndex));
             throw new RuntimeFailureException();
@@ -2337,6 +2368,12 @@ public sealed partial class BytecodeVm
     private static RuntimeSpriteValue? GetSpriteUnchecked(RuntimeValue value) => (RuntimeSpriteValue?)value.Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static RuntimeTilesetValue? GetTilesetUnchecked(RuntimeValue value) => (RuntimeTilesetValue?)value.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static RuntimeTilemapValue? GetTilemapUnchecked(RuntimeValue value) => (RuntimeTilemapValue?)value.Value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetImageWidthFast(RuntimeValue value) => GetImageUnchecked(value)?.Width ?? 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2350,6 +2387,36 @@ public sealed partial class BytecodeVm
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetSpriteCountFast(RuntimeValue value) => GetSpriteUnchecked(value)?.FrameCount ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetTileCountFast(RuntimeValue value) => GetTilesetUnchecked(value)?.TileCount ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetTileWidthFast(RuntimeValue value) => GetTilesetUnchecked(value)?.TileWidth ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetTileHeightFast(RuntimeValue value) => GetTilesetUnchecked(value)?.TileHeight ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapWidthFast(RuntimeValue value) => GetTilemapUnchecked(value)?.Width ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapHeightFast(RuntimeValue value) => GetTilemapUnchecked(value)?.Height ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapPixelWidthFast(RuntimeValue value) => GetTilemapUnchecked(value)?.PixelWidth ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapPixelHeightFast(RuntimeValue value) => GetTilemapUnchecked(value)?.PixelHeight ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapTileWidthFast(RuntimeValue value) => GetTilemapUnchecked(value)?.TileWidth ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapTileHeightFast(RuntimeValue value) => GetTilemapUnchecked(value)?.TileHeight ?? 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetMapLayerCountFast(RuntimeValue value) => GetTilemapUnchecked(value)?.LayerCount ?? 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryGetFastWholeNumber(RuntimeValue value, out long result)
@@ -3147,6 +3214,194 @@ public sealed partial class BytecodeVm
                 return true;
             }
 
+            case BuiltinFunctionId.LoadTileset:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 3)
+                {
+                    return false;
+                }
+
+                var tileHeightValue = stack.PeekUnchecked();
+                var tileWidthValue = stack.PeekUnchecked(1);
+                var pathValue = stack.PeekUnchecked(2);
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                var path = GetStringUnchecked(pathValue);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                if ((tileWidthValue.Type != TypeSymbol.Integer && tileWidthValue.Type != TypeSymbol.Long)
+                    || (tileHeightValue.Type != TypeSymbol.Integer && tileHeightValue.Type != TypeSymbol.Long))
+                {
+                    return false;
+                }
+
+                var tileWidth = tileWidthValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(tileWidthValue) : GetLongUnchecked(tileWidthValue);
+                var tileHeight = tileHeightValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(tileHeightValue) : GetLongUnchecked(tileHeightValue);
+                if (tileWidth <= 0 || tileHeight <= 0 || tileWidth > int.MaxValue || tileHeight > int.MaxValue)
+                {
+                    return false;
+                }
+
+                var tileset = _host.LoadTileset(path, (int)tileWidth, (int)tileHeight);
+                if (tileset is null)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromTileset(tileset);
+                return true;
+            }
+
+            case BuiltinFunctionId.LoadTilesetMargin:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 4)
+                {
+                    return false;
+                }
+
+                var marginValue = stack.PeekUnchecked();
+                var tileHeightValue = stack.PeekUnchecked(1);
+                var tileWidthValue = stack.PeekUnchecked(2);
+                var pathValue = stack.PeekUnchecked(3);
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                var path = GetStringUnchecked(pathValue);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                if ((tileWidthValue.Type != TypeSymbol.Integer && tileWidthValue.Type != TypeSymbol.Long)
+                    || (tileHeightValue.Type != TypeSymbol.Integer && tileHeightValue.Type != TypeSymbol.Long)
+                    || (marginValue.Type != TypeSymbol.Integer && marginValue.Type != TypeSymbol.Long))
+                {
+                    return false;
+                }
+
+                var tileWidth = tileWidthValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(tileWidthValue) : GetLongUnchecked(tileWidthValue);
+                var tileHeight = tileHeightValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(tileHeightValue) : GetLongUnchecked(tileHeightValue);
+                var margin = marginValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(marginValue) : GetLongUnchecked(marginValue);
+                if (tileWidth <= 0 || tileHeight <= 0 || margin < 0 || tileWidth > int.MaxValue || tileHeight > int.MaxValue || margin > int.MaxValue)
+                {
+                    return false;
+                }
+
+                var tileset = _host.LoadTileset(path, (int)tileWidth, (int)tileHeight, (int)margin);
+                if (tileset is null)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromTileset(tileset);
+                return true;
+            }
+
+            case BuiltinFunctionId.LoadTilesetMarginSpacing:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 5)
+                {
+                    return false;
+                }
+
+                var spacingValue = stack.PeekUnchecked();
+                var marginValue = stack.PeekUnchecked(1);
+                var tileHeightValue = stack.PeekUnchecked(2);
+                var tileWidthValue = stack.PeekUnchecked(3);
+                var pathValue = stack.PeekUnchecked(4);
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                var path = GetStringUnchecked(pathValue);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                if ((tileWidthValue.Type != TypeSymbol.Integer && tileWidthValue.Type != TypeSymbol.Long)
+                    || (tileHeightValue.Type != TypeSymbol.Integer && tileHeightValue.Type != TypeSymbol.Long)
+                    || (marginValue.Type != TypeSymbol.Integer && marginValue.Type != TypeSymbol.Long)
+                    || (spacingValue.Type != TypeSymbol.Integer && spacingValue.Type != TypeSymbol.Long))
+                {
+                    return false;
+                }
+
+                var tileWidth = tileWidthValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(tileWidthValue) : GetLongUnchecked(tileWidthValue);
+                var tileHeight = tileHeightValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(tileHeightValue) : GetLongUnchecked(tileHeightValue);
+                var margin = marginValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(marginValue) : GetLongUnchecked(marginValue);
+                var spacing = spacingValue.Type == TypeSymbol.Integer ? GetIntegerUnchecked(spacingValue) : GetLongUnchecked(spacingValue);
+                if (tileWidth <= 0 || tileHeight <= 0 || margin < 0 || spacing < 0
+                    || tileWidth > int.MaxValue || tileHeight > int.MaxValue || margin > int.MaxValue || spacing > int.MaxValue)
+                {
+                    return false;
+                }
+
+                var tileset = _host.LoadTileset(path, (int)tileWidth, (int)tileHeight, (int)margin, (int)spacing);
+                if (tileset is null)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromTileset(tileset);
+                return true;
+            }
+
+            case BuiltinFunctionId.LoadTilemap:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var pathValue = stack.PeekUnchecked();
+                if (pathValue.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                var path = GetStringUnchecked(pathValue);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                var tilemap = _host.LoadTilemap(path);
+                if (tilemap is null)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromTilemap(tilemap);
+                return true;
+            }
+
             case BuiltinFunctionId.ImageWidth:
             {
                 var stack = frame.EvaluationStack;
@@ -3242,6 +3497,98 @@ public sealed partial class BytecodeVm
                 return true;
             }
 
+            case BuiltinFunctionId.TileCount:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var tilesetValue = stack.PeekUnchecked();
+                if (tilesetValue.Type != TypeSymbol.Tileset)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetTileCountFast(tilesetValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.TileWidth:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var tilesetValue = stack.PeekUnchecked();
+                if (tilesetValue.Type != TypeSymbol.Tileset)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetTileWidthFast(tilesetValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.TileHeight:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var tilesetValue = stack.PeekUnchecked();
+                if (tilesetValue.Type != TypeSymbol.Tileset)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetTileHeightFast(tilesetValue));
+                return true;
+            }
+
+            case BuiltinFunctionId.MapWidth:
+            case BuiltinFunctionId.MapHeight:
+            case BuiltinFunctionId.MapPixelWidth:
+            case BuiltinFunctionId.MapPixelHeight:
+            case BuiltinFunctionId.MapTileWidth:
+            case BuiltinFunctionId.MapTileHeight:
+            case BuiltinFunctionId.MapLayerCount:
+            {
+                var stack = frame.EvaluationStack;
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var tilemapValue = stack.PeekUnchecked();
+                if (tilemapValue.Type != TypeSymbol.Tilemap)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(executionInfo.CanonicalId switch
+                {
+                    BuiltinFunctionId.MapWidth => GetMapWidthFast(tilemapValue),
+                    BuiltinFunctionId.MapHeight => GetMapHeightFast(tilemapValue),
+                    BuiltinFunctionId.MapPixelWidth => GetMapPixelWidthFast(tilemapValue),
+                    BuiltinFunctionId.MapPixelHeight => GetMapPixelHeightFast(tilemapValue),
+                    BuiltinFunctionId.MapTileWidth => GetMapTileWidthFast(tilemapValue),
+                    BuiltinFunctionId.MapTileHeight => GetMapTileHeightFast(tilemapValue),
+                    BuiltinFunctionId.MapLayerCount => GetMapLayerCountFast(tilemapValue),
+                    _ => 0
+                });
+                return true;
+            }
+
             default:
                 return false;
         }
@@ -3279,7 +3626,7 @@ public sealed partial class BytecodeVm
                     result = RuntimeValue.FromString(Path.Combine(GetStringUnchecked(leftValue), GetStringUnchecked(rightValue)));
                     return true;
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("COMBINEPATH", "left", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3301,7 +3648,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue));
                     if (!Directory.Exists(fullPath))
                     {
                         ReportBuiltInArgumentError("DIRSIZE", "path", "указывает на папку, которая не существует.", ResolveLocation(frame.Routine.Id, instructionIndex));
@@ -3309,7 +3656,7 @@ public sealed partial class BytecodeVm
                     }
 
                     stack.PopUnchecked();
-                    result = RuntimeValue.FromLong(GetDirectorySize(fullPath));
+                    result = RuntimeValue.FromLong(BuiltinFileSystemHelpers.GetDirectorySize(fullPath));
                     return true;
                 }
                 catch (RuntimeFailureException)
@@ -3321,7 +3668,7 @@ public sealed partial class BytecodeVm
                     ReportNumericOverflow("Суммарный размер папки в функции DIRSIZE", TypeSymbol.Long, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("DIRSIZE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3344,13 +3691,13 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    File.WriteAllText(NormalizeFileSystemPath(GetStringUnchecked(pathValue)), GetStringUnchecked(textValue), FileSystemTextEncoding);
+                    File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue)), GetStringUnchecked(textValue), BuiltinFileSystemHelpers.FileSystemTextEncoding);
                     stack.PopUnchecked();
                     stack.PopUnchecked();
                     result = RuntimeValue.FromBoolean(true);
                     return true;
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("WRITEFILE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3372,7 +3719,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue));
                     if (!File.Exists(fullPath))
                     {
                         stack.PopUnchecked();
@@ -3385,7 +3732,7 @@ public sealed partial class BytecodeVm
                     result = RuntimeValue.FromBoolean(true);
                     return true;
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("DELETEFILE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3407,7 +3754,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue));
                     try
                     {
                         Directory.Delete(fullPath, recursive: true);
@@ -3429,7 +3776,7 @@ public sealed partial class BytecodeVm
                     result = RuntimeValue.FromBoolean(true);
                     return true;
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("DELETEDIRRECURSIVE", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3443,7 +3790,7 @@ public sealed partial class BytecodeVm
                     result = RuntimeValue.FromString(Environment.CurrentDirectory);
                     return true;
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("CURRENTDIR", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3465,7 +3812,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = NormalizeFileSystemPath(GetStringUnchecked(pathValue));
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue));
                     Directory.SetCurrentDirectory(fullPath);
                     stack.PopUnchecked();
                     result = RuntimeValue.FromBoolean(true);
@@ -3475,7 +3822,7 @@ public sealed partial class BytecodeVm
                 {
                     return false;
                 }
-                catch (Exception ex) when (IsFileSystemException(ex))
+                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
                 {
                     ReportFileSystemFailure("CHANGEDIR", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
                     throw new RuntimeFailureException();
@@ -3690,8 +4037,8 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
-            var destinationPath = NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
             if (!File.Exists(sourcePath))
             {
                 return false;
@@ -3717,7 +4064,7 @@ public sealed partial class BytecodeVm
             result = RuntimeValue.FromBoolean(true);
             return true;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(functionName, "destination", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
             throw new RuntimeFailureException();
@@ -3737,7 +4084,7 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
             var exists = isDirectory ? Directory.Exists(sourcePath) : File.Exists(sourcePath);
             if (!exists
                 || string.IsNullOrWhiteSpace(newName)
@@ -3768,7 +4115,7 @@ public sealed partial class BytecodeVm
             result = RuntimeValue.FromBoolean(true);
             return true;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(functionName, "newName", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
             throw new RuntimeFailureException();
@@ -3790,8 +4137,8 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var sourcePath = NormalizeFileSystemPath(source);
-            var destinationPath = NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
             if (!Directory.Exists(sourcePath))
             {
                 return false;
@@ -3803,7 +4150,7 @@ public sealed partial class BytecodeVm
             }
             else
             {
-                CopyDirectory(sourcePath, destinationPath, overwrite);
+                BuiltinFileSystemHelpers.CopyDirectory(sourcePath, destinationPath, overwrite);
             }
 
             var stack = frame.EvaluationStack;
@@ -3817,7 +4164,7 @@ public sealed partial class BytecodeVm
             result = RuntimeValue.FromBoolean(true);
             return true;
         }
-        catch (Exception ex) when (IsFileSystemException(ex))
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
             ReportFileSystemFailure(functionName, "destination", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
             throw new RuntimeFailureException();
@@ -3947,7 +4294,7 @@ public sealed partial class BytecodeVm
         if (callerFrame.EvaluationStack.Count <= callerStackDepth)
         {
             ReportRuntimeDiagnostic(
-                MissingReturnValueCode,
+                DiagnosticCodes.RuntimeMissingReturnValue,
                 $"Функция '{routine.Name}' завершилась без значения RETURN.",
                 callSiteLocation);
             throw new RuntimeFailureException();
@@ -4157,7 +4504,7 @@ public sealed partial class BytecodeVm
         }
 
         ReportRuntimeDiagnostic(
-            StepZeroCode,
+            DiagnosticCodes.StepZero,
             "В цикле FOR недопустим STEP 0.",
             ResolveLocation(frame.Routine.Id, instructionIndex));
         throw new RuntimeFailureException();
@@ -4195,7 +4542,7 @@ public sealed partial class BytecodeVm
             if (frame.EvaluationStack.Count == 0)
             {
                 ReportRuntimeDiagnostic(
-                    MissingReturnValueCode,
+                    DiagnosticCodes.RuntimeMissingReturnValue,
                     $"Функция '{frame.Routine.Name}' завершилась без значения RETURN.",
                     ResolveLocation(frame.Routine.Id, instructionIndex));
                 throw new RuntimeFailureException();
@@ -5558,18 +5905,18 @@ public sealed partial class BytecodeVm
 
     private void ReportDivisionByZero(TextLocation location)
     {
-        ReportRuntimeDiagnostic(DivisionByZeroCode, "Деление на ноль.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.DivisionByZero, "Деление на ноль.", location);
     }
 
     private void ReportNumericOverflow(string detail, TypeSymbol type, TextLocation location)
     {
-        ReportRuntimeDiagnostic(NumericOverflowCode, $"{detail} выходит за диапазон {type.Name}.", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.NumericOverflow, $"{detail} выходит за диапазон {type.Name}.", location);
     }
 
     private void ReportEmptyFunctionValue(TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            EmptyFunctionValueCode,
+            DiagnosticCodes.EmptyFunctionValue,
             "Значение функционального типа не содержит функции.",
             location);
     }
@@ -5577,14 +5924,14 @@ public sealed partial class BytecodeVm
     private void ReportBuiltInArgumentError(string functionName, string argumentName, string detail, TextLocation location)
     {
         ReportRuntimeDiagnostic(
-            BuiltinArgumentCode,
+            DiagnosticCodes.BuiltinArgument,
             $"Функция {functionName}: аргумент '{argumentName}' {detail}",
             location);
     }
 
     private void ReportInvalidRuntimeState(string message, TextLocation? location = null)
     {
-        ReportRuntimeDiagnostic(InvalidRuntimeStateCode, message, location ?? FallbackRuntimeLocation);
+        ReportRuntimeDiagnostic(DiagnosticCodes.InvalidRuntimeState, message, location ?? FallbackRuntimeLocation);
     }
 
     private T ReportInvalidRuntimeState<T>(string message, TextLocation? location = null)

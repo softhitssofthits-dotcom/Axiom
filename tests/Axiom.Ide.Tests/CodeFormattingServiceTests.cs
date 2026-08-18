@@ -167,6 +167,42 @@ public sealed class CodeFormattingServiceTests
     }
 
     [Fact]
+    public void FormatLine_FormatsTilesetKeywordsTypesAndBuiltIns()
+    {
+        var classicDeclaration = _service.FormatLine("dim tiles as tileset", CodeFormattingStyle.Classic);
+        var classicLoad = _service.FormatLine("tiles=loadtileset(path,16,16,1,2)", CodeFormattingStyle.Classic);
+        var classicDraw = _service.FormatLine("drawtile tiles,4,88,40", CodeFormattingStyle.Classic);
+        var modernDeclaration = _service.FormatLine("dim tiles as tileset", CodeFormattingStyle.Modern);
+        var modernInfo = _service.FormatLine("print tilecount(tiles),tilewidth(tiles),tileheight(tiles)", CodeFormattingStyle.Modern);
+
+        Assert.Equal("DIM tiles AS TILESET", classicDeclaration);
+        Assert.Equal("tiles = LOADTILESET(path, 16, 16, 1, 2)", classicLoad);
+        Assert.Equal("DRAWTILE tiles, 4, 88, 40", classicDraw);
+        Assert.Equal("Dim tiles As Tileset", modernDeclaration);
+        Assert.Equal("Print Tilecount(tiles), Tilewidth(tiles), Tileheight(tiles)", modernInfo);
+    }
+
+    [Fact]
+    public void FormatLine_FormatsTilemapKeywordsTypesAndBuiltIns()
+    {
+        var classicDeclaration = _service.FormatLine("dim level as tilemap", CodeFormattingStyle.Classic);
+        var classicLoad = _service.FormatLine("level=loadtilemap(path)", CodeFormattingStyle.Classic);
+        var classicDraw = _service.FormatLine("drawtilemap level,32,48", CodeFormattingStyle.Classic);
+        var classicLayer = _service.FormatLine("drawtilelayer level,2,32,48", CodeFormattingStyle.Classic);
+        var classicSet = _service.FormatLine("setmaptile level,1,2,2,1,4,3", CodeFormattingStyle.Classic);
+        var modernDeclaration = _service.FormatLine("dim level as tilemap", CodeFormattingStyle.Modern);
+        var modernInfo = _service.FormatLine("print mapwidth(level),maptile(level,1,1,1),maptileflags(level,1,1,1)", CodeFormattingStyle.Modern);
+
+        Assert.Equal("DIM level AS TILEMAP", classicDeclaration);
+        Assert.Equal("level = LOADTILEMAP(path)", classicLoad);
+        Assert.Equal("DRAWTILEMAP level, 32, 48", classicDraw);
+        Assert.Equal("DRAWTILELAYER level, 2, 32, 48", classicLayer);
+        Assert.Equal("SETMAPTILE level, 1, 2, 2, 1, 4, 3", classicSet);
+        Assert.Equal("Dim level As Tilemap", modernDeclaration);
+        Assert.Equal("Print Mapwidth(level), Maptile(level, 1, 1, 1), Maptileflags(level, 1, 1, 1)", modernInfo);
+    }
+
+    [Fact]
     public void FormatLine_Classic_FormatsShiftPowerAndIntegerDivisionOperators()
     {
         var result = _service.FormatLine("print(a<<2)+(b>>1)+2^3+7\\2", CodeFormattingStyle.Classic);

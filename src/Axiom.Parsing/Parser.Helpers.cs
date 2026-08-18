@@ -40,7 +40,7 @@ public sealed partial class Parser
         }
 
         Diagnostics.Report(
-            ExpectedIdentifierCode,
+            DiagnosticCodes.ExpectedIdentifier,
             "Ожидался идентификатор.",
             CreateDiagnosticLocation(Current.Location));
 
@@ -55,7 +55,7 @@ public sealed partial class Parser
         }
 
         Diagnostics.Report(
-            ExpectedIdentifierCode,
+            DiagnosticCodes.ExpectedIdentifier,
             "Ожидался идентификатор.",
             CreateDiagnosticLocation(Current.Location));
 
@@ -77,6 +77,8 @@ public sealed partial class Parser
             or SyntaxKind.BooleanKeyword
             or SyntaxKind.ImageKeyword
             or SyntaxKind.SpriteKeyword
+            or SyntaxKind.TilemapKeyword
+            or SyntaxKind.TilesetKeyword
             or SyntaxKind.FileKeyword)
         {
             return NextToken();
@@ -112,7 +114,7 @@ public sealed partial class Parser
         }
 
         Diagnostics.Report(
-            ExpectedTokenCode,
+            DiagnosticCodes.ExpectedToken,
             $"Ожидался {displayName}.",
             CreateDiagnosticLocation(Current.Location));
 
@@ -172,7 +174,7 @@ public sealed partial class Parser
     private void ReportExpectedToken(string expectedDisplayName)
     {
         Diagnostics.Report(
-            ExpectedTokenCode,
+            DiagnosticCodes.ExpectedToken,
             $"Ожидался {expectedDisplayName}.",
             CreateDiagnosticLocation(Current.Location));
     }
@@ -180,7 +182,7 @@ public sealed partial class Parser
     private void ReportExpectedExpression()
     {
         Diagnostics.Report(
-            ExpectedExpressionCode,
+            DiagnosticCodes.ExpectedExpression,
             "Ожидалось выражение.",
             CreateDiagnosticLocation(Current.Location));
     }
@@ -188,7 +190,7 @@ public sealed partial class Parser
     private void ReportUnexpectedToken(SyntaxToken token, string description)
     {
         Diagnostics.Report(
-            UnexpectedTokenCode,
+            DiagnosticCodes.UnexpectedToken,
             $"{description}: '{token.Text}'.",
             CreateDiagnosticLocation(token.Location));
     }
@@ -305,6 +307,9 @@ public sealed partial class Parser
             TokenKind.DrawLineKeyword => SyntaxKind.DrawLineKeyword,
             TokenKind.DrawRectKeyword => SyntaxKind.DrawRectKeyword,
             TokenKind.DrawSpriteKeyword => SyntaxKind.DrawSpriteKeyword,
+            TokenKind.DrawTileKeyword => SyntaxKind.DrawTileKeyword,
+            TokenKind.DrawTileLayerKeyword => SyntaxKind.DrawTileLayerKeyword,
+            TokenKind.DrawTilemapKeyword => SyntaxKind.DrawTilemapKeyword,
             TokenKind.DrawTextKeyword => SyntaxKind.DrawTextKeyword,
             TokenKind.ElseKeyword => SyntaxKind.ElseKeyword,
             TokenKind.ElseIfKeyword => SyntaxKind.ElseIfKeyword,
@@ -354,6 +359,7 @@ public sealed partial class Parser
             TokenKind.ReturnKeyword => SyntaxKind.ReturnKeyword,
             TokenKind.SelfKeyword => SyntaxKind.SelfKeyword,
             TokenKind.SelectKeyword => SyntaxKind.SelectKeyword,
+            TokenKind.SetMapTileKeyword => SyntaxKind.SetMapTileKeyword,
             TokenKind.ScreenKeyword => SyntaxKind.ScreenKeyword,
             TokenKind.SleepKeyword => SyntaxKind.SleepKeyword,
             TokenKind.StepKeyword => SyntaxKind.StepKeyword,
@@ -361,6 +367,8 @@ public sealed partial class Parser
             TokenKind.SpriteKeyword => SyntaxKind.SpriteKeyword,
             TokenKind.StringKeyword => SyntaxKind.StringKeyword,
             TokenKind.SubKeyword => SyntaxKind.SubKeyword,
+            TokenKind.TilemapKeyword => SyntaxKind.TilemapKeyword,
+            TokenKind.TilesetKeyword => SyntaxKind.TilesetKeyword,
             TokenKind.ThenKeyword => SyntaxKind.ThenKeyword,
             TokenKind.ToKeyword => SyntaxKind.ToKeyword,
             TokenKind.TransparentKeyword => SyntaxKind.TransparentKeyword,

@@ -70,6 +70,10 @@ public sealed partial class Interpreter
             BoundFillRectStatement fillRect => ExecuteFillRect(fillRect),
             BoundDrawImageStatement drawImage => ExecuteDrawImage(drawImage),
             BoundDrawSpriteStatement drawSprite => ExecuteDrawSprite(drawSprite),
+            BoundDrawTileStatement drawTile => ExecuteDrawTile(drawTile),
+            BoundDrawTilemapStatement drawTilemap => ExecuteDrawTilemap(drawTilemap),
+            BoundDrawTileLayerStatement drawTileLayer => ExecuteDrawTileLayer(drawTileLayer),
+            BoundSetMapTileStatement setMapTile => ExecuteSetMapTile(setMapTile),
             BoundOnKeyStatement onKey => ExecuteOnKey(onKey),
             BoundOnMouseStatement onMouse => ExecuteOnMouse(onMouse),
             BoundOpenStatement open => ExecuteOpen(open),
@@ -369,7 +373,7 @@ public sealed partial class Interpreter
                 ? string.Empty
                 : $" по измерению #{index + 1}";
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 $"Массив '{variableName}' не может иметь нижнюю границу {int.MinValue}{dimensionText}, потому что значение слева от диапазона используется поисковыми функциями массива как признак отсутствия совпадения.",
                 arrayBounds[index].LowerBound.Location);
             throw new RuntimeFailureException();
@@ -558,7 +562,7 @@ public sealed partial class Interpreter
         if (string.IsNullOrWhiteSpace(code))
         {
             ReportRuntimeDiagnostic(
-                BuiltinArgumentCode,
+                DiagnosticCodes.BuiltinArgument,
                 "ERROR: код пользовательской ошибки не должен быть пустым.",
                 statement.Expression.Location);
             throw new RuntimeFailureException();
@@ -633,7 +637,7 @@ public sealed partial class Interpreter
 
         if (diagnostic is null)
         {
-            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue("MB3005", "Runtime failure.", 0, 0));
+            return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(DiagnosticCodes.InvalidRuntimeState, "Runtime failure.", 0, 0));
         }
 
         _diagnostics.Remove(diagnostic);

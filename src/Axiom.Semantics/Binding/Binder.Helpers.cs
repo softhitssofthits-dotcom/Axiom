@@ -75,7 +75,7 @@ public sealed partial class Binder
     private void ReportArrayMapRejectsNestedArrayResult(TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(
-            TypeMismatchCode,
+            DiagnosticCodes.TypeMismatch,
             $"Функция 'ARRAYMAP' не может строить массив с элементами типа {actualType.Name}. Вложенные массивы не поддерживаются.",
             location);
     }

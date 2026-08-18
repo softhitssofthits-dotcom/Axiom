@@ -1247,3 +1247,221 @@ public sealed class DrawSpriteStatementSyntax : StatementSyntax
 
     public bool HasScale => WidthExpression is not null || HeightExpression is not null;
 }
+
+public sealed class DrawTileStatementSyntax : StatementSyntax
+{
+    public DrawTileStatementSyntax(
+        SyntaxToken drawTileKeyword,
+        ExpressionSyntax tilesetExpression,
+        SyntaxToken tileIndexCommaToken,
+        ExpressionSyntax tileIndexExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax xExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax yExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawTileKeyword);
+        ArgumentNullException.ThrowIfNull(tilesetExpression);
+        ArgumentNullException.ThrowIfNull(tileIndexCommaToken);
+        ArgumentNullException.ThrowIfNull(tileIndexExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        DrawTileKeyword = drawTileKeyword;
+        TilesetExpression = tilesetExpression;
+        TileIndexCommaToken = tileIndexCommaToken;
+        TileIndexExpression = tileIndexExpression;
+        XCommaToken = xCommaToken;
+        XExpression = xExpression;
+        YCommaToken = yCommaToken;
+        YExpression = yExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawTileStatement;
+
+    public SyntaxToken DrawTileKeyword { get; }
+
+    public ExpressionSyntax TilesetExpression { get; }
+
+    public SyntaxToken TileIndexCommaToken { get; }
+
+    public ExpressionSyntax TileIndexExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+}
+
+public sealed class DrawTilemapStatementSyntax : StatementSyntax
+{
+    public DrawTilemapStatementSyntax(
+        SyntaxToken drawTilemapKeyword,
+        ExpressionSyntax tilemapExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax xExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax yExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawTilemapKeyword);
+        ArgumentNullException.ThrowIfNull(tilemapExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        DrawTilemapKeyword = drawTilemapKeyword;
+        TilemapExpression = tilemapExpression;
+        XCommaToken = xCommaToken;
+        XExpression = xExpression;
+        YCommaToken = yCommaToken;
+        YExpression = yExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawTilemapStatement;
+
+    public SyntaxToken DrawTilemapKeyword { get; }
+
+    public ExpressionSyntax TilemapExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+}
+
+public sealed class DrawTileLayerStatementSyntax : StatementSyntax
+{
+    public DrawTileLayerStatementSyntax(
+        SyntaxToken drawTileLayerKeyword,
+        ExpressionSyntax tilemapExpression,
+        SyntaxToken layerIndexCommaToken,
+        ExpressionSyntax layerIndexExpression,
+        SyntaxToken xCommaToken,
+        ExpressionSyntax xExpression,
+        SyntaxToken yCommaToken,
+        ExpressionSyntax yExpression)
+    {
+        ArgumentNullException.ThrowIfNull(drawTileLayerKeyword);
+        ArgumentNullException.ThrowIfNull(tilemapExpression);
+        ArgumentNullException.ThrowIfNull(layerIndexCommaToken);
+        ArgumentNullException.ThrowIfNull(layerIndexExpression);
+        ArgumentNullException.ThrowIfNull(xCommaToken);
+        ArgumentNullException.ThrowIfNull(xExpression);
+        ArgumentNullException.ThrowIfNull(yCommaToken);
+        ArgumentNullException.ThrowIfNull(yExpression);
+
+        DrawTileLayerKeyword = drawTileLayerKeyword;
+        TilemapExpression = tilemapExpression;
+        LayerIndexCommaToken = layerIndexCommaToken;
+        LayerIndexExpression = layerIndexExpression;
+        XCommaToken = xCommaToken;
+        XExpression = xExpression;
+        YCommaToken = yCommaToken;
+        YExpression = yExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DrawTileLayerStatement;
+
+    public SyntaxToken DrawTileLayerKeyword { get; }
+
+    public ExpressionSyntax TilemapExpression { get; }
+
+    public SyntaxToken LayerIndexCommaToken { get; }
+
+    public ExpressionSyntax LayerIndexExpression { get; }
+
+    public SyntaxToken XCommaToken { get; }
+
+    public ExpressionSyntax XExpression { get; }
+
+    public SyntaxToken YCommaToken { get; }
+
+    public ExpressionSyntax YExpression { get; }
+}
+
+public sealed class SetMapTileStatementSyntax : StatementSyntax
+{
+    public SetMapTileStatementSyntax(
+        SyntaxToken setMapTileKeyword,
+        ExpressionSyntax tilemapExpression,
+        SyntaxToken layerIndexCommaToken,
+        ExpressionSyntax layerIndexExpression,
+        SyntaxToken columnCommaToken,
+        ExpressionSyntax columnExpression,
+        SyntaxToken rowCommaToken,
+        ExpressionSyntax rowExpression,
+        SyntaxToken tilesetIndexCommaToken,
+        ExpressionSyntax tilesetIndexExpression,
+        SyntaxToken tileIndexCommaToken,
+        ExpressionSyntax tileIndexExpression,
+        SyntaxToken? flagsCommaToken,
+        ExpressionSyntax? flagsExpression)
+    {
+        ArgumentNullException.ThrowIfNull(setMapTileKeyword);
+        ArgumentNullException.ThrowIfNull(tilemapExpression);
+        ArgumentNullException.ThrowIfNull(layerIndexCommaToken);
+        ArgumentNullException.ThrowIfNull(layerIndexExpression);
+        ArgumentNullException.ThrowIfNull(columnCommaToken);
+        ArgumentNullException.ThrowIfNull(columnExpression);
+        ArgumentNullException.ThrowIfNull(rowCommaToken);
+        ArgumentNullException.ThrowIfNull(rowExpression);
+        ArgumentNullException.ThrowIfNull(tilesetIndexCommaToken);
+        ArgumentNullException.ThrowIfNull(tilesetIndexExpression);
+        ArgumentNullException.ThrowIfNull(tileIndexCommaToken);
+        ArgumentNullException.ThrowIfNull(tileIndexExpression);
+
+        SetMapTileKeyword = setMapTileKeyword;
+        TilemapExpression = tilemapExpression;
+        LayerIndexCommaToken = layerIndexCommaToken;
+        LayerIndexExpression = layerIndexExpression;
+        ColumnCommaToken = columnCommaToken;
+        ColumnExpression = columnExpression;
+        RowCommaToken = rowCommaToken;
+        RowExpression = rowExpression;
+        TilesetIndexCommaToken = tilesetIndexCommaToken;
+        TilesetIndexExpression = tilesetIndexExpression;
+        TileIndexCommaToken = tileIndexCommaToken;
+        TileIndexExpression = tileIndexExpression;
+        FlagsCommaToken = flagsCommaToken;
+        FlagsExpression = flagsExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.SetMapTileStatement;
+
+    public SyntaxToken SetMapTileKeyword { get; }
+
+    public ExpressionSyntax TilemapExpression { get; }
+
+    public SyntaxToken LayerIndexCommaToken { get; }
+
+    public ExpressionSyntax LayerIndexExpression { get; }
+
+    public SyntaxToken ColumnCommaToken { get; }
+
+    public ExpressionSyntax ColumnExpression { get; }
+
+    public SyntaxToken RowCommaToken { get; }
+
+    public ExpressionSyntax RowExpression { get; }
+
+    public SyntaxToken TilesetIndexCommaToken { get; }
+
+    public ExpressionSyntax TilesetIndexExpression { get; }
+
+    public SyntaxToken TileIndexCommaToken { get; }
+
+    public ExpressionSyntax TileIndexExpression { get; }
+
+    public SyntaxToken? FlagsCommaToken { get; }
+
+    public ExpressionSyntax? FlagsExpression { get; }
+}

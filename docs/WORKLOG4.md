@@ -1,6 +1,8 @@
 # Журнал работ 4
 
-Этот файл является активным журналом работ проекта начиная с Session 832.
+**Статус: исторический.** Активный журнал продолжается в `docs/WORKLOG5.md`.
+
+Этот файл содержит записи с Session 832 по Session 1031.
 
 Исторические части журнала:
 - `docs/WORKLOG.md` содержит записи до Session 168 включительно;
@@ -5760,3 +5762,630 @@
 - считать перенос `GET` / `PUT` в `CANVAS` закрытым;
 - считать базовую выборочную волну переноса части совместимого графического слоя в `CANVAS` завершённой;
 - следующий графический шаг выбирать уже не по старому списку операторов, а по следующей реальной потребности modern graphics.
+
+## Session 1011 - 2026-06-08 13:11 - мышь перенесена в CANVAS
+
+Задача:
+- довести `MOUSEX`, `MOUSEY`, `MOUSEBUTTON`, `MOUSEPRESS` и `ON MOUSE` до полного рабочего договора в `CANVAS`;
+- синхронизировать manual, runnable-примеры, acceptance-проверки и активные реестры.
+
+Что сделано:
+1. В уже изменённом runtime-слое `src/Axiom.Runtime/Execution/Interpreter.Mouse.cs` и `src/Axiom.Runtime/Execution/BytecodeVm.Mouse.cs` мышиные функции и `ON MOUSE` переведены на общий допуск активной рисуемой поверхности `SCREEN` или `CANVAS`.
+2. Зафиксирован новый координатный договор `CANVAS`: `MOUSEX()` и `MOUSEY()` теперь переводят экранную точку мыши в мировую координату через `VIEWPORT` и `CAMERA`, а `ON MOUSE` передаёт те же `x/y`, что и эти функции в момент вызова обработчика.
+3. Добавлены runnable-примеры `samples/functions/mousex/canvas_world_position.axm` и `samples/operators/on-mouse/canvas_world_handler.axm`. Оба примера русскоязычные и рассчитаны на запуск в `Axiom.Ide`.
+4. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлены сквозные проверки `MouseCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm` и `OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm`, а scripted input для этих sample привязан к детерминированной точке `15,16`.
+5. Обновлены manual-страницы `docs/manual/mousex.html`, `docs/manual/mousey.html`, `docs/manual/mousebutton.html`, `docs/manual/mousepress.html`, `docs/manual/on-mouse.html`, `docs/manual/keyboard-mouse-events.html`, `docs/manual/data-and-input.html` и поисковый индекс `docs/manual/scripts/search-index.js`.
+6. В `docs/SPECIFICATION3.md` добавлен отдельный блок про мышиный договор в `CANVAS`, а в `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md` зафиксировано, что мышь в `CANVAS` закрыта и следующий логичный кандидат уже лежит в направлении тайловой карты.
+
+Затронутые файлы:
+- `samples/functions/mousex/canvas_world_position.axm`
+- `samples/operators/on-mouse/canvas_world_handler.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/manual/mousex.html`
+- `docs/manual/mousey.html`
+- `docs/manual/mousebutton.html`
+- `docs/manual/mousepress.html`
+- `docs/manual/on-mouse.html`
+- `docs/manual/keyboard-mouse-events.html`
+- `docs/manual/data-and-input.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- выполнить адресные `dotnet test` для `Axiom.Execution.Tests` по новым mouse acceptance-проверкам;
+- выполнить `git diff --check`.
+
+Решение:
+- считать мышиный договор `CANVAS` закрытым;
+- считать следующее направление modern graphics уже не переносом старого screen-оператора, а следующим более крупным слоем поверх текущей базы;
+- ближайшим кандидатом оставить тайловую карту, потому что базовые координаты мира, viewport, камера, индексные helper-операции и мышиный ввод для неё уже готовы.
+
+## Session 1012 - 2026-06-08 13:38 - mouse samples сделаны наглядными
+
+Задача:
+- довести mouse-примеры для `CANVAS` до живого ручного формата в `Axiom.Ide`;
+- сохранить детерминированные acceptance-проверки.
+
+Что сделано:
+1. Переписаны `samples/functions/mousex/canvas_world_position.axm` и `samples/functions/mousey/canvas_world_position.axm`: теперь они открывают `CANVAS`, рисуют видимую рамку мира, показывают текущие мировые координаты мыши на холсте и завершаются по `ESC`.
+2. Переписан `samples/operators/on-mouse/canvas_world_handler.axm`: теперь пример визуально показывает координаты из `ON MOUSE("MOVE")`, оставляет маркер в мировой точке и одновременно печатает прежний детерминированный итог для acceptance.
+3. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` обновлён scripted input для этих sample: автоматический прогон теперь подаёт `ESC`, чтобы визуальные циклы корректно завершались без ручного ввода.
+4. Для `ON MOUSE` в sample отдельно удержан мировой режим `VIEWPORT` + `CAMERA` к моменту прихода события, чтобы acceptance по-прежнему подтверждал координаты `105, 54`, а не экранные `15, 16`.
+
+Затронутые файлы:
+- `samples/functions/mousex/canvas_world_position.axm`
+- `samples/functions/mousey/canvas_world_position.axm`
+- `samples/operators/on-mouse/canvas_world_handler.axm`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~MouseCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm"` — пройдено, `2/2`.
+
+Решение:
+- считать mouse acceptance-примеры приведёнными к нужному пользовательскому формату;
+- следующий шаг по modern graphics не менять: после закрытия мыши по-прежнему выбирать уже следующий новый слой, а не возвращаться к переделке этих sample.
+
+## Session 1013 - 2026-06-08 14:50 - исправлен mouse input в native-окне CANVAS
+
+Задача:
+- разобрать пользовательскую ручную проверку mouse sample в `Axiom.Ide`;
+- понять, почему в `CANVAS` приходят завышенные координаты и почему пример `on-mouse` не показывает нажатия кнопок.
+
+Что сделано:
+1. Просмотрен свежий IDE-журнал `C:\Axiom\.artifacts\bin\Axiom.Ide\Debug\net10.0-windows\Logs\ide-session-20260608-144001.log`. Журнал показал нормальную активацию `canvas.activated` для всех трёх sample и отмену выполнения без runtime-диагностик, то есть проблема была не в падении движка, а в маршрутизации ввода.
+2. Найден реальный дефект в `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`: native-окно передавало в `ProgramConsoleService` сырые координаты клиентской области окна, а не координаты логического framebuffer после масштабирования кадра.
+3. В `NativeGraphicsScreenWindow` добавлен пересчёт `client -> framebuffer` с учётом фактического масштабирования и letterbox-полей. Теперь `MOUSEX()`, `MOUSEY()` и `ON MOUSE` в `CANVAS` получают координаты пикселей холста, а не пикселей большого окна.
+4. В `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs` добавлены адресные проверки на пересчёт координат в масштабированном окне и на отбрасывание letterbox-области.
+5. `samples/operators/on-mouse/canvas_world_handler.axm` расширен: кроме `ON MOUSE("MOVE")` он теперь слушает ещё `ON MOUSE(1)`, `ON MOUSE(2)` и `ON MOUSE(3)`, поэтому в ручной проверке видно и движение, и реальные нажатия кнопок.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`
+- `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs`
+- `samples/operators/on-mouse/canvas_world_handler.axm`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~NativeGraphicsScreenWindowTests"` — пройдено, `17/17`.
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~MouseCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm"` — пройдено, `2/2`.
+- `git diff --check -- src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs samples/operators/on-mouse/canvas_world_handler.axm docs/WORKLOG4.md` — без ошибок содержимого; остались только предупреждения Git про будущую нормализацию `LF -> CRLF`.
+
+Решение:
+- считать найденный дефект координат мыши в native `CANVAS` закрытым;
+- ручную повторную проверку просить уже на свежей сборке: после фикса координаты должны перестать улетать в тысячи, а sample `on-mouse` должен показывать `BTN=1/2/3` при клике соответствующей кнопкой.
+
+## Session 1014 - 2026-06-08 15:41 - sample on-mouse показывает удержание отдельно от события
+
+Задача:
+- разобрать пользовательское замечание по `canvas_world_handler.axm`, где при движении мыши с зажатой кнопкой поле кнопки возвращалось к нулю.
+
+Что сделано:
+1. Проверен текущий договор мыши: одноразовое событие `ON MOUSE("MOVE")` и текущее удержание кнопки - это разные вещи.
+2. Обновлён sample `samples/operators/on-mouse/canvas_world_handler.axm`: теперь он отдельно показывает `EVT` как кнопку последнего события и `HOLD` как текущее удержание через `MOUSEBUTTON(1..3)`.
+3. Тем самым sample больше не создаёт ложное впечатление, будто удержание кнопки пропадает во время движения мыши: при drag `EVT` может стать `0` на событии движения, а `HOLD` остаётся `TRUE` для реально зажатой кнопки.
+
+Затронутые файлы:
+- `samples/operators/on-mouse/canvas_world_handler.axm`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `git diff --check -- samples/operators/on-mouse/canvas_world_handler.axm` — без ошибок.
+
+Решение:
+- считать это не runtime-дефектом, а прояснением sample;
+- для проверки drag-сценариев ориентироваться на `HOLD`, а не на кнопку последнего события `MOVE`.
+
+## Session 1015 - 2026-06-08 15:46 - sample on-mouse починен после ошибки BOOLEAN в STR
+
+Задача:
+- устранить новую semantic-ошибку в `canvas_world_handler.axm`, появившуюся после добавления строки про удержание кнопок.
+
+Что сделано:
+1. Найдена причина ошибки `MB2003`: sample пытался передавать `BOOLEAN` в `STR(...)`, а эта форма ожидает числовой аргумент.
+2. В sample добавлена небольшая функция `BoolText(flag AS BOOLEAN) AS STRING`, которая возвращает `"TRUE"` или `"FALSE"`.
+3. Строка `HOLD` переведена на текстовые переменные `holdLeftText`, `holdRightText`, `holdMiddleText`, поэтому sample снова компилируется и остаётся понятным при ручной проверке.
+
+Затронутые файлы:
+- `samples/operators/on-mouse/canvas_world_handler.axm`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm"` — пройдено, `1/1`.
+
+Решение:
+- считать sample снова рабочим;
+- для вывода булевых состояний в user-facing sample не использовать `STR(...)`, а переводить их в строку явно.
+
+## Session 1016 - 2026-06-08 16:01 - drag-мышь и читаемость CANVAS mouse sample
+
+Задача:
+- разобрать повторное ручное замечание: при движении мыши с зажатой кнопкой индикация удержания выглядит сброшенной, а часть текста не помещается в графическое окно.
+
+Что сделано:
+1. В `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs` уточнён drag-договор native-окна: отпускание кнопки теперь снимает состояние `MOUSEBUTTON(...)` даже если курсор в момент отпускания находится за пределами логического framebuffer, а захват мыши снимается только после отпускания всех зажатых кнопок.
+2. В `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs` добавлена проверка `MouseButtonReleaseOutsideFramebuffer_ReleasesPressedState`, которая фиксирует этот случай.
+3. `samples/operators/on-mouse/canvas_world_handler.axm` увеличен до `CANVAS 480, 270`, рамка мира стала крупной, а строка удержания теперь короткая: `HOLD L=1 R=0 M=0` вместо длинных `TRUE/FALSE`.
+4. `samples/functions/mousex/canvas_world_position.axm` и `samples/functions/mousey/canvas_world_position.axm` приведены к тому же крупному формату `CANVAS 480, 270`, чтобы координаты были видны без обрезания текста.
+5. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` обновлена контрольная точка scripted input на `40, 90`, ожидания мировых координат изменены на `110, 60`, и добавлена отдельная проверка `MouseYCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm`.
+6. В `docs/BYTECODE_COVERAGE.md` уточнено, что `MOUSEY` canvas sample тоже покрыт отдельной сквозной VM-проверкой, а mouse sample укрупнены для ручной проверки.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`
+- `tests/Axiom.Ide.Tests/NativeGraphicsScreenWindowTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/functions/mousex/canvas_world_position.axm`
+- `samples/functions/mousey/canvas_world_position.axm`
+- `samples/operators/on-mouse/canvas_world_handler.axm`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~NativeGraphicsScreenWindowTests"` - пройдено, `18/18`;
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~MouseCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~MouseYCoordinatesCanvasAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~OnMouseCanvasAcceptanceSample_RunsOnBytecodeVm"` - пройдено, `3/3`.
+
+Решение:
+- для ручной проверки drag-сценария смотреть строку `HOLD`, а не `EVT`: `EVT=0` на движении является нормальным событием движения, а удержание кнопки теперь показано отдельно и коротко;
+- следующий шаг modern graphics не меняется: после стабилизации мыши выбирать уже следующий слой поверх готовых `CANVAS`, `VIEWPORT`, камеры и ввода.
+
+## Session 1017 - 2026-06-08 16:17 - оформлен отдельный договор тайловой карты
+
+Задача:
+- зафиксировать следующий крупный слой современной графики не расплывчатым пунктом плана, а отдельным документом;
+- опереться на Tiled как на модель и формат карты, на MonoGame/pygame как на способ рисования, а для имён оставить BASIC-стиль.
+
+Что сделано:
+1. Создан новый документ `docs/TILEMAP_CONTRACT.md`. В нём зафиксирован полный первый договор тайловой карты: сущности `TILESET` и `TILEMAP`, набор пользовательских функций и операторов, границы первого поддерживаемого объёма, правила рисования, свойства, объектные слои, диагностика и порядок внедрения.
+2. В `docs/TILEMAP_CONTRACT.md` прямо принято проектное решение не выносить наружу сырые Tiled `gid`, а нормализовать клетку в публичный договор `tilesetIndex`, `tileIndex`, `flags`, чтобы слой был удобен для Axiom-кода.
+3. В `docs/TILEMAP_CONTRACT.md` зафиксировано, что первый утверждённый объём не будет размываться: он сразу включает свойства карты/слоёв/тайлов/объектов, чтение и изменение клеток, объектные слои и реальный договор видимой отрисовки поверх `CANVAS`, `CAMERA` и `VIEWPORT`.
+4. В `docs/MODERN_GRAPHICS_PLAN.md` расплывчатый шестой срез заменён ссылкой на отдельный договор и точным порядком внедрения.
+5. В `docs/SPECIFICATION3.md` добавлена короткая активная фиксация, что подробный рабочий договор тайловой карты теперь живёт в `docs/TILEMAP_CONTRACT.md`.
+6. В `README.md` новый документ добавлен в список основных документов, чтобы он не потерялся.
+7. В `docs/PLANS4.md` зафиксирован следующий технический шаг по этому договору: сначала `TILESET` / `LOADTILESET` / `DRAWTILE`, затем `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP`.
+
+Затронутые файлы:
+- `docs/TILEMAP_CONTRACT.md`
+- `README.md`
+- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/SPECIFICATION3.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `git diff --check -- docs/TILEMAP_CONTRACT.md README.md docs/MODERN_GRAPHICS_PLAN.md docs/SPECIFICATION3.md docs/PLANS4.md docs/WORKLOG4.md`
+
+Решение:
+- считать полный проектный договор тайловой карты зафиксированным отдельным документом;
+- следующий шаг больше не выбирать как «какой-нибудь ещё оператор», а идти по уже утверждённой очереди тайлового слоя.
+
+## Session 1018 - 2026-06-08 19:19 - первый срез TILESET синхронизирован с manual и реестрами
+
+Задача:
+- начать реальную работу по `docs/TILEMAP_CONTRACT.md` с уже реализованного первого шага `TILESET` / `LOADTILESET` / `DRAWTILE`;
+- закрыть документационный хвост этого среза, не уходя пока в `TILEMAP`.
+
+Что сделано:
+1. Добавлена новая manual-страница `docs/manual/tilesets.html` для типа `TILESET`, функций `LOADTILESET`, `TILECOUNT`, `TILEWIDTH`, `TILEHEIGHT` и оператора `DRAWTILE`.
+2. В manual-навигации и обзорных страницах синхронизированы ссылки на новый тайловый срез: обновлены `graphics.html`, `data-types.html`, `modern-graphics.html`, `reference.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`.
+3. В `docs/SPECIFICATION3.md` добавлен активный рабочий договор первого кодового среза: `TILESET`, формы `LOADTILESET`, `1`-основанный `tileIndex`, `DRAWTILE` только в `CANVAS`, пустое значение для size-функций и явная граница, что `TILEMAP` ещё не включён в этот шаг.
+4. В `docs/BYTECODE_COVERAGE.md` добавлена отдельная запись по `TILESET` / `LOADTILESET` / `DRAWTILE` с фиксацией interpreter-, VM-, acceptance- и manual-покрытия.
+5. В `docs/PLANS4.md` зафиксировано, что первый тайлсет-срез закрыт и следующим точным шагом становится уже tilemap-слой `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`.
+6. Для ручной приёмки в manual прямо привязан runnable sample `samples/operators/drawtile/basic_tileset.axm`, который уже показывает первый и четвёртый тайлы из одного атласа на `CANVAS`.
+
+Затронутые файлы:
+- `docs/manual/tilesets.html`
+- `docs/manual/graphics.html`
+- `docs/manual/data-types.html`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/reference.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `node --check docs/manual/scripts/manual.js`
+- `node --check docs/manual/scripts/search-index.js`
+- для кодового среза в этом рабочем ходе уже были получены зелёные проверки: `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj -nologo`, `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj -nologo`, `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -nologo`, `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -nologo --filter "FullyQualifiedName~DrawTile|FullyQualifiedName~Tileset|DisplayName~drawtile|DisplayName~tileset"`.
+
+Решение:
+- считать первый реальный шаг по `docs/TILEMAP_CONTRACT.md` закрытым не только кодом и sample, но и пользовательской документацией;
+- следующий шаг не расширять внутри `TILESET`, а переводить работу на `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`.
+
+## Session 1019 - 2026-06-08 19:29 - IDE-подсветка tile-слоя закреплена
+
+Задача:
+- устранить пропуск в IDE-подсветке для нового тайлового слоя;
+- зафиксировать это как постоянное правило репозитория, чтобы новые языковые сущности больше не появлялись без раскраски в `Axiom.Ide`.
+
+Что сделано:
+1. В `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` и `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd` добавлены слова `DRAWTILE`, `TILESET`, `LOADTILESET`, `TILECOUNT`, `TILEWIDTH`, `TILEHEIGHT` в правильные категории подсветки: оператор, тип и встроенные функции.
+2. В `tests/Axiom.Ide.Tests/EditorFeatureTests.cs` расширена проверка словаря подсветки: `TILESET` теперь входит в список ожидаемых типов, а для тайлового слоя добавлена отдельная проверка наличия всех новых слов.
+3. В `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs` добавлена отдельная проверка форматирования строк с `TILESET`, `LOADTILESET`, `DRAWTILE`, `TILECOUNT`, `TILEWIDTH` и `TILEHEIGHT`, чтобы IDE-форматирование и словарь подсветки дальше шли синхронно.
+4. В `AGENTS.md` добавлено постоянное рабочее правило: каждая новая пользовательская языковая сущность обязана в том же задании получать поддержку IDE-подсветки в обеих схемах и покрытие в `tests/Axiom.Ide.Tests/`.
+
+Затронутые файлы:
+- `AGENTS.md`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs`
+
+Проверки:
+- `node --check docs/manual/scripts/manual.js`
+- `node --check docs/manual/scripts/search-index.js`
+- `git diff --check -- AGENTS.md src/Axiom.Ide/Editor/Highlighting/Axiom.xshd src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd tests/Axiom.Ide.Tests/EditorFeatureTests.cs tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs docs/manual/tilesets.html docs/manual/graphics.html docs/manual/data-types.html docs/manual/modern-graphics.html docs/manual/reference.html docs/manual/scripts/manual.js docs/manual/scripts/search-index.js docs/SPECIFICATION3.md docs/BYTECODE_COVERAGE.md docs/PLANS4.md docs/WORKLOG4.md`
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -nologo --filter "FullyQualifiedName~EditorFeatureTests|FullyQualifiedName~CodeFormattingServiceTests"` - пройдено, `83/83`; в выводе остаётся старое предупреждение `xUnit1013` для `ProgramRunServiceTests`, не связанное с этим шагом.
+
+Решение:
+- считать обязательное правило по IDE-раскраске новых языковых сущностей зафиксированным на уровне репозитория;
+- следующий шаг по `docs/TILEMAP_CONTRACT.md` не меняется: переходить к `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`, сразу добавляя им IDE-подсветку в том же наборе правок.
+
+## Session 1020 - 2026-06-08 21:47 - IDE-подсветка TILEMAP добавлена
+
+Задача:
+- закрыть обязательную IDE-подсветку для первого `TILEMAP`-слоя, который уже появился в лексере, парсере и семантике;
+- не оставлять `TILEMAP`-примеры без раскраски и IDE-форматирования.
+
+Что сделано:
+1. В `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` и `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd` добавлены `DRAWTILEMAP` и `DRAWTILELAYER` как операторы, `TILEMAP` как имя типа, а также `LOADTILEMAP`, `MAPWIDTH`, `MAPHEIGHT`, `MAPPIXELWIDTH`, `MAPPIXELHEIGHT`, `MAPTILEWIDTH`, `MAPTILEHEIGHT`, `MAPLAYERCOUNT` как встроенные функции.
+2. В `tests/Axiom.Ide.Tests/EditorFeatureTests.cs` расширен обязательный перечень типов и добавлена отдельная проверка словаря подсветки для `TILEMAP`-слоя.
+3. В `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs` добавлена адресная проверка IDE-форматирования строк с `TILEMAP`, `LOADTILEMAP`, `DRAWTILEMAP`, `DRAWTILELAYER` и `MAP*`.
+4. В `docs/PLANS4.md` зафиксировано, что IDE-слой для `TILEMAP` закрыт и следующий практический шаг уже лежит в runtime-исполнении `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- выполнить `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj -nologo --filter "FullyQualifiedName~EditorFeatureTests|FullyQualifiedName~CodeFormattingServiceTests"`;
+- выполнить `git diff --check -- src/Axiom.Ide/Editor/Highlighting/Axiom.xshd src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd tests/Axiom.Ide.Tests/EditorFeatureTests.cs tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs docs/PLANS4.md docs/WORKLOG4.md`.
+
+Решение:
+- считать обязательную IDE-подсветку для первого `TILEMAP`-слоя закрытой;
+- следующий шаг не переносить обратно в документационный слой, а продолжать исполнение `TILEMAP` в interpreter и `BytecodeVm`.
+
+## Session 1021 - 2026-06-08 23:24 - первый runtime-срез TILEMAP закрыт
+
+Задача:
+- продолжить работу по `docs/TILEMAP_CONTRACT.md` без повторной разведки;
+- довести `TILEMAP` / `LOADTILEMAP` / `MAP*` / `DRAWTILEMAP` / `DRAWTILELAYER` до тестов, runnable-примера, manual и активных реестров.
+
+Что сделано:
+1. Добавлены parser- и binder-проверки для `DIM level AS TILEMAP`, `LOADTILEMAP`, функций `MAPWIDTH`, `MAPHEIGHT`, `MAPPIXELWIDTH`, `MAPPIXELHEIGHT`, `MAPTILEWIDTH`, `MAPTILEHEIGHT`, `MAPLAYERCOUNT`, а также операторов `DRAWTILEMAP` и `DRAWTILELAYER`.
+2. В `tests/Axiom.Runtime.Tests/InterpreterTests.cs` и `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` добавлены проверки загрузки карты, функций размеров, отрисовки видимого слоя, явной отрисовки скрытого слоя и ошибки при попытке рисовать объектный слой.
+3. Добавлен runnable-пример `samples/operators/drawtilemap/visible_and_layer.axm` и маленькая карта `samples/operators/drawtilemap/simple_map.tmj`; сквозной тест `DrawTilemapAcceptanceSample_RunsOnBytecodeVm` подтверждает пример через `BytecodeVm` без отката на интерпретатор.
+4. Добавлена manual-страница `docs/manual/tilemaps.html`; синхронизированы `modern-graphics.html`, `graphics.html`, `data-types.html`, `reference.html`, `docs/manual/scripts/manual.js` и `docs/manual/scripts/search-index.js`.
+5. В `docs/SPECIFICATION3.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md` зафиксирован первый исполненный `TILEMAP`-срез и следующий шаг по чтению/записи клеток карты.
+
+Затронутые файлы:
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/drawtilemap/visible_and_layer.axm`
+- `samples/operators/drawtilemap/simple_map.tmj`
+- `docs/manual/tilemaps.html`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/graphics.html`
+- `docs/manual/data-types.html`
+- `docs/manual/reference.html`
+- `docs/manual/scripts/manual.js`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~Tilemap|FullyQualifiedName~DrawTile"` - пройдено, `4/4`.
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~Tilemap|FullyQualifiedName~DrawTile"` - пройдено, `4/4`.
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Tilemap|FullyQualifiedName~DrawTile"` - пройдено, `10/10`.
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~DrawTilemapAcceptanceSample_RunsOnBytecodeVm"` - пройдено, `1/1`.
+
+Решение:
+- считать первый runtime/VM/manual-срез `TILEMAP` закрытым;
+- следующий шаг по `docs/TILEMAP_CONTRACT.md`: реализовать `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и `SETMAPTILE` с обязательной IDE-подсветкой, тестами, runnable-примером и manual.
+
+## Session 1022 - 2026-06-08 23:56 - чтение и запись клеток TILEMAP закрыты
+
+Задача:
+- продолжить работу по `docs/TILEMAP_CONTRACT.md`;
+- закрыть срез `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и `SETMAPTILE` без пропуска IDE-подсветки.
+
+Что сделано:
+1. Добавлены функции `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` для чтения клетки тайловой карты и оператор `SETMAPTILE` для записи или очистки существующей клетки тайлового слоя.
+2. Interpreter и `BytecodeVm` синхронизированы по договору: чтение вне карты, из пустой карты, объектного слоя или пустой клетки возвращает `0`; запись вне карты, в объектный слой, с неверным тайлсетом, тайлом или флагами выдаёт runtime-ошибку.
+3. IDE-подсветка обновлена в `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` и `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`; проверки словаря и форматирования расширены в `tests/Axiom.Ide.Tests/`.
+4. Добавлен runnable sample `samples/operators/setmaptile/cell_update.axm`, который показывает изменение и очистку клетки карты.
+5. Manual синхронизирован: обновлены `docs/manual/tilemaps.html`, обзорные страницы и `docs/manual/scripts/search-index.js`.
+6. Активные документы обновлены: `docs/SPECIFICATION3.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`.
+
+Затронутые файлы:
+- `src/Axiom.Lexing/Lexer.cs`
+- `src/Axiom.Lexing/TokenKind.cs`
+- `src/Axiom.Syntax/GraphicsSyntax.cs`
+- `src/Axiom.Syntax/SyntaxKind.cs`
+- `src/Axiom.Parsing/Parser.Statements.cs`
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`
+- `src/Axiom.Semantics/BoundNodes/BoundStatements.cs`
+- `src/Axiom.Semantics/Symbols/BuiltinFunctionId.cs`
+- `src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.Input.cs`
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`
+- `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`
+- `tests/Axiom.Parsing.Tests/ParserTests.cs`
+- `tests/Axiom.Semantics.Tests/BinderTests.cs`
+- `tests/Axiom.Runtime.Tests/InterpreterTests.cs`
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`
+- `tests/Axiom.Ide.Tests/EditorFeatureTests.cs`
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
+- `samples/operators/setmaptile/cell_update.axm`
+- `docs/manual/tilemaps.html`
+- `docs/manual/graphics.html`
+- `docs/manual/data-types.html`
+- `docs/manual/modern-graphics.html`
+- `docs/manual/scripts/search-index.js`
+- `docs/SPECIFICATION3.md`
+- `docs/BYTECODE_COVERAGE.md`
+- `docs/PLANS4.md`
+- `docs/WORKLOG4.md`
+
+Проверки:
+- `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj --no-restore --filter "FullyQualifiedName~Tilemap|FullyQualifiedName~SetMapTile|FullyQualifiedName~DrawTile"` - пройдено, `6/6`.
+- `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj --no-restore --filter "FullyQualifiedName~Tilemap|FullyQualifiedName~SetMapTile|FullyQualifiedName~DrawTile"` - пройдено, `5/5`.
+- `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Tilemap|FullyQualifiedName~SetMapTile|FullyQualifiedName~MapTile|FullyQualifiedName~DrawTile"` - пройдено, `16/16`.
+- `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~SetMapTileAcceptanceSample_RunsOnBytecodeVm"` - пройдено, `1/1`.
+- `dotnet test tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj --no-restore --filter "FullyQualifiedName~EditorFeatureTests|FullyQualifiedName~CodeFormattingServiceTests"` - пройдено.
+
+Решение:
+- считать срез `MAPTILE` / `MAPTILESET` / `MAPTILEFLAGS` / `SETMAPTILE` закрытым;
+- следующий шаг по `docs/TILEMAP_CONTRACT.md`: свойства карты, слоёв и тайлов.
+
+## Session 1023 - 2026-08-18 - диагностические коды runtime вынесены в централизованный класс DiagnosticCodes
+
+Задача: заменить локальные `private const string`-константы MB3001-MB3009 в `Interpreter` и `BytecodeVm` на централизованные поля `DiagnosticCodes` из `Axiom.Core`, а также заменить инлайновые строковые литералы `"MB3010"` / `"MB4001"` / `"MB4002"` / `"MB4003"`.
+
+Изменённые файлы:
+- `src/Axiom.Runtime/Execution/Interpreter.cs` — удалены 9 констант (MB3001-MB3009), `using Axiom.Core` уже был;
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs` — удалены 9 констант (MB3001-MB3009), заменены ссылки: BuiltinArgumentCode x2, InvalidRuntimeStateCode x2, StepZeroCode x2, MissingReturnValueCode x2, DivisionByZeroCode x1, NumericOverflowCode x1, EmptyFunctionValueCode x1;
+- `src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs` — BuiltinArgumentCode x2, `"MB3010"` x3;
+- `src/Axiom.Runtime/Execution/BytecodeVm.FileIO.cs` — BuiltinArgumentCode x18;
+- `src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs` — BuiltinArgumentCode x1, ArrayBoundsCode x4;
+- `src/Axiom.Runtime/Execution/BytecodeVm.PrintUsing.cs` — BuiltinArgumentCode x1;
+- `src/Axiom.Runtime/Execution/BytecodeVm.Input.cs` — InputConversionCode x2;
+- `src/Axiom.Runtime/Execution/Interpreter.Helpers.cs` — DivisionByZeroCode x1, ArrayBoundsCode x2, InputConversionCode x2, StepZeroCode x1, MissingReturnValueCode x1, EmptyFunctionValueCode x1, BuiltinArgumentCode x1, NumericOverflowCode x1, InvalidRuntimeStateCode x1;
+- `src/Axiom.Runtime/Execution/Interpreter.Graphics.cs` — BuiltinArgumentCode x2, `"MB3010"` x3;
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs` — BuiltinArgumentCode x2, `"MB3005"` x1;
+- `src/Axiom.Runtime/Execution/Interpreter.PrintUsing.cs` — BuiltinArgumentCode x1;
+- `src/Axiom.Runtime/Execution/Interpreter.FileIO.cs` — BuiltinArgumentCode x18;
+- `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs` — `"MB4001"` x1, `"MB4002"` x1, `"MB4003"` x1; `using Axiom.Core` уже был.
+
+Итого замен: ~75 ссылок на константы/литералы в 13 файлах.
+
+Маппинг:
+- `DivisionByZeroCode` → `DiagnosticCodes.DivisionByZero`
+- `ArrayBoundsCode` → `DiagnosticCodes.ArrayBounds`
+- `InputConversionCode` → `DiagnosticCodes.InputConversion`
+- `StepZeroCode` → `DiagnosticCodes.StepZero`
+- `InvalidRuntimeStateCode` → `DiagnosticCodes.InvalidRuntimeState`
+- `MissingReturnValueCode` → `DiagnosticCodes.RuntimeMissingReturnValue`
+- `BuiltinArgumentCode` → `DiagnosticCodes.BuiltinArgument`
+- `NumericOverflowCode` → `DiagnosticCodes.NumericOverflow`
+- `EmptyFunctionValueCode` → `DiagnosticCodes.EmptyFunctionValue`
+- `"MB3010"` → `DiagnosticCodes.MissingGraphicsMode`
+- `"MB4001"` → `DiagnosticCodes.BytecodeCoverage`
+- `"MB4002"` → `DiagnosticCodes.BytecodeCapture`
+- `"MB4003"` → `DiagnosticCodes.BytecodeJsonSnapshot`
+
+Проверки:
+- `dotnet build src/Axiom.Runtime/Axiom.Runtime.csproj --no-restore` — успешно, 0 ошибок, 0 предупреждений.
+- `dotnet build src/Axiom.Execution/Axiom.Execution.csproj --no-restore` — успешно, 0 ошибок, 0 предупреждений.
+- Поиск оставшихся `private const string.*Code =` и `"MB3` / `"MB4` в затронутых файлах — не найдено.
+
+## Session 1024 - 2026-08-18 15:00 - архитектурный анализ и план улучшений
+
+Задача: провести полный архитектурный анализ проекта, выявить недочёты, баги и логические несостыковки, создать план качественного улучшения.
+
+Что сделано:
+1. Проведён параллельный анализ 6 направлений: крупные файлы, дублирование Interpreter/BytecodeVm, управление ресурсами, здоровье тестов, диагностическая система, MainWindowViewModel.
+2. Создан `docs/IMPROVEMENT_PLAN.md` с полным планом улучшений по 5 волнам.
+3. Начато выполнение волн 1 и 4 (безопасность и документы).
+
+Найденные проблемы (подтверждены анализом):
+- Утечка GCHandle в `NativeGraphicsScreenWindow` — нет финализатора, нет try/finally.
+- `Direct3D11SwapChainRenderer.Dispose` — нет изоляции исключений между Dispose-вызовами.
+- Мёртвый тест в `ProgramRunServiceTests.cs:746` — без `[Fact]`.
+- `docs/agent/` файлы ссылаются на `PLANS3.md` вместо `PLANS4.md` (~19 ссылок в 5 файлах).
+- ~8,000-10,000 строк дублированной бизнес-логики между Interpreter и BytecodeVm.
+- 62 диагностических кода разбросаны по 5 файлам без единого реестра.
+- MainWindowViewModel — 3,460 строк, 53 команды, 13 зависимостей.
+- Отсутствует `Axiom.Syntax.Tests`.
+
+Следующий шаг: продолжить волны 1-4 плана.
+
+## Session 1025 - 2026-08-18 15:15 - исправлены утечки ресурсов и мёртвый тест
+
+Задача: закрыть волну 1 плана улучшений — критические проблемы безопасности ресурсов.
+
+Что сделано:
+1. `NativeGraphicsScreenWindow.cs`:
+   - Добавлено поле `_windowGcHandle` для хранения `GCHandle`.
+   - Конструктор обёрнут в try/catch: при исключении после `GCHandle.Alloc` ресурс освобождается.
+   - `HandleDestroyed` обёрнут в try/finally: `GCHandle.Free` гарантирован даже при исключении в `_renderer.Dispose()`.
+   - Добавлен финализатор `~NativeGraphicsScreenWindow()` как страховка.
+   - Добавлен disposed-флаг, `Dispose()` вызывает `GC.SuppressFinalize(this)`.
+2. `Direct3D11SwapChainRenderer.cs`:
+   - Добавлен disposed-флаг.
+   - Каждый Dispose-вызов обёрнут в отдельный try/catch.
+3. `ProgramRunServiceTests.cs:746`: добавлен `[Fact]`.
+
+Затронутые файлы:
+- `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`
+- `src/Axiom.Ide/Graphics/Direct3D11SwapChainRenderer.cs`
+- `tests/Axiom.Ide.Tests/ProgramRunServiceTests.cs`
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+
+## Session 1026 - 2026-08-18 15:30 - исправлены ссылки PLANS3 → PLANS4 в docs/agent/
+
+Задача: закрыть волну 4.1 — обновить все устаревшие ссылки на `docs/PLANS3.md` в файлах `docs/agent/`.
+
+Что сделано:
+- `docs/agent/CURRENT_STATE.md` — 4 ссылки исправлены.
+- `docs/agent/README.md` — 2 ссылки исправлены.
+- `docs/agent/PLAYBOOKS.md` — 4 ссылки исправлены.
+- `docs/agent/HEADROOM_PILOT.md` — 3 ссылки исправлены.
+- `docs/agent/EXTERNAL_TOOLS_EVALUATION.md` — 6 ссылок исправлено.
+
+Итого: 19 ссылок в 5 файлах.
+
+Проверки:
+- Поиск `PLANS3` в `docs/agent/` — 0 совпадений.
+
+## Session 1027 - 2026-08-18 15:45 - централизованы диагностические коды
+
+Задача: создать единый реестр диагностических кодов в `Axiom.Core` и перевести все слои на его использование.
+
+Что сделано:
+1. Создан `src/Axiom.Core/DiagnosticCodes.cs` — публичный статический класс со всеми 46 кодами.
+2. Обновлены файлы:
+   - `src/Axiom.Lexing/Lexer.cs` — 4 удалённых константы, 9 замен.
+   - `src/Axiom.Parsing/Parser.cs` + `Parser.Helpers.cs` — 4 удалённых константы, 6 замен.
+   - `src/Axiom.Semantics/Binding/Binder.cs` + `Binder.Diagnostics.cs` + `Binder.Helpers.cs` — 36 удалённых констант, 66 замен.
+   - `src/Axiom.Runtime/Execution/Interpreter.cs` + 6 partial-файлов — 9 удалённых констант, ~30 замен.
+   - `src/Axiom.Runtime/Execution/BytecodeVm.cs` + 6 partial-файлов — 9 удалённых констант, ~30 замен.
+   - `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs` — 3 замены инлайновых строк.
+
+Итого: ~75 замен ссылок в 13 файлах. Все `MB3010` и `MB4xxx` инлайновые литералы заменены на именованные константы.
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+
+## Session 1028 - 2026-08-18 16:00 - прототип общего слоя built-in (Numeric)
+
+Задача: создать общий слой для built-in функций и применить его к Numeric как прототипу.
+
+Что сделано:
+1. Создана директория `src/Axiom.Runtime/Builtins/`.
+2. Создан `src/Axiom.Runtime/Builtins/BuiltinNumericHelpers.cs` — статический класс с общей логикой:
+   - `EvaluateRnd`, `EvaluateSgn`, `EvaluateMin`, `EvaluateMax`
+   - `CompareNumericValues`, `ToDoubleMathOperand`, `HasNegativeSign`
+   - `ApplySign` (4 перегрузки для int, long, double, decimal)
+3. Рефакторинг `Interpreter.Builtins.Numeric.cs` (386 → 316 строк, -70):
+   - `EvaluateRndBuiltin`, `EvaluateSgnBuiltin`, `EvaluateMinBuiltin`, `EvaluateMaxBuiltin` делегируют в хелпер.
+   - `CompareNumericValues`, `ToDoubleMathOperand`, `HasNegativeSign` — thin wrappers.
+   - Удалены 4 статических `ApplySign` перегрузки.
+4. Рефакторинг `BytecodeVm.Builtins.Numeric.cs` (310 → 285 строк, -25):
+   - `EvaluateRndBuiltin`, `ToDoubleMathOperand`, `HasNegativeSign` делегируют в хелпер.
+   - Удалены 4 статических `ApplySign` перегрузки.
+
+Архитектурный паттерн: хелпер принимает `TextLocation` напрямую; Interpreter передаёт `expression.Location` или `GetBuiltInArgumentLocation(expression, N)`; BytecodeVm передаёт location напрямую.
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+- `dotnet test tests/Axiom.Runtime.Tests` — 875/875 пройдено.
+- `dotnet test tests/Axiom.Parsing.Tests` — 137/137 пройдено.
+- `dotnet test tests/Axiom.Semantics.Tests` — 365/365 пройдено.
+- `dotnet test tests/Axiom.Bytecode.Tests` — 203/203 пройдено.
+
+Следующий шаг: продолжить вынос built-in функций в общий слой — следующая область Regex или String.
+
+## Session 1029 - 2026-08-18 16:30 - Рефакторинг Interpreter.Builtins.Regex через BuiltinRegexHelpers
+
+Задача: рефакторить `src/Axiom.Runtime/Execution/Interpreter.Builtins.Regex.cs` (354 строки) для делегирования в общий `BuiltinRegexHelpers`.
+
+Изменения в `Interpreter.Builtins.Regex.cs` (354 → 148 строк, -206):
+1. Добавлен `using Axiom.Runtime.Builtins;`, убран `using System.Text;`.
+2. Удалено поле `RegexExecutionLimit` — теперь `BuiltinRegexHelpers.DefaultTimeout`.
+3. `CreateRegex` — делегирует в `BuiltinRegexHelpers.ParseRegexModes` + `BuiltinRegexHelpers.CreateRegex`.
+4. `ParseRegexModes` — удалён, логика перенесена в `CreateRegex`.
+5. `ReportInvalidRegexMode` — удалён, обработка ошибок в хелпере.
+6. `ReportRegexTimeout` — удалён, обработка таймаутов в хелпере.
+7. `ReplaceRegexMatches` — удалён, перенесён в `BuiltinRegexHelpers`.
+8. `EvaluateRegexIsMatch` → `BuiltinRegexHelpers.IsMatch`.
+9. `EvaluateRegexMatch` → `BuiltinRegexHelpers.Match`.
+10. `EvaluateRegexExtract` → валидация group + `BuiltinRegexHelpers.Extract`.
+11. `EvaluateRegexMatches` → `BuiltinRegexHelpers.Matches` + `CreateStringArrayValue`.
+12. `EvaluateRegexExtractAll` → валидация group + `BuiltinRegexHelpers.ExtractAll` + `CreateStringArrayValue`.
+13. `EvaluateRegexSplit` → `BuiltinRegexHelpers.Split` + `CreateStringArrayValue`.
+14. `EvaluateRegexReplace` → валидация count + `BuiltinRegexHelpers.Replace`.
+15. `EvaluateRegexCount` → `BuiltinRegexHelpers.Count`.
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+- `dotnet test --filter "Regex"` — 5/5 пройдено.
+
+Следующий шаг: продолжить вынос built-in функций в общий слой — следующая область String.
+
+## Session 1030 - 2026-08-18 16:45 - Рефакторинг BytecodeVm.Builtins.Regex через BuiltinRegexHelpers
+
+Задача: рефакторить `src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Regex.cs` (462 строки) для делегирования в общий `BuiltinRegexHelpers`.
+
+Изменения в `BytecodeVm.Builtins.Regex.cs` (462 → 294 строки, -168):
+1. Добавлен `using Axiom.Runtime.Builtins;`.
+2. Удалено поле `RegexExecutionLimit`.
+3. Сохранены `_regexCache` и `_regexModesCache` — BytecodeVm-специфичные оптимизации.
+4. `CreateRegex` — кеш + `BuiltinRegexHelpers.CreateRegex`.
+5. `ParseRegexModes` — кеш + `BuiltinRegexHelpers.ParseRegexModes`.
+6. Все `EvaluateRegex*Builtin` делегируют в `BuiltinRegexHelpers.*`.
+7. Удалены дублированные `ReplaceRegexMatches`, `ReportInvalidRegexMode`, `ReportRegexTimeout`.
+8. Сохранены BytecodeVm-специфичные `ValidateRegexReplaceCount`, `IsRegexReplaceGuaranteedNoOp`, `ReplacementDependsOnMatch`.
+
+Суммарно по Regex: 354 + 462 = 816 строк → 148 + 294 = 442 строки (-374).
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+- `dotnet test tests/Axiom.Runtime.Tests` — 875/875 пройдено.
+
+## Session 1031 - 2026-08-18 17:00 - Вынесен общий слой String built-in функций
+
+Задача: создать `BuiltinStringHelpers` и рефакторить String built-in функции в Interpreter и BytecodeVm.
+
+Что сделано:
+1. Создан `src/Axiom.Runtime/Builtins/BuiltinStringHelpers.cs` — статический класс с общей логикой:
+   - `EvaluateLeft`, `EvaluateRight`, `EvaluateMid`, `EvaluateReverse`
+   - `EvaluateInsert`, `EvaluateRemove`, `EvaluateRepeat`, `EvaluateSpace`
+   - `EvaluateInStr`, `EvaluateInStrRev`, `EvaluateSubStrCount`
+   - `TrimByCharacters`, `EvaluateContains`, `EvaluateStartsWith`, `EvaluateEndsWith`
+   - `EvaluateReplace`, `ParseVal`
+2. Рефакторинг Interpreter String builtins (8 файлов, -107 строк):
+   - `Interpreter.Builtins.String.cs` — делегирует Left/Right/Mid/Reverse/ParseVal.
+   - `Interpreter.Builtins.String.Edit.cs` — делегирует Insert/Remove.
+   - `Interpreter.Builtins.String.Search.cs` — делегирует Contains/StartsWith/EndsWith/InStr/InStrRev/Replace/SubStrCount.
+   - `Interpreter.Builtins.String.Trim.cs` — делегирует TrimByCharacters.
+   - `Interpreter.Builtins.String.Fill.cs` — делегирует Repeat/Space.
+   - `Interpreter.Builtins.String.Helpers.cs` — удалён дублированный TrimByCharacters.
+3. Рефакторинг BytecodeVm String builtins (4 файла, -245 строк):
+   - `BytecodeVm.Builtins.String.cs` — делегирует Left/Right/Mid/Reverse/Insert/Remove/InStr/InStrRev/SubStrCount/ParseVal.
+   - `BytecodeVm.Builtins.String.Edit.cs` — делегирует Insert/Remove.
+   - `BytecodeVm.Builtins.String.Fill.cs` — делегирует Repeat/Space.
+   - `BytecodeVm.Builtins.String.Helpers.cs` — удалён дублированный TrimByCharacters.
+4. Исправлены баги в `BuiltinStringHelpers`:
+   - `EvaluateInStr` — исправлено поведение для пустого фрагмента при start > text.Length.
+   - `EvaluateInStrRev` — исправлено поведение для пустого фрагмента: возвращает `min(start, text.Length) + 1`.
+   - `EvaluateInsert`/`EvaluateRemove` — исправлена1-based→0-based конвертация для Interpreter.
+
+Суммарно по String: 539 + 792 = 1331 строк → 377 + 547 = 924 строки (-407).
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+- `dotnet test tests/Axiom.Runtime.Tests` — 875/875 пройдено.
+
+Следующий шаг: продолжить вынос built-in функций в общий слой — следующая область FileSystem или DateTime.

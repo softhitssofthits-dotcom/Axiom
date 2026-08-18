@@ -130,6 +130,10 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
     public static RuntimeValue FromSprite(RuntimeSpriteValue? value) => new(TypeSymbol.Sprite, value);
 
+    public static RuntimeValue FromTilemap(RuntimeTilemapValue? value) => new(TypeSymbol.Tilemap, value);
+
+    public static RuntimeValue FromTileset(RuntimeTilesetValue? value) => new(TypeSymbol.Tileset, value);
+
     public static RuntimeValue FromRuntimeError(RuntimeErrorValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -337,6 +341,26 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (RuntimeSpriteValue?)Value;
     }
 
+    public RuntimeTilesetValue? AsTileset()
+    {
+        if (Type != TypeSymbol.Tileset)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not TILESET.");
+        }
+
+        return (RuntimeTilesetValue?)Value;
+    }
+
+    public RuntimeTilemapValue? AsTilemap()
+    {
+        if (Type != TypeSymbol.Tilemap)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not TILEMAP.");
+        }
+
+        return (RuntimeTilemapValue?)Value;
+    }
+
     public RuntimeArrayValue AsArray()
     {
         if (Type is not ArrayTypeSymbol)
@@ -471,6 +495,18 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         {
             var sprite = AsSprite();
             return sprite is null ? "<ПУСТОЙ SPRITE>" : $"<SPRITE {sprite.FrameWidth}x{sprite.FrameHeight}x{sprite.FrameCount}>";
+        }
+
+        if (Type == TypeSymbol.Tilemap)
+        {
+            var tilemap = AsTilemap();
+            return tilemap is null ? "<ПУСТОЙ TILEMAP>" : $"<TILEMAP {tilemap.Width}x{tilemap.Height} layers={tilemap.LayerCount}>";
+        }
+
+        if (Type == TypeSymbol.Tileset)
+        {
+            var tileset = AsTileset();
+            return tileset is null ? "<ПУСТОЙ TILESET>" : $"<TILESET {tileset.TileWidth}x{tileset.TileHeight}x{tileset.TileCount}>";
         }
 
         if (Type is FunctionTypeSymbol functionType)

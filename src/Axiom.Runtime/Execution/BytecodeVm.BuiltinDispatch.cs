@@ -1,5 +1,6 @@
 using Axiom.Bytecode;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -24,19 +25,19 @@ public sealed partial class BytecodeVm
         return builtin.CanonicalId switch
         {
             BuiltinFunctionId.Len => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromInteger(GetStringUnchecked(value).Length)),
-            BuiltinFunctionId.Left => BuiltinExecution.Binary(static (vm, text, count, location) => RuntimeValue.FromString(
+            BuiltinFunctionId.Left => BuiltinExecution.Binary(static (vm, text, count, location) =>
                 BytecodeVm.EvaluateLeft(
                     GetStringUnchecked(text),
-                    vm.RequirePositiveCount("LEFT", "count", GetIntegerUnchecked(count), location)))),
+                    vm.RequirePositiveCount("LEFT", "count", GetIntegerUnchecked(count), location))),
             BuiltinFunctionId.Right => BuiltinExecution.Binary(static (vm, text, count, location) =>
                 BytecodeVm.EvaluateRightBuiltin(
                     text,
                     vm.RequirePositiveCount("RIGHT", "count", GetIntegerUnchecked(count), location))),
-            BuiltinFunctionId.Mid => BuiltinExecution.Ternary(static (vm, text, start, count, location) => RuntimeValue.FromString(
+            BuiltinFunctionId.Mid => BuiltinExecution.Ternary(static (vm, text, start, count, location) =>
                 BytecodeVm.EvaluateMid(
                     GetStringUnchecked(text),
                     vm.RequirePositiveStart("MID", GetIntegerUnchecked(start), location),
-                    vm.RequirePositiveCount("MID", "count", GetIntegerUnchecked(count), location)))),
+                    vm.RequirePositiveCount("MID", "count", GetIntegerUnchecked(count), location))),
             BuiltinFunctionId.TrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateTrimWhitespaceBuiltin(value)),
             BuiltinFunctionId.TrimCharacters => BuiltinExecution.BinaryNoLocation(static (vm, value, chars) => RuntimeValue.FromString(BytecodeVm.EvaluateTrimCharacters(GetStringUnchecked(value), GetStringUnchecked(chars)))),
             BuiltinFunctionId.LTrimWhitespace => BuiltinExecution.UnaryNoLocation(static (vm, value) => BytecodeVm.EvaluateLeftTrimWhitespaceBuiltin(value)),
@@ -59,10 +60,10 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.InStrRevFrom => BuiltinExecution.Ternary(static (vm, start, text, value, location) => RuntimeValue.FromInteger(
                 BytecodeVm.EvaluateInStrRev(vm.RequirePositiveStart("INSTRREV", GetIntegerUnchecked(start), location), GetStringUnchecked(text), GetStringUnchecked(value)))),
             BuiltinFunctionId.SubStrCount => BuiltinExecution.Binary(static (vm, text, value, location) => RuntimeValue.FromInteger(vm.EvaluateSubStrCount(GetStringUnchecked(text), GetStringUnchecked(value), location))),
-            BuiltinFunctionId.Repeat => BuiltinExecution.Binary(static (vm, value, count, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateRepeat(GetStringUnchecked(value), vm.RequireNonNegativeCount("REPEAT", "count", GetIntegerUnchecked(count), location)))),
-            BuiltinFunctionId.Space => BuiltinExecution.Unary(static (vm, count, location) => RuntimeValue.FromString(
-                BytecodeVm.EvaluateSpace(vm.RequireNonNegativeCount("SPACE", "count", GetIntegerUnchecked(count), location)))),
+            BuiltinFunctionId.Repeat => BuiltinExecution.Binary(static (vm, value, count, location) =>
+                BytecodeVm.EvaluateRepeat(GetStringUnchecked(value), vm.RequireNonNegativeCount("REPEAT", "count", GetIntegerUnchecked(count), location))),
+            BuiltinFunctionId.Space => BuiltinExecution.Unary(static (vm, count, location) =>
+                BytecodeVm.EvaluateSpace(vm.RequireNonNegativeCount("SPACE", "count", GetIntegerUnchecked(count), location))),
             BuiltinFunctionId.StringFill => BuiltinExecution.Binary(static (vm, count, fill, location) => RuntimeValue.FromString(
                 vm.EvaluateStringFill(
                     vm.RequireNonNegativeCount("STRING", "count", GetIntegerUnchecked(count), location),
@@ -156,13 +157,30 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ImageWidth => BuiltinExecution.UnaryNoLocation(static (vm, image) => RuntimeValue.FromInteger(BytecodeVm.GetImageWidth(image))),
             BuiltinFunctionId.ImageHeight => BuiltinExecution.UnaryNoLocation(static (vm, image) => RuntimeValue.FromInteger(BytecodeVm.GetImageHeight(image))),
             BuiltinFunctionId.LoadSprite => BuiltinExecution.Ternary(static (vm, path, frameWidth, frameHeight, location) => vm.EvaluateLoadSpriteBuiltin(GetStringUnchecked(path), GetLongUnchecked(frameWidth), GetLongUnchecked(frameHeight), location)),
+            BuiltinFunctionId.LoadTileset => BuiltinExecution.Ternary(static (vm, path, tileWidth, tileHeight, location) => vm.EvaluateLoadTilesetBuiltin(GetStringUnchecked(path), GetLongUnchecked(tileWidth), GetLongUnchecked(tileHeight), margin: 0, spacing: 0, location)),
+            BuiltinFunctionId.LoadTilesetMargin => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateLoadTilesetBuiltin(GetStringUnchecked(arguments[0]), GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3]), spacing: 0, location)),
+            BuiltinFunctionId.LoadTilesetMarginSpacing => BuiltinExecution.Variadic(static (vm, arguments, location) => vm.EvaluateLoadTilesetBuiltin(GetStringUnchecked(arguments[0]), GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3]), GetLongUnchecked(arguments[4]), location)),
+            BuiltinFunctionId.LoadTilemap => BuiltinExecution.Unary(static (vm, path, location) => vm.EvaluateLoadTilemapBuiltin(GetStringUnchecked(path), location)),
             BuiltinFunctionId.SpriteWidth => BuiltinExecution.UnaryNoLocation(static (vm, sprite) => RuntimeValue.FromInteger(BytecodeVm.GetSpriteWidth(sprite))),
             BuiltinFunctionId.SpriteHeight => BuiltinExecution.UnaryNoLocation(static (vm, sprite) => RuntimeValue.FromInteger(BytecodeVm.GetSpriteHeight(sprite))),
             BuiltinFunctionId.SpriteCount => BuiltinExecution.UnaryNoLocation(static (vm, sprite) => RuntimeValue.FromInteger(BytecodeVm.GetSpriteCount(sprite))),
+            BuiltinFunctionId.TileCount => BuiltinExecution.UnaryNoLocation(static (vm, tileset) => RuntimeValue.FromInteger(BytecodeVm.GetTileCount(tileset))),
+            BuiltinFunctionId.TileWidth => BuiltinExecution.UnaryNoLocation(static (vm, tileset) => RuntimeValue.FromInteger(BytecodeVm.GetTileWidth(tileset))),
+            BuiltinFunctionId.TileHeight => BuiltinExecution.UnaryNoLocation(static (vm, tileset) => RuntimeValue.FromInteger(BytecodeVm.GetTileHeight(tileset))),
+            BuiltinFunctionId.MapWidth => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapWidth(tilemap))),
+            BuiltinFunctionId.MapHeight => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapHeight(tilemap))),
+            BuiltinFunctionId.MapPixelWidth => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapPixelWidth(tilemap))),
+            BuiltinFunctionId.MapPixelHeight => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapPixelHeight(tilemap))),
+            BuiltinFunctionId.MapTileWidth => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapTileWidth(tilemap))),
+            BuiltinFunctionId.MapTileHeight => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapTileHeight(tilemap))),
+            BuiltinFunctionId.MapLayerCount => BuiltinExecution.UnaryNoLocation(static (vm, tilemap) => RuntimeValue.FromInteger(BytecodeVm.GetMapLayerCount(tilemap))),
+            BuiltinFunctionId.MapTile => BuiltinExecution.Variadic(static (vm, arguments, location) => RuntimeValue.FromInteger(BytecodeVm.GetMapTile(arguments[0], GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3])))),
+            BuiltinFunctionId.MapTileset => BuiltinExecution.Variadic(static (vm, arguments, location) => RuntimeValue.FromInteger(BytecodeVm.GetMapTileset(arguments[0], GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3])))),
+            BuiltinFunctionId.MapTileFlags => BuiltinExecution.Variadic(static (vm, arguments, location) => RuntimeValue.FromInteger(BytecodeVm.GetMapTileFlags(arguments[0], GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3])))),
             BuiltinFunctionId.Rgb => BuiltinExecution.Ternary(static (vm, red, green, blue, location) => RuntimeValue.FromInteger(vm.EvaluateRgbBuiltin(GetLongUnchecked(red), GetLongUnchecked(green), GetLongUnchecked(blue), location))),
             BuiltinFunctionId.Int => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateIntBuiltin(value, location))),
             BuiltinFunctionId.Str => BuiltinExecution.UnaryNoLocation(static (vm, value) => value.ToDisplayRuntimeValue()),
-            BuiltinFunctionId.Val => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromDouble(ParseVal(GetStringUnchecked(value)))),
+            BuiltinFunctionId.Val => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromDouble(BuiltinStringHelpers.ParseVal(GetStringUnchecked(value)))),
             BuiltinFunctionId.LCase => BuiltinExecution.UnaryNoLocation(static (vm, value) => EvaluateLowerCaseBuiltin(value)),
             BuiltinFunctionId.UCase => BuiltinExecution.UnaryNoLocation(static (vm, value) => EvaluateUpperCaseBuiltin(value)),
             BuiltinFunctionId.Rnd => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateRndBuiltin()),

@@ -502,7 +502,7 @@ public sealed partial class Interpreter
 
     private void ReportPrintUsingError(string detail, TextLocation location)
     {
-        ReportRuntimeDiagnostic(BuiltinArgumentCode, $"PRINT USING: {detail}", location);
+        ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, $"PRINT USING: {detail}", location);
     }
 
     private static bool IsNumericMaskCharacter(char character)

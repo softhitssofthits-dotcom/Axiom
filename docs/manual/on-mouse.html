@@ -31,12 +31,13 @@
 
         <section class="article-section">
             <h2>Для чего нужен оператор ON MOUSE</h2>
-            <p>Оператор <code>ON MOUSE</code> подходит для интерактивных программ, где нужно реагировать на нажатие кнопки, отпускание кнопки, перемещение указателя или прокрутку колеса между обычными операторами. Оператор работает только при активном графическом режиме <code>SCREEN</code>.</p>
+            <p>Оператор <code>ON MOUSE</code> подходит для интерактивных программ, где нужно реагировать на нажатие кнопки, отпускание кнопки, перемещение указателя или прокрутку колеса между обычными операторами. Оператор работает при активном графическом режиме <code>SCREEN</code> и при активном <code>CANVAS</code>.</p>
         </section>
 
         <section class="article-section">
             <h2>Где работает оператор ON MOUSE</h2>
-            <p>Оператор <code>ON MOUSE</code> работает только при активном графическом режиме <code>SCREEN 1..10</code>. Без него выполнение сообщает диагностику <code>MB3010</code>. Координаты событий мыши измеряются в пикселях клиентской области активного окна <code>SCREEN</code> и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>.</p>
+            <p>Оператор <code>ON MOUSE</code> работает при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. Без активной рисуемой поверхности выполнение сообщает диагностику <code>MB3010</code>.</p>
+            <p>При активном <code>SCREEN</code> координаты событий мыши измеряются в пикселях клиентской области активного окна и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>. При активном <code>CANVAS</code> параметры <code>x</code> и <code>y</code> передаются уже в мировых координатах и учитывают текущие <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
             <p>Оператор <code>ON MOUSE</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
         </section>
 
@@ -107,8 +108,9 @@ END SUB</code></pre>
                 <li>Если обработчик включён, совпавшее нажатие считается обработанным и не попадёт в последующий <a href="mousepress.html"><code>MOUSEPRESS</code></a>.</li>
                 <li>Если обработчик на паузе или не зарегистрирован, нажатие остаётся доступным для <code>MOUSEPRESS</code>.</li>
                 <li>Отпускание, перемещение и колесо не читаются функцией <code>MOUSEPRESS</code>, но доступны обработчикам <code>ON MOUSE(..., "UP")</code>, <code>ON MOUSE("MOVE")</code> и <code>ON MOUSE("WHEEL")</code>.</li>
-                <li>При активном <code>SCREEN</code> координаты <code>x</code> и <code>y</code> совпадают с теми же «сырыми» чтениями, которые в этот момент дают <code>MOUSEX</code> и <code>MOUSEY</code>.</li>
-                <li>Операторы <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют координаты события: обработчик получает клиентские координаты активной поверхности ввода, а не логические координаты графических примитивов.</li>
+                <li>При активном <code>SCREEN</code> координаты <code>x</code> и <code>y</code> совпадают с теми же экранными чтениями, которые в этот момент дают <code>MOUSEX</code> и <code>MOUSEY</code>.</li>
+                <li>При активном <code>CANVAS</code> координаты <code>x</code> и <code>y</code> совпадают с теми же мировыми чтениями, которые в этот момент дают <code>MOUSEX</code> и <code>MOUSEY</code>.</li>
+                <li>Операторы <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не изменяют координаты события в <code>SCREEN</code>. В <code>CANVAS</code> пересчёт идёт по договору <code>VIEWPORT</code> и <code>CAMERA</code>.</li>
                 <li>В панели <code>Output</code> среды разработки уход указателя за пределы поверхности сбрасывает состояние мыши: координаты становятся <code>-1/-1</code>, очередь событий очищается, удержание кнопок снимается.</li>
                 <li>В нативном графическом окне <code>SCREEN</code> уход указателя за видимую область сам по себе не создаёт отдельного сброса координат: без нового события ввода сохраняется последняя известная точка.</li>
                 <li>В текущем срезе нет обработчиков двойного клика и захвата указателя.</li>
@@ -133,14 +135,14 @@ END SUB</code></pre>
 
         <section class="article-section">
             <h2>Ручная проверка</h2>
-            <ul class="resource-list"><li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши</a></li><li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li><li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li></ul>
+            <ul class="resource-list"><li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши в SCREEN</a></li><li><a href="../../samples/operators/on-mouse/canvas_world_handler.axm">ON MOUSE: мировые координаты в CANVAS</a></li><li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li><li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li></ul>
         </section>
 
         <section class="article-section">
             <h2>Диагностика</h2>
             <ul>
                 <li><code>MB2035</code>: обработчик оператора <code>ON MOUSE</code> не является подходящей процедурой <code>SUB</code>. Для обработчика события допустимы только формы без параметров или с параметрами <code>INTEGER, LONG, LONG</code>.</li>
-                <li><code>MB3010</code>: оператор <code>ON MOUSE</code> вызван без активного графического режима <code>SCREEN</code>.</li>
+                <li><code>MB3010</code>: оператор <code>ON MOUSE</code> вызван без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
             </ul>
         </section>
 
