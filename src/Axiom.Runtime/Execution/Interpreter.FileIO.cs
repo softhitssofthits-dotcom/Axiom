@@ -1,4 +1,3 @@
-using System.Security;
 using Axiom.Core;
 using Axiom.Semantics;
 using Axiom.Runtime.Builtins;
@@ -49,7 +48,7 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteClose(BoundCloseStatement statement)
     {
         var file = RequireOpenFile(statement.FileVariable, statement.Location, "CLOSE");
-        CloseFile(file);
+        BuiltinFileIOHelpers.CloseFile(file, _openFiles);
         AssignVariable(statement.FileVariable, RuntimeValue.FromFile(value: null));
         return ExecutionSignal.None;
     }
@@ -62,112 +61,58 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateFilePath(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireOpenFile(fileValue, expression.Location, "FILEPATH");
-        return RuntimeValue.FromString(file.Path);
+        return BuiltinFileIOHelpers.EvaluateFilePath(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateFileMode(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireOpenFile(fileValue, expression.Location, "FILEMODE");
-        return RuntimeValue.FromString(GetFileModeName(file.Mode));
+        return BuiltinFileIOHelpers.EvaluateFileMode(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateFilePos(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireOpenFile(fileValue, expression.Location, "FILEPOS");
-        return RuntimeValue.FromLong(file.Position);
+        return BuiltinFileIOHelpers.EvaluateFilePos(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateFileLength(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireOpenFile(fileValue, expression.Location, "FILELENGTH");
-        return RuntimeValue.FromLong(file.Length);
+        return BuiltinFileIOHelpers.EvaluateFileLength(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateLineNumber(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "LINENUMBER");
-        return RuntimeValue.FromLong(file.LineNumber);
+        return BuiltinFileIOHelpers.EvaluateLineNumber(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateEof(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "EOF");
-        return RuntimeValue.FromBoolean(file.IsEndOfFile);
+        return BuiltinFileIOHelpers.EvaluateEof(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateReadToEnd(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "READTOEND");
-
-        try
-        {
-            return RuntimeValue.FromString(file.ReadToEnd());
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция READTOEND: не удалось прочитать текст из файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateReadToEnd(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateReadText(BoundCallExpression expression, RuntimeValue fileValue, int count)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "READTEXT");
-
-        try
-        {
-            return RuntimeValue.FromString(file.ReadText(count));
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция READTEXT: не удалось прочитать текст из файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateReadText(fileValue, count, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateReadLine(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "READLINE");
-
-        if (file.IsEndOfFile)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                "Функция READLINE: достигнут конец файла.",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
-
-        try
-        {
-            return RuntimeValue.FromString(file.ReadLine());
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция READLINE: не удалось прочитать строку из файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateReadLine(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateReadLines(BoundCallExpression expression, RuntimeValue fileValue, int count)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "READLINES");
+        var file = BuiltinFileIOHelpers.RequireReadableFile(fileValue, expression.Location, "READLINES", ReportFileIOError);
 
         try
         {
             return CreateStringArrayValue(file.ReadLines(count));
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
+        catch (Exception ex) when (BuiltinFileIOHelpers.IsFileIoException(ex))
         {
             ReportRuntimeDiagnostic(
                 DiagnosticCodes.BuiltinArgument,
@@ -179,197 +124,50 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateSkipLine(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireReadableFile(fileValue, expression.Location, "SKIPLINE");
-
-        if (file.IsEndOfFile)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                "Функция SKIPLINE: достигнут конец файла.",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
-
-        try
-        {
-            file.SkipLine();
-            return RuntimeValue.FromBoolean(true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция SKIPLINE: не удалось пропустить строку файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateSkipLine(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateWrite(BoundCallExpression expression, RuntimeValue fileValue, string text, bool appendLineBreak)
     {
-        var operationName = appendLineBreak ? "WRITELINE" : "WRITE";
-        var file = RequireWritableFile(fileValue, expression.Location, operationName);
-
-        try
-        {
-            file.Write(text, appendLineBreak);
-            return RuntimeValue.FromBoolean(true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция {operationName}: не удалось записать в файл: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateWrite(fileValue, text, appendLineBreak, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateNewLine(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireWritableFile(fileValue, expression.Location, "NEWLINE");
-
-        try
-        {
-            file.Write(string.Empty, appendLineBreak: true);
-            return RuntimeValue.FromBoolean(true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция NEWLINE: не удалось записать перевод строки в файл: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateNewLine(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateFlush(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireWritableFile(fileValue, expression.Location, "FLUSH");
-
-        try
-        {
-            file.Flush();
-            return RuntimeValue.FromBoolean(true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция FLUSH: не удалось сбросить буфер файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateFlush(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeValue EvaluateSeekFile(BoundCallExpression expression, RuntimeValue fileValue, RuntimeValue positionValue)
     {
-        var file = RequireOpenFile(fileValue, expression.Location, "SEEKFILE");
-        var position = AsFilePosition(expression, positionValue, argumentIndex: 1);
+        var position = BuiltinFileIOHelpers.AsFilePosition(
+            positionValue,
+            GetBuiltInArgumentLocation(expression, 1),
+            (msg, loc) => ReportInvalidRuntimeState<long>(msg, loc));
 
-        if (file.Mode == RuntimeTextFileMode.Append)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                "Функция SEEKFILE: файл, открытый в режиме APPEND, не поддерживает явный переход по позиции.",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
-
-        if (position < 0)
-        {
-            ReportBuiltInArgumentError(
-                "SEEKFILE",
-                "position",
-                "не может быть отрицательным.",
-                GetBuiltInArgumentLocation(expression, 1));
-            throw new RuntimeFailureException();
-        }
-
-        if (position > file.Length)
-        {
-            ReportBuiltInArgumentError(
-                "SEEKFILE",
-                "position",
-                "не может выходить за пределы файла.",
-                GetBuiltInArgumentLocation(expression, 1));
-            throw new RuntimeFailureException();
-        }
-
-        try
-        {
-            file.Seek(position);
-            return RuntimeValue.FromBoolean(true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция SEEKFILE: не удалось перейти к указанной позиции: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateSeekFile(
+            fileValue, position, expression.Location,
+            ReportFileIOError,
+            (funcName, argName, detail, loc) => ReportBuiltInArgumentError(funcName, argName, detail, loc));
     }
 
     private RuntimeValue EvaluateRewind(BoundCallExpression expression, RuntimeValue fileValue)
     {
-        var file = RequireOpenFile(fileValue, expression.Location, "REWIND");
-
-        if (file.Mode == RuntimeTextFileMode.Append)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                "Функция REWIND: файл, открытый в режиме APPEND, не поддерживает переход в начало.",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
-
-        try
-        {
-            file.Rewind();
-            return RuntimeValue.FromBoolean(true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ObjectDisposedException or InvalidOperationException)
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция REWIND: не удалось перейти в начало файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateRewind(fileValue, expression.Location, ReportFileIOError);
     }
 
     private RuntimeTextFile RequireReadableFile(RuntimeValue fileValue, TextLocation location, string operationName)
     {
-        var file = RequireOpenFile(fileValue, location, operationName);
-
-        if (file.Mode == RuntimeTextFileMode.Input)
-        {
-            return file;
-        }
-
-        ReportRuntimeDiagnostic(
-            DiagnosticCodes.BuiltinArgument,
-            $"Функция {operationName}: аргумент 'file' должен быть открыт для чтения.",
-            location);
-        throw new RuntimeFailureException();
+        return BuiltinFileIOHelpers.RequireReadableFile(fileValue, location, operationName, ReportFileIOError);
     }
 
     private RuntimeTextFile RequireWritableFile(RuntimeValue fileValue, TextLocation location, string operationName)
     {
-        var file = RequireOpenFile(fileValue, location, operationName);
-
-        if (file.Mode is RuntimeTextFileMode.Output or RuntimeTextFileMode.Append)
-        {
-            return file;
-        }
-
-        ReportRuntimeDiagnostic(
-            DiagnosticCodes.BuiltinArgument,
-            $"Функция {operationName}: аргумент 'file' должен быть открыт для записи.",
-            location);
-        throw new RuntimeFailureException();
+        return BuiltinFileIOHelpers.RequireWritableFile(fileValue, location, operationName, ReportFileIOError);
     }
 
     private RuntimeTextFile RequireOpenFile(VariableSymbol variable, TextLocation location, string operationName)
@@ -379,56 +177,29 @@ public sealed partial class Interpreter
 
     private RuntimeTextFile RequireOpenFile(RuntimeValue fileValue, TextLocation location, string operationName)
     {
-        var file = fileValue.AsFile();
-
-        if (file is not null && file.IsOpen)
-        {
-            return file;
-        }
-
-        ReportRuntimeDiagnostic(
-            DiagnosticCodes.BuiltinArgument,
-            $"Операция {operationName}: нужен открытый файл.",
-            location);
-        throw new RuntimeFailureException();
+        return BuiltinFileIOHelpers.RequireOpenFile(fileValue, location, operationName, ReportFileIOError);
     }
 
     private long AsFilePosition(BoundCallExpression expression, RuntimeValue value, int argumentIndex)
     {
-        return value.Type switch
-        {
-            var type when type == TypeSymbol.Integer => value.AsInteger(),
-            var type when type == TypeSymbol.Long => value.AsLong(),
-            _ => ReportInvalidRuntimeState<long>(
-                $"Функция SEEKFILE получила неподдерживаемый тип позиции '{value.Type.Name}'.",
-                GetBuiltInArgumentLocation(expression, argumentIndex))
-        };
+        return BuiltinFileIOHelpers.AsFilePosition(
+            value,
+            GetBuiltInArgumentLocation(expression, argumentIndex),
+            (msg, loc) => ReportInvalidRuntimeState<long>(msg, loc));
     }
 
     private void CloseAllOpenFiles()
     {
-        foreach (var file in _openFiles.ToArray())
-        {
-            CloseFile(file);
-        }
+        BuiltinFileIOHelpers.CloseAllOpenFiles(_openFiles);
     }
 
     private void CloseFile(RuntimeTextFile file)
     {
-        ArgumentNullException.ThrowIfNull(file);
-
-        file.Dispose();
-        _openFiles.Remove(file);
+        BuiltinFileIOHelpers.CloseFile(file, _openFiles);
     }
 
-    private static string GetFileModeName(RuntimeTextFileMode mode)
+    private void ReportFileIOError(string detail, TextLocation location)
     {
-        return mode switch
-        {
-            RuntimeTextFileMode.Input => "INPUT",
-            RuntimeTextFileMode.Output => "OUTPUT",
-            RuntimeTextFileMode.Append => "APPEND",
-            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unsupported file mode.")
-        };
+        ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, detail, location);
     }
 }

@@ -258,3 +258,64 @@
 - 3.4 (InterpreterTests) — завершена, 12,015 → 11 файлов.
 
 Следующий шаг: продуктовая работа или волна 5 (тестирование графики).
+
+## Session 1039 - 2026-08-18 23:00 - Волна 2: закрытие хвостов PrintUsing, FileIO, Mouse
+
+Задача: создать общие хелперы для трёх оставшихся областей built-in функций.
+
+Что сделано:
+
+### 1. BuiltinPrintUsingHelpers.cs (544 строки)
+
+| Файл | Было | Стало | Δ |
+|------|------|-------|---|
+| Interpreter.PrintUsing.cs | 559 | 28 | −531 |
+| BytecodeVm.PrintUsing.cs | 768 | 88 | −680 |
+| BuiltinPrintUsingHelpers.cs | — | 544 | +544 |
+| **Сумма** | 1,327 | 660 | **−667** |
+
+Извлечено: типы токенов формата, парсинг маски, числовое форматирование (базовое + расширенное), строковые поля, экспоненциальное форматирование, разделители тысяч.
+
+### 2. BuiltinFileIOHelpers.cs (396 строк)
+
+| Файл | Было | Стало | Δ |
+|------|------|-------|---|
+| Interpreter.FileIO.cs | 434 | 205 | −229 |
+| BytecodeVm.FileIO.cs | 444 | 191 | −253 |
+| BuiltinFileIOHelpers.cs | — | 396 | +396 |
+| **Сумма** | 878 | 792 | **−86** |
+
+Извлечено: RequireOpenFile, RequireReadableFile, RequireWritableFile, Evaluate* файловые операции, CloseFile, CloseAllOpenFiles, GetFileModeName, IsFileIoException.
+
+### 3. BuiltinMouseHelpers.cs (136 строк)
+
+| Файл | Было | Стало | Δ |
+|------|------|-------|---|
+| Interpreter.Mouse.cs | 232 | 129 | −103 |
+| BytecodeVm.Mouse.cs | 246 | 143 | −103 |
+| BuiltinMouseHelpers.cs | — | 136 | +136 |
+| **Сумма** | 478 | 408 | **−70** |
+
+Извлечено: MouseHandlerKey, IsSupportedMouseButton, ConsumeMouseButtonPress, TryReadMouseEvent, TranslateMouse*ToRuntimeCoordinates.
+
+### Итоговый эффект общего слоя built-in функций
+
+| Область | Хелпер | Δ строк |
+|---------|--------|---------|
+| Numeric | BuiltinNumericHelpers | −95 |
+| Regex | BuiltinRegexHelpers | −374 |
+| String | BuiltinStringHelpers | −407 |
+| FileSystem | BuiltinFileSystemHelpers | −416 |
+| DateTime | BuiltinDateTimeHelpers | −800 |
+| Array | BuiltinArrayHelpers | −811 |
+| PrintUsing | BuiltinPrintUsingHelpers | −667 |
+| FileIO | BuiltinFileIOHelpers | −86 |
+| Mouse | BuiltinMouseHelpers | −70 |
+| **Итого** | | **−3,726** |
+
+Проверки:
+- `dotnet build Axiom.sln` — 0 ошибок, 0 предупреждений.
+- `dotnet test tests/Axiom.Runtime.Tests` — 875/875 пройдено.
+
+Волна 2 плана улучшений полностью закрыта.
+Следующий шаг: волна 5 (тестирование графики).

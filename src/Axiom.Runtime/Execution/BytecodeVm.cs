@@ -28,7 +28,7 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<(int RoutineId, int InstructionIndex), InputInstructionPlan> _inputInstructionCache = [];
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol> _recordFieldCache = [];
     private readonly Dictionary<string, UserDefinedTypeSymbol> _recordTypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, List<PrintUsingFormatToken>> _printUsingFormatCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<BuiltinPrintUsingHelpers.PrintUsingFormatToken>> _printUsingFormatCache = new(StringComparer.Ordinal);
     private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
     private readonly RuntimeValue?[] _constantValues;

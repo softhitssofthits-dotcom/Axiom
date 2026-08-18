@@ -1,25 +1,26 @@
 using Axiom.Bytecode;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 
 namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
     private const int MaxMouseEventsPerDispatch = 64;
-    private readonly Dictionary<MouseHandlerKey, MouseHandlerRegistration> _mouseHandlers = [];
+    private readonly Dictionary<BuiltinMouseHelpers.MouseHandlerKey, MouseHandlerRegistration> _mouseHandlers = [];
     private readonly Queue<MouseInputEvent> _bufferedMouseEvents = [];
     private int _mouseHandlerDepth;
 
     private long ReadMouseX()
     {
         RequireDrawableSurfaceActive("MOUSEX", FallbackRuntimeLocation);
-        return TranslateMouseXToRuntimeCoordinates(_host.GetMouseX(), _host.GetMouseY());
+        return BuiltinMouseHelpers.TranslateMouseXToRuntimeCoordinates(_host, _host.GetMouseX(), _host.GetMouseY());
     }
 
     private long ReadMouseY()
     {
         RequireDrawableSurfaceActive("MOUSEY", FallbackRuntimeLocation);
-        return TranslateMouseYToRuntimeCoordinates(_host.GetMouseX(), _host.GetMouseY());
+        return BuiltinMouseHelpers.TranslateMouseYToRuntimeCoordinates(_host, _host.GetMouseX(), _host.GetMouseY());
     }
 
     private bool IsMouseButtonDown(int buttonNumber)
@@ -43,10 +44,10 @@ public sealed partial class BytecodeVm
         var deferredEvents = new List<MouseInputEvent>();
         var processedEvents = 0;
 
-        while (processedEvents < MaxMouseEventsPerDispatch && TryReadMouseEvent(out var mouseEvent))
+        while (processedEvents < MaxMouseEventsPerDispatch && BuiltinMouseHelpers.TryReadMouseEvent(_bufferedMouseEvents, _host.ReadMouseEvent, out var mouseEvent))
         {
             processedEvents++;
-            var handlerKey = GetMouseHandlerKey(mouseEvent);
+            var handlerKey = BuiltinMouseHelpers.GetMouseHandlerKey(mouseEvent);
             if (!_mouseHandlers.TryGetValue(handlerKey, out var registration) || !registration.IsEnabled)
             {
                 deferredEvents.Add(mouseEvent);
@@ -68,22 +69,22 @@ public sealed partial class BytecodeVm
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 1 ? instruction.GetOperand(1) : 0);
 
-        if (!IsSupportedMouseHandlerTarget(buttonNumber, eventKind))
+        if (!BuiltinMouseHelpers.IsSupportedMouseHandlerTarget(buttonNumber, eventKind))
         {
             return;
         }
 
         var passEvent = instruction.OperandCount > 0 && instruction.GetOperand(0) != 0;
-        _mouseHandlers[new MouseHandlerKey(eventKind, buttonNumber)] = new MouseHandlerRegistration(handlerValue!, passEvent, IsEnabled: true);
+        _mouseHandlers[new BuiltinMouseHelpers.MouseHandlerKey(eventKind, buttonNumber)] = new MouseHandlerRegistration(handlerValue!, passEvent, IsEnabled: true);
     }
 
     private void ExecuteUnregisterMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
     {
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 0 ? instruction.GetOperand(0) : 0);
-        if (IsSupportedMouseHandlerTarget(buttonNumber, eventKind))
+        if (BuiltinMouseHelpers.IsSupportedMouseHandlerTarget(buttonNumber, eventKind))
         {
-            _mouseHandlers.Remove(new MouseHandlerKey(eventKind, buttonNumber));
+            _mouseHandlers.Remove(new BuiltinMouseHelpers.MouseHandlerKey(eventKind, buttonNumber));
         }
     }
 
@@ -91,68 +92,20 @@ public sealed partial class BytecodeVm
     {
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 0 ? instruction.GetOperand(0) : 0);
-        SetMouseHandlerEnabled(buttonNumber, eventKind, isEnabled: false);
+        BuiltinMouseHelpers.SetMouseHandlerEnabled(_mouseHandlers, buttonNumber, eventKind, isEnabled: false);
     }
 
     private void ExecuteResumeMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
     {
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 0 ? instruction.GetOperand(0) : 0);
-        SetMouseHandlerEnabled(buttonNumber, eventKind, isEnabled: true);
-    }
-
-    private void SetMouseHandlerEnabled(int buttonNumber, MouseInputEventKind eventKind, bool isEnabled)
-    {
-        if (!IsSupportedMouseHandlerTarget(buttonNumber, eventKind)
-            || !_mouseHandlers.TryGetValue(new MouseHandlerKey(eventKind, buttonNumber), out var registration))
-        {
-            return;
-        }
-
-        _mouseHandlers[new MouseHandlerKey(eventKind, buttonNumber)] = registration with { IsEnabled = isEnabled };
+        BuiltinMouseHelpers.SetMouseHandlerEnabled(_mouseHandlers, buttonNumber, eventKind, isEnabled: true);
     }
 
     private bool ConsumeMouseButtonPress(int buttonNumber)
     {
         RequireDrawableSurfaceActive("MOUSEPRESS", FallbackRuntimeLocation);
-
-        if (!IsSupportedMouseButton(buttonNumber))
-        {
-            return false;
-        }
-
-        var deferredEvents = new List<MouseInputEvent>();
-        var matched = false;
-
-        while (TryReadMouseEvent(out var candidate))
-        {
-            if (!matched && candidate.Kind == MouseInputEventKind.Press && candidate.ButtonNumber == buttonNumber)
-            {
-                matched = true;
-                continue;
-            }
-
-            deferredEvents.Add(candidate);
-        }
-
-        foreach (var deferredEvent in deferredEvents)
-        {
-            _bufferedMouseEvents.Enqueue(deferredEvent);
-        }
-
-        return matched;
-    }
-
-    private bool TryReadMouseEvent(out MouseInputEvent mouseEvent)
-    {
-        if (_bufferedMouseEvents.Count > 0)
-        {
-            mouseEvent = _bufferedMouseEvents.Dequeue();
-            return true;
-        }
-
-        mouseEvent = _host.ReadMouseEvent();
-        return IsSupportedMouseEvent(mouseEvent);
+        return BuiltinMouseHelpers.ConsumeMouseButtonPress(buttonNumber, _bufferedMouseEvents, _host.ReadMouseEvent);
     }
 
     private void InvokeMouseHandler(MouseHandlerRegistration registration, MouseInputEvent mouseEvent, TextLocation location)
@@ -180,56 +133,6 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private long TranslateMouseXToRuntimeCoordinates(long absoluteMouseX, long absoluteMouseY)
-    {
-        if (!_host.IsCanvasActive)
-        {
-            return absoluteMouseX;
-        }
-
-        return TryTranslateMouseAbsoluteToLogical(absoluteMouseX, absoluteMouseY, out var logicalX, out _)
-            ? logicalX
-            : -1;
-    }
-
-    private long TranslateMouseYToRuntimeCoordinates(long absoluteMouseX, long absoluteMouseY)
-    {
-        if (!_host.IsCanvasActive)
-        {
-            return absoluteMouseY;
-        }
-
-        return TryTranslateMouseAbsoluteToLogical(absoluteMouseX, absoluteMouseY, out _, out var logicalY)
-            ? logicalY
-            : -1;
-    }
-
-    private bool TryTranslateMouseAbsoluteToLogical(long absoluteMouseX, long absoluteMouseY, out long logicalX, out long logicalY)
-    {
-        if (absoluteMouseX < 0 || absoluteMouseY < 0)
-        {
-            logicalX = -1;
-            logicalY = -1;
-            return false;
-        }
-
-        return GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(_host, absoluteMouseX, absoluteMouseY, out logicalX, out logicalY);
-    }
-
-    private static bool IsSupportedMouseButton(int buttonNumber) => buttonNumber is >= 1 and <= 3;
-
-    private static bool IsSupportedMouseHandlerTarget(int buttonNumber, MouseInputEventKind eventKind) =>
-        eventKind is MouseInputEventKind.Move or MouseInputEventKind.Wheel
-            ? buttonNumber == 0
-            : IsSupportedMouseButton(buttonNumber) && eventKind is MouseInputEventKind.Press or MouseInputEventKind.Release;
-
-    private static bool IsSupportedMouseEvent(MouseInputEvent mouseEvent) =>
-        mouseEvent.Kind == MouseInputEventKind.Move
-            ? mouseEvent.ButtonNumber == 0
-            : mouseEvent.Kind == MouseInputEventKind.Wheel
-                ? mouseEvent.ButtonNumber != 0
-                : IsSupportedMouseButton(mouseEvent.ButtonNumber) && mouseEvent.Kind is MouseInputEventKind.Press or MouseInputEventKind.Release;
-
     private static MouseInputEventKind ToMouseInputEventKind(int eventKind) => eventKind switch
     {
         1 => MouseInputEventKind.Release,
@@ -237,10 +140,4 @@ public sealed partial class BytecodeVm
         3 => MouseInputEventKind.Wheel,
         _ => MouseInputEventKind.Press
     };
-
-    private static MouseHandlerKey GetMouseHandlerKey(MouseInputEvent mouseEvent) => new(mouseEvent.Kind, mouseEvent.Kind is MouseInputEventKind.Move or MouseInputEventKind.Wheel ? 0 : mouseEvent.ButtonNumber);
-
-    private readonly record struct MouseHandlerKey(MouseInputEventKind EventKind, int ButtonNumber);
-
-    private readonly record struct MouseHandlerRegistration(RuntimeFunctionValue Handler, bool PassEvent, bool IsEnabled);
 }
