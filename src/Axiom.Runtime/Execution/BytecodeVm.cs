@@ -2171,17 +2171,24 @@ public sealed partial class BytecodeVm
     {
         result = RuntimeValue.Void;
 
+        var count = right.Type == TypeSymbol.Integer
+            ? GetIntegerUnchecked(right)
+            : unchecked((int)GetLongUnchecked(right));
+
+        if (count < 0 || count > 63)
+            return false;
+
         if (left.Type == TypeSymbol.Integer)
         {
             if (right.Type == TypeSymbol.Integer)
             {
-                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) << GetIntegerUnchecked(right));
+                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) << count);
                 return true;
             }
 
             if (right.Type == TypeSymbol.Long)
             {
-                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) << unchecked((int)GetLongUnchecked(right)));
+                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) << count);
                 return true;
             }
         }
@@ -2190,13 +2197,13 @@ public sealed partial class BytecodeVm
         {
             if (right.Type == TypeSymbol.Integer)
             {
-                result = RuntimeValue.FromLong(GetLongUnchecked(left) << GetIntegerUnchecked(right));
+                result = RuntimeValue.FromLong(GetLongUnchecked(left) << count);
                 return true;
             }
 
             if (right.Type == TypeSymbol.Long)
             {
-                result = RuntimeValue.FromLong(GetLongUnchecked(left) << unchecked((int)GetLongUnchecked(right)));
+                result = RuntimeValue.FromLong(GetLongUnchecked(left) << count);
                 return true;
             }
         }
@@ -2208,17 +2215,24 @@ public sealed partial class BytecodeVm
     {
         result = RuntimeValue.Void;
 
+        var count = right.Type == TypeSymbol.Integer
+            ? GetIntegerUnchecked(right)
+            : unchecked((int)GetLongUnchecked(right));
+
+        if (count < 0 || count > 63)
+            return false;
+
         if (left.Type == TypeSymbol.Integer)
         {
             if (right.Type == TypeSymbol.Integer)
             {
-                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) >> GetIntegerUnchecked(right));
+                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) >> count);
                 return true;
             }
 
             if (right.Type == TypeSymbol.Long)
             {
-                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) >> unchecked((int)GetLongUnchecked(right)));
+                result = RuntimeValue.FromInteger(GetIntegerUnchecked(left) >> count);
                 return true;
             }
         }
@@ -2227,13 +2241,13 @@ public sealed partial class BytecodeVm
         {
             if (right.Type == TypeSymbol.Integer)
             {
-                result = RuntimeValue.FromLong(GetLongUnchecked(left) >> GetIntegerUnchecked(right));
+                result = RuntimeValue.FromLong(GetLongUnchecked(left) >> count);
                 return true;
             }
 
             if (right.Type == TypeSymbol.Long)
             {
-                result = RuntimeValue.FromLong(GetLongUnchecked(left) >> unchecked((int)GetLongUnchecked(right)));
+                result = RuntimeValue.FromLong(GetLongUnchecked(left) >> count);
                 return true;
             }
         }
@@ -2474,8 +2488,8 @@ public sealed partial class BytecodeVm
                 Opcode.Xor => RuntimeValue.FromInteger(left ^ right),
                 Opcode.Eqv => RuntimeValue.FromInteger(~(left ^ right)),
                 Opcode.Imp => RuntimeValue.FromInteger((~left) | right),
-                Opcode.ShiftLeft => RuntimeValue.FromInteger(left << right),
-                Opcode.ShiftRight => RuntimeValue.FromInteger(left >> right),
+                Opcode.ShiftLeft => right is >= 0 and <= 31 ? RuntimeValue.FromInteger(left << right) : RuntimeValue.Void,
+                Opcode.ShiftRight => right is >= 0 and <= 31 ? RuntimeValue.FromInteger(left >> right) : RuntimeValue.Void,
                 _ => RuntimeValue.Void
             };
         }
@@ -2506,8 +2520,8 @@ public sealed partial class BytecodeVm
                 Opcode.Xor => RuntimeValue.FromLong(left ^ right),
                 Opcode.Eqv => RuntimeValue.FromLong(~(left ^ right)),
                 Opcode.Imp => RuntimeValue.FromLong((~left) | right),
-                Opcode.ShiftLeft => RuntimeValue.FromLong(left << unchecked((int)right)),
-                Opcode.ShiftRight => RuntimeValue.FromLong(left >> unchecked((int)right)),
+                Opcode.ShiftLeft => right is >= 0 and <= 63 ? RuntimeValue.FromLong(left << unchecked((int)right)) : RuntimeValue.Void,
+                Opcode.ShiftRight => right is >= 0 and <= 63 ? RuntimeValue.FromLong(left >> unchecked((int)right)) : RuntimeValue.Void,
                 _ => RuntimeValue.Void
             };
         }
@@ -5681,20 +5695,28 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateShiftLeft(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
+        var count = GetShiftCount(right);
+        if (count < 0 || count > 63)
+            return ReportInvalidRuntimeState<RuntimeValue>($"Сдвиг на {count} вне допустимого диапазона 0..63.", location);
+
         return left.Type switch
         {
-            var type when type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() << GetShiftCount(right)),
-            var type when type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() << GetShiftCount(right)),
+            var type when type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() << count),
+            var type when type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() << count),
             _ => ReportInvalidRuntimeState<RuntimeValue>($"Операция << не поддерживает тип '{left.Type.Name}'.", location)
         };
     }
 
     private RuntimeValue EvaluateShiftRight(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
+        var count = GetShiftCount(right);
+        if (count < 0 || count > 63)
+            return ReportInvalidRuntimeState<RuntimeValue>($"Сдвиг на {count} вне допустимого диапазона 0..63.", location);
+
         return left.Type switch
         {
-            var type when type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() >> GetShiftCount(right)),
-            var type when type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() >> GetShiftCount(right)),
+            var type when type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() >> count),
+            var type when type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() >> count),
             _ => ReportInvalidRuntimeState<RuntimeValue>($"Операция >> не поддерживает тип '{left.Type.Name}'.", location)
         };
     }
@@ -5763,154 +5785,56 @@ public sealed partial class BytecodeVm
 
     private static bool ValuesEqual(RuntimeValue left, RuntimeValue right)
     {
-        if (left.Type == TypeSymbol.Integer)
-        {
-            return GetIntegerUnchecked(left) == GetIntegerUnchecked(right);
-        }
-
-        if (left.Type == TypeSymbol.Long)
-        {
-            return GetLongUnchecked(left) == GetLongUnchecked(right);
-        }
-
-        if (left.Type == TypeSymbol.Double)
-        {
-            return GetDoubleUnchecked(left) == GetDoubleUnchecked(right);
-        }
-
-        if (left.Type == TypeSymbol.Decimal)
-        {
-            return GetDecimalUnchecked(left) == GetDecimalUnchecked(right);
-        }
-
-        if (left.Type == TypeSymbol.String)
-        {
-            return string.Equals(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal);
-        }
-
-        if (left.Type == TypeSymbol.Boolean)
-        {
-            return GetBooleanUnchecked(left) == GetBooleanUnchecked(right);
-        }
-
-        if (left.Type is UserDefinedTypeSymbol)
-        {
-            return RecordsEqual(left.AsRecord(), right.AsRecord());
-        }
-
-        return false;
+        return RuntimeValueHelpers.ValuesEqual(left, right);
     }
 
     private int Compare(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
-        if (left.Type == TypeSymbol.Integer)
+        try
         {
-            return GetIntegerUnchecked(left).CompareTo(GetIntegerUnchecked(right));
+            return RuntimeValueHelpers.Compare(left, right);
         }
-
-        if (left.Type == TypeSymbol.Long)
+        catch (InvalidOperationException)
         {
-            return GetLongUnchecked(left).CompareTo(GetLongUnchecked(right));
+            return ReportInvalidRuntimeState<int>(
+                $"Сравнение не поддерживается для типа '{left.Type.Name}'.",
+                location);
         }
-
-        if (left.Type == TypeSymbol.Double)
-        {
-            return GetDoubleUnchecked(left).CompareTo(GetDoubleUnchecked(right));
-        }
-
-        if (left.Type == TypeSymbol.Decimal)
-        {
-            return GetDecimalUnchecked(left).CompareTo(GetDecimalUnchecked(right));
-        }
-
-        if (left.Type == TypeSymbol.String)
-        {
-            return string.Compare(GetStringUnchecked(left), GetStringUnchecked(right), StringComparison.Ordinal);
-        }
-
-        return ReportInvalidRuntimeState<int>(
-            $"Сравнение не поддерживается для типа '{left.Type.Name}'.",
-            location);
     }
 
     private static bool RecordsEqual(RuntimeRecordValue left, RuntimeRecordValue right)
     {
-        ArgumentNullException.ThrowIfNull(left);
-        ArgumentNullException.ThrowIfNull(right);
-
-        if (!ReferenceEquals(left.Type, right.Type))
-        {
-            return false;
-        }
-
-        foreach (var field in left.Type.Fields)
-        {
-            if (!ValuesEqual(left.GetField(field), right.GetField(field)))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return RuntimeValueHelpers.RecordsEqual(left, right);
     }
+
     private RuntimeValue EvaluateCheckedIntegerOperation(Func<int> operation, string detail, TextLocation location)
     {
-        try
-        {
-            return RuntimeValue.FromInteger(operation());
-        }
-        catch (OverflowException)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeArithmeticHelpers.EvaluateCheckedIntegerOperation(operation, detail, location, ReportNumericOverflow);
     }
 
     private RuntimeValue EvaluateCheckedLongOperation(Func<long> operation, string detail, TextLocation location)
     {
-        try
-        {
-            return RuntimeValue.FromLong(operation());
-        }
-        catch (OverflowException)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Long, location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeArithmeticHelpers.EvaluateCheckedLongOperation(operation, detail, location, ReportNumericOverflow);
     }
 
     private RuntimeValue EvaluateCheckedDecimalOperation(Func<decimal> operation, string detail, TextLocation location)
     {
-        try
-        {
-            return RuntimeValue.FromDecimal(operation());
-        }
-        catch (OverflowException)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Decimal, location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeArithmeticHelpers.EvaluateCheckedDecimalOperation(operation, detail, location, ReportNumericOverflow);
     }
 
     private RuntimeValue EnsureFiniteDoubleResult(double value, string detail, TextLocation location)
     {
-        if (!double.IsFinite(value))
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Double, location);
-            throw new RuntimeFailureException();
-        }
-
-        return RuntimeValue.FromDouble(value);
+        return RuntimeArithmeticHelpers.EnsureFiniteDoubleResult(value, detail, location, ReportNumericOverflow);
     }
 
     private void ReportDivisionByZero(TextLocation location)
     {
-        ReportRuntimeDiagnostic(DiagnosticCodes.DivisionByZero, "Деление на ноль.", location);
+        RuntimeArithmeticHelpers.ReportDivisionByZero(location, ReportRuntimeDiagnostic);
     }
 
     private void ReportNumericOverflow(string detail, TypeSymbol type, TextLocation location)
     {
-        ReportRuntimeDiagnostic(DiagnosticCodes.NumericOverflow, $"{detail} выходит за диапазон {type.Name}.", location);
+        RuntimeArithmeticHelpers.ReportNumericOverflow(detail, type, location, ReportRuntimeDiagnostic);
     }
 
     private void ReportEmptyFunctionValue(TextLocation location)

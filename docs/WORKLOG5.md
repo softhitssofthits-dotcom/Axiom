@@ -485,3 +485,98 @@ TOP 5 приоритетов:
 - Тесты: 1,737/1,738 non-IDE pass
 
 Следующий шаг: фильтрация интерактивных samples из acceptance suite (TASK-004 follow-up) или продуктовая работа.
+
+## Session 1042 - 2026-08-18 23:30 - Forensic audit: Basic Language Core
+
+Задача: провести forensic audit фундаментального слоя языка Axiom (значения, типы, переменные, константы, присваивания, выражения).
+
+Что сделано:
+1. Проведён полный аудит по 66 разделам из входного документа audit.
+2. Создан отчёт в ответе (не в файле — по требованию аудита).
+3. Исправлен CORE-001: добавлен `checked` на `\` и `MOD` в `TryEvaluateGlobalIntegralConstantCore` (`Binder.Declarations.cs:442-443`).
+4. Добавлены тесты:
+   - `Bind_ReportsCircularConstantReference` — циклическая ссылка в CONST
+   - `Bind_GlobalConstantDivisionByZeroIsHandledGracefully` — деление на ноль в глобальном CONST
+   - `Bind_GlobalConstantModuloByZeroIsHandledGracefully` — остаток от нуля в глобальном CONST
+   - `Execute_NumericComparisonOperators` — прямые тесты всех 6 операторов сравнения для INTEGER, LONG, DOUBLE
+   - `Execute_StringComparisonOperators` — сравнения строк
+5. Build: 0 errors, 0 warnings.
+6. Тесты: 368/368 Semantics, 886/886 Runtime.
+
+Ключевые находки аудита:
+- Health Score: 8.2/10
+- Исправленный баг: missing `checked` на `\`/`MOD` в глобальном constant evaluator
+- Дублирование: ~540 строк логики между Interpreter и BytecodeVm (ValuesEqual, Compare, арифметика)
+- Нет short-circuit для AND/OR (by design, не документировано)
+- Нет литерала Decimal в лексере (только через конверсию)
+- Тонкое покрытие тестами операторов сравнения
+
+Следующий шаг: продолжить по recovery roadmap аудита — вынести общие хелперы из Interpreter/BytecodeVm (CORE-002/003) или продуктовая работа.
+
+## Session 1043 - 2026-08-19 00:30 - Recovery roadmap аудита: CORE-003, CORE-009, документация
+
+Задача: продолжить исправление находок forensic audit.
+
+Что сделано:
+
+### CORE-009 — Валидация shift count
+- `Interpreter.Expressions.cs`: `GetShiftCount` теперь принимает `TextLocation` и возвращает ошибку MB3007 при значении вне 0..63.
+- `BytecodeVm.cs`: `EvaluateShiftLeft`/`EvaluateShiftRight` проверяют диапазон до сдвига.
+- `BytecodeVm.cs`: hot-path `TryEvaluateHotShiftLeft`/`TryEvaluateHotShiftRight` возвращают `false` при невалидном сдвиге (fallback на slow path с диагностикой).
+- `BytecodeVm.cs`: fast-path integer/long возвращает `Void` при невалидном сдвиге.
+
+### CORE-003 — Консолидация ValuesEqual
+- Создан `src/Axiom.Runtime/Values/RuntimeValueHelpers.cs` с `ValuesEqual`, `Compare`, `RecordsEqual`.
+- `Interpreter.Expressions.cs`: делегирует в `RuntimeValueHelpers` (удалено ~90 строк дублирования).
+- `BytecodeVm.cs`: делегирует в `RuntimeValueHelpers` (удалено ~90 строк дублирования).
+- `BuiltinArrayHelpers.cs`: делегирует в `RuntimeValueHelpers` (удалено ~18 строк дублирования).
+- Итого удалено дублирования: ~198 строк.
+
+### Документация (CORE-004, CORE-005, CORE-006, CORE-010)
+- `docs/manual/arithmetic-and-logic.html`: добавлено примечание об отсутствии short-circuit у AND/OR.
+- `docs/manual/data-types-scalars.html`: добавлены примечания:
+  - научная нотация не поддерживается;
+  - литерал DECIMAL не имеет суффикса;
+  - шестнадцатеричные литералы: диапазон Long ограничен `&H7FFFFFFFFFFFFFFF`.
+
+Проверки:
+- Build: 0 errors, 0 warnings.
+- Тесты: 368/368 Semantics, 886/886 Runtime, 137/137 Parsing.
+
+Статус recovery roadmap:
+- CORE-001 ✅, CORE-003 ✅, CORE-004 ✅, CORE-005 ✅, CORE-006 ✅, CORE-007 ✅, CORE-008 ✅, CORE-009 ✅, CORE-010 ✅
+- CORE-002 частично: ValuesEqual/Compare/RecordsEqual вынесены, overflow helpers остаются (требуют delegate pattern)
+
+Следующий шаг: CORE-002 remainder (overflow helpers) или продуктовая работа.
+
+## Session 1044 - 2026-08-19 01:30 - CORE-002 завершён: вынос overflow helpers
+
+Задача: завершить CORE-002 — вынести дублированные overflow helpers из Interpreter и BytecodeVm в общий слой.
+
+Что сделано:
+1. Создан `src/Axiom.Runtime/Values/RuntimeArithmeticHelpers.cs` (107 строк):
+   - `EvaluateCheckedIntegerOperation`, `EvaluateCheckedLongOperation`, `EvaluateCheckedDecimalOperation` — делегат `Action<string, TypeSymbol, TextLocation>` для overflow.
+   - `EnsureFiniteDoubleResult` — проверка `double.IsFinite` с тем же делегатом.
+   - `ReportNumericOverflow`, `ReportDivisionByZero` — делегат `Action<string, string, TextLocation>` для diagnostic reporting.
+2. `Interpreter.Helpers.cs`: 4 overflow helper + 2 report methods делегируют в `RuntimeArithmeticHelpers`.
+3. `BytecodeVm.cs`: 4 overflow helper + 3 report methods делегируют в `RuntimeArithmeticHelpers`.
+4. Build: 0 errors, 0 warnings.
+5. Тесты: 368 +886 +137 +203 =1,594/1,594 pass.
+
+Итоговый эффект выноса built-in и overflow helpers:
+
+| Область | Хелпер | Удалено строк |
+|---------|--------|--------------|
+| Numeric | BuiltinNumericHelpers | -95 |
+| Regex | BuiltinRegexHelpers | -374 |
+| String | BuiltinStringHelpers | -407 |
+| FileSystem | BuiltinFileSystemHelpers | -416 |
+| DateTime | BuiltinDateTimeHelpers | -800 |
+| Array | BuiltinArrayHelpers | -811 |
+| Values/Compare | RuntimeValueHelpers | -198 |
+| Arithmetic overflow | RuntimeArithmeticHelpers | ~-100 |
+| **Итого** | | **~-3,200** |
+
+Recovery roadmap аудита: 10/10 пунктов закрыты.
+
+Следующий шаг: продуктовая работа или GitHub deploy.

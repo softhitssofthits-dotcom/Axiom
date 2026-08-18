@@ -1,3 +1,4 @@
+using Axiom.Core;
 using Axiom.Semantics;
 using Axiom.Syntax;
 
@@ -221,10 +222,10 @@ public sealed partial class Interpreter
             SyntaxKind.XorKeyword when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() ^ right.AsLong()),
             SyntaxKind.EqvKeyword when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong(~(left.AsLong() ^ right.AsLong())),
             SyntaxKind.ImpKeyword when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong((~left.AsLong()) | right.AsLong()),
-            SyntaxKind.LessLessToken when expression.Type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() << GetShiftCount(right)),
-            SyntaxKind.GreaterGreaterToken when expression.Type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() >> GetShiftCount(right)),
-            SyntaxKind.LessLessToken when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() << GetShiftCount(right)),
-            SyntaxKind.GreaterGreaterToken when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() >> GetShiftCount(right)),
+            SyntaxKind.LessLessToken when expression.Type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() << GetShiftCount(right, expression.Location)),
+            SyntaxKind.GreaterGreaterToken when expression.Type == TypeSymbol.Integer => RuntimeValue.FromInteger(left.AsInteger() >> GetShiftCount(right, expression.Location)),
+            SyntaxKind.LessLessToken when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() << GetShiftCount(right, expression.Location)),
+            SyntaxKind.GreaterGreaterToken when expression.Type == TypeSymbol.Long => RuntimeValue.FromLong(left.AsLong() >> GetShiftCount(right, expression.Location)),
             _ => ReportInvalidRuntimeState<RuntimeValue>($"Неподдерживаемый binary operator: {expression.OperatorKind}.", expression.Location)
         };
     }
@@ -330,11 +331,22 @@ public sealed partial class Interpreter
             expression.Location);
     }
 
-    private static int GetShiftCount(RuntimeValue value)
+    private int GetShiftCount(RuntimeValue value, TextLocation location)
     {
-        return value.Type == TypeSymbol.Long
-            ? unchecked((int)value.AsLong())
+        var count = value.Type == TypeSymbol.Long
+            ? (int)value.AsLong()
             : value.AsInteger();
+
+        if (count < 0 || count > 63)
+        {
+            ReportRuntimeDiagnostic(
+                DiagnosticCodes.BuiltinArgument,
+                $"Сдвиг на {count} вне допустимого диапазона 0..63.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        return count;
     }
 
     private RuntimeValue EvaluateCallExpression(BoundCallExpression expression)
@@ -405,98 +417,17 @@ public sealed partial class Interpreter
 
     private static bool ValuesEqual(RuntimeValue left, RuntimeValue right)
     {
-        if (left.Type == TypeSymbol.Integer)
-        {
-            return left.AsInteger() == right.AsInteger();
-        }
-
-        if (left.Type == TypeSymbol.Long)
-        {
-            return left.AsLong() == right.AsLong();
-        }
-
-        if (left.Type == TypeSymbol.Double)
-        {
-            return left.AsDouble() == right.AsDouble();
-        }
-
-        if (left.Type == TypeSymbol.Decimal)
-        {
-            return left.AsDecimal() == right.AsDecimal();
-        }
-
-        if (left.Type == TypeSymbol.String)
-        {
-            return string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
-        }
-
-        if (left.Type == TypeSymbol.Boolean)
-        {
-            return left.AsBoolean() == right.AsBoolean();
-        }
-
-        if (left.Type is UserDefinedTypeSymbol)
-        {
-            return RecordsEqual(left.AsRecord(), right.AsRecord());
-        }
-
-        return false;
+        return RuntimeValueHelpers.ValuesEqual(left, right);
     }
 
     private static int Compare(RuntimeValue left, RuntimeValue right)
     {
-        if (left.Type == TypeSymbol.Integer)
-        {
-            return left.AsInteger().CompareTo(right.AsInteger());
-        }
-
-        if (left.Type == TypeSymbol.Long)
-        {
-            return left.AsLong().CompareTo(right.AsLong());
-        }
-
-        if (left.Type == TypeSymbol.Double)
-        {
-            return left.AsDouble().CompareTo(right.AsDouble());
-        }
-
-        if (left.Type == TypeSymbol.Decimal)
-        {
-            return left.AsDecimal().CompareTo(right.AsDecimal());
-        }
-
-        if (left.Type == TypeSymbol.String)
-        {
-            return string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal);
-        }
-
-        return ThrowInvalidComparison(left.Type, right.Type);
-    }
-
-    private static int ThrowInvalidComparison(TypeSymbol leftType, TypeSymbol rightType)
-    {
-        throw new InvalidOperationException(
-            $"Comparison is not supported for runtime types {leftType.Name} and {rightType.Name}.");
+        return RuntimeValueHelpers.Compare(left, right);
     }
 
     private static bool RecordsEqual(RuntimeRecordValue left, RuntimeRecordValue right)
     {
-        ArgumentNullException.ThrowIfNull(left);
-        ArgumentNullException.ThrowIfNull(right);
-
-        if (!ReferenceEquals(left.Type, right.Type))
-        {
-            return false;
-        }
-
-        foreach (var field in left.Type.Fields)
-        {
-            if (!ValuesEqual(left.GetField(field), right.GetField(field)))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return RuntimeValueHelpers.RecordsEqual(left, right);
     }
 }
+

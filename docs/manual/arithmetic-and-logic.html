@@ -123,6 +123,7 @@ PRINT TRUE <> FALSE</code></pre>
             <h2>Логика и побитовый режим</h2>
             <p><code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code> и <code>IMP</code> имеют два режима. С логическими значениями они возвращают <code>BOOLEAN</code>. С целыми числами они работают по битам и возвращают <code>INTEGER</code> или <code>LONG</code>.</p>
             <p><code>EQV</code> означает равнозначность: логический результат равен <code>TRUE</code>, когда оба операнда одинаковы. <code>IMP</code> означает импликацию: <code>TRUE IMP FALSE</code> даёт <code>FALSE</code>, остальные логические сочетания дают <code>TRUE</code>.</p>
+            <p><code>AND</code> и <code>OR</code> всегда вычисляют оба операнда. Короткое замыкание (short-circuit) не используется: если правый операнд содержит вызов функции с побочными эффектами, он будет выполнен в любом случае.</p>
             <pre><code class="language-basic">PRINT TRUE AND NOT FALSE
 PRINT 6 AND 3
 PRINT 6 XOR 3

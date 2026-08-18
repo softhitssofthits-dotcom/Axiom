@@ -162,6 +162,54 @@ PRINT mask >> 4
     }
 
     [Fact]
+    public void Execute_NumericComparisonOperators()
+    {
+        const string text = """
+DIM a AS INTEGER = 5
+DIM b AS INTEGER = 10
+PRINT a = b
+PRINT a <> b
+PRINT a < b
+PRINT a <= b
+PRINT a > b
+PRINT a >= b
+PRINT a = a
+PRINT a <= a
+DIM x AS LONG = 100
+DIM y AS LONG = 200
+PRINT x < y
+PRINT x > y
+DIM d1 AS DOUBLE = 3.14
+DIM d2 AS DOUBLE = 2.71
+PRINT d1 > d2
+PRINT d1 < d2
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["FALSE", "TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "TRUE", "TRUE", "TRUE", "FALSE", "TRUE", "FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_StringComparisonOperators()
+    {
+        const string text = """
+DIM a AS STRING = "apple"
+DIM b AS STRING = "banana"
+PRINT a < b
+PRINT a > b
+PRINT a = a
+PRINT a <> b
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE", "TRUE", "TRUE"], host.Output);
+    }
+
+    [Fact]
     public void Execute_InKeyReadsQueuedKeysWithoutBlocking()
     {
         const string text = """

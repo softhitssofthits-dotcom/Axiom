@@ -590,22 +590,8 @@ internal static class BuiltinArrayHelpers
         return foundIndices;
     }
 
-    private static bool ValuesEqual(RuntimeValue left, RuntimeValue right)
+    public static bool ValuesEqual(RuntimeValue left, RuntimeValue right)
     {
-        if (left.Type != right.Type)
-        {
-            return false;
-        }
-
-        return left.Type switch
-        {
-            var t when t == TypeSymbol.Integer => left.AsInteger() == right.AsInteger(),
-            var t when t == TypeSymbol.Long => left.AsLong() == right.AsLong(),
-            var t when t == TypeSymbol.Double => left.AsDouble() == right.AsDouble(),
-            var t when t == TypeSymbol.Decimal => left.AsDecimal() == right.AsDecimal(),
-            var t when t == TypeSymbol.Boolean => left.AsBoolean() == right.AsBoolean(),
-            var t when t == TypeSymbol.String => string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal),
-            _ => false
-        };
+        return RuntimeValueHelpers.ValuesEqual(left, right);
     }
 }

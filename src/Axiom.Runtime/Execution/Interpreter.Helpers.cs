@@ -425,52 +425,22 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateCheckedIntegerOperation(Func<int> operation, string detail, TextLocation location)
     {
-        try
-        {
-            return RuntimeValue.FromInteger(operation());
-        }
-        catch (OverflowException)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeArithmeticHelpers.EvaluateCheckedIntegerOperation(operation, detail, location, ReportNumericOverflow);
     }
 
     private RuntimeValue EvaluateCheckedLongOperation(Func<long> operation, string detail, TextLocation location)
     {
-        try
-        {
-            return RuntimeValue.FromLong(operation());
-        }
-        catch (OverflowException)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Long, location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeArithmeticHelpers.EvaluateCheckedLongOperation(operation, detail, location, ReportNumericOverflow);
     }
 
     private RuntimeValue EnsureFiniteDoubleResult(double value, string detail, TextLocation location)
     {
-        if (!double.IsFinite(value))
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Double, location);
-            throw new RuntimeFailureException();
-        }
-
-        return RuntimeValue.FromDouble(value);
+        return RuntimeArithmeticHelpers.EnsureFiniteDoubleResult(value, detail, location, ReportNumericOverflow);
     }
 
     private RuntimeValue EvaluateCheckedDecimalOperation(Func<decimal> operation, string detail, TextLocation location)
     {
-        try
-        {
-            return RuntimeValue.FromDecimal(operation());
-        }
-        catch (OverflowException)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Decimal, location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeArithmeticHelpers.EvaluateCheckedDecimalOperation(operation, detail, location, ReportNumericOverflow);
     }
 
     private TextLocation GetBuiltInArgumentLocation(BoundCallExpression expression, int argumentIndex)
@@ -485,7 +455,7 @@ public sealed partial class Interpreter
 
     private void ReportDivisionByZero(TextLocation location)
     {
-        ReportRuntimeDiagnostic(DiagnosticCodes.DivisionByZero, "Деление на ноль.", location);
+        RuntimeArithmeticHelpers.ReportDivisionByZero(location, ReportRuntimeDiagnostic);
     }
 
     private void ReportArrayIndicesOutOfBounds(string arrayName, IReadOnlyList<int> indices, RuntimeArrayValue array, TextLocation location)
@@ -599,10 +569,7 @@ public sealed partial class Interpreter
 
     private void ReportNumericOverflow(string detail, TypeSymbol type, TextLocation location)
     {
-        ReportRuntimeDiagnostic(
-            DiagnosticCodes.NumericOverflow,
-            $"{detail} выходит за диапазон {type.Name}.",
-            location);
+        RuntimeArithmeticHelpers.ReportNumericOverflow(detail, type, location, ReportRuntimeDiagnostic);
     }
 
     private void ReportInvalidRuntimeState(string message, TextLocation? location = null)

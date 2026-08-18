@@ -225,3 +225,36 @@
 - Recovery roadmap: 5/9 задач завершены, 4 deferred с обоснованием.
 - Build: 0 errors, 0 warnings. Тесты: 1,737/1,738 non-IDE pass.
 - Следующий шаг: фильтрация интерактивных samples или продуктовая работа.
+
+### 2026-08-18 - Forensic audit Basic Language Core и исправление CORE-001
+
+- Проведён forensic audit фундаментального слоя языка (Health Score: 8.2/10).
+- Исправлен CORE-001: `checked` на `\` и `MOD` в `TryEvaluateGlobalIntegralConstantCore`.
+- Добавлены тесты: циклические CONST, деление на ноль в CONST, сравнения (INTEGER/LONG/DOUBLE/STRING).
+- Build: 0 errors. Тесты: 368/368 + 886/886.
+- Recovery roadmap аудита:
+  1. [P1] CORE-001 — done
+  2. [P2] CORE-002 — вынести общие хелперы из Interpreter/BytecodeVm
+  3. [P2] CORE-003 — консолидировать ValuesEqual (3 копии → 1)
+  4. [P3] CORE-004 — задокументировать отсутствие short-circuit
+  5. [P3] CORE-005 — задокументировать отсутствие Decimal-литералов
+  6. [P3] CORE-006 — задокументировать отсутствие научной нотации
+- Следующий шаг: CORE-002/003 (вынос общих хелперов) или продуктовая работа.
+
+### 2026-08-19 - Recovery roadmap аудита: CORE-003, CORE-009, документация
+
+- CORE-003: ValuesEqual/Compare/RecordsEqual консолидированы в `RuntimeValueHelpers` (-198 строк дублирования).
+- CORE-009: Валидация shift count 0..63 в обоих движках + hot/fast paths.
+- CORE-004/005/006/010: Документация обновлена (manual: short-circuit, Decimal, научная нотация, hex Long).
+- Build: 0 errors. Тесты: 368 +886 +137 =1,391.
+- Recovery roadmap: 9/10 пунктов закрыты. CORE-002 частично (overflow helpers — отдельная задача с delegate pattern).
+- Следующий шаг: CORE-002 remainder (overflow helpers) или продуктовая работа.
+
+### 2026-08-19 - CORE-002 завершён: overflow helpers вынесены
+
+- `RuntimeArithmeticHelpers.cs` создан: EvaluateChecked*(4 метода) + Report*(2 метода) с delegate pattern.
+- Interpreter и BytecodeVm делегируют в общий слой.
+- Recovery roadmap аудита: **10/10 пунктов закрыты**.
+- Build: 0 errors. Тесты: 368 +886 +137 +203 =1,594.
+- Суммарный эффект выноса: ~-3,200 строк дублирования за все сессии.
+- Следующий шаг: продуктовая работа или GitHub deploy.

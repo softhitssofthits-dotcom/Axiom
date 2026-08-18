@@ -106,6 +106,9 @@ END IF</code></pre>
                 </tbody>
             </table>
             <p>Ведущие нули в числовых литералах не допускаются: формы вроде <code>001</code> и <code>01.25</code> дают диагностическое сообщение <code>MB0003</code>. Отрицательное значение записывается через унарный минус перед литералом: <code>-7</code>, <code>-1.5</code>.</p>
+            <p>Научная нотация (<code>1.5E10</code>, <code>3.14e-2</code>) в текущей версии не поддерживается. Большие и малые вещественные значения нужно записывать десятичной точкой полностью.</p>
+            <p>Литерал <code>DECIMAL</code> не имеет собственного суффикса. Чтобы получить значение типа <code>DECIMAL</code>, укажите целевой тип явно в <code>DIM</code> или <code>CONST</code>.</p>
+            <p>Шестнадцатеричные литералы не поддерживают суффикс <code>&amp;</code> для явного выбора <code>LONG</code>. Тип определяется по диапазону значения: от <code>&amp;H0</code> до <code>&amp;H7FFFFFFF</code> даёт <code>INTEGER</code>, от <code>&amp;H80000000</code> до <code>&amp;H7FFFFFFFFFFFFFFF</code> даёт <code>LONG</code>. Значения выше <code>&amp;H7FFFFFFFFFFFFFFF</code> сообщают <code>MB0004</code>.</p>
         </section>
 
         <section class="article-section">

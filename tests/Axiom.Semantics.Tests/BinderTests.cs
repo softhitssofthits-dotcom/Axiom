@@ -6392,6 +6392,48 @@ END TRY
     }
 
     [Fact]
+    public void Bind_ReportsCircularConstantReference()
+    {
+        const string text = """
+CONST A AS INTEGER = B + 1
+CONST B AS INTEGER = A + 1
+PRINT A
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == "MB2018" || d.Code == "MB2001");
+    }
+
+    [Fact]
+    public void Bind_GlobalConstantDivisionByZeroIsHandledGracefully()
+    {
+        const string text = """
+CONST Divisor AS INTEGER = 0
+CONST X AS INTEGER = 10 \ Divisor
+PRINT X
+""";
+
+        var exception = Record.Exception(() => BindProgram(text, out _));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Bind_GlobalConstantModuloByZeroIsHandledGracefully()
+    {
+        const string text = """
+CONST Divisor AS INTEGER = 0
+CONST X AS INTEGER = 10 MOD Divisor
+PRINT X
+""";
+
+        var exception = Record.Exception(() => BindProgram(text, out _));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
     public void Bind_ReportsInvalidFieldAccessReceiver()
     {
         const string text = """

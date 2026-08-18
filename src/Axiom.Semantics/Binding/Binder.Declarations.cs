@@ -439,8 +439,8 @@ public sealed partial class Binder
                         SyntaxKind.PlusToken => checked(leftValue + rightValue),
                         SyntaxKind.MinusToken => checked(leftValue - rightValue),
                         SyntaxKind.StarToken => checked(leftValue * rightValue),
-                        SyntaxKind.BackslashToken when rightValue != 0 => leftValue / rightValue,
-                        SyntaxKind.ModKeyword when rightValue != 0 => leftValue % rightValue,
+                        SyntaxKind.BackslashToken when rightValue != 0 => checked(leftValue / rightValue),
+                        SyntaxKind.ModKeyword when rightValue != 0 => checked(leftValue % rightValue),
                         _ => 0
                     };
 
