@@ -144,6 +144,12 @@ internal static class BuiltinStringHelpers
         return text.Replace(oldValue, newValue, StringComparison.Ordinal);
     }
 
+    public static string TrimWhitespace(string text) => text.Trim();
+
+    public static string LeftTrimWhitespace(string text) => text.TrimStart();
+
+    public static string RightTrimWhitespace(string text) => text.TrimEnd();
+
     public static double ParseVal(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return 0d;

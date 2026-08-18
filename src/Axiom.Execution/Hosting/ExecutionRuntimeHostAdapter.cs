@@ -11,8 +11,9 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     private readonly IRuntimeRandom _runtimeRandom;
     private readonly IRuntimeCancellationProvider? _inputCancellationProvider;
     private readonly IRuntimeCancellationProvider? _outputCancellationProvider;
+    private readonly IRuntimeCancellationProvider? _externalCancellationProvider;
 
-    public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter, IRuntimeClock runtimeClock, IRuntimeRandom runtimeRandom)
+    public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter, IRuntimeClock runtimeClock, IRuntimeRandom runtimeRandom, IRuntimeCancellationProvider? externalCancellationProvider = null)
     {
         ArgumentNullException.ThrowIfNull(inputProvider);
         ArgumentNullException.ThrowIfNull(outputWriter);
@@ -27,6 +28,7 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         _outputCancellationProvider = ReferenceEquals(inputProvider, outputWriter)
             ? null
             : outputWriter as IRuntimeCancellationProvider;
+        _externalCancellationProvider = externalCancellationProvider;
     }
 
     public IReadOnlyList<string> Output => _output;
@@ -34,8 +36,9 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public int OutputCheckpoint => _output.Count;
 
     public bool IsCancellationRequested =>
-        _inputCancellationProvider is not null && _inputCancellationProvider.IsCancellationRequested
-        || _outputCancellationProvider is not null && _outputCancellationProvider.IsCancellationRequested;
+        (_externalCancellationProvider is not null && _externalCancellationProvider.IsCancellationRequested)
+        || (_inputCancellationProvider is not null && _inputCancellationProvider.IsCancellationRequested)
+        || (_outputCancellationProvider is not null && _outputCancellationProvider.IsCancellationRequested);
 
     public string ReadInput(InputRequest request) => _inputProvider.ReadInput(request);
 

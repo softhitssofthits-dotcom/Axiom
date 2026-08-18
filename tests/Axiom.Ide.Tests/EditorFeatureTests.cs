@@ -584,7 +584,7 @@ public sealed class EditorFeatureTests
     [Fact]
     public void MainWindowCodeBehind_HandlesOutputContextMenuActions()
     {
-        var code = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml.cs"), Encoding.UTF8);
+        var code = ReadAllMainWindowCodeBehind();
 
         Assert.Contains("OnOutputTextBoxPreviewMouseRightButtonDown", code, StringComparison.Ordinal);
         Assert.Contains("OnOutputTextBoxPreviewMouseRightButtonUp", code, StringComparison.Ordinal);
@@ -727,10 +727,7 @@ public sealed class EditorFeatureTests
     [Fact]
     public void MainWindowCodeBehind_TracksCaretAndBottomPaneFocus()
     {
-        var code = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml.cs"), Encoding.UTF8);
-        var filesPaneCode = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.FilesPane.cs"), Encoding.UTF8);
-        var searchCode = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.Search.cs"), Encoding.UTF8);
-        var visualTreeCode = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.VisualTree.cs"), Encoding.UTF8);
+        var code = ReadAllMainWindowCodeBehind();
 
         Assert.Contains("OnEditorCaretPositionChanged", code, StringComparison.Ordinal);
         Assert.Contains("UpdateCaretStatusFromActiveEditor", code, StringComparison.Ordinal);
@@ -743,16 +740,16 @@ public sealed class EditorFeatureTests
         Assert.Contains("DiagnosticsDataGrid.Focus()", code, StringComparison.Ordinal);
         Assert.Contains("RemoveDecorativeLineMargins", code, StringComparison.Ordinal);
         Assert.Contains("DottedLineMargin", code, StringComparison.Ordinal);
-        Assert.Contains("OnFilesTreeItemExpanded", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("OnFilesTreeSelectedItemChanged", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("OnFilesTreeItemPreviewMouseRightButtonDown", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("OnFilesTreeRenameTextBoxIsVisibleChanged", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("OnFilesTreeRenameTextBoxLostKeyboardFocus", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("OnFilesTreeRenameTextBoxPreviewKeyDown", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("CommitFilesPaneNodeRename", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("CancelFilesPaneNodeRename", filesPaneCode, StringComparison.Ordinal);
-        Assert.Contains("GetFilesTreeRenameSelectionLength", visualTreeCode, StringComparison.Ordinal);
-        Assert.Contains("FocusFilesTreeItem", visualTreeCode, StringComparison.Ordinal);
+        Assert.Contains("OnFilesTreeItemExpanded", code, StringComparison.Ordinal);
+        Assert.Contains("OnFilesTreeSelectedItemChanged", code, StringComparison.Ordinal);
+        Assert.Contains("OnFilesTreeItemPreviewMouseRightButtonDown", code, StringComparison.Ordinal);
+        Assert.Contains("OnFilesTreeRenameTextBoxIsVisibleChanged", code, StringComparison.Ordinal);
+        Assert.Contains("OnFilesTreeRenameTextBoxLostKeyboardFocus", code, StringComparison.Ordinal);
+        Assert.Contains("OnFilesTreeRenameTextBoxPreviewKeyDown", code, StringComparison.Ordinal);
+        Assert.Contains("CommitFilesPaneNodeRename", code, StringComparison.Ordinal);
+        Assert.Contains("CancelFilesPaneNodeRename", code, StringComparison.Ordinal);
+        Assert.Contains("GetFilesTreeRenameSelectionLength", code, StringComparison.Ordinal);
+        Assert.Contains("FocusFilesTreeItem", code, StringComparison.Ordinal);
         Assert.Contains("_suppressFilesTreeNodeActivation", code, StringComparison.Ordinal);
         Assert.Contains("OnEditorLostKeyboardFocus", code, StringComparison.Ordinal);
         Assert.Contains("OnEditorPreviewKeyDown", code, StringComparison.Ordinal);
@@ -777,8 +774,8 @@ public sealed class EditorFeatureTests
         Assert.Contains("DocumentFormattingPolicy.CanApplyFormatting(viewModel.Documents.ActiveDocument)", code, StringComparison.Ordinal);
         Assert.Contains("HandleEditorInteractionException(\"editor.caret.line-transition.exception\"", code, StringComparison.Ordinal);
         Assert.Contains("AxiomSmartIdentifierService", code, StringComparison.Ordinal);
-        Assert.Contains("_findReplaceDialog.ShowDialog();", searchCode, StringComparison.Ordinal);
-        Assert.Contains("_findReplaceDialog.PrepareForShow(selectSearchPattern);", searchCode, StringComparison.Ordinal);
+        Assert.Contains("_findReplaceDialog.ShowDialog();", code, StringComparison.Ordinal);
+        Assert.Contains("_findReplaceDialog.PrepareForShow(selectSearchPattern);", code, StringComparison.Ordinal);
         Assert.Contains("TraceService.Write(\"ui.theme.apply\"", code, StringComparison.Ordinal);
         Assert.Contains("ApplyCurrentLineHighlightStyle", code, StringComparison.Ordinal);
         Assert.Contains("UpdateCurrentLineHighlightVisibility", code, StringComparison.Ordinal);
@@ -909,7 +906,7 @@ public sealed class EditorFeatureTests
     {
         var xaml = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml"), Encoding.UTF8);
         var styles = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Resources\ShellStyles.xaml"), Encoding.UTF8);
-        var code = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml.cs"), Encoding.UTF8);
+        var code = ReadAllMainWindowCodeBehind();
 
         Assert.Contains("<TextBlock Text=\"{Binding StatusBar.PathText}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Style=\"{StaticResource StatusBarPathTextBlockStyle}\"", xaml, StringComparison.Ordinal);
@@ -933,7 +930,7 @@ public sealed class EditorFeatureTests
     public void MainWindowXaml_UsesCopyableDiagnosticsGrid()
     {
         var xaml = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml"), Encoding.UTF8);
-        var code = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml.cs"), Encoding.UTF8);
+        var code = ReadAllMainWindowCodeBehind();
 
         Assert.Contains("x:Name=\"DiagnosticsDataGrid\"", xaml, StringComparison.Ordinal);
         Assert.Contains("MouseDoubleClick=\"OnDiagnosticsDataGridMouseDoubleClick\"", xaml, StringComparison.Ordinal);
@@ -1159,7 +1156,7 @@ public sealed class EditorFeatureTests
     public void MainWindowXaml_ExposesStartDebuggingAndClearAllBreakpoints()
     {
         var xaml = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml"), Encoding.UTF8);
-        var code = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml.cs"), Encoding.UTF8);
+        var code = ReadAllMainWindowCodeBehind();
 
         Assert.Contains("Menu.Debug", xaml, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.AutomationId=\"DebugMenuItem\"", xaml, StringComparison.Ordinal);
@@ -1293,6 +1290,18 @@ public sealed class EditorFeatureTests
         Assert.Contains("Text=\"&#xE8C8;\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Text=\"&#xE77F;\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Text=\"&#xE8B3;\"", xaml, StringComparison.Ordinal);
+    }
+
+    private string ReadAllMainWindowCodeBehind()
+    {
+        var main = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.xaml.cs"), Encoding.UTF8);
+        var editor = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.Editor.cs"), Encoding.UTF8);
+        var diagnostics = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.Diagnostics.cs"), Encoding.UTF8);
+        var output = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.Output.cs"), Encoding.UTF8);
+        var filesPane = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.FilesPane.cs"), Encoding.UTF8);
+        var search = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.Search.cs"), Encoding.UTF8);
+        var visualTree = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\MainWindow.VisualTree.cs"), Encoding.UTF8);
+        return main + editor + diagnostics + output + filesPane + search + visualTree;
     }
 
     private static string GetRepositoryFilePath(string relativePath)

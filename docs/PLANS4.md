@@ -190,3 +190,38 @@
 - Покрыты: LINE (horizontal, diagonal), RECT (fill, box), CIRCLE, PSET, CLS, FILLRECT, VIEWPORT clipping.
 - 884/884 тестов пройдено.
 - Следующий шаг: расширять графические baseline-тесты (DRAW, PAINT, WINDOW, GET/PUT) или продуктовая работа.
+
+### 2026-08-18 - forensic audit и recovery roadmap
+
+- Проведён полный forensic audit проекта (28 проходов, 29 разделов).
+- Создан `docs/AUDIT_REPORT.md` с полным отчётом.
+- Создан `docs/RECOVERY_ROADMAP.md` с планом из 20 задач по 6 фазам.
+- Project Health Score: 7.5/10.
+- Следующие задачи по приоритету:
+  1. [P1] TASK-001 — Fix String builtins divergence (BytecodeVm → BuiltinStringHelpers)
+  2. [P1] TASK-002 — Split MainWindow.xaml.cs (1,550+ → 4 partial files)
+  3. [P2] TASK-003 — Update ARCHITECTURE.md dependency rules
+  4. [P2] TASK-004 — Fix hanging Execution/IDE tests
+  5. [P2] TASK-005 — Add execution timeout
+- Следующий шаг: реализация TASK-001.
+
+### 2026-08-19 - TASK-001 и TASK-002 завершены
+
+- TASK-001: String builtins divergence исправлен. BytecodeVm.Builtins.String.cs (454 → 243 строки, −211). Все строковые операции делегируют BuiltinStringHelpers.
+- TASK-002: MainWindow.xaml.cs разбит (1,713 → 717 строк). Созданы MainWindow.Editor.cs (508), MainWindow.Diagnostics.cs (237), MainWindow.Output.cs (233).
+- Суммарный эффект: −205 строк дублирования + −996 строк в MainWindow.xaml.cs.
+- Build: 0 errors, 0 warnings. Тесты: 1,671/1,671 non-IDE pass.
+- Следующий шаг: TASK-003 (Update ARCHITECTURE.md) или TASK-008 (Fix CanConvert Decimal→Double).
+
+### 2026-08-19 - TASK-003, TASK-005, TASK-008 завершены
+
+- TASK-003: ARCHITECTURE.md обновлён — Bytecode в правилах зависимостей, описание слоя добавлено.
+- TASK-005: Execution timeout реализован — `TimeoutCancellationProvider`, `ExecutionRequest.CancellationProvider`, `ProgramRunService.Run(timeout)`.
+- TASK-008: CanConvert Decimal→Double исправлен, тест обновлён.
+- TASK-004: Hanging tests — корень: интерактивные samples в acceptance suite. Deferred.
+- TASK-006: Environment.CurrentDirectory — защищён shell lock. Deferred.
+- TASK-009: ArrayAccessExpressionSyntax — verified dead code. Deferred.
+- TASK-010: Latent opcodes — verified. Deferred.
+- Recovery roadmap: 5/9 задач завершены, 4 deferred с обоснованием.
+- Build: 0 errors, 0 warnings. Тесты: 1,737/1,738 non-IDE pass.
+- Следующий шаг: фильтрация интерактивных samples или продуктовая работа.

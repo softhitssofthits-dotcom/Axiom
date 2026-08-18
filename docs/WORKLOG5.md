@@ -351,3 +351,137 @@
 Проверки:
 - `dotnet build tests/Axiom.Runtime.Tests` — 0 ошибок, 0 предупреждений.
 - `dotnet test tests/Axiom.Runtime.Tests` — 884/884 пройдено (включая 9 новых).
+
+## Session 1041 - 2026-08-18 23:59 - Полный forensic audit проекта Axiom
+
+Задача: провести полный независимый аудит проекта по заданию из файла «Задача Аудит.md».
+
+Что сделано:
+1. Проведён multi-pass forensic audit (28 проходов):
+   - PASS 0: Repository Reconnaissance — топология, зависимости, структура
+   - PASS 1: Project Truth Reconstruction — матрица docs vs code
+   - PASS 2: Architectural Reconstruction — actual vs documented
+   - PASS 3: Dependency Forensics — DAG, layer violations
+   - PASS 4-10: Language Pipeline Audit (Lexer→Parser→AST→Semantics→Bytecode→VM→Runtime)
+   - PASS 11: IDE Forensics
+   - PASS 12: Test Forensics
+   - PASS 13-15: Dead Code, Duplication, Over/Underengineering
+   - PASS 16-17: Performance, Reliability, Security
+   - PASS 18-19: Git History, Contradiction Matrix
+   - PASS 20-22: Root Cause Analysis, Invariants, Impact Analysis
+   - PASS 23-25: Second Review, Blind Spots, Health Score
+2. Проанализированы: 320 .cs файлов, 19 проектов, ~2,341 тестов, 350+ samples, 57 коммитов
+3. Созданы два аналитических документа:
+   - `docs/AUDIT_REPORT.md` — полный forensic audit (29 разделов)
+   - `docs/RECOVERY_ROADMAP.md` — практический план восстановления (20 задач)
+
+Ключевые находки:
+- Языковой pipeline (Lexer→Parser→AST→Semantics→Runtime→BytecodeVm) работает корректно
+- Build: 0 errors, 0 warnings; 1,614+ тестов проходят
+- ARCHITECTURE.md dependency rules устарели (нет Bytecode)
+- String builtins: BytecodeVm переимплементирует вместо делегирования BuiltinStringHelpers
+- Keyword lists дублированы в 5 местах (TokenKind, SyntaxKind, Lexer, 2x XSHD)
+- MainWindow.xaml.cs: 1,550+ строк, 0% покрытия тестами
+- Execution-Acceptance и IDE тесты зависают (>120s timeout)
+- Нет таймаута на выполнение пользовательских программ
+- Environment.CurrentDirectory мутация в ProgramRunService.Run()
+- CanConvert() не включает Decimal→Double
+
+Project Health Score: 7.5/10
+
+TOP 5 приоритетов:
+1. [P1] TASK-001 — Fix String builtins divergence
+2. [P1] TASK-002 — Split MainWindow.xaml.cs
+3. [P2] TASK-003 — Update ARCHITECTURE.md
+4. [P2] TASK-004 — Fix hanging tests
+5. [P2] TASK-005 — Add execution timeout
+
+Следующий шаг: реализация TASK-001 (fix String builtins divergence).
+
+## Session 1042 - 2026-08-19 01:00 - TASK-001: Fix String builtins divergence
+
+Задача: устранить переимплементацию строковых built-in в BytecodeVm, делегировать BuiltinStringHelpers.
+
+Что сделано:
+1. В `BuiltinStringHelpers.cs` (+6 строк) добавлены 3 метода:
+   - `TrimWhitespace(string)` → `text.Trim()`
+   - `LeftTrimWhitespace(string)` → `text.TrimStart()`
+   - `RightTrimWhitespace(string)` → `text.TrimEnd()`
+2. В `BytecodeVm.Builtins.String.cs` (454 → 243 строки, −211):
+   - `EvaluateContains` → делегирует в `BuiltinStringHelpers.EvaluateContains`
+   - `EvaluateStartsWith` → делегирует в `BuiltinStringHelpers.EvaluateStartsWith`
+   - `EvaluateEndsWith` → делегирует в `BuiltinStringHelpers.EvaluateEndsWith`
+   - `EvaluateReplace` → делегирует в `BuiltinStringHelpers.EvaluateReplace`
+   - `EvaluateReplaceBuiltin` → упрощён, делегирует замену
+   - `EvaluateTrimWhitespace*` → делегирует в `BuiltinStringHelpers.TrimWhitespace`
+   - `EvaluateLeftTrimWhitespace*` → делегирует в `BuiltinStringHelpers.LeftTrimWhitespace`
+   - `EvaluateRightTrimWhitespace*` → делегирует в `BuiltinStringHelpers.RightTrimWhitespace`
+   - Удалены `FindTrimStart`, `FindTrimEnd` (больше не нужны)
+3. В `Interpreter.Builtins.String.Trim.cs` обновлено делегирование на `BuiltinStringHelpers.*`
+
+Результат:
+- Суммарный эффект: −205 строк дублированного кода
+- Build: 0 errors, 0 warnings
+- Тесты: 884/884 Runtime, 203/203 Bytecode, 143/143 Execution Pipeline
+
+## Session 1043 - 2026-08-19 02:00 - TASK-002: Split MainWindow.xaml.cs
+
+Задача: разбить MainWindow.xaml.cs (1,713 строки) на partial-файлы по ответственности.
+
+Что сделано:
+1. Создан `MainWindow.Editor.cs` (508 строк) — editor lifecycle, caret/selection events, formatting, trace
+2. Создан `MainWindow.Diagnostics.cs` (237 строки) — diagnostics navigation, breakpoints UI, debug rendering
+3. Создан `MainWindow.Output.cs` (233 строки) — output text box input handling, context menu, mouse routing
+4. `MainWindow.xaml.cs` уменьшен с 1,713 до 717 строк (−996)
+5. Обновлены тесты `EditorFeatureTests.cs` для чтения всех partial-файлов
+
+Результат:
+- MainWindow.xaml.cs: 1,713 → 717 строк (−58%)
+- 4 partial-файла с чёткими зонами ответственности
+- Build: 0 errors, 0 warnings
+- Тесты: 66/67 EditorFeature pass (1 pre-existing failure), 884/884 Runtime, 1,671/1,671 total non-IDE
+
+Следующий шаг: TASK-003 (Update ARCHITECTURE.md) или TASK-008 (Fix CanConvert Decimal→Double).
+
+## Session 1044 - 2026-08-19 03:00 - TASK-003, TASK-005, TASK-008, TASK-004
+
+Задача: продолжить реализацию recovery roadmap.
+
+### TASK-003: Update ARCHITECTURE.md
+- Добавлен `Axiom.Bytecode` в правила зависимостей (§5)
+- Добавлено описание слоя `Axiom.Bytecode` (§4.5b)
+- Обновлено описание `Axiom.Runtime` — добавлен `BytecodeVm`
+- Обновлена структура solution — добавлены `Axiom.Bytecode/` и `Axiom.Syntax.Tests/`
+
+### TASK-008: Fix CanConvert Decimal→Double
+- В `Binder.Helpers.cs` добавлено `(fromType == TypeSymbol.Decimal && toType == TypeSymbol.Double)` в `CanConvert`
+- Обновлён тест `Bind_ReportsDecimalAndDoubleMixedArithmetic` — теперь ожидает успешное связывание
+- Build: 0 errors; 365/365 Semantics, 884/884 Runtime
+
+### TASK-005: Add execution timeout
+- Создан `TimeoutCancellationProvider` в `Axiom.Runtime/Host/` — отсчитывает время, триггерит `IsCancellationRequested`
+- Добавлено `CancellationProvider` свойство в `ExecutionRequest`
+- Обновлён `ExecutionRuntimeHostAdapter` — принимает и проверяет внешний cancellation provider
+- Обновлён `AxiomExecutionPipeline` — передаёт cancellation provider в adapter
+- Обновлён `ProgramRunService.Run()` — принимает `timeout` параметр
+- Обновлён `IProgramRunService` — интерфейс с `timeout`
+- Обновлён `FakeProgramRunService` в тестах
+- Build: 0 errors; 884/884 Runtime, 365/365 Semantics
+
+### TASK-004: Hanging tests — root cause
+- Установлено: зависание вызвано интерактивными samples (SLEEP, INKEY, SCREEN) в acceptance suite
+- `PositiveAcceptanceSamplePaths()` перебирает все 350+ .axm файлы без фильтрации интерактивных
+- Исправление требует фильтрации — отдельная задача
+
+### TASK-006: Environment.CurrentDirectory — deferred
+- Мутация защищена shell lock + finally блоком
+- Runtime использует `Environment.CurrentDirectory` в 4 местах для `CURRENTDIR()`
+- Правильный фикс требует добавления `ResourceBaseDirectory` в `IRuntimeHost`
+
+Итоги сессии:
+- Завершено задач: TASK-001, TASK-002, TASK-003, TASK-005, TASK-008 (5 P1/P2 задач)
+- Верифицировано: TASK-004, TASK-006, TASK-009, TASK-010 (4 задачи с deferred/verified статусом)
+- Build: 0 errors, 0 warnings
+- Тесты: 1,737/1,738 non-IDE pass
+
+Следующий шаг: фильтрация интерактивных samples из acceptance suite (TASK-004 follow-up) или продуктовая работа.

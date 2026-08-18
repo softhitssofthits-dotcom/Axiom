@@ -568,7 +568,7 @@ public sealed class AxiomExecutionPipeline
         bool usedInterpreterFallback,
         string? interpreterFallbackReason)
     {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom);
+        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider);
         var executionStopwatch = Stopwatch.StartNew();
         var runtimeResult = Interpreter.Execute(compiledProgram.BoundProgram, runtimeHost);
         executionStopwatch.Stop();
@@ -590,7 +590,7 @@ public sealed class AxiomExecutionPipeline
 
     private static ExecutionResult RunThroughBytecodeVm(BytecodeModule module, ExecutionRequest request)
     {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom);
+        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider);
         var executionStopwatch = Stopwatch.StartNew();
         var breakpoints = request.SourceBreakpointLines.Count == 0
             ? null

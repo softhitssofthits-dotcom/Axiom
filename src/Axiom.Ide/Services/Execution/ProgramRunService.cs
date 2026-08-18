@@ -98,7 +98,8 @@ public sealed class ProgramRunService : IProgramRunService
         ExecutionMode mode = ExecutionMode.Bytecode,
         IEnumerable<int>? sourceBreakpointLines = null,
         bool stopBeforeFirstInstruction = false,
-        string? sourceFilePath = null)
+        string? sourceFilePath = null,
+        TimeSpan? timeout = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
 
@@ -172,12 +173,17 @@ public sealed class ProgramRunService : IProgramRunService
                 _compiledProgram = compiledProgram;
             }
 
+            using var timeoutCancellation = timeout is { } t && t > TimeSpan.Zero
+                ? new TimeoutCancellationProvider(t)
+                : null;
+
             var executionResult = _pipeline.RunCompiled(
                 compiledProgram,
                 new ExecutionRequest(
                     sourceText,
                     inputProvider: inputProvider,
                     outputWriter: _consoleService,
+                    cancellationProvider: timeoutCancellation,
                     mode: mode,
                     sourceBreakpointLines: sourceBreakpointLines,
                     stopBeforeFirstInstruction: stopBeforeFirstInstruction));

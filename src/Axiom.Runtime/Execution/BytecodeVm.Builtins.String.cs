@@ -29,75 +29,35 @@ public sealed partial class BytecodeVm
         return BuiltinStringHelpers.EvaluateMid(text, start, count);
     }
 
-    private static string EvaluateTrimWhitespace(string text)
-    {
-        var start = FindTrimStart(text);
-        if (start == text.Length)
-        {
-            return string.Empty;
-        }
-
-        var end = FindTrimEnd(text, start);
-        return start == 0 && end == text.Length - 1
-            ? text
-            : text.Substring(start, end - start + 1);
-    }
+    private static string EvaluateTrimWhitespace(string text) => BuiltinStringHelpers.TrimWhitespace(text);
 
     private static RuntimeValue EvaluateTrimWhitespaceBuiltin(RuntimeValue value)
     {
         var text = GetStringUnchecked(value);
-        var start = FindTrimStart(text);
-        if (start == text.Length)
-        {
-            return RuntimeValue.FromString(string.Empty);
-        }
-
-        var end = FindTrimEnd(text, start);
-        return start == 0 && end == text.Length - 1
-            ? value
-            : RuntimeValue.FromString(text.Substring(start, end - start + 1));
+        var trimmed = BuiltinStringHelpers.TrimWhitespace(text);
+        return trimmed.Length == text.Length ? value : RuntimeValue.FromString(trimmed);
     }
 
     private static string EvaluateTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: true, trimEnd: true);
 
-    private static string EvaluateLeftTrimWhitespace(string text)
-    {
-        var start = FindTrimStart(text);
-        return start == 0
-            ? text
-            : start == text.Length
-                ? string.Empty
-                : text[start..];
-    }
+    private static string EvaluateLeftTrimWhitespace(string text) => BuiltinStringHelpers.LeftTrimWhitespace(text);
 
     private static RuntimeValue EvaluateLeftTrimWhitespaceBuiltin(RuntimeValue value)
     {
         var text = GetStringUnchecked(value);
-        var start = FindTrimStart(text);
-        return start == 0
-            ? value
-            : RuntimeValue.FromString(start == text.Length ? string.Empty : text[start..]);
+        var trimmed = BuiltinStringHelpers.LeftTrimWhitespace(text);
+        return trimmed.Length == text.Length ? value : RuntimeValue.FromString(trimmed);
     }
 
     private static string EvaluateLeftTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: true, trimEnd: false);
 
-    private static string EvaluateRightTrimWhitespace(string text)
-    {
-        var end = FindTrimEnd(text, start: 0);
-        return end == text.Length - 1
-            ? text
-            : end < 0
-                ? string.Empty
-                : text[..(end + 1)];
-    }
+    private static string EvaluateRightTrimWhitespace(string text) => BuiltinStringHelpers.RightTrimWhitespace(text);
 
     private static RuntimeValue EvaluateRightTrimWhitespaceBuiltin(RuntimeValue value)
     {
         var text = GetStringUnchecked(value);
-        var end = FindTrimEnd(text, start: 0);
-        return end == text.Length - 1
-            ? value
-            : RuntimeValue.FromString(end < 0 ? string.Empty : text[..(end + 1)]);
+        var trimmed = BuiltinStringHelpers.RightTrimWhitespace(text);
+        return trimmed.Length == text.Length ? value : RuntimeValue.FromString(trimmed);
     }
 
     private static string EvaluateRightTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: false, trimEnd: true);
@@ -122,106 +82,17 @@ public sealed partial class BytecodeVm
 
     private static bool EvaluateContains(string text, string fragment)
     {
-        if (fragment.Length == 0)
-        {
-            return true;
-        }
-
-        if (text.Length == 0 || fragment.Length > text.Length)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(text, fragment))
-        {
-            return true;
-        }
-
-        if (fragment.Length == text.Length)
-        {
-            return string.Equals(text, fragment, StringComparison.Ordinal);
-        }
-
-        if (fragment.Length == 1)
-        {
-            return text.IndexOf(fragment[0]) >= 0;
-        }
-
-        return text.Contains(fragment, StringComparison.Ordinal);
+        return BuiltinStringHelpers.EvaluateContains(text, fragment).AsBoolean();
     }
 
     private static bool EvaluateStartsWith(string text, string fragment)
     {
-        if (fragment.Length == 0)
-        {
-            return true;
-        }
-
-        if (fragment.Length > text.Length)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(text, fragment))
-        {
-            return true;
-        }
-
-        if (fragment.Length == text.Length)
-        {
-            return string.Equals(text, fragment, StringComparison.Ordinal);
-        }
-
-        return text.StartsWith(fragment, StringComparison.Ordinal);
+        return BuiltinStringHelpers.EvaluateStartsWith(text, fragment).AsBoolean();
     }
 
     private static bool EvaluateEndsWith(string text, string fragment)
     {
-        if (fragment.Length == 0)
-        {
-            return true;
-        }
-
-        if (fragment.Length > text.Length)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(text, fragment))
-        {
-            return true;
-        }
-
-        if (fragment.Length == text.Length)
-        {
-            return string.Equals(text, fragment, StringComparison.Ordinal);
-        }
-
-        return text.EndsWith(fragment, StringComparison.Ordinal);
-    }
-
-    private static int FindTrimStart(string text)
-    {
-        var start = 0;
-
-        while (start < text.Length && char.IsWhiteSpace(text[start]))
-        {
-            start++;
-        }
-
-        return start;
-    }
-
-    private static int FindTrimEnd(string text, int start)
-    {
-        var end = text.Length - 1;
-
-        while (end >= start && char.IsWhiteSpace(text[end]))
-        {
-            end--;
-        }
-
-        return end;
+        return BuiltinStringHelpers.EvaluateEndsWith(text, fragment).AsBoolean();
     }
 
     private string EvaluateReplace(string text, string oldText, string newText, TextLocation location)
@@ -232,7 +103,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        return text.Replace(oldText, newText, StringComparison.Ordinal);
+        return BuiltinStringHelpers.EvaluateReplace(text, oldText, newText);
     }
 
     private RuntimeValue EvaluateReplaceBuiltin(
@@ -251,36 +122,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        if (ReferenceEquals(oldText, newText) || string.Equals(oldText, newText, StringComparison.Ordinal))
-        {
-            return textValue;
-        }
-
-        if (text.Length == 0 || oldText.Length > text.Length)
-        {
-            return textValue;
-        }
-
-        var firstMatchIndex = text.IndexOf(oldText, StringComparison.Ordinal);
-        if (firstMatchIndex < 0)
-        {
-            return textValue;
-        }
-
-        string replaced;
-        if (oldText.Length == 1 && newText.Length == 1)
-        {
-            replaced = text.Replace(oldText[0], newText[0]);
-        }
-        else if (firstMatchIndex == 0 && oldText.Length == text.Length)
-        {
-            replaced = newText;
-        }
-        else
-        {
-            replaced = text.Replace(oldText, newText, StringComparison.Ordinal);
-        }
-
+        var replaced = BuiltinStringHelpers.EvaluateReplace(text, oldText, newText);
         return string.Equals(replaced, text, StringComparison.Ordinal)
             ? textValue
             : RuntimeValue.FromString(replaced);

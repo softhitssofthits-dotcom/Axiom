@@ -9,7 +9,8 @@ public sealed partial class Binder
             || (fromType == TypeSymbol.Integer && toType == TypeSymbol.Decimal)
             || (fromType == TypeSymbol.Integer && toType == TypeSymbol.Double)
             || (fromType == TypeSymbol.Long && toType == TypeSymbol.Decimal)
-            || (fromType == TypeSymbol.Long && toType == TypeSymbol.Double);
+            || (fromType == TypeSymbol.Long && toType == TypeSymbol.Double)
+            || (fromType == TypeSymbol.Decimal && toType == TypeSymbol.Double);
     }
 
     private static bool IsNumeric(TypeSymbol type)

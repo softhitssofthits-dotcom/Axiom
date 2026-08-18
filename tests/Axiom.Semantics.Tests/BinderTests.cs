@@ -4282,8 +4282,7 @@ PRINT price + 0.1
 
         BindProgram(text, out var diagnostics);
 
-        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
-        Assert.Contains("DOUBLE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(diagnostics.Where(static d => d.Code == "MB2003"));
     }
 
     [Theory]

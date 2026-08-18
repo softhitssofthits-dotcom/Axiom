@@ -11,6 +11,7 @@ public sealed class ExecutionRequest
         IDiagnosticSink? diagnosticSink = null,
         IRuntimeClock? runtimeClock = null,
         IRuntimeRandom? runtimeRandom = null,
+        IRuntimeCancellationProvider? cancellationProvider = null,
         ExecutionMode mode = ExecutionMode.Bytecode,
         string? bytecodeSnapshotPath = null,
         IEnumerable<int>? sourceBreakpointLines = null,
@@ -24,6 +25,7 @@ public sealed class ExecutionRequest
         DiagnosticSink = diagnosticSink ?? NullDiagnosticSink.Instance;
         RuntimeClock = runtimeClock ?? NullRuntimeHost.Instance;
         RuntimeRandom = runtimeRandom ?? NullRuntimeHost.Instance;
+        CancellationProvider = cancellationProvider;
         Mode = mode;
         BytecodeSnapshotPath = bytecodeSnapshotPath;
         SourceBreakpointLines = NormalizeSourceBreakpointLines(sourceBreakpointLines);
@@ -41,6 +43,8 @@ public sealed class ExecutionRequest
     public IRuntimeClock RuntimeClock { get; }
 
     public IRuntimeRandom RuntimeRandom { get; }
+
+    public IRuntimeCancellationProvider? CancellationProvider { get; }
 
     public ExecutionMode Mode { get; }
 

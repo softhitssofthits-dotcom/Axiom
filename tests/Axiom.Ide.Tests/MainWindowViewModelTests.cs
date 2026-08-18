@@ -2678,7 +2678,8 @@ public sealed class MainWindowViewModelTests
             Axiom.Execution.ExecutionMode mode = Axiom.Execution.ExecutionMode.Bytecode,
             IEnumerable<int>? sourceBreakpointLines = null,
             bool stopBeforeFirstInstruction = false,
-            string? sourceFilePath = null)
+            string? sourceFilePath = null,
+            TimeSpan? timeout = null)
         {
             CallCount++;
             LastSourceText = sourceText;

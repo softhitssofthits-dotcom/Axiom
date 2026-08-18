@@ -34,6 +34,7 @@ src/
   Axiom.Syntax/
   Axiom.Parsing/
   Axiom.Semantics/
+  Axiom.Bytecode/
   Axiom.Runtime/
   Axiom.Execution/
   Axiom.Ide/
@@ -41,8 +42,10 @@ src/
 
 tests/
   Axiom.Lexing.Tests/
+  Axiom.Syntax.Tests/
   Axiom.Parsing.Tests/
   Axiom.Semantics.Tests/
+  Axiom.Bytecode.Tests/
   Axiom.Runtime.Tests/
   Axiom.Execution.Tests/
   Axiom.Ide.Tests/
@@ -116,6 +119,18 @@ tests/
 - логика должна раскладываться по профильным partial-файлам, а не возвращаться в общий монолит;
 - текущая рабочая раскладка binder включает `Binder.Expressions.cs`, `Binder.InvocationExpressions.cs`, `Binder.Statements.cs`, `Binder.DeclarationStatements.cs`, `Binder.IoStatements.cs`, `Binder.ControlFlowStatements.cs`, `Binder.SelectCaseStatements.cs`, `Binder.Diagnostics.cs`, `Binder.Declarations.cs`, `Binder.Routines.cs`, `Binder.TypeResolution.cs`, `Binder.ScopeHelpers.cs`, `Binder.SyntaxHelpers.cs` и компактный `Binder.Helpers.cs` для оставшихся общих числовых вспомогательных методов.
 
+### 4.5b Axiom.Bytecode
+Понижение и байткодная компиляция:
+- `BoundProgramLowerer` — понижение связанного дерева в линейное lowered-представление
+- `BytecodeCompiler` — эмиссия lowered-инструкций в `BytecodeModule`
+- `BytecodeModule`, `BytecodeRoutine`, `BytecodeInstruction` — модель байткодного модуля
+- `Opcode` — набор опкодов VM
+- `ConstantPool` — пул констант модуля
+- `BytecodeModuleValidator` — валидация целостности модуля до исполнения
+- `BytecodeDebugInfo` — отладочная карта для сопоставления с исходным кодом
+
+Слой не исполняет программу: исполнение байткода происходит в `BytecodeVm` внутри `Axiom.Runtime`.
+
 ### 4.6 Axiom.Runtime
 Исполнение программы:
 - хранение окружения и областей видимости
@@ -123,7 +138,8 @@ tests/
 - значения переменных
 - `IRuntimeHost` как абстракция ввода/вывода
 - `RuntimeResult` как результат исполнения
-- `Interpreter` как исполнитель уже связанного `BoundProgram`
+- `Interpreter` как исполнитель уже связанного `BoundProgram` (AST-walking интерпретатор)
+- `BytecodeVm` как исполнитель `BytecodeModule` (байткодный движок)
 - встроенные функции
 - исполнение операторов и выражений
 - диагностические сообщения времени выполнения
@@ -275,8 +291,9 @@ tests/
 - `Syntax` зависит только от `Core`;
 - `Parsing` зависит от `Core`, `Lexing`, `Syntax`;
 - `Semantics` зависит от `Core`, `Syntax`;
-- `Runtime` зависит от `Core`, `Syntax`, `Semantics`;
-- `Execution` зависит от `Core`, `Syntax`, `Parsing`, `Semantics`, `Runtime`;
+- `Bytecode` зависит от `Core`, `Syntax`, `Semantics`;
+- `Runtime` зависит от `Core`, `Syntax`, `Semantics`, `Bytecode` (байткодный движок `BytecodeVm` живёт в `Runtime` и исполняет `BytecodeModule` из `Bytecode`);
+- `Execution` зависит от `Core`, `Syntax`, `Parsing`, `Semantics`, `Bytecode`, `Runtime`;
 - `Ide` зависит от `Execution` как от основной границы запуска; прямое знание о внутренних деталях `Parsing`, `Semantics` и `Runtime` на стороне интерфейса не допускается.
 
 IDE не должна содержать доменную логику языка, кроме вызова сервисов ядра и отображения результатов.
