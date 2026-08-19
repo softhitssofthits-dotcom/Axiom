@@ -103,6 +103,7 @@ public sealed partial class BytecodeVm
             _hasGlobalSlot[global.Slot] = true;
         }
 
+        BuildRecordTypeCache(module);
         RefreshFastInstructionPathFlag();
     }
 

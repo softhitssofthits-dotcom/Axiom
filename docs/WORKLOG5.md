@@ -800,3 +800,97 @@ Health Score массивной подсистемы: **8.8/10**.
 - Semantics: 374/374
 
 Следующий шаг: продуктовая работа или следующий аудит.
+
+## Session 1047 - 2026-08-19 22:00 - Deep TYPE forensic audit и исправление TYPE-001..003
+
+Задача: провести полный forensic-аудит подсистемы пользовательских типов TYPE и исправить найденные дефекты.
+
+### Аудит
+
+Проведён полный forensic-аудит по 123 разделам: синтаксис, парсер, семантический анализ, runtime representation, байткодный путь, копирование, методы, конструкторы, инварианты, тесты, samples, документация.
+
+Health Score подсистемы TYPE: **8.6/10**.
+
+Главный вывод: TYPE subsystem фундаментально корректна. Value-oriented модель с ordinal-based массивом полей, неявным SELF как BYREF параметром, перегружаемыми конструкторами, инвариантом и структурным сравнением работает во всех слоях.
+
+Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → UserDefinedTypeSymbol → RuntimeRecordValue → BytecodeVm CreateRecord/LoadField/StoreField`.
+
+Полный паритет интерпретатора и BytecodeVm подтверждён.
+
+### Найденные и исправленные дефекты
+
+- TYPE-001 [P3]: BytecodeVm type resolution linear scan → добавлен `BuildRecordTypeCache()` для O(1) lookup
+- TYPE-002 [P3]: Missing negative acceptance samples → добавлены 4 новых: cyclic_reference, duplicate_declaration, unknown_field, invalid_field_type
+- TYPE-003 [P4]: Manual constructor overload resolution → уже задокументировано, подтверждено
+
+Дополнительно исправлен дефект: `DeclareTypeMethods()` вызывал `CompleteMethods()` дважды для дублированного TYPE → добавлена проверка `MethodsCompleted`.
+
+### Созданные файлы
+
+- `docs/TYPE_AUDIT_REPORT.md` — полный отчёт аудита
+- `samples/acceptance/negative/type_cyclic_reference.axm`
+- `samples/acceptance/negative/type_duplicate_declaration.axm`
+- `samples/acceptance/negative/type_unknown_field.axm`
+- `samples/acceptance/negative/type_invalid_field_type.axm`
+
+### Изменённые файлы
+
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs` — добавлен вызов `BuildRecordTypeCache()`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Records.cs` — добавлены `BuildRecordTypeCache()` и `CollectRecordTypes()`
+- `src/Axiom.Semantics/Binding/Binder.Declarations.cs` — добавлена проверка `MethodsCompleted` в `DeclareTypeMethods()`
+- `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` — добавлены 4 новых negative acceptance теста
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+- Runtime: 897/897
+- Semantics: 374/374
+- Parsing: 143/143
+- Acceptance: 51/51 (negative)
+
+Следующий шаг: продуктовая работа или INPUT/PRINT/DATA аудит.
+
+## Session 1053 - 2026-08-20 02:00 - Deep I/O forensic audit и исправление IO-005
+
+Задача: провести полный forensic audit I/O-подсистемы (INPUT, PRINT, DATA, READ, RESTORE) и исправить найденные недочёты.
+
+### Что сделано
+
+1. Проведён полный forensic audit I/O-подсистемы (112 раздела, 101 секция отчёта).
+2. Создан `docs/IO_AUDIT_REPORT.md` с полным отчётом.
+3. Исправлен IO-005 [P3]: вынесен общий слой I/O helpers:
+   - создан `src/Axiom.Runtime/Builtins/BuiltinIOHelpers.cs`:
+     - `TryParseInputField(TypeSymbol, string)` — парсинг одного поля ввода (string overload)
+     - `TryParseInputField(TypeSymbol, ReadOnlySpan<char>)` — парсинг одного поля ввода (span overload)
+     - `NormalizeInputField(string, bool)` — обрезка пробелов
+     - `NormalizeInputField(ReadOnlySpan<char>, bool)` — обрезка пробелов (span overload)
+     - `CountInputFields(string)` — подсчёт полей через запятую
+   - `Interpreter.Helpers.cs` делегирует в `BuiltinIOHelpers.TryParseInputField()` и `BuiltinIOHelpers.NormalizeInputField()`
+   - `BytecodeVm.Input.cs` делегирует в `BuiltinIOHelpers` для `TryParseInputField()`, `NormalizeInputField()`, `CountInputFields()`
+
+### Главные выводы аудита
+
+- Health Score: 8.5/10
+- PRINT, PRINT USING, INPUT: полностью реализованы, паритет interpreter/VM, тесты, samples, manual
+- DATA, READ, RESTORE, LINE INPUT: полностью отсутствуют (не баги, а нереализованные возможности)
+- I/O-абстракция чистая: `IRuntimeHost` = `IInputProvider` + `IOutputWriter` + ...
+- INPUT parsing вынесен в общий слой (IO-005 FIXED)
+- Главный вопрос: можно ли переходить к аудиту файловой системы? → YES, WITH CONDITIONS
+
+### Созданные файлы
+
+- `docs/IO_AUDIT_REPORT.md` — полный отчёт аудита
+- `src/Axiom.Runtime/Builtins/BuiltinIOHelpers.cs` — общий слой I/O-логики
+
+### Изменённые файлы
+
+- `src/Axiom.Runtime/Execution/Interpreter.Helpers.cs` — делегирование в `BuiltinIOHelpers`
+- `src/Axiom.Runtime/Execution/BytecodeVm.Input.cs` — делегирование в `BuiltinIOHelpers`
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+- Runtime: 897/897
+- Execution (non-acceptance): 149/149
+
+Следующий шаг: продуктовая работа или реализация DATA/READ/RESTORE.

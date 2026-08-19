@@ -166,4 +166,61 @@ public sealed partial class BytecodeVm
             ? TryResolveRecordType(arrayType.ElementType, typeName, visited)
             : null;
     }
+
+    private void BuildRecordTypeCache(BytecodeModule module)
+    {
+        ArgumentNullException.ThrowIfNull(module);
+
+        var visited = new HashSet<TypeSymbol>();
+
+        foreach (var global in module.Globals)
+        {
+            CollectRecordTypes(global.Type, visited);
+        }
+
+        foreach (var routine in module.Routines)
+        {
+            CollectRecordTypes(routine.ResultType, visited);
+
+            foreach (var variable in routine.ParameterVariables)
+            {
+                CollectRecordTypes(variable.Type, visited);
+            }
+
+            foreach (var variable in routine.LocalVariables)
+            {
+                CollectRecordTypes(variable.Type, visited);
+            }
+
+            foreach (var variable in routine.CapturedVariables)
+            {
+                CollectRecordTypes(variable.Type, visited);
+            }
+        }
+    }
+
+    private void CollectRecordTypes(TypeSymbol type, HashSet<TypeSymbol> visited)
+    {
+        if (type is null || !visited.Add(type))
+        {
+            return;
+        }
+
+        if (type is UserDefinedTypeSymbol userType)
+        {
+            _recordTypeCache.TryAdd(userType.Name, userType);
+
+            foreach (var field in userType.Fields)
+            {
+                CollectRecordTypes(field.Type, visited);
+            }
+
+            return;
+        }
+
+        if (type is ArrayTypeSymbol arrayType)
+        {
+            CollectRecordTypes(arrayType.ElementType, visited);
+        }
+    }
 }

@@ -489,6 +489,11 @@ public sealed partial class Binder
                 continue;
             }
 
+            if (type.MethodsCompleted)
+            {
+                continue;
+            }
+
             var methods = new List<FunctionSymbol>(typeDeclaration.Methods.Count);
             var constructors = new List<FunctionSymbol>();
             FunctionSymbol? invariant = null;

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 
 namespace Axiom.Runtime;
@@ -222,53 +223,12 @@ public sealed partial class Interpreter
 
     private RuntimeValue? TryParseInput(TypeSymbol type, string text)
     {
-        if (type == TypeSymbol.Integer)
+        var result = BuiltinIOHelpers.TryParseInputField(type, text);
+        if (result is not null || type == TypeSymbol.String || type == TypeSymbol.Boolean
+            || type == TypeSymbol.Integer || type == TypeSymbol.Long
+            || type == TypeSymbol.Double || type == TypeSymbol.Decimal)
         {
-            return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integerValue)
-                ? RuntimeValue.FromInteger(integerValue)
-                : null;
-        }
-
-        if (type == TypeSymbol.Long)
-        {
-            return long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longValue)
-                ? RuntimeValue.FromLong(longValue)
-                : null;
-        }
-
-        if (type == TypeSymbol.Double)
-        {
-            return double.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var doubleValue)
-                   && double.IsFinite(doubleValue)
-                ? RuntimeValue.FromDouble(doubleValue)
-                : null;
-        }
-
-        if (type == TypeSymbol.Decimal)
-        {
-            return decimal.TryParse(text, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var decimalValue)
-                ? RuntimeValue.FromDecimal(decimalValue)
-                : null;
-        }
-
-        if (type == TypeSymbol.String)
-        {
-            return RuntimeValue.FromString(text);
-        }
-
-        if (type == TypeSymbol.Boolean)
-        {
-            if (string.Equals(text, "TRUE", StringComparison.OrdinalIgnoreCase))
-            {
-                return RuntimeValue.FromBoolean(true);
-            }
-
-            if (string.Equals(text, "FALSE", StringComparison.OrdinalIgnoreCase))
-            {
-                return RuntimeValue.FromBoolean(false);
-            }
-
-            return null;
+            return result;
         }
 
         return ReportInvalidRuntimeState<RuntimeValue?>($"INPUT не поддерживает тип {type.Name}.");
@@ -363,7 +323,7 @@ public sealed partial class Interpreter
 
     private static string NormalizeInputField(string text, bool trim)
     {
-        return trim ? text.Trim() : text;
+        return BuiltinIOHelpers.NormalizeInputField(text, trim);
     }
 
     private int ToArrayBound(RuntimeValue value, TextLocation location, string detail)

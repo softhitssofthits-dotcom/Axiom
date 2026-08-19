@@ -1,0 +1,7 @@
+TYPE Person
+    Name AS STRING
+END TYPE
+
+TYPE Person
+    Age AS INTEGER
+END TYPE

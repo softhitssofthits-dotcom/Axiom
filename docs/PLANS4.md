@@ -312,3 +312,24 @@
 - Тесты: 897/897 Runtime, 374/374 Semantics.
 - Создан `docs/ARRAY_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа.
+
+### 2026-08-19 - Deep TYPE forensic audit и исправление TYPE-001..003
+
+- Проведён полный forensic-аудит подсистемы TYPE (123 раздела).
+- Health Score: 8.6/10.
+- TYPE-001 [P3]: BytecodeVm type resolution linear scan → `BuildRecordTypeCache()` для O(1).
+- TYPE-002 [P3]: 4 negative acceptance samples (cyclic, duplicate, unknown_field, invalid_type).
+- TYPE-003 [P4]: Manual constructor overload resolution — уже задокументировано.
+- Дополнительно: исправлен crash при дублированном TYPE (`DeclareTypeMethods` + `MethodsCompleted`).
+- Build: 0 errors. Тесты: 897 + 374 + 143 + 51 = 1,465.
+- Создан `docs/TYPE_AUDIT_REPORT.md`.
+- Следующий шаг: продуктовая работа или INPUT/PRINT/DATA аудит.
+
+### 2026-08-20 - Deep I/O forensic audit и исправление IO-005
+
+- Проведён полный forensic audit I/O-подсистемы (112 раздела).
+- Health Score: 8.5/10.
+- IO-005 [P3]: I/O helpers вынесены в `BuiltinIOHelpers` (TryParseInputField, NormalizeInputField, CountInputFields).
+- Build: 0 errors. Тесты: 897 + 149 = 1,046.
+- Создан `docs/IO_AUDIT_REPORT.md`.
+- Следующий шаг: продуктовая работа или реализация DATA/READ/RESTORE.

@@ -1,0 +1,4 @@
+TYPE Node
+    Value AS INTEGER
+    Child AS Node
+END TYPE

@@ -1,0 +1,4 @@
+TYPE Person
+    Name AS STRING
+    Handler AS FUNCTION(INTEGER) AS INTEGER
+END TYPE
