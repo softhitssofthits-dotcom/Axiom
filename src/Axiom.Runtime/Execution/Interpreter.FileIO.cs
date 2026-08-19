@@ -106,20 +106,8 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateReadLines(BoundCallExpression expression, RuntimeValue fileValue, int count)
     {
-        var file = BuiltinFileIOHelpers.RequireReadableFile(fileValue, expression.Location, "READLINES", ReportFileIOError);
-
-        try
-        {
-            return CreateStringArrayValue(file.ReadLines(count));
-        }
-        catch (Exception ex) when (BuiltinFileIOHelpers.IsFileIoException(ex))
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция READLINES: не удалось прочитать строки из файла: {ex.Message}",
-                expression.Location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateReadLines(
+            fileValue, count, expression.Location, ReportFileIOError, CreateStringArrayValue);
     }
 
     private RuntimeValue EvaluateSkipLine(BoundCallExpression expression, RuntimeValue fileValue)

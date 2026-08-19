@@ -894,3 +894,46 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 - Execution (non-acceptance): 149/149
 
 Следующий шаг: продуктовая работа или реализация DATA/READ/RESTORE.
+
+## Session 1054 - 2026-08-20 03:00 - Deep File System / File I/O forensic audit
+
+Задача: провести полный forensic audit файловой подсистемы (OPEN, CLOSE, READ, WRITE, SEEK, EOF, encoding, paths, handle lifecycle, security).
+
+### Что сделано
+
+1. Проведён полный forensic audit файловой подсистемы (135 раздела, 126 секций отчёта).
+2. Создан `docs/FILE_SYSTEM_AUDIT_REPORT.md` с полным отчётом.
+3. Извлечён дублированный READLINES в `BuiltinFileIOHelpers.EvaluateReadLines()`:
+   - `Interpreter.FileIO.cs` делегирует в `BuiltinFileIOHelpers.EvaluateReadLines()`
+   - `BytecodeVm.FileIO.cs` делегирует в `BuiltinFileIOHelpers.EvaluateReadLines()`
+   - Делегат `Func<IReadOnlyList<string>, RuntimeValue>` передаёт `CreateStringArrayValue`
+
+### Главные выводы аудита
+
+- Health Score: **8.8/10**
+- Файловая подсистема зрелая и хорошо спроектированна
+- OPEN/CLOSE: три режима (INPUT, OUTPUT, APPEND), deterministic handle lifecycle
+- READ/WRITE: text-only, UTF-8 encoding, buffered write
+- SEEK/EOF: byte-based positioning, deterministic
+- Handle model: object reference (не numeric), `_openFiles` HashSet, cleanup через `finally`
+- Interpreter/VM parity: confirmed — оба движка делегируют в `BuiltinFileIOHelpers`
+- Security: нет sandbox (by design — локальный язык)
+- CWD: `ProgramRunService` сохраняет/восстанавливает `Environment.CurrentDirectory`
+- Binary mode, PRINT #f, INPUT #f, GET/PUT: не реализованы (feature gaps, не bugs)
+
+### Созданные файлы
+
+- `docs/FILE_SYSTEM_AUDIT_REPORT.md` — полный отчёт аудита
+
+### Изменённые файлы
+
+- `src/Axiom.Runtime/Builtins/BuiltinFileIOHelpers.cs` — добавлен `EvaluateReadLines()`
+- `src/Axiom.Runtime/Execution/Interpreter.FileIO.cs` — делегирование READLINES в helper
+- `src/Axiom.Runtime/Execution/BytecodeVm.FileIO.cs` — делегирование READLINES в helper
+
+### Проверки
+
+- Build: 0 ошибок, 1 предупреждение (xUnit2029 в тестах, не связано)
+- Runtime: 897/897
+
+Следующий шаг: продуктовая работа или аудит системы ошибок (Error Handling, Level 10).

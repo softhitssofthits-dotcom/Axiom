@@ -112,20 +112,8 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateReadLinesBuiltin(RuntimeValue fileValue, int count, TextLocation location)
     {
-        var file = BuiltinFileIOHelpers.RequireReadableFile(fileValue, location, "READLINES", ReportFileIOError);
-
-        try
-        {
-            return CreateStringArrayValue(file.ReadLines(count));
-        }
-        catch (Exception ex) when (BuiltinFileIOHelpers.IsFileIoException(ex))
-        {
-            ReportRuntimeDiagnostic(
-                DiagnosticCodes.BuiltinArgument,
-                $"Функция READLINES: не удалось прочитать строки из файла: {ex.Message}",
-                location);
-            throw new RuntimeFailureException();
-        }
+        return BuiltinFileIOHelpers.EvaluateReadLines(
+            fileValue, count, location, ReportFileIOError, CreateStringArrayValue);
     }
 
     private RuntimeValue EvaluateSkipLineBuiltin(RuntimeValue fileValue, TextLocation location)

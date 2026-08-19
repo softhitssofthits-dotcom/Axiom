@@ -181,6 +181,28 @@ internal static class BuiltinFileIOHelpers
         }
     }
 
+    public static RuntimeValue EvaluateReadLines(
+        RuntimeValue fileValue,
+        int count,
+        TextLocation location,
+        Action<string, TextLocation> reportError,
+        Func<IReadOnlyList<string>, RuntimeValue> createStringArray)
+    {
+        var file = RequireReadableFile(fileValue, location, "READLINES", reportError);
+
+        try
+        {
+            return createStringArray(file.ReadLines(count));
+        }
+        catch (Exception ex) when (IsFileIoException(ex))
+        {
+            reportError(
+                $"Функция READLINES: не удалось прочитать строки из файла: {ex.Message}",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     public static RuntimeValue EvaluateSkipLine(
         RuntimeValue fileValue,
         TextLocation location,
