@@ -1,0 +1,2254 @@
+﻿using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using Axiom.Ide.Graphics;
+using Axiom.Ide.Services.Diagnostics;
+using Axiom.Ide.Services.EventLog;
+using Axiom.Ide.ViewModels;
+using Axiom.Runtime;
+
+namespace Axiom.Ide.Services.Input;
+
+public sealed partial class ProgramConsoleService
+{
+    public void ActivateScreen(int mode)
+    {
+        ActivateScreen(mode, activePage: 0, visualPage: 0);
+    }
+
+    public void ActivateScreen(int mode, int activePage, int visualPage)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            WriteGraphicsFrameSummary(final: true);
+            WriteGraphicsInputSummary(final: true);
+
+            var (width, height) = _screenModeSizeProvider.GetSize(mode);
+            if (activePage is < 0 or > 3 || visualPage is < 0 or > 3)
+            {
+                return;
+            }
+
+            var preservePages = _screenMode == mode && _screenWidth == width && _screenHeight == height && _screenPages.Length == 4;
+            _isScreenActive = mode != 0;
+            _isCanvasActive = false;
+            _isScreenOutputActive = true;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
+            _screenMode = mode;
+            _screenWidth = width;
+            _screenHeight = height;
+            _activeScreenPage = _isScreenActive ? activePage : 0;
+            _visualScreenPage = _isScreenActive ? visualPage : 0;
+            _inputState.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
+            ResetViewportCore();
+            ResetWindowCore();
+            if (!_isScreenActive || !preservePages)
+            {
+                _screenPages = new ScreenFramebuffer?[4];
+            }
+
+            if (_isScreenActive)
+            {
+                for (var page = 0; page < _screenPages.Length; page++)
+                {
+                    _screenPages[page] ??= new ScreenFramebuffer(width, height);
+                }
+
+                _framebuffer = _screenPages[_activeScreenPage];
+            }
+            else
+            {
+                _framebuffer = new ScreenFramebuffer(width, height);
+            }
+
+            _graphicsTextBuffer.Clear();
+            _pendingGraphicsTraceLine.Clear();
+            GraphicsText = string.Empty;
+            CancelScheduledGraphicsVisualRefresh();
+            _graphicsForeground = 15;
+            _graphicsBackground = null;
+            _graphicsLastBackgroundColor = 0;
+            ResetTextViewportCore(resetCursor: false);
+            _screenTextFirstVisibleRow = 1;
+            _graphicsRow = 1;
+            _graphicsColumn = 1;
+            _pendingGraphicsViewportScroll = false;
+            _graphicsCurrentX = 0;
+            _graphicsCurrentY = 0;
+            ResetGraphicsFrameMetrics();
+            PublishGraphicsFrame();
+            OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsCanvasActive));
+            OnPropertyChanged(nameof(IsScreenOutputActive));
+            OnPropertyChanged(nameof(ScreenMode));
+            OnPropertyChanged(nameof(ScreenWidth));
+            OnPropertyChanged(nameof(ScreenHeight));
+            EnsureGraphicsWindow();
+            WriteGraphicsEvent(
+                "screen.activated",
+                $"mode={mode} | size={width}x{height}");
+        });
+    }
+
+    public void ActivateCanvas(long width, long height)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            WriteGraphicsFrameSummary(final: true);
+            WriteGraphicsInputSummary(final: true);
+
+            if (width <= 0 || height <= 0 || width > int.MaxValue || height > int.MaxValue)
+            {
+                return;
+            }
+
+            _isScreenActive = false;
+            _isCanvasActive = true;
+            _isScreenOutputActive = false;
+            _screenMode = 0;
+            _screenWidth = (int)width;
+            _screenHeight = (int)height;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
+            _canvasFrameInProgress = false;
+            _inputState.SetScreenState(isScreenActive: false, isScreenOutputActive: false, _screenMode, _screenWidth, _screenHeight);
+            ResetViewportCore();
+            ResetWindowCore();
+            _screenPages = new ScreenFramebuffer?[4];
+            _framebuffer = new ScreenFramebuffer(_screenWidth, _screenHeight);
+            _framebuffer.ClearTrueColor(0);
+            _graphicsTextBuffer.Clear();
+            _pendingGraphicsTraceLine.Clear();
+            GraphicsText = string.Empty;
+            CancelScheduledGraphicsVisualRefresh();
+            _graphicsForeground = 15;
+            _graphicsBackground = null;
+            _graphicsLastBackgroundColor = 0;
+            ResetTextViewportCore(resetCursor: false);
+            _screenTextFirstVisibleRow = 1;
+            _graphicsRow = 1;
+            _graphicsColumn = 1;
+            _pendingGraphicsViewportScroll = false;
+            _graphicsCurrentX = 0;
+            _graphicsCurrentY = 0;
+            ResetGraphicsFrameMetrics();
+            PublishGraphicsFrame();
+            OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsCanvasActive));
+            OnPropertyChanged(nameof(IsScreenOutputActive));
+            OnPropertyChanged(nameof(ScreenMode));
+            OnPropertyChanged(nameof(ScreenWidth));
+            OnPropertyChanged(nameof(ScreenHeight));
+            EnsureGraphicsWindow();
+            WriteGraphicsEvent(
+                "canvas.activated",
+                $"size={width}x{height}");
+        });
+    }
+
+    public void DeactivateScreen()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            var previousMode = _screenMode;
+            var previousWidth = _screenWidth;
+            var previousHeight = _screenHeight;
+            _isScreenActive = false;
+            var wasCanvasActive = _isCanvasActive;
+            _isCanvasActive = false;
+            _isScreenOutputActive = false;
+            _screenMode = 0;
+            _screenWidth = 0;
+            _screenHeight = 0;
+            _activeScreenPage = 0;
+            _visualScreenPage = 0;
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
+            _canvasFrameInProgress = false;
+            _inputState.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
+            ResetViewportCore();
+            ResetWindowCore();
+            FlushPendingGraphicsTraceLine(logEmpty: false);
+            _framebuffer = null;
+            _screenPages = new ScreenFramebuffer?[4];
+            GraphicsFrame = null;
+            _graphicsTextBuffer.Clear();
+            ResetTextViewportCore(resetCursor: false);
+            _screenTextFirstVisibleRow = 1;
+            GraphicsText = string.Empty;
+            CancelScheduledGraphicsVisualRefresh();
+            WriteGraphicsFrameSummary(final: true);
+            WriteGraphicsInputSummary(final: true);
+            OnPropertyChanged(nameof(IsScreenActive));
+            OnPropertyChanged(nameof(IsCanvasActive));
+            OnPropertyChanged(nameof(IsScreenOutputActive));
+            OnPropertyChanged(nameof(ScreenMode));
+            OnPropertyChanged(nameof(ScreenWidth));
+            OnPropertyChanged(nameof(ScreenHeight));
+            CloseGraphicsWindow();
+            WriteGraphicsEvent(
+                wasCanvasActive ? "canvas.deactivated" : "screen.deactivated",
+                $"mode={previousMode} | size={previousWidth}x{previousHeight}");
+        });
+    }
+
+    public void BeginFrame()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            _canvasFrameInProgress = true;
+            CancelScheduledGraphicsVisualRefresh();
+            _framebuffer.ClearTrueColor(0);
+        });
+    }
+
+    public void PresentFrame()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            _canvasFrameInProgress = false;
+            CancelScheduledGraphicsVisualRefresh();
+            PublishGraphicsFrame();
+        });
+    }
+
+    public void ClearFrame(int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            _framebuffer.ClearTrueColor(color);
+        });
+    }
+
+    public void SetCanvasCamera(long x, long y)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            _canvasCameraX = x;
+            _canvasCameraY = y;
+        });
+    }
+
+    public void ResetCanvasCamera()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive)
+            {
+                return;
+            }
+
+            _canvasCameraX = 0;
+            _canvasCameraY = 0;
+        });
+    }
+
+    public void DrawRect(long x, long y, long width, long height, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            var left = TranslateCanvasX(x, viewport);
+            var top = TranslateCanvasY(y, viewport);
+            DrawAbsoluteLineCore(left, top, left + width - 1, top, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left + width - 1, top, left + width - 1, top + height - 1, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left + width - 1, top + height - 1, left, top + height - 1, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left, top + height - 1, left, top, color, trueColor: true, viewport);
+        });
+    }
+
+    public void FillRect(long x, long y, long width, long height, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            var left = TranslateCanvasX(x, viewport);
+            var top = TranslateCanvasY(y, viewport);
+            var clippedLeft = Math.Max(left, viewport.Left);
+            var clippedTop = Math.Max(top, viewport.Top);
+            var clippedRight = Math.Min(left + width - 1, viewport.Right);
+            var clippedBottom = Math.Min(top + height - 1, viewport.Bottom);
+            _framebuffer.FillTrueColorRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
+        });
+    }
+
+    public void DrawCanvasLine(long x1, long y1, long x2, long y2, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            DrawAbsoluteLineCore(
+                TranslateCanvasX(x1, viewport),
+                TranslateCanvasY(y1, viewport),
+                TranslateCanvasX(x2, viewport),
+                TranslateCanvasY(y2, viewport),
+                color,
+                trueColor: true,
+                viewport);
+        });
+    }
+
+    public void DrawCanvasCircle(long x, long y, long radius, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            DrawCanvasCircleCore(x, y, radius, color, filled: false);
+        });
+    }
+
+    public void FillCanvasCircle(long x, long y, long radius, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            DrawCanvasCircleCore(x, y, radius, color, filled: true);
+        });
+    }
+
+    public void DrawCanvasText(string text, long x, long y, int color)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isCanvasActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            _framebuffer.DrawTrueColorText(
+                TranslateCanvasX(x, viewport),
+                TranslateCanvasY(y, viewport),
+                text,
+                color,
+                viewport.Left,
+                viewport.Top,
+                viewport.Right,
+                viewport.Bottom);
+        });
+    }
+
+    public void ClearGraphics()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            FlushPendingGraphicsTraceLine(logEmpty: false);
+            GraphicsText = string.Empty;
+            _graphicsTextBuffer.Clear();
+            _screenTextFirstVisibleRow = 1;
+            _framebuffer?.Clear();
+            _graphicsRow = _textViewportTop;
+            _graphicsColumn = 1;
+            _pendingGraphicsViewportScroll = false;
+            _graphicsCurrentX = 0;
+            _graphicsCurrentY = 0;
+            PublishGraphicsFrame();
+            CancelScheduledGraphicsVisualRefresh();
+        });
+    }
+
+    public void SetTextColor(int foreground, TextBackgroundMode backgroundMode, int background = 0)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _graphicsForeground = foreground;
+            switch (backgroundMode)
+            {
+                case TextBackgroundMode.Color:
+                    _graphicsBackground = background;
+                    _graphicsLastBackgroundColor = background;
+                    break;
+                case TextBackgroundMode.Transparent:
+                    _graphicsBackground = null;
+                    break;
+            }
+
+            PublishGraphicsFrame();
+        });
+    }
+
+    public void LocateText(int row, int column)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _graphicsRow = Math.Max(1, row);
+            _graphicsColumn = Math.Max(1, column);
+            _pendingGraphicsViewportScroll = false;
+        });
+    }
+
+    public void ResetPalette()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _framebuffer?.ResetPalette();
+            PublishGraphicsFrame();
+        });
+    }
+
+    public void SetPaletteColor(int index, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _framebuffer?.SetPaletteColor(index, color);
+            PublishGraphicsFrame();
+        });
+    }
+
+    public RuntimeImageValue? LoadImage(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            if (!File.Exists(resolvedPath))
+            {
+                return null;
+            }
+
+            using var stream = File.OpenRead(resolvedPath);
+            var decoder = BitmapDecoder.Create(
+                stream,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+            if (decoder.Frames.Count == 0)
+            {
+                return null;
+            }
+
+            BitmapSource source = decoder.Frames[0];
+            if (source.Format != PixelFormats.Bgra32)
+            {
+                source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0d);
+            }
+
+            var width = source.PixelWidth;
+            var height = source.PixelHeight;
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            var pixels = new uint[checked(width * height)];
+            source.CopyPixels(pixels, width * sizeof(uint), offset: 0);
+            return new RuntimeImageValue(width, height, pixels);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException)
+        {
+            return null;
+        }
+    }
+
+    public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight)
+    {
+        if (frameWidth <= 0 || frameHeight <= 0)
+        {
+            return null;
+        }
+
+        var image = LoadImage(path);
+        return image is null ? null : new RuntimeSpriteValue(image, frameWidth, frameHeight);
+    }
+
+    public RuntimeTilesetValue? LoadTileset(string path, int tileWidth, int tileHeight, int margin = 0, int spacing = 0)
+    {
+        if (tileWidth <= 0 || tileHeight <= 0 || margin < 0 || spacing < 0)
+        {
+            return null;
+        }
+
+        var image = LoadImage(path);
+        if (image is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return new RuntimeTilesetValue(image, tileWidth, tileHeight, margin, spacing);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+        catch (OverflowException)
+        {
+            return null;
+        }
+    }
+
+    public RuntimeTilemapValue? LoadTilemap(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var resolvedPath = ResolveResourcePath(path);
+            if (!File.Exists(resolvedPath))
+            {
+                return null;
+            }
+
+            return RuntimeTilemapValue.LoadFromTiledJson(
+                resolvedPath,
+                staticResolvedPath => LoadImageFromResolvedPath(staticResolvedPath));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or InvalidDataException or JsonException or OverflowException)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        InvokeOnDispatcher(() =>
+        {
+            if (_isCanvasActive)
+            {
+                DrawImageOnCanvas(image, x, y, width, height);
+                return;
+            }
+
+            if (!_inputState.Snapshot.IsScreenActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            if (viewport.IsEmpty)
+            {
+                return;
+            }
+
+            _framebuffer.DrawImage(image, absoluteX, absoluteY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawSprite(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(sprite);
+        InvokeOnDispatcher(() =>
+        {
+            if (_isCanvasActive)
+            {
+                DrawSpriteOnCanvas(sprite, frame, x, y, width, height);
+                return;
+            }
+
+            if (!_inputState.Snapshot.IsScreenActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            if (viewport.IsEmpty)
+            {
+                return;
+            }
+
+            _framebuffer.DrawSprite(sprite, frame, absoluteX, absoluteY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawImageRegion(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        InvokeOnDispatcher(() =>
+        {
+            if (_isCanvasActive)
+            {
+                DrawImageRegionOnCanvas(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+                return;
+            }
+
+            if (!_inputState.Snapshot.IsScreenActive || _framebuffer is null)
+            {
+                return;
+            }
+
+            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
+            {
+                return;
+            }
+
+            var viewport = GetEffectiveViewportCore();
+            if (viewport.IsEmpty)
+            {
+                return;
+            }
+
+            _framebuffer.DrawImageRegion(image, sourceX, sourceY, sourceWidth, sourceHeight, absoluteX, absoluteY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    private void DrawImageOnCanvas(RuntimeImageValue image, long x, long y, int width, int height)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        {
+            return;
+        }
+
+        var viewport = GetEffectiveViewportCore();
+        _framebuffer.DrawImage(
+            image,
+            TranslateCanvasX(x, viewport),
+            TranslateCanvasY(y, viewport),
+            width,
+            height,
+            viewport.Left,
+            viewport.Top,
+            viewport.Right,
+            viewport.Bottom);
+    }
+
+    private void DrawSpriteOnCanvas(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        {
+            return;
+        }
+
+        var viewport = GetEffectiveViewportCore();
+        _framebuffer.DrawSprite(
+            sprite,
+            frame,
+            TranslateCanvasX(x, viewport),
+            TranslateCanvasY(y, viewport),
+            width,
+            height,
+            viewport.Left,
+            viewport.Top,
+            viewport.Right,
+            viewport.Bottom);
+    }
+
+    private void DrawImageRegionOnCanvas(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        {
+            return;
+        }
+
+        var viewport = GetEffectiveViewportCore();
+        _framebuffer.DrawImageRegion(
+            image,
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            TranslateCanvasX(x, viewport),
+            TranslateCanvasY(y, viewport),
+            width,
+            height,
+            viewport.Left,
+            viewport.Top,
+            viewport.Right,
+            viewport.Bottom);
+    }
+
+    public bool CopyScreenPage(int sourcePage, int destinationPage)
+    {
+        var copied = false;
+        InvokeOnDispatcher(() =>
+        {
+            if (!_isScreenActive || sourcePage is < 0 or > 3 || destinationPage is < 0 or > 3)
+            {
+                copied = false;
+                return;
+            }
+
+            var source = _screenPages[sourcePage];
+            var destination = _screenPages[destinationPage];
+            if (source is null || destination is null)
+            {
+                copied = false;
+                return;
+            }
+
+            destination.CopyFrom(source);
+            if (destinationPage == _activeScreenPage)
+            {
+                _framebuffer = destination;
+            }
+
+            copied = true;
+            PublishGraphicsFrame();
+        });
+
+        return copied;
+    }
+
+    public void WriteGraphicsText(string text, bool newLine)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        InvokeOnDispatcher(() =>
+        {
+            WriteGraphicsTextCore(text, newLine);
+            PublishGraphicsFrame();
+        });
+    }
+
+    public string ReadGraphicsInput(InputRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        _graphicsInputRequestCount++;
+        return RequestInput(new ProgramInputRequest(_graphicsInputRequestCount, request.PromptText, request.ValueCount));
+    }
+
+    public void SetPixel(long x, long y, int color)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            SetLogicalPixelCore(x, y, color);
+            SetGraphicsCurrentPositionCore(x, y);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public int GetPixel(long x, long y)
+    {
+        var color = 0;
+        InvokeOnDispatcher(() => color = GetLogicalPixelCore(x, y), DispatcherPriority.Background);
+        return color;
+    }
+
+    public void SetAbsolutePixel(long x, long y, int color)
+    {
+        SetPixelCore(x, y, color);
+    }
+
+    public int GetAbsolutePixel(long x, long y)
+    {
+        return GetPixelCore(x, y);
+    }
+
+    public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            GraphicsHostDrawing.DrawLine(this, x1, y1, x2, y2, color, kind);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawCircle(
+        long x,
+        long y,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            GraphicsHostDrawing.DrawCircle(this, x, y, radius, color, relativeCenter, startAngle, endAngle, aspect, drawStartRadius, drawEndRadius);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void DrawCircle(long x, long y, long radius, int color)
+    {
+        DrawCircle(x, y, radius, color, relativeCenter: false, startAngle: null, endAngle: null, aspect: 1d, drawStartRadius: false, drawEndRadius: false);
+    }
+
+    public void SetGraphicsCurrentPosition(long x, long y)
+    {
+        InvokeOnDispatcher(() => SetGraphicsCurrentPositionCore(x, y));
+    }
+
+    public bool SetViewport(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates)
+    {
+        var applied = false;
+        InvokeOnDispatcher(() =>
+        {
+            applied = TrySetViewportCore(left, top, right, bottom, fillColor, borderColor, useScreenCoordinates);
+            if (applied)
+            {
+                ScheduleGraphicsVisualRefresh();
+            }
+        });
+
+        return applied;
+    }
+
+    public void ResetViewport()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            ResetViewportCore(preserveCurrentPosition: true);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public bool SetWindow(double left, double top, double right, double bottom, bool useScreenCoordinates)
+    {
+        var applied = false;
+        InvokeOnDispatcher(() =>
+        {
+            applied = TrySetWindowCore(left, top, right, bottom, useScreenCoordinates);
+            if (applied)
+            {
+                ScheduleGraphicsVisualRefresh();
+            }
+        });
+
+        return applied;
+    }
+
+    public void ResetWindow()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            ResetWindowCore(preserveCurrentPosition: true);
+            ScheduleGraphicsVisualRefresh();
+        });
+    }
+
+    public void Paint(GraphicsPaintRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        InvokeOnDispatcher(() =>
+        {
+            RunBatchedGraphicsUpdate(() => GraphicsHostDrawing.Paint(this, request));
+            SetGraphicsCurrentPositionCore(request.X, request.Y);
+        });
+    }
+
+    public void Paint(long x, long y, int fillColor, int borderColor)
+    {
+        Paint(GraphicsPaintRequest.CreateSolid(x, y, fillColor, borderColor));
+    }
+
+    public void EnqueueKey(string keyText)
+    {
+        if (string.IsNullOrEmpty(keyText))
+        {
+            return;
+        }
+
+        _inputState.EnqueueKey(keyText);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsKeysEnqueued++;
+            _graphicsMaxPendingKeys = Math.Max(_graphicsMaxPendingKeys, _inputState.Snapshot.PendingKeyCount);
+        }
+    }
+
+    public void SetKeyDown(string keyText)
+    {
+        _inputState.SetKeyDown(keyText);
+    }
+
+    public void SetKeyUp(string keyText)
+    {
+        _inputState.SetKeyUp(keyText);
+    }
+
+    public string ReadKey()
+    {
+        var keyText = _inputState.ReadKey();
+        if (keyText.Length > 0 && _inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsKeysRead++;
+        }
+
+        return keyText;
+    }
+
+    public bool IsKeyDown(string keyText)
+    {
+        return _inputState.IsKeyDown(keyText);
+    }
+
+    public void ClearKeyState()
+    {
+        _inputState.ClearKeyState();
+    }
+
+    public void SetMousePosition(long x, long y)
+    {
+        _inputState.SetMousePosition(x, y);
+    }
+
+    public void SetMouseButtonDown(int buttonNumber)
+    {
+        _inputState.SetMouseButtonDown(buttonNumber);
+    }
+
+    public void EnqueueMouseButtonPress(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        _inputState.EnqueueMouseButtonPress(buttonNumber);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMousePressEnqueued++;
+        }
+    }
+
+    public void EnqueueMouseButtonRelease(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        _inputState.EnqueueMouseButtonRelease(buttonNumber);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMouseReleaseEnqueued++;
+        }
+    }
+
+    public void EnqueueMouseMove()
+    {
+        _inputState.EnqueueMouseMove();
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMouseMoveEnqueued++;
+        }
+    }
+
+    public void EnqueueMouseWheel(int delta)
+    {
+        if (delta == 0)
+        {
+            return;
+        }
+
+        _inputState.EnqueueMouseWheel(delta);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMouseWheelEnqueued++;
+        }
+    }
+
+    public void SetMouseButtonUp(int buttonNumber)
+    {
+        _inputState.SetMouseButtonUp(buttonNumber);
+    }
+
+    public long GetMouseX()
+    {
+        return _inputState.GetMouseX();
+    }
+
+    public long GetMouseY()
+    {
+        return _inputState.GetMouseY();
+    }
+
+    public bool IsMouseButtonDown(int buttonNumber)
+    {
+        return _inputState.IsMouseButtonDown(buttonNumber);
+    }
+
+    public int ReadMouseButtonPress()
+    {
+        return _inputState.ReadMouseButtonPress();
+    }
+
+    public MouseInputEvent ReadMouseEvent()
+    {
+        var mouseEvent = _inputState.ReadMouseEvent();
+        if (mouseEvent.Kind != MouseInputEventKind.None && _inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsRead++;
+            RecordGraphicsMouseEventRead(mouseEvent.Kind);
+        }
+
+        return mouseEvent;
+    }
+
+    public void ClearMouseState()
+    {
+        _inputState.ClearMouseState();
+    }
+
+    public void RestoreOutputCheckpoint(int checkpoint)
+    {
+        InvokeOnDispatcher(() => _consoleOutput.RestoreOutputCheckpoint(checkpoint));
+    }
+
+    private void HandleInputSubmit(string promptText, string inputText, bool isScreenOutputActive)
+    {
+        if (isScreenOutputActive)
+        {
+            WriteGraphicsTextCore(promptText + inputText, newLine: true);
+            PublishGraphicsFrame();
+        }
+        else
+        {
+            _consoleOutput.AppendTranscriptLine(promptText + inputText);
+        }
+    }
+
+    private void OnInputWaitingChanged()
+    {
+        if (_inputState.Snapshot.IsScreenOutputActive)
+        {
+            PublishGraphicsFrame();
+        }
+    }
+
+    private void SubmitInputCore()
+    {
+        _inputPrompt.SubmitInput(HandleInputSubmit, _inputState.Snapshot.IsScreenOutputActive);
+    }
+
+    private void AppendTranscriptLine(string line)
+    {
+        _consoleOutput.AppendTranscriptLine(line);
+    }
+
+    private void RestoreOutputCheckpointCore(int checkpoint)
+    {
+        _consoleOutput.RestoreOutputCheckpoint(checkpoint);
+    }
+
+    private void ResetInputState()
+    {
+        _inputPrompt.ResetInputState();
+    }
+
+    private void ResetSessionState()
+    {
+        _inputPrompt.CancelPendingFrame();
+        _sessionManager.Reset(() => { });
+        _inputState.Reset();
+        _isScreenActive = false;
+        _isScreenOutputActive = false;
+        _isCanvasActive = false;
+        _screenMode = 0;
+        _screenWidth = 0;
+        _screenHeight = 0;
+        _activeScreenPage = 0;
+        _visualScreenPage = 0;
+        _canvasCameraX = 0;
+        _canvasCameraY = 0;
+        _framebuffer = null;
+        _screenPages = new ScreenFramebuffer?[4];
+        GraphicsFrame = null;
+        _graphicsTextBuffer.Clear();
+        _pendingGraphicsTraceLine.Clear();
+        GraphicsText = string.Empty;
+        CancelScheduledGraphicsVisualRefresh();
+        _graphicsForeground = 15;
+        _graphicsBackground = null;
+        _graphicsLastBackgroundColor = 0;
+        ResetTextViewportCore(resetCursor: false);
+        _screenTextFirstVisibleRow = 1;
+        _graphicsRow = 1;
+        _graphicsColumn = 1;
+        _pendingGraphicsViewportScroll = false;
+        _graphicsCurrentX = 0;
+        _graphicsCurrentY = 0;
+        ResetViewportCore();
+        ResetWindowCore();
+        _consoleOutput.Reset();
+        ResetInputState();
+        OnPropertyChanged(nameof(IsScreenActive));
+        OnPropertyChanged(nameof(IsCanvasActive));
+        OnPropertyChanged(nameof(IsScreenOutputActive));
+        OnPropertyChanged(nameof(ScreenMode));
+        OnPropertyChanged(nameof(ScreenWidth));
+        OnPropertyChanged(nameof(ScreenHeight));
+        CloseGraphicsWindow();
+    }
+
+    private void ClearOutputCore()
+    {
+        _consoleOutput.ClearOutput();
+    }
+
+    private void InvokeOnDispatcher(Action action, DispatcherPriority priority = DispatcherPriority.Send)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+
+        if (dispatcher.CheckAccess())
+        {
+            action();
+            return;
+        }
+
+        dispatcher.Invoke(action, priority);
+    }
+
+    private static string SanitizeForLog(string text)
+    {
+        return text
+            .Replace("\r", "\\r", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal)
+            .Trim();
+    }
+
+    private string ResolveResourcePath(string path)
+    {
+        var expandedPath = Environment.ExpandEnvironmentVariables(path);
+        if (Path.IsPathFullyQualified(expandedPath))
+        {
+            return expandedPath;
+        }
+
+        var baseDirectory = string.IsNullOrWhiteSpace(ResourceBaseDirectory)
+            ? Environment.CurrentDirectory
+            : ResourceBaseDirectory!;
+        return Path.GetFullPath(Path.Combine(baseDirectory, expandedPath));
+    }
+
+    private RuntimeImageValue? LoadImageFromResolvedPath(string resolvedPath)
+    {
+        try
+        {
+            if (!File.Exists(resolvedPath))
+            {
+                return null;
+            }
+
+            using var stream = File.OpenRead(resolvedPath);
+            var decoder = BitmapDecoder.Create(
+                stream,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+            if (decoder.Frames.Count == 0)
+            {
+                return null;
+            }
+
+            BitmapSource source = decoder.Frames[0];
+            if (source.Format != PixelFormats.Bgra32)
+            {
+                source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0d);
+            }
+
+            var width = source.PixelWidth;
+            var height = source.PixelHeight;
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            var pixels = new uint[checked(width * height)];
+            source.CopyPixels(pixels, width * sizeof(uint), offset: 0);
+            return new RuntimeImageValue(width, height, pixels);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException)
+        {
+            return null;
+        }
+    }
+
+    private void RecordGraphicsMouseEventEnqueued(MouseInputEventKind eventKind)
+    {
+        switch (eventKind)
+        {
+            case MouseInputEventKind.Move:
+                _graphicsMouseMoveEnqueued++;
+                break;
+            case MouseInputEventKind.Press:
+                _graphicsMousePressEnqueued++;
+                break;
+            case MouseInputEventKind.Release:
+                _graphicsMouseReleaseEnqueued++;
+                break;
+            case MouseInputEventKind.Wheel:
+                _graphicsMouseWheelEnqueued++;
+                break;
+        }
+    }
+
+    private void RecordGraphicsMouseEventRead(MouseInputEventKind eventKind)
+    {
+        switch (eventKind)
+        {
+            case MouseInputEventKind.Move:
+                _graphicsMouseMoveRead++;
+                break;
+            case MouseInputEventKind.Press:
+                _graphicsMousePressRead++;
+                break;
+            case MouseInputEventKind.Release:
+                _graphicsMouseReleaseRead++;
+                break;
+            case MouseInputEventKind.Wheel:
+                _graphicsMouseWheelRead++;
+                break;
+        }
+    }
+
+    private void WriteGraphicsEvent(string eventName, string message)
+    {
+        _traceService.Write(eventName, message);
+        _eventLogService.Write(new IdeEventLogEntry
+        {
+            Level = IdeEventLevel.Info,
+            Category = "graphics",
+            EventName = eventName,
+            Source = nameof(ProgramConsoleService),
+            TextPreview = message
+        });
+    }
+
+    private void WriteGraphicsOutputTrace(string line)
+    {
+        _traceService.Write("screen.output", SanitizeForLog(line));
+        _eventLogService.Write(new IdeEventLogEntry
+        {
+            Level = IdeEventLevel.Info,
+            Category = "graphics",
+            EventName = "screen.output",
+            Source = nameof(ProgramConsoleService),
+            TextLength = line.Length,
+            TextPreview = line
+        });
+    }
+
+    private void FlushPendingGraphicsTraceLine(bool logEmpty)
+    {
+        if (_pendingGraphicsTraceLine.Length == 0 && !logEmpty)
+        {
+            return;
+        }
+
+        WriteGraphicsOutputTrace(_pendingGraphicsTraceLine.ToString());
+        _pendingGraphicsTraceLine.Clear();
+    }
+
+    private static bool IsSupportedMouseButton(int buttonNumber) => buttonNumber is >= 1 and <= 3;
+
+    private void EnsureGraphicsWindow()
+    {
+        if (_graphicsWindow is not null)
+        {
+            _graphicsWindow.Activate();
+            return;
+        }
+
+        _graphicsWindow = new NativeGraphicsScreenWindow(this, _screenWidth, _screenHeight);
+        _graphicsWindow.Closed += OnGraphicsWindowClosed;
+        _graphicsWindow.Show();
+        _graphicsWindow.PresentFrame(GraphicsFrame);
+    }
+
+    private void CloseGraphicsWindow()
+    {
+        if (_graphicsWindow is null)
+        {
+            return;
+        }
+
+        var window = _graphicsWindow;
+        _graphicsWindow = null;
+        window.Closed -= OnGraphicsWindowClosed;
+        window.Close();
+    }
+
+    private void OnGraphicsWindowClosed(object? sender, EventArgs e)
+    {
+        if (_graphicsWindow is null)
+        {
+            return;
+        }
+
+        _graphicsWindow.Closed -= OnGraphicsWindowClosed;
+        _graphicsWindow = null;
+        if (!_sessionManager.IsSessionActive)
+        {
+            return;
+        }
+
+        _sessionManager.IsCancellationRequested = true;
+        WriteGraphicsEvent("screen.closed-by-user", "SCREEN window was closed by the user; run cancellation requested.");
+    }
+
+    private void WriteGraphicsTextCore(string text, bool newLine)
+    {
+        var followScreenZeroBottom = IsScreenZeroMode && IsViewingScreenZeroBottom();
+        NormalizeGraphicsViewportCursorBeforeWrite();
+        var targetRow = ResolveGraphicsTextBufferRow(_graphicsRow);
+        _graphicsTextBuffer.Write(
+            targetRow,
+            _graphicsColumn,
+            text,
+            _graphicsForeground,
+            _graphicsBackground,
+            IsScreenZeroMode ? ScreenTextCellColumns : GetVisibleTextColumns());
+        _pendingGraphicsTraceLine.Append(text);
+
+        if (newLine)
+        {
+            _graphicsColumn = 1;
+            if (IsScreenZeroMode)
+            {
+                AdvanceScreenZeroCursorAfterNewLine(targetRow, followScreenZeroBottom);
+            }
+            else if (IsScreenActive)
+            {
+                AdvanceGraphicsViewportCursorAfterNewLine();
+            }
+            else
+            {
+                _graphicsRow++;
+                _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                _pendingGraphicsViewportScroll = false;
+            }
+
+            FlushPendingGraphicsTraceLine(logEmpty: true);
+        }
+        else
+        {
+            _graphicsColumn += text.Length;
+        }
+
+    }
+
+    private void AdvanceScreenZeroCursorAfterNewLine(int targetRow, bool followScreenZeroBottom)
+    {
+        var nextRow = targetRow + 1;
+        _graphicsTextBuffer.EnsureRow(nextRow);
+        if (_graphicsRow < ScreenTextCellRows)
+        {
+            _graphicsRow++;
+        }
+
+        if (followScreenZeroBottom)
+        {
+            _screenTextFirstVisibleRow = GetScreenZeroBottomFirstVisibleRow();
+        }
+    }
+
+    private void AdvanceGraphicsViewportCursorAfterNewLine()
+    {
+        if (!_textViewportExplicit)
+        {
+            _graphicsRow++;
+            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            _pendingGraphicsViewportScroll = false;
+            return;
+        }
+
+        if (_graphicsRow >= _textViewportTop && _graphicsRow <= _textViewportBottom)
+        {
+            if (_graphicsRow < _textViewportBottom)
+            {
+                _graphicsRow++;
+                _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                _pendingGraphicsViewportScroll = false;
+                return;
+            }
+
+            _graphicsRow = _textViewportBottom + 1;
+            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            _pendingGraphicsViewportScroll = true;
+            return;
+        }
+
+        _graphicsRow++;
+        _graphicsTextBuffer.EnsureRow(_graphicsRow);
+        _pendingGraphicsViewportScroll = false;
+    }
+
+    private void NormalizeGraphicsViewportCursorBeforeWrite()
+    {
+        if (!_pendingGraphicsViewportScroll || !IsScreenActive)
+        {
+            return;
+        }
+
+        _graphicsTextBuffer.ScrollRowsUp(_textViewportTop, _textViewportBottom);
+        _graphicsTextBuffer.EnsureRow(_textViewportBottom);
+        _graphicsRow = _textViewportBottom;
+        _graphicsColumn = 1;
+        _pendingGraphicsViewportScroll = false;
+    }
+
+    private bool TrySetTextViewportCore(int topRow, int bottomRow)
+    {
+        if (!IsScreenActive)
+        {
+            return false;
+        }
+
+        var visibleRows = GetVisibleTextRows();
+        if (topRow < 1 || bottomRow < topRow || bottomRow > visibleRows)
+        {
+            return false;
+        }
+
+        _textViewportTop = topRow;
+        _textViewportBottom = bottomRow;
+        _textViewportExplicit = true;
+        _graphicsRow = topRow;
+        _graphicsColumn = 1;
+        _pendingGraphicsViewportScroll = false;
+        PublishGraphicsFrame();
+        return true;
+    }
+
+    private void ResetTextViewportCore(bool resetCursor = true)
+    {
+        _textViewportTop = 1;
+        _textViewportBottom = IsScreenZeroMode ? ScreenTextCellRows : GetVisibleTextRows();
+        _textViewportExplicit = false;
+        _pendingGraphicsViewportScroll = false;
+        if (resetCursor)
+        {
+            _graphicsRow = _textViewportTop;
+            _graphicsColumn = 1;
+        }
+    }
+
+    private string BuildVisibleGraphicsText()
+    {
+        var (firstVisibleRow, visibleRows, visibleColumns) = GetGraphicsTextViewport();
+        return _graphicsTextBuffer.ToPlainText(firstVisibleRow, visibleRows, visibleColumns);
+    }
+
+    private (int FirstVisibleRow, int VisibleRows, int VisibleColumns) GetGraphicsTextViewport()
+    {
+        if (IsScreenZeroMode)
+        {
+            return (_screenTextFirstVisibleRow, ScreenTextCellRows, ScreenTextCellColumns);
+        }
+
+        var visibleRows = GetVisibleTextRows();
+        var visibleColumns = GetVisibleTextColumns();
+        return (1, visibleRows, visibleColumns);
+    }
+
+    private int ResolveGraphicsTextBufferRow(int logicalRow)
+    {
+        logicalRow = Math.Max(1, logicalRow);
+        if (!IsScreenZeroMode)
+        {
+            return logicalRow;
+        }
+
+        return GetScreenZeroLiveWindowFirstRow() + logicalRow - 1;
+    }
+
+    private int GetScreenZeroLiveWindowFirstRow() =>
+        Math.Max(1, _graphicsTextBuffer.LineCount - ScreenTextCellRows + 1);
+
+    private int GetScreenZeroBottomFirstVisibleRow() =>
+        Math.Max(1, Math.Max(1, _graphicsTextBuffer.LineCount) - ScreenTextCellRows + 1);
+
+    private int GetVisibleTextRows() =>
+        Math.Max(1, _screenHeight / ScreenTextRasterizer.CellHeight);
+
+    private int GetVisibleTextColumns() =>
+        Math.Max(1, _screenWidth / ScreenTextRasterizer.CellWidth);
+
+    private bool IsViewingScreenZeroBottom() =>
+        _screenTextFirstVisibleRow >= GetScreenZeroBottomFirstVisibleRow();
+
+    private bool IsScreenZeroMode =>
+        _isScreenOutputActive && !_isScreenActive && _screenMode == 0;
+
+    private void SetPixelCore(long x, long y, int color)
+    {
+        if (!IsInsideScreen(x, y))
+        {
+            return;
+        }
+
+        _framebuffer?.SetPixel(x, y, color);
+        _graphicsBatchHasChanges = true;
+    }
+
+    private void SetTrueColorPixelCore(long x, long y, int color)
+    {
+        if (!IsInsideScreen(x, y))
+        {
+            return;
+        }
+
+        _framebuffer?.SetTrueColorPixel(x, y, color);
+        _graphicsBatchHasChanges = true;
+    }
+
+    private void SetLogicalPixelCore(long x, long y, int color)
+    {
+        if (_isCanvasActive)
+        {
+            var viewport = GetEffectiveViewportCore();
+            var canvasAbsoluteX = TranslateCanvasX(x, viewport);
+            var canvasAbsoluteY = TranslateCanvasY(y, viewport);
+            if (!viewport.IsInsideAbsolute(canvasAbsoluteX, canvasAbsoluteY))
+            {
+                return;
+            }
+
+            SetPixelCore(canvasAbsoluteX, canvasAbsoluteY, color);
+            return;
+        }
+
+        if (!TryTranslateLogicalToAbsoluteCore(x, y, out var absoluteX, out var absoluteY))
+        {
+            return;
+        }
+
+        SetPixelCore(absoluteX, absoluteY, color);
+    }
+
+    private void SetGraphicsCurrentPositionCore(long x, long y)
+    {
+        _graphicsCurrentX = x;
+        _graphicsCurrentY = y;
+    }
+
+    private int GetPixelCore(long x, long y)
+    {
+        return _framebuffer?.GetPixel(x, y) ?? 0;
+    }
+
+    private int GetLogicalPixelCore(long x, long y)
+    {
+        if (_isCanvasActive)
+        {
+            return GetPixelCore(x, y);
+        }
+
+        return TryTranslateLogicalToAbsoluteCore(x, y, out var absoluteX, out var absoluteY)
+            ? GetPixelCore(absoluteX, absoluteY)
+            : 0;
+    }
+
+    private void PaintCore(GraphicsPaintRequest request)
+    {
+        GraphicsHostDrawing.Paint(this, request);
+    }
+
+    private void RunBatchedGraphicsUpdate(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        _graphicsBatchDepth++;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            _graphicsBatchDepth--;
+            if (_graphicsBatchDepth == 0 && _graphicsBatchHasChanges)
+            {
+                _graphicsBatchHasChanges = false;
+                ScheduleGraphicsVisualRefresh();
+            }
+        }
+    }
+
+    private bool IsInsideScreen(long x, long y) =>
+        (_isScreenActive || _isCanvasActive) &&
+        x >= 0 &&
+        y >= 0 &&
+        x < _screenWidth &&
+        y < _screenHeight;
+
+    private GraphicsViewport GetEffectiveViewportCore()
+    {
+        if (_viewportEnabled)
+        {
+            return new GraphicsViewport(_viewportLeft, _viewportTop, _viewportRight, _viewportBottom, _viewportRelativeCoordinates);
+        }
+
+        var right = _screenWidth > 0 ? _screenWidth - 1L : -1L;
+        var bottom = _screenHeight > 0 ? _screenHeight - 1L : -1L;
+        return new GraphicsViewport(0, 0, right, bottom, UsesRelativeCoordinates: false);
+    }
+
+    private bool TryTranslateLogicalToAbsoluteCore(long x, long y, out long absoluteX, out long absoluteY)
+    {
+        return GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsolute(this, x, y, out absoluteX, out absoluteY);
+    }
+
+    private (long X, long Y) ResolveCurrentAbsolutePositionCore()
+    {
+        return GraphicsCoordinateSpaceMath.TryResolveCurrentAbsolutePosition(this, out var absoluteX, out var absoluteY)
+            ? (absoluteX, absoluteY)
+            : (0L, 0L);
+    }
+
+    private void ResetViewportCore(bool preserveCurrentPosition = false)
+    {
+        var absolutePosition = preserveCurrentPosition ? ResolveCurrentAbsolutePositionCore() : (0L, 0L);
+        _viewportEnabled = false;
+        _viewportRelativeCoordinates = false;
+        _viewportLeft = 0;
+        _viewportTop = 0;
+        _viewportRight = _screenWidth > 0 ? _screenWidth - 1L : -1L;
+        _viewportBottom = _screenHeight > 0 ? _screenHeight - 1L : -1L;
+        if (preserveCurrentPosition)
+        {
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, absolutePosition.Item1, absolutePosition.Item2, out var logicalX, out var logicalY))
+            {
+                SetGraphicsCurrentPositionCore(logicalX, logicalY);
+            }
+        }
+    }
+
+    private bool TrySetViewportCore(long left, long top, long right, long bottom, int? fillColor, int? borderColor, bool useScreenCoordinates)
+    {
+        if (_screenWidth <= 0 || _screenHeight <= 0 || left > right || top > bottom)
+        {
+            return false;
+        }
+
+        var baseLeft = _viewportEnabled ? _viewportLeft : 0L;
+        var baseTop = _viewportEnabled ? _viewportTop : 0L;
+        var absoluteLeft = useScreenCoordinates ? left : GraphicsLineMath.SaturatingAdd(baseLeft, left);
+        var absoluteTop = useScreenCoordinates ? top : GraphicsLineMath.SaturatingAdd(baseTop, top);
+        var absoluteRight = useScreenCoordinates ? right : GraphicsLineMath.SaturatingAdd(baseLeft, right);
+        var absoluteBottom = useScreenCoordinates ? bottom : GraphicsLineMath.SaturatingAdd(baseTop, bottom);
+        if (!IsInsideScreen(absoluteLeft, absoluteTop) || !IsInsideScreen(absoluteRight, absoluteBottom))
+        {
+            return false;
+        }
+
+        var previousAbsolutePosition = ResolveCurrentAbsolutePositionCore();
+        RunBatchedGraphicsUpdate(() =>
+        {
+            if (fillColor.HasValue)
+            {
+                _framebuffer?.FillRectangle(absoluteLeft, absoluteTop, absoluteRight, absoluteBottom, fillColor.Value);
+                _graphicsBatchHasChanges = true;
+            }
+
+            if (borderColor.HasValue)
+            {
+                DrawAbsoluteLineCore(absoluteLeft, absoluteTop, absoluteRight, absoluteTop, borderColor.Value);
+                DrawAbsoluteLineCore(absoluteRight, absoluteTop, absoluteRight, absoluteBottom, borderColor.Value);
+                DrawAbsoluteLineCore(absoluteRight, absoluteBottom, absoluteLeft, absoluteBottom, borderColor.Value);
+                DrawAbsoluteLineCore(absoluteLeft, absoluteBottom, absoluteLeft, absoluteTop, borderColor.Value);
+            }
+
+            _viewportEnabled = true;
+            _viewportRelativeCoordinates = !useScreenCoordinates;
+            _viewportLeft = absoluteLeft;
+            _viewportTop = absoluteTop;
+            _viewportRight = absoluteRight;
+            _viewportBottom = absoluteBottom;
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, previousAbsolutePosition.X, previousAbsolutePosition.Y, out var logicalX, out var logicalY))
+            {
+                SetGraphicsCurrentPositionCore(logicalX, logicalY);
+            }
+        });
+
+        return true;
+    }
+
+    private void ResetWindowCore(bool preserveCurrentPosition = false)
+    {
+        var absolutePosition = preserveCurrentPosition ? ResolveCurrentAbsolutePositionCore() : (0L, 0L);
+        _windowEnabled = false;
+        _windowUsesScreenCoordinates = false;
+        _windowLeft = 0d;
+        _windowTop = 0d;
+        _windowRight = 0d;
+        _windowBottom = 0d;
+        if (preserveCurrentPosition)
+        {
+            if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, absolutePosition.Item1, absolutePosition.Item2, out var logicalX, out var logicalY))
+            {
+                SetGraphicsCurrentPositionCore(logicalX, logicalY);
+            }
+        }
+    }
+
+    private bool TrySetWindowCore(double left, double top, double right, double bottom, bool useScreenCoordinates)
+    {
+        var viewport = GetEffectiveViewportCore();
+        if (_screenWidth <= 0 || _screenHeight <= 0 || viewport.Width < 2 || viewport.Height < 2)
+        {
+            return false;
+        }
+
+        if (!GraphicsCoordinateSpaceMath.TryCreateWindow(left, top, right, bottom, useScreenCoordinates, out var window))
+        {
+            return false;
+        }
+
+        var previousAbsolutePosition = ResolveCurrentAbsolutePositionCore();
+        _windowEnabled = true;
+        _windowUsesScreenCoordinates = window.UsesScreenCoordinates;
+        _windowLeft = window.Left;
+        _windowTop = window.Top;
+        _windowRight = window.Right;
+        _windowBottom = window.Bottom;
+        if (GraphicsCoordinateSpaceMath.TryTranslateAbsoluteToLogical(this, previousAbsolutePosition.X, previousAbsolutePosition.Y, out var logicalX, out var logicalY))
+        {
+            SetGraphicsCurrentPositionCore(logicalX, logicalY);
+        }
+
+        return true;
+    }
+
+    private void DrawLineCore(long x1, long y1, long x2, long y2, int color)
+    {
+        var dx = Math.Abs(x2 - x1);
+        var sx = x1 < x2 ? 1 : -1;
+        var dy = -Math.Abs(y2 - y1);
+        var sy = y1 < y2 ? 1 : -1;
+        var error = dx + dy;
+
+        while (true)
+        {
+            SetLogicalPixelCore(x1, y1, color);
+            if (x1 == x2 && y1 == y2)
+            {
+                break;
+            }
+
+            var doubledError = GraphicsLineMath.SaturatingDouble(error);
+            if (doubledError >= dy)
+            {
+                error = GraphicsLineMath.SaturatingAdd(error, dy);
+                x1 += sx;
+            }
+
+            if (doubledError <= dx)
+            {
+                error = GraphicsLineMath.SaturatingAdd(error, dx);
+                y1 += sy;
+            }
+        }
+
+        SetGraphicsCurrentPositionCore(x2, y2);
+    }
+
+    private void DrawAbsoluteLineCore(long x1, long y1, long x2, long y2, int color, bool trueColor = false, GraphicsViewport? clipViewport = null)
+    {
+        var dx = Math.Abs(x2 - x1);
+        var sx = x1 < x2 ? 1 : -1;
+        var dy = -Math.Abs(y2 - y1);
+        var sy = y1 < y2 ? 1 : -1;
+        var error = dx + dy;
+        var viewport = clipViewport ?? new GraphicsViewport(0, 0, _screenWidth - 1L, _screenHeight - 1L, UsesRelativeCoordinates: false);
+
+        while (true)
+        {
+            if (viewport.IsInsideAbsolute(x1, y1))
+            {
+                if (trueColor)
+                {
+                    SetTrueColorPixelCore(x1, y1, color);
+                }
+                else
+                {
+                    SetPixelCore(x1, y1, color);
+                }
+            }
+
+            if (x1 == x2 && y1 == y2)
+            {
+                break;
+            }
+
+            var doubledError = GraphicsLineMath.SaturatingDouble(error);
+            if (doubledError >= dy)
+            {
+                error = GraphicsLineMath.SaturatingAdd(error, dy);
+                x1 += sx;
+            }
+
+            if (doubledError <= dx)
+            {
+                error = GraphicsLineMath.SaturatingAdd(error, dx);
+                y1 += sy;
+            }
+        }
+    }
+
+    private long TranslateCanvasX(long x, GraphicsViewport viewport) =>
+        GraphicsLineMath.SaturatingAdd(viewport.Left, x - _canvasCameraX);
+
+    private long TranslateCanvasY(long y, GraphicsViewport viewport) =>
+        GraphicsLineMath.SaturatingAdd(viewport.Top, y - _canvasCameraY);
+
+    private void DrawCanvasCircleCore(long worldX, long worldY, long radius, int color, bool filled)
+    {
+        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0 || radius < 0)
+        {
+            return;
+        }
+
+        var viewport = GetEffectiveViewportCore();
+        var centerX = TranslateCanvasX(worldX, viewport);
+        var centerY = TranslateCanvasY(worldY, viewport);
+        if (radius == 0)
+        {
+            if (viewport.IsInsideAbsolute(centerX, centerY))
+            {
+                SetTrueColorPixelCore(centerX, centerY, color);
+            }
+            return;
+        }
+
+        if (filled)
+        {
+            var radiusSquared = (double)radius * radius;
+            for (long dy = -radius; dy <= radius; dy++)
+            {
+                var span = (long)Math.Floor(Math.Sqrt(Math.Max(0d, radiusSquared - ((double)dy * dy))));
+                var rowY = centerY + dy;
+                if (rowY < viewport.Top || rowY > viewport.Bottom)
+                {
+                    continue;
+                }
+
+                _framebuffer.FillTrueColorRectangle(
+                    Math.Max(centerX - span, viewport.Left),
+                    rowY,
+                    Math.Min(centerX + span, viewport.Right),
+                    rowY,
+                    color);
+            }
+
+            _graphicsBatchHasChanges = true;
+            return;
+        }
+
+        GraphicsEllipseRasterizer.Rasterize(
+            centerX,
+            centerY,
+            radius,
+            radius,
+            true,
+            0d,
+            Math.Tau,
+            _screenWidth,
+            _screenHeight,
+            (x, y) =>
+            {
+                if (viewport.IsInsideAbsolute(x, y))
+                {
+                    SetTrueColorPixelCore(x, y, color);
+                }
+            });
+    }
+
+    private void DrawBoxCore(long x1, long y1, long x2, long y2, int color, bool filled)
+    {
+        var left = Math.Min(x1, x2);
+        var right = Math.Max(x1, x2);
+        var top = Math.Min(y1, y2);
+        var bottom = Math.Max(y1, y2);
+
+        if (filled)
+        {
+            AddFillCore(left, top, right, bottom, color);
+
+            return;
+        }
+
+        DrawLineCore(left, top, right, top, color);
+        DrawLineCore(right, top, right, bottom, color);
+        DrawLineCore(right, bottom, left, bottom, color);
+        DrawLineCore(left, bottom, left, top, color);
+    }
+
+    private void DrawCircleCore(
+        long centerX,
+        long centerY,
+        double radius,
+        int color,
+        bool relativeCenter,
+        double? startAngle,
+        double? endAngle,
+        double aspect,
+        bool drawStartRadius,
+        bool drawEndRadius)
+    {
+        if (!GraphicsCircleValidation.HasValidArguments(radius, startAngle, endAngle, aspect))
+        {
+            return;
+        }
+
+        if (relativeCenter)
+        {
+            if (!GraphicsCoordinateValidation.TryResolvePoint(_graphicsCurrentX, _graphicsCurrentY, centerX, centerY, out centerX, out centerY))
+            {
+                return;
+            }
+        }
+        else if (!GraphicsCoordinateValidation.IsSupportedCircleCenter(centerX, centerY))
+        {
+            return;
+        }
+
+        SetGraphicsCurrentPositionCore(centerX, centerY);
+
+        var radiusX = aspect <= 1d ? radius : radius / aspect;
+        var radiusY = aspect <= 1d ? radius * aspect : radius;
+
+        if (radiusX <= 0 || radiusY <= 0)
+        {
+            SetLogicalPixelCore(centerX, centerY, color);
+            return;
+        }
+
+        var arcStart = NormalizeCircleAngle(startAngle) ?? 0d;
+        var normalizedEnd = NormalizeCircleAngle(endAngle);
+        var fullCircle = !startAngle.HasValue && !endAngle.HasValue;
+        if (!fullCircle && startAngle.HasValue && normalizedEnd.HasValue)
+        {
+            fullCircle = Math.Abs(arcStart - normalizedEnd.Value) <= 1e-9;
+        }
+
+        var sweep = fullCircle ? Math.Tau : (normalizedEnd ?? Math.Tau) - arcStart;
+        if (!fullCircle && sweep <= 0d)
+        {
+            sweep += Math.Tau;
+        }
+
+        var startPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart);
+
+        if (drawStartRadius)
+        {
+            DrawLineCore(centerX, centerY, startPoint.X, startPoint.Y, color);
+        }
+
+        GraphicsEllipseRasterizer.Rasterize(
+            centerX,
+            centerY,
+            radiusX,
+            radiusY,
+            fullCircle,
+            arcStart,
+            sweep,
+            GetRasterWidthCore(),
+            GetRasterHeightCore(),
+            (x, y) => SetLogicalPixelCore(x, y, color));
+
+        if (drawEndRadius)
+        {
+            var endPoint = GraphicsEllipseRasterizer.GetEllipsePoint(centerX, centerY, radiusX, radiusY, arcStart + sweep);
+            DrawLineCore(centerX, centerY, endPoint.X, endPoint.Y, color);
+        }
+
+        SetGraphicsCurrentPositionCore(centerX, centerY);
+    }
+
+    private static double? NormalizeCircleAngle(double? angle) =>
+        angle switch
+        {
+            null => null,
+            < 0 => GraphicsEllipseRasterizer.NormalizeAngle(-angle.Value),
+            _ => GraphicsEllipseRasterizer.NormalizeAngle(angle.Value)
+        };
+
+    private int GetRasterWidthCore()
+    {
+        var viewport = GetEffectiveViewportCore();
+        return viewport.UsesRelativeCoordinates
+            ? checked((int)Math.Max(0, viewport.Width))
+            : _screenWidth;
+    }
+
+    private int GetRasterHeightCore()
+    {
+        var viewport = GetEffectiveViewportCore();
+        return viewport.UsesRelativeCoordinates
+            ? checked((int)Math.Max(0, viewport.Height))
+            : _screenHeight;
+    }
+
+    private void RefreshGraphicsVisuals()
+    {
+        if (_isCanvasActive && _canvasFrameInProgress)
+        {
+            return;
+        }
+
+        PublishGraphicsFrame(coalesced: true);
+    }
+
+    private void PublishGraphicsFrame(bool coalesced = false)
+    {
+        var (firstVisibleRow, visibleRows, visibleColumns) = GetGraphicsTextViewport();
+        var inputRow = ResolveGraphicsTextBufferRow(_graphicsRow);
+        GraphicsText = BuildVisibleGraphicsText();
+        var displayFramebuffer = _isScreenActive ? _screenPages[_visualScreenPage] : _framebuffer;
+        var frame = displayFramebuffer?.CreateSnapshot(
+            _graphicsTextBuffer,
+            _graphicsForeground,
+            _graphicsBackground,
+            _inputPrompt.IsWaitingForInput ? CurrentPromptText + CurrentInputText : null,
+            inputRow,
+            _graphicsColumn,
+            firstVisibleRow,
+            visibleRows,
+            visibleColumns);
+        GraphicsFrame = frame;
+        _graphicsWindow?.PresentFrame(frame);
+        RecordGraphicsFramePublished(coalesced);
+    }
+
+    private void ScheduleGraphicsVisualRefresh()
+    {
+        RecordGraphicsCommandQueued();
+
+        if (_isCanvasActive && _canvasFrameInProgress)
+        {
+            return;
+        }
+
+        if (Application.Current is null)
+        {
+            RefreshGraphicsVisuals();
+            return;
+        }
+
+        if (_graphicsVisualRefreshPending)
+        {
+            return;
+        }
+
+        _graphicsVisualRefreshPending = true;
+        var dispatcher = Application.Current.Dispatcher;
+        _graphicsVisualRefreshTimer?.Stop();
+        _graphicsVisualRefreshTimer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
+        {
+            Interval = GraphicsFrameCoalescingInterval
+        };
+        _graphicsVisualRefreshTimer.Tick += (_, _) =>
+        {
+            _graphicsVisualRefreshTimer?.Stop();
+            _graphicsVisualRefreshTimer = null;
+            _graphicsVisualRefreshPending = false;
+            RefreshGraphicsVisuals();
+        };
+        _graphicsVisualRefreshTimer.Start();
+    }
+
+    private void CancelScheduledGraphicsVisualRefresh()
+    {
+        _graphicsVisualRefreshTimer?.Stop();
+        _graphicsVisualRefreshTimer = null;
+        _graphicsVisualRefreshPending = false;
+    }
+
+    private void ResetGraphicsFrameMetrics()
+    {
+        _graphicsFrameMetricsStartedAt = DateTimeOffset.UtcNow;
+        _lastGraphicsFramePublishedAt = null;
+        _graphicsFramePublishCount = 0;
+        _graphicsImmediateFramePublishCount = 0;
+        _graphicsCoalescedFramePublishCount = 0;
+        _graphicsQueuedCommandCount = 0;
+        _graphicsQueuedCommandsSinceLastFrame = 0;
+        _graphicsMaxCommandsPerFrame = 0;
+        _graphicsTotalFrameIntervalMs = 0;
+        _graphicsMaxFrameIntervalMs = 0;
+        _graphicsKeysEnqueued = 0;
+        _graphicsKeysRead = 0;
+        _graphicsMouseEventsEnqueued = 0;
+        _graphicsMouseEventsRead = 0;
+        _graphicsMouseMoveEnqueued = 0;
+        _graphicsMousePressEnqueued = 0;
+        _graphicsMouseReleaseEnqueued = 0;
+        _graphicsMouseWheelEnqueued = 0;
+        _graphicsMouseMoveRead = 0;
+        _graphicsMousePressRead = 0;
+        _graphicsMouseReleaseRead = 0;
+        _graphicsMouseWheelRead = 0;
+        _graphicsMaxPendingKeys = 0;
+        _graphicsMaxPendingMouseEvents = 0;
+        _graphicsInputEventsAtLastSummary = 0;
+    }
+
+    private void RecordGraphicsCommandQueued()
+    {
+        if (!_inputState.Snapshot.IsScreenOutputActive)
+        {
+            return;
+        }
+
+        _graphicsQueuedCommandCount++;
+        _graphicsQueuedCommandsSinceLastFrame++;
+    }
+
+    private void RecordGraphicsFramePublished(bool coalesced)
+    {
+        if (!_inputState.Snapshot.IsScreenOutputActive)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (_lastGraphicsFramePublishedAt is not null)
+        {
+            var intervalMs = (now - _lastGraphicsFramePublishedAt.Value).TotalMilliseconds;
+            _graphicsTotalFrameIntervalMs += intervalMs;
+            _graphicsMaxFrameIntervalMs = Math.Max(_graphicsMaxFrameIntervalMs, intervalMs);
+        }
+
+        _lastGraphicsFramePublishedAt = now;
+        _graphicsFramePublishCount++;
+        if (coalesced)
+        {
+            _graphicsCoalescedFramePublishCount++;
+        }
+        else
+        {
+            _graphicsImmediateFramePublishCount++;
+        }
+
+        _graphicsMaxCommandsPerFrame = Math.Max(_graphicsMaxCommandsPerFrame, _graphicsQueuedCommandsSinceLastFrame);
+        _graphicsQueuedCommandsSinceLastFrame = 0;
+
+        if (_graphicsFramePublishCount % GraphicsFrameSummaryInterval == 0)
+        {
+            WriteGraphicsFrameSummary(final: false);
+            WriteGraphicsInputSummary(final: false);
+        }
+    }
+
+    private void WriteGraphicsFrameSummary(bool final)
+    {
+        if (_graphicsFramePublishCount == 0)
+        {
+            return;
+        }
+
+        var intervalCount = Math.Max(0, _graphicsFramePublishCount - 1);
+        var averageIntervalMs = intervalCount == 0 ? 0 : _graphicsTotalFrameIntervalMs / intervalCount;
+        var elapsedMs = _graphicsFrameMetricsStartedAt is null
+            ? 0
+            : (DateTimeOffset.UtcNow - _graphicsFrameMetricsStartedAt.Value).TotalMilliseconds;
+
+        WriteGraphicsEvent(
+            "screen.frame.summary",
+            string.Create(
+                System.Globalization.CultureInfo.InvariantCulture,
+                $"final={final} | frames={_graphicsFramePublishCount} | immediateFrames={_graphicsImmediateFramePublishCount} | coalescedFrames={_graphicsCoalescedFramePublishCount} | commands={_graphicsQueuedCommandCount} | maxCommandsPerFrame={_graphicsMaxCommandsPerFrame} | avgIntervalMs={averageIntervalMs:F2} | maxIntervalMs={_graphicsMaxFrameIntervalMs:F2} | elapsedMs={elapsedMs:F2}"));
+    }
+
+    private void WriteGraphicsInputSummary(bool final)
+    {
+        var inputEvents =
+            _graphicsKeysEnqueued
+            + _graphicsKeysRead
+            + _graphicsMouseEventsEnqueued
+            + _graphicsMouseEventsRead;
+        if (inputEvents == 0 || (!final && inputEvents == _graphicsInputEventsAtLastSummary))
+        {
+            return;
+        }
+
+        _graphicsInputEventsAtLastSummary = inputEvents;
+        WriteGraphicsEvent(
+            "screen.input.summary",
+            string.Create(
+                System.Globalization.CultureInfo.InvariantCulture,
+                $"final={final} | keysEnqueued={_graphicsKeysEnqueued} | keysRead={_graphicsKeysRead} | mouseEventsEnqueued={_graphicsMouseEventsEnqueued} | mouseEventsRead={_graphicsMouseEventsRead} | moveEnqueued={_graphicsMouseMoveEnqueued} | moveRead={_graphicsMouseMoveRead} | pressEnqueued={_graphicsMousePressEnqueued} | pressRead={_graphicsMousePressRead} | releaseEnqueued={_graphicsMouseReleaseEnqueued} | releaseRead={_graphicsMouseReleaseRead} | wheelEnqueued={_graphicsMouseWheelEnqueued} | wheelRead={_graphicsMouseWheelRead} | maxPendingKeys={_graphicsMaxPendingKeys} | maxPendingMouseEvents={_graphicsMaxPendingMouseEvents}"));
+    }
+
+    private void AddFillCore(long left, long top, long right, long bottom, int color)
+    {
+        if (!_inputState.Snapshot.IsScreenActive)
+        {
+            return;
+        }
+
+        var clippedLeft = Math.Max(0, left);
+        var clippedTop = Math.Max(0, top);
+        var clippedRight = Math.Min(_screenWidth - 1L, right);
+        var clippedBottom = Math.Min(_screenHeight - 1L, bottom);
+
+        if (clippedLeft > clippedRight || clippedTop > clippedBottom)
+        {
+            return;
+        }
+
+        _framebuffer?.FillRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
+    }
+
+}
