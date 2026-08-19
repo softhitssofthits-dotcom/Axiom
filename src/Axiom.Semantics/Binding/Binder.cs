@@ -38,6 +38,7 @@ public sealed partial class Binder
     private BoundScope _scope;
     private FunctionSymbol? _currentFunction;
     private int _forDepth;
+    private int _whileDepth;
     private int _doLoopDepth;
 
     private Binder()

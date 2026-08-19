@@ -46,6 +46,7 @@
             <pre><code class="language-basic">FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]
     [&lt;операторы&gt;]
     [EXIT FOR]
+    [CONTINUE FOR]
     [&lt;операторы&gt;]
 NEXT</code></pre>
         </section>
@@ -59,6 +60,7 @@ NEXT</code></pre>
                 <li><code>STEP &lt;шаг&gt;</code> — необязательная часть, задающая изменение счётчика после прохода. Если <code>STEP</code> не указан, используется шаг <code>1</code>.</li>
                 <li><code>&lt;операторы&gt;</code> — инструкции, которые выполняются при каждом проходе цикла.</li>
                 <li><code>EXIT FOR</code> — необязательный досрочный выход из ближайшего окружающего цикла <code>FOR ... NEXT</code>.</li>
+                <li><code>CONTINUE FOR</code> — необязательный пропуск оставшейся части текущей итерации с переходом к инкременту счётчика.</li>
                 <li><code>NEXT</code> завершает тело цикла и возвращает управление к проверке следующего значения счётчика.</li>
             </ul>
         </section>
@@ -78,11 +80,12 @@ NEXT</code></pre>
             <p>Если начальное значение уже находится за границей диапазона для указанного направления, тело цикла не выполняется ни одного раза. Если начальное и конечное значения совпадают, цикл выполняется один раз при ненулевом шаге.</p>
         </section>
 
-        <section class="article-section">
+            <section class="article-section">
             <h2>Границы, шаг и выход</h2>
             <ul>
                 <li><code>STEP 0</code> в Axiom считается ошибкой времени выполнения <code>MB3004</code>.</li>
                 <li><code>EXIT FOR</code> передаёт управление на оператор, следующий после соответствующего <code>NEXT</code>.</li>
+                <li><code>CONTINUE FOR</code> пропускает оставшуюся часть текущей итерации и переходит к инкременту счётчика через <code>NEXT</code>. Подробнее — на странице <a href="continue.html">оператора CONTINUE</a>.</li>
                 <li>Циклы <code>FOR ... NEXT</code> можно вкладывать друг в друга. Для вложенных циклов используйте разные счётчики.</li>
                 <li>Форма завершения цикла в текущем Axiom — только <code>NEXT</code>.</li>
                 <li>Если счётчик заранее объявлен как константа или как переменная неподдерживаемого типа, цикл не связывается как корректный <code>FOR</code>.</li>
@@ -141,6 +144,7 @@ after=4</code></pre>
                 <li><code>MB2009</code> — заранее объявленный счётчик имеет тип, который нельзя использовать в <code>FOR</code>.</li>
                 <li><code>MB3004</code> — шаг цикла равен нулю.</li>
                 <li><code>MB2013</code> — <code>EXIT FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
+                <li><code>MB2037</code> — <code>CONTINUE FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
                 <li><code>MB2001</code> — счётчик, созданный самой строкой <code>FOR</code>, используется после выхода из его области видимости.</li>
             </ul>
         </section>
@@ -149,6 +153,7 @@ after=4</code></pre>
             <h2>См. также</h2>
             <div class="link-list">
                 <a href="loops.html">Циклы</a>
+                <a href="continue.html">Оператор CONTINUE</a>
                 <a href="while.html">Оператор WHILE</a>
                 <a href="do-loop.html">Оператор DO ... LOOP</a>
                 <a href="if.html">Оператор IF</a>

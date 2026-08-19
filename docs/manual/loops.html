@@ -28,7 +28,7 @@
             </nav>
             <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Циклы</h1>
-            <p class="lead">Раздел циклов описывает операторы повторения блоков программы: счётный цикл <code>FOR</code>, предусловный цикл <code>WHILE</code> и гибкий цикл <code>DO ... LOOP</code>. Выбор формы зависит от того, что известно заранее и где удобнее проверять условие.</p>
+            <p class="lead">Раздел циклов описывает операторы повторения блоков программы: счётный цикл <code>FOR</code>, предусловный цикл <code>WHILE</code> и гибкий цикл <code>DO ... LOOP</code>. Выбор формы зависит от того, что известно заранее и где удобнее проверять условие. Для пропуска отдельных итераций любой формы цикла служит оператор <code>CONTINUE</code>.</p>
 
             <section class="article-section">
                 <h2>Какая часть программы повторяется</h2>
@@ -62,12 +62,14 @@ LOOP</code></pre>
                     <a href="for.html">Оператор цикла FOR</a>
                     <a href="while.html">Оператор цикла WHILE</a>
                     <a href="do-loop.html">Оператор цикла DO ... LOOP</a>
+                    <a href="continue.html">Оператор CONTINUE</a>
                 </div>
             </section>
 
             <section class="article-section">
                 <h2>Условие завершения</h2>
                 <p>Условие цикла должно быть логическим выражением. Если условие не меняется внутри тела, цикл может стать бесконечным; для таких случаев в Axiom у <code>DO ... LOOP</code> есть явный выход <code>EXIT DO</code>.</p>
+                <p>Для пропуска отдельных итераций без выхода из цикла в Axiom используется оператор <code>CONTINUE</code> в одной из трёх форм: <code>CONTINUE FOR</code>, <code>CONTINUE WHILE</code> или <code>CONTINUE DO</code>. Каждая форма работает только с соответствующим типом цикла.</p>
                 <blockquote>
                     <p><em>В QuickBASIC предусловный цикл записывался как <code>WHILE ... WEND</code>. В Axiom используется более явная форма <code>WHILE ... END WHILE</code>, а прямой выход поддержан для <code>DO ... LOOP</code> через <code>EXIT DO</code>.</em></p>
                 </blockquote>
@@ -80,6 +82,7 @@ LOOP</code></pre>
                     <a href="for.html">Оператор цикла FOR</a>
                     <a href="while.html">Оператор цикла WHILE</a>
                     <a href="do-loop.html">Оператор цикла DO ... LOOP</a>
+                    <a href="continue.html">Оператор CONTINUE</a>
                     <a href="if.html">Оператор IF</a>
                     <a href="sleep.html">Оператор SLEEP</a>
                     <a href="diagnostics.html">Диагностика</a>

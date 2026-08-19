@@ -155,6 +155,33 @@ public sealed class StatementSyntaxTests
     }
 
     [Fact]
+    public void ContinueForStatement_HasCorrectKind()
+    {
+        var continueKeyword = Token(SyntaxKind.ContinueKeyword, "CONTINUE");
+        var forKeyword = Token(SyntaxKind.ForKeyword, "FOR");
+        var stmt = new ContinueForStatementSyntax(continueKeyword, forKeyword);
+        Assert.Equal(SyntaxKind.ContinueForStatement, stmt.Kind);
+    }
+
+    [Fact]
+    public void ContinueWhileStatement_HasCorrectKind()
+    {
+        var continueKeyword = Token(SyntaxKind.ContinueKeyword, "CONTINUE");
+        var whileKeyword = Token(SyntaxKind.WhileKeyword, "WHILE");
+        var stmt = new ContinueWhileStatementSyntax(continueKeyword, whileKeyword);
+        Assert.Equal(SyntaxKind.ContinueWhileStatement, stmt.Kind);
+    }
+
+    [Fact]
+    public void ContinueDoStatement_HasCorrectKind()
+    {
+        var continueKeyword = Token(SyntaxKind.ContinueKeyword, "CONTINUE");
+        var doKeyword = Token(SyntaxKind.DoKeyword, "DO");
+        var stmt = new ContinueDoStatementSyntax(continueKeyword, doKeyword);
+        Assert.Equal(SyntaxKind.ContinueDoStatement, stmt.Kind);
+    }
+
+    [Fact]
     public void EraseStatement_HasCorrectKind()
     {
         var keyword = Token(SyntaxKind.EraseKeyword, "ERASE");

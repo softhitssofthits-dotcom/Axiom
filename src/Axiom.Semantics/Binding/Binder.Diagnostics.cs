@@ -491,6 +491,21 @@ public sealed partial class Binder
         _diagnostics.Report(DiagnosticCodes.InvalidExitDoContext, "EXIT DO допустим только внутри DO ... LOOP.", location);
     }
 
+    private void ReportInvalidContinueForContext(TextLocation location)
+    {
+        _diagnostics.Report(DiagnosticCodes.InvalidContinueForContext, "CONTINUE FOR допустим только внутри FOR ... NEXT.", location);
+    }
+
+    private void ReportInvalidContinueWhileContext(TextLocation location)
+    {
+        _diagnostics.Report(DiagnosticCodes.InvalidContinueWhileContext, "CONTINUE WHILE допустим только внутри WHILE ... END WHILE.", location);
+    }
+
+    private void ReportInvalidContinueDoContext(TextLocation location)
+    {
+        _diagnostics.Report(DiagnosticCodes.InvalidContinueDoContext, "CONTINUE DO допустим только внутри DO ... LOOP.", location);
+    }
+
     private void ReportInvalidSelectCaseRange(TextLocation location)
     {
         _diagnostics.Report(DiagnosticCodes.InvalidSelectCaseRange, "Диапазон CASE ... TO допустим только для числовых или строковых значений.", location);

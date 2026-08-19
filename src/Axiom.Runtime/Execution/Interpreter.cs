@@ -6,7 +6,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
-
+    private const int MaxCallDepth = 200;
 
     private readonly DiagnosticBag _diagnostics = new();
     private readonly Dictionary<FunctionSymbol, BoundRoutine> _routines;

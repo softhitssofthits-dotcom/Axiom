@@ -18,7 +18,8 @@ public sealed partial class Interpreter
             DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatement(statement);
 
-            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
+            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo
+                || signal.HasContinueFor || signal.HasContinueWhile || signal.HasContinueDo)
             {
                 return signal;
             }
@@ -87,6 +88,9 @@ public sealed partial class Interpreter
             BoundForStatement forStatement => ExecuteFor(forStatement),
             BoundExitForStatement exitForStatement => ExecuteExitFor(exitForStatement),
             BoundExitDoStatement exitDoStatement => ExecuteExitDo(exitDoStatement),
+            BoundContinueForStatement continueForStatement => ExecuteContinueFor(continueForStatement),
+            BoundContinueWhileStatement continueWhileStatement => ExecuteContinueWhile(continueWhileStatement),
+            BoundContinueDoStatement continueDoStatement => ExecuteContinueDo(continueDoStatement),
             BoundReturnStatement returnStatement => ExecuteReturn(returnStatement),
             BoundExpressionStatement expressionStatement => ExecuteExpressionStatement(expressionStatement),
             _ => ReportInvalidRuntimeState<ExecutionSignal>($"Unsupported bound statement: {statement.Kind}.", statement.Location)
@@ -655,9 +659,15 @@ public sealed partial class Interpreter
             DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
-            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo)
+            if (signal.HasReturn || signal.HasExitFor || signal.HasExitDo
+                || signal.HasContinueFor || signal.HasContinueDo)
             {
                 return signal;
+            }
+
+            if (signal.HasContinueWhile)
+            {
+                continue;
             }
         }
 
@@ -743,7 +753,7 @@ public sealed partial class Interpreter
             DispatchInputHandlers(statement.Location);
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
-            if (signal.HasReturn)
+            if (signal.HasReturn || signal.HasExitFor)
             {
                 return signal;
             }
@@ -751,6 +761,28 @@ public sealed partial class Interpreter
             if (signal.HasExitDo)
             {
                 break;
+            }
+
+            if (signal.HasContinueFor || signal.HasContinueWhile)
+            {
+                return signal;
+            }
+
+            if (signal.HasContinueDo)
+            {
+                if (statement.EvaluateConditionAfterBody)
+                {
+                    if (!ShouldContinueDoLoop(statement))
+                    {
+                        break;
+                    }
+                }
+                else if (!ShouldContinueDoLoop(statement))
+                {
+                    break;
+                }
+
+                continue;
             }
 
             if (statement.EvaluateConditionAfterBody)
@@ -878,7 +910,7 @@ public sealed partial class Interpreter
 
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
-            if (signal.HasReturn || signal.HasExitDo)
+            if (signal.HasReturn || signal.HasExitDo || signal.HasContinueWhile || signal.HasContinueDo)
             {
                 return signal;
             }
@@ -925,7 +957,7 @@ public sealed partial class Interpreter
 
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
-            if (signal.HasReturn || signal.HasExitDo)
+            if (signal.HasReturn || signal.HasExitDo || signal.HasContinueWhile || signal.HasContinueDo)
             {
                 return signal;
             }
@@ -972,7 +1004,7 @@ public sealed partial class Interpreter
 
             var signal = ExecuteStatementsInChildScope(statement.Statements);
 
-            if (signal.HasReturn || signal.HasExitDo)
+            if (signal.HasReturn || signal.HasExitDo || signal.HasContinueWhile || signal.HasContinueDo)
             {
                 return signal;
             }
@@ -1001,6 +1033,21 @@ public sealed partial class Interpreter
     private static ExecutionSignal ExecuteExitDo(BoundExitDoStatement statement)
     {
         return ExecutionSignal.ExitDo();
+    }
+
+    private static ExecutionSignal ExecuteContinueFor(BoundContinueForStatement statement)
+    {
+        return ExecutionSignal.ContinueFor();
+    }
+
+    private static ExecutionSignal ExecuteContinueWhile(BoundContinueWhileStatement statement)
+    {
+        return ExecutionSignal.ContinueWhile();
+    }
+
+    private static ExecutionSignal ExecuteContinueDo(BoundContinueDoStatement statement)
+    {
+        return ExecutionSignal.ContinueDo();
     }
 
     private ExecutionSignal ExecuteReturn(BoundReturnStatement statement)

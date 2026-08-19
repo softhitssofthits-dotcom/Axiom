@@ -439,6 +439,12 @@ public sealed partial class Interpreter
             scope.Define(parameter, storedArgument);
         }
 
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(function.Name, callSiteLocation);
+            throw new RuntimeFailureException();
+        }
+
         _callStack.Push(new CallFrame(function, scope, callSiteLocation));
         _scopeStack.Push(scope);
 
@@ -508,6 +514,12 @@ public sealed partial class Interpreter
                 ? ResolveByRefStoredArgument(expression.Arguments[index - 1], expression.Location)
                 : parameter.IsArray ? argument.AsArray() : argument.CopyForStorage();
             scope.Define(parameter, storedArgument);
+        }
+
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(constructor.Name, expression.Location);
+            throw new RuntimeFailureException();
         }
 
         _callStack.Push(new CallFrame(constructor, scope, expression.Location));

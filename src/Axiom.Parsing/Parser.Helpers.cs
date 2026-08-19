@@ -195,6 +195,22 @@ public sealed partial class Parser
             CreateDiagnosticLocation(token.Location));
     }
 
+    private void ReportDuplicateElse(SyntaxToken token)
+    {
+        Diagnostics.Report(
+            DiagnosticCodes.DuplicateElse,
+            "В конструкции IF допускается только один блок ELSE.",
+            CreateDiagnosticLocation(token.Location));
+    }
+
+    private void ReportDuplicateCaseElse(SyntaxToken token)
+    {
+        Diagnostics.Report(
+            DiagnosticCodes.DuplicateCaseElse,
+            "В конструкции SELECT CASE допускается только один блок CASE ELSE.",
+            CreateDiagnosticLocation(token.Location));
+    }
+
     private SyntaxToken CreateMissingToken(SyntaxKind kind)
     {
         return new SyntaxToken(kind, string.Empty, CreateDiagnosticLocation(Current.Location));
@@ -297,6 +313,7 @@ public sealed partial class Parser
             TokenKind.CloseKeyword => SyntaxKind.CloseKeyword,
             TokenKind.ColorKeyword => SyntaxKind.ColorKeyword,
             TokenKind.ConstKeyword => SyntaxKind.ConstKeyword,
+            TokenKind.ContinueKeyword => SyntaxKind.ContinueKeyword,
             TokenKind.DecimalKeyword => SyntaxKind.DecimalKeyword,
             TokenKind.DimKeyword => SyntaxKind.DimKeyword,
             TokenKind.DoKeyword => SyntaxKind.DoKeyword,

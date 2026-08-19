@@ -1,0 +1,14 @@
+﻿' Пример показывает пропуск итерации через CONTINUE FOR.
+' Ожидается вывод:
+' 1
+' 2
+' 4
+' 5
+
+For I = 1 To 5
+    If i = 3 Then
+        Continue For
+    End If
+
+    Print i
+Next

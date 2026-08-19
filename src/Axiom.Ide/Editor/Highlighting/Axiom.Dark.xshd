@@ -38,6 +38,7 @@
             <Word>CLS</Word>
             <Word>COLOR</Word>
             <Word>CONST</Word>
+            <Word>CONTINUE</Word>
             <Word>DIM</Word>
             <Word>DO</Word>
             <Word>DRAW</Word>

@@ -117,11 +117,6 @@ public sealed partial class Binder
 
     private static TypeSymbol GetSelectCaseComparisonType(TypeSymbol testType)
     {
-        if (testType == TypeSymbol.Integer || testType == TypeSymbol.Double)
-        {
-            return TypeSymbol.Double;
-        }
-
         return testType;
     }
 

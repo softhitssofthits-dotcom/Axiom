@@ -1,0 +1,6 @@
+SUB Show(text AS STRING)
+    PRINT text
+END SUB
+
+DIM handler AS FUNCTION(STRING) AS STRING
+handler = Show

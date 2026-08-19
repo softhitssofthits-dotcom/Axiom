@@ -753,6 +753,60 @@ public sealed class ExitDoStatementSyntax : StatementSyntax
     public SyntaxToken DoKeyword { get; }
 }
 
+public sealed class ContinueForStatementSyntax : StatementSyntax
+{
+    public ContinueForStatementSyntax(SyntaxToken continueKeyword, SyntaxToken forKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(continueKeyword);
+        ArgumentNullException.ThrowIfNull(forKeyword);
+
+        ContinueKeyword = continueKeyword;
+        ForKeyword = forKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ContinueForStatement;
+
+    public SyntaxToken ContinueKeyword { get; }
+
+    public SyntaxToken ForKeyword { get; }
+}
+
+public sealed class ContinueWhileStatementSyntax : StatementSyntax
+{
+    public ContinueWhileStatementSyntax(SyntaxToken continueKeyword, SyntaxToken whileKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(continueKeyword);
+        ArgumentNullException.ThrowIfNull(whileKeyword);
+
+        ContinueKeyword = continueKeyword;
+        WhileKeyword = whileKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ContinueWhileStatement;
+
+    public SyntaxToken ContinueKeyword { get; }
+
+    public SyntaxToken WhileKeyword { get; }
+}
+
+public sealed class ContinueDoStatementSyntax : StatementSyntax
+{
+    public ContinueDoStatementSyntax(SyntaxToken continueKeyword, SyntaxToken doKeyword)
+    {
+        ArgumentNullException.ThrowIfNull(continueKeyword);
+        ArgumentNullException.ThrowIfNull(doKeyword);
+
+        ContinueKeyword = continueKeyword;
+        DoKeyword = doKeyword;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ContinueDoStatement;
+
+    public SyntaxToken ContinueKeyword { get; }
+
+    public SyntaxToken DoKeyword { get; }
+}
+
 public sealed class ReturnStatementSyntax : StatementSyntax
 {
     public ReturnStatementSyntax(SyntaxToken returnKeyword, ExpressionSyntax? expression)

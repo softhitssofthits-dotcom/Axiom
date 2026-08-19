@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор CONTINUE</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="continue">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Пропуск итерации</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="loops.html">Циклы</a>
+            <span>/</span>
+            <span>Оператор CONTINUE</span>
+        </nav>
+
+        <p class="eyebrow">Оператор</p>
+        <h1 class="page-title">Оператор CONTINUE</h1>
+        <p class="lead"><code>CONTINUE</code> — оператор языка Axiom, который пропускает оставшуюся часть текущей итерации цикла и переходит к следующей итерации. Оператор имеет три формы: <code>CONTINUE FOR</code>, <code>CONTINUE WHILE</code> и <code>CONTINUE DO</code>, каждая из которых работает с соответствующим типом цикла.</p>
+
+        <section class="article-section">
+            <h2>Когда использовать CONTINUE</h2>
+            <p>Оператор <code>CONTINUE</code> удобен, когда внутри тела цикла встречается условие, при котором оставшаяся часть итерации не нужна. Вместо вложенного <code>IF ... END IF</code> вокруг остатка тела оператор <code>CONTINUE</code> явно показывает, что программа должна перейти к следующему проходу.</p>
+            <p>Форма оператора должна совпадать с типом окружающего цикла. Использование <code>CONTINUE FOR</code> вне цикла <code>FOR ... NEXT</code>, <code>CONTINUE WHILE</code> вне цикла <code>WHILE ... END WHILE</code> или <code>CONTINUE DO</code> вне цикла <code>DO ... LOOP</code> приводит к ошибке диагностики.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Синтаксис</h2>
+            <pre><code class="language-basic">CONTINUE FOR</code></pre>
+            <pre><code class="language-basic">CONTINUE WHILE</code></pre>
+            <pre><code class="language-basic">CONTINUE DO</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Части записи</h2>
+            <ul>
+                <li><code>CONTINUE FOR</code> — пропускает оставшуюся часть тела цикла <code>FOR ... NEXT</code> и переходит к инкременту счётчика (оператору <code>NEXT</code>), после чего выполняется проверка условия следующей итерации.</li>
+                <li><code>CONTINUE WHILE</code> — пропускает оставшуюся часть тела цикла <code>WHILE ... END WHILE</code> и переходит к проверке условия в заголовке цикла.</li>
+                <li><code>CONTINUE DO</code> — пропускает оставшуюся часть тела цикла <code>DO ... LOOP</code> и переходит к проверке условия (если оно есть) или к началу следующей итерации.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Поведение каждой формы</h2>
+            <h3>CONTINUE FOR</h3>
+            <p>Оператор <code>CONTINUE FOR</code> передаёт управление на оператор <code>NEXT</code>, который увеличивает счётчик на шаг и затем проверяет, не вышел ли счётчик за границу. Это значит, что <code>CONTINUE FOR</code> не пропускает инкремент счётчика — счётчик изменяется как при обычном завершении итерации.</p>
+
+            <h3>CONTINUE WHILE</h3>
+            <p>Оператор <code>CONTINUE WHILE</code> передаёт управление обратно к заголовку цикла, где условие проверяется заново. Если условие всё ещё истинно, начинается следующий проход; если ложно — управление переходит к инструкции после <code>END WHILE</code>.</p>
+
+            <h3>CONTINUE DO</h3>
+            <p>Оператор <code>CONTINUE DO</code> передаёт управление к оператору <code>LOOP</code>. Для форм с <code>LOOP WHILE</code> и <code>LOOP UNTIL</code> это означает проверку постусловия. Для форм с <code>DO WHILE</code> и <code>DO UNTIL</code> управление переходит к началу тела, где условие проверяется перед следующим проходом. Для формы <code>DO ... LOOP</code> без условия следующий проход начинается немедленно.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример: CONTINUE FOR</h2>
+            <p>В этом примере цикл проходит от 1 до 5, но печатает только нечётные числа: при чётном значении <code>CONTINUE FOR</code> пропускает оператор <code>PRINT</code>.</p>
+            <pre><code class="language-basic">' Ожидаемый вывод:
+' 1
+' 3
+' 5
+FOR i = 1 TO 5
+    IF i MOD 2 = 0 THEN
+        CONTINUE FOR
+    END IF
+
+    PRINT i
+NEXT</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример: CONTINUE WHILE</h2>
+            <p>В этом примере цикл <code>WHILE</code> печатает числа от 0 до 4, пропуская значение 2.</p>
+            <pre><code class="language-basic">' Ожидаемый вывод:
+' 0
+' 1
+' 3
+' 4
+DIM i AS INTEGER = 0
+
+WHILE i &lt; 5
+    i = i + 1
+
+    IF i = 2 THEN
+        CONTINUE WHILE
+    END IF
+
+    PRINT i - 1
+END WHILE</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример: CONTINUE DO</h2>
+            <p>В этом примере цикл <code>DO ... LOOP</code> печатает числа от 0 до 4, пропуская значение 3.</p>
+            <pre><code class="language-basic">' Ожидаемый вывод:
+' 0
+' 1
+' 2
+' 4
+DIM i AS INTEGER = 0
+
+DO WHILE i &lt; 5
+    IF i = 3 THEN
+        i = i + 1
+        CONTINUE DO
+    END IF
+
+    PRINT i
+    i = i + 1
+LOOP</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Вложенные циклы</h2>
+            <p>Оператор <code>CONTINUE</code> действует только на ближайший окружающий цикл указанного типа. Во вложенных циклах <code>CONTINUE</code> во внутреннем цикле не влияет на внешний.</p>
+            <pre><code class="language-basic">' Ожидаемый вывод:
+' j=0 i=0
+' j=0 i=1
+' j=1 i=0
+' j=1 i=1
+FOR j = 0 TO 1
+    FOR i = 0 TO 2
+        IF i = 2 THEN
+            CONTINUE FOR
+        END IF
+
+        PRINT "j=" & j & " i=" & i
+    NEXT
+NEXT</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>CONTINUE</code>.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/control-flow/for/continue_for.axm">CONTINUE FOR: пропуск итерации счётного цикла</a></li>
+                <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации предусловного цикла</a></li>
+                <li><a href="../../samples/control-flow/do/continue_do.axm">CONTINUE DO: пропуск итерации цикла DO ... LOOP</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2037</code> — <code>CONTINUE FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
+                <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
+                <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="loops.html">Циклы</a>
+                <a href="for.html">Оператор FOR</a>
+                <a href="while.html">Оператор WHILE</a>
+                <a href="do-loop.html">Оператор DO ... LOOP</a>
+                <a href="if.html">Оператор IF</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    private const int MaxCallDepth = 200;
 
     private static readonly TextLocation FallbackRuntimeLocation = new(new TextSpan(0, 0), 1, 1);
 
@@ -2870,6 +2871,13 @@ public sealed partial class BytecodeVm
         var byRefArgumentSlots = instruction.Opcode == Opcode.CallByRef
             ? ResolveByRefArgumentSlots(callerFrame, instruction)
             : null;
+
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(targetRoutine.Name, ResolveLocation(callerFrame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+
         _callStack.Push(CreateFrame(
             targetRoutine,
             arguments.Span,
@@ -4292,6 +4300,12 @@ public sealed partial class BytecodeVm
         var callerFrame = CurrentFrame;
         var callerStackDepth = callerFrame.EvaluationStack.Count;
         var callStackDepth = _callStack.Count;
+
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(function.Name, callSiteLocation);
+            throw new RuntimeFailureException();
+        }
 
         _callStack.Push(CreateFrame(routine, arguments, captures, callSiteLocation: callSiteLocation));
 
@@ -5842,6 +5856,14 @@ public sealed partial class BytecodeVm
         ReportRuntimeDiagnostic(
             DiagnosticCodes.EmptyFunctionValue,
             "Значение функционального типа не содержит функции.",
+            location);
+    }
+
+    private void ReportCallStackOverflow(string functionName, TextLocation location)
+    {
+        ReportRuntimeDiagnostic(
+            DiagnosticCodes.CallStackOverflow,
+            $"Превышена максимальная глубина стека вызовов ({MaxCallDepth}) при вызове '{functionName}'. Возможно, программа содержит бесконечную рекурсию.",
             location);
     }
 

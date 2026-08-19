@@ -1,0 +1,9 @@
+' Переменная внутри блока IF не видна после END IF.
+DIM outer AS INTEGER = 10
+
+IF TRUE THEN
+    DIM x AS INTEGER = 5
+    PRINT x
+END IF
+
+PRINT x

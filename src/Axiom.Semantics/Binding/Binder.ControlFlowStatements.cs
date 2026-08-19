@@ -47,7 +47,18 @@ public sealed partial class Binder
     private BoundStatement BindWhileStatement(WhileStatementSyntax statement)
     {
         var condition = BindCondition(statement.Condition);
-        var statements = BindStatementsInChildScope(statement.Statements, DeclarationContexts.WhileBlock);
+        _whileDepth++;
+        IReadOnlyList<BoundStatement> statements;
+
+        try
+        {
+            statements = BindStatementsInChildScope(statement.Statements, DeclarationContexts.WhileBlock);
+        }
+        finally
+        {
+            _whileDepth--;
+        }
+
         return new BoundWhileStatement(GetLocation(statement), condition, statements);
     }
 
@@ -275,6 +286,36 @@ public sealed partial class Binder
         }
 
         return new BoundExitDoStatement(GetLocation(statement));
+    }
+
+    private BoundStatement BindContinueForStatement(ContinueForStatementSyntax statement)
+    {
+        if (_forDepth <= 0)
+        {
+            ReportInvalidContinueForContext(statement.ContinueKeyword.Location);
+        }
+
+        return new BoundContinueForStatement(GetLocation(statement));
+    }
+
+    private BoundStatement BindContinueWhileStatement(ContinueWhileStatementSyntax statement)
+    {
+        if (_whileDepth <= 0)
+        {
+            ReportInvalidContinueWhileContext(statement.ContinueKeyword.Location);
+        }
+
+        return new BoundContinueWhileStatement(GetLocation(statement));
+    }
+
+    private BoundStatement BindContinueDoStatement(ContinueDoStatementSyntax statement)
+    {
+        if (_doLoopDepth <= 0)
+        {
+            ReportInvalidContinueDoContext(statement.ContinueKeyword.Location);
+        }
+
+        return new BoundContinueDoStatement(GetLocation(statement));
     }
 
     private BoundStatement BindReturnStatement(ReturnStatementSyntax statement)

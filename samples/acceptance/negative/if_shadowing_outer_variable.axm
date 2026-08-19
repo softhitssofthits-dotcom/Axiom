@@ -1,0 +1,7 @@
+' Переменная в блоке IF затеняет внешнюю переменную.
+DIM x AS INTEGER = 1
+
+IF TRUE THEN
+    DIM x AS STRING = "inner"
+    PRINT x
+END IF

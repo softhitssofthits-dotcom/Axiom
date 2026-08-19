@@ -1,0 +1,9 @@
+' CASE ELSE не может стоять перед обычным CASE.
+DIM value AS INTEGER = 1
+
+SELECT CASE value
+    CASE ELSE
+        PRINT "fallback"
+    CASE 1
+        PRINT "bad"
+END SELECT

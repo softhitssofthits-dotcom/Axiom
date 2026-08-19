@@ -1,0 +1,2 @@
+DIM value AS INTEGER = 42
+PRINT value()

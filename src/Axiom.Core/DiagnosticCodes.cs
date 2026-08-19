@@ -13,6 +13,8 @@ public static class DiagnosticCodes
     public const string ExpectedIdentifier = "MB1002";
     public const string ExpectedExpression = "MB1003";
     public const string UnexpectedToken = "MB1004";
+    public const string DuplicateElse = "MB1005";
+    public const string DuplicateCaseElse = "MB1006";
 
     // Семантический анализ (MB2xxx)
     public const string UnknownName = "MB2001";
@@ -51,6 +53,9 @@ public static class DiagnosticCodes
     public const string InvalidOnKeyHandler = "MB2034";
     public const string InvalidOnMouseHandler = "MB2035";
     public const string InvalidOnMouseEvent = "MB2036";
+    public const string InvalidContinueForContext = "MB2037";
+    public const string InvalidContinueWhileContext = "MB2038";
+    public const string InvalidContinueDoContext = "MB2039";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";
@@ -63,6 +68,7 @@ public static class DiagnosticCodes
     public const string NumericOverflow = "MB3008";
     public const string EmptyFunctionValue = "MB3009";
     public const string MissingGraphicsMode = "MB3010";
+    public const string CallStackOverflow = "MB3011";
 
     // Конвейер выполнения (MB4xxx)
     public const string BytecodeCoverage = "MB4001";

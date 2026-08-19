@@ -24,6 +24,7 @@ public sealed class Lexer
         ["CLOSE"] = TokenKind.CloseKeyword,
         ["COLOR"] = TokenKind.ColorKeyword,
         ["CONST"] = TokenKind.ConstKeyword,
+        ["CONTINUE"] = TokenKind.ContinueKeyword,
         ["DECIMAL"] = TokenKind.DecimalKeyword,
         ["DIM"] = TokenKind.DimKeyword,
         ["DO"] = TokenKind.DoKeyword,

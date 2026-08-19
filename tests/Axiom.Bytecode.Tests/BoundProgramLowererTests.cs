@@ -825,6 +825,7 @@ public sealed class BoundProgramLowererTests
                 LoweredInstructionKind.LoadLiteral,
                 LoweredInstructionKind.BinaryOperation,
                 LoweredInstructionKind.StoreVariable,
+                LoweredInstructionKind.Label,
                 LoweredInstructionKind.LoadVariable,
                 LoweredInstructionKind.LoadLiteral,
                 LoweredInstructionKind.BinaryOperation,
@@ -835,10 +836,10 @@ public sealed class BoundProgramLowererTests
             instructions.Select(static instruction => instruction.Kind).ToArray());
 
         Assert.Equal("L0001", instructions[2].Label);
-        Assert.Equal("L0001", instructions[13].Label);
-        Assert.Equal("L0002", instructions[14].Label);
+        Assert.Equal("L0001", instructions[14].Label);
+        Assert.Equal("L0003", instructions[15].Label);
         Assert.Equal(SyntaxKind.PlusToken, instructions[8].OperatorKind);
-        Assert.Equal(SyntaxKind.LessToken, instructions[12].OperatorKind);
+        Assert.Equal(SyntaxKind.LessToken, instructions[13].OperatorKind);
     }
 
     [Fact]
@@ -862,11 +863,13 @@ public sealed class BoundProgramLowererTests
         Assert.Equal(
             [
                 "Label:L0001",
-                "Label:L0003",
-                "JumpIfTrue:L0003",
                 "Label:L0004",
+                "Label:L0005",
+                "JumpIfTrue:L0004",
+                "Label:L0006",
+                "Label:L0002",
                 "JumpIfTrue:L0001",
-                "Label:L0002"
+                "Label:L0003"
             ],
             branchInstructions.Select(static instruction => $"{instruction.Kind}:{instruction.Label}").ToArray());
     }
@@ -899,6 +902,7 @@ public sealed class BoundProgramLowererTests
                 LoweredInstructionKind.LoadLiteral,
                 LoweredInstructionKind.BinaryOperation,
                 LoweredInstructionKind.StoreVariable,
+                LoweredInstructionKind.Label,
                 LoweredInstructionKind.LoadVariable,
                 LoweredInstructionKind.LoadLiteral,
                 LoweredInstructionKind.BinaryOperation,
@@ -909,10 +913,10 @@ public sealed class BoundProgramLowererTests
             instructions.Select(static instruction => instruction.Kind).ToArray());
 
         Assert.Equal("L0001", instructions[2].Label);
-        Assert.Equal("L0001", instructions[13].Label);
-        Assert.Equal("L0002", instructions[14].Label);
+        Assert.Equal("L0001", instructions[14].Label);
+        Assert.Equal("L0003", instructions[15].Label);
         Assert.Equal(SyntaxKind.PlusToken, instructions[8].OperatorKind);
-        Assert.Equal(SyntaxKind.GreaterOrEqualsToken, instructions[12].OperatorKind);
+        Assert.Equal(SyntaxKind.GreaterOrEqualsToken, instructions[13].OperatorKind);
     }
 
     [Fact]
@@ -936,11 +940,13 @@ public sealed class BoundProgramLowererTests
         Assert.Equal(
             [
                 "Label:L0001",
-                "Label:L0003",
-                "JumpIfFalse:L0003",
                 "Label:L0004",
+                "Label:L0005",
+                "JumpIfFalse:L0004",
+                "Label:L0006",
+                "Label:L0002",
                 "JumpIfFalse:L0001",
-                "Label:L0002"
+                "Label:L0003"
             ],
             branchInstructions.Select(static instruction => $"{instruction.Kind}:{instruction.Label}").ToArray());
     }
@@ -1054,6 +1060,68 @@ public sealed class BoundProgramLowererTests
     }
 
     [Fact]
+    public void Lower_ContinueFor_EmitsJumpToForContinueLabel()
+    {
+        var result = Lower("""
+            FOR i = 1 TO 3
+                IF i = 2 THEN
+                    CONTINUE FOR
+                END IF
+            NEXT
+            """);
+
+        Assert.True(result.Succeeded);
+        Assert.NotNull(result.Program);
+
+        var branchInstructions = result.Program.EntryPoint.Instructions
+            .Where(static instruction => instruction.Kind is LoweredInstructionKind.Label or LoweredInstructionKind.Jump or LoweredInstructionKind.JumpIfFalse or LoweredInstructionKind.JumpIfTrue)
+            .ToArray();
+
+        // CONTINUE FOR should emit a Jump to the continueLabel (between body and step increment)
+        Assert.Contains(branchInstructions, static instruction => instruction.Kind == LoweredInstructionKind.Jump);
+    }
+
+    [Fact]
+    public void Lower_ContinueWhile_EmitsJumpToWhileStart()
+    {
+        var result = Lower("""
+            WHILE TRUE
+                CONTINUE WHILE
+            END WHILE
+            """);
+
+        Assert.True(result.Succeeded);
+        Assert.NotNull(result.Program);
+
+        var branchInstructions = result.Program.EntryPoint.Instructions
+            .Where(static instruction => instruction.Kind is LoweredInstructionKind.Label or LoweredInstructionKind.Jump or LoweredInstructionKind.JumpIfFalse or LoweredInstructionKind.JumpIfTrue)
+            .ToArray();
+
+        // CONTINUE WHILE should emit a Jump back to the condition check (startLabel)
+        Assert.Contains(branchInstructions, static instruction => instruction.Kind == LoweredInstructionKind.Jump);
+    }
+
+    [Fact]
+    public void Lower_ContinueDo_EmitsJumpToDoContinueLabel()
+    {
+        var result = Lower("""
+            DO WHILE TRUE
+                CONTINUE DO
+            LOOP
+            """);
+
+        Assert.True(result.Succeeded);
+        Assert.NotNull(result.Program);
+
+        var branchInstructions = result.Program.EntryPoint.Instructions
+            .Where(static instruction => instruction.Kind is LoweredInstructionKind.Label or LoweredInstructionKind.Jump or LoweredInstructionKind.JumpIfFalse or LoweredInstructionKind.JumpIfTrue)
+            .ToArray();
+
+        // CONTINUE DO should emit a Jump to the continueLabel
+        Assert.Contains(branchInstructions, static instruction => instruction.Kind == LoweredInstructionKind.Jump);
+    }
+
+    [Fact]
     public void Lower_NestedExitDo_TargetsNearestDoLoop()
     {
         var result = Lower("""
@@ -1128,6 +1196,7 @@ public sealed class BoundProgramLowererTests
                 LoweredInstructionKind.LoadVariable,
                 LoweredInstructionKind.PrintValue,
                 LoweredInstructionKind.PrintLine,
+                LoweredInstructionKind.Label,
                 LoweredInstructionKind.LoadVariable,
                 LoweredInstructionKind.LoadVariable,
                 LoweredInstructionKind.BinaryOperation,
@@ -1146,16 +1215,17 @@ public sealed class BoundProgramLowererTests
         Assert.Equal(SyntaxKind.GreaterToken, instructions[11].OperatorKind);
         Assert.Equal("L0002", instructions[12].Label);
         Assert.Equal(SyntaxKind.GreaterToken, instructions[15].OperatorKind);
-        Assert.Equal("L0004", instructions[16].Label);
+        Assert.Equal("L0005", instructions[16].Label);
         Assert.Equal("L0003", instructions[17].Label);
         Assert.Equal("L0002", instructions[18].Label);
         Assert.Equal(SyntaxKind.LessToken, instructions[21].OperatorKind);
-        Assert.Equal("L0004", instructions[22].Label);
+        Assert.Equal("L0005", instructions[22].Label);
         Assert.Equal("L0003", instructions[23].Label);
-        Assert.Equal(SyntaxKind.PlusToken, instructions[29].OperatorKind);
-        Assert.Equal("i", instructions[30].Variable?.Name);
-        Assert.Equal("L0001", instructions[31].Label);
-        Assert.Equal("L0004", instructions[32].Label);
+        Assert.Equal("L0004", instructions[27].Label);
+        Assert.Equal(SyntaxKind.PlusToken, instructions[30].OperatorKind);
+        Assert.Equal("i", instructions[31].Variable?.Name);
+        Assert.Equal("L0001", instructions[32].Label);
+        Assert.Equal("L0005", instructions[33].Label);
     }
 
     [Fact]
@@ -1178,13 +1248,14 @@ public sealed class BoundProgramLowererTests
             [
                 "Label:L0001",
                 "JumpIfFalse:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Jump:L0003",
                 "Label:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Label:L0003",
+                "Label:L0004",
                 "Jump:L0001",
-                "Label:L0004"
+                "Label:L0005"
             ],
             branchInstructions.Select(static instruction => $"{instruction.Kind}:{instruction.Label}").ToArray());
     }
@@ -1211,22 +1282,24 @@ public sealed class BoundProgramLowererTests
             [
                 "Label:L0001",
                 "JumpIfFalse:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Jump:L0003",
                 "Label:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Label:L0003",
-                "Label:L0005",
-                "JumpIfFalse:L0006",
-                "JumpIfTrue:L0008",
-                "Jump:L0007",
                 "Label:L0006",
-                "JumpIfTrue:L0008",
+                "JumpIfFalse:L0007",
+                "JumpIfTrue:L0010",
+                "Jump:L0008",
                 "Label:L0007",
-                "Jump:L0005",
+                "JumpIfTrue:L0010",
                 "Label:L0008",
+                "Label:L0009",
+                "Jump:L0006",
+                "Label:L0010",
+                "Label:L0004",
                 "Jump:L0001",
-                "Label:L0004"
+                "Label:L0005"
             ],
             branchInstructions.Select(static instruction => $"{instruction.Kind}:{instruction.Label}").ToArray());
     }
@@ -1253,14 +1326,15 @@ public sealed class BoundProgramLowererTests
             [
                 "Label:L0001",
                 "JumpIfFalse:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Jump:L0003",
                 "Label:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Label:L0003",
-                "Jump:L0004",
+                "Jump:L0005",
+                "Label:L0004",
                 "Jump:L0001",
-                "Label:L0004"
+                "Label:L0005"
             ],
             branchInstructions.Select(static instruction => $"{instruction.Kind}:{instruction.Label}").ToArray());
     }
@@ -1288,23 +1362,25 @@ public sealed class BoundProgramLowererTests
             [
                 "Label:L0001",
                 "JumpIfFalse:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Jump:L0003",
                 "Label:L0002",
-                "JumpIfTrue:L0004",
+                "JumpIfTrue:L0005",
                 "Label:L0003",
-                "Label:L0005",
-                "JumpIfFalse:L0006",
-                "JumpIfTrue:L0008",
-                "Jump:L0007",
                 "Label:L0006",
-                "JumpIfTrue:L0008",
-                "Label:L0007",
+                "JumpIfFalse:L0007",
+                "JumpIfTrue:L0010",
                 "Jump:L0008",
-                "Jump:L0005",
+                "Label:L0007",
+                "JumpIfTrue:L0010",
                 "Label:L0008",
+                "Jump:L0010",
+                "Label:L0009",
+                "Jump:L0006",
+                "Label:L0010",
+                "Label:L0004",
                 "Jump:L0001",
-                "Label:L0004"
+                "Label:L0005"
             ],
             branchInstructions.Select(static instruction => $"{instruction.Kind}:{instruction.Label}").ToArray());
     }

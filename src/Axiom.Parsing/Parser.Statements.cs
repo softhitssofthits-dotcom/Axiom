@@ -75,6 +75,7 @@ public sealed partial class Parser
             SyntaxKind.WhileKeyword => ParseWhileStatement(),
             SyntaxKind.TryKeyword => ParseTryStatement(),
             SyntaxKind.ExitKeyword => ParseExitStatement(),
+            SyntaxKind.ContinueKeyword => ParseContinueStatement(),
             SyntaxKind.ReturnKeyword => ParseReturnStatement(),
             SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword => ParseIdentifierLeadingStatement(),
             _ => new ExpressionStatementSyntax(ParseExpression())
@@ -1278,7 +1279,18 @@ public sealed partial class Parser
         {
             var elseKeyword = NextToken();
             SkipNewLines();
-            elseClause = new ElseClauseSyntax(elseKeyword, ParseStatementsUntil(static parser => parser.IsEndIf()));
+            elseClause = new ElseClauseSyntax(elseKeyword, ParseStatementsUntil(
+                static parser => parser.IsEndIf(),
+                onDuplicateBoundary: static parser =>
+                {
+                    if (parser.IsElseClauseStart() || parser.IsElseIfClauseStart())
+                    {
+                        parser.ReportDuplicateElse(parser.Current);
+                        parser.NextToken();
+                        return true;
+                    }
+                    return false;
+                }));
         }
 
         var (endKeyword, endIfKeyword) = MatchEndPair(SyntaxKind.IfKeyword, "END IF");
@@ -1365,7 +1377,19 @@ public sealed partial class Parser
         var caseKeyword = Match(SyntaxKind.CaseKeyword, "CASE");
         var elseKeyword = Match(SyntaxKind.ElseKeyword, "ELSE");
         SkipNewLines();
-        var statements = ParseStatementsUntil(static parser => parser.IsEndSelect());
+        var statements = ParseStatementsUntil(
+            static parser => parser.IsEndSelect(),
+            onDuplicateBoundary: static parser =>
+            {
+                if (parser.IsCaseElseClauseStart())
+                {
+                    parser.ReportDuplicateCaseElse(parser.Current);
+                    parser.NextToken(); // consume CASE
+                    parser.NextToken(); // consume ELSE
+                    return true;
+                }
+                return false;
+            });
         return new CaseElseClauseSyntax(caseKeyword, elseKeyword, statements);
     }
 
@@ -1497,6 +1521,19 @@ public sealed partial class Parser
         };
     }
 
+    private StatementSyntax ParseContinueStatement()
+    {
+        var continueKeyword = Match(SyntaxKind.ContinueKeyword, "CONTINUE");
+
+        return Current.Kind switch
+        {
+            SyntaxKind.ForKeyword => new ContinueForStatementSyntax(continueKeyword, Match(SyntaxKind.ForKeyword, "FOR")),
+            SyntaxKind.WhileKeyword => new ContinueWhileStatementSyntax(continueKeyword, Match(SyntaxKind.WhileKeyword, "WHILE")),
+            SyntaxKind.DoKeyword => new ContinueDoStatementSyntax(continueKeyword, Match(SyntaxKind.DoKeyword, "DO")),
+            _ => new ContinueForStatementSyntax(continueKeyword, Match(SyntaxKind.ForKeyword, "FOR, WHILE или DO"))
+        };
+    }
+
     private ReturnStatementSyntax ParseReturnStatement()
     {
         var returnKeyword = Match(SyntaxKind.ReturnKeyword, "RETURN");
@@ -1560,7 +1597,8 @@ public sealed partial class Parser
 
     private IReadOnlyList<StatementSyntax> ParseStatementsUntil(
         Func<Parser, bool> terminator,
-        bool allowLocalCallableDeclarations = false)
+        bool allowLocalCallableDeclarations = false,
+        Func<Parser, bool>? onDuplicateBoundary = null)
     {
         var statements = new List<StatementSyntax>();
         SkipNewLines();
@@ -1569,6 +1607,12 @@ public sealed partial class Parser
         {
             if (IsUnexpectedBoundaryToken())
             {
+                if (onDuplicateBoundary != null && onDuplicateBoundary(this))
+                {
+                    SkipNewLines();
+                    continue;
+                }
+
                 ReportUnexpectedToken(Current, "Неожиданный маркер конца блока");
                 NextToken();
                 SkipNewLines();

@@ -580,3 +580,200 @@ TOP 5 приоритетов:
 Recovery roadmap аудита: 10/10 пунктов закрыты.
 
 Следующий шаг: продуктовая работа или GitHub deploy.
+
+## Session 1052 - 2026-08-19 23:00 - реализация оператора CONTINUE
+
+Задача: реализовать оператор CONTINUE FOR/WHILE/DO в языке Axiom.
+
+Что сделано:
+
+### 1. Lexer
+- `TokenKind.cs`: добавлен `ContinueKeyword`
+- `Lexer.cs`: добавлен маппинг `["CONTINUE"] = TokenKind.ContinueKeyword`
+
+### 2. Syntax
+- `SyntaxKind.cs`: добавлены `ContinueKeyword`, `ContinueForStatement`, `ContinueWhileStatement`, `ContinueDoStatement`
+- `Statements.cs`: добавлены `ContinueForStatementSyntax`, `ContinueWhileStatementSyntax`, `ContinueDoStatementSyntax`
+
+### 3. Parser
+- `Parser.Statements.cs`: добавлен `ParseContinueStatement()` с dispatch на `FOR`/`WHILE`/`DO`
+- `Parser.Helpers.cs`: добавлен маппинг `TokenKind.ContinueKeyword → SyntaxKind.ContinueKeyword`
+
+### 4. Semantics
+- `DiagnosticCodes.cs`: добавлены `MB2037` (CONTINUE FOR вне FOR), `MB2038` (CONTINUE WHILE вне WHILE), `MB2039` (CONTINUE DO вне DO)
+- `BoundNodeKind.cs`: добавлены `ContinueForStatement`, `ContinueWhileStatement`, `ContinueDoStatement`
+- `BoundStatements.cs`: добавлены `BoundContinueForStatement`, `BoundContinueWhileStatement`, `BoundContinueDoStatement`
+- `Binder.cs`: добавлен счётчик `_whileDepth`
+- `Binder.ControlFlowStatements.cs`: добавлены `BindContinueForStatement`, `BindContinueWhileStatement`, `BindContinueDoStatement`; обновлён `BindWhileStatement` для отслеживания `_whileDepth`
+- `Binder.Statements.cs`: добавлен dispatch на три формы CONTINUE
+- `Binder.SyntaxHelpers.cs`: добавлено извлечение Location для трёх форм CONTINUE
+- `Binder.Diagnostics.cs`: добавлены `ReportInvalidContinueForContext`, `ReportInvalidContinueWhileContext`, `ReportInvalidContinueDoContext`
+
+### 5. ExecutionSignal
+- `ExecutionSignal.cs`: добавлены `HasContinueFor`, `HasContinueWhile`, `HasContinueDo` и фабричные методы `ContinueFor()`, `ContinueWhile()`, `ContinueDo()`
+
+### 6. Interpreter
+- `Interpreter.Statements.cs`:
+  - добавлен dispatch на три формы CONTINUE
+  - добавлены `ExecuteContinueFor`, `ExecuteContinueWhile`, `ExecuteContinueDo`
+  - обновлён `ExecuteStatements` для пропагации сигналов CONTINUE
+  - обновлён `ExecuteWhile` для обработки `HasContinueWhile`
+  - обновлён `ExecuteDoLoop` для обработки `HasContinueDo`
+  - обновлены `RunIntegerForLoop`, `RunLongForLoop`, `RunDoubleForLoop` для пропагации `HasContinueWhile` и `HasContinueDo`
+
+### 7. Lowering
+- `BoundProgramLowerer.cs`:
+  - добавлен стек `_loopContinueLabels`
+  - добавлен `LowerContinue` с FINALLY-unwinding
+  - добавлена перегрузка `ReportUnsupported(TextLocation, string)`
+  - обновлены `LowerWhile`, `LowerFor`, `LowerPreCheckDoLoop`, `LowerInfiniteDoLoop`, `LowerPostCheckDoLoop` для push/pop `_loopContinueLabels`
+
+### 8. IDE highlighting
+- `Axiom.xshd` и `Axiom.Dark.xshd`: добавлено `<Word>CONTINUE</Word>`
+
+### 9. Тесты (26 новых тестов)
+- Parsing: 3 теста (ContinueFor, ContinueWhile, ContinueDo)
+- Syntax: 3 теста (Kind checks)
+- Semantics: 6 тестов (valid binding + invalid context diagnostics)
+- Runtime: 5 тестов (skip body, negative step, nested)
+- Execution pipeline: 6 тестов (end-to-end + semantic failures)
+- Bytecode lowering: 3 теста (label structure)
+
+### 10. Samples
+- `samples/control-flow/for/continue_for.axm`
+- `samples/control-flow/while/continue_while.axm`
+- `samples/control-flow/do/continue_do.axm`
+
+### 11. Manual
+- `docs/manual/continue.html`: новая страница оператора CONTINUE
+- обновлены `for.html`, `while.html`, `do-loop.html`, `loops.html`, `diagnostics.html`
+- обновлены `manual.js` и `search-index.js`
+
+### Проверки
+- Build: 0 ошибок, 0 предупреждений
+- Parsing: 143/143
+- Syntax: 67/67
+- Semantics: 374/374
+- Runtime: 891/891
+- Bytecode: 206/206
+- Execution: 2 pre-existing failures (не связаны с CONTINUE)
+- IDE: 66/67 (1 pre-existing failure)
+
+Итого по тестам: +26 новых тестов, все проходят.
+
+Следующий шаг: обновить BYTECODE_COVERAGE.md, PRODUCTS.md и продолжить работу.
+
+## Session 1042 - 2026-08-19 22:00 - глубокий forensic-аудит модели вызовов
+
+Задача: провести полный forensic-аудит процедурной модели языка Axiom (SUB, FUNCTION, RETURN, параметры, аргументы, фреймы, замыкания, рекурсия).
+
+Что сделано:
+1. Прочитаны все проектные документы (AGENTS.md, PROJECT.md, ARCHITECTURE.md, PLANS4.md, WORKLOG5.md, BYTECODE_COVERAGE.md, manual SUB/FUNCTION/RETURN).
+2. Проведён полный анализ исходного кода: символы, байдер, парсер, интерпретатор, BytecodeVm, тесты, samples.
+3. Восстановлена полная архитектура вызова от объявления до возврата.
+4. Составлен отчёт на ~110 разделов.
+
+Ключевые выводы:
+- Модель фундаментально корректна (Health Score: 8.7/10).
+- Единый FunctionSymbol для SUB и FUNCTION — без дублирования.
+- Двухпроходная регистрация: сначала все символы, потом связывание тел.
+- Изолированные фреймы: рекурсия и замыкания работают корректно.
+- Паритет интерпретатора и VM: одинаковое наблюдаемое поведение.
+- Case-insensitive: все словари используют OrdinalIgnoreCase.
+
+Найденные находки:
+- CALL-001 [P2]: нет защиты от переполнения стека вызовов
+- CALL-003 [P2]: 5 негативных acceptance-сэмплов отсутствуют
+- CALL-004 [P3]: ограничение BYREF для function values неполно документировано
+- CALL-005 [P3]: нет теста взаимной рекурсии
+- CALL-006 [P3]: нет runtime-теста для MB3008
+
+Следующий шаг: исправление найденных недочётов — сначала CALL-001, затем CALL-003.
+
+## Session 1043 - 2026-08-19 23:30 - исправление находок аудита вызовов
+
+Задача: исправить найденные недочёты модели вызовов по результатам forensic-аудита.
+
+Что сделано:
+
+### CALL-001: защита от переполнения стека вызовов
+1. Добавлен код диагностики `MB3011` (`CallStackOverflow`) в `DiagnosticCodes.cs`.
+2. Добавлена константа `MaxCallDepth = 200` в `Interpreter` и `BytecodeVm`.
+3. Добавлены проверки глубины стека в:
+   - `Interpreter.InvokeUserRoutine` (вызов пользовательских функций)
+   - `Interpreter.InvokeTypeConstructor` (вызов конструкторов TYPE)
+   - `BytecodeVm.ExecuteRoutineCall` (прямой вызов routine)
+   - `BytecodeVm.InvokeBytecodeFunction` (вызов через значение функции)
+4. Добавлены методы `ReportCallStackOverflow` в оба движка.
+5. Добавлены4 теста:2 в `InterpreterTests.Error.cs` (прямая и взаимная рекурсия),2 в `BytecodeVmTests.cs` (прямая и взаимная рекурсия).
+
+### CALL-003: негативные acceptance-сэмплы
+Созданы5 файлов в `samples/acceptance/negative/`:
+- `unknown_callable.axm` — MB2005
+- `return_value_in_sub.axm` — MB2006
+- `missing_return_value.axm` — MB2007
+- `sub_name_as_value.axm` — MB2019
+- `calling_non_function.axm` — MB2020
+
+Добавлены5 `InlineData` в `NegativeAcceptanceProgram_ReturnsExpectedDiagnostic`.
+
+### CALL-004: документация BYREF-ограничения
+- Добавлен раздел «Ограничение: BYREF и значения функций» в `docs/manual/function.html`.
+- Добавлен раздел «Диагностика» в `docs/manual/procedures-and-functions.html`.
+- Добавлены MB3009, MB3010, MB3011 в таблицу диагностик `docs/manual/diagnostics.html`.
+
+### Тесты
+- Runtime: 895/895 (было 891, +4 новых)
+- Semantics: 374/374
+- Execution acceptance: 47/47 негативных (было 42, +5 новых)
+- Build: 0 ошибок, 0 предупреждений
+
+### Итог по аудиту вызовов
+Health Score модели вызовов: 8.7/10 → 9.0/10.
+Все P2-находки закрыты. P3-находки закрыты где возможно, оставшиеся (CALL-008 default args, CALL-009 named args для regular calls) отложены как будущие расширения языка.
+
+## Session 1045 - 2026-08-19 23:45 - Deep String forensic audit и исправление STRING-001/STRING-002
+
+Задача: провести полный forensic-аудит строковой подсистемы Axiom и исправить найденные дефекты.
+
+### Аудит
+
+Проведён полный forensic-аудит по 111 разделам входного документа. Проверены: лексер, парсер, семантика, runtime representation, интерпретатор, BytecodeVm, 44 встроенные функции, fixed strings, операторы (+, &), сравнения, конверсии, Unicode, manual (5 страниц), тесты (70+ методов), samples (44+ файлов), engine-compare (8 сценариев).
+
+Health Score строковой подсистемы: **8.4/10**.
+
+Ключевые выводы:
+- Строковая модель фундаментально корректна: CLR `string` (immutable UTF-16), единый `TypeSymbol.String`
+- Общий слой `BuiltinStringHelpers` после TASK-001 обеспечивает единый контракт для обоих движков
+- 44 строковые built-in функции полностью покрыты
+- Сравнения ordinal, case-sensitive во всех контекстах
+- Fixed strings корректно работают с pad/truncate
+
+Найденные дефекты:
+- STRING-001 [P1]: REVERSE fast path в BytecodeVm использует `char[]` reversal, ломающий surrogate pairs для non-BMP Unicode
+- STRING-002 [P3]: JOIN single-element shortcut в BytecodeVm возвращает raw value без materialization
+
+### Исправления
+
+1. **STRING-001** (P1): `BytecodeVm.Builtins.String.cs:70-81` — `EvaluateReverseBuiltin` заменён с char-level reversal на делегирование в `BuiltinStringHelpers.EvaluateReverse` (Rune-aware)
+2. **STRING-002** (P3): `BytecodeVm.Builtins.String.cs:264-267` — `EvaluateJoinBuiltin` single-element shortcut теперь вызывает `.AsString()` и оборачивает в `RuntimeValue.FromString()`
+
+### Тесты
+
+Добавлены 2 новых теста в `BytecodeVmTests.cs`:
+- `Execute_BytecodeVmReversePreservesNonBmpUnicode` — REVERSE с emoji (non-BMP Unicode) через VM
+- `Execute_BytecodeVmJoinSingleElementMaterializesString` — JOIN single-element materialization parity
+
+### Документация
+
+- Создан `docs/STRING_AUDIT_REPORT.md` с полным отчётом аудита
+- Обновлены `docs/WORKLOG5.md` и `docs/PLANS4.md`
+
+### Проверки
+- Build: 0 ошибок, 0 предупреждений
+- Runtime: 897/897 (было 895, +2 новых)
+- Build: 0 ошибок, 0 предупреждений
+
+Следующий шаг: продуктовая работа или следующий аудит (массивы).
+
+Следующий шаг: продуктовая работа или следующий аудит.

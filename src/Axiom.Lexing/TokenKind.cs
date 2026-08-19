@@ -49,6 +49,7 @@ public enum TokenKind
     ClsKeyword,
     CloseKeyword,
     ColorKeyword,
+    ContinueKeyword,
     ConstKeyword,
     DecimalKeyword,
     DimKeyword,

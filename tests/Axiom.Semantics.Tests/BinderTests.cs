@@ -4685,6 +4685,99 @@ END WHILE
     }
 
     [Fact]
+    public void Bind_ContinueForInsideFor()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    CONTINUE FOR
+NEXT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var forStatement = Assert.IsType<BoundForStatement>(Assert.Single(program.GlobalStatements));
+        Assert.IsType<BoundContinueForStatement>(Assert.Single(forStatement.Statements));
+    }
+
+    [Fact]
+    public void Bind_ContinueWhileInsideWhile()
+    {
+        const string text = """
+WHILE TRUE
+    CONTINUE WHILE
+END WHILE
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var whileStatement = Assert.IsType<BoundWhileStatement>(Assert.Single(program.GlobalStatements));
+        Assert.IsType<BoundContinueWhileStatement>(Assert.Single(whileStatement.Statements));
+    }
+
+    [Fact]
+    public void Bind_ContinueDoInsideDoLoop()
+    {
+        const string text = """
+DO WHILE TRUE
+    CONTINUE DO
+LOOP
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var doLoopStatement = Assert.IsType<BoundDoLoopStatement>(Assert.Single(program.GlobalStatements));
+        Assert.IsType<BoundContinueDoStatement>(Assert.Single(doLoopStatement.Statements));
+    }
+
+    [Fact]
+    public void Bind_ReportsContinueForOutsideFor()
+    {
+        const string text = """
+WHILE TRUE
+    CONTINUE FOR
+END WHILE
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2037");
+        Assert.Contains("CONTINUE FOR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsContinueWhileOutsideWhile()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    CONTINUE WHILE
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2038");
+        Assert.Contains("CONTINUE WHILE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ReportsContinueDoOutsideDo()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    CONTINUE DO
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2039");
+        Assert.Contains("CONTINUE DO", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Bind_ReturnInFunction()
     {
         const string text = """

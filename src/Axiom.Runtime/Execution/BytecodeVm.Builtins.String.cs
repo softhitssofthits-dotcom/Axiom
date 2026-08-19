@@ -75,9 +75,7 @@ public sealed partial class BytecodeVm
             return value;
         }
 
-        var buffer = text.ToCharArray();
-        Array.Reverse(buffer);
-        return RuntimeValue.FromString(new string(buffer));
+        return BuiltinStringHelpers.EvaluateReverse(text);
     }
 
     private static bool EvaluateContains(string text, string fragment)
@@ -263,7 +261,7 @@ public sealed partial class BytecodeVm
 
         if (array.Length == 1)
         {
-            return array.GetValue(array.LowerBound);
+            return RuntimeValue.FromString(array.GetValue(array.LowerBound).AsString());
         }
 
         var values = new string[array.Length];

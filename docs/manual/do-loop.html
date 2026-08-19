@@ -41,18 +41,28 @@
                 <h2>Синтаксис</h2>
                 <pre><code class="language-basic">DO WHILE &lt;условие&gt;
     &lt;инструкции&gt;
+    [CONTINUE DO]
+    [&lt;инструкции&gt;]
 LOOP</code></pre>
                 <pre><code class="language-basic">DO UNTIL &lt;условие&gt;
     &lt;инструкции&gt;
+    [CONTINUE DO]
+    [&lt;инструкции&gt;]
 LOOP</code></pre>
                 <pre><code class="language-basic">DO
     &lt;инструкции&gt;
+    [CONTINUE DO]
+    [&lt;инструкции&gt;]
 LOOP WHILE &lt;условие&gt;</code></pre>
                 <pre><code class="language-basic">DO
     &lt;инструкции&gt;
+    [CONTINUE DO]
+    [&lt;инструкции&gt;]
 LOOP UNTIL &lt;условие&gt;</code></pre>
                 <pre><code class="language-basic">DO
     &lt;инструкции&gt;
+    [CONTINUE DO]
+    [&lt;инструкции&gt;]
 LOOP</code></pre>
                 <pre><code class="language-basic">EXIT DO</code></pre>
             </section>
@@ -62,6 +72,7 @@ LOOP</code></pre>
                 <p><code>&lt;условие&gt;</code> - логическое выражение типа <code>BOOLEAN</code>.</p>
                 <p><code>&lt;инструкции&gt;</code> - тело цикла между <code>DO</code> и <code>LOOP</code>.</p>
                 <p><code>EXIT DO</code> немедленно завершает ближайший окружающий цикл <code>DO ... LOOP</code> и передаёт управление инструкции после <code>LOOP</code>.</p>
+                <p><code>CONTINUE DO</code> пропускает оставшуюся часть текущей итерации и переходит к проверке условия (для форм с <code>LOOP WHILE</code> или <code>LOOP UNTIL</code>) или к началу следующей итерации. Подробнее — на странице <a href="continue.html">оператора CONTINUE</a>.</p>
             </section>
 
             <section class="article-section">
@@ -105,6 +116,7 @@ PRINT "done"</code></pre>
                     <li><a href="../../samples/control-flow/do/loop_while.axm">LOOP WHILE: условие в конце</a></li>
                     <li><a href="../../samples/control-flow/do/loop_until.axm">LOOP UNTIL: завершение после прохода</a></li>
                     <li><a href="../../samples/control-flow/do/exit_do.axm">EXIT DO: досрочный выход</a></li>
+                    <li><a href="../../samples/control-flow/do/continue_do.axm">CONTINUE DO: пропуск итерации</a></li>
                     <li><a href="../../samples/control-flow/do/do_loop_exit.axm">DO ... LOOP: выход из безусловной формы</a></li>
                 </ul>
             </section>
@@ -112,12 +124,16 @@ PRINT "done"</code></pre>
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <p>Ошибка возникает, если условие цикла не имеет тип <code>BOOLEAN</code>, если <code>DO</code> не закрыт соответствующим <code>LOOP</code> или если <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</p>
+                <ul>
+                    <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+                </ul>
             </section>
 
             <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="loops.html">Циклы</a>
+                    <a href="continue.html">Оператор CONTINUE</a>
                     <a href="while.html">Оператор цикла WHILE</a>
                     <a href="for.html">Оператор цикла FOR</a>
                     <a href="if.html">Оператор IF</a>

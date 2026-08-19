@@ -54,8 +54,20 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/type_method_overload_ambiguous.axm", ExecutionStatus.SemanticFailure, "MB2033")]
     [InlineData("samples/acceptance/negative/type_constructor_invariant_false.axm", ExecutionStatus.RuntimeFailure, "MB3005")]
     [InlineData("samples/acceptance/negative/select_case_invalid_types.axm", ExecutionStatus.SemanticFailure, "MB2003")]
+    [InlineData("samples/acceptance/negative/select_case_boolean_range.axm", ExecutionStatus.SemanticFailure, "MB2015")]
+    [InlineData("samples/acceptance/negative/if_block_scope_escape.axm", ExecutionStatus.SemanticFailure, "MB2001")]
+    [InlineData("samples/acceptance/negative/select_case_empty_selector.axm", ExecutionStatus.SyntaxFailure, "MB1003")]
+    [InlineData("samples/acceptance/negative/select_case_else_before_case.axm", ExecutionStatus.SyntaxFailure, "MB1004")]
+    [InlineData("samples/acceptance/negative/if_duplicate_else.axm", ExecutionStatus.SyntaxFailure, "MB1005")]
+    [InlineData("samples/acceptance/negative/select_case_duplicate_case_else.axm", ExecutionStatus.SyntaxFailure, "MB1006")]
+    [InlineData("samples/acceptance/negative/if_shadowing_outer_variable.axm", ExecutionStatus.SemanticFailure, "MB2016")]
     [InlineData("samples/control-flow/for/predeclared_counter_invalid_type.axm", ExecutionStatus.SemanticFailure, "MB2009")]
     [InlineData("samples/operators/on-key/invalid_handler_parameter.axm", ExecutionStatus.SemanticFailure, "MB2034")]
+    [InlineData("samples/acceptance/negative/unknown_callable.axm", ExecutionStatus.SemanticFailure, "MB2005")]
+    [InlineData("samples/acceptance/negative/return_value_in_sub.axm", ExecutionStatus.SemanticFailure, "MB2006")]
+    [InlineData("samples/acceptance/negative/missing_return_value.axm", ExecutionStatus.SemanticFailure, "MB2007")]
+    [InlineData("samples/acceptance/negative/sub_name_as_value.axm", ExecutionStatus.SemanticFailure, "MB2019")]
+    [InlineData("samples/acceptance/negative/calling_non_function.axm", ExecutionStatus.SemanticFailure, "MB2020")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);

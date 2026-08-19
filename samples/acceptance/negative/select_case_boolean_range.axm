@@ -1,0 +1,7 @@
+' SELECT CASE диапазон TO допустим только для числовых или строковых значений.
+DIM flag AS BOOLEAN = TRUE
+
+SELECT CASE flag
+    CASE FALSE TO TRUE
+        PRINT "bad"
+END SELECT

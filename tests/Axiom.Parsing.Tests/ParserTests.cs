@@ -1422,6 +1422,61 @@ END SELECT
     }
 
     [Fact]
+    public void Parse_IfReportsDuplicateElse()
+    {
+        const string text = """
+IF TRUE THEN
+    PRINT "yes"
+ELSE
+    PRINT "first"
+ELSE
+    PRINT "duplicate"
+END IF
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static diagnostic => diagnostic.Code == "MB1005");
+    }
+
+    [Fact]
+    public void Parse_IfReportsDuplicateElseIfAfterElse()
+    {
+        const string text = """
+IF TRUE THEN
+    PRINT "yes"
+ELSE
+    PRINT "first"
+ELSEIF FALSE THEN
+    PRINT "duplicate"
+END IF
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static diagnostic => diagnostic.Code == "MB1005");
+    }
+
+    [Fact]
+    public void Parse_SelectCaseReportsDuplicateCaseElse()
+    {
+        const string text = """
+SELECT CASE 1
+    CASE 1
+        PRINT "one"
+    CASE ELSE
+        PRINT "first"
+    CASE ELSE
+        PRINT "duplicate"
+END SELECT
+""";
+
+        ParseProgram(text, out var diagnostics);
+
+        Assert.Contains(diagnostics, static diagnostic => diagnostic.Code == "MB1006");
+    }
+
+    [Fact]
     public void Parse_ForNextStatement()
     {
         const string text = """
@@ -1648,6 +1703,33 @@ END TRY
 
         Assert.Empty(diagnostics);
         AssertGlobalStatement<ExitDoStatementSyntax>(program);
+    }
+
+    [Fact]
+    public void Parse_ContinueForStatement()
+    {
+        var program = ParseProgram("CONTINUE FOR", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertGlobalStatement<ContinueForStatementSyntax>(program);
+    }
+
+    [Fact]
+    public void Parse_ContinueWhileStatement()
+    {
+        var program = ParseProgram("CONTINUE WHILE", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertGlobalStatement<ContinueWhileStatementSyntax>(program);
+    }
+
+    [Fact]
+    public void Parse_ContinueDoStatement()
+    {
+        var program = ParseProgram("CONTINUE DO", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertGlobalStatement<ContinueDoStatementSyntax>(program);
     }
 
     [Fact]

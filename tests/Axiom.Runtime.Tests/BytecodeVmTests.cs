@@ -5561,6 +5561,42 @@ PRINT ASCW(CHRW(128512))
     }
 
     [Fact]
+    public void Execute_BytecodeVmReversePreservesNonBmpUnicode()
+    {
+        const string text = """
+DIM s AS STRING
+s = "a" + CHRW(128512) + "b"
+PRINT LEN(REVERSE(s))
+DIM r AS STRING
+r = REVERSE(s)
+PRINT ASCW(MID(r, 1, 1))
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["4", "98"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_BytecodeVmJoinSingleElementMaterializesString()
+    {
+        const string text = """
+DIM items(1 TO 1) AS STRING
+items(1) = "hello"
+DIM result AS STRING
+result = JOIN(items)
+PRINT result
+PRINT LEN(result)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["hello", "5"], host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledNumericConversionAndRoundingBuiltins()
     {
         const string text = """
@@ -6655,6 +6691,47 @@ PRINT Person(-1).Age
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3005", diagnostic.Code);
         Assert.Contains("инвариант", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledCallStackOverflowReportsDiagnostic()
+    {
+        const string text = """
+Recurse()
+
+SUB Recurse()
+    Recurse()
+END SUB
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3011");
+        Assert.Contains("глубина стека", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Recurse", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Execute_CompiledMutualRecursionOverflowReportsDiagnostic()
+    {
+        const string text = """
+A(0)
+
+FUNCTION A(n AS INTEGER) AS INTEGER
+    RETURN B(n + 1)
+END FUNCTION
+
+FUNCTION B(n AS INTEGER) AS INTEGER
+    RETURN A(n + 1)
+END FUNCTION
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3011");
+        Assert.Contains("глубина стека", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     private static (BytecodeModule module, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(

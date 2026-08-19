@@ -1,0 +1,10 @@
+' В конструкции IF допускается только один блок ELSE.
+DIM x AS INTEGER = 1
+
+IF x > 0 THEN
+    PRINT "positive"
+ELSE
+    PRINT "first else"
+ELSE
+    PRINT "duplicate else"
+END IF

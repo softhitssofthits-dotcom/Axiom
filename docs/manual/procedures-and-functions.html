@@ -104,7 +104,22 @@ END FUNCTION</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>См. также</h2>
+                <h2>Диагностика</h2>
+                <p>При работе с процедурами и функциями возможны следующие ошибки:</p>
+                <ul>
+                    <li><code>MB2004</code> — неверное число аргументов при вызове.</li>
+                    <li><code>MB2005</code> — вызываемое имя не найдено.</li>
+                    <li><code>MB2006</code> — <code>RETURN</code> со значением внутри <code>SUB</code>.</li>
+                    <li><code>MB2007</code> — <code>RETURN</code> без значения внутри <code>FUNCTION</code>.</li>
+                    <li><code>MB2019</code> — имя <code>SUB</code> используется как значение.</li>
+                    <li><code>MB2020</code> — вызов значения, не являющегося функцией.</li>
+                    <li><code>MB3006</code> — <code>FUNCTION</code> завершилась без <code>RETURN</code> со значением.</li>
+                    <li><code>MB3011</code> — превышена максимальная глубина стека вызовов (бесконечная рекурсия).</li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>См. также</h2>
             <div class="link-list">
                 <a href="sub.html">Процедура SUB</a>
                 <a href="function.html">Функция FUNCTION</a>

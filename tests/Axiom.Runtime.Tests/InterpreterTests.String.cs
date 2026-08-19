@@ -434,6 +434,102 @@ LOOP
     }
 
     [Fact]
+    public void Execute_ContinueForSkipsRestOfBody()
+    {
+        const string text = """
+FOR i = 1 TO 5
+    IF i = 3 THEN
+        CONTINUE FOR
+    END IF
+    PRINT STR(i)
+NEXT
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "4", "5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ContinueWhileSkipsRestOfBody()
+    {
+        const string text = """
+DIM i AS INTEGER = 0
+WHILE i < 5
+    i = i + 1
+    IF i = 3 THEN
+        CONTINUE WHILE
+    END IF
+    PRINT STR(i)
+END WHILE
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "4", "5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ContinueDoSkipsRestOfBody()
+    {
+        const string text = """
+DIM i AS INTEGER = 0
+DO WHILE i < 5
+    i = i + 1
+    IF i = 3 THEN
+        CONTINUE DO
+    END IF
+    PRINT STR(i)
+LOOP
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "2", "4", "5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ContinueForWithNegativeStep()
+    {
+        const string text = """
+FOR i = 5 TO 1 STEP -1
+    IF i = 3 THEN
+        CONTINUE FOR
+    END IF
+    PRINT STR(i)
+NEXT
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["5", "4", "2", "1"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_NestedContinueForTargetsNearestFor()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    FOR j = 1 TO 3
+        IF j = 2 THEN
+            CONTINUE FOR
+        END IF
+        PRINT STR(i) + ":" + STR(j)
+    NEXT
+NEXT
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1:1", "1:3", "2:1", "2:3", "3:1", "3:3"], host.Output);
+    }
+
+    [Fact]
     public void Execute_NestedForAndWhileLoops()
     {
         const string text = """

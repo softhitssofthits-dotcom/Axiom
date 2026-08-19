@@ -258,3 +258,45 @@
 - Build: 0 errors. Тесты: 368 +886 +137 +203 =1,594.
 - Суммарный эффект выноса: ~-3,200 строк дублирования за все сессии.
 - Следующий шаг: продуктовая работа или GitHub deploy.
+
+### 2026-08-19 - реализован оператор CONTINUE
+
+- Добавлен оператор `CONTINUE FOR` / `CONTINUE WHILE` / `CONTINUE DO` во все слои: lexer, parser, semantics, lowering, interpreter, BytecodeVm.
+- Добавлены диагностики MB2037, MB2038, MB2039 для контекстных ошибок.
+- Добавлено26 новых тестов (parser, syntax, semantics, runtime, execution, lowering).
+- Добавлены3 runnable samples: `continue_for.axm`, `continue_while.axm`, `continue_do.axm`.
+- Обновлен manual: новая страница `continue.html`, обновлены `for.html`, `while.html`, `do-loop.html`, `loops.html`, `diagnostics.html`, `manual.js`, `search-index.js`.
+- Обновлена IDE-подсветка обеих тем.
+- Build: 0 errors. Тесты: 143 +374 +891 +206 =1,614 (+26 новых).
+- Следующий шаг: обновить `docs/BYTECODE_COVERAGE.md` для записи CONTINUE, затем продолжить продуктовую работу.
+
+### 2026-08-19 - глубокий forensic-аудит модели вызовов (SUB/FUNCTION/call-frame)
+
+- Проведён полный forensic-аудит процедурной модели языка: SUB, FUNCTION, RETURN, параметры, аргументы, фреймы, замыкания, рекурсия, встроенные функции.
+- Health Score: 8.7/10.
+- Модель фундаментально корректна: двухпроходная регистрация, единый FunctionSymbol, изолированные фреймы, корректные замыкания, BYVAL/BYREF, паритет интерпретатора и VM.
+- Выявлены находки:
+  - CALL-001 [P2]: нет защиты от переполнения стека (StackOverflowException без диагностики)
+  - CALL-003 [P2]: 5 негативных acceptance-сэмплов (MB2005, MB2006, MB2007, MB2019, MB2020)
+  - CALL-004 [P3]: ограничение BYREF для function values не полностью документировано
+  - CALL-005 [P3]: нет теста взаимной рекурсии
+  - CALL-006 [P3]: нет runtime-теста для MB3008 (FUNCTION без RETURN)
+- Следующий шаг: исправление находок по порядку приоритета.
+
+## Ближайшие задачи по аудиту вызовов
+
+1. [P2] CALL-001 — добавить ограничение глубины стека вызовов с диагностикой MB3xxx
+2. [P2] CALL-003 — создать 5 негативных acceptance-сэмплов: unknown_callable, return_value_in_sub, missing_return_value, sub_name_as_value, calling_non_function
+3. [P3] CALL-004 — расширить документацию BYREF-ограничения в function.html
+4. [P3] CALL-005 — добавить тест взаимной рекурсии (IsEven/IsOdd)
+5. [P3] CALL-006 — добавить runtime-тест для MB3008 (FUNCTION без RETURN на исполняемом пути)
+
+### 2026-08-19 - Deep String forensic audit и исправление STRING-001/STRING-002
+
+- Проведён полный forensic-аудит строковой подсистемы (111 разделов).
+- Health Score: 8.4/10.
+- Исправлен STRING-001 [P1]: REVERSE fast path Unicode surrogate pair corruption.
+- Исправлен STRING-002 [P3]: JOIN single-element VM parity.
+- Добавлены 2 теста. Тесты: 897/897.
+- Создан `docs/STRING_AUDIT_REPORT.md`.
+- Следующий шаг: продуктовая работа или глубокий аудит массивов.

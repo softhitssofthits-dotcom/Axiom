@@ -1,0 +1,5 @@
+SUB Greet()
+    RETURN 42
+END SUB
+
+Greet()

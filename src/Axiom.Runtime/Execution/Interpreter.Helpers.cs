@@ -559,6 +559,14 @@ public sealed partial class Interpreter
             location);
     }
 
+    private void ReportCallStackOverflow(string functionName, TextLocation location)
+    {
+        ReportRuntimeDiagnostic(
+            DiagnosticCodes.CallStackOverflow,
+            $"Превышена максимальная глубина стека вызовов ({Interpreter.MaxCallDepth}) при вызове '{functionName}'. Возможно, программа содержит бесконечную рекурсию.",
+            location);
+    }
+
     private void ReportBuiltInArgumentError(string functionName, string argumentName, string detail, TextLocation location)
     {
         ReportRuntimeDiagnostic(

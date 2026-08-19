@@ -8,6 +8,7 @@ public sealed class BoundProgramLowerer
     private readonly List<BytecodeDiagnostic> _diagnostics = [];
     private readonly Stack<LoopExitContext> _doLoopExitLabels = [];
     private readonly Stack<LoopExitContext> _forExitLabels = [];
+    private readonly Stack<LoopExitContext> _loopContinueLabels = [];
     private readonly List<FinallyContext> _activeFinallyContexts = [];
     private HashSet<VariableSymbol> _currentRoutineLocals = [];
     private bool _emitStatementBoundaries;
@@ -683,6 +684,18 @@ public sealed class BoundProgramLowerer
                 LowerExitFor(exitForStatement, instructions);
                 break;
 
+            case BoundContinueForStatement continueForStatement:
+                LowerContinue(continueForStatement.Location, "CONTINUE FOR", instructions);
+                break;
+
+            case BoundContinueWhileStatement continueWhileStatement:
+                LowerContinue(continueWhileStatement.Location, "CONTINUE WHILE", instructions);
+                break;
+
+            case BoundContinueDoStatement continueDoStatement:
+                LowerContinue(continueDoStatement.Location, "CONTINUE DO", instructions);
+                break;
+
             case BoundReturnStatement returnStatement:
                 if (returnStatement.Expression is not null)
                 {
@@ -1200,9 +1213,17 @@ public sealed class BoundProgramLowerer
         LowerExpression(whileStatement.Condition, instructions);
         instructions.Add(LoweredInstruction.JumpIfFalse(whileStatement.Condition.Location, endLabel));
 
-        foreach (var statement in whileStatement.Statements)
+        _loopContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
+        try
         {
-            LowerStatement(statement, instructions);
+            foreach (var statement in whileStatement.Statements)
+            {
+                LowerStatement(statement, instructions);
+            }
+        }
+        finally
+        {
+            _loopContinueLabels.Pop();
         }
 
         instructions.Add(LoweredInstruction.Jump(whileStatement.Location, startLabel));
@@ -1214,6 +1235,7 @@ public sealed class BoundProgramLowerer
         var checkLabel = CreateLabel();
         var negativeStepLabel = CreateLabel();
         var bodyLabel = CreateLabel();
+        var continueLabel = CreateLabel();
         var endLabel = CreateLabel();
         var endVariable = CreateForTemporary(forStatement, "end", checkLabel);
         var stepVariable = CreateForTemporary(forStatement, "step", checkLabel);
@@ -1252,6 +1274,7 @@ public sealed class BoundProgramLowerer
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, bodyLabel));
 
         _forExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
+        _loopContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in forStatement.Statements)
@@ -1261,9 +1284,11 @@ public sealed class BoundProgramLowerer
         }
         finally
         {
+            _loopContinueLabels.Pop();
             _forExitLabels.Pop();
         }
 
+        instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, continueLabel));
         instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
         instructions.Add(LoweredInstruction.LoadVariable(forStatement.StepExpression.Location, stepVariable));
         instructions.Add(LoweredInstruction.BinaryOperation(forStatement.StepExpression.Location, SyntaxKind.PlusToken));
@@ -1322,6 +1347,7 @@ public sealed class BoundProgramLowerer
             : LoweredInstruction.JumpIfTrue(condition.Location, endLabel));
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
+        _loopContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -1331,6 +1357,7 @@ public sealed class BoundProgramLowerer
         }
         finally
         {
+            _loopContinueLabels.Pop();
             _doLoopExitLabels.Pop();
         }
 
@@ -1347,6 +1374,7 @@ public sealed class BoundProgramLowerer
         EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
+        _loopContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -1356,6 +1384,7 @@ public sealed class BoundProgramLowerer
         }
         finally
         {
+            _loopContinueLabels.Pop();
             _doLoopExitLabels.Pop();
         }
 
@@ -1373,12 +1402,14 @@ public sealed class BoundProgramLowerer
         }
 
         var startLabel = CreateLabel();
+        var continueLabel = CreateLabel();
         var endLabel = CreateLabel();
 
         instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, startLabel));
         EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
+        _loopContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -1388,9 +1419,11 @@ public sealed class BoundProgramLowerer
         }
         finally
         {
+            _loopContinueLabels.Pop();
             _doLoopExitLabels.Pop();
         }
 
+        instructions.Add(LoweredInstruction.LabelMarker(doLoopStatement.Location, continueLabel));
         LowerExpression(condition, instructions);
         instructions.Add(doLoopStatement.ConditionKind == BoundDoLoopConditionKind.While
             ? LoweredInstruction.JumpIfTrue(condition.Location, startLabel)
@@ -1441,6 +1474,29 @@ public sealed class BoundProgramLowerer
         }
 
         instructions.Add(LoweredInstruction.Jump(location, exitContext.Label));
+    }
+
+    private void LowerContinue(Axiom.Core.TextLocation location, string constructName, List<LoweredInstruction> instructions)
+    {
+        if (_loopContinueLabels.Count == 0)
+        {
+            ReportUnsupported(location, constructName);
+            return;
+        }
+
+        var continueContext = _loopContinueLabels.Peek();
+
+        for (var index = _activeFinallyContexts.Count - 1; index >= continueContext.FinallyDepth; index--)
+        {
+            var context = _activeFinallyContexts[index];
+            instructions.Add(LoweredInstruction.PopErrorHandler(location));
+            foreach (var statement in context.Statements)
+            {
+                LowerStatement(statement, instructions);
+            }
+        }
+
+        instructions.Add(LoweredInstruction.Jump(location, continueContext.Label));
     }
 
     private void LowerExpression(BoundExpression expression, List<LoweredInstruction> instructions)
@@ -1898,6 +1954,14 @@ public sealed class BoundProgramLowerer
             "BC3001",
             $"Понижение пока не поддерживает {category}: {node.Kind}.",
             node.Location));
+    }
+
+    private void ReportUnsupported(Axiom.Core.TextLocation location, string category)
+    {
+        _diagnostics.Add(new BytecodeDiagnostic(
+            "BC3001",
+            $"Понижение пока не поддерживает {category}.",
+            location));
     }
 
     private void ReportUnsupportedSelector(BoundSelectCaseSelector selector, string category)

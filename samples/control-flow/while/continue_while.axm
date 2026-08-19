@@ -1,0 +1,17 @@
+' Пример показывает пропуск итерации через CONTINUE WHILE.
+' Ожидается вывод:
+' 1
+' 2
+' 4
+' 5
+
+DIM i AS INTEGER = 0
+
+WHILE i < 5
+    i = i + 1
+    IF i = 3 THEN
+        CONTINUE WHILE
+    END IF
+
+    PRINT i
+END WHILE

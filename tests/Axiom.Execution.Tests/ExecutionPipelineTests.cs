@@ -643,6 +643,118 @@ PRINT "done"
     }
 
     [Fact]
+    public void Run_SupportsContinueFor()
+    {
+        const string text = """
+FOR i = 1 TO 5
+    IF i = 3 THEN
+        CONTINUE FOR
+    END IF
+    PRINT STR(i)
+NEXT
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["1", "2", "4", "5"], result.Output);
+    }
+
+    [Fact]
+    public void Run_SupportsContinueWhile()
+    {
+        const string text = """
+DIM i AS INTEGER = 0
+WHILE i < 5
+    i = i + 1
+    IF i = 3 THEN
+        CONTINUE WHILE
+    END IF
+    PRINT STR(i)
+END WHILE
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["1", "2", "4", "5"], result.Output);
+    }
+
+    [Fact]
+    public void Run_SupportsContinueDo()
+    {
+        const string text = """
+DIM i AS INTEGER = 0
+DO WHILE i < 5
+    i = i + 1
+    IF i = 3 THEN
+        CONTINUE DO
+    END IF
+    PRINT STR(i)
+LOOP
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["1", "2", "4", "5"], result.Output);
+    }
+
+    [Fact]
+    public void Run_ReturnsSemanticFailureForContinueForOutsideFor()
+    {
+        const string text = """
+WHILE TRUE
+    CONTINUE FOR
+END WHILE
+""";
+
+        var output = new CollectingOutputWriter();
+        var result = Run(text, outputWriter: output);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB2037");
+        Assert.Empty(result.Output);
+        Assert.Empty(output.Output);
+    }
+
+    [Fact]
+    public void Run_ReturnsSemanticFailureForContinueWhileOutsideWhile()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    CONTINUE WHILE
+NEXT
+""";
+
+        var output = new CollectingOutputWriter();
+        var result = Run(text, outputWriter: output);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB2038");
+        Assert.Empty(result.Output);
+        Assert.Empty(output.Output);
+    }
+
+    [Fact]
+    public void Run_ReturnsSemanticFailureForContinueDoOutsideDo()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    CONTINUE DO
+NEXT
+""";
+
+        var output = new CollectingOutputWriter();
+        var result = Run(text, outputWriter: output);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB2039");
+        Assert.Empty(result.Output);
+        Assert.Empty(output.Output);
+    }
+
+    [Fact]
     public void Run_SupportsBlockLocalsInsideBranches()
     {
         const string text = """

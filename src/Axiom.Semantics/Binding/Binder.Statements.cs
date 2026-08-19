@@ -76,6 +76,9 @@ public sealed partial class Binder
             ForStatementSyntax forStatement => BindForStatement(forStatement),
             ExitForStatementSyntax exitForStatement => BindExitForStatement(exitForStatement),
             ExitDoStatementSyntax exitDoStatement => BindExitDoStatement(exitDoStatement),
+            ContinueForStatementSyntax continueForStatement => BindContinueForStatement(continueForStatement),
+            ContinueWhileStatementSyntax continueWhileStatement => BindContinueWhileStatement(continueWhileStatement),
+            ContinueDoStatementSyntax continueDoStatement => BindContinueDoStatement(continueDoStatement),
             ReturnStatementSyntax returnStatement => BindReturnStatement(returnStatement),
             ExpressionStatementSyntax expressionStatement => new BoundExpressionStatement(GetLocation(expressionStatement), BindExpression(expressionStatement.Expression)),
             _ => throw new ArgumentOutOfRangeException(nameof(statement), statement, "Unsupported statement.")

@@ -1579,6 +1579,36 @@ public sealed class BoundExitDoStatement : BoundStatement
     public override BoundNodeKind Kind => BoundNodeKind.ExitDoStatement;
 }
 
+public sealed class BoundContinueForStatement : BoundStatement
+{
+    public BoundContinueForStatement(TextLocation location)
+        : base(location)
+    {
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ContinueForStatement;
+}
+
+public sealed class BoundContinueWhileStatement : BoundStatement
+{
+    public BoundContinueWhileStatement(TextLocation location)
+        : base(location)
+    {
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ContinueWhileStatement;
+}
+
+public sealed class BoundContinueDoStatement : BoundStatement
+{
+    public BoundContinueDoStatement(TextLocation location)
+        : base(location)
+    {
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ContinueDoStatement;
+}
+
 public sealed class BoundReturnStatement : BoundStatement
 {
     public BoundReturnStatement(TextLocation location, BoundExpression? expression)

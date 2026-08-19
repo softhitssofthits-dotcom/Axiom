@@ -61,7 +61,8 @@
             { id: "loops", href: "loops.html", label: "Циклы" },
             { id: "for", href: "for.html", label: "FOR ... NEXT" },
             { id: "while", href: "while.html", label: "WHILE ... END WHILE" },
-            { id: "do-loop", href: "do-loop.html", label: "DO ... LOOP" }
+            { id: "do-loop", href: "do-loop.html", label: "DO ... LOOP" },
+            { id: "continue", href: "continue.html", label: "CONTINUE" }
           ]
         },
         {

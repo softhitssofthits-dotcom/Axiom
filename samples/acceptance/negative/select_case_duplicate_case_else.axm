@@ -1,0 +1,11 @@
+' В конструкции SELECT CASE допускается только один блок CASE ELSE.
+DIM value AS INTEGER = 1
+
+SELECT CASE value
+    CASE 1
+        PRINT "one"
+    CASE ELSE
+        PRINT "first else"
+    CASE ELSE
+        PRINT "duplicate else"
+END SELECT
