@@ -79,17 +79,6 @@ public sealed class ExpressionSyntaxTests
     }
 
     [Fact]
-    public void ArrayAccessExpression_HasCorrectKind()
-    {
-        var id = Token(SyntaxKind.IdentifierToken, "arr");
-        var open = Token(SyntaxKind.OpenParenToken, "(");
-        var index = new LiteralExpressionSyntax(Token(SyntaxKind.IntegerLiteralToken, "1"));
-        var close = Token(SyntaxKind.CloseParenToken, ")");
-        var expr = new ArrayAccessExpressionSyntax(id, open, index, close);
-        Assert.Equal(SyntaxKind.ArrayAccessExpression, expr.Kind);
-    }
-
-    [Fact]
     public void FieldAccessExpression_HasCorrectKind()
     {
         var target = new NameExpressionSyntax(Token(SyntaxKind.IdentifierToken, "obj"));

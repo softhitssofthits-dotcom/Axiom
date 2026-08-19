@@ -203,10 +203,10 @@ public sealed partial class Interpreter
             SyntaxKind.ModKeyword => EvaluateRemainder(expression, left, right),
             SyntaxKind.EqualsToken => RuntimeValue.FromBoolean(ValuesEqual(left, right)),
             SyntaxKind.NotEqualsToken => RuntimeValue.FromBoolean(!ValuesEqual(left, right)),
-            SyntaxKind.LessToken => RuntimeValue.FromBoolean(Compare(left, right) < 0),
-            SyntaxKind.LessOrEqualsToken => RuntimeValue.FromBoolean(Compare(left, right) <= 0),
-            SyntaxKind.GreaterToken => RuntimeValue.FromBoolean(Compare(left, right) > 0),
-            SyntaxKind.GreaterOrEqualsToken => RuntimeValue.FromBoolean(Compare(left, right) >= 0),
+            SyntaxKind.LessToken => RuntimeValue.FromBoolean(CompareWithDiagnostics(left, right, expression.Location) < 0),
+            SyntaxKind.LessOrEqualsToken => RuntimeValue.FromBoolean(CompareWithDiagnostics(left, right, expression.Location) <= 0),
+            SyntaxKind.GreaterToken => RuntimeValue.FromBoolean(CompareWithDiagnostics(left, right, expression.Location) > 0),
+            SyntaxKind.GreaterOrEqualsToken => RuntimeValue.FromBoolean(CompareWithDiagnostics(left, right, expression.Location) >= 0),
             SyntaxKind.AndKeyword when expression.Type == TypeSymbol.Boolean => RuntimeValue.FromBoolean(left.AsBoolean() && right.AsBoolean()),
             SyntaxKind.OrKeyword when expression.Type == TypeSymbol.Boolean => RuntimeValue.FromBoolean(left.AsBoolean() || right.AsBoolean()),
             SyntaxKind.XorKeyword when expression.Type == TypeSymbol.Boolean => RuntimeValue.FromBoolean(left.AsBoolean() ^ right.AsBoolean()),
@@ -423,6 +423,20 @@ public sealed partial class Interpreter
     private static int Compare(RuntimeValue left, RuntimeValue right)
     {
         return RuntimeValueHelpers.Compare(left, right);
+    }
+
+    private int CompareWithDiagnostics(RuntimeValue left, RuntimeValue right, TextLocation location)
+    {
+        try
+        {
+            return RuntimeValueHelpers.Compare(left, right);
+        }
+        catch (InvalidOperationException)
+        {
+            return ReportInvalidRuntimeState<int>(
+                $"Сравнение не поддерживается для типа '{left.Type.Name}'.",
+                location);
+        }
     }
 
     private static bool RecordsEqual(RuntimeRecordValue left, RuntimeRecordValue right)

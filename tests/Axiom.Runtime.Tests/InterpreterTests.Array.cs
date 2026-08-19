@@ -625,14 +625,14 @@ PRINT ARRAYISALLOCATED(merged)
 PRINT LBOUND(merged)
 PRINT UBOUND(merged)
 PRINT ARRAYLENGTH(merged)
-PRINT merged(1)
-PRINT merged(2)
+PRINT merged(10)
+PRINT merged(11)
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "1", "2", "2", "30", "40"], host.Output);
+        Assert.Equal(["TRUE", "10", "11", "2", "30", "40"], host.Output);
     }
 
     [Fact]

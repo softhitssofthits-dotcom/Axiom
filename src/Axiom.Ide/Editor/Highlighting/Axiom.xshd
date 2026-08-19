@@ -39,6 +39,7 @@
             <Word>COLOR</Word>
             <Word>CONST</Word>
             <Word>CONTINUE</Word>
+            <Word>COLUMN</Word>
             <Word>DIM</Word>
             <Word>DO</Word>
             <Word>DRAW</Word>
@@ -84,6 +85,7 @@
             <Word>OUTPUT</Word>
             <Word>PAINT</Word>
             <Word>PALETTE</Word>
+            <Word>PI</Word>
             <Word>PCOPY</Word>
             <Word>PRESERVE</Word>
             <Word>PRINT</Word>
@@ -94,6 +96,7 @@
             <Word>REDIM</Word>
             <Word>RESETCAMERA</Word>
             <Word>RETURN</Word>
+            <Word>ROW</Word>
             <Word>SCREEN</Word>
             <Word>SELF</Word>
             <Word>SELECT</Word>

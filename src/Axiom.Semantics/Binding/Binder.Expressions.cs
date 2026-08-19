@@ -18,7 +18,6 @@ public sealed partial class Binder
             ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression),
             NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
-            ArrayAccessExpressionSyntax arrayAccessExpression => BindArrayAccessExpression(arrayAccessExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             ErrorExpressionSyntax errorExpression => new BoundErrorExpression(errorExpression.Token.Location),
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")

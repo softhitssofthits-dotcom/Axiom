@@ -777,3 +777,26 @@ Health Score строковой подсистемы: **8.4/10**.
 Следующий шаг: продуктовая работа или следующий аудит (массивы).
 
 Следующий шаг: продуктовая работа или следующий аудит.
+
+## Session 1046 - 2026-08-20 01:00 - Deep Array forensic audit и исправление ARRAY-001..004
+
+Задача: провести полный forensic-аудит массивной подсистемы Axiom и исправить найденные дефекты.
+
+### Аудит
+
+Проведён полный forensic-аудит по 5 параллельным направлениям: типовая модель, built-in функции, тесты/samples, паритет движков, документация.
+
+Health Score массивной подсистемы: **8.8/10**.
+
+Найденные и исправленные дефекты:
+- ARRAY-001 [P1]: ARRAYCONCAT 1D empty-array bounds parity
+- ARRAY-002 [P1]: Compare error handling parity (Interpreter crash → diagnostic)
+- ARRAY-003 [P3]: ROW/COLUMN/PI IDE highlighting
+- ARRAY-004 [P3]: Error message formatting parity (parentheses)
+
+### Проверки
+- Build: 0 ошибок, 0 предупреждений
+- Runtime: 897/897
+- Semantics: 374/374
+
+Следующий шаг: продуктовая работа или следующий аудит.

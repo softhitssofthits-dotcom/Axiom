@@ -111,16 +111,6 @@ public sealed partial class Binder
         return BindInvocationExpression(target, expression, GetLocation(expression.Target), "вызываемого значения");
     }
 
-    private BoundExpression BindArrayAccessExpression(ArrayAccessExpressionSyntax expression)
-    {
-        var variable = LookupVariable(expression.Identifier.Text, expression.Identifier.Location);
-        return BindArrayAccess(
-            new BoundVariableExpression(expression.Identifier.Location, variable),
-            [expression.Index],
-            expression.Identifier.Location,
-            variable.Name);
-    }
-
     private BoundExpression BindFieldAccessExpression(FieldAccessExpressionSyntax expression)
     {
         var target = BindExpression(expression.Target);
@@ -588,7 +578,6 @@ public sealed partial class Binder
         {
             NameExpressionSyntax nameExpression => BindAssignableNameTarget(nameExpression),
             CallExpressionSyntax callExpression => BindAssignableCallTarget(callExpression),
-            ArrayAccessExpressionSyntax arrayAccessExpression => BindAssignableArrayAccessTarget(arrayAccessExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             _ => new BoundErrorExpression(GetLocation(target))
         };
@@ -1466,24 +1455,6 @@ public sealed partial class Binder
         }
 
         return new BoundErrorExpression(GetLocation(expression));
-    }
-
-    private BoundExpression BindAssignableArrayAccessTarget(ArrayAccessExpressionSyntax expression)
-    {
-        var target = BindArrayAccessExpression(expression);
-
-        if (target.Type is not ArrayTypeSymbol)
-        {
-            return target;
-        }
-
-        if (_scope.TryLookupVariable(expression.Identifier.Text, out var variable)
-            && variable?.Type is ArrayTypeSymbol arrayType)
-        {
-            ReportWrongArgumentCount(variable.Name, arrayType.Rank, actualCount: 1, expression.Identifier.Location);
-        }
-
-        return new BoundErrorExpression(expression.Identifier.Location);
     }
 
     private bool HasRangeArgument(IReadOnlyList<ExpressionSyntax> arguments)

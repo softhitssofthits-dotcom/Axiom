@@ -639,17 +639,18 @@ public sealed partial class BytecodeVm
 
     private static string FormatArrayIndices(IReadOnlyList<int> indices)
     {
-        return string.Join(", ", indices);
+        return $"({string.Join(", ", indices)})";
     }
 
     private static string FormatArrayIndices(ReadOnlySpan<int> indices)
     {
         if (indices.Length == 0)
         {
-            return string.Empty;
+            return "()";
         }
 
         var builder = new System.Text.StringBuilder();
+        builder.Append('(');
         builder.Append(indices[0]);
 
         for (var index = 1; index < indices.Length; index++)
@@ -658,12 +659,13 @@ public sealed partial class BytecodeVm
             builder.Append(indices[index]);
         }
 
+        builder.Append(')');
         return builder.ToString();
     }
 
     private static string FormatArraySlices(IReadOnlyList<RuntimeArrayIndexSlice> slices)
     {
-        return string.Join(", ", slices.Select(static slice => slice.IsRange ? $"{slice.LowerBound} TO {slice.UpperBound}" : slice.LowerBound.ToString()));
+        return $"({string.Join(", ", slices.Select(static slice => slice.IsRange ? $"{slice.LowerBound} TO {slice.UpperBound}" : slice.LowerBound.ToString()))})";
     }
 
     private static bool TryValidateArraySlices(RuntimeArrayValue array, IReadOnlyList<RuntimeArrayIndexSlice> slices)

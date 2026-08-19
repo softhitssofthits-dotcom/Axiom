@@ -300,3 +300,15 @@
 - Добавлены 2 теста. Тесты: 897/897.
 - Создан `docs/STRING_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа или глубокий аудит массивов.
+
+### 2026-08-20 - Deep Array forensic audit и исправление ARRAY-001..004
+
+- Проведён полный forensic-аудит массивной подсистемы (5 параллельных направления).
+- Health Score: 8.8/10.
+- Исправлен ARRAY-001 [P1]: ARRAYCONCAT 1D empty-array bounds parity.
+- Исправлен ARRAY-002 [P1]: Compare error handling parity (Interpreter crash → diagnostic).
+- Исправлен ARRAY-003 [P3]: ROW/COLUMN/PI IDE highlighting.
+- Исправлен ARRAY-004 [P3]: Error message formatting parity (parentheses).
+- Тесты: 897/897 Runtime, 374/374 Semantics.
+- Создан `docs/ARRAY_AUDIT_REPORT.md`.
+- Следующий шаг: продуктовая работа.

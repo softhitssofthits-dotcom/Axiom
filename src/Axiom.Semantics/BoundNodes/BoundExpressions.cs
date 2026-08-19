@@ -78,7 +78,7 @@ public sealed class BoundArrayAccessExpression : BoundExpression
 public sealed class BoundArrayRangeExpression : BoundExpression
 {
     public BoundArrayRangeExpression(TextLocation location, BoundExpression lowerBound, BoundExpression upperBound)
-        : base(location, TypeSymbol.Error)
+        : base(location, TypeSymbol.Void)
     {
         ArgumentNullException.ThrowIfNull(lowerBound);
         ArgumentNullException.ThrowIfNull(upperBound);

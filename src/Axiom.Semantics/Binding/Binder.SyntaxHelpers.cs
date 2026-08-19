@@ -48,7 +48,6 @@ public sealed partial class Binder
             BinaryExpressionSyntax binaryExpression => binaryExpression.OperatorToken.Location,
             ParenthesizedExpressionSyntax parenthesizedExpression => parenthesizedExpression.OpenParenToken.Location,
             CallExpressionSyntax callExpression => GetLocation(callExpression.Target),
-            ArrayAccessExpressionSyntax arrayAccessExpression => arrayAccessExpression.Identifier.Location,
             FieldAccessExpressionSyntax fieldAccessExpression => fieldAccessExpression.Identifier.Location,
             ErrorExpressionSyntax errorExpression => errorExpression.Token.Location,
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")

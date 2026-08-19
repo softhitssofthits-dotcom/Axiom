@@ -167,32 +167,6 @@ public sealed class CallExpressionSyntax : ExpressionSyntax
     public SyntaxToken CloseParenToken { get; }
 }
 
-public sealed class ArrayAccessExpressionSyntax : ExpressionSyntax
-{
-    public ArrayAccessExpressionSyntax(SyntaxToken identifier, SyntaxToken openParenToken, ExpressionSyntax index, SyntaxToken closeParenToken)
-    {
-        ArgumentNullException.ThrowIfNull(identifier);
-        ArgumentNullException.ThrowIfNull(openParenToken);
-        ArgumentNullException.ThrowIfNull(index);
-        ArgumentNullException.ThrowIfNull(closeParenToken);
-
-        Identifier = identifier;
-        OpenParenToken = openParenToken;
-        Index = index;
-        CloseParenToken = closeParenToken;
-    }
-
-    public override SyntaxKind Kind => SyntaxKind.ArrayAccessExpression;
-
-    public SyntaxToken Identifier { get; }
-
-    public SyntaxToken OpenParenToken { get; }
-
-    public ExpressionSyntax Index { get; }
-
-    public SyntaxToken CloseParenToken { get; }
-}
-
 public sealed class FieldAccessExpressionSyntax : ExpressionSyntax
 {
     public FieldAccessExpressionSyntax(ExpressionSyntax target, SyntaxToken dotToken, SyntaxToken identifier)

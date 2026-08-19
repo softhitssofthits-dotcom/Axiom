@@ -717,7 +717,7 @@ public sealed partial class Interpreter
     {
         var lowerBound = EvaluateExpression(selector.LowerBound);
         var upperBound = EvaluateExpression(selector.UpperBound);
-        return Compare(testValue, lowerBound) >= 0 && Compare(testValue, upperBound) <= 0;
+        return CompareWithDiagnostics(testValue, lowerBound, selector.LowerBound.Location) >= 0 && CompareWithDiagnostics(testValue, upperBound, selector.UpperBound.Location) <= 0;
     }
 
     private bool MatchesCaseComparison(RuntimeValue testValue, BoundCaseComparisonSelector selector)
@@ -728,10 +728,10 @@ public sealed partial class Interpreter
         {
             SyntaxKind.EqualsToken => ValuesEqual(testValue, value),
             SyntaxKind.NotEqualsToken => !ValuesEqual(testValue, value),
-            SyntaxKind.LessToken => Compare(testValue, value) < 0,
-            SyntaxKind.LessOrEqualsToken => Compare(testValue, value) <= 0,
-            SyntaxKind.GreaterToken => Compare(testValue, value) > 0,
-            SyntaxKind.GreaterOrEqualsToken => Compare(testValue, value) >= 0,
+            SyntaxKind.LessToken => CompareWithDiagnostics(testValue, value, selector.Expression.Location) < 0,
+            SyntaxKind.LessOrEqualsToken => CompareWithDiagnostics(testValue, value, selector.Expression.Location) <= 0,
+            SyntaxKind.GreaterToken => CompareWithDiagnostics(testValue, value, selector.Expression.Location) > 0,
+            SyntaxKind.GreaterOrEqualsToken => CompareWithDiagnostics(testValue, value, selector.Expression.Location) >= 0,
             _ => ReportInvalidRuntimeState<bool>($"Unsupported CASE IS operator: {selector.OperatorKind}.", selector.Location)
         };
     }

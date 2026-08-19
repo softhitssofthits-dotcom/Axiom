@@ -234,7 +234,6 @@ public enum SyntaxKind
     ParenthesizedExpression,
     NamedArgumentExpression,
     CallExpression,
-    ArrayAccessExpression,
     FieldAccessExpression,
     ErrorExpression
 }

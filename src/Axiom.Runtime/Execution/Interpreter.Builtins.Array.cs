@@ -814,6 +814,16 @@ public sealed partial class Interpreter
 
         if (left.Rank == 1)
         {
+            if (left.Length == 0)
+            {
+                return BuiltinArrayHelpers.CloneArrayValue(arrayType, right);
+            }
+
+            if (right.Length == 0)
+            {
+                return BuiltinArrayHelpers.CloneArrayValue(arrayType, left);
+            }
+
             var values = new List<RuntimeValue>(left.Length + right.Length);
             BuiltinArrayHelpers.ForEachArrayIndexAscending(left, index => values.Add(left.GetValue(index)));
             BuiltinArrayHelpers.ForEachArrayIndexAscending(right, index => values.Add(right.GetValue(index)));
