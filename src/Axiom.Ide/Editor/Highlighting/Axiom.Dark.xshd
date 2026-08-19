@@ -15,12 +15,15 @@
            foreground="#4EC9B0" />
     <Color name="BuiltIn"
            foreground="#DCDCAA" />
+    <Color name="Operator"
+           foreground="#D4D4D4" />
 
     <RuleSet ignoreCase="true">
         <Rule color="Comment">'[^\r\n]*</Rule>
         <Rule color="Comment">\bREM\b[^\r\n]*</Rule>
         <Rule color="String">&quot;(&quot;&quot;|[^&quot;\r\n])*&quot;?</Rule>
         <Rule color="Number">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>
+        <Rule color="Operator">&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;=|&gt;=|:=|[-+*/\\^=&lt;&gt;&amp;]</Rule>
 
         <Keywords color="Keyword">
             <Word>AND</Word>
@@ -39,7 +42,6 @@
             <Word>COLOR</Word>
             <Word>CONST</Word>
             <Word>CONTINUE</Word>
-            <Word>COLUMN</Word>
             <Word>DIM</Word>
             <Word>DO</Word>
             <Word>DRAW</Word>
@@ -85,7 +87,6 @@
             <Word>OUTPUT</Word>
             <Word>PAINT</Word>
             <Word>PALETTE</Word>
-            <Word>PI</Word>
             <Word>PCOPY</Word>
             <Word>PRESERVE</Word>
             <Word>PRINT</Word>
@@ -96,7 +97,6 @@
             <Word>REDIM</Word>
             <Word>RESETCAMERA</Word>
             <Word>RETURN</Word>
-            <Word>ROW</Word>
             <Word>SCREEN</Word>
             <Word>SELF</Word>
             <Word>SELECT</Word>
@@ -351,7 +351,6 @@
             <Word>STARTOFYEAR</Word>
             <Word>STARTSWITH</Word>
             <Word>STR</Word>
-            <Word>STRING</Word>
             <Word>SUBSTRCOUNT</Word>
             <Word>TAN</Word>
             <Word>TANH</Word>

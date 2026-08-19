@@ -14,15 +14,16 @@ public interface IProgramRunService
         IEnumerable<int>? sourceBreakpointLines = null,
         bool stopBeforeFirstInstruction = false,
         string? sourceFilePath = null,
-        TimeSpan? timeout = null);
+        TimeSpan? timeout = null,
+        IRuntimeCancellationProvider? cancellationProvider = null);
 
-    ProgramRunResult Continue(BytecodeVmStopState stopState);
+    ProgramRunResult Continue(IProgramDebuggerState debuggerState);
 
-    ProgramRunResult StepOver(BytecodeVmStopState stopState);
+    ProgramRunResult StepOver(IProgramDebuggerState debuggerState);
 
-    ProgramRunResult StepInto(BytecodeVmStopState stopState);
+    ProgramRunResult StepInto(IProgramDebuggerState debuggerState);
 
-    ProgramRunResult StepOut(BytecodeVmStopState stopState);
+    ProgramRunResult StepOut(IProgramDebuggerState debuggerState);
 
-    ProgramRunResult StepBack(BytecodeVmStopState stopState);
+    ProgramRunResult StepBack(IProgramDebuggerState debuggerState);
 }

@@ -342,3 +342,112 @@
 - Build: 0 errors. Тесты: 897/897.
 - Создан `docs/FILE_SYSTEM_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа или аудит системы ошибок (Error Handling, Level 10).
+
+### 2026-08-19 - Deep Error Handling / Exceptions / Diagnostics forensic audit и исправление ERROR-003, ERROR-004
+
+- Проведён полный forensic audit системы ошибок (135 раздела).
+- Health Score: 8.5/10.
+- ERROR-003 [P0]: `InvalidOperationException` из `BuiltinDateTimeHelpers` ловится и переводится в MB3007 (оба движка).
+- ERROR-004 [P1]: `BytecodeEvaluationStack.Pop()` бросает `EvaluationStackUnderflowException`, VM переводит в MB3005.
+- Создан `EvaluationStackUnderflowException.cs`.
+- Build: 0 errors. Тесты: 897 + 94 + 21 = 1,012.
+- Создан `docs/ERROR_HANDLING_AUDIT.md`.
+- Следующий шаг: аудит модулей/namespaces/project structure (Level 11).
+
+### 2026-08-19 - Deep Modules / Namespaces / Program Structure forensic audit
+
+- Проведён полный forensic audit программной модели (130 раздела).
+- Health Score: 8.5/10.
+- **Axiom — строго однофайловый язык.** Программа = один `.axm` файл.
+- Нет модулей, namespaces, imports, visibility modifiers, project file format.
+- Все P2/P3 findings — feature gaps, не баги.
+- Система стабильна для Bytecode/VM audit.
+- Создан `docs/MODULES_AUDIT.md`.
+- Следующий шаг: глубокий аудит Bytecode / VM (Level 12).
+
+### 2026-08-19 - Deep Bytecode / VM Forensic + Performance Audit (Level 12) завершён
+
+- Проведён полный forensic + performance аудит Bytecode VM по 10 фазам.
+- Health Score: **8.4/10**.
+- 48 benchmark scenarios: VM быстрее в 43/48 (90%), median speedup 0.63x.
+- 1046/1046 тестов проходят (897 Runtime + 149 Execution Pipeline).
+- Создан `docs/BYTECODE_VM_AUDIT_REPORT.md` с полным отчётом.
+- Ключевые находки:
+  - PERF-001 [P1]: RuntimeValue boxing — 2 unbox + 0-1 box per arithmetic op
+  - PERF-002 [P2]: No constant folding in lowering
+  - PERF-003 [P2]: Negate/Not нет fast path (closure alloc)
+  - PERF-004 [P3]: I/O regression (1.05-1.19x)
+- Топ-3 оптимизации:
+  1. Negate/Not fast paths (low risk, immediate benefit)
+  2. ReferenceEquals short-circuit in ValuesEqual (low risk)
+  3. Constant folding in lowering (medium risk)
+- Следующий шаг: Phase A quick-win оптимизации или продуктовая работа.
+
+### 2026-08-19 - Phase A quick-win оптимизации реализованы
+
+- OPT-001: Negate fast path — `TryEvaluateHotNegate()` без closure allocation
+- OPT-002: Not fast path — `TryEvaluateHotNot()` без closure allocation
+- OPT-003: ReferenceEquals short-circuit в `ValuesEqual()` и `Compare()`
+- Результаты: string_concat -25%, scalar_assignment -17%, bitwise_shift -9%
+- Build: 0 errors. Тесты: 897 + 149 = 1046/1046. Benchmark: 48/48 PASS.
+- Следующий шаг: Phase B (constant folding, dead code elimination) или продуктовая работа.
+
+### 2026-08-19 - Верификация benchmarks: регрессий нет
+
+- Все 5 ранее зафиксированных «регрессий» оказались шумом коротких прогонов (3 итерации, 1 прогрев).
+- На длинных прогонах (10 итераций, 3 прогрева): 46/48 VM быстрее, 2/48 паритет, 0/48 регрессий.
+- Обновлены `docs/BYTECODE_VM_AUDIT_REPORT.md` и `docs/WORKLOG5.md`.
+- Следующий шаг: продуктовая работа или Phase B оптимизации.
+
+### 2026-08-19 - Phase B оптимизации реализованы
+
+- B.1: Constant folding — `TryFoldUnary`, `TryFoldBinary`, `TryFoldConversion` в BoundProgramLowerer
+- B.2: Dead code elimination — пропуск unreachable statements после Return/Jump
+- B.3: Dead branch elimination — `IF TRUE/FALSE` → прямое выполнение нужной ветки
+- Build: 0 errors. Тесты: 897 + 206 + 374 + 149 = 1626/1626. Benchmark: 48/48 PASS.
+- Следующий шаг: Phase C (I/O fast paths) или продуктовая работа.
+
+### 2026-08-20 - Phase C: inline fast paths для строковых built-in
+
+- Добавлен `TryExecuteFastStringBuiltin` —10 inline fast paths: LEN, TRIM, LTRIM, RTRIM, LCASE, UCASE, CONTAINS, STARTSWITH, ENDSWITH, INSTR
+- Build: 0 errors. Тесты: 897 + 149 = 1046/1046. Benchmark: 48/48 PASS.
+- Следующий шаг: Phase D (type-specialized stacks) или продуктовая работа.
+
+### 2026-08-20 - Phase D: integer cache expansion — не даёт эффекта, откачено
+
+- Расширение кеша [-1,1024] → [-1,8192] не даёт значительного улучшения
+- Откачено — кеш уже покрывал основной диапазон
+- Для дальнейшего ускорения нужна глубокая архитектурная переработка (type-specialized stacks)
+- Следующий шаг: продуктовая работа.
+
+### 2026-08-20 - Глубокая архитектурная переработка VM запланирована (отложена)
+
+- **OPT-PERF-ARCH-001**: Type-specialized stacks — параллельные `int[]`, `long[]`, `double[]`, `decimal[]`, `bool[]` стеки рядом с `RuntimeValue[]`
+  - Цель: устранить boxing/unboxing для горячих арифметических операций
+  - Ожидаемый эффект: дополнительные 20-40% на CPU-heavy сценариях
+  - Сложность: высокая — затрагивает core VM loop, все арифметические/comparison opcodes, frame model
+  - Статус: **ОТЛОЖЕНО** — требует отдельного проектирования
+  - Документация: `docs/BYTECODE_VM_AUDIT_REPORT.md`, раздел20
+- Следующий шаг: доработать отчёт аудита до полного формата (122 раздела).
+
+### 2026-08-19 - Форензик-аудит IDE завершён, начато исправление находок
+
+Проведён глубокий аудит интеграции IDE с языком (уровень 13). Документ: `docs/IDE_FORENSIC_AUDIT.md`.
+
+**Исправлено (Session 1057):**
+- **IDE-004** [P3]: Исправлена двойная классификация STRING в XSHD
+- **IDE-005** [P3]: Добавлена подсветка операторов в оба XSHD
+- **IDE-006** [P3]: Убраны COLUMN/ROW/PI из XSHD (не ключевые слова языка)
+- **IDE-009** [P3]: Очистка диагностик при редактировании документа
+- **IDE-001** [P2]: Устранено нарушение архитектуры SmartIdentifierService (инъекция парсинга)
+
+**Запланировано (отложено):**
+- **IDE-002** [P2]: Создать абстракцию отладчика вместо прямого использования BytecodeVmStopState — **ВЫПОЛНЕНО**
+- **IDE-003** [P2]: Разделить ProgramConsoleService на сфокусированные сервисы — **ОТЛОЖЕНО**
+- **IDE-008** [P2]: Добавить команду отмены выполнения программы — **ВЫПОЛНЕНО**
+- **TASK-007** [P2]: Консолидировать источник ключевых слов (5 мест → 1) — **ВЫПОЛНЕНО** (центральный реестр + тест XSHD)
+
+**Не трогать:**
+- ProgramRunService — стабилен, хорошо протестирован
+- AxiomExecutionPipeline — ядро pipeline, тщательно протестировано
+- DocumentWorkspaceService — чистый, хорошо протестирован

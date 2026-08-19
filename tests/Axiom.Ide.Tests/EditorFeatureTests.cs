@@ -1,4 +1,5 @@
-﻿using Axiom.Ide.Editor.Highlighting;
+﻿using Axiom.Core;
+using Axiom.Ide.Editor.Highlighting;
 using Axiom.Ide.Editor.Navigation;
 using Axiom.Ide.Models;
 using Axiom.Ide.Services.Persistence;
@@ -345,14 +346,48 @@ public sealed class EditorFeatureTests
     [Fact]
     public void Highlighting_VocabularyCoversAllBuiltInFunctions()
     {
+        var typeNames = AxiomHighlightingVocabulary.TypeNames;
+
         var missingBuiltIns = BuiltinFunctions.All
             .Select(static function => function.Name)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Where(name => !AxiomHighlightingVocabulary.BuiltIns.Contains(name))
+            .Where(name => !AxiomHighlightingVocabulary.BuiltIns.Contains(name)
+                && !typeNames.Contains(name))
             .OrderBy(static name => name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         Assert.Empty(missingBuiltIns);
+    }
+
+    [Fact]
+    public void Highlighting_XshdKeywordsMatchCentralRegistry()
+    {
+        var xshdKeywords = AxiomHighlightingVocabulary.Keywords;
+        var xshdTypes = AxiomHighlightingVocabulary.TypeNames;
+        var centralKeywords = Axiom.Core.AxiomLanguageKeywords.Keywords;
+        var centralTypes = Axiom.Core.AxiomLanguageKeywords.TypeNames;
+
+        var missingFromXshd = centralKeywords
+            .Where(k => !xshdKeywords.Contains(k))
+            .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var extraInXshd = xshdKeywords
+            .Where(k => !centralKeywords.Contains(k))
+            .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var missingTypesFromXshd = centralTypes
+            .Where(t => !xshdTypes.Contains(t))
+            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        Assert.True(missingFromXshd.Length == 0,
+            $"Keywords in central registry but missing from XSHD: {string.Join(", ", missingFromXshd)}");
+        Assert.True(extraInXshd.Length == 0,
+            $"Keywords in XSHD but missing from central registry: {string.Join(", ", extraInXshd)}");
+        Assert.True(missingTypesFromXshd.Length == 0,
+            $"Type names in central registry but missing from XSHD: {string.Join(", ", missingTypesFromXshd)}");
     }
 
     [Fact]

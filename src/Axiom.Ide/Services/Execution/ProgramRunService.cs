@@ -99,7 +99,8 @@ public sealed class ProgramRunService : IProgramRunService
         IEnumerable<int>? sourceBreakpointLines = null,
         bool stopBeforeFirstInstruction = false,
         string? sourceFilePath = null,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null,
+        IRuntimeCancellationProvider? cancellationProvider = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
 
@@ -177,13 +178,15 @@ public sealed class ProgramRunService : IProgramRunService
                 ? new TimeoutCancellationProvider(t)
                 : null;
 
+            var effectiveCancellation = cancellationProvider ?? timeoutCancellation;
+
             var executionResult = _pipeline.RunCompiled(
                 compiledProgram,
                 new ExecutionRequest(
                     sourceText,
                     inputProvider: inputProvider,
                     outputWriter: _consoleService,
-                    cancellationProvider: timeoutCancellation,
+                    cancellationProvider: effectiveCancellation,
                     mode: mode,
                     sourceBreakpointLines: sourceBreakpointLines,
                     stopBeforeFirstInstruction: stopBeforeFirstInstruction));
@@ -203,6 +206,10 @@ public sealed class ProgramRunService : IProgramRunService
                 _consoleService.EndSession();
             }
 
+            IProgramDebuggerState? debuggerState = executionResult.StopState is not null
+                ? CreateDebuggerAdapter(executionResult.StopState)
+                : null;
+
             _traceService.Write(
                 "run.pipeline",
                 $"status={executionResult.Status} | requestedMode={executionResult.RequestedMode} | actualEngine={executionResult.ActualEngine?.ToString() ?? "none"} | stopped={executionResult.Stopped} | diagnostics={diagnostics.Length} | outputLines={executionResult.Output.Count} | compiledCache={(usesCompiledCache ? "hit" : "miss")} | bytecodeCache={(executionResult.UsedBytecodeCache ? "hit" : "miss")} | preparationMs={preparationDuration.TotalMilliseconds:F3} | loweringMs={executionResult.LoweringDuration.TotalMilliseconds:F3} | bytecodeMs={executionResult.BytecodeEmissionDuration.TotalMilliseconds:F3} | executionMs={executionDuration.TotalMilliseconds:F3}");
@@ -213,10 +220,10 @@ public sealed class ProgramRunService : IProgramRunService
                 EventName = executionResult.Stopped ? "run.stopped" : "run.completed",
                 Source = nameof(ProgramRunService),
                 CommandName = "Run",
-                DebugLine = executionResult.StopState?.Snapshot.SourceLocation.Line,
-                Opcode = executionResult.StopState?.Snapshot.Opcode.ToString(),
-                CallDepth = executionResult.StopState?.Snapshot.CallDepth,
-                CanStepBack = executionResult.StopState?.CanStepBack,
+                DebugLine = debuggerState?.StopInfo.Line,
+                Opcode = debuggerState?.StopInfo.Opcode,
+                CallDepth = debuggerState?.StopInfo.CallDepth,
+                CanStepBack = debuggerState?.StopInfo.CanStepBack,
                 OutputLength = outputText.Length,
                 Properties = new Dictionary<string, string?>(StringComparer.Ordinal)
                 {
@@ -247,7 +254,7 @@ public sealed class ProgramRunService : IProgramRunService
                 bytecodeEmissionDuration: executionResult.BytecodeEmissionDuration,
                 usedLoweredCache: executionResult.UsedLoweredCache,
                 usedBytecodeCache: executionResult.UsedBytecodeCache,
-                stopState: executionResult.StopState);
+                debuggerState: debuggerState);
         }
         catch (Exception exception)
         {
@@ -289,54 +296,45 @@ public sealed class ProgramRunService : IProgramRunService
         }
     }
 
-    public ProgramRunResult Continue(BytecodeVmStopState stopState)
+    public ProgramRunResult Continue(IProgramDebuggerState debuggerState)
     {
-        return ResumeStoppedRun(
-            stopState,
-            static state => state.Resume(),
-            "run.continue",
-            "run.continue.exception",
-            "Unexpected ProgramRunService continuation failure.");
+        ArgumentNullException.ThrowIfNull(debuggerState);
+        return debuggerState.Resume();
     }
 
-    public ProgramRunResult StepOver(BytecodeVmStopState stopState)
+    public ProgramRunResult StepOver(IProgramDebuggerState debuggerState)
     {
-        return ResumeStoppedRun(
-            stopState,
-            static state => state.StepOver(),
-            "run.step-over",
-            "run.step-over.exception",
-            "Unexpected ProgramRunService step-over failure.");
+        ArgumentNullException.ThrowIfNull(debuggerState);
+        return debuggerState.StepOver();
     }
 
-    public ProgramRunResult StepInto(BytecodeVmStopState stopState)
+    public ProgramRunResult StepInto(IProgramDebuggerState debuggerState)
     {
-        return ResumeStoppedRun(
-            stopState,
-            static state => state.StepInto(),
-            "run.step-into",
-            "run.step-into.exception",
-            "Unexpected ProgramRunService step-into failure.");
+        ArgumentNullException.ThrowIfNull(debuggerState);
+        return debuggerState.StepInto();
     }
 
-    public ProgramRunResult StepOut(BytecodeVmStopState stopState)
+    public ProgramRunResult StepOut(IProgramDebuggerState debuggerState)
     {
-        return ResumeStoppedRun(
-            stopState,
-            static state => state.StepOut(),
-            "run.step-out",
-            "run.step-out.exception",
-            "Unexpected ProgramRunService step-out failure.");
+        ArgumentNullException.ThrowIfNull(debuggerState);
+        return debuggerState.StepOut();
     }
 
-    public ProgramRunResult StepBack(BytecodeVmStopState stopState)
+    public ProgramRunResult StepBack(IProgramDebuggerState debuggerState)
     {
-        return ResumeStoppedRun(
+        ArgumentNullException.ThrowIfNull(debuggerState);
+        return debuggerState.StepBack();
+    }
+
+    private IProgramDebuggerState CreateDebuggerAdapter(BytecodeVmStopState stopState)
+    {
+        return new BytecodeVmDebuggerAdapter(
             stopState,
-            static state => state.StepBack(),
-            "run.step-back",
-            "run.step-back.exception",
-            "Unexpected ProgramRunService step-back failure.");
+            resume: state => ResumeStoppedRun(state, static s => s.Resume(), "run.continue", "run.continue.exception", "Unexpected ProgramRunService continuation failure."),
+            stepOver: state => ResumeStoppedRun(state, static s => s.StepOver(), "run.step-over", "run.step-over.exception", "Unexpected ProgramRunService step-over failure."),
+            stepInto: state => ResumeStoppedRun(state, static s => s.StepInto(), "run.step-into", "run.step-into.exception", "Unexpected ProgramRunService step-into failure."),
+            stepOut: state => ResumeStoppedRun(state, static s => s.StepOut(), "run.step-out", "run.step-out.exception", "Unexpected ProgramRunService step-out failure."),
+            stepBack: state => ResumeStoppedRun(state, static s => s.StepBack(), "run.step-back", "run.step-back.exception", "Unexpected ProgramRunService step-back failure."));
     }
 
     private ProgramRunResult ResumeStoppedRun(
@@ -369,6 +367,10 @@ public sealed class ProgramRunService : IProgramRunService
                 _consoleService.EndSession();
             }
 
+            IProgramDebuggerState? debuggerState = runtimeResult.StopState is not null
+                ? CreateDebuggerAdapter(runtimeResult.StopState)
+                : null;
+
             _traceService.Write(
                 traceName,
                 $"status={(diagnostics.Length == 0 ? ProgramRunStatus.Success : ProgramRunStatus.RuntimeFailure)} | stopped={runtimeResult.Stopped} | diagnostics={diagnostics.Length} | executionMs={executionStopwatch.Elapsed.TotalMilliseconds:F3}");
@@ -379,10 +381,10 @@ public sealed class ProgramRunService : IProgramRunService
                 EventName = traceName.Replace('.', '-'),
                 Source = nameof(ProgramRunService),
                 CommandName = traceName,
-                DebugLine = runtimeResult.StopState?.Snapshot.SourceLocation.Line,
-                Opcode = runtimeResult.StopState?.Snapshot.Opcode.ToString(),
-                CallDepth = runtimeResult.StopState?.Snapshot.CallDepth,
-                CanStepBack = runtimeResult.StopState?.CanStepBack,
+                DebugLine = debuggerState?.StopInfo.Line,
+                Opcode = debuggerState?.StopInfo.Opcode,
+                CallDepth = debuggerState?.StopInfo.CallDepth,
+                CanStepBack = debuggerState?.StopInfo.CanStepBack,
                 OutputLength = BuildOutputText(GetConsoleOutputText(), runtimeResult.PendingOutput).Length,
                 Properties = new Dictionary<string, string?>(StringComparer.Ordinal)
                 {
@@ -398,7 +400,7 @@ public sealed class ProgramRunService : IProgramRunService
                 executionDuration: executionStopwatch.Elapsed,
                 requestedExecutionMode: ExecutionMode.Bytecode,
                 actualEngine: ExecutionEngineKind.BytecodeVm,
-                stopState: runtimeResult.StopState);
+                debuggerState: debuggerState);
         }
         catch (Exception exception)
         {

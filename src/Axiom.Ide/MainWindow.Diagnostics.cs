@@ -89,8 +89,12 @@ public partial class MainWindow
         }
 
         SetStoppedRunLineHighlight(editor, true);
-        SetStoppedRunExecutionSpan(editor, viewModel.StoppedRunState?.Snapshot.SourceLocation);
-        TraceEditorEvent("editor.breakpoint.stopped-line", editor, $"line={line} | span={viewModel.StoppedRunState?.Snapshot.SourceLocation.Span.ToString() ?? "none"}");
+        var stopInfo = viewModel.StoppedRunState?.StopInfo;
+        if (stopInfo is { Line: > 0, Column: > 0 })
+        {
+            SetStoppedRunExecutionSpan(editor, new Axiom.Core.TextLocation(new Axiom.Core.TextSpan(0, 0), stopInfo.Line.Value, stopInfo.Column.Value));
+        }
+        TraceEditorEvent("editor.breakpoint.stopped-line", editor, $"line={line} | stopInfo=({stopInfo?.Line}, {stopInfo?.Column})");
         UpdateCaretStatusFromActiveEditor();
     }
 

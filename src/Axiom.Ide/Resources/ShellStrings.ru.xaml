@@ -34,6 +34,7 @@
     <sys:String x:Key="Menu.Run">_Запуск</sys:String>
     <sys:String x:Key="Menu.Run.Compile">_Компилировать</sys:String>
     <sys:String x:Key="Menu.Run.Run">_Запуск программы</sys:String>
+    <sys:String x:Key="Menu.Run.Cancel">_Отменить выполнение</sys:String>
     <sys:String x:Key="Menu.Run.ExecutionMode">_Режим запуска</sys:String>
     <sys:String x:Key="Menu.Run.ExecutionMode.Interpreter">_Интерпретатор</sys:String>
     <sys:String x:Key="Menu.Run.ExecutionMode.Bytecode">_Байткод</sys:String>

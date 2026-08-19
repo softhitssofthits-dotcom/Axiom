@@ -3,6 +3,7 @@ using Axiom.Execution;
 using Axiom.Ide.Documents;
 using Axiom.Ide.Models;
 using Axiom.Ide.Services.EventLog;
+using Axiom.Ide.Services.Execution;
 
 namespace Axiom.Ide.ViewModels;
 
@@ -60,11 +61,24 @@ public sealed partial class MainWindowViewModel
             });
 
         var result = await ExecuteRunOperationAsync(
-            () => _programRunService.Run(
-                documentContent.SourceText,
-                SelectedExecutionMode,
-                sourceBreakpointLines,
-                sourceFilePath: runDocument?.FilePath));
+            () =>
+            {
+                var cancellation = new ManualCancellationProvider();
+                _runCancellationProvider = cancellation;
+                try
+                {
+                    return _programRunService.Run(
+                        documentContent.SourceText,
+                        SelectedExecutionMode,
+                        sourceBreakpointLines,
+                        sourceFilePath: runDocument?.FilePath,
+                        cancellationProvider: cancellation);
+                }
+                finally
+                {
+                    _runCancellationProvider = null;
+                }
+            });
 
         ApplyRunOutputFromResult(result, "run.output-sync");
 
@@ -80,8 +94,8 @@ public sealed partial class MainWindowViewModel
             result.Stopped ? "debugger.stopped" : "debugger.run-finished",
             commandName: useSourceBreakpoints ? "RunDebug" : "Run",
             document: runDocument,
-            line: result.StoppedAt?.SourceLocation.Line,
-            column: result.StoppedAt?.SourceLocation.Column,
+            line: result.StoppedAt?.Line,
+            column: result.StoppedAt?.Column,
             outputLength: result.OutputText.Length,
             properties: new Dictionary<string, string?>(StringComparer.Ordinal)
             {
@@ -90,7 +104,7 @@ public sealed partial class MainWindowViewModel
                 ["canStepBack"] = (result.CanStepBack).ToString()
             });
 
-        SetStoppedRunState(useSourceBreakpoints ? result.StopState : null, useSourceBreakpoints ? runDocument : null);
+        SetStoppedRunState(useSourceBreakpoints ? result.DebuggerState : null, useSourceBreakpoints ? runDocument : null);
         UpdateRunTiming(result);
 
         if (result.Cancelled)
@@ -116,6 +130,14 @@ public sealed partial class MainWindowViewModel
         RaiseShellCommandCanExecuteChanged();
         UpdateTitle();
     }
+
+    private void CancelRunningProgram()
+    {
+        _runCancellationProvider?.Cancel();
+        StatusBar.StatusText = GetLocalizedString("Run.StatusCancelling", "Cancelling...");
+    }
+
+    private bool CanCancelRunningProgram() => StatusBar.IsRunning && _runCancellationProvider is not null;
 
     private async Task RunOrContinueProgramAsync()
     {
@@ -258,8 +280,8 @@ public sealed partial class MainWindowViewModel
             "debugger.step-start-result",
             commandName: "StepStart",
             document: runDocument,
-            line: result.StoppedAt?.SourceLocation.Line,
-            column: result.StoppedAt?.SourceLocation.Column,
+            line: result.StoppedAt?.Line,
+            column: result.StoppedAt?.Column,
             outputLength: result.OutputText.Length,
             properties: new Dictionary<string, string?>(StringComparer.Ordinal)
             {
@@ -268,7 +290,7 @@ public sealed partial class MainWindowViewModel
                 ["stopped"] = result.Stopped.ToString()
             });
 
-        SetStoppedRunState(result.StopState, runDocument);
+        SetStoppedRunState(result.DebuggerState, runDocument);
         UpdateRunTiming(result);
 
         if (result.Cancelled)
@@ -296,11 +318,11 @@ public sealed partial class MainWindowViewModel
     }
 
     private async Task ResumeStoppedProgramAsync(
-        Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult> resume,
+        Func<IProgramDebuggerState, ProgramRunResult> resume,
         string runningStatusKey,
         string runningStatusFallback,
         string resultTraceName,
-        Func<Axiom.Runtime.BytecodeVmStopState, bool>? canResume = null)
+        Func<IProgramDebuggerState, bool>? canResume = null)
     {
         canResume ??= static state => state.CanResume;
 
@@ -334,8 +356,8 @@ public sealed partial class MainWindowViewModel
             "debugger.resume-result",
             commandName: resultTraceName,
             document: stoppedRunDocument,
-            line: result.StoppedAt?.SourceLocation.Line,
-            column: result.StoppedAt?.SourceLocation.Column,
+            line: result.StoppedAt?.Line,
+            column: result.StoppedAt?.Column,
             outputLength: result.OutputText.Length,
             properties: new Dictionary<string, string?>(StringComparer.Ordinal)
             {
@@ -345,7 +367,7 @@ public sealed partial class MainWindowViewModel
                 ["canStepBack"] = result.CanStepBack.ToString()
             });
 
-        SetStoppedRunState(result.StopState, stoppedRunDocument);
+        SetStoppedRunState(result.DebuggerState, stoppedRunDocument);
         UpdateRunTiming(result);
 
         if (result.Cancelled)
@@ -605,7 +627,7 @@ public sealed partial class MainWindowViewModel
         && ReferenceEquals(_stoppedRunDocument, Documents.ActiveDocument);
 
     private void SetStoppedRunState(
-        Axiom.Runtime.BytecodeVmStopState? stopState,
+        IProgramDebuggerState? stopState,
         DocumentTabViewModel? document)
     {
         var normalizedDocument = stopState is null ? null : document;
@@ -617,7 +639,7 @@ public sealed partial class MainWindowViewModel
 
         _stoppedRunState = stopState;
         _stoppedRunDocument = normalizedDocument;
-        SetStoppedRunLine(stopState?.Snapshot.SourceLocation.Line);
+        SetStoppedRunLine(stopState?.StopInfo.Line);
         TraceStoppedRunState(stopState, normalizedDocument);
         NotifyStoppedRunPresentationChanged();
     }
@@ -637,7 +659,7 @@ public sealed partial class MainWindowViewModel
     }
 
     private void TraceStoppedRunState(
-        Axiom.Runtime.BytecodeVmStopState? stopState,
+        IProgramDebuggerState? stopState,
         DocumentTabViewModel? document)
     {
         if (stopState is null)
@@ -656,10 +678,10 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var snapshot = stopState.Snapshot;
+        var info = stopState.StopInfo;
         _traceService.Write(
             "run.stop-state",
-            $"stopped=true | line={snapshot.SourceLocation.Line} | column={snapshot.SourceLocation.Column} | opcode={snapshot.Opcode} | callDepth={snapshot.CallDepth} | canResume={stopState.CanResume} | canStepBack={stopState.CanStepBack} | document={document?.DisplayName ?? "<none>"} | outputChars={BottomPane.OutputText.Length} | output=\"{BuildSourcePreview(BottomPane.OutputText)}\"");
+            $"stopped=true | line={info.Line} | column={info.Column} | opcode={info.Opcode} | callDepth={info.CallDepth} | canResume={stopState.CanResume} | canStepBack={info.CanStepBack} | document={document?.DisplayName ?? "<none>"} | outputChars={BottomPane.OutputText.Length} | output=\"{BuildSourcePreview(BottomPane.OutputText)}\"");
         _eventLogService.Write(new IdeEventLogEntry
         {
             Level = IdeEventLevel.Info,
@@ -669,12 +691,12 @@ public sealed partial class MainWindowViewModel
             CommandName = "StopState",
             DocumentPath = document?.FilePath,
             DocumentName = document?.DisplayName,
-            Line = snapshot.SourceLocation.Line,
-            Column = snapshot.SourceLocation.Column,
-            DebugLine = snapshot.SourceLocation.Line,
-            Opcode = snapshot.Opcode.ToString(),
-            CallDepth = snapshot.CallDepth,
-            CanStepBack = stopState.CanStepBack,
+            Line = info.Line,
+            Column = info.Column,
+            DebugLine = info.Line,
+            Opcode = info.Opcode,
+            CallDepth = info.CallDepth,
+            CanStepBack = info.CanStepBack,
             OutputLength = BottomPane.OutputText.Length,
             TextLength = BottomPane.OutputText.Length,
             TextPreview = BottomPane.OutputText,

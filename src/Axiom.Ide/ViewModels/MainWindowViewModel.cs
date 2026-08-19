@@ -55,9 +55,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private string? _filesPaneClipboardPath;
     private bool _filesPaneClipboardIsCut;
     private bool _filesPaneClipboardIsDirectory;
-    private Axiom.Runtime.BytecodeVmStopState? _stoppedRunState;
+    private IProgramDebuggerState? _stoppedRunState;
     private DocumentTabViewModel? _stoppedRunDocument;
     private int? _stoppedRunLine;
+    private ManualCancellationProvider? _runCancellationProvider;
     private readonly object _editorNoiseSync = new();
     private readonly EditorNoiseBurst _caretNoiseBurst = new("editor.caret.burst", "Caret");
     private readonly EditorNoiseBurst _selectionNoiseBurst = new("editor.selection.burst", "Selection");
@@ -211,6 +212,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         CloseTabCommand = new RelayCommand(CloseTab, CanCloseTab);
         CompileCommand = new RelayCommand(async () => await CompileProgramAsync(), CanCompileProgram);
         RunCommand = new RelayCommand(async () => await RunProgramAsync(useSourceBreakpoints: false), CanRunProgram);
+        CancelRunCommand = new RelayCommand(CancelRunningProgram, CanCancelRunningProgram);
         ContinueRunCommand = new RelayCommand(async () => await ContinueProgramAsync(), CanContinueProgram);
         StepOverCommand = new RelayCommand(async () => await StepOverProgramAsync(), CanStepOverProgram);
         StepIntoCommand = new RelayCommand(async () => await StepIntoProgramAsync(), CanStepIntoProgram);
@@ -344,7 +346,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public IReadOnlyList<int> SourceBreakpointLines =>
         Documents.ActiveDocument?.SourceBreakpointLines ?? [];
 
-    public Axiom.Runtime.BytecodeVmStopState? StoppedRunState =>
+    public IProgramDebuggerState? StoppedRunState =>
         IsStoppedRunForActiveDocument ? _stoppedRunState : null;
 
     public bool HasStoppedRun => IsStoppedRunForActiveDocument && _stoppedRunState?.CanResume == true;
@@ -393,6 +395,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public RelayCommand CloseTabCommand { get; }
     public RelayCommand CompileCommand { get; }
     public RelayCommand RunCommand { get; }
+    public RelayCommand CancelRunCommand { get; }
     public RelayCommand ContinueRunCommand { get; }
     public RelayCommand StepOverCommand { get; }
     public RelayCommand StepIntoCommand { get; }
@@ -1173,7 +1176,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     private string FormatStoppedStatus(ProgramRunResult result)
     {
-        var line = result.StoppedAt?.SourceLocation.Line;
+        var line = result.StoppedAt?.Line;
 
         return line is > 0
             ? GetLocalizedFormattedString("Run.StatusStoppedAtBreakpoint", "Run stopped at line {0}.", line.Value)

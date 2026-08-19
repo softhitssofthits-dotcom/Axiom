@@ -1,3 +1,5 @@
+using Axiom.Ide.Services.Execution;
+
 namespace Axiom.Ide.Models;
 
 public sealed class ProgramRunResult
@@ -17,7 +19,7 @@ public sealed class ProgramRunResult
         TimeSpan bytecodeEmissionDuration = default,
         bool usedLoweredCache = false,
         bool usedBytecodeCache = false,
-        Axiom.Runtime.BytecodeVmStopState? stopState = null)
+        IProgramDebuggerState? debuggerState = null)
     {
         ArgumentNullException.ThrowIfNull(diagnostics);
         ArgumentNullException.ThrowIfNull(outputText);
@@ -36,7 +38,7 @@ public sealed class ProgramRunResult
         BytecodeEmissionDuration = bytecodeEmissionDuration;
         UsedLoweredCache = usedLoweredCache;
         UsedBytecodeCache = usedBytecodeCache;
-        StopState = stopState;
+        DebuggerState = debuggerState;
     }
 
     public ProgramRunStatus Status { get; }
@@ -73,13 +75,13 @@ public sealed class ProgramRunResult
 
     public string? InterpreterFallbackReason { get; }
 
-    public Axiom.Runtime.BytecodeVmStopState? StopState { get; }
+    public IProgramDebuggerState? DebuggerState { get; }
 
-    public Axiom.Runtime.BytecodeVmExecutionSnapshot? StoppedAt => StopState?.Snapshot;
+    public DebuggerStopInfo? StoppedAt => DebuggerState?.StopInfo;
 
-    public bool Stopped => StopState is not null;
+    public bool Stopped => DebuggerState is not null;
 
-    public bool CanStepBack => StopState?.CanStepBack == true;
+    public bool CanStepBack => DebuggerState?.StopInfo.CanStepBack == true;
 
     public bool Cancelled => Status == ProgramRunStatus.Cancelled;
 

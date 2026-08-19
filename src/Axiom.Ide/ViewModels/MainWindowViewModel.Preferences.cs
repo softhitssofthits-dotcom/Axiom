@@ -303,6 +303,7 @@ public sealed partial class MainWindowViewModel
         CloseTabCommand.RaiseCanExecuteChanged();
         CompileCommand.RaiseCanExecuteChanged();
         RunCommand.RaiseCanExecuteChanged();
+        CancelRunCommand.RaiseCanExecuteChanged();
         ContinueRunCommand.RaiseCanExecuteChanged();
         StepOverCommand.RaiseCanExecuteChanged();
         StepIntoCommand.RaiseCanExecuteChanged();

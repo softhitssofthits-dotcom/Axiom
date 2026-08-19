@@ -229,6 +229,10 @@
                         <TextBlock Style="{StaticResource MenuItemGlyphStyle}" Foreground="{DynamicResource RunAccentBrush}" Text="&#xE768;" />
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="{DynamicResource Menu.Run.Cancel}"
+                          Command="{Binding CancelRunCommand}"
+                          Style="{StaticResource DropDownMenuItemStyle}"
+                          AutomationProperties.AutomationId="CancelRunMenuItem" />
                 <Separator />
                 <MenuItem Header="{DynamicResource Menu.Run.ExecutionMode}"
                           Style="{StaticResource DropDownMenuItemStyle}"

@@ -193,6 +193,18 @@ public sealed class BottomPaneViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Очищает список диагностик.
+    /// </summary>
+    public void ClearDiagnostics()
+    {
+        if (Diagnostics.Count > 0)
+        {
+            Diagnostics.Clear();
+            SelectedDiagnostic = null;
+        }
+    }
+
+    /// <summary>
     /// Добавляет строку в output transcript.
     /// </summary>
     public void AppendOutputLine(string line)

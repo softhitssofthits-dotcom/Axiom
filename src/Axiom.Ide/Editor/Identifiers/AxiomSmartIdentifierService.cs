@@ -1,13 +1,20 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Reflection;
-using Axiom.Parsing;
 using Axiom.Syntax;
 
 namespace Axiom.Ide.Editor.Identifiers;
 
 public sealed class AxiomSmartIdentifierService
 {
+    private readonly Func<string, ProgramSyntax> _parseSource;
+
+    public AxiomSmartIdentifierService(Func<string, ProgramSyntax> parseSource)
+    {
+        ArgumentNullException.ThrowIfNull(parseSource);
+        _parseSource = parseSource;
+    }
+
     public string NormalizeDocument(string sourceText)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
@@ -26,7 +33,7 @@ public sealed class AxiomSmartIdentifierService
         return NormalizeRange(sourceText, lineStartOffset, lineLength);
     }
 
-    private static string NormalizeRange(string sourceText, int rangeStart, int rangeLength)
+    private string NormalizeRange(string sourceText, int rangeStart, int rangeLength)
     {
         if (sourceText.Length == 0 || rangeLength == 0)
         {
@@ -35,7 +42,7 @@ public sealed class AxiomSmartIdentifierService
                 : sourceText.Substring(rangeStart, rangeLength);
         }
 
-        var program = Parser.Parse(sourceText, out _);
+        var program = _parseSource(sourceText);
         var canonicalNames = BuildCanonicalNames(program);
         if (canonicalNames.Count == 0)
         {

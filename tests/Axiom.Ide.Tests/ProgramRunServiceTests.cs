@@ -1,4 +1,4 @@
-ï»¿using Axiom.Execution;
+using Axiom.Execution;
 using Axiom.Ide.Models;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
@@ -213,9 +213,9 @@ PRINT 3
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.True(result.Stopped);
-        Assert.NotNull(result.StopState);
-        Assert.Equal(2, result.StoppedAt!.SourceLocation.Line);
-        Assert.True(result.StopState!.CanResume);
+        Assert.NotNull(result.DebuggerState);
+        Assert.Equal(2, result.StoppedAt!.Line);
+        Assert.True(result.DebuggerState!.CanResume);
         Assert.Equal("1", result.OutputText);
     }
 
@@ -242,9 +242,9 @@ PRINT "done"
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.True(result.Stopped);
-        Assert.NotNull(result.StopState);
-        Assert.Equal(6, result.StoppedAt!.SourceLocation.Line);
-        Assert.True(result.StopState!.CanResume);
+        Assert.NotNull(result.DebuggerState);
+        Assert.Equal(6, result.StoppedAt!.Line);
+        Assert.True(result.DebuggerState!.CanResume);
         Assert.Equal(string.Empty, result.OutputText);
     }
 
@@ -261,12 +261,12 @@ PRINT 3
 """;
 
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
-        var continuedResult = service.Continue(stoppedResult.StopState!);
+        var continuedResult = service.Continue(stoppedResult.DebuggerState!);
 
         Assert.True(stoppedResult.Stopped);
         Assert.Equal(ProgramRunStatus.Success, continuedResult.Status);
         Assert.False(continuedResult.Stopped);
-        Assert.False(stoppedResult.StopState!.CanResume);
+        Assert.False(stoppedResult.DebuggerState!.CanResume);
         Assert.Equal(["1", "2", "3"], consoleService.WrittenOutput);
     }
 
@@ -283,13 +283,13 @@ PRINT 3
 """;
 
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
-        var steppedResult = service.StepOver(stoppedResult.StopState!);
+        var steppedResult = service.StepOver(stoppedResult.DebuggerState!);
 
         Assert.True(stoppedResult.Stopped);
         Assert.Equal(ProgramRunStatus.Success, steppedResult.Status);
         Assert.True(steppedResult.Stopped);
-        Assert.Equal(3, steppedResult.StoppedAt!.SourceLocation.Line);
-        Assert.False(stoppedResult.StopState!.CanResume);
+        Assert.Equal(3, steppedResult.StoppedAt!.Line);
+        Assert.False(stoppedResult.DebuggerState!.CanResume);
         Assert.Equal(["1", "2"], consoleService.WrittenOutput);
     }
 
@@ -306,7 +306,7 @@ NEXT
 """;
 
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
-        var steppedResult = service.StepOver(stoppedResult.StopState!);
+        var steppedResult = service.StepOver(stoppedResult.DebuggerState!);
 
         Assert.True(steppedResult.Stopped);
         Assert.Equal("1 ", steppedResult.OutputText);
@@ -328,10 +328,10 @@ PRINT AddOne(4)
 """;
 
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [5]);
-        var steppedResult = service.StepInto(stoppedResult.StopState!);
+        var steppedResult = service.StepInto(stoppedResult.DebuggerState!);
 
         Assert.True(steppedResult.Stopped);
-        Assert.Equal(2, steppedResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(2, steppedResult.StoppedAt!.Line);
         Assert.Equal(2, steppedResult.StoppedAt.CallDepth);
         Assert.Equal(string.Empty, steppedResult.OutputText);
     }
@@ -352,8 +352,8 @@ PRINT "done"
 """;
 
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [5]);
-        var insideRoutine = service.StepInto(stoppedResult.StopState!);
-        var steppedOut = service.StepOut(insideRoutine.StopState!);
+        var insideRoutine = service.StepInto(stoppedResult.DebuggerState!);
+        var steppedOut = service.StepOut(insideRoutine.DebuggerState!);
 
         Assert.True(steppedOut.Stopped);
         Assert.Equal(1, steppedOut.StoppedAt!.CallDepth);
@@ -375,13 +375,13 @@ PRINT value
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [3]);
         Assert.True(stoppedResult.CanStepBack);
 
-        var steppedBack = service.StepBack(stoppedResult.StopState!);
+        var steppedBack = service.StepBack(stoppedResult.DebuggerState!);
 
         Assert.Equal(ProgramRunStatus.Success, steppedBack.Status);
         Assert.True(steppedBack.Stopped);
-        Assert.Equal(2, steppedBack.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(2, steppedBack.StoppedAt!.Line);
         Assert.True(steppedBack.CanStepBack);
-        Assert.False(stoppedResult.StopState!.CanResume);
+        Assert.False(stoppedResult.DebuggerState!.CanResume);
         Assert.Equal(string.Empty, steppedBack.OutputText);
     }
 
@@ -402,19 +402,19 @@ PrintBanner("debug sample")
 """;
 
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [7]);
-        var insideRoutine = service.StepInto(stoppedResult.StopState!);
-        var afterFirstPrint = service.StepOver(insideRoutine.StopState!);
-        var afterSecondPrint = service.StepOver(afterFirstPrint.StopState!);
+        var insideRoutine = service.StepInto(stoppedResult.DebuggerState!);
+        var afterFirstPrint = service.StepOver(insideRoutine.DebuggerState!);
+        var afterSecondPrint = service.StepOver(afterFirstPrint.DebuggerState!);
 
         Assert.True(afterSecondPrint.Stopped);
         Assert.True(afterSecondPrint.CanStepBack);
-        Assert.Equal(4, afterSecondPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(4, afterSecondPrint.StoppedAt!.Line);
         Assert.Equal("sub: begin" + Environment.NewLine + "debug sample", consoleService.OutputText);
 
-        var backed = service.StepBack(afterSecondPrint.StopState!);
+        var backed = service.StepBack(afterSecondPrint.DebuggerState!);
 
         Assert.True(backed.Stopped);
-        Assert.Equal(3, backed.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(3, backed.StoppedAt!.Line);
         Assert.Equal("sub: begin", consoleService.OutputText);
         Assert.Equal("sub: begin" + Environment.NewLine + "debug sample", backed.OutputText);
     }
@@ -436,13 +436,13 @@ PRINT values(1)
 
         Assert.True(stoppedResult.Stopped);
         Assert.True(stoppedResult.CanStepBack);
-        Assert.Equal(4, stoppedResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(4, stoppedResult.StoppedAt!.Line);
 
-        var steppedBack = service.StepBack(stoppedResult.StopState!);
+        var steppedBack = service.StepBack(stoppedResult.DebuggerState!);
 
         Assert.Equal(ProgramRunStatus.Success, steppedBack.Status);
         Assert.True(steppedBack.Stopped);
-        Assert.Equal(3, steppedBack.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(3, steppedBack.StoppedAt!.Line);
         Assert.True(steppedBack.CanStepBack);
         Assert.Equal(string.Empty, consoleService.OutputText);
     }
@@ -463,14 +463,14 @@ PRINT 99
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [4]);
 
         Assert.True(stoppedResult.Stopped);
-        Assert.Equal(4, stoppedResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(4, stoppedResult.StoppedAt!.Line);
         Assert.Equal("10", consoleService.OutputText);
 
-        var steppedBack = service.StepBack(stoppedResult.StopState!);
+        var steppedBack = service.StepBack(stoppedResult.DebuggerState!);
 
         Assert.Equal(ProgramRunStatus.Success, steppedBack.Status);
         Assert.True(steppedBack.Stopped);
-        Assert.Equal(3, steppedBack.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(3, steppedBack.StoppedAt!.Line);
         Assert.True(steppedBack.CanStepBack);
         Assert.Equal(string.Empty, consoleService.OutputText);
     }
@@ -500,23 +500,23 @@ PRINT board(1, 2)
         var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [13]);
 
         Assert.True(stoppedResult.Stopped);
-        Assert.Equal(13, stoppedResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(13, stoppedResult.StoppedAt!.Line);
         Assert.Equal("2", consoleService.OutputText);
         Assert.True(stoppedResult.CanStepBack);
 
-        var toArraySort = service.StepBack(stoppedResult.StopState!);
+        var toArraySort = service.StepBack(stoppedResult.DebuggerState!);
 
         Assert.Equal(ProgramRunStatus.Success, toArraySort.Status);
         Assert.True(toArraySort.Stopped);
-        Assert.Equal(12, toArraySort.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(12, toArraySort.StoppedAt!.Line);
         Assert.Equal(string.Empty, consoleService.OutputText);
         Assert.True(toArraySort.CanStepBack);
 
-        var toLastAssignment = service.StepBack(toArraySort.StopState!);
+        var toLastAssignment = service.StepBack(toArraySort.DebuggerState!);
 
         Assert.Equal(ProgramRunStatus.Success, toLastAssignment.Status);
         Assert.True(toLastAssignment.Stopped);
-        Assert.Equal(10, toLastAssignment.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(10, toLastAssignment.StoppedAt!.Line);
         Assert.Equal(string.Empty, consoleService.OutputText);
     }
 
@@ -546,25 +546,25 @@ PRINT board(2, 3)
         var firstPrint = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [10]);
 
         Assert.True(firstPrint.Stopped);
-        Assert.Equal(10, firstPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(10, firstPrint.StoppedAt!.Line);
         Assert.Equal("2", consoleService.OutputText);
 
-        var atFirstPrint = service.StepBack(firstPrint.StopState!);
+        var atFirstPrint = service.StepBack(firstPrint.DebuggerState!);
         Assert.True(atFirstPrint.Stopped);
-        Assert.Equal(9, atFirstPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(9, atFirstPrint.StoppedAt!.Line);
         Assert.Equal(string.Empty, consoleService.OutputText);
 
-        var atArraySort = service.StepBack(atFirstPrint.StopState!);
+        var atArraySort = service.StepBack(atFirstPrint.DebuggerState!);
         Assert.True(atArraySort.Stopped);
-        Assert.Equal(8, atArraySort.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(8, atArraySort.StoppedAt!.Line);
         Assert.Equal(string.Empty, consoleService.OutputText);
 
-        var rerunPrint = service.Continue(atArraySort.StopState!);
+        var rerunPrint = service.Continue(atArraySort.DebuggerState!);
         Assert.True(rerunPrint.Stopped);
-        Assert.Equal(10, rerunPrint.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(10, rerunPrint.StoppedAt!.Line);
         Assert.Equal("2", consoleService.OutputText);
 
-        var completed = service.Continue(rerunPrint.StopState!);
+        var completed = service.Continue(rerunPrint.DebuggerState!);
         Assert.False(completed.Stopped);
         Assert.Equal(
             string.Join(Environment.NewLine, ["2", "4", "6", "1", "3", "5"]),
@@ -587,7 +587,7 @@ PRINT 2
         Assert.Equal(ProgramCompilationStatus.Success, compileResult.Status);
         Assert.True(runResult.UsedCompiledCache);
         Assert.True(runResult.Stopped);
-        Assert.Equal(2, runResult.StoppedAt!.SourceLocation.Line);
+        Assert.Equal(2, runResult.StoppedAt!.Line);
     }
 
     [Fact]
@@ -771,7 +771,7 @@ PRINT "mode10 width="; width
 PRINT "mode10 height="; height
 PRINT "mode10 cols="; cols
 PRINT "mode10 rows="; rows
-PRINT "ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ° SCREEN 10 Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð°"
+PRINT "Ïðîâåðêà SCREEN 10 çàâåðøåíà"
 """;
 
         var result = service.Run(sourceText, ExecutionMode.Bytecode);
@@ -791,7 +791,7 @@ PRINT "ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ° SCREEN 10 Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð°"
                 "mode10 height=1079",
                 "mode10 cols=239",
                 "mode10 rows=89",
-                "ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ° SCREEN 10 Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð°"
+                "Ïðîâåðêà SCREEN 10 çàâåðøåíà"
             ],
             graphicsOutput);
     }
@@ -844,7 +844,7 @@ PRINT "ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ° SCREEN 10 Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð°"
         Assert.Equal("MB3001", result.Diagnostics[0].Code);
         Assert.Equal(1, result.Diagnostics[0].Line);
         Assert.Equal(9, result.Diagnostics[0].Column);
-        Assert.Contains("Ð½Ð¾Ð»ÑŒ", result.Diagnostics[0].Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("íîëü", result.Diagnostics[0].Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(string.Empty, result.OutputText);
     }
 

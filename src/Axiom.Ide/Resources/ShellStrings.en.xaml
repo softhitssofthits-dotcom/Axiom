@@ -34,6 +34,7 @@
     <sys:String x:Key="Menu.Run">_Run</sys:String>
     <sys:String x:Key="Menu.Run.Compile">_Compile</sys:String>
     <sys:String x:Key="Menu.Run.Run">_Run Program</sys:String>
+    <sys:String x:Key="Menu.Run.Cancel">_Cancel Run</sys:String>
     <sys:String x:Key="Menu.Run.ExecutionMode">Execution _Mode</sys:String>
     <sys:String x:Key="Menu.Run.ExecutionMode.Interpreter">_Interpreter</sys:String>
     <sys:String x:Key="Menu.Run.ExecutionMode.Bytecode">_Bytecode</sys:String>

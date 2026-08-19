@@ -1,4 +1,4 @@
-﻿using Axiom.Ide.Models;
+using Axiom.Ide.Models;
 using Axiom.Ide.Editor.Formatting;
 using Axiom.Ide.Editor.Identifiers;
 using Axiom.Ide.Files;
@@ -12,6 +12,7 @@ using Axiom.Ide.Services.Persistence;
 using Axiom.Ide.Services.Prompts;
 using Axiom.Ide.Services.Shell;
 using Axiom.Ide.ViewModels;
+using Axiom.Parsing;
 using System.Reflection;
 using System.Diagnostics;
 
@@ -232,8 +233,8 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(1, runService.CompileCallCount);
         Assert.Equal("PRINT 1", runService.LastCompiledSourceText);
         Assert.False(viewModel.StatusBar.IsRunning);
-        Assert.Contains("компиляц", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("успеш", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("��������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
         Assert.Empty(viewModel.BottomPane.Diagnostics);
     }
 
@@ -261,7 +262,7 @@ public sealed class MainWindowViewModelTests
         Assert.True(viewModel.StatusBar.IsTimingVisible);
         Assert.True(viewModel.StatusBar.IsCompilationTimingVisible);
         Assert.NotEqual(string.Empty, viewModel.StatusBar.CompilationTimingText);
-        Assert.Contains("мс", viewModel.StatusBar.CompilationTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("��", viewModel.StatusBar.CompilationTimingText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -287,7 +288,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(BottomPaneFocusTarget.Diagnostics, viewModel.BottomPane.FocusTarget);
         Assert.Equal(1, viewModel.BottomPane.FocusRequestVersion);
         Assert.NotNull(viewModel.BottomPane.SelectedDiagnostic);
-        Assert.Contains("диагностик", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("����������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -306,7 +307,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(0, viewModel.BottomPane.SelectedTabIndex);
         Assert.Equal(1, viewModel.BottomPane.FocusRequestVersion);
         Assert.Equal(BottomPaneFocusTarget.Output, viewModel.BottomPane.FocusTarget);
-        Assert.Contains("успеш", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -334,14 +335,14 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.StatusBar.IsTimingVisible);
         Assert.True(viewModel.StatusBar.IsRunTimingVisible);
-        Assert.Contains("Подготовка", viewModel.StatusBar.PreparationTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("����������", viewModel.StatusBar.PreparationTimingText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("7", viewModel.StatusBar.PreparationTimingText, StringComparison.Ordinal);
-        Assert.Contains("Выполнение", viewModel.StatusBar.ExecutionTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("����������", viewModel.StatusBar.ExecutionTimingText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("11", viewModel.StatusBar.ExecutionTimingText, StringComparison.Ordinal);
         Assert.NotEqual(string.Empty, viewModel.StatusBar.TotalTimingText);
         Assert.Contains("18", viewModel.StatusBar.TotalTimingText, StringComparison.Ordinal);
-        Assert.Contains("да", viewModel.StatusBar.CacheTimingText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("интерпретатор", viewModel.StatusBar.EngineTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("��", viewModel.StatusBar.CacheTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�������������", viewModel.StatusBar.EngineTimingText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -356,14 +357,14 @@ public sealed class MainWindowViewModelTests
             OnRun = _ => new ProgramRunResult(
                 ProgramRunStatus.Success,
                 [],
-                "2" + Environment.NewLine + "равно")
+                "2" + Environment.NewLine + "�����")
         };
         var viewModel = CreateViewModel(documentService: documentService, runService: runService);
         PrepareSavedActiveDocument(viewModel, @"C:\temp\program.axm", "PRINT 1");
 
         viewModel.RunCommand.Execute(null);
 
-        Assert.Equal("2" + Environment.NewLine + "равно", viewModel.BottomPane.OutputText);
+        Assert.Equal("2" + Environment.NewLine + "�����", viewModel.BottomPane.OutputText);
     }
 
     [Fact]
@@ -423,7 +424,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(BottomPaneFocusTarget.Diagnostics, viewModel.BottomPane.FocusTarget);
         Assert.Equal(2, viewModel.BottomPane.FocusRequestVersion);
         Assert.NotNull(viewModel.BottomPane.SelectedDiagnostic);
-        Assert.Contains("диагностик", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("����������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -587,8 +588,8 @@ public sealed class MainWindowViewModelTests
 
         viewModel.RunCommand.Execute(null);
 
-        Assert.Contains("Сохранить", promptService.LastConfirmationMessage, StringComparison.Ordinal);
-        Assert.Contains("запуск", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("���������", promptService.LastConfirmationMessage, StringComparison.Ordinal);
+        Assert.Contains("������", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(@"C:\temp\program.axm", documentService.LastSavedFilePath);
         Assert.Equal("PRINT 2", documentService.LastSavedSourceText);
         Assert.Equal("PRINT 2", runService.LastSourceText);
@@ -610,8 +611,8 @@ public sealed class MainWindowViewModelTests
         viewModel.RunCommand.Execute(null);
 
         Assert.Equal(0, runService.CallCount);
-        Assert.Contains("сохран", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("запуск", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -644,7 +645,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(string.Empty, viewModel.BottomPane.CurrentPromptText);
         Assert.False(viewModel.SubmitInputCommand.CanExecute(null));
 
-        viewModel.BottomPane.CurrentInputText = "Иван";
+        viewModel.BottomPane.CurrentInputText = "����";
 
         Assert.Equal(string.Empty, consoleService.CurrentInputText);
     }
@@ -658,14 +659,14 @@ public sealed class MainWindowViewModelTests
 
         dispatcher.BeginInvoke(() =>
         {
-            viewModel.BottomPane.CurrentInputText = "Иван";
+            viewModel.BottomPane.CurrentInputText = "����";
             viewModel.SubmitInputCommand.Execute(null);
         });
 
         var result = consoleService.RequestInput(new ProgramInputRequest(1, null, 1));
 
-        Assert.Equal("Иван", result);
-        Assert.Equal("? Иван", consoleService.OutputText);
+        Assert.Equal("����", result);
+        Assert.Equal("? ����", consoleService.OutputText);
     }
 
     [Fact]
@@ -686,7 +687,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.Documents.ActiveDocument.IsDirty);
         Assert.Equal(@"C:\temp", viewModel.FilesPane.RootPath);
         Assert.Equal(@"C:\temp\sample.axm", viewModel.StatusBar.PathText);
-        Assert.Contains("сохран", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -738,7 +739,7 @@ public sealed class MainWindowViewModelTests
         Assert.Single(viewModel.Documents.Documents);
         Assert.DoesNotContain(firstDocument, viewModel.Documents.Documents);
         Assert.Same(secondDocument, viewModel.Documents.ActiveDocument);
-        Assert.Contains("закрыта вкладка", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������� �������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -757,7 +758,7 @@ public sealed class MainWindowViewModelTests
         Assert.Single(viewModel.Documents.Documents);
         Assert.Same(document, viewModel.Documents.ActiveDocument);
         Assert.Equal("Untitled.axm", promptService.LastPromptedFileName);
-        Assert.Contains("отмен", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -820,7 +821,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(recentPath, viewModel.Documents.ActiveDocument!.FilePath);
         Assert.Equal(@"C:\temp", viewModel.FilesPane.RootPath);
         Assert.Equal(recentPath, viewModel.StatusBar.PathText);
-        Assert.Contains("открыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -863,7 +864,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(path, viewModel.Documents.ActiveDocument!.FilePath);
         Assert.Equal(@"C:\temp", viewModel.FilesPane.RootPath);
-        Assert.Contains("открыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -920,7 +921,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(@"C:\temp\folder", viewModel.FilesPane.RootPath);
         Assert.Equal(@"C:\temp\folder", fileTreeService.LastRootPath);
-        Assert.Contains("переход", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -944,7 +945,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.False(viewModel.Documents.ActiveDocument!.IsReadOnly);
         Assert.True(viewModel.SaveCommand.CanExecute(null));
-        Assert.Contains("открыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1073,7 +1074,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(@"C:\temp", fileOperationsService.LastCreateDirectoryParentPath);
         Assert.Equal("examples", fileOperationsService.LastCreateDirectoryName);
-        Assert.Contains("создан", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1236,8 +1237,8 @@ public sealed class MainWindowViewModelTests
 
         viewModel.MoveFilesPaneNodeToRecycleBinCommand.Execute(null);
 
-        Assert.Equal("Удалить", promptService.LastConfirmationTitle);
-        Assert.Contains("Удалить файл", promptService.LastConfirmationMessage, StringComparison.Ordinal);
+        Assert.Equal("�������", promptService.LastConfirmationTitle);
+        Assert.Contains("������� ����", promptService.LastConfirmationMessage, StringComparison.Ordinal);
         Assert.Equal(@"C:\temp\program.axm", fileOperationsService.LastRecycleBinPath);
         Assert.Single(viewModel.Documents.Documents);
         Assert.True(viewModel.Documents.ActiveDocument!.IsUntitled);
@@ -1271,7 +1272,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(fileTreeService.LastShowHiddenFiles);
         Assert.True(viewModel.FilesPane.ShowHiddenFiles);
-        Assert.Contains("скрыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1289,8 +1290,8 @@ public sealed class MainWindowViewModelTests
         viewModel.FilesPane.SelectedNode = node;
         viewModel.ShowFilesPaneNodePropertiesCommand.Execute(null);
 
-        Assert.Equal("Свойства", promptService.LastInfoTitle);
-        Assert.Contains("Имя:", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("��������", promptService.LastInfoTitle);
+        Assert.Contains("���:", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("file.txt", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(@"C:\temp\file.txt", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
     }
@@ -1303,10 +1304,10 @@ public sealed class MainWindowViewModelTests
 
         viewModel.AboutCommand.Execute(null);
 
-        Assert.Equal("О программе Axiom IDE", promptService.LastInfoTitle);
+        Assert.Equal("� ��������� Axiom IDE", promptService.LastInfoTitle);
         Assert.Contains("Axiom IDE", promptService.LastInfoMessage, StringComparison.Ordinal);
-        Assert.Contains("оболочка интерпретатора", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("Окно «О программе» закрыто.", viewModel.StatusBar.StatusText);
+        Assert.Contains("�������� ��������������", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("���� �� ��������� �������.", viewModel.StatusBar.StatusText);
     }
 
     [Fact]
@@ -1351,7 +1352,7 @@ public sealed class MainWindowViewModelTests
         viewModel.OpenManualCommand.Execute(null);
 
         Assert.Equal(expectedPath, navigationService.LastOpenedPath);
-        Assert.Equal("Руководство открыто.", viewModel.StatusBar.StatusText);
+        Assert.Equal("����������� �������.", viewModel.StatusBar.StatusText);
         Assert.Equal(string.Empty, promptService.LastErrorTitle);
     }
 
@@ -1368,9 +1369,9 @@ public sealed class MainWindowViewModelTests
         viewModel.OpenManualCommand.Execute(null);
 
         Assert.Null(navigationService.LastOpenedPath);
-        Assert.Equal("Открыть руководство", promptService.LastErrorTitle);
+        Assert.Equal("������� �����������", promptService.LastErrorTitle);
         Assert.Contains(@"docs\manual\index.html", promptService.LastErrorMessage, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("Руководство не найдено.", viewModel.StatusBar.StatusText);
+        Assert.Equal("����������� �� �������.", viewModel.StatusBar.StatusText);
     }
 
     [Fact]
@@ -1867,7 +1868,7 @@ public sealed class MainWindowViewModelTests
         Assert.True(viewModel.HasStoppedRun);
         Assert.NotNull(viewModel.StoppedRunState);
         Assert.True(viewModel.ContinueRunCommand.CanExecute(null));
-        Assert.Equal(2, viewModel.StoppedRunState!.Snapshot.SourceLocation.Line);
+        Assert.Equal(2, viewModel.StoppedRunState!.StopInfo.Line);
         Assert.Equal("1", viewModel.BottomPane.OutputText);
         Assert.Contains("2", viewModel.StatusBar.StatusText, StringComparison.Ordinal);
     }
@@ -1924,7 +1925,7 @@ public sealed class MainWindowViewModelTests
         Assert.Null(viewModel.StoppedRunLine);
         Assert.False(viewModel.ContinueRunCommand.CanExecute(null));
         Assert.Equal("1" + Environment.NewLine + "2" + Environment.NewLine + "3", viewModel.BottomPane.OutputText);
-        Assert.Contains("успеш", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2105,7 +2106,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.HasStoppedRun);
         Assert.NotNull(viewModel.StoppedRunState);
-        Assert.Equal(1, viewModel.StoppedRunState!.Snapshot.CallDepth);
+        Assert.Equal(1, viewModel.StoppedRunState!.StopInfo.CallDepth);
     }
 
     [Fact]
@@ -2135,7 +2136,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.HasStoppedRun);
         Assert.NotNull(viewModel.StoppedRunState);
-        Assert.Equal(2, viewModel.StoppedRunState!.Snapshot.SourceLocation.Line);
+        Assert.Equal(2, viewModel.StoppedRunState!.StopInfo.Line);
         Assert.Equal(string.Empty, viewModel.BottomPane.OutputText);
     }
 
@@ -2166,7 +2167,7 @@ public sealed class MainWindowViewModelTests
 
         viewModel.StepBackCommand.Execute(null);
         Assert.Equal(string.Empty, viewModel.BottomPane.OutputText);
-        Assert.Equal(1, viewModel.StoppedRunState!.Snapshot.SourceLocation.Line);
+        Assert.Equal(1, viewModel.StoppedRunState!.StopInfo.Line);
     }
 
     [Fact]
@@ -2221,7 +2222,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.StopDebuggingCommand.CanExecute(null));
         Assert.False(viewModel.ContinueRunCommand.CanExecute(null));
         Assert.Equal("1", viewModel.BottomPane.OutputText);
-        Assert.Contains("отлад", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2326,7 +2327,7 @@ public sealed class MainWindowViewModelTests
         Assert.Null(viewModel.StoppedRunLine);
         Assert.False(viewModel.ContinueRunCommand.CanExecute(null));
         Assert.False(viewModel.StopDebuggingCommand.CanExecute(null));
-        Assert.Contains("отлад", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
 
         viewModel.RunOrContinueCommand.Execute(null);
 
@@ -2418,7 +2419,7 @@ public sealed class MainWindowViewModelTests
             Assert.True(eventLogService.BeginSessionCalled);
             Assert.True(eventLogService.FlushCalled);
             Assert.Equal(eventLogService.CurrentSessionLogPathValue, externalNavigationService.LastOpenedPath);
-            Assert.Contains("журнал", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
@@ -2450,7 +2451,7 @@ public sealed class MainWindowViewModelTests
             Assert.True(eventLogService.BeginSessionCalled);
             Assert.True(eventLogService.FlushCalled);
             Assert.Equal(logPath, viewerService.LastShownPath);
-            Assert.Contains("журнал", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
@@ -2506,7 +2507,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(eventLogService.DeleteInactiveLogsCalled);
         Assert.Contains("3", viewModel.StatusBar.StatusText, StringComparison.Ordinal);
-        Assert.Contains("Удалить", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("�������", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2592,7 +2593,8 @@ public sealed class MainWindowViewModelTests
             consoleService ?? new ProgramConsoleService(),
             promptService ?? new FakeDialogPromptService(),
             codeFormattingService ?? new AxiomCodeFormattingService(),
-            smartIdentifierService ?? new AxiomSmartIdentifierService(),
+            smartIdentifierService ?? new AxiomSmartIdentifierService(
+                sourceText => Parser.Parse(sourceText, out _)),
             fileTreeService ?? new FakeFileTreeService([]),
             fileOperationsService ?? new FakeFileOperationsService(),
             traceService ?? NullIdeTraceService.Instance,
@@ -2646,11 +2648,11 @@ public sealed class MainWindowViewModelTests
     {
         public Func<string, ProgramCompilationResult>? OnCompile { get; set; }
         public Func<string, ProgramRunResult>? OnRun { get; set; }
-        public Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult>? OnContinue { get; set; }
-        public Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult>? OnStepOver { get; set; }
-        public Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult>? OnStepInto { get; set; }
-        public Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult>? OnStepOut { get; set; }
-        public Func<Axiom.Runtime.BytecodeVmStopState, ProgramRunResult>? OnStepBack { get; set; }
+        public Func<IProgramDebuggerState, ProgramRunResult>? OnContinue { get; set; }
+        public Func<IProgramDebuggerState, ProgramRunResult>? OnStepOver { get; set; }
+        public Func<IProgramDebuggerState, ProgramRunResult>? OnStepInto { get; set; }
+        public Func<IProgramDebuggerState, ProgramRunResult>? OnStepOut { get; set; }
+        public Func<IProgramDebuggerState, ProgramRunResult>? OnStepBack { get; set; }
         public int CompileCallCount { get; private set; }
         public int CallCount { get; private set; }
         public int ContinueCallCount { get; private set; }
@@ -2679,7 +2681,8 @@ public sealed class MainWindowViewModelTests
             IEnumerable<int>? sourceBreakpointLines = null,
             bool stopBeforeFirstInstruction = false,
             string? sourceFilePath = null,
-            TimeSpan? timeout = null)
+            TimeSpan? timeout = null,
+            Axiom.Runtime.IRuntimeCancellationProvider? cancellationProvider = null)
         {
             CallCount++;
             LastSourceText = sourceText;
@@ -2690,34 +2693,34 @@ public sealed class MainWindowViewModelTests
             return OnRun?.Invoke(sourceText) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
 
-        public ProgramRunResult Continue(Axiom.Runtime.BytecodeVmStopState stopState)
+        public ProgramRunResult Continue(IProgramDebuggerState debuggerState)
         {
             ContinueCallCount++;
-            return OnContinue?.Invoke(stopState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
+            return OnContinue?.Invoke(debuggerState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
 
-        public ProgramRunResult StepOver(Axiom.Runtime.BytecodeVmStopState stopState)
+        public ProgramRunResult StepOver(IProgramDebuggerState debuggerState)
         {
             StepOverCallCount++;
-            return OnStepOver?.Invoke(stopState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
+            return OnStepOver?.Invoke(debuggerState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
 
-        public ProgramRunResult StepInto(Axiom.Runtime.BytecodeVmStopState stopState)
+        public ProgramRunResult StepInto(IProgramDebuggerState debuggerState)
         {
             StepIntoCallCount++;
-            return OnStepInto?.Invoke(stopState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
+            return OnStepInto?.Invoke(debuggerState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
 
-        public ProgramRunResult StepOut(Axiom.Runtime.BytecodeVmStopState stopState)
+        public ProgramRunResult StepOut(IProgramDebuggerState debuggerState)
         {
             StepOutCallCount++;
-            return OnStepOut?.Invoke(stopState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
+            return OnStepOut?.Invoke(debuggerState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
 
-        public ProgramRunResult StepBack(Axiom.Runtime.BytecodeVmStopState stopState)
+        public ProgramRunResult StepBack(IProgramDebuggerState debuggerState)
         {
             StepBackCallCount++;
-            return OnStepBack?.Invoke(stopState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
+            return OnStepBack?.Invoke(debuggerState) ?? new ProgramRunResult(ProgramRunStatus.Success, [], string.Empty);
         }
     }
 

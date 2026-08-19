@@ -11,6 +11,7 @@ using Axiom.Ide.Services.Input;
 using Axiom.Ide.Services.Persistence;
 using Axiom.Ide.Services.Prompts;
 using Axiom.Ide.ViewModels;
+using Axiom.Parsing;
 
 namespace Axiom.Ide.Services.Shell;
 
@@ -38,7 +39,8 @@ public sealed class IdeShellCompositionRoot
         var recentFilesService = new RecentFilesService();
         var promptService = new WpfDialogPromptService();
         var codeFormattingService = new AxiomCodeFormattingService();
-        var smartIdentifierService = new AxiomSmartIdentifierService();
+        var smartIdentifierService = new AxiomSmartIdentifierService(
+            sourceText => Parser.Parse(sourceText, out _));
         var fileTreeService = new FileTreeService();
         var fileOperationsService = new FileOperationsService();
         var externalNavigationService = new ExternalNavigationService();

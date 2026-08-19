@@ -281,6 +281,11 @@ public partial class MainWindow
             viewModel.ReportEditorTextActivity(
                 document,
                 editor.Document?.TextLength ?? 0);
+
+            if (!viewModel.StatusBar.IsRunning)
+            {
+                viewModel.BottomPane.ClearDiagnostics();
+            }
         }
         catch (Exception exception)
         {
