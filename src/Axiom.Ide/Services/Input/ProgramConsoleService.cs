@@ -23,13 +23,6 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
     private readonly IScreenModeSizeProvider _screenModeSizeProvider;
-    private readonly RuntimeInputSnapshot _inputSnapshot = new();
-    private DispatcherFrame? _pendingFrame;
-    private string _currentInputText = string.Empty;
-    private string _currentPromptText = string.Empty;
-    private bool _isWaitingForInput;
-    private string _outputText = string.Empty;
-    private string _submittedText = string.Empty;
     private bool _isScreenActive;
     private bool _isCanvasActive;
     private bool _isScreenOutputActive;
@@ -102,8 +95,10 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
     private long _graphicsMaxPendingKeys;
     private long _graphicsMaxPendingMouseEvents;
     private long _graphicsInputEventsAtLastSummary;
-    private volatile bool _isCancellationRequested;
-    private volatile bool _isSessionActive;
+    private readonly SessionManager _sessionManager;
+    private readonly ConsoleOutputService _consoleOutput;
+    private readonly InputStateService _inputState;
+    private readonly InputPromptService _inputPrompt;
 
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
@@ -113,14 +108,39 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _traceService = traceService ?? NullIdeTraceService.Instance;
         _eventLogService = eventLogService ?? NullIdeEventLogService.Instance;
         _screenModeSizeProvider = screenModeSizeProvider ?? ScreenModeSizeProvider.Instance;
+        _sessionManager = new SessionManager(traceService, eventLogService);
+        _consoleOutput = new ConsoleOutputService(traceService, eventLogService);
+        _inputState = new InputStateService();
+        _inputPrompt = new InputPromptService(traceService, eventLogService);
     }
+
+    /// <summary>
+    /// Менеджер сессий — доступен для внешних сервисов.
+    /// </summary>
+    public SessionManager SessionManager => _sessionManager;
+
+    /// <summary>
+    /// Сервис консольного вывода — доступен для внешних сервисов.
+    /// </summary>
+    public ConsoleOutputService ConsoleOutput => _consoleOutput;
+
+    /// <summary>
+    /// Сервис состояния ввода — доступен для внешних сервисов.
+    /// </summary>
+    public InputStateService InputState => _inputState;
+
+    /// <summary>
+    /// Сервис ввода пользователя — доступен для внешних сервисов.
+    /// </summary>
+    public InputPromptService InputPrompt => _inputPrompt;
 
     public string CurrentInputText
     {
-        get => _currentInputText;
+        get => _inputPrompt.CurrentInputText;
         set
         {
-            if (SetProperty(ref _currentInputText, value) && _inputSnapshot.IsScreenOutputActive && _isWaitingForInput)
+            _inputPrompt.CurrentInputText = value;
+            if (_inputState.Snapshot.IsScreenOutputActive && _inputPrompt.IsWaitingForInput)
             {
                 PublishGraphicsFrame();
             }
@@ -131,10 +151,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public string CurrentPromptText
     {
-        get => _currentPromptText;
-        private set
+        get => _inputPrompt.CurrentPromptText;
+        set
         {
-            if (SetProperty(ref _currentPromptText, value) && _inputSnapshot.IsScreenOutputActive)
+            _inputPrompt.CurrentPromptText = value;
+            if (_inputState.Snapshot.IsScreenOutputActive)
             {
                 PublishGraphicsFrame();
             }
@@ -143,10 +164,11 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public bool IsWaitingForInput
     {
-        get => _isWaitingForInput;
-        private set
+        get => _inputPrompt.IsWaitingForInput;
+        set
         {
-            if (SetProperty(ref _isWaitingForInput, value) && _inputSnapshot.IsScreenOutputActive)
+            _inputPrompt.IsWaitingForInput = value;
+            if (_inputState.Snapshot.IsScreenOutputActive)
             {
                 PublishGraphicsFrame();
             }
@@ -155,8 +177,8 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public string OutputText
     {
-        get => _outputText;
-        private set => SetProperty(ref _outputText, value);
+        get => _consoleOutput.OutputText;
+        set => _consoleOutput.OutputText = value;
     }
 
     public string GraphicsText
@@ -173,21 +195,21 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public IntPtr ScreenWindowHandle => _graphicsWindow?.Hwnd ?? IntPtr.Zero;
 
-    public bool IsScreenActive => _inputSnapshot.IsScreenActive;
+    public bool IsScreenActive => _inputState.Snapshot.IsScreenActive;
 
     public bool IsCanvasActive => _isCanvasActive;
 
-    public bool IsScreenOutputActive => _inputSnapshot.IsScreenOutputActive;
+    public bool IsScreenOutputActive => _inputState.Snapshot.IsScreenOutputActive;
 
-    public int ScreenMode => _inputSnapshot.ScreenMode;
+    public int ScreenMode => _inputState.Snapshot.ScreenMode;
 
     public int ActiveScreenPage => _activeScreenPage;
 
     public int VisualScreenPage => _visualScreenPage;
 
-    public int ScreenWidth => _inputSnapshot.ScreenWidth;
+    public int ScreenWidth => _inputState.Snapshot.ScreenWidth;
 
-    public int ScreenHeight => _inputSnapshot.ScreenHeight;
+    public int ScreenHeight => _inputState.Snapshot.ScreenHeight;
 
     public bool TryGetScreenTextScrollState(out ScreenTextScrollState state)
     {
@@ -276,34 +298,22 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public double WindowBottom => _windowBottom;
 
-    public int OutputCheckpoint =>
-        string.IsNullOrEmpty(OutputText)
-            ? 0
-            : OutputText.Split(Environment.NewLine).Length;
+    public int OutputCheckpoint => _consoleOutput.OutputCheckpoint;
 
     public bool IsCancellationRequested
     {
-        get => _isCancellationRequested;
+        get => _sessionManager.IsCancellationRequested;
     }
 
     public void BeginSession()
     {
         InvokeOnDispatcher(ResetSessionState);
-        _isSessionActive = true;
-        _traceService.Write("console.begin", "Console session started.");
-        _eventLogService.Write(new IdeEventLogEntry
-        {
-            Level = IdeEventLevel.Info,
-            Category = "output",
-            EventName = "console.session-begin",
-            Source = nameof(ProgramConsoleService),
-            OutputLength = 0
-        });
+        _sessionManager.BeginSession(() => { }); // reset already done above
     }
 
     public void EndSession()
     {
-        _isSessionActive = false;
+        _sessionManager.EndSession();
     }
 
     public void Clear()
@@ -318,80 +328,22 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     public string RequestInput(ProgramInputRequest request)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
-
-        if (!dispatcher.CheckAccess())
-        {
-            return dispatcher.Invoke(() => RequestInput(request));
-        }
-
-        if (_pendingFrame is not null)
-        {
-            throw new InvalidOperationException("Concurrent INPUT requests are not supported.");
-        }
-
-        _submittedText = string.Empty;
-        CurrentPromptText = CreateConsolePrompt(request);
-        CurrentInputText = string.Empty;
-        IsWaitingForInput = true;
-        _traceService.Write(
-            "console.input.request",
-            $"request={request.RequestNumber} | values={request.ValueCount} | prompt=\"{SanitizeForLog(CurrentPromptText)}\"");
-        _eventLogService.Write(new IdeEventLogEntry
-        {
-            Level = IdeEventLevel.Info,
-            Category = "input",
-            EventName = "input.requested",
-            Source = nameof(ProgramConsoleService),
-            TextLength = CurrentPromptText.Length,
-            TextPreview = CurrentPromptText,
-            Properties = new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["requestNumber"] = request.RequestNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ["valueCount"] = request.ValueCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
-            }
-        });
-
-        var frame = new DispatcherFrame();
-        _pendingFrame = frame;
-        Dispatcher.PushFrame(frame);
-
-        var submittedText = _submittedText;
-        ResetInputState();
-        return submittedText;
+        return _inputPrompt.RequestInput(request, HandleInputSubmit, _inputState.Snapshot.IsScreenOutputActive, OnInputWaitingChanged);
     }
 
     public void SubmitInput()
     {
-        InvokeOnDispatcher(SubmitInputCore);
+        InvokeOnDispatcher(() => _inputPrompt.SubmitInput(HandleInputSubmit, _inputState.Snapshot.IsScreenOutputActive));
     }
 
     public void AppendInputCharacter(char character)
     {
-        InvokeOnDispatcher(() =>
-        {
-            if (!_isWaitingForInput || char.IsControl(character))
-            {
-                return;
-            }
-
-            CurrentInputText += character;
-        });
+        InvokeOnDispatcher(() => _inputPrompt.AppendInputCharacter(character));
     }
 
     public void BackspaceInputCharacter()
     {
-        InvokeOnDispatcher(() =>
-        {
-            if (!_isWaitingForInput || CurrentInputText.Length == 0)
-            {
-                return;
-            }
-
-            CurrentInputText = CurrentInputText[..^1];
-        });
+        InvokeOnDispatcher(() => _inputPrompt.BackspaceInputCharacter());
     }
 
     public void WriteOutput(string text)
@@ -399,7 +351,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         ArgumentNullException.ThrowIfNull(text);
         InvokeOnDispatcher(() =>
         {
-            if (_inputSnapshot.IsScreenOutputActive)
+            if (_inputState.Snapshot.IsScreenOutputActive)
             {
                 WriteGraphicsTextCore(text, newLine: true);
                 PublishGraphicsFrame();
@@ -440,7 +392,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _screenHeight = height;
             _activeScreenPage = _isScreenActive ? activePage : 0;
             _visualScreenPage = _isScreenActive ? visualPage : 0;
-            _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
+            _inputState.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
             if (!_isScreenActive || !preservePages)
@@ -514,7 +466,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _canvasCameraX = 0;
             _canvasCameraY = 0;
             _canvasFrameInProgress = false;
-            _inputSnapshot.SetScreenState(isScreenActive: false, isScreenOutputActive: false, _screenMode, _screenWidth, _screenHeight);
+            _inputState.SetScreenState(isScreenActive: false, isScreenOutputActive: false, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
             _screenPages = new ScreenFramebuffer?[4];
@@ -568,7 +520,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _canvasCameraX = 0;
             _canvasCameraY = 0;
             _canvasFrameInProgress = false;
-            _inputSnapshot.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
+            _inputState.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
             FlushPendingGraphicsTraceLine(logEmpty: false);
@@ -964,7 +916,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
-            if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
+            if (!_inputState.Snapshot.IsScreenActive || _framebuffer is null)
             {
                 return;
             }
@@ -996,7 +948,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
-            if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
+            if (!_inputState.Snapshot.IsScreenActive || _framebuffer is null)
             {
                 return;
             }
@@ -1028,7 +980,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
                 return;
             }
 
-            if (!_inputSnapshot.IsScreenActive || _framebuffer is null)
+            if (!_inputState.Snapshot.IsScreenActive || _framebuffer is null)
             {
                 return;
             }
@@ -1299,77 +1251,53 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        _inputSnapshot.EnqueueKey(keyText);
-        if (_inputSnapshot.IsScreenActive)
+        _inputState.EnqueueKey(keyText);
+        if (_inputState.Snapshot.IsScreenActive)
         {
             _graphicsKeysEnqueued++;
-            _graphicsMaxPendingKeys = Math.Max(_graphicsMaxPendingKeys, _inputSnapshot.PendingKeyCount);
+            _graphicsMaxPendingKeys = Math.Max(_graphicsMaxPendingKeys, _inputState.Snapshot.PendingKeyCount);
         }
     }
 
     public void SetKeyDown(string keyText)
     {
-        if (string.IsNullOrEmpty(keyText))
-        {
-            return;
-        }
-
-        _inputSnapshot.SetKeyDown(keyText);
+        _inputState.SetKeyDown(keyText);
     }
 
     public void SetKeyUp(string keyText)
     {
-        if (string.IsNullOrEmpty(keyText))
-        {
-            return;
-        }
-
-        _inputSnapshot.SetKeyUp(keyText);
+        _inputState.SetKeyUp(keyText);
     }
 
     public string ReadKey()
     {
-        if (_inputSnapshot.TryReadKey(out var keyText))
+        var keyText = _inputState.ReadKey();
+        if (keyText.Length > 0 && _inputState.Snapshot.IsScreenActive)
         {
-            if (_inputSnapshot.IsScreenActive)
-            {
-                _graphicsKeysRead++;
-            }
-
-            return keyText;
+            _graphicsKeysRead++;
         }
 
-        return string.Empty;
+        return keyText;
     }
 
     public bool IsKeyDown(string keyText)
     {
-        if (string.IsNullOrEmpty(keyText))
-        {
-            return false;
-        }
-
-        return _inputSnapshot.IsKeyDown(keyText);
+        return _inputState.IsKeyDown(keyText);
     }
 
     public void ClearKeyState()
     {
-        _inputSnapshot.ClearKeyState();
+        _inputState.ClearKeyState();
     }
 
     public void SetMousePosition(long x, long y)
     {
-        _inputSnapshot.SetMousePosition(x, y);
+        _inputState.SetMousePosition(x, y);
     }
 
     public void SetMouseButtonDown(int buttonNumber)
     {
-        if (!IsSupportedMouseButton(buttonNumber))
-        {
-            return;
-        }
-
-        _inputSnapshot.SetMouseButtonDown(buttonNumber);
+        _inputState.SetMouseButtonDown(buttonNumber);
     }
 
     public void EnqueueMouseButtonPress(int buttonNumber)
@@ -1379,7 +1307,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber));
+        _inputState.EnqueueMouseButtonPress(buttonNumber);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMousePressEnqueued++;
+        }
     }
 
     public void EnqueueMouseButtonRelease(int buttonNumber)
@@ -1389,12 +1322,22 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber));
+        _inputState.EnqueueMouseButtonRelease(buttonNumber);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMouseReleaseEnqueued++;
+        }
     }
 
     public void EnqueueMouseMove()
     {
-        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Move, 0));
+        _inputState.EnqueueMouseMove();
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMouseMoveEnqueued++;
+        }
     }
 
     public void EnqueueMouseWheel(int delta)
@@ -1404,181 +1347,107 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             return;
         }
 
-        EnqueueMouseEventCore(new MouseInputEvent(MouseInputEventKind.Wheel, delta));
+        _inputState.EnqueueMouseWheel(delta);
+        if (_inputState.Snapshot.IsScreenActive)
+        {
+            _graphicsMouseEventsEnqueued++;
+            _graphicsMouseWheelEnqueued++;
+        }
     }
 
     public void SetMouseButtonUp(int buttonNumber)
     {
-        if (!IsSupportedMouseButton(buttonNumber))
-        {
-            return;
-        }
-
-        _inputSnapshot.SetMouseButtonUp(buttonNumber);
+        _inputState.SetMouseButtonUp(buttonNumber);
     }
 
     public long GetMouseX()
     {
-        return _inputSnapshot.GetMouseX();
+        return _inputState.GetMouseX();
     }
 
     public long GetMouseY()
     {
-        return _inputSnapshot.GetMouseY();
+        return _inputState.GetMouseY();
     }
 
     public bool IsMouseButtonDown(int buttonNumber)
     {
-        if (!IsSupportedMouseButton(buttonNumber))
-        {
-            return false;
-        }
-
-        return _inputSnapshot.IsMouseButtonDown(buttonNumber);
+        return _inputState.IsMouseButtonDown(buttonNumber);
     }
 
     public int ReadMouseButtonPress()
     {
-        return _inputSnapshot.ReadMouseButtonPress();
+        return _inputState.ReadMouseButtonPress();
     }
 
     public MouseInputEvent ReadMouseEvent()
     {
-        if (_inputSnapshot.TryReadMouseEvent(out var mouseEvent))
+        var mouseEvent = _inputState.ReadMouseEvent();
+        if (mouseEvent.Kind != MouseInputEventKind.None && _inputState.Snapshot.IsScreenActive)
         {
-            if (_inputSnapshot.IsScreenActive)
-            {
-                _graphicsMouseEventsRead++;
-                RecordGraphicsMouseEventRead(mouseEvent.Kind);
-            }
-
-            return mouseEvent;
+            _graphicsMouseEventsRead++;
+            RecordGraphicsMouseEventRead(mouseEvent.Kind);
         }
 
-        return default;
+        return mouseEvent;
     }
 
     public void ClearMouseState()
     {
-        _inputSnapshot.ClearMouseState();
+        _inputState.ClearMouseState();
     }
 
     public void RestoreOutputCheckpoint(int checkpoint)
     {
-        InvokeOnDispatcher(() => RestoreOutputCheckpointCore(checkpoint));
+        InvokeOnDispatcher(() => _consoleOutput.RestoreOutputCheckpoint(checkpoint));
     }
 
-    private void SubmitInputCore()
+    private void HandleInputSubmit(string promptText, string inputText, bool isScreenOutputActive)
     {
-        if (_pendingFrame is null)
+        if (isScreenOutputActive)
         {
-            return;
-        }
-
-        _submittedText = CurrentInputText;
-        if (_inputSnapshot.IsScreenOutputActive)
-        {
-            WriteGraphicsTextCore(CurrentPromptText + CurrentInputText, newLine: true);
-            IsWaitingForInput = false;
+            WriteGraphicsTextCore(promptText + inputText, newLine: true);
             PublishGraphicsFrame();
         }
         else
         {
-            AppendTranscriptLine(CurrentPromptText + CurrentInputText);
+            _consoleOutput.AppendTranscriptLine(promptText + inputText);
         }
+    }
 
-        _traceService.Write(
-            "console.input.submit",
-            $"text=\"{SanitizeForLog(CurrentInputText)}\"");
-        _eventLogService.Write(new IdeEventLogEntry
+    private void OnInputWaitingChanged()
+    {
+        if (_inputState.Snapshot.IsScreenOutputActive)
         {
-            Level = IdeEventLevel.Info,
-            Category = "input",
-            EventName = "input.submitted",
-            Source = nameof(ProgramConsoleService),
-            TextLength = CurrentInputText.Length,
-            TextPreview = CurrentInputText,
-            OutputLength = OutputCheckpoint
-        });
-        _pendingFrame.Continue = false;
-        _pendingFrame = null;
+            PublishGraphicsFrame();
+        }
+    }
+
+    private void SubmitInputCore()
+    {
+        _inputPrompt.SubmitInput(HandleInputSubmit, _inputState.Snapshot.IsScreenOutputActive);
     }
 
     private void AppendTranscriptLine(string line)
     {
-        OutputText = string.IsNullOrEmpty(OutputText)
-            ? line
-            : $"{OutputText}{Environment.NewLine}{line}";
-
-        _traceService.Write("console.output", SanitizeForLog(line));
-        _eventLogService.Write(new IdeEventLogEntry
-        {
-            Level = IdeEventLevel.Info,
-            Category = "output",
-            EventName = "output.changed",
-            Source = nameof(ProgramConsoleService),
-            TextLength = line.Length,
-            TextPreview = line,
-            OutputLength = OutputCheckpoint
-        });
+        _consoleOutput.AppendTranscriptLine(line);
     }
 
     private void RestoreOutputCheckpointCore(int checkpoint)
     {
-        if (checkpoint < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint must not be negative.");
-        }
-
-        if (string.IsNullOrEmpty(OutputText))
-        {
-            if (checkpoint == 0)
-            {
-                return;
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint is outside the current output range.");
-        }
-
-        var lines = OutputText.Split(Environment.NewLine);
-        if (checkpoint > lines.Length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint is outside the current output range.");
-        }
-
-        OutputText = checkpoint == 0
-            ? string.Empty
-            : string.Join(Environment.NewLine, lines.Take(checkpoint));
-
-        _eventLogService.Write(new IdeEventLogEntry
-        {
-            Level = IdeEventLevel.Info,
-            Category = "output",
-            EventName = "output.restored",
-            Source = nameof(ProgramConsoleService),
-            OutputLength = checkpoint
-        });
+        _consoleOutput.RestoreOutputCheckpoint(checkpoint);
     }
 
     private void ResetInputState()
     {
-        IsWaitingForInput = false;
-        CurrentPromptText = string.Empty;
-        CurrentInputText = string.Empty;
+        _inputPrompt.ResetInputState();
     }
 
     private void ResetSessionState()
     {
-        if (_pendingFrame is not null)
-        {
-            _pendingFrame.Continue = false;
-            _pendingFrame = null;
-        }
-
-        _submittedText = string.Empty;
-        _isCancellationRequested = false;
-        _isSessionActive = false;
-        _inputSnapshot.Reset();
+        _inputPrompt.CancelPendingFrame();
+        _sessionManager.Reset(() => { });
+        _inputState.Reset();
         _isScreenActive = false;
         _isScreenOutputActive = false;
         _isCanvasActive = false;
@@ -1608,7 +1477,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         _graphicsCurrentY = 0;
         ResetViewportCore();
         ResetWindowCore();
-        OutputText = string.Empty;
+        _consoleOutput.Reset();
         ResetInputState();
         OnPropertyChanged(nameof(IsScreenActive));
         OnPropertyChanged(nameof(IsCanvasActive));
@@ -1621,20 +1490,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void ClearOutputCore()
     {
-        if (string.IsNullOrEmpty(OutputText))
-        {
-            return;
-        }
-
-        OutputText = string.Empty;
-        _eventLogService.Write(new IdeEventLogEntry
-        {
-            Level = IdeEventLevel.Info,
-            Category = "output",
-            EventName = "output.cleared",
-            Source = nameof(ProgramConsoleService),
-            OutputLength = 0
-        });
+        _consoleOutput.ClearOutput();
     }
 
     private void InvokeOnDispatcher(Action action, DispatcherPriority priority = DispatcherPriority.Send)
@@ -1650,20 +1506,6 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         }
 
         dispatcher.Invoke(action, priority);
-    }
-
-    private static string CreateConsolePrompt(ProgramInputRequest request)
-    {
-        var promptText = request.PromptText?.TrimEnd();
-
-        if (string.IsNullOrWhiteSpace(promptText))
-        {
-            return "? ";
-        }
-
-        return promptText.EndsWith('?') || promptText.EndsWith(':')
-            ? $"{promptText} "
-            : $"{promptText}? ";
     }
 
     private static string SanitizeForLog(string text)
@@ -1727,17 +1569,6 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException)
         {
             return null;
-        }
-    }
-
-    private void EnqueueMouseEventCore(MouseInputEvent mouseEvent)
-    {
-        _inputSnapshot.EnqueueMouseEvent(mouseEvent);
-        if (_inputSnapshot.IsScreenActive)
-        {
-            _graphicsMouseEventsEnqueued++;
-            RecordGraphicsMouseEventEnqueued(mouseEvent.Kind);
-            _graphicsMaxPendingMouseEvents = Math.Max(_graphicsMaxPendingMouseEvents, _inputSnapshot.PendingMouseEventCount);
         }
     }
 
@@ -1855,12 +1686,12 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
         _graphicsWindow.Closed -= OnGraphicsWindowClosed;
         _graphicsWindow = null;
-        if (!_isSessionActive)
+        if (!_sessionManager.IsSessionActive)
         {
             return;
         }
 
-        _isCancellationRequested = true;
+        _sessionManager.IsCancellationRequested = true;
         WriteGraphicsEvent("screen.closed-by-user", "SCREEN window was closed by the user; run cancellation requested.");
     }
 
@@ -2577,7 +2408,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
             _graphicsTextBuffer,
             _graphicsForeground,
             _graphicsBackground,
-            _isWaitingForInput ? CurrentPromptText + CurrentInputText : null,
+            _inputPrompt.IsWaitingForInput ? CurrentPromptText + CurrentInputText : null,
             inputRow,
             _graphicsColumn,
             firstVisibleRow,
@@ -2663,7 +2494,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void RecordGraphicsCommandQueued()
     {
-        if (!_inputSnapshot.IsScreenOutputActive)
+        if (!_inputState.Snapshot.IsScreenOutputActive)
         {
             return;
         }
@@ -2674,7 +2505,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void RecordGraphicsFramePublished(bool coalesced)
     {
-        if (!_inputSnapshot.IsScreenOutputActive)
+        if (!_inputState.Snapshot.IsScreenOutputActive)
         {
             return;
         }
@@ -2750,7 +2581,7 @@ public sealed class ProgramConsoleService : ViewModelBase, IProgramConsoleServic
 
     private void AddFillCore(long left, long top, long right, long bottom, int color)
     {
-        if (!_inputSnapshot.IsScreenActive)
+        if (!_inputState.Snapshot.IsScreenActive)
         {
             return;
         }
