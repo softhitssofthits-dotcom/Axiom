@@ -16,6 +16,7 @@ namespace Axiom.Ide;
 public partial class MainWindow
 {
     private readonly Dictionary<TextEditor, int> _lastCaretLineByEditor = [];
+    private bool _enterKeyInProgress;
 
     private void OnEditorLoaded(object sender, RoutedEventArgs e)
     {
@@ -147,6 +148,7 @@ public partial class MainWindow
         var previousLine = Math.Max(editor.TextArea.Caret.Line, 1);
         TraceEditorEvent("editor.enter.pressed", editor, $"line={previousLine}");
 
+        _enterKeyInProgress = true;
         Dispatcher.BeginInvoke(() =>
         {
             try
@@ -156,6 +158,10 @@ public partial class MainWindow
             catch (Exception exception)
             {
                 HandleEditorInteractionException("editor.enter.block-edit.exception", editor, exception);
+            }
+            finally
+            {
+                _enterKeyInProgress = false;
             }
         });
     }
@@ -204,6 +210,14 @@ public partial class MainWindow
         {
             if (_isApplyingLineFormatting)
             {
+                UpdateCaretStatusFromActiveEditor();
+                return;
+            }
+
+            if (_enterKeyInProgress)
+            {
+                var enterCurrentLine = Math.Max(editor.TextArea.Caret.Line, 1);
+                _lastCaretLineByEditor[editor] = enterCurrentLine;
                 UpdateCaretStatusFromActiveEditor();
                 return;
             }
@@ -430,6 +444,11 @@ public partial class MainWindow
         var lineText = editor.Document.GetText(line);
 
         if (string.IsNullOrWhiteSpace(lineText))
+        {
+            return;
+        }
+
+        if (!_codeFormattingService.IsLineSyntaxValid(lineText))
         {
             return;
         }

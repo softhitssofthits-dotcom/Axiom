@@ -57,6 +57,31 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
         return FormatLineCore(lineText, style);
     }
 
+    public bool IsLineSyntaxValid(string lineText)
+    {
+        ArgumentNullException.ThrowIfNull(lineText);
+
+        if (lineText.Length == 0)
+        {
+            return true;
+        }
+
+        var indentLength = 0;
+        while (indentLength < lineText.Length && char.IsWhiteSpace(lineText[indentLength]))
+        {
+            indentLength++;
+        }
+
+        var body = lineText[indentLength..];
+        if (body.Length == 0)
+        {
+            return true;
+        }
+
+        SplitComment(body, out var codePart, out _);
+        return codePart.Length == 0 || TryTokenize(codePart, out _);
+    }
+
     private static string FormatLineCore(string lineText, CodeFormattingStyle style)
     {
         if (lineText.Length == 0)
