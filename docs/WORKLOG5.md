@@ -1561,3 +1561,47 @@ Fast path работает через `PeekUnchecked` для проверки т
 - IDE-003: Разделить ProgramConsoleService — ОТЛОЖЕНО (крупный рефакторинг, ~2000 строк)
 
 Следующий шаг: обновить документы аудита и планов.
+
+## Session 1059 - 2026-08-19 05:00 - Разделение ProgramConsoleService (шаги 1-8)
+
+Задача: разделить ProgramConsoleService на сфокусированные сервисы по плану из форензик-аудита.
+
+### Что сделано
+
+1. **Шаг 1: SessionManager** (68 строк) — управление сессией, отмена
+2. **Шаг 2: ConsoleOutputService** (124 строки) — transcript, чекпоинты, очистка
+3. **Шаг 3: InputStateService** (162 строки) — клавиатура, мышь, RuntimeInputSnapshot
+4. **Шаг 4: InputPromptService** (166 строк) — INPUT prompt, подтверждение, ввод символов
+5. **Шаг 5: ProgramConsoleService.Graphics.cs** (1972 строки) — partial-файл с графикой
+6. **Шаг 6: ProgramConsoleService.cs** (304 строки) — фасад, делегирует сервисам
+7. **Шаг 7: Потребители** — не требуют изменений (API не изменился)
+8. **Шаг 8: Unit-тесты** — 45 новых тестов для извлечённых сервисов
+
+### Результат
+
+| Файл | Строк | Назначение |
+|------|-------|------------|
+| ProgramConsoleService.cs | 304 | Фасад |
+| ProgramConsoleService.Graphics.cs | 1972 | Графика (partial) |
+| SessionManager.cs | 68 | Сессия |
+| ConsoleOutputService.cs | 124 | Вывод |
+| InputStateService.cs | 162 | Ввод |
+| InputPromptService.cs | 166 | INPUT prompt |
+| **Итого** | **2796** | |
+
+**Было:** 1 файл, 2771 строк
+**Стало:** 6 файлов, основной фасад 304 строк
+
+### Тесты
+
+- SessionManagerTests: 7 тестов
+- ConsoleOutputServiceTests: 12 тестов
+- InputStateServiceTests: 15 тестов
+- InputPromptServiceTests: 11 тестов
+- Всего новых: 45 тестов
+- Все существующие тесты проходят: 156/156
+
+### Следующий шаг
+
+- GraphicsHostService как отдельный класс (выделить из partial-файла)
+- Или перейти к другим задачам из плана
