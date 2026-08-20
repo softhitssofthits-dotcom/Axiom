@@ -32,7 +32,7 @@ public sealed class EditorFeatureTests
     public void ScreenRenderer_UsesNativeWin32Direct3DWindow()
     {
         var nativeWindow = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Graphics\NativeGraphicsScreenWindow.cs"), Encoding.UTF8);
-        var service = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Services\Input\ProgramConsoleService.cs"), Encoding.UTF8);
+        var graphicsService = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Services\Graphics\GraphicsHostService.cs"), Encoding.UTF8);
 
         Assert.Contains("CreateWindowEx", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("WndProc", nativeWindow, StringComparison.Ordinal);
@@ -43,17 +43,17 @@ public sealed class EditorFeatureTests
         Assert.Contains("HandleResize", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("WmMouseMove", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("Direct3D11SwapChainRenderer", nativeWindow, StringComparison.Ordinal);
-        Assert.Contains("NativeGraphicsScreenWindow", service, StringComparison.Ordinal);
-        Assert.DoesNotContain("new GraphicsScreenWindow", service, StringComparison.Ordinal);
-        Assert.Contains("GraphicsFrameCoalescingInterval", service, StringComparison.Ordinal);
-        Assert.Contains("DispatcherTimer", service, StringComparison.Ordinal);
-        Assert.Contains("GraphicsFrameSummaryInterval", service, StringComparison.Ordinal);
-        Assert.Contains("screen.frame.summary", service, StringComparison.Ordinal);
-        Assert.Contains("screen.input.summary", service, StringComparison.Ordinal);
-        Assert.DoesNotContain("screen.key.enqueued", service, StringComparison.Ordinal);
-        Assert.DoesNotContain("screen.key.read", service, StringComparison.Ordinal);
-        Assert.DoesNotContain("screen.mouse.enqueued", service, StringComparison.Ordinal);
-        Assert.DoesNotContain("screen.mouse.read", service, StringComparison.Ordinal);
+        Assert.Contains("NativeGraphicsScreenWindow", graphicsService, StringComparison.Ordinal);
+        Assert.DoesNotContain("new GraphicsScreenWindow", graphicsService, StringComparison.Ordinal);
+        Assert.Contains("GraphicsFrameCoalescingInterval", graphicsService, StringComparison.Ordinal);
+        Assert.Contains("DispatcherTimer", graphicsService, StringComparison.Ordinal);
+        Assert.Contains("GraphicsFrameSummaryInterval", graphicsService, StringComparison.Ordinal);
+        Assert.Contains("screen.frame.summary", graphicsService, StringComparison.Ordinal);
+        Assert.Contains("screen.input.summary", graphicsService, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.key.enqueued", graphicsService, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.key.read", graphicsService, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.mouse.enqueued", graphicsService, StringComparison.Ordinal);
+        Assert.DoesNotContain("screen.mouse.read", graphicsService, StringComparison.Ordinal);
     }
 
     [Fact]

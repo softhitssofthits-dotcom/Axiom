@@ -47,7 +47,7 @@ internal sealed class BytecodeEvaluationStack
     {
         if (Count == 0)
         {
-            throw new InvalidOperationException("Evaluation stack is empty.");
+            throw new EvaluationStackUnderflowException("Стек вычисления опустел.");
         }
 
         return PopUnchecked();

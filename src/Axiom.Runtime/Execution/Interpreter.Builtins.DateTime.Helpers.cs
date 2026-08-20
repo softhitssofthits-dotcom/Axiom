@@ -275,6 +275,15 @@ public sealed partial class Interpreter
                 GetBuiltInArgumentLocation(expression, 2));
             throw new RuntimeFailureException();
         }
+        catch (InvalidOperationException ex)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "value",
+                $"не поддерживается для данного типа даты/времени: {ex.Message}",
+                GetBuiltInArgumentLocation(expression, 2));
+            throw new RuntimeFailureException();
+        }
     }
 
     private void EnsureCalendarYearArgument(

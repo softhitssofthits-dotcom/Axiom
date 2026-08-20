@@ -507,6 +507,11 @@ public sealed partial class BytecodeVm
             {
                 ExecuteInstruction(frame, instruction, instructionIndex);
             }
+            catch (EvaluationStackUnderflowException ex)
+            {
+                ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
+                throw new RuntimeFailureException();
+            }
             catch (RuntimeFailureException) when (TryHandleRuntimeFailure())
             {
             }
@@ -537,6 +542,11 @@ public sealed partial class BytecodeVm
         try
         {
             ExecuteInstruction(frame, instruction, instructionIndex);
+        }
+        catch (EvaluationStackUnderflowException ex)
+        {
+            ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
         }
         catch (RuntimeFailureException) when (TryHandleRuntimeFailure())
         {
@@ -620,7 +630,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.Negate:
-                frame.EvaluationStack.Push(EvaluateNegate(PopValue(frame, instructionIndex), ResolveLocation(frame.Routine.Id, instructionIndex)));
+                ExecuteNegateInstruction(frame, instructionIndex);
                 break;
 
             case Opcode.Concat:
@@ -703,7 +713,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.Not:
-                frame.EvaluationStack.Push(EvaluateNot(PopValue(frame, instructionIndex), ResolveLocation(frame.Routine.Id, instructionIndex)));
+                ExecuteNotInstruction(frame, instructionIndex);
                 break;
 
             case Opcode.Convert:
@@ -1469,6 +1479,115 @@ public sealed partial class BytecodeVm
         }
 
         stack.PushUnchecked(EvaluateShiftRight(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
+    }
+
+    private void ExecuteNegateInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var operand = frame.EvaluationStack.PopUnchecked();
+
+        if (TryEvaluateHotNegate(operand, out var result))
+        {
+            frame.EvaluationStack.PushUnchecked(result);
+            return;
+        }
+
+        frame.EvaluationStack.Push(EvaluateNegate(operand, ResolveLocation(frame.Routine.Id, instructionIndex)));
+    }
+
+    private static bool TryEvaluateHotNegate(RuntimeValue operand, out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        if (operand.Type == TypeSymbol.Integer)
+        {
+            try
+            {
+                result = RuntimeValue.FromInteger(checked(-GetIntegerUnchecked(operand)));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (operand.Type == TypeSymbol.Long)
+        {
+            try
+            {
+                result = RuntimeValue.FromLong(checked(-GetLongUnchecked(operand)));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        if (operand.Type == TypeSymbol.Double)
+        {
+            var value = -GetDoubleUnchecked(operand);
+            if (double.IsFinite(value))
+            {
+                result = RuntimeValue.FromDouble(value);
+                return true;
+            }
+
+            return false;
+        }
+
+        if (operand.Type == TypeSymbol.Decimal)
+        {
+            try
+            {
+                result = RuntimeValue.FromDecimal(checked(-GetDecimalUnchecked(operand)));
+                return true;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private void ExecuteNotInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var operand = frame.EvaluationStack.PopUnchecked();
+
+        if (TryEvaluateHotNot(operand, out var result))
+        {
+            frame.EvaluationStack.PushUnchecked(result);
+            return;
+        }
+
+        frame.EvaluationStack.Push(EvaluateNot(operand, ResolveLocation(frame.Routine.Id, instructionIndex)));
+    }
+
+    private static bool TryEvaluateHotNot(RuntimeValue operand, out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+
+        if (operand.Type == TypeSymbol.Boolean)
+        {
+            result = RuntimeValue.FromBoolean(!GetBooleanUnchecked(operand));
+            return true;
+        }
+
+        if (operand.Type == TypeSymbol.Integer)
+        {
+            result = RuntimeValue.FromInteger(~GetIntegerUnchecked(operand));
+            return true;
+        }
+
+        if (operand.Type == TypeSymbol.Long)
+        {
+            result = RuntimeValue.FromLong(~GetLongUnchecked(operand));
+            return true;
+        }
+
+        return false;
     }
 
     private void ExecuteJumpIfEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -3101,7 +3220,12 @@ public sealed partial class BytecodeVm
             return true;
         }
 
-        return TryExecuteFastFileSystemBuiltin(frame, executionInfo, instructionIndex, out result);
+        if (TryExecuteFastFileSystemBuiltin(frame, executionInfo, instructionIndex, out result))
+        {
+            return true;
+        }
+
+        return TryExecuteFastStringBuiltin(frame, executionInfo, out result);
     }
 
     private bool TryExecuteFastGraphicsBuiltin(
@@ -3862,6 +3986,213 @@ public sealed partial class BytecodeVm
             case BuiltinFunctionId.MoveFileOverwrite:
             case BuiltinFunctionId.CopyDirOverwrite:
                 return TryExecuteFastFileSystemMutationBuiltin(frame, executionInfo.CanonicalId, instructionIndex, out result);
+
+            default:
+                return false;
+        }
+    }
+
+    private static bool TryExecuteFastStringBuiltin(
+        BytecodeCallFrame frame,
+        BuiltinExecutionInfo executionInfo,
+        out RuntimeValue result)
+    {
+        result = RuntimeValue.Void;
+        var stack = frame.EvaluationStack;
+
+        switch (executionInfo.CanonicalId)
+        {
+            case BuiltinFunctionId.Len:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var value = stack.PeekUnchecked();
+                if (value.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetStringUnchecked(value).Length);
+                return true;
+            }
+
+            case BuiltinFunctionId.TrimWhitespace:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var value = stack.PeekUnchecked();
+                if (value.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromString(GetStringUnchecked(value).Trim());
+                return true;
+            }
+
+            case BuiltinFunctionId.LTrimWhitespace:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var value = stack.PeekUnchecked();
+                if (value.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromString(GetStringUnchecked(value).TrimStart());
+                return true;
+            }
+
+            case BuiltinFunctionId.RTrimWhitespace:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var value = stack.PeekUnchecked();
+                if (value.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                result = RuntimeValue.FromString(GetStringUnchecked(value).TrimEnd());
+                return true;
+            }
+
+            case BuiltinFunctionId.Contains:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var right = stack.PeekUnchecked();
+                var left = stack.PeekUnchecked(1);
+                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromBoolean(GetStringUnchecked(left).Contains(GetStringUnchecked(right)));
+                return true;
+            }
+
+            case BuiltinFunctionId.StartsWith:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var right = stack.PeekUnchecked();
+                var left = stack.PeekUnchecked(1);
+                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromBoolean(GetStringUnchecked(left).StartsWith(GetStringUnchecked(right), StringComparison.Ordinal));
+                return true;
+            }
+
+            case BuiltinFunctionId.EndsWith:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var right = stack.PeekUnchecked();
+                var left = stack.PeekUnchecked(1);
+                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromBoolean(GetStringUnchecked(left).EndsWith(GetStringUnchecked(right), StringComparison.Ordinal));
+                return true;
+            }
+
+            case BuiltinFunctionId.LCase:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var value = stack.PeekUnchecked();
+                if (value.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                var text = GetStringUnchecked(value);
+                var lowered = text.ToLowerInvariant();
+                result = ReferenceEquals(text, lowered) ? value : RuntimeValue.FromString(lowered);
+                return true;
+            }
+
+            case BuiltinFunctionId.UCase:
+            {
+                if (stack.Count < 1)
+                {
+                    return false;
+                }
+
+                var value = stack.PeekUnchecked();
+                if (value.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                var text = GetStringUnchecked(value);
+                var uppered = text.ToUpperInvariant();
+                result = ReferenceEquals(text, uppered) ? value : RuntimeValue.FromString(uppered);
+                return true;
+            }
+
+            case BuiltinFunctionId.InStr:
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                var right = stack.PeekUnchecked();
+                var left = stack.PeekUnchecked(1);
+                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
+                {
+                    return false;
+                }
+
+                stack.PopUnchecked();
+                stack.PopUnchecked();
+                result = RuntimeValue.FromInteger(GetStringUnchecked(left).IndexOf(GetStringUnchecked(right), StringComparison.Ordinal) + 1);
+                return true;
+            }
 
             default:
                 return false;

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Axiom.Ide.Services.Graphics;
 using Axiom.Ide.Services.Input;
 
 namespace Axiom.Ide.Graphics;
@@ -51,7 +52,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private static readonly WndProc StaticWndProc = DispatchWindowMessage;
     private static ushort s_windowClassAtom;
 
-    private readonly ProgramConsoleService _consoleService;
+    private readonly GraphicsHostService _graphicsHost;
+    private readonly IGraphicsWindowInputSink _inputSink;
     private Direct3D11SwapChainRenderer? _renderer;
     private ScreenFramebufferSnapshot? _lastFrame;
     private bool _isVerticalScrollBarVisible;
@@ -62,11 +64,13 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private bool _disposed;
     private GCHandle _windowGcHandle;
 
-    public NativeGraphicsScreenWindow(ProgramConsoleService consoleService, int width, int height)
+    public NativeGraphicsScreenWindow(GraphicsHostService graphicsHost, IGraphicsWindowInputSink inputSink, int width, int height)
     {
-        ArgumentNullException.ThrowIfNull(consoleService);
+        ArgumentNullException.ThrowIfNull(graphicsHost);
+        ArgumentNullException.ThrowIfNull(inputSink);
 
-        _consoleService = consoleService;
+        _graphicsHost = graphicsHost;
+        _inputSink = inputSink;
         RegisterWindowClass();
 
         var windowRect = new Rect
@@ -225,7 +229,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 SetFocus(Hwnd);
                 if (TryUpdateMousePositionFromClientPoint(GetX(lParam), GetY(lParam)))
                 {
-                    _consoleService.EnqueueMouseMove();
+                    _inputSink.EnqueueMouseMove();
                 }
                 return IntPtr.Zero;
 
@@ -256,7 +260,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             case WmMouseWheel:
                 SetFocus(Hwnd);
                 UpdateMousePositionFromScreenPoint(lParam);
-                _consoleService.EnqueueMouseWheel(GetWheelDelta(wParam));
+                _inputSink.EnqueueMouseWheel(GetWheelDelta(wParam));
                 return IntPtr.Zero;
 
             default:
@@ -268,10 +272,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     {
         if (TryMapVirtualKey(virtualKey, out var keyName))
         {
-            _consoleService.SetKeyDown(keyName);
-            if (!_consoleService.IsWaitingForInput && ShouldEnqueueKeyDown(virtualKey))
+            _inputSink.SetKeyDown(keyName);
+            if (!_inputSink.IsWaitingForInput && ShouldEnqueueKeyDown(virtualKey))
             {
-                _consoleService.EnqueueKey(keyName);
+                _inputSink.EnqueueKey(keyName);
             }
         }
     }
@@ -280,7 +284,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     {
         if (TryMapVirtualKey(virtualKey, out var keyName))
         {
-            _consoleService.SetKeyUp(keyName);
+            _inputSink.SetKeyUp(keyName);
         }
     }
 
@@ -288,9 +292,9 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     {
         if (character == '\r')
         {
-            if (_consoleService.IsWaitingForInput)
+            if (_inputSink.IsWaitingForInput)
             {
-                _consoleService.SubmitInput();
+                _inputSink.SubmitInput();
             }
 
             return;
@@ -298,21 +302,21 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         if (character == '\b')
         {
-            if (_consoleService.IsWaitingForInput)
+            if (_inputSink.IsWaitingForInput)
             {
-                _consoleService.BackspaceInputCharacter();
+                _inputSink.BackspaceInputCharacter();
             }
 
             return;
         }
 
-        if (_consoleService.IsWaitingForInput)
+        if (_inputSink.IsWaitingForInput)
         {
-            _consoleService.AppendInputCharacter(character);
+            _inputSink.AppendInputCharacter(character);
         }
         else if (ShouldEnqueueChar(character))
         {
-            _consoleService.EnqueueKey(character.ToString());
+            _inputSink.EnqueueKey(character.ToString());
         }
     }
 
@@ -329,14 +333,14 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         {
             SetCapture(Hwnd);
             _capturedMouseButtons |= GetMouseButtonMask(button);
-            _consoleService.EnqueueMouseButtonPress(button);
-            _consoleService.SetMouseButtonDown(button);
+            _inputSink.EnqueueMouseButtonPress(button);
+            _inputSink.SetMouseButtonDown(button);
         }
         else
         {
             _capturedMouseButtons &= ~GetMouseButtonMask(button);
-            _consoleService.EnqueueMouseButtonRelease(button);
-            _consoleService.SetMouseButtonUp(button);
+            _inputSink.EnqueueMouseButtonRelease(button);
+            _inputSink.SetMouseButtonUp(button);
             if (_capturedMouseButtons == 0)
             {
                 ReleaseCapture();
@@ -368,8 +372,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     private bool TryUpdateMousePositionFromClientPoint(int clientX, int clientY)
     {
-        var frameWidth = _lastFrame?.Width ?? _consoleService.ScreenWidth;
-        var frameHeight = _lastFrame?.Height ?? _consoleService.ScreenHeight;
+        var frameWidth = _lastFrame?.Width ?? _graphicsHost.ScreenWidth;
+        var frameHeight = _lastFrame?.Height ?? _graphicsHost.ScreenHeight;
         if (frameWidth <= 0 || frameHeight <= 0)
         {
             frameWidth = _clientWidth;
@@ -378,11 +382,11 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         if (!TryMapClientPointToFramebuffer(clientX, clientY, _clientWidth, _clientHeight, frameWidth, frameHeight, out var framebufferX, out var framebufferY))
         {
-            _consoleService.SetMousePosition(-1, -1);
+            _inputSink.SetMousePosition(-1, -1);
             return false;
         }
 
-        _consoleService.SetMousePosition(framebufferX, framebufferY);
+        _inputSink.SetMousePosition(framebufferX, framebufferY);
         return true;
     }
 
@@ -428,7 +432,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     private void HandleVerticalScroll(int request)
     {
-        if (!_consoleService.TryGetScreenTextScrollState(out var state) || !state.HasOverflow)
+        if (!_graphicsHost.TryGetScreenTextScrollState(out var state) || !state.HasOverflow)
         {
             return;
         }
@@ -446,7 +450,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             _ => currentPosition
         };
 
-        _consoleService.SetScreenTextFirstVisibleRow(targetPosition + 1);
+        _graphicsHost.SetScreenTextFirstVisibleRow(targetPosition + 1);
     }
 
     private int GetScrollTrackPosition(int fallbackPosition)
@@ -464,7 +468,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     private void UpdateVerticalScrollBar()
     {
-        var showVerticalScrollBar = _consoleService.TryGetScreenTextScrollState(out var state) && state.HasOverflow;
+        var showVerticalScrollBar = _graphicsHost.TryGetScreenTextScrollState(out var state) && state.HasOverflow;
         SetVerticalScrollBarVisible(showVerticalScrollBar);
 
         if (!showVerticalScrollBar)

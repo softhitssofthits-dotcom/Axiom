@@ -1605,3 +1605,78 @@ Fast path работает через `PeekUnchecked` для проверки т
 
 - GraphicsHostService как отдельный класс (выделить из partial-файла)
 - Или перейти к другим задачам из плана
+
+## Session 1065 - 2026-08-20 17:30 - Извлечение GraphicsHostService из ProgramConsoleService
+
+Задача: выделить GraphicsHostService как отдельный класс из ProgramConsoleService.Graphics.cs (2254 строки).
+
+### Что сделано
+
+1. **Создан `src/Axiom.Ide/Services/Graphics/GraphicsHostService.cs`** (2432 строки):
+   - Реализует `IGraphicsHost` (48+ членов)
+   - Содержит все 62 graphics-поля
+   - Screen/Canvas lifecycle (8 методов)
+   - Drawing primitives (14 методов + Core)
+   - Pixel operations (9 методов + Core)
+   - Viewport/Window (8 методов + Core)
+   - Text subsystem (12 методов + text viewport)
+   - Image/Sprite/Tileset/Tilemap (13 методов)
+   - Palette (2 метода)
+   - Frame publishing + Metrics (14 методов)
+   - Graphics window lifecycle (3 метода)
+   - Coordinate math helpers (9 методов)
+   - Input metrics tracking (RecordKeyEnqueued, RecordKeyRead, RecordMouseEventEnqueued, RecordMouseEventRead)
+
+2. **Создан `src/Axiom.Ide/Graphics/IGraphicsWindowInputSink.cs`** (23 строки):
+   - Интерфейс ввода для NativeGraphicsScreenWindow
+   - 13 методов: EnqueueKey, SetKeyDown, SetKeyUp, IsWaitingForInput, SubmitInput, BackspaceInputCharacter, AppendInputCharacter, EnqueueMouseButtonPress, SetMouseButtonDown, EnqueueMouseButtonRelease, SetMouseButtonUp, EnqueueMouseMove, EnqueueMouseWheel, SetMousePosition
+
+3. **Обновлён `src/Axiom.Ide/Graphics/NativeGraphicsScreenWindow.cs`**:
+   - Конструктор: `(ProgramConsoleService)` → `(GraphicsHostService, IGraphicsWindowInputSink, int, int)`
+   - Все `_consoleService.` вызовы заменены на `_graphicsHost.` / `_inputSink.`
+   - Добавлен `using Axiom.Ide.Services.Graphics;`
+
+4. **Переписан `src/Axiom.Ide/Services/Input/ProgramConsoleService.cs`** (388 → 685 строк):
+   - Удалены все 62 graphics-поля
+   - Добавлен `_graphicsHostService: GraphicsHostService`
+   - Фасад реализует `IGraphicsWindowInputSink`
+   - Все IGraphicsHost-методы делегируют в `_graphicsHostService`
+   - Input-методы делегируют в `_inputState` + вызывают метрики `_graphicsHostService`
+   - `ResetSessionState` вызывает `_graphicsHostService.ResetGraphicsState()`
+   - Property change callbacks из GraphicsHostService в фасад
+
+5. **Удалён `src/Axiom.Ide/Services/Input/ProgramConsoleService.Graphics.cs`** (2254 строки)
+
+6. **Обновлены тесты**:
+   - `NativeGraphicsScreenWindowTests.cs`: 3 теста обновлены для нового конструктора
+   - `EditorFeatureTests.cs`: `ScreenRenderer_UsesNativeWin32Direct3DWindow` проверяет `GraphicsHostService.cs` вместо `ProgramConsoleService.cs`
+
+### Результат
+
+| Файл | Было | Стало | Δ |
+|------|------|-------|---|
+| ProgramConsoleService.cs | 388 | 685 | +297 |
+| ProgramConsoleService.Graphics.cs | 2254 | DELETED | -2254 |
+| GraphicsHostService.cs | — | 2432 | +2432 |
+| IGraphicsWindowInputSink.cs | — | 23 | +23 |
+| NativeGraphicsScreenWindow.cs | 783 | 787 | +4 |
+| **Итого** | 3425 | 3927 | +502 |
+
+Архитектурный эффект: ProgramConsoleService разделён на 5 сервисов:
+- SessionManager (68 строк)
+- ConsoleOutputService (124 строки)
+- InputStateService (162 строки)
+- InputPromptService (166 строк)
+- **GraphicsHostService (2432 строки)** ← NEW
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+- IDE тесты: 117/117 (ProgramConsoleService + NativeGraphicsScreenWindow + EditorFeature + SmartIdentifier)
+- Runtime тесты: 896/897 (1 pre-existing failure)
+- Все 98 ProgramConsoleService тестов проходят
+- Все 18 NativeGraphicsScreenWindow тестов проходят
+
+### Следующий шаг
+
+- Продуктовая работа или дальнейший рефакторинг GraphicsHostService на partial-файлы

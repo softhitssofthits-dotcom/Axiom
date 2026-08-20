@@ -6,6 +6,11 @@ public static class RuntimeValueHelpers
 {
     public static bool ValuesEqual(RuntimeValue left, RuntimeValue right)
     {
+        if (ReferenceEquals(left, right))
+        {
+            return true;
+        }
+
         if (left.Type == TypeSymbol.Integer)
         {
             if (right.Type == TypeSymbol.Integer)
@@ -78,6 +83,11 @@ public static class RuntimeValueHelpers
 
     public static int Compare(RuntimeValue left, RuntimeValue right)
     {
+        if (ReferenceEquals(left, right))
+        {
+            return 0;
+        }
+
         if (left.Type == TypeSymbol.Integer)
         {
             if (right.Type == TypeSymbol.Integer)

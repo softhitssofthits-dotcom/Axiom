@@ -443,11 +443,11 @@
 
 **Запланировано (отложено):**
 - **IDE-002** [P2]: Создать абстракцию отладчика вместо прямого использования BytecodeVmStopState — **ВЫПОЛНЕНО**
-- **IDE-003** [P2]: Разделить ProgramConsoleService на сфокусированные сервисы — **ВЫПОЛНЕНО ЧАСТИЧНО**
+- **IDE-003** [P2]: Разделить ProgramConsoleService на сфокусированные сервисы — **ВЫПОЛНЕНО**
   - ✅ Извлечены: SessionManager (68 строк), ConsoleOutputService (124 строки), InputStateService (162 строки), InputPromptService (166 строк)
-  - ✅ ProgramConsoleService сокращён с 2771 до 304 строк (фасад)
-  - ✅ Графика вынесена в partial-файл ProgramConsoleService.Graphics.cs (1972 строки)
-  - ⏳ GraphicsHostService как отдельный класс — требует перемещения ~1900 строк с исправлением сотен ссылок; текущий partial-файл — приемлемый промежуточный результат
+  - ✅ ProgramConsoleService сокращён с 2771 до 685 строк (фасад)
+  - ✅ GraphicsHostService как отдельный класс — 2432 строки, выделен из partial-файла, фасад делегирует все IGraphicsHost-вызовы
+  - ✅ NativeGraphicsScreenWindow decoupled: принимает GraphicsHostService + IGraphicsWindowInputSink
 - **IDE-008** [P2]: Добавить команду отмены выполнения программы — **ВЫПОЛНЕНО**
 - **TASK-007** [P2]: Консолидировать источник ключевых слов (5 мест → 1) — **ВЫПОЛНЕНО** (центральный реестр + тест XSHD)
 

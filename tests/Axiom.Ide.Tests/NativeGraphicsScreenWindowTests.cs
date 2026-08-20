@@ -1,4 +1,5 @@
 using Axiom.Ide.Graphics;
+using Axiom.Ide.Services.Graphics;
 using Axiom.Ide.Services.Input;
 using System.Runtime.InteropServices;
 
@@ -47,7 +48,7 @@ public sealed class NativeGraphicsScreenWindowTests
     public void WindowCloseMessage_DestroysWindowAndRaisesClosed()
     {
         var service = new ProgramConsoleService();
-        using var window = new NativeGraphicsScreenWindow(service, 64, 48);
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 64, 48);
         var closed = false;
         window.Closed += (_, _) => closed = true;
 
@@ -61,7 +62,7 @@ public sealed class NativeGraphicsScreenWindowTests
     public void MouseMoveMessage_KeepsLastKnownCoordinatesUntilAnotherMouseInputArrives()
     {
         var service = new ProgramConsoleService();
-        using var window = new NativeGraphicsScreenWindow(service, 64, 48);
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 64, 48);
 
         SendMessage(window.Hwnd, WmMouseMove, IntPtr.Zero, MakeMouseLParam(11, 22));
 
@@ -78,7 +79,7 @@ public sealed class NativeGraphicsScreenWindowTests
     public void MouseButtonReleaseOutsideFramebuffer_ReleasesPressedState()
     {
         var service = new ProgramConsoleService();
-        using var window = new NativeGraphicsScreenWindow(service, 64, 48);
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 64, 48);
 
         SendMessage(window.Hwnd, WmLButtonDown, IntPtr.Zero, MakeMouseLParam(11, 22));
         Assert.True(service.IsMouseButtonDown(1));

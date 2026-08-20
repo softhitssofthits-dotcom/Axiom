@@ -146,37 +146,73 @@ public sealed partial class Interpreter
             ? ParseCanonicalDateBasedArgument(expression, "DATEADD", "value", 2, value)
             : ParseCanonicalTimeBasedArgument(expression, "DATEADD", "value", 2, value);
 
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTemporal(AddTemporalValue(expression, "DATEADD", temporal, intervalToken.Kind, number)));
+        try
+        {
+            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTemporal(AddTemporalValue(expression, "DATEADD", temporal, intervalToken.Kind, number)));
+        }
+        catch (InvalidOperationException ex)
+        {
+            ReportBuiltInArgumentError(
+                "DATEADD",
+                "value",
+                $"не поддерживается для данного типа даты/времени: {ex.Message}",
+                GetBuiltInArgumentLocation(expression, 2));
+            throw new RuntimeFailureException();
+        }
     }
 
     private RuntimeValue EvaluateDateDiffBuiltin(BoundCallExpression expression, string interval, string fromValue, string toValue)
     {
         var intervalToken = ParseDateTimeIntervalToken(expression, "DATEDIFF", "interval", 0, interval);
 
-        if (intervalToken.IsDateBased)
+        try
         {
-            var fromTemporal = ParseCanonicalDateBasedArgument(expression, "DATEDIFF", "fromValue", 1, fromValue);
-            var toTemporal = ParseCanonicalDateBasedArgument(expression, "DATEDIFF", "toValue", 2, toValue);
-            return RuntimeValue.FromLong(BuiltinDateTimeHelpers.EvaluateDateBasedDiff(intervalToken.Kind, fromTemporal.Date, toTemporal.Date));
-        }
+            if (intervalToken.IsDateBased)
+            {
+                var fromTemporal = ParseCanonicalDateBasedArgument(expression, "DATEDIFF", "fromValue", 1, fromValue);
+                var toTemporal = ParseCanonicalDateBasedArgument(expression, "DATEDIFF", "toValue", 2, toValue);
+                return RuntimeValue.FromLong(BuiltinDateTimeHelpers.EvaluateDateBasedDiff(intervalToken.Kind, fromTemporal.Date, toTemporal.Date));
+            }
 
-        var fromTimeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEDIFF", "fromValue", 1, fromValue);
-        var toTimeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEDIFF", "toValue", 2, toValue);
-        return RuntimeValue.FromLong(EvaluateTimeBasedDiff(intervalToken.Kind, fromTimeTemporal, toTimeTemporal));
+            var fromTimeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEDIFF", "fromValue", 1, fromValue);
+            var toTimeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEDIFF", "toValue", 2, toValue);
+            return RuntimeValue.FromLong(EvaluateTimeBasedDiff(intervalToken.Kind, fromTimeTemporal, toTimeTemporal));
+        }
+        catch (InvalidOperationException ex)
+        {
+            ReportBuiltInArgumentError(
+                "DATEDIFF",
+                "interval",
+                $"не поддерживается для данного типа даты/времени: {ex.Message}",
+                GetBuiltInArgumentLocation(expression, 0));
+            throw new RuntimeFailureException();
+        }
     }
 
     private RuntimeValue EvaluateDatePartBuiltin(BoundCallExpression expression, string part, string value)
     {
         var partToken = ParseDateTimePartToken(expression, "DATEPART", "part", 0, part);
 
-        if (partToken.IsDateBased)
+        try
         {
-            var temporal = ParseCanonicalDateBasedArgument(expression, "DATEPART", "value", 1, value);
-            return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateDatePart(partToken.Kind, temporal.Date));
-        }
+            if (partToken.IsDateBased)
+            {
+                var temporal = ParseCanonicalDateBasedArgument(expression, "DATEPART", "value", 1, value);
+                return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateDatePart(partToken.Kind, temporal.Date));
+            }
 
-        var timeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEPART", "value", 1, value);
-        return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateTimePart(partToken.Kind, timeTemporal.Time));
+            var timeTemporal = ParseCanonicalTimeBasedArgument(expression, "DATEPART", "value", 1, value);
+            return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateTimePart(partToken.Kind, timeTemporal.Time));
+        }
+        catch (InvalidOperationException ex)
+        {
+            ReportBuiltInArgumentError(
+                "DATEPART",
+                "part",
+                $"не поддерживается для данного типа даты/времени: {ex.Message}",
+                GetBuiltInArgumentLocation(expression, 0));
+            throw new RuntimeFailureException();
+        }
     }
 
     private RuntimeValue EvaluateDateValueBuiltin(BoundCallExpression expression, string value)
