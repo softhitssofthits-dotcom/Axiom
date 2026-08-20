@@ -110,8 +110,30 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
         _screenModeSizeProvider = screenModeSizeProvider ?? ScreenModeSizeProvider.Instance;
         _sessionManager = new SessionManager(traceService, eventLogService);
         _consoleOutput = new ConsoleOutputService(traceService, eventLogService);
+        _consoleOutput.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ConsoleOutputService.OutputText))
+            {
+                OnPropertyChanged(nameof(OutputText));
+            }
+        };
         _inputState = new InputStateService();
         _inputPrompt = new InputPromptService(traceService, eventLogService);
+        _inputPrompt.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(InputPromptService.IsWaitingForInput))
+            {
+                OnPropertyChanged(nameof(IsWaitingForInput));
+            }
+            else if (e.PropertyName == nameof(InputPromptService.CurrentPromptText))
+            {
+                OnPropertyChanged(nameof(CurrentPromptText));
+            }
+            else if (e.PropertyName == nameof(InputPromptService.CurrentInputText))
+            {
+                OnPropertyChanged(nameof(CurrentInputText));
+            }
+        };
     }
 
     /// <summary>
