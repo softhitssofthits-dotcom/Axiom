@@ -149,7 +149,7 @@ public sealed class GraphicsHostService : IGraphicsHost
     public int ScreenHeight => _screenHeight;
     public string GraphicsText => _graphicsText;
     public ScreenFramebufferSnapshot? GraphicsFrame => _graphicsFrame;
-    public IntPtr ScreenWindowHandle => _graphicsWindow?.Handle ?? IntPtr.Zero;
+    public IntPtr ScreenWindowHandle => _graphicsWindow?.Hwnd ?? IntPtr.Zero;
 
     public int CurrentForegroundColor => _graphicsForeground;
     public int CurrentBackgroundColor => _graphicsBackground ?? _graphicsLastBackgroundColor;
