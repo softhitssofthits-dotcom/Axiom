@@ -218,8 +218,8 @@
 - TASK-003: ARCHITECTURE.md обновлён — Bytecode в правилах зависимостей, описание слоя добавлено.
 - TASK-005: Execution timeout реализован — `TimeoutCancellationProvider`, `ExecutionRequest.CancellationProvider`, `ProgramRunService.Run(timeout)`.
 - TASK-008: CanConvert Decimal→Double исправлен, тест обновлён.
-- TASK-004: Hanging tests — корень: интерактивные samples в acceptance suite. Deferred.
-- TASK-006: Environment.CurrentDirectory — защищён shell lock. Deferred.
+- TASK-004: Hanging tests — фильтрация интерактивных samples из acceptance suite. DONE.
+- TASK-006: Environment.CurrentDirectory — мутация устранена, NormalizeFileSystemPath принимает baseDirectory. DONE.
 - TASK-009: ArrayAccessExpressionSyntax — verified dead code. Deferred.
 - TASK-010: Latent opcodes — verified. Deferred.
 - Recovery roadmap: 5/9 задач завершены, 4 deferred с обоснованием.
@@ -285,11 +285,11 @@
 
 ## Ближайшие задачи по аудиту вызовов
 
-1. [P2] CALL-001 — добавить ограничение глубины стека вызовов с диагностикой MB3xxx
-2. [P2] CALL-003 — создать 5 негативных acceptance-сэмплов: unknown_callable, return_value_in_sub, missing_return_value, sub_name_as_value, calling_non_function
-3. [P3] CALL-004 — расширить документацию BYREF-ограничения в function.html
-4. [P3] CALL-005 — добавить тест взаимной рекурсии (IsEven/IsOdd)
-5. [P3] CALL-006 — добавить runtime-тест для MB3008 (FUNCTION без RETURN на исполняемом пути)
+1. [P2] CALL-001 — DONE (добавлено ограничение глубины стека с MB3011)
+2. [P2] CALL-003 — DONE (5 негативных acceptance-сэмплов созданы)
+3. [P3] CALL-004 — DONE (документация BYREF-ограничения добавлена)
+4. [P3] CALL-005 — DONE (тест взаимной рекурсии IsEven/IsOdd добавлен в InterpreterTests.Error.cs и BytecodeVmTests.cs)
+5. [P3] CALL-006 — DONE (тест MB3006 для FUNCTION без RETURN добавлен, VM ловит на этапе валидации BC4054)
 
 ### 2026-08-19 - Deep String forensic audit и исправление STRING-001/STRING-002
 

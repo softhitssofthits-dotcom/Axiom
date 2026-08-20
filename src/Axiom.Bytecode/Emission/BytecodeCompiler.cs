@@ -756,7 +756,6 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.LoadVariable => EmitLoadVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.StoreVariable => EmitStoreVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.AppendStringVariable => EmitAppendStringVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
-            LoweredInstructionKind.Dup => new BytecodeInstruction(Opcode.Dup),
             LoweredInstructionKind.UnaryOperation => EmitUnaryOperation(routine, instruction),
             LoweredInstructionKind.BinaryOperation => EmitBinaryOperation(routine, instruction),
             LoweredInstructionKind.Convert => EmitConversion(routine, instruction),

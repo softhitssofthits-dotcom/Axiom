@@ -6734,6 +6734,67 @@ END FUNCTION
         Assert.Contains("глубина стека", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Execute_CompiledMutualRecursionIsEvenIsOddTerminates()
+    {
+        const string text = """
+PRINT IsEven(10)
+PRINT IsEven(7)
+PRINT IsOdd(10)
+PRINT IsOdd(7)
+
+FUNCTION IsEven(n AS INTEGER) AS BOOLEAN
+    IF n = 0 THEN
+        RETURN TRUE
+    END IF
+    RETURN IsOdd(n - 1)
+END FUNCTION
+
+FUNCTION IsOdd(n AS INTEGER) AS BOOLEAN
+    IF n = 0 THEN
+        RETURN FALSE
+    END IF
+    RETURN IsEven(n - 1)
+END FUNCTION
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE", "FALSE", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledReportsMissingReturnValue()
+    {
+        const string text = """
+PRINT GetValue()
+
+FUNCTION GetValue() AS INTEGER
+    DIM x AS INTEGER = 5
+END FUNCTION
+""";
+
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        Assert.Empty(binderDiagnostics);
+
+        var loweringResult = new BoundProgramLowerer().Lower(program);
+        Assert.True(loweringResult.Succeeded);
+
+        var compilationResult = new BytecodeCompiler().Compile(loweringResult.Program!);
+
+        var allDiagnostics = compilationResult.Diagnostics
+            .Select(d => $"{d.Code}:{d.Message}")
+            .ToArray();
+
+        Assert.True(
+            compilationResult.Diagnostics.Any(static d => d.Code == "BC4054"),
+            $"Expected BC4054 diagnostic for missing return value. Got: {string.Join("; ", allDiagnostics)}");
+    }
+
     private static (BytecodeModule module, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(
         string text,
         TestRuntimeHost? host = null,

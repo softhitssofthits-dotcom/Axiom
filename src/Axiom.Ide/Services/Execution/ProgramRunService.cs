@@ -104,15 +104,10 @@ public sealed class ProgramRunService : IProgramRunService
     {
         ArgumentNullException.ThrowIfNull(sourceText);
 
-        var previousCurrentDirectory = Environment.CurrentDirectory;
-        var currentDirectoryChanged = false;
-
         try
         {
             var runBaseDirectory = ResolveResourceBaseDirectory(sourceFilePath);
             _consoleService.ResourceBaseDirectory = runBaseDirectory;
-            Environment.CurrentDirectory = runBaseDirectory;
-            currentDirectoryChanged = true;
             _consoleService.BeginSession();
             var inputProvider = new IdeInputProvider(_consoleService);
             var usesCompiledCache = _compiledProgram is not null
@@ -286,13 +281,6 @@ public sealed class ProgramRunService : IProgramRunService
             };
 
             return new ProgramRunResult(ProgramRunStatus.InfrastructureFailure, diagnostics, string.Empty);
-        }
-        finally
-        {
-            if (currentDirectoryChanged)
-            {
-                Environment.CurrentDirectory = previousCurrentDirectory;
-            }
         }
     }
 

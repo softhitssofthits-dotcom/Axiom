@@ -657,7 +657,6 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.AddLongInteger:
-                case Opcode.Dup:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
 
@@ -2232,14 +2231,6 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
-            case Opcode.Dup:
-            {
-                var duplicatedType = Pop();
-                Push(duplicatedType);
-                Push(duplicatedType);
-                break;
-            }
-
             case Opcode.CreateRecord:
             {
                 Push(ResolveCreatedRecordType(module, routine, instructionIndex, instruction));
@@ -3503,11 +3494,6 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.JumpIfForDoneLocal:
             case Opcode.AdvanceForLoopLocal:
-                return true;
-
-            case Opcode.Dup:
-                popCount = 1;
-                pushCount = 2;
                 return true;
 
             case Opcode.StoreGlobal:

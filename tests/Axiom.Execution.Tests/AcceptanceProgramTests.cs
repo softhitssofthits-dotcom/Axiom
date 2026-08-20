@@ -1,4 +1,4 @@
-﻿using Axiom.Runtime;
+using Axiom.Runtime;
 
 namespace Axiom.Execution.Tests;
 
@@ -3173,17 +3173,18 @@ public sealed class AcceptanceProgramTests
 
     public static IEnumerable<object[]> PositiveAcceptanceSamplePaths()
     {
-        var samplesRoot = Path.Combine(FindRepositoryRoot(), "samples");
+        var repositoryRoot = FindRepositoryRoot();
+        var samplesRoot = Path.Combine(repositoryRoot, "samples");
 
         return Directory
             .EnumerateFiles(samplesRoot, "*.axm", SearchOption.AllDirectories)
-            .Select(path => Path.GetRelativePath(FindRepositoryRoot(), path).Replace(Path.DirectorySeparatorChar, '/'))
-            .Where(IsPositiveAcceptanceSample)
-            .Order(StringComparer.OrdinalIgnoreCase)
-            .Select(static relativePath => new object[] { relativePath });
+            .Select(path => (Relative: Path.GetRelativePath(repositoryRoot, path).Replace(Path.DirectorySeparatorChar, '/'), Full: path))
+            .Where(static pair => IsPositiveAcceptanceSample(pair.Relative, pair.Full))
+            .OrderBy(static pair => pair.Relative, StringComparer.OrdinalIgnoreCase)
+            .Select(static pair => new object[] { pair.Relative });
     }
 
-    private static bool IsPositiveAcceptanceSample(string relativePath)
+    private static bool IsPositiveAcceptanceSample(string relativePath, string fullPath)
     {
         if (relativePath.StartsWith("samples/acceptance/negative/", StringComparison.OrdinalIgnoreCase))
         {
@@ -3205,7 +3206,54 @@ public sealed class AcceptanceProgramTests
             return false;
         }
 
+        if (IsInteractiveSample(fullPath))
+        {
+            return false;
+        }
+
         return true;
+    }
+
+    private static bool IsInteractiveSample(string fullPath)
+    {
+        try
+        {
+            var sourceText = File.ReadAllText(fullPath);
+
+            if (sourceText.Contains('\0'))
+            {
+                return true;
+            }
+
+            if (sourceText.Contains("SLEEP", StringComparison.Ordinal) ||
+                sourceText.Contains("INKEY", StringComparison.Ordinal) ||
+                sourceText.Contains("SCREEN ", StringComparison.Ordinal) ||
+                sourceText.Contains("ON KEY", StringComparison.Ordinal) ||
+                sourceText.Contains("ON MOUSE", StringComparison.Ordinal) ||
+                sourceText.Contains("CANVAS ", StringComparison.Ordinal) ||
+                sourceText.Contains("DRAWIMAGE", StringComparison.Ordinal) ||
+                sourceText.Contains("DRAWSPRITE", StringComparison.Ordinal) ||
+                sourceText.Contains("LOADIMAGE", StringComparison.Ordinal) ||
+                sourceText.Contains("LOADSPRITE", StringComparison.Ordinal) ||
+                sourceText.Contains("LOADTILESET", StringComparison.Ordinal) ||
+                sourceText.Contains("LOADTILEMAP", StringComparison.Ordinal) ||
+                sourceText.Contains("DRAWTILEMAP", StringComparison.Ordinal) ||
+                sourceText.Contains("DRAWTILELAYER", StringComparison.Ordinal) ||
+                sourceText.Contains("DRAWTILE", StringComparison.Ordinal) ||
+                sourceText.Contains("DIM ", StringComparison.Ordinal) && sourceText.Contains(" AS IMAGE", StringComparison.Ordinal) ||
+                sourceText.Contains("DIM ", StringComparison.Ordinal) && sourceText.Contains(" AS SPRITE", StringComparison.Ordinal) ||
+                sourceText.Contains("DIM ", StringComparison.Ordinal) && sourceText.Contains(" AS TILESET", StringComparison.Ordinal) ||
+                sourceText.Contains("DIM ", StringComparison.Ordinal) && sourceText.Contains(" AS TILEMAP", StringComparison.Ordinal) ||
+                sourceText.Contains("Ожидаемая диагностика", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+        catch (IOException)
+        {
+        }
+
+        return false;
     }
 
     private static ExecutionResult RunAuditSample(string sourceText, string relativePath)

@@ -27,7 +27,7 @@ public sealed partial class BytecodeVm
         try
         {
             var file = new RuntimeTextFile(
-                BuiltinFileSystemHelpers.NormalizeFileSystemPath(path),
+                BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory),
                 ReadOpenMode(instruction.GetOperand(0), location),
                 BuiltinFileSystemHelpers.FileSystemTextEncoding);
 

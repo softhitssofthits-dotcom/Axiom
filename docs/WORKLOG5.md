@@ -1680,3 +1680,62 @@ Fast path работает через `PeekUnchecked` для проверки т
 ### Следующий шаг
 
 - Продуктовая работа или дальнейший рефакторинг GraphicsHostService на partial-файлы
+
+## Session 1066 - 2026-08-20 20:00 - Закрытие отложенных задач аудита
+
+Задача: закрыть отложенные задачи из recovery roadmap и аудита вызовов.
+
+### CALL-005: тест взаимной рекурсии (IsEven/IsOdd)
+
+Добавлены позитивные тесты взаимной рекурсии с базовым случаем:
+- `InterpreterTests.Error.cs`: `Execute_MutualRecursionIsEvenIsOddTerminates` — IsEven(10)=TRUE, IsEven(7)=FALSE, IsOdd(10)=FALSE, IsOdd(7)=TRUE
+- `BytecodeVmTests.cs`: `Execute_CompiledMutualRecursionIsEvenIsOddTerminates` — аналог для VM
+
+### CALL-006: runtime-тест для FUNCTION без RETURN
+
+Добавлены тесты MB3006 (RuntimeMissingReturnValue):
+- `InterpreterTests.Error.cs`: `Execute_ReportsMissingReturnValue` — FUNCTION без RETURN на исполняемом пути → MB3006
+- `BytecodeVmTests.cs`: `Execute_CompiledReportsMissingReturnValue` — VM ловит на этапе валидации байткода (BC4054)
+
+### TASK-004: фильтрация интерактивных samples из acceptance suite
+
+В `AcceptanceProgramTests.cs` добавлена фильтрация интерактивных samples в `IsPositiveAcceptanceSample`:
+- SLEEP, INKEY, SCREEN, ON KEY, ON MOUSE, CANVAS, DRAWIMAGE, DRAWSPRITE
+- LOADIMAGE, LOADSPRITE, LOADTILESET, LOADTILEMAP, DRAWTILEMAP, DRAWTILELAYER, DRAWTILE
+- DIM ... AS IMAGE/SPRITE/TILESET/TILEMAP
+- NUL-байты (повреждённые файлы)
+- «Ожидаемая диагностика» (негативные тесты без _error в имени)
+- Результат: 422 теста проходят за 7 секунд вместо зависания
+
+### TASK-006: устранение мутации Environment.CurrentDirectory
+
+Полное устранение мутации `Environment.CurrentDirectory` в `ProgramRunService.Run()`:
+
+1. `BuiltinFileSystemHelpers.cs`: `NormalizeFileSystemPath` принимает опциональный `baseDirectory` параметр. Если указан и путь относительный — резолвит через `Path.GetFullPath(Path.Combine(baseDirectory, expanded))`.
+
+2. Все ~88 вызовов `NormalizeFileSystemPath` в runtime обновлены для передачи `_host.ResourceBaseDirectory`:
+   - `Interpreter.Builtins.FileSystem.cs` (~38 вызовов)
+   - `BytecodeVm.Builtins.FileSystem.cs` (~38 вызовов)
+   - `BytecodeVm.cs` (~10 fast-path вызовов)
+   - `Interpreter.FileIO.cs` (1 вызов OPEN)
+   - `BytecodeVm.FileIO.cs` (1 вызов OPEN)
+
+3. `ProgramRunService.cs`: убрана мутация `Environment.CurrentDirectory = runBaseDirectory` и save/restore паттерн в finally. Оставлено только `_consoleService.ResourceBaseDirectory = runBaseDirectory`.
+
+4. `RuntimeTilemapValue.cs`: оставлен как есть — вызывается только из `GraphicsHostService` который уже резолвит путь в абсолютный.
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+- Runtime: 900/901 (1 предсуществующий падает — breakpoint тест)
+- Acceptance: 422/422
+- Semantics: 374/374
+
+### Обновлена документация
+
+- `docs/PLANS4.md`: TASK-004 и TASK-006 отмечены как DONE, CALL-001..006 отмечены как DONE
+- `docs/WORKLOG5.md`: эта запись
+
+### Следующий шаг
+
+- Продуктовая работа

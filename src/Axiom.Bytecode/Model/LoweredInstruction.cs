@@ -138,11 +138,6 @@ public sealed class LoweredInstruction
             preserve: useDisplayString);
     }
 
-    public static LoweredInstruction Dup(TextLocation location)
-    {
-        return new LoweredInstruction(LoweredInstructionKind.Dup, location);
-    }
-
     public static LoweredInstruction UnaryOperation(TextLocation location, SyntaxKind operatorKind)
     {
         return new LoweredInstruction(LoweredInstructionKind.UnaryOperation, location, operatorKind: operatorKind);

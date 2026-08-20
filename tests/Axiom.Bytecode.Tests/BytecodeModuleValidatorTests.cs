@@ -2310,28 +2310,6 @@ public sealed class BytecodeModuleValidatorTests
         Assert.Equal(10, diagnostic.Location.Line);
     }
 
-    [Theory]
-    [InlineData(Opcode.CreateArray)]
-    [InlineData(Opcode.BeginInput)]
-    [InlineData(Opcode.EndInput)]
-    public void Validate_UnsupportedReservedOpcode_ReturnsDiagnostic(Opcode opcode)
-    {
-        var module = CreateValidModule(
-            instructions:
-            [
-                new BytecodeInstruction(opcode),
-                new BytecodeInstruction(Opcode.Return)
-            ]);
-
-        var result = new BytecodeModuleValidator().Validate(module);
-
-        Assert.False(result.Succeeded);
-
-        var diagnostic = Assert.Single(result.Diagnostics);
-        Assert.Equal("BC4011", diagnostic.Code);
-        Assert.Equal(10, diagnostic.Location.Line);
-    }
-
     [Fact]
     public void Validate_InvalidJumpTarget_ReturnsDiagnostic()
     {

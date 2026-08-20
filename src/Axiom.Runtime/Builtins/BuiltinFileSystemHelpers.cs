@@ -10,9 +10,16 @@ internal static class BuiltinFileSystemHelpers
     public static readonly Encoding StrictUtf8TextEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
     public static readonly Encoding Windows1251TextEncoding = CreateWindows1251TextEncoding();
 
-    public static string NormalizeFileSystemPath(string path)
+    public static string NormalizeFileSystemPath(string path, string? baseDirectory = null)
     {
-        return Path.GetFullPath(Environment.ExpandEnvironmentVariables(path));
+        var expanded = Environment.ExpandEnvironmentVariables(path);
+
+        if (baseDirectory is not null && !Path.IsPathFullyQualified(expanded))
+        {
+            return Path.GetFullPath(Path.Combine(baseDirectory, expanded));
+        }
+
+        return Path.GetFullPath(expanded);
     }
 
     public static string ReadTextFileWithFallback(string fullPath)

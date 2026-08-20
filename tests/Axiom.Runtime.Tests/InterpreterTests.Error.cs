@@ -1,4 +1,4 @@
-﻿using Axiom.Parsing;
+using Axiom.Parsing;
 using Axiom.Semantics;
 using System.Text;
 
@@ -239,6 +239,54 @@ END FUNCTION
 
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3011");
         Assert.Contains("глубина стека", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_MutualRecursionIsEvenIsOddTerminates()
+    {
+        const string text = """
+PRINT IsEven(10)
+PRINT IsEven(7)
+PRINT IsOdd(10)
+PRINT IsOdd(7)
+
+FUNCTION IsEven(n AS INTEGER) AS BOOLEAN
+    IF n = 0 THEN
+        RETURN TRUE
+    END IF
+    RETURN IsOdd(n - 1)
+END FUNCTION
+
+FUNCTION IsOdd(n AS INTEGER) AS BOOLEAN
+    IF n = 0 THEN
+        RETURN FALSE
+    END IF
+    RETURN IsEven(n - 1)
+END FUNCTION
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE", "FALSE", "FALSE", "TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_ReportsMissingReturnValue()
+    {
+        const string text = """
+PRINT GetValue()
+
+FUNCTION GetValue() AS INTEGER
+    DIM x AS INTEGER = 5
+END FUNCTION
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3006");
+        Assert.Contains("GetValue", diagnostic.Message, StringComparison.Ordinal);
+        Assert.Contains("RETURN", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
 }

@@ -8,7 +8,6 @@ public enum LoweredInstructionKind
     LoadVariable,
     StoreVariable,
     AppendStringVariable,
-    Dup,
     UnaryOperation,
     BinaryOperation,
     Convert,

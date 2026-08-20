@@ -10,7 +10,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromBoolean(File.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromBoolean(File.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -23,7 +23,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromBoolean(Directory.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromBoolean(Directory.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -36,7 +36,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             return RuntimeValue.FromBoolean(File.Exists(fullPath) || Directory.Exists(fullPath));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -50,7 +50,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(BuiltinFileSystemHelpers.ReadTextFileWithFallback(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.ReadTextFileWithFallback(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -63,7 +63,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists(expression, "READALLLINES", "path", 0, fullPath);
 
             var lines = BuiltinFileSystemHelpers.ReadDecodedLines(BuiltinFileSystemHelpers.ReadTextFileWithFallback(fullPath));
@@ -84,7 +84,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
+            File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             return RuntimeValue.FromBoolean(true);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -98,7 +98,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            File.AppendAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
+            File.AppendAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             return RuntimeValue.FromBoolean(true);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -112,7 +112,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists(expression, "FILESIZE", "path", 0, fullPath);
             return RuntimeValue.FromLong(new FileInfo(fullPath).Length);
         }
@@ -131,7 +131,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists(expression, "FILEDATE", "path", 0, fullPath);
             return RuntimeValue.FromString(new FileInfo(fullPath).LastWriteTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
@@ -150,7 +150,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists(expression, "FILECREATEDATE", "path", 0, fullPath);
             return RuntimeValue.FromString(new FileInfo(fullPath).CreationTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
@@ -169,7 +169,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists(expression, "FILEACCESSEDDATE", "path", 0, fullPath);
             return RuntimeValue.FromString(new FileInfo(fullPath).LastAccessTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
@@ -188,7 +188,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists(expression, "DIRDATE", "path", 0, fullPath);
             return RuntimeValue.FromString(new DirectoryInfo(fullPath).LastWriteTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
@@ -211,7 +211,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists(expression, "GETFILES", "path", 0, fullPath);
             EnsureSearchPattern(expression, "GETFILES", pattern, patternArgumentIndex);
 
@@ -240,7 +240,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists(expression, "GETDIRS", "path", 0, fullPath);
             EnsureSearchPattern(expression, "GETDIRS", pattern, patternArgumentIndex);
 
@@ -278,7 +278,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetFileName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(Path.GetFileName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -291,7 +291,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetDirectoryName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)) ?? string.Empty);
+            return RuntimeValue.FromString(Path.GetDirectoryName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)) ?? string.Empty);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -304,7 +304,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetExtension(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(Path.GetExtension(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -317,7 +317,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -330,7 +330,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetPathRoot(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)) ?? string.Empty);
+            return RuntimeValue.FromString(Path.GetPathRoot(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)) ?? string.Empty);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -356,7 +356,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            Directory.CreateDirectory(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
+            Directory.CreateDirectory(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory));
             return RuntimeValue.FromBoolean(true);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -370,7 +370,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
 
             if (!File.Exists(fullPath))
             {
@@ -391,8 +391,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
 
             EnsureFileExists(expression, "COPYFILE", "source", 0, sourcePath);
             File.Copy(sourcePath, destinationPath, overwrite);
@@ -413,8 +413,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
 
             EnsureFileExists(expression, "MOVEFILE", "source", 0, sourcePath);
             File.Move(sourcePath, destinationPath, overwrite);
@@ -435,7 +435,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists(expression, "RENAMEFILE", "path", 0, sourcePath);
             EnsureSimpleFileSystemName(expression, "RENAMEFILE", "newName", 1, newName);
 
@@ -445,7 +445,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "RENAMEFILE",
                     "path",
-                    "не содержит родительскую папку.",
+                    "РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЂРѕРґРёС‚РµР»СЊСЃРєСѓСЋ РїР°РїРєСѓ.",
                     GetBuiltInArgumentLocation(expression, 0));
                 throw new RuntimeFailureException();
             }
@@ -468,7 +468,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
 
             if (!Directory.Exists(fullPath))
             {
@@ -489,7 +489,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
 
             if (!Directory.Exists(fullPath))
             {
@@ -510,8 +510,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
 
             EnsureDirectoryExists(expression, "COPYDIR", "source", 0, sourcePath);
             BuiltinFileSystemHelpers.CopyDirectory(sourcePath, destinationPath, overwrite);
@@ -532,8 +532,8 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
 
             EnsureDirectoryExists(expression, "MOVEDIR", "source", 0, sourcePath);
             Directory.Move(sourcePath, destinationPath);
@@ -554,7 +554,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists(expression, "RENAMEDIR", "path", 0, sourcePath);
             EnsureSimpleFileSystemName(expression, "RENAMEDIR", "newName", 1, newName);
 
@@ -564,7 +564,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "RENAMEDIR",
                     "path",
-                    "не содержит родительскую папку.",
+                    "РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЂРѕРґРёС‚РµР»СЊСЃРєСѓСЋ РїР°РїРєСѓ.",
                     GetBuiltInArgumentLocation(expression, 0));
                 throw new RuntimeFailureException();
             }
@@ -587,7 +587,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(Environment.CurrentDirectory));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(_host.ResourceBaseDirectory ?? Environment.CurrentDirectory));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -600,7 +600,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists(expression, "CHANGEDIR", "path", 0, fullPath);
             Directory.SetCurrentDirectory(fullPath);
             return RuntimeValue.FromBoolean(true);
@@ -620,7 +620,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists(expression, "DIRSIZE", "path", 0, fullPath);
             return RuntimeValue.FromLong(BuiltinFileSystemHelpers.GetDirectorySize(fullPath));
         }
@@ -630,7 +630,7 @@ public sealed partial class Interpreter
         }
         catch (OverflowException)
         {
-            ReportNumericOverflow("Суммарный размер папки в функции DIRSIZE", TypeSymbol.Long, expression.Location);
+            ReportNumericOverflow("РЎСѓРјРјР°СЂРЅС‹Р№ СЂР°Р·РјРµСЂ РїР°РїРєРё РІ С„СѓРЅРєС†РёРё DIRSIZE", TypeSymbol.Long, expression.Location);
             throw new RuntimeFailureException();
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -644,7 +644,7 @@ public sealed partial class Interpreter
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             var rootPath = Path.GetPathRoot(fullPath);
 
             if (string.IsNullOrWhiteSpace(rootPath))
@@ -652,7 +652,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "FREESPACE",
                     "path",
-                    "не указывает на диск или корень файловой системы.",
+                    "РЅРµ СѓРєР°Р·С‹РІР°РµС‚ РЅР° РґРёСЃРє РёР»Рё РєРѕСЂРµРЅСЊ С„Р°Р№Р»РѕРІРѕР№ СЃРёСЃС‚РµРјС‹.",
                     GetBuiltInArgumentLocation(expression, 0));
                 throw new RuntimeFailureException();
             }
@@ -869,7 +869,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             "pattern",
-            "не может быть пустой строкой.",
+            "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚РѕР№ СЃС‚СЂРѕРєРѕР№.",
             GetBuiltInArgumentLocation(expression, argumentIndex < 0 ? 0 : argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -891,7 +891,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             argumentName,
-            "должен быть простым именем без пути.",
+            "РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїСЂРѕСЃС‚С‹Рј РёРјРµРЅРµРј Р±РµР· РїСѓС‚Рё.",
             GetBuiltInArgumentLocation(expression, argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -912,7 +912,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             "prefix",
-            "должен быть простым префиксом имени без пути.",
+            "РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїСЂРѕСЃС‚С‹Рј РїСЂРµС„РёРєСЃРѕРј РёРјРµРЅРё Р±РµР· РїСѓС‚Рё.",
             GetBuiltInArgumentLocation(expression, argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -924,7 +924,7 @@ public sealed partial class Interpreter
         int argumentIndex,
         string path)
     {
-        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
 
         if (File.Exists(fullPath))
         {
@@ -939,7 +939,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             argumentName,
-            "указывает на файл или папку, которые не существуют.",
+            "СѓРєР°Р·С‹РІР°РµС‚ РЅР° С„Р°Р№Р» РёР»Рё РїР°РїРєСѓ, РєРѕС‚РѕСЂС‹Рµ РЅРµ СЃСѓС‰РµСЃС‚РІСѓСЋС‚.",
             GetBuiltInArgumentLocation(expression, argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -951,7 +951,7 @@ public sealed partial class Interpreter
         int argumentIndex,
         string path)
     {
-        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
         var rootPath = Path.GetPathRoot(fullPath);
 
         if (string.IsNullOrWhiteSpace(rootPath))
@@ -959,7 +959,7 @@ public sealed partial class Interpreter
             ReportBuiltInArgumentError(
                 functionName,
                 argumentName,
-                "не указывает на диск или корень файловой системы.",
+                "РЅРµ СѓРєР°Р·С‹РІР°РµС‚ РЅР° РґРёСЃРє РёР»Рё РєРѕСЂРµРЅСЊ С„Р°Р№Р»РѕРІРѕР№ СЃРёСЃС‚РµРјС‹.",
                 GetBuiltInArgumentLocation(expression, argumentIndex));
             throw new RuntimeFailureException();
         }

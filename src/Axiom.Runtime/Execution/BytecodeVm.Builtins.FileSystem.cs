@@ -11,7 +11,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromBoolean(File.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromBoolean(File.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -24,7 +24,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromBoolean(Directory.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromBoolean(Directory.Exists(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -37,7 +37,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             return RuntimeValue.FromBoolean(File.Exists(fullPath) || Directory.Exists(fullPath));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -51,7 +51,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(BuiltinFileSystemHelpers.ReadTextFileWithFallback(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.ReadTextFileWithFallback(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -64,7 +64,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists("READALLLINES", "path", fullPath, location);
             return CreateStringArrayValue(BuiltinFileSystemHelpers.ReadDecodedLines(BuiltinFileSystemHelpers.ReadTextFileWithFallback(fullPath)));
         }
@@ -83,7 +83,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
+            File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             return RuntimeValue.FromBoolean(true);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -97,7 +97,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            File.AppendAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
+            File.AppendAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory), text, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             return RuntimeValue.FromBoolean(true);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -111,7 +111,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var file = new FileInfo(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
+            var file = new FileInfo(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory));
             if (!file.Exists)
             {
                 ReportFileSystemMissingFile("FILESIZE", "path", location);
@@ -150,7 +150,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("DIRDATE", "path", fullPath, location);
             return RuntimeValue.FromString(new DirectoryInfo(fullPath).LastWriteTime.ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
@@ -169,7 +169,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("GETFILES", "path", fullPath, location);
             EnsureSearchPattern("GETFILES", pattern, location);
 
@@ -194,7 +194,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("GETDIRS", "path", fullPath, location);
             EnsureSearchPattern("GETDIRS", pattern, location);
 
@@ -232,7 +232,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetFileName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(Path.GetFileName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -245,7 +245,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetDirectoryName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)) ?? string.Empty);
+            return RuntimeValue.FromString(Path.GetDirectoryName(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)) ?? string.Empty);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -258,7 +258,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetExtension(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)));
+            return RuntimeValue.FromString(Path.GetExtension(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -271,7 +271,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -284,7 +284,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(Path.GetPathRoot(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path)) ?? string.Empty);
+            return RuntimeValue.FromString(Path.GetPathRoot(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory)) ?? string.Empty);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -310,7 +310,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            Directory.CreateDirectory(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
+            Directory.CreateDirectory(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory));
             return RuntimeValue.FromBoolean(true);
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -324,7 +324,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             if (!File.Exists(fullPath))
             {
                 return RuntimeValue.FromBoolean(false);
@@ -344,8 +344,8 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
             EnsureFileExists("COPYFILE", "source", sourcePath, location);
             File.Copy(sourcePath, destinationPath, overwrite);
             return RuntimeValue.FromBoolean(true);
@@ -365,8 +365,8 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
             EnsureFileExists("MOVEFILE", "source", sourcePath, location);
             File.Move(sourcePath, destinationPath, overwrite);
             return RuntimeValue.FromBoolean(true);
@@ -386,7 +386,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureFileExists("RENAMEFILE", "path", sourcePath, location);
             EnsureSimpleFileSystemName("RENAMEFILE", "newName", newName, location);
 
@@ -415,7 +415,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             if (!Directory.Exists(fullPath))
             {
                 return RuntimeValue.FromBoolean(false);
@@ -435,7 +435,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             if (!Directory.Exists(fullPath))
             {
                 return RuntimeValue.FromBoolean(false);
@@ -455,8 +455,8 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("COPYDIR", "source", sourcePath, location);
             BuiltinFileSystemHelpers.CopyDirectory(sourcePath, destinationPath, overwrite);
             return RuntimeValue.FromBoolean(true);
@@ -476,8 +476,8 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("MOVEDIR", "source", sourcePath, location);
             Directory.Move(sourcePath, destinationPath);
             return RuntimeValue.FromBoolean(true);
@@ -497,7 +497,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("RENAMEDIR", "path", sourcePath, location);
             EnsureSimpleFileSystemName("RENAMEDIR", "newName", newName, location);
 
@@ -526,7 +526,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(Environment.CurrentDirectory));
+            return RuntimeValue.FromString(BuiltinFileSystemHelpers.NormalizeFileSystemPath(_host.ResourceBaseDirectory ?? Environment.CurrentDirectory));
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
         {
@@ -539,7 +539,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("CHANGEDIR", "path", fullPath, location);
             Directory.SetCurrentDirectory(fullPath);
             return RuntimeValue.FromBoolean(true);
@@ -559,7 +559,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             EnsureDirectoryExists("DIRSIZE", "path", fullPath, location);
             return RuntimeValue.FromLong(BuiltinFileSystemHelpers.GetDirectorySize(fullPath));
         }
@@ -583,7 +583,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
             var rootPath = Path.GetPathRoot(fullPath);
             if (string.IsNullOrWhiteSpace(rootPath))
             {
@@ -705,7 +705,7 @@ public sealed partial class BytecodeVm
     {
         try
         {
-            var file = new FileInfo(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path));
+            var file = new FileInfo(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory));
             if (!file.Exists)
             {
                 ReportFileSystemMissingFile(functionName, "path", location);
@@ -820,7 +820,7 @@ public sealed partial class BytecodeVm
 
     private FileSystemInfo GetExistingFileSystemInfo(string functionName, string argumentName, string path, TextLocation location)
     {
-        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
 
         if (File.Exists(fullPath))
         {
@@ -838,7 +838,7 @@ public sealed partial class BytecodeVm
 
     private DriveInfo GetDriveInfo(string functionName, string argumentName, string path, TextLocation location)
     {
-        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path);
+        var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory);
         var rootPath = Path.GetPathRoot(fullPath);
 
         if (string.IsNullOrWhiteSpace(rootPath))

@@ -30,7 +30,7 @@ public sealed partial class Interpreter
                 _ => throw new ArgumentOutOfRangeException(nameof(statement), statement.Mode, "Unsupported file mode.")
             };
 
-            var file = new RuntimeTextFile(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path), runtimeMode, BuiltinFileSystemHelpers.FileSystemTextEncoding);
+            var file = new RuntimeTextFile(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory), runtimeMode, BuiltinFileSystemHelpers.FileSystemTextEncoding);
             _openFiles.Add(file);
             AssignVariable(statement.FileVariable, RuntimeValue.FromFile(file));
             return ExecutionSignal.None;
