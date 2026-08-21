@@ -1739,3 +1739,303 @@ Fast path работает через `PeekUnchecked` для проверки т
 ### Следующий шаг
 
 - Продуктовая работа
+
+## Session 1067 - 2026-08-20 21:30 - Complete Language Feature Inventory / Subsystem Discovery Audit
+
+Задача: создать `docs/LANGUAGE_INVENTORY.md` — полную инвентаризацию языка Axiom по 79 разделам.
+
+### Что сделано
+
+1. **Прочитаны обязательные проектные документы**: AGENTS.md, PROJECT.md, ARCHITECTURE.md, PLANS4.md, WORKLOG5.md, BYTECODE_COVERAGE.md, BYTECODE_PERF_MATRIX.md.
+
+2. **Запущены 3 параллельных агента** для сборки срезов отчёта:
+   - **Агент A: Master Feature Registry** — 356 записей LANG-0001..LANG-0356 по 24 категориям
+   - **Агент B: Subsystem Inventories + Matrices** — §15-§35 (21 подсистема) + §41-§69 (29 матриц)
+   - **Агент C: Overview + Core Language + Statistics** — §1-§14 + §70-§79
+
+3. **Собран финальный файл** `docs/LANGUAGE_INVENTORY.md`:
+   - 9,655 строк
+   - 79 разделов
+   - 356 LANG-features в Master Feature Registry
+   - 24 категории features
+   - 21 подсистема с инвентарём
+   - 29 матриц перекрёстных ссылок
+
+### Ключевые цифры
+
+| Параметр | Значение |
+|----------|----------|
+| LANG-features | 356 |
+| Категории | 24 |
+| Подсистемы | 21 |
+| Матрицы | 29 |
+| Строк отчёта | 9,655 |
+| BuiltinFunctionId | 276 (~112 уникальных) |
+| Statement kinds | 63 |
+| Expression kinds | 10 |
+| Типы данных | 14 |
+| Ключевые слова | 101 |
+| Диагностические коды | 47+ |
+| Тесты | 2,279+ |
+| Samples | 602+ |
+| Manual pages | 102 |
+| Benchmark scenarios | 48 |
+
+### Структура отчёта
+
+- §1-§5: Обзор (Executive Summary, What Axiom Is, Language Boundary, User-Visible Features, Internal Features)
+- §6-§14: Ядро языка (Core, Literals, Types, Variables, Expressions, Operators, Statements, Control Flow, Functions)
+- §15-§35: Подсистемы (String, Array, TYPE, Numeric, DateTime, Regex, Random, I/O, DATA, Files, Errors, Modules, Keyboard, Mouse, Events, Timing, Graphics, Image, Sprite, Text, Modern Graphics)
+- §36-§40: Инфраструктура (Debugging, IDE, Project System, Runtime, Other)
+- §41-§48: Покрытие (Interpreter, VM, IDE, Tests, Samples, Docs, Bytecode, Performance)
+- §49: Master Feature Registry (356 LANG-entries)
+- §50-§60: Реестр (Contradictions, Undocumented, Unimplemented, Partial, Interpreter-only, VM-only, IDE-only, Planned, Legacy, Dead, Unknown)
+- §61-§69: Зависимости и пробелы (Dependency Graphs, Gaps, Maturity, Complexity)
+- §70-§79: Статистика и выводы (Statistics, Hidden, Architecture, Language vs Runtime, Audit Queue, Language Map, Confidence)
+
+### Файлы
+
+- Создан: `docs/LANGUAGE_INVENTORY.md` (9,655 строк)
+- Временные срезы: `.artifacts/inventory/partA_registry.md`, `partB_subsystems.md`, `partC_overview.md`
+
+## Session 1034 - 2026-08-20 18:00 - Forensic-аудит KEYBOARD / INKEY подсистемы
+
+Задача: провести глубокий forensic-аудит подсистемы KEYBOARD / INKEY.
+
+Что сделано:
+1. Проведён полный forensic-аудит подсистемы KEYBOARD / INKEY.
+2. Проанализированы все слои: Lexer, Parser, Binder, Lowering, Bytecode, Interpreter, Bytecode VM, Runtime, IDE, Tests, Samples, Documentation.
+3. Инвентаризированы все возможности: INKEY(), KEYDOWN(), KEYPRESS(), ON KEY (register/OFF/STOP/ON), "ANY" handler, аккорды, KeyboardInputNormalizer, IKeyboardInputProvider.
+4. Проверен паритет Interpreter ↔ VM — полный, без расхождений.
+5. Проверены benchmarks — VM быстрее Interpreter (maze_chase_input_polling: 0.739x runtime).
+6. Найдены 8 проблем (7 P2 + 1 P4):
+   - SYS-014..020: полное дублирование keyboard logic между Interpreter и BytecodeVm (~200 строк)
+   - SYS-024: KeyboardInputNameMapper не использует KeyboardInputNormalizer (P4)
+7. Дополнительно: 3 P3 findings (LINQ в hot path, NormalizeChord аллокации, нет dedicated benchmark).
+8. Итоговая оценка здоровья: 7.8/10.
+9. Ответ на главный вопрос: YES, WITH CONDITIONS — подсистема стабильна, но требует выноса дублированной логики в BuiltinKeyboardHelpers.
+
+Файлы:
+- Создан: `docs/audit/KEYBOARD_INKEY_FORENSIC_AUDIT.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1034 - 2026-08-20 16:00 - Forensic-аудит REGEX подсистемы
+
+Задача: провести глубокий forensic-аудит подсистемы REGEX.
+
+Что сделано:
+1. Проведён полный forensic-аудит подсистемы REGEX.
+2. Проанализированы все слои: Parser, Binder, Interpreter, Bytecode VM, Runtime, IDE, Tests, Samples, Documentation.
+3. Инвентаризированы все возможности: 8 встроенных функций (REGEXISMATCH, REGEXMATCH, REGEXEXTRACT, REGEXMATCHES, REGEXEXTRACTALL, REGEXSPLIT, REGEXREPLACE, REGEXCOUNT), 18 дескрипторов с перегрузками.
+4. Проверен паритет Interpreter ↔ VM — полный, без расхождений в семантике.
+5. Проверены benchmarks — VM быстрее Interpreter (0.673x и 0.689x runtime) благодаря кэшу regex.
+6. Найдены 5 проблем (все P3/P4, ни одна не блокирует развитие):
+   - SYS-001: Отсутствие кэша regex в Interpreter (P3)
+   - SYS-002: Дублирование валидации group/count (P4)
+   - SYS-003: Regex не описан в SPECIFICATION3.md (P4)
+   - SYS-004: Нет тестов с режимами m, s, x (P4)
+   - SYS-005: Нет parity-тестов Interpreter vs VM (P4)
+7. Итоговая оценка здоровья: 8.2/10.
+8. Ответ на главный вопрос: YES — подсистема готова к переходу к следующей.
+
+Файлы:
+- Создан: `docs/audit/REGEX.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1034 - 2026-08-20 16:00 - Forensic-аудит DATE / TIME подсистемы
+
+Задача: провести глубокий forensic-аудит подсистемы DATE / TIME.
+
+Что сделано:
+1. Проведён полный forensic-аудит подсистемы DATE / TIME.
+2. Проанализированы все слои: Lexer, Parser, Binder, Interpreter, Bytecode VM, Runtime, IDE, Tests, Samples, Documentation.
+3. Инвентаризированы все возможности: 38 встроенных функций (35 уникальных BuiltinFunctionId с перегрузками).
+4. Проверен паритет Interpreter ↔ VM — полный, без расхождений.
+5. Проверены benchmarks — VM быстрее Interpreter (0.497x и 0.651x runtime).
+6. Найдены 5 проблем (все P3/P4, ни одна не блокирует развитие):
+   - DT-001: ~300 строк дублированной логики между Interpreter и VM (P3)
+   - DT-002: Строковая модель без нативного типа DATE/TIME (P4)
+   - DT-003: Нет тестов для DATEADD с "q" и "yyyy" (P4)
+   - DT-004: Нет тестов для DATEPART с "h", "n", "s" (P4)
+   - DT-005: Нет теста для ISDATE с пустой строкой (P4)
+7. Итоговая оценка здоровья: 8.2/10.
+8. Ответ на главный вопрос: YES — подсистема готова к переходу к следующей.
+
+Файлы:
+- Создан: `docs/audit/DATETIME_FORENSIC_AUDIT.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1033 - 2026-08-20 14:00 - Forensic-аудит NUMERIC / MATH подсистемы
+
+Задача: провести глубокий forensic-аудит подсистемы NUMERIC / MATH.
+
+Что сделано:
+1. Проведён полный forensic-аудит подсистемы NUMERIC / MATH.
+2. Проанализированы все слои: Lexer, Parser, Binder, Interpreter, Bytecode VM, Runtime, IDE, Tests, Samples, Documentation.
+3. Инвентаризированы все возможности: 8 арифметических операторов, 6 операторов сравнения, 8 логических/побитовых операторов, 2 оператора сдвига, 34 встроенные числовые функции.
+4. Проверен паритет Interpreter ↔ VM — полный, без расхождений.
+5. Проверены benchmarks — VM быстрее Interpreter (0.708x и 0.818x runtime).
+6. Найдены 3 проблемы (все P3/P4, ни одна не блокирует развитие):
+   - SYS-057: INT function misplacement в String.cs вместо Numeric.cs
+   - SYS-058: Duplicate ToInt32Checked в обоих движках
+   - SYS-059: Duplicate EvaluateChecked* wrappers
+7. Итоговая оценка здоровья: 8.6/10.
+8. Ответ на главный вопрос: YES — подсистема готова к переходу к следующей.
+
+Файлы:
+- Создан: `docs/audit/NUMERIC_MATH_FORENSIC_AUDIT.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1068 - 2026-08-20 23:00 - Forensic-аудит TIMING / SLEEP подсистемы
+
+Задача: провести глубокий forensic-аудит подсистемы TIMING / SLEEP (оператор SLEEP и встроенная функция TIMER).
+
+Что сделано:
+1. Проведён полный forensic-аудит по 48 разделам.
+2. Инвентаризированы 4 features: SLEEP с длительностью, SLEEP без аргумента, TIMER(), IRuntimeClock.
+3. Восстановлен полный конвейер: Lexer → Parser → Binder → Lowering → Bytecode → Interpreter → BytecodeVm → Runtime.
+4. Проведён полный паритетный анализ Interpreter ↔ BytecodeVm — расхождений не обнаружено.
+5. Проведён анализ edge cases: SLEEP 0, отрицательная длительность, >int.MaxValue, TIMER в полночь, midnight wrap, точность дробных секунд, отмена.
+6. Проверены тесты (23 теста, все проходят), samples (2 файла), документация (manual + specification).
+7. Проверена IDE-интеграция: подсветка обеих тем, форматирование.
+
+Найденные проблемы:
+- SYS-015 [P3]: Дублирование 3 методов между Interpreter и BytecodeVm (~42 строки): WaitForAnyKey, SleepForMilliseconds, EvaluateTimerBuiltin.
+- SYS-007 [P4]: SLEEP компилируется с LONG, падает в runtime с >int.MaxValue.
+- SYS-009 [P4]: TIMER midnight wrap не документирован в manual.
+
+Итоговая оценка здоровья: 8.6/10.
+Ответ на главный вопрос: YES — подсистема готова к переходу к следующей.
+
+Файлы:
+- Создан: `docs/audit/TIMING_SLEEP.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1069 - 2026-08-21 20:00 - Forensic-аудит GRAPHICS / CANVAS / MODERN GRAPHICS
+
+Задача: провести глубокий forensic-аудит современной графической подсистемы CANVAS (18 операторов, 4 типа, 15+ built-in).
+
+Что сделано:
+- Полная инвентаризация подсистемы: 18 операторов, 4 типа данных, 15+ встроенных функций
+- Анализ конвейера: Lexer → Parser → Binder → Lowering → Bytecode → VM → Interpreter → IDE
+- Сравнение Interpreter и BytecodeVm: полный паритет по всем 18 операторам
+- Анализ тестов: ~180 тестов по всем слоям (Parser, Binder, Bytecode, Interpreter, VM, IDE)
+- Анализ samples: 32 файла, включая флагманский maze_chase.axm
+- Анализ производительности: все 4 engine-compare сценария в целевом диапазоне (0.540x-0.793x)
+- Анализ документации: полное покрытие в manual
+
+Найденные проблемы:
+- SYS-001 (P2): ~600 строк дублированной вспомогательной логики между Interpreter и VM
+- SYS-002 (P3): GraphicsHostService — God Object (2432 строки)
+- SYS-007 (P4): BytecodeVm DRAWIMAGE/DRAWSPRITE: return после Validate без throw
+- SYS-004 (P3): Нет отдельного engine-compare для тайловых карт
+- SYS-005 (P4): Нет тестов для SETMAPTILE с флагами отражения
+- SYS-006 (P4): Нет тестов для DRAWTILEMAP с несколькими тайлсетами
+
+Ответ на главный вопрос: YES, WITH CONDITIONS — подсистема стабильна и готова к переходу, но SYS-007 (return без throw) требует исправления.
+
+Файлы:
+- Создан: `docs/audit/GRAPHICS_CANVAS_MODERN_FORENSIC_AUDIT.md`
+
+### Следующий шаг
+
+- Исправить SYS-007 (return без throw в BytecodeVm для DRAWIMAGE/DRAWSPRITE)
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1072 - 2026-08-21 17:30 - Forensic-аудит подсистемы IMAGE
+
+Задача: провести глубокий forensic-аудит подсистемы GRAPHICS / IMAGE.
+
+Что сделано:
+1. Проведён полный forensic-аудит IMAGE-подсистемы (39 раздела).
+2. Проанализированы все слои: Lexer → Parser → Binder → Lowering → Bytecode → Interpreter → BytecodeVm → Runtime → Host → IDE.
+3. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+4. Проверены тесты: 14 тестов покрывают основные и негативные сценарии.
+5. Проверены samples: 2 адекватных sample (load_and_draw_image, missing_image_error).
+6. Проверена документация: manual полный и корректный.
+
+Найденные проблемы (все P3/P4):
+- SYS-IMG-001 (P3): дублирование ~33 строк вспомогательных методов между Interpreter и VM
+- SYS-IMG-002 (P4): нет тестов DRAWIMAGE на CANVAS
+- SYS-IMG-003 (P4): нет интеграционного теста DRAWIMAGE + VIEWPORT
+- SYS-IMG-004 (P4): нет лимита на размер загружаемого изображения
+
+Health Score: 8.5/10.
+Ответ на главный вопрос: YES — подсистема стабильна, корректна и архитектурно понятна.
+
+Файлы:
+- Создан: `docs/audit/IMAGE.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1073 - 2026-08-21 18:00 - Forensic-аудит подсистемы SPRITE
+
+Задача: провести глубокий forensic-аудит подсистемы GRAPHICS / SPRITE.
+
+Что сделано:
+1. Проведён полный forensic-аудит SPRITE-подсистемы (35 раздела).
+2. Проанализированы все слои: Lexer → Parser → Binder → Lowering → Bytecode → Interpreter → BytecodeVm → Runtime → Host → IDE.
+3. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+4. Проверены тесты: 18 тестов покрывают основные и негативные сценарии.
+5. Проверены samples: 3 адекватных sample + 1 benchmark-сценарий.
+6. Проверена документация: manual полный и корректный.
+
+Найденные проблемы (все P3/P4):
+- SYS-SPR-001 (P3): дублирование ~54 строк вспомогательных методов между Interpreter и VM
+- SYS-SPR-002 (P4): нет тестов DRAWSPRITE на CANVAS
+- SYS-SPR-003 (P4): нет интеграционного теста DRAWSPRITE + VIEWPORT
+
+Health Score: 8.5/10.
+Ответ на главный вопрос: YES — подсистема стабильна, корректна и архитектурно понятна.
+
+Файлы:
+- Создан: `docs/audit/SPRITE.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1074 - 2026-08-21 18:30 - Forensic-аудит подсистемы TILEMAP/TILESET
+
+Задача: провести глубокий forensic-аудит подсистемы GRAPHICS / TILEMAP / TILESET.
+
+Что сделано:
+1. Проведён полный forensic-аудит TILEMAP/TILESET-подсистемы (30 раздела).
+2. Проанализированы все слои: Lexer → Parser → Binder → Lowering → Bytecode → Interpreter → BytecodeVm → Runtime → Host → IDE.
+3. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+4. Проверены тесты: 30+ тестов покрывают основные и негативные сценарии.
+5. Проверены samples: 3 адекватных sample + 1 benchmark-сценарий.
+6. Проверена документация: 2 manual-страницы + контракт.
+
+Найденные проблемы (все P3/P4):
+- SYS-TL-001 (P3): дублирование ~150+ строк helper-методов между Interpreter и VM
+- SYS-TL-002 (P3): Tiled JSON парсер внутри RuntimeTilemapValue
+- SYS-TL-003 (P4): нет тестов DRAWTILEMAP с несколькими тайлсетами
+- SYS-TL-004 (P4): нет теста SETMAPTILE с флагами отражения через runtime
+
+Health Score: 8.3/10.
+Ответ на главный вопрос: YES — подсистема стабильна, корректна и архитектурно понятна.
+
+Файлы:
+- Создан: `docs/audit/TILEMAP_TILESET.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану

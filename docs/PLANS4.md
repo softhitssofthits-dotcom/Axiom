@@ -455,3 +455,38 @@
 - ProgramRunService — стабилен, хорошо протестирован
 - AxiomExecutionPipeline — ядро pipeline, тщательно протестировано
 - DocumentWorkspaceService — чистый, хорошо протестирован
+
+### 2026-08-20 - Complete Language Feature Inventory завершён
+
+- Создан `docs/LANGUAGE_INVENTORY.md` — полная инвентаризация языка Axiom (79 разделов, 9,655 строк).
+- Master Feature Registry: 356 LANG-features в 24 категориях.
+- 21 подсистема с инвентарём, 29 матриц перекрёстных ссылок.
+- Все источники сопоставлены: код, тесты, samples, документация, спецификация, аудиты.
+- Следующий шаг: продуктовая работа или реализация следующего шага по плану.
+
+### 2026-08-20 - Forensic-аудит REGEX подсистемы завершён
+
+- Проведён полный forensic-аудит подсистемы REGEX.
+- Создан `docs/audit/REGEX.md` (48 разделов, полная инвентаризация).
+- 8 встроенных функций, 18 дескрипторов, полный паритет Interpreter ↔ VM.
+- Health Score: 8.2/10. Главный вопрос: YES.
+- Найденные проблемы (все P3/P4):
+  - SYS-001: Отсутствие кэша regex в Interpreter
+  - SYS-002: Дублирование валидации group/count
+  - SYS-003: Regex не описан в SPECIFICATION3.md
+  - SYS-004: Нет тестов с режимами m, s, x
+  - SYS-005: Нет parity-тестов Interpreter vs VM
+- Следующий шаг: продуктовая работа или реализация следующего шага по плану.
+
+### 2026-08-20 - Forensic-аудит TIMING / SLEEP подсистемы завершён
+
+- Проведён полный forensic-аудит подсистемы TIMING / SLEEP (48 раздела).
+- Создан `docs/audit/TIMING_SLEEP.md`.
+- 4 features: SLEEP (длительность), SLEEP (key wait), TIMER(), IRuntimeClock.
+- Полный паритет Interpreter ↔ BytecodeVm. 23 теста, все проходят.
+- Health Score: 8.6/10. Главный вопрос: YES.
+- Найденные проблемы (все P3/P4):
+  - SYS-015 [P3]: Дублирование 3 методов между Interpreter и BytecodeVm (~42 строки)
+  - SYS-007 [P4]: SLEEP компилируется с LONG, падает в runtime с >int.MaxValue
+  - SYS-009 [P4]: TIMER midnight wrap не документирован
+- Следующий шаг: продуктовая работа или реализация следующего шага по плану.
