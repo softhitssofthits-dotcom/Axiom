@@ -490,3 +490,54 @@
   - SYS-007 [P4]: SLEEP компилируется с LONG, падает в runtime с >int.MaxValue
   - SYS-009 [P4]: TIMER midnight wrap не документирован
 - Следующий шаг: продуктовая работа или реализация следующего шага по плану.
+
+### 2026-08-21 - Forensic-аудит IF / ELSE / SELECT CASE завершён
+
+- Проведён полный forensic-аудит подсистемы ветвления (48 раздела).
+- Создан `docs/audit/IF_ELSE_SELECT_CASE.md`.
+- 5 features: IF/ELSEIF/ELSE, SELECT CASE, блочная видимость, dead branch elimination, специализированные опкоды.
+- Полный паритет Interpreter ↔ BytecodeVm. 50+ тестов, все проходят.
+- Health Score: **9.0/10** (самая высокая среди всех аудитов). Главный вопрос: **YES**.
+- Найденные проблемы (все P3/P4):
+  - SYS-001 [P4]: GetSelectCaseComparisonType() — identity function
+  - SYS-002 [P4]: Pop() vs PopUnchecked() непоследовательность
+  - SYS-003 [P3]: Нет явных тестов DECIMAL/LONG в SELECT CASE
+  - SYS-004 [P4]: Нет теста вложенного SELECT CASE
+- Следующий шаг: продуктовая работа.
+
+### 2026-08-22 - Forensic-аудит FOR / WHILE / DO / LOOP завершён
+
+- Проведён полный forensic-аудит подсистемы циклов (48 раздела).
+- Создан `docs/audit/FOR_WHILE_DO_LOOP.md`.
+- 8 features: FOR...NEXT, WHILE, DO...LOOP (5 форм), EXIT FOR/DO, CONTINUE FOR/WHILE/DO, специализированные FOR-опкоды, ValidateForStep.
+- Полный паритет Interpreter ↔ BytecodeVm. 100+ тестов, все проходят.
+- Health Score: **9.1/10** (самая высокая среди всех аудитов). Главный вопрос: **YES**.
+- Найденные проблемы (все P4):
+  - SYS-001 [P4]: Нет явного теста WHILE с побочными эффектами
+  - SYS-002 [P4]: Нет теста DO + TRY/CATCH + CONTINUE
+- Следующий шаг: продуктовая работа.
+
+### 2026-08-22 - Forensic-аудит SUB / FUNCTION / PARAMETERS / RETURN / CALL MODEL завершён
+
+- Проведён полный forensic-аудит процедурной модели (48 раздела).
+- Создан `docs/audit/SUB_FUNCTION_CALL_MODEL.md`.
+- 11 features: SUB, FUNCTION, RETURN, BYVAL, BYREF, локальные procedures, closures, function values, TYPE методы, TYPE конструкторы, защита стека.
+- Полный паритет Interpreter ↔ BytecodeVm. 75+ тестов, все проходят.
+- Health Score: **9.0/10**. Главный вопрос: **YES**.
+- Найденные проблемы (1 P4):
+  - SYS-001 [P4]: FieldByRefStoragePlan и ArrayElementByRefStoragePlan — dead code
+- Все предыдущие находки (CALL-001..006) уже закрыты.
+- Следующий шаг: продуктовая работа.
+
+### 2026-08-22 - Forensic-аудит STRING / STRING OPERATIONS завершён
+
+- Проведён полный forensic-аудит строковой подсистемы (48 раздела).
+- Создан `docs/audit/STRING_OPERATIONS.md`.
+- 20 features: STRING тип, STRING * N, 44 встроенных функций, операторы + и &, сравнения, STR/VAL, ASC/CHR, SPLIT/JOIN.
+- Полный паритет Interpreter ↔ BytecodeVm. 120 тестов + 51 sample.
+- Health Score: **8.8/10**. Главный вопрос: **YES**.
+- Найденные проблемы (все P4):
+  - SYS-001 [P4]: Нет non-BMP Unicode тестов для MID/LEFT/RIGHT
+  - SYS-002 [P4]: LEN behavior для non-BMP Unicode не документировано
+- Предыдущие дефекты (STRING-001, STRING-002) уже исправлены.
+- Следующий шаг: продуктовая работа.

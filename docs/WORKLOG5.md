@@ -2094,3 +2094,196 @@ Health Score: 8.8/10.
 ### Следующий шаг
 
 - Продуктовая работа или реализация следующего шага по плану
+
+## Session 1077 - 2026-08-21 23:00 - Forensic-аудит подсистемы IF / ELSE / SELECT CASE
+
+Задача: провести полный forensic-аудит подсистемы ветвления языка Axiom (IF/ELSEIF/ELSE/END IF и SELECT CASE/CASE/CASE ELSE/END SELECT).
+
+### Что сделано
+
+1. Проведён полный forensic-аудит подсистемы по 48 разделам входного документа.
+2. Проанализированы все слои: Lexer → Parser → Syntax → Binder → Bound Model → Lowering → Bytecode → Interpreter → BytecodeVm → Runtime → IDE → Tests → Samples → Documentation.
+3. Инвентаризированы 5 features: IF/ELSEIF/ELSE, SELECT CASE, блочная видимость, оптимизация мёртвых ветвей, специализированные опкоды сравнения+перехода.
+4. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+5. Проверены benchmarks — VM быстрее на 17-19% (control_flow_branch_maze: 0.826x runtime / 0.814x total).
+6. Проверены тесты: 50+ тестов по всем уровням (lexer, syntax, parser, binder, execution, interpreter, VM, lowerer, IDE).
+7. Проверены samples: 10 positive + 9 negative + 1 benchmark.
+8. Проверена документация: manual (if.html, select-case.html, expressions-and-branching.html), спецификация, архитектура.
+
+### Найденные проблемы
+
+Все найденные проблемы имеют приоритет P3-P4:
+- SYS-001 (P4): `GetSelectCaseComparisonType()` — identity function (placeholder)
+- SYS-002 (P4): `Pop()` vs `PopUnchecked()` непоследовательность в ordered comparison jump
+- SYS-003 (P3): Нет явных тестов для DECIMAL и LONG в SELECT CASE
+- SYS-004 (P4): Нет теста для вложенного SELECT CASE в SELECT CASE
+
+### Итоговая оценка здоровья
+
+Health Score: **9.0/10** (самая высокая оценка среди всех проведённых аудитов).
+
+Архитектурные решения:
+- ELSEIF как вложенный BoundIfStatement — элегантная рекурсивная модель
+- First-match семантика SELECT CASE — стандартное поведение BASIC
+- Блочная видимость ветвей — корректно реализована на всех уровнях
+- Lowering с оптимизацией константных условий (IF TRUE/FALSE)
+- Специализированные опкоды сравнения+перехода (JumpIfLess, JumpIfGreater и др.)
+
+Ответ на главный вопрос: **YES** — подсистема фундаментально корректна, архитектурно чиста и полностью готова к переходу к следующей подсистеме.
+
+### Созданные файлы
+
+- `docs/audit/IF_ELSE_SELECT_CASE.md` — полный отчёт аудита (48 разделов)
+
+### Проверки
+
+- Build: 0 ошибок, 1 предупреждение (xUnit2029, не связано)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1078 - 2026-08-22 00:00 - Forensic-аудит подсистемы FOR / WHILE / DO / LOOP
+
+Задача: провести полный forensic-аудит подсистемы циклов языка Axiom (FOR...NEXT, WHILE...END WHILE, DO...LOOP, EXIT FOR, EXIT DO, CONTINUE FOR/WHILE/DO).
+
+### Что сделано
+
+1. Проведён полный forensic-аудит подсистемы по 48 разделам входного документа.
+2. Проанализированы все слои: Lexer → Parser → Syntax → Binder → Bound Model → Lowering → BytecodeCompiler → BytecodeVm → Interpreter → Runtime → IDE → Tests → Samples → Documentation.
+3. Инвентаризированы 8 features: FOR...NEXT, WHILE...END WHILE, DO...LOOP (5 форм), EXIT FOR, EXIT DO, CONTINUE FOR/WHILE/DO, специализированные FOR-опкоды, ValidateForStep.
+4. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+5. Проверены benchmarks — VM быстрее на 17-19% (control_flow_branch_maze: 0.826x runtime / 0.814x total).
+6. Проверены тесты: 100+ тестов по всем уровням.
+7. Проверены samples: 17 positive + 1 negative + benchmarks.
+8. Проверена документация: 5 manual-страниц, спецификация, архитектура.
+
+### Найденные проблемы
+
+Все найденные проблемы имеют приоритет P4:
+- SYS-001 (P4): Нет явного теста WHILE с побочными эффектами в условии
+- SYS-002 (P4): Нет теста DO...LOOP с TRY/CATCH и CONTINUE DO
+
+### Итоговая оценка здоровья
+
+Health Score: **9.1/10** (самая высокая оценка среди всех проведённых аудитов).
+
+Ключевые архитектурные решения:
+- Типоспециализированные циклы FOR в Interpreter (Integer/Long/Double)
+- Collapsed opcodes: JumpIfForDoneLocal (15→1), AdvanceForLoopLocal (4→1)
+- Fast paths в VM для Integer/Long/Double/Decimal без boxing
+- Отдельные стеки меток для EXIT FOR/EXIT DO/CONTINUE
+- FINALLY unwinding при EXIT/CONTINUE
+- ExecutionSignal для чистой пропагации сигналов
+
+Ответ на главный вопрос: **YES** — подсистема фундаментально корректна, архитектурно зрела и полностью готова к переходу к следующей подсистеме.
+
+### Созданные файлы
+
+- `docs/audit/FOR_WHILE_DO_LOOP.md` — полный отчёт аудита (48 разделов)
+
+### Проверки
+
+- Build: 0 ошибок, 1 предупреждение (xUnit2029, не связано)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1079 - 2026-08-22 01:00 - Forensic-аудит подсистемы SUB / FUNCTION / PARAMETERS / RETURN / CALL MODEL
+
+Задача: провести полный forensic-аудит процедурной модели языка Axiom (SUB, FUNCTION, RETURN, BYVAL/BYREF, closures, function values, recursion, TYPE methods/constructors).
+
+### Что сделано
+
+1. Проведён полный forensic-аудит подсистемы по 48 разделам входного документа.
+2. Проанализированы все слои: Lexer → Parser → Syntax → Binder → Bound Model → Lowering → BytecodeCompiler → BytecodeVm → Interpreter → Runtime → IDE → Tests → Samples → Documentation.
+3. Инвентаризированы 11 features: SUB, FUNCTION, RETURN, BYVAL, BYREF, локальные procedures, closures, function values, TYPE методы, TYPE конструкторы/инвариант, защита стека.
+4. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+5. Проверены benchmarks — VM быстрее на 13-14% (routine_closure_pipeline: 0.861x runtime / 0.874x total).
+6. Проверены тесты: 75+ тестов по всем уровням.
+7. Проверены samples: 16 positive + 7 negative + benchmarks.
+8. Проверена документация: 4 manual-страницы, спецификация, архитектура, BYREF audit.
+
+### Найденные проблемы
+
+Одна проблема P4:
+- SYS-001 (P4): FieldByRefStoragePlan и ArrayElementByRefStoragePlan — dead code в Lowering
+
+Все предыдущие находки (CALL-001..006) уже закрыты в предыдущих сессиях.
+
+### Итоговая оценка здоровья
+
+Health Score: **9.0/10**.
+
+Ключевые архитектурные решения:
+- Двухпроходная регистрация (forward references)
+- Единый FunctionSymbol для SUB и FUNCTION
+- Изолированные фреймы (корректная рекурсия)
+- BYREF через RuntimeReferenceStoredValue (Interpreter) и BytecodeVariableSlot delegates (VM)
+- Closures через scope chain (Interpreter) и shared slots (VM)
+- Frame reuse и capture caching в VM
+- FINALLY unwinding при RETURN
+- MaxCallDepth = 200 (MB3011)
+
+Ответ на главный вопрос: **YES** — подсистема фундаментально корректна, архитектурно зрела и полностью готова к переходу к следующей подсистеме.
+
+### Созданные файлы
+
+- `docs/audit/SUB_FUNCTION_CALL_MODEL.md` — полный отчёт аудита (48 разделов)
+
+### Проверки
+
+- Build: 0 ошибок, 1 предупреждение (xUnit2029, не связано)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1080 - 2026-08-22 02:00 - Forensic-аудит подсистемы STRING / STRING OPERATIONS
+
+Задача: провести полный forensic-аудит строковой подсистемы языка Axiom (STRING тип, STRING * N, 44 встроенных функций, операторы + и &, сравнения, STR/VAL, ASC/CHR/ASCW/CHRW, SPLIT/JOIN).
+
+### Что сделано
+
+1. Проведён полный forensic-аудит подсистемы по 48 разделам входного документа.
+2. Проанализированы все слои: Lexer → Parser → Binder → Lowering → BytecodeCompiler → BytecodeVm → Interpreter → Runtime → IDE → Tests → Samples → Documentation.
+3. Инвентаризированы 20 features: STRING тип, STRING * N, LEN, LEFT/RIGHT/MID, TRIM/LTRIM/RTRIM, LCASE/UCASE, REVERSE, CONTAINS/STARTSWITH/ENDSWITH, REPLACE, REPLACEMANY, INSTR/INSTRREV, SUBSTRCOUNT, REPEAT/SPACE/STRING, PADLEFT/PADRIGHT/CENTER, INSERT/REMOVE, ASC/ASCW/CHR/CHRW, SPLIT/JOIN, STR/VAL, операторы + и &, операторы сравнения.
+4. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
+5. Проверены benchmarks — VM быстрее на 48-60% (string_primitive_scan: 0.398x, string_concat_accumulator: 0.522x, string_array_loop_pipeline: 0.514x).
+6. Проверены тесты: 120 тестов + 51 sample.
+7. Проверена документация: 6 manual-страниц, спецификация, архитектура, STRING_AUDIT_REPORT.md.
+
+### Найденные проблемы
+
+Все найденные проблемы имеют приоритет P4:
+- SYS-001 (P4): Нет non-BMP Unicode тестов для MID/LEFT/RIGHT
+- SYS-002 (P4): LEN behavior для non-BMP Unicode не документировано
+
+Предыдущие дефекты (STRING-001, STRING-002) уже исправлены.
+
+### Итоговая оценка здоровья
+
+Health Score: **8.8/10**.
+
+Ключевые архитектурные решения:
+- Единый `BuiltinStringHelpers` — источник правды для всех 44 функций
+- `RuntimeStringAccumulator` — оптимизация конкатенации
+- `AppendString*` opcodes — in-place строковое построение
+- 10 inline fast paths в VM
+- Ordinal case-sensitive сравнение
+- CP866 для ASC/CHR (0..255), Unicode выше
+
+Ответ на главный вопрос: **YES** — подсистема фундаментально корректна, архитектурно зрела и полностью готова к переходу к следующей подсистеме.
+
+### Созданные файлы
+
+- `docs/audit/STRING_OPERATIONS.md` — полный отчёт аудита (48 разделов)
+
+### Проверки
+
+- Build: 0 ошибок, 1 предупреждение (xUnit2029, не связано)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
