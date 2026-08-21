@@ -944,8 +944,6 @@ Axiom — строго однофайловый язык. Программа = �
 | 50+ файловых функций | ✅ | Полная реализация |
 | DATA, READ, RESTORE | ❌ | Не реализовано |
 | LINE INPUT | ❌ | Не реализовано |
-| GOTO, GOSUB | ❌ | Не реализовано |
-| ON ERROR | ❌ | Не реализовано |
 
 ---
 
@@ -975,7 +973,6 @@ Axiom — строго однофайловый язык. Программа = �
 | Все regex функции | ✅ | Делегирует в BuiltinRegexHelpers |
 | Все файловые функции | ✅ | Делегирует в helpers |
 | DATA, READ, RESTORE | ❌ | Не реализовано |
-| GOTO, GOSUB | ❌ | Не реализовано |
 
 ---
 
@@ -9070,9 +9067,6 @@ NOTES: Свёртка массива в одно значение.
 |---------|----------------------|--------|
 | DATA/READ/RESTORE | PROJECT.md (упоминание) | Не реализовано на всех уровнях |
 | LINE INPUT | IO_AUDIT_REPORT.md | Не реализовано |
-| GOTO | PROJECT.md (отдельное направление) | Не реализовано |
-| GOSUB | PROJECT.md (отдельное направление) | Не реализовано |
-| ON ERROR | PROJECT.md (отдельное направление) | Не реализовано |
 | Система модулей | PROJECT.md (отдельное направление) | Не реализовано |
 | Классы, объекты, указатели | PROJECT.md (отдельное направление) | Не реализовано |
 | Компиляция в exe/native | PROJECT.md (отдельное направление) | Не реализовано |
@@ -9127,7 +9121,6 @@ NOTES: Свёртка массива в одно значение.
 Из PROJECT.md и PLANS4.md:
 - Система проектов из множества модулей
 - Классы, объекты, указатели
-- GOTO, GOSUB, ON ERROR
 - Компиляция в exe или native code
 - Совместимость с QuickBASIC 4.5 (там где полезна)
 - Автодополнение, навигация по коду и рефакторинг
@@ -9385,7 +9378,6 @@ Regex
 | Отладчик | Базовая | Точки останова, шаги, нет переменных |
 | Модули | Не реализовано | Feature gap |
 | DATA/READ/RESTORE | Не реализовано | Feature gap |
-| GOTO/GOSUB | Не реализовано | Feature gap |
 
 ---
 
@@ -9499,7 +9491,6 @@ Regex
 | Область | Причина |
 |---------|---------|
 | Graphics baseline tests | Только 9 baseline-тестов для графики; нужно расширять покрытие растеризации |
-| GOTO/GOSUB | Запланированы в `PROJECT.md`, не реализованы; требуется дизайн |
 | Multi-file modules | Запланированы, не реализованы; влияет на архитектуру |
 | Debugger | Запланирован, не реализован; требует `BytecodeDebugInfo` расширения |
 | Type-specialized stacks | Архитектурная оптимизация VM для устранения boxing |
@@ -9514,9 +9505,8 @@ Regex
 |----------|----------|------------|-----------|--------------|-------------|
 | AUDIT-001 | Type-specialized stacks | VM | P1 | Устранение boxing через `object? Value` — ключевая оптимизация производительности | Нет |
 | AUDIT-002 | Graphics rendering correctness | Runtime/Graphics | P2 | Только 9 baseline-тестов; SCREEN и CANVAS пути требуют расширенной верификации | Нет |
-| AUDIT-003 | GOTO/GOSUB design | Language | P2 | Запланированы в `PROJECT.md`; требуют спецификации до реализации | Нет |
-| AUDIT-004 | Multi-file module system | Architecture | P3 | Запланировано; влияет на парсинг, семантику, runtime | AUDIT-003 |
-| AUDIT-005 | Debugger architecture | IDE + Runtime | P3 | Запланирован; требует расширения `BytecodeDebugInfo` и UI-слоя | AUDIT-001 |
+| AUDIT-003 | Multi-file module system | Architecture | P3 | Запланировано; влияет на парсинг, семантику, runtime | Нет |
+| AUDIT-004 | Debugger architecture | IDE + Runtime | P3 | Запланирован; требует расширения `BytecodeDebugInfo` и UI-слоя | AUDIT-001 |
 | AUDIT-006 | Block scope edge cases | Semantics | P2 | Блочная видимость спроектирована, но граничные случаи (затенение, вложенные блоки) требуют верификации | Нет |
 | AUDIT-007 | BYREF function values | Semantics + Runtime | P3 | Ограничено простыми переменными; расширение на массивы и поля TYPE | Нет |
 
@@ -9528,23 +9518,17 @@ Regex
 |-----------|----------|----------|
 | P1 | AUDIT-001 | Type-specialized stacks (VM performance deep-dive) |
 | P2 | AUDIT-002 | Graphics rendering correctness |
-| P2 | AUDIT-003 | GOTO/GOSUB design specification |
-| P2 | AUDIT-006 | Block scope edge cases |
-| P3 | AUDIT-004 | Multi-file module system |
-| P3 | AUDIT-005 | Debugger architecture |
-| P3 | AUDIT-007 | BYREF function values |
+| P3 | AUDIT-003 | Multi-file module system |
+| P3 | AUDIT-004 | Debugger architecture |
 
 ---
 
 ## §77. Recommended Audit Order
 
 1. **AUDIT-001** — Type-specialized stacks (производительность VM). Это архитектурная оптимизация, которая влияет на все последующие работы с VM. Не имеет зависимостей.
-2. **AUDIT-006** — Block scope edge cases. Быстрый аудит граничных случаев блочной видимости. Не имеет зависимостей.
-3. **AUDIT-002** — Graphics rendering correctness. Расширение тестового покрытия графики. Не имеет зависимостей.
-4. **AUDIT-003** — GOTO/GOSUB design. Спецификация до реализации. Не имеет зависимостей.
-5. **AUDIT-007** — BYREF function values. Расширение механизма передачи по ссылке. Не имеет зависимостей.
-6. **AUDIT-004** — Multi-file module system. Зависит от AUDIT-003 (GOTO/GOSUB могут влиять на модель модулей).
-7. **AUDIT-005** — Debugger architecture. Зависит от AUDIT-001 (type-specialized stacks влияют на отладчик).
+2. **AUDIT-002** — Graphics rendering correctness. Расширение тестового покрытия графики. Не имеет зависимостей.
+3. **AUDIT-003** — Multi-file module system. Запланировано; влияет на парсинг, семантику, runtime.
+4. **AUDIT-004** — Debugger architecture. Зависит от AUDIT-001 (type-specialized stacks влияют на отладчик).
 
 ---
 

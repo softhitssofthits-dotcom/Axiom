@@ -969,8 +969,6 @@ Axiom — полноценный интерпретируемый BASIC-подо
 | Особенность | Статус |
 |-------------|--------|
 | `BYREF` для function values | Ограничено (только простые переменные) |
-| `GOTO` / `GOSUB` | Не реализованы (запланированы) |
-| `ON ERROR` | Не реализован (есть TRY/CATCH) |
 | Multi-file modules | Не реализованы |
 | Классы/ООП | Не реализованы |
 | Компиляция в exe | Не реализована |
@@ -1005,7 +1003,6 @@ Axiom — полноценный интерпретируемый BASIC-подо
 ## 57. Planned Features
 
 Из `PROJECT.md` и `docs/PLANS4.md`:
-- `GOTO`, `GOSUB`, `ON ERROR`
 - Компиляция в exe/native code
 - Система проектов из множества модулей
 - Классы, объекты, указатели
@@ -1033,7 +1030,6 @@ Axiom — полноценный интерпретируемый BASIC-подо
 | Decimal-литералы | Не поддерживаются (документировано) |
 | Научная нотация | Не поддерживается (документировано) |
 | Короткое замыкание AND/OR | Не реализовано (документировано) |
-| Метки и GOTO | Запланированы, не реализованы |
 
 ---
 
@@ -1239,7 +1235,6 @@ Benchmark сценариев:        48
 | Область | Причина |
 |---------|---------|
 | Graphics baseline tests | Только 9 baseline-тестов, нужно расширять |
-| GOTO/GOSUB | Запланированы, не реализованы |
 | Multi-file modules | Запланированы, не реализованы |
 | Debugger | Запланирован, не реализован |
 
@@ -1251,9 +1246,8 @@ Benchmark сценариев:        48
 |----|----------|-----------|
 | AUDIT-001 | Graphics rendering correctness | P2 |
 | AUDIT-002 | Type-specialized stacks (VM performance) | P1 |
-| AUDIT-003 | GOTO/GOSUB design | P2 |
-| AUDIT-004 | Multi-file module system design | P3 |
-| AUDIT-005 | Debugger architecture | P3 |
+| AUDIT-003 | Multi-file module system design | P3 |
+| AUDIT-004 | Debugger architecture | P3 |
 
 ---
 
@@ -1263,7 +1257,6 @@ Benchmark сценариев:        48
 |-----------|-------|
 | P1 | Type-specialized stacks (VM performance deep-dive) |
 | P2 | Graphics rendering correctness |
-| P2 | GOTO/GOSUB design specification |
 | P3 | Multi-file module system |
 | P3 | Debugger architecture |
 
@@ -1273,9 +1266,8 @@ Benchmark сценариев:        48
 
 1. Type-specialized stacks (производительность VM)
 2. Graphics rendering correctness
-3. GOTO/GOSUB design
-4. Multi-file modules
-5. Debugger
+3. Multi-file modules
+4. Debugger
 
 ---
 

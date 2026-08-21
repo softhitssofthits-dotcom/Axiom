@@ -1491,7 +1491,6 @@ Fast path работает через `PeekUnchecked` для проверки т
 - Axiom — **строго однофайловый язык** (нет модулей, namespaces, imports)
 - **Нет DATA/READ/RESTORE** — не реализованы
 - **Нет отладчика** — запланирован, не реализован
-- **Нет GOTO/GOSUB** — запланированы, не реализованы
 
 ### Файлы
 
@@ -2035,6 +2034,62 @@ Health Score: 8.3/10.
 
 Файлы:
 - Создан: `docs/audit/TILEMAP_TILESET.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1075 - 2026-08-21 21:00 - Forensic-аудит подсистемы DEBUGGER
+
+Задача: провести полный forensic-аудит подсистемы отладчика (DEBUGGER).
+
+Что сделано:
+1. Проведён полный forensic-аудит подсистемы отладчика (48 раздела).
+2. Проанализированы все слои: BytecodeDebugInfo → BytecodeVm (breakpoints, stepping, snapshots) → IProgramDebuggerState → BytecodeVmDebuggerAdapter → ProgramRunService → MainWindowViewModel.Debug → BreakpointMargin → DebugExecutionSpanRenderer.
+3. Проверен паритет Interpreter ↔ BytecodeVm — отладчик работает ТОЛЬКО с BytecodeVm (архитектурное решение).
+4. Проверены тесты: 25+ тестов покрывают breakpoints, stepping, resume, step-back.
+5. Проверен sample: 1 runnable sample (`samples/smoke/debug_step_controls.axm`).
+6. Проверена документация: IDE_FORENSIC_AUDIT.md §53-59.
+
+Найденные проблемы (все P3/P4):
+- SYS-017 (P3): отладчик только для BytecodeVm (архитектурное решение, не баг)
+- SYS-018 (P3): редактирование кода во время остановки (нет инвалидации состояния)
+- SYS-019 (P4): нет панели переменных
+- SYS-020 (P4): нет панели стека вызовов
+
+Health Score: 8.0/10.
+Ответ на главный вопрос: YES — подсистема стабильна, корректна и архитектурно понятна.
+
+Файлы:
+- Создан: `docs/audit/DEBUGGER.md`
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1076 - 2026-08-21 22:00 - Forensic-аудит подсистемы базовых значений/типов/выражений
+
+Задача: провести полный forensic-аудит подсистемы базовых значений, типов, переменных, констант, присвоения и выражений.
+
+Что сделано:
+1. Проведён полный forensic-аудит подсистемы (48 раздела).
+2. Проанализированы все слои: RuntimeValue → TypeSymbol → Parser → Binder → Interpreter → BytecodeVm → Lowering.
+3. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет для всех арифметических, логических, сравнительных и конверсионных операций.
+4. Проверены тесты: 200+ тестов покрывают подсистему.
+5. Проверены samples: 30+ runnable samples.
+6. Проверена документация: 7 manual-страниц.
+
+Найденные проблемы (все P4):
+- SYS-032 (P4): ArrayAccessExpressionSyntax dead code
+- SYS-033 (P4): Latent opcodes (Dup, CreateArray, BeginInput/EndInput)
+- SYS-034 (P4): ArrayDimensionSyntax.Kind wrong kind
+- SYS-035 (P4): Unused expression parameter in EvaluateChr
+
+Health Score: 8.8/10.
+Ответ на главный вопрос: YES — подсистема стабильна, корректна и архитектурно понятна.
+
+Файлы:
+- Создан: `docs/audit/BASE_VALUES_TYPES.md`
 
 ### Следующий шаг
 
