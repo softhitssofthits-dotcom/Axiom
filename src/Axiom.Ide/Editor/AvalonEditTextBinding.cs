@@ -76,7 +76,9 @@ public static class AvalonEditTextBinding
 
             try
             {
+                var caretOffset = editor.TextArea.Caret.Offset;
                 editor.Text = newText;
+                editor.TextArea.Caret.Offset = Math.Min(caretOffset, editor.Document.TextLength);
             }
             finally
             {

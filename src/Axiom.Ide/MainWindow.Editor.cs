@@ -117,6 +117,12 @@ public partial class MainWindow
 
             TraceEditorEvent("editor.focus.lost", editor, "autoFormat=true");
             TryFormatEditorLine(editor, Math.Max(editor.TextArea.Caret.Line, 1));
+
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.ApplySmartIdentifierToActiveDocument();
+            }
+
             _lastCaretLineByEditor[editor] = Math.Max(editor.TextArea.Caret.Line, 1);
             _viewModel?.FlushEditorActivityEvents();
         }
@@ -154,6 +160,12 @@ public partial class MainWindow
             try
             {
                 TryApplyBlockEditingAfterEnter(editor, previousLine);
+                TryFormatEditorLine(editor, previousLine, preserveCaretPosition: true);
+
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.ApplySmartIdentifierToActiveDocument();
+                }
             }
             catch (Exception exception)
             {
@@ -184,6 +196,12 @@ public partial class MainWindow
             {
                 TraceEditorEvent("editor.mouse.line-transition", editor, $"fromLine={previousLine} | toLine={currentLine}");
                 TryFormatEditorLine(editor, previousLine);
+
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.ApplySmartIdentifierToActiveDocument();
+                }
+
                 currentLine = Math.Max(editor.TextArea.Caret.Line, 1);
             }
 
@@ -233,6 +251,12 @@ public partial class MainWindow
                 {
                     TraceEditorEvent("editor.caret.line-transition", editor, $"fromLine={previousLine} | toLine={currentLine}");
                     TryFormatEditorLine(editor, previousLine);
+
+                    if (DataContext is MainWindowViewModel caretVm)
+                    {
+                        caretVm.ApplySmartIdentifierToActiveDocument();
+                    }
+
                     currentLine = Math.Max(editor.TextArea.Caret.Line, 1);
                 }
 
@@ -433,7 +457,7 @@ public partial class MainWindow
         }
     }
 
-    private void TryFormatEditorLine(TextEditor editor, int lineNumber)
+    private void TryFormatEditorLine(TextEditor editor, int lineNumber, bool preserveCaretPosition = false)
     {
         if (editor.Document is null || lineNumber < 1 || lineNumber > editor.Document.LineCount)
         {
@@ -464,15 +488,24 @@ public partial class MainWindow
         _isApplyingLineFormatting = true;
         try
         {
-            var caretOffset = editor.TextArea.Caret.Offset;
-            var lineStartOffset = line.Offset;
-            var relativeCaret = caretOffset - lineStartOffset;
+            if (preserveCaretPosition)
+            {
+                var caretOffset = editor.TextArea.Caret.Offset;
+                editor.Document.Replace(line, formattedText);
+                editor.TextArea.Caret.Offset = caretOffset;
+            }
+            else
+            {
+                var caretOffset = editor.TextArea.Caret.Offset;
+                var lineStartOffset = line.Offset;
+                var relativeCaret = caretOffset - lineStartOffset;
 
-            editor.Document.Replace(line, formattedText);
+                editor.Document.Replace(line, formattedText);
 
-            var newLine = editor.Document.GetLineByNumber(lineNumber);
-            var newCaretOffset = newLine.Offset + Math.Min(relativeCaret, newLine.Length);
-            editor.TextArea.Caret.Offset = newCaretOffset;
+                var newLine = editor.Document.GetLineByNumber(lineNumber);
+                var newCaretOffset = newLine.Offset + Math.Min(relativeCaret, newLine.Length);
+                editor.TextArea.Caret.Offset = newCaretOffset;
+            }
         }
         finally
         {

@@ -1,5 +1,5 @@
-using System.Text.RegularExpressions;
 using ICSharpCode.AvalonEdit.Document;
+using Axiom.Core;
 using Axiom.Ide.Editor.Formatting;
 
 namespace Axiom.Ide.Editor.StructuralEditing;
@@ -7,34 +7,6 @@ namespace Axiom.Ide.Editor.StructuralEditing;
 public sealed class AxiomBlockEditingService
 {
     private const string IndentUnit = "    ";
-
-    private static readonly Regex IfHeaderRegex = new(@"^IF\b.+\bTHEN$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex ElseIfHeaderRegex = new(@"^ELSEIF\b.+\bTHEN$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex ElseHeaderRegex = new(@"^ELSE$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex ForHeaderRegex = new(@"^FOR\b.+\bTO\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex WhileHeaderRegex = new(@"^WHILE\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex SelectCaseHeaderRegex = new(@"^SELECT\s+CASE\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex DoWhileHeaderRegex = new(@"^DO\s+WHILE\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex DoUntilHeaderRegex = new(@"^DO\s+UNTIL\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex DoHeaderRegex = new(@"^DO$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex SubHeaderRegex = new(@"^SUB\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex FunctionHeaderRegex = new(@"^FUNCTION\b.+\bAS\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex TypeHeaderRegex = new(@"^TYPE\s+[\p{L}_][\p{L}\p{Nd}_]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex TryHeaderRegex = new(@"^TRY$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex CatchHeaderRegex = new(@"^CATCH\s+[\p{L}_][\p{L}\p{Nd}_]*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex FinallyHeaderRegex = new(@"^FINALLY$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex CaseElseHeaderRegex = new(@"^CASE\s+ELSE$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex CaseHeaderRegex = new(@"^CASE\b.+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-
-    private static readonly Regex EndIfRegex = new(@"^END\s+IF$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex NextRegex = new(@"^NEXT(?:\b.*)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex EndWhileRegex = new(@"^END\s+WHILE$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex EndSelectRegex = new(@"^END\s+SELECT$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex LoopRegex = new(@"^LOOP(?:\s+(?:WHILE|UNTIL)\b.+)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex EndSubRegex = new(@"^END\s+SUB$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex EndFunctionRegex = new(@"^END\s+FUNCTION$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex EndTypeRegex = new(@"^END\s+TYPE$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex EndTryRegex = new(@"^END\s+TRY$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private readonly ICodeFormattingService _formattingService;
 
@@ -177,18 +149,18 @@ public sealed class AxiomBlockEditingService
     private bool TryFindExpectedBranchIndent(
         TextDocument document,
         int lineNumber,
-        BranchLineKind branchKind,
+        BlockBranchKind branchKind,
         out string indentation)
     {
         indentation = string.Empty;
         var expectedOpeningKind = branchKind switch
         {
-            BranchLineKind.ElseIf => BlockOpeningKind.If,
-            BranchLineKind.Else => BlockOpeningKind.If,
-            BranchLineKind.Case => BlockOpeningKind.SelectCase,
-            BranchLineKind.CaseElse => BlockOpeningKind.SelectCase,
-            BranchLineKind.Catch => BlockOpeningKind.Try,
-            BranchLineKind.Finally => BlockOpeningKind.Try,
+            BlockBranchKind.ElseIf => BlockOpeningKind.If,
+            BlockBranchKind.Else => BlockOpeningKind.If,
+            BlockBranchKind.Case => BlockOpeningKind.SelectCase,
+            BlockBranchKind.CaseElse => BlockOpeningKind.SelectCase,
+            BlockBranchKind.Catch => BlockOpeningKind.Try,
+            BlockBranchKind.Finally => BlockOpeningKind.Try,
             _ => throw new ArgumentOutOfRangeException(nameof(branchKind))
         };
 
@@ -200,8 +172,8 @@ public sealed class AxiomBlockEditingService
 
         indentation = branchKind switch
         {
-            BranchLineKind.Case => openBlock.Indentation + IndentUnit,
-            BranchLineKind.CaseElse => openBlock.Indentation + IndentUnit,
+            BlockBranchKind.Case => openBlock.Indentation + IndentUnit,
+            BlockBranchKind.CaseElse => openBlock.Indentation + IndentUnit,
             _ => openBlock.Indentation
         };
         return true;
@@ -369,253 +341,33 @@ public sealed class AxiomBlockEditingService
 
     private static LineAnalysis AnalyzeLine(string lineText)
     {
-        if (lineText.Length == 0)
+        var info = BlockLineClassifier.ClassifyLine(lineText);
+
+        if (info.IsBlank)
         {
-            return LineAnalysis.Blank();
+            return LineAnalysis.Blank;
         }
 
-        var indentLength = 0;
-        while (indentLength < lineText.Length && char.IsWhiteSpace(lineText[indentLength]))
-        {
-            indentLength++;
-        }
-
-        var indentation = lineText[..indentLength];
-        var body = StripComments(lineText[indentLength..]).Trim();
-
-        if (body.Length == 0)
-        {
-            return LineAnalysis.Blank();
-        }
-
-        if (ElseIfHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BranchKind: BranchLineKind.ElseIf, IncreasesIndentNextLine: true);
-        }
-
-        if (ElseHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BranchKind: BranchLineKind.Else, IncreasesIndentNextLine: true);
-        }
-
-        if (CaseElseHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BranchKind: BranchLineKind.CaseElse, IncreasesIndentNextLine: true);
-        }
-
-        if (CaseHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BranchKind: BranchLineKind.Case, IncreasesIndentNextLine: true);
-        }
-
-        if (CatchHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BranchKind: BranchLineKind.Catch, IncreasesIndentNextLine: true);
-        }
-
-        if (FinallyHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BranchKind: BranchLineKind.Finally, IncreasesIndentNextLine: true);
-        }
-
-        if (IfHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.If, IncreasesIndentNextLine: true);
-        }
-
-        if (ForHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.For, IncreasesIndentNextLine: true);
-        }
-
-        if (WhileHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.While, IncreasesIndentNextLine: true);
-        }
-
-        if (SelectCaseHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.SelectCase, IncreasesIndentNextLine: true);
-        }
-
-        if (DoWhileHeaderRegex.IsMatch(body) || DoUntilHeaderRegex.IsMatch(body) || DoHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.Do, IncreasesIndentNextLine: true);
-        }
-
-        if (FunctionHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.Function, IncreasesIndentNextLine: true);
-        }
-
-        if (TypeHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.Type, IncreasesIndentNextLine: true);
-        }
-
-        if (TryHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.Try, IncreasesIndentNextLine: true);
-        }
-
-        if (SubHeaderRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, BlockOpeningKind.Sub, IncreasesIndentNextLine: true);
-        }
-
-        if (EndIfRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndIf);
-        }
-
-        if (EndWhileRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndWhile);
-        }
-
-        if (EndSelectRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndSelect);
-        }
-
-        if (EndSubRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndSub);
-        }
-
-        if (EndFunctionRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndFunction);
-        }
-
-        if (EndTypeRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndType);
-        }
-
-        if (EndTryRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.EndTry);
-        }
-
-        if (NextRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.Next);
-        }
-
-        if (LoopRegex.IsMatch(body))
-        {
-            return new LineAnalysis(indentation, ClosingKind: BlockClosingKind.Loop);
-        }
-
-        return new LineAnalysis(indentation);
-    }
-
-    private static string StripComments(string text)
-    {
-        var inString = false;
-
-        for (var index = 0; index < text.Length; index++)
-        {
-            var current = text[index];
-
-            if (current == '"')
-            {
-                if (inString && index + 1 < text.Length && text[index + 1] == '"')
-                {
-                    index++;
-                    continue;
-                }
-
-                inString = !inString;
-                continue;
-            }
-
-            if (inString)
-            {
-                continue;
-            }
-
-            if (current == '\'')
-            {
-                return text[..index];
-            }
-
-            if (StartsRemComment(text, index))
-            {
-                return text[..index];
-            }
-        }
-
-        return text;
-    }
-
-    private static bool StartsRemComment(string text, int index)
-    {
-        if (index + 2 >= text.Length)
-        {
-            return false;
-        }
-
-        if (!text[index..(index + 3)].Equals("REM", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        var hasLeadingBoundary = index == 0 || char.IsWhiteSpace(text[index - 1]);
-        var afterIndex = index + 3;
-        var hasTrailingBoundary = afterIndex >= text.Length || char.IsWhiteSpace(text[afterIndex]);
-        return hasLeadingBoundary && hasTrailingBoundary;
+        return new LineAnalysis(
+            info.Indentation,
+            info.OpeningKind,
+            info.ClosingKind,
+            info.BranchKind,
+            info.IncreasesIndentNextLine);
     }
 
     private readonly record struct LineAnalysis(
         string Indentation,
         BlockOpeningKind? OpeningKind = null,
         BlockClosingKind? ClosingKind = null,
-        BranchLineKind? BranchKind = null,
+        BlockBranchKind? BranchKind = null,
         bool IncreasesIndentNextLine = false,
         bool HasContent = true)
     {
         public bool IsBlank => !HasContent;
 
-        public static LineAnalysis Blank() => new(string.Empty, HasContent: false);
+        public static readonly LineAnalysis Blank = new(string.Empty, HasContent: false);
     }
 
     private readonly record struct OpenBlockContext(BlockOpeningKind Kind, string Indentation);
-
-    private enum BlockOpeningKind
-    {
-        If,
-        For,
-        While,
-        SelectCase,
-        Do,
-        Sub,
-        Function,
-        Type,
-        Try
-    }
-
-    private enum BlockClosingKind
-    {
-        EndIf,
-        Next,
-        EndWhile,
-        EndSelect,
-        Loop,
-        EndSub,
-        EndFunction,
-        EndType,
-        EndTry
-    }
-
-    private enum BranchLineKind
-    {
-        ElseIf,
-        Else,
-        Case,
-        CaseElse,
-        Catch,
-        Finally
-    }
 }

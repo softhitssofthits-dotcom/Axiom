@@ -71,7 +71,7 @@ public sealed class CodeFormattingServiceTests
     {
         var result = _service.FormatLine("   print   a  +   3   rem note", CodeFormattingStyle.Modern);
 
-        Assert.Equal("   Print a + 3 Rem note", result);
+        Assert.Equal("   Print a + 3   Rem note", result);
     }
 
     [Fact]
@@ -216,5 +216,153 @@ public sealed class CodeFormattingServiceTests
         var result = _service.FormatLine("print a <    < 2, b >       > 1", CodeFormattingStyle.Classic);
 
         Assert.Equal("PRINT a << 2, b >> 1", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesTabAlignedCommentGap()
+    {
+        var result = _service.FormatLine("DIM TILE AS INTEGER = 16\t\t' Размер клетки", CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM TILE AS INTEGER = 16\t\t' Размер клетки", result);
+    }
+
+    [Fact]
+    public void FormatLine_Modern_PreservesTabAlignedCommentGap()
+    {
+        var result = _service.FormatLine("DIM TILE AS INTEGER = 16\t\t' Размер клетки", CodeFormattingStyle.Modern);
+
+        Assert.Equal("Dim TILE As Integer = 16\t\t' Размер клетки", result);
+    }
+
+    [Fact]
+    public void FormatLine_Modern_PreservesSpaceAlignedCommentGap()
+    {
+        var result = _service.FormatLine("DIM TILE AS INTEGER = 16     ' Размер клетки", CodeFormattingStyle.Modern);
+
+        Assert.Equal("Dim TILE As Integer = 16     ' Размер клетки", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesSingleSpaceCommentGap()
+    {
+        var result = _service.FormatLine("print a+1 ' comment", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT a + 1 ' comment", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesRemCommentGap()
+    {
+        var result = _service.FormatLine("DIM X AS INTEGER\t\tREM note", CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM X AS INTEGER\t\tREM note", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesCyrillicIdentifiers()
+    {
+        var result = _service.FormatLine("dim счётчик as integer=42", CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM счётчик AS INTEGER = 42", result);
+    }
+
+    [Fact]
+    public void FormatLine_Modern_PreservesCyrillicIdentifiers()
+    {
+        var result = _service.FormatLine("dim имя as string=\"привет\"", CodeFormattingStyle.Modern);
+
+        Assert.Equal("Dim имя As String = \"привет\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesCyrillicInStringsAndComments()
+    {
+        var result = _service.FormatLine("print \"Привет, мир!\" ' комментарий", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT \"Привет, мир!\" ' комментарий", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesEmojiInStrings()
+    {
+        var result = _service.FormatLine("print \"Hello 🌍 World\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT \"Hello 🌍 World\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_HandlesMixedCyrillicAndLatinIdentifiers()
+    {
+        var result = _service.FormatLine("print myVar+счётчик*2", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT myVar + счётчик * 2", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesNonBmpUnicodeInStrings()
+    {
+        var result = _service.FormatLine("print \"𝕳𝖊𝖑𝖑𝖔\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT \"𝕳𝖊𝖑𝖑𝖔\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_HandlesCyrillicKeywordLikePrefix()
+    {
+        var result = _service.FormatLine("print формат+1", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT формат + 1", result);
+    }
+
+    [Fact]
+    public void FormatDocument_Classic_PreservesCyrillicAcrossMultipleLines()
+    {
+        const string source = "dim имя as string=\"Алиса\"\r\nprint имя\r\n";
+
+        var result = _service.FormatDocument(source, CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM имя AS STRING = \"Алиса\"\r\nPRINT имя\r\n", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_DimLineWithoutEquals()
+    {
+        var result = _service.FormatLine("dim a as integer", CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM a AS INTEGER", result);
+    }
+
+    [Fact]
+    public void IsLineSyntaxValid_DimLineWithoutEquals_ReturnsTrue()
+    {
+        Assert.True(_service.IsLineSyntaxValid("dim a as integer"));
+    }
+
+    [Fact]
+    public void IsLineSyntaxValid_DimLineWithTrailingWhitespace_ReturnsTrue()
+    {
+        Assert.True(_service.IsLineSyntaxValid("dim a as integer  "));
+    }
+
+    [Fact]
+    public void FormatLine_Classic_DimLineWithTrailingWhitespace()
+    {
+        var result = _service.FormatLine("dim a as integer  ", CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM a AS INTEGER", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_DimWithEquals()
+    {
+        var result = _service.FormatLine("dim a as integer=1", CodeFormattingStyle.Classic);
+
+        Assert.Equal("DIM a AS INTEGER = 1", result);
+    }
+
+    [Fact]
+    public void IsLineSyntaxValid_DimWithEquals_ReturnsTrue()
+    {
+        Assert.True(_service.IsLineSyntaxValid("dim a as integer=1"));
     }
 }

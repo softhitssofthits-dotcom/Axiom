@@ -306,4 +306,113 @@ public sealed class BlockEditingServiceTests
         Assert.Equal("IF a THEN\r\n    PRINT 1\r\nEND IF", document.Text);
         Assert.Equal(caretOffset, newCaretOffset);
     }
+
+    [Fact]
+    public void TryHandleLineTransition_DeeplyNestedIfBlocks_ClosesCorrectly()
+    {
+        var document = new TextDocument(
+            "IF a THEN\r\n" +
+            "    IF b THEN\r\n" +
+            "        IF c THEN\r\n" +
+            "            IF d THEN\r\n" +
+            "                IF e THEN\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 5, 6, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Equal(
+            "IF a THEN\r\n" +
+            "    IF b THEN\r\n" +
+            "        IF c THEN\r\n" +
+            "            IF d THEN\r\n" +
+            "                IF e THEN\r\n" +
+            "                    \r\n" +
+            "                END IF",
+            document.Text);
+        Assert.Equal(document.GetLineByNumber(6).Offset + 20, newCaretOffset);
+    }
+
+    [Fact]
+    public void TryHandleLineTransition_TenLevelsOfNestedForLoops_HandledCorrectly()
+    {
+        var sb = new System.Text.StringBuilder();
+        for (var i = 0; i < 10; i++)
+        {
+            sb.Append(new string(' ', i * 4));
+            sb.Append($"FOR i{i} = 1 TO 2\r\n");
+        }
+
+        var document = new TextDocument(sb.ToString());
+
+        var changed = _service.TryHandleLineTransition(document, 10, 11, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        var text = document.Text;
+        Assert.Contains("NEXT", text);
+        var lastNext = text.LastIndexOf("NEXT", StringComparison.Ordinal);
+        Assert.True(lastNext > 0);
+    }
+
+    [Fact]
+    public void TryHandleLineTransition_MixedNestedBlocks_PreservesStructure()
+    {
+        var document = new TextDocument(
+            "IF a THEN\r\n" +
+            "    FOR i = 1 TO 10\r\n" +
+            "        WHILE b < 5\r\n" +
+            "            DO WHILE c > 0\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 4, 5, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Contains("LOOP", document.Text);
+        var text = document.Text;
+        Assert.Equal(
+            "IF a THEN\r\n" +
+            "    FOR i = 1 TO 10\r\n" +
+            "        WHILE b < 5\r\n" +
+            "            DO WHILE c > 0\r\n" +
+            "                \r\n" +
+            "            LOOP",
+            text);
+    }
+
+    [Fact]
+    public void TryHandleLineTransition_NestedSelectCaseInsideIf_ClosesCorrectly()
+    {
+        var document = new TextDocument(
+            "IF a THEN\r\n" +
+            "    SELECT CASE x\r\n" +
+            "        CASE 1\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 3, 4, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Equal(
+            "IF a THEN\r\n" +
+            "    SELECT CASE x\r\n" +
+            "        CASE 1\r\n" +
+            "            ",
+            document.Text);
+        Assert.Equal(document.GetLineByNumber(4).Offset + 12, newCaretOffset);
+    }
+
+    [Fact]
+    public void TryHandleLineTransition_NestedTryInsideFor_ClosesCorrectly()
+    {
+        var document = new TextDocument(
+            "FOR i = 1 TO 5\r\n" +
+            "    TRY\r\n");
+
+        var changed = _service.TryHandleLineTransition(document, 2, 3, document.TextLength, CodeFormattingStyle.Classic, out var newCaretOffset);
+
+        Assert.True(changed);
+        Assert.Equal(
+            "FOR i = 1 TO 5\r\n" +
+            "    TRY\r\n" +
+            "        \r\n" +
+            "    END TRY",
+            document.Text);
+        Assert.Equal(document.GetLineByNumber(3).Offset + 8, newCaretOffset);
+    }
 }

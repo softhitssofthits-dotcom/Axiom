@@ -1,3 +1,4 @@
+using Axiom.Execution;
 using Axiom.Ide.Models;
 using Axiom.Ide.Editor.Formatting;
 using Axiom.Ide.Editor.Identifiers;
@@ -12,7 +13,6 @@ using Axiom.Ide.Services.Persistence;
 using Axiom.Ide.Services.Prompts;
 using Axiom.Ide.Services.Shell;
 using Axiom.Ide.ViewModels;
-using Axiom.Parsing;
 using System.Reflection;
 using System.Diagnostics;
 
@@ -2594,7 +2594,7 @@ public sealed class MainWindowViewModelTests
             promptService ?? new FakeDialogPromptService(),
             codeFormattingService ?? new AxiomCodeFormattingService(),
             smartIdentifierService ?? new AxiomSmartIdentifierService(
-                sourceText => Parser.Parse(sourceText, out _)),
+                new IdentifierNormalizationService()),
             fileTreeService ?? new FakeFileTreeService([]),
             fileOperationsService ?? new FakeFileOperationsService(),
             traceService ?? NullIdeTraceService.Instance,

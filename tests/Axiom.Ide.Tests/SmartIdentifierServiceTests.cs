@@ -1,12 +1,12 @@
+using Axiom.Execution;
 using Axiom.Ide.Editor.Identifiers;
-using Axiom.Parsing;
 
 namespace Axiom.Ide.Tests;
 
 public sealed class SmartIdentifierServiceTests
 {
     private readonly AxiomSmartIdentifierService _service = new(
-        sourceText => Parser.Parse(sourceText, out _));
+        new IdentifierNormalizationService());
 
     [Fact]
     public void NormalizeLine_UsesDeclarationCasingForVariableReference()

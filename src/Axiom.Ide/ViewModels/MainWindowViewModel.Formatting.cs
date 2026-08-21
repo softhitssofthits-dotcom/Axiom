@@ -103,4 +103,25 @@ public sealed partial class MainWindowViewModel
             "format.document.unchanged",
             $"{BuildDocumentTrace(document)} | style={SelectedFormattingStyle} | chars={formattedText.Length}");
     }
+
+    public void ApplySmartIdentifierToActiveDocument()
+    {
+        if (!IsSmartIdentifierEnabled || Documents.ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (!DocumentFormattingPolicy.CanApplyFormatting(document))
+        {
+            return;
+        }
+
+        var originalText = document.SourceText;
+        var normalizedText = _smartIdentifierService.NormalizeDocument(originalText);
+
+        if (!string.Equals(document.SourceText, normalizedText, StringComparison.Ordinal))
+        {
+            document.SourceText = normalizedText;
+        }
+    }
 }

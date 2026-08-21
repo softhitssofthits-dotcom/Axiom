@@ -1,4 +1,5 @@
 using System.Text;
+using Axiom.Lexing;
 using Axiom.Ide.Editor.Highlighting;
 
 namespace Axiom.Ide.Editor.Formatting;
@@ -78,7 +79,7 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
             return true;
         }
 
-        SplitComment(body, out var codePart, out _);
+        SplitComment(body, out var codePart, out _, out _);
         return codePart.Length == 0 || TryTokenize(codePart, out _);
     }
 
@@ -103,7 +104,7 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
             return lineText;
         }
 
-        SplitComment(body, out var codePart, out var commentPart);
+        SplitComment(body, out var codePart, out var commentPart, out var commentGap);
 
         if (!TryTokenize(codePart, out var rawTokens))
         {
@@ -130,7 +131,8 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
             return indentation + normalizedCommentPart;
         }
 
-        return indentation + formattedCode + " " + normalizedCommentPart;
+        var effectiveGap = commentGap.Length > 0 ? commentGap : " ";
+        return indentation + formattedCode + effectiveGap + normalizedCommentPart;
     }
 
     private static string? FormatTokens(IReadOnlyList<RawToken> rawTokens, CodeFormattingStyle style)
@@ -315,7 +317,7 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
         return char.ToUpperInvariant(text[0]) + text[1..].ToLowerInvariant();
     }
 
-    private static void SplitComment(string lineText, out string codePart, out string commentPart)
+    private static void SplitComment(string lineText, out string codePart, out string commentPart, out string gap)
     {
         var inString = false;
 
@@ -342,7 +344,14 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
 
             if (current == '\'')
             {
-                codePart = lineText[..index].TrimEnd();
+                var codeEnd = index;
+                while (codeEnd > 0 && char.IsWhiteSpace(lineText[codeEnd - 1]))
+                {
+                    codeEnd--;
+                }
+
+                codePart = lineText[..codeEnd];
+                gap = lineText[codeEnd..index];
                 commentPart = lineText[index..];
                 return;
             }
@@ -352,13 +361,21 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
                 continue;
             }
 
-            codePart = lineText[..index].TrimEnd();
+            var remCodeEnd = index;
+            while (remCodeEnd > 0 && char.IsWhiteSpace(lineText[remCodeEnd - 1]))
+            {
+                remCodeEnd--;
+            }
+
+            codePart = lineText[..remCodeEnd];
+            gap = lineText[remCodeEnd..index];
             commentPart = lineText[index..];
             return;
         }
 
         codePart = lineText.TrimEnd();
         commentPart = string.Empty;
+        gap = string.Empty;
     }
 
     private static bool StartsRemComment(string lineText, int index)
@@ -377,6 +394,9 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
         var isWordEnd = index + 3 >= lineText.Length || !IsIdentifierCharacter(lineText[index + 3]);
         return isWordStart && isWordEnd;
     }
+
+    private static bool IsIdentifierCharacter(char character) =>
+        char.IsLetterOrDigit(character) || character == '_';
 
     private static List<RawToken> NormalizeCompoundShiftOperators(IReadOnlyList<RawToken> rawTokens)
     {
@@ -424,142 +444,108 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
     {
         tokens = [];
 
-        for (var index = 0; index < text.Length;)
+        if (text.Length == 0)
         {
-            var current = text[index];
+            return true;
+        }
 
-            if (char.IsWhiteSpace(current))
+        var lexerTokens = Lexer.Lex(text, out var diagnostics);
+
+        if (diagnostics.Count > 0)
+        {
+            return false;
+        }
+
+        foreach (var token in lexerTokens)
+        {
+            if (token.Kind is TokenKind.EndOfFileToken or TokenKind.NewLineToken or TokenKind.CommentToken)
             {
-                index++;
                 continue;
             }
 
-            if (IsIdentifierStart(current))
+            if (token.Kind == TokenKind.BadToken)
             {
-                var start = index++;
-                while (index < text.Length && IsIdentifierCharacter(text[index]))
-                {
-                    index++;
-                }
-
-                tokens.Add(new RawToken(text[start..index], RawTokenKind.Word));
-                continue;
-            }
-
-            if (char.IsDigit(current))
-            {
-                var start = index++;
-                while (index < text.Length && char.IsDigit(text[index]))
-                {
-                    index++;
-                }
-
-                if (index < text.Length && text[index] == '.')
-                {
-                    index++;
-                    while (index < text.Length && char.IsDigit(text[index]))
-                    {
-                        index++;
-                    }
-                }
-
-                tokens.Add(new RawToken(text[start..index], RawTokenKind.Number));
-                continue;
-            }
-
-            if (current == '"')
-            {
-                var start = index++;
-
-                while (index < text.Length)
-                {
-                    if (text[index] != '"')
-                    {
-                        index++;
-                        continue;
-                    }
-
-                    if (index + 1 < text.Length && text[index + 1] == '"')
-                    {
-                        index += 2;
-                        continue;
-                    }
-
-                    index++;
-                    tokens.Add(new RawToken(text[start..index], RawTokenKind.String));
-                    goto ContinueOuterLoop;
-                }
-
                 return false;
             }
 
-            if (index + 1 < text.Length)
+            var rawKind = MapTokenKind(token.Kind);
+            if (rawKind is not null)
             {
-                var pair = text.Substring(index, 2);
-                if (pair is "<>" or "<=" or ">=" or "<<" or ">>")
-                {
-                    tokens.Add(new RawToken(pair, RawTokenKind.Operator));
-                    index += 2;
-                    continue;
-                }
+                tokens.Add(new RawToken(token.Text, rawKind.Value));
             }
-
-            if (current is '+' or '-' or '*' or '/' or '\\' or '^' or '=' or '<' or '>')
-            {
-                tokens.Add(new RawToken(current.ToString(), RawTokenKind.Operator));
-                index++;
-                continue;
-            }
-
-            if (current == '(')
-            {
-                tokens.Add(new RawToken("(", RawTokenKind.OpenParen));
-                index++;
-                continue;
-            }
-
-            if (current == ')')
-            {
-                tokens.Add(new RawToken(")", RawTokenKind.CloseParen));
-                index++;
-                continue;
-            }
-
-            if (current == ',')
-            {
-                tokens.Add(new RawToken(",", RawTokenKind.Comma));
-                index++;
-                continue;
-            }
-
-            if (current == ';')
-            {
-                tokens.Add(new RawToken(";", RawTokenKind.Semicolon));
-                index++;
-                continue;
-            }
-
-            if (current == '.')
-            {
-                tokens.Add(new RawToken(".", RawTokenKind.Dot));
-                index++;
-                continue;
-            }
-
-            return false;
-
-        ContinueOuterLoop:
-            continue;
         }
 
         return true;
     }
 
-    private static bool IsIdentifierStart(char character) =>
-        char.IsLetter(character) || character == '_';
+    private static RawTokenKind? MapTokenKind(TokenKind kind)
+    {
+        if (kind >= TokenKind.AndKeyword && kind <= TokenKind.XorKeyword)
+        {
+            return RawTokenKind.Word;
+        }
 
-    private static bool IsIdentifierCharacter(char character) =>
-        char.IsLetterOrDigit(character) || character == '_';
+        if (kind is TokenKind.IdentifierToken)
+        {
+            return RawTokenKind.Word;
+        }
+
+        if (kind is TokenKind.IntegerLiteralToken or TokenKind.LongLiteralToken or TokenKind.DoubleLiteralToken)
+        {
+            return RawTokenKind.Number;
+        }
+
+        if (kind is TokenKind.BooleanLiteralToken)
+        {
+            return RawTokenKind.Word;
+        }
+
+        if (kind is TokenKind.StringLiteralToken)
+        {
+            return RawTokenKind.String;
+        }
+
+        if (kind is TokenKind.OpenParenToken)
+        {
+            return RawTokenKind.OpenParen;
+        }
+
+        if (kind is TokenKind.CloseParenToken)
+        {
+            return RawTokenKind.CloseParen;
+        }
+
+        if (kind is TokenKind.CommaToken)
+        {
+            return RawTokenKind.Comma;
+        }
+
+        if (kind is TokenKind.SemicolonToken)
+        {
+            return RawTokenKind.Semicolon;
+        }
+
+        if (kind is TokenKind.DotToken)
+        {
+            return RawTokenKind.Dot;
+        }
+
+        if (kind is TokenKind.PlusToken or TokenKind.MinusToken or TokenKind.StarToken or
+            TokenKind.SlashToken or TokenKind.BackslashToken or TokenKind.CaretToken or
+            TokenKind.EqualsToken or TokenKind.LessToken or TokenKind.GreaterToken or
+            TokenKind.LessOrEqualsToken or TokenKind.GreaterOrEqualsToken or TokenKind.NotEqualsToken or
+            TokenKind.AmpersandToken)
+        {
+            return RawTokenKind.Operator;
+        }
+
+        if (kind is TokenKind.LessLessToken or TokenKind.GreaterGreaterToken)
+        {
+            return RawTokenKind.Operator;
+        }
+
+        return null;
+    }
 
     private sealed record RawToken(string Text, RawTokenKind Kind);
 

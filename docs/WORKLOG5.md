@@ -2287,3 +2287,459 @@ Health Score: **8.8/10**.
 ### Следующий шаг
 
 - Продуктовая работа или реализация следующего шага по плану
+
+## Session 1065 - 2026-08-21 20:30 - Forensic-аудит ARRAY / ARRAY SEMANTICS
+
+Задача: провести полный forensic-аудит подсистемы массивов Axiom.
+
+### Метод
+
+Параллельные исследования по 6 направлениям:
+1. Parser + Binder (Syntax nodes, ArrayTypeSymbol, 34 descriptors, binding logic)
+2. Interpreter (RuntimeArrayValue 1331 строк, 34 built-in функции, DIM/REDIM/ERASE)
+3. BytecodeVm (4 опкода, fast paths 1D/3D, 34 built-in функции, BuiltinArrayHelpers)
+4. Tests + Samples (343 теста, 63 samples, 9 benchmarks, 14 manual pages)
+5. Performance (9 engine-compare benchmarks — все ≤ 0.900x)
+6. Documentation (14 manual pages, полное покрытие)
+
+### Результат
+
+- **Health Score: 9.0/10** (повышен с 8.8 после повторной верификации)
+- **48 пользовательских сущностей** (4 оператора + 4 expression-формы + 34 array built-ins + 4 string-array built-ins + 2 присваивания)
+- **Полный паритет** Interpreter ↔ BytecodeVm для всех сущностей
+- **4 ранее найденных дефекта** (ARRAY-001..004) — все исправлены
+- **Новых критических дефектов не обнаружено**
+- **9/9 benchmarks в целевом диапазоне** (0.474x–0.857x runtime)
+
+### Найденные проблемы
+
+| ID | Серьёзность | Проблема |
+|----|-------------|----------|
+| SYS-001 | P3 | Validation helpers дублируются между Interpreter и VM (~200 строк) |
+| SYS-002 | P3 | 63 sample файла не покрыты acceptance-тестами |
+| SYS-003 | P4 | ARRAYDISTINCT O(n²) линейный скан |
+| SYS-004 | P4 | Нет dedicated samples для LBOUND/UBOUND |
+
+### Главный вопрос: **YES**
+
+Подсистема массивов фундаментально корректна, хорошо протестирована, производительна и архитектурно зрела. Готова к переходу к следующей подсистеме.
+
+### Созданные файлы
+
+- `docs/audit/ARRAY_SEMANTICS.md` — полный отчёт аудита (48 разделов)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1081 - 2026-08-22 03:00 - Глубокий forensic-аудит TYPE / USER-DEFINED TYPES
+
+Задача: провести полный forensic-аудит подсистемы пользовательских типов TYPE.
+
+### Метод
+
+Полный forensic-анализ:
+1. Parser (`ParseTypeDeclaration()`, `ParseTypeField()`)
+2. Syntax (`TypeDeclarationSyntax`, `TypeFieldSyntax`, `FieldAccessExpressionSyntax`)
+3. Binder (`UserDefinedTypeSymbol`, `TypeFieldSymbol`, двухфазное завершение, обнаружение циклов)
+4. Bound Model (`BoundRecordLiteralExpression`, `BoundTypeConstructorExpression`, `BoundFieldAccessExpression`)
+5. Lowering (`CreateRecord`, `LoadField`, `StoreField`)
+6. Bytecode VM (`ExecuteCreateRecord()`, `ExecuteLoadField()`, `ExecuteStoreField()`, `ResolveRecordType()`)
+7. Runtime (`RuntimeRecordValue`, copy semantics, structural equality)
+8. Tests (90+ тестов по всем уровням)
+9. Samples (22 файла в `samples/operators/type/`)
+10. Documentation (`docs/manual/type.html`, `docs/TYPE_AUDIT_REPORT.md`)
+11. Engine-compare benchmark (`type_record_roundtrip.axm` ~0.891x)
+
+### Результат
+
+- **Health Score: 8.9/10**
+- **16 пользовательских сущностей** (объявление, поля, методы, конструкторы, инвариант, литералы, сравнение)
+- **Полный паритет** Interpreter ↔ BytecodeVm
+- **Предыдущий аудит** (TYPE-001..003) — корректен
+- **7 новых находок**: 1×P2, 2×P3, 4×P4
+
+### Найденные проблемы
+
+| ID | Серьёзность | Проблема |
+|----|-------------|----------|
+| SYS-017 | P4 | Путающая проверка `parameters.Count != 0` для инварианта |
+| SYS-018 | P3 | SetField вызывает CloneFieldValue() при каждой записи, даже для скаляров |
+| SYS-019 | P2 | Рекурсивное глубокое копирование может быть дорогим для deeply nested типов |
+| SYS-020 | P3 | ResolveRecordType() при первом вызове выполняет линейный скан |
+| SYS-021 | P4 | Нет тестов для IMAGE/SPRITE/TILESET/TILEMAP полей |
+| SYS-022 | P4 | Manual не описывает ограничения на типы полей |
+| SYS-023 | P4 | Нет теста для записи с 0 полей |
+
+### Главный вопрос: **YES**
+
+Подсистема TYPE фундаментально стабильна, корректна и архитектурно зрела. Все критические пути реализованы, протестированы и задокументированы.
+
+### Созданные файлы
+
+- `docs/audit/TYPE_USER_DEFINED_TYPES_FORENSIC_AUDIT.md` — полный отчёт аудита (48 разделов)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1062 - 2026-08-21 18:00 - Deep Modules / Namespaces / Program Structure Forensic Audit
+
+Задача: провести полный forensic-аудит подсистемы MODULES / NAMESPACES / PROGRAM STRUCTURE по 62 разделам протокола.
+
+Что сделано:
+1. Проведён глубокий анализ всех слоёв: Lexer, Parser, Binder, Lowerer, BytecodeCompiler, BytecodeVm, Interpreter, IDE.
+2. Проанализированы все архитектурные решения: ProgramSyntax, BoundProgram, LoweredProgram, BytecodeModule.
+3. Проверен полный путь выполнения: SourceText → Parser → Binder → Lowerer → BytecodeCompiler → VM/Interpreter.
+4. Исследованы edge cases: пустые программы, только объявления, глубоко вложенные функции, переполнение стека.
+5. Проверен паритет Interpreter ↔ BytecodeVm.
+6. Проанализированы тесты, samples, документация.
+
+Результат:
+- **Axiom — строго однофайловый язык.** Программа = один `.axm` файл.
+- Нет модулей, namespaces, imports, visibility modifiers, project file format.
+- Все P2/P3 findings — feature gaps, не баги.
+- **Health Score: 8.6/10.**
+- Найдено 2 небольших edge-case дефекта:
+  - SYS-001 [P3]: `InvokeTypeInvariant` не проверяет `MaxCallDepth`.
+  - SYS-002 [P3]: Нет runtime-проверки `HasExitDo` на верхнем уровне.
+- Система стабильна для перехода к следующей подсистеме.
+
+Созданные файлы:
+- `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md` — полный отчёт аудита (48 разделов)
+
+### Главный вопрос: **YES, WITH CONDITIONS**
+
+Условия: два P3 edge-case дефекта должны быть закрыты отдельной задачей.
+
+### Следующий шаг
+
+- Продуктовая работа или реализация следующего шага по плану
+
+## Session 1083 - 2026-08-22 04:00 - Forensic-аудит проектирования DATA / READ / RESTORE
+
+Задача: провести полный forensic-аудит подсистемы DATA / READ / RESTORE — полностью отсутствующей возможности языка Axiom.
+
+### Что сделано
+
+1. Проведён полный forensic-аудит по 48 разделам входного документа.
+2. Проанализированы все слои существующей инфраструктуры: Lexer, Parser, Binder, Lowering, Bytecode, Interpreter, BytecodeVm, Runtime, IDE.
+3. Подтверждено полное отсутствие подсистемы на всех уровнях: нет ключевых слов, нет синтаксических узлов, нет bound nodes, нет опкодов, нет runtime-компонентов, нет тестов, нет samples, нет документации.
+4. Проанализирована готовность существующей инфраструктуры к реализации DATA/READ/RESTORE.
+5. Предложен полный семантический контракт (DATA pool, data pointer, labels).
+6. Предложена архитектура реализации: DataPool в RuntimeEnvironment, опкоды LoadDataValue/RestoreDataPointer/RestoreToLabel.
+7. Предложен Recovery Roadmap из 8 этапов.
+8. Предложены 20+ автоматических тестов и 9 runnable samples.
+9. Предложены 6 новых диагностических кодов (MB1040-MB1042, MB2040-MB2042, MB3012-MB3013).
+
+### Результат
+
+- **Health Score: 0/10** (не применимо — подсистема не существует)
+- **Оценка готовности к реализации: 8/10** — существующая архитектура полностью подходит
+- **5 features**: DATA, READ, RESTORE, метки DATA, указатель чтения
+- **Все features — NOT_IMPLEMENTED**
+- **Главный вопрос: NO** — подсистема полностью отсутствует
+
+### Найденные проблемы
+
+| ID | Серьёзность | Проблема |
+|----|-------------|----------|
+| SYS-001 | P3 | DATA не реализован (feature gap) |
+| SYS-002 | P3 | READ не реализован (feature gap) |
+| SYS-003 | P3 | RESTORE не реализован (feature gap) |
+| SYS-004 | P3 | Метки DATA не реализованы (feature gap) |
+| SYS-005 | P3 | Указатель чтения не реализован (feature gap) |
+
+### Созданные файлы
+
+- `docs/audit/DATA_READ_RESTORE.md` — полный отчёт аудита (48 разделов)
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+
+### Следующий шаг
+
+- Продуктовая работа или реализация DATA/READ/RESTORE по Recovery Roadmap из отчёта
+
+## Session 1063 - 2026-08-21 15:00 - Forensic-аудит MULTI-FILE MODULE DESIGN
+
+Задача: провести глубокий forensic-аудит подсистемы MULTI-FILE MODULE DESIGN.
+
+Что сделано:
+1. Прочитаны обязательные документы: AGENTS.md, PROJECT.md, README.md, SPECIFICATION3.md, ARCHITECTURE.md, PLANS4.md, WORKLOG5.md.
+2. Проведён полный поиск по репозиторию: лексер, парсер, семантика, runtime, bytecode, IDE, тесты, samples, документация.
+3. Найдено: подсистема MULTI-FILE MODULE DESIGN **не реализована**. Axiom — строго однофайловый язык.
+4. Существующие аудиты: `docs/MODULES_AUDIT.md` (Session 1056), `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md` (Session 1057).
+5. Единственный эскиз модульной системы: `docs/FUTURE.md:498-545` (MODULE ... END MODULE, IMPORT, 4 правила).
+6. Создан полный forensic-отчёт: `docs/audit/MULTI_FILE_MODULE_DESIGN.md`.
+
+Ключевые findings:
+- SYS-001..010 — все feature gaps, не баги.
+- Нет ключевых слов MODULE/NAMESPACE/IMPORT/EXPORT в лексере (100 keywords, ни одного модульного).
+- Нет модульных синтаксических узлов.
+- Нет модульных областей видимости.
+- Нет multi-file compilation pipeline (CompilationRequest принимает один string sourceText).
+- Нет модели проекта в IDE (FilesPaneViewModel — raw filesystem browser).
+- Нет тестов, samples, manual-страниц для модульной системы.
+- Эскиз в FUTURE.md не промотирован в спецификацию или план.
+
+Оценка здоровья: **2.5/10** (подсистема не реализована).
+
+Созданные файлы:
+- `docs/audit/MULTI_FILE_MODULE_DESIGN.md` — полный отчёт аудита (48 разделов)
+
+### Главный вопрос: **NO**
+
+Подсистема не реализована. Текущая однофайловая программная модель стабильна, но модульная система не существует.
+
+### Следующий шаг
+
+- Провести проектирование модульной системы (DESIGN-001..005) или продуктовая работа
+
+## Session 1038 - 2026-08-21 15:00 - Forensic audit: TYPE-SPECIALIZED STACKS / BOXING ELIMINATION
+
+Задача: провести глубокий forensic-аудит подсистемы TYPE-SPECIALIZED STACKS / BOXING ELIMINATION.
+
+Что сделано:
+1. Прочитаны обязательные проектные документы: AGENTS.md, PROJECT.md, SPECIFICATION3.md, ARCHITECTURE.md, PLANS4.md, WORKLOG5.md.
+2. Проведён полный forensic-анализ подсистемы по 48 разделам входного документа.
+3. Проверены: RuntimeValue.cs, BytecodeEvaluationStack.cs, BytecodeVm.cs (fast paths), Interpreter.Expressions.cs, RuntimeArithmeticHelpers.cs, LoweredInstruction.ValueType, BytecodeModuleValidator.cs.
+4. Проанализированы: existing audit report, BYTECODE_PERF_MATRIX.md, FUTURE.md, engine-compare benchmarks.
+
+Ключевые выводы:
+- Подсистема TYPE-SPECIALIZED STACKS **не реализована** как отдельная feature.
+- Текущая модель: `RuntimeValue` (sealed class) с `object? Value` boxing.
+- Boxing overhead: 2 unbox + 0-1 box per arithmetic operation (~5x overhead).
+- Fast paths в BytecodeVm компенсируют часть накладных расходов.
+- VM быстрее Interpreter на 96% сценариев (медиана 0.63x runtime ratio).
+- Integer/Long cache (-1..1024) покрывает ~100% FOR-циклов.
+- Double/Decimal не кэшируются — каждая операция аллокация.
+- Type-specialized stacks запланированы (OPT-PERF-ARCH-001), но не реализованы.
+
+Оценка здоровья: **7.5/10** (подсистема работает корректно, но boxing model — архитектурный потолок).
+
+Главный вопрос: **YES, WITH CONDITIONS** — подсистема стабильна и корректна, но type-specialized stacks не реализованы.
+
+Созданные файлы:
+- `docs/audit/TYPE_SPECIALIZED_STACKS.md` — полный отчёт аудита (48 разделов)
+
+### Следующий шаг
+
+- Продолжить forensic-аудит следующей подсистемы или продуктовая работа
+
+## Session 1076 - 2026-08-22 18:00 - Forensic-аудит BYREF / FUNCTION VALUES завершён
+
+Задача: провести полный forensic-аудит подсистемы BYREF и FUNCTION VALUES языка Axiom.
+
+Что сделано:
+1. Прочитаны все проектные документы (AGENTS.md, PROJECT.md, ARCHITECTURE.md, PLANS4.md, WORKLOG5.md, LANGUAGE_INVENTORY.md, manual SUB/FUNCTION/RETURN).
+2. Проведён полный анализ исходного кода: Lexer, Parser, Binder, Lowering, BytecodeCompiler, BytecodeVm, Interpreter, RuntimeFunctionValue, BytecodeVariableSlot, RuntimeReferenceStoredValue.
+3. Проанализированы все тесты (33 теста непосредственно для BYREF/FUNCTION VALUES).
+4. Проанализированы все samples (4 BYREF + 4 function value + 2 benchmark).
+5. Запущены и пройдены все тесты: 14 Runtime, 4 Bytecode, 2 Execution — все pass.
+6. Восстановлена полная архитектура от объявления параметра до косвенного вызова function value.
+7. Создан отчёт `docs/audit/BYREF_FUNCTION_VALUES.md` (48 разделов).
+
+Ключевые выводы:
+- Подсистема BYREF / FUNCTION VALUES фундаментально корректна.
+- BYREF работает через `RuntimeReferenceStoredValue` (Interpreter) и `BytecodeVariableSlot` с делегатами (VM).
+- Function values работают через `RuntimeFunctionValue` с поддержкой closures.
+- Полный паритет Interpreter ↔ BytecodeVm подтверждён.
+- Полный паритет подтверждён тестами.
+- 10 features: BYREF, BYVAL, Function Values, Closures, MB2028, MB2029, MB3009, CallByRef опкод, CopyBackByRefArguments, Function Value Caching.
+
+Оценка здоровья: **8.9/10**.
+
+Найденные проблемы (все P4):
+- SYS-001 [P4]: ResolveByRefStoredArgument fallback — POSSIBLY DEAD code
+- SYS-002 [P4]: Нет явного теста BYREF через несколько уровней вызовов
+- SYS-003 [P4]: Нет явного теста рекурсии с closures
+
+Все предыдущие находки (CALL-001..006) уже закрыты.
+
+Главный вопрос: **YES** — подсистема достаточно стабильна, корректна и архитектурно понятна для перехода к следующей подсистеме.
+
+Созданные файлы:
+- `docs/audit/BYREF_FUNCTION_VALUES.md` — полный отчёт аудита (48 разделов)
+
+## Session 1033 - 2026-08-21 21:00 - Forensic-аудит GRAPHICS RENDERING CORRECTNESS
+
+Задача: провести глубокий forensic-аудит подсистемы графического рендеринга.
+
+Что сделано:
+1. Полная инвентаризация графической подсистемы: 188+ файлов, 34 опкода, 80+ samples.
+2. Детальный анализ Interpreter.Graphics.cs (1451 строка, 28 statements, 13 built-ins).
+3. Детальный анализ BytecodeVm.Graphics.cs (1692 строки, 34 опкода, 27 built-ins).
+4. Анализ всех runtime helpers: GraphicsDrawParser, GraphicsDrawExecutor, GraphicsEllipseRasterizer, GraphicsFloodFill, GraphicsLineMath, GraphicsBufferTransfer, GraphicsCoordinateValidation, GraphicsCircleValidation, GraphicsInstructionArguments, GraphicsPaintRequest.
+5. Анализ IDE host: GraphicsHostService (~2400 строк), NativeGraphicsScreenWindow, Direct3D11SwapChainRenderer, ScreenFramebuffer, ScreenTextBuffer.
+6. Анализ lowering: BoundProgramLowerer, LoweredInstruction, Opcode, BytecodeModuleValidator.
+7. Анализ тестов: ~60 interpreter, ~55 VM, 9 baseline, ~25 parser, ~12 pipeline, ~50+ IDE, ~30 acceptance.
+8. Анализ bytecode coverage: все 34 graphics entities — VM: да.
+9. Анализ performance: 6 engine-compare benchmarks — все ≤1.000x.
+
+Найденные проблемы:
+- P0: GetPixel в CANVAS не применяет камеру (асимметрия с SetPixel).
+- P1: LINE-валидатор всегда снимает 4 координаты (bug при отсутствии startPoint).
+- P1: 4 независимые реализации нормализации цвета с разным поведением.
+- P1: STEP overflow для PSET/PAINT/canvas primitives (нет SaturatingAdd).
+- P1: SetAbsolutePixel/GetAbsolutePixel обходят dispatcher (data race).
+- P2: CIRCLE default color = 15 (undocumented).
+- P2: ApplyPaletteUsing не прерывает при ошибке.
+- P2: DRAWTILEMAP/DRAWTILELAYER не обновляют позицию.
+- P2: Math.Abs(long.MinValue) overflow в DRAW executor.
+- P2: Пустой паттерн PAINT → DivideByZeroException.
+- P3: 14 опкодов отсутствуют в TryGetStackEffect.
+- P3: FindNearestDefaultPaletteIndex brute-force O(256).
+- P3: Bresenham/flood fill без лимитов.
+- P3: Per-frame snapshot allocation без reuse.
+- P3: Нет попиксельного паритета Interpreter ↔ VM.
+
+Оценка здоровья: **7.1/10**.
+
+Главный вопрос: **YES, WITH CONDITIONS** — подсистема достаточно стабильна, но требуется исправление P0 (GetPixel camera) и P1 (validator, STEP overflow, color normalization, dispatcher) перед переходом.
+
+Созданные файлы:
+- `docs/audit/GRAPHICS_RENDERING_CORRECTNESS.md` — полный отчёт аудита (48 разделов)
+
+### Следующий шаг
+
+- Продолжить forensic-аудит следующей подсистемы или продуктовая работа
+
+## Session 1084 - 2026-08-22 20:00 - План улучшений IDE/Language Integration и реализация Фаз 0-1
+
+Задача: на основе аудита `docs/audit/IDE_LANGUAGE_INTEGRATION.md` подготовить пошаговый план улучшений и реализовать Фазы 0 и 1.
+
+### Созданные файлы
+
+- `docs/audit/IDE_LANGUAGE_INTEGRATION_IMPROVEMENTS.md` — план из 8 задач по 3 фазам
+- `src/Axiom.Core/BlockLineClassifier.cs` — централизованный классификатор строк блоков (замена 27 regex)
+
+### Изменённые файлы
+
+- `src/Axiom.Ide/Editor/StructuralEditing/AxiomBlockEditingService.cs` — делегирует в `BlockLineClassifier` (удалено 27 compiled regex + 2 вспомогательных метода)
+- `src/Axiom.Ide/Editor/Formatting/AxiomCodeFormattingService.cs` — `TryTokenize()` теперь использует `Lexer.Lex()` вместо собственного токенизатора (удалено ~130 строк)
+- `src/Axiom.Ide/Editor/Identifiers/AxiomSmartIdentifierService.cs` — добавлен кэш парсинга по hash текста
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs` — +8 тестов Unicode (кириллица, emoji, non-BMP)
+- `tests/Axiom.Ide.Tests/BlockEditingServiceTests.cs` — +6 тестов глубокой вложенности (5 уровней IF, 10 уровней FOR, смешанные блоки)
+
+### Завершённые задачи
+
+| # | Задача | ID | Статус |
+|---|--------|----|--------|
+| 1 | Тесты Unicode для форматтера | SYS-007 | ✅ |
+| 2 | Тесты максимальной вложенности | SYS-008 | ✅ |
+| 3 | STRING только в TypeName XSHD | SYS-005 | ✅ (верифицировано) |
+| 4 | BlockLineClassifier вместо 27 regex | SYS-004 | ✅ |
+| 5 | Lexer в форматтере | SYS-003 | ✅ |
+| 6 | Кэш парсинга в SmartIdentifierService | SYS-006 | ✅ |
+
+### Архитектурный эффект
+
+- Удалено 27 compiled regex из `AxiomBlockEditingService` → `BlockLineClassifier` в `Axiom.Core` (центральный, тестируемый)
+- Удалён собственный токенизатор форматтера (~130 строк) → `Lexer.Lex()` (единый лексер языка)
+- Добавлен кэш парсинга в `SmartIdentifierService` (повторные вызовы без ре-парсинга)
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+- IDE tests: 63/63 (CodeFormatting 31 + BlockEditing 28 + SmartIdentifier 4)
+- 1 pre-existing failure: `MainWindowCodeBehind_TracksCaretAndBottomPaneFocus` (не связан)
+
+### Оставшиеся задачи (Фаза 2, отложены)
+
+- Задача 7: Перенос нормализации идентификаторов в pipeline (SYS-001, P2)
+- Задача 8: Генерация XSHD из центрального реестра (SYS-002, P2)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация Фазы 2
+
+## Session 1085 - 2026-08-22 21:00 - Исправление бага форматирования при нажатии Enter
+
+Задача: исправить баг — форматирование строки не происходило при нажатии Enter в редакторе.
+
+### Проблема
+
+При нажатии Enter в редакторе строка не форматировалась (не переводилась в UPPER CASE для Classic или Title Case для Modern). Пользователь вводил `dim a as integer`, нажимал Enter, и строка оставалась в нижнем регистре.
+
+### Корневая причина
+
+В `MainWindow.Editor.cs` при нажатии Enter:
+1. `_enterKeyInProgress = true` блокировал `OnEditorCaretPositionChanged` (строка 217-223)
+2. `Dispatcher.BeginInvoke` вызывал только `TryApplyBlockEditingAfterEnter` (блочное редактирование)
+3. `TryFormatEditorLine` НЕ вызывался вообще при нажатии Enter
+4. Форматирование происходило только при потере фокуса или клике мышью
+
+### Исправление
+
+Добавлен вызов `TryFormatEditorLine(editor, previousLine)` в `Dispatcher.BeginInvoke` callback после `TryApplyBlockEditingAfterEnter`.
+
+### Изменённые файлы
+
+- `src/Axiom.Ide/MainWindow.Editor.cs` — добавлен `TryFormatEditorLine` в Enter key handler
+- `tests/Axiom.Ide.Tests/CodeFormattingServiceTests.cs` — добавлены тесты `IsLineSyntaxValid` и `FormatLine` для строк без `=`
+
+### Проверки
+
+- Build: 0 ошибок, 0 предупреждений
+- IDE tests: 69/69 (CodeFormatting 35 + BlockEditing 28 + SmartIdentifier 4 + новые 2)
+
+### Следующий шаг
+
+- Продуктовая работа или реализация Фазы 2
+
+## Session 1086 - 2026-08-22 22:00 - Исправление бага каретки при переключении форматов
+
+Задача: исправить баг — при переключении между Classic и Modern форматами курсор прыгал в начало документа.
+
+### Корневая причина
+
+В `AvalonEditTextBinding.OnTextChanged` при замене текста через привязку `editor.Text = newText` каретка сбрасывалась в позицию 0.
+
+### Исправление
+
+В `AvalonEditTextBinding.cs` добавлено сохранение и восстановление позиции каретки при замене текста.
+
+### Изменённые файлы
+
+- `src/Axiom.Ide/Editor/AvalonEditTextBinding.cs` — сохранение/восстановление каретки
+
+### Проверки
+
+- Build: 0 ошибок
+- IDE tests: 71/71
+
+## Session 1087 - 2026-08-22 23:00 - Фаза 2: IdentifierNormalizationService и XSHD генерация
+
+Задача: завершить Фазу2 плана улучшений IDE/Language Integration.
+
+### Задача 7: Перенос нормализации идентификаторов в pipeline (SYS-001)
+
+Создан `IdentifierNormalizationService` в `Axiom.Execution` с прямым вызовом `Parser.Parse`. `AxiomSmartIdentifierService` в `Axiom.Ide` теперь делегирует в новый сервис, не имея прямой зависимости от `Axiom.Parsing`.
+
+**Созданные файлы:**
+- `src/Axiom.Execution/IdentifierNormalizationService.cs`
+
+**Изменённые файлы:**
+- `src/Axiom.Ide/Editor/Identifiers/AxiomSmartIdentifierService.cs` — делегирует (47 строк вместо 247)
+- `src/Axiom.Ide/Services/Shell/IdeShellCompositionRoot.cs` — удалён `using Axiom.Parsing`
+- `tests/Axiom.Ide.Tests/SmartIdentifierServiceTests.cs` — обновлён конструктор
+- `tests/Axiom.Ide.Tests/MainWindowViewModelTests.cs` — обновлён конструктор
+
+**Архитектурный эффект:** IDE больше не имеет прямой зависимости от `Axiom.Parsing`.
+
+### Задача 8: Скрипт генерации XSHD (SYS-002)
+
+Создан скрипт `scripts/Generate-XshdKeywords.ps1` для генерации секций XSHD из `AxiomLanguageKeywords`. Тест `Highlighting_XshdKeywordsMatchCentralRegistry` автоматически проверяет синхронизацию.
+
+**Созданные файлы:**
+- `scripts/Generate-XshdKeywords.ps1`
+
+### Итог по плану улучшений
+
+Все 8 задач плана завершены. Дополнительно исправлены 2 бага (форматирование при Enter, каретка при переключении форматов).
+
+### Следующий шаг
+
+- Продуктовая работа

@@ -541,3 +541,66 @@
   - SYS-002 [P4]: LEN behavior для non-BMP Unicode не документировано
 - Предыдущие дефекты (STRING-001, STRING-002) уже исправлены.
 - Следующий шаг: продуктовая работа.
+
+### 2026-08-21 - Forensic-аудит MODULES / NAMESPACES / PROGRAM STRUCTURE завершён
+
+- Проведён полный forensic-аудит программной модели (48 раздела).
+- Создан `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md`.
+- **Axiom — строго однофайловый язык.** Программа = один `.axm` файл.
+- Нет модулей, namespaces, imports, visibility modifiers, project file format.
+- Все P2/P3 findings — feature gaps, не баги.
+- Health Score: **8.6/10**. Главный вопрос: **YES, WITH CONDITIONS**.
+- Найденные проблемы:
+  - SYS-001 [P3]: `InvokeTypeInvariant` не проверяет `MaxCallDepth` (edge-case дефект)
+  - SYS-002 [P3]: Нет runtime-проверки `HasExitDo` на верхнем уровне (edge-case дефект)
+  - SYS-003..007 [P2/P3]: Feature gaps (multi-file, project format, import/module, visibility, namespace)
+  - SYS-008..013 [P3/P4]: Пробелы в тестах и документации
+- Условия вердикта: закрыть SYS-001 и SYS-002 отдельной задачей.
+- Система стабильна для перехода к следующей подсистеме.
+- Следующий шаг: продуктовая работа.
+
+### 2026-08-22 - Forensic-аудит DATA / READ / RESTORE завершён
+
+- Проведён полный forensic-аудит проектирования подсистемы DATA / READ / RESTORE (48 раздела).
+- Создан `docs/audit/DATA_READ_RESTORE.md`.
+- Подсистема **полностью отсутствует** на всех уровнях: нет ключевых слов, нет синтаксических узлов, нет bound nodes, нет опкодов, нет runtime-компонентов, нет тестов, нет samples, нет документации.
+- Health Score: **0/10** (не применимо — подсистема не существует).
+- Оценка готовности к реализации: **8/10** — существующая архитектура полностью подходит.
+- 5 features: DATA, READ, RESTORE, метки DATA, указатель чтения — все NOT_IMPLEMENTED.
+- Предложен Recovery Roadmap из 8 этапов (проектирование → lexer/parser → binder → runtime → interpreter → bytecode/VM → IDE → samples/manual).
+- Предложены 6 новых диагностических кодов (MB1040-MB1042, MB2040-MB2042, MB3012-MB3013).
+- Главный вопрос: **NO** — подсистема полностью отсутствует.
+- Следующий шаг: продуктовая работа или реализация DATA/READ/RESTORE по Recovery Roadmap.
+
+### 2026-08-22 - Forensic-аудит GRAPHICS RENDERING CORRECTNESS завершён
+
+- Проведён полный forensic-аудит подсистемы графического рендеринга (48 разделов).
+- Создан `docs/audit/GRAPHICS_RENDERING_CORRECTNESS.md`.
+- Подсистема **реализована полностью**: 188+ файлов, 34 опкода, 80+ samples, 2 режима (SCREEN + CANVAS).
+- Health Score: **7.1/10**.
+- Обнаружена 1 критическая проблема (P0): GetPixel в CANVAS не применяет камеру.
+- Обнаружено 4 существенных проблемы (P1): LINE-валидатор, 4 нормализации цвета, STEP overflow, dispatcher bypass.
+- Обнаружено 5 проблем P2 и 8 проблем P3.
+- Все 6 engine-compare benchmarks показывают ≤1.000x (VM не медленнее interpreter).
+- Главный вопрос: **YES, WITH CONDITIONS** — требуется исправление P0 и P1.
+- Recovery Roadmap: 8 этапов (диагностика → корректность → семантика → архитектура → производительность → тесты → документация → подготовка).
+- Следующий шаг: исправление P0/P1 проблем или продолжение аудита других подсистем.
+
+### 2026-08-22 - План улучшений IDE/Language Integration: Фазы 0-1 завершены
+
+- На основе аудита `docs/audit/IDE_LANGUAGE_INTEGRATION.md` создан пошаговый план `docs/audit/IDE_LANGUAGE_INTEGRATION_IMPROVEMENTS.md` (8 задач, 3 фазы).
+- **Фаза 0 (P4/P3):** 3 задачи завершены — тесты Unicode форматтера, тесты глубокой вложенности блочного редактирования, верификация STRING в XSHD.
+- **Фаза 1 (P3):** 3 задачи завершены — `BlockLineClassifier` в `Axiom.Core` (замена 27 regex), `Lexer.Lex()` в форматтере (замена собственного токенизатора), кэш парсинга в `SmartIdentifierService`.
+- Архитектурный эффект: удалено ~260 строк дублированной логики, централизованы классификатор и токенизатор.
+- **Фаза 2 (P2):** 2 задачи отложены — перенос нормализации идентификаторов в pipeline, генерация XSHD из центрального реестра.
+- Тесты: 63/63 IDE pass (31 formatting + 28 block editing + 4 smart identifier).
+- Следующий шаг: продуктовая работа или реализация Фазы 2.
+
+### 2026-08-22 - План улучшений IDE/Language Integration: все фазы завершены
+
+- **Фаза 2 (P2):** 2 задачи завершены — `IdentifierNormalizationService` в `Axiom.Execution` (удалена прямая зависимость IDE от `Axiom.Parsing`), скрипт генерации XSHD из центрального реестра.
+- Дополнительно исправлены 2 бага: форматирование при нажатии Enter, каретка при переключении форматов.
+- **Все 8 задач плана улучшений IDE/Language Integration завершены.**
+- Архитектурный эффект: удалено ~260 строк дублированной логики, `AxiomSmartIdentifierService` сокращён с 247 до 47 строк, IDE потеряла прямую зависимость от `Axiom.Parsing`.
+- Тесты: 71/71 IDE pass.
+- Следующий шаг: продуктовая работа.
