@@ -402,4 +402,44 @@ public sealed class CodeFormattingServiceTests
         Assert.Equal(result1, result2);
         Assert.Equal(result2, result3);
     }
+
+    [Fact]
+    public void FormatLine_Classic_FormatsBuiltInInsideInterpolation()
+    {
+        var result = _service.FormatLine("print $\"Длина = {len(s)}\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"Длина = {LEN(s)}\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Modern_FormatsBuiltInInsideInterpolation()
+    {
+        var result = _service.FormatLine("print $\"Длина = {len(s)}\"", CodeFormattingStyle.Modern);
+
+        Assert.Equal("Print $\"Длина = {Len(s)}\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_FormatsKeywordsInsideInterpolation()
+    {
+        var result = _service.FormatLine("print $\"{a mod 2}\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"{a MOD 2}\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_FormatsMultipleExpressionsInInterpolation()
+    {
+        var result = _service.FormatLine("print $\"{len(a)} + {len(b)}\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"{LEN(a)} + {LEN(b)}\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesTextPartsAndFormatsExpressions()
+    {
+        var result = _service.FormatLine("print $\"Длина строки = {len(stroka)} символов\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"Длина строки = {LEN(stroka)} символов\"", result);
+    }
 }
