@@ -365,4 +365,41 @@ public sealed class CodeFormattingServiceTests
     {
         Assert.True(_service.IsLineSyntaxValid("dim a as integer=1"));
     }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesInterpolatedString()
+    {
+        var result = _service.FormatLine("print $\"Привет, {name}!\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"Привет, {name}!\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Modern_PreservesInterpolatedString()
+    {
+        var result = _service.FormatLine("print $\"Привет, {name}!\"", CodeFormattingStyle.Modern);
+
+        Assert.Equal("Print $\"Привет, {name}!\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesInterpolatedStringWithExpressions()
+    {
+        var result = _service.FormatLine("print $\"{a} + {b} = {a + b}\"", CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"{a} + {b} = {a + b}\"", result);
+    }
+
+    [Fact]
+    public void FormatLine_Classic_PreservesInterpolatedStringRepeatedFormatting()
+    {
+        var line = "print $\"Привет, {name}!\"";
+        var result1 = _service.FormatLine(line, CodeFormattingStyle.Classic);
+        var result2 = _service.FormatLine(result1, CodeFormattingStyle.Classic);
+        var result3 = _service.FormatLine(result2, CodeFormattingStyle.Classic);
+
+        Assert.Equal("PRINT $\"Привет, {name}!\"", result1);
+        Assert.Equal(result1, result2);
+        Assert.Equal(result2, result3);
+    }
 }

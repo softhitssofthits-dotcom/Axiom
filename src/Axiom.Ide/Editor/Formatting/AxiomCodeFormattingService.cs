@@ -456,6 +456,9 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
             return false;
         }
 
+        var insideInterpolation = false;
+        var interpolationStartOffset = -1;
+
         foreach (var token in lexerTokens)
         {
             if (token.Kind is TokenKind.EndOfFileToken or TokenKind.NewLineToken or TokenKind.CommentToken)
@@ -466,6 +469,27 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
             if (token.Kind == TokenKind.BadToken)
             {
                 return false;
+            }
+
+            if (token.Kind == TokenKind.InterpolatedStringStartToken)
+            {
+                insideInterpolation = true;
+                interpolationStartOffset = token.Span.Start;
+                continue;
+            }
+
+            if (insideInterpolation)
+            {
+                if (token.Kind == TokenKind.InterpolatedStringEndToken)
+                {
+                    var endOffset = token.Span.End;
+                    var interpolatedText = text[interpolationStartOffset..endOffset];
+                    tokens.Add(new RawToken(interpolatedText, RawTokenKind.String));
+                    insideInterpolation = false;
+                    continue;
+                }
+
+                continue;
             }
 
             var rawKind = MapTokenKind(token.Kind);
@@ -542,15 +566,6 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
         if (kind is TokenKind.LessLessToken or TokenKind.GreaterGreaterToken)
         {
             return RawTokenKind.Operator;
-        }
-
-        if (kind is TokenKind.InterpolatedStringStartToken or
-            TokenKind.InterpolatedStringTextToken or
-            TokenKind.InterpolatedStringExpressionStartToken or
-            TokenKind.InterpolatedStringExpressionEndToken or
-            TokenKind.InterpolatedStringEndToken)
-        {
-            return RawTokenKind.String;
         }
 
         return null;
