@@ -163,4 +163,85 @@ PRINT USING "! & \    \"; "Hello"; "World"; "xy"
         Assert.Contains("числов", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Execute_PrintUsingForceSignPositive()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"+###\"; 42");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["+ 42"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingForceSignNegative()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"+###\"; -7");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["-  7"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingNegativeSignOnly()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"-###\"; 5");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["   5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingDollarSign()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"$###.##\"; 12.5");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal([" $12.50"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingStarFill()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"**###.##\"; 3.14");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["****3.14"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingStarFillWithDollar()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"**$###.##\"; 7.5");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["****$7.50"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingThousandsSeparator()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"#,###.##\"; 1234.56");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1,234.56"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingNumberDoesNotFit()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"##\"; 1234");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["%1234"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_PrintUsingMultipleValues()
+    {
+        var (_, host, result) = ExecuteProgram("PRINT USING \"## = ##\"; 1; 2");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal([" 1 =  2"], host.Output);
+    }
+
 }

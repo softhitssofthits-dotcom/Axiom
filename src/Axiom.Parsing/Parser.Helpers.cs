@@ -397,6 +397,11 @@ public sealed partial class Parser
             TokenKind.WindowKeyword => SyntaxKind.WindowKeyword,
             TokenKind.WhileKeyword => SyntaxKind.WhileKeyword,
             TokenKind.XorKeyword => SyntaxKind.XorKeyword,
+            TokenKind.InterpolatedStringStartToken => SyntaxKind.InterpolatedStringStartToken,
+            TokenKind.InterpolatedStringTextToken => SyntaxKind.InterpolatedStringTextToken,
+            TokenKind.InterpolatedStringExpressionStartToken => SyntaxKind.InterpolatedStringExpressionStartToken,
+            TokenKind.InterpolatedStringExpressionEndToken => SyntaxKind.InterpolatedStringExpressionEndToken,
+            TokenKind.InterpolatedStringEndToken => SyntaxKind.InterpolatedStringEndToken,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported token kind.")
         };
     }

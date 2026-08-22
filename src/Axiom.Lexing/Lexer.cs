@@ -157,10 +157,20 @@ public sealed class Lexer
 
     private Token NextToken()
     {
+        if (_interpolatedStringStarts.Count > 0 && !_insideInterpolatedExpression)
+        {
+            return NextInterpolatedStringToken();
+        }
+
         SkipWhitespace();
 
         if (_position >= _text.Length)
         {
+            if (_interpolatedStringStarts.Count > 0)
+            {
+                ReportDiagnostic(_interpolatedStringStarts.Peek(), 0, DiagnosticCodes.UnterminatedString, "Незакрытая интерполированная строка.");
+                _interpolatedStringStarts.Pop();
+            }
             return CreateToken(TokenKind.EndOfFileToken, _position, 0);
         }
 
@@ -174,9 +184,22 @@ public sealed class Lexer
             return ReadQuoteComment();
         }
 
-        if (Current == '"')
+        if (Current == '"' )
         {
             return ReadStringLiteral();
+        }
+
+        if (Current == '$' && Peek(1) == '"')
+        {
+            return ReadInterpolatedString();
+        }
+
+        if (Current == '}' && _insideInterpolatedExpression && _interpolatedStringStarts.Count > 0)
+        {
+            _insideInterpolatedExpression = false;
+            var start = _position;
+            _position++;
+            return CreateToken(TokenKind.InterpolatedStringExpressionEndToken, start, 1);
         }
 
         if (Current == '&' && (Peek(1) == 'H' || Peek(1) == 'h'))
@@ -437,6 +460,155 @@ public sealed class Lexer
         }
 
         return CreateToken(TokenKind.StringLiteralToken, start, _position - start, content.ToString());
+    }
+
+    private Token ReadInterpolatedString()
+    {
+        var start = _position;
+        _position += 2;
+
+        _interpolatedStringStarts.Push(start);
+        return CreateToken(TokenKind.InterpolatedStringStartToken, start, _position - start);
+    }
+
+    private readonly Stack<int> _interpolatedStringStarts = new();
+    private bool _insideInterpolatedExpression;
+
+    private Token NextInterpolatedStringToken()
+    {
+        if (_position >= _text.Length)
+        {
+            ReportDiagnostic(_interpolatedStringStarts.Peek(), 0, DiagnosticCodes.UnterminatedString, "Незакрытая интерполированная строка.");
+            _interpolatedStringStarts.Pop();
+            return CreateToken(TokenKind.EndOfFileToken, _position, 0);
+        }
+
+        if (Current == '"')
+        {
+            return ReadInterpolatedStringEnd();
+        }
+
+        if (Current == '{')
+        {
+            if (Peek(1) == '{')
+            {
+                var textToken = ReadInterpolatedStringText();
+                if (textToken is not null)
+                {
+                    return textToken;
+                }
+            }
+
+            var start = _position;
+            _position++;
+            _insideInterpolatedExpression = true;
+            return CreateToken(TokenKind.InterpolatedStringExpressionStartToken, start, 1);
+        }
+
+        if (Current == '}')
+        {
+            if (Peek(1) == '}')
+            {
+                var textToken = ReadInterpolatedStringText();
+                if (textToken is not null)
+                {
+                    return textToken;
+                }
+            }
+
+            return ReadInterpolatedStringExpressionEnd();
+        }
+
+        var token = ReadInterpolatedStringText();
+        if (token is not null)
+        {
+            return token;
+        }
+
+        if (Current == '"')
+        {
+            return ReadInterpolatedStringEnd();
+        }
+
+        ReportDiagnostic(_position, 1, DiagnosticCodes.UnterminatedString, "Неожиданный символ в интерполированной строке.");
+        return CreateToken(TokenKind.BadToken, _position++, 1);
+    }
+
+    private Token ReadInterpolatedStringText()
+    {
+        var start = _position;
+        var content = new System.Text.StringBuilder();
+
+        while (_position < _text.Length)
+        {
+            if (Current == '{')
+            {
+                if (Peek(1) == '{')
+                {
+                    content.Append('{');
+                    _position += 2;
+                    continue;
+                }
+                break;
+            }
+
+            if (Current == '"')
+            {
+                break;
+            }
+
+            if (Current == '\\' && Peek(1) == '{')
+            {
+                content.Append('{');
+                _position += 2;
+                continue;
+            }
+
+            if (Current == '\\' && Peek(1) == '"')
+            {
+                content.Append('"');
+                _position += 2;
+                continue;
+            }
+
+            if (Current == '\\' && Peek(1) == '\\')
+            {
+                content.Append('\\');
+                _position += 2;
+                continue;
+            }
+
+            content.Append(Current);
+            _position++;
+        }
+
+        if (content.Length == 0)
+        {
+            return null;
+        }
+
+        return CreateToken(TokenKind.InterpolatedStringTextToken, start, _position - start, content.ToString());
+    }
+
+    private Token ReadInterpolatedStringExpressionEnd()
+    {
+        var start = _position;
+        _position++;
+        _insideInterpolatedExpression = false;
+        return CreateToken(TokenKind.InterpolatedStringExpressionEndToken, start, 1);
+    }
+
+    private Token ReadInterpolatedStringEnd()
+    {
+        var start = _position;
+        _position++;
+
+        if (_interpolatedStringStarts.Count > 0)
+        {
+            _interpolatedStringStarts.Pop();
+        }
+
+        return CreateToken(TokenKind.InterpolatedStringEndToken, start, 1);
     }
 
     private Token ReadOperatorOrBadToken()

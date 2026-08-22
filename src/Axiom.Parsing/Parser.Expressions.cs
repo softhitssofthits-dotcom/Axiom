@@ -43,6 +43,7 @@ public sealed partial class Parser
         {
             SyntaxKind.OpenParenToken => ParseParenthesizedExpression(),
             SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken or SyntaxKind.StringLiteralToken or SyntaxKind.BooleanLiteralToken => new LiteralExpressionSyntax(NextToken()),
+            SyntaxKind.InterpolatedStringStartToken => ParseInterpolatedStringExpression(),
             SyntaxKind.IdentifierToken
                 or SyntaxKind.SelfKeyword
                 or SyntaxKind.LineKeyword
@@ -64,6 +65,35 @@ public sealed partial class Parser
         var expression = ParseExpression();
         var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
         return new ParenthesizedExpressionSyntax(openParenToken, expression, closeParenToken);
+    }
+
+    private InterpolatedStringExpressionSyntax ParseInterpolatedStringExpression()
+    {
+        var startToken = Match(SyntaxKind.InterpolatedStringStartToken, "$\"");
+        var parts = new List<InterpolatedStringPartSyntax>();
+
+        while (Current.Kind is not (SyntaxKind.InterpolatedStringEndToken or SyntaxKind.EndOfFileToken))
+        {
+            if (Current.Kind == SyntaxKind.InterpolatedStringTextToken)
+            {
+                var textToken = NextToken();
+                parts.Add(new InterpolatedStringTextPartSyntax(textToken));
+            }
+            else if (Current.Kind == SyntaxKind.InterpolatedStringExpressionStartToken)
+            {
+                var openBrace = Match(SyntaxKind.InterpolatedStringExpressionStartToken, "{");
+                var expression = ParseExpression();
+                var closeBrace = Match(SyntaxKind.InterpolatedStringExpressionEndToken, "}");
+                parts.Add(new InterpolatedStringExpressionPartSyntax(openBrace, expression, closeBrace));
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        var endToken = Match(SyntaxKind.InterpolatedStringEndToken, "\"");
+        return new InterpolatedStringExpressionSyntax(startToken, parts, endToken);
     }
 
     private ExpressionSyntax ParsePostfixExpression(ExpressionSyntax target)

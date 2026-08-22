@@ -21,6 +21,7 @@ public sealed partial class Interpreter
             BoundBinaryExpression binary => EvaluateBinaryExpression(binary),
             BoundCallExpression call => EvaluateCallExpression(call),
             BoundConversionExpression conversion => EvaluateConversionExpression(conversion),
+            BoundInterpolatedStringExpression interpolated => EvaluateInterpolatedStringExpression(interpolated),
             BoundErrorExpression => ReportInvalidRuntimeState<RuntimeValue>("Невозможно вычислить expression с semantic error.", expression.Location),
             _ => ReportInvalidRuntimeState<RuntimeValue>($"Неподдерживаемый bound expression: {expression.Kind}.", expression.Location)
         };
@@ -50,6 +51,23 @@ public sealed partial class Interpreter
     private RuntimeValue EvaluateVariableExpression(BoundVariableExpression expression)
     {
         return GetVariableValue(expression.Variable);
+    }
+
+    private RuntimeValue EvaluateInterpolatedStringExpression(BoundInterpolatedStringExpression expression)
+    {
+        if (expression.Parts.Count == 0)
+        {
+            return RuntimeValue.FromString(string.Empty);
+        }
+
+        var sb = new System.Text.StringBuilder();
+        foreach (var part in expression.Parts)
+        {
+            var value = EvaluateExpression(part);
+            sb.Append(value.ToDisplayString());
+        }
+
+        return RuntimeValue.FromString(sb.ToString());
     }
 
     private RuntimeValue EvaluateArrayAccessExpression(BoundArrayAccessExpression expression)

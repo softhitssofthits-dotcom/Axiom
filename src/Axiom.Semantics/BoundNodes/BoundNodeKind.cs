@@ -77,5 +77,6 @@ public enum BoundNodeKind
     BinaryExpression,
     CallExpression,
     ConversionExpression,
-    ErrorExpression
+    ErrorExpression,
+    InterpolatedStringExpression
 }

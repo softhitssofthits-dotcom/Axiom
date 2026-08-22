@@ -133,5 +133,10 @@ public enum TokenKind
     WindowKeyword,
     LoopKeyword,
     WhileKeyword,
-    XorKeyword
+    XorKeyword,
+    InterpolatedStringStartToken,
+    InterpolatedStringTextToken,
+    InterpolatedStringExpressionStartToken,
+    InterpolatedStringExpressionEndToken,
+    InterpolatedStringEndToken
 }

@@ -2743,3 +2743,34 @@ Health Score: **8.8/10**.
 ### Следующий шаг
 
 - Продуктовая работа
+
+## Session 1088 - 2026-08-22 23:30 - INPUT/PRINT тесты и интерполяция строк $"expr"
+
+Задача: реализовать план улучшений INPUT/PRINT и добавить интерполяцию строк.
+
+### Фаза 0: Тесты INPUT/PRINT USING
+
+Добавлено 19 новых тестов:
+- INPUT: DOUBLE, BOOLEAN, BOOLEAN case-insensitive, mixed types, comma prompt, full-line string, INTEGER conversion, conversion error, field count mismatch, constant target (10 тестов)
+- PRINT USING: force sign (+/-), dollar sign, star fill, star fill + dollar, thousands separator, number doesn't fit, empty format, multiple values (9 тестов)
+
+### Фаза 2: Интерполяция строк $"expr"
+
+Полная реализация через весь pipeline: Lexer → Syntax → Parser → Binder → Lowering → Interpreter.
+
+8 тестов, 1 runnable-пример, обновлён manual (секция «Интерполяция строк» в print.html).
+
+### Исправленные баги
+
+1. Пробел между выражениями в лексере: `SkipWhitespace()` съедал пробел между `}` и `{`
+2. Форматтер ломает интерполированные строки: `MapTokenKind` не обрабатывал новые токены
+
+### Проверки
+
+- Build: 0 ошибок
+- Runtime tests: 927/928 (1 pre-existing)
+- IDE tests: 69/69
+
+### Следующий шаг
+
+- Продуктовая работа

@@ -866,4 +866,270 @@ PRINT name
         Assert.Equal(1, request.ValueCount);
     }
 
+    [Fact]
+    public void Execute_InputDoubleVariable()
+    {
+        const string text = """
+DIM value AS DOUBLE
+INPUT value
+PRINT value
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "3.14");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3.14"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InputBooleanVariable()
+    {
+        const string text = """
+DIM flag AS BOOLEAN
+INPUT flag
+PRINT flag
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "TRUE");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InputBooleanCaseInsensitive()
+    {
+        const string text = """
+DIM flag AS BOOLEAN
+INPUT flag
+PRINT flag
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "false");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["FALSE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InputMixedTypes()
+    {
+        const string text = """
+DIM name AS STRING
+DIM age AS INTEGER
+DIM score AS DOUBLE
+INPUT name, age, score
+PRINT name; " "; age; " "; score
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "Ada, 25, 98.5");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada 25 98.5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InputWithCommaPrompt()
+    {
+        const string text = """
+DIM name AS STRING
+INPUT "Name,", name
+PRINT name
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "Ada");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Ada"], host.Output);
+        var request = Assert.Single(host.InputRequests);
+        Assert.Equal("Name,", request.PromptText);
+    }
+
+    [Fact]
+    public void Execute_InputStringPreservesFullLineForSingleVariable()
+    {
+        const string text = """
+DIM msg AS STRING
+INPUT msg
+PRINT msg
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "hello, world");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["hello, world"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InputIntegerConversion()
+    {
+        const string text = """
+DIM n AS INTEGER
+INPUT n
+PRINT n + 1
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "41");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["42"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InputReportsConversionError()
+    {
+        const string text = """
+DIM n AS INTEGER
+INPUT n
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "abc");
+
+        Assert.False(result.Succeeded);
+        Assert.NotEmpty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Execute_InputReportsFieldCountMismatch()
+    {
+        const string text = """
+DIM a AS INTEGER
+DIM b AS INTEGER
+INPUT a, b
+""";
+
+        var (_, host, result) = ExecuteProgram(text, "1");
+
+        Assert.False(result.Succeeded);
+        Assert.NotEmpty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Execute_InputReportsConstantTarget()
+    {
+        const string text = """
+CONST x AS INTEGER = 5
+INPUT x
+""";
+
+        var program = Parser.Parse(text, out var parserDiagnostics);
+        var bound = Binder.Bind(program, out var binderDiagnostics);
+
+        Assert.NotEmpty(binderDiagnostics);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringBasic()
+    {
+        const string text = """
+DIM name AS STRING = "Алиса"
+PRINT $"Привет, {name}!"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => d.Message))}");
+        Assert.Equal(["Привет, Алиса!"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringMultipleExpressions()
+    {
+        const string text = """
+DIM name AS STRING = "Алиса"
+DIM age AS INTEGER = 25
+PRINT $"{name} {age}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Алиса 25"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringWithExpression()
+    {
+        const string text = """
+DIM a AS INTEGER = 3
+DIM b AS INTEGER = 4
+PRINT $"Сумма: {a + b}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Сумма: 7"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringEmpty()
+    {
+        const string text = """
+PRINT $""
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal([""], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringNoExpressions()
+    {
+        const string text = """
+PRINT $"Просто текст"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Просто текст"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringWithFunctionCall()
+    {
+        const string text = """
+DIM s AS STRING = "hello"
+PRINT $"Длина: {LEN(s)}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Длина: 5"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringWithBoolean()
+    {
+        const string text = """
+DIM flag AS BOOLEAN = TRUE
+PRINT $"Флаг: {flag}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Флаг: TRUE"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringNested()
+    {
+        const string text = """
+DIM name AS STRING = "Алиса"
+DIM age AS INTEGER = 25
+DIM city AS STRING = "Москва"
+PRINT $"{name}, {age} лет, {city}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Алиса, 25 лет, Москва"], host.Output);
+    }
+
 }

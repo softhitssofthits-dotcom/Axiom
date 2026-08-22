@@ -2317,4 +2317,48 @@ IF TRUE THEN
         var member = Assert.IsType<GlobalStatementSyntax>(Assert.Single(program.Members));
         return Assert.IsType<TStatement>(member.Statement);
     }
+
+    [Fact]
+    public void Debug_InterpolatedStringTokens()
+    {
+        var tokens = Axiom.Lexing.Lexer.Lex("$\"Hello, {name}!\"", out var diagnostics);
+
+        var tokenList = tokens.ToList();
+        Assert.Empty(diagnostics);
+
+        var kinds = tokenList.Select(t => $"{t.Kind}:{t.Text}").ToList();
+        Assert.True(tokenList.Count > 0, $"No tokens. Kinds: {string.Join(", ", kinds)}");
+    }
+
+    [Fact]
+    public void Parse_InterpolatedStringExpression()
+    {
+        var program = Parser.Parse("PRINT $\"Hello, {name}!\"", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var print = AssertGlobalStatement<PrintStatementSyntax>(program);
+        Assert.Single(print.Items);
+    }
+
+    [Fact]
+    public void Parse_InterpolatedStringWithOperator()
+    {
+        var program = Parser.Parse("PRINT $\"{a + b}\"", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var print = AssertGlobalStatement<PrintStatementSyntax>(program);
+        Assert.Single(print.Items);
+    }
+
+    [Fact]
+    public void Debug_InterpolatedStringMultipleTokens()
+    {
+        var tokens = Axiom.Lexing.Lexer.Lex("$\"{name} {age}\"", out var diagnostics);
+
+        var tokenList = tokens.ToList();
+        Assert.Empty(diagnostics);
+
+        var kinds = tokenList.Select(t => $"{t.Kind}:{t.Text}").ToList();
+        Assert.True(false, $"Tokens: {string.Join(", ", kinds)}");
+    }
 }

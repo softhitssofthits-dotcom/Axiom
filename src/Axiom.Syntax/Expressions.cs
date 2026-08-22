@@ -201,3 +201,66 @@ public sealed class ErrorExpressionSyntax : ExpressionSyntax
 
     public SyntaxToken Token { get; }
 }
+
+public abstract class InterpolatedStringPartSyntax : SyntaxNode
+{
+}
+
+public sealed class InterpolatedStringTextPartSyntax : InterpolatedStringPartSyntax
+{
+    public InterpolatedStringTextPartSyntax(SyntaxToken textToken)
+    {
+        ArgumentNullException.ThrowIfNull(textToken);
+        TextToken = textToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.InterpolatedStringTextPart;
+
+    public SyntaxToken TextToken { get; }
+}
+
+public sealed class InterpolatedStringExpressionPartSyntax : InterpolatedStringPartSyntax
+{
+    public InterpolatedStringExpressionPartSyntax(
+        SyntaxToken openBraceToken,
+        ExpressionSyntax expression,
+        SyntaxToken closeBraceToken)
+    {
+        ArgumentNullException.ThrowIfNull(openBraceToken);
+        ArgumentNullException.ThrowIfNull(expression);
+        ArgumentNullException.ThrowIfNull(closeBraceToken);
+
+        OpenBraceToken = openBraceToken;
+        Expression = expression;
+        CloseBraceToken = closeBraceToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.InterpolatedStringExpressionPart;
+
+    public SyntaxToken OpenBraceToken { get; }
+    public ExpressionSyntax Expression { get; }
+    public SyntaxToken CloseBraceToken { get; }
+}
+
+public sealed class InterpolatedStringExpressionSyntax : ExpressionSyntax
+{
+    public InterpolatedStringExpressionSyntax(
+        SyntaxToken startToken,
+        IReadOnlyList<InterpolatedStringPartSyntax> parts,
+        SyntaxToken endToken)
+    {
+        ArgumentNullException.ThrowIfNull(startToken);
+        ArgumentNullException.ThrowIfNull(parts);
+        ArgumentNullException.ThrowIfNull(endToken);
+
+        StartToken = startToken;
+        Parts = parts;
+        EndToken = endToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.InterpolatedStringExpression;
+
+    public SyntaxToken StartToken { get; }
+    public IReadOnlyList<InterpolatedStringPartSyntax> Parts { get; }
+    public SyntaxToken EndToken { get; }
+}

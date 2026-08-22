@@ -544,6 +544,15 @@ public sealed class AxiomCodeFormattingService : ICodeFormattingService
             return RawTokenKind.Operator;
         }
 
+        if (kind is TokenKind.InterpolatedStringStartToken or
+            TokenKind.InterpolatedStringTextToken or
+            TokenKind.InterpolatedStringExpressionStartToken or
+            TokenKind.InterpolatedStringExpressionEndToken or
+            TokenKind.InterpolatedStringEndToken)
+        {
+            return RawTokenKind.String;
+        }
+
         return null;
     }
 

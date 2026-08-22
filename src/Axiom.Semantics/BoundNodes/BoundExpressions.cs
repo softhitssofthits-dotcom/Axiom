@@ -260,3 +260,17 @@ public sealed class BoundErrorExpression : BoundExpression
 
     public override BoundNodeKind Kind => BoundNodeKind.ErrorExpression;
 }
+
+public sealed class BoundInterpolatedStringExpression : BoundExpression
+{
+    public BoundInterpolatedStringExpression(TextLocation location, IReadOnlyList<BoundExpression> parts)
+        : base(location, TypeSymbol.String)
+    {
+        ArgumentNullException.ThrowIfNull(parts);
+        Parts = parts;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.InterpolatedStringExpression;
+
+    public IReadOnlyList<BoundExpression> Parts { get; }
+}

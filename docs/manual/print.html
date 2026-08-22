@@ -124,6 +124,31 @@ Flag: X</code></pre>
         </section>
 
         <section class="article-section">
+            <h2>Интерполяция строк</h2>
+            <p>Вместо конкатенации через <code>&amp;</code> можно использовать интерполяцию строк. Интерполяция позволяет вставлять значения выражений прямо внутрь строки, заключённой в <code>$"..."</code>.</p>
+            <pre><code class="language-basic">DIM name AS STRING = "Алиса"
+DIM age AS INTEGER = 25
+PRINT $"Привет, {name}! Тебе {age} лет."</code></pre>
+            <p>Результат:</p>
+            <pre><code>Привет, Алиса! Тебе 25 лет.</code></pre>
+            <p>Внутри фигурных скобок <code>{}</code> допускаются любые выражения: переменные, арифметика, вызовы функций. Значения автоматически преобразуются в строку.</p>
+            <pre><code class="language-basic">DIM a AS INTEGER = 3
+DIM b AS INTEGER = 4
+PRINT $"Сумма: {a + b}, Произведение: {a * b}"
+PRINT $"Длина слова: {LEN("Привет")}"</code></pre>
+            <p>Результат:</p>
+            <pre><code>Сумма: 7, Произведение: 12
+Длина слова: 6</code></pre>
+            <p>Преимущества интерполяции перед конкатенацией:</p>
+            <ul>
+                <li>один знак <code>$</code> в начале строки — не нужно писать <code>&amp;</code> между каждой частью;</li>
+                <li>строка читается как готовый текст, а не как цепочка склеек;</li>
+                <li>выражения внутри <code>{}</code> вычисляются автоматически.</li>
+            </ul>
+            <p>Для вставки литеральной фигурной скобки используйте двойные скобки: <code>{{</code> и <code>}}</code>.</p>
+        </section>
+
+        <section class="article-section">
             <h2>Ручная проверка</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>PRINT</code>.</p>
             <ul class="resource-list">
@@ -133,6 +158,7 @@ Flag: X</code></pre>
                 <li><a href="../../samples/operators/print/separator_comma.axm">PRINT: разделитель ,</a></li>
                 <li><a href="../../samples/operators/print/mixed_list.axm">PRINT: смешанный список вывода</a></li>
                 <li><a href="../../samples/operators/print/using_basic.axm">PRINT USING: базовые маски</a></li>
+                <li><a href="../../samples/expressions/interpolation_basic.axm">Интерполяция строк: базовый пример</a></li>
             </ul>
         </section>
 

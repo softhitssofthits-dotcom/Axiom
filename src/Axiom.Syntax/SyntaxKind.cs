@@ -235,5 +235,13 @@ public enum SyntaxKind
     NamedArgumentExpression,
     CallExpression,
     FieldAccessExpression,
-    ErrorExpression
+    ErrorExpression,
+    InterpolatedStringExpression,
+    InterpolatedStringTextPart,
+    InterpolatedStringExpressionPart,
+    InterpolatedStringStartToken,
+    InterpolatedStringTextToken,
+    InterpolatedStringExpressionStartToken,
+    InterpolatedStringExpressionEndToken,
+    InterpolatedStringEndToken
 }

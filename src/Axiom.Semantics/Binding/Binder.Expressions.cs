@@ -19,6 +19,7 @@ public sealed partial class Binder
             NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
+            InterpolatedStringExpressionSyntax interpolatedExpression => BindInterpolatedStringExpression(interpolatedExpression),
             ErrorExpressionSyntax errorExpression => new BoundErrorExpression(errorExpression.Token.Location),
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")
         };
@@ -60,6 +61,28 @@ public sealed partial class Binder
         };
 
         return new BoundLiteralExpression(expression.LiteralToken.Location, expression.LiteralToken.Value, type);
+    }
+
+    private BoundExpression BindInterpolatedStringExpression(InterpolatedStringExpressionSyntax expression)
+    {
+        var parts = new List<BoundExpression>();
+
+        foreach (var part in expression.Parts)
+        {
+            switch (part)
+            {
+                case InterpolatedStringTextPartSyntax textPart:
+                    parts.Add(new BoundLiteralExpression(textPart.TextToken.Location, textPart.TextToken.Text, TypeSymbol.String));
+                    break;
+
+                case InterpolatedStringExpressionPartSyntax exprPart:
+                    var boundExpr = BindExpression(exprPart.Expression);
+                    parts.Add(boundExpr);
+                    break;
+            }
+        }
+
+        return new BoundInterpolatedStringExpression(expression.StartToken.Location, parts);
     }
 
     private BoundExpression BindNameExpression(NameExpressionSyntax expression)

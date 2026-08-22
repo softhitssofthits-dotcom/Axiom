@@ -1655,9 +1655,30 @@ public sealed class BoundProgramLowerer
                 LowerCall(call, instructions);
                 break;
 
+            case BoundInterpolatedStringExpression interpolated:
+                LowerInterpolatedString(interpolated, instructions);
+                break;
+
             default:
                 ReportUnsupported(expression, "выражение");
                 break;
+        }
+    }
+
+    private void LowerInterpolatedString(BoundInterpolatedStringExpression interpolated, List<LoweredInstruction> instructions)
+    {
+        if (interpolated.Parts.Count == 0)
+        {
+            instructions.Add(LoweredInstruction.LoadLiteral(interpolated.Location, string.Empty, TypeSymbol.String));
+            return;
+        }
+
+        LowerExpression(interpolated.Parts[0], instructions);
+
+        for (var index = 1; index < interpolated.Parts.Count; index++)
+        {
+            LowerExpression(interpolated.Parts[index], instructions);
+            instructions.Add(LoweredInstruction.BinaryOperation(interpolated.Location, SyntaxKind.AmpersandToken));
         }
     }
 
