@@ -490,9 +490,13 @@ public partial class MainWindow
         {
             if (preserveCaretPosition)
             {
-                var caretOffset = editor.TextArea.Caret.Offset;
+                var caretLine = editor.TextArea.Caret.Line;
                 editor.Document.Replace(line, formattedText);
-                editor.TextArea.Caret.Offset = caretOffset;
+                if (caretLine <= editor.Document.LineCount)
+                {
+                    var restoredLine = editor.Document.GetLineByNumber(caretLine);
+                    editor.TextArea.Caret.Offset = restoredLine.Offset;
+                }
             }
             else
             {
