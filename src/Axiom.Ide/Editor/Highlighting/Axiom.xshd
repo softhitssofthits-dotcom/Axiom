@@ -17,10 +17,95 @@
            foreground="#795E26" />
     <Color name="Operator"
            foreground="#000000" />
+    <Color name="Interpolation"
+           foreground="#800080" />
 
     <RuleSet ignoreCase="true">
         <Rule color="Comment">'[^\r\n]*</Rule>
         <Rule color="Comment">\bREM\b[^\r\n]*</Rule>
+
+        <Span color="String" begin="\$&quot;" end="&quot;">
+            <RuleSet>
+                <Span color="Interpolation" begin="\{" end="\}">
+                    <RuleSet>
+                        <Rule color="Comment">'[^\r\n]*</Rule>
+                        <Rule color="Comment">\bREM\b[^\r\n]*</Rule>
+                        <Rule color="String">&quot;(&quot;&quot;|[^&quot;\r\n])*&quot;?</Rule>
+                        <Rule color="Number">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>
+                        <Rule color="Operator">&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;=|&gt;=|:=|[-+*/\\^=&lt;&gt;&amp;]</Rule>
+                        <Keywords color="Keyword">
+                            <Word>AND</Word><Word>APPEND</Word><Word>AS</Word><Word>BYREF</Word><Word>BYVAL</Word>
+                            <Word>BEGINFRAME</Word><Word>CAMERA</Word><Word>CANVAS</Word><Word>CASE</Word><Word>CATCH</Word>
+                            <Word>CIRCLE</Word><Word>CLOSE</Word><Word>CLS</Word><Word>COLOR</Word><Word>CONST</Word><Word>CONTINUE</Word>
+                            <Word>DIM</Word><Word>DO</Word><Word>DRAW</Word><Word>DRAWCIRCLE</Word><Word>DRAWIMAGE</Word>
+                            <Word>DRAWLINE</Word><Word>DRAWRECT</Word><Word>DRAWSPRITE</Word><Word>DRAWTILE</Word><Word>DRAWTILELAYER</Word>
+                            <Word>DRAWTILEMAP</Word><Word>DRAWTEXT</Word><Word>ELSE</Word><Word>ELSEIF</Word><Word>END</Word>
+                            <Word>ERROR</Word><Word>EQV</Word><Word>ERASE</Word><Word>EXIT</Word><Word>FALSE</Word><Word>TRUE</Word>
+                            <Word>FILLCIRCLE</Word><Word>FILLRECT</Word><Word>FINALLY</Word><Word>FOR</Word><Word>FUNCTION</Word>
+                            <Word>GET</Word><Word>IF</Word><Word>IMP</Word><Word>INPUT</Word><Word>IS</Word><Word>KEY</Word>
+                            <Word>LINE</Word><Word>LOCATE</Word><Word>LOOP</Word><Word>MOD</Word><Word>MOUSE</Word>
+                            <Word>NEXT</Word><Word>NOT</Word><Word>OFF</Word><Word>ON</Word><Word>OPEN</Word><Word>OR</Word><Word>OUTPUT</Word>
+                            <Word>PAINT</Word><Word>PALETTE</Word><Word>PCOPY</Word><Word>PRESERVE</Word><Word>PRESENT</Word><Word>PRESET</Word>
+                            <Word>PRINT</Word><Word>PSET</Word><Word>PUT</Word><Word>REDIM</Word><Word>RESETCAMERA</Word><Word>RETURN</Word>
+                            <Word>SCREEN</Word><Word>SELECT</Word><Word>SELF</Word><Word>SETMAPTILE</Word><Word>SLEEP</Word>
+                            <Word>STEP</Word><Word>STOP</Word><Word>SUB</Word><Word>THEN</Word><Word>TO</Word>
+                            <Word>TRANSPARENT</Word><Word>TRY</Word><Word>TYPE</Word><Word>UNTIL</Word><Word>USING</Word>
+                            <Word>VIEW</Word><Word>VIEWPORT</Word><Word>WHILE</Word><Word>WINDOW</Word><Word>XOR</Word>
+                        </Keywords>
+                        <Keywords color="TypeName">
+                            <Word>BOOLEAN</Word><Word>DECIMAL</Word><Word>DOUBLE</Word><Word>FILE</Word><Word>IMAGE</Word>
+                            <Word>INTEGER</Word><Word>LONG</Word><Word>SPRITE</Word><Word>STRING</Word><Word>TILEMAP</Word><Word>TILESET</Word>
+                        </Keywords>
+                        <Keywords color="BuiltIn">
+                            <Word>ABS</Word><Word>ACOS</Word><Word>ACOSH</Word><Word>APPENDFILE</Word><Word>ASC</Word><Word>ASCW</Word>
+                            <Word>ARRAYCLONE</Word><Word>ARRAYCONCAT</Word><Word>ARRAYCONTAINS</Word><Word>ARRAYCOUNT</Word>
+                            <Word>ARRAYBINARYSEARCH</Word><Word>ARRAYFILL</Word><Word>ARRAYFINDALL</Word><Word>ARRAYINDEXOF</Word>
+                            <Word>ARRAYISALLOCATED</Word><Word>ARRAYINSERT</Word><Word>ARRAYLASTINDEXOF</Word><Word>ARRAYBOUNDS</Word>
+                            <Word>ARRAYLENGTH</Word><Word>ARRAYRANK</Word><Word>ARRAYREMOVE</Word><Word>ARRAYREVERSE</Word>
+                            <Word>ARRAYREVERSEALL</Word><Word>ARRAYSLICE</Word><Word>ARRAYSORT</Word><Word>ARRAYSPLICE</Word>
+                            <Word>ARRAYSWAP</Word><Word>ARRAYUNSHIFT</Word><Word>ARRAYDISTINCT</Word><Word>ARRAYFLATTEN</Word>
+                            <Word>ARRAYGROUP</Word><Word>ARRAYMAP</Word><Word>ARRAYREDUCE</Word><Word>ARRAYFILTER</Word>
+                            <Word>ASIN</Word><Word>ASINH</Word><Word>ATAN</Word><Word>ATAN2</Word><Word>ATANH</Word>
+                            <Word>CHR</Word><Word>CHRW</Word><Word>CLAMP</Word><Word>CLOSEFILE</Word><Word>CONTAINS</Word>
+                            <Word>COPYFILE</Word><Word>COS</Word><Word>COSH</Word><Word>CURRENTDIR</Word>
+                            <Word>DATE</Word><Word>DATEADD</Word><Word>DATEDIFF</Word><Word>DATEPART</Word><Word>DATESERIAL</Word><Word>DATEVALUE</Word>
+                            <Word>DAY</Word><Word>DELETEFILE</Word><Word>DELETEDIR</Word><Word>ENDSWITH</Word><Word>EOF</Word>
+                            <Word>EXP</Word><Word>EXISTSFILE</Word><Word>EXISTSDIR</Word><Word>EXTRACT</Word><Word>EXTRACTALL</Word>
+                            <Word>FLOOR</Word><Word>FORMAT</Word><Word>HEX</Word><Word>HOUR</Word>
+                            <Word>INPUTFILE</Word><Word>INSTR</Word><Word>INSTRREV</Word><Word>INT</Word><Word>ISARRAY</Word>
+                            <Word>ISBOOLEAN</Word><Word>ISDATE</Word><Word>ISEMPTY</Word><Word>ISINTEGER</Word><Word>ISLONG</Word>
+                            <Word>ISDOUBLE</Word><Word>ISDECIMAL</Word><Word>ISFILE</Word><Word>ISIMAGE</Word><Word>ISNUMERIC</Word>
+                            <Word>ISSPRITE</Word><Word>ISSTRING</Word><Word>ISTILEMAP</Word><Word>ISTILESET</Word><Word>ISTYPE</Word>
+                            <Word>JOIN</Word><Word>KEY</Word><Word>LBOUND</Word><Word>LCASE</Word><Word>LEFT</Word><Word>LEN</Word>
+                            <Word>LINEINPUT</Word><Word>LOCATE</Word><Word>LOG</Word><Word>LOG10</Word><Word>LOWER</Word>
+                            <Word>LTRIM</Word><Word>MATCH</Word><Word>MATCHES</Word><Word>MID</Word><Word>MINUTE</Word>
+                            <Word>MAX</Word><Word>MIN</Word><Word>MONTH</Word><Word>MOUSEBUTTON</Word><Word>MOUSEPRESS</Word>
+                            <Word>MOUSEX</Word><Word>MOUSEY</Word><Word>NOW</Word><Word>OCT</Word><Word>OPENFILE</Word>
+                            <Word>PADLEFT</Word><Word>PADRIGHT</Word><Word>PI</Word><Word>PRINT</Word><Word>RANDOMIZE</Word>
+                            <Word>READFILE</Word><Word>READLINE</Word><Word>READALL</Word><Word>REGEX</Word><Word>REPLACE</Word>
+                            <Word>REPLACEMANY</Word><Word>REVERSE</Word><Word>RIGHT</Word><Word>RND</Word><Word>ROUND</Word>
+                            <Word>RTRIM</Word><Word>SECOND</Word><Word>SEEKFILE</Word><Word>SIGN</Word><Word>SIN</Word><Word>SINH</Word>
+                            <Word>SORT</Word><Word>SPACE</Word><Word>SPLIT</Word><Word>SQR</Word><Word>SQRT</Word>
+                            <Word>STARTSWITH</Word><Word>STR</Word><Word>STRING</Word><Word>SUBSTR</Word><Word>SUBSTRCOUNT</Word>
+                            <Word>TAN</Word><Word>TANH</Word><Word>TIMER</Word><Word>TIME</Word><Word>TIMESERIAL</Word><Word>TIMEVALUE</Word>
+                            <Word>TRIM</Word><Word>TYPEOF</Word><Word>UBOUND</Word><Word>UCASE</Word><Word>UPPER</Word><Word>VAL</Word>
+                            <Word>WRITEFILE</Word><Word>WRITELINE</Word><Word>YEAR</Word>
+                            <Word>LOADIMAGE</Word><Word>IMAGEWIDTH</Word><Word>IMAGEHEIGHT</Word>
+                            <Word>LOADSPRITE</Word><Word>SPRITEWIDTH</Word><Word>SPRITEHEIGHT</Word><Word>SPRITECOUNT</Word>
+                            <Word>LOADTILESET</Word><Word>TILECOUNT</Word><Word>TILEWIDTH</Word><Word>TILEHEIGHT</Word>
+                            <Word>LOADTILEMAP</Word><Word>MAPWIDTH</Word><Word>MAPHEIGHT</Word><Word>MAPPIXELWIDTH</Word><Word>MAPPIXELHEIGHT</Word>
+                            <Word>MAPTILEWIDTH</Word><Word>MAPTILEHEIGHT</Word><Word>MAPLAYERCOUNT</Word><Word>MAPTILE</Word>
+                            <Word>MAPTILESET</Word><Word>MAPTILEFLAGS</Word>
+                            <Word>SCREENMODE</Word><Word>SCREENWIDTH</Word><Word>SCREENHEIGHT</Word>
+                            <Word>RGB</Word><Word>POINT</Word><Word>GETPIXEL</Word><Word>ROW</Word><Word>COLUMN</Word>
+                            <Word>CANVAS</Word><Word>ISKEYPRESSED</Word><Word>READKEY</Word>
+                            <Word>IMAGE</Word><Word>SPRITE</Word><Word>TILEMAP</Word><Word>TILESET</Word>
+                        </Keywords>
+                    </RuleSet>
+                </Span>
+            </RuleSet>
+        </Span>
+
         <Rule color="String">&quot;(&quot;&quot;|[^&quot;\r\n])*&quot;?</Rule>
         <Rule color="Number">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>
         <Rule color="Operator">&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;=|&gt;=|:=|[-+*/\\^=&lt;&gt;&amp;]</Rule>
