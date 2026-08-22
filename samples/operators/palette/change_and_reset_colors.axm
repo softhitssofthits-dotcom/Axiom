@@ -5,10 +5,10 @@ SCREEN 1
 CLS
 LINE (20, 40)-(180, 40), 1
 PRINT "default index="; POINT(20, 40)
-SLEEP
+SLEEP 500
 PALETTE 1, 196
 PRINT "changed index="; POINT(20, 40)
-SLEEP
+SLEEP 500
 PALETTE
 PRINT "reset index="; POINT(20, 40)
 PRINT "PALETTE sample finished"

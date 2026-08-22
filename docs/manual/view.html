@@ -25,7 +25,7 @@
             <p class="lead"><code>VIEW</code> — оператор языка Axiom, который задаёт прямоугольную область графического экрана, внутри которой работает рисование. Родственная форма <code>VIEW PRINT</code> задаёт не область пикселей, а диапазон строк для экранного текста на графическом экране.</p>
 
             <section class="article-section">
-                <h2>Для чего нужен оператор VIEW</h2>
+                <h2>Когда использовать VIEW</h2>
                 <p>Оператор <code>VIEW</code> нужен тогда, когда программе требуется ограничить физическую область экрана для рисования.</p>
                 <p>Оператор <code>VIEW PRINT</code> нужен тогда, когда программе требуется ограничить диапазон строк экранного текста на графическом экране.</p>
             </section>
@@ -53,10 +53,10 @@ VIEW PRINT topRow TO bottomRow</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>left</code>, <code>top</code>, <code>right</code>, <code>bottom</code></td><td>Координаты углов viewport.</td></tr>
@@ -86,13 +86,12 @@ VIEW PRINT topRow TO bottomRow</code></pre>
                 <h2>Правила работы</h2>
                 <p>Оператор <code>VIEW</code> ограничивает физическую область вывода графических операторов. Оператор <code>WINDOW</code> поверх этого viewport может дополнительно задать логическую систему координат.</p>
                 <p>Оператор <code>VIEW PRINT</code> не управляет пикселями. Этот оператор управляет только текстовыми строками.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
                 <ul>
-                    <li><code>MB3010</code>: оператор <code>VIEW</code> или оператор <code>VIEW PRINT</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3007</code>: координаты viewport или номера строк имеют недопустимое значение.</li>
+                    <li>форма <code>VIEW</code> без аргументов и форма <code>VIEW PRINT</code> без аргументов сбрасывают соответствующее ограничение и возвращают вывод ко всему экрану;</li>
+                    <li>координаты viewport задаются в пикселях; строки <code>VIEW PRINT</code> задаются в строках текстовой сетки текущего графического режима;</li>
+                    <li>недопустимые границы viewport или номера строк завершают выполнение диагностикой <code>MB3007</code>;</li>
+                    <li>оператор <code>VIEW</code> действует только в графическом режиме: без активного <code>SCREEN 1..10</code> выполнение завершается диагностикой <code>MB3010</code>;</li>
+                    <li>заливка и рамка viewport становятся видимыми сразу после выполнения оператора <code>VIEW</code>, если указаны соответствующие цвета.</li>
                 </ul>
             </section>
 
@@ -107,6 +106,25 @@ LOCATE 2, 2
 PRINT "Текст внутри окна"
 SLEEP</code></pre>
                 <p>В этом примере оператор <code>VIEW</code> ограничивает физическую область рисования и одновременно задаёт заливку и рамку viewport. Затем оператор <code>VIEW PRINT</code> ограничивает строки экранного текста внутри графического режима.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения операторов <code>VIEW</code> и <code>VIEW PRINT</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: экранные и относительные координаты</a></li>
+                    <li><a href="../../samples/operators/view/invalid_bounds_error.axm">VIEW: ошибка недопустимых границ</a></li>
+                    <li><a href="../../samples/operators/view-print/scrolling_region.axm">VIEW PRINT: прокручиваемая текстовая область</a></li>
+                    <li><a href="../../samples/operators/view-print/invalid_rows_error.axm">VIEW PRINT: ошибка недопустимых строк</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>VIEW</code> или оператор <code>VIEW PRINT</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: координаты viewport или номера строк имеют недопустимое значение.</li>
+                </ul>
             </section>
 
             <section class="article-section">

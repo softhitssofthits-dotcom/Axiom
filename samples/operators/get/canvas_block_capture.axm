@@ -24,4 +24,4 @@ PRINT buffer(1, 6)
 PRINT buffer(2, 6)
 
 PRESENT
-SLEEP
+SLEEP 500

@@ -2349,16 +2349,4 @@ IF TRUE THEN
         var print = AssertGlobalStatement<PrintStatementSyntax>(program);
         Assert.Single(print.Items);
     }
-
-    [Fact]
-    public void Debug_InterpolatedStringMultipleTokens()
-    {
-        var tokens = Axiom.Lexing.Lexer.Lex("$\"{name} {age}\"", out var diagnostics);
-
-        var tokenList = tokens.ToList();
-        Assert.Empty(diagnostics);
-
-        var kinds = tokenList.Select(t => $"{t.Kind}:{t.Text}").ToList();
-        Assert.True(false, $"Tokens: {string.Join(", ", kinds)}");
-    }
 }

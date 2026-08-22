@@ -31,13 +31,17 @@
                 <p>Функция <code>REGEXREPLACE</code> возвращает новую строку, где найденные совпадения заменены указанным текстом.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = REGEXREPLACE(text, pattern, replacement[, modes][, count])</code></pre>
-                <p><strong>Части записи.</strong> <code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве.</p>
+                <h3>Аргументы</h3><p><code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве.</p>
                 <h3>Количество замен и ссылки на группы</h3>
                 <p>Если <code>count</code> равен нулю, функция возвращает исходный текст без изменений. Отрицательное количество замен даёт <code>MB3007</code>. В строке замены можно использовать ссылки на группы через <code>$1</code>, <code>$2</code> и далее.</p>
                 <h3>Пример замены по шаблону</h3>
                 <pre><code class="language-basic">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
 PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
 PRINT REGEXREPLACE("A12 B34", "([A-Z])(\\d+)", "$1-$2")</code></pre>
+                <p>Результат:</p>
+                <pre><code>one # two #
+one # two 34
+A-12 B-34</code></pre>
             </section>
 
             <section class="article-section" id="regexcount">
@@ -45,11 +49,15 @@ PRINT REGEXREPLACE("A12 B34", "([A-Z])(\\d+)", "$1-$2")</code></pre>
                 <p>Функция <code>REGEXCOUNT</code> возвращает количество совпадений с регулярным выражением.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = REGEXCOUNT(text, pattern[, modes])</code></pre>
+                <h3>Аргументы</h3><p><code>text</code> задаёт исходную строку, <code>pattern</code> задаёт регулярное выражение, <code>modes</code> при необходимости включает дополнительные режимы поиска. Результат имеет тип <code>INTEGER</code>.</p>
                 <h3>Ноль при отсутствии совпадений</h3>
                 <p>Если совпадений нет, результат равен <code>0</code>. Эта функция удобна, когда нужно только число найденных фрагментов без извлечения самих значений.</p>
-                <h3>Пример подсчета совпадений</h3>
+                <h3>Пример подсчёта совпадений</h3>
                 <pre><code class="language-basic">PRINT REGEXCOUNT("one 12 two 34", "\d+")
 PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre>
+                <p>Результат:</p>
+                <pre><code>2
+2</code></pre>
             </section>
 
             <section class="article-section">

@@ -18,4 +18,4 @@ PRINT "cart="; PMAP(105, 0); ","; PMAP(205, 1)
 PRINT "cart back="; PMAP(3, 2); ","; PMAP(3, 3)
 
 PRINT "PMAP sample finished"
-SLEEP
+SLEEP 500

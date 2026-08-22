@@ -25,7 +25,7 @@
             <p class="lead"><code>PALETTE</code> — оператор языка Axiom, который меняет соответствие между индексом палитры и видимым цветом на графическом экране <code>SCREEN</code>. Оператор <code>PALETTE</code> нужен для палитровой графики исторического пути <code>SCREEN</code>, где пиксели хранят цветовые индексы, а палитра определяет, каким цветом эти индексы показываются пользователю.</p>
 
             <section class="article-section">
-                <h2>Для чего нужен оператор PALETTE</h2>
+                <h2>Когда использовать PALETTE</h2>
                 <p>Оператор <code>PALETTE</code> нужен тогда, когда программа хочет изменить вид уже нарисованных индексных пикселей без их перерисовки.</p>
                 <p>Оператор <code>PALETTE</code> позволяет временно сменить цветовую схему экрана, выделить важный объект, показать эффект тревоги или вернуть стандартную палитру после временной настройки цветов.</p>
             </section>
@@ -45,10 +45,10 @@ PALETTE USING array</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>index</code></td><td>Индекс палитры, который оператор <code>PALETTE</code> должен переназначить. Значение приводится к целому и нормализуется по правилу <code>ABS(value) MOD 256</code>.</td></tr>
@@ -73,15 +73,6 @@ PALETTE USING array</code></pre>
                 <p>Элементы массива в операторе <code>PALETTE USING</code> приводятся к целому значению, а затем нормализуются по тому же правилу <code>ABS(value) MOD 256</code>, что и обычные аргументы <code>index</code> и <code>color</code>.</p>
                 <p>Если массив для оператора <code>PALETTE USING</code> содержит больше <code>256</code> видимых элементов, оператор <code>PALETTE</code> использует только первые <code>256</code> элементов. Если элементов меньше, остальные индексы палитры сохраняют прежние значения.</p>
                 <p>Оператор <code>PALETTE</code> не меняет текущую графическую позицию, область <code>VIEW</code>, систему координат <code>WINDOW</code>, область <code>VIEW PRINT</code>, текстовый курсор и состояние мышиного ввода.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3005</code>: массив для <code>PALETTE USING</code> объявлен, но ещё не выделен.</li>
-                    <li><code>MB2003</code>: форма <code>PALETTE USING</code> получила не одномерный числовой массив.</li>
-                </ul>
             </section>
 
             <section class="article-section">
@@ -115,13 +106,22 @@ PRINT POINT(20, 40)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Проверочные программы</h2>
+                <h2>Ручная проверка</h2>
                 <p>Готовые примеры для ручной проверки оператора <code>PALETTE</code> находятся в <code>samples/operators/palette/</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/palette/change_and_reset_colors.axm">PALETTE: изменение и сброс цветов</a></li>
                     <li><a href="../../samples/operators/palette/using_array_colors.axm">PALETTE USING: цвета из массива</a></li>
                     <li><a href="../../samples/operators/palette/text_screen_error.axm">PALETTE: ошибка вне графического SCREEN</a></li>
                     <li><a href="../../samples/operators/palette/using_without_screen_error.axm">PALETTE USING: ошибка без SCREEN</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3005</code>: массив для <code>PALETTE USING</code> объявлен, но ещё не выделен.</li>
+                    <li><code>MB2003</code>: форма <code>PALETTE USING</code> получила не одномерный числовой массив.</li>
                 </ul>
             </section>
 

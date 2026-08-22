@@ -25,13 +25,13 @@
             <p class="lead"><code>GET</code> и <code>PUT</code> — операторы языка Axiom, которые копируют прямоугольный блок пикселей между активной графической поверхностью и двумерным числовым массивом. Оператор <code>GET</code> читает блок в массив, а оператор <code>PUT</code> возвращает содержимое массива обратно на экран или на холст.</p>
 
             <section class="article-section" id="get">
-                <h2>Что это такое</h2>
+                <h2>Что такое GET и PUT</h2>
                 <p><code>GET</code> — оператор языка Axiom, который считывает прямоугольный блок пикселей из активной графической поверхности в двумерный числовой массив.</p>
                 <p><code>PUT</code> — оператор языка Axiom, который рисует такой буфер обратно на активной графической поверхности.</p>
             </section>
 
             <section class="article-section">
-                <h2>Для чего нужны операторы GET и PUT</h2>
+                <h2>Когда использовать GET и PUT</h2>
                 <p>Операторы <code>GET</code> и <code>PUT</code> нужны для старого блочного обмена: сохранить кусок изображения, временно убрать его, вернуть позже, перенести в другое место или наложить разными побитовыми действиями.</p>
                 <p>В новых полноцветных сценах чаще удобнее использовать <code>IMAGE</code> и <code>SPRITE</code>, но для небольших индексных блоков, отладки и совместимых BASIC-приёмов операторы <code>GET</code> и <code>PUT</code> остаются полезными и в <code>SCREEN</code>, и в <code>CANVAS</code>.</p>
             </section>
@@ -58,10 +58,10 @@ PUT (x, y), buffer, XOR</code></pre>
             </section>
 
             <section class="article-section" id="put">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>x1</code>, <code>y1</code>, <code>x2</code>, <code>y2</code></td><td>Координаты двух углов прямоугольника для <code>GET</code>. В <code>SCREEN</code> это screen-координаты с учётом <code>VIEW</code> и <code>WINDOW</code>. В <code>CANVAS</code> это мировые координаты.</td></tr>
@@ -106,14 +106,6 @@ PUT (x, y), buffer, XOR</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: оператор <code>GET</code> или оператор <code>PUT</code> вызван без активного <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
-                    <li><code>MB3007</code>: массив <code>buffer</code> не является выделенным двумерным числовым массивом, размеры буфера не совпали с прямоугольником <code>GET</code>, координаты недопустимы или значение буфера у <code>PUT</code> не приводится к корректному числу.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">CANVAS 24, 18
 CLS RGB(0, 0, 0)
@@ -132,7 +124,25 @@ PUT (102, 50), buffer, PSET
 
 PRESENT
 SLEEP</code></pre>
-                <p>Готовые runnable-примеры для ручной проверки лежат в <a href="../../samples/operators/get/canvas_block_capture.axm">samples/operators/get/canvas_block_capture.axm</a> и <a href="../../samples/operators/put/canvas_block_restore.axm">samples/operators/put/canvas_block_restore.axm</a>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения операторов <code>GET</code> и <code>PUT</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: захват прямоугольной области в SCREEN</a></li>
+                    <li><a href="../../samples/operators/get/canvas_block_capture.axm">GET: захват блока в CANVAS</a></li>
+                    <li><a href="../../samples/operators/put/canvas_block_restore.axm">PUT: восстановление блока в CANVAS</a></li>
+                    <li><a href="../../samples/operators/put/default_xor_and_preset.axm">PUT: действия по умолчанию, XOR и PRESET</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>GET</code> или оператор <code>PUT</code> вызван без активного <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
+                    <li><code>MB3007</code>: массив <code>buffer</code> не является выделенным двумерным числовым массивом, размеры буфера не совпали с прямоугольником <code>GET</code>, координаты недопустимы или значение буфера у <code>PUT</code> не приводится к корректному числу.</li>
+                </ul>
             </section>
 
             <section class="article-section">

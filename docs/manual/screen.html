@@ -25,7 +25,7 @@
             <p class="lead"><code>SCREEN</code> — оператор языка Axiom, который выбирает экранный режим программы. Оператор <code>SCREEN</code> может открыть текстовое окно <code>SCREEN 0</code> или графический экран <code>SCREEN 1..10</code>. После оператора <code>SCREEN</code> текстовый вывод и графика идут уже не во вкладку <code>Output</code>, а в отдельное окно программы.</p>
 
             <section class="article-section">
-                <h2>Для чего нужен оператор SCREEN</h2>
+                <h2>Когда использовать SCREEN</h2>
                 <p>Оператор <code>SCREEN</code> нужен тогда, когда программе требуется собственное экранное окно с текстовой сеткой, палитровыми цветами, пиксельной графикой, экранными страницами и классическими графическими операторами BASIC.</p>
                 <p>Если программа не вызвала оператор <code>SCREEN</code>, операторы <code>PRINT</code> и <code>INPUT</code> работают во вкладке <code>Output</code>. Если программа вызвала оператор <code>SCREEN</code>, текст и графика переносятся в отдельное экранное окно.</p>
             </section>
@@ -46,10 +46,10 @@ SCREEN mode, , activePage, visiblePage</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>mode</code></td><td>Целое число от <code>0</code> до <code>10</code>. Значение <code>0</code> выбирает текстовый режим. Значения <code>1..10</code> выбирают графический режим.</td></tr>
@@ -105,14 +105,6 @@ SCREEN mode, , activePage, visiblePage</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3007</code>: режим <code>SCREEN</code>, активная страница или видимая страница имеют недопустимое значение.</li>
-                    <li><code>MB3005</code>: хост не смог создать экранное окно или выбранный экранный режим недоступен.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">SCREEN 1, , 1, 0
 COLOR 15, 1
@@ -122,6 +114,14 @@ PSET (20, 20), 12
 PCOPY 1, 0
 SLEEP</code></pre>
                 <p>В этом примере оператор <code>SCREEN</code> открывает графический режим, делает страницу <code>1</code> активной для рисования и страницу <code>0</code> видимой для показа.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3007</code>: режим <code>SCREEN</code>, активная страница или видимая страница имеют недопустимое значение.</li>
+                    <li><code>MB3005</code>: хост не смог создать экранное окно или выбранный экранный режим недоступен.</li>
+                </ul>
             </section>
 
             <section class="article-section">

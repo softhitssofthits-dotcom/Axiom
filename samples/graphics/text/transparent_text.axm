@@ -11,6 +11,6 @@ PRINT "Transparent caption over the red rectangle"
 LOCATE 16, 1
 COLOR 10, TRANSPARENT
 PRINT "Press ESC to finish"
-SLEEP
+SLEEP 500
 SCREEN 0
 PRINT "Transparent text sample finished"

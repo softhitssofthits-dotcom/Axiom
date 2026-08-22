@@ -20,7 +20,7 @@
 <p>Функция <code>DATE</code> возвращает текущую дату в формате <code>yyyy-MM-dd</code>.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">dateText = DATE([timeZone])</code></pre>
-<p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, возвращается текущая дата для этого пояса.</p>
+<h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, возвращается текущая дата для этого пояса.</p>
 <h3>Пример текущей даты</h3>
 <pre><code class="language-basic">' Текущая локальная дата и дата в UTC
 PRINT DATE()
@@ -32,7 +32,7 @@ PRINT DATE("UTC")</code></pre>
 <p>Функция <code>TIME</code> возвращает текущее время в формате <code>HH:mm:ss</code>.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">timeText = TIME([timeZone])</code></pre>
-<p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, время вычисляется для этого пояса.</p>
+<h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, время вычисляется для этого пояса.</p>
 <h3>Пример текущего времени</h3>
 <pre><code class="language-basic">' Текущее локальное время и время в UTC
 PRINT TIME()
@@ -44,7 +44,7 @@ PRINT TIME("UTC")</code></pre>
 <p>Функция <code>NOW</code> возвращает текущие дату и время в формате <code>yyyy-MM-dd HH:mm:ss</code>.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">dateTimeText = NOW([timeZone])</code></pre>
-<p><strong>Части записи.</strong> Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, дата и время вычисляются для него.</p>
+<h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, дата и время вычисляются для него.</p>
 <h3>Пример текущих даты и времени</h3>
 <pre><code class="language-basic">' Текущие дата и время в локальном поясе и в UTC
 PRINT NOW()
@@ -77,7 +77,7 @@ PRINT NOW("UTC")</code></pre>
 <p>Функция <code>TIMER</code> возвращает число секунд, прошедших с локальной полуночи текущего дня.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">seconds = TIMER()</code></pre>
-<p><strong>Части записи.</strong> Результат имеет тип <code>DOUBLE</code>.</p>
+<h3>Аргументы</h3><p>Результат имеет тип <code>DOUBLE</code>.</p>
 <h3>Измерение внутри одного дня</h3>
 <p>Эта функция удобна для простых измерений времени внутри одного дня.</p>
 <h3>Пример секунд от полуночи</h3>

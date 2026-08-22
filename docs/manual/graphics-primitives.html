@@ -188,16 +188,6 @@ PRINT POINT(12, 12)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> вызваны без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
-                    <li><code>MB3010</code>: операторы <code>LINE</code>, <code>CIRCLE</code>, <code>DRAW</code> и форма <code>POINT(selector)</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3010</code>: форма <code>POINT(x, y)</code> вызвана без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
-                    <li><code>MB3007</code>: оператор получил недопустимые координаты, радиус, селектор или другой числовой аргумент вне поддерживаемого договора.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">SCREEN 1
 PSET (10, 10), 12
@@ -207,6 +197,16 @@ CIRCLE (160, 90), 24, 10
 PAINT (160, 90), 9, 10
 PRINT "Цвет точки:"; POINT(10, 10)
 SLEEP</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> вызваны без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
+                    <li><code>MB3010</code>: операторы <code>LINE</code>, <code>CIRCLE</code>, <code>DRAW</code> и форма <code>POINT(selector)</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3010</code>: форма <code>POINT(x, y)</code> вызвана без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
+                    <li><code>MB3007</code>: оператор получил недопустимые координаты, радиус, селектор или другой числовой аргумент вне поддерживаемого договора.</li>
+                </ul>
             </section>
 
             <section class="article-section">

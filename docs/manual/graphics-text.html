@@ -88,14 +88,6 @@ PRINT "Текст начинается с третьей строки и пят�
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: оператор <code>COLOR</code> вызван без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3007</code>: оператор <code>LOCATE</code> получил строку или столбец вне допустимого диапазона текущей экранной сетки.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">SCREEN 3
 CLS
@@ -108,6 +100,14 @@ LOCATE 5, 5
 PRINT "Белый текст поверх графики"
 SLEEP</code></pre>
                 <p>В этом примере оператор <code>CLS</code> очищает экран, оператор <code>COLOR</code> сначала включает непрозрачный фон, а затем прозрачный фон, а оператор <code>LOCATE</code> управляет положением экранного текста по строкам и столбцам.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>COLOR</code> вызван без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: оператор <code>LOCATE</code> получил строку или столбец вне допустимого диапазона текущей экранной сетки.</li>
+                </ul>
             </section>
 
             <section class="article-section">

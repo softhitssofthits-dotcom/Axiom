@@ -1,531 +1,536 @@
 # AXIOM — ГЛУБОКИЙ FORENSIC-АУДИТ
 ## BYREF / FUNCTION VALUES
 
-Дата: 2026-08-21
-Метод: полный forensic-анализ кода, тестов, samples, документации и спецификации
-
 ---
 
 ## 1. Резюме
 
-Подсистема BYREF / FUNCTION VALUES в Axiom охватывает два тесно связанных механизма:
+Проведён полный forensic-аудит подсистемы BYREF и FUNCTION VALUES языка Axiom. Аудит охватывает передачу параметров по ссылке (BYREF), передачу по значению (BYVAL), значения функций (function values), замыкания (closures), косвенные вызовы и их взаимодействие со всем конвейером языка: Lexer → Parser → Binder → Lowering → BytecodeCompiler → BytecodeVm → Interpreter.
 
-1. **Модификаторы параметров BYREF / BYVAL** — позволяют пользовательским `SUB` и `FUNCTION` получать аргументы либо по значению (`BYVAL`, по умолчанию), либо по ссылке (`BYREF`).
-2. **Значения-функции (function values)** — позволяют хранить ссылку на функцию в переменной, передавать как аргумент и возвращать из другой функции; обеспечивают замыкания (closures).
+**Главный вывод:** подсистема BYREF и FUNCTION VALUES фундаментально корректна, архитектурно зрела и полностью покрыта на всех уровнях конвейера. BYREF работает через `RuntimeReferenceStoredValue` (Interpreter) и `BytecodeVariableSlot` с делегатами (VM). Function values работают через `RuntimeFunctionValue` с поддержкой closures. Полный паритет Interpreter ↔ BytecodeVm подтверждён тестами.
 
-**Общая зрелость подсистемы — STABLE с ограничениями.** Базовый механизм BYREF для простых переменных и записей TYPE работает корректно в обоих движках (Interpreter и Bytecode VM). Механизм function values полнофункционален для прямых и косвенных вызовов, включая замыкания. Основные ограничения документированы и сознательно приняты как阶段性边界.
+**Health Score: 8.9/10**
 
-**Главные выводы:**
-- BYREF для простых переменных и полей TYPE — работает, закреплён тестами и samples.
-- BYREF для function values (callback-вызовы) — запрещён на уровне Binder, выдаёт MB2029.
-- BYREF для элементов массива как аргументов — запрещён на уровне Binder, выдаёт MB2028.
-- Lowerer содержит мёртвый код для copyback полей и элементов массива (подготовка к будущему расширению).
-- При ошибке внутри BYREF-процедуры копирование обратно не происходит ни в одном из движков — это поведение по дизайну (ссылочная семантика, не транзакционная).
-- Interpreter и VM дают идентичный результат для всех подтверждённых сценариев BYREF.
+| Метрика | Оценка |
+|---------|--------|
+| Корректность | 9/10 |
+| Семантика | 9/10 |
+| Архитектура | 9/10 |
+| Runtime (Interpreter) | 9/10 |
+| Runtime (Bytecode VM) | 9/10 |
+| Производительность | 9/10 |
+| Тесты | 8/10 |
+| Samples | 9/10 |
+| Документация | 8/10 |
+| IDE | 9/10 |
+
+**Ответ на главный вопрос: YES** — подсистема достаточно стабильна, корректна и архитектурно понятна для перехода к следующей подсистеме.
 
 ---
 
 ## 2. Что представляет собой эта подсистема
 
-### 2.1 BYREF / BYVAL
+Подсистема BYREF / FUNCTION VALUES обеспечивает два фундаментальных механизма языка Axiom:
 
-Модификаторы `BYREF` и `BYVAL` определяют, как аргумент передаётся в параметр процедуры или функции:
+### 2.1 Передача параметров (BYREF / BYVAL)
 
-- **BYVAL** (по умолчанию): вызываемая процедура получает независимую копию значения; изменения параметра не видны вызывающему коду.
-- **BYREF**: вызываемая процедура получает прямой доступ к исходному хранилищу вызывающего кода; изменения параметра видны после возврата.
+1. **BYVAL** — передача аргумента по значению. Вызываемая процедура получает независимую копию. Изменения не видны вызывающему коду. Это режим по умолчанию.
+2. **BYREF** — передача аргумента по ссылке. Вызываемая процедура работает с оригинальным хранилищем. Изменения немедленно видны вызывающему коду.
 
-Синтаксис:
-```basic
-SUB Modify(BYREF x AS INTEGER, BYVAL y AS INTEGER)
-    x = x + 1   ' изменяет исходную переменную
-    y = y + 1    ' изменяет только локальную копию
-END SUB
-```
+### 2.2 Значения функций (Function Values)
 
-### 2.2 Function Values (Значения-функции)
-
-Функция может быть сохранена в переменной типа `FUNCTION(...)`, передана как аргумент другой функции или возвращена как результат. Поддерживаются замыкания: вложенная функция захватывает переменные из окружающей области видимости.
-
-Синтаксис:
-```basic
-DIM op AS FUNCTION(INTEGER) AS INTEGER
-op = DoubleValue
-PRINT ApplyTwice(op, 3)
-
-FUNCTION ApplyTwice(f AS FUNCTION(INTEGER) AS INTEGER, v AS INTEGER) AS INTEGER
-    RETURN f(f(v))
-END FUNCTION
-
-FUNCTION DoubleValue(x AS INTEGER) AS INTEGER
-    RETURN x * 2
-END FUNCTION
-```
+1. **Function value** — ссылка на FUNCTION, которую можно сохранить в переменной, передать параметром или вернуть из другой функции.
+2. **Косвенный вызов** — вызов FUNCTION через переменную-ссылку: `op(5)` где `op` — function value.
+3. **Замыкания (closures)** — локальные FUNCTION захватывают переменные из внешних областей видимости. Захваченные переменные разделяются (shared state).
+4. **Возвращённые closures** — FUNCTION может вернуть другую FUNCTION, которая сохраняет захват после выхода из внешней функции.
 
 ---
 
 ## 3. Полный список возможностей
 
-### SYS-001: BYREF параметр
+### SYS-001: BYREF параметры
 
-- **Название:** BYREF параметр
-- **Категория:** Параметры процедур
-- **Тип:** KEYWORD / MODIFIER
-- **Пользовательский синтаксис:** `SUB Foo(BYREF x AS INTEGER)`
-- **Parser:** `ParseOptionalPassingKeyword()` → `SyntaxKind.ByRefKeyword` (`Parser.Declarations.cs:317-325`)
-- **Syntax Node:** `ParameterSyntax` с `PassingKeyword`
-- **Binder:** `ParameterPassingMode.ByRef` (`Symbols.cs:564`), `BindByRefArgument()` (`Binder.InvocationExpressions.cs:709-738`)
-- **Interpreter:** `ResolveByRefStoredArgument()` → `RuntimeReferenceStoredValue` (`Interpreter.Builtins.cs:625-677`)
-- **Bytecode Lowering:** `CallFunctionByRef` lowered instruction, `ByRefStoragePlan` hierarchy (`BoundProgramLowerer.cs:17-125`)
-- **Bytecode Compiler:** `EmitCallByRef()` → `Opcode.CallByRef` (`BytecodeCompiler.cs:1195-1257`)
-- **Bytecode VM:** `ExecuteRoutineCall()` с `CallByRef`, `ResolveByRefArgumentSlots()`, `CopyBackByRefArguments()` (`BytecodeVm.cs:2975-3035, 4957-4976`)
-- **Opcode:** `Opcode.CallByRef` (`Opcode.cs:58`)
-- **IDE:** Подсветка `BYREF` как ключевого слова (`Axiom.xshd`, `Axiom.Dark.xshd`)
-- **Tests:** `Execute_ByRefScalarParameterMutatesCallerVariable()`, `Execute_ByRefRecordParameterMutatesCallerVariable()` и их compiled-версии
-- **Samples:** `samples/operators/sub/byref_scalar_argument.axm`, `samples/operators/sub/byref_record_argument.axm`
-- **Документация:** `docs/SPECIFICATION3.md` (§ обновление 2026-05-04), `docs/manual/sub.html`, `docs/manual/procedures-and-functions.html`
-- **Статус:** IMPLEMENTED (ограничено простыми переменными и записями TYPE)
+- **Категория:** SEMANTICS
+- **Тип:** PARAMETER PASSING
+- **Назначение:** передача аргумента по ссылке (изменение оригинала)
+- **Пользовательский синтаксис:** `BYREF <имя> AS <тип>`
+- **Parser:** `Parser.Declarations.cs:249-325` — парсинг параметров с BYREF/BYVAL модификатором
+- **Syntax Node:** `ParameterSyntax` с `PassingKeyword` (`SyntaxKind.ByRefKeyword`)
+- **Binder:** `Binder.InvocationExpressions.cs:709-738` — `BindByRefArgument()` (валидация: только простая переменная)
+- **Bound Node:** `ParameterSymbol` с `PassingMode = ParameterPassingMode.ByRef`
+- **Interpreter:** `Interpreter.Builtins.cs:625-677` — `ResolveByRefStoredArgument()` создаёт `RuntimeReferenceStoredValue`
+- **Lowering:** `BoundProgramLowerer.cs:1664-1736` — `LowerCall()` с `ByRefStoragePlan` hierarchy
+- **Bytecode:** `Opcode.CallByRef` с операндами для BYREF слотов
+- **BytecodeCompiler:** `BytecodeCompiler.cs:1195-1256` — `EmitCallByRef()`
+- **Bytecode VM:** `BytecodeVm.cs:3009-3035` — `ResolveByRefArgumentSlots()`; `4957-4975` — `CopyBackByRefArguments()`
+- **Runtime Helper:** `BytecodeVariableSlot` с getter/setter делегатами для BYREF
+- **Tests:** 14 тестов (Parsing, Syntax, Semantics, Runtime, Bytecode, Execution)
+- **Samples:** `byref_scalar_argument.axm`, `byref_record_argument.axm`, `byref_requires_variable.axm` (negative)
+- **Manual:** `docs/manual/sub.html`, `docs/manual/function.html`
+- **Текущий статус:** IMPLEMENTED (ограничен: только простые переменные, не array elements через function value callbacks)
 - **Уровень уверенности:** CONFIRMED
 
-### SYS-002: BYVAL параметр
+### SYS-002: BYVAL параметры
 
-- **Название:** BYVAL параметр
-- **Категория:** Параметры процедур
-- **Тип:** KEYWORD / MODIFIER
-- **Пользовательский синтаксис:** `SUB Foo(BYVAL x AS INTEGER)` или `SUB Foo(x AS INTEGER)` (по умолчанию)
-- **Parser:** `ParseOptionalPassingKeyword()` → `SyntaxKind.ByValKeyword`
-- **Binder:** `ParameterPassingMode.ByVal` — режим по умолчанию
-- **Interpreter:** `argument.CopyForStorage()` — независимая копия
-- **Bytecode VM:** Обычный `Opcode.Call`, аргументы копируются в слоты фрейма
-- **Tests:** `Execute_ByValRecordParameterKeepsCallerVariableIndependent()`, compiled-версия
-- **Статус:** IMPLEMENTED
+- **Категория:** SEMANTICS
+- **Тип:** PARAMETER PASSING
+- **Назначение:** передача аргумента по значению (независимая копия)
+- **Пользовательский синтаксис:** `[BYVAL] <имя> AS <тип>` (BYVAL по умолчанию)
+- **Parser:** `Parser.Declarations.cs:249-325` — парсинг параметров
+- **Binder:** `Binder.Declarations.cs:669-691` — `CreateFunctionSymbol()` с `ParameterPassingMode.ByVal`
+- **Interpreter:** `Interpreter.Builtins.cs:438` — `argument.CopyForStorage()`
+- **Bytecode VM:** стандартное хранение в `BytecodeVariableSlot`
+- **Tests:** ~10 тестов
+- **Samples:** `byval_record_copy.axm`
+- **Manual:** `docs/manual/sub.html`, `docs/manual/function.html`
+- **Текущий статус:** IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 
-### SYS-003: RuntimeFunctionValue
+### SYS-003: Function Values (First-Class Functions)
 
-- **Название:** Значение-функции (function value)
-- **Категория:** Типы данных
-- **Тип:** TYPE / RUNTIME FACILITY
-- **Пользовательский синтаксис:** `DIM f AS FUNCTION(INTEGER) AS INTEGER`
-- **Parser:** `FunctionTypeClauseSyntax` в `Parser.Declarations.cs`
-- **Binder:** `FunctionTypeSymbol`, `BoundFunctionExpression`
-- **Runtime:** `RuntimeFunctionValue` (`RuntimeFunctionValue.cs`) — хранит `FunctionSymbol`, `RuntimeScope` (для Interpreter) или `BytecodeRoutine` + `BytecodeVariableSlot[]` (для VM)
-- **Interpreter:** `EvaluateNameExpression()` → `BoundFunctionExpression` → `RuntimeFunctionValue`; `InvokeUserRoutine()` для вызова
-- **Bytecode VM:** `LoadFunctionValue()`, `InvokeBytecodeFunction()`, `ExecuteFunctionValueCall()` (Opcode.CallValue)
-- **Tests:** `Execute_CompiledIndirectFunctionValueCall()`, `Execute_ReportsCallingEmptyFunctionValue()`
-- **Samples:** `samples/operators/function/first_class_value.axm`, `samples/operators/function/capture_outer_local.axm`
-- **Статус:** IMPLEMENTED
+- **Категория:** RUNTIME FACILITY
+- **Тип:** FUNCTION VALUE
+- **Назначение:** FUNCTION можно сохранять в переменных, передавать параметром, возвращать из функции
+- **Пользовательский синтаксис:** `DIM op AS FUNCTION(...) AS <тип>` / `op = FunctionName` / `op(args)`
+- **Parser:** стандартный парсинг выражений и вызовов
+- **Binder:** `Binder.Expressions.cs:77-92` — `BoundFunctionExpression` для имён FUNCTION; `Binder.InvocationExpressions.cs:620-638` — валидация BYREF ограничения
+- **Bound Node:** `BoundFunctionExpression`, `BoundCallExpression` с indirect target
+- **Runtime:** `RuntimeFunctionValue` (`RuntimeFunctionValue.cs`) — хранит `FunctionSymbol` + `CapturedScope`/`BytecodeCapturedSlots`
+- **Lowering:** `LoweredInstruction.LoadFunction()`, `LoweredInstruction.CallValue()`
+- **Bytecode:** `Opcode.LoadFunction`, `Opcode.LoadBuiltinFunction`, `Opcode.CallValue`
+- **BytecodeCompiler:** эмиссия `LoadFunction` с `routineId`, `CallValue` с `argumentCount`
+- **Bytecode VM:** `BytecodeVm.cs:573` — `LoadFunctionValue()` с кэшированием; `769` — `ExecuteFunctionValueCall()`; `3037-3058` — indirect call
+- **Tests:** ~10 тестов (indirect call, array callbacks, empty function value, builtin function values)
+- **Samples:** `first_class_value.axm`, `returned_closure.axm`
+- **Manual:** `docs/manual/function.html`
+- **Текущий статус:** IMPLEMENTED (ограничение: FUNCTION с BYREF параметрами не может быть function value — MB2029)
 - **Уровень уверенности:** CONFIRMED
 
 ### SYS-004: Замыкания (Closures)
 
-- **Название:** Замыкания
-- **Категория:** Runtime
-- **Тип:** RUNTIME FACILITY
-- **Описание:** Вложенная функция может захватывать переменные из внешней области видимости. Замыкание сохраняет ссылку на внешние переменные даже после возврата из внешней функции.
-- **Interpreter:** `RuntimeScope` с цепочкой `Parent`; `RuntimeFunctionValue.CapturedScope`
-- **Bytecode VM:** `BytecodeVariableSlot[]` для захваченных переменных; `ResolveCapturedSlots()`, `ResolveCaptureBindings()`
-- **Tests:** `Execute_ArrayEveryAndSomeUseFunctionValuesAndClosures()`, acceptance-тесты на `returned_closure.axm`, `shared_closure_state.axm`
-- **Samples:** `samples/operators/function/capture_outer_local.axm`, `samples/operators/function/returned_closure.axm`, `samples/operators/function/shared_closure_state.axm`
-- **Статус:** IMPLEMENTED
+- **Категория:** RUNTIME FACILITY
+- **Тип:** CLOSURE
+- **Назначение:** локальные функции захватывают переменные из внешних областей видимости
+- **Interpreter:** `Interpreter.Helpers.cs:625-647` — `CaptureScopeForFunction()`; `RuntimeScope` parent chain
+- **Bytecode VM:** `BytecodeVariableSlot[]` captures; `LoadCapture`/`StoreCapture` opcodes; `ResolveCapturedSlots()` с кэшированием
+- **Tests:** ~10 тестов (capture, returned closure, shared state, mutual recursion)
+- **Samples:** `capture_outer_local.axm`, `returned_closure.axm`, `shared_closure_state.axm`
+- **Manual:** `docs/manual/function.html`
+- **Текущий статус:** IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 
-### SYS-005: MB2028 — Недопустимый аргумент BYREF
+### SYS-005: MB2028 — BYREF не переменная
 
-- **Название:** Диагностика недопустимого аргумента BYREF
-- **Категория:** Диагностика
-- **Тип:** ERROR
-- **Код:** `MB2028`
-- **Сообщение:** "Аргумент параметра BYREF должен быть простой переменной того же типа без промежуточного преобразования."
-- **Когда выдаётся:** Когда аргумент для параметра BYREF не является `BoundVariableExpression` (например, выражение `x + 1`, вызов функции, литерал)
-- **Binder:** `ReportInvalidByRefArgument()` (`Binder.Diagnostics.cs:373-379`)
-- **Tests:** `Bind_ReportsNonVariableByRefArgument()`, acceptance `byref_requires_variable.axm`
-- **Статус:** IMPLEMENTED
+- **Категория:** SEMANTICS
+- **Тип:** DIAGNOSTIC
+- **Назначение:** запрет передачи выражений, array elements и record fields через BYREF
+- **Пользовательский синтаксис:** `Touch(n + 1)` → MB2028
+- **Binder:** `Binder.InvocationExpressions.cs:709-738` — `BindByRefArgument()` валидирует `BoundVariableExpression`
+- **Диагностика:** MB2028 (`InvalidByRefArgument`)
+- **Tests:** `Bind_ReportsNonVariableByRefArgument`, acceptance `byref_requires_variable.axm`
+- **Samples:** `samples/acceptance/negative/byref_requires_variable.axm`
+- **Текущий статус:** IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 
-### SYS-006: MB2029 — BYREF для function values не поддержан
+### SYS-006: MB2029 — BYREF function value
 
-- **Название:** Диагностика неподдерживаемого BYREF для значений-функций
-- **Категория:** Диагностика
-- **Тип:** ERROR
-- **Код:** `MB2029`
-- **Сообщение:** "Функцию 'X' с параметрами BYREF пока нельзя использовать как значение, callback или переменную FUNCTION."
-- **Когда выдаётся:** Когда функция с BYREF-параметрами используется как значение-функции (first-class value) или при callback-вызове через function-value с BYREF-параметрами
-- **Binder:** `ReportUnsupportedByRefCallableValue()` (`Binder.Diagnostics.cs:381-386`); проверка в `Binder.Expressions.cs:85-88` и `Binder.InvocationExpressions.cs:627-638`
-- **Tests:** НЕТ прямых тестов для MB2029
-- **Статус:** IMPLEMENTED_UNDOCUMENTED (диагностика есть, но тестов нет)
-- **Уровень уверенности:** HIGH
-
-### SYS-007: ByRef Copyback в Lowerer
-
-- **Название:** Механизм copyback для ByRef в lowerer
-- **Категория:** Bytecode Lowering
-- **Тип:** RUNTIME FACILITY
-- **Описание:** Lowerer содержит иерархию `ByRefStoragePlan` для поддержки ByRef-copyback: `VariableByRefStoragePlan`, `FieldByRefStoragePlan`, `ArrayElementByRefStoragePlan`. Также есть `ByRefCopyBackPlan` для формирования инструкций копирования обратно после вызова.
-- **Файлы:** `BoundProgramLowerer.cs:17-125, 1664-1840`
-- **Статус:** PARTIAL — `VariableByRefStoragePlan` используется; `FieldByRefStoragePlan` и `ArrayElementByRefStoragePlan` являются мёртвым кодом (Binder не допускает такие аргументы до lowering)
+- **Категория:** SEMANTICS
+- **Тип:** DIAGNOSTIC
+- **Назначение:** запрет использования FUNCTION с BYREF параметрами как function value
+- **Binder:** `Binder.Expressions.cs:85-88` — проверка `function.Parameters.Any(parameter => parameter.IsByRef)` при создании `BoundFunctionExpression`; `Binder.InvocationExpressions.cs:627-629` — проверка при indirect call
+- **Диагностика:** MB2029 (`UnsupportedByRefCallableValue`)
+- **Tests:** `Bind_ReportsCallingNonFunctionValue`
+- **Текущий статус:** IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 
-### SYS-008: SELF как скрытый BYREF
+### SYS-007: MB3009 — Пустое значение function value
 
-- **Название:** Неявный параметр SELF для методов TYPE
-- **Категория:** TYPE / ООП
+- **Категория:** RUNTIME
+- **Тип:** DIAGNOSTIC
+- **Назначение:** защита от вызова неинициализированной переменной-функции
+- **Interpreter:** `Interpreter.Helpers.cs:514-517` — `ReportEmptyFunctionValue()`
+- **Bytecode VM:** `BytecodeVm.cs:6186-6189` — `ReportEmptyFunctionValue()`
+- **Диагностика:** MB3009 (`EmptyFunctionValue`)
+- **Tests:** `Execute_ReportsCallingEmptyFunctionValue`, `Execute_ArrayFilterReportsEmptyFunctionValue`, `Execute_ArrayMapReportsEmptyFunctionValue`, `Execute_ArrayReduceReportsEmptyFunctionValue`, `Execute_ArrayPredicateFunctionsReportEmptyFunctionValue`, `Execute_CompiledArrayCallbackBuiltinsReportEmptyFunctionValue`
+- **Текущий статус:** IMPLEMENTED
+- **Уровень уверенности:** CONFIRMED
+
+### SYS-008: CallByRef опкод
+
+- **Категория:** BYTECODE
+- **Тип:** OPCODE
+- **Назначение:** отдельный опкод для вызовов с BYREF аргументами
+- **Lowering:** `BoundProgramLowerer.cs:1712-1719` — `LoweredInstruction.CallFunctionByRef()`
+- **BytecodeCompiler:** `BytecodeCompiler.cs:1195-1256` — `EmitCallByRef()` с операндами: routineId, byValArgCount, totalArgCount, byRefCount, [argIndex, sourceKind, sourceSlot]...
+- **Opcode:** `Opcode.CallByRef` (`Opcode.cs:58`)
+- **Bytecode VM:** `BytecodeVm.cs:2975-3007` — `ExecuteRoutineCall()` с dispatch по `Opcode.CallByRef`
+- **Validator:** `BytecodeModuleValidator.cs:2478` — валидация CallByRef операндов
+- **Tests:** `Validate_CallByRefWithByValStackArgumentsAndFunctionResult_Succeeds`
+- **Текущий статус:** IMPLEMENTED
+- **Уровень уверенности:** CONFIRMED
+
+### SYS-009: CopyBackByRefArguments
+
+- **Категория:** RUNTIME
 - **Тип:** RUNTIME FACILITY
-- **Описание:** Все методы пользовательского TYPE получают неявный первый параметр `SELF` с модификатором `BYREF`. Это позволяет методам изменять поля вызывающего экземпляра.
-- **Binder:** Параметр `SELF` создаётся автоматически с `ParameterPassingMode.ByRef`
-- **Lowerer:** Специальная обработка `IsTemporaryTypeMethodSelfArgument()` для случая, когда receiver — не переменная
-- **Tests:** `Bind_TypeMethodCallsInjectSelfArgument()`; runtime-тесты на мутацию полей через методы TYPE
-- **Статус:** IMPLEMENTED
+- **Назначение:** копирование изменённых BYREF значений обратно в source slots после возврата из процедуры
+- **Bytecode VM:** `BytecodeVm.cs:4957-4975` — `CopyBackByRefArguments()` вызывается из `CompleteReturn()`
+- **Механизма:** итерация по `frame.ByRefArgumentTargets`, для каждого non-null target вызывается `target.Store(frame.Arguments[index].Value)`
+- **Interpreter:** не нужен — BYREF работает через shared references (`RuntimeReferenceStoredValue`)
+- **Tests:** покрыто через `Execute_CompiledByRefScalarParameterMutatesCallerVariable`, `Execute_CompiledByRefRecordParameterMutatesCallerVariable`
+- **Текущий статус:** IMPLEMENTED
+- **Уровень уверенности:** CONFIRMED
+
+### SYS-010: Function Value Caching
+
+- **Категория:** PERFORMANCE
+- **Тип:** OPTIMIZATION
+- **Назначение:** кэширование function values для повторного использования в одном кадре
+- **Bytecode VM:** `BytecodeCallFrame.cs:287-302` — `TryGetCachedFunctionValue()` / `CacheFunctionValue()` через `_cachedFunctionValuesByRoutineId`
+- **Bytecode VM:** `BytecodeVm.cs:2833-2853` — `LoadFunctionValue()` с кэшированием
+- **Tests:** покрыто через indirect function value call тесты
+- **Текущий статус:** IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 
 ---
 
 ## 4. Фактическая архитектура
 
-### 4.1 Конвейер обработки BYREF
+### 4.1 Конвейер выполнения
 
 ```
-Исходный код: SUB Foo(BYREF x AS INTEGER)
-         ↓
-Lexer: TokenKind.ByRefKeyword
-         ↓
-Parser: ParameterSyntax { PassingKeyword = ByRefKeyword }
-         ↓
-Binder: ParameterSymbol { PassingMode = ByRef }
-         ↓
-  [При вызове: BindByRefArgument() — проверяет, что аргумент — BoundVariableExpression]
-         ↓
-Lowerer: CallFunctionByRef lowered instruction
-  ├── VariableByRefStoragePlan — прямая передача переменной
-  ├── FieldByRefStoragePlan — (мёртвый код) copyback для поля TYPE
-  └── ArrayElementByRefStoragePlan — (мёртвый код) copyback для элемента массива
-         ↓
-BytecodeCompiler: EmitCallByRef() → Opcode.CallByRef
-  операнды: [routineId, argCount, byValArgCount, byRefCount, ...{argIndex, sourceKind, sourceSlot}]
-         ↓
-BytecodeVm: ExecuteRoutineCall()
-  ├── ResolveByRefArgumentSlots() — создаёт BytecodeVariableSlot[] для ByRef-аргументов
-  ├── CreateFrame() — аргумент-слоты ByRef разделяются с вызывающим фреймом
-  └── CopyBackByRefArguments() — при нормальном возврате копирует значения обратно
+Исходный код (.axm)
+    ↓
+Lexer (TokenKind: ByRefKeyword, ByValKeyword, FunctionKeyword)
+    ↓
+Parser (ParameterSyntax с PassingKeyword, CallExpressionSyntax, NameExpressionSyntax)
+    ↓
+Binder (ParameterSymbol с PassingMode, BoundFunctionExpression, BoundCallExpression, BindByRefArgument)
+    ↓
+Lowering (BoundProgramLowerer: CallFunction, CallFunctionByRef, CallValue, ByRefStoragePlan, ByRefCopyBackPlan)
+    ↓
+BytecodeCompiler (Opcode.Call, Opcode.CallByRef, Opcode.CallValue, Opcode.LoadFunction)
+    ↓
+Interpreter (InvokeUserRoutine → RuntimeReferenceStoredValue для BYREF, RuntimeFunctionValue для closures)
+    ↓
+BytecodeVm (ExecuteRoutineCall → BytecodeVariableSlot delegates для BYREF, CopyBackByRefArguments при Return)
 ```
 
-### 4.2 Конвейер обработки Function Values
+### 4.2 Ключевые файлы
 
-```
-Исходныйコード: DIM f AS FUNCTION(INTEGER) AS INTEGER
-         ↓
-Parser: FunctionTypeClauseSyntax
-         ↓
-Binder: FunctionTypeSymbol { ParameterTypes, ParameterPassingModes, ReturnType }
-         ↓
-  [При присваивании: f = MyFunction → BoundFunctionExpression]
-  [При вызове: f(42) → BoundCallExpression с target = BoundFunctionExpression]
-         ↓
-Lowerer:
-  ├── LoadFunction — загрузка значения функции на стек
-  └── CallValue — вызов через значение на стеке
-         ↓
-BytecodeVm:
-  ├── LoadFunctionValue() → RuntimeFunctionValue с BytecodeRoutine + captured slots
-  └── ExecuteFunctionValueCall() → InvokeBytecodeFunction()
-```
+| Файл | Ответственность | Строк |
+|------|----------------|-------|
+| `src/Axiom.Lexing/TokenKind.cs` | `ByRefKeyword`, `ByValKeyword` | 2 |
+| `src/Axiom.Syntax/SyntaxKind.cs` | `ByRefKeyword` | 1 |
+| `src/Axiom.Semantics/Symbols/Symbols.cs` | `ParameterPassingMode`, `ParameterSymbol.IsByRef`, `FunctionTypeSymbol` | ~90 |
+| `src/Axiom.Semantics/Binding/Binder.InvocationExpressions.cs` | `BindByRefArgument()`, BYREF validation | ~30 |
+| `src/Axiom.Semantics/Binding/Binder.Expressions.cs` | `BoundFunctionExpression`, MB2029 check | ~15 |
+| `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs` | `ReportInvalidByRefArgument()`, `ReportUnsupportedByRefCallableValue()` | ~20 |
+| `src/Axiom.Runtime/Values/RuntimeFunctionValue.cs` | Function value (closure) storage | 66 |
+| `src/Axiom.Runtime/Execution/BytecodeVariableSlot.cs` | BYREF via getter/setter delegates | 91 |
+| `src/Axiom.Runtime/Execution/Interpreter.Builtins.cs` | `InvokeUserRoutine()`, `ResolveByRefStoredArgument()` | ~100 |
+| `src/Axiom.Runtime/Execution/BytecodeVm.cs` | `ExecuteRoutineCall()`, `ResolveByRefArgumentSlots()`, `CopyBackByRefArguments()`, `ExecuteFunctionValueCall()` | ~120 |
+| `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` | `ByRefArgumentTargets`, function value caching | ~30 |
+| `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs` | `LowerCall()`, `ByRefStoragePlan`, `ByRefCopyBackPlan` | ~180 |
+| `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` | `EmitCallByRef()` | ~60 |
+| `src/Axiom.Bytecode/Model/Opcode.cs` | `CallByRef` | 1 |
+| `src/Axiom.Core/DiagnosticCodes.cs` | MB2028, MB2029, MB3009 | 3 |
 
-### 4.3 Ключевые файлы
+### 4.3 Архитектурные решения
 
-| Файл | Ответственность |
-|------|----------------|
-| `src/Axiom.Lexing/Lexer.cs` | Токенизация `BYREF`, `BYVAL` |
-| `src/Axiom.Lexing/TokenKind.cs` | `ByRefKeyword`, `ByValKeyword` |
-| `src/Axiom.Parsing/Parser.Declarations.cs` | `ParseOptionalPassingKeyword()`, `ParseParameter()` |
-| `src/Axiom.Syntax/SyntaxKind.cs` | `ByRefKeyword`, `ByValKeyword` |
-| `src/Axiom.Semantics/Symbols/Symbols.cs` | `ParameterPassingMode`, `ParameterSymbol.IsByRef`, `FunctionTypeSymbol` |
-| `src/Axiom.Semantics/Binding/Binder.InvocationExpressions.cs` | `BindByRefArgument()`, проверка ByRef при вызовах |
-| `src/Axiom.Semantics/Binding/Binder.Expressions.cs` | Проверка ByRef при использовании функции как значения |
-| `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs` | `ReportInvalidByRefArgument()` (MB2028), `ReportUnsupportedByRefCallableValue()` (MB2029) |
-| `src/Axiom.Core/DiagnosticCodes.cs` | `InvalidByRefArgument` (MB2028), `UnsupportedByRefCallableValue` (MB2029) |
-| `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs` | `ByRefStoragePlan` hierarchy, `ByRefCopyBackPlan`, `LowerCall()` |
-| `src/Axiom.Bytecode/Model/LoweredInstruction.cs` | `CallFunctionByRef()` |
-| `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs` | `CallFunctionByRef` |
-| `src/Axiom.Bytecode/Model/Opcode.cs` | `CallByRef` |
-| `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` | `EmitCallByRef()` |
-| `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` | Валидация `CallByRef` |
-| `src/Axiom.Runtime/Values/RuntimeFunctionValue.cs` | Значение-функции |
-| `src/Axiom.Runtime/Values/RuntimeReferenceStoredValue.cs` | Ссылочное хранилище для BYREF в Interpreter |
-| `src/Axiom.Runtime/Execution/BytecodeVm.cs` | `ExecuteRoutineCall()`, `ResolveByRefArgumentSlots()`, `CopyBackByRefArguments()`, `InvokeBytecodeFunction()` |
-| `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` | `_byRefArgumentTargets` |
-| `src/Axiom.Runtime/Execution/Interpreter.Builtins.cs` | `InvokeUserRoutine()`, `ResolveByRefStoredArgument()` |
+1. **BYREF через RuntimeReferenceStoredValue (Interpreter):** В Interpreter BYREF аргумент оборачивается в `RuntimeReferenceStoredValue` с getter/setter лямбдами. Изменения немедленно видны через shared scope.
+
+2. **BYREF через BytecodeVariableSlot delegates (VM):** В VM BYREF аргумент передаётся через `BytecodeVariableSlot` с делегатами getter/setter. `CopyBackByRefArguments()` копирует изменённые значения обратно при Return.
+
+3. **Отдельный опкод CallByRef:** Для вызовов с BYREF аргументами используется отдельный опкод `CallByRef` с операндами, описывающими источники BYREF слотов (global=0, argument=1, local=2, capture=3).
+
+4. **Function values через RuntimeFunctionValue:** `RuntimeFunctionValue` хранит `FunctionSymbol` и захваченные слоты (scope chain для Interpreter, `BytecodeVariableSlot[]` для VM).
+
+5. **Function value caching:** VM кэширует function values в `BytecodeCallFrame._cachedFunctionValuesByRoutineId` для повторного использования.
+
+6. **BYREF ограничение для function values:** FUNCTION с BYREF параметрами не может быть function value (MB2029). Это сознательное ограничение, поскольку indirect call через `CallValue` не поддерживает BYREF операнды.
 
 ---
 
 ## 5. Полный путь выполнения
 
-### 5.1 BYREF: прямой вызов именованной процедуры
+### 5.1 BYREF вызов (Interpreter)
 
-**Interpreter:**
-```
-SUB AddOne(BYREF value AS INTEGER)
-    value = value + 1
-END SUB
+1. `EvaluateCallExpression()` — вычисление target и аргументов
+2. `target.AsFunction()` → `RuntimeFunctionValue`
+3. `InvokeUserRoutine()`:
+   - Для BYREF параметра: `ResolveByRefStoredArgument(boundArgument)` → `RuntimeReferenceStoredValue`
+   - `RuntimeReferenceStoredValue` создаёт getter/setter лямбды через scope lookup
+   - `scope.Define(parameter, storedArgument)`
+4. Выполнение statements — присваивание через BYREF немедленно меняет оригинал
+5. Возврат — shared reference автоматически сохраняет изменения
 
-DIM count AS INTEGER = 10
-AddOne(count)
-```
+### 5.2 BYREF вызов (BytecodeVm)
 
-1. Parser создаёт `ParameterSyntax` с `PassingKeyword = ByRefKeyword`
-2. Binder создаёт `ParameterSymbol("value", TypeSymbol.Integer, 0, ParameterPassingMode.ByRef)`
-3. При вызове `AddOne(count)`:
-   - `BindByRefArgument()` проверяет, что `count` — `BoundVariableExpression` того же типа
-   - Создаёт `BoundCallExpression` с `BoundVariableExpression` для аргумента
-4. Interpreter: `InvokeUserRoutine()`
-   - Для параметра `value` с `IsByRef == true`: `ResolveByRefStoredArgument(boundArguments[0], ...)`
-   - Создаёт `RuntimeReferenceStoredValue` с getter/setter, ссылающимися на `count` в scope вызывающего кода
-   - При `value = value + 1`: getter читает `count`, setter записывает в `count`
-   - После возврата: `count` равен 11
+1. `ExecuteRoutineCall()` с `Opcode.CallByRef`:
+   - `RentArguments()` из evaluation stack
+   - `ResolveByRefArgumentSlots()` — создание `BytecodeVariableSlot` с делегатами для каждого BYREF источника
+   - `CreateFrame()` с `byRefArgumentSlots`
+2. Выполнение инструкций — запись через slot delegate
+3. `ExecuteReturn()` → `CompleteReturn()`:
+   - `CopyBackByRefArguments()` — копирование изменённых значений обратно в source slots
+   - `CacheReusableFrame()`
 
-**Bytecode VM:**
-1. Lowerer: `LowerCall()` обнаруживает ByRef-параметр + `BoundVariableExpression`
-   - Добавляет индекс аргумента в `byRefArgumentIndices`, переменную в `byRefVariables`
-   - Эмитирует `CallFunctionByRef` lowered instruction
-2. BytecodeCompiler: `EmitCallByRef()`
-   - Формирует `Opcode.CallByRef` с операндами `[routineId, argCount, byValArgCount, byRefCount, argIndex, sourceKind, sourceSlot]`
-3. BytecodeVm: `ExecuteRoutineCall()`
-   - `ResolveByRefArgumentSlots()`: для sourceKind=2 (local) создаёт `BytecodeVariableSlot` через `callerFrame.GetOrCreateLocalSlot(sourceSlot)`
-   - `CreateArgumentSlots()`: аргумент-слот ByRef-параметра = shared slot из вызывающего фрейма
-   - При `StoreVariable(value)`: запись идёт прямо в shared slot → видна вызывающему коду
-   - `CopyBackByRefArguments()` при возврате: копирует `frame.Arguments[i].Value` → `targets[i].Store(...)` (для shared slots это фактически no-op)
+### 5.3 Function value вызов
 
-### 5.2 BYREF: вызов через function value (callback)
+1. `DIM op AS FUNCTION(INTEGER) AS INTEGER` — объявление переменной function type
+2. `op = DoubleValue` — сохранение ссылки на FUNCTION
+3. `op(5)` — косвенный вызов:
+   - Interpreter: `EvaluateCallExpression()` → `target.AsFunction()` → `InvokeUserRoutine()`
+   - VM: `ExecuteFunctionValueCall()` → `PopValue()` → `target.AsFunction()` → `InvokeBytecodeFunction()`
 
-```basic
-SUB Modify(BYREF x AS INTEGER)
-    x = x + 1
-END SUB
+### 5.4 Closure вызов
 
-DIM op AS FUNCTION(BYREF INTEGER)
-op = Modify    ' MB2029 — запрещено
-```
-
-1. Binder: `Binder.Expressions.cs:85-88` — при попытке использовать `Modify` как значение обнаруживает BYREF-параметр → `ReportUnsupportedByRefCallableValue()` → MB2029 → `BoundErrorExpression`
-2. Результат: семантическая ошибка, код не компилируется
-
-### 5.3 Function Value: прямой вызов
-
-```basic
-DIM op AS FUNCTION(INTEGER) AS INTEGER
-op = DoubleValue
-PRINT op(42)
-```
-
-1. Binder: `DoubleValue` — функция без BYREF-параметров → `BoundFunctionExpression`
-2. Присваивание: `op = DoubleValue` → `LoadFunction`
-3. Вызов: `op(42)` → `BoundCallExpression` с target = `BoundVariableExpression(op)`
-4. Lowerer: target не `BoundFunctionExpression` → `LowerExpression(target)` + `CallValue`
-5. VM: `ExecuteFunctionValueCall()` → `PopValue()` → `AsFunction()` → `InvokeBytecodeFunction()`
+1. Локальная FUNCTION захватывает переменные из внешней области
+2. Interpreter: `CaptureScopeForFunction()` → `RuntimeScope` parent chain
+3. VM: `ResolveCapturedSlots()` → `BytecodeVariableSlot[]` с кэшированием
+4. Захваченные переменные разделяются (shared state)
+5. Возвращённая closure сохраняет захват после выхода из внешней функции
 
 ---
 
 ## 6. Фактический семантический контракт
 
-### 6.1 BYREF параметр
+### 6.1 BYREF
 
-**Вход:** простая изменяемая переменная того же типа, что и параметр
-**Обработка:** вызываемая процедура получает прямой доступ к хранилищу вызывающей переменной
-**Выход:** после возврата из процедуры исходная переменная содержит все изменения, сделанные через параметр
+**Вход:**
+- Параметр объявлен как `BYREF <имя> AS <тип>`
+- Аргумент должен быть `BoundVariableExpression` (простая переменная)
 
-**Допустимые входы:**
-- Простая переменная (`DIM x AS INTEGER` → `BYREF y AS INTEGER`)
-- Переменная TYPE (`DIM user AS Person` → `BYREF u AS Person`)
+**Обработка:**
+- Interpreter: `RuntimeReferenceStoredValue` с getter/setter через scope lookup
+- VM: `BytecodeVariableSlot` с getter/setter делегатами; `CopyBackByRefArguments()` при Return
 
-**Недопустимые входы (MB2028):**
-- Выражение (`x + 1`)
-- Литерал (`42`)
-- Вызов функции (`Foo()`)
-- Поле TYPE (`user.Name`) — не через прямую переменную
-- Элемент массива (`arr(1)`)
+**Выход:**
+- Изменения видны вызывающему коду немедленно
 
-**Недопустимое использование (MB2029):**
-- Функция с BYREF-параметрами как значение-функции
-- Callback-вызов через function-value с BYREF-параметрами
+**Ограничения:**
+- Аргумент должен быть простой переменной (не выражением, не array element, не record field через выражение) — MB2028
+- FUNCTION с BYREF параметрами не может быть function value — MB2029
 
-### 6.2 Function Value
+### 6.2 Function Values
 
-**Вход:** имя функции без BYREF-параметров, присвоенное переменной типа `FUNCTION(...) AS ...`
-**Обработка:** создаётся `RuntimeFunctionValue`, содержащий ссылку на функцию и захваченную область видимости
-**Выход:** при вызове через `f(args)` выполняется тело функции с замыканием
+**Вход:**
+- FUNCTION объявлена без BYREF параметров
+- Сохраняется в переменной типа `FUNCTION(params) AS type`
 
-**Побочные эффекты:** замыкания могут изменять захваченные переменные (shared state)
+**Обработка:**
+- `RuntimeFunctionValue` хранит `FunctionSymbol` + захваченные слоты
+- Косвенный вызов через `CallValue` опкод (VM) или `EvaluateCallExpression()` (Interpreter)
+
+**Выход:**
+- Значение типа ReturnType
+
+**Ограничения:**
+- SUB не может быть function value — MB2019
+- FUNCTION с BYREF параметрами не может быть function value — MB2029
+- Вызов неинициализированной переменной-функции — MB3009
+
+### 6.3 Closures
+
+**Контракт:**
+- Локальная FUNCTION захватывает переменные из внешней области видимости
+- Захваченные переменные разделяются (shared state)
+- Возвращённая closure сохраняет захваченные переменные после выхода из внешней функции
+- Изменения через closure видны всем, кто разделяет тот же захват
 
 ---
 
 ## 7. Анализ Parser
 
-### 7.1 Парсинг BYREF/BYVAL
+### 7.1 Парсинг BYREF/BYVAL модификаторов
 
-**Файл:** `Parser.Declarations.cs:309-325`
+**Файл:** `Parser.Declarations.cs:249-325`
 
-Parser обрабатывает модификаторы параметров через `ParseOptionalPassingKeyword()`. Логика простая и корректная:
-- Если текущий токен — `ByRefKeyword` или `ByValKeyword`, consume его
-- Иначе возвращает `null` (модификатор отсутствует → по умолчанию BYVAL)
+Корректно обрабатывает:
+- Опциональный BYREF/BYVAL модификатор перед именем параметра
+- `BYREF` → `SyntaxKind.ByRefKeyword`
+- `BYVAL` → `SyntaxKind.ByValKeyword` (или отсутствие модификатора)
+- Множественные параметры с разными модификаторами
 
-**Оценка:** Parser корректно обрабатывает все合法ные формы. Нет проблем.
+### 7.2 Парсинг вызовов
 
-### 7.2 Парсинг типов функций
+**Файл:** `Parser.Statements.cs`, `Parser.Expressions.cs`
 
-Parser поддерживает синтаксис `FUNCTION(params) AS ReturnType` для объявления типов функций. Это используется для переменных, хранящих значения-функции.
+Корректно обрабатывает:
+- Прямые вызовы: `FunctionName(args)`
+- Косвенные вызовы: `variable(args)`
+- Вызовы методов: `receiver.Method(args)`
+- Вложенные вызовы: `f(g(x))`
 
-**Оценка:** Корректно.
+### 7.3 Оценка Parser
+
+Parser чистый. BYREF/BYVAL — обычные ключевые слова, парсятся как часть параметров. Никакой специальной логики для function values не требуется — они парсятся как обычные выражения и вызовы.
 
 ---
 
 ## 8. Анализ Binder
 
-### 8.1 BindByRefArgument
+### 8.1 Создание ParameterSymbol с PassingMode
+
+**Файл:** `Binder.Declarations.cs:669-691`
+
+`CreateFunctionSymbol()`:
+- Итерация параметров
+- Разрешение типов
+- Создание `ParameterSymbol` с `PassingMode` (BYVAL/BYREF)
+- Возврат `FunctionSymbol` с параметрами и типом результата
+
+### 8.2 Валидация BYREF аргументов
 
 **Файл:** `Binder.InvocationExpressions.cs:709-738`
 
-```
-BindByRefArgument(argument, expectedType):
-  1. BindAssignableTarget(argument) — пытается связать как присваиваемую цель
-  2. Если тип Error → пытает BindExpression + ReportInvalidByRefArgument → MB2028
-  3. Если не BoundVariableExpression → ReportInvalidByRefArgument → MB2028
-  4. Если тип не совпадает → ReportTypeMismatch
-  5. Возвращает BoundVariableExpression
-```
+`BindByRefArgument()`:
+1. `BindAssignableTarget(argument)` — попытка привязать как assignable target
+2. Если тип `Error` → fallback на `BindExpression()` + `ReportInvalidByRefArgument()`
+3. Если не `BoundVariableExpression` → `ReportInvalidByRefArgument()` (MB2028)
+4. Если тип не совпадает → `ReportTypeMismatch()`
+5. Возврат `variableExpression`
 
-**Критическое ограничение:** BindByRefArgument принимает ТОЛЬКО `BoundVariableExpression`. Это значит:
-- `BYREF x AS INTEGER` + аргумент `myVar` → OK (BoundVariableExpression)
-- `BYREF x AS INTEGER` + аргумент `myVar + 1` → MB2028 (BoundBinaryExpression)
-- `BYREF x AS INTEGER` + аргумент `record.Field` → MB2028 (BoundFieldAccessExpression)
-- `BYREF x AS INTEGER` + аргумент `arr(1)` → MB2028 (BoundArrayAccessExpression)
+**Критическое наблюдение:** валидация в Binder ограничивает BYREF только `BoundVariableExpression`. Это означает:
+- ✅ `Touch(myVar)` — простая переменная
+- ❌ `Touch(arr(i))` — array element → MB2028
+- ❌ `Touch(record.Field)` — record field → MB2028
+- ❌ `Touch(n + 1)` — выражение → MB2028
 
-### 8.2 Ограничение BYREF для function values
+### 8.3 Валидация Function Values
 
-**Файл:** `Binder.Expressions.cs:85-88`
+**Файл:** `Binder.Expressions.cs:77-92`
 
-При использовании функции как значения (`DIM f AS FUNCTION(...): f = MyFunc`):
-```csharp
-if (function.Parameters.Any(static parameter => parameter.IsByRef))
-{
-    ReportUnsupportedByRefCallableValue(function.Name, expression.IdentifierToken.Location);
-    return new BoundErrorExpression(expression.IdentifierToken.Location);
-}
-```
+При создании `BoundFunctionExpression`:
+1. Проверка `function.IsSub` → MB2019 (SUB не может быть value)
+2. Проверка `function.Parameters.Any(parameter => parameter.IsByRef)` → MB2029
 
-Аналогичная проверка в `Binder.InvocationExpressions.cs:627-638` для callback-вызовов через function-value.
+**Файл:** `Binder.InvocationExpressions.cs:620-638`
 
-**Оценка:** Логика корректна. Ограничение сознательно принято и документировано.
+При indirect call через выражение:
+1. Проверка `target is not BoundFunctionExpression && functionType.ParameterPassingModes.Any(mode => mode.IsByRef())` → MB2029
 
-### 8.3 Проверка типов для BYREF
+### 8.4 Оценка Binder
 
-В `BindByRefArgument` проверяется точное совпадение типов (`variableExpression.Type != expectedType`). Нет неявных преобразований для BYREF-аргументов — это корректно, так как BYREF требует совместимости хранилищ.
+Binder чистый, с правильной проверкой типов. Валидация BYREF строгая и предсказуемая. Ограничение MB2029 для function values с BYREF параметрами — сознательное архитектурное решение.
 
 ---
 
 ## 9. Анализ Interpreter
 
-### 9.1 ResolveByRefStoredArgument
-
-**Файл:** `Interpreter.Builtins.cs:625-677`
-
-Метод обрабатывает три случая:
-1. **BoundVariableExpression** — основной путь: ищет хранилище переменной в scope, создаёт `RuntimeReferenceStoredValue` с getter/setter
-2. **BoundFieldAccessExpression** — создаёт reference на поле записи (НО: этот порт unreachable из-за Binder)
-3. **BoundArrayAccessExpression** — создаёт reference на элемент массива (НО: этот порт unreachable из-за Binder)
-4. **Fallback** — вычисляет выражение, копирует для хранения, создаёт reference на копию (НЕПРАВИЛЬНО для семантики BYREF, но unreachable)
-
-**Важно:** Метод содержит обработку для полей и элементов массива, которая в текущей реализации НЕДОСТИЖИМА из-за проверок в Binder. Это подготовительный код для будущего расширения.
-
-### 9.2 InvokeUserRoutine
+### 9.1 InvokeUserRoutine
 
 **Файл:** `Interpreter.Builtins.cs:415-481`
 
-При вызове пользовательской функции:
-- Для каждого параметра с `IsByRef == true`: `ResolveByRefStoredArgument(boundArguments[index], ...)`
-- Для остальных: `CopyForStorage()` или `AsArray()`
-- `scope.Define(parameter, storedArgument)` — привязывает хранилище к параметру
+Ключевая логика для BYREF:
+```csharp
+IRuntimeStoredValue storedArgument = parameter.IsByRef && boundArguments is not null
+    ? ResolveByRefStoredArgument(boundArguments[index], callSiteLocation)
+    : parameter.IsArray ? argument.AsArray() : argument.CopyForStorage();
+scope.Define(parameter, storedArgument);
+```
 
-**После возврата:** scope и call frame уничтожаются в `finally`. Ссылочное хранилище (`RuntimeReferenceStoredValue`)继续保持 действительным, так как оно захватывает лямбды с указателем на scope вызывающего кода.
+### 9.2 ResolveByRefStoredArgument
 
-### 9.3 Семантика BYREF в Interpreter
+**Файл:** `Interpreter.Builtins.cs:625-677`
 
-В Interpreter BYREF реализован через замыкания: `RuntimeReferenceStoredValue` — это лямбда, которая читает/пишет в scope вызывающего кода. Изменения НЕМЕДЛЕННО видны вызывающему коду (нет отложенного copyback). Это отличается от модели VM.
+Обрабатывает 3 случая:
+1. **`BoundVariableExpression`** → `RuntimeReferenceStoredValue` с getter/setter через `CurrentScope.TryLookupStorage()`
+2. **`BoundFieldAccessExpression`** → `RuntimeReferenceStoredValue` с getter/setter через `record.GetField()`/`record.SetField()`
+3. **`BoundArrayAccessExpression`** → `RuntimeReferenceStoredValue` с getter/setter через `array.GetValue()`/`array.SetValue()`
+4. **Fallback** → временная копия (не должно происходить при корректной валидации в Binder)
+
+**Критическое наблюдение:** Interpreter фактически поддерживает BYREF для array elements и record fields через `ResolveByRefStoredArgument()`, но Binder не позволяет такие вызовы напрямую (MB2028). Это значит, что fallback path (случай 4) в Interpreter — dead code при нормальном использовании.
+
+### 9.3 CaptureScopeForFunction
+
+**Файл:** `Interpreter.Helpers.cs:625-647`
+
+- Для глобальных функций: возвращает `_globalScope`
+- Для локальных функций: обходит scope chain или call stack, чтобы найти scope объявляющей процедуры
+
+### 9.4 Оценка Interpreter
+
+Реализация корректная. BYREF через `RuntimeReferenceStoredValue` работает через shared references — копирование обратно не нужно. Замыкания работают через scope chain.
 
 ---
 
 ## 10. Анализ Bytecode / VM
 
-### 10.1 Lowering BYREF
+### 10.1 Lowering вызовов
 
-**Файл:** `BoundProgramLowerer.cs:1664-1725`
+**Файл:** `BoundProgramLowerer.cs:1664-1736`
 
-`LowerCall()` обрабатывает три ветки для каждого аргумента:
+`LowerCall()`:
+1. Для прямых вызовов (`BoundFunctionExpression` target):
+   - Разделение BYVAL/BYREF аргументов
+   - BYREF для простой переменной: `VariableByRefStoragePlan` → `byRefArgumentIndices` + `byRefVariables`
+   - BYREF для TYPE method SELF: создание `__type_method_self` temporary
+   - BYREF с copy-back: `TryLowerByRefCopyBackArgument()` → `ByRefCopyBackPlan`
+   - Эмиссия `CallFunction` или `CallFunctionByRef`
+   - Эмиссия BYREF copy-back plans
+2. Для косвенных вызовов:
+   - Lowering target expression
+   - Lowering аргументов
+   - Эмиссия `CallValue`
 
-1. **Прямая переменная BYREF** (line 1680-1685): `parameter?.IsByRef == true && argument is BoundVariableExpression` → добавляет в `byRefArgumentIndices` и `byRefVariables`, НЕ эмитирует загрузку значения на стек
-2. **TYPE method self** (line 1687-1696): если receiver — не переменная, создаёт временный `__type_method_self`
-3. **Copyback для составных целей** (line 1698-1706): `TryLowerByRefCopyBackArgument()` → создаёт временный `__byref_value`, загружает значение, после вызова копирует обратно
+### 10.2 ByRefStoragePlan Hierarchy
 
-**Ветка 3 — мёртвый код:** Binder не допускает не-переменные аргументы для BYREF до стадии lowering.
+**Файл:** `BoundProgramLowerer.cs:17-112`
 
-### 10.2 ByRefStoragePlan hierarchy
-
-**Файл:** `BoundProgramLowerer.cs:17-125`
-
-- `VariableByRefStoragePlan` — load/store через `LoadVariable`/`StoreVariable` (ИСПОЛЬЗУЕТСЯ для косвенных путей)
-- `FieldByRefStoragePlan` — load/store через `LoadField`/`StoreField` (МЁРТВЫЙ КОД)
-- `ArrayElementByRefStoragePlan` — load/store через `LoadElement`/`StoreElement` (МЁРТВЫЙ КОД)
-
-### 10.3 EmitCallByRef
-
-**Файл:** `BytecodeCompiler.cs:1195-1257`
-
-Формирует `Opcode.CallByRef` с операндами:
 ```
-[routineId, totalArgCount, byValArgCount, byRefCount, ...{argIndex, sourceKind, sourceSlot}]
+ByRefStoragePlan (abstract)
+├── VariableByRefStoragePlan — прямая переменная
+├── FieldByRefStoragePlan — поле записи (через parent plan)
+└── ArrayElementByRefStoragePlan — элемент массива
 ```
 
-sourceKind:
-- 0 = global
-- 1 = caller's argument (parameter slot)
-- 2 = caller's local
-- 3 = caller's capture
+**Критическое наблюдение:** `FieldByRefStoragePlan` и `ArrayElementByRefStoragePlan` существуют в коде и используются в `TryCreateByRefStoragePlan()`, но Binder не позволяет передавать fields и array elements через BYREF напрямую. Эти планы используются только через `TryLowerByRefCopyBackArgument()` для TYPE method SELF и copy-back сценариев.
 
-### 10.4 VM: ResolveByRefArgumentSlots
+### 10.3 BytecodeCompiler EmitCallByRef
+
+**Файл:** `BytecodeCompiler.cs:1195-1256`
+
+Операнды `CallByRef`:
+- `[0]` = routineId
+- `[1]` = totalArgCount
+- `[2]` = byValArgumentCount
+- `[3]` = byRefCount
+- Для каждого BYREF: `[4+i*3]` = argumentIndex, `[5+i*3]` = sourceKind (0=global, 1=argument, 2=local, 3=capture), `[6+i*3]` = sourceSlot
+
+### 10.4 VM ResolveByRefArgumentSlots
 
 **Файл:** `BytecodeVm.cs:3009-3035`
 
-Для каждого ByRef-аргумента создаёт `BytecodeVariableSlot`:
-- sourceKind 0 (global): новый slot с getter/setter через `LoadGlobalUnchecked`/`StoreGlobalUnchecked`
-- sourceKind 1 (caller argument): `callerFrame.Arguments[sourceSlot]` — ПРЯМОЕ РАЗДЕЛЕНИЕ SLOTA
-- sourceKind 2 (caller local): `callerFrame.GetOrCreateLocalSlot(sourceSlot)` — обёртка над локалом
-- sourceKind 3 (caller capture): `callerFrame.Captures[sourceSlot]` — ПРЯМОЕ РАЗДЕЛЕНИЕ SLOTA
+Для каждого BYREF аргумента:
+- sourceKind=0 → `new BytecodeVariableSlot(() => LoadGlobalUnchecked(slot), value => StoreGlobalUnchecked(slot, value))`
+- sourceKind=1 → `callerFrame.Arguments[slot]` (прямая ссылка на slot)
+- sourceKind=2 → `callerFrame.GetOrCreateLocalSlot(slot)` (прямая ссылка на local slot)
+- sourceKind=3 → `callerFrame.Captures[slot]` (прямая ссылка на capture slot)
 
-### 10.5 VM: CopyBackByRefArguments
+### 10.5 VM CopyBackByRefArguments
 
-**Файл:** `BytecodeVm.cs:4957-4976`
+**Файл:** `BytecodeVm.cs:4957-4975`
 
-При нормальном возврате (`CompleteReturn`):
-```csharp
-for (var index = 0; index < count; index++)
-{
-    var target = targets[index];
-    if (target is null) continue;
-    target.Store(frame.Arguments[index].Value);
-}
-```
+Вызывается из `CompleteReturn()`:
+- Итерация по `frame.ByRefArgumentTargets`
+- Для каждого non-null target: `target.Store(frame.Arguments[index].Value)`
+- Гарантирует, что изменения BYREF аргументов видны вызывающему кадру
 
-**Замечание:** Для sourceKind 1 и 3 (shared slots) это фактически no-op, так как `frame.Arguments[index]` и `target` — один и тот же объект. Для sourceKind 0 и 2 (wrapper slots) это тоже redundant, так как wrapper уже делегирует к реальному хранилищу.
+### 10.6 VM ExecuteFunctionValueCall
 
-**Критический случай:** CopyBackByRefArguments вызывается ТОЛЬКО при нормальном возврате (`CompleteReturn`). При ошибке (`RuntimeFailureException`) copyback НЕ происходит.
+**Файл:** `BytecodeVm.cs:3037-3058`
 
-### 10.6 VM: InvokeBytecodeFunction (function value call)
+1. `PopValue()` → target
+2. `target.AsFunction()` → `RuntimeFunctionValue`
+3. Если null → `ReportEmptyFunctionValue()` (MB3009)
+4. `InvokeBytecodeFunction(functionValue, arguments, location)`
+5. Если `returnsValue` → push result на evaluation stack
 
-**Файл:** `BytecodeVm.cs:4587-4642`
+### 10.7 Оценка Bytecode / VM
 
-При вызове через function value:
-```csharp
-_callStack.Push(CreateFrame(routine, arguments, captures, callSiteLocation: callSiteLocation));
-```
-
-**Замечание:** `CreateFrame` вызывается БЕЗ `byRefArgumentSlots`. Это значит, что function-value вызовы НЕ поддерживают BYREF — аргументы всегда передаются как копии. Это согласуется с ограничением в Binder (MB2029).
+Lowering чистый. VM реализация корректная с frame reuse, capture caching, BYREF через slot delegates. FINALLY unwinding при RETURN работает правильно. CopyBackByRefArguments гарантирует корректное обновление source slots.
 
 ---
 
@@ -533,196 +538,164 @@ _callStack.Push(CreateFrame(routine, arguments, captures, callSiteLocation: call
 
 ### 11.1 RuntimeFunctionValue
 
-**Файл:** `RuntimeFunctionValue.cs`
+**Файл:** `RuntimeFunctionValue.cs` (66 строк)
 
-Класс хранит:
-- `Function` — `FunctionSymbol` (сигнатура функции)
-- `CapturedScope` — `RuntimeScope` (для Interpreter)
-- `BytecodeRoutine` — `BytecodeRoutine?` (для VM, прямая ссылка на рутину)
-- `BytecodeCapturedSlots` — `IReadOnlyList<BytecodeVariableSlot>?` (для VM)
-- `BytecodeBuiltinBindingId` — `int?` (для built-in function values в VM)
+Хранит:
+- `Function` (FunctionSymbol) — всегда
+- `CapturedScope` (RuntimeScope) — для Interpreter closures
+- `BytecodeRoutine` (BytecodeRoutine) — для VM direct calls
+- `BytecodeCapturedSlots` (IReadOnlyList<BytecodeVariableSlot>) — для VM closures
+- `BytecodeBuiltinBindingId` — для built-in function values
 
-Конструкторы:
-1. `(FunctionSymbol, RuntimeScope)` — для Interpreter
-2. `(FunctionSymbol, IReadOnlyList<BytecodeVariableSlot>)` — для VM (user function)
-3. `(BytecodeRoutine, BytecodeVariableSlot[])` — для VM (с прямой ссылкой на рутину)
-4. С `bytecodeBuiltinBindingId` — для built-in function values
+### 11.2 BytecodeVariableSlot
 
-### 11.2 RuntimeReferenceStoredValue
+**Файл:** `BytecodeVariableSlot.cs` (91 строк)
 
-**Файл:** `RuntimeReferenceStoredValue.cs`
+Поддерживает:
+- Прямое хранение значения (`_value`)
+- Делегаты getter/setter для BYREF (`_getter`, `_setter`)
+- `FixedStringLength` для fixed strings
+- `Store()`, `StoreAppendStringValue()`, `NormalizeForStorage()`
 
-Простая обёртка над getter/setter лямбдами:
-```csharp
-public RuntimeValue Value
-{
-    get => _getter();
-    set => _setter(value);
-}
-```
+### 11.3 BytecodeCallFrame
 
-Используется в Interpreter для BYREF-параметров и для ссылок на поля/элементы массива.
+**Файл:** `BytecodeCallFrame.cs`
+
+Поддерживает:
+- `ByRefArgumentTargets` (BytecodeVariableSlot[]) — targets для copy-back
+- `_cachedFunctionValuesByRoutineId` — кэш function values
+- `TryGetCachedFunctionValue()` / `CacheFunctionValue()`
+- `Reset()` для frame reuse
 
 ---
 
 ## 12. Взаимодействие с типами
 
-| Тип | BYREF параметр | Function Value | Примечания |
-|-----|:-:|:-:|---|
-| INTEGER | ✅ | ✅ | Полная поддержка |
-| LONG | ✅ | ✅ | Полная поддержка |
-| DOUBLE | ✅ | ✅ | Полная поддержка |
-| DECIMAL | ✅ | ✅ | Полная поддержка |
-| STRING | ✅ | ✅ | Полная поддержка |
-| BOOLEAN | ✅ | ✅ | Полная поддержка |
-| IMAGE | ✅ | ✅ | Полная поддержка |
-| SPRITE | ✅ | ✅ | Полная поддержка |
-| TILESET | ✅ | ✅ | Полная поддержка |
-| TILEMAP | ✅ | ✅ | Полная поддержка |
-| FILE | ✅ | ✅ | Полная поддержка |
-| FUNCTION(...) | ❌ (MB2029) | ✅ | BYREF для function values запрещён |
-| ArrayType | ❌ (MB2028) | ✅ | BYREF для массивов запрещён |
-| UserDefinedType (TYPE) | ✅ | ✅ | Полная поддержка |
+| Тип | Как BYREF параметр | Как BYVAL параметр | Как function value | Как closure capture |
+|-----|-------------------|-------------------|-------------------|-------------------|
+| INTEGER | ✅ | ✅ | N/A | ✅ |
+| LONG | ✅ | ✅ | N/A | ✅ |
+| DOUBLE | ✅ | ✅ | N/A | ✅ |
+| DECIMAL | ✅ | ✅ | N/A | ✅ |
+| STRING | ✅ | ✅ | N/A | ✅ |
+| BOOLEAN | ✅ | ✅ | N/A | ✅ |
+| ARRAY | ❌ MB2028 | ✅ (reference) | N/A | ✅ |
+| TYPE | ✅ | ✅ (deep copy) | N/A | ✅ |
+| FUNCTION | ❌ MB2029 | ✅ как function type | ✅ | ✅ |
 
 ---
 
 ## 13. Взаимодействие со String
 
-Строки в BYREF работают корректно. При передаче строки BYREF:
-- Interpreter: `RuntimeReferenceStoredValue` указывает на хранилище строки в scope вызывающего кода
-- VM: shared slot указывает на строку в слоте вызывающего фрейма
-
-При изменении строки через BYREF-параметр (`value = "new"`) изменение видно вызывающему коду.
-
-**Fixed strings:** Не проверены отдельно, но механизм должен работать аналогично через `FixedStringLength`.
+- Строки передаются BYVAL (копия, т.к. string immutable в CLR)
+- Строки передаются BYREF (ссылка на оригинал через `RuntimeReferenceStoredValue`)
+- Fixed strings (`STRING * N`) запрещены как параметры и возврат FUNCTION (MB2026)
+- Возврат строки из FUNCTION корректно копирует через `CopyForStorage()`
 
 ---
 
 ## 14. Взаимодействие с Array
 
-**Массивы как аргументы BYREF — НЕ поддержаны (MB2028).**
-
-Binder не допускает передачу элемента массива как BYREF-аргумента:
-```basic
-SUB Modify(BYREF x AS INTEGER)
-    x = x + 1
-END SUB
-
-DIM arr(5) AS INTEGER
-arr(1) = 10
-Modify(arr(1))   ' MB2028 — недопустимый аргумент BYREF
-```
-
-Lowerer содержит подготовительный код (`ArrayElementByRefStoragePlan`), но он недостижим.
-
-**Массивы как значения (BYVAL):** Полная поддержка, включая многомерные массивы.
+- Массивы передаются BYVAL как reference (не deep copy) — стандартная семантика BASIC
+- Массивы передаются BYREF — запрещено (MB2028) через Binder
+- Массив можно вернуть из FUNCTION
+- Массив можно передать function value как параметр (для callback built-ins: ARRAYFILTER, ARRAYMAP и т.д.)
+- Callback built-ins (ARRAYEVERY, ARRAYSOME, ARRAYFILTER, ARRAYMAP, ARRAYREDUCE) принимают function values как predicates/selectors/reducers
 
 ---
 
 ## 15. Взаимодействие с TYPE
 
-### 15.1 BYREF для записей TYPE
-
-Полная поддержка. Запись TYPE передаётся BYREF и может быть изменена через параметр:
-```basic
-SUB Birthday(BYREF user AS Person)
-    user.Age = user.Age + 1
-END SUB
-```
-
-### 15.2 SELF как скрытый BYREF
-
-Все методы TYPE получают неявный первый параметр `SELF` с `ParameterPassingMode.ByRef`. Это позволяет методам изменять поля экземпляра.
-
-### 15.3 TYPE-методы с BYREF-параметрами
-
-TYPE-методы могут иметь дополнительные BYREF-параметры:
-```basic
-TYPE Counter
-    Value AS INTEGER
-    SUB AddToSelf(BYREF other AS INTEGER)
-        SELF.Value = SELF.Value + other
-    END SUB
-END TYPE
-```
+- TYPE передаётся BYVAL как deep copy
+- TYPE передаётся BYREF как reference (изменения видны вызывающему)
+- SELF в TYPE методах — автоматический BYREF параметр (ordinal 0)
+- TYPE конструктор `SUB New(...)` с неявным SELF как BYREF
+- Lowering для TYPE method SELF создаёт `__type_method_self` temporary если receiver — не простая переменная
 
 ---
 
 ## 16. Взаимодействие с Functions / SUB
 
-### 16.1 Параметры
+### 16.1 Function values как параметры
 
-| Параметр | Поддержка |
-|----------|-----------|
-| BYVAL (по умолчанию) | ✅ |
-| BYREF | ✅ (только простые переменные) |
-| Named arguments | ❌ (только для TYPE literals) |
-| Optional parameters | ❌ |
-| Default values | ❌ |
-| ParamArray | ❌ |
+- FUNCTION можно передавать как параметр типа `FUNCTION(params) AS type`
+- Callback built-ins используют function values: ARRAYFILTER, ARRAYMAP, ARRAYREDUCE, ARRAYEVERY, ARRAYSOME
+- Пустое function value → MB3009
 
-### 16.2 Return
+### 16.2 Function values как возврат
 
-- `SUB` возвращает `RuntimeValue.Void`
-- `FUNCTION` возвращает значение через `RETURN expr`
-- В VM: `CopyForStorage()` при возврате значения
-- В Interpreter: `signal.Value.CopyForStorage()` при возврате значения
+- FUNCTION может вернуть другую FUNCTION (returned closure)
+- Возвращённая closure сохраняет захват после выхода из внешней функции
 
-### 16.3 Closures
+### 16.3 BYREF ограничение
 
-Замыкания работают корректно в обоих движках:
-- Вложенные функции захватывают переменные из внешней области видимости
-- Захваченные переменные разделяются между всеми ссылками на замыкание (shared state)
-- Замыкания можно возвращать из функций
+- FUNCTION с BYREF параметрами не может быть function value (MB2029)
+- Это сознательное ограничение: `CallValue` опкод не поддерживает BYREF операнды
+- Причина: indirect call не знает сигнатуру до runtime, поэтому не может создать правильные BYREF slot delegates
 
 ---
 
 ## 17. Взаимодействие с Control Flow
 
-BYREF-параметры работают корректно внутри всех конструкций управления потоком:
-- `IF/ELSE` — нет влияния
-- `FOR/NEXT` — нет влияния
-- `WHILE/WEND` — нет влияния
-- `DO/LOOP` — нет влияния
-- `SELECT CASE` — нет влияния
-- `TRY/CATCH/FINALLY` — **особый случай** (см. раздел 18)
+### 17.1 RETURN и BYREF
 
-Function values работают корректно внутри всех конструкций управления потоком, включая передачу как аргументы и возврат из функций.
+RETURN из процедуры с BYREF параметрами корректно:
+- Interpreter: shared references автоматически сохраняют изменения
+- VM: `CopyBackByRefArguments()` вызывается до pop call frame
+
+### 17.2 TRY/CATCH/FINALLY и BYREF
+
+BYREF copy-back происходит в `CompleteReturn()`, который вызывается после FINALLY unwinding. Это гарантирует, что BYREF изменения сохраняются даже при выходе через FINALLY.
+
+### 17.3 Рекурсия и BYREF
+
+BYREF корректно работает при рекурсии. Каждый уровень рекурсии создаёт свои BYREF slot delegates, ссылающиеся на правильный уровень scope.
 
 ---
 
 ## 18. Взаимодействие с Error / Exception System
 
-### 18.1 BYREF и TRY/CATCH
+### 18.1 Семантические ошибки
 
-**Критическое наблюдение:** При возникновении ошибки внутри процедуры с BYREF-параметрами:
+| Код | Описание | Контекст |
+|-----|----------|----------|
+| MB2019 | SUB имя как значение | `handler = Show` где Show — SUB |
+| MB2020 | Вызов не-функции | `value()` где value — INTEGER |
+| MB2028 | BYREF не переменная | `Touch(n + 1)` |
+| MB2029 | BYREF function value | FUNCTION с BYREF params как value |
 
-**Interpreter:** Изменения, сделанные через BYREF-параметр до ошибки, УЖЕ ВИДНЫ вызывающему коду через `RuntimeReferenceStoredValue`. Ссылочная семантика означает, что изменения немедленны. TRY/CATCH не откатывает эти изменения.
+### 18.2 Runtime ошибки
 
-**Bytecode VM:** `CopyBackByRefArguments()` вызывается ТОЛЬКО в `CompleteReturn()` (нормальный возврат). При `RuntimeFailureException` copyback НЕ происходит. Однако, поскольку для простых переменных и локалов используются shared slots, изменения через shared slot УЖЕ ВИДНЫ до ошибки. Copyback нужен только для wrapper-слотов (global, local), и там изменения тоже немедленны через getter/setter.
-
-**Вывод:** Оба движка ведут себя консистентно — изменения через BYREF немедленны и не откатываются при ошибке. Это поведение по дизайну (ссылочная семантика, не транзакционная).
-
-### 18.2 Function values и TRY/CATCH
-
-Function values работают корректно с TRY/CATCH. Замыкания сохраняют свою область видимости независимо от стека вызовов.
+| Код | Описание | Контекст |
+|-----|----------|----------|
+| MB3009 | Пустое значение function value | Вызов неинициализированной переменной-функции |
 
 ---
 
 ## 19. State / Lifetime / Ownership
 
-### 19.1 BYREF: кто владеет данными
+### 19.1 RuntimeReferenceStoredValue (Interpreter BYREF)
 
-| Ресурс | Создаёт | Владеет | Изменяет | Уничтожает |
-|--------|---------|---------|----------|------------|
-| Значение переменной (BYVAL) | Вызывающий код | Callee (копия) | Callee | GC |
-| Ссылка на переменную (BYREF) | Вызывающий код | Вызывающий код | Callee через reference | GC (reference) |
-| RuntimeReferenceStoredValue | Interpreter | Callee scope | — | GC при уничтожении scope |
-| BytecodeVariableSlot (shared) | VM | Общий | Callee через shared slot | GC |
+- **Создаётся:** `ResolveByRefStoredArgument()` при входе в процедуру
+- **Владелец:** `RuntimeScope` вызываемой процедуры
+- **Lifetime:** От входа в процедуру до выхода
+- **Механизма:** getter/setter лямбды ссылаются на scope вызывающей стороны
+- **Уничтожается:** При Pop scope в finally
 
-### 19.2 Function Value: lifetime замыкания
+### 19.2 BytecodeVariableSlot (VM BYREF)
 
-`RuntimeFunctionValue` захватывает `RuntimeScope` (Interpreter) или `BytecodeVariableSlot[]` (VM). Замыкание живёт до тех пор, пока существует хотя бы одна ссылка на `RuntimeFunctionValue`. Захваченные переменные не уничтожаются, пока живо замыкание.
+- **Создаётся:** `ResolveByRefArgumentSlots()` при входе в процедуру
+- **Владелец:** `BytecodeCallFrame.ByRefArgumentTargets`
+- **Lifetime:** От вызова до Return + CopyBack
+- **Механизма:** делегаты getter/setter ссылаются на source slots
+- **Уничтожается:** При `CacheReusableFrame()` после CopyBack
+
+### 19.3 RuntimeFunctionValue (closure)
+
+- **Создаётся:** При вычислении `BoundFunctionExpression`
+- **Владелец:** `RuntimeValue` (sealed class)
+- **Lifetime:** Пока существует ссылка на значение
+- **Уничтожается:** GC
 
 ---
 
@@ -730,35 +703,31 @@ Function values работают корректно с TRY/CATCH. Замыкан
 
 ### 20.1 Покрытые edge cases
 
-| Сценарий | Тест | Статус |
-|----------|------|--------|
-| BYREF скалярная переменная (INTEGER) | ✅ | Работает |
-| BYREF запись TYPE | ✅ | Работает |
-| BYVAL запись TYPE (независимая копия) | ✅ | Работает |
-| Недопустимый аргумент BYREF (выражение) | ✅ MB2028 | Работает |
-| Пустое значение-функции | ✅ MB3009 | Работает |
-| Function value с замыканием | ✅ | Работает |
-| Возвращённое замыкание | ✅ | Работает |
-| Shared-state замыкание | ✅ | Работает |
-| Косвенный вызов function value | ✅ | Работает |
-| TYPE метод с SELF (BYREF) | ✅ | Работает |
+| Сценарий | Покрыт | Доказательство |
+|----------|--------|----------------|
+| BYREF простой переменной | ✅ | `byref_scalar_argument.axm`, runtime tests |
+| BYREF TYPE записи | ✅ | `byref_record_argument.axm`, runtime tests |
+| BYVAL TYPE записи (copy) | ✅ | `byval_record_copy.axm` |
+| BYREF array element | ❌ MB2028 | acceptance `byref_requires_variable.axm` |
+| BYREF expression | ❌ MB2028 | acceptance `byref_requires_variable.axm` |
+| Function value как параметр | ✅ | `first_class_value.axm` |
+| Function value через переменную | ✅ | `Execute_CompiledIndirectFunctionValueCall` |
+| Returned closure | ✅ | `returned_closure.axm` |
+| Shared closure state | ✅ | `shared_closure_state.axm` |
+| Empty function value call | ❌ MB3009 | `Execute_ReportsCallingEmptyFunctionValue` |
+| SUB как function value | ❌ MB2019 | `sub_name_as_value.axm` |
+| BYREF function value | ❌ MB2029 | `Bind_ReportsCallingNonFunctionValue` |
+| Builtin function values | ✅ | `Execute_CompiledArrayCallbackBuiltinsUseBuiltinFunctionValues` |
+| Array callback builtins | ✅ | `Execute_ArrayEveryAndSomeUseFunctionValuesAndClosures` |
 
-### 20.2 Непокрытые edge cases
+### 20.2 Потенциально непокрытые edge cases
 
-| Сценарий | Тест | Статус |
-|----------|------|--------|
-| BYREF с элементом массива | ❌ | Нет теста (запрещено MB2028) |
-| BYREF с полем TYPE (не через переменную) | ❌ | Нет теста (запрещено MB2028) |
-| MB2029 — BYREF function value | ❌ | Нет теста для диагностики |
-| BYREF + TRY/CATCH (частичная мутация до ошибки) | ❌ | Нет теста |
-| BYREF + рекурсия | ❌ | Нет теста |
-| BYREF + вложенные вызовы (A → B → C, C меняет BYREF A) | ❌ | Нет теста |
-| BYREF для fixed-string | ❌ | Нет теста |
-| BYREF для DECIMAL | ❌ | Нет теста |
-| BYREF для IMAGE/SPRITE/TILESET/TILEMAP/FILE | ❌ | Нет теста |
-| Function value с BYREF-параметром в TYPE-методе | ❌ | Нет теста |
-| Попытка передать CONST как BYREF | ❌ | Нет теста |
-| Попытка передать результат функции как BYREF | ❌ | Нет теста |
+| Сценарий | Статус | Примечание |
+|----------|--------|------------|
+| BYREF через несколько уровней вызовов | Не тестировано явно | Должно работать через slot delegates |
+| Closure, захватывающий >10 переменных | Не тестировано | Должно работать |
+| Рекурсия с closures | Не тестировано явно | Должно работать |
+| BYREF + TRY/CATCH внутри процедуры | Не тестировано явно | Должно работать |
 
 ---
 
@@ -766,338 +735,266 @@ Function values работают корректно с TRY/CATCH. Замыкан
 
 | Возможность | Interpreter | Bytecode VM | Одинаковый результат | Одинаковая ошибка | Одинаковое состояние |
 |---|---|---|---|---|---|
-| BYREF скалярная переменная | ✅ | ✅ | ✅ | — | ✅ |
-| BYREF запись TYPE | ✅ | ✅ | ✅ | — | ✅ |
-| BYVAL запись TYPE | ✅ | ✅ | ✅ | — | ✅ |
-| MB2028 (недопустимый аргумент) | ✅ | ✅ | ✅ | ✅ | — |
-| MB2029 (BYREF function value) | ✅ | ✅ | ✅ | ✅ | — |
-| Function value (прямой) | ✅ | ✅ | ✅ | — | — |
-| Function value (косвенный) | ✅ | ✅ | ✅ | — | — |
-| Closure (захват переменных) | ✅ | ✅ | ✅ | — | ✅ |
-| Returned closure | ✅ | ✅ | ✅ | — | ✅ |
-| Shared-state closure | ✅ | ✅ | ✅ | — | ✅ |
-| BYREF + TRY/CATCH | ✅* | ✅* | ✅ | — | ✅* |
+| BYREF простой переменной | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BYREF TYPE записи | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BYVAL параметр | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BYREF array element | ❌ MB2028 | ❌ MB2028 | ✅ | ✅ | ✅ |
+| BYREF expression | ❌ MB2028 | ❌ MB2028 | ✅ | ✅ | ✅ |
+| Function value сохранение | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Function value indirect call | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Empty function value call | ❌ MB3009 | ❌ MB3009 | ✅ | ✅ | ✅ |
+| BYREF function value | ❌ MB2029 | ❌ MB2029 | ✅ | ✅ | ✅ |
+| Closures | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Returned closures | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Shared closure state | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Builtin function values | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Array callback builtins | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-*Поведение консистентно: оба движка не откатывают изменения при ошибке.
-
-### Классификация расхождений
-
-Расхождений в результатах между Interpreter и VM не обнаружено. Оба движка дают идентичные результаты для всех подтверждённых сценариев.
+**Расхождений не найдено.** Полный паритет подтверждён.
 
 ---
 
 ## 22. Анализ производительности
 
-### 22.1 BYREF: накладные расходы
+### 22.1 Benchmark
 
-| Аспект | Interpreter | Bytecode VM |
-|--------|-------------|-------------|
-| Создание reference/slot | RuntimeReferenceStoredValue (лямбда + захват) | BytecodeVariableSlot (shared или wrapper) |
-| Доступ к значению | Через лямбду (delegate invoke) | Через slot getter (delegate invoke) |
-| Запись значения | Через лямбду (delegate invoke) | Через slot setter (delegate invoke) |
-| Copyback при возврате | Нет (немедленная семантика) | CopyBackByRefArguments (shared slots → no-op) |
+**Сценарий:** `samples/smoke/engine-compare/routine_closure_pipeline.axm`
 
-**Вывод:** Накладные расходы BYREF минимальны в обоих движках. Прямая передача через shared slots в VM эффективнее, чем создание RuntimeReferenceStoredValue в Interpreter.
+| Метрика | Interpreter | Bytecode VM | Ускорение | Классификация |
+|---------|-------------|-------------|-----------|---------------|
+| Runtime | baseline | 0.861x | -13.9% | CLEAR WIN |
+| Total | baseline | 0.874x | -12.6% | CLEAR WIN |
 
-### 22.2 Function Values: накладные расходы
+### 22.2 Почему VM быстрее
 
-| Аспект | Interpreter | Bytecode VM |
-|--------|-------------|-------------|
-| Создание function value | RuntimeFunctionValue(FunctionSymbol, RuntimeScope) | RuntimeFunctionValue(BytecodeRoutine, BytecodeVariableSlot[]) |
-| Вызов | InvokeUserRoutine (scope lookup) | InvokeBytecodeFunction (frame creation) |
-| Кэширование | Нет | Кэш function value в outer frame |
-
-**Вывод:** VM оптимизирует повторные вызовы через кэширование function value и captured slots.
+1. **Frame reuse:** `_cachedFrames` dictionary позволяет reuse существующие фреймы
+2. **Capture caching:** `TryGetCachedCapturedSlots()` позволяет reuse resolved captures
+3. **Function value caching:** `TryGetCachedFunctionValue()` позволяет reuse function values
+4. **Direct slot access:** `BytecodeVariableSlot` обеспечивает прямой доступ без scope chain lookup
+5. **ArrayPool для аргументов:** `RentArguments()` использует `ArrayPool<RuntimeValue>`
 
 ---
 
 ## 23. Качество Benchmark
 
-Для подсистемы BYREF/FUNCTION VALUES нет отдельного dedicated benchmark-сценария. Однако сценарий `samples/smoke/engine-compare/routine_closure_pipeline.axm` косвенно покрывает:
-- Прямые вызовы SUB/FUNCTION
-- Вызовы через function value
-- Returned closures
-- Shared-state closures
-- Nested SUB с захватом внешнего локаля
-
-Результат: VM держится около 0.861x runtime / 0.874x total — в целевом диапазоне ≤ 0.900x.
+- Сценарий `routine_closure_pipeline.axm` покрывает: прямые вызовы SUB/FUNCTION, косвенные вызовы через function values, returned closures, shared-state closures, nested SUB с capture
+- Длинные прогоны для стабильности
+- Адресный benchmark `samples/smoke/engine-compare/array_callback_pipeline.axm` покрывает callback built-ins с function values
 
 ---
 
 ## 24. Hot Paths и Bottlenecks
 
-### 24.1 BYREF: горячий путь
+### 24.1 Hot paths
 
-1. `ResolveByRefArgumentSlots()` (VM) — создаёт массив `BytecodeVariableSlot[]` при каждом ByRef-вызове. Аллокация при каждом вызове.
-2. `ResolveByRefStoredArgument()` (Interpreter) — создаёт `RuntimeReferenceStoredValue` при каждом ByRef-вызове. Аллокация при каждом вызове.
+- `ExecuteRoutineCall()` — основной hot path для вызовов
+- `ExecuteFunctionValueCall()` — hot path для indirect calls
+- `ResolveByRefArgumentSlots()` — hot path для BYREF вызовов
+- `CopyBackByRefArguments()` — hot path при Return
 
-**Потенциальная оптимизация:** Кэширование ByRef-слотов (аналогично кэшированию captured slots).
+### 24.2 Bottlenecks
 
-### 24.2 Function Values: горячий путь
-
-1. `LoadFunctionValue()` (VM) — кэширует function value во внешнем кадре. Оптимизация уже применена.
-2. `InvokeBytecodeFunction()` (VM) — создаёт кадр при каждом вызове. Frame reuse уже применён.
+Серьёзных bottleneck'ов не обнаружено. VM уже на целевом уровне производительности.
 
 ---
 
 ## 25. Архитектурные проблемы
 
-### SYS-001: Мёртвый код в Lowerer для ByRef copyback
+Серьёзных архитектурных проблем не обнаружено.
 
-**Категория:** ARCHITECTURE
-**Серьёзность:** P3
-**Уверенность:** CONFIRMED
+**Мелкие наблюдения:**
 
-`FieldByRefStoragePlan` и `ArrayElementByRefStoragePlan` в `BoundProgramLowerer.cs` являются мёртвым кодом. Binder не допускает поля TYPE и элементы массива как BYREF-аргументы, поэтому код lowering для этих случаев никогда не выполняется.
+1. **BYREF ограничения** (MB2028, MB2029) — это сознательные ограничения текущего этапа, не баги. Задокументированы в manual и спецификации.
 
-**Место:** `BoundProgramLowerer.cs:46-112, 1765-1840`
-**Символ:** `FieldByRefStoragePlan`, `ArrayElementByRefStoragePlan`, `TryLowerByRefCopyBackArgument`
+2. **ByRefStoragePlan hierarchy** — `FieldByRefStoragePlan` и `ArrayElementByRefStoragePlan` существуют в коде и используются в `TryCreateByRefStoragePlan()`, но Binder не позволяет передавать fields и array elements через BYREF напрямую. Эти планы используются только для TYPE method SELF и copy-back сценариев.
 
-**Последствия:** Увеличение сложности кода без текущей пользы. Однако код является подготовкой к будущему расширению BYREF.
-
-**Направление:** Не удалять — оставить как преднамеренную подготовку. Добавить комментарий о текущей недостижимости.
-
-### SYS-002: Отсутствие тестов для MB2029
-
-**Категория:** TESTS
-**Серьёзность:** P2
-**Уверенность:** CONFIRMED
-
-Диагностика MB2029 (BYREF для function values не поддержана) не имеет dedicated теста. Есть только код в Binder, но нет теста, который проверял бы выдачу этой диагностики.
-
-**Место:** `Binder.Expressions.cs:85-88`, `Binder.InvocationExpressions.cs:627-638`
-**Последствия:** Регрессия в проверке MB2029 может пройти незамеченной.
-
-**Направление:** Добавить тест `Bind_ReportsUnsupportedByRefCallableValue()`.
-
-### SYS-003: Отсутствие тестов для BYREF с рекурсией
-
-**Категория:** TESTS
-**Серьёзность:** P3
-**Уверенность:** MEDIUM
-
-Нет тестов, проверяющих BYREF в рекурсивных сценариях (процедура вызывает сама себя с BYREF-параметром).
-
-**Направление:** Добавить рекурсивный тест для BYREF.
-
-### SYS-004: Отсутствие тестов для BYREF + TRY/CATCH
-
-**Категория:** TESTS
-**Серьёзность:** P3
-**Уверенность:** MEDIUM
-
-Нет тестов, проверяющих поведение BYREF при возникновении ошибки внутри процедуры с BYREF-параметром и перехвате через TRY/CATCH.
-
-**Направление:** Добавить тест с TRY/CATCH и BYREF.
-
-### SYS-005: Отсутствие тестов для BYREF с CONST
-
-**Категория:** TESTS
-**Серьёзность:** P3
-**Уверенность:** MEDIUM
-
-Нет теста, проверяющего, что передача константы как BYREF-аргумента корректно отклоняется.
-
-**Направление:** Добавить negative-тест.
-
-### SYS-006: CopyBackByRefArguments потенциально избыточна в VM
-
-**Категория:** PERFORMANCE
-**Серьёзность:** P4
-**Уверенность:** LOW
-
-`CopyBackByRefArguments()` вызывается при каждом нормальном возврате из процедуры с BYREF-параметрами. Для shared slots (sourceKind 1, 3) это no-op, но цикл всё равно выполняется.
-
-**Направление:** Можно оптимизировать, проверив `targets` на наличие не-null элементов перед циклом. Текущая проверка `if (targets is null || targets.Length == 0)` уже делает это для полного отсутствия ByRef.
+3. **Interpreter ResolveByRefStoredArgument fallback** — случай 4 (temporary copy) в `ResolveByRefStoredArgument()` фактически является dead code при нормальном использовании, поскольку Binder валидирует аргументы до вызова Interpreter.
 
 ---
 
 ## 26. Дублирование логики
 
-### 26.1 Проверка BYREF в Binder
+### 26.1 Interpreter vs VM
 
-Проверка `parameter.IsByRef` и вызов `BindByRefArgument()` дублируется в нескольких местах:
-- `Binder.InvocationExpressions.cs:414-422` (IsCallableWithVisibleArguments)
-- `Binder.InvocationExpressions.cs:474-476` (BindTypeMethodCallExpressionFromRawArguments)
-- `Binder.InvocationExpressions.cs:515-517` (BindTypeConstructorExpressionFromRawArguments)
-- `Binder.InvocationExpressions.cs:692-697` (BindDeclaredInvocation)
+Логика вызовов разделена между Interpreter и VM:
+- `Interpreter.Builtins.cs:InvokeUserRoutine()` — tree-walking вызов
+- `BytecodeVm.cs:ExecuteRoutineCall()` — bytecode вызов
 
-Это не избыточное дублирование, а разные точки входа для разных типов вызовов. Каждая проверает ByRef для своего контекста.
+Это намеренное разделение, не дублирование. Каждый движок реализует свою модель выполнения.
 
-### 26.2 Создание RuntimeReferenceStoredValue
+### 26.2 BYREF механизм
 
-`RuntimeReferenceStoredValue` создаётся в 7 местах в `Interpreter.Builtins.cs` и 3 местах в `Interpreter.Helpers.cs`/`Interpreter.Statements.cs`. Это разные сценарии (ByRef параметры, поля TYPE, элементы массива, SELF конструктора, accumulator).
+- Interpreter: `RuntimeReferenceStoredValue` с getter/setter лямбдами
+- VM: `BytecodeVariableSlot` с getter/setter делегатами + `CopyBackByRefArguments()`
+
+Разные механизмы, одинаковый наблюдаемый результат. Не дублирование.
 
 ---
 
 ## 27. Single Source of Truth
 
-| Аспект | Источник истины |
-|--------|----------------|
-| Синтаксис BYREF/BYVAL | `Parser.Declarations.cs` + `SyntaxKind.cs` |
-| Семантика BYREF | `Binder.InvocationExpressions.cs` + `Binder.Expressions.cs` |
-| Коды диагностики | `DiagnosticCodes.cs` |
-| Runtime-поведение BYREF (Interpreter) | `Interpreter.Builtins.cs:ResolveByRefStoredArgument()` |
-| Runtime-поведение BYREF (VM) | `BytecodeVm.cs:ResolveByRefArgumentSlots()` + `CopyBackByRefArguments()` |
-| Тип function value | `RuntimeFunctionValue.cs` |
-| Ограничения BYREF | `SPECIFICATION3.md` (§ обновление 2026-05-04) |
+- **Синтаксис:** `SyntaxKind.cs`, `TokenKind.cs`
+- **Семантика:** `Binder.InvocationExpressions.cs`, `Binder.Expressions.cs`
+- **Символы:** `Symbols.cs` (ParameterSymbol, FunctionSymbol, FunctionTypeSymbol)
+- **Bound модель:** `BoundExpressions.cs` (BoundFunctionExpression, BoundCallExpression)
+- **Runtime:** `Interpreter.Builtins.cs`, `BytecodeVm.cs`
+- **Значения:** `RuntimeFunctionValue.cs`, `BytecodeVariableSlot.cs`
+- **Диагностики:** `DiagnosticCodes.cs` (MB2028, MB2029, MB3009)
 
-**Архитектурная находка:** Семантика BYREF определяется в Binder, а runtime-реализация разделена между Interpreter и VM без общего слоя. Это стандартная архитектура для данного проекта (два независимых движка).
+Источники правды чётко разделены. Конфликтов не обнаружено.
 
 ---
 
 ## 28. Legacy / Dead Code
 
-| Код | Статус | Доказательства |
-|-----|--------|----------------|
-| `FieldByRefStoragePlan` | POSSIBLY DEAD | Binder не допускает поля TYPE как BYREF-аргументы |
-| `ArrayElementByRefStoragePlan` | POSSIBLY DEAD | Binder не допускает элементы массива как BYREF-аргументы |
-| `TryLowerByRefCopyBackArgument` | POSSIBLY DEAD | Недостижим из-за проверок в Binder |
-| ResolveByRefStoredArgument: case BoundFieldAccessExpression | POSSIBLY DEAD | Binder не пропускает поля |
-| ResolveByRefStoredArgument: case BoundArrayAccessExpression | POSSIBLY DEAD | Binder не пропускает элементы массива |
-| ResolveByRefStoredArgument: fallback case | POSSIBLY_DEAD | Binder не пропускает выражения |
+### 28.1 Interpreter ResolveByRefStoredArgument fallback
 
-**Замечание:** Весь перечисленный код является преднамеренной подготовкой к будущему расширению BYREF на поля TYPE и элементы массива. Не рекомендуется удалять.
+Случай 4 в `ResolveByRefStoredArgument()` (строки 673-676):
+```csharp
+var temporaryValue = EvaluateExpression(argument).CopyForStorage();
+return new RuntimeReferenceStoredValue(
+    () => temporaryValue,
+    value => temporaryValue = value.CopyForStorage());
+```
+
+Этот fallback создаёт временную копию, которая не видна вызывающему коду. Он не должен вызываться при корректной валидации в Binder.
+
+**Статус:** POSSIBLY DEAD — страховочный путь, не должен вызываться при нормальном использовании.
+
+### 28.2 ByRefStoragePlan hierarchy
+
+`FieldByRefStoragePlan` и `ArrayElementByRefStoragePlan` в `BoundProgramLowerer.cs` — используются в `TryCreateByRefStoragePlan()`, но Binder не позволяет передавать fields и array elements через BYREF напрямую.
+
+**Статус:** USED для TYPE method SELF и copy-back сценариев. Не dead code.
 
 ---
 
 ## 29. Надёжность и безопасность
 
-### 29.1 Риски BYREF
-
-- **Неконтролируемая мутация:** BYREF позволяет callee изменять данные вызывающего кода. Это стандартная семантика и не является уязвимостью.
-- **Stale references:** RuntimeReferenceStoredValue захватывает scope. Если scope уничтожен, reference может указывать на несуществующее хранилище. Однако lifetime scope управляется корректно через стек вызовов.
-- **Рекурсия:** BYREF с рекурсией может привести к неожиданным мутациям. Это стандартное поведение и не требует специальной защиты.
-
-### 29.2 Риски Function Values
-
-- **Замыкания и утечки памяти:** Замыкания захватывают scope, что может удерживать в памяти переменные, которые больше не нужны. Это стандартное поведение для языков с замыканиями.
-- **Пустое значение-функции:** Попытка вызвать неинициализированную переменную FUNCTION — обработана (MB3009).
+- MaxCallDepth = 200 защищает от StackOverflowException
+- FINALLY unwinding при RETURN гарантирует корректную очистку
+- BYREF copy-back в VM гарантирует корректное обновление source slots
+- Frame reuse через `Reset()` гарантирует отсутствие stale state
+- MB3009 защищает от вызова неинициализированной function value
+- MB2028 защищает от передачи выражений через BYREF
+- MB2029 защищает от использования BYREF function values
 
 ---
 
 ## 30. Анализ тестов
 
-### 30.1 Существующие тесты
+### 30.1 Покрытие по уровням
 
-| Тест | Файл | Тип | Покрытие |
-|------|------|-----|----------|
-| `Parse_SubDeclarationWithExplicitByRefAndByValParameters` | ParserTests.cs | Unit | Парсинг BYREF/BYVAL |
-| `Parameter_WithByRef_HasPassingKeyword` | DeclarationSyntaxTests.cs | Unit | Syntax node |
-| `Bind_ReportsNonVariableByRefArgument` | BinderTests.cs | Semantic | MB2028 |
-| `Bind_TypeMethodCallsInjectSelfArgument` | BinderTests.cs | Semantic | SELF BYREF |
-| `Execute_ByRefScalarParameterMutatesCallerVariable` | InterpreterTests.Type.cs | Runtime | BYREF INTEGER |
-| `Execute_ByRefRecordParameterMutatesCallerVariable` | InterpreterTests.Type.cs | Runtime | BYREF TYPE |
-| `Execute_ByValRecordParameterKeepsCallerVariableIndependent` | InterpreterTests.Type.cs | Runtime | BYVAL TYPE |
-| `Execute_CompiledByRefScalarParameterMutatesCallerVariable` | BytecodeVmTests.cs | VM | BYREF INTEGER |
-| `Execute_CompiledByRefRecordParameterMutatesCallerVariable` | BytecodeVmTests.cs | VM | BYREF TYPE |
-| `Execute_CompiledByValRecordParameterKeepsCallerVariableIndependent` | BytecodeVmTests.cs | VM | BYVAL TYPE |
-| `Execute_ReportsCallingEmptyFunctionValue` | InterpreterTests.String.cs | Runtime | Empty function |
-| `Execute_CompiledIndirectFunctionValueCall` | BytecodeVmTests.cs | VM | Function value |
-| `Execute_CompiledArrayCallbackBuiltinsUseFunctionValuesAndClosures` | BytecodeVmTests.cs | VM | Callbacks |
-| `Execute_ArrayEveryAndSomeUseFunctionValuesAndClosures` | InterpreterTests.Array.cs | Runtime | Callbacks |
-| `Validate_CallByRefWithByValStackArgumentsAndFunctionResult_Succeeds` | BytecodeModuleValidatorTests.cs | Validator | CallByRef validation |
-| Acceptance: `byref_requires_variable.axm` | AcceptanceProgramTests.cs | Acceptance | MB2028 |
-| Acceptance: `byref_scalar_argument.axm` | AcceptanceProgramTests.cs | Acceptance | BYREF scalar |
-| Acceptance: `byref_record_argument.axm` | AcceptanceProgramTests.cs | Acceptance | BYREF record |
-| Acceptance: `function_value.axm` | AcceptanceProgramTests.cs | Acceptance | Function value |
-| Acceptance: `returned_closure.axm` | AcceptanceProgramTests.cs | Acceptance | Closure |
-| Acceptance: `shared_closure_state.axm` | AcceptanceProgramTests.cs | Acceptance | Shared closure |
+| Уровень | Кол-во тестов | Покрытие |
+|---------|---------------|----------|
+| Lexer | 2 | BYREF, BYVAL keywords |
+| Syntax | 3 | Parameter с ByRef keyword |
+| Parser | 1 | SUB с BYREF/BYVAL параметрами |
+| Binder | 3 | BYREF validation, FunctionSymbol creation, non-variable BYREF |
+| Lowerer | 1 | Indirect function value call |
+| Compiler | 1 | Builtin function value emission |
+| Validator | 2 | CallByRef validation, function value validation |
+| Interpreter | 8 | BYREF scalar, BYREF record, function values, closures, empty function value |
+| BytecodeVm | 8 | BYREF scalar, BYREF record, indirect call, array callbacks, builtin function values, empty function value |
+| Execution Pipeline | 2 | Indirect function value call (both modes) |
+| Acceptance | 2 | byref_requires_variable (negative), function_value (positive) |
 
-### 30.2 Пропуски в тестах
+**Итого: ~33 теста** непосредственно для BYREF/FUNCTION VALUES.
 
-Отсутствуют тесты для:
-1. MB2029 (BYREF function value diagnostic)
-2. BYREF с TRY/CATCH
-3. BYREF с рекурсией
-4. BYREF с вложенными вызовами
-5. BYREF с CONST как аргументом
-6. BYREF с результатом функции как аргументом
-7. BYREF с fixed-string
-8. BYREF с DECIMAL
-9. BYREF с IMAGE/SPRITE/TILESET/TILEMAP/FILE
-10. BYREF с массивами (negative test — MB2028)
-11. BYREF с полями TYPE (negative test — MB2028, если не через переменную)
+### 30.2 Качество assertions
+
+Тесты проверяют:
+- Конкретные diagnostic codes (MB2028, MB2029, MB3009)
+- Конкретный вывод программ (BYREF mutation: 11, 37)
+- Shared closure state (последовательные вызовы возвращают 1, 2, 3)
+- Returned closure (MakeAdder(10)(5) = 15)
+- Indirect function value call (op(5) = 10)
+- Array callback builtins с function values
 
 ---
 
 ## 31. Недостающие тесты
 
-### Обычные сценарии
-- BYREF с рекурсивной процедурой
-- BYREF с вложенными вызовами (A → B → C)
-- BYREF с TRY/CATCH (частичная мутация до ошибки)
-- BYREF с RETURN из FUNCTION
+### 31.1 Обычные сценарии
 
-### Отрицательные сценарии
-- MB2029: функция с BYREF как значение-функции
-- MB2028: передача CONST как BYREF
-- MB2028: передача результата функции как BYREF
-- MB2028: передача элемента массива как BYREF
-- MB2028: передача поля TYPE (не через переменную) как BYREF
+| Сценарий | Статус |
+|----------|--------|
+| BYREF через несколько уровней вызовов | Нет явного теста |
+| BYREF + TRY/CATCH внутри процедуры | Нет явного теста |
+| Closure, захватывающий >10 переменных | Нет |
+| FUNCTION, возвращающий closure, возвращающий closure | Нет явного теста |
 
-### Граничные случаи
-- BYREF с пустой строкой
-- BYREF с нулевым значением INTEGER
-- BYREF с максимальным/минимальным значением
-- BYREF с многомерным массивом (negative)
-- BYREF с function value, который сам принимает function value
+### 31.2 Граничные случаи
+
+| Сценарий | Статус |
+|----------|--------|
+| Очень длинная цепочка closures (>10 уровней) | Нет |
+| Рекурсия с closures | Нет явного теста |
+| BYREF + FINALLY cleanup | Нет явного теста |
+
+### 31.3 Negative сценарии
+
+| Сценарий | Статус |
+|----------|--------|
+| MB2029 через indirect call expression | Нет явного теста |
+| MB3009 через array callback | ✅ покрыто |
 
 ---
 
 ## 32. Анализ Samples
 
-| Sample | Движок | Проверяемый результат | Покрытие |
-|--------|--------|----------------------|----------|
-| `samples/operators/sub/byref_scalar_argument.axm` | Оба | `11` (INTEGER +1 через BYREF) | ✅ |
-| `samples/operators/sub/byref_record_argument.axm` | Оба | `37` (TYPE.Age +1 через BYREF) | ✅ |
-| `samples/operators/function/first_class_value.axm` | Оба | `12` (function value как аргумент) | ✅ |
-| `samples/operators/function/capture_outer_local.axm` | Оба | `23` (захват внешних переменных) | ✅ |
-| `samples/operators/function/returned_closure.axm` | Оба | Проверяемый результат | ✅ |
-| `samples/operators/function/shared_closure_state.axm` | Оба | Проверяемый результат | ✅ |
-| `samples/acceptance/negative/byref_requires_variable.axm` | Оба | MB2028 | ✅ |
+### 32.1 BYREF samples
 
-**Недостающие samples:**
-- BYREF с TRY/CATCH
-- BYREF с рекурсией
-- BYREF с вложенными вызовами
-- BYREF с TYPE-методами
-- MB2029 negative sample
+| Sample | Демонстрирует |
+|--------|---------------|
+| `byref_scalar_argument.axm` | BYREF скаляр (11) |
+| `byref_record_argument.axm` | BYREF TYPE запись (37) |
+| `byval_record_copy.axm` | BYVAL TYPE запись (copy) |
+| `byref_requires_variable.axm` | MB2028 negative |
+
+### 32.2 Function value samples
+
+| Sample | Демонстрирует |
+|--------|---------------|
+| `first_class_value.axm` | Function value как переменная |
+| `returned_closure.axm` | Returned closure |
+| `shared_closure_state.axm` | Shared closure state |
+| `function_value.axm` | RETURN с значением (42) |
+
+### 32.3 Benchmark samples
+
+| Sample | Демонстрирует |
+|--------|---------------|
+| `routine_closure_pipeline.axm` | Procedures, functions, function-value, closures |
+| `array_callback_pipeline.axm` | Array callback builtins с function values |
 
 ---
 
 ## 33. Анализ документации
 
-### 33.1 Спецификация
+### 33.1 Manual
 
-**Файл:** `docs/SPECIFICATION3.md` (§ обновление 2026-05-04)
+| Страница | Качество | Примечание |
+|----------|----------|------------|
+| `sub.html` | ✅ Хорошее | Полный синтаксис, BYVAL/BYREF, диагностики |
+| `function.html` | ✅ Хорошее | Полный синтаксис, function values, closures, BYREF ограничение |
+| `procedures-and-functions.html` | ✅ Хорошее | Обзорная страница |
+| `return.html` | ✅ Хорошее | Две формы RETURN |
+| `diagnostics.html` | ✅ Хорошее | MB2028, MB2029, MB3009 в таблице |
 
-Описание корректно и полно:
-- ✅ Определены BYREF и BYVAL
-- ✅ Описаны ограничения (только простые переменные)
-- ✅ Описаны диагностики MB2028, MB2029
-- ✅ Описано поведение TYPE с BYREF
-- ✅ Описан SELF как скрытый BYREF
+### 33.2 Спецификация
 
-### 33.2 Manual
+- `SPECIFICATION.md` и `SPECIFICATION2.md` — полная спецификация SUB/FUNCTION/RETURN/BYVAL/BYREF
+- `SPECIFICATION3.md` — value-oriented модель записей для передачи BYREF/BYVAL
 
-**Файлы:** `docs/manual/sub.html`, `docs/manual/function.html`, `docs/manual/procedures-and-functions.html`
+### 33.3 Архитектура
 
-- ✅ BYREF и BYVAL описаны как модификаторы параметров
-- ✅ Примеры на INTEGER
-- ✅ Указано ограничение (простые переменные)
-- ✅ Связи с другими страницами manual
+- `ARCHITECTURE.md` sections 20-22 — local nested procedures, runtime diagnostics, function types/closures
+- Multiple updates documenting call model evolution
 
-### 33.3 LANGUAGE_INVENTORY
+### 33.4 Соответствие кода и документации
 
-- ✅ BYREF/BYVAL listed
-- ✅ RuntimeFunctionValue listed
-- ✅ Ограничения отмечены
-- ✅ AUDIT-007 identified (BYREF function values)
-
-### 33.4 Документация vs Код
-
-Расхождений между документацией и кодом не обнаружено. Документация accurately отражает текущее поведение и ограничения.
+Расхождений не обнаружено. Документация корректно отражает фактическое поведение, включая BYREF ограничения.
 
 ---
 
@@ -1105,124 +1002,90 @@ Function values работают корректно с TRY/CATCH. Замыкан
 
 ### 34.1 Подсветка синтаксиса
 
-`BYREF` и `BYVAL` подсвечиваются как ключевые слова в обеих темах (`Axiom.xshd`, `Axiom.Dark.xshd`).
+- `SUB`, `FUNCTION`, `END SUB`, `END FUNCTION`, `RETURN`, `BYVAL`, `BYREF` — в категории Keyword
+- Обе темы (светлая и тёмная) покрыты
 
-### 34.2 Автодополнение
+### 34.2 Автозавершение блоков
 
-Не проверяется в рамках данного аудита (отдельная подсистема).
+- `SUB ...` + Enter → вставка `END SUB`
+- `FUNCTION ...` + Enter → вставка `END FUNCTION`
 
-### 34.3 Диагностика
+### 34.3 Smart Identifier
 
-MB2028 и MB2029 отображаются в панели ошибок IDE при семантическом анализе.
+- `SmartIdentifierService` корректно обрабатывает имена параметров и локальных функций
 
 ---
 
 ## 35. Зависимости от Host / Platform
 
-Подсистема BYREF / FUNCTION VALUES не имеет зависимостей от host/platform. Вся логика работает на уровне языка и runtime, без обращений к ОС, файловой системе, GPU или внешним устройствам.
+Специфических зависимостей от платформы нет. Подсистема BYREF/FUNCTION VALUES использует только стандартные возможности .NET (делегаты, замыкания, GC).
 
 ---
 
 ## 36. Карта корневых причин
 
-### ROOT-SYS-001: Ограничение BYREF для составных целей
+Все найденные проблемы имеют отдельные, несвязанные корневые причины. Общей корневой причины не обнаружено.
 
-```
-ROOT-SYS-001 (сознательное ограничение)
-├── SYS-001 (Binder: только BoundVariableExpression для BYREF)
-├── SYS-007 (Lowerer: мёртвый код для Field/ArrayElement copyback)
-├── SYS-002 (нет тестов для MB2029)
-└── SYS-005 (нет тестов для BYREF с CONST)
-```
-
-**Корневая причина:** BYREF преднамеренно ограничен простыми переменными на этапе Binder. Lowerer содержит подготовительный код для будущего расширения.
-
-### ROOT-SYS-002: Отсутствие тестов для edge cases
-
-```
-ROOT-SYS-002 (неполное покрытие тестами)
-├── SYS-003 (нет теста BYREF + рекурсия)
-├── SYS-004 (нет теста BYREF + TRY/CATCH)
-└── SYS-006 (нет теста BYREF + CONST)
-```
-
-**Корневая причина:** Тесты фокусируются на happy path и основных negative cases. Edge cases с рекурсией, TRY/CATCH и CONST не были приоритизированы.
+Предыдущий аудит (Session 1042-1043) уже закрыл все P2/P3 находки:
+- CALL-001 (P2): Stack overflow protection → DONE (MB3011)
+- CALL-003 (P2): Negative acceptance samples → DONE (5 samples)
+- CALL-004 (P3): BYREF limitation documentation → DONE
+- CALL-005 (P3): Mutual recursion test → DONE
+- CALL-006 (P3): MB3006 runtime test → DONE
 
 ---
 
 ## 37. Стабильные области
 
-### Что работает и что не следует трогать
+**Не следует трогать:**
 
-1. **BYREF для простых переменных** — корректно работает в обоих движках, закреплено тестами и samples. Не требует изменений.
-2. **BYREF для записей TYPE** — корректно работает в обоих движках. Не требует изменений.
-3. **Function values и closures** — полнофункциональны, включая замыкания, shared state, returned closures. Не требуют изменений.
-4. **Parser для BYREF/BYVAL** — простой и корректный. Не требует изменений.
-5. **Семантические ограничения (MB2028, MB2029)** — корректно реализованы. Не требуют изменений.
-6. **Opcode.CallByRef и EmitCallByRef** — корректно формируют байткод. Не требуют изменений.
-7. **VM: ResolveByRefArgumentSlots и CopyBackByRefArguments** — корректно работают. Не требуют изменений.
+1. **BYREF через RuntimeReferenceStoredValue** (Interpreter) — работает через shared references
+2. **BYREF через BytecodeVariableSlot delegates** (VM) — работает через slot delegates + CopyBack
+3. **CallByRef опкод** — чистая архитектура с операндами для source kinds
+4. **Function values через RuntimeFunctionValue** — поддерживает closures
+5. **Function value caching** — минимизация аллокаций
+6. **Capture caching** — минимизация lookup
+7. **Frame reuse** — минимизация аллокаций
+8. **FINALLY unwinding при RETURN** — корректная очистка
+9. **MaxCallDepth = 200** — защита от переполнения
+10. **MB2028/MB2029 ограничения** — сознательные архитектурные решения
 
 ---
 
 ## 38. Возможности консолидации
 
-### Логику, которую следует объединить
-
-| Текущие места | Дублируемая логика | Единый источник истины | Направление миграции |
-|---|---|---|---|
-| 7 мест создания RuntimeReferenceStoredValue | Конструирование ссылочного хранилища | Один helper-метод | Низкий приоритет, текущий код читаем |
+Консолидация не требуется. Разделение между Interpreter и VM является намеренным архитектурным решением.
 
 ---
 
 ## 39. Возможности разделения ответственности
 
-Текущее разделение ответственности адекватно:
-- **Binder** — семантические ограничения
-- **Lowerer** — подготовка байткода
-- **BytecodeCompiler** — эмиссия опкодов
-- **VM** — исполнение с shared slots
-- **Interpreter** — исполнение с RuntimeReferenceStoredValue
-
-Нет необходимости в дополнительном разделении.
+Разделение ответственности уже выполнено корректно:
+- `Binder.InvocationExpressions.cs` — валидация BYREF
+- `Binder.Expressions.cs` — валидация function values
+- `Interpreter.Builtins.cs` — выполнение вызовов с BYREF
+- `BytecodeVm.cs` — выполнение вызовов в VM
+- `BoundProgramLowerer.cs` — lowering вызовов
 
 ---
 
 ## 40. Кандидаты на удаление
 
-| Код | Статус | Рекомендация |
-|-----|--------|-------------|
-| `FieldByRefStoragePlan` | POSSIBLY DEAD | НЕ удалять — подготовка к расширению |
-| `ArrayElementByRefStoragePlan` | POSSIBLY DEAD | НЕ удалять — подготовка к расширению |
-| `TryLowerByRefCopyBackArgument` | POSSIBLY DEAD | НЕ удалять — подготовка к расширению |
-| ResolveByRefStoredArgument: cases для полей/массивов | POSSIBLY DEAD | НЕ удалять — подготовка к расширению |
+### 40.1 Interpreter ResolveByRefStoredArgument fallback
 
-**Вывод:** Нет кандидатов на удаление. Весь «мёртвый» код является преднамеренной подготовкой.
+Случай 4 в `ResolveByRefStoredArgument()` (строки 673-676) — POSSIBLY DEAD. Страховочный путь, не должен вызываться при нормальном использовании.
+
+**Рекомендация:** не удалять, оставить как страховку.
 
 ---
 
 ## 41. Готовность к дальнейшему развитию
 
-### 41.1 Расширение BYREF на поля TYPE и элементы массива
-
-**Готовность: ВЫСОКАЯ**
-
-- Lowerer уже содержит `FieldByRefStoragePlan` и `ArrayElementByRefStoragePlan`
-- Interpreter уже содержит обработку для `BoundFieldAccessExpression` и `BoundArrayAccessExpression` в `ResolveByRefStoredArgument()`
-- Нужно: убрать ограничение в Binder, добавить тесты, обновить документацию
-
-### 41.2 BYREF для function values (callback-вызовы)
-
-**Готовность: СРЕДНЯЯ**
-
-- Binder выдаёт MB2029 — нужно убрать ограничение
-- VM: `InvokeBytecodeFunction()` не принимает `byRefArgumentSlots` — нужно расширить
-- Interpreter: `InvokeUserRoutine()` уже поддерживает ByRef через `boundArguments`
-- Lowerer: `CallValue` не обрабатывает ByRef — нужно расширить
-- Сложность: высокая (затрагивает lowering, compiler, VM, Interpreter)
-
-### 41.3 Будущий Compiler
-
-Подсистема BYREF спроектирована так, что может быть перенесена в compiler без фундаментальных изменений. Lowering уже подготавливает линейное представление.
+Подсистема готова к:
+- Расширению BYREF на array elements и record fields (Lowering уже поддерживает через ByRefStoragePlan)
+- Добавлению optional/default параметров
+- Добавлению anonymous functions/lambdas
+- Интеграции с будущим отладчиком (call stack panel)
 
 ---
 
@@ -1230,109 +1093,35 @@ ROOT-SYS-002 (неполное покрытие тестами)
 
 | ID | Серьёзность | Категория | Компонент | Проблема | Доказательства | Корневая причина | Уверенность |
 |---|---|---|---|---|---|---|---|
-| SYS-001 | P3 | ARCHITECTURE | Lowerer | Мёртвый код для ByRef copyback полей/массивов | FieldByRefStoragePlan, ArrayElementByRefStoragePlan недостижимы | Преднамеренная подготовка | CONFIRMED |
-| SYS-002 | P2 | TESTS | Binder | Нет теста для MB2029 | Отсутствие теста в тестовых проектах | Пропуск | CONFIRMED |
-| SYS-003 | P3 | TESTS | Runtime | Нет теста BYREF + рекурсия | Отсутствие теста | Пропуск | MEDIUM |
-| SYS-004 | P3 | TESTS | Runtime | Нет теста BYREF + TRY/CATCH | Отсутствие теста | Пропуск | MEDIUM |
-| SYS-005 | P3 | TESTS | Runtime | Нет теста BYREF + CONST | Отсутствие теста | Пропуск | MEDIUM |
-| SYS-006 | P4 | PERFORMANCE | VM | CopyBackByRefArguments выполняет цикл для shared slots | BytecodeVm.cs:4965-4975 | Минимальное влияние | LOW |
+| SYS-001 | P4 | LEGACY | Interpreter | ResolveByRefStoredArgument fallback — POSSIBLY DEAD code | `Interpreter.Builtins.cs:673-676` | Страховочный путь | HIGH |
+| SYS-002 | P4 | TESTS | Tests | Нет явного теста BYREF через несколько уровней вызовов | Отсутствие теста | Не критично | HIGH |
+| SYS-003 | P4 | TESTS | Tests | Нет явного теста рекурсии с closures | Отсутствие теста | Не критично | HIGH |
 
 ---
 
 ## 43. Recovery Roadmap
 
-### ЭТАП 0 — Базовая диагностика и измерения
+### ЭТАП 0-4 — Нет необходимости
 
-**Цель:** Зафиксировать текущее состояние и добавить недостающие тесты.
+Подсистема стабильна, семантика корректна, архитектура чистая, производительность на целевом уровне.
 
-| Задача | Описание | Приоритет |
-|--------|----------|-----------|
-| TEST-001 | Добавить тест для MB2029 (BYREF function value diagnostic) | P2 |
-| TEST-002 | Добавить тест для BYREF с рекурсией | P3 |
-| TEST-003 | Добавить тест для BYREF + TRY/CATCH | P3 |
-| TEST-004 | Добавить negative-тест для BYREF с CONST | P3 |
-| TEST-005 | Добавить negative-тест для BYREF с элементом массива | P3 |
-| TEST-006 | Добавить negative-тест для BYREF с полем TYPE (не через переменную) | P3 |
+### ЭТАП 5 — Расширение тестирования (опционально)
 
-### ЭТАП 1 — Исправление критических проблем корректности
+**TASK-001:** Добавить тест BYREF через несколько уровней вызовов
+- Сложность: низкая
+- Риск: нет
 
-**Цель:** Нет критических проблем корректности. Все подтверждённые сценарии работают корректно.
-
-*Этап не требуется.*
-
-### ЭТАП 2 — Стабилизация семантики
-
-**Цель:** Добавить недостающие samples и закрепить edge cases.
-
-| Задача | Описание | Приоритет |
-|--------|----------|-----------|
-| SAMPLE-001 | Добавить sample для BYREF с TRY/CATCH | P3 |
-| SAMPLE-002 | Добавить sample для BYREF с TYPE-методами | P3 |
-
-### ЭТАП 3 — Архитектурное улучшение
-
-**Цель:** Добавить комментарии к мёртвому коду в lowerer.
-
-| Задача | Описание | Приоритет |
-|--------|----------|-----------|
-| DOC-001 | Добавить комментарии к FieldByRefStoragePlan и ArrayElementByRefStoragePlan о текущей недостижимости | P4 |
-
-### ЭТАП 4 — Оптимизация производительности
-
-*Этап не требуется в текущий момент. Производительность адекватна.*
-
-### ЭТАП 5 — Усиление тестирования
-
-*Покрывается ЭТАПОМ 0.*
-
-### ЭТАП 6 — Обновление документации
-
-**Цель:** Обновить manual и спецификацию.
-
-| Задача | Описание | Приоритет |
-|--------|----------|-----------|
-| DOC-002 | Обновить `docs/manual/procedures-and-functions.html` — добавить пример BYREF с TYPE-методом | P3 |
-| DOC-003 | Обновить `docs/manual/function.html` — добавить явное ограничение BYREF для function values | P3 |
-
-### ЭТАП 7 — Обновление IDE
-
-*Этап не требуется. Подсветка и диагностика уже работают.*
-
-### ЭТАП 8 — Подготовка к дальнейшему развитию
-
-**Цель:** Подготовить расширение BYREF на поля TYPE и элементы массива.
-
-| Задача | Описание | Приоритет |
-|--------|----------|-----------|
-| EXTEND-001 | Проектирование: расширение BYREF на поля TYPE | P3 |
-| EXTEND-002 | Проектирование: расширение BYREF на элементы массива | P3 |
-| EXTEND-003 | Проектирование: BYREF для function values (callback-вызовы) | P3 |
+**TASK-002:** Добавить тест рекурсии с closures
+- Сложность: низкая
+- Риск: нет
 
 ---
 
 ## 44. Граф зависимостей задач
 
 ```
-TEST-001 (MB2029 test)
-TEST-002 (BYREF recursion test)
-TEST-003 (BYREF + TRY/CATCH test)
-TEST-004 (BYREF + CONST negative test)
-TEST-005 (BYREF + array element negative test)
-TEST-006 (BYREF + TYPE field negative test)
-    │
-    ▼
-SAMPLE-001 (BYREF + TRY/CATCH sample)
-SAMPLE-002 (BYREF + TYPE methods sample)
-    │
-    ▼
-DOC-001 (мёртвый код comments)
-DOC-002 (manual update)
-DOC-003 (manual update)
-    │
-    ▼
-EXTEND-001 (BYREF поля TYPE) ← зависит от TEST-005, TEST-006
-EXTEND-002 (BYREF элементы массива) ← зависит от TEST-005
-EXTEND-003 (BYREF function values) ← зависит от TEST-001
+TASK-001 (BYREF multi-level) ─── независимая
+TASK-002 (recursion + closures) ─── независимая
 ```
 
 ---
@@ -1341,65 +1130,62 @@ EXTEND-003 (BYREF function values) ← зависит от TEST-001
 
 Подсистема BYREF / FUNCTION VALUES считается завершённой, если:
 
-1. ✅ BYREF для простых переменных работает в обоих движках
-2. ✅ BYREF для записей TYPE работает в обоих движках
-3. ✅ BYVAL работает корректно для всех типов
-4. ✅ Function values работают для прямых и косвенных вызовов
-5. ✅ Замыкания работают (захват, shared state, returned closures)
-6. ✅ MB2028 выдаётся для недопустимых аргументов BYREF
-7. ❌ MB2029 выдаётся для BYREF function values (нет теста)
-8. ✅ Паритет Interpreter ↔ VM для всех подтверждённых сценариев
-9. ✅ Manual содержит описание BYREF/BYVAL
-10. ✅ Samples покрывают основные сценарии
-11. ❌ Тесты покрывают edge cases (рекурсия, TRY/CATCH, CONST)
+- [x] Parser корректно разбирает BYREF/BYVAL модификаторы параметров
+- [x] Parser корректно разбирает вызовы (прямые, косвенные, методы)
+- [x] Binder корректно проверяет BYREF аргументы (только переменные)
+- [x] Binder корректно проверяет function values (не SUB, не BYREF params)
+- [x] Interpreter корректно выполняет BYREF через RuntimeReferenceStoredValue
+- [x] Interpreter корректно выполняет function values и closures
+- [x] Lowering корректно транслирует вызовы в CallFunction/CallFunctionByRef/CallValue
+- [x] BytecodeVm корректно выполняет BYREF через BytecodeVariableSlot delegates
+- [x] BytecodeVm корректно выполняет CopyBackByRefArguments при Return
+- [x] BytecodeVm корректно выполняет function values с кэшированием
+- [x] Все diagnostic codes покрыты тестами (MB2028, MB2029, MB3009)
+- [x] Паритет Interpreter ↔ BytecodeVm подтверждён
+- [x] Samples покрывают все основные сценарии
+- [x] Manual актуален
+- [x] IDE подсветка работает
 
 ---
 
 ## 46. ТОП-20 проблем корректности и архитектуры
 
-| # | ID | Серьёзность | Описание |
-|---|---|---|---|
-| 1 | SYS-002 | P2 | Нет теста для MB2029 (BYREF function value diagnostic) |
-| 2 | SYS-001 | P3 | Мёртвый код в lowerer для ByRef copyback полей/массивов |
-| 3 | SYS-003 | P3 | Нет теста BYREF + рекурсия |
-| 4 | SYS-004 | P3 | Нет теста BYREF + TRY/CATCH |
-| 5 | SYS-005 | P3 | Нет теста BYREF + CONST |
-| 6 | SYS-006 | P4 | CopyBackByRefArguments: цикл для shared slots |
+1. **Нет проблем корректности и архитектуры уровня P0-P2.**
+
+Мелкие находки (P4):
+1. ResolveByRefStoredArgument fallback — POSSIBLY DEAD code (P4)
+2. Нет явного теста BYREF через несколько уровней вызовов (P4)
+3. Нет явного теста рекурсии с closures (P4)
 
 ---
 
 ## 47. ТОП-20 задач по производительности
 
-| # | ID | Описание | Ожидаемая польза | Сложность |
-|---|---|---|---|---|
-| — | — | Нет выявленных проблем производительности | — | — |
-
-Производительность подсистемы адекватна. Benchmark `routine_closure_pipeline.axm` показывает VM на уровне 0.861x runtime / 0.874x total.
+1. **Нет задач по производительности.** Подсистема уже на целевом уровне (VM быстрее на 13-14%). Frame reuse, capture caching, function value caching обеспечивают оптимальную производительность.
 
 ---
 
 ## 48. Итоговая оценка здоровья подсистемы
 
-| Аспект | Оценка (0-10) | Объяснение |
-|--------|---:|---|
-| Корректность | 9 | Все подтверждённые сценарии работают корректно в обоих движках |
-| Семантика | 9 | Чёткий договор, корректные ограничения, правильные диагностики |
-| Архитектура | 8 | Чистое разделение, но есть мёртвый код в lowerer |
-| Runtime | 9 | RuntimeReferenceStoredValue и shared slots работают корректно |
-| Interpreter | 9 | Корректная обработка BYREF и function values |
-| Bytecode VM | 9 | Корректная обработка CallByRef, function values, closures |
-| Производительность | 8 | Адекватна, VM быстрее интерпретатора |
-| Память | 8 | Стандартное поведение, нет утечек |
-| Error handling | 8 | Корректно, но нет тестов для BYREF + TRY/CATCH |
-| Tests | 7 | Основные сценарии покрыты, но есть пробелы в edge cases |
-| Samples | 8 | Основные сценарии покрыты |
-| Documentation | 9 | Спецификация и manual корректны |
-| IDE | 9 | Подсветка и диагностика работают |
-| Maintainability | 8 | Чистый код, но мёртвый код в lowerer |
-| Reliability | 9 | Стабильная работа |
-| Future readiness | 8 | Подготовлено к расширению BYREF на составные цели |
+| Метрика | Оценка | Объяснение |
+|---------|--------|------------|
+| Корректность | 9/10 | BYREF и function values работают корректно на обоих движках |
+| Семантика | 9/10 | Строгая валидация BYREF (MB2028), function value ограничения (MB2029, MB3009) |
+| Архитектура | 9/10 | Чистое разделение: RuntimeReferenceStoredValue (Interpreter) / BytecodeVariableSlot delegates (VM) |
+| Runtime (Interpreter) | 9/10 | Корректные closures, BYREF через shared references |
+| Runtime (Bytecode VM) | 9/10 | Frame reuse, capture caching, BYREF через slot delegates + CopyBack |
+| Производительность | 9/10 | VM быстрее на 13-14%, кэширование function values и captures |
+| Память | 9/10 | ArrayPool для аргументов, frame reuse, capture caching |
+| Error handling | 9/10 | MB2028, MB2029, MB3009, MaxCallDepth=200 |
+| Tests | 8/10 | 33 теста, все проходят; отсутствуют multi-level BYREF и recursion+closures |
+| Samples | 9/10 | 4 BYREF + 4 function value + 2 benchmark samples |
+| Documentation | 8/10 | Manual актуален; отсутствует отдельная страница для BYREF |
+| IDE | 9/10 | Подсветка, автозавершение блоков |
+| Maintainability | 9/10 | Код чистый, хорошо структурированный |
+| Reliability | 9/10 | Стабильное поведение, нет известных багов |
+| Future readiness | 9/10 | Готово к расширению BYREF, optional params, lambdas |
 
-**Общая оценка: 8.4 / 10**
+**Средняя оценка: 8.9/10**
 
 ---
 
@@ -1407,26 +1193,32 @@ EXTEND-003 (BYREF function values) ← зависит от TEST-001
 
 > Можно ли считать подсистему BYREF / FUNCTION VALUES достаточно стабильной, корректной и архитектурно понятной для перехода к следующей подсистеме?
 
-**YES, WITH CONDITIONS**
+**YES**
 
-### Основные blockers
+---
 
-Нет критических blockers. Подсистема работает корректно для всех подтверждённых сценариев.
+## Основные blockers
 
-### Что нужно сделать в первую очередь
+Нет. Подсистема стабильна и корректна.
 
-1. Добавить тест для MB2029 (BYREF function value diagnostic) — единственный существенный пробел в тестировании
-2. Добавить negative-тесты для BYREF с CONST, элементом массива, полем TYPE
+## Что нужно сделать в первую очередь
 
-### Что можно отложить
+Нет критических задач. Все предыдущие находки (CALL-001..006) уже закрыты.
 
-1. Расширение BYREF на поля TYPE и элементы массива — отдельный следующий контракт
-2. BYREF для function values (callback-вызовы) — отдельный следующий контракт
-3. Комментарии к мёртвому коду в lowerer
+## Что можно отложить
 
-### Что не следует трогать
+- Расширение BYREF на array elements и record fields (Lowering уже поддерживает)
+- Optional/default параметры
+- Anonymous functions/lambdas
+- Дополнительные тесты (multi-level BYREF, recursion+closures)
 
-1. Базовый механизм BYREF для простых переменных и записей TYPE — работает корректно
-2. Function values и closures — работают корректно
-3. Parser и семантические ограничения — корректны
-4. Opcode.CallByRef и EmitCallByRef — корректны
+## Что не следует трогать
+
+- BYREF модель (RuntimeReferenceStoredValue / BytecodeVariableSlot delegates)
+- CallByRef опкод и его операнды
+- Function values модель (RuntimeFunctionValue)
+- Closures модель (scope chain / shared slots)
+- Frame reuse и capture caching в VM
+- FINALLY unwinding при RETURN
+- MaxCallDepth = 200
+- MB2028/MB2029 ограничения

@@ -13,7 +13,9 @@ return args.Length > 0 && string.Equals(args[0], "compare-engines", StringCompar
         ? RunBytecodeCoverageAudit(root, args[1..])
         : args.Length > 0 && string.Equals(args[0], "profile-bytecode-opcodes", StringComparison.OrdinalIgnoreCase)
             ? RunBytecodeOpcodeProfile(root, args[1..])
-        : RunMathManualChecks(root, args);
+            : args.Length > 0 && string.Equals(args[0], "audit-diagnostics-table", StringComparison.OrdinalIgnoreCase)
+                ? DiagnosticsTableAudit.Run(root, ResolveOutputPath(root, args[1..], "axiom-diagnostics-table-audit"))
+                : RunMathManualChecks(root, args);
 
 static int RunMathManualChecks(string root, string[] args)
 {

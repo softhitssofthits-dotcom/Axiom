@@ -1,5 +1,5 @@
 # AXIOM — ГЛУБОКИЙ FORENSIC-АУДИТ
-## TYPE-SPECIALIZED STACKS / МОДЕЛЬ ЗНАЧЕНИЙ И СТЕКА ВЫЧИСЛЕНИЙ
+## TYPE-SPECIALIZED STACKS / BOXING ELIMINATION
 
 Дата: 2026-08-21
 Метод: полный forensic-анализ кода, документации, benchmarks и архитектуры
@@ -131,6 +131,36 @@ Type-specialized stacks — параллельные типизированны�
 - **Статус:** PLANNED (OPT-PERF-ARCH-001)
 - **Уровень уверенности:** CONFIRMED (запланировано в `FUTURE.md` и `BYTECODE_VM_AUDIT_REPORT.md`)
 
+### SYS-008: AddLongInteger специализированная инструкция
+
+- **Название:** Специализированный опкод Long+Integer
+- **Категория:** VM / Optimization
+- **Тип:** RUNTIME FACILITY
+- **Файл:** `src/Axiom.Runtime/Execution/BytecodeVm.cs:1354-1377`
+- **Описание:** Отдельный опкод `AddLongInteger` для часто встречающейся комбинации типов Long + Integer без generic dispatch.
+- **Статус:** IMPLEMENTED
+- **Уровень уверенности:** CONFIRMED
+
+### SYS-009: RuntimeArithmeticHelpers
+
+- **Название:** Общие арифметические хелперы
+- **Категория:** Runtime / Shared
+- **Тип:** RUNTIME FACILITY
+- **Файл:** `src/Axiom.Runtime/Values/RuntimeArithmeticHelpers.cs`
+- **Описание:** Статические методы `EvaluateCheckedIntegerOperation`, `EvaluateCheckedLongOperation`, `EvaluateCheckedDecimalOperation`, `EnsureFiniteDoubleResult` — общие для Interpreter и BytecodeVm.
+- **Статус:** IMPLEMENTED
+- **Уровень уверенности:** CONFIRMED
+
+### SYS-010: LoweredInstruction.ValueType
+
+- **Название:** Типовая аннотация lowered-инструкций
+- **Категория:** Bytecode / Model
+- **Тип:** RUNTIME FACILITY
+- **Файл:** `src/Axiom.Bytecode/Model/LoweredInstruction.cs:63`
+- **Описание:** Поле `TypeSymbol? ValueType` на каждой lowered-инструкции, позволяющее эмиттеру байткода и валидатору знать тип значения без повторного анализа.
+- **Статус:** IMPLEMENTED
+- **Уровень уверенности:** CONFIRMED
+
 ---
 
 ## 4. Фактическая архитектура
@@ -196,6 +226,9 @@ ExecuteAddInstruction(frame, instructionIndex):
 | `src/Axiom.Runtime/Execution/BytecodeCallFrame.cs` | Фрейм вызова (locals, arguments, captures) |
 | `src/Axiom.Runtime/Execution/BytecodeVm.cs` | Fast paths, арифметика, сравнения |
 | `src/Axiom.Runtime/Values/RuntimeArithmeticHelpers.cs` | Checked arithmetic helpers |
+| `src/Axiom.Runtime/Execution/Interpreter.Expressions.cs` | Interpreter-арифметика (generic dispatch) |
+| `src/Axiom.Bytecode/Model/LoweredInstruction.cs` | Lowered-инструкции с ValueType |
+| `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` | Валидация с type stack tracking |
 | `docs/FUTURE.md` | План type-specialized stacks |
 | `docs/BYTECODE_VM_AUDIT_REPORT.md` | Анализ boxing overhead |
 
@@ -252,6 +285,26 @@ Opcode.CompareEqual:
   4. RuntimeValue.FromBoolean(result) → кэшированный True/False
 ```
 
+### 5.3 Interpreter путь (для сравнения)
+
+```
+Исходный код: PRINT 2 + 3
+         ↓
+Lexer → Parser → Binder: BoundBinaryExpression(Integer, Add, Integer)
+         ↓
+Interpreter.EvaluateBinaryExpression:
+  1. left = EvaluateExpression(expression.Left) → RuntimeValue(Integer, boxed_2)
+  2. right = EvaluateExpression(expression.Right) → RuntimeValue(Integer, boxed_3)
+  3. expression.Type == Integer → EvaluateCheckedIntegerOperation:
+     - left.AsInteger() → (int)Value! → UNBOX
+     - right.AsInteger() → (int)Value! → UNBOX
+     - checked(2 + 3) = 5
+     - RuntimeValue.FromInteger(5) → кэш-хит или BOX
+  4. PRINT → result.ToDisplayString() → "5"
+```
+
+**Ключевое отличие:** Interpreter использует тот же boxing, но без fast path — каждая операция проходит через generic dispatch с pattern matching по `SyntaxKind`.
+
 ---
 
 ## 6. Фактический семантический контракт
@@ -274,6 +327,18 @@ Opcode.CompareEqual:
 
 **Ограничения:** размер ограничен `int.MaxValue`, рост через `Array.Resize`
 
+### 6.3 Fast paths контракт
+
+**Вход:** два `RuntimeValue` (left, right)
+**Обработка:** проверка `left.Type == right.Type`, затем прямой unbox/operate/box
+**Выход:** `true` + результат в `out result`, или `false` (fallback к generic path)
+
+**Гарантии:**
+- При совпадении типов и отсутствии overflow → `true`
+- При несовпадении типов → `false`
+- При overflow → `false` (generic path создаёт diagnostic)
+- При non-finite double → `false` (generic path создаёт diagnostic)
+
 ---
 
 ## 7. Анализ Parser
@@ -284,7 +349,10 @@ Opcode.CompareEqual:
 
 ## 8. Анализ Binder
 
-Подсистема TYPE-SPECIALIZED STACKS не затрагивает Binder. Binder работает на уровне семантики и не зависит от модели значений.
+Подсистема TYPE-SPECIALIZED STACKS не затрагивает Binder напрямую. Однако Binder создаёт `BoundBinaryExpression` с фиксированным `Type`, который затем используется:
+- Lowerer для выбора опкода
+- BytecodeCompiler для эмиссии инструкций
+- BytecodeModuleValidator для type stack tracking через `LoweredInstruction.ValueType`
 
 ---
 
@@ -299,11 +367,12 @@ Interpreter использует ту же модель `RuntimeValue` с boxing
 - Нет `BytecodeEvaluationStack` — значения хранятся в `RuntimeScope` и передаются как аргументы методов
 - Boxing/unboxing происходит при создании `RuntimeValue` и при чтении через `AsXxx()`
 - Нет fast paths — каждая операция проходит через generic dispatch
-- Нет кэша целых чисел в горячем пути (кэш есть в `RuntimeValue.FromInteger`, но Interpreter не использует специализированные пути)
+- Кэш целых чисел работает через `RuntimeValue.FromInteger`, но Interpreter не использует специализированные пути
+- Арифметика через `EvaluateCheckedIntegerOperation` / `EvaluateCheckedLongOperation` / `EvaluateCheckedDecimalOperation` / `EnsureFiniteDoubleResult` — общие хелперы с BytecodeVm
 
 ### 9.3 Interpreter-only логика
 
-Нет логики, реализованной специально в Interpreter и отсутствующей в общей Runtime architecture. Оба движка используют одну и ту же модель `RuntimeValue`.
+Нет логики, реализованной специально в Interpreter и отсутствующей в общей Runtime architecture. Оба движка используют одну и ту же модель `RuntimeValue` и общие арифметические хелперы.
 
 ---
 
@@ -329,6 +398,7 @@ Interpreter использует ту же модель `RuntimeValue` с boxing
 | CompareLess/Greater | `TryEvaluateFastComparison` | Integer, Long, Double, Decimal | 2 unbox |
 | IntegralDivide | `TryEvaluateFastIntegerBinaryInstruction` | Integer, Long | 2 unbox + 0-1 box |
 | Power | `TryEvaluateFastIntegerBinaryInstruction` | Integer | 2 unbox + 0-1 box |
+| AddLongInteger | Специализированный опкод | Long+Integer | 2 unbox + 0-1 box |
 
 ### 10.2 Boxing/unboxing per instruction (подтверждено кодом)
 
@@ -373,6 +443,24 @@ private void ExecuteAddLongIntegerInstruction(BytecodeCallFrame frame, int instr
 
 Это пример **opcode-level specialization** — отдельный опкод для часто встречающейся комбинации типов.
 
+### 10.5 GetXxxUnchecked: преднамеренная оптимизация
+
+```csharp
+// Fast path — без проверки типа
+private static int GetIntegerUnchecked(RuntimeValue value) => (int)value.Value!;
+private static long GetLongUnchecked(RuntimeValue value) => (long)value.Value!;
+private static double GetDoubleUnchecked(RuntimeValue value) => (double)value.Value!;
+private static decimal GetDecimalUnchecked(RuntimeValue value) => (decimal)value.Value!;
+private static bool GetBooleanUnchecked(RuntimeValue value) => (bool)value.Value!;
+
+// Generic path — с проверкой типа
+public int AsInteger() => Type == TypeSymbol.Integer
+    ? (int)Value!
+    : throw new InvalidOperationException(...);
+```
+
+`GetXxxUnchecked` — это версия `AsXxx` без проверки типа. Преднамеренное дублирование для производительности: в hot path тип уже проверён через `left.Type == TypeSymbol.Integer`, поэтому повторная проверка избыточна.
+
 ---
 
 ## 11. Анализ Runtime
@@ -392,7 +480,7 @@ int (boxed):
 └── padding: 4 bytes
 └── Итого: 16 bytes на boxed int
 
-Полный overhead для одного integer в стеке:
+Polny overhead для одного integer v steke:
 - RuntimeValue: 24 bytes (heap)
 - boxed int: 16 bytes (heap)
 - Ссылка в массиве: 8 bytes (stack/array)
@@ -544,7 +632,7 @@ Boxing не влияет на обработку ошибок. `RuntimeFailureEx
 | LONG 0 | ✅ | Нет |
 | LONG 1025 | ❌ | Да |
 | DOUBLE 0.0 | ❌ | Да |
-| DECIMAL 0 | ❌ | Da |
+| DECIMAL 0 | ❌ | Да |
 | BOOLEAN true | ✅ | Нет |
 | BOOLEAN false | ✅ | Нет |
 
@@ -581,6 +669,8 @@ Non-finite результаты (Infinity, NaN) проходят через fast
 | Fast paths | ❌ | ✅ | ✅ | VM быстрее на горячих путях |
 | Specialized opcodes | ❌ | ✅ | ✅ | VM имеет AddLongInteger и др. |
 | EvaluationStack | ❌ | ✅ | — | Только в VM |
+| Checked arithmetic | ✅ (через хелперы) | ✅ (через хелперы) | ✅ | Общие RuntimeArithmeticHelpers |
+| GetXxxUnchecked | ❌ | ✅ | ✅ | VM пропускает проверку типа в hot path |
 
 **Ключевое расхождение:** VM имеет fast paths и специализированные опкоды, которые отсутствуют в Interpreter. Это объясняет, почему VM быстрее на CPU-heavy сценариях (медиана 0.63x).
 
@@ -609,15 +699,17 @@ Non-finite результаты (Infinity, NaN) проходят через fast
 | Сравнения | ~50% | Результат — Boolean (кэш) |
 | Логические операции | ~100% | Результат — Boolean (кэш) |
 
-### 22.3 VM performance: текущее состояние
+### 22.3 VM performance: текущее состояние (подтверждено benchmarks)
 
 | Категория | Медиана runtime ratio | Комментарий |
 |-----------|----------------------|-------------|
-| CPU-heavy (арифметика) | ~0.40x | VM в 2.5x быстрее |
-| String-heavy | ~0.50x | VM в 2x быстрее |
-| Array-heavy | ~0.70x | VM в 1.4x быстрее |
-| I/O-heavy | ~0.90x | Паритет |
+| CPU-heavy (арифметика) | ~0.85x | VM в 1.2x быстрее |
+| String-heavy | ~0.40x | VM в 2.5x быстрее |
+| Array-heavy | ~0.47x | VM в 2.1x быстрее |
+| I/O-heavy | ~0.92x | Паритет |
 | Mixed | ~0.63x | VM в 1.6x быстрее |
+| Control flow | ~0.83x | VM в 1.2x быстрее |
+| Bitwise | ~0.86x | VM в 1.2x быстрее |
 
 ---
 
@@ -627,16 +719,16 @@ Non-finite результаты (Infinity, NaN) проходят через fast
 
 - ✅ Чередующийся запуск движков (Interpreter/BytecodeVm)
 - ✅ Прогревочные итерации
-- ✅ Множественные итерации
+- ✅ Множественные итерации (20-40)
 - ✅ Мин/ср/медиана/макс
 - ✅ Одинаковый вход
 - ✅ Runtime отделён от total (включая frontend)
+- ✅ 48+ адресных сценариев в `samples/smoke/engine-compare/`
 
 ### 23.2 Ограничения
 
 - ⚠️ Нет профилирования GC
 - ⚠️ Нет CPU counter profiling
-- ⚠️ Только 3 итерации измерения
 - ⚠️ Нет изоляции boxing overhead от остальных накладных расходов
 
 ---
@@ -648,8 +740,6 @@ Non-finite результаты (Infinity, NaN) проходят через fast
 ```
 ROOT-PERF-001: RuntimeValue boxing model
 ├── PERF-001: Boxing per arithmetic operation (2 unbox + 0-1 box)
-├── PERF-003: Negate/Not closure allocation (УЖЕ ИСПРАВЛЕНО)
-├── PERF-004: Slow-path closure allocation (УЖЕ ИСПРАВЛЕНО)
 ├── PERF-007: Double/Decimal always allocate (нет кэша)
 └── PERF-008: No type-specialized stacks
 ```
@@ -662,7 +752,6 @@ ROOT-PERF-002: Lowering quality gaps
 └── PERF-005: No dead code elimination
 
 ROOT-PERF-003: I/O path overhead
-├── PERF-006: File I/O regression (resolved)
 ├── PERF-009: Field access via string
 └── PERF-010: No inline caching
 ```
@@ -708,7 +797,7 @@ ROOT-PERF-003: I/O path overhead
 ### SYS-003: Boxing для Boolean
 
 **Категория:** PERFORMANCE
-**Серьёзность:** P3
+**Серьёзность:** P4
 **Уверенность:** CONFIRMED
 
 Boolean boxingуется в `object?`, хотя в кэше есть только 2 значения (true/false). Кэш работает корректно, но сам факт boxing избыточен.
@@ -731,17 +820,11 @@ Boolean boxingуется в `object?`, хотя в кэше есть тольк�
 
 ### 26.2 GetXxxUnchecked дублирует AsXxx
 
-```csharp
-// Fast path
-private static int GetIntegerUnchecked(RuntimeValue value) => (int)value.Value!;
-
-// Generic path
-public int AsInteger() => Type == TypeSymbol.Integer
-    ? (int)Value!
-    : throw new InvalidOperationException(...);
-```
-
 `GetXxxUnchecked` — это версия `AsXxx` без проверки типа. Преднамеренное дублирование.
+
+### 26.3 Interpreter и VM используют общие хелперы
+
+Арифметические операции (checked arithmetic, finite double check) вынесены в `RuntimeArithmeticHelpers` и используются обоими движками. Это **правильное** разделение.
 
 ---
 
@@ -754,6 +837,9 @@ public int AsInteger() => Type == TypeSymbol.Integer
 | Кэш целых чисел | `RuntimeValue.cs` (CachedIntegers/CachedLongs) |
 | Стек вычислений | `BytecodeEvaluationStack.cs` |
 | Fast paths | `BytecodeVm.cs` (TryEvaluateHotXxx) |
+| Checked arithmetic | `RuntimeArithmeticHelpers.cs` |
+| Type annotations | `LoweredInstruction.ValueType` |
+| Type stack validation | `BytecodeModuleValidator.cs` |
 | План type-specialized stacks | `FUTURE.md`, `BYTECODE_VM_AUDIT_REPORT.md` |
 
 **Архитектурная находка:** Единый источник истины для модели значений — `RuntimeValue.cs`. Все компоненты (Interpreter, VM, helpers) используют одну и ту же модель.
@@ -797,10 +883,10 @@ Boxing создаёт значительное давление на памят�
 ### 30.1 Существующие тесты
 
 Тесты для модели значений и стека вычислений покрыты косвенно через:
-- Runtime-тесты (897 тестов) — покрывают все операции
+- Runtime-тесты (897+ тестов) — покрывают все операции
 - BytecodeVm-тесты — покрывают fast paths
 - Acceptance-тесты — покрывают end-to-end сценарии
-- Engine-comparison benchmarks (48 сценариев) — покрывают производительность
+- Engine-comparison benchmarks (48+ сценариев) — покрывают производительность
 
 ### 30.2 Пропуски в тестах
 
@@ -835,6 +921,8 @@ Boxing создаёт значительное давление на памят�
 
 Нет dedicated samples для type-specialized stacks (подсистема не реализована). Все существующие samples работают через текущую модель `RuntimeValue`.
 
+Engine-comparison сценарии в `samples/smoke/engine-compare/` косвенно покрывают boxing overhead через нагрузочные тесты арифметики, строк, массивов и управления.
+
 ---
 
 ## 33. Анализ документации
@@ -854,7 +942,13 @@ Boxing создаёт значительное давление на памят�
 - ✅ Performance speedup matrix создана
 - ✅ Top 20 bottlenecks идентифицированы
 
-### 33.3 LANGUAGE_INVENTORY.md
+### 33.3 BYTECODE_PERF_MATRIX.md
+
+- ✅ 48+ адресных сценариев измерено
+- ✅ Все семейства языка имеют dedicated или косвенные benchmarks
+- ✅ Прямого долга > 1.000x не осталось
+
+### 33.4 LANGUAGE_INVENTORY.md
 
 - ✅ RuntimeValue описан как "Единый тип значения с boxing через `object? Value`"
 
@@ -910,12 +1004,19 @@ ROOT-PERF-002: Lowering quality gaps
 4. **Fast paths** — корректны, оптимизированы, покрыты тестами. Не требуют изменений.
 5. **BytecodeEvaluationStack** — простой, эффективный, AggressiveInlining. Не требует изменений.
 6. **Frame model** — стабильный, с переиспользованием фреймов. Не требует изменений.
+7. **RuntimeArithmeticHelpers** — общие checked arithmetic хелперы. Не требуют изменений.
+8. **AddLongInteger опкод** — пример удачной opcode-level specialization. Не требует изменений.
 
 ---
 
 ## 38. Возможности консолидации
 
 Текущая архитектура не требует консолидации. Все компоненты используют единую модель `RuntimeValue`.
+
+При реализации type-specialized stacks потребуется новая консолидация:
+- Типизированные стеки должны быть едиными для Interpreter и VM
+- Fast paths должны быть переписаны на типизированные операции
+- Возможно, потребуется tagged struct как промежуточный слой
 
 ---
 
@@ -1077,8 +1178,8 @@ COMPILER-003 (inline annotations) ← не зависит
 2. ✅ Кэш целых чисел работает корректно
 3. ✅ Fast paths работают корректно для всех горячих операций
 4. ✅ VM быстрее Interpreter на CPU-heavy сценариях
-5. ✅ Все 897 runtime-тестов проходят
-6. ✅ Все 48 benchmark-сценариев показывают VM ≤ 1.0x
+5. ✅ Все 897+ runtime-тестов проходят
+6. ✅ Все 48+ benchmark-сценариев показывают VM ≤ 1.0x
 7. ❌ Type-specialized stacks реализованы (PLANNED)
 8. ❌ Boxing устранён для горячих типов (PLANNED)
 9. ❌ GC pressure минимизирован (PLANNED)
@@ -1108,61 +1209,62 @@ COMPILER-003 (inline annotations) ← не зависит
 | 4 | OPT-004 | Типизированные fast paths без boxing | Устранение boxing в горячих путях | Средняя |
 | 5 | OPT-005 | Constant folding в lowering | Устранение runtime вычислений | Средняя |
 | 6 | OPT-006 | Dead code elimination в lowering | Снижение размера bytecode | Низкая |
-| 7 | OPT-007 | Register-like locals для горячих переменных | Обход стека для счётчиков циклов | Высокая |
-| 8 | OPT-008 | Superinstructions (LoadLocal+LoadLocal+Add) | Снижение dispatch overhead | Средняя |
 
 ---
 
 ## 48. Итоговая оценка здоровья подсистемы
 
-| Аспект | Оценка (0-10) | Объяснение |
-|--------|---:|---|
-| Корректность | 10 | Все 897 тестов проходят, нет проблем корректности |
-| Семантика | 10 | Модель значений стабильна и корректна |
-| Архитектура | 6 | Boxing model — архитектурный потолок |
-| Runtime | 8 | Fast paths компенсируют часть boxing overhead |
-| Interpreter | 7 | Нет fast paths, полный boxing overhead |
-| Bytecode VM | 8 | Fast paths, специализированные опкоды, кэш |
-| Производительность | 7 | VM быстрее на 37% (медиана), но boxing ограничивает |
-| Память | 5 | Boxing создаёт значительное GC pressure |
-| Error handling | 10 | Не зависит от модели значений |
-| Tests | 8 | Полное покрытие функциональности, нет dedicated perf тестов |
-| Samples | 8 | Нет dedicated samples (подсистема не реализована) |
-| Documentation | 9 | FUTURE.md и BYTECODE_VM_AUDIT_REPORT.md актуальны |
-| IDE | 10 | Не затрагивается |
-| Maintainability | 8 | Чистый код, понятная архитектура |
-| Reliability | 10 | Стабильная работа |
-| Future readiness | 4 | Требует фундаментальной переработки для type-specialized stacks |
+| Аспект | Оценка (0-10) | Обоснование |
+|--------|--------------|-------------|
+| Корректность | 9/10 | Все операции работают корректно. Нет багов. |
+| Семантика | 9/10 | Семантика стабильна и хорошо определена. |
+| Архитектура | 6/10 | Boxing model — архитектурный потолок. Нужна фундаментальная переработка. |
+| Runtime | 8/10 | Стабильный, immutable, корректный. |
+| Interpreter | 8/10 | Корректный, но без fast paths. |
+| Bytecode VM | 8/10 | Корректный, с fast paths и specialized opcodes. |
+| Производительность | 7/10 | VM быстрее Interpreter на 96% сценариев, но boxing overhead limits ceiling. |
+| Память | 5/10 | Boxing создаёт значительное давление на GC. |
+| Error handling | 9/10 | Checked arithmetic, overflow detection, diagnostics. |
+| Tests | 8/10 | 897+ тестов, 48+ benchmarks. Нет dedicated boxing-тестов. |
+| Samples | 8/10 | 48+ engine-compare сценариев. Нет dedicated boxing samples. |
+| Documentation | 9/10 | Полный аудит, матрица производительности, план. |
+| IDE | 9/10 | Не затронута. |
+| Maintainability | 7/10 | Fast paths дублируют generic paths. Преднамеренно. |
+| Reliability | 9/10 | Immutable values, thread-safe reads. |
+| Future readiness | 5/10 | Boxing model prevents compiler readiness. Нужна переработка. |
 
-**Общая оценка: 7.8 / 10**
+**Общая оценка: 7.5/10**
+
+Подсистема работает корректно и стабильно. Главный долг — boxing model, которая является архитектурным потолком для дальнейшего ускорения. Fast paths компенсируют часть накладных расходов, но не устраняют фундаментальную проблему.
 
 ---
 
-## ФИНАЛЬНЫЙ КОНТРОЛЬНЫЙ ВОПРОС
+## Финальный контрольный вопрос
 
-> Можно ли считать подсистему TYPE-SPECIALIZED STACKS достаточно стабильной, корректной и архитектурно понятной для перехода к следующей подсистеме?
+> Можно ли считать подсистему TYPE-SPECIALIZED STACKS / BOXING ELIMINATION достаточно стабильной, корректной и архитектурно понятной для перехода к следующей подсистеме?
 
 **YES, WITH CONDITIONS**
 
 ### Основные blockers
 
-Нет критических blockers. Текущая модель `RuntimeValue` работает корректно и стабильно. Type-specialized stacks — это будущая оптимизация, а не текущая проблема.
+1. **Boxing model** — архитектурный потолок, но не блокирует текущую работу
+2. **Type-specialized stacks** — запланированы, но не реализованы
 
 ### Что нужно сделать в первую очередь
 
-1. Добавить dedicated тесты для boxing overhead и кэш-хит rate
-2. Приступить к проектированию tagged struct (ARCH-001)
+1. Добавить dedicated тесты для boxing overhead и cache hit rate
+2. При реализации type-specialized stacks — фундаментальная переработка модели значений
 
 ### Что можно отложить
 
-1. Реализация type-specialized stacks (OPT-002) — высокая сложность
-2. Register-like locals (OPT-007) — высокая сложность
-3. Superinstructions (OPT-008) — средняя сложность
+1. Type-specialized stacks — высокая сложность, текущая производительность достаточна
+2. Tagged struct — промежуточное решение, лучше сразу type-specialized stacks
+3. Compiler readiness — зависит от type-specialized stacks
 
 ### Что не следует трогать
 
-1. RuntimeValue модель — стабильна и корректна
-2. Integer/Long cache — эффективен
-3. Fast paths — корректны и оптимизированы
-4. BytecodeEvaluationStack — простой и эффективный
-5. Frame model — стабильный
+1. RuntimeValue модель — стабильна, immutable, корректна
+2. Integer/Long cache — эффективен для типичных сценариев
+3. Fast paths — корректны, оптимизированы, покрыты тестами
+4. BytecodeEvaluationStack — простой, эффективный
+5. RuntimeArithmeticHelpers — общие хелперы, правильное разделение

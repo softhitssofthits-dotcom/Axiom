@@ -507,8 +507,6 @@ public sealed class BoundProgramLowererTests
         Assert.Equal(
             [
                 LoweredInstructionKind.LoadLiteral,
-                LoweredInstructionKind.LoadLiteral,
-                LoweredInstructionKind.BinaryOperation,
                 LoweredInstructionKind.JumpIfFalse,
                 LoweredInstructionKind.LoadLiteral,
                 LoweredInstructionKind.PrintValue,
@@ -523,10 +521,10 @@ public sealed class BoundProgramLowererTests
             ],
             instructions.Select(static instruction => instruction.Kind).ToArray());
 
-        Assert.Equal("L0001", instructions[3].Label);
-        Assert.Equal("L0002", instructions[7].Label);
-        Assert.Equal("L0001", instructions[8].Label);
-        Assert.Equal("L0002", instructions[12].Label);
+        Assert.Equal("L0001", instructions[1].Label);
+        Assert.Equal("L0002", instructions[5].Label);
+        Assert.Equal("L0001", instructions[6].Label);
+        Assert.Equal("L0002", instructions[10].Label);
     }
 
     [Fact]

@@ -44,7 +44,7 @@
                 <p>Функция <code>ISOPEN</code> проверяет, связан ли объект <code>FILE</code> с открытым файлом в текущий момент.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = ISOPEN(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт переменную типа <code>FILE</code>. Функция возвращает <code>TRUE</code>, если файл открыт, и <code>FALSE</code>, если переменная ещё не открыта или уже закрыта.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт переменную типа <code>FILE</code>. Функция возвращает <code>TRUE</code>, если файл открыт, и <code>FALSE</code>, если переменная ещё не открыта или уже закрыта.</p>
                 <h3>Пример вызова ISOPEN</h3>
                 <pre><code class="language-basic">' Проверка состояния файла до и после открытия
 DIM f AS FILE
@@ -60,7 +60,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>FILEPATH</code> возвращает полный путь файла, который сейчас связан с переменной <code>FILE</code>.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">path = FILEPATH(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является строка с полным путём.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является строка с полным путём.</p>
                 <h3>Пример вызова FILEPATH</h3>
                 <pre><code class="language-basic">' Получение полного пути открытого файла
 DIM f AS FILE
@@ -75,7 +75,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>FILEMODE</code> возвращает режим, в котором файл был открыт.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">modeName = FILEMODE(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат обычно имеет вид <code>INPUT</code>, <code>OUTPUT</code> или <code>APPEND</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат обычно имеет вид <code>INPUT</code>, <code>OUTPUT</code> или <code>APPEND</code>.</p>
                 <h3>Пример вызова FILEMODE</h3>
                 <pre><code class="language-basic">' Определение режима открытого файла
 DIM f AS FILE
@@ -90,7 +90,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>FILEPOS</code> возвращает текущую позицию чтения или записи в открытом файле.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">position = FILEPOS(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Возвращаемое значение имеет тип <code>LONG</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Возвращаемое значение имеет тип <code>LONG</code>.</p>
                 <h3>Пример вызова FILEPOS</h3>
                 <pre><code class="language-basic">' Позиция меняется после чтения строки
 DIM f AS FILE
@@ -107,7 +107,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>FILELENGTH</code> возвращает длину открытого файла в тех же единицах, в которых работает <code>FILEPOS</code>.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">length = FILELENGTH(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является число типа <code>LONG</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является число типа <code>LONG</code>.</p>
                 <h3>Пример вызова FILELENGTH</h3>
                 <pre><code class="language-basic">' Получение длины открытого файла
 DIM f AS FILE
@@ -122,7 +122,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>EOF</code> показывает, достигнута ли конечная позиция файла при чтении.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = EOF(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, когда позиция чтения уже дошла до конца файла.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, когда позиция чтения уже дошла до конца файла.</p>
                 <h3>Пример вызова EOF</h3>
                 <pre><code class="language-basic">' Чтение файла до конца
 DIM f AS FILE
@@ -139,7 +139,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>READTOEND</code> читает остаток файла от текущей позиции до конца и возвращает его одной строкой.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">text = READTOEND(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Возвращается строка с остатком содержимого без дополнительного преобразования в массив строк.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Возвращается строка с остатком содержимого без дополнительного преобразования в массив строк.</p>
                 <h3>Пример вызова READTOEND</h3>
                 <pre><code class="language-basic">' Чтение первой строки отдельно, а затем остатка файла
 DIM f AS FILE
@@ -155,7 +155,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>READTEXT</code> читает указанное количество символов или текстовых позиций от текущего места.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">text = READTEXT(file, count)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. <code>count</code> задаёт, сколько текста нужно прочитать. Результатом является строка.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. <code>count</code> задаёт, сколько текста нужно прочитать. Результатом является строка.</p>
                 <h3>Пример вызова READTEXT</h3>
                 <pre><code class="language-basic">' Чтение первых пяти символов
 DIM f AS FILE
@@ -170,7 +170,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>READLINE</code> читает одну текстовую строку от текущей позиции и возвращает её без символов перевода строки.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">lineText = READLINE(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Результатом является одна строка текста.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Результатом является одна строка текста.</p>
                 <h3>Пример вызова READLINE</h3>
                 <pre><code class="language-basic">' Последовательное чтение строк
 DIM f AS FILE
@@ -186,7 +186,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>READLINES</code> читает несколько строк подряд и возвращает их как массив <code>STRING()</code>.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">lines = READLINES(file, count)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. <code>count</code> задаёт число строк. Результатом является новый массив строк.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. <code>count</code> задаёт число строк. Результатом является новый массив строк.</p>
                 <h3>Пример вызова READLINES</h3>
                 <pre><code class="language-basic">' Чтение двух строк одним вызовом
 DIM f AS FILE
@@ -204,7 +204,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>LINENUMBER</code> возвращает номер текущей строки чтения в текстовом файле.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">lineNumber = LINENUMBER(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый в режиме <code>INPUT</code>. Результатом является номер строки типа <code>LONG</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый в режиме <code>INPUT</code>. Результатом является номер строки типа <code>LONG</code>.</p>
                 <h3>Пример вызова LINENUMBER</h3>
                 <pre><code class="language-basic">' Номер строки увеличивается после чтения
 DIM f AS FILE
@@ -221,7 +221,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>SKIPLINE</code> пропускает текущую строку и переводит позицию к началу следующей строки.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = SKIPLINE(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, если переход выполнен.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, если переход выполнен.</p>
                 <h3>Пример вызова SKIPLINE</h3>
                 <pre><code class="language-basic">' Пропуск первой строки
 DIM f AS FILE
@@ -237,7 +237,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>WRITE</code> записывает текст в открытый файл без добавления перевода строки.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = WRITE(file, text)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт строку, которую нужно записать. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт строку, которую нужно записать. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова WRITE</h3>
                 <pre><code class="language-basic">' Запись двух фрагментов в одну строку
 DIM f AS FILE
@@ -253,7 +253,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>WRITELINE</code> записывает строку и сразу завершает её переводом строки.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = WRITELINE(file, text)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт содержимое строки. Возвращается <code>TRUE</code>, если запись выполнена.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт содержимое строки. Возвращается <code>TRUE</code>, если запись выполнена.</p>
                 <h3>Пример вызова WRITELINE</h3>
                 <pre><code class="language-basic">' Запись двух строк
 DIM f AS FILE
@@ -269,7 +269,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>NEWLINE</code> добавляет в открытый файл перевод строки без дополнительного текста.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = NEWLINE(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова NEWLINE</h3>
                 <pre><code class="language-basic">' Добавление пустой строки между двумя записями
 DIM f AS FILE
@@ -286,7 +286,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>FLUSH</code> принудительно сбрасывает накопленную запись в файл.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = FLUSH(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт файл, открытый для записи. Результатом является <code>TRUE</code> при успешном сбросе.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. Результатом является <code>TRUE</code> при успешном сбросе.</p>
                 <h3>Пример вызова FLUSH</h3>
                 <pre><code class="language-basic">' Немедленная запись буфера
 DIM f AS FILE
@@ -302,7 +302,7 @@ CLOSE f</code></pre>
                 <p>Функция <code>SEEKFILE</code> переводит текущую позицию открытого файла в указанное место.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = SEEKFILE(file, position)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. <code>position</code> задаёт целевую позицию типа <code>LONG</code>. Результатом является <code>TRUE</code>, если переход выполнен.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. <code>position</code> задаёт целевую позицию типа <code>LONG</code>. Результатом является <code>TRUE</code>, если переход выполнен.</p>
                 <p><strong>Допустимые режимы.</strong> <code>SEEKFILE</code> разрешён для режимов <code>INPUT</code> и <code>OUTPUT</code>. Для режима <code>APPEND</code> явный переход по позиции не поддерживается.</p>
                 <h3>Пример вызова SEEKFILE</h3>
                 <pre><code class="language-basic">' Замена одного символа в уже записанном тексте
@@ -326,7 +326,7 @@ PRINT READFILE(path)</code></pre>
                 <p>Функция <code>REWIND</code> возвращает позицию чтения или записи в начало открытого файла.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = REWIND(file)</code></pre>
-                <p><strong>Части записи.</strong> <code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <p><strong>Допустимые режимы.</strong> Как и <code>SEEKFILE</code>, функция используется с режимами <code>INPUT</code> и <code>OUTPUT</code>.</p>
                 <h3>Пример вызова REWIND</h3>
                 <pre><code class="language-basic">' Возврат в начало после чтения первой строки

@@ -22,4 +22,4 @@ PRINT "cart pos="; POINT(0); ","; POINT(1)
 PRINT "cart logical="; POINT(2); ","; POINT(3)
 
 PRINT "WINDOW sample finished"
-SLEEP
+SLEEP 500

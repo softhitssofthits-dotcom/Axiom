@@ -109,6 +109,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         // Child viewmodels
         Documents = new DocumentWorkspaceService(documentFileService, recentFilesService, () => SelectedLanguage);
+        Documents.DocumentOpened += FormatDocumentAfterOpen;
         StatusBar = new StatusBarViewModel();
         BottomPane = new BottomPaneViewModel();
         FilesPane = new FilesPaneViewModel();

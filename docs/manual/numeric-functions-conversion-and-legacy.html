@@ -39,13 +39,16 @@
                 <p>Функция <code>INT</code> округляет число вниз и возвращает результат в типе <code>INTEGER</code>.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = INT(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат всегда имеет тип <code>INTEGER</code>, даже если исходное значение было <code>DOUBLE</code> или <code>LONG</code>.</p>
-                <h3>Разбор числа из текста</h3>
+                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат всегда имеет тип <code>INTEGER</code>, даже если исходное значение было <code>DOUBLE</code> или <code>LONG</code>.</p>
+                <h3>Округление вниз</h3>
                 <p><code>INT</code> округляет именно вниз, а не к нулю. Поэтому <code>INT(3.9)</code> даёт <code>3</code>, а <code>INT(-3.9)</code> даёт <code>-4</code>. Если итоговое значение не помещается в диапазон <code>INTEGER</code>, выполнение завершается диагностикой переполнения.</p>
-                <h3>Пример VAL</h3>
+                <h3>Пример округления вниз</h3>
                 <pre><code class="language-basic">' Округление вниз для положительных и отрицательных значений
 PRINT INT(7.8)
 PRINT INT(-7.8)</code></pre>
+                <p>Результат:</p>
+                <pre><code>7
+-8</code></pre>
             </section>
 
             <section class="article-section" id="str">
@@ -53,7 +56,7 @@ PRINT INT(-7.8)</code></pre>
                 <p>Функция <code>STR</code> преобразует число в строку.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">text = STR(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение любого поддерживаемого числового типа. Результат имеет тип <code>STRING</code>.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение любого поддерживаемого числового типа. Результат имеет тип <code>STRING</code>.</p>
                 <h3>Текстовое представление числа</h3>
                 <p><code>STR</code> удобна, когда числовое значение нужно объединить с другим текстом, записать в файл или показать через <code>PRINT</code> как часть более длинной строки. Для обратного преобразования используется <code>VAL</code>.</p>
                 <h3>Пример STR</h3>
@@ -62,6 +65,8 @@ DIM amount AS DOUBLE
 
 amount = 12.5
 PRINT "Сумма: " + STR(amount)</code></pre>
+                <p>Результат:</p>
+                <pre><code>Сумма: 12.5</code></pre>
             </section>
 
             <section class="article-section" id="val">
@@ -69,15 +74,17 @@ PRINT "Сумма: " + STR(amount)</code></pre>
                 <p>Функция <code>VAL</code> читает число из строки и возвращает результат в типе <code>DOUBLE</code>.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = VAL(text)</code></pre>
-                <p><strong>Части записи.</strong> <code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
-                <h3>Старые имена совместимости</h3>
+                <h3>Аргументы</h3><p><code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
+                <h3>Некорректный текст</h3>
                 <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
-                <h3>Пример старых математических имен</h3>
+                <h3>Пример чтения числа из строки</h3>
                 <pre><code class="language-basic">' Преобразование строкового значения в число
 DIM text AS STRING
 
 text = "125.75"
 PRINT VAL(text) + 10</code></pre>
+                <p>Результат:</p>
+                <pre><code>135.75</code></pre>
             </section>
 
             <section class="article-section">

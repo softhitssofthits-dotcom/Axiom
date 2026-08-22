@@ -6,4 +6,4 @@ PSET (20, 20), 9
 PAINT STEP (30, 30), , 9
 LOCATE 1, 1
 PRINT "PAINT STEP sample finished"
-SLEEP
+SLEEP 500

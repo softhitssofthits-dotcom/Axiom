@@ -20,7 +20,7 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Спрайты SPRITE</span>
             </nav>
-            <p class="eyebrow">Тип, функции и оператор</p>
+            <p class="eyebrow">Тип, функции и операторы</p>
             <h1 class="page-title">Спрайты SPRITE</h1>
             <p class="lead">Эта страница описывает встроенный тип данных <code>SPRITE</code>, встроенные функции <code>LOADSPRITE</code>, <code>SPRITEWIDTH</code>, <code>SPRITEHEIGHT</code>, <code>SPRITECOUNT</code> и оператор <code>DRAWSPRITE</code>. Тип <code>SPRITE</code> хранит спрайтовый лист, то есть одно изображение, разбитое на одинаковые кадры.</p>
 
@@ -50,10 +50,10 @@ DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>name</code></td><td>Переменная типа <code>SPRITE</code>.</td></tr>
@@ -104,6 +104,28 @@ DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
             </section>
 
             <section class="article-section">
+                <h2>Пример</h2>
+<pre><code class="language-basic">SCREEN 1
+DIM walk AS SPRITE
+walk = LOADSPRITE("assets/walk_sheet.png", 16, 16)
+
+PRINT "Кадров="; SPRITECOUNT(walk)
+DRAWSPRITE walk, 1, 16, 24
+DRAWSPRITE walk, 3, 64, 24, 32, 32
+SLEEP</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения типа <code>SPRITE</code> и оператора <code>DRAWSPRITE</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/graphics/sprites/walk_cycle.axm">SPRITE: анимация ходьбы</a></li>
+                    <li><a href="../../samples/graphics/sprites/page_flip_walk.axm">SPRITE: анимация со сменой страниц</a></li>
+                    <li><a href="../../samples/graphics/sprites/invalid_frame_error.axm">SPRITE: ошибка неверного номера кадра</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
                     <li><code>MB3007</code>: путь в функции <code>LOADSPRITE</code> пустой.</li>
@@ -114,18 +136,6 @@ DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
                     <li><code>MB3007</code>: ширина или высота в масштабированной форме <code>DRAWSPRITE</code> меньше либо равна нулю.</li>
                     <li><code>MB3010</code>: оператор <code>DRAWSPRITE</code> вызван без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
                 </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
-DIM walk AS SPRITE
-walk = LOADSPRITE("assets/walk_sheet.png", 16, 16)
-
-PRINT "Кадров="; SPRITECOUNT(walk)
-DRAWSPRITE walk, 1, 16, 24
-DRAWSPRITE walk, 3, 64, 24, 32, 32
-SLEEP</code></pre>
             </section>
 
             <section class="article-section">

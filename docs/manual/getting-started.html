@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -43,6 +43,7 @@
             <section class="article-section">
                 <h2>Маршрут первого чтения</h2>
                 <ol class="contents-list">
+                    <li><a href="#syntax-notation">Как читать записи синтаксиса</a></li>
                     <li><a href="#program-file">Как устроен файл программы</a></li>
                     <li><a href="#first-program">Первая программа</a></li>
                     <li><a href="#comments">Комментарии</a></li>
@@ -61,6 +62,18 @@
                     <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
                     <li><a href="../../samples/smoke/v0_1_baseline.axm">Сводный пример для первой проверки</a></li>
                 </ul>
+            </section>
+
+            <section class="article-section" id="syntax-notation">
+                <h2>Как читать записи синтаксиса</h2>
+                <p>На страницах справочника формы записи конструкций показаны в едином формате. Правила чтения этого формата стоит освоить один раз:</p>
+                <ul>
+                    <li>текст в <code>&lt;угловых скобках&gt;</code> — место, куда подставляется ваша конструкция; слова в скобках описывают её роль, например <code>&lt;счётчик&gt;</code> или <code>&lt;список вывода&gt;</code>;</li>
+                    <li>части в <code>[квадратных скобках]</code> необязательны: конструкция работает и без них;</li>
+                    <li>ключевые слова языка пишутся как есть: <code>IF</code>, <code>THEN</code>, <code>END IF</code>;</li>
+                    <li>если у конструкции несколько форм записи, каждая форма показывается отдельным блоком, а не смешивается в одну строку.</li>
+                </ul>
+                <p>Например, запись <code>FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]</code> читается так: после <code>FOR</code> пишется имя счётчика, затем начальное значение, ключевое слово <code>TO</code> и конечная граница, а часть <code>STEP &lt;шаг&gt;</code> в квадратных скобках необязательна — без неё цикл использует шаг <code>1</code>.</p>
             </section>
 
             <section class="article-section" id="program-file">

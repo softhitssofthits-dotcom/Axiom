@@ -25,25 +25,25 @@
             <p class="lead"><code>TILEMAP</code> — встроенный тип данных языка Axiom, который хранит загруженную ортогональную карту Tiled. На этой странице собраны тип <code>TILEMAP</code>, встроенная функция <code>LOADTILEMAP</code>, функции размеров <code>MAPWIDTH</code>, <code>MAPHEIGHT</code>, <code>MAPPIXELWIDTH</code>, <code>MAPPIXELHEIGHT</code>, <code>MAPTILEWIDTH</code>, <code>MAPTILEHEIGHT</code>, <code>MAPLAYERCOUNT</code>, функции чтения клеток <code>MAPTILE</code>, <code>MAPTILESET</code>, <code>MAPTILEFLAGS</code> и операторы <code>DRAWTILEMAP</code>, <code>DRAWTILELAYER</code>, <code>SETMAPTILE</code>. Синтаксис ниже относится к разным функциям и операторам, а не к одной общей конструкции.</p>
 
             <section class="article-section" id="type">
-                <h2>Что это такое</h2>
+                <h2>Что такое TILEMAP</h2>
                 <p><code>TILEMAP</code> — встроенный тип данных языка Axiom, который хранит карту из тайловых и объектных слоёв, размеры карты, размеры клетки и ссылки на тайлсеты.</p>
                 <p>Текущий срез поддерживает конечные ортогональные карты Tiled в формате JSON <code>.tmj</code> или <code>.json</code>. Номера слоёв для пользователя начинаются с <code>1</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Для чего сущность нужна</h2>
+                <h2>Когда использовать TILEMAP</h2>
                 <p>Тип <code>TILEMAP</code> нужен, когда уровень уже собран в редакторе карт и программа должна загрузить его как готовую карту, а не рисовать клетки ручными циклами.</p>
                 <p>Функция <code>LOADTILEMAP</code> загружает карту, функции <code>MAP...</code> читают её размеры, состав и клетки, оператор <code>DRAWTILEMAP</code> рисует видимые тайловые слои, оператор <code>DRAWTILELAYER</code> рисует один выбранный тайловый слой, а оператор <code>SETMAPTILE</code> изменяет одну клетку тайлового слоя.</p>
             </section>
 
             <section class="article-section">
-                <h2>Где сущность работает и от чего зависит</h2>
+                <h2>Где работает TILEMAP</h2>
                 <p>Функция <code>LOADTILEMAP</code> и функции <code>MAP...</code> работают со значением карты как с данными. Путь <code>path</code> разрешается относительно каталога запускаемой программы в IDE.</p>
                 <p>Операторы <code>DRAWTILEMAP</code> и <code>DRAWTILELAYER</code> работают только при активном операторе <code>CANVAS</code>. Координаты <code>x</code> и <code>y</code> задаются в пикселях и обозначают левый верхний угол карты в мировых координатах <code>CANVAS</code>. Вывод учитывает <code>CAMERA</code> и обрезается активным <code>VIEWPORT</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Синтаксис каждой поддерживаемой формы</h2>
+                <h2>Синтаксис</h2>
 <pre><code class="language-basic">DIM name AS TILEMAP
 
 name = LOADTILEMAP(path)
@@ -71,7 +71,7 @@ SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex[, flags]</c
             </section>
 
             <section class="article-section">
-                <h2>Объяснение параметров и аргументов</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
                         <tr><th>Аргумент</th><th>Описание</th></tr>
@@ -91,7 +91,7 @@ SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex[, flags]</c
             </section>
 
             <section class="article-section">
-                <h2>Что именно делают операторы и что именно возвращают функции</h2>
+                <h2>Что делают операторы и функции</h2>
                 <p>Функция <code>LOADTILEMAP</code> загружает карту, связанные тайлсеты и изображения тайлсетов, затем возвращает значение <code>TILEMAP</code>.</p>
                 <p>Функции <code>MAPWIDTH</code> и <code>MAPHEIGHT</code> возвращают ширину и высоту карты в клетках. Функции <code>MAPPIXELWIDTH</code> и <code>MAPPIXELHEIGHT</code> возвращают размер карты в пикселях. Функции <code>MAPTILEWIDTH</code> и <code>MAPTILEHEIGHT</code> возвращают размер одной клетки в пикселях. Функция <code>MAPLAYERCOUNT</code> возвращает число слоёв карты.</p>
                 <p>Функция <code>MAPTILE</code> возвращает номер тайла внутри тайлсета. Функция <code>MAPTILESET</code> возвращает номер тайлсета внутри карты. Функция <code>MAPTILEFLAGS</code> возвращает битовую маску отражения. Для пустой клетки, координат за пределами карты, отсутствующего слоя, объектного слоя или пустого значения <code>TILEMAP</code> эти функции возвращают <code>0</code>.</p>
@@ -100,7 +100,7 @@ SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex[, flags]</c
             </section>
 
             <section class="article-section">
-                <h2>Правила работы, ограничения и пограничные случаи</h2>
+                <h2>Правила работы</h2>
                 <ul>
                     <li>Переменная типа <code>TILEMAP</code> после <code>DIM</code> может быть пустой.</li>
                     <li>Для пустого значения <code>TILEMAP</code> функции размеров и состава возвращают <code>0</code>.</li>
@@ -115,23 +115,7 @@ SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex[, flags]</c
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3007</code>: путь <code>path</code> пустой.</li>
-                    <li><code>MB3007</code>: координаты <code>x</code> или <code>y</code> выходят за поддерживаемый диапазон графических координат.</li>
-                    <li><code>MB3007</code>: аргумент <code>layerIndex</code> не указывает существующий слой карты.</li>
-                    <li><code>MB3007</code>: оператор <code>SETMAPTILE</code> получил <code>column</code> или <code>row</code> за пределами тайлового слоя.</li>
-                    <li><code>MB3007</code>: оператор <code>SETMAPTILE</code> получил несуществующий <code>tilesetIndex</code>, несуществующий <code>tileIndex</code> или маску <code>flags</code> вне диапазона <code>0..7</code>.</li>
-                    <li><code>MB3005</code>: файл карты, тайлсет или изображение тайлсета не удалось загрузить.</li>
-                    <li><code>MB3005</code>: оператор <code>DRAWTILEMAP</code> или <code>DRAWTILELAYER</code> получил пустое значение <code>TILEMAP</code>.</li>
-                    <li><code>MB3005</code>: оператор <code>DRAWTILELAYER</code> получил номер объектного слоя.</li>
-                    <li><code>MB3005</code>: оператор <code>SETMAPTILE</code> получил пустое значение <code>TILEMAP</code> или номер объектного слоя.</li>
-                    <li><code>MB3010</code>: оператор <code>DRAWTILEMAP</code> или <code>DRAWTILELAYER</code> вызван без активного <code>CANVAS</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Короткий runnable-пример</h2>
+                <h2>Пример</h2>
 <pre><code class="language-basic">DIM level AS TILEMAP
 level = LOADTILEMAP("simple_map.tmj")
 
@@ -152,7 +136,31 @@ DRAWTEXT "Клетка: " & MAPTILE(level, 1, 1, 2), 8, 8, RGB(240, 240, 240)
 DRAWTILEMAP level, 24, 32
 PRESENT
 SLEEP</code></pre>
-                <p>Более полный пример изменения и очистки клетки лежит в runnable-файле <a href="../../samples/operators/setmaptile/cell_update.axm">samples/operators/setmaptile/cell_update.axm</a>. Он использует карту <code>samples/operators/drawtilemap/simple_map.tmj</code>.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения типа <code>TILEMAP</code> и операторов <code>DRAWTILEMAP</code> и <code>SETMAPTILE</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/drawtilemap/visible_and_layer.axm">DRAWTILEMAP: видимость и слой карты</a></li>
+                    <li><a href="../../samples/operators/setmaptile/cell_update.axm">SETMAPTILE: изменение и очистка клетки</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3007</code>: путь <code>path</code> пустой.</li>
+                    <li><code>MB3007</code>: координаты <code>x</code> или <code>y</code> выходят за поддерживаемый диапазон графических координат.</li>
+                    <li><code>MB3007</code>: аргумент <code>layerIndex</code> не указывает существующий слой карты.</li>
+                    <li><code>MB3007</code>: оператор <code>SETMAPTILE</code> получил <code>column</code> или <code>row</code> за пределами тайлового слоя.</li>
+                    <li><code>MB3007</code>: оператор <code>SETMAPTILE</code> получил несуществующий <code>tilesetIndex</code>, несуществующий <code>tileIndex</code> или маску <code>flags</code> вне диапазона <code>0..7</code>.</li>
+                    <li><code>MB3005</code>: файл карты, тайлсет или изображение тайлсета не удалось загрузить.</li>
+                    <li><code>MB3005</code>: оператор <code>DRAWTILEMAP</code> или <code>DRAWTILELAYER</code> получил пустое значение <code>TILEMAP</code>.</li>
+                    <li><code>MB3005</code>: оператор <code>DRAWTILELAYER</code> получил номер объектного слоя.</li>
+                    <li><code>MB3005</code>: оператор <code>SETMAPTILE</code> получил пустое значение <code>TILEMAP</code> или номер объектного слоя.</li>
+                    <li><code>MB3010</code>: оператор <code>DRAWTILEMAP</code> или <code>DRAWTILELAYER</code> вызван без активного <code>CANVAS</code>.</li>
+                </ul>
             </section>
 
             <section class="article-section">

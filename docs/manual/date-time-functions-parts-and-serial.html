@@ -31,7 +31,7 @@
                 <p>Функция <code>DATESERIAL</code> строит строку даты из года, месяца и дня.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATESERIAL(year, month, day)</code></pre>
-                <p><strong>Части записи.</strong> <code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат возвращается как строка формата <code>yyyy-MM-dd</code>.</p>
+                <h3>Аргументы</h3><p><code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат возвращается как строка формата <code>yyyy-MM-dd</code>.</p>
                 <h3>Проверка реальной календарной даты</h3>
                 <p>Компоненты должны образовывать реальную календарную дату. Автоматического переноса переполненных значений вроде тринадцатого месяца здесь нет.</p>
             </section>
@@ -41,7 +41,7 @@
                 <p>Функция <code>TIMESERIAL</code> строит строку времени из часов, минут и секунд.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = TIMESERIAL(hour, minute, second)</code></pre>
-                <p><strong>Части записи.</strong> <code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат возвращается как строка формата <code>HH:mm:ss</code>.</p>
+                <h3>Аргументы</h3><p><code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат возвращается как строка формата <code>HH:mm:ss</code>.</p>
             </section>
 
             <section class="article-section" id="year-month-day">
@@ -51,7 +51,7 @@
                 <pre><code class="language-basic">result = YEAR(value)
 result = MONTH(value)
 result = DAY(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт строку даты или даты-времени в каноническом формате. Результат каждой функции имеет тип <code>INTEGER</code>.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт строку даты или даты-времени в каноническом формате. Результат каждой функции имеет тип <code>INTEGER</code>.</p>
             </section>
 
             <section class="article-section" id="hour-minute-second">
@@ -69,7 +69,7 @@ result = SECOND(value)</code></pre>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = WEEKDAY(value)
 result = WEEKDAYNAME(weekday)</code></pre>
-                <p><strong>Части записи.</strong> Для <code>WEEKDAY</code> аргумент <code>value</code> задаёт строку даты или даты-времени. Функция возвращает номер по схеме <code>1 = Monday</code>, <code>7 = Sunday</code>. Для <code>WEEKDAYNAME</code> аргумент <code>weekday</code> задаёт номер дня недели.</p>
+                <h3>Аргументы</h3><p>Для <code>WEEKDAY</code> аргумент <code>value</code> задаёт строку даты или даты-времени. Функция возвращает номер по схеме <code>1 = Monday</code>, <code>7 = Sunday</code>. Для <code>WEEKDAYNAME</code> аргумент <code>weekday</code> задаёт номер дня недели.</p>
             </section>
 
             <section class="article-section" id="monthname">
@@ -89,7 +89,7 @@ result = STARTOFMONTH(value)
 result = ENDOFMONTH(value)
 result = STARTOFYEAR(value)
 result = ENDOFYEAR(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают строку даты формата <code>yyyy-MM-dd</code>.</p>
+                <h3>Аргументы</h3><p><code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают строку даты формата <code>yyyy-MM-dd</code>.</p>
                 <h3>Пример сборки и чтения даты</h3>
                 <pre><code class="language-basic">' Сборка даты и работа с календарными частями
 PRINT DATESERIAL(2026, 4, 20)

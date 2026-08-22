@@ -39,7 +39,7 @@
                 <p>Функция <code>FILEEXISTS</code> проверяет, существует ли файл по указанному пути.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = FILEEXISTS(path)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. Функция возвращает <code>TRUE</code>, если файл найден, и <code>FALSE</code>, если файла нет.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Функция возвращает <code>TRUE</code>, если файл найден, и <code>FALSE</code>, если файла нет.</p>
                 <h3>Пример вызова FILEEXISTS</h3>
                 <pre><code class="language-basic">' Проверка существования файла
 PRINT FILEEXISTS("notes.txt")</code></pre>
@@ -50,7 +50,7 @@ PRINT FILEEXISTS("notes.txt")</code></pre>
                 <p>Функция <code>DIREXISTS</code> проверяет, существует ли папка по указанному пути.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DIREXISTS(path)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к папке. Функция возвращает <code>TRUE</code>, если папка найдена.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к папке. Функция возвращает <code>TRUE</code>, если папка найдена.</p>
                 <h3>Пример вызова DIREXISTS</h3>
                 <pre><code class="language-basic">' Проверка существования папки
 PRINT DIREXISTS(".")</code></pre>
@@ -61,7 +61,7 @@ PRINT DIREXISTS(".")</code></pre>
                 <p>Функция <code>PATHEXISTS</code> проверяет, существует ли по пути файл или папка.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = PATHEXISTS(path)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к объекту файловой системы. Результатом является логическое значение.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к объекту файловой системы. Результатом является логическое значение.</p>
                 <h3>Пример вызова PATHEXISTS</h3>
                 <pre><code class="language-basic">' Проверка любого объекта по пути
 PRINT PATHEXISTS("notes.txt")
@@ -73,7 +73,7 @@ PRINT PATHEXISTS("docs")</code></pre>
                 <p>Функция <code>READFILE</code> читает весь текстовый файл целиком и возвращает одну строку.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">text = READFILE(path)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к текстовому файлу. Результатом является строка с полным содержимым файла.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является строка с полным содержимым файла.</p>
                 <h3>Пример вызова READFILE</h3>
                 <pre><code class="language-basic">' Чтение всего файла одной строкой
 DIM text AS STRING
@@ -87,7 +87,7 @@ PRINT text</code></pre>
                 <p>Функция <code>READALLLINES</code> читает текстовый файл построчно и возвращает массив строк.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">lines = READALLLINES(path)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к текстовому файлу. Результатом является массив <code>STRING()</code> с границами <code>1 TO N</code>.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является массив <code>STRING()</code> с границами <code>1 TO N</code>.</p>
                 <h3>Пример вызова READALLLINES</h3>
                 <pre><code class="language-basic">' Чтение файла в массив строк
 DIM lines() AS STRING
@@ -102,7 +102,7 @@ PRINT lines(1)</code></pre>
                 <p>Функция <code>WRITEFILE</code> записывает текст в файл с начала. Если файл уже существует, его содержимое заменяется.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = WRITEFILE(path, text)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова WRITEFILE</h3>
                 <pre><code class="language-basic">' Полная перезапись файла
 PRINT WRITEFILE("notes.txt", "Первая строка")</code></pre>
@@ -113,7 +113,7 @@ PRINT WRITEFILE("notes.txt", "Первая строка")</code></pre>
                 <p>Функция <code>APPENDFILE</code> дописывает текст в конец файла. Если файла ещё нет, он создаётся.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = APPENDFILE(path, text)</code></pre>
-                <p><strong>Части записи.</strong> <code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку, которую нужно добавить в конец файла. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку, которую нужно добавить в конец файла. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова APPENDFILE</h3>
                 <pre><code class="language-basic">' Добавление новой строки в конец файла
 PRINT APPENDFILE("notes.txt", CHR(10) + "Вторая строка")</code></pre>

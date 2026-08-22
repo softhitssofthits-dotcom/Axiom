@@ -25,7 +25,7 @@
             <p class="lead"><code>WINDOW</code> — оператор языка Axiom, который задаёт логическую систему координат внутри текущего viewport. После оператора <code>WINDOW</code> программа может рисовать не по физическим пикселям экрана, а по собственной числовой шкале.</p>
 
             <section class="article-section">
-                <h2>Для чего нужен оператор WINDOW</h2>
+                <h2>Когда использовать WINDOW</h2>
                 <p>Оператор <code>WINDOW</code> нужен тогда, когда программе требуется рисовать графики, оси, фигуры или схемы не в пиксельных координатах, а в собственной логической системе координат.</p>
             </section>
 
@@ -43,10 +43,10 @@ WINDOW (left, top)-(right, bottom)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>left</code>, <code>top</code>, <code>right</code>, <code>bottom</code></td><td>Две противоположные вершины логического прямоугольника.</td></tr>
@@ -70,14 +70,6 @@ WINDOW (left, top)-(right, bottom)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: оператор <code>WINDOW</code> вызван без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3007</code>: границы логического окна имеют недопустимое значение или вырождают логический прямоугольник.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">SCREEN 1
 VIEW SCREEN (10, 10)-(20, 20)
@@ -87,6 +79,23 @@ PSET (100, 200), 12
 PRINT PMAP(100, 0); ","; PMAP(200, 1)
 SLEEP</code></pre>
                 <p>В этом примере оператор <code>WINDOW</code> связывает логические координаты <code>100..110</code> и <code>200..210</code> с физическим viewport. После этого оператор <code>PSET</code> рисует не по сырым пикселям, а по логической шкале.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения оператора <code>WINDOW</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/operators/window/cartesian_and_screen.axm">WINDOW: декартова и экранная системы координат</a></li>
+                    <li><a href="../../samples/operators/window/zero_size_error.axm">WINDOW: ошибка нулевого размера окна</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>WINDOW</code> вызван без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: границы логического окна имеют недопустимое значение или вырождают логический прямоугольник.</li>
+                </ul>
             </section>
 
             <section class="article-section">

@@ -233,8 +233,8 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(1, runService.CompileCallCount);
         Assert.Equal("PRINT 1", runService.LastCompiledSourceText);
         Assert.False(viewModel.StatusBar.IsRunning);
-        Assert.Contains("��������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("компиляц", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("успеш", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
         Assert.Empty(viewModel.BottomPane.Diagnostics);
     }
 
@@ -262,7 +262,7 @@ public sealed class MainWindowViewModelTests
         Assert.True(viewModel.StatusBar.IsTimingVisible);
         Assert.True(viewModel.StatusBar.IsCompilationTimingVisible);
         Assert.NotEqual(string.Empty, viewModel.StatusBar.CompilationTimingText);
-        Assert.Contains("��", viewModel.StatusBar.CompilationTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("мс", viewModel.StatusBar.CompilationTimingText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -288,7 +288,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(BottomPaneFocusTarget.Diagnostics, viewModel.BottomPane.FocusTarget);
         Assert.Equal(1, viewModel.BottomPane.FocusRequestVersion);
         Assert.NotNull(viewModel.BottomPane.SelectedDiagnostic);
-        Assert.Contains("����������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("диагностик", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(0, viewModel.BottomPane.SelectedTabIndex);
         Assert.Equal(1, viewModel.BottomPane.FocusRequestVersion);
         Assert.Equal(BottomPaneFocusTarget.Output, viewModel.BottomPane.FocusTarget);
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("успеш", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -335,14 +335,14 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.StatusBar.IsTimingVisible);
         Assert.True(viewModel.StatusBar.IsRunTimingVisible);
-        Assert.Contains("����������", viewModel.StatusBar.PreparationTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Подготовка", viewModel.StatusBar.PreparationTimingText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("7", viewModel.StatusBar.PreparationTimingText, StringComparison.Ordinal);
-        Assert.Contains("����������", viewModel.StatusBar.ExecutionTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Выполнение", viewModel.StatusBar.ExecutionTimingText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("11", viewModel.StatusBar.ExecutionTimingText, StringComparison.Ordinal);
         Assert.NotEqual(string.Empty, viewModel.StatusBar.TotalTimingText);
         Assert.Contains("18", viewModel.StatusBar.TotalTimingText, StringComparison.Ordinal);
-        Assert.Contains("��", viewModel.StatusBar.CacheTimingText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("�������������", viewModel.StatusBar.EngineTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("да", viewModel.StatusBar.CacheTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("интерпретатор", viewModel.StatusBar.EngineTimingText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -357,14 +357,14 @@ public sealed class MainWindowViewModelTests
             OnRun = _ => new ProgramRunResult(
                 ProgramRunStatus.Success,
                 [],
-                "2" + Environment.NewLine + "�����")
+                "2" + Environment.NewLine + "равно")
         };
         var viewModel = CreateViewModel(documentService: documentService, runService: runService);
         PrepareSavedActiveDocument(viewModel, @"C:\temp\program.axm", "PRINT 1");
 
         viewModel.RunCommand.Execute(null);
 
-        Assert.Equal("2" + Environment.NewLine + "�����", viewModel.BottomPane.OutputText);
+        Assert.Equal("2" + Environment.NewLine + "равно", viewModel.BottomPane.OutputText);
     }
 
     [Fact]
@@ -424,7 +424,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(BottomPaneFocusTarget.Diagnostics, viewModel.BottomPane.FocusTarget);
         Assert.Equal(2, viewModel.BottomPane.FocusRequestVersion);
         Assert.NotNull(viewModel.BottomPane.SelectedDiagnostic);
-        Assert.Contains("����������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("диагностик", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -588,8 +588,8 @@ public sealed class MainWindowViewModelTests
 
         viewModel.RunCommand.Execute(null);
 
-        Assert.Contains("���������", promptService.LastConfirmationMessage, StringComparison.Ordinal);
-        Assert.Contains("������", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Сохранить", promptService.LastConfirmationMessage, StringComparison.Ordinal);
+        Assert.Contains("запуск", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(@"C:\temp\program.axm", documentService.LastSavedFilePath);
         Assert.Equal("PRINT 2", documentService.LastSavedSourceText);
         Assert.Equal("PRINT 2", runService.LastSourceText);
@@ -611,8 +611,8 @@ public sealed class MainWindowViewModelTests
         viewModel.RunCommand.Execute(null);
 
         Assert.Equal(0, runService.CallCount);
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("сохран", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("запуск", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -645,7 +645,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(string.Empty, viewModel.BottomPane.CurrentPromptText);
         Assert.False(viewModel.SubmitInputCommand.CanExecute(null));
 
-        viewModel.BottomPane.CurrentInputText = "����";
+        viewModel.BottomPane.CurrentInputText = "Иван";
 
         Assert.Equal(string.Empty, consoleService.CurrentInputText);
     }
@@ -659,14 +659,14 @@ public sealed class MainWindowViewModelTests
 
         dispatcher.BeginInvoke(() =>
         {
-            viewModel.BottomPane.CurrentInputText = "����";
+            viewModel.BottomPane.CurrentInputText = "Иван";
             viewModel.SubmitInputCommand.Execute(null);
         });
 
         var result = consoleService.RequestInput(new ProgramInputRequest(1, null, 1));
 
-        Assert.Equal("����", result);
-        Assert.Equal("? ����", consoleService.OutputText);
+        Assert.Equal("Иван", result);
+        Assert.Equal("? Иван", consoleService.OutputText);
     }
 
     [Fact]
@@ -687,7 +687,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.Documents.ActiveDocument.IsDirty);
         Assert.Equal(@"C:\temp", viewModel.FilesPane.RootPath);
         Assert.Equal(@"C:\temp\sample.axm", viewModel.StatusBar.PathText);
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("сохран", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -739,7 +739,7 @@ public sealed class MainWindowViewModelTests
         Assert.Single(viewModel.Documents.Documents);
         Assert.DoesNotContain(firstDocument, viewModel.Documents.Documents);
         Assert.Same(secondDocument, viewModel.Documents.ActiveDocument);
-        Assert.Contains("������� �������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("закрыта вкладка", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -758,7 +758,7 @@ public sealed class MainWindowViewModelTests
         Assert.Single(viewModel.Documents.Documents);
         Assert.Same(document, viewModel.Documents.ActiveDocument);
         Assert.Equal("Untitled.axm", promptService.LastPromptedFileName);
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("отмен", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -821,7 +821,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(recentPath, viewModel.Documents.ActiveDocument!.FilePath);
         Assert.Equal(@"C:\temp", viewModel.FilesPane.RootPath);
         Assert.Equal(recentPath, viewModel.StatusBar.PathText);
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("открыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -864,7 +864,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(path, viewModel.Documents.ActiveDocument!.FilePath);
         Assert.Equal(@"C:\temp", viewModel.FilesPane.RootPath);
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("открыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -921,7 +921,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(@"C:\temp\folder", viewModel.FilesPane.RootPath);
         Assert.Equal(@"C:\temp\folder", fileTreeService.LastRootPath);
-        Assert.Contains("�������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("переход", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -945,7 +945,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.False(viewModel.Documents.ActiveDocument!.IsReadOnly);
         Assert.True(viewModel.SaveCommand.CanExecute(null));
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("открыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1074,7 +1074,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(@"C:\temp", fileOperationsService.LastCreateDirectoryParentPath);
         Assert.Equal("examples", fileOperationsService.LastCreateDirectoryName);
-        Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("создан", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1237,8 +1237,8 @@ public sealed class MainWindowViewModelTests
 
         viewModel.MoveFilesPaneNodeToRecycleBinCommand.Execute(null);
 
-        Assert.Equal("�������", promptService.LastConfirmationTitle);
-        Assert.Contains("������� ����", promptService.LastConfirmationMessage, StringComparison.Ordinal);
+        Assert.Equal("Удалить", promptService.LastConfirmationTitle);
+        Assert.Contains("Удалить файл", promptService.LastConfirmationMessage, StringComparison.Ordinal);
         Assert.Equal(@"C:\temp\program.axm", fileOperationsService.LastRecycleBinPath);
         Assert.Single(viewModel.Documents.Documents);
         Assert.True(viewModel.Documents.ActiveDocument!.IsUntitled);
@@ -1272,7 +1272,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(fileTreeService.LastShowHiddenFiles);
         Assert.True(viewModel.FilesPane.ShowHiddenFiles);
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("скрыт", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1290,8 +1290,8 @@ public sealed class MainWindowViewModelTests
         viewModel.FilesPane.SelectedNode = node;
         viewModel.ShowFilesPaneNodePropertiesCommand.Execute(null);
 
-        Assert.Equal("��������", promptService.LastInfoTitle);
-        Assert.Contains("���:", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Свойства", promptService.LastInfoTitle);
+        Assert.Contains("Имя:", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("file.txt", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(@"C:\temp\file.txt", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
     }
@@ -1304,10 +1304,10 @@ public sealed class MainWindowViewModelTests
 
         viewModel.AboutCommand.Execute(null);
 
-        Assert.Equal("� ��������� Axiom IDE", promptService.LastInfoTitle);
+        Assert.Equal("О программе Axiom IDE", promptService.LastInfoTitle);
         Assert.Contains("Axiom IDE", promptService.LastInfoMessage, StringComparison.Ordinal);
-        Assert.Contains("�������� ��������������", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("���� �� ��������� �������.", viewModel.StatusBar.StatusText);
+        Assert.Contains("оболочка интерпретатора", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Окно «О программе» закрыто.", viewModel.StatusBar.StatusText);
     }
 
     [Fact]
@@ -1352,7 +1352,7 @@ public sealed class MainWindowViewModelTests
         viewModel.OpenManualCommand.Execute(null);
 
         Assert.Equal(expectedPath, navigationService.LastOpenedPath);
-        Assert.Equal("����������� �������.", viewModel.StatusBar.StatusText);
+        Assert.Equal("Руководство открыто.", viewModel.StatusBar.StatusText);
         Assert.Equal(string.Empty, promptService.LastErrorTitle);
     }
 
@@ -1369,9 +1369,9 @@ public sealed class MainWindowViewModelTests
         viewModel.OpenManualCommand.Execute(null);
 
         Assert.Null(navigationService.LastOpenedPath);
-        Assert.Equal("������� �����������", promptService.LastErrorTitle);
+        Assert.Equal("Открыть руководство", promptService.LastErrorTitle);
         Assert.Contains(@"docs\manual\index.html", promptService.LastErrorMessage, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("����������� �� �������.", viewModel.StatusBar.StatusText);
+        Assert.Equal("Руководство не найдено.", viewModel.StatusBar.StatusText);
     }
 
     [Fact]
@@ -1925,7 +1925,7 @@ public sealed class MainWindowViewModelTests
         Assert.Null(viewModel.StoppedRunLine);
         Assert.False(viewModel.ContinueRunCommand.CanExecute(null));
         Assert.Equal("1" + Environment.NewLine + "2" + Environment.NewLine + "3", viewModel.BottomPane.OutputText);
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("успеш", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2222,7 +2222,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.StopDebuggingCommand.CanExecute(null));
         Assert.False(viewModel.ContinueRunCommand.CanExecute(null));
         Assert.Equal("1", viewModel.BottomPane.OutputText);
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("отлад", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2327,7 +2327,7 @@ public sealed class MainWindowViewModelTests
         Assert.Null(viewModel.StoppedRunLine);
         Assert.False(viewModel.ContinueRunCommand.CanExecute(null));
         Assert.False(viewModel.StopDebuggingCommand.CanExecute(null));
-        Assert.Contains("�����", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("отлад", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
 
         viewModel.RunOrContinueCommand.Execute(null);
 
@@ -2419,7 +2419,7 @@ public sealed class MainWindowViewModelTests
             Assert.True(eventLogService.BeginSessionCalled);
             Assert.True(eventLogService.FlushCalled);
             Assert.Equal(eventLogService.CurrentSessionLogPathValue, externalNavigationService.LastOpenedPath);
-            Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("журнал", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
@@ -2451,7 +2451,7 @@ public sealed class MainWindowViewModelTests
             Assert.True(eventLogService.BeginSessionCalled);
             Assert.True(eventLogService.FlushCalled);
             Assert.Equal(logPath, viewerService.LastShownPath);
-            Assert.Contains("������", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("журнал", viewModel.StatusBar.StatusText, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
@@ -2507,7 +2507,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(eventLogService.DeleteInactiveLogsCalled);
         Assert.Contains("3", viewModel.StatusBar.StatusText, StringComparison.Ordinal);
-        Assert.Contains("�������", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Удалить", promptService.LastConfirmationMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

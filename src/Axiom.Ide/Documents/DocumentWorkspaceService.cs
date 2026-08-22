@@ -42,6 +42,12 @@ public sealed class DocumentWorkspaceService : ViewModelBase
     }
 
     /// <summary>
+    /// Возникает после открытия нового документа.
+    /// Повторная активация уже открытой вкладки событие не вызывает.
+    /// </summary>
+    public event Action<DocumentTabViewModel>? DocumentOpened;
+
+    /// <summary>
     /// Создаёт новую пустую вкладку и делает её активной.
     /// </summary>
     public DocumentTabViewModel CreateNewDocument()
@@ -373,6 +379,7 @@ public sealed class DocumentWorkspaceService : ViewModelBase
         Documents.Add(document);
         ActiveDocument = document;
         RememberFile(content.FilePath);
+        DocumentOpened?.Invoke(document);
         return document;
     }
 }

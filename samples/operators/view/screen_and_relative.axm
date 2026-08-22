@@ -14,4 +14,4 @@ PRINT "rel pos="; POINT(0); ","; POINT(1)
 VIEW
 PRINT "reset pos="; POINT(0); ","; POINT(1)
 PRINT "VIEW sample finished"
-SLEEP
+SLEEP 500

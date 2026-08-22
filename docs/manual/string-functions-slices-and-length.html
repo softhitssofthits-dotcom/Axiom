@@ -20,10 +20,12 @@
 <p>Функция <code>LEN</code> возвращает длину строки в символах.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">length = LEN(text)</code></pre>
-<p><strong>Части записи.</strong> <code>text</code> задаёт строку, длину которой нужно получить. Результат имеет тип <code>INTEGER</code>.</p>
+<h3>Аргументы</h3><p><code>text</code> задаёт строку, длину которой нужно получить. Результат имеет тип <code>INTEGER</code>.</p>
 <h3>Пример длины строки</h3>
 <pre><code class="language-basic">' Длина строки "Пример"
 PRINT LEN("Пример")</code></pre>
+<p>Результат:</p>
+<pre><code>6</code></pre>
 </section>
 
 <section class="article-section" id="left">
@@ -31,12 +33,14 @@ PRINT LEN("Пример")</code></pre>
 <p>Функция <code>LEFT</code> возвращает указанное количество символов с начала строки.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">part = LEFT(text, count)</code></pre>
-<p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять слева.</p>
+<h3>Аргументы</h3><p><code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять слева.</p>
 <h3>Количество символов слева</h3>
 <p>Количество символов должно быть строго больше нуля. Иначе выполнение завершается диагностикой <code>MB3007</code>.</p>
 <h3>Пример первых символов</h3>
 <pre><code class="language-basic">' Первые два символа строки
 PRINT LEFT("abcdef", 2)</code></pre>
+<p>Результат:</p>
+<pre><code>ab</code></pre>
 </section>
 
 <section class="article-section" id="right">
@@ -44,12 +48,14 @@ PRINT LEFT("abcdef", 2)</code></pre>
 <p>Функция <code>RIGHT</code> возвращает указанное количество символов с конца строки.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">part = RIGHT(text, count)</code></pre>
-<p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять справа.</p>
+<h3>Аргументы</h3><p><code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять справа.</p>
 <h3>Количество символов справа</h3>
 <p>Количество символов должно быть строго больше нуля. Иначе выполнение завершается диагностикой <code>MB3007</code>.</p>
 <h3>Пример последних символов</h3>
 <pre><code class="language-basic">' Последние два символа строки
 PRINT RIGHT("abcdef", 2)</code></pre>
+<p>Результат:</p>
+<pre><code>ef</code></pre>
 </section>
 
 <section class="article-section" id="mid">
@@ -57,12 +63,14 @@ PRINT RIGHT("abcdef", 2)</code></pre>
 <p>Функция <code>MID</code> возвращает фрагмент строки, начиная с заданной позиции.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">part = MID(text, start, count)</code></pre>
-<p><strong>Части записи.</strong> <code>text</code> задаёт исходную строку. <code>start</code> задаёт начальную позицию. <code>count</code> задаёт длину фрагмента.</p>
+<h3>Аргументы</h3><p><code>text</code> задаёт исходную строку. <code>start</code> задаёт начальную позицию. <code>count</code> задаёт длину фрагмента.</p>
 <h3>Позиция начала и длина фрагмента</h3>
 <p>Позиция считается с единицы. Если начало находится правее конца строки, функция возвращает пустую строку. Начальная позиция меньше <code>1</code> и количество меньше либо равно нулю дают <code>MB3007</code>.</p>
 <h3>Пример фрагмента из середины</h3>
 <pre><code class="language-basic">' Фрагмент строки с третьего символа длиной два знака
 PRINT MID("abcdef", 3, 2)</code></pre>
+<p>Результат:</p>
+<pre><code>cd</code></pre>
 </section>
 
 <section class="article-section">

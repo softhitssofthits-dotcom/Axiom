@@ -31,7 +31,7 @@
                 <p>Функция <code>DATEADD</code> добавляет к дате, времени или дате-времени указанное число интервалов.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEADD(interval, number, value)</code></pre>
-                <p><strong>Части записи.</strong> <code>interval</code> задаёт токен интервала, <code>number</code> число шагов, а <code>value</code> исходную дату, время или дату-время.</p>
+                <h3>Аргументы</h3><p><code>interval</code> задаёт токен интервала, <code>number</code> число шагов, а <code>value</code> исходную дату, время или дату-время.</p>
                 <h3>Единицы прибавления даты и времени</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходной строки: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем.</p>
             </section>
@@ -41,7 +41,7 @@
                 <p>Функция <code>DATEDIFF</code> возвращает разницу между двумя значениями в выбранных интервалах.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEDIFF(interval, fromValue, toValue)</code></pre>
-                <p><strong>Части записи.</strong> <code>interval</code> задаёт единицу измерения, <code>fromValue</code> начальное значение, а <code>toValue</code> конечное. Результат имеет тип <code>LONG</code>.</p>
+                <h3>Аргументы</h3><p><code>interval</code> задаёт единицу измерения, <code>fromValue</code> начальное значение, а <code>toValue</code> конечное. Результат имеет тип <code>LONG</code>.</p>
             </section>
 
             <section class="article-section" id="datepart">
@@ -49,7 +49,7 @@
                 <p>Функция <code>DATEPART</code> извлекает указанную часть даты или времени по токену.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEPART(part, value)</code></pre>
-                <p><strong>Части записи.</strong> <code>part</code> задаёт требуемую часть, а <code>value</code> строку даты, времени или даты-времени. Результат имеет тип <code>INTEGER</code>.</p>
+                <h3>Аргументы</h3><p><code>part</code> задаёт требуемую часть, а <code>value</code> строку даты, времени или даты-времени. Результат имеет тип <code>INTEGER</code>.</p>
                 <h3>Проверка перед разбором строки</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
             </section>
@@ -60,7 +60,7 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEVALUE(value)
 result = TIMEVALUE(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт строку даты-времени в каноническом формате. Обе функции возвращают строку.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт строку даты-времени в каноническом формате. Обе функции возвращают строку.</p>
             </section>
 
             <section class="article-section" id="isdate">
@@ -68,7 +68,7 @@ result = TIMEVALUE(value)</code></pre>
                 <p>Функция <code>ISDATE</code> проверяет, является ли строка допустимой канонической датой, временем или датой-временем.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = ISDATE(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт строку для проверки. Результат имеет тип <code>BOOLEAN</code>.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт строку для проверки. Результат имеет тип <code>BOOLEAN</code>.</p>
             </section>
 
             <section class="article-section">

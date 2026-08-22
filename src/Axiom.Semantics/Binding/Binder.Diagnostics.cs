@@ -527,11 +527,4 @@ public sealed partial class Binder
         _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Оператор '{GetOperatorText(operatorKind)}' неприменим к типам {leftType.Name} и {rightType.Name}.", location);
         return new BoundErrorExpression(location);
     }
-    private void ReportInvalidTypeMethodReceiver(string methodName, TextLocation location)
-    {
-        _diagnostics.Report(
-            DiagnosticCodes.InvalidTypeMethodReceiver,
-            $"В текущем шаге метод '{methodName}' можно вызывать только у устойчивого получателя TYPE: переменной, поля записи или элемента массива. Временные значения и результаты выражений пока не поддерживаются.",
-            location);
-    }
 }

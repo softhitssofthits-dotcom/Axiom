@@ -5,6 +5,8 @@ using Axiom.Ide.Models;
 using Axiom.Ide.Services.Persistence;
 using Axiom.Semantics;
 using Axiom.Syntax;
+using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Highlighting;
 using System.Reflection;
 using System.Text;
 
@@ -68,6 +70,8 @@ public sealed class EditorFeatureTests
         Assert.NotNull(definition.GetNamedColor("Comment"));
         Assert.NotNull(definition.GetNamedColor("TypeName"));
         Assert.NotNull(definition.GetNamedColor("BuiltIn"));
+        Assert.NotNull(definition.GetNamedColor("Interpolation"));
+        Assert.NotNull(definition.GetNamedColor("InterpolationText"));
     }
 
     [Fact]
@@ -82,6 +86,193 @@ public sealed class EditorFeatureTests
         Assert.NotNull(definition.GetNamedColor("Comment"));
         Assert.NotNull(definition.GetNamedColor("TypeName"));
         Assert.NotNull(definition.GetNamedColor("BuiltIn"));
+        Assert.NotNull(definition.GetNamedColor("Interpolation"));
+        Assert.NotNull(definition.GetNamedColor("InterpolationText"));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_CommentWinsOverInterpolatedString(IdeTheme theme)
+    {
+        const string code = "' PRINT $\"Привет, {name}!\"";
+        var sections = HighlightCode(code, theme);
+
+        var section = Assert.Single(sections);
+        Assert.Equal(0, section.Offset);
+        Assert.Equal(code.Length, section.Length);
+        Assert.Equal("Comment", section.ColorName);
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light, "REM PRINT \"{a + 1}\"")]
+    [InlineData(IdeTheme.Dark, "REM PRINT \"{a + 1}\"")]
+    [InlineData(IdeTheme.Light, "rem PRINT \"{a + 1}\"")]
+    [InlineData(IdeTheme.Dark, "rem PRINT \"{a + 1}\"")]
+    public void Highlighting_RemCommentWinsOverInterpolatedString(IdeTheme theme, string code)
+    {
+        var sections = HighlightCode(code, theme);
+
+        var section = Assert.Single(sections);
+        Assert.Equal(0, section.Offset);
+        Assert.Equal(code.Length, section.Length);
+        Assert.Equal("Comment", section.ColorName);
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_InterpolatedStringPrefixAndTextColored(IdeTheme theme)
+    {
+        var code = "PRINT $\"Текст\"";
+        var sections = HighlightCode(code, theme);
+
+        Assert.Equal("Keyword", ColorAt(sections, 0));
+        Assert.Equal("Interpolation", ColorAt(sections, code.IndexOf("$\"", StringComparison.Ordinal)));
+        Assert.Equal("String", ColorAt(sections, code.IndexOf("Текст", StringComparison.Ordinal)));
+        Assert.Equal("String", ColorAt(sections, code.Length - 1));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_InterpolationHoleHighlightsExpression(IdeTheme theme)
+    {
+        var code = "PRINT $\"Сумма: {a + 1}\"";
+        var sections = HighlightCode(code, theme);
+
+        Assert.Equal("Keyword", ColorAt(sections, 0));
+        Assert.Equal("Interpolation", ColorAt(sections, code.IndexOf("$\"", StringComparison.Ordinal)));
+        Assert.Equal("String", ColorAt(sections, code.IndexOf("Сумма", StringComparison.Ordinal)));
+        Assert.Equal("Interpolation", ColorAt(sections, code.IndexOf('{')));
+        Assert.Equal("InterpolationText", ColorAt(sections, code.IndexOf("a ", StringComparison.Ordinal)));
+        Assert.Equal("Operator", ColorAt(sections, code.IndexOf('+')));
+        Assert.Equal("Number", ColorAt(sections, code.IndexOf('1')));
+        Assert.Equal("Interpolation", ColorAt(sections, code.LastIndexOf('}')));
+        Assert.Equal("String", ColorAt(sections, code.Length - 1));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_InterpolationHoleHighlightsBuiltInAndNestedString(IdeTheme theme)
+    {
+        var code = "PRINT $\"Длина: {LEN(\"слово\")}\"";
+        var sections = HighlightCode(code, theme);
+
+        Assert.Equal("BuiltIn", ColorAt(sections, code.IndexOf("LEN", StringComparison.Ordinal)));
+        Assert.Equal("String", ColorAt(sections, code.IndexOf("\"слово", StringComparison.Ordinal)));
+        Assert.Equal("String", ColorAt(sections, code.IndexOf("слово", StringComparison.Ordinal)));
+        Assert.Equal("InterpolationText", ColorAt(sections, code.IndexOf(')')));
+        Assert.Equal("Interpolation", ColorAt(sections, code.LastIndexOf('}')));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_DoubleBraceInsideInterpolatedStringStaysText(IdeTheme theme)
+    {
+        var code = "PRINT $\"a{{b\"";
+        var sections = HighlightCode(code, theme);
+
+        var doubleBrace = code.IndexOf("{{", StringComparison.Ordinal);
+        Assert.Equal("String", ColorAt(sections, doubleBrace));
+        Assert.Equal("String", ColorAt(sections, doubleBrace + 1));
+        Assert.Equal("String", ColorAt(sections, code.Length - 1));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_EscapedQuoteDoesNotEndInterpolatedString(IdeTheme theme)
+    {
+        var code = "PRINT $\"a\\\"b\" ' комм";
+        var sections = HighlightCode(code, theme);
+
+        var escapedQuote = code.IndexOf("\\\"", StringComparison.Ordinal);
+        Assert.Equal("String", ColorAt(sections, escapedQuote));
+        Assert.Equal("String", ColorAt(sections, escapedQuote + 1));
+        Assert.Equal("String", ColorAt(sections, escapedQuote + 2));
+        Assert.Equal("Comment", ColorAt(sections, code.IndexOf("' ", StringComparison.Ordinal)));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_ApostropheInsidePlainStringStaysString(IdeTheme theme)
+    {
+        var code = "PRINT \"it's\"";
+        var sections = HighlightCode(code, theme);
+
+        Assert.Equal("String", ColorAt(sections, code.IndexOf('\'')));
+        Assert.Equal("String", ColorAt(sections, code.Length - 1));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_PlainStringFollowedByComment(IdeTheme theme)
+    {
+        var code = "PRINT \"x\" ' комм";
+        var sections = HighlightCode(code, theme);
+
+        Assert.Equal("String", ColorAt(sections, code.IndexOf('x')));
+        Assert.Equal("Comment", ColorAt(sections, code.IndexOf('\'')));
+    }
+
+    [Theory]
+    [InlineData(IdeTheme.Light)]
+    [InlineData(IdeTheme.Dark)]
+    public void Highlighting_MultilineInterpolatedStringContinuesOnNextLine(IdeTheme theme)
+    {
+        var code = "PRINT $\"Строка\nпродолжение {a}\"";
+        var sections = HighlightCode(code, theme, lineNumber: 2);
+
+        // Смещения секций подсветки — абсолютные, относительно всего документа.
+        Assert.Equal("String", ColorAt(sections, code.IndexOf("продолжение", StringComparison.Ordinal)));
+        Assert.Equal("Interpolation", ColorAt(sections, code.IndexOf('{')));
+        Assert.Equal("InterpolationText", ColorAt(sections, code.IndexOf('a')));
+        Assert.Equal("String", ColorAt(sections, code.Length - 1));
+    }
+
+    [Fact]
+    public void Highlighting_MainRuleSetPlacesCommentSpansBeforeStringSpans()
+    {
+        var definition = AxiomHighlighting.Definition;
+        var main = definition.MainRuleSet;
+
+        Assert.Equal(4, main.Spans.Count);
+        Assert.Equal("Comment", main.Spans[0].SpanColor?.Name);
+        Assert.Equal("Comment", main.Spans[1].SpanColor?.Name);
+        Assert.Equal("String", main.Spans[2].SpanColor?.Name);
+        Assert.Equal("Interpolation", main.Spans[2].StartColor?.Name);
+
+        var holeSpan = Assert.Single(main.Spans[2].RuleSet!.Spans);
+        Assert.Equal("InterpolationText", holeSpan.SpanColor?.Name);
+        Assert.Equal("Interpolation", holeSpan.StartColor?.Name);
+        Assert.Equal("Interpolation", holeSpan.EndColor?.Name);
+        Assert.Contains(holeSpan.RuleSet!.Spans, span => span.SpanColor?.Name == "String");
+    }
+
+    private static IReadOnlyList<(int Offset, int Length, string? ColorName)> HighlightCode(
+        string code, IdeTheme theme, int lineNumber = 1)
+    {
+        var document = new TextDocument(code);
+        var highlighter = new DocumentHighlighter(document, AxiomHighlighting.GetDefinition(theme));
+
+        return highlighter.HighlightLine(lineNumber).Sections
+            .Select(section => (section.Offset, section.Length, section.Color?.Name))
+            .ToList();
+    }
+
+    private static string? ColorAt(IReadOnlyList<(int Offset, int Length, string? ColorName)> sections, int offset)
+    {
+        // Движок выдаёт секции слоями: сначала фон строки, поверх — точные секции,
+        // поэтому верхним (визуально действующим) считается последнее совпадение.
+        return sections
+            .Where(section => offset >= section.Offset && offset < section.Offset + section.Length)
+            .Select(section => section.ColorName)
+            .LastOrDefault();
     }
 
     [Fact]

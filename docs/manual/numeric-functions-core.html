@@ -39,11 +39,14 @@
                 <p>Функция <code>ABS</code> возвращает модуль числа.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = ABS(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат имеет тот же числовой тип, что и исходное значение.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат имеет тот же числовой тип, что и исходное значение.</p>
                 <h3>Пример модуля числа</h3>
                 <pre><code class="language-basic">' Модуль числа всегда неотрицателен
 PRINT ABS(-18)
 PRINT ABS(3.25)</code></pre>
+                <p>Результат:</p>
+                <pre><code>18
+3.25</code></pre>
             </section>
 
             <section class="article-section" id="rnd">
@@ -66,12 +69,16 @@ PRINT value</code></pre>
                 <p>Функция <code>SGN</code> определяет знак числа.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = SGN(value)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт числовое выражение. Результат имеет тип <code>INTEGER</code> и равен <code>-1</code>, <code>0</code> или <code>1</code>.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат имеет тип <code>INTEGER</code> и равен <code>-1</code>, <code>0</code> или <code>1</code>.</p>
                 <h3>Пример знака числа</h3>
                 <pre><code class="language-basic">' Определение знака трёх значений
 PRINT SGN(-9)
 PRINT SGN(0)
 PRINT SGN(9)</code></pre>
+                <p>Результат:</p>
+                <pre><code>-1
+0
+1</code></pre>
             </section>
 
             <section class="article-section" id="min">
@@ -79,11 +86,14 @@ PRINT SGN(9)</code></pre>
                 <p>Функция <code>MIN</code> возвращает меньшее из двух чисел.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = MIN(left, right)</code></pre>
-                <p><strong>Части записи.</strong> <code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Если аргументы имеют разные числовые типы, язык приводит их к общему числовому типу.</p>
+                <h3>Аргументы</h3><p><code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Если аргументы имеют разные числовые типы, язык приводит их к общему числовому типу.</p>
                 <h3>Пример меньшего и большего значения</h3>
                 <pre><code class="language-basic">' Выбор меньшего значения
 PRINT MIN(8, 3)
 PRINT MIN(2.5, 7)</code></pre>
+                <p>Результат:</p>
+                <pre><code>3
+2.5</code></pre>
             </section>
 
             <section class="article-section" id="max">
@@ -91,11 +101,14 @@ PRINT MIN(2.5, 7)</code></pre>
                 <p>Функция <code>MAX</code> возвращает большее из двух чисел.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = MAX(left, right)</code></pre>
-                <p><strong>Части записи.</strong> <code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Возвращаемый тип определяется по тем же правилам, что и у <code>MIN</code>.</p>
+                <h3>Аргументы</h3><p><code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Возвращаемый тип определяется по тем же правилам, что и у <code>MIN</code>.</p>
                 <h3>Пример большего значения</h3>
                 <pre><code class="language-basic">' Выбор большего значения
 PRINT MAX(8, 3)
 PRINT MAX(2.5, 7)</code></pre>
+                <p>Результат:</p>
+                <pre><code>8
+7</code></pre>
             </section>
 
             <section class="article-section" id="clamp">
@@ -103,7 +116,7 @@ PRINT MAX(2.5, 7)</code></pre>
                 <p>Функция <code>CLAMP</code> ограничивает значение заданным диапазоном.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = CLAMP(value, low, high)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт исходное число. <code>low</code> задаёт нижнюю границу, а <code>high</code> верхнюю. Если <code>value</code> меньше нижней границы, возвращается <code>low</code>; если больше верхней, возвращается <code>high</code>.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт исходное число. <code>low</code> задаёт нижнюю границу, а <code>high</code> верхнюю. Если <code>value</code> меньше нижней границы, возвращается <code>low</code>; если больше верхней, возвращается <code>high</code>.</p>
                 <h3>Нижняя граница не выше верхней</h3>
                 <p>Нижняя граница не должна быть больше верхней. Если диапазон задан неверно, выполнение завершается диагностикой времени выполнения.</p>
                 <h3>Пример ограничения диапазоном</h3>
@@ -111,6 +124,10 @@ PRINT MAX(2.5, 7)</code></pre>
 PRINT CLAMP(-5, 0, 100)
 PRINT CLAMP(45, 0, 100)
 PRINT CLAMP(120, 0, 100)</code></pre>
+                <p>Результат:</p>
+                <pre><code>0
+45
+100</code></pre>
             </section>
 
             <section class="article-section" id="setsign">
@@ -118,11 +135,14 @@ PRINT CLAMP(120, 0, 100)</code></pre>
                 <p>Функция <code>SETSIGN</code> переносит знак второго аргумента на первый.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = SETSIGN(value, signFrom)</code></pre>
-                <p><strong>Части записи.</strong> <code>value</code> задаёт число, модуль которого нужно сохранить. <code>signFrom</code> задаёт источник знака. Результат возвращается в числовом типе первого аргумента.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт число, модуль которого нужно сохранить. <code>signFrom</code> задаёт источник знака. Результат возвращается в числовом типе первого аргумента.</p>
                 <h3>Пример переноса знака</h3>
                 <pre><code class="language-basic">' Знак второго аргумента переносится на первый
 PRINT SETSIGN(12, -5)
 PRINT SETSIGN(-12, 5)</code></pre>
+                <p>Результат:</p>
+                <pre><code>-12
+12</code></pre>
             </section>
 
             <section class="article-section">

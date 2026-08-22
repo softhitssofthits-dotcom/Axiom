@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -26,8 +26,18 @@
 <pre><code class="language-basic">result = CONTAINS(text, fragment)
 result = STARTSWITH(text, fragment)
 result = ENDSWITH(text, fragment)</code></pre>
+<h3>Аргументы</h3>
+<p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент.</p>
 <h3>Правила сравнения</h3>
-<p>Поиск выполняется с учётом регистра. Пустой фрагмент считается найденным.</p>
+<p>Поиск выполняется с учётом регистра. Пустой фрагмент считается найденным. Результат имеет тип <code>BOOLEAN</code>.</p>
+<h3>Пример проверки наличия фрагмента</h3>
+<pre><code class="language-basic">PRINT CONTAINS("banana", "na")
+PRINT STARTSWITH("banana", "ba")
+PRINT ENDSWITH("banana", "na")</code></pre>
+<p>Результат:</p>
+<pre><code>TRUE
+TRUE
+TRUE</code></pre>
 </section>
 
 <section class="article-section" id="replace">
@@ -35,8 +45,14 @@ result = ENDSWITH(text, fragment)</code></pre>
 <p>Функция <code>REPLACE</code> заменяет все найденные вхождения фрагмента.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">result = REPLACE(text, oldText, newText)</code></pre>
+<h3>Аргументы</h3>
+<p><code>text</code> задаёт исходную строку, <code>oldText</code> задаёт заменяемый фрагмент, <code>newText</code> задаёт текст замены.</p>
 <h3>Ограничение заменяемого фрагмента</h3>
 <p>Пустой заменяемый фрагмент даёт <code>MB3007</code>.</p>
+<h3>Пример замены всех вхождений</h3>
+<pre><code class="language-basic">PRINT REPLACE("banana", "na", "NA")</code></pre>
+<p>Результат:</p>
+<pre><code>baNANA</code></pre>
 </section>
 
 
@@ -57,6 +73,8 @@ newItems(1) = "X"
 oldItems(2) = "abc"
 newItems(2) = "Y"
 PRINT REPLACEMANY("abc ab", oldItems, newItems)</code></pre>
+<p>Результат:</p>
+<pre><code>Y X</code></pre>
 </section>
 <section class="article-section" id="instr">
 <h2>INSTR и INSTRREV</h2>
@@ -64,8 +82,16 @@ PRINT REPLACEMANY("abc ab", oldItems, newItems)</code></pre>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">position = INSTR([start, ]text, fragment)
 position = INSTRREV([start, ]text, fragment)</code></pre>
+<h3>Аргументы</h3>
+<p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент. Необязательный <code>start</code> задаёт начальную позицию поиска.</p>
 <h3>Начальная позиция и отсутствие совпадения</h3>
 <p>Если аргумент <code>start</code> не указан, поиск начинается с естественного начала или конца строки. Если совпадение не найдено, результат равен <code>0</code>.</p>
+<h3>Пример поиска позиции</h3>
+<pre><code class="language-basic">PRINT INSTR("banana", "na")
+PRINT INSTRREV("banana", "na")</code></pre>
+<p>Результат:</p>
+<pre><code>3
+5</code></pre>
 </section>
 
 <section class="article-section" id="substrcount">
@@ -73,15 +99,13 @@ position = INSTRREV([start, ]text, fragment)</code></pre>
 <p>Функция <code>SUBSTRCOUNT</code> считает непересекающиеся вхождения фрагмента.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">count = SUBSTRCOUNT(text, fragment)</code></pre>
+<h3>Аргументы</h3>
+<p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент.</p>
+<h3>Пример подсчёта вхождений</h3>
+<pre><code class="language-basic">PRINT SUBSTRCOUNT("banana", "na")</code></pre>
+<p>Результат:</p>
+<pre><code>2</code></pre>
 </section>
-
-<section class="article-section"><h2>Пример поиска в строке</h2><pre><code class="language-basic">PRINT CONTAINS("banana", "na")
-PRINT STARTSWITH("banana", "ba")
-PRINT ENDSWITH("banana", "na")
-PRINT REPLACE("banana", "na", "NA")
-PRINT INSTR("banana", "na")
-PRINT INSTRREV("banana", "na")
-PRINT SUBSTRCOUNT("banana", "na")</code></pre></section>
 
 <section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS</a></li><li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li><li><a href="../../samples/functions/replacemany/multiple_tokens.axm">REPLACEMANY</a></li><li><a href="../../samples/functions/instr/basic_usage.axm">INSTR</a></li><li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV</a></li><li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT</a></li></ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="regex-functions.html">Регулярные выражения</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>

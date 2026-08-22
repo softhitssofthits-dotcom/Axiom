@@ -20,7 +20,7 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Изображения IMAGE</span>
             </nav>
-            <p class="eyebrow">Тип, функции и оператор</p>
+            <p class="eyebrow">Тип, функции и операторы</p>
             <h1 class="page-title">Изображения IMAGE</h1>
             <p class="lead">Эта страница описывает встроенный тип данных <code>IMAGE</code>, встроенные функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code>, <code>IMAGEHEIGHT</code> и оператор <code>DRAWIMAGE</code>. Тип <code>IMAGE</code> хранит уже загруженное полноцветное изображение, а оператор <code>DRAWIMAGE</code> выводит это изображение на графический экран или на современный холст.</p>
 
@@ -49,10 +49,10 @@ DRAWIMAGE image, x, y, width, height</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
-                        <tr><th>Параметр</th><th>Описание</th></tr>
+                        <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>name</code></td><td>Переменная типа <code>IMAGE</code>.</td></tr>
@@ -101,17 +101,6 @@ DRAWIMAGE image, x, y, width, height</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3007</code>: путь в функции <code>LOADIMAGE</code> пустой.</li>
-                    <li><code>MB3005</code>: файл изображения отсутствует, недоступен, повреждён или не поддерживается текущим декодером.</li>
-                    <li><code>MB3005</code>: оператор <code>DRAWIMAGE</code> получил пустое значение <code>IMAGE</code>.</li>
-                    <li><code>MB3007</code>: ширина или высота в масштабированной форме <code>DRAWIMAGE</code> меньше либо равна нулю.</li>
-                    <li><code>MB3010</code>: оператор <code>DRAWIMAGE</code> вызван без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">SCREEN 1
 DIM logo AS IMAGE
@@ -122,6 +111,26 @@ PRINT "Высота="; IMAGEHEIGHT(logo)
 DRAWIMAGE logo, 16, 24
 DRAWIMAGE logo, 96, 24, 64, 64
 SLEEP</code></pre>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения типа <code>IMAGE</code> и оператора <code>DRAWIMAGE</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
+                    <li><a href="../../samples/graphics/images/missing_image_error.axm">IMAGE: ошибка отсутствующего файла</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3007</code>: путь в функции <code>LOADIMAGE</code> пустой.</li>
+                    <li><code>MB3005</code>: файл изображения отсутствует, недоступен, повреждён или не поддерживается текущим декодером.</li>
+                    <li><code>MB3005</code>: оператор <code>DRAWIMAGE</code> получил пустое значение <code>IMAGE</code>.</li>
+                    <li><code>MB3007</code>: ширина или высота в масштабированной форме <code>DRAWIMAGE</code> меньше либо равна нулю.</li>
+                    <li><code>MB3010</code>: оператор <code>DRAWIMAGE</code> вызван без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
+                </ul>
             </section>
 
             <section class="article-section">

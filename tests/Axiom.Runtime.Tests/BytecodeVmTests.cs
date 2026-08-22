@@ -3424,15 +3424,16 @@ PRINT 99
     public void Execute_ResumeFromSourcePositionBreakpointCanStopAgainOnSameLine()
     {
         const string text = """
+DIM x AS INTEGER = 5
 PRINT 0
-PRINT 2 + 3
+PRINT x + 3
 PRINT 9
 """;
         var snapshots = new List<BytecodeVmExecutionSnapshot>();
         ExecuteProgram(text, instructionObserver: snapshots.Add);
 
         var targets = snapshots
-            .Where(static snapshot => snapshot.SourceLocation.Line == 2)
+            .Where(static snapshot => snapshot.SourceLocation.Line == 3)
             .GroupBy(static snapshot => (snapshot.SourceLocation.Line, snapshot.SourceLocation.Column))
             .Select(static group => group.First())
             .Take(2)
@@ -3441,7 +3442,7 @@ PRINT 9
         Assert.True(
             targets.Length >= 2,
             string.Join(", ", snapshots
-                .Where(static snapshot => snapshot.SourceLocation.Line == 2)
+                .Where(static snapshot => snapshot.SourceLocation.Line == 3)
                 .Select(static snapshot => $"{snapshot.Opcode}@{snapshot.SourceLocation.Line}:{snapshot.SourceLocation.Column}")));
 
         var breakpoints = BytecodeBreakpointSet.FromPositions(targets
@@ -3473,7 +3474,7 @@ PRINT 9
         Assert.False(completed.Stopped);
         Assert.Null(completed.StopState);
         Assert.False(secondStop.StopState.CanResume);
-        Assert.Equal(["0", "5", "9"], host.Output);
+        Assert.Equal(["0", "8", "9"], host.Output);
     }
 
     [Fact]

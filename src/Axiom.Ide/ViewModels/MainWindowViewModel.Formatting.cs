@@ -104,6 +104,34 @@ public sealed partial class MainWindowViewModel
             $"{BuildDocumentTrace(document)} | style={SelectedFormattingStyle} | chars={formattedText.Length}");
     }
 
+    private void FormatDocumentAfterOpen(DocumentTabViewModel document)
+    {
+        // Открытый документ сразу приводится к выбранному стилю — включая выражения
+        // внутри {..} интерполированных строк. Вкладки с несохранёнными правками не трогаем,
+        // а сам файл на диске не меняется, поэтому dirty-флаг снимается.
+        if (document.IsDirty || !DocumentFormattingPolicy.CanApplyFormatting(document))
+        {
+            return;
+        }
+
+        var formattedText = _codeFormattingService.FormatDocument(document.SourceText, SelectedFormattingStyle);
+        if (IsSmartIdentifierEnabled)
+        {
+            formattedText = _smartIdentifierService.NormalizeDocument(formattedText);
+        }
+
+        if (string.Equals(document.SourceText, formattedText, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        document.SourceText = formattedText;
+        document.MarkAsSaved();
+        _traceService.Write(
+            "format.document.on-open",
+            $"{BuildDocumentTrace(document)} | style={SelectedFormattingStyle}");
+    }
+
     public void ApplySmartIdentifierToActiveDocument()
     {
         if (!IsSmartIdentifierEnabled || Documents.ActiveDocument is not { } document)

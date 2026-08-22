@@ -112,21 +112,25 @@ public sealed class InputPromptService : ViewModelBase
             return;
         }
 
-        _submittedText = CurrentInputText;
+        // Значения захватываются до сброса IsWaitingForInput: подписчики этого
+        // свойства синхронно очищают CurrentInputText в нижней панели.
+        var promptText = CurrentPromptText;
+        var inputText = CurrentInputText;
+        _submittedText = inputText;
         IsWaitingForInput = false;
-        onSubmit?.Invoke(CurrentPromptText, CurrentInputText, isScreenOutputActive);
+        onSubmit?.Invoke(promptText, inputText, isScreenOutputActive);
 
         _traceService.Write(
             "console.input.submit",
-            $"text=\"{SanitizeForLog(CurrentInputText)}\"");
+            $"text=\"{SanitizeForLog(inputText)}\"");
         _eventLogService.Write(new IdeEventLogEntry
         {
             Level = IdeEventLevel.Info,
             Category = "input",
             EventName = "input.submitted",
             Source = nameof(InputPromptService),
-            TextLength = CurrentInputText.Length,
-            TextPreview = CurrentInputText
+            TextLength = inputText.Length,
+            TextPreview = inputText
         });
         _pendingFrame.Continue = false;
         _pendingFrame = null;

@@ -46,7 +46,6 @@ public static class DiagnosticCodes
     public const string InvalidTypeFieldDefaultValue = "MB2027";
     public const string InvalidByRefArgument = "MB2028";
     public const string UnsupportedByRefCallableValue = "MB2029";
-    public const string InvalidTypeMethodReceiver = "MB2030";
     public const string MixedTypeLiteralInitialization = "MB2031";
     public const string TypeLiteralPositionalArity = "MB2032";
     public const string AmbiguousTypeConstructor = "MB2033";

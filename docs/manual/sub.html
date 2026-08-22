@@ -133,6 +133,12 @@ ShowBanner("Axiom")</code></pre>
             <section class="article-section">
                 <h2>Диагностика</h2>
                 <p>Ошибка возникает, если <code>SUB</code> используется как выражение, если процедура вызывается с неверным числом или типами аргументов, если аргумент для <code>BYREF</code> не является простой переменной или если внутри <code>SUB</code> записан <code>RETURN</code> со значением.</p>
+                <ul>
+                    <li><code>MB2004</code> — процедура вызвана с неверным числом аргументов.</li>
+                    <li><code>MB2006</code> — внутри <code>SUB</code> записан <code>RETURN</code> со значением.</li>
+                    <li><code>MB2019</code> — процедура <code>SUB</code> используется как значение в выражении.</li>
+                    <li><code>MB2028</code> — аргумент, передаваемый параметру <code>BYREF</code>, не является простой переменной подходящего типа.</li>
+                </ul>
             </section>
 
             <section class="article-section">

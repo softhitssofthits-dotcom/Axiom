@@ -19,12 +19,41 @@
            foreground="#000000" />
     <Color name="Interpolation"
            foreground="#800080" />
+    <Color name="InterpolationText"
+           foreground="#000000" />
 
     <RuleSet ignoreCase="true">
-        <Rule color="Comment">'[^\r\n]*</Rule>
-        <Rule color="Comment">\bREM\b[^\r\n]*</Rule>
-        <Rule color="Interpolation">\$&quot;</Rule>
-        <Rule color="String">&quot;(&quot;&quot;|[^&quot;\r\n])*&quot;?</Rule>
+        <Span color="Comment" multiline="false">
+            <Begin>'</Begin>
+        </Span>
+        <Span color="Comment" multiline="false">
+            <Begin>\bREM\b</Begin>
+        </Span>
+        <Span color="String" multiline="true">
+            <Begin color="Interpolation">\$&quot;</Begin>
+            <End>(?&lt;!\\)&quot;</End>
+            <RuleSet ignoreCase="true">
+                <Span color="InterpolationText" multiline="false">
+                    <Begin color="Interpolation">(?&lt;![\\{])\{(?!\{)</Begin>
+                    <End color="Interpolation">\}</End>
+                    <RuleSet ignoreCase="true">
+                        <Span color="String" multiline="false">
+                            <Begin>&quot;</Begin>
+                            <End>&quot;</End>
+                        </Span>
+                        <Import ruleSet="Code" />
+                    </RuleSet>
+                </Span>
+            </RuleSet>
+        </Span>
+        <Span color="String" multiline="false">
+            <Begin>&quot;</Begin>
+            <End>&quot;</End>
+        </Span>
+        <Import ruleSet="Code" />
+    </RuleSet>
+
+    <RuleSet name="Code" ignoreCase="true">
         <Rule color="Number">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>
         <Rule color="Operator">&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;=|&gt;=|:=|[-+*/\\^=&lt;&gt;&amp;]</Rule>
 

@@ -20,7 +20,7 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Функции состояния SCREEN</span>
             </nav>
-            <p class="eyebrow">Функции</p>
+            <p class="eyebrow">Встроенные функции</p>
             <h1 class="page-title">Функции состояния SCREEN</h1>
             <p class="lead">Эта страница описывает встроенные функции языка Axiom, которые сообщают текущее состояние экранного режима <code>SCREEN</code>: активен ли графический экран, какой режим выбран, какие размеры имеет текущее окно и где находится текущая графическая позиция.</p>
 
@@ -31,7 +31,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Функция SCREENISACTIVE</h2>
+                <h2>SCREENISACTIVE</h2>
                 <p><code>SCREENISACTIVE</code> — встроенная функция языка Axiom, которая сообщает, активен ли графический режим <code>SCREEN 1..10</code>.</p>
 <pre><code class="language-basic">SCREENISACTIVE()</code></pre>
                 <p>Функция возвращает <code>TRUE</code>, если активен графический режим <code>SCREEN 1..10</code>.</p>
@@ -39,14 +39,14 @@
             </section>
 
             <section class="article-section">
-                <h2>Функция SCREENMODE</h2>
+                <h2>SCREENMODE</h2>
                 <p><code>SCREENMODE</code> — встроенная функция языка Axiom, которая возвращает номер текущего режима <code>SCREEN</code>.</p>
 <pre><code class="language-basic">SCREENMODE()</code></pre>
                 <p>В режиме <code>SCREEN 0</code> функция возвращает <code>0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Функция SCREENWIDTH</h2>
+                <h2>SCREENWIDTH</h2>
                 <p><code>SCREENWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину текущего окна <code>SCREEN</code> в пикселях.</p>
 <pre><code class="language-basic">SCREENWIDTH()</code></pre>
                 <p>Для режима <code>SCREEN 0</code> функция возвращает <code>640</code>.</p>
@@ -54,7 +54,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Функция SCREENHEIGHT</h2>
+                <h2>SCREENHEIGHT</h2>
                 <p><code>SCREENHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту текущего окна <code>SCREEN</code> в пикселях.</p>
 <pre><code class="language-basic">SCREENHEIGHT()</code></pre>
                 <p>Для режима <code>SCREEN 0</code> функция возвращает <code>300</code>.</p>
@@ -62,7 +62,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Функция POINT(selector)</h2>
+                <h2>POINT(selector)</h2>
                 <p>Форма <code>POINT(selector)</code> описана на странице классических операторов рисования, но она тоже относится к функциям состояния графического экрана, потому что может возвращать текущую графическую позицию.</p>
                 <p>Когда программе нужны координаты текущей графической позиции, следует читать страницу <a href="graphics-primitives.html">операторов рисования</a> вместе со страницами <a href="view.html">VIEW</a> и <a href="window.html">WINDOW</a>.</p>
             </section>
@@ -74,12 +74,6 @@
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Функции <code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> сами по себе не требуют отдельной runtime-диагностики отсутствующего графического режима, потому что читают текущее состояние экранного договора <code>SCREEN</code>.</p>
-                <p>Форма <code>POINT(selector)</code> использует диагностику своей страницы: при недопустимом селекторе функция <code>POINT</code> сообщает <code>MB3007</code>, а при отсутствии графического режима <code>SCREEN 1..10</code> функция <code>POINT</code> сообщает <code>MB3010</code>.</p>
-            </section>
-
-            <section class="article-section">
                 <h2>Пример</h2>
 <pre><code class="language-basic">SCREEN 1
 PRINT SCREENISACTIVE()
@@ -88,6 +82,22 @@ PRINT SCREENWIDTH()
 PRINT SCREENHEIGHT()
 SLEEP</code></pre>
                 <p>В этом примере встроенные функции состояния <code>SCREEN</code> сообщают, что графический режим активен, какой режим выбран и какие фактические размеры имеет текущее экранное окно.</p>
+            </section>
+
+            <section class="article-section">
+                <h2>Ручная проверка</h2>
+                <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения функций состояния <code>SCREEN</code>.</p>
+                <ul class="resource-list">
+                    <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: информация о текущем режиме</a></li>
+                    <li><a href="../../samples/graphics/screen/best_fit_dimensions.axm">SCREEN 10: адаптивные размеры окна</a></li>
+                    <li><a href="../../samples/graphics/screen/text_scroll.axm">SCREEN: прокрутка экранного текста</a></li>
+                </ul>
+            </section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Функции <code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> сами по себе не требуют отдельной runtime-диагностики отсутствующего графического режима, потому что читают текущее состояние экранного договора <code>SCREEN</code>.</p>
+                <p>Форма <code>POINT(selector)</code> использует диагностику своей страницы: при недопустимом селекторе функция <code>POINT</code> сообщает <code>MB3007</code>, а при отсутствии графического режима <code>SCREEN 1..10</code> функция <code>POINT</code> сообщает <code>MB3010</code>.</p>
             </section>
 
             <section class="article-section">

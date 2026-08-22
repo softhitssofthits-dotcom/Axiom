@@ -9,10 +9,10 @@ colors(1) = 196
 colors(2) = 17
 LINE (20, 40)-(180, 40), 1
 PRINT "before using="; POINT(20, 40)
-SLEEP
+SLEEP 500
 PALETTE USING colors
 PRINT "after using="; POINT(20, 40)
-SLEEP
+SLEEP 500
 PALETTE
 PRINT "after reset="; POINT(20, 40)
 PRINT "PALETTE USING sample finished"
