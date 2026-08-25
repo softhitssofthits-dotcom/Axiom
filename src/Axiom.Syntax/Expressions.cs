@@ -224,6 +224,10 @@ public sealed class InterpolatedStringExpressionPartSyntax : InterpolatedStringP
     public InterpolatedStringExpressionPartSyntax(
         SyntaxToken openBraceToken,
         ExpressionSyntax expression,
+        SyntaxToken? commaToken,
+        SyntaxToken? alignmentToken,
+        SyntaxToken? colonToken,
+        SyntaxToken? formatSpecifierToken,
         SyntaxToken closeBraceToken)
     {
         ArgumentNullException.ThrowIfNull(openBraceToken);
@@ -232,6 +236,10 @@ public sealed class InterpolatedStringExpressionPartSyntax : InterpolatedStringP
 
         OpenBraceToken = openBraceToken;
         Expression = expression;
+        CommaToken = commaToken;
+        AlignmentToken = alignmentToken;
+        ColonToken = colonToken;
+        FormatSpecifierToken = formatSpecifierToken;
         CloseBraceToken = closeBraceToken;
     }
 
@@ -239,6 +247,10 @@ public sealed class InterpolatedStringExpressionPartSyntax : InterpolatedStringP
 
     public SyntaxToken OpenBraceToken { get; }
     public ExpressionSyntax Expression { get; }
+    public SyntaxToken? CommaToken { get; }
+    public SyntaxToken? AlignmentToken { get; }
+    public SyntaxToken? ColonToken { get; }
+    public SyntaxToken? FormatSpecifierToken { get; }
     public SyntaxToken CloseBraceToken { get; }
 }
 

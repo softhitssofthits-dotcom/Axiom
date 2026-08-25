@@ -83,8 +83,40 @@ public sealed partial class Parser
             {
                 var openBrace = Match(SyntaxKind.InterpolatedStringExpressionStartToken, "{");
                 var expression = ParseExpression();
+
+                SyntaxToken? commaToken = null;
+                SyntaxToken? alignmentToken = null;
+                if (Current.Kind == SyntaxKind.CommaToken)
+                {
+                    commaToken = NextToken();
+
+                    if (Current.Kind == SyntaxKind.MinusToken)
+                    {
+                        var minusToken = NextToken();
+                        var numberToken = Match(SyntaxKind.IntegerLiteralToken, "выравнивание");
+                        var negativeValue = -((int)(numberToken.Value ?? 0));
+                        alignmentToken = new SyntaxToken(
+                            SyntaxKind.IntegerLiteralToken,
+                            $"-{numberToken.Text}",
+                            numberToken.Location,
+                            negativeValue);
+                    }
+                    else
+                    {
+                        alignmentToken = Match(SyntaxKind.IntegerLiteralToken, "выравнивание");
+                    }
+                }
+
+                SyntaxToken? colonToken = null;
+                SyntaxToken? formatSpecifierToken = null;
+                if (Current.Kind == SyntaxKind.ColonToken)
+                {
+                    colonToken = NextToken();
+                    formatSpecifierToken = Match(SyntaxKind.InterpolatedStringFormatSpecifierToken, "спецификатор формата");
+                }
+
                 var closeBrace = Match(SyntaxKind.InterpolatedStringExpressionEndToken, "}");
-                parts.Add(new InterpolatedStringExpressionPartSyntax(openBrace, expression, closeBrace));
+                parts.Add(new InterpolatedStringExpressionPartSyntax(openBrace, expression, commaToken, alignmentToken, colonToken, formatSpecifierToken, closeBrace));
             }
             else
             {

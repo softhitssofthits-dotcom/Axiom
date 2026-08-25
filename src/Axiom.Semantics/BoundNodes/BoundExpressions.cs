@@ -261,9 +261,25 @@ public sealed class BoundErrorExpression : BoundExpression
     public override BoundNodeKind Kind => BoundNodeKind.ErrorExpression;
 }
 
+public sealed class BoundInterpolatedStringPart
+{
+    public BoundInterpolatedStringPart(BoundExpression expression, int? alignment = null, string? formatSpecifier = null)
+    {
+        ArgumentNullException.ThrowIfNull(expression);
+        Expression = expression;
+        Alignment = alignment;
+        FormatSpecifier = formatSpecifier;
+    }
+
+    public BoundExpression Expression { get; }
+    public int? Alignment { get; }
+    public string? FormatSpecifier { get; }
+    public TextLocation Location => Expression.Location;
+}
+
 public sealed class BoundInterpolatedStringExpression : BoundExpression
 {
-    public BoundInterpolatedStringExpression(TextLocation location, IReadOnlyList<BoundExpression> parts)
+    public BoundInterpolatedStringExpression(TextLocation location, IReadOnlyList<BoundInterpolatedStringPart> parts)
         : base(location, TypeSymbol.String)
     {
         ArgumentNullException.ThrowIfNull(parts);
@@ -272,5 +288,5 @@ public sealed class BoundInterpolatedStringExpression : BoundExpression
 
     public override BoundNodeKind Kind => BoundNodeKind.InterpolatedStringExpression;
 
-    public IReadOnlyList<BoundExpression> Parts { get; }
+    public IReadOnlyList<BoundInterpolatedStringPart> Parts { get; }
 }

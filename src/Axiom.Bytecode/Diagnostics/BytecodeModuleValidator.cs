@@ -902,6 +902,7 @@ public sealed class BytecodeModuleValidator
                 case Opcode.PrintLine:
                 case Opcode.Locate:
                 case Opcode.CloseFile:
+                case Opcode.FormatInterpolatedPart:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
 

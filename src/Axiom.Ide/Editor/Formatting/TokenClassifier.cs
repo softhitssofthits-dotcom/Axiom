@@ -24,6 +24,7 @@ internal static class TokenClassifier
                 RawTokenKind.Comma => new FormattedToken(rawToken.Text, FormattedTokenKind.Comma),
                 RawTokenKind.Semicolon => new FormattedToken(rawToken.Text, FormattedTokenKind.Semicolon),
                 RawTokenKind.Dot => new FormattedToken(rawToken.Text, FormattedTokenKind.Dot),
+                RawTokenKind.PlainText => new FormattedToken(rawToken.Text, FormattedTokenKind.PlainText),
                 RawTokenKind.Operator when IsPrefixOperator(rawToken.Text, previous)
                     => new FormattedToken(rawToken.Text, FormattedTokenKind.PrefixOperator),
                 RawTokenKind.Operator => new FormattedToken(rawToken.Text, FormattedTokenKind.BinaryOperator),

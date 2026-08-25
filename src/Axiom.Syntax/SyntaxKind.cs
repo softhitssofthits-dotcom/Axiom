@@ -19,6 +19,7 @@ public enum SyntaxKind
     CaretToken,
     SlashToken,
     BackslashToken,
+    ColonToken,
     ColonEqualsToken,
     EqualsToken,
     NotEqualsToken,
@@ -243,5 +244,6 @@ public enum SyntaxKind
     InterpolatedStringTextToken,
     InterpolatedStringExpressionStartToken,
     InterpolatedStringExpressionEndToken,
+    InterpolatedStringFormatSpecifierToken,
     InterpolatedStringEndToken
 }

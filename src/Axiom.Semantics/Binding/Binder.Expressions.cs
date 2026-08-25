@@ -65,19 +65,33 @@ public sealed partial class Binder
 
     private BoundExpression BindInterpolatedStringExpression(InterpolatedStringExpressionSyntax expression)
     {
-        var parts = new List<BoundExpression>();
+        var parts = new List<BoundInterpolatedStringPart>();
 
         foreach (var part in expression.Parts)
         {
             switch (part)
             {
                 case InterpolatedStringTextPartSyntax textPart:
-                    parts.Add(new BoundLiteralExpression(textPart.TextToken.Location, textPart.TextToken.Text, TypeSymbol.String));
+                    parts.Add(new BoundInterpolatedStringPart(
+                        new BoundLiteralExpression(textPart.TextToken.Location, textPart.TextToken.Text, TypeSymbol.String)));
                     break;
 
                 case InterpolatedStringExpressionPartSyntax exprPart:
                     var boundExpr = BindExpression(exprPart.Expression);
-                    parts.Add(boundExpr);
+
+                    int? alignment = null;
+                    if (exprPart.AlignmentToken is not null)
+                    {
+                        alignment = (int)(exprPart.AlignmentToken.Value ?? 0);
+                    }
+
+                    string? formatSpecifier = null;
+                    if (exprPart.FormatSpecifierToken is not null)
+                    {
+                        formatSpecifier = exprPart.FormatSpecifierToken.Text;
+                    }
+
+                    parts.Add(new BoundInterpolatedStringPart(boundExpr, alignment, formatSpecifier));
                     break;
             }
         }

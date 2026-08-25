@@ -699,6 +699,11 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Sleep, location, valueCount: hasDuration ? 1 : 0);
     }
 
+    public static LoweredInstruction FormatInterpolatedPart(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.FormatInterpolatedPart, location);
+    }
+
     public static LoweredInstruction PushErrorHandler(
         TextLocation location,
         string? catchLabel,

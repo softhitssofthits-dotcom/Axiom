@@ -14,7 +14,8 @@ internal enum RawTokenKind
     CloseParen,
     Comma,
     Semicolon,
-    Dot
+    Dot,
+    PlainText
 }
 
 internal enum FormattedTokenKind
@@ -30,5 +31,6 @@ internal enum FormattedTokenKind
     CloseParen,
     Comma,
     Semicolon,
-    Dot
+    Dot,
+    PlainText
 }

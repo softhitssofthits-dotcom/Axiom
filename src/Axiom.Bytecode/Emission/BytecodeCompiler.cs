@@ -826,6 +826,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.PrintLine => new BytecodeInstruction(Opcode.PrintLine),
             LoweredInstructionKind.Input => EmitInput(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.Sleep => new BytecodeInstruction(Opcode.Sleep, [instruction.ValueCount]),
+            LoweredInstructionKind.FormatInterpolatedPart => new BytecodeInstruction(Opcode.FormatInterpolatedPart),
             LoweredInstructionKind.PushErrorHandler => EmitPushErrorHandler(routine, instruction, parameterSlots, localSlots, captureSlots, labelTargets),
             LoweredInstructionKind.PopErrorHandler => new BytecodeInstruction(Opcode.PopErrorHandler),
             LoweredInstructionKind.RaiseError => new BytecodeInstruction(Opcode.RaiseError, [instruction.ValueCount]),

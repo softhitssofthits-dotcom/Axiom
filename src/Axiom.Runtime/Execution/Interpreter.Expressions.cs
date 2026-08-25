@@ -63,11 +63,53 @@ public sealed partial class Interpreter
         var sb = new System.Text.StringBuilder();
         foreach (var part in expression.Parts)
         {
-            var value = EvaluateExpression(part);
-            sb.Append(value.ToDisplayString());
+            var value = EvaluateExpression(part.Expression);
+
+            string text;
+            if (part.FormatSpecifier is not null || part.Alignment is not null)
+            {
+                text = FormatInterpolatedValue(value, part.Alignment, part.FormatSpecifier);
+            }
+            else
+            {
+                text = value.ToDisplayString();
+            }
+
+            sb.Append(text);
         }
 
         return RuntimeValue.FromString(sb.ToString());
+    }
+
+    private static string FormatInterpolatedValue(RuntimeValue value, int? alignment, string? format)
+    {
+        string formatted;
+
+        if (format is not null)
+        {
+            var upperFormat = format.ToUpperInvariant();
+            formatted = value.Type switch
+            {
+                var t when t == TypeSymbol.Integer => ((int)value.AsInteger()).ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                var t when t == TypeSymbol.Long => value.AsLong().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                var t when t == TypeSymbol.Double => value.AsDouble().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                var t when t == TypeSymbol.Decimal => value.AsDecimal().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                _ => value.ToDisplayString()
+            };
+        }
+        else
+        {
+            formatted = value.ToDisplayString();
+        }
+
+        if (alignment.HasValue)
+        {
+            formatted = alignment.Value > 0
+                ? formatted.PadLeft(alignment.Value)
+                : formatted.PadRight(-alignment.Value);
+        }
+
+        return formatted;
     }
 
     private RuntimeValue EvaluateArrayAccessExpression(BoundArrayAccessExpression expression)

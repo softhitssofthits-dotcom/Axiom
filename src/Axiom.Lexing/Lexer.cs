@@ -162,6 +162,12 @@ public sealed class Lexer
             return NextInterpolatedStringToken();
         }
 
+        if (_expectFormatSpecifier)
+        {
+            _expectFormatSpecifier = false;
+            return ReadFormatSpecifier();
+        }
+
         SkipWhitespace();
 
         if (_position >= _text.Length)
@@ -473,6 +479,7 @@ public sealed class Lexer
 
     private readonly Stack<int> _interpolatedStringStarts = new();
     private bool _insideInterpolatedExpression;
+    private bool _expectFormatSpecifier;
 
     private Token NextInterpolatedStringToken()
     {
@@ -611,6 +618,25 @@ public sealed class Lexer
         return CreateToken(TokenKind.InterpolatedStringEndToken, start, 1);
     }
 
+    private Token ReadFormatSpecifier()
+    {
+        var start = _position;
+        var content = new System.Text.StringBuilder();
+
+        while (_position < _text.Length)
+        {
+            if (Current == '}' || Current == '"' || IsNewLine(Current))
+            {
+                break;
+            }
+
+            content.Append(Current);
+            _position++;
+        }
+
+        return CreateToken(TokenKind.InterpolatedStringFormatSpecifierToken, start, _position - start, content.ToString().Trim());
+    }
+
     private Token ReadOperatorOrBadToken()
     {
         var start = _position;
@@ -643,6 +669,13 @@ public sealed class Lexer
                 {
                     _position += 2;
                     return CreateToken(TokenKind.ColonEqualsToken, start, 2);
+                }
+
+                if (_insideInterpolatedExpression && _interpolatedStringStarts.Count > 0)
+                {
+                    _position++;
+                    _expectFormatSpecifier = true;
+                    return CreateToken(TokenKind.ColonToken, start, 1);
                 }
 
                 _position++;

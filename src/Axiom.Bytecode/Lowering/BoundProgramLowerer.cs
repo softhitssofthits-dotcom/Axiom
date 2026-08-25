@@ -1673,12 +1673,27 @@ public sealed class BoundProgramLowerer
             return;
         }
 
-        LowerExpression(interpolated.Parts[0], instructions);
+        LowerInterpolatedStringPart(interpolated.Parts[0], instructions);
 
         for (var index = 1; index < interpolated.Parts.Count; index++)
         {
-            LowerExpression(interpolated.Parts[index], instructions);
+            LowerInterpolatedStringPart(interpolated.Parts[index], instructions);
             instructions.Add(LoweredInstruction.BinaryOperation(interpolated.Location, SyntaxKind.AmpersandToken));
+        }
+    }
+
+    private void LowerInterpolatedStringPart(BoundInterpolatedStringPart part, List<LoweredInstruction> instructions)
+    {
+        if (part.FormatSpecifier is not null || part.Alignment is not null)
+        {
+            LowerExpression(part.Expression, instructions);
+            instructions.Add(LoweredInstruction.LoadLiteral(part.Location, part.Alignment ?? 0, TypeSymbol.Integer));
+            instructions.Add(LoweredInstruction.LoadLiteral(part.Location, part.FormatSpecifier ?? string.Empty, TypeSymbol.String));
+            instructions.Add(LoweredInstruction.FormatInterpolatedPart(part.Location));
+        }
+        else
+        {
+            LowerExpression(part.Expression, instructions);
         }
     }
 

@@ -74,6 +74,7 @@ public enum LoweredInstructionKind
     PrintLine,
     Input,
     Sleep,
+    FormatInterpolatedPart,
     PushErrorHandler,
     PopErrorHandler,
     RaiseError,

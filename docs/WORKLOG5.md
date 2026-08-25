@@ -2955,3 +2955,91 @@ Health Score: **8.8/10**.
 ### Следующий шаг
 
 - Продуктовая работа. Оставшиеся ранее существующие падения: `MainWindowCodeBehind_TracksCaretAndBottomPaneFocus` (проверка форматирования в code-behind), `Run_SetsCurrentDirToSourceFileDirectoryDuringExecution` (путь рабочего каталога), `Run_GetCanvasAcceptanceProgram`/`Run_PutCanvasAcceptanceProgram` (пустой вывод graphics при `SLEEP 500` — вероятный баг `ProgramRunService`).
+
+## Session 1091 - 2026-08-25 20:00 - Спецификаторы формата в интерполированных строках
+
+### Что сделано
+
+Реализована поддержка спецификаторов формата и выравнивания внутри `{...}` интерполированных строк `$"..."`.
+
+Синтаксис:
+- `{выражение:формат}` — форматирование значения (например `{price:F2}`)
+- `{выражение,выравнивание}` — выравнивание (например `{name,20}`)
+- `{выражение,выравнивание:формат}` — оба (например `{price,12:F2}`)
+
+Поддерживаемые спецификаторы: `F`, `N`, `E`, `P`, `X`, `D`, `G` (с опциональной точностью). Выравнивание: положительное = вправо, отрицательное = влево.
+
+### Изменённые файлы
+
+**Лексер:**
+- `src/Axiom.Lexing/TokenKind.cs` — добавлены `ColonToken`, `InterpolatedStringFormatSpecifierToken`
+- `src/Axiom.Lexing/Lexer.cs` — обработка `:` внутри интерполированного выражения (emit `ColonToken` вместо `BadToken`), новый метод `ReadFormatSpecifier()`, флаг `_expectFormatSpecifier`
+
+**Синтаксис:**
+- `src/Axiom.Syntax/SyntaxKind.cs` — добавлены `ColonToken`, `InterpolatedStringFormatSpecifierToken`
+- `src/Axiom.Syntax/Expressions.cs` — расширен `InterpolatedStringExpressionPartSyntax`: добавлены `CommaToken?`, `AlignmentToken?`, `ColonToken?`, `FormatSpecifierToken?`
+
+**Парсер:**
+- `src/Axiom.Parsing/Parser.Helpers.cs` — маппинг новых токенов
+- `src/Axiom.Parsing/Parser.Expressions.cs` — парсинг alignment и format после выражения внутри `{}`
+
+**Семантика:**
+- `src/Axiom.Semantics/BoundNodes/BoundExpressions.cs` — новый класс `BoundInterpolatedStringPart` (Expression + Alignment? + FormatSpecifier?), `BoundInterpolatedStringExpression` теперь работает с `IReadOnlyList<BoundInterpolatedStringPart>`
+- `src/Axiom.Semantics/Binding/Binder.Expressions.cs` — создание `BoundInterpolatedStringPart` с alignment/format из AST
+
+**Рантайм (интерпретатор):**
+- `src/Axiom.Runtime/Execution/Interpreter.Expressions.cs` — `FormatInterpolatedValue()` с поддержкой .NET-форматов (`F`, `N`, `E`, `P`, `X`, `D`, `G`) и `PadLeft`/`PadRight` для выравнивания
+
+**Байткод:**
+- `src/Axiom.Bytecode/Model/LoweredInstructionKind.cs` — добавлен `FormatInterpolatedPart`
+- `src/Axiom.Bytecode/Model/Opcode.cs` — добавлен `FormatInterpolatedPart`
+- `src/Axiom.Bytecode/Model/LoweredInstruction.cs` — фабричный метод `FormatInterpolatedPart()`
+- `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs` — маппинг `LoweredInstructionKind.FormatInterpolatedPart` → `Opcode.FormatInterpolatedPart`
+- `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs` — `LowerInterpolatedStringPart()`: если есть format/alignment, опускает `LoadLiteral(alignment)` + `LoadLiteral(formatSpec)` + `FormatInterpolatedPart`
+- `src/Axiom.Runtime/Execution/BytecodeVm.cs` — `ExecuteFormatInterpolatedPart()` + `FormatInterpolatedValue()`
+
+**Подсветка IDE:**
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` — `:` добавлен в правило операторов
+- `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd` — аналогично
+
+**Пример:**
+- `samples/expressions/interpolation_format.axm` — runnable-пример всех форматов
+
+### Валидация
+
+Сборка: 0 ошибок, 0 warnings. Тесты: Semantics 374/374, Parsing 146/146, Lexing 18/18, Syntax 66/66, Bytecode 203/203, Runtime 928/928, Execution 797/797, IDE 577/581 (4 падения — ранее существующие).
+
+### Следующий шаг
+
+- Добавить runtime-тесты спецификаторов формата. Обновить manual.
+
+### Дополнение: runtime-тесты и manual
+
+Добавлены 8 runtime-тестов спецификаторов формата в `tests/Axiom.Runtime.Tests/InterpreterTests.cs`:
+- `Execute_InterpolatedStringFormatFixedPoint` — `{price:F2}` → `1234.50`
+- `Execute_InterpolatedStringFormatIntegerPadding` — `{code:D5}` → `00042`
+- `Execute_InterpolatedStringFormatPercent` — `{ratio:P1}` → `85.6 %`
+- `Execute_InterpolatedStringFormatHex` — `{code:X}` → `FF`
+- `Execute_InterpolatedStringFormatThousands` — `{big:N0}` → `1,234,567`
+- `Execute_InterpolatedStringAlignmentRight` — `{name,20}` → правое выравнивание
+- `Execute_InterpolatedStringAlignmentLeft` — `{name,-20}` → левое выравнивание
+- `Execute_InterpolatedStringFormatWithAlignment` — `{price,12:F2}` → выравнивание + формат
+- `Execute_InterpolatedStringFormatWithExpression` — `{a + b:D4}` → выражение + формат
+- `Execute_InterpolatedStringFormatScientific` — `{ratio:E3}` → научная запись
+
+Обновлён manual:
+- `docs/manual/print.html` — добавлена секция «Спецификаторы формата в интерполяции» с таблицей спецификаторов и примерами; добавлена ссылка на `samples/expressions/interpolation_format.axm`.
+- `docs/manual/cheat-sheet.html` — добавлены примеры `{price:F2}` и `{name,20}` в сводку ввода-вывода.
+
+Итого: Runtime 938/938 (было 928/928, +10 тестов), Execution 798/798 (было 797/797, +1 acceptance). Сборка 0 ошибок/0 warnings.
+
+### Исправление: форматтер IDE удалял спецификаторы формата интерполяции
+
+Причина: `LineFormatter.TryTokenize` при обработке `{...}` внутри `$"..."` вызывает `MapTokenKind()` для каждого токена. `ColonToken` и `InterpolatedStringFormatSpecifierToken` не обрабатывались → `MapTokenKind` возвращал `null` → токены молча выбрасывались. В результате `{price:F2}` превращалось в `{price}`.
+
+Исправление:
+- `src/Axiom.Ide/Editor/Formatting/FormattingTypes.cs` — добавлены `PlainText` в `RawTokenKind` и `FormattedTokenKind`
+- `src/Axiom.Ide/Editor/Formatting/LineFormatter.cs` — в `TryTokenize` перед `MapTokenKind` добавлена проверка на `ColonToken`/`InterpolatedStringFormatSpecifierToken` (добавляются как `PlainText`); в `NeedsSpace` добавлено правило: `PlainText` не получает пробел ни до, ни после
+- `src/Axiom.Ide/Editor/Formatting/TokenClassifier.cs` — добавлен кейс `RawTokenKind.PlainText` → `FormattedTokenKind.PlainText` (текст не модифицируется)
+
+Результат: сборка 0 ошибок/0 warnings; IDE-тесты 581/581 (4 падения — ранее существующие); все форматирующие тесты проходят; `interpolation_format.axm` корректно отображается в IDE с сохранением спецификаторов.

@@ -1132,4 +1132,145 @@ PRINT $"{name}, {age} лет, {city}"
         Assert.Equal(["Алиса, 25 лет, Москва"], host.Output);
     }
 
+    [Fact]
+    public void Execute_InterpolatedStringFormatFixedPoint()
+    {
+        const string text = """
+DIM price AS DOUBLE = 1234.5
+PRINT $"Цена: {price:F2}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Цена: 1234.50"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatIntegerPadding()
+    {
+        const string text = """
+DIM code AS INTEGER = 42
+PRINT $"Код: {code:D5}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Код: 00042"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatPercent()
+    {
+        const string text = """
+DIM ratio AS DOUBLE = 0.856
+PRINT $"Доля: {ratio:P1}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Доля: 85.6 %"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatHex()
+    {
+        const string text = """
+DIM code AS INTEGER = 255
+PRINT $"Hex: {code:X}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Hex: FF"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatThousands()
+    {
+        const string text = """
+DIM big AS INTEGER = 1234567
+PRINT $"Число: {big:N0}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Число: 1,234,567"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringAlignmentRight()
+    {
+        const string text = """
+DIM name AS STRING = "Алиса"
+PRINT $"|{name,20}|"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["|               Алиса|"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringAlignmentLeft()
+    {
+        const string text = """
+DIM name AS STRING = "Алиса"
+PRINT $"|{name,-20}|"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["|Алиса               |"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatWithAlignment()
+    {
+        const string text = """
+DIM price AS DOUBLE = 1234.5
+PRINT $"|{price,12:F2}|"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["|     1234.50|"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatWithExpression()
+    {
+        const string text = """
+DIM a AS INTEGER = 10
+DIM b AS INTEGER = 3
+PRINT $"Сумма: {a + b:D4}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Сумма: 0013"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_InterpolatedStringFormatScientific()
+    {
+        const string text = """
+DIM ratio AS DOUBLE = 0.856
+PRINT $"Научная: {ratio:E3}"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded, $"Failed: {string.Join("; ", result.Diagnostics.Select(d => $"{d.Code}: {d.Message}"))}");
+        Assert.Equal(["Научная: 8.560E-001"], host.Output);
+    }
+
 }

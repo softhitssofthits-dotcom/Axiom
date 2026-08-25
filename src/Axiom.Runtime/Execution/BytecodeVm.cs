@@ -846,6 +846,10 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.FormatInterpolatedPart:
+                ExecuteFormatInterpolatedPart(frame, instructionIndex);
+                break;
+
             case Opcode.Screen:
                 ExecuteScreenInstruction(frame, instructionIndex);
                 InvalidateReverseExecutionHistory();
@@ -1287,6 +1291,48 @@ public sealed partial class BytecodeVm
             Opcode.CompareGreaterOrEqual => RuntimeValue.FromBoolean(Compare(left, right, location) >= 0),
             _ => throw new InvalidOperationException($"Unsupported binary opcode '{opcode}'.")
         });
+    }
+
+    private void ExecuteFormatInterpolatedPart(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        var formatSpec = stack.Pop().AsString();
+        var alignment = stack.Pop().AsInteger();
+        var value = stack.Pop();
+
+        var formatted = FormatInterpolatedValue(value, alignment, formatSpec);
+        stack.Push(RuntimeValue.FromString(formatted));
+    }
+
+    private static string FormatInterpolatedValue(RuntimeValue value, int alignment, string format)
+    {
+        string formatted;
+
+        if (!string.IsNullOrEmpty(format))
+        {
+            var upperFormat = format.ToUpperInvariant();
+            formatted = value.Type switch
+            {
+                var t when t == TypeSymbol.Integer => ((int)value.AsInteger()).ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                var t when t == TypeSymbol.Long => value.AsLong().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                var t when t == TypeSymbol.Double => value.AsDouble().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                var t when t == TypeSymbol.Decimal => value.AsDecimal().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
+                _ => value.ToDisplayString()
+            };
+        }
+        else
+        {
+            formatted = value.ToDisplayString();
+        }
+
+        if (alignment != 0)
+        {
+            formatted = alignment > 0
+                ? formatted.PadLeft(alignment)
+                : formatted.PadRight(-alignment);
+        }
+
+        return formatted;
     }
 
     private void ExecuteAppendStringGlobal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)

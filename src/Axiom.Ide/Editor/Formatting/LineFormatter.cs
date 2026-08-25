@@ -108,7 +108,12 @@ internal static class LineFormatter
 
     private static bool NeedsSpace(FormattedToken previous, FormattedToken current)
     {
-        if (current.Kind is FormattedTokenKind.CloseParen or FormattedTokenKind.Comma or FormattedTokenKind.Semicolon)
+        if (current.Kind is FormattedTokenKind.CloseParen or FormattedTokenKind.Comma or FormattedTokenKind.Semicolon or FormattedTokenKind.PlainText)
+        {
+            return false;
+        }
+
+        if (previous.Kind is FormattedTokenKind.PlainText)
         {
             return false;
         }
@@ -360,6 +365,12 @@ internal static class LineFormatter
                         interpolationText.Append('}');
                         insideExpression = false;
                         lastTextOffset = token.Span.End;
+                        continue;
+                    }
+
+                    if (token.Kind is TokenKind.ColonToken or TokenKind.InterpolatedStringFormatSpecifierToken)
+                    {
+                        expressionTokens.Add(new RawToken(token.Text, RawTokenKind.PlainText));
                         continue;
                     }
 

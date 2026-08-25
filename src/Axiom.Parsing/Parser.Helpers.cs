@@ -283,6 +283,7 @@ public sealed partial class Parser
             TokenKind.SlashToken => SyntaxKind.SlashToken,
             TokenKind.BackslashToken => SyntaxKind.BackslashToken,
             TokenKind.ColonEqualsToken => SyntaxKind.ColonEqualsToken,
+            TokenKind.ColonToken => SyntaxKind.ColonToken,
             TokenKind.EqualsToken => SyntaxKind.EqualsToken,
             TokenKind.NotEqualsToken => SyntaxKind.NotEqualsToken,
             TokenKind.LessToken => SyntaxKind.LessToken,
@@ -402,6 +403,7 @@ public sealed partial class Parser
             TokenKind.InterpolatedStringExpressionStartToken => SyntaxKind.InterpolatedStringExpressionStartToken,
             TokenKind.InterpolatedStringExpressionEndToken => SyntaxKind.InterpolatedStringExpressionEndToken,
             TokenKind.InterpolatedStringEndToken => SyntaxKind.InterpolatedStringEndToken,
+            TokenKind.InterpolatedStringFormatSpecifierToken => SyntaxKind.InterpolatedStringFormatSpecifierToken,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported token kind.")
         };
     }

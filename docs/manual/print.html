@@ -149,6 +149,54 @@ PRINT $"Длина слова: {LEN("Привет")}"</code></pre>
         </section>
 
         <section class="article-section">
+            <h2>Спецификаторы формата в интерполяции</h2>
+            <p>Внутри <code>{}</code> интерполированной строки после выражения можно указать спецификатор формата и выравнивание. Спецификатор задаёт способ представления значения, а выравнивание — минимальную ширину поля.</p>
+            <pre><code class="language-basic">{выражение}
+{выражение,выравнивание}
+{выражение:формат}
+{выражение,выравнивание:формат}</code></pre>
+            <p>Выравнивание — целое число после запятой. Положительное значение выравнивает вправо (дополняет пробелами слева), отрицательное — влево (дополняет пробелами справа).</p>
+            <pre><code class="language-basic">DIM name AS STRING = "Алиса"
+PRINT $"|{name,20}|"    ' правое выравнивание, 20 символов
+PRINT $"|{name,-20}|"   ' левое выравнивание, 20 символов</code></pre>
+            <p>Результат:</p>
+            <pre><code>|               Алиса|
+|Алиса               |</code></pre>
+            <p>Спецификатор формата — строка после двоеточия. Поддерживаемые спецификаторы:</p>
+            <table>
+                <thead>
+                    <tr><th>Спецификатор</th><th>Описание</th><th>Пример</th><th>Результат</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>F</code> / <code>F{n}</code></td><td>Фиксированная точка</td><td><code>{3.14159:F2}</code></td><td><code>3.14</code></td></tr>
+                    <tr><td><code>N</code> / <code>N{n}</code></td><td>С разделителем тысяч</td><td><code>{1234567:N0}</code></td><td><code>1,234,567</code></td></tr>
+                    <tr><td><code>E</code> / <code>E{n}</code></td><td>Научная запись (n знаков после запятой в мантиссе)</td><td><code>{0.00123:E3}</code></td><td><code>1.230E-003</code></td></tr>
+                    <tr><td><code>P</code> / <code>P{n}</code></td><td>Процент (×100 + %)</td><td><code>{0.856:P1}</code></td><td><code>85.6 %</code></td></tr>
+                    <tr><td><code>X</code> / <code>X{n}</code></td><td>Шестнадцатеричное</td><td><code>{255:X}</code></td><td><code>FF</code></td></tr>
+                    <tr><td><code>D</code> / <code>D{n}</code></td><td>Целое с ведущими нулями</td><td><code>{42:D5}</code></td><td><code>00042</code></td></tr>
+                    <tr><td><code>G</code> / <code>G{n}</code></td><td>Общий формат</td><td><code>{3.14:G}</code></td><td><code>3.14</code></td></tr>
+                </tbody>
+            </table>
+            <p>Число после буквы (<code>n</code>) задаёт точность: количество знаков после запятой для <code>F</code>, <code>E</code>, <code>P</code> или минимальное количество цифр для <code>D</code>.</p>
+            <p>Спецификаторы <code>D</code> допустимы только для целых типов (<code>INTEGER</code>, <code>LONG</code>). Спецификаторы <code>F</code>, <code>N</code>, <code>E</code>, <code>P</code>, <code>G</code> допустимы для числовых типов. Спецификатор <code>X</code> допустим для <code>INTEGER</code> и <code>LONG</code>. Для строк и булевых значений спецификатор формата игнорируется.</p>
+            <pre><code class="language-basic">DIM price AS DOUBLE = 1234.5
+DIM code AS INTEGER = 42
+DIM ratio AS DOUBLE = 0.856
+
+PRINT $"Цена: {price:F2}"              ' Фиксированная точка
+PRINT $"Код: {code:D5}"                ' Ведущие нули
+PRINT $"Доля: {ratio:P1}"              ' Процент
+PRINT $"Hex: {code:X}"                 ' Шестнадцатеричное
+PRINT $"Цена: |{price,12:F2}|"         ' Выравнивание + формат</code></pre>
+            <p>Результат:</p>
+            <pre><code>Цена: 1234.50
+Код: 00042
+Доля: 85.6 %
+Hex: FF
+Цена: |     1234.50|</code></pre>
+        </section>
+
+        <section class="article-section">
             <h2>Ручная проверка</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>PRINT</code>.</p>
             <ul class="resource-list">
@@ -159,6 +207,7 @@ PRINT $"Длина слова: {LEN("Привет")}"</code></pre>
                 <li><a href="../../samples/operators/print/mixed_list.axm">PRINT: смешанный список вывода</a></li>
                 <li><a href="../../samples/operators/print/using_basic.axm">PRINT USING: базовые маски</a></li>
                 <li><a href="../../samples/expressions/interpolation_basic.axm">Интерполяция строк: базовый пример</a></li>
+                <li><a href="../../samples/expressions/interpolation_format.axm">Интерполяция строк: спецификаторы формата</a></li>
             </ul>
         </section>
 
