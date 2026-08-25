@@ -492,7 +492,7 @@ public sealed class BytecodeCompilerTests
             instructions:
             [
                 LoweredInstruction.LoadLiteral(Location(2), 1, TypeSymbol.Integer),
-                LoweredInstruction.Convert(Location(2), TypeSymbol.String),
+                LoweredInstruction.Convert(Location(2), TypeSymbol.Boolean),
                 LoweredInstruction.Return(Location(3))
             ],
             isEntryPoint: true);

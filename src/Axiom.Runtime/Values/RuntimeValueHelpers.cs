@@ -73,6 +73,21 @@ public static class RuntimeValueHelpers
             return left.AsBoolean() == right.AsBoolean();
         }
 
+        if (left.Type == TypeSymbol.Date)
+        {
+            return right.Type == TypeSymbol.Date && left.AsDate() == right.AsDate();
+        }
+
+        if (left.Type == TypeSymbol.Time)
+        {
+            return right.Type == TypeSymbol.Time && left.AsTime() == right.AsTime();
+        }
+
+        if (left.Type == TypeSymbol.DateTime)
+        {
+            return right.Type == TypeSymbol.DateTime && left.AsDateTime() == right.AsDateTime();
+        }
+
         if (left.Type is UserDefinedTypeSymbol)
         {
             return RecordsEqual(left.AsRecord(), right.AsRecord());
@@ -139,6 +154,21 @@ public static class RuntimeValueHelpers
         if (left.Type == TypeSymbol.String)
         {
             return string.Compare(left.AsString(), right.AsString(), StringComparison.Ordinal);
+        }
+
+        if (left.Type == TypeSymbol.Date)
+        {
+            return left.AsDate().CompareTo(right.AsDate());
+        }
+
+        if (left.Type == TypeSymbol.Time)
+        {
+            return left.AsTime().CompareTo(right.AsTime());
+        }
+
+        if (left.Type == TypeSymbol.DateTime)
+        {
+            return left.AsDateTime().CompareTo(right.AsDateTime());
         }
 
         throw new InvalidOperationException(

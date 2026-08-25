@@ -140,6 +140,120 @@ internal static class BuiltinDateTimeHelpers
         };
     }
 
+    internal static bool TryConvertTemporalValue(RuntimeValue value, TypeSymbol targetType, out RuntimeValue converted)
+    {
+        converted = null!;
+
+        if (targetType == TypeSymbol.String)
+        {
+            if (value.Type == TypeSymbol.Date)
+            {
+                converted = RuntimeValue.FromString(FormatCanonicalDate(value.AsDate()));
+                return true;
+            }
+
+            if (value.Type == TypeSymbol.Time)
+            {
+                converted = RuntimeValue.FromString(FormatCanonicalTime(value.AsTime()));
+                return true;
+            }
+
+            if (value.Type == TypeSymbol.DateTime)
+            {
+                converted = RuntimeValue.FromString(FormatCanonicalDateTime(value.AsDateTime()));
+                return true;
+            }
+
+            return false;
+        }
+
+        if (targetType == TypeSymbol.Date)
+        {
+            if (value.Type == TypeSymbol.DateTime)
+            {
+                converted = RuntimeValue.FromDate(DateOnly.FromDateTime(value.AsDateTime()));
+                return true;
+            }
+
+            if (value.Type == TypeSymbol.String)
+            {
+                if (TryParseCanonicalDateOnly(value.AsString(), out var date))
+                {
+                    converted = RuntimeValue.FromDate(date);
+                    return true;
+                }
+
+                if (TryParseCanonicalDateTime(value.AsString(), out var dateTime))
+                {
+                    converted = RuntimeValue.FromDate(DateOnly.FromDateTime(dateTime));
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        if (targetType == TypeSymbol.Time)
+        {
+            if (value.Type == TypeSymbol.DateTime)
+            {
+                converted = RuntimeValue.FromTime(TimeOnly.FromDateTime(value.AsDateTime()));
+                return true;
+            }
+
+            if (value.Type == TypeSymbol.String)
+            {
+                if (TryParseCanonicalTimeOnly(value.AsString(), out var time))
+                {
+                    converted = RuntimeValue.FromTime(time);
+                    return true;
+                }
+
+                if (TryParseCanonicalDateTime(value.AsString(), out var dateTime))
+                {
+                    converted = RuntimeValue.FromTime(TimeOnly.FromDateTime(dateTime));
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        if (targetType == TypeSymbol.DateTime)
+        {
+            if (value.Type == TypeSymbol.Date)
+            {
+                converted = RuntimeValue.FromDateTime(value.AsDate().ToDateTime(TimeOnly.MinValue));
+                return true;
+            }
+
+            if (value.Type == TypeSymbol.Time)
+            {
+                converted = RuntimeValue.FromDateTime(DateOnly.MinValue.ToDateTime(value.AsTime()));
+                return true;
+            }
+
+            if (value.Type == TypeSymbol.String)
+            {
+                if (TryParseCanonicalDateTime(value.AsString(), out var dateTime))
+                {
+                    converted = RuntimeValue.FromDateTime(dateTime);
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
     internal static bool TryParseCanonicalDateOnly(string value, out DateOnly date)
     {
         return DateOnly.TryParseExact(value, CanonicalDateFormat, DateTimeCulture, DateTimeStyles.None, out date);

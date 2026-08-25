@@ -2519,6 +2519,10 @@ public sealed class BytecodeModuleValidator
             BytecodeScalarTypeCode.Long => TypeSymbol.Long,
             BytecodeScalarTypeCode.Double => TypeSymbol.Double,
             BytecodeScalarTypeCode.Decimal => TypeSymbol.Decimal,
+            BytecodeScalarTypeCode.String => TypeSymbol.String,
+            BytecodeScalarTypeCode.Date => TypeSymbol.Date,
+            BytecodeScalarTypeCode.Time => TypeSymbol.Time,
+            BytecodeScalarTypeCode.DateTime => TypeSymbol.DateTime,
             _ => null
         };
     }
@@ -3289,7 +3293,8 @@ public sealed class BytecodeModuleValidator
 
     private static bool IsComparisonOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
     {
-        if (leftType == TypeSymbol.Integer || leftType == TypeSymbol.Long || leftType == TypeSymbol.String)
+        if (leftType == TypeSymbol.Integer || leftType == TypeSymbol.Long || leftType == TypeSymbol.String
+            || leftType == TypeSymbol.Date || leftType == TypeSymbol.Time || leftType == TypeSymbol.DateTime)
         {
             return rightType == leftType;
         }
@@ -3336,6 +3341,30 @@ public sealed class BytecodeModuleValidator
                 || sourceType == TypeSymbol.Long
                 || sourceType == TypeSymbol.Double
                 || sourceType == TypeSymbol.Decimal;
+        }
+
+        if (targetType == TypeSymbol.String)
+        {
+            return sourceType == TypeSymbol.Date
+                || sourceType == TypeSymbol.Time
+                || sourceType == TypeSymbol.DateTime;
+        }
+
+        if (targetType == TypeSymbol.Date)
+        {
+            return sourceType == TypeSymbol.DateTime || sourceType == TypeSymbol.String;
+        }
+
+        if (targetType == TypeSymbol.Time)
+        {
+            return sourceType == TypeSymbol.DateTime || sourceType == TypeSymbol.String;
+        }
+
+        if (targetType == TypeSymbol.DateTime)
+        {
+            return sourceType == TypeSymbol.Date
+                || sourceType == TypeSymbol.Time
+                || sourceType == TypeSymbol.String;
         }
 
         return targetType == TypeSymbol.Decimal

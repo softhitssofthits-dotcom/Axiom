@@ -10,7 +10,17 @@ public sealed partial class Binder
             || (fromType == TypeSymbol.Integer && toType == TypeSymbol.Double)
             || (fromType == TypeSymbol.Long && toType == TypeSymbol.Decimal)
             || (fromType == TypeSymbol.Long && toType == TypeSymbol.Double)
-            || (fromType == TypeSymbol.Decimal && toType == TypeSymbol.Double);
+            || (fromType == TypeSymbol.Decimal && toType == TypeSymbol.Double)
+            || (fromType == TypeSymbol.Date && toType == TypeSymbol.String)
+            || (fromType == TypeSymbol.Time && toType == TypeSymbol.String)
+            || (fromType == TypeSymbol.DateTime && toType == TypeSymbol.String)
+            || (fromType == TypeSymbol.String && toType == TypeSymbol.Date)
+            || (fromType == TypeSymbol.String && toType == TypeSymbol.Time)
+            || (fromType == TypeSymbol.String && toType == TypeSymbol.DateTime)
+            || (fromType == TypeSymbol.Date && toType == TypeSymbol.DateTime)
+            || (fromType == TypeSymbol.DateTime && toType == TypeSymbol.Date)
+            || (fromType == TypeSymbol.Time && toType == TypeSymbol.DateTime)
+            || (fromType == TypeSymbol.DateTime && toType == TypeSymbol.Time);
     }
 
     private static bool IsNumeric(TypeSymbol type)
@@ -30,12 +40,16 @@ public sealed partial class Binder
             || type == TypeSymbol.Long
             || type == TypeSymbol.Double
             || type == TypeSymbol.Decimal
-            || type == TypeSymbol.Boolean;
+            || type == TypeSymbol.Boolean
+            || type == TypeSymbol.Date
+            || type == TypeSymbol.Time
+            || type == TypeSymbol.DateTime;
     }
 
     private static bool SupportsOrderedComparison(TypeSymbol type)
     {
-        return IsNumeric(type) || type == TypeSymbol.String;
+        return IsNumeric(type) || type == TypeSymbol.String
+            || type == TypeSymbol.Date || type == TypeSymbol.Time || type == TypeSymbol.DateTime;
     }
 
     private static bool SupportsStructuralEquality(TypeSymbol type)
@@ -47,10 +61,49 @@ public sealed partial class Binder
                 || scalar == TypeSymbol.Double
                 || scalar == TypeSymbol.Decimal
                 || scalar == TypeSymbol.String
-                || scalar == TypeSymbol.Boolean => true,
+                || scalar == TypeSymbol.Boolean
+                || scalar == TypeSymbol.Date
+                || scalar == TypeSymbol.Time
+                || scalar == TypeSymbol.DateTime => true,
             UserDefinedTypeSymbol userDefinedType => userDefinedType.Fields.All(static field => SupportsStructuralEquality(field.Type)),
             _ => false
         };
+    }
+
+    private static bool IsTemporalType(TypeSymbol type)
+    {
+        return type == TypeSymbol.Date || type == TypeSymbol.Time || type == TypeSymbol.DateTime;
+    }
+
+    private static bool IsTemporalComparisonOperand(TypeSymbol left, TypeSymbol right)
+    {
+        return (IsTemporalType(left) && (IsTemporalType(right) || right == TypeSymbol.String))
+            || (IsTemporalType(right) && (IsTemporalType(left) || left == TypeSymbol.String));
+    }
+
+    private static TypeSymbol ResolveTemporalComparisonType(TypeSymbol left, TypeSymbol right)
+    {
+        if (left == right)
+        {
+            return left;
+        }
+
+        if (left == TypeSymbol.DateTime || right == TypeSymbol.DateTime)
+        {
+            return TypeSymbol.DateTime;
+        }
+
+        if (left == TypeSymbol.String)
+        {
+            return right;
+        }
+
+        if (right == TypeSymbol.String)
+        {
+            return left;
+        }
+
+        return TypeSymbol.Error;
     }
 
     private static TypeSymbol PromoteNumericType(TypeSymbol leftType, TypeSymbol rightType, bool forceDouble = false)

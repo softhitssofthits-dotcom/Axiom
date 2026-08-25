@@ -5876,6 +5876,21 @@ public sealed partial class BytecodeVm
             }
         }
 
+        var targetTypeSymbol = targetType switch
+        {
+            BytecodeScalarTypeCode.String => TypeSymbol.String,
+            BytecodeScalarTypeCode.Date => TypeSymbol.Date,
+            BytecodeScalarTypeCode.Time => TypeSymbol.Time,
+            BytecodeScalarTypeCode.DateTime => TypeSymbol.DateTime,
+            _ => TypeSymbol.Error
+        };
+
+        if (targetTypeSymbol != TypeSymbol.Error
+            && BuiltinDateTimeHelpers.TryConvertTemporalValue(value, targetTypeSymbol, out var temporalValue))
+        {
+            return temporalValue;
+        }
+
         return ReportInvalidRuntimeState<RuntimeValue>(
             $"Неподдерживаемое преобразование VM: {value.Type.Name} -> {targetType}.",
             location);

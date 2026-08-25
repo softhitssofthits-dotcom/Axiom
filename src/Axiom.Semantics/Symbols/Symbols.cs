@@ -49,6 +49,12 @@ public class TypeSymbol : Symbol
 
     public static TypeSymbol File { get; } = new("FILE");
 
+    public static TypeSymbol Date { get; } = new("DATE");
+
+    public static TypeSymbol Time { get; } = new("TIME");
+
+    public static TypeSymbol DateTime { get; } = new("DATETIME");
+
     public static RuntimeErrorTypeSymbol RuntimeError { get; } = new();
 
     public static TypeSymbol Void { get; } = new("VOID");
@@ -67,7 +73,7 @@ public class TypeSymbol : Symbol
 
         return typeSyntax switch
         {
-            NamedTypeSyntax namedType => FromSyntaxKind(namedType.TypeToken.Kind),
+            NamedTypeSyntax namedType => FromNamedTypeToken(namedType.TypeToken),
             FixedLengthStringTypeSyntax => String,
             FunctionTypeSyntax functionType => FunctionTypeSymbol.Create(
                 functionType.ParameterTypes.Select(FromTypeSyntax).ToArray(),
@@ -76,6 +82,28 @@ public class TypeSymbol : Symbol
             ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(FromTypeSyntax(arrayType.ElementType), arrayType.Rank),
             _ => Error
         };
+    }
+
+    private static TypeSymbol FromNamedTypeToken(SyntaxToken token)
+    {
+        var fromKind = FromSyntaxKind(token.Kind);
+        if (fromKind != Error)
+        {
+            return fromKind;
+        }
+
+        if (token.Kind == SyntaxKind.IdentifierToken)
+        {
+            return token.Text.ToUpperInvariant() switch
+            {
+                "DATE" => Date,
+                "TIME" => Time,
+                "DATETIME" => DateTime,
+                _ => Error
+            };
+        }
+
+        return Error;
     }
 
     public static TypeSymbol FromSyntaxKind(SyntaxKind kind)
@@ -93,6 +121,9 @@ public class TypeSymbol : Symbol
             SyntaxKind.TilemapKeyword => Tilemap,
             SyntaxKind.TilesetKeyword => Tileset,
             SyntaxKind.FileKeyword => File,
+            SyntaxKind.DateKeyword => Date,
+            SyntaxKind.TimeKeyword => Time,
+            SyntaxKind.DateTimeKeyword => DateTime,
             _ => Error
         };
     }

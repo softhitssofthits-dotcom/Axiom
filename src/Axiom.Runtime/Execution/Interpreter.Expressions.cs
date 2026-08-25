@@ -1,4 +1,5 @@
 using Axiom.Core;
+using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
 using Axiom.Syntax;
 
@@ -468,6 +469,11 @@ public sealed partial class Interpreter
         if (expression.Type == TypeSymbol.Decimal && value.Type == TypeSymbol.Long)
         {
             return RuntimeValue.FromDecimal(value.AsLong());
+        }
+
+        if (BuiltinDateTimeHelpers.TryConvertTemporalValue(value, expression.Type, out var temporalValue))
+        {
+            return temporalValue;
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>(

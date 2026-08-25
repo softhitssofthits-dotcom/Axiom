@@ -1,2 +1,2 @@
-' Пример показывает, что TIME("UTC") согласован с прямым вызовом UTCTIME().
-PRINT TIME("UTC") = UTCTIME()
+' Пример показывает, что TIME("UTC") согласован с прямым вызовом UTCTIME() с точностью до секунды.
+PRINT HOUR(TIME("UTC")) = HOUR(UTCTIME()) AND MINUTE(TIME("UTC")) = MINUTE(UTCTIME()) AND SECOND(TIME("UTC")) = SECOND(UTCTIME())

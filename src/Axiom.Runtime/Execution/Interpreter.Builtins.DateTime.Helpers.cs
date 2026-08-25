@@ -5,6 +5,94 @@ namespace Axiom.Runtime;
 
 public sealed partial class Interpreter
 {
+    private DateOnly ExtractDateValue(BoundCallExpression expression, string functionName, RuntimeValue value, int argumentIndex)
+    {
+        if (value.Type == TypeSymbol.Date)
+        {
+            return value.AsDate();
+        }
+
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return DateOnly.FromDateTime(value.AsDateTime());
+        }
+
+        if (value.Type == TypeSymbol.String)
+        {
+            return BuiltinDateTimeHelpers.ParseCanonicalDateArgument(
+                value.AsString(),
+                functionName,
+                GetBuiltInArgumentLocation(expression, argumentIndex),
+                ReportBuiltInArgumentError);
+        }
+
+        ReportBuiltInArgumentError(
+            functionName,
+            "value",
+            "must be a DATE, DATETIME or canonical date string.",
+            GetBuiltInArgumentLocation(expression, argumentIndex));
+        throw new RuntimeFailureException();
+    }
+
+    private TimeOnly ExtractTimeValue(BoundCallExpression expression, string functionName, RuntimeValue value, int argumentIndex)
+    {
+        if (value.Type == TypeSymbol.Time)
+        {
+            return value.AsTime();
+        }
+
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return TimeOnly.FromDateTime(value.AsDateTime());
+        }
+
+        if (value.Type == TypeSymbol.String)
+        {
+            return BuiltinDateTimeHelpers.ParseCanonicalTimeArgument(
+                value.AsString(),
+                functionName,
+                GetBuiltInArgumentLocation(expression, argumentIndex),
+                ReportBuiltInArgumentError);
+        }
+
+        ReportBuiltInArgumentError(
+            functionName,
+            "value",
+            "must be a TIME, DATETIME or canonical time string.",
+            GetBuiltInArgumentLocation(expression, argumentIndex));
+        throw new RuntimeFailureException();
+    }
+
+    private DateTime ExtractDateTimeValue(BoundCallExpression expression, string functionName, RuntimeValue value, int argumentIndex)
+    {
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return value.AsDateTime();
+        }
+
+        if (value.Type == TypeSymbol.Date)
+        {
+            return value.AsDate().ToDateTime(TimeOnly.MinValue);
+        }
+
+        if (value.Type == TypeSymbol.String)
+        {
+            return BuiltinDateTimeHelpers.ParseCanonicalDateTimeArgument(
+                value.AsString(),
+                functionName,
+                "value",
+                GetBuiltInArgumentLocation(expression, argumentIndex),
+                ReportBuiltInArgumentError);
+        }
+
+        ReportBuiltInArgumentError(
+            functionName,
+            "value",
+            "must be a DATETIME, DATE or canonical date-time string.",
+            GetBuiltInArgumentLocation(expression, argumentIndex));
+        throw new RuntimeFailureException();
+    }
+
     private DateOnly ParseCanonicalDateArgument(BoundCallExpression expression, string functionName, string value)
     {
         return BuiltinDateTimeHelpers.ParseCanonicalDateArgument(

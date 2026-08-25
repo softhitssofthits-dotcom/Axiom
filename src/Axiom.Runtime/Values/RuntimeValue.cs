@@ -70,6 +70,21 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return FromBoolean(false);
         }
 
+        if (type == TypeSymbol.Date)
+        {
+            return FromDate(default);
+        }
+
+        if (type == TypeSymbol.Time)
+        {
+            return FromTime(default);
+        }
+
+        if (type == TypeSymbol.DateTime)
+        {
+            return FromDateTime(default);
+        }
+
         if (type == TypeSymbol.Void)
         {
             return Void;
@@ -133,6 +148,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     public static RuntimeValue FromTilemap(RuntimeTilemapValue? value) => new(TypeSymbol.Tilemap, value);
 
     public static RuntimeValue FromTileset(RuntimeTilesetValue? value) => new(TypeSymbol.Tileset, value);
+
+    public static RuntimeValue FromDate(DateOnly value) => new(TypeSymbol.Date, value);
+
+    public static RuntimeValue FromTime(TimeOnly value) => new(TypeSymbol.Time, value);
+
+    public static RuntimeValue FromDateTime(System.DateTime value) => new(TypeSymbol.DateTime, value);
 
     public static RuntimeValue FromRuntimeError(RuntimeErrorValue value)
     {
@@ -361,6 +382,36 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (RuntimeTilemapValue?)Value;
     }
 
+    public DateOnly AsDate()
+    {
+        if (Type != TypeSymbol.Date)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not DATE.");
+        }
+
+        return (DateOnly)Value!;
+    }
+
+    public TimeOnly AsTime()
+    {
+        if (Type != TypeSymbol.Time)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not TIME.");
+        }
+
+        return (TimeOnly)Value!;
+    }
+
+    public System.DateTime AsDateTime()
+    {
+        if (Type != TypeSymbol.DateTime)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not DATETIME.");
+        }
+
+        return (System.DateTime)Value!;
+    }
+
     public RuntimeArrayValue AsArray()
     {
         if (Type is not ArrayTypeSymbol)
@@ -479,6 +530,21 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return AsBoolean() ? "TRUE" : "FALSE";
         }
 
+        if (Type == TypeSymbol.Date)
+        {
+            return AsDate().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalDateFormat, CultureInfo.InvariantCulture);
+        }
+
+        if (Type == TypeSymbol.Time)
+        {
+            return AsTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture);
+        }
+
+        if (Type == TypeSymbol.DateTime)
+        {
+            return AsDateTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture);
+        }
+
         if (Type == TypeSymbol.File)
         {
             var file = AsFile();
@@ -563,6 +629,21 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (Type == TypeSymbol.Boolean)
         {
             return AsBoolean() ? TrueStringValue : FalseStringValue;
+        }
+
+        if (Type == TypeSymbol.Date)
+        {
+            return FromString(AsDate().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalDateFormat, CultureInfo.InvariantCulture));
+        }
+
+        if (Type == TypeSymbol.Time)
+        {
+            return FromString(AsTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture));
+        }
+
+        if (Type == TypeSymbol.DateTime)
+        {
+            return FromString(AsDateTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
         }
 
         return FromString(ToDisplayString());

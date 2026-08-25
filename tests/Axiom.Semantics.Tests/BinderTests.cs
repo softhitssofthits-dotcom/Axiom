@@ -3475,9 +3475,9 @@ PRINT TIMER()
         var program = BindProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
-        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.String, BuiltinFunctionId.Date);
-        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.String, BuiltinFunctionId.Time);
-        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.String, BuiltinFunctionId.Now);
+        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.Date, BuiltinFunctionId.Date);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Time, BuiltinFunctionId.Time);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.DateTime, BuiltinFunctionId.Now);
         AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Double, BuiltinFunctionId.Timer);
     }
 
@@ -3510,8 +3510,8 @@ PRINT WEEKDAYNAME(1)
         var program = BindProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
-        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.String, BuiltinFunctionId.DateSerial);
-        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.String, BuiltinFunctionId.TimeSerial);
+        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.Date, BuiltinFunctionId.DateSerial);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Time, BuiltinFunctionId.TimeSerial);
         AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.Year);
         AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Integer, BuiltinFunctionId.Month);
         AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.String, BuiltinFunctionId.MonthName);
@@ -3541,8 +3541,8 @@ PRINT ISDATE("2026-04-20")
         AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.String, BuiltinFunctionId.DateAdd);
         AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Long, BuiltinFunctionId.DateDiff);
         AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.DatePart);
-        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.String, BuiltinFunctionId.DateValue);
-        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.String, BuiltinFunctionId.TimeValue);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Date, BuiltinFunctionId.DateValue);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Time, BuiltinFunctionId.TimeValue);
         AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.Boolean, BuiltinFunctionId.IsDate);
     }
 
@@ -3563,10 +3563,10 @@ PRINT ENDOFYEAR("2026-04-20 14:05:06")
         Assert.Empty(diagnostics);
         AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.Boolean, BuiltinFunctionId.IsLeapYear);
         AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Integer, BuiltinFunctionId.DaysInMonth);
-        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.String, BuiltinFunctionId.StartOfMonth);
-        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.String, BuiltinFunctionId.EndOfMonth);
-        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.String, BuiltinFunctionId.StartOfYear);
-        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.String, BuiltinFunctionId.EndOfYear);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Date, BuiltinFunctionId.StartOfMonth);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Date, BuiltinFunctionId.EndOfMonth);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Date, BuiltinFunctionId.StartOfYear);
+        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.Date, BuiltinFunctionId.EndOfYear);
     }
 
     [Fact]
@@ -3591,19 +3591,19 @@ PRINT FROMUTC("2026-04-20 11:05:06", "UTC")
         var program = BindProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
-        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.String, BuiltinFunctionId.DateInZone);
-        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.String, BuiltinFunctionId.TimeInZone);
-        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.String, BuiltinFunctionId.NowInZone);
-        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.String, BuiltinFunctionId.UtcDate);
-        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.String, BuiltinFunctionId.UtcTime);
-        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.String, BuiltinFunctionId.UtcNow);
+        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.Date, BuiltinFunctionId.DateInZone);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Time, BuiltinFunctionId.TimeInZone);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.DateTime, BuiltinFunctionId.NowInZone);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Date, BuiltinFunctionId.UtcDate);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Time, BuiltinFunctionId.UtcTime);
+        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.DateTime, BuiltinFunctionId.UtcNow);
         AssertBuiltinCall(program.GlobalStatements[6], TypeSymbol.Integer, BuiltinFunctionId.UtcOffset);
         AssertBuiltinCall(program.GlobalStatements[7], TypeSymbol.Integer, BuiltinFunctionId.UtcOffsetValue);
         AssertBuiltinCall(program.GlobalStatements[8], TypeSymbol.Integer, BuiltinFunctionId.UtcOffsetValueZone);
-        AssertBuiltinCall(program.GlobalStatements[9], TypeSymbol.String, BuiltinFunctionId.ToUtc);
-        AssertBuiltinCall(program.GlobalStatements[10], TypeSymbol.String, BuiltinFunctionId.ToUtcZone);
-        AssertBuiltinCall(program.GlobalStatements[11], TypeSymbol.String, BuiltinFunctionId.FromUtc);
-        AssertBuiltinCall(program.GlobalStatements[12], TypeSymbol.String, BuiltinFunctionId.FromUtcZone);
+        AssertBuiltinCall(program.GlobalStatements[9], TypeSymbol.DateTime, BuiltinFunctionId.ToUtc);
+        AssertBuiltinCall(program.GlobalStatements[10], TypeSymbol.DateTime, BuiltinFunctionId.ToUtcZone);
+        AssertBuiltinCall(program.GlobalStatements[11], TypeSymbol.DateTime, BuiltinFunctionId.FromUtc);
+        AssertBuiltinCall(program.GlobalStatements[12], TypeSymbol.DateTime, BuiltinFunctionId.FromUtcZone);
     }
 
     [Fact]
@@ -3612,7 +3612,7 @@ PRINT FROMUTC("2026-04-20 11:05:06", "UTC")
         BindProgram("PRINT YEAR(2026)", out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
-        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

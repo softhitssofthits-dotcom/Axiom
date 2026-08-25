@@ -42,14 +42,14 @@ PRINT TIMER()
         const string text = """
 PRINT DATESERIAL(2026, 4, 20)
 PRINT TIMESERIAL(14, 5, 6)
-PRINT YEAR("2026-04-20")
-PRINT MONTH("2026-04-20 14:05:06")
-PRINT DAY("2026-04-20")
-PRINT HOUR("14:05:06")
-PRINT MINUTE("2026-04-20 14:05:06")
-PRINT SECOND("14:05:06")
-PRINT WEEKDAY("2026-04-20")
-PRINT WEEKDAY("2026-04-26")
+PRINT YEAR(DATESERIAL(2026, 4, 20))
+PRINT MONTH(DATESERIAL(2026, 4, 20))
+PRINT DAY(DATESERIAL(2026, 4, 20))
+PRINT HOUR(TIMESERIAL(14, 5, 6))
+PRINT MINUTE(TIMESERIAL(14, 5, 6))
+PRINT SECOND(TIMESERIAL(14, 5, 6))
+PRINT WEEKDAY(DATESERIAL(2026, 4, 20))
+PRINT WEEKDAY(DATESERIAL(2026, 4, 26))
 """;
 
         var (_, host, result) = ExecuteProgram(text);
@@ -65,9 +65,9 @@ PRINT WEEKDAY("2026-04-26")
 
         var (_, _, result) = ExecuteProgram(text);
 
-        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
-        Assert.Contains("YEAR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -146,9 +146,9 @@ PRINT ISDATE("20.04.2026")
     {
         const string text = """
 PRINT MONTHNAME(4)
-PRINT MONTHNAME(MONTH("2026-12-20"))
+PRINT MONTHNAME(MONTH(DATESERIAL(2026, 12, 20)))
 PRINT WEEKDAYNAME(1)
-PRINT WEEKDAYNAME(WEEKDAY("2026-04-26"))
+PRINT WEEKDAYNAME(WEEKDAY(DATESERIAL(2026, 4, 26)))
 """;
 
         var (_, host, result) = ExecuteProgram(text);
@@ -219,10 +219,10 @@ PRINT WEEKDAYNAME(WEEKDAY("2026-04-26"))
 PRINT ISLEAPYEAR(2024)
 PRINT ISLEAPYEAR(2025)
 PRINT DAYSINMONTH(2024, 2)
-PRINT STARTOFMONTH("2026-04-20 14:05:06")
-PRINT ENDOFMONTH("2024-02-11")
-PRINT STARTOFYEAR("2026-04-20")
-PRINT ENDOFYEAR("2026-04-20 14:05:06")
+PRINT STARTOFMONTH(DATESERIAL(2026, 4, 20))
+PRINT ENDOFMONTH(DATESERIAL(2024, 2, 11))
+PRINT STARTOFYEAR(DATESERIAL(2026, 4, 20))
+PRINT ENDOFYEAR(DATESERIAL(2026, 4, 20))
 """;
 
         var (_, host, result) = ExecuteProgram(text);
@@ -272,9 +272,9 @@ PRINT ENDOFYEAR("2026-04-20 14:05:06")
 
         var (_, _, result) = ExecuteProgram(text);
 
-        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
-        Assert.Contains("STARTOFMONTH", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -285,8 +285,8 @@ PRINT UTCDATE()
 PRINT UTCTIME()
 PRINT UTCNOW()
 PRINT UTCOFFSET()
-PRINT TOUTC("2026-04-20 14:05:06")
-PRINT FROMUTC("2026-04-20 11:05:06")
+PRINT TOUTC(NOW())
+PRINT FROMUTC(UTCNOW())
 """;
 
         var localNow = new DateTimeOffset(2026, 04, 20, 14, 05, 06, TimeSpan.FromHours(3));
@@ -392,9 +392,9 @@ PRINT FROMUTC("2026-04-20 22:15:00")
 
         var (_, _, result) = ExecuteProgram(text);
 
-        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
-        Assert.Contains("TOUTC", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATETIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

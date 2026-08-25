@@ -156,6 +156,9 @@
             <Word>BOOLEAN</Word>
             <Word>DECIMAL</Word>
             <Word>DOUBLE</Word>
+            <Word>DATE</Word>
+            <Word>DATETIME</Word>
+            <Word>TIME</Word>
             <Word>FILE</Word>
             <Word>IMAGE</Word>
             <Word>INTEGER</Word>

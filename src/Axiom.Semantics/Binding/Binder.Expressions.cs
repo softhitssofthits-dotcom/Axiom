@@ -366,6 +366,26 @@ public sealed partial class Binder
             return new BoundBinaryExpression(syntax.OperatorToken.Location, left, syntax.OperatorToken.Kind, right, TypeSymbol.Boolean);
         }
 
+        if (IsTemporalComparisonOperand(left.Type, right.Type))
+        {
+            var comparisonType = ResolveTemporalComparisonType(left.Type, right.Type);
+
+            if (comparisonType == TypeSymbol.Error)
+            {
+                return ReportInvalidBinaryOperator(syntax.OperatorToken.Kind, left.Type, right.Type, syntax.OperatorToken.Location);
+            }
+
+            var leftOperand = BindExpression(syntax.Left, comparisonType);
+            var rightOperand = BindExpression(syntax.Right, comparisonType);
+
+            if (leftOperand.Type == TypeSymbol.Error || rightOperand.Type == TypeSymbol.Error)
+            {
+                return new BoundErrorExpression(syntax.OperatorToken.Location);
+            }
+
+            return new BoundBinaryExpression(syntax.OperatorToken.Location, leftOperand, syntax.OperatorToken.Kind, rightOperand, TypeSymbol.Boolean);
+        }
+
         return ReportInvalidBinaryOperator(syntax.OperatorToken.Kind, left.Type, right.Type, syntax.OperatorToken.Location);
     }
 

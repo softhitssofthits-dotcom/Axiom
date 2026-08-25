@@ -5,5 +5,9 @@ public enum BytecodeScalarTypeCode
     Integer,
     Long,
     Double,
-    Decimal
+    Decimal,
+    String,
+    Date,
+    Time,
+    DateTime
 }

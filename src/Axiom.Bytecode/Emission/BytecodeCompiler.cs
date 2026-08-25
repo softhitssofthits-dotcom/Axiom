@@ -1150,6 +1150,30 @@ public sealed class BytecodeCompiler
             return true;
         }
 
+        if (type == TypeSymbol.String)
+        {
+            typeCode = BytecodeScalarTypeCode.String;
+            return true;
+        }
+
+        if (type == TypeSymbol.Date)
+        {
+            typeCode = BytecodeScalarTypeCode.Date;
+            return true;
+        }
+
+        if (type == TypeSymbol.Time)
+        {
+            typeCode = BytecodeScalarTypeCode.Time;
+            return true;
+        }
+
+        if (type == TypeSymbol.DateTime)
+        {
+            typeCode = BytecodeScalarTypeCode.DateTime;
+            return true;
+        }
+
         typeCode = default;
         return false;
     }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Axiom.Core;
 using Axiom.Runtime.Builtins;
+using Axiom.Semantics;
 
 namespace Axiom.Runtime;
 
@@ -8,53 +9,53 @@ public sealed partial class BytecodeVm
 {
     private RuntimeValue EvaluateDateBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToString(BuiltinDateTimeHelpers.CanonicalDateFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromDate(DateOnly.FromDateTime(_host.GetLocalNow().DateTime));
     }
 
     private RuntimeValue EvaluateDateBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("DATE", "timeZone", timeZoneId, location);
         var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(DateOnly.FromDateTime(currentDateTime)));
+        return RuntimeValue.FromDate(DateOnly.FromDateTime(currentDateTime));
     }
 
     private RuntimeValue EvaluateTimeBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToString(BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromTime(TimeOnly.FromDateTime(_host.GetLocalNow().DateTime));
     }
 
     private RuntimeValue EvaluateTimeBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("TIME", "timeZone", timeZoneId, location);
         var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTime(TimeOnly.FromDateTime(currentDateTime)));
+        return RuntimeValue.FromTime(TimeOnly.FromDateTime(currentDateTime));
     }
 
     private RuntimeValue EvaluateNowBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromDateTime(_host.GetLocalNow().DateTime);
     }
 
     private RuntimeValue EvaluateNowBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("NOW", "timeZone", timeZoneId, location);
         var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(currentDateTime));
+        return RuntimeValue.FromDateTime(currentDateTime);
     }
 
     private RuntimeValue EvaluateUtcDateBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(BuiltinDateTimeHelpers.CanonicalDateFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromDate(DateOnly.FromDateTime(_host.GetLocalNow().ToUniversalTime().DateTime));
     }
 
     private RuntimeValue EvaluateUtcTimeBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromTime(TimeOnly.FromDateTime(_host.GetLocalNow().ToUniversalTime().DateTime));
     }
 
     private RuntimeValue EvaluateUtcNowBuiltin()
     {
-        return RuntimeValue.FromString(_host.GetLocalNow().ToUniversalTime().ToString(BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+        return RuntimeValue.FromDateTime(_host.GetLocalNow().ToUniversalTime().DateTime);
     }
 
     private RuntimeValue EvaluateTimerBuiltin()
@@ -70,7 +71,7 @@ public sealed partial class BytecodeVm
 
         try
         {
-            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(year, month, day)));
+            return RuntimeValue.FromDate(new DateOnly(year, month, day));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -89,17 +90,17 @@ public sealed partial class BytecodeVm
         EnsureTimeSerialMinute(minute, location);
         EnsureTimeSerialSecond(second, location);
 
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTime(new TimeOnly(hour, minute, second)));
+        return RuntimeValue.FromTime(new TimeOnly(hour, minute, second));
     }
 
-    private RuntimeValue EvaluateYearBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateYearBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(ParseCanonicalDateArgument("YEAR", value, location).Year);
+        return RuntimeValue.FromInteger(ExtractDateValue("YEAR", value, location).Year);
     }
 
-    private RuntimeValue EvaluateMonthBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateMonthBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(ParseCanonicalDateArgument("MONTH", value, location).Month);
+        return RuntimeValue.FromInteger(ExtractDateValue("MONTH", value, location).Month);
     }
 
     private RuntimeValue EvaluateMonthNameBuiltin(int month, TextLocation location)
@@ -108,29 +109,29 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromString(BuiltinDateTimeHelpers.CanonicalMonthNames[month - 1]);
     }
 
-    private RuntimeValue EvaluateDayBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateDayBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(ParseCanonicalDateArgument("DAY", value, location).Day);
+        return RuntimeValue.FromInteger(ExtractDateValue("DAY", value, location).Day);
     }
 
-    private RuntimeValue EvaluateHourBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateHourBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(ParseCanonicalTimeArgument("HOUR", value, location).Hour);
+        return RuntimeValue.FromInteger(ExtractTimeValue("HOUR", value, location).Hour);
     }
 
-    private RuntimeValue EvaluateMinuteBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateMinuteBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(ParseCanonicalTimeArgument("MINUTE", value, location).Minute);
+        return RuntimeValue.FromInteger(ExtractTimeValue("MINUTE", value, location).Minute);
     }
 
-    private RuntimeValue EvaluateSecondBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateSecondBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(ParseCanonicalTimeArgument("SECOND", value, location).Second);
+        return RuntimeValue.FromInteger(ExtractTimeValue("SECOND", value, location).Second);
     }
 
-    private RuntimeValue EvaluateWeekdayBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateWeekdayBuiltin(RuntimeValue value, TextLocation location)
     {
-        return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.GetMondayFirstWeekdayNumber(ParseCanonicalDateArgument("WEEKDAY", value, location)));
+        return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.GetMondayFirstWeekdayNumber(ExtractDateValue("WEEKDAY", value, location)));
     }
 
     private RuntimeValue EvaluateWeekdayNameBuiltin(int weekday, TextLocation location)
@@ -217,12 +218,12 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateDateValueBuiltin(string value, TextLocation location)
     {
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(ParseCanonicalDateBasedArgument("DATEVALUE", "value", value, location).Date));
+        return RuntimeValue.FromDate(ParseCanonicalDateBasedArgument("DATEVALUE", "value", value, location).Date);
     }
 
     private RuntimeValue EvaluateTimeValueBuiltin(string value, TextLocation location)
     {
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTime(ParseCanonicalTimeBasedArgument("TIMEVALUE", "value", value, location).Time));
+        return RuntimeValue.FromTime(ParseCanonicalTimeBasedArgument("TIMEVALUE", "value", value, location).Time);
     }
 
     private RuntimeValue EvaluateIsDateBuiltin(string value)
@@ -235,30 +236,30 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromInteger(checked((int)ResolveCurrentLocalUtcOffset().TotalMinutes));
     }
 
-    private RuntimeValue EvaluateUtcOffsetBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateUtcOffsetBuiltin(RuntimeValue value, TextLocation location)
     {
-        var dateTime = ParseCanonicalDateTimeArgument("UTCOFFSET", "value", value, location);
+        var dateTime = ExtractDateTimeValue("UTCOFFSET", value, location);
         var offset = ResolveLocalUtcOffsetForLocalDateTime("UTCOFFSET", "value", dateTime, location);
         return RuntimeValue.FromInteger(checked((int)offset.TotalMinutes));
     }
 
-    private RuntimeValue EvaluateUtcOffsetBuiltin(string value, string timeZoneId, TextLocation location)
+    private RuntimeValue EvaluateUtcOffsetBuiltin(RuntimeValue value, string timeZoneId, TextLocation location)
     {
-        var dateTime = ParseCanonicalDateTimeArgument("UTCOFFSET", "value", value, location);
+        var dateTime = ExtractDateTimeValue("UTCOFFSET", value, location);
         var timeZone = ResolveTimeZoneArgument("UTCOFFSET", "timeZone", timeZoneId, location);
         var offset = ResolveUtcOffsetForLocalDateTime("UTCOFFSET", "value", timeZone, dateTime, location);
         return RuntimeValue.FromInteger(checked((int)offset.TotalMinutes));
     }
 
-    private RuntimeValue EvaluateToUtcBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateToUtcBuiltin(RuntimeValue value, TextLocation location)
     {
-        var dateTime = ParseCanonicalDateTimeArgument("TOUTC", "value", value, location);
+        var dateTime = ExtractDateTimeValue("TOUTC", value, location);
 
         try
         {
             var offset = ResolveLocalUtcOffsetForLocalDateTime("TOUTC", "value", dateTime, location);
             var utcDateTime = new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), offset).UtcDateTime;
-            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(utcDateTime));
+            return RuntimeValue.FromDateTime(utcDateTime);
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -271,16 +272,16 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private RuntimeValue EvaluateToUtcBuiltin(string value, string timeZoneId, TextLocation location)
+    private RuntimeValue EvaluateToUtcBuiltin(RuntimeValue value, string timeZoneId, TextLocation location)
     {
-        var dateTime = ParseCanonicalDateTimeArgument("TOUTC", "value", value, location);
+        var dateTime = ExtractDateTimeValue("TOUTC", value, location);
         var timeZone = ResolveTimeZoneArgument("TOUTC", "timeZone", timeZoneId, location);
 
         try
         {
             var offset = ResolveUtcOffsetForLocalDateTime("TOUTC", "value", timeZone, dateTime, location);
             var utcDateTime = new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), offset).UtcDateTime;
-            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(utcDateTime));
+            return RuntimeValue.FromDateTime(utcDateTime);
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -293,14 +294,14 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private RuntimeValue EvaluateFromUtcBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateFromUtcBuiltin(RuntimeValue value, TextLocation location)
     {
-        var dateTime = ParseCanonicalDateTimeArgument("FROMUTC", "value", value, location);
+        var dateTime = ExtractDateTimeValue("FROMUTC", value, location);
 
         try
         {
             var localDateTime = ConvertUtcToLocalDateTime(dateTime);
-            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(localDateTime));
+            return RuntimeValue.FromDateTime(localDateTime);
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -313,15 +314,15 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private RuntimeValue EvaluateFromUtcBuiltin(string value, string timeZoneId, TextLocation location)
+    private RuntimeValue EvaluateFromUtcBuiltin(RuntimeValue value, string timeZoneId, TextLocation location)
     {
-        var dateTime = ParseCanonicalDateTimeArgument("FROMUTC", "value", value, location);
+        var dateTime = ExtractDateTimeValue("FROMUTC", value, location);
         var timeZone = ResolveTimeZoneArgument("FROMUTC", "timeZone", timeZoneId, location);
 
         try
         {
             var localDateTime = ConvertUtcToTimeZoneDateTime(dateTime, timeZone);
-            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDateTime(localDateTime));
+            return RuntimeValue.FromDateTime(localDateTime);
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -347,29 +348,92 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromInteger(DateTime.DaysInMonth(year, month));
     }
 
-    private RuntimeValue EvaluateStartOfMonthBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateStartOfMonthBuiltin(RuntimeValue value, TextLocation location)
     {
-        var date = ParseCanonicalDateArgument("STARTOFMONTH", value, location);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, date.Month, 1)));
+        var date = ExtractDateValue("STARTOFMONTH", value, location);
+        return RuntimeValue.FromDate(new DateOnly(date.Year, date.Month, 1));
     }
 
-    private RuntimeValue EvaluateEndOfMonthBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateEndOfMonthBuiltin(RuntimeValue value, TextLocation location)
     {
-        var date = ParseCanonicalDateArgument("ENDOFMONTH", value, location);
+        var date = ExtractDateValue("ENDOFMONTH", value, location);
         var lastDay = DateTime.DaysInMonth(date.Year, date.Month);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, date.Month, lastDay)));
+        return RuntimeValue.FromDate(new DateOnly(date.Year, date.Month, lastDay));
     }
 
-    private RuntimeValue EvaluateStartOfYearBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateStartOfYearBuiltin(RuntimeValue value, TextLocation location)
     {
-        var date = ParseCanonicalDateArgument("STARTOFYEAR", value, location);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, 1, 1)));
+        var date = ExtractDateValue("STARTOFYEAR", value, location);
+        return RuntimeValue.FromDate(new DateOnly(date.Year, 1, 1));
     }
 
-    private RuntimeValue EvaluateEndOfYearBuiltin(string value, TextLocation location)
+    private RuntimeValue EvaluateEndOfYearBuiltin(RuntimeValue value, TextLocation location)
     {
-        var date = ParseCanonicalDateArgument("ENDOFYEAR", value, location);
-        return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalDate(new DateOnly(date.Year, 12, 31)));
+        var date = ExtractDateValue("ENDOFYEAR", value, location);
+        return RuntimeValue.FromDate(new DateOnly(date.Year, 12, 31));
+    }
+
+    private DateOnly ExtractDateValue(string functionName, RuntimeValue value, TextLocation location)
+    {
+        if (value.Type == TypeSymbol.Date)
+        {
+            return value.AsDate();
+        }
+
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return DateOnly.FromDateTime(value.AsDateTime());
+        }
+
+        if (value.Type == TypeSymbol.String)
+        {
+            return BuiltinDateTimeHelpers.ParseCanonicalDateArgument(value.AsString(), functionName, location, ReportBuiltInArgumentError);
+        }
+
+        ReportBuiltInArgumentError(functionName, "value", "must be a DATE, DATETIME or canonical date string.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private TimeOnly ExtractTimeValue(string functionName, RuntimeValue value, TextLocation location)
+    {
+        if (value.Type == TypeSymbol.Time)
+        {
+            return value.AsTime();
+        }
+
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return TimeOnly.FromDateTime(value.AsDateTime());
+        }
+
+        if (value.Type == TypeSymbol.String)
+        {
+            return BuiltinDateTimeHelpers.ParseCanonicalTimeArgument(value.AsString(), functionName, location, ReportBuiltInArgumentError);
+        }
+
+        ReportBuiltInArgumentError(functionName, "value", "must be a TIME, DATETIME or canonical time string.", location);
+        throw new RuntimeFailureException();
+    }
+
+    private DateTime ExtractDateTimeValue(string functionName, RuntimeValue value, TextLocation location)
+    {
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return value.AsDateTime();
+        }
+
+        if (value.Type == TypeSymbol.Date)
+        {
+            return value.AsDate().ToDateTime(TimeOnly.MinValue);
+        }
+
+        if (value.Type == TypeSymbol.String)
+        {
+            return BuiltinDateTimeHelpers.ParseCanonicalDateTimeArgument(value.AsString(), functionName, "value", location, ReportBuiltInArgumentError);
+        }
+
+        ReportBuiltInArgumentError(functionName, "value", "must be a DATETIME, DATE or canonical date-time string.", location);
+        throw new RuntimeFailureException();
     }
 
     private DateOnly ParseCanonicalDateArgument(string functionName, string value, TextLocation location)
