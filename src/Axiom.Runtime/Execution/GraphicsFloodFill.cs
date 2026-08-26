@@ -20,8 +20,8 @@ public static class GraphicsFloodFill
             return;
         }
 
-        var borderColor = NormalizeColor(request.BorderColor);
-        var startColor = NormalizeColor(getPixel(request.X, request.Y));
+        var borderColor = GraphicsColorNormalization.Normalize(request.BorderColor);
+        var startColor = GraphicsColorNormalization.Normalize(getPixel(request.X, request.Y));
         if (request.UsesPattern)
         {
             PaintPattern(
@@ -57,7 +57,7 @@ public static class GraphicsFloodFill
         int screenWidth,
         int screenHeight)
     {
-        var fillColor = NormalizeColor(request.SolidFillColor ?? 0);
+        var fillColor = GraphicsColorNormalization.Normalize(request.SolidFillColor ?? 0);
         if (startColor == fillColor || startColor == borderColor)
         {
             return;
@@ -86,8 +86,8 @@ public static class GraphicsFloodFill
         int screenHeight)
     {
         var fillPatternRows = request.FillPatternRows!;
-        var fillOneColor = NormalizeColor(request.PatternForegroundColor);
-        var fillZeroColor = NormalizeColor(request.PatternBackgroundColor);
+        var fillOneColor = GraphicsColorNormalization.Normalize(request.PatternForegroundColor);
+        var fillZeroColor = GraphicsColorNormalization.Normalize(request.PatternBackgroundColor);
         var startTargetColor = GetPatternColor(fillPatternRows, request.X, request.Y, fillOneColor, fillZeroColor);
         if (startColor == borderColor)
         {
@@ -124,8 +124,6 @@ public static class GraphicsFloodFill
             },
             (x, y) => GetPatternColor(fillPatternRows, x, y, fillOneColor, fillZeroColor));
     }
-
-    private static int NormalizeColor(int color) => (int)(Math.Abs((long)color) % 256);
 
     private static void Flood(
         long startX,
@@ -177,7 +175,7 @@ public static class GraphicsFloodFill
                 return false;
             }
 
-            var currentColor = NormalizeColor(getPixel(x, y));
+            var currentColor = GraphicsColorNormalization.Normalize(getPixel(x, y));
             return canPaint(x, y, currentColor);
         }
 

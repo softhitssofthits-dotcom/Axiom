@@ -951,6 +951,8 @@ Canvas-примитивы обновляют позицию в interpreter, SCRE
 - TASK-G-08: Добавить SetGraphicsCurrentPosition в DRAWTILEMAP/DRAWTILELAYER
 - TASK-G-09: Добавить валидацию length > 0 в GraphicsPaintRequest.CreatePattern
 
+> Статус: Этап 1 (TASK-G-01..05), Этап 2 (TASK-G-06..09) и Этап 3 (TASK-G-10, G-11) выполнены 2026-08-26 (Sessions 1095-1097). Исправлены SYS-G-001..009, SYS-G-011, SYS-G-016.
+
 ### ЭТАП 3 — Архитектурное улучшение
 - TASK-G-10: Добавить TryGetStackEffect для 14 отсутствующих опкодов
 - TASK-G-11: Переименовать mouseEventKind → flags в LoweredInstruction

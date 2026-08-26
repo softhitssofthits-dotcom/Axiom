@@ -670,12 +670,14 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     public void SetAbsolutePixel(long x, long y, int color)
     {
-        SetPixelCore(x, y, color);
+        InvokeOnDispatcher(() => SetPixelCore(x, y, color));
     }
 
     public int GetAbsolutePixel(long x, long y)
     {
-        return GetPixelCore(x, y);
+        var color = 0;
+        InvokeOnDispatcher(() => color = GetPixelCore(x, y), DispatcherPriority.Background);
+        return color;
     }
 
     public void SetGraphicsCurrentPosition(long x, long y)
@@ -1632,7 +1634,15 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         if (_isCanvasActive)
         {
-            return GetPixelCore(x, y);
+            var viewport = GetEffectiveViewportCore();
+            var canvasAbsoluteX = TranslateCanvasX(x, viewport);
+            var canvasAbsoluteY = TranslateCanvasY(y, viewport);
+            if (!viewport.IsInsideAbsolute(canvasAbsoluteX, canvasAbsoluteY))
+            {
+                return 0;
+            }
+
+            return GetPixelCore(canvasAbsoluteX, canvasAbsoluteY);
         }
 
         return TryTranslateLogicalToAbsoluteCore(x, y, out var absoluteX, out var absoluteY)

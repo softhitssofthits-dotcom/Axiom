@@ -276,49 +276,29 @@ internal static class GraphicsBufferTransfer
     {
         if (value.Type == TypeSymbol.Integer)
         {
-            color = NormalizeIntegralColor(value.AsInteger());
+            color = GraphicsColorNormalization.Normalize(value.AsInteger());
             return true;
         }
 
         if (value.Type == TypeSymbol.Long)
         {
-            color = NormalizeIntegralColor(value.AsLong());
+            color = GraphicsColorNormalization.Normalize(value.AsLong());
             return true;
         }
 
         if (value.Type == TypeSymbol.Double)
         {
-            var numericValue = value.AsDouble();
-            if (!double.IsFinite(numericValue))
-            {
-                color = 0;
-                return false;
-            }
-
-            color = (int)(Math.Abs(Math.Truncate(numericValue)) % 256d);
-            return true;
+            return GraphicsColorNormalization.TryNormalize(value.AsDouble(), out color);
         }
 
         if (value.Type == TypeSymbol.Decimal)
         {
-            color = (int)(decimal.Abs(decimal.Truncate(value.AsDecimal())) % 256m);
+            color = GraphicsColorNormalization.Normalize(value.AsDecimal());
             return true;
         }
 
         color = 0;
         return false;
-    }
-
-    private static int NormalizeIntegralColor(long value)
-    {
-        ulong magnitude = value switch
-        {
-            >= 0 => (ulong)value,
-            long.MinValue => (ulong)long.MaxValue + 1UL,
-            _ => (ulong)(-value)
-        };
-
-        return (int)(magnitude % 256UL);
     }
 
     private static int ApplyPutAction(int destinationColor, int sourceColor, BoundPutActionKind action)

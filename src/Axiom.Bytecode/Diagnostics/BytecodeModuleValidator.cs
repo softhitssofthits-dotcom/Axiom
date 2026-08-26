@@ -1536,6 +1536,25 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
+            case Opcode.Palette:
+            {
+                var valueCount = instruction.GetOperand(0);
+                if (valueCount == 2)
+                {
+                    var colorType = Pop();
+                    var indexType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, indexType, TypeSymbol.Integer, "индекс палитры");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет палитры");
+                }
+                else if (valueCount == 1)
+                {
+                    var valuesType = Pop();
+                    ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, valuesType, "массив PALETTE USING");
+                }
+
+                break;
+            }
+
             case Opcode.PSet:
             {
                 if (instruction.GetOperand(1) == 3)
@@ -1624,7 +1643,12 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.Line:
             {
-                if (instruction.GetOperand(1) == 5)
+                var flags = instruction.GetOperand(0);
+                var count = instruction.GetOperand(1);
+                var hasExplicitStartPoint = (flags & 4) != 0;
+                var hasColor = hasExplicitStartPoint ? count == 5 : count == 3;
+
+                if (hasColor)
                 {
                     var colorType = Pop();
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет линии");
@@ -1632,10 +1656,14 @@ public sealed class BytecodeModuleValidator
 
                 var y2Type = Pop();
                 var x2Type = Pop();
-                var y1Type = Pop();
-                var x1Type = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, TypeSymbol.Long, "координата X1");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, TypeSymbol.Long, "координата Y1");
+                if (hasExplicitStartPoint)
+                {
+                    var y1Type = Pop();
+                    var x1Type = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, TypeSymbol.Long, "координата X1");
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, TypeSymbol.Long, "координата Y1");
+                }
+
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, TypeSymbol.Long, "координата X2");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, TypeSymbol.Long, "координата Y2");
                 break;
@@ -1755,6 +1783,13 @@ public sealed class BytecodeModuleValidator
                 var xType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, xType, TypeSymbol.Long, "координата X");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, yType, TypeSymbol.Long, "координата Y");
+                break;
+            }
+
+            case Opcode.Draw:
+            {
+                var commandType = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, commandType, TypeSymbol.String, "команды DRAW");
                 break;
             }
 
@@ -3106,34 +3141,44 @@ public sealed class BytecodeModuleValidator
 
     private static TypeSymbol? GetBuiltinReturnType(BuiltinBinding builtin, IReadOnlyList<TypeSymbol?> argumentTypes)
     {
+        if (BuiltinFunctions.TryGetDescriptor(builtin.CanonicalId, out var descriptor))
+        {
+            // Тип-сохраняющие политики должны выводить тип из фактического аргумента,
+            // а не из объявленного (обычно Double) возвращаемого типа.
+            switch (descriptor.ResultTypePolicy)
+            {
+                case BuiltinResultTypePolicy.SameAsFirstArgument:
+                case BuiltinResultTypePolicy.PromotedNumeric:
+                    return argumentTypes.Count > 0 ? argumentTypes[0] : descriptor.DeclaredReturnType;
+            }
+        }
+
         if (builtin.Function is not null)
         {
             return builtin.Function.ReturnType;
         }
 
-        if (!BuiltinFunctions.TryGetDescriptor(builtin.CanonicalId, out var descriptor))
+        if (descriptor is not null)
         {
-            return null;
+            return descriptor.ResultTypePolicy switch
+            {
+                BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => argumentTypes.Count > 0 && argumentTypes[0] is ArrayTypeSymbol arrayType
+                    ? arrayType.ElementType
+                    : descriptor.DeclaredReturnType,
+                BuiltinResultTypePolicy.ArrayMapSelectorReturnArray => argumentTypes.Count > 1
+                    && argumentTypes[1] is FunctionTypeSymbol selectorType
+                    && selectorType.ReturnType != TypeSymbol.Void
+                    && selectorType.ReturnType is not ArrayTypeSymbol
+                        ? ArrayTypeSymbol.Create(selectorType.ReturnType)
+                        : descriptor.DeclaredReturnType,
+                BuiltinResultTypePolicy.ArrayReduceAccumulator => argumentTypes.Count > 1 && argumentTypes[1] is not null
+                    ? argumentTypes[1]
+                    : descriptor.DeclaredReturnType,
+                _ => descriptor.DeclaredReturnType
+            };
         }
 
-        return descriptor.ResultTypePolicy switch
-        {
-            BuiltinResultTypePolicy.SameAsFirstArgument => argumentTypes.Count > 0 ? argumentTypes[0] : descriptor.DeclaredReturnType,
-            BuiltinResultTypePolicy.PromotedNumeric => argumentTypes.Count > 0 ? argumentTypes[0] : descriptor.DeclaredReturnType,
-            BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => argumentTypes.Count > 0 && argumentTypes[0] is ArrayTypeSymbol arrayType
-                ? arrayType.ElementType
-                : descriptor.DeclaredReturnType,
-            BuiltinResultTypePolicy.ArrayMapSelectorReturnArray => argumentTypes.Count > 1
-                && argumentTypes[1] is FunctionTypeSymbol selectorType
-                && selectorType.ReturnType != TypeSymbol.Void
-                && selectorType.ReturnType is not ArrayTypeSymbol
-                    ? ArrayTypeSymbol.Create(selectorType.ReturnType)
-                    : descriptor.DeclaredReturnType,
-            BuiltinResultTypePolicy.ArrayReduceAccumulator => argumentTypes.Count > 1 && argumentTypes[1] is not null
-                ? argumentTypes[1]
-                : descriptor.DeclaredReturnType,
-            _ => descriptor.DeclaredReturnType
-        };
+        return null;
     }
 
     private static bool IsUnaryOperationCompatible(Opcode opcode, TypeSymbol operandType)
@@ -3663,6 +3708,86 @@ public sealed class BytecodeModuleValidator
                 return true;
 
             case Opcode.Viewport:
+                popCount = instruction.GetOperand(0);
+                return true;
+
+            case Opcode.Line:
+            {
+                var flags = instruction.GetOperand(0);
+                var count = instruction.GetOperand(1);
+                var hasExplicitStartPoint = (flags & 4) != 0;
+                var hasColor = hasExplicitStartPoint ? count == 5 : count == 3;
+                popCount = 2 + (hasColor ? 1 : 0) + (hasExplicitStartPoint ? 2 : 0);
+                return true;
+            }
+
+            case Opcode.Screen:
+                popCount = 4;
+                return true;
+
+            case Opcode.PCopy:
+                popCount = 2;
+                return true;
+
+            case Opcode.Locate:
+                popCount = 2;
+                return true;
+
+            case Opcode.View:
+            {
+                var flags = instruction.GetOperand(0);
+                popCount = ((flags & 2) != 0 ? 4 : 0)
+                    + ((flags & 4) != 0 ? 1 : 0)
+                    + ((flags & 8) != 0 ? 1 : 0);
+                return true;
+            }
+
+            case Opcode.Window:
+                popCount = (instruction.GetOperand(0) & 2) != 0 ? 4 : 0;
+                return true;
+
+            case Opcode.Color:
+                popCount = instruction.GetOperand(1) == 2 ? 2 : 1;
+                return true;
+
+            case Opcode.Palette:
+                popCount = instruction.GetOperand(0);
+                return true;
+
+            case Opcode.PSet:
+                popCount = instruction.GetOperand(1) == 3 ? 3 : 2;
+                return true;
+
+            case Opcode.Get:
+                popCount = 5;
+                return true;
+
+            case Opcode.Put:
+                popCount = 3;
+                return true;
+
+            case Opcode.Circle:
+            {
+                var flags = instruction.GetOperand(0);
+                popCount = 3
+                    + ((flags & 16) != 0 ? 1 : 0)
+                    + ((flags & 2) != 0 ? 1 : 0)
+                    + ((flags & 4) != 0 ? 1 : 0)
+                    + ((flags & 8) != 0 ? 1 : 0);
+                return true;
+            }
+
+            case Opcode.Paint:
+            {
+                var flags = instruction.GetOperand(0);
+                popCount = 2
+                    + ((flags & 2) != 0 ? 1 : 0)
+                    + ((flags & 4) != 0 ? 1 : 0)
+                    + ((flags & 8) != 0 ? 1 : 0);
+                return true;
+            }
+
+            case Opcode.Draw:
                 popCount = instruction.GetOperand(0);
                 return true;
 

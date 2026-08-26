@@ -3170,3 +3170,74 @@ Health Score: **8.8/10**.
 - Дополнение к DT-004: docs/SPECIFICATION.md и docs/SPECIFICATION2.md — секции DATEADD/DATEDIFF/DATEPART переписаны на нативный контракт (value — нативное DATE/TIME/DATETIME; строковые формы не поддерживаются; смешение видов — ошибка компиляции MB2003; пример DATEADD("m", 1, DATEVALUE("2026-01-31"))). Финальный sweep по docs+samples: 0 оставшихся строковых форм (исключая исторические WORKLOG/PLANS/_old_version).
 
 - Новая защита: присваивание полной даты-времени в DATE/TIME запрещено на этапе компиляции (MB2003, сообщение «Cannot assign a full date-time value to 'DATE': the time component would be silently truncated.»). Binder: Binder.DeclarationStatements.cs (TryReportTruncatingTemporalAssignment — проверка в DIM/CONST/присваивании; срабатывает для нативного DATETIME и строкового литерала yyyy-MM-dd HH:mm:ss), Binder.Diagnostics.cs (ReportTruncatingTemporalAssignment). Биндинг инициализаторов переведён на двухшаговый (BindExpression -> ApplyExpectedType), чтобы видеть исходный тип до конверсии. +12 тестов BinderTests (6 негативных, 6 позитивных). Верификация (AutoCoder, независимо): build 0 ошибок/0 предупреждений; Semantics 389/389 (+12), Runtime 958/958, Parsing 146/146, Execution 950/950, Ide 577/581 (4 pre-existing). Пробник: DIM d AS DATE = ""2026-01-02 12:00:00"" -> SemanticFailure MB2003 (ранее Success с молчаливым усечением). Документы: manual data-types-conversions.html (абзац про запрет), DATETIME_FORENSIC_AUDIT.md (4.3 и 7.1).
+
+## Session 1095 - 2026-08-26 14:54 - Графический аудит Этап 1: P0 GetPixel + 3×P1
+
+Задача: выполнить Этап 1 Recovery Roadmap графического аудита `docs/audit/GRAPHICS_RENDERING_CORRECTNESS.md` — критическую корректность (P0) и существенные дефекты (P1). Работа делегирована 4 субагентам параллельно по непересекающимся файлам; интеграционную сборку и прогон тестов выполнил оркестратор.
+
+Что сделано (5 находок, TASK-G-01..05):
+
+1. **SYS-G-001 [P0]** — `GetLogicalPixelCore` (`GraphicsHostService`) для CANVAS не применял камеру: добавлено зеркальное `SetLogicalPixelCore` преобразование (`TranslateCanvasX/Y` + clip по viewport); SCREEN не тронут. `POINT(x,y)`/`GetPixel` при ненулевой камере теперь корректны.
+2. **SYS-G-005 [P1]** — `SetAbsolutePixel`/`GetAbsolutePixel` обходили dispatcher: обёрнуты в `InvokeOnDispatcher` (`GetAbsolutePixel` — `DispatcherPriority.Background`, как у `GetPixel`).
+3. **SYS-G-002 [P1]** — LINE-валидатор bytecode: в `BytecodeModuleValidator` декодируются flags/count, `hasExplicitStartPoint = (flags & 4) != 0`, цвет снимается только при hasColor, Y1/X1 — только при explicit start; добавлен `case Opcode.Line` в `TryGetStackEffect` (раньше возвращал false — проверки стека/типов для `Line` полностью пропускались).
+4. **SYS-G-003 [P1]** — консолидация нормализации цвета: создан `GraphicsColorNormalization` (`Normalize(long/int/decimal)`, `TryNormalize(double, out int)`); удалены 4 разрозненные реализации (в т.ч. опасный `Math.Abs(value) % 256` на `long.MinValue`, теперь даёт 0); переведены `GraphicsDrawExecutor`/`GraphicsFloodFill`/`GraphicsBufferTransfer`.
+5. **SYS-G-004 [P1]** — STEP overflow: `PSET`/`PAINT` в `Interpreter.Graphics.cs` и `BytecodeVm.Graphics.cs` переведены с `+=` на `GraphicsLineMath.SaturatingAdd` (как LINE/CIRCLE/GET/PUT); отдельных canvas-STEP-сайтов нет (canvas-операторы принимают только абсолютные координаты).
+
+Изменённые файлы: 7 src + 1 новый (`GraphicsColorNormalization.cs`) + 3 тестовых.
+
+Тесты: +13 новых/обновлённых. Bytecode 210/210 (+7 валидаторных), Runtime 962/962 (+4 STEP), Ide 579/583 (+2 host; 4 pre-existing падения — `Run_SetsCurrentDirToSourceFileDirectoryDuringExecution`, `Run_Get/PutCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm`, `MainWindowCodeBehind_TracksCaretAndBottomPaneFocus`).
+
+Верификация (оркестратор): сборка 0 ошибок / 3 pre-existing предупреждения (Lexer CS8603, BinderTests xUnit2029, Ide CS9113). Замечание окружения: `dotnet` из PATH — бандл AutoClaw без SDK; сборка/тесты запускались явным `C:\Program Files\dotnet\dotnet.exe` с `DOTNET_ROOT=C:\Program Files\dotnet`.
+
+Вынесено отдельными шагами (не входило в Этап 1):
+- VM-паритетные тесты STEP-переполнения в `BytecodeVmTests.cs` (тесты добавлены только для interpreter);
+- 5-я реализация нормализации цвета `ScreenFramebuffer.NormalizeColorIndex` (Axiom.Ide) — переключение на `GraphicsColorNormalization`;
+- SYS-G-016 [P3]: ещё 13 опкодов отсутствуют в `TryGetStackEffect` (Screen, PCopy, View, Window, Color, Locate, Palette, PSet, Get, Put, Circle, Paint, Draw).
+
+Следующий шаг: Этап 2 графического аудита — стабилизация семантики (TASK-G-06 CIRCLE default color, G-07 ApplyPaletteUsing throw, G-08 DRAWTILEMAP/DRAWTILELAYER позиция, G-09 PAINT пустой паттерн).
+
+## Session 1096 - 2026-08-26 15:09 - Графический аудит Этап 2: стабилизация семантики
+
+Задача: выполнить Этап 2 Recovery Roadmap графического аудита (TASK-G-06..09). Делегировано 2 субагентам; документацию CIRCLE выполнил оркестратор.
+
+Что сделано:
+1. **SYS-G-006 [P2]** (TASK-G-06) — CIRCLE default color = 15 задокументирован в `docs/manual/graphics-primitives.html` (не текущий foreground, в отличие от LINE/PSET; поведение НЕ менялось — решение «документировать», не «исправлять»).
+2. **SYS-G-007 [P2]** (TASK-G-07) — `ApplyPaletteUsing` теперь прерывает выполнение: `return` → `throw new RuntimeFailureException()` после `ReportInvalidRuntimeState`/`ReportRuntimeDiagnostic` в `Interpreter.Graphics.cs` (258-259, 264-265) и `BytecodeVm.Graphics.cs` (292-293, 298-299).
+3. **SYS-G-008 [P2]** (TASK-G-08) — `DRAWTILEMAP`/`DRAWTILELAYER` обновляют графическую позицию через `SetGraphicsCurrentPosition(x, y)` в `Interpreter.Graphics.cs` и `BytecodeVm.Graphics.cs` (паритет с `DRAWTILE`).
+4. **SYS-G-011 [P2]** (TASK-G-09) — `GraphicsPaintRequest.CreatePattern` валидирует длину паттерна > 0 (fill и background) → `ArgumentOutOfRangeException` вместо `DivideByZeroException`; языковой путь `PAINT ..., ""` уже был защищён MB3007.
+
+Изменённые файлы: `Interpreter.Graphics.cs`, `BytecodeVm.Graphics.cs`, `GraphicsPaintRequest.cs`, `docs/manual/graphics-primitives.html`; тесты `InterpreterTests.Graphics.cs`, `BytecodeVmTests.cs`.
+
+Тесты: +3 Runtime (палитра + паттерн ×2), обновлены 4 tilemap-теста позиции (interpreter + VM). Bytecode 210/210, Runtime 965/965, Ide 579/583 (4 pre-existing).
+
+Верификация (оркестратор): сборка 0 ошибок / 0 предупреждений (инкрементальная).
+
+Следующий шаг: Этап 3 графического аудита — архитектурное улучшение (TASK-G-10..15: TryGetStackEffect для 13 опкодов, переименование mouseEventKind→flags, helpers свойств ресурсов/STEP/guards, удаление dead code).
+
+## Session 1097 - 2026-08-26 15:37 - Графический аудит Этап 3: валидатор + переименование
+
+Задача: выполнить Этап 3 Recovery Roadmap графического аудита (TASK-G-10 и G-11). Делегировано 1 субагенту; интеграционную сборку и правку тестов выполнил оркестратор.
+
+Что сделано:
+1. **SYS-G-016 [P3]** (TASK-G-10) — в `BytecodeModuleValidator.TryGetStackEffect` добавлены stack-effect для 13 опкодов (Screen, PCopy, View, Window, Color, Locate, Palette, PSet, Get, Put, Circle, Paint, Draw); ранее метод возвращал false, и высотный/типовой walker'ы останавливались на них. Парный `TryApplyStackTypeEffect` уже содержал 11 из 13 — они «молчали»; добавлены недостающие `Palette` (массив/Integer) и `Draw` (String).
+2. **SYS-G-009 [P2]** (TASK-G-11) — поле `LoweredInstruction.mouseEventKind` переименовано в `flags` (оно хранило графические флаги, не событие мыши). Переименованы только графические/общие использования; реальные mouse-события (`ValidateMouseEventKind`, `BoundMouseEventKind`, фабрики Register/Unregister/Pause/ResumeMouseHandler) НЕ тронуты.
+
+Тесты: +23 в `BytecodeModuleValidatorTests` (успешные проходы для 13 опкодов + негативные BC4053/BC4111/BC4112/BC4113/BC4123). Bytecode 233/233 (+23), Runtime 965/965, Ide 579/583 (4 pre-existing).
+
+Правки оркестратора (субагент не мог собрать):
+- 2 теста (Get/Put) передавали `constants:` в `CreateEntryPointWithLocal`, хотя константы живут в `ConstantPool` модуля — перенесено в `CreateValidModule(constants:)`;
+- 1 тест Paint (`[10, 5]` → `[10, 4]`): valueCount для flags=10 (fill+background, без border) = 4.
+
+Верификация (оркестратор): сборка 0 ошибок / 0 предупреждений.
+
+Следующий шаг: Этапы 4-7 графического аудита (оптимизации G-16..19, helpers G-12..14, dead code G-15, паритетные тесты, бенчмарки) — по самому аудиту «можно отложить». Рекомендация — перейти к следующему аудиту или продуктовой работе.
+
+## Session 1098 - 2026-08-26 16:23 - Исправлена регрессия Execution-теста (ABS-типизация в валидаторе)
+
+Полная верификация решения (все 8 тестовых проектов) вскрыла регрессию: `ScreenGameAcceptanceSample_RunsOnBytecodeVm` (Execution, `samples/graphics/game/paddle_ball.axm`) падал с `BC4116: StoreLocal ожидает INTEGER, но получила DOUBLE` на строке `dy = -ABS(dy)`.
+
+Бисекция подтвердила: тест проходит на HEAD (до правок графического аудита) и падает после. Причина — не ошибка графических правок, а латентный баг валидатора, который они вскрыли: `TryApplyStackTypeEffect` использует `TryGetStackEffect` как «ворота» — раньше он возвращал false для графических опкодов, и type-walker останавливался, не доходя до ABS. После добавления stack-effect (Этап 3) walker стал проходить дальше и вскрыл, что `GetBuiltinReturnType` возвращает объявленный `Double` у ABS (через `builtin.Function.ReturnType`), игнорируя политику `SameAsFirstArgument`; рантайм и биндер при этом честно возвращают тип аргумента (INTEGER).
+
+Исправление: в `BytecodeModuleValidator.GetBuiltinReturnType` политики `SameAsFirstArgument` и `PromotedNumeric` теперь применяются из дескриптора ДО отката к `builtin.Function.ReturnType` (совпадает с логикой биндера `ResolveNumericBuiltinReturnType`).
+
+Проверка: сборка 0 ошибок/0 предупреждений; Execution 950/950 (было 949/950). Полный прогон решения: Lexing 18/18, Parsing 146/146, Semantics 389/389, Runtime 965/965, Bytecode 233/233, Syntax 66/66, Execution 950/950, Ide 579/583 (4 pre-existing). Новых падений нет.

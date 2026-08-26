@@ -2,6 +2,7 @@ using System.Windows.Threading;
 using Axiom.Ide.Graphics;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
+using Axiom.Ide.Services.Graphics;
 using Axiom.Ide.Services.Input;
 using Axiom.Runtime;
 
@@ -840,10 +841,68 @@ public sealed class ProgramConsoleServiceTests
         service.SetPixel(100, 50, 12);
         service.PresentFrame();
 
-        Assert.Equal(12, service.GetPixel(10, 6));
+        // POINT()/GetPixel must apply the same camera transform as PSET/SetPixel:
+        // world (100, 50) projects through the camera to absolute viewport pixel (10, 6).
+        Assert.Equal(12, service.GetPixel(100, 50));
+        Assert.Equal(12, service.GetAbsolutePixel(10, 6));
+        Assert.Equal(0, service.GetPixel(10, 6));
         Assert.Equal(0, service.GetPixel(9, 6));
         Assert.Equal(100, service.CurrentGraphicsX);
         Assert.Equal(50, service.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Canvas_GetPixelAppliesCameraOffsetLikeSetPixel()
+    {
+        var service = new ProgramConsoleService();
+
+        service.ActivateCanvas(24, 18);
+        service.SetCanvasCamera(100, 50);
+        service.SetPixel(100, 50, 12);
+        service.PresentFrame();
+
+        // World-space read-back through the camera must hit the physical pixel PSET wrote.
+        Assert.Equal(12, service.GetPixel(100, 50));
+        Assert.Equal(12, service.GetAbsolutePixel(0, 0));
+
+        // A logical coordinate whose camera transform lands outside the canvas must not
+        // alias a physical pixel (previously GetLogicalPixelCore skipped the transform).
+        Assert.Equal(0, service.GetPixel(0, 0));
+        Assert.Equal(0, service.GetPixel(123, 68));
+    }
+
+    [Fact]
+    public void AbsolutePixelOperationsAreMarshaledThroughDispatcher()
+    {
+        var console = new ProgramConsoleService();
+        var marshalCount = 0;
+        DispatcherPriority? lastPriority = null;
+        var host = new GraphicsHostService(
+            console.InputState,
+            console.InputPrompt,
+            console.SessionManager,
+            (action, priority) =>
+            {
+                marshalCount++;
+                lastPriority = priority;
+                action();
+            },
+            () => null,
+            () => console);
+
+        host.ActivateCanvas(8, 8);
+        marshalCount = 0;
+
+        host.SetAbsolutePixel(2, 3, 5);
+        Assert.Equal(1, marshalCount);
+
+        Assert.Equal(5, host.GetAbsolutePixel(2, 3));
+        Assert.Equal(2, marshalCount);
+        Assert.Equal(DispatcherPriority.Background, lastPriority);
+
+        // The write landed in the shared framebuffer; a logical read observes it too.
+        Assert.Equal(5, host.GetPixel(2, 3));
+        Assert.Equal(3, marshalCount);
     }
 
     [Fact]
@@ -1363,8 +1422,13 @@ public sealed class ProgramConsoleServiceTests
 
         service.Paint(101, 51, 6, 9);
 
-        Assert.Equal(6, service.GetPixel(11, 7));
-        Assert.Equal(9, service.GetPixel(10, 6));
+        // GetPixel is logical (world-space): the camera projects world (101, 51) to absolute (11, 7).
+        Assert.Equal(6, service.GetPixel(101, 51));
+        Assert.Equal(9, service.GetPixel(100, 50));
+        Assert.Equal(6, service.GetAbsolutePixel(11, 7));
+        Assert.Equal(9, service.GetAbsolutePixel(10, 6));
+        Assert.Equal(0, service.GetPixel(11, 7));
+        Assert.Equal(0, service.GetPixel(10, 6));
         Assert.Equal(101, service.CurrentGraphicsX);
         Assert.Equal(51, service.CurrentGraphicsY);
     }

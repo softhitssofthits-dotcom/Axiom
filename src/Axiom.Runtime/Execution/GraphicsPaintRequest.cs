@@ -53,6 +53,19 @@ public sealed class GraphicsPaintRequest
         byte[]? backgroundPatternRows = null)
     {
         ArgumentNullException.ThrowIfNull(fillPatternRows);
+        if (fillPatternRows.Length == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(fillPatternRows),
+                "PAINT fill pattern must contain at least one row (8 bits per row).");
+        }
+
+        if (backgroundPatternRows is not null && backgroundPatternRows.Length == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(backgroundPatternRows),
+                "PAINT background pattern must contain at least one row (8 bits per row).");
+        }
 
         return new(
             x,

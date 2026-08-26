@@ -256,13 +256,13 @@ public sealed partial class Interpreter
         if (!array.IsAllocated)
         {
             ReportInvalidRuntimeState("Массив 'PALETTE USING' объявлен, но ещё не выделен.", location);
-            return;
+            throw new RuntimeFailureException();
         }
 
         if (array.Rank != 1)
         {
             ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, "PALETTE USING: ожидается одномерный массив.", location);
-            return;
+            throw new RuntimeFailureException();
         }
 
         var paletteIndex = 0;
@@ -300,8 +300,8 @@ public sealed partial class Interpreter
         var y = EvaluateExpression(statement.YExpression).AsLong();
         if (statement.IsRelative)
         {
-            x += _host.CurrentGraphicsX;
-            y += _host.CurrentGraphicsY;
+            x = GraphicsLineMath.SaturatingAdd(_host.CurrentGraphicsX, x);
+            y = GraphicsLineMath.SaturatingAdd(_host.CurrentGraphicsY, y);
         }
 
         _host.SetPixel(x, y, color);
@@ -433,8 +433,8 @@ public sealed partial class Interpreter
         var y = EvaluateExpression(statement.YExpression).AsLong();
         if (statement.IsRelative)
         {
-            x += _host.CurrentGraphicsX;
-            y += _host.CurrentGraphicsY;
+            x = GraphicsLineMath.SaturatingAdd(_host.CurrentGraphicsX, x);
+            y = GraphicsLineMath.SaturatingAdd(_host.CurrentGraphicsY, y);
         }
 
         var fillValue = statement.FillColorExpression is null ? null : EvaluateExpression(statement.FillColorExpression);
@@ -616,6 +616,7 @@ public sealed partial class Interpreter
             }
         }
 
+        _host.SetGraphicsCurrentPosition(x, y);
         return ExecutionSignal.None;
     }
 
@@ -641,6 +642,7 @@ public sealed partial class Interpreter
         }
 
         DrawTilemapLayer(tilemap, layer, x, y);
+        _host.SetGraphicsCurrentPosition(x, y);
         return ExecutionSignal.None;
     }
 

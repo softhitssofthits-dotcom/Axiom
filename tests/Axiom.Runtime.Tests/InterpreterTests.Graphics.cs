@@ -103,6 +103,86 @@ PRINT POINT(15, 24)
     }
 
     [Fact]
+    public void Execute_PSetStepSaturatesOverflowingCoordinates()
+    {
+        const string text = """
+SCREEN 1
+PSET (1, 1), 15
+PSET STEP (9223372036854775807, 0), 15
+PSET STEP (5, 4), 15
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(15, host.GetPixel(1, 1));
+        Assert.Equal(0, host.GetPixel(long.MaxValue, 1));
+        Assert.Equal(15, host.GetPixel(6, 5));
+        Assert.Equal(6, host.CurrentGraphicsX);
+        Assert.Equal(5, host.CurrentGraphicsY);
+    }
+
+    [Fact]
+    public void Execute_PSetStepSaturatesNegativeOverflow()
+    {
+        const string text = """
+SCREEN 1
+PAINT STEP (-9223372036854775807, -2), 15
+PSET STEP (-10, 0), 15
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(-9223372036854775807, host.CurrentGraphicsX);
+        Assert.Equal(-2, host.CurrentGraphicsY);
+        Assert.Equal(0, host.GetPixel(0, 0));
+    }
+
+    [Fact]
+    public void Execute_PaintStepSaturatesOverflowingCoordinates()
+    {
+        const string text = """
+SCREEN 1
+PSET (1, 1), 15
+PAINT STEP (9223372036854775807, 0), 15
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        var request = Assert.Single(host.PaintRequests);
+        Assert.Equal(long.MaxValue, request.X);
+        Assert.Equal(1, request.Y);
+        Assert.Equal(long.MaxValue, host.CurrentGraphicsX);
+        Assert.Equal(1, host.CurrentGraphicsY);
+        Assert.Equal(15, host.GetPixel(1, 1));
+    }
+
+    [Fact]
+    public void Execute_PaintStepSaturatesNegativeOverflow()
+    {
+        const string text = """
+SCREEN 1
+PAINT STEP (-9223372036854775807, -2), 15
+PAINT STEP (-10, 0), 15
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(2, host.PaintRequests.Count);
+        Assert.Equal(long.MinValue, host.PaintRequests[1].X);
+        Assert.Equal(-2, host.PaintRequests[1].Y);
+        Assert.Equal(long.MinValue, host.CurrentGraphicsX);
+        Assert.Equal(-2, host.CurrentGraphicsY);
+    }
+
+    [Fact]
     public void Execute_ViewSupportsAbsoluteAndRelativeViewportCoordinates()
     {
         const string text = """
@@ -230,6 +310,23 @@ PALETTE USING colors
 
         Assert.False(result.Succeeded);
         Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+    }
+
+    [Fact]
+    public void Execute_PaletteUsingUnallocatedArrayAbortsExecution()
+    {
+        const string text = """
+SCREEN 1
+DIM colors() AS INTEGER
+PALETTE USING colors
+PRINT "after"
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
+        Assert.Empty(host.Output);
     }
 
     [Fact]
@@ -581,7 +678,7 @@ SETMAPTILE level, 1, 3, 1, 1, 1
     }
 
     [Fact]
-    public void Execute_DrawTilemapDrawsVisibleTileLayersAndPreservesCurrentPosition()
+    public void Execute_DrawTilemapDrawsVisibleTileLayersAndUpdatesCurrentPosition()
     {
         const string text = """
 CANVAS 160, 90
@@ -604,8 +701,8 @@ DRAWTILEMAP level, 10, 20
                 new DrawImageRegionCall(image, 32, 0, 16, 8, 26, 28, 16, 8)
             ],
             host.DrawImageRegions);
-        Assert.Equal(0, host.CurrentGraphicsX);
-        Assert.Equal(0, host.CurrentGraphicsY);
+        Assert.Equal(10, host.CurrentGraphicsX);
+        Assert.Equal(20, host.CurrentGraphicsY);
     }
 
     [Fact]
@@ -627,8 +724,8 @@ DRAWTILELAYER level, 2, 10, 20
         Assert.True(result.Succeeded);
         Assert.Equal(3, host.DrawImageRegions.Count);
         Assert.Equal(new DrawImageRegionCall(image, 0, 0, 16, 8, 10, 20, 16, 8), host.DrawImageRegions[0]);
-        Assert.Equal(0, host.CurrentGraphicsX);
-        Assert.Equal(0, host.CurrentGraphicsY);
+        Assert.Equal(10, host.CurrentGraphicsX);
+        Assert.Equal(20, host.CurrentGraphicsY);
     }
 
     [Fact]
@@ -1767,6 +1864,32 @@ PRINT POINT(3, 3)
         Assert.Equal(6, host.GetPixel(3, 2));
         Assert.Equal(6, host.GetPixel(2, 3));
         Assert.Equal(1, host.GetPixel(3, 3));
+    }
+
+    [Fact]
+    public void Execute_PaintWithEmptyPatternStringReportsArgumentDiagnostic()
+    {
+        var (_, _, result) = ExecuteProgram("""
+SCREEN 1
+PAINT (1, 1), ""
+""");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
+    public void Execute_CreatePatternWithEmptyRowsThrowsArgumentOutOfRange()
+    {
+        var fillException = Assert.Throws<ArgumentOutOfRangeException>(
+            () => GraphicsPaintRequest.CreatePattern(0, 0, Array.Empty<byte>(), 15, 7, 0));
+        Assert.Equal("fillPatternRows", fillException.ParamName);
+        Assert.Contains("PAINT", fillException.Message, StringComparison.OrdinalIgnoreCase);
+
+        var backgroundException = Assert.Throws<ArgumentOutOfRangeException>(
+            () => GraphicsPaintRequest.CreatePattern(0, 0, [0b11111111], 15, 7, 0, Array.Empty<byte>()));
+        Assert.Equal("backgroundPatternRows", backgroundException.ParamName);
+        Assert.Contains("PAINT", backgroundException.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

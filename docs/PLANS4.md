@@ -719,3 +719,28 @@
 - Разрешены: расширение DATE->DATETIME и TIME->DATETIME; дата-только строка в DATE; время-только строка в TIME; явные DATEVALUE/TIMEVALUE.
 - Тесты: +12 (Semantics 389/389); регрессий нет (Runtime 958/958, Execution 950/950).
 - Известный остаток: runtime-строка (DIM d AS DATE = s, где s - переменная STRING) всё ещё может усечься в рантайме - статически не обнаружить; закрытие потребует runtime-проверки конверсии (затронет и аргументы функций - отдельное решение).
+
+### 2026-08-26 - графический аудит Этап 1 закрыт (P0 GetPixel + 3×P1)
+
+- Выполнены TASK-G-01..05 из `docs/audit/GRAPHICS_RENDERING_CORRECTNESS.md`: P0 GetPixel-камера, LINE-валидатор, консолидация нормализации цвета, STEP overflow, dispatcher для absolute-pixel.
+- Сборка 0 ошибок; Bytecode 210/210 (+7), Runtime 962/962 (+4), Ide 579/583 (4 pre-existing).
+- Вынесено отдельно: VM-паритетные тесты STEP, переключение `ScreenFramebuffer.NormalizeColorIndex` на общий helper, SYS-G-016 (13 опкодов в `TryGetStackEffect`).
+- Следующий шаг: Этап 2 — стабилизация семантики (TASK-G-06 CIRCLE default color, G-07 ApplyPaletteUsing, G-08 DRAWTILEMAP/DRAWTILELAYER позиция, G-09 PAINT пустой паттерн).
+
+### 2026-08-26 - графический аудит Этап 2 закрыт (стабилизация семантики)
+
+- Выполнены TASK-G-06..09: CIRCLE default color задокументирован (manual); ApplyPaletteUsing прерывает выполнение (RuntimeFailureException); DRAWTILEMAP/DRAWTILELAYER обновляют позицию; PAINT пустой паттерн валидируется.
+- Сборка 0 ошибок; Bytecode 210/210, Runtime 965/965, Ide 579/583 (4 pre-existing).
+- Следующий шаг: Этап 3 — архитектурное улучшение (TASK-G-10..15).
+
+### 2026-08-26 - графический аудит Этап 3 закрыт (валидатор + переименование)
+
+- Выполнены TASK-G-10 (`TryGetStackEffect` для 13 опкодов) и TASK-G-11 (`mouseEventKind` → `flags`).
+- Сборка 0 ошибок; Bytecode 233/233 (+23), Runtime 965/965, Ide 579/583 (4 pre-existing).
+- Осталось (Этапы 4-7, по аудиту «можно отложить»): оптимизации (G-16..19), консолидация helpers (G-12..14), dead code (G-15), паритетные тесты, бенчмарки.
+
+### 2026-08-26 - исправлена регрессия Execution-теста (ABS-типизация)
+
+- Полная верификация вскрыла падение `ScreenGameAcceptanceSample_RunsOnBytecodeVm` (BC4116 на `dy = -ABS(dy)`).
+- Причина: латентный баг `GetBuiltinReturnType` — возвращал объявленный Double у ABS, игнорируя `SameAsFirstArgument`; вскрыт после включения type-walker'а для графических опкодов.
+- Исправлено (политики SameAsFirstArgument/PromotedNumeric применяются из дескриптора). Execution 950/950, новых падений нет.

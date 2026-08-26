@@ -27,3 +27,7 @@ parser-*.txt
 config/
 IDENTITY.md
 USER.md
+.openclaw/
+HEARTBEAT.md
+SOUL.md
+TOOLS.md

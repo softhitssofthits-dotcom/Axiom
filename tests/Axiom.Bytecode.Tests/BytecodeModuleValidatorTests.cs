@@ -2954,6 +2954,769 @@ public sealed class BytecodeModuleValidatorTests
         Assert.Equal(13, diagnostic.Location.Line);
     }
 
+    [Fact]
+    public void Validate_LineWithoutExplicitStartPoint_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.Line, [0, 2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_LineWithoutExplicitStartPointWithColor_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.Line, [0, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 4)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_LineWithExplicitStartPoint_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.Line, [4, 4]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 30L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 40L)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_LineWithExplicitStartPointAndColor_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.PushConst, [4]),
+                new BytecodeInstruction(Opcode.Line, [4, 5]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 30L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 40L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 4)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_LineWithoutExplicitStartPointWithMismatchedCoordinateType_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.Line, [0, 2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 20)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4111", diagnostic.Code);
+        Assert.Equal(10, diagnostic.Location.Line);
+    }
+
+    [Fact]
+    public void Validate_LineWithExplicitStartPointWithMismatchedStartCoordinateType_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.Line, [4, 4]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 20),
+                new BytecodeConstant(BytecodeConstantKind.Long, 30L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 40L)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4111", diagnostic.Code);
+        Assert.Equal(10, diagnostic.Location.Line);
+    }
+
+    [Fact]
+    public void Validate_LineWithoutExplicitStartPointInsufficientStackValues_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.Line, [0, 2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4053", diagnostic.Code);
+        Assert.Equal(10, diagnostic.Location.Line);
+    }
+
+    [Fact]
+    public void Validate_Screen_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.Screen),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 0),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 0),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_ScreenWithInsufficientStackValues_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.Screen),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 0),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 0)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4053", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Validate_PCopy_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PCopy),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 0),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 1)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_Locate_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.Locate),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 5),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 10)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_ColorWithForegroundAndBackground_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.Color, [1, 2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 6),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 2)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_ViewWithCoordinatesFillAndBorder_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.PushConst, [4]),
+                new BytecodeInstruction(Opcode.PushConst, [5]),
+                new BytecodeInstruction(Opcode.View, [14, 6]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 3),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 9)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_WindowWithCoordinates_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.Window, [2, 4]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Double, 100d),
+                new BytecodeConstant(BytecodeConstantKind.Double, 200d),
+                new BytecodeConstant(BytecodeConstantKind.Double, 110d),
+                new BytecodeConstant(BytecodeConstantKind.Double, 210d)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PaletteWithIndexAndColor_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.Palette, [2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 4),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 12)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PaletteUsingWithArray_Succeeds()
+    {
+        var routine = CreateEntryPointWithLocal(
+            ArrayTypeSymbol.Create(TypeSymbol.Integer),
+            [
+                new BytecodeInstruction(Opcode.LoadLocal, [0]),
+                new BytecodeInstruction(Opcode.Palette, [1]),
+                new BytecodeInstruction(Opcode.Return)
+            ]);
+
+        var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PaletteUsingWithNonArray_ReturnsDiagnostic()
+    {
+        var routine = CreateEntryPointWithLocal(
+            TypeSymbol.Integer,
+            [
+                new BytecodeInstruction(Opcode.LoadLocal, [0]),
+                new BytecodeInstruction(Opcode.Palette, [1]),
+                new BytecodeInstruction(Opcode.Return)
+            ]);
+
+        var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4112", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Validate_PSetWithoutColor_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PSet, [0, 2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PSetWithColor_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PSet, [0, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 20L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 4)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PSetWithInsufficientStackValues_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PSet, [0, 2]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4053", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Validate_GetWithRectangleAndBuffer_Succeeds()
+    {
+        var routine = CreateEntryPointWithLocal(
+            ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2),
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.LoadLocal, [0]),
+                new BytecodeInstruction(Opcode.Get, [0, 5]),
+                new BytecodeInstruction(Opcode.Return)
+            ]);
+
+        var module = CreateValidModule(
+            routines: [routine],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 11L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 11L)
+            ],
+            debugInfo: CreateDebugInfo(routine));
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PutWithBuffer_Succeeds()
+    {
+        var routine = CreateEntryPointWithLocal(
+            ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2),
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.LoadLocal, [0]),
+                new BytecodeInstruction(Opcode.Put, [0, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ]);
+
+        var module = CreateValidModule(
+            routines: [routine],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L)
+            ],
+            debugInfo: CreateDebugInfo(routine));
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_CircleWithoutOptionalArguments_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.Circle, [0, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Double, 3d)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_CircleWithColorAndAspect_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.PushConst, [4]),
+                new BytecodeInstruction(Opcode.Circle, [24, 5]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Double, 3d),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 14),
+                new BytecodeConstant(BytecodeConstantKind.Double, 1d)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_CircleWithMismatchedRadiusType_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.Circle, [0, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 3)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4111", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Validate_PaintWithFillColor_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.Paint, [2, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Integer, 9)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PaintWithStringFillAndBackground_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.PushConst, [3]),
+                new BytecodeInstruction(Opcode.Paint, [10, 4]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.String, "*"),
+                new BytecodeConstant(BytecodeConstantKind.String, "*")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_PaintWithNonNumericBorder_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.PushConst, [1]),
+                new BytecodeInstruction(Opcode.PushConst, [2]),
+                new BytecodeInstruction(Opcode.Paint, [4, 3]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.Long, 10L),
+                new BytecodeConstant(BytecodeConstantKind.String, "border")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4113", diagnostic.Code);
+    }
+
+    [Fact]
+    public void Validate_Draw_Succeeds()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.Draw, [1]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.String, "R10")
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Validate_DrawWithNonStringCommand_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(
+            instructions:
+            [
+                new BytecodeInstruction(Opcode.PushConst, [0]),
+                new BytecodeInstruction(Opcode.Draw, [1]),
+                new BytecodeInstruction(Opcode.Return)
+            ],
+            constants:
+            [
+                new BytecodeConstant(BytecodeConstantKind.Integer, 42)
+            ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("BC4111", diagnostic.Code);
+    }
+
     private static BytecodeModule CreateValidModule(
         IReadOnlyList<BytecodeInstruction>? instructions = null,
         IReadOnlyList<BytecodeRoutine>? routines = null,

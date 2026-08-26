@@ -27,7 +27,7 @@ public sealed class LoweredInstruction
         int valueCount = 0,
         bool preserve = false,
         bool handlerReceivesKeyText = false,
-        int mouseEventKind = 0,
+        int flags = 0,
         int indexRangeMask = 0)
     {
         Kind = kind;
@@ -50,7 +50,7 @@ public sealed class LoweredInstruction
         ValueCount = valueCount;
         Preserve = preserve;
         HandlerReceivesKeyText = handlerReceivesKeyText;
-        MouseEventKind = mouseEventKind;
+        Flags = flags;
         IndexRangeMask = indexRangeMask;
     }
 
@@ -94,7 +94,7 @@ public sealed class LoweredInstruction
 
     public bool HandlerReceivesKeyText { get; }
 
-    public int MouseEventKind { get; }
+    public int Flags { get; }
 
     public int IndexRangeMask { get; }
 
@@ -298,22 +298,22 @@ public sealed class LoweredInstruction
             LoweredInstructionKind.RegisterMouseHandler,
             location,
             handlerReceivesKeyText: handlerReceivesEvent,
-            mouseEventKind: (int)eventKind);
+            flags: (int)eventKind);
     }
 
     public static LoweredInstruction UnregisterMouseHandler(TextLocation location, BoundMouseEventKind eventKind)
     {
-        return new LoweredInstruction(LoweredInstructionKind.UnregisterMouseHandler, location, mouseEventKind: (int)eventKind);
+        return new LoweredInstruction(LoweredInstructionKind.UnregisterMouseHandler, location, flags: (int)eventKind);
     }
 
     public static LoweredInstruction PauseMouseHandler(TextLocation location, BoundMouseEventKind eventKind)
     {
-        return new LoweredInstruction(LoweredInstructionKind.PauseMouseHandler, location, mouseEventKind: (int)eventKind);
+        return new LoweredInstruction(LoweredInstructionKind.PauseMouseHandler, location, flags: (int)eventKind);
     }
 
     public static LoweredInstruction ResumeMouseHandler(TextLocation location, BoundMouseEventKind eventKind)
     {
-        return new LoweredInstruction(LoweredInstructionKind.ResumeMouseHandler, location, mouseEventKind: (int)eventKind);
+        return new LoweredInstruction(LoweredInstructionKind.ResumeMouseHandler, location, flags: (int)eventKind);
     }
 
     public static LoweredInstruction PrintValue(TextLocation location)
@@ -365,7 +365,7 @@ public sealed class LoweredInstruction
         }
 
         var valueCount = hasCoordinates ? 4 + (hasFillColor ? 1 : 0) + (hasBorderColor ? 1 : 0) : 0;
-        return new LoweredInstruction(LoweredInstructionKind.View, location, valueCount: valueCount, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.View, location, valueCount: valueCount, flags: flags);
     }
 
     public static LoweredInstruction ViewPrint(TextLocation location, bool hasRows)
@@ -389,7 +389,7 @@ public sealed class LoweredInstruction
             flags |= 2;
         }
 
-        return new LoweredInstruction(LoweredInstructionKind.Window, location, valueCount: hasCoordinates ? 4 : 0, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.Window, location, valueCount: hasCoordinates ? 4 : 0, flags: flags);
     }
 
     public static LoweredInstruction Cls(TextLocation location)
@@ -403,7 +403,7 @@ public sealed class LoweredInstruction
             LoweredInstructionKind.Color,
             location,
             valueCount: backgroundMode == BoundColorBackgroundMode.Color ? 2 : 1,
-            mouseEventKind: (int)backgroundMode);
+            flags: (int)backgroundMode);
     }
 
     public static LoweredInstruction Locate(TextLocation location)
@@ -434,7 +434,7 @@ public sealed class LoweredInstruction
             flags |= 2;
         }
 
-        return new LoweredInstruction(LoweredInstructionKind.PSet, location, valueCount: hasColor ? 3 : 2, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.PSet, location, valueCount: hasColor ? 3 : 2, flags: flags);
     }
 
     public static LoweredInstruction Get(TextLocation location, bool isStartRelative, bool isEndRelative)
@@ -450,7 +450,7 @@ public sealed class LoweredInstruction
             flags |= 2;
         }
 
-        return new LoweredInstruction(LoweredInstructionKind.Get, location, valueCount: 5, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.Get, location, valueCount: 5, flags: flags);
     }
 
     public static LoweredInstruction Put(TextLocation location, BoundPutActionKind action, bool isRelative)
@@ -461,7 +461,7 @@ public sealed class LoweredInstruction
             flags |= 1;
         }
 
-        return new LoweredInstruction(LoweredInstructionKind.Put, location, valueCount: 3, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.Put, location, valueCount: 3, flags: flags);
     }
 
     public static LoweredInstruction Line(
@@ -492,7 +492,7 @@ public sealed class LoweredInstruction
             LoweredInstructionKind.Line,
             location,
             valueCount: hasColor ? (hasExplicitStartPoint ? 5 : 3) : (hasExplicitStartPoint ? 4 : 2),
-            mouseEventKind: flags);
+            flags: flags);
     }
 
     public static LoweredInstruction Circle(
@@ -534,7 +534,7 @@ public sealed class LoweredInstruction
             + (hasStart ? 1 : 0)
             + (hasEnd ? 1 : 0)
             + (hasAspect ? 1 : 0);
-        return new LoweredInstruction(LoweredInstructionKind.Circle, location, valueCount: valueCount, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.Circle, location, valueCount: valueCount, flags: flags);
     }
 
     public static LoweredInstruction Paint(TextLocation location, bool isRelative, bool hasFillColor, bool hasBorderColor, bool hasBackground)
@@ -564,7 +564,7 @@ public sealed class LoweredInstruction
             + (hasFillColor ? 1 : 0)
             + (hasBorderColor ? 1 : 0)
             + (hasBackground ? 1 : 0);
-        return new LoweredInstruction(LoweredInstructionKind.Paint, location, valueCount: valueCount, mouseEventKind: flags);
+        return new LoweredInstruction(LoweredInstructionKind.Paint, location, valueCount: valueCount, flags: flags);
     }
 
     public static LoweredInstruction Canvas(TextLocation location)

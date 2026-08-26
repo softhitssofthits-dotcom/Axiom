@@ -966,7 +966,7 @@ SETMAPTILE level, 1, 3, 1, 1, 1
     }
 
     [Fact]
-    public void Execute_CompiledDrawTilemapDrawsVisibleTileLayersAndPreservesCurrentPosition()
+    public void Execute_CompiledDrawTilemapDrawsVisibleTileLayersAndUpdatesCurrentPosition()
     {
         const string text = """
 CANVAS 160, 90
@@ -990,8 +990,8 @@ DRAWTILEMAP level, 10, 20
                 new DrawImageRegionCall(image, 32, 0, 16, 8, 26, 28, 16, 8)
             ],
             host.DrawImageRegions);
-        Assert.Equal(0, host.CurrentGraphicsX);
-        Assert.Equal(0, host.CurrentGraphicsY);
+        Assert.Equal(10, host.CurrentGraphicsX);
+        Assert.Equal(20, host.CurrentGraphicsY);
     }
 
     [Fact]
@@ -1014,8 +1014,8 @@ DRAWTILELAYER level, 2, 10, 20
         Assert.Contains(module.Routines.SelectMany(static routine => routine.Instructions), static instruction => instruction.Opcode == Opcode.DrawTileLayer);
         Assert.Equal(3, host.DrawImageRegions.Count);
         Assert.Equal(new DrawImageRegionCall(image, 0, 0, 16, 8, 10, 20, 16, 8), host.DrawImageRegions[0]);
-        Assert.Equal(0, host.CurrentGraphicsX);
-        Assert.Equal(0, host.CurrentGraphicsY);
+        Assert.Equal(10, host.CurrentGraphicsX);
+        Assert.Equal(20, host.CurrentGraphicsY);
     }
 
     [Fact]

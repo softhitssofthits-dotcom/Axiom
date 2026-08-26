@@ -178,17 +178,11 @@ internal static class GraphicsDrawExecutor
 
         try
         {
-            return NormalizeColor(checked((long)Math.Truncate(value)), position);
+            return GraphicsColorNormalization.Normalize(checked((long)Math.Truncate(value)));
         }
         catch (OverflowException)
         {
             throw new GraphicsDrawException("Команда DRAW содержит слишком большой числовой цвет.", position);
         }
-    }
-
-    private static int NormalizeColor(long value, int position)
-    {
-        _ = position;
-        return (int)(Math.Abs(value) % 256);
     }
 }
