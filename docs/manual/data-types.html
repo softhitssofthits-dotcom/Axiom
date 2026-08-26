@@ -10,7 +10,7 @@
 <header class="topbar">
     <div class="topbar__inner">
         <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Числа, строки, логические значения, FILE, IMAGE, SPRITE, TILESET, TILEMAP, TYPE и массивы</div>
+        <div class="topbar__meta">Числа, строки, дата и время, логические значения, FILE, IMAGE, SPRITE, TILESET, TILEMAP, TYPE и массивы</div>
         <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
 </header>
@@ -31,14 +31,14 @@
 
             <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Типы данных</h1>
-            <p class="lead">Раздел типов данных описывает, какого рода значения хранит программа Axiom и как язык различает их назначение: скалярные типы, строки, файлы, записи, массивы и преобразования между типами.</p>
+            <p class="lead">Раздел типов данных описывает, какого рода значения хранит программа Axiom и как язык различает их назначение: скалярные типы, включая дату и время, строки, файлы, записи, массивы и преобразования между типами.</p>
 
         <section class="article-section">
             <h2>Главные правила</h2>
             <ul>
                 <li>Каждая переменная и константа имеет определённый тип.</li>
                 <li>Тип задаётся явно через <code>AS</code> или выводится из инициализатора там, где такая форма поддержана.</li>
-                <li>Базовые встроенные типы Axiom включают <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code>, <code>FILE</code>, <code>IMAGE</code>, <code>SPRITE</code>, <code>TILESET</code> и <code>TILEMAP</code>.</li>
+                <li>Базовые встроенные типы Axiom включают <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>, <code>STRING</code>, <code>BOOLEAN</code>, <code>DATE</code>, <code>TIME</code>, <code>DATETIME</code>, <code>FILE</code>, <code>IMAGE</code>, <code>SPRITE</code>, <code>TILESET</code> и <code>TILEMAP</code>.</li>
                 <li>Пользовательские записи объявляются через <code>TYPE ... END TYPE</code>.</li>
                 <li>Массивный тип строится из типа элемента и ранга: <code>INTEGER()</code>, <code>STRING(,)</code>, <code>Record(,,)</code>.</li>
                 <li>Если операция требует <code>BOOLEAN</code>, числовое значение не заменяет логическое автоматически.</li>
@@ -84,6 +84,20 @@ END IF</code></pre>
             <blockquote>
                 <p><em>В QuickBASIC в условных выражениях часто использовалась числовая модель: ноль означал ложь, ненулевое значение — истину. В Axiom условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое выражение нужно явно превратить в сравнение, например <code>count &gt; 0</code>.</em></p>
             </blockquote>
+        </section>
+
+        <section class="article-section" id="temporal">
+            <h2>Типы даты и времени</h2>
+            <p>Типы <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> хранят календарные и суточные значения: <code>DATE</code> хранит дату, <code>TIME</code> хранит время суток, а <code>DATETIME</code> хранит дату и время вместе. Это скалярные типы, поэтому такие значения объявляются, присваиваются, выводятся и сравниваются как обычные данные.</p>
+            <pre><code class="language-basic">DIM day AS DATE
+DIM moment AS TIME
+DIM stamp AS DATETIME
+
+day = "2026-08-25"
+moment = "14:05:06"
+stamp = "2026-08-25 14:05:06"</code></pre>
+            <p>Каждый тип имеет канонический строковый вид: <code>DATE</code> — <code>yyyy-MM-dd</code>, <code>TIME</code> — <code>HH:mm:ss</code>, <code>DATETIME</code> — <code>yyyy-MM-dd HH:mm:ss</code>. Строка в таком виде неявно преобразуется в соответствующий тип, а значение типа выводится в этом же виде.</p>
+            <p>Значения <code>DATE</code> и <code>DATETIME</code> охватывают годы с <code>1</code> по <code>9999</code>, а <code>TIME</code> — время суток от <code>00:00:00</code> до <code>23:59:59</code>. Значения этих типов сравниваются операторами <code>=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code> и <code>&gt;=</code>. Подробности о типах находятся на странице <a href="data-types-scalars.html">Скалярные типы и литералы</a>, а функции для работы с такими значениями собраны в разделе <a href="date-time-functions.html">Функции даты и времени</a>.</p>
         </section>
 
         <section class="article-section" id="file">
@@ -150,6 +164,7 @@ DIM board(,) AS INTEGER</code></pre>
                     <tr><td>Числовые</td><td><code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
                     <tr><td>Строковые</td><td><code>STRING</code>, <code>STRING * N</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
                     <tr><td>Логические</td><td><code>BOOLEAN</code>, <code>TRUE</code>, <code>FALSE</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a></td></tr>
+                    <tr><td>Дата и время</td><td><code>DATE</code>, <code>TIME</code>, <code>DATETIME</code></td><td><a href="data-types-scalars.html">Скалярные типы и литералы</a>, <a href="date-time-functions.html">Функции даты и времени</a></td></tr>
                     <tr><td>Файловые</td><td><code>FILE</code></td><td><a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a></td></tr>
                     <tr><td>Изображения</td><td><code>IMAGE</code></td><td><a href="images.html">Изображения IMAGE</a></td></tr>
                     <tr><td>Графические атласы и карты</td><td><code>SPRITE</code>, <code>TILESET</code>, <code>TILEMAP</code></td><td><a href="sprites.html">Спрайты SPRITE</a>, <a href="tilesets.html">Тайлсеты TILESET</a>, <a href="tilemaps.html">Тайловые карты TILEMAP</a></td></tr>
@@ -191,6 +206,7 @@ DIM board(,) AS INTEGER</code></pre>
                 <a href="dim.html">Оператор DIM</a>
                 <a href="data-types-scalars.html">Скалярные типы и литералы</a>
                 <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
+                <a href="date-time-functions.html">Функции даты и времени</a>
                 <a href="data-types-strings-and-files.html">STRING, FILE и фиксированная длина</a>
                 <a href="images.html">Изображения IMAGE</a>
                 <a href="tilesets.html">Тайлсеты TILESET</a>

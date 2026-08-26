@@ -129,17 +129,6 @@ internal static class BuiltinDateTimeHelpers
         return dateTime.ToString(CanonicalDateTimeFormat, DateTimeCulture);
     }
 
-    internal static string FormatCanonicalTemporal(CanonicalTemporalValue value)
-    {
-        return value.Kind switch
-        {
-            TemporalValueKind.Date => FormatCanonicalDate(value.Date),
-            TemporalValueKind.Time => FormatCanonicalTime(value.Time),
-            TemporalValueKind.DateTime => FormatCanonicalDateTime(value.ToDateTime()),
-            _ => throw new InvalidOperationException($"Unsupported temporal kind '{value.Kind}'.")
-        };
-    }
-
     internal static bool TryConvertTemporalValue(RuntimeValue value, TypeSymbol targetType, out RuntimeValue converted)
     {
         converted = null!;
@@ -519,6 +508,469 @@ internal static class BuiltinDateTimeHelpers
             functionName,
             argName,
             "must be one of: yyyy, q, m, d, y, w, h, n, s.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static CanonicalTemporalValue ParseCanonicalDateBasedArgument(
+        string value,
+        string functionName,
+        string argumentName,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (TryParseCanonicalDateOnly(value, out var date))
+        {
+            return CanonicalTemporalValue.FromDate(date);
+        }
+
+        if (TryParseCanonicalDateTime(value, out var dateTime))
+        {
+            return CanonicalTemporalValue.FromDateTime(dateTime);
+        }
+
+        reportError(
+            functionName,
+            argumentName,
+            $"must be a canonical date or date-time in form '{CanonicalDateFormat}' or '{CanonicalDateTimeFormat}'.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static CanonicalTemporalValue ParseCanonicalTimeBasedArgument(
+        string value,
+        string functionName,
+        string argumentName,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (TryParseCanonicalTimeOnly(value, out var time))
+        {
+            return CanonicalTemporalValue.FromTime(time);
+        }
+
+        if (TryParseCanonicalDateTime(value, out var dateTime))
+        {
+            return CanonicalTemporalValue.FromDateTime(dateTime);
+        }
+
+        reportError(
+            functionName,
+            argumentName,
+            $"must be a canonical time or date-time in form '{CanonicalTimeFormat}' or '{CanonicalDateTimeFormat}'.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static TimeZoneInfo ResolveTimeZoneArgument(
+        string functionName,
+        string argumentName,
+        string value,
+        TextLocation location,
+        IRuntimeHost host,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            reportError(
+                functionName,
+                argumentName,
+                "must name 'UTC', 'LOCAL' or a known host time zone identifier.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        if (host.TryResolveTimeZone(value, out var timeZone))
+        {
+            return timeZone;
+        }
+
+        reportError(
+            functionName,
+            argumentName,
+            "must name 'UTC', 'LOCAL' or a known host time zone identifier.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static TimeSpan ResolveUtcOffsetAtCurrentInstant(TimeZoneInfo timeZone, DateTimeOffset localNow)
+    {
+        return timeZone.GetUtcOffset(localNow.UtcDateTime);
+    }
+
+    internal static TimeSpan ResolveCurrentLocalUtcOffset(IRuntimeHost host)
+    {
+        return ResolveUtcOffsetAtCurrentInstant(host.GetLocalTimeZone(), host.GetLocalNow());
+    }
+
+    internal static TimeSpan ResolveUtcOffsetForLocalDateTime(
+        string functionName,
+        string argumentName,
+        TimeZoneInfo timeZone,
+        DateTime localDateTime,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        var unspecifiedLocalDateTime = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
+
+        if (timeZone.IsInvalidTime(unspecifiedLocalDateTime))
+        {
+            reportError(
+                functionName,
+                argumentName,
+                "must refer to an existing local date-time and not fall into a skipped clock transition.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        if (timeZone.IsAmbiguousTime(unspecifiedLocalDateTime))
+        {
+            reportError(
+                functionName,
+                argumentName,
+                "must refer to an unambiguous local date-time and not fall into a repeated clock transition.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        return timeZone.GetUtcOffset(unspecifiedLocalDateTime);
+    }
+
+    internal static DateTime ConvertUtcToTimeZoneDateTime(DateTime utcDateTime, TimeZoneInfo timeZone)
+    {
+        var utc = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
+        var offset = timeZone.GetUtcOffset(utc);
+        var convertedTicks = utc.Ticks + offset.Ticks;
+
+        if (convertedTicks < DateTime.MinValue.Ticks || convertedTicks > DateTime.MaxValue.Ticks)
+        {
+            throw new ArgumentOutOfRangeException(nameof(utcDateTime));
+        }
+
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, timeZone);
+    }
+
+    internal static DateTime ConvertUtcToLocalDateTime(DateTime utcDateTime, IRuntimeHost host)
+    {
+        return ConvertUtcToTimeZoneDateTime(utcDateTime, host.GetLocalTimeZone());
+    }
+
+    internal static CanonicalTemporalValue AddTemporalValue(
+        string functionName,
+        CanonicalTemporalValue value,
+        DateTimeIntervalKind interval,
+        int number,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        try
+        {
+            return interval switch
+            {
+                DateTimeIntervalKind.Year => AddDateBasedTemporal(value, static (date, amount) => date.AddYears(amount), static (dateTime, amount) => dateTime.AddYears(amount), number),
+                DateTimeIntervalKind.Quarter => AddDateBasedTemporal(value, static (date, amount) => date.AddMonths(checked(amount * 3)), static (dateTime, amount) => dateTime.AddMonths(checked(amount * 3)), number),
+                DateTimeIntervalKind.Month => AddDateBasedTemporal(value, static (date, amount) => date.AddMonths(amount), static (dateTime, amount) => dateTime.AddMonths(amount), number),
+                DateTimeIntervalKind.Day => AddDateBasedTemporal(value, static (date, amount) => date.AddDays(amount), static (dateTime, amount) => dateTime.AddDays(amount), number),
+                DateTimeIntervalKind.Hour => AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerHour)),
+                DateTimeIntervalKind.Minute => AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerMinute)),
+                DateTimeIntervalKind.Second => AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerSecond)),
+                _ => throw new InvalidOperationException($"Unsupported interval '{interval}'.")
+            };
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            reportError(
+                functionName,
+                "value",
+                "must remain within canonical date/time range after arithmetic.",
+                location);
+            throw new RuntimeFailureException();
+        }
+        catch (OverflowException)
+        {
+            reportError(
+                functionName,
+                "value",
+                "must remain within canonical date/time range after arithmetic.",
+                location);
+            throw new RuntimeFailureException();
+        }
+        catch (InvalidOperationException ex)
+        {
+            reportError(
+                functionName,
+                "value",
+                $"is not supported for the given date/time kind: {ex.Message}",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    internal static long EvaluateTimeBasedDiff(
+        DateTimeIntervalKind interval,
+        CanonicalTemporalValue fromTemporal,
+        CanonicalTemporalValue toTemporal,
+        string functionName,
+        string argumentName,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (fromTemporal.Kind == TemporalValueKind.Time && toTemporal.Kind == TemporalValueKind.Time)
+        {
+            return GetTimeBoundaryIndex(toTemporal.Time, interval) - GetTimeBoundaryIndex(fromTemporal.Time, interval);
+        }
+
+        if (fromTemporal.Kind == TemporalValueKind.DateTime && toTemporal.Kind == TemporalValueKind.DateTime)
+        {
+            return GetDateTimeBoundaryIndex(toTemporal.ToDateTime(), interval) - GetDateTimeBoundaryIndex(fromTemporal.ToDateTime(), interval);
+        }
+
+        reportError(
+            functionName,
+            argumentName,
+            "must use values of the same temporal kind (time or date-time).",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static bool IsDateBasedInterval(DateTimeIntervalKind interval)
+    {
+        return interval is DateTimeIntervalKind.Year
+            or DateTimeIntervalKind.Quarter
+            or DateTimeIntervalKind.Month
+            or DateTimeIntervalKind.Day;
+    }
+
+    internal static CanonicalTemporalValue ToTemporalValue(RuntimeValue value)
+    {
+        if (value.Type == TypeSymbol.Date)
+        {
+            return CanonicalTemporalValue.FromDate(value.AsDate());
+        }
+
+        if (value.Type == TypeSymbol.Time)
+        {
+            return CanonicalTemporalValue.FromTime(value.AsTime());
+        }
+
+        if (value.Type == TypeSymbol.DateTime)
+        {
+            return CanonicalTemporalValue.FromDateTime(value.AsDateTime());
+        }
+
+        throw new InvalidOperationException($"Unsupported temporal type '{value.Type.Name}'.");
+    }
+
+    internal static RuntimeValue ToRuntimeTemporalValue(CanonicalTemporalValue value)
+    {
+        return value.Kind switch
+        {
+            TemporalValueKind.Date => RuntimeValue.FromDate(value.Date),
+            TemporalValueKind.Time => RuntimeValue.FromTime(value.Time),
+            TemporalValueKind.DateTime => RuntimeValue.FromDateTime(value.ToDateTime()),
+            _ => throw new InvalidOperationException($"Unsupported temporal kind '{value.Kind}'.")
+        };
+    }
+
+    internal static long EvaluateDateDiffTemporal(
+        string functionName,
+        DateTimeIntervalKind interval,
+        CanonicalTemporalValue fromTemporal,
+        CanonicalTemporalValue toTemporal,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (IsDateBasedInterval(interval))
+        {
+            if (fromTemporal.Kind is TemporalValueKind.Date or TemporalValueKind.DateTime
+                && toTemporal.Kind is TemporalValueKind.Date or TemporalValueKind.DateTime)
+            {
+                return EvaluateDateBasedDiff(interval, fromTemporal.Date, toTemporal.Date);
+            }
+
+            reportError(
+                functionName,
+                "fromValue",
+                "must be a DATE or DATETIME value for date-based intervals.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        if (fromTemporal.Kind is TemporalValueKind.Time or TemporalValueKind.DateTime
+            && toTemporal.Kind is TemporalValueKind.Time or TemporalValueKind.DateTime)
+        {
+            return EvaluateTimeBasedDiff(interval, fromTemporal, toTemporal, functionName, "toValue", location, reportError);
+        }
+
+        reportError(
+            functionName,
+            "fromValue",
+            "must be a TIME or DATETIME value for time-based intervals.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static int EvaluateDatePartTemporal(
+        string functionName,
+        PartTokenInfo part,
+        CanonicalTemporalValue temporal,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (part.IsDateBased)
+        {
+            if (temporal.Kind is TemporalValueKind.Date or TemporalValueKind.DateTime)
+            {
+                return EvaluateDatePart(part.Kind, temporal.Date);
+            }
+
+            reportError(
+                functionName,
+                "value",
+                "must be a DATE or DATETIME value for date-based parts.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        if (temporal.Kind is TemporalValueKind.Time or TemporalValueKind.DateTime)
+        {
+            return EvaluateTimePart(part.Kind, temporal.Time);
+        }
+
+        reportError(
+            functionName,
+            "value",
+            "must be a TIME or DATETIME value for time-based parts.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureCalendarYearArgument(
+        string functionName,
+        string argumentName,
+        int year,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (year is >= 1 and <= 9999)
+        {
+            return;
+        }
+
+        reportError(
+            functionName,
+            argumentName,
+            "must be in range 1..9999.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureCalendarMonthArgument(
+        string functionName,
+        string argumentName,
+        int month,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (month is >= 1 and <= 12)
+        {
+            return;
+        }
+
+        reportError(
+            functionName,
+            argumentName,
+            "must be in range 1..12.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureDateSerialDay(
+        int day,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (day is >= 1 and <= 31)
+        {
+            return;
+        }
+
+        reportError(
+            "DATESERIAL",
+            "day",
+            "must be in range 1..31.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureTimeSerialHour(
+        int hour,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (hour is >= 0 and <= 23)
+        {
+            return;
+        }
+
+        reportError(
+            "TIMESERIAL",
+            "hour",
+            "must be in range 0..23.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureTimeSerialMinute(
+        int minute,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (minute is >= 0 and <= 59)
+        {
+            return;
+        }
+
+        reportError(
+            "TIMESERIAL",
+            "minute",
+            "must be in range 0..59.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureTimeSerialSecond(
+        int second,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (second is >= 0 and <= 59)
+        {
+            return;
+        }
+
+        reportError(
+            "TIMESERIAL",
+            "second",
+            "must be in range 0..59.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    internal static void EnsureWeekdayNameWeekday(
+        int weekday,
+        TextLocation location,
+        Action<string, string, string, TextLocation> reportError)
+    {
+        if (weekday is >= 1 and <= 7)
+        {
+            return;
+        }
+
+        reportError(
+            "WEEKDAYNAME",
+            "weekday",
+            "must be in range 1..7 according to Monday-first numbering.",
             location);
         throw new RuntimeFailureException();
     }

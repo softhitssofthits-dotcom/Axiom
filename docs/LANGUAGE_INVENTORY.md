@@ -5813,7 +5813,7 @@ CATEGORY: DateTime Built-ins
 FEATURE: DATEADD
 USER-VISIBLE: YES
 SYNTAX: DATEADD(interval,n,value)
-SIGNATURE: (STRING,INT,STRING) -> STRING
+SIGNATURE: (STRING,INT,DATE|TIME|DATETIME) -> DATE|TIME|DATETIME
 TYPE: Built-in function
 PARSER: YES
 BINDER: YES
@@ -5828,14 +5828,14 @@ MATURITY: STABLE
 DEPENDENCIES: Lexer, Parser, Binder, Runtime
 EVIDENCE: BuiltinFunctionId.DateAdd
 CONFIDENCE: CONFIRMED
-NOTES: Добавление к дате.
+NOTES: Добавление к дате. Только нативные DATE/TIME/DATETIME; результат того же вида.
 
 LANG-0213:
 CATEGORY: DateTime Built-ins
 FEATURE: DATEDIFF
 USER-VISIBLE: YES
 SYNTAX: DATEDIFF(interval,from,to)
-SIGNATURE: (STRING,STRING,STRING) -> LONG
+SIGNATURE: (STRING,DATE|TIME|DATETIME,DATE|TIME|DATETIME) -> LONG
 TYPE: Built-in function
 PARSER: YES
 BINDER: YES
@@ -5850,14 +5850,14 @@ MATURITY: STABLE
 DEPENDENCIES: Lexer, Parser, Binder, Runtime
 EVIDENCE: BuiltinFunctionId.DateDiff
 CONFIDENCE: CONFIRMED
-NOTES: Разница дат.
+NOTES: Разница дат. Оба значения одного вида; смешение видов — MB2003.
 
 LANG-0214:
 CATEGORY: DateTime Built-ins
 FEATURE: DATEPART
 USER-VISIBLE: YES
 SYNTAX: DATEPART(part,value)
-SIGNATURE: (STRING,STRING) -> INTEGER
+SIGNATURE: (STRING,DATE|TIME|DATETIME) -> INTEGER
 TYPE: Built-in function
 PARSER: YES
 BINDER: YES
@@ -5872,7 +5872,7 @@ MATURITY: STABLE
 DEPENDENCIES: Lexer, Parser, Binder, Runtime
 EVIDENCE: BuiltinFunctionId.DatePart
 CONFIDENCE: CONFIRMED
-NOTES: Часть даты.
+NOTES: Часть даты. Только нативные значения.
 
 LANG-0215:
 CATEGORY: DateTime Built-ins

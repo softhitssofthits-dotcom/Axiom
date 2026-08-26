@@ -32,8 +32,9 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEADD(interval, number, value)</code></pre>
                 <h3>Аргументы</h3><p><code>interval</code> задаёт токен интервала, <code>number</code> число шагов, а <code>value</code> исходную дату, время или дату-время.</p>
+                <p>Аргумент <code>value</code> принимает только нативное значение <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code> — строковые формы не поддерживаются (для получения нативного значения из строки используйте <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>DATEVALUE</code> или <code>TIMEVALUE</code>). Функция возвращает нативное значение того же вида: <code>DATE</code> даёт <code>DATE</code>, <code>TIME</code> даёт <code>TIME</code>, <code>DATETIME</code> даёт <code>DATETIME</code>, без промежуточного преобразования в строку.</p>
                 <h3>Единицы прибавления даты и времени</h3>
-                <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходной строки: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем.</p>
+                <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходного значения: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем. Интервалы <code>yyyy</code>, <code>q</code>, <code>m</code> и <code>d</code> требуют значения вида <code>DATE</code> или <code>DATETIME</code>, а интервалы <code>h</code>, <code>n</code> и <code>s</code> — значения вида <code>TIME</code> или <code>DATETIME</code>.</p>
             </section>
 
             <section class="article-section" id="datediff">
@@ -42,6 +43,9 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEDIFF(interval, fromValue, toValue)</code></pre>
                 <h3>Аргументы</h3><p><code>interval</code> задаёт единицу измерения, <code>fromValue</code> начальное значение, а <code>toValue</code> конечное. Результат имеет тип <code>LONG</code>.</p>
+                <p>Аргументы <code>fromValue</code> и <code>toValue</code> принимают только нативные значения <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code>, причём оба значения должны быть одного вида. Строковые формы не поддерживаются.</p>
+                <h3>Одинаковый временной вид значений</h3>
+                <p>Для интервалов времени <code>h</code>, <code>n</code> и <code>s</code> оба значения должны быть одного временного вида: либо оба временами, либо оба датами-временем. Смешение вида, например вызов <code>DATEDIFF("h", timeValue, dateTimeValue)</code>, не проходит проверку типов и завершается ошибкой компиляции вместо молчаливой разности только по времени суток. Для интервалов дат <code>yyyy</code>, <code>q</code>, <code>m</code> и <code>d</code> оба значения должны быть вида <code>DATE</code> или <code>DATETIME</code>.</p>
             </section>
 
             <section class="article-section" id="datepart">
@@ -49,9 +53,9 @@
                 <p>Функция <code>DATEPART</code> извлекает указанную часть даты или времени по токену.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEPART(part, value)</code></pre>
-                <h3>Аргументы</h3><p><code>part</code> задаёт требуемую часть, а <code>value</code> строку даты, времени или даты-времени. Результат имеет тип <code>INTEGER</code>.</p>
+                <h3>Аргументы</h3><p><code>part</code> задаёт требуемую часть, а <code>value</code> принимает только нативное значение <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code> (строковые формы не поддерживаются). Результат имеет тип <code>INTEGER</code>.</p>
                 <h3>Проверка перед разбором строки</h3>
-                <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>.</p>
+                <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>. Токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code> и <code>w</code> требуют значения вида <code>DATE</code> или <code>DATETIME</code>, а токены <code>h</code>, <code>n</code> и <code>s</code> — значения вида <code>TIME</code> или <code>DATETIME</code>.</p>
             </section>
 
             <section class="article-section" id="datevalue-timevalue">
@@ -60,7 +64,7 @@
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATEVALUE(value)
 result = TIMEVALUE(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт строку даты-времени в каноническом формате. Обе функции возвращают строку.</p>
+                <h3>Аргументы</h3><p><code>value</code> задаёт строку даты-времени в каноническом формате. Функция <code>DATEVALUE</code> возвращает значение <code>DATE</code>, а функция <code>TIMEVALUE</code> — значение <code>TIME</code>.</p>
             </section>
 
             <section class="article-section" id="isdate">
@@ -73,20 +77,38 @@ result = TIMEVALUE(value)</code></pre>
 
             <section class="article-section">
                 <h2>Пример календарной арифметики и разбора</h2>
-                <pre><code class="language-basic">' Арифметика и разбор канонических значений даты и времени
-PRINT DATEADD("m", 1, "2026-01-31")
-PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")
-PRINT DATEPART("y", "2026-04-21")
+                <pre><code class="language-basic">' Арифметика и разбор нативных значений даты и времени
+PRINT DATEADD("m", 1, DATEVALUE("2026-01-31"))
+PRINT DATEDIFF("d", DATEVALUE("2026-04-20 23:59:59"), DATEVALUE("2026-04-21 00:00:00"))
+PRINT DATEPART("y", DATEVALUE("2026-04-21"))
 PRINT DATEVALUE("2026-04-20 14:05:06")
 PRINT TIMEVALUE("2026-04-20 14:05:06")
 PRINT ISDATE("2026-04-20 14:05:06")</code></pre>
             </section>
 
             <section class="article-section">
+                <h2>Пример с нативными значениями</h2>
+                <pre><code class="language-basic">' Типизированный стиль: нативные значения без преобразования в строку
+DIM d AS DATE = DATESERIAL(2026, 1, 31)
+PRINT DATEADD("m", 1, d)                     ' 2026-02-28, результат имеет тип DATE
+DIM t AS TIME = TIMESERIAL(14, 5, 59)
+PRINT DATEADD("n", 1, t)                     ' 14:06:59, результат имеет тип TIME
+DIM dt AS DATETIME = "2026-04-20 23:05:06"
+PRINT DATEADD("h", 2, dt)                    ' 2026-04-21 01:05:06, результат имеет тип DATETIME
+PRINT DATEDIFF("m", d, DATEADD("m", 2, d))   ' 2
+PRINT DATEPART("q", d)                       ' 1</code></pre>
+            </section>
+
+            <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
                     <li>Неканонический текст вроде <code>"20.04.2026"</code> считается ошибкой аргумента встроенной функции.</li>
+                    <li>Строковые значения для <code>DATEADD</code>, <code>DATEDIFF</code> и <code>DATEPART</code> не принимаются: преобразуйте строки в нативные значения через <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>DATEVALUE</code> или <code>TIMEVALUE</code>.</li>
                     <li>Неподдерживаемые токены для <code>DATEADD</code>, <code>DATEDIFF</code> и <code>DATEPART</code> также приводят к ошибке аргумента.</li>
+                    <li>Для интервалов времени <code>h</code>, <code>n</code> и <code>s</code> функция <code>DATEDIFF</code> отвергает смешение временного вида значений: если одно значение является временем, а другое датой-временем, вызов не проходит проверку типов (ошибка компиляции <code>MB2003</code>).</li>
+                    <li>Для нативных значений функция <code>DATEADD</code> отвергает несовместимую пару интервала и вида значения: интервалы <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code> не работают с <code>TIME</code>, а интервалы <code>h</code>, <code>n</code>, <code>s</code> — с <code>DATE</code>.</li>
+                    <li>Функция <code>DATEDIFF</code> с нативными значениями требует, чтобы значения соответствовали виду интервала: для интервалов дат — <code>DATE</code> или <code>DATETIME</code>, для интервалов времени — <code>TIME</code> или <code>DATETIME</code>.</li>
+                    <li>Функция <code>DATEPART</code> с нативным значением требует, чтобы значение соответствовало виду запрошенной части: части даты требуют <code>DATE</code> или <code>DATETIME</code>, части времени — <code>TIME</code> или <code>DATETIME</code>.</li>
                     <li>Если вычисление выходит за допустимый диапазон даты или времени, функция завершается диагностикой времени выполнения.</li>
                 </ul>
             </section>
@@ -95,7 +117,9 @@ PRINT ISDATE("2026-04-20 14:05:06")</code></pre>
                 <h2>Ручная проверка</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/dateadd/month_end_shift.axm">DATEADD: сдвиг даты</a></li>
+                    <li><a href="../../samples/functions/dateadd/typed_temporal_values.axm">DATEADD, DATEDIFF и DATEPART: нативные значения DATE, TIME и DATETIME</a></li>
                     <li><a href="../../samples/functions/datediff/day_boundary.axm">DATEDIFF: разница между датами</a></li>
+                    <li><a href="../../samples/functions/datediff/mixed_temporal_kinds_error.axm">DATEDIFF: смешение временного вида значений</a></li>
                     <li><a href="../../samples/functions/datepart/day_of_year.axm">DATEPART: извлечение части</a></li>
                     <li><a href="../../samples/functions/datevalue/from_datetime.axm">DATEVALUE: дата из даты-времени</a></li>
                     <li><a href="../../samples/functions/timevalue/from_datetime.axm">TIMEVALUE: время из даты-времени</a></li>

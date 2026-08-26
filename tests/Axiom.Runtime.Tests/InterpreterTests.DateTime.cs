@@ -98,16 +98,20 @@ PRINT WEEKDAY(DATESERIAL(2026, 4, 26))
     public void Execute_DateTimeStage3FunctionsUseCanonicalContracts()
     {
         const string text = """
-PRINT DATEADD("m", 1, "2026-01-31")
-PRINT DATEADD("h", 2, "2026-04-20 23:05:06")
-PRINT DATEADD("s", 10, "23:59:55")
-PRINT DATEDIFF("m", "2026-01-31", "2026-04-20")
-PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")
-PRINT DATEDIFF("n", "14:05:59", "14:06:00")
-PRINT DATEPART("q", "2026-04-20")
-PRINT DATEPART("y", "2026-04-21")
-PRINT DATEPART("w", "2026-04-26")
-PRINT DATEPART("h", "2026-04-20 14:05:06")
+PRINT DATEADD("m", 1, DATEVALUE("2026-01-31"))
+DIM dt AS DATETIME = "2026-04-20 23:05:06"
+PRINT DATEADD("h", 2, dt)
+PRINT DATEADD("s", 10, TIMEVALUE("23:59:55"))
+PRINT DATEDIFF("m", DATEVALUE("2026-01-31"), DATEVALUE("2026-04-20"))
+DIM dt1 AS DATETIME = "2026-04-20 23:59:59"
+DIM dt2 AS DATETIME = "2026-04-21 00:00:00"
+PRINT DATEDIFF("d", dt1, dt2)
+PRINT DATEDIFF("n", TIMEVALUE("14:05:59"), TIMEVALUE("14:06:00"))
+PRINT DATEPART("q", DATEVALUE("2026-04-20"))
+PRINT DATEPART("y", DATEVALUE("2026-04-21"))
+PRINT DATEPART("w", DATEVALUE("2026-04-26"))
+DIM dt3 AS DATETIME = "2026-04-20 14:05:06"
+PRINT DATEPART("h", dt3)
 PRINT DATEVALUE("2026-04-20 14:05:06")
 PRINT TIMEVALUE("2026-04-20 14:05:06")
 PRINT ISDATE("2026-04-20")
@@ -167,13 +171,186 @@ PRINT WEEKDAYNAME(WEEKDAY(DATESERIAL(2026, 4, 26)))
     [Fact]
     public void Execute_DateAddReportsInvalidIntervalToken()
     {
-        const string text = "PRINT DATEADD(\"ww\", 1, \"2026-04-20\")";
+        const string text = "PRINT DATEADD(\"ww\", 1, DATEVALUE(\"2026-04-20\"))";
 
         var (_, _, result) = ExecuteProgram(text);
 
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
         Assert.Contains("DATEADD", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("interval", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_DateAddSupportsQuarterAndYearIntervals()
+    {
+        const string text = """
+PRINT DATEADD("q", 1, DATEVALUE("2026-01-31"))
+PRINT DATEADD("q", -1, DATEVALUE("2026-04-30"))
+PRINT DATEADD("yyyy", 1, DATEVALUE("2024-02-29"))
+DIM dt AS DATETIME = "2026-04-20 14:05:06"
+PRINT DATEADD("yyyy", 1, dt)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            [
+                "2026-04-30",
+                "2026-01-30",
+                "2025-02-28",
+                "2027-04-20 14:05:06"
+            ],
+            host.Output);
+    }
+
+    [Fact]
+    public void Execute_DateDiffReportsMixedTemporalKinds()
+    {
+        const string text = """
+DIM t AS TIME = TIMEVALUE("10:00:00")
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+PRINT DATEDIFF("h", t, dt)
+""";
+
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        _ = Binder.Bind(syntax, out var binderDiagnostics);
+
+        var diagnostic = Assert.Single(binderDiagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATETIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_DateAddAcceptsNativeTemporalValues()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 1, 31)
+PRINT DATEADD("m", 1, d)
+DIM t AS TIME = TIMESERIAL(23, 59, 55)
+PRINT DATEADD("s", 10, t)
+DIM dt AS DATETIME = "2026-04-20 23:05:06"
+PRINT DATEADD("h", 2, dt)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["2026-02-28", "00:00:05", "2026-04-21 01:05:06"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_DateDiffAcceptsNativeTemporalValues()
+    {
+        const string text = """
+DIM d1 AS DATE = DATESERIAL(2026, 1, 31)
+DIM d2 AS DATE = DATESERIAL(2026, 4, 20)
+PRINT DATEDIFF("m", d1, d2)
+DIM t1 AS TIME = TIMESERIAL(14, 5, 59)
+DIM t2 AS TIME = TIMESERIAL(14, 6, 0)
+PRINT DATEDIFF("n", t1, t2)
+DIM dt1 AS DATETIME = "2026-04-20 23:59:59"
+DIM dt2 AS DATETIME = "2026-04-21 00:00:00"
+PRINT DATEDIFF("d", dt1, dt2)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3", "1", "1"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_DatePartAcceptsNativeTemporalValues()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 4, 20)
+PRINT DATEPART("q", d)
+PRINT DATEPART("y", d)
+PRINT DATEPART("w", d)
+DIM t AS TIME = TIMESERIAL(14, 5, 6)
+PRINT DATEPART("h", t)
+DIM dt AS DATETIME = "2026-04-20 14:05:06"
+PRINT DATEPART("m", dt)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["2", "110", "1", "14", "4"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_DateAddNativeTimeValueReportsKindError()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+PRINT DATEADD("m", 1, t)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("DATEADD", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not supported for the given date/time kind", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_DateDiffNativeDateValuesReportIntervalKindError()
+    {
+        const string text = """
+DIM d1 AS DATE = DATESERIAL(2026, 1, 31)
+DIM d2 AS DATE = DATESERIAL(2026, 4, 20)
+PRINT DATEDIFF("h", d1, d2)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("DATEDIFF", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("fromValue", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("must be a TIME or DATETIME value for time-based intervals", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_DatePartNativeTimeValueReportsKindError()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+PRINT DATEPART("m", t)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("DATEPART", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("must be a DATE or DATETIME value for date-based parts", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_DateDiffNativeMixedTemporalKindsReportsSameKindError()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+PRINT DATEDIFF("h", t, dt)
+""";
+
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        _ = Binder.Bind(syntax, out var binderDiagnostics);
+
+        var diagnostic = Assert.Single(binderDiagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATETIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

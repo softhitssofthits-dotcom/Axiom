@@ -3043,3 +3043,130 @@ Health Score: **8.8/10**.
 - `src/Axiom.Ide/Editor/Formatting/TokenClassifier.cs` — добавлен кейс `RawTokenKind.PlainText` → `FormattedTokenKind.PlainText` (текст не модифицируется)
 
 Результат: сборка 0 ошибок/0 warnings; IDE-тесты 581/581 (4 падения — ранее существующие); все форматирующие тесты проходят; `interpolation_format.axm` корректно отображается в IDE с сохранением спецификаторов.
+
+## Session 1092 - 2026-08-25 23:48 - Устранение дефектов подсистемы DATE/TIME по forensic-аудиту
+
+Выполнены дефекты из задания по forensic-аудиту DATE/TIME:
+
+**P2 — смешанные виды в DATEDIFF (time-интервалы):**
+- `DATEDIFF("h", "10:00:00", "2026-01-02 12:00:00")` раньше молча игнорировал дату и возвращал разность только по времени суток.
+- Теперь смешение времени и даты-времени в `DATEDIFF` с интервалами `h`/`n`/`s` даёт ошибку аргумента `MB3007` с текстом `must use values of the same temporal kind (time or date-time).` и аргументом `toValue`.
+- Логика размещена в одном месте: `BuiltinDateTimeHelpers.EvaluateTimeBasedDiff(...)`.
+
+**P3 — консолидация дублированной логики:**
+- В `src/Axiom.Runtime/Builtins/BuiltinDateTimeHelpers.cs` перенесены из двух движков: валидация диапазонов (`EnsureCalendarYearArgument`, `EnsureCalendarMonthArgument`, `EnsureDateSerialDay`, `EnsureTimeSerialHour/Minute/Second`, `EnsureWeekdayNameWeekday`), разрешение часовых поясов и конвертация (`ResolveTimeZoneArgument`, `ResolveCurrentLocalUtcOffset`, `ResolveUtcOffsetAtCurrentInstant`, `ResolveUtcOffsetForLocalDateTime`, `ConvertUtcToLocalDateTime`, `ConvertUtcToTimeZoneDateTime`), парсинг с определением вида (`ParseCanonicalDateBasedArgument`, `ParseCanonicalTimeBasedArgument`), арифметика (`AddTemporalValue` с полной обработкой ошибок) и разность (`EvaluateTimeBasedDiff`).
+- `Interpreter.Builtins.DateTime.Helpers.cs` и `BytecodeVm.Builtins.DateTime.cs` теперь содержат только тонкие обёртки, различающиеся способом передачи позиции (`BoundCallExpression`+index против `TextLocation`), как и допускало задание.
+- Удалён мёртвый код: `Interpreter.ResolveLocalUtcOffsetForUtcDateTime`, неиспользуемые приватные обёртки `ParseCanonicalDateArgument`/`ParseCanonicalTimeArgument` (Interpreter) и `ParseCanonicalDateArgument`/`ParseCanonicalTimeArgument`/`ParseCanonicalDateTimeArgument` (VM).
+- Поведение и сигнатуры ошибок сохранены 1:1; сообщения DATE/TIME-диагностики переведены на английский: `is not supported for the given date/time kind: {ex.Message}` вместо `не поддерживается для данного типа даты/времени: ...` (8 вхождений: 6 ушли вместе с консолидированной логикой, 2 остались в `DATEPART`-обёртках обоих движков).
+
+**P3 — унификация диагностики конвертации типов:**
+- `Interpreter.Expressions.cs` и `BytecodeVm.cs` теперь выдают одинаковый текст `Cannot convert type: {from} -> {to}.`; расхождение `VM` устранено, в VM `targetTypeSymbol.Name` выводится по расширенному маппингу `BytecodeScalarTypeCode` → `TypeSymbol`.
+
+**P4 — тесты:**
+- `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs`: `Execute_CompiledToUtcReportsInvalidLocalDateTimeDuringSkippedTransition`, `Execute_CompiledUtcOffsetReportsAmbiguousLocalDateTimeDuringRepeatedTransition` (DST-паритет с Interpreter), `Execute_CompiledDateDiffReportsMixedTemporalKinds`, `Execute_CompiledDateAddSupportsQuarterAndYearIntervals`; добавлен helper `CreateTestSeasonalTimeZone`.
+- `tests/Axiom.Runtime.Tests/InterpreterTests.DateTime.cs`: `Execute_DateDiffReportsMixedTemporalKinds`, `Execute_DateAddSupportsQuarterAndYearIntervals`.
+
+**P5 — решено отложить:**
+- Принятие нативных `Date`/`Time`/`DateTime` в `DATEADD`/`DATEDIFF`/`DATEPART` не делалось: это требует перегрузок дескрипторов и меняет публичный контракт функций; риск регрессий против пользы не оправдан. Рекомендация на будущее: сначала расширить дескрипторы `BuiltinFunctions.DateTime.cs` вариантами с нативными типами и покрыть оба движка, только затем убирать строковые формы.
+
+**Sample и manual:**
+- `samples/functions/datediff/mixed_temporal_kinds_error.axm` — negative-sample ошибки `MB3007` при смешении временного вида (файл с `_error.` в имени автоматически исключается из positive acceptance).
+- `docs/manual/date-time-functions-arithmetic-and-validation.html` — в разделе `DATEDIFF` добавлено правило одинакового временного вида значений, в диагностике — случай смешения видов, в ручной проверке — ссылка на новый sample.
+- `docs/BYTECODE_COVERAGE.md` — обновлены строки `DATEADD/DATEDIFF/DATEPART/...` и `UTCOFFSET/TOUTC/FROMUTC/...`: новые тесты, negative-sample и VM DST-паритет.
+
+**Валидация:**
+- `dotnet build Axiom.sln`: 0 ошибок, 3 предупреждения (существовавшие ранее: Lexer CS8603, BinderTests xUnit2029, Ide.Tests CS9113).
+- Тесты: Runtime 944/944 (+6 новых), Execution 947/947, Semantics 374/374, Parsing 146/146, Lexing 18/18, Syntax 66/66, Bytecode 203/203, Ide 577/581 (те же 4 ранее существовавших падения: `Run_SetsCurrentDirToSourceFileDirectoryDuringExecution`, `Run_GetCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm`, `Run_PutCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm`, `MainWindowCodeBehind_TracksCaretAndBottomPaneFocus` — подтверждено прогоном на baseline через `git stash`).
+- Среда: dotnet из Git Bash требует переменных `PROGRAMFILES`, `PROGRAMFILES(X86)`, `PROGRAMDATA`, `ALLUSERSPROFILE` (NuGet 7.9 `XPlatMachineWideSetting` читает их из окружения) и сборки с `-m:1 -nr:false` (worker-ноды не наследуют эти переменные); без них restore падает с `Value cannot be null. (Parameter 'path1')`. Правок репозитория для этого не потребовалось.
+
+Следующий шаг: ручная приёмка `samples/functions/datediff/mixed_temporal_kinds_error.axm` в `Axiom.Ide` и решение по пункту P5 (нативные типы в аргументах DATEADD/DATEDIFF/DATEPART) отдельным проектным решением.
+
+## Session 1093 - 2026-08-26 00:06 - Manual: нативные типы DATE/TIME/DATETIME в разделе типов данных
+
+Задача документации: manual не отражал перевод подсистемы даты/времени со строковой модели на нативные типы `DATE`/`TIME`/`DATETIME`. Код языка, тесты и samples не менялись.
+
+**Факты, сверенные с кодом:**
+- Ключевые слова: `src/Axiom.Core/AxiomLanguageKeywords.cs` — `DATE`, `TIME`, `DATETIME` присутствуют в списке зарезервированных слов.
+- Типы: `src/Axiom.Semantics/Symbols/Symbols.cs` — `TypeSymbol.Date` (`"DATE"`), `TypeSymbol.Time` (`"TIME"`), `TypeSymbol.DateTime` (`"DATETIME"`); поддержаны `SyntaxKind.DateKeyword/TimeKeyword/DateTimeKeyword`.
+- Хранение: `RuntimeValue.FromDate(DateOnly)` / `FromTime(TimeOnly)` / `FromDateTime(DateTime)` в `src/Axiom.Runtime/Values/RuntimeValue.cs`.
+- Канонические форматы: `BuiltinDateTimeHelpers.CanonicalDateFormat/CanonicalTimeFormat/CanonicalDateTimeFormat` — `yyyy-MM-dd`, `HH:mm:ss`, `yyyy-MM-dd HH:mm:ss`.
+- Сравнение: `RuntimeValueHelpers.ValuesEqual/ValuesCompare` через `DateOnly/TimeOnly/DateTime.CompareTo`; биндер допускает временные операнды операторов сравнения (`Binder.Expressions`, `IsTemporalComparisonOperand`).
+- Неявные преобразования (`Binder.Helpers`): `DATE↔STRING`, `TIME↔STRING`, `DATETIME↔STRING`, `DATE↔DATETIME`, `TIME↔DATETIME`; числовых переходов с временными типами в списке нет.
+- Явные конвертеры: `DATEVALUE(value AS STRING) AS DATE`, `TIMEVALUE(value AS STRING) AS TIME` (`src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.DateTime.cs`).
+
+**Изменённые страницы manual:**
+- `docs/manual/data-types.html` — `DATE`/`TIME`/`DATETIME` добавлены в список базовых типов, топбар и lead; новая секция `id="temporal"` с каноническими форматами, диапазонами, примером `DIM` и правилом сравнения; строка «Дата и время» в сводной таблице; ссылки на раздел даты и времени.
+- `docs/manual/data-types-scalars.html` — топбар и lead дополнены; новая секция `id="temporal"` с таблицей «тип / что хранит / канонический строковый вид / диапазон», примером объявления и неявного преобразования строки; ссылки в «См. также».
+- `docs/manual/data-type-limits.html` — в таблицу «Нечисловые скалярные значения» добавлены строки `DATE` (годы с 1 по 9999), `TIME` (от 00:00:00 до 23:59:59), `DATETIME` (годы с 1 по 9999) с каноническими видами; топбар дополнен.
+- `docs/manual/data-types-conversions.html` — новая секция `id="temporal-conversions"` с таблицей неявных преобразований временных типов и описанием `DATEVALUE`/`TIMEVALUE`; пункт в списке «Что не преобразуется автоматически»; ссылки на samples `datevalue/from_datetime.axm`, `timevalue/from_datetime.axm` и страницу «Арифметика, разбор и проверка».
+- `docs/manual/date-time-functions.html` — lead и раздел «Канонические форматы» переписаны под типизированные значения; новая секция `id="typed-values"` (объявление, присваивание из `DATE()`/`TIME()`, сравнение); уточнён пункт «Основные правила» о принимаемых и возвращаемых типах; ссылка на «Типы данных».
+
+**Валидация:**
+- Временный скрипт `.artifacts/check-manual-html.mjs` (каталог в gitignore): во всех пяти страницах парные теги сбалансированы, все относительные ссылки разрешаются.
+- Код, тесты и samples не менялись; сборка не требовалась.
+
+**Не сделано:**
+- `date-time-functions-current.html` сохраняет строко-ориентированные формулировки (`dateText = DATE(...)`); явное описание типов результата функций на этой и соседних страницах оставлено на отдельную задачу, чтобы не расширять объём.
+- `scripts/search-index.js` и `scripts/manual.js` не менялись: новых страниц и сущностей не добавлено.
+
+Следующий шаг: ручная приёмка `samples/functions/datediff/mixed_temporal_kinds_error.axm` в `Axiom.Ide` (из Session 1092); отдельным проектным решением — нативные типы в аргументах `DATEADD`/`DATEDIFF`/`DATEPART` (P5).
+
+## Session 1094 - 2026-08-26 00:52 - DT-004: нативные DATE/TIME/DATETIME в аргументах DATEADD/DATEDIFF/DATEPART
+
+Выполнен пункт P5 из Session 1092: `DATEADD`/`DATEDIFF`/`DATEPART` принимают нативные `DATE`/`TIME`/`DATETIME` без round-trip через строку.
+
+**Выбранный механизм (изучение Binder):**
+- Binder выбирает перегрузку встроенной функции по арности, затем по первому совпадению через `CanBindBuiltInArguments` (точный тип / числовая политика / `CanConvert`). Механизма выбора «лучшей» перегрузки по типу не было; пар с одинаковым именем и арностью ранее не существовало, поэтому ветка с несколькими совпадениями арности была мёртвым кодом.
+- В `Binder.InvocationExpressions.cs` добавлено предпочтение точного совпадения типов аргументов: среди перегрузок той же арности сначала ищется дескриптор, у которого все аргументы совпадают с параметрами по типу точно, затем — прежний первый подходящий по `CanBindBuiltInArguments`. Привязка аргументов переработана на однократное связывание с последующим `ApplyExpectedType` (без повторного связывания синтаксиса, которое удваивало бы диагностику).
+- В `Binder.Expressions.cs` хвост `BindExpression(expr, expectedType)` вынесен в `ApplyExpectedType(syntax, bound, expectedType)` и переиспользуется обоими путями; поведение прежнего пути не изменилось.
+- Дескрипторы нативных форм добавлены ПОСЛЕ строковых в `BuiltinFunctions.DateTime.cs`, поэтому `arityMatches[0]`, `BuiltinFunctions.All` и диагностика неверных аргументов остались на строковой форме; строковые формы привязываются ровно как раньше.
+
+**Новые сущности:**
+- 9 новых `BuiltinFunctionId`: `DateAddDateValue`/`DateAddTimeValue`/`DateAddDateTimeValue`, `DateDiffDateValues`/`DateDiffTimeValues`/`DateDiffDateTimeValues`, `DatePartDateValue`/`DatePartTimeValue`/`DatePartDateTimeValue`.
+- Возвращаемый тип нативных форм `DATEADD`: `DATE → DATE`, `TIME → TIME`, `DATETIME → DATETIME` (сохраняется вид значения); `DATEDIFF` — `LONG`, `DATEPART` — `INTEGER` как и у строковых форм.
+- Общий слой `BuiltinDateTimeHelpers`: `ToTemporalValue` (RuntimeValue → CanonicalTemporalValue без строк), `ToRuntimeTemporalValue` (обратно), `IsDateBasedInterval`, `EvaluateDateDiffTemporal`, `EvaluateDatePartTemporal` (проверка вида значения против вида интервала/части). Правила `AddTemporalValue`/`EvaluateTimeBasedDiff` (включая ошибку смешанных видов `must use values of the same temporal kind`), канонические форматы, DST-логика и поведение строковых форм не менялись.
+- Интерпретатор и VM получили зеркальные нативные обработчики и диспатч-руки; паритет полный (результат, тип, ошибки).
+
+**Новые сообщения об ошибках (английский, стиль существующих):**
+- `must be a DATE or DATETIME value for date-based intervals.` / `must be a TIME or DATETIME value for time-based intervals.` (DATEDIFF, аргумент `fromValue`);
+- `must be a DATE or DATETIME value for date-based parts.` / `must be a TIME or DATETIME value for time-based parts.` (DATEPART, аргумент `value`);
+- для DATEADD несовместимость интервала и вида сохраняет прежний текст `is not supported for the given date/time kind: ...`.
+
+**Смежное исправление (необходимо для `DIM d AS DATE`):**
+- Лексер не отображал `DATE`/`TIME`/`DATETIME` в ключевые слова (пропуск stage 1): добавлены строки в `src/Axiom.Lexing/Lexer.cs`.
+- Парсер не принимал эти ключевые слова ни в позиции типа (`MatchNamedTypeToken`), ни в позиции вызова (`ParsePrimaryExpression` — из-за этого `DATE()`/`TIME()` перестали бы разбираться): оба места дополнены в `Parser.Helpers.cs` и `Parser.Expressions.cs`.
+- Подсветка IDE уже содержала `DATE`/`DATETIME`/`TIME` как типы в обоих `.xshd` — правок не потребовалось.
+
+**Тесты:**
+- Semantics: `Bind_BuiltinDateTimeNativeOverloadsReturnNativeTypes`, `Bind_BuiltinDateTimeStringFormsStillBindToStringOverloads`.
+- Interpreter: `Execute_DateAddAcceptsNativeTemporalValues`, `Execute_DateDiffAcceptsNativeTemporalValues`, `Execute_DatePartAcceptsNativeTemporalValues`, `Execute_DateAddNativeTimeValueReportsKindError`, `Execute_DateDiffNativeDateValuesReportIntervalKindError`, `Execute_DatePartNativeTimeValueReportsKindError`, `Execute_DateDiffNativeMixedTemporalKindsReportsSameKindError`.
+- VM: зеркальные `Execute_Compiled*` пары тех же сценариев.
+- Execution: `Run_SupportsNativeDateTimeBuiltinsOnBytecodeVm` (без fallback на интерпретатор), acceptance `DateAddTypedTemporalValuesSample_RunsSuccessfully`.
+
+**Sample:** `samples/functions/dateadd/typed_temporal_values.axm` — типизированный стиль `DIM d AS DATE` + нативные `DATEADD`/`DATEDIFF`/`DATEPART`; открывается в `Axiom.Ide` и запускается вручную, ожидаемый вывод в комментарии.
+
+**Manual:** `docs/manual/date-time-functions-arithmetic-and-validation.html` — секции `DATEADD`/`DATEDIFF`/`DATEPART` дополнены нативными формами и типами результата, добавлен пример с нативными значениями, расширена диагностика, добавлена ссылка на новый sample; исправлена неточность «DATEVALUE/TIMEVALUE возвращают строку».
+
+**Валидация:**
+- `dotnet build Axiom.sln`: 0 ошибок, 2 предупреждения (ранее существовавшие: Lexer CS8603, BinderTests xUnit2029).
+- Полный `dotnet test Axiom.sln`: Lexing 18/18, Parsing 146/146, Semantics 376/376 (+2), Syntax 66/66, Bytecode 203/203, Runtime 958/958 (+14), Execution 950/950 (+3), IDE 577/581 (те же 4 ранее существовавших падения из Session 1092, подтверждены ранее на baseline).
+
+**Отклонения и риски:**
+- Для неверных программ сообщения ошибок нативных форм могут отличаться от строковых (например, `DATEDIFF("h", d1, d2)` с нативными `DATE` даёт новое сообщение о виде значения вместо прежнего «must be a canonical time or date-time…»); семантика верных программ не изменилась.
+- `DATEDIFF` с нативными `TIME` и date-интервалом и обратные пары отвергаются на этапе выполнения (вид интервала известен только во время выполнения).
+- Binder-ветка «несколько перегрузок одной арности» впервые активирована; для снижения риска аргументы связываются один раз, а не дважды.
+
+Следующий шаг: ручная приёмка `samples/functions/dateadd/typed_temporal_values.axm` и `mixed_temporal_kinds_error.axm` в `Axiom.Ide`; отдельно — профиль производительности нативных перегрузок в `engine-compare`.
+
+### 2026-08-26 - DT-004 финал: удаление строковых форм DATEADD/DATEDIFF/DATEPART
+
+- Подтверждено по src: строковые дескрипторы удалены; 46 регистраций в BuiltinFunctions.DateTime.cs (37 прочих + 9 нативных перегрузок). DateAdd/DateDiff/DatePart в BuiltinFunctionId.cs:163/167/171 помечены reserved (комментарий: удалять нельзя — ломает числовые иды сериализации bytecode). Ссылок на не-нативные иды в src нет (grep 0 совпадений).
+- Тесты: 4 теста смешанных видов DATEDIFF (Execute_DateDiffReportsMixedTemporalKinds, Execute_DateDiffNativeMixedTemporalKindsReportsSameKindError и Execute_Compiled*-пары) переведены с runtime MB3007 на compile-time MB2003 — прямой Parser.Parse + Binder.Bind (минуя ExecuteProgram, т.к. его хелперы требуют пустой список диагностик биндера).
+- Sample samples/functions/datediff/mixed_temporal_kinds_error.axm: заголовок MB3007 → MB2003 (ошибка компиляции).
+- Manual docs/manual/date-time-functions-arithmetic-and-validation.html: у DATEADD/DATEDIFF/DATEPART только нативные значения; пример переписан на DATEVALUE; пункт диагностики про строковые аргументы и MB2003.
+- Документы: docs/audit/DATETIME_FORENSIC_AUDIT.md (DT-004 выполнено, 46 регистраций, секции 3.4/5/7/9/10/12/14/15/16), docs/LANGUAGE_INVENTORY.md (LANG-0212/0213/0214 — нативные сигнатуры), docs/BYTECODE_COVERAGE.md (строки 120-121: MB2003, удаление строковых форм, актуальные имена Binder-тестов).
+- Верификация (AutoCoder, независимо): build 0 ошибок / 0 предупреждений; Runtime 958/958, Semantics 377/377, Parsing 146/146, Execution 950/950, Ide 577/581 (4 pre-existing падения UI-тестов, не связаны с сессией).
+
+- Дополнение к DT-004: docs/SPECIFICATION.md и docs/SPECIFICATION2.md — секции DATEADD/DATEDIFF/DATEPART переписаны на нативный контракт (value — нативное DATE/TIME/DATETIME; строковые формы не поддерживаются; смешение видов — ошибка компиляции MB2003; пример DATEADD("m", 1, DATEVALUE("2026-01-31"))). Финальный sweep по docs+samples: 0 оставшихся строковых форм (исключая исторические WORKLOG/PLANS/_old_version).
+
+- Новая защита: присваивание полной даты-времени в DATE/TIME запрещено на этапе компиляции (MB2003, сообщение «Cannot assign a full date-time value to 'DATE': the time component would be silently truncated.»). Binder: Binder.DeclarationStatements.cs (TryReportTruncatingTemporalAssignment — проверка в DIM/CONST/присваивании; срабатывает для нативного DATETIME и строкового литерала yyyy-MM-dd HH:mm:ss), Binder.Diagnostics.cs (ReportTruncatingTemporalAssignment). Биндинг инициализаторов переведён на двухшаговый (BindExpression -> ApplyExpectedType), чтобы видеть исходный тип до конверсии. +12 тестов BinderTests (6 негативных, 6 позитивных). Верификация (AutoCoder, независимо): build 0 ошибок/0 предупреждений; Semantics 389/389 (+12), Runtime 958/958, Parsing 146/146, Execution 950/950, Ide 577/581 (4 pre-existing). Пробник: DIM d AS DATE = ""2026-01-02 12:00:00"" -> SemanticFailure MB2003 (ранее Success с молчаливым усечением). Документы: manual data-types-conversions.html (абзац про запрет), DATETIME_FORENSIC_AUDIT.md (4.3 и 7.1).

@@ -75,6 +75,9 @@ public sealed partial class Parser
             or SyntaxKind.DecimalKeyword
             or SyntaxKind.StringKeyword
             or SyntaxKind.BooleanKeyword
+            or SyntaxKind.DateKeyword
+            or SyntaxKind.TimeKeyword
+            or SyntaxKind.DateTimeKeyword
             or SyntaxKind.ImageKeyword
             or SyntaxKind.SpriteKeyword
             or SyntaxKind.TilemapKeyword

@@ -10,7 +10,7 @@
 <header class="topbar">
     <div class="topbar__inner">
         <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Вывод типа, расширяющие переходы, VAL и STR</div>
+        <div class="topbar__meta">Вывод типа, расширяющие переходы, дата и время, VAL и STR</div>
         <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
 </header>
@@ -72,6 +72,26 @@ DIM name = "Алиса"</code></pre>
             <p>Переходы в обратную сторону не выполняются автоматически. <code>DOUBLE</code> и <code>DECIMAL</code> тоже не смешиваются молча: обычное арифметическое выражение должно оставаться в одной понятной числовой линии.</p>
         </section>
 
+        <section class="article-section" id="temporal-conversions">
+            <h2>Преобразования даты и времени</h2>
+            <p>Типы <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> участвуют в собственном наборе неявных преобразований: каждый из них переходит в <code>STRING</code> и обратно, а дата и время объединяются с типом <code>DATETIME</code> в обе стороны.</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Переход</th><th>Разрешён</th><th>Пример</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>DATE</code> ↔ <code>STRING</code></td><td>да</td><td><code>DIM day AS DATE = "2026-08-25"</code></td></tr>
+                    <tr><td><code>TIME</code> ↔ <code>STRING</code></td><td>да</td><td><code>DIM moment AS TIME = "14:05:06"</code></td></tr>
+                    <tr><td><code>DATETIME</code> ↔ <code>STRING</code></td><td>да</td><td><code>DIM stamp AS DATETIME = "2026-08-25 14:05:06"</code></td></tr>
+                    <tr><td><code>DATE</code> ↔ <code>DATETIME</code></td><td>да</td><td><code>DIM stamp AS DATETIME = day</code></td></tr>
+                    <tr><td><code>TIME</code> ↔ <code>DATETIME</code></td><td>да</td><td><code>DIM stamp AS DATETIME = moment</code></td></tr>
+                </tbody>
+            </table>
+            <p>Строка должна быть записана в каноническом формате нужного типа. Числовые значения не превращаются в дату или время автоматически, и наоборот.</p>
+            <p>Присваивание полной даты-времени (например, <code>"2026-08-25 14:05:06"</code>) переменной типа <code>DATE</code> или <code>TIME</code> запрещено: такая конверсия молча отбрасывала бы время или дату. Компилятор сообщает об ошибке <code>MB2003</code>; для явного извлечения части используйте <code>DATEVALUE</code> или <code>TIMEVALUE</code>. Расширяющие переходы <code>DATE</code> → <code>DATETIME</code> и <code>TIME</code> → <code>DATETIME</code> по-прежнему неявно разрешены.</p>
+            <p>Для явного разбора строки служат функции <code>DATEVALUE</code> и <code>TIMEVALUE</code>: <code>DATEVALUE</code> возвращает значение типа <code>DATE</code>, а <code>TIMEVALUE</code> — значение типа <code>TIME</code>. Обе функции принимают строку и описаны на странице <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>.</p>
+        </section>
+
         <section class="article-section">
             <h2>Явный DECIMAL</h2>
             <p>Литерал <code>10.50</code> сам по себе имеет тип <code>DOUBLE</code>. Если значение должно участвовать в десятичных расчётах, целевой тип нужно указать явно.</p>
@@ -126,6 +146,7 @@ PRINT 7 / 2</code></pre>
                 <li><code>STRING</code> не становится числом без <code>VAL</code>.</li>
                 <li>Число не становится строкой для оператора <code>+</code>; используйте <code>STR</code> или оператор <code>&amp;</code>.</li>
                 <li><code>BOOLEAN</code> не превращается в число и не принимает число вместо <code>TRUE</code> или <code>FALSE</code>.</li>
+                <li><code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> не смешиваются с числами автоматически.</li>
                 <li><code>FILE</code>, массивы, записи <code>TYPE</code> и значения функций не участвуют в обычных скалярных преобразованиях.</li>
             </ul>
         </section>
@@ -147,6 +168,8 @@ PRINT 7 / 2</code></pre>
                 <li><a href="../../samples/functions/val/basic_usage.axm">VAL: базовое использование</a></li>
                 <li><a href="../../samples/functions/val/invalid_text_behavior.axm">VAL: недопустимый текст</a></li>
                 <li><a href="../../samples/functions/str/basic_usage.axm">STR: базовое использование</a></li>
+                <li><a href="../../samples/functions/datevalue/from_datetime.axm">DATEVALUE: дата из даты-времени</a></li>
+                <li><a href="../../samples/functions/timevalue/from_datetime.axm">TIMEVALUE: время из даты-времени</a></li>
             </ul>
         </section>
 
@@ -166,6 +189,7 @@ PRINT 7 / 2</code></pre>
                 <a href="data-types-scalars.html">Скалярные типы и литералы</a>
                 <a href="variables-and-constants.html">Переменные и константы</a>
                 <a href="dim.html">Оператор DIM</a>
+                <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>
                 <a href="numeric-functions-conversion-and-legacy.html">Преобразующие числовые функции</a>
                 <a href="arithmetic-and-logic.html">Арифметика и логика</a>
             </div>

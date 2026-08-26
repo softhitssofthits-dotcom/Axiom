@@ -254,9 +254,15 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.Second => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateSecondBuiltin(value, location)),
             BuiltinFunctionId.Weekday => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateWeekdayBuiltin(value, location)),
             BuiltinFunctionId.WeekdayName => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateWeekdayNameBuiltin(GetIntegerUnchecked(value), location)),
-            BuiltinFunctionId.DateAdd => BuiltinExecution.Ternary(static (vm, interval, value, dateText, location) => vm.EvaluateDateAddBuiltin(GetStringUnchecked(interval), GetIntegerUnchecked(value), GetStringUnchecked(dateText), location)),
-            BuiltinFunctionId.DateDiff => BuiltinExecution.Ternary(static (vm, interval, left, right, location) => vm.EvaluateDateDiffBuiltin(GetStringUnchecked(interval), GetStringUnchecked(left), GetStringUnchecked(right), location)),
-            BuiltinFunctionId.DatePart => BuiltinExecution.Binary(static (vm, interval, dateText, location) => vm.EvaluateDatePartBuiltin(GetStringUnchecked(interval), GetStringUnchecked(dateText), location)),
+            BuiltinFunctionId.DateAddDateValue
+                or BuiltinFunctionId.DateAddTimeValue
+                or BuiltinFunctionId.DateAddDateTimeValue => BuiltinExecution.Ternary(static (vm, interval, number, value, location) => vm.EvaluateDateAddBuiltin(GetStringUnchecked(interval), GetIntegerUnchecked(number), value, location)),
+            BuiltinFunctionId.DateDiffDateValues
+                or BuiltinFunctionId.DateDiffTimeValues
+                or BuiltinFunctionId.DateDiffDateTimeValues => BuiltinExecution.Ternary(static (vm, interval, left, right, location) => vm.EvaluateDateDiffBuiltin(GetStringUnchecked(interval), left, right, location)),
+            BuiltinFunctionId.DatePartDateValue
+                or BuiltinFunctionId.DatePartTimeValue
+                or BuiltinFunctionId.DatePartDateTimeValue => BuiltinExecution.Binary(static (vm, interval, value, location) => vm.EvaluateDatePartBuiltin(GetStringUnchecked(interval), value, location)),
             BuiltinFunctionId.DateValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.TimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.IsDate => BuiltinExecution.UnaryNoLocation(static (vm, value) => vm.EvaluateIsDateBuiltin(GetStringUnchecked(value))),

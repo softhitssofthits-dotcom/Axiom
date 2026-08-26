@@ -5878,6 +5878,10 @@ public sealed partial class BytecodeVm
 
         var targetTypeSymbol = targetType switch
         {
+            BytecodeScalarTypeCode.Integer => TypeSymbol.Integer,
+            BytecodeScalarTypeCode.Long => TypeSymbol.Long,
+            BytecodeScalarTypeCode.Double => TypeSymbol.Double,
+            BytecodeScalarTypeCode.Decimal => TypeSymbol.Decimal,
             BytecodeScalarTypeCode.String => TypeSymbol.String,
             BytecodeScalarTypeCode.Date => TypeSymbol.Date,
             BytecodeScalarTypeCode.Time => TypeSymbol.Time,
@@ -5892,7 +5896,7 @@ public sealed partial class BytecodeVm
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>(
-            $"Неподдерживаемое преобразование VM: {value.Type.Name} -> {targetType}.",
+            $"Cannot convert type: {value.Type.Name} -> {targetTypeSymbol.Name}.",
             location);
     }
 

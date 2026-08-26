@@ -45,6 +45,15 @@ public sealed partial class Binder
         _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.", location);
     }
 
+    private void ReportTruncatingTemporalAssignment(TypeSymbol targetType, TextLocation location)
+    {
+        var truncatedComponent = targetType == TypeSymbol.Date ? "time" : "date";
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Cannot assign a full date-time value to '{targetType.Name}': the {truncatedComponent} component would be silently truncated.",
+            location);
+    }
+
     private void ReportUnsupportedScreenColorSwitch(TextLocation location)
     {
         _diagnostics.Report(DiagnosticCodes.TypeMismatch, "Параметр colorSwitch в SCREEN сейчас не поддерживается; используйте пустое место перед activePage.", location);

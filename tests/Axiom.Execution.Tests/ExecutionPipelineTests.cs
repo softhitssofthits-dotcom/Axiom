@@ -1706,9 +1706,11 @@ PRINT LOG(0)
         const string text = """
 PRINT DATESERIAL(2026, 4, 20)
 PRINT TIMESERIAL(14, 5, 6)
-PRINT DATEADD("m", 1, "2026-01-31")
-PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")
-PRINT DATEPART("y", "2026-04-21")
+PRINT DATEADD("m", 1, DATEVALUE("2026-01-31"))
+DIM pdt1 AS DATETIME = "2026-04-20 23:59:59"
+DIM pdt2 AS DATETIME = "2026-04-21 00:00:00"
+PRINT DATEDIFF("d", pdt1, pdt2)
+PRINT DATEPART("y", DATEVALUE("2026-04-21"))
 PRINT DATEVALUE("2026-04-20 14:05:06")
 PRINT TIMEVALUE("2026-04-20 14:05:06")
 PRINT ISDATE("2026-04-20 14:05:06")
@@ -1757,6 +1759,44 @@ PRINT ISDATE(UTCNOW())
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["TRUE", "TRUE", "TRUE", "TRUE"], result.Output);
+    }
+
+    [Fact]
+    public void Run_SupportsNativeDateTimeBuiltinsOnBytecodeVm()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 1, 31)
+PRINT DATEADD("m", 1, d)
+DIM t AS TIME = TIMESERIAL(14, 5, 59)
+PRINT DATEADD("n", 1, t)
+DIM dt AS DATETIME = "2026-04-20 23:05:06"
+PRINT DATEADD("h", 2, dt)
+PRINT DATEDIFF("m", d, DATEADD("m", 2, d))
+PRINT DATEDIFF("n", t, DATEADD("n", 1, t))
+PRINT DATEDIFF("d", dt, DATEADD("d", 1, dt))
+PRINT DATEPART("q", d)
+PRINT DATEPART("h", t)
+PRINT DATEPART("y", dt)
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(
+            [
+                "2026-02-28",
+                "14:06:59",
+                "2026-04-21 01:05:06",
+                "2",
+                "1",
+                "1",
+                "1",
+                "14",
+                "110"
+            ],
+            result.Output);
     }
 
     [Fact]
@@ -1814,7 +1854,7 @@ PRINT FIX(TIMER())
     public void Run_WithBytecodeMode_ReportsDateTimeBuiltinArgumentError()
     {
         const string text = """
-PRINT DATEADD("ww", 1, "2026-04-20")
+PRINT DATEADD("ww", 1, DATEVALUE("2026-04-20"))
 """;
 
         var pipeline = new AxiomExecutionPipeline();

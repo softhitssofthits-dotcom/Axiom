@@ -5747,10 +5747,12 @@ PRINT SECOND("14:05:06")
 PRINT WEEKDAY("2026-04-20")
 PRINT MONTHNAME(4)
 PRINT WEEKDAYNAME(7)
-PRINT DATEADD("m", 1, "2026-01-31")
-PRINT DATEADD("s", 10, "23:59:55")
-PRINT DATEDIFF("d", "2026-04-20 23:59:59", "2026-04-21 00:00:00")
-PRINT DATEPART("y", "2026-04-21")
+PRINT DATEADD("m", 1, DATEVALUE("2026-01-31"))
+PRINT DATEADD("s", 10, TIMEVALUE("23:59:55"))
+DIM cdt1 AS DATETIME = "2026-04-20 23:59:59"
+DIM cdt2 AS DATETIME = "2026-04-21 00:00:00"
+PRINT DATEDIFF("d", cdt1, cdt2)
+PRINT DATEPART("y", DATEVALUE("2026-04-21"))
 PRINT DATEVALUE("2026-04-20 14:05:06")
 PRINT TIMEVALUE("2026-04-20 14:05:06")
 PRINT ISDATE("2026-04-20 14:05:06")
@@ -5844,6 +5846,215 @@ PRINT DATESERIAL(2025, 2, 29)
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("DATESERIAL", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("day", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledToUtcReportsInvalidLocalDateTimeDuringSkippedTransition()
+    {
+        const string text = "PRINT TOUTC(\"2026-03-29 02:30:00\")";
+
+        var host = new TestRuntimeHost(
+            new DateTimeOffset(2026, 07, 20, 14, 05, 06, TimeSpan.FromHours(3)),
+            CreateTestSeasonalTimeZone());
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3007", diagnostic.Code);
+        Assert.Contains("TOUTC", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledUtcOffsetReportsAmbiguousLocalDateTimeDuringRepeatedTransition()
+    {
+        const string text = "PRINT UTCOFFSET(\"2026-10-25 02:30:00\")";
+
+        var host = new TestRuntimeHost(
+            new DateTimeOffset(2026, 07, 20, 14, 05, 06, TimeSpan.FromHours(3)),
+            CreateTestSeasonalTimeZone());
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3007", diagnostic.Code);
+        Assert.Contains("UTCOFFSET", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateDiffReportsMixedTemporalKinds()
+    {
+        const string text = """
+DIM t AS TIME = TIMEVALUE("10:00:00")
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+PRINT DATEDIFF("h", t, dt)
+""";
+
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        _ = Binder.Bind(syntax, out var binderDiagnostics);
+
+        var diagnostic = Assert.Single(binderDiagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATETIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateAddSupportsQuarterAndYearIntervals()
+    {
+        const string text = """
+PRINT DATEADD("q", 1, DATEVALUE("2026-01-31"))
+PRINT DATEADD("q", -1, DATEVALUE("2026-04-30"))
+PRINT DATEADD("yyyy", 1, DATEVALUE("2024-02-29"))
+DIM cqdt AS DATETIME = "2026-04-20 14:05:06"
+PRINT DATEADD("yyyy", 1, cqdt)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            [
+                "2026-04-30",
+                "2026-01-30",
+                "2025-02-28",
+                "2027-04-20 14:05:06"
+            ],
+            host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateAddAcceptsNativeTemporalValues()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 1, 31)
+PRINT DATEADD("m", 1, d)
+DIM t AS TIME = TIMESERIAL(23, 59, 55)
+PRINT DATEADD("s", 10, t)
+DIM dt AS DATETIME = "2026-04-20 23:05:06"
+PRINT DATEADD("h", 2, dt)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["2026-02-28", "00:00:05", "2026-04-21 01:05:06"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateDiffAcceptsNativeTemporalValues()
+    {
+        const string text = """
+DIM d1 AS DATE = DATESERIAL(2026, 1, 31)
+DIM d2 AS DATE = DATESERIAL(2026, 4, 20)
+PRINT DATEDIFF("m", d1, d2)
+DIM t1 AS TIME = TIMESERIAL(14, 5, 59)
+DIM t2 AS TIME = TIMESERIAL(14, 6, 0)
+PRINT DATEDIFF("n", t1, t2)
+DIM dt1 AS DATETIME = "2026-04-20 23:59:59"
+DIM dt2 AS DATETIME = "2026-04-21 00:00:00"
+PRINT DATEDIFF("d", dt1, dt2)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3", "1", "1"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledDatePartAcceptsNativeTemporalValues()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 4, 20)
+PRINT DATEPART("q", d)
+PRINT DATEPART("y", d)
+PRINT DATEPART("w", d)
+DIM t AS TIME = TIMESERIAL(14, 5, 6)
+PRINT DATEPART("h", t)
+DIM dt AS DATETIME = "2026-04-20 14:05:06"
+PRINT DATEPART("m", dt)
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["2", "110", "1", "14", "4"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateAddNativeTimeValueReportsKindError()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+PRINT DATEADD("m", 1, t)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("DATEADD", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not supported for the given date/time kind", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateDiffNativeDateValuesReportIntervalKindError()
+    {
+        const string text = """
+DIM d1 AS DATE = DATESERIAL(2026, 1, 31)
+DIM d2 AS DATE = DATESERIAL(2026, 4, 20)
+PRINT DATEDIFF("h", d1, d2)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("DATEDIFF", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("fromValue", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("must be a TIME or DATETIME value for time-based intervals", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledDatePartNativeTimeValueReportsKindError()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+PRINT DATEPART("m", t)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("DATEPART", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("value", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("must be a DATE or DATETIME value for date-based parts", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_CompiledDateDiffNativeMixedTemporalKindsReportsSameKindError()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+PRINT DATEDIFF("h", t, dt)
+""";
+
+        var syntax = Parser.Parse(text, out var parserDiagnostics);
+        Assert.Empty(parserDiagnostics);
+
+        _ = Binder.Bind(syntax, out var binderDiagnostics);
+
+        var diagnostic = Assert.Single(binderDiagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATETIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -6851,6 +7062,36 @@ END FUNCTION
             TimeSpan.FromHours(offsetHours),
             id,
             id);
+    }
+
+    private static TimeZoneInfo CreateTestSeasonalTimeZone()
+    {
+        var daylightDelta = TimeSpan.FromHours(1);
+        var daylightTransitionStart = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(
+            new DateTime(1, 1, 1, 2, 0, 0),
+            3,
+            5,
+            DayOfWeek.Sunday);
+        var daylightTransitionEnd = TimeZoneInfo.TransitionTime.CreateFloatingDateRule(
+            new DateTime(1, 1, 1, 3, 0, 0),
+            10,
+            5,
+            DayOfWeek.Sunday);
+        var adjustmentRule = TimeZoneInfo.AdjustmentRule.CreateAdjustmentRule(
+            new DateTime(2000, 1, 1),
+            new DateTime(2099, 12, 31),
+            daylightDelta,
+            daylightTransitionStart,
+            daylightTransitionEnd);
+
+        return TimeZoneInfo.CreateCustomTimeZone(
+            "Axiom Runtime Tests Seasonal",
+            TimeSpan.FromHours(2),
+            "Axiom Runtime Tests Seasonal",
+            "Axiom Runtime Tests Standard",
+            "Axiom Runtime Tests Daylight",
+            [adjustmentRule],
+            disableDaylightSavingTime: false);
     }
 
     private static IReadOnlyDictionary<string, TimeZoneInfo> CreateNamedTimeZones(params TimeZoneInfo[] timeZones)

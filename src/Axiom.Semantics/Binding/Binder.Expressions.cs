@@ -24,17 +24,22 @@ public sealed partial class Binder
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")
         };
 
-        if (expectedType is null || expectedType == TypeSymbol.Error || boundExpression.Type == TypeSymbol.Error)
+        if (expectedType is null || expectedType == TypeSymbol.Error)
         {
             return boundExpression;
         }
 
-        if (boundExpression.Type == expectedType)
+        return ApplyExpectedType(expression, boundExpression, expectedType);
+    }
+
+    private BoundExpression ApplyExpectedType(ExpressionSyntax syntax, BoundExpression boundExpression, TypeSymbol expectedType)
+    {
+        if (boundExpression.Type == TypeSymbol.Error || boundExpression.Type == expectedType)
         {
             return boundExpression;
         }
 
-        if (TryConvertConstant(expression, boundExpression, expectedType, out var convertedConstant))
+        if (TryConvertConstant(syntax, boundExpression, expectedType, out var convertedConstant))
         {
             return convertedConstant;
         }
@@ -44,8 +49,8 @@ public sealed partial class Binder
             return new BoundConversionExpression(boundExpression.Location, expectedType, boundExpression);
         }
 
-        ReportTypeMismatch(boundExpression.Type, expectedType, GetLocation(expression));
-        return new BoundErrorExpression(GetLocation(expression));
+        ReportTypeMismatch(boundExpression.Type, expectedType, GetLocation(syntax));
+        return new BoundErrorExpression(GetLocation(syntax));
     }
 
     private BoundExpression BindLiteralExpression(LiteralExpressionSyntax expression)

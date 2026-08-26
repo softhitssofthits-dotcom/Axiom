@@ -1,4 +1,5 @@
 using Axiom.Syntax;
+using System.Globalization;
 
 namespace Axiom.Semantics;
 
@@ -51,9 +52,23 @@ public sealed partial class Binder
             }
 
             var explicitType = ResolveType(declaration.TypeClause);
-            var explicitInitializer = declaration.Initializer is null
-                ? null
-                : BindExpression(declaration.Initializer, explicitType);
+            BoundExpression? explicitInitializer = null;
+            if (declaration.Initializer is not null)
+            {
+                explicitInitializer = BindExpression(declaration.Initializer);
+                if (explicitType != TypeSymbol.Error)
+                {
+                    if (TryReportTruncatingTemporalAssignment(declaration.Initializer, explicitInitializer, explicitType))
+                    {
+                        explicitInitializer = new BoundErrorExpression(GetLocation(declaration.Initializer));
+                    }
+                    else
+                    {
+                        explicitInitializer = ApplyExpectedType(declaration.Initializer, explicitInitializer, explicitType);
+                    }
+                }
+            }
+
             return (explicitType, explicitInitializer, fixedStringLength);
         }
 
@@ -77,7 +92,18 @@ public sealed partial class Binder
         var type = ReportUnsupportedFixedStringType(declaration.TypeClause, declarationName)
             ? TypeSymbol.Error
             : ResolveType(declaration.TypeClause);
-        var initializer = BindExpression(declaration.Initializer, type);
+        var initializer = BindExpression(declaration.Initializer);
+        if (type != TypeSymbol.Error)
+        {
+            if (TryReportTruncatingTemporalAssignment(declaration.Initializer, initializer, type))
+            {
+                initializer = new BoundErrorExpression(GetLocation(declaration.Initializer));
+            }
+            else
+            {
+                initializer = ApplyExpectedType(declaration.Initializer, initializer, type);
+            }
+        }
 
         if (string.IsNullOrWhiteSpace(declaration.Identifier.Text))
         {
@@ -130,6 +156,11 @@ public sealed partial class Binder
         if (targetType == TypeSymbol.Error || expression.Type == TypeSymbol.Error)
         {
             return expression;
+        }
+
+        if (TryReportTruncatingTemporalAssignment(expressionSyntax, expression, targetType))
+        {
+            return new BoundErrorExpression(GetLocation(expressionSyntax));
         }
 
         if (expression.Type == targetType)
@@ -256,5 +287,49 @@ public sealed partial class Binder
     private static TypeSymbol BindArrayVariableType(TypeSymbol elementType, int rank)
     {
         return ArrayTypeSymbol.Create(elementType, rank);
+    }
+
+    private bool TryReportTruncatingTemporalAssignment(
+        ExpressionSyntax initializerSyntax,
+        BoundExpression boundExpression,
+        TypeSymbol targetType)
+    {
+        if (targetType != TypeSymbol.Date && targetType != TypeSymbol.Time)
+        {
+            return false;
+        }
+
+        if (boundExpression.Type == TypeSymbol.DateTime
+            || (boundExpression.Type == TypeSymbol.String
+                && TryGetStringLiteralText(initializerSyntax, out var literalText)
+                && IsCanonicalDateTimeText(literalText)))
+        {
+            ReportTruncatingTemporalAssignment(targetType, GetLocation(initializerSyntax));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetStringLiteralText(ExpressionSyntax expression, out string text)
+    {
+        if (expression is LiteralExpressionSyntax literal
+            && literal.LiteralToken.Kind == SyntaxKind.StringLiteralToken
+            && literal.LiteralToken.Value is string value)
+        {
+            text = value;
+            return true;
+        }
+
+        text = string.Empty;
+        return false;
+    }
+
+    private static bool IsCanonicalDateTimeText(string text)
+    {
+        return text.Length == 19
+            && text[10] == ' '
+            && DateOnly.TryParseExact(text.AsSpan(0, 10), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)
+            && TimeOnly.TryParseExact(text.AsSpan(11, 8), "HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
     }
 }

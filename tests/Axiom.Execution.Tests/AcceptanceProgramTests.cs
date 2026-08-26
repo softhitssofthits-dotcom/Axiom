@@ -637,6 +637,31 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void DateAddTypedTemporalValuesSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/functions/dateadd/typed_temporal_values.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(
+            [
+                "2026-02-28",
+                "14:06:59",
+                "2026-04-21 01:05:06",
+                "2",
+                "1",
+                "1",
+                "1",
+                "14",
+                "110"
+            ],
+            result.Output);
+    }
+
+    [Fact]
     public void BlockScopeSmokeSample_RunsSuccessfully()
     {
         var sourceText = TestProgramLoader.LoadText("samples/smoke/block_scope_semantics.axm");

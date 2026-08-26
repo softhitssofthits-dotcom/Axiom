@@ -10,7 +10,7 @@
 <header class="topbar">
     <div class="topbar__inner">
         <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Числовые границы, литералы и практические ограничения</div>
+        <div class="topbar__meta">Числовые границы, дата и время, литералы и практические ограничения</div>
         <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
 </header>
@@ -80,6 +80,21 @@
                         <td><code>BOOLEAN</code></td>
                         <td><code>TRUE</code> или <code>FALSE</code></td>
                         <td>Число не подставляется вместо логического значения автоматически.</td>
+                    </tr>
+                    <tr>
+                        <td><code>DATE</code></td>
+                        <td>Календарную дату</td>
+                        <td>Годы с <code>1</code> по <code>9999</code>; канонический вид <code>yyyy-MM-dd</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>TIME</code></td>
+                        <td>Время суток</td>
+                        <td>От <code>00:00:00</code> до <code>23:59:59</code>; канонический вид <code>HH:mm:ss</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>DATETIME</code></td>
+                        <td>Дату и время суток</td>
+                        <td>Годы с <code>1</code> по <code>9999</code>; канонический вид <code>yyyy-MM-dd HH:mm:ss</code>.</td>
                     </tr>
                     <tr>
                         <td><code>STRING</code></td>

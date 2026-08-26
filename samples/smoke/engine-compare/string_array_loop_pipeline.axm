@@ -103,10 +103,11 @@ FUNCTION BuildDraftLine(lineIndex AS INTEGER) AS STRING
 END FUNCTION
 
 FUNCTION BuildScheduleEntry(slotIndex AS INTEGER) AS STRING
-    DIM dayText AS STRING = DATEADD("d", slotIndex - 1, DATESERIAL(2026, 4, 1))
-    DIM timeText AS STRING = DATEADD("n", slotIndex * 7, TIMESERIAL(8, 0, 0))
+    DIM dayText AS DATE = DATEADD("d", slotIndex - 1, DATESERIAL(2026, 4, 1))
+    DIM timeText AS TIME = DATEADD("n", slotIndex * 7, TIMESERIAL(8, 0, 0))
+    DIM timeStr AS STRING = timeText
 
-    RETURN "слот " + STR(slotIndex) + ": " + WEEKDAYNAME(WEEKDAY(dayText)) + ", " + MONTHNAME(MONTH(dayText)) + " " + STR(DAY(dayText)) + " " + LEFT(timeText, 5)
+    RETURN "слот " + STR(slotIndex) + ": " + WEEKDAYNAME(WEEKDAY(dayText)) + ", " + MONTHNAME(MONTH(dayText)) + " " + STR(DAY(dayText)) + " " + LEFT(timeStr, 5)
 END FUNCTION
 
 FUNCTION NormalizeDraftLine(inputText AS STRING, lineIndex AS INTEGER) AS STRING

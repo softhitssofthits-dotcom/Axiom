@@ -777,11 +777,133 @@ public sealed partial class Binder
             .Select(argument => BindExpression(argument))
             .ToArray();
 
-        var matchedDescriptor = arityMatches.FirstOrDefault(descriptor => CanBindBuiltInArguments(rawArguments, descriptor));
+        var matchedDescriptor = arityMatches.FirstOrDefault(descriptor => ArgumentsMatchExactly(rawArguments, descriptor));
+        if (matchedDescriptor is not null)
+        {
+            return BindResolvedBuiltInInvocationFromRawArguments(
+                expression,
+                matchedDescriptor,
+                location,
+                rawArguments);
+        }
 
-        return matchedDescriptor is not null
-            ? BindResolvedBuiltInInvocation(expression, matchedDescriptor, location, callableName)
-            : BindDeclaredBuiltInInvocation(expression, arityMatches[0], location);
+        if (arityMatches.Length > 0 && IsTemporalArithmeticBuiltinId(arityMatches[0].Id))
+        {
+            return BindStrictTemporalArithmeticInvocation(expression, arityMatches, location, rawArguments);
+        }
+
+        matchedDescriptor = arityMatches.FirstOrDefault(descriptor => CanBindBuiltInArguments(rawArguments, descriptor));
+
+        return BindResolvedBuiltInInvocationFromRawArguments(
+            expression,
+            matchedDescriptor ?? arityMatches[0],
+            location,
+            rawArguments);
+    }
+
+    private static bool IsTemporalArithmeticBuiltinId(BuiltinFunctionId id)
+    {
+        return id is BuiltinFunctionId.DateAddDateValue
+            or BuiltinFunctionId.DateAddTimeValue
+            or BuiltinFunctionId.DateAddDateTimeValue
+            or BuiltinFunctionId.DateDiffDateValues
+            or BuiltinFunctionId.DateDiffTimeValues
+            or BuiltinFunctionId.DateDiffDateTimeValues
+            or BuiltinFunctionId.DatePartDateValue
+            or BuiltinFunctionId.DatePartTimeValue
+            or BuiltinFunctionId.DatePartDateTimeValue;
+    }
+
+    private static int CountArgumentsMatchingExactly(
+        IReadOnlyList<BoundExpression> rawArguments,
+        BuiltinFunctionDescriptor descriptor)
+    {
+        var matches = 0;
+
+        for (var index = 0; index < rawArguments.Count; index++)
+        {
+            if (rawArguments[index].Type == descriptor.Parameters[index].Type)
+            {
+                matches++;
+            }
+        }
+
+        return matches;
+    }
+
+    private BoundExpression BindStrictTemporalArithmeticInvocation(
+        CallExpressionSyntax expression,
+        IReadOnlyList<BuiltinFunctionDescriptor> arityMatches,
+        TextLocation location,
+        IReadOnlyList<BoundExpression> rawArguments)
+    {
+        // Значения DATEADD/DATEDIFF/DATEPART должны быть нативными значениями одного вида.
+        // Неявные преобразования между DATE/TIME/DATETIME и из STRING здесь запрещены:
+        // смешение видов не должно молча усекаться (дефект DT-001), а строковая форма
+        // арифметики удалена — строки нужно явно преобразовывать через DATEVALUE/TIMEVALUE.
+        var reportDescriptor = arityMatches
+            .OrderByDescending(descriptor => CountArgumentsMatchingExactly(rawArguments, descriptor))
+            .First();
+
+        var arguments = new List<BoundExpression>(rawArguments.Count);
+
+        for (var index = 0; index < rawArguments.Count; index++)
+        {
+            var argument = rawArguments[index];
+            var parameterType = reportDescriptor.Parameters[index].Type;
+
+            if (argument.Type == TypeSymbol.Error || argument.Type == parameterType)
+            {
+                arguments.Add(argument);
+                continue;
+            }
+
+            ReportTypeMismatch(argument.Type, parameterType, GetLocation(expression.Arguments[index]));
+            arguments.Add(new BoundErrorExpression(GetLocation(expression.Arguments[index])));
+        }
+
+        var resolvedTarget = new BoundFunctionExpression(location, reportDescriptor.CreateSymbol());
+        return new BoundCallExpression(location, resolvedTarget, arguments, reportDescriptor.DeclaredReturnType);
+    }
+
+    private static bool ArgumentsMatchExactly(
+        IReadOnlyList<BoundExpression> rawArguments,
+        BuiltinFunctionDescriptor descriptor)
+    {
+        if (rawArguments.Count != descriptor.Parameters.Count)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < rawArguments.Count; index++)
+        {
+            if (rawArguments[index].Type != descriptor.Parameters[index].Type)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private BoundExpression BindResolvedBuiltInInvocationFromRawArguments(
+        CallExpressionSyntax expression,
+        BuiltinFunctionDescriptor descriptor,
+        TextLocation location,
+        IReadOnlyList<BoundExpression> rawArguments)
+    {
+        var resolvedSymbol = descriptor.CreateSymbol();
+        var resolvedTarget = new BoundFunctionExpression(location, resolvedSymbol);
+        var arguments = new List<BoundExpression>(expression.Arguments.Count);
+
+        for (var index = 0; index < expression.Arguments.Count; index++)
+        {
+            arguments.Add(index < descriptor.Parameters.Count
+                ? ApplyExpectedType(expression.Arguments[index], rawArguments[index], descriptor.Parameters[index].Type)
+                : rawArguments[index]);
+        }
+
+        return new BoundCallExpression(location, resolvedTarget, arguments, resolvedSymbol.ReturnType);
     }
 
     private BoundExpression BindResolvedBuiltInInvocation(

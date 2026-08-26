@@ -1,4 +1,3 @@
-using System.Globalization;
 using Axiom.Core;
 using Axiom.Runtime.Builtins;
 using Axiom.Semantics;
@@ -15,7 +14,7 @@ public sealed partial class BytecodeVm
     private RuntimeValue EvaluateDateBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("DATE", "timeZone", timeZoneId, location);
-        var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
+        var currentDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
         return RuntimeValue.FromDate(DateOnly.FromDateTime(currentDateTime));
     }
 
@@ -27,7 +26,7 @@ public sealed partial class BytecodeVm
     private RuntimeValue EvaluateTimeBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("TIME", "timeZone", timeZoneId, location);
-        var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
+        var currentDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
         return RuntimeValue.FromTime(TimeOnly.FromDateTime(currentDateTime));
     }
 
@@ -39,7 +38,7 @@ public sealed partial class BytecodeVm
     private RuntimeValue EvaluateNowBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("NOW", "timeZone", timeZoneId, location);
-        var currentDateTime = ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
+        var currentDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
         return RuntimeValue.FromDateTime(currentDateTime);
     }
 
@@ -140,80 +139,37 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromString(BuiltinDateTimeHelpers.CanonicalWeekdayNamesMondayFirst[weekday - 1]);
     }
 
-    private RuntimeValue EvaluateDateAddBuiltin(string interval, int number, string value, TextLocation location)
+    private RuntimeValue EvaluateDateAddBuiltin(string interval, int number, RuntimeValue value, TextLocation location)
     {
         var intervalToken = ParseDateTimeIntervalToken("DATEADD", "interval", interval, location);
-        var temporal = intervalToken.IsDateBased
-            ? ParseCanonicalDateBasedArgument("DATEADD", "value", value, location)
-            : ParseCanonicalTimeBasedArgument("DATEADD", "value", value, location);
-
-        try
-        {
-            return RuntimeValue.FromString(BuiltinDateTimeHelpers.FormatCanonicalTemporal(AddTemporalValue("DATEADD", temporal, intervalToken.Kind, number, location)));
-        }
-        catch (InvalidOperationException ex)
-        {
-            ReportBuiltInArgumentError(
-                "DATEADD",
-                "value",
-                $"не поддерживается для данного типа даты/времени: {ex.Message}",
-                location);
-            throw new RuntimeFailureException();
-        }
+        var temporal = BuiltinDateTimeHelpers.ToTemporalValue(value);
+        var result = AddTemporalValue("DATEADD", temporal, intervalToken.Kind, number, location);
+        return BuiltinDateTimeHelpers.ToRuntimeTemporalValue(result);
     }
 
-    private RuntimeValue EvaluateDateDiffBuiltin(string interval, string fromValue, string toValue, TextLocation location)
+    private RuntimeValue EvaluateDateDiffBuiltin(string interval, RuntimeValue fromValue, RuntimeValue toValue, TextLocation location)
     {
         var intervalToken = ParseDateTimeIntervalToken("DATEDIFF", "interval", interval, location);
-
-        try
-        {
-            if (intervalToken.IsDateBased)
-            {
-                var fromTemporal = ParseCanonicalDateBasedArgument("DATEDIFF", "fromValue", fromValue, location);
-                var toTemporal = ParseCanonicalDateBasedArgument("DATEDIFF", "toValue", toValue, location);
-                return RuntimeValue.FromLong(BuiltinDateTimeHelpers.EvaluateDateBasedDiff(intervalToken.Kind, fromTemporal.Date, toTemporal.Date));
-            }
-
-            var fromTimeTemporal = ParseCanonicalTimeBasedArgument("DATEDIFF", "fromValue", fromValue, location);
-            var toTimeTemporal = ParseCanonicalTimeBasedArgument("DATEDIFF", "toValue", toValue, location);
-            return RuntimeValue.FromLong(EvaluateTimeBasedDiff(intervalToken.Kind, fromTimeTemporal, toTimeTemporal));
-        }
-        catch (InvalidOperationException ex)
-        {
-            ReportBuiltInArgumentError(
-                "DATEDIFF",
-                "interval",
-                $"не поддерживается для данного типа даты/времени: {ex.Message}",
-                location);
-            throw new RuntimeFailureException();
-        }
+        var fromTemporal = BuiltinDateTimeHelpers.ToTemporalValue(fromValue);
+        var toTemporal = BuiltinDateTimeHelpers.ToTemporalValue(toValue);
+        return RuntimeValue.FromLong(BuiltinDateTimeHelpers.EvaluateDateDiffTemporal(
+            "DATEDIFF",
+            intervalToken.Kind,
+            fromTemporal,
+            toTemporal,
+            location,
+            ReportBuiltInArgumentError));
     }
 
-    private RuntimeValue EvaluateDatePartBuiltin(string part, string value, TextLocation location)
+    private RuntimeValue EvaluateDatePartBuiltin(string part, RuntimeValue value, TextLocation location)
     {
         var partToken = ParseDateTimePartToken("DATEPART", "part", part, location);
-
-        try
-        {
-            if (partToken.IsDateBased)
-            {
-                var temporal = ParseCanonicalDateBasedArgument("DATEPART", "value", value, location);
-                return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateDatePart(partToken.Kind, temporal.Date));
-            }
-
-            var timeTemporal = ParseCanonicalTimeBasedArgument("DATEPART", "value", value, location);
-            return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateTimePart(partToken.Kind, timeTemporal.Time));
-        }
-        catch (InvalidOperationException ex)
-        {
-            ReportBuiltInArgumentError(
-                "DATEPART",
-                "part",
-                $"не поддерживается для данного типа даты/времени: {ex.Message}",
-                location);
-            throw new RuntimeFailureException();
-        }
+        return RuntimeValue.FromInteger(BuiltinDateTimeHelpers.EvaluateDatePartTemporal(
+            "DATEPART",
+            partToken,
+            BuiltinDateTimeHelpers.ToTemporalValue(value),
+            location,
+            ReportBuiltInArgumentError));
     }
 
     private RuntimeValue EvaluateDateValueBuiltin(string value, TextLocation location)
@@ -321,7 +277,7 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var localDateTime = ConvertUtcToTimeZoneDateTime(dateTime, timeZone);
+            var localDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(dateTime, timeZone);
             return RuntimeValue.FromDateTime(localDateTime);
         }
         catch (ArgumentOutOfRangeException)
@@ -436,15 +392,6 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
-    private DateOnly ParseCanonicalDateArgument(string functionName, string value, TextLocation location)
-        => BuiltinDateTimeHelpers.ParseCanonicalDateArgument(value, functionName, location, ReportBuiltInArgumentError);
-
-    private TimeOnly ParseCanonicalTimeArgument(string functionName, string value, TextLocation location)
-        => BuiltinDateTimeHelpers.ParseCanonicalTimeArgument(value, functionName, location, ReportBuiltInArgumentError);
-
-    private DateTime ParseCanonicalDateTimeArgument(string functionName, string argumentName, string value, TextLocation location)
-        => BuiltinDateTimeHelpers.ParseCanonicalDateTimeArgument(value, functionName, argumentName, location, ReportBuiltInArgumentError);
-
     private BuiltinDateTimeHelpers.IntervalTokenInfo ParseDateTimeIntervalToken(string functionName, string argumentName, string value, TextLocation location)
         => BuiltinDateTimeHelpers.ParseDateTimeIntervalToken(value, functionName, argumentName, location, ReportBuiltInArgumentError);
 
@@ -453,37 +400,23 @@ public sealed partial class BytecodeVm
 
     private TimeZoneInfo ResolveTimeZoneArgument(string functionName, string argumentName, string value, TextLocation location)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                argumentName,
-                "must name 'UTC', 'LOCAL' or a known host time zone identifier.",
-                location);
-            throw new RuntimeFailureException();
-        }
-
-        if (_host.TryResolveTimeZone(value, out var timeZone))
-        {
-            return timeZone;
-        }
-
-        ReportBuiltInArgumentError(
+        return BuiltinDateTimeHelpers.ResolveTimeZoneArgument(
             functionName,
             argumentName,
-            "must name 'UTC', 'LOCAL' or a known host time zone identifier.",
-            location);
-        throw new RuntimeFailureException();
+            value,
+            location,
+            _host,
+            ReportBuiltInArgumentError);
     }
 
     private TimeSpan ResolveCurrentLocalUtcOffset()
     {
-        return ResolveUtcOffsetAtCurrentInstant(_host.GetLocalTimeZone());
+        return BuiltinDateTimeHelpers.ResolveCurrentLocalUtcOffset(_host);
     }
 
     private TimeSpan ResolveUtcOffsetAtCurrentInstant(TimeZoneInfo timeZone)
     {
-        return timeZone.GetUtcOffset(_host.GetLocalNow().UtcDateTime);
+        return BuiltinDateTimeHelpers.ResolveUtcOffsetAtCurrentInstant(timeZone, _host.GetLocalNow());
     }
 
     private TimeSpan ResolveLocalUtcOffsetForLocalDateTime(
@@ -507,48 +440,18 @@ public sealed partial class BytecodeVm
         DateTime localDateTime,
         TextLocation location)
     {
-        var unspecifiedLocalDateTime = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
-
-        if (timeZone.IsInvalidTime(unspecifiedLocalDateTime))
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                argumentName,
-                "must refer to an existing local date-time and not fall into a skipped clock transition.",
-                location);
-            throw new RuntimeFailureException();
-        }
-
-        if (timeZone.IsAmbiguousTime(unspecifiedLocalDateTime))
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                argumentName,
-                "must refer to an unambiguous local date-time and not fall into a repeated clock transition.",
-                location);
-            throw new RuntimeFailureException();
-        }
-
-        return timeZone.GetUtcOffset(unspecifiedLocalDateTime);
+        return BuiltinDateTimeHelpers.ResolveUtcOffsetForLocalDateTime(
+            functionName,
+            argumentName,
+            timeZone,
+            localDateTime,
+            location,
+            ReportBuiltInArgumentError);
     }
 
     private DateTime ConvertUtcToLocalDateTime(DateTime utcDateTime)
     {
-        return ConvertUtcToTimeZoneDateTime(utcDateTime, _host.GetLocalTimeZone());
-    }
-
-    private static DateTime ConvertUtcToTimeZoneDateTime(DateTime utcDateTime, TimeZoneInfo timeZone)
-    {
-        var utc = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
-        var offset = timeZone.GetUtcOffset(utc);
-        var convertedTicks = utc.Ticks + offset.Ticks;
-
-        if (convertedTicks < DateTime.MinValue.Ticks || convertedTicks > DateTime.MaxValue.Ticks)
-        {
-            throw new ArgumentOutOfRangeException(nameof(utcDateTime));
-        }
-
-        return TimeZoneInfo.ConvertTimeFromUtc(utc, timeZone);
+        return BuiltinDateTimeHelpers.ConvertUtcToLocalDateTime(utcDateTime, _host);
     }
 
     private BuiltinDateTimeHelpers.CanonicalTemporalValue ParseCanonicalDateBasedArgument(
@@ -557,22 +460,12 @@ public sealed partial class BytecodeVm
         string value,
         TextLocation location)
     {
-        if (BuiltinDateTimeHelpers.TryParseCanonicalDateOnly(value, out var date))
-        {
-            return BuiltinDateTimeHelpers.CanonicalTemporalValue.FromDate(date);
-        }
-
-        if (BuiltinDateTimeHelpers.TryParseCanonicalDateTime(value, out var dateTime))
-        {
-            return BuiltinDateTimeHelpers.CanonicalTemporalValue.FromDateTime(dateTime);
-        }
-
-        ReportBuiltInArgumentError(
+        return BuiltinDateTimeHelpers.ParseCanonicalDateBasedArgument(
+            value,
             functionName,
             argumentName,
-            $"must be a canonical date or date-time in form '{BuiltinDateTimeHelpers.CanonicalDateFormat}' or '{BuiltinDateTimeHelpers.CanonicalDateTimeFormat}'.",
-            location);
-        throw new RuntimeFailureException();
+            location,
+            ReportBuiltInArgumentError);
     }
 
     private BuiltinDateTimeHelpers.CanonicalTemporalValue ParseCanonicalTimeBasedArgument(
@@ -581,22 +474,12 @@ public sealed partial class BytecodeVm
         string value,
         TextLocation location)
     {
-        if (BuiltinDateTimeHelpers.TryParseCanonicalTimeOnly(value, out var time))
-        {
-            return BuiltinDateTimeHelpers.CanonicalTemporalValue.FromTime(time);
-        }
-
-        if (BuiltinDateTimeHelpers.TryParseCanonicalDateTime(value, out var dateTime))
-        {
-            return BuiltinDateTimeHelpers.CanonicalTemporalValue.FromDateTime(dateTime);
-        }
-
-        ReportBuiltInArgumentError(
+        return BuiltinDateTimeHelpers.ParseCanonicalTimeBasedArgument(
+            value,
             functionName,
             argumentName,
-            $"must be a canonical time or date-time in form '{BuiltinDateTimeHelpers.CanonicalTimeFormat}' or '{BuiltinDateTimeHelpers.CanonicalDateTimeFormat}'.",
-            location);
-        throw new RuntimeFailureException();
+            location,
+            ReportBuiltInArgumentError);
     }
 
     private BuiltinDateTimeHelpers.CanonicalTemporalValue AddTemporalValue(
@@ -606,166 +489,57 @@ public sealed partial class BytecodeVm
         int number,
         TextLocation location)
     {
-        try
-        {
-            return interval switch
-            {
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Year => BuiltinDateTimeHelpers.AddDateBasedTemporal(value, static (date, amount) => date.AddYears(amount), static (dateTime, amount) => dateTime.AddYears(amount), number),
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Quarter => BuiltinDateTimeHelpers.AddDateBasedTemporal(value, static (date, amount) => date.AddMonths(checked(amount * 3)), static (dateTime, amount) => dateTime.AddMonths(checked(amount * 3)), number),
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Month => BuiltinDateTimeHelpers.AddDateBasedTemporal(value, static (date, amount) => date.AddMonths(amount), static (dateTime, amount) => dateTime.AddMonths(amount), number),
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Day => BuiltinDateTimeHelpers.AddDateBasedTemporal(value, static (date, amount) => date.AddDays(amount), static (dateTime, amount) => dateTime.AddDays(amount), number),
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Hour => BuiltinDateTimeHelpers.AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerHour)),
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Minute => BuiltinDateTimeHelpers.AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerMinute)),
-                BuiltinDateTimeHelpers.DateTimeIntervalKind.Second => BuiltinDateTimeHelpers.AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerSecond)),
-                _ => throw new InvalidOperationException($"Unsupported interval '{interval}'.")
-            };
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                "value",
-                "must remain within canonical date/time range after arithmetic.",
-                location);
-            throw new RuntimeFailureException();
-        }
-        catch (OverflowException)
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                "value",
-                "must remain within canonical date/time range after arithmetic.",
-                location);
-            throw new RuntimeFailureException();
-        }
-        catch (InvalidOperationException ex)
-        {
-            ReportBuiltInArgumentError(
-                functionName,
-                "value",
-                $"не поддерживается для данного типа даты/времени: {ex.Message}",
-                location);
-            throw new RuntimeFailureException();
-        }
-    }
-
-    private long EvaluateTimeBasedDiff(BuiltinDateTimeHelpers.DateTimeIntervalKind interval, BuiltinDateTimeHelpers.CanonicalTemporalValue fromTemporal, BuiltinDateTimeHelpers.CanonicalTemporalValue toTemporal)
-    {
-        if (fromTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.Time && toTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.Time)
-        {
-            return BuiltinDateTimeHelpers.GetTimeBoundaryIndex(toTemporal.Time, interval) - BuiltinDateTimeHelpers.GetTimeBoundaryIndex(fromTemporal.Time, interval);
-        }
-
-        if (fromTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.DateTime && toTemporal.Kind == BuiltinDateTimeHelpers.TemporalValueKind.DateTime)
-        {
-            return BuiltinDateTimeHelpers.GetDateTimeBoundaryIndex(toTemporal.ToDateTime(), interval) - BuiltinDateTimeHelpers.GetDateTimeBoundaryIndex(fromTemporal.ToDateTime(), interval);
-        }
-
-        return BuiltinDateTimeHelpers.GetTimeBoundaryIndex(toTemporal.Time, interval) - BuiltinDateTimeHelpers.GetTimeBoundaryIndex(fromTemporal.Time, interval);
+        return BuiltinDateTimeHelpers.AddTemporalValue(
+            functionName,
+            value,
+            interval,
+            number,
+            location,
+            ReportBuiltInArgumentError);
     }
 
     private void EnsureCalendarYearArgument(string functionName, string argumentName, int year, TextLocation location)
     {
-        if (year is >= 1 and <= 9999)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
+        BuiltinDateTimeHelpers.EnsureCalendarYearArgument(
             functionName,
             argumentName,
-            "must be in range 1..9999.",
-            location);
-        throw new RuntimeFailureException();
+            year,
+            location,
+            ReportBuiltInArgumentError);
     }
 
     private void EnsureCalendarMonthArgument(string functionName, string argumentName, int month, TextLocation location)
     {
-        if (month is >= 1 and <= 12)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
+        BuiltinDateTimeHelpers.EnsureCalendarMonthArgument(
             functionName,
             argumentName,
-            "must be in range 1..12.",
-            location);
-        throw new RuntimeFailureException();
+            month,
+            location,
+            ReportBuiltInArgumentError);
     }
 
     private void EnsureDateSerialDay(int day, TextLocation location)
     {
-        if (day is >= 1 and <= 31)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
-            "DATESERIAL",
-            "day",
-            "must be in range 1..31.",
-            location);
-        throw new RuntimeFailureException();
+        BuiltinDateTimeHelpers.EnsureDateSerialDay(day, location, ReportBuiltInArgumentError);
     }
 
     private void EnsureTimeSerialHour(int hour, TextLocation location)
     {
-        if (hour is >= 0 and <= 23)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
-            "TIMESERIAL",
-            "hour",
-            "must be in range 0..23.",
-            location);
-        throw new RuntimeFailureException();
+        BuiltinDateTimeHelpers.EnsureTimeSerialHour(hour, location, ReportBuiltInArgumentError);
     }
 
     private void EnsureTimeSerialMinute(int minute, TextLocation location)
     {
-        if (minute is >= 0 and <= 59)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
-            "TIMESERIAL",
-            "minute",
-            "must be in range 0..59.",
-            location);
-        throw new RuntimeFailureException();
+        BuiltinDateTimeHelpers.EnsureTimeSerialMinute(minute, location, ReportBuiltInArgumentError);
     }
 
     private void EnsureTimeSerialSecond(int second, TextLocation location)
     {
-        if (second is >= 0 and <= 59)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
-            "TIMESERIAL",
-            "second",
-            "must be in range 0..59.",
-            location);
-        throw new RuntimeFailureException();
+        BuiltinDateTimeHelpers.EnsureTimeSerialSecond(second, location, ReportBuiltInArgumentError);
     }
 
     private void EnsureWeekdayNameWeekday(int weekday, TextLocation location)
     {
-        if (weekday is >= 1 and <= 7)
-        {
-            return;
-        }
-
-        ReportBuiltInArgumentError(
-            "WEEKDAYNAME",
-            "weekday",
-            "must be in range 1..7 according to Monday-first numbering.",
-            location);
-        throw new RuntimeFailureException();
+        BuiltinDateTimeHelpers.EnsureWeekdayNameWeekday(weekday, location, ReportBuiltInArgumentError);
     }
 }

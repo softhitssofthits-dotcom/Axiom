@@ -156,9 +156,22 @@ public enum BuiltinFunctionId
     Second,
     Weekday,
     WeekdayName,
+    // Строковые формы DATEADD/DATEDIFF/DATEPART удалены из реестра встроенных функций.
+    // Значения DateAdd/DateDiff/DatePart сохранены в перечислении и не регистрируются:
+    // BytecodeModuleSerializer хранит идентификаторы по имени перечисления, поэтому удаление
+    // членов сломало бы десериализацию ранее сохранённых bytecode-снимков.
     DateAdd,
+    DateAddDateValue,
+    DateAddTimeValue,
+    DateAddDateTimeValue,
     DateDiff,
+    DateDiffDateValues,
+    DateDiffTimeValues,
+    DateDiffDateTimeValues,
     DatePart,
+    DatePartDateValue,
+    DatePartTimeValue,
+    DatePartDateTimeValue,
     DateValue,
     TimeValue,
     IsDate,

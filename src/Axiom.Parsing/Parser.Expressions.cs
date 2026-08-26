@@ -52,7 +52,10 @@ public sealed partial class Parser
                 or SyntaxKind.DoubleKeyword
                 or SyntaxKind.DecimalKeyword
                 or SyntaxKind.StringKeyword
-                or SyntaxKind.BooleanKeyword => new NameExpressionSyntax(NextToken()),
+                or SyntaxKind.BooleanKeyword
+                or SyntaxKind.DateKeyword
+                or SyntaxKind.TimeKeyword
+                or SyntaxKind.DateTimeKeyword => new NameExpressionSyntax(NextToken()),
             _ => ParseMissingExpression()
         };
 

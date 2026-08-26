@@ -136,8 +136,9 @@ FUNCTION BuildEventLine(lineIndex AS INTEGER, numericValue AS INTEGER) AS STRING
 END FUNCTION
 
 FUNCTION BuildScheduleLine(slotIndex AS INTEGER) AS STRING
-    DIM dayText AS STRING = DATEADD("d", slotIndex - 1, DATESERIAL(2026, 5, 1))
-    DIM timeText AS STRING = DATEADD("n", slotIndex * 11, TIMESERIAL(8, 0, 0))
+    DIM dayText AS DATE = DATEADD("d", slotIndex - 1, DATESERIAL(2026, 5, 1))
+    DIM timeText AS TIME = DATEADD("n", slotIndex * 11, TIMESERIAL(8, 0, 0))
+    DIM timeStr AS STRING = timeText
     DIM zoneText AS STRING
 
     SELECT CASE slotIndex MOD 3
@@ -149,7 +150,7 @@ FUNCTION BuildScheduleLine(slotIndex AS INTEGER) AS STRING
             zoneText = "south"
     END SELECT
 
-    RETURN "section=schedule level=INFO user=PL" + RIGHT("0" + STR(slotIndex MOD 10), 2) + " token=sch111 route=/calendar/" + zoneText + " text=" + WEEKDAYNAME(WEEKDAY(dayText)) + " " + MONTHNAME(MONTH(dayText)) + " " + STR(DAY(dayText)) + " " + LEFT(timeText, 5)
+    RETURN "section=schedule level=INFO user=PL" + RIGHT("0" + STR(slotIndex MOD 10), 2) + " token=sch111 route=/calendar/" + zoneText + " text=" + WEEKDAYNAME(WEEKDAY(dayText)) + " " + MONTHNAME(MONTH(dayText)) + " " + STR(DAY(dayText)) + " " + LEFT(timeStr, 5)
 END FUNCTION
 
 FUNCTION NormalizeMixedLine(inputText AS STRING, lineIndex AS INTEGER) AS STRING

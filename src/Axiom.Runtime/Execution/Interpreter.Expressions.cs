@@ -477,7 +477,7 @@ public sealed partial class Interpreter
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>(
-            $"Неподдерживаемое преобразование: {value.Type.Name} -> {expression.Type.Name}.",
+            $"Cannot convert type: {value.Type.Name} -> {expression.Type.Name}.",
             expression.Location);
     }
 

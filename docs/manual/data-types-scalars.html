@@ -10,7 +10,7 @@
 <header class="topbar">
     <div class="topbar__inner">
         <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">INTEGER, LONG, DOUBLE, DECIMAL и BOOLEAN</div>
+        <div class="topbar__meta">INTEGER, LONG, DOUBLE, DECIMAL, BOOLEAN, DATE, TIME и DATETIME</div>
         <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
     </div>
 </header>
@@ -31,7 +31,7 @@
 
             <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Скалярные типы и литералы</h1>
-            <p class="lead">Раздел скалярных типов и литералов описывает числовые и логические значения, которые хранятся непосредственно: целые числа, вещественные числа, десятичные числа и значения <code>TRUE</code> / <code>FALSE</code>.</p>
+            <p class="lead">Раздел скалярных типов и литералов описывает значения, которые хранятся непосредственно: целые числа, вещественные числа, десятичные числа, логические значения <code>TRUE</code> / <code>FALSE</code>, а также дату, время суток и дату со временем.</p>
 
         <section class="article-section">
             <h2>Данные и их типы</h2>
@@ -88,6 +88,46 @@ END IF</code></pre>
             <blockquote>
                 <p><em>В QuickBASIC условие часто опиралось на числовую модель: ноль означал ложь, ненулевое значение — истину. В Axiom условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое значение нужно явно сравнить, например <code>count &gt; 0</code>.</em></p>
             </blockquote>
+        </section>
+
+        <section class="article-section" id="temporal">
+            <h2>Типы даты и времени</h2>
+            <p>Типы <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> хранят значения календаря и часов: дату, время суток и дату вместе со временем. Эти типы являются скалярными, поэтому для них работает обычное объявление, присваивание, вывод и сравнение.</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Тип</th><th>Что хранит</th><th>Канонический строковый вид</th><th>Диапазон</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>DATE</code></td>
+                        <td>Календарную дату без времени суток.</td>
+                        <td><code>yyyy-MM-dd</code>, например <code>2026-08-25</code>.</td>
+                        <td>годы с <code>1</code> по <code>9999</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>TIME</code></td>
+                        <td>Время суток без даты.</td>
+                        <td><code>HH:mm:ss</code>, например <code>14:05:06</code>.</td>
+                        <td>от <code>00:00:00</code> до <code>23:59:59</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>DATETIME</code></td>
+                        <td>Дату и время суток вместе.</td>
+                        <td><code>yyyy-MM-dd HH:mm:ss</code>, например <code>2026-08-25 14:05:06</code>.</td>
+                        <td>годы с <code>1</code> по <code>9999</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>Значения этих типов объявляются через <code>AS</code>, как любой другой скалярный тип:</p>
+            <pre><code class="language-basic">DIM day AS DATE
+DIM moment AS TIME
+DIM stamp AS DATETIME
+
+day = "2026-08-25"
+moment = "14:05:06"
+stamp = "2026-08-25 14:05:06"</code></pre>
+            <p>Строковый литерал в каноническом формате неявно преобразуется в нужный тип при присваивании. Значения <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> сравниваются операторами <code>=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code> и <code>&gt;=</code>.</p>
+            <p>Функции, которые получают текущие значения, собирают дату из частей и выполняют календарную арифметику, описаны в разделе <a href="date-time-functions.html">Функции даты и времени</a>. Короткая таблица всех диапазонов находится в приложении <a href="data-type-limits.html">Диапазоны и ограничения типов</a>.</p>
         </section>
 
         <section class="article-section">
@@ -195,6 +235,7 @@ YES</code></pre>
             <div class="link-list">
                 <a href="data-types.html">Типы данных</a>
                 <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
+                <a href="date-time-functions.html">Функции даты и времени</a>
                 <a href="variables-and-constants.html">Переменные и константы</a>
                 <a href="dim.html">Оператор DIM</a>
                 <a href="data-types-conversions.html">Вывод типа и преобразования</a>

@@ -678,3 +678,44 @@
 - Пример: `samples/expressions/interpolation_format.axm`.
 - Валидация: сборка 0 ошибок/0 warnings; все тест-сьюты без регрессий.
 - Следующий шаг: добавить runtime-тесты спецификаторов формата; обновить manual.
+
+### 2026-08-25 - устранены дефекты DATE/TIME по forensic-аудиту
+
+- `DATEDIFF` с time-интервалами (`h`/`n`/`s`) больше не смешивает виды значений: время + дата-время теперь даёт ошибку аргумента `MB3007` вместо молчаливой разности по времени суток.
+- Дублированная логика DATE/TIME (~300 строк) консолидирована в `BuiltinDateTimeHelpers.cs`; в обоих движках остались только тонкие обёртки, различающиеся передачей позиции.
+- Русские вкрапления в DATE/TIME-диагностике переведены на английский; сообщения конвертации типов унифицированы между движками (`Cannot convert type: {from} -> {to}.`).
+- Добавлены VM-тесты DST-переходов (`TOUTC`/`UTCOFFSET`), тесты смешанного `DATEDIFF` и тесты `DATEADD` с `q`/`yyyy` в обоих движках; добавлен negative-sample `samples/functions/datediff/mixed_temporal_kinds_error.axm` и обновлён manual.
+- Валидация: сборка 0 ошибок (3 ранее существовавших предупреждения); Runtime 944/944, Execution 947/947, остальные сьюты без новых падений (IDE — те же 4 ранее существовавших).
+- Следующий шаг: ручная приёмка negative-sample в `Axiom.Ide`; пункт P5 (нативные Date/Time/DateTime в аргументах `DATEADD`/`DATEDIFF`/`DATEPART`) отложен до отдельного проектного решения.
+
+### 2026-08-26 - Manual: нативные типы DATE/TIME/DATETIME в разделе типов данных
+
+- Документация типов `DATE`/`TIME`/`DATETIME` добавлена в manual: `data-types.html`, `data-types-scalars.html`, `data-type-limits.html`, `data-types-conversions.html`, `date-time-functions.html`.
+- Факты сверены с кодом: ключевые слова, `TypeSymbol`, канонические форматы, сравнение через `CompareTo`, неявные преобразования и сигнатуры `DATEVALUE`/`TIMEVALUE`.
+- HTML проверен на баланс парных тегов и целостность относительных ссылок (временный скрипт в `.artifacts/`).
+- Код, тесты и samples не менялись.
+- Следующий шаг: ручная приёмка `samples/functions/datediff/mixed_temporal_kinds_error.axm` в `Axiom.Ide`; отдельным решением — нативные типы в аргументах `DATEADD`/`DATEDIFF`/`DATEPART` (P5).
+
+### 2026-08-26 - DT-004: нативные DATE/TIME/DATETIME в DATEADD/DATEDIFF/DATEPART завершён
+
+- `DATEADD`/`DATEDIFF`/`DATEPART` принимают нативные `DATE`/`TIME`/`DATETIME` без round-trip через строку; строковые формы сохранены без изменений.
+- Binder получил выбор перегрузки по точному совпадению типов аргументов (впервые активирована ветка нескольких перегрузок одной арности); аргументы связываются один раз.
+- Возврат нативных форм `DATEADD`: `DATE → DATE`, `TIME → TIME`, `DATETIME → DATETIME`; `DATEDIFF` — `LONG`, `DATEPART` — `INTEGER`.
+- Лексер и парсер дополнены ключевыми словами `DATE`/`TIME`/`DATETIME` (объявление `DIM d AS DATE` и вызовы `DATE()`/`TIME()` работают).
+- Тесты: Semantics +2, Runtime +14, Execution +3; полный прогон решения зелёный (IDE — те же 4 ранее существовавших падения).
+- Следующий шаг: ручная приёмка `samples/functions/dateadd/typed_temporal_values.axm` и `mixed_temporal_kinds_error.axm` в `Axiom.Ide`; отдельно — адресный профиль производительности нативных перегрузок в `samples/smoke/engine-compare/`.
+
+### 2026-08-26 - DT-004: удаление строковых форм (завершение)
+
+- Выполнено: строковые формы DATEADD/DATEDIFF/DATEPART удалены из кода, документации и примеров; enum-иды DateAdd/DateDiff/DatePart reserved.
+- Защита DT-001 усилена: смешение временных видов теперь compile-time MB2003 (Binder), тесты переведены на прямой bind.
+- Samples и acceptance зелёные (Execution 950/950 — включая engine-compare паритет).
+- Документация (manual, аудит, inventory, coverage) приведена к нативному API.
+- Осталось (опционально): удалить reserved-иды при следующем несовместимом изменении байткода.
+
+### 2026-08-26 - Запрет усекающего присваивания даты-времени в DATE/TIME
+
+- Выполнено: DIM/CONST/присваивание полной даты-времени (нативный DATETIME или строковый литерал) в DATE/TIME -> ошибка компиляции MB2003.
+- Разрешены: расширение DATE->DATETIME и TIME->DATETIME; дата-только строка в DATE; время-только строка в TIME; явные DATEVALUE/TIMEVALUE.
+- Тесты: +12 (Semantics 389/389); регрессий нет (Runtime 958/958, Execution 950/950).
+- Известный остаток: runtime-строка (DIM d AS DATE = s, где s - переменная STRING) всё ещё может усечься в рантайме - статически не обнаружить; закрытие потребует runtime-проверки конверсии (затронет и аргументы функций - отдельное решение).

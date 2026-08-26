@@ -284,9 +284,15 @@ public sealed partial class Interpreter
             BuiltinFunctionId.Second => EvaluateSecondBuiltin(expression, arguments[0]),
             BuiltinFunctionId.Weekday => EvaluateWeekdayBuiltin(expression, arguments[0]),
             BuiltinFunctionId.WeekdayName => EvaluateWeekdayNameBuiltin(expression, arguments[0].AsInteger()),
-            BuiltinFunctionId.DateAdd => EvaluateDateAddBuiltin(expression, arguments[0].AsString(), arguments[1].AsInteger(), arguments[2].AsString()),
-            BuiltinFunctionId.DateDiff => EvaluateDateDiffBuiltin(expression, arguments[0].AsString(), arguments[1].AsString(), arguments[2].AsString()),
-            BuiltinFunctionId.DatePart => EvaluateDatePartBuiltin(expression, arguments[0].AsString(), arguments[1].AsString()),
+            BuiltinFunctionId.DateAddDateValue
+                or BuiltinFunctionId.DateAddTimeValue
+                or BuiltinFunctionId.DateAddDateTimeValue => EvaluateDateAddBuiltin(expression, arguments[0].AsString(), arguments[1].AsInteger(), arguments[2]),
+            BuiltinFunctionId.DateDiffDateValues
+                or BuiltinFunctionId.DateDiffTimeValues
+                or BuiltinFunctionId.DateDiffDateTimeValues => EvaluateDateDiffBuiltin(expression, arguments[0].AsString(), arguments[1], arguments[2]),
+            BuiltinFunctionId.DatePartDateValue
+                or BuiltinFunctionId.DatePartTimeValue
+                or BuiltinFunctionId.DatePartDateTimeValue => EvaluateDatePartBuiltin(expression, arguments[0].AsString(), arguments[1]),
             BuiltinFunctionId.DateValue => EvaluateDateValueBuiltin(expression, arguments[0].AsString()),
             BuiltinFunctionId.TimeValue => EvaluateTimeValueBuiltin(expression, arguments[0].AsString()),
             BuiltinFunctionId.IsDate => EvaluateIsDateBuiltin(arguments[0].AsString()),

@@ -3527,9 +3527,9 @@ PRINT WEEKDAYNAME(1)
     public void Bind_BuiltinDateTimeStage3FunctionsReturnExpectedTypes()
     {
         const string text = """
-PRINT DATEADD("d", 1, "2026-04-20")
-PRINT DATEDIFF("d", "2026-04-20", "2026-04-21")
-PRINT DATEPART("q", "2026-04-20")
+PRINT DATEADD("d", 1, DATEVALUE("2026-04-20"))
+PRINT DATEDIFF("d", DATEVALUE("2026-04-20"), DATEVALUE("2026-04-21"))
+PRINT DATEPART("q", DATEVALUE("2026-04-20"))
 PRINT DATEVALUE("2026-04-20 14:05:06")
 PRINT TIMEVALUE("2026-04-20 14:05:06")
 PRINT ISDATE("2026-04-20")
@@ -3538,12 +3538,246 @@ PRINT ISDATE("2026-04-20")
         var program = BindProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
-        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.String, BuiltinFunctionId.DateAdd);
-        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Long, BuiltinFunctionId.DateDiff);
-        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.DatePart);
+        AssertBuiltinCall(program.GlobalStatements[0], TypeSymbol.Date, BuiltinFunctionId.DateAddDateValue);
+        AssertBuiltinCall(program.GlobalStatements[1], TypeSymbol.Long, BuiltinFunctionId.DateDiffDateValues);
+        AssertBuiltinCall(program.GlobalStatements[2], TypeSymbol.Integer, BuiltinFunctionId.DatePartDateValue);
         AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Date, BuiltinFunctionId.DateValue);
         AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Time, BuiltinFunctionId.TimeValue);
         AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.Boolean, BuiltinFunctionId.IsDate);
+    }
+
+    [Fact]
+    public void Bind_BuiltinDateTimeNativeOverloadsReturnNativeTypes()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 1, 31)
+DIM t AS TIME = TIMESERIAL(23, 59, 55)
+DIM dt AS DATETIME = "2026-04-20 23:05:06"
+PRINT DATEADD("m", 1, d)
+PRINT DATEADD("s", 10, t)
+PRINT DATEADD("h", 2, dt)
+PRINT DATEDIFF("m", d, DATEADD("m", 2, d))
+PRINT DATEDIFF("n", t, DATEADD("n", 1, t))
+PRINT DATEDIFF("d", dt, DATEADD("d", 1, dt))
+PRINT DATEPART("q", d)
+PRINT DATEPART("h", t)
+PRINT DATEPART("y", dt)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertBuiltinCall(program.GlobalStatements[3], TypeSymbol.Date, BuiltinFunctionId.DateAddDateValue);
+        AssertBuiltinCall(program.GlobalStatements[4], TypeSymbol.Time, BuiltinFunctionId.DateAddTimeValue);
+        AssertBuiltinCall(program.GlobalStatements[5], TypeSymbol.DateTime, BuiltinFunctionId.DateAddDateTimeValue);
+        AssertBuiltinCall(program.GlobalStatements[6], TypeSymbol.Long, BuiltinFunctionId.DateDiffDateValues);
+        AssertBuiltinCall(program.GlobalStatements[7], TypeSymbol.Long, BuiltinFunctionId.DateDiffTimeValues);
+        AssertBuiltinCall(program.GlobalStatements[8], TypeSymbol.Long, BuiltinFunctionId.DateDiffDateTimeValues);
+        AssertBuiltinCall(program.GlobalStatements[9], TypeSymbol.Integer, BuiltinFunctionId.DatePartDateValue);
+        AssertBuiltinCall(program.GlobalStatements[10], TypeSymbol.Integer, BuiltinFunctionId.DatePartTimeValue);
+        AssertBuiltinCall(program.GlobalStatements[11], TypeSymbol.Integer, BuiltinFunctionId.DatePartDateTimeValue);
+    }
+
+    [Fact]
+    public void Bind_BuiltinDateTimeStringValueArgumentsAreRejected()
+    {
+        const string text = """
+PRINT DATEADD("d", 1, "2026-04-20")
+PRINT DATEDIFF("d", "2026-04-20", "2026-04-21")
+PRINT DATEPART("q", "2026-04-20")
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.NotEmpty(diagnostics);
+        Assert.All(diagnostics, static d => Assert.Equal("MB2003", d.Code));
+        Assert.Contains(diagnostics, static d => d.Message.Contains("STRING", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(diagnostics, static d => d.Message.Contains("DATE", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Bind_BuiltinDateTimeMixedTemporalKindsAreRejected()
+    {
+        const string text = """
+DIM t AS TIME = TIMESERIAL(10, 0, 0)
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+PRINT DATEDIFF("h", t, dt)
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DATETIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TruncatingDateTimeStringAssignmentToDateIsRejected()
+    {
+        const string text = """
+DIM d AS DATE = "2026-01-02 12:00:00"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TruncatingDateTimeStringAssignmentToTimeIsRejected()
+    {
+        const string text = """
+DIM t AS TIME = "2026-01-02 12:00:00"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TruncatingNativeDateTimeAssignmentToDateIsRejected()
+    {
+        const string text = """
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+DIM d AS DATE = dt
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TruncatingNativeDateTimeAssignmentToTimeIsRejected()
+    {
+        const string text = """
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+DIM t AS TIME = dt
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TruncatingDateTimeStringReassignmentToDateIsRejected()
+    {
+        const string text = """
+DIM d AS DATE
+d = "2026-01-02 12:00:00"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_TruncatingNativeDateTimeReassignmentToTimeIsRejected()
+    {
+        const string text = """
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+DIM t AS TIME
+t = dt
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("TIME", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_DateOnlyStringAssignmentToDateIsAllowed()
+    {
+        const string text = """
+DIM d AS DATE = "2026-01-02"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_TimeOnlyStringAssignmentToTimeIsAllowed()
+    {
+        const string text = """
+DIM t AS TIME = "12:00:00"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_FullDateTimeStringAssignmentToDateTimeIsAllowed()
+    {
+        const string text = """
+DIM dt AS DATETIME = "2026-01-02 12:00:00"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_WideningDateAssignmentToDateTimeIsAllowed()
+    {
+        const string text = """
+DIM d AS DATE = DATESERIAL(2026, 1, 2)
+DIM dt AS DATETIME = d
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_DateValueAssignmentToDateIsAllowed()
+    {
+        const string text = """
+DIM d AS DATE = DATEVALUE("2026-01-02 12:00:00")
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_TimeValueAssignmentToTimeIsAllowed()
+    {
+        const string text = """
+DIM t AS TIME = TIMEVALUE("2026-01-02 12:00:00")
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
