@@ -20,3 +20,10 @@ TestResults/
 *-build.log
 parser-*.log
 parser-*.txt
+
+# Local agent / workspace metadata (not part of the repository)
+.agents/
+.opencode/
+config/
+IDENTITY.md
+USER.md
