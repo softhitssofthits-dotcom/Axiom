@@ -38,7 +38,7 @@ Use this when the language core stays stable and the shell/UX changes.
 
 1. Confirm the slice is really IDE-only.
 2. Prefer a small regression-first change.
-3. Touch `docs/IDE_REDESIGN.md` or `docs/ARCHITECTURE.md` if shell structure changed materially.
+3. Touch `docs/archive/ide/IDE_REDESIGN.md` or `docs/ARCHITECTURE.md` if shell structure changed materially.
 4. Add or update `tests/Axiom.Ide.Tests/`.
 5. Use `Axiom.Ide.SmokeHarness` when the change needs live-shell evidence.
 6. Record the result in `docs/WORKLOG5.md`.

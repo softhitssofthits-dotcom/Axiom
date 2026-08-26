@@ -3,7 +3,7 @@
 
 **Дата аудита:** 2026-08-21
 **Метод:** полный forensic-анализ кода, тестов, samples, документации, спецификации и архитектуры
-**Предыдущий аудит:** `docs/TYPE_AUDIT_REPORT.md` (Health Score: 8.6/10, 3 находки P3/P4)
+**Предыдущий аудит:** `docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md` (Health Score: 8.6/10, 3 находки P3/P4)
 
 ---
 
@@ -1077,7 +1077,7 @@ TYPE упоминается в `docs/ARCHITECTURE.md` как часть обще
 
 ### 33.4 Предыдущий аудит
 
-`docs/TYPE_AUDIT_REPORT.md` — качественный аудит с Health Score 8.6/10.
+`docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md` — качественный аудит с Health Score 8.6/10.
 
 ### 33.5 Расхождения документации и кода
 

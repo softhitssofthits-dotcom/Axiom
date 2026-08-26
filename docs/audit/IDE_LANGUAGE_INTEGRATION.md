@@ -59,7 +59,7 @@
 - **IDE:** Два XSHD-файла (светлая и тёмная тема), 7 цветовых категорий
 - **Tests:** `EditorFeatureTests` — 15+ тестов покрытия словаря
 - **Samples:** N/A
-- **Documentation:** Частично (IDE_FORENSIC_AUDIT.md)
+- **Documentation:** Частично (docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md)
 - **Текущий статус:** IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 - **Доказательства:** `Axiom.xshd`, `Axiom.Dark.xshd`, `AxiomHighlighting.cs`, `AxiomHighlightingVocabulary.cs`
@@ -1035,8 +1035,8 @@ Regex-правило: `"[^"]*"?` — подсветка строк с подде
 
 | Документ | Статус | Точность |
 |----------|--------|----------|
-| `IDE_FORENSIC_AUDIT.md` | Активен | Точно описывает состояние на 2026-08-19 |
-| `IDE_REDESIGN.md` | Активен | Фазы 1-8 закрыты |
+| `docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md` | Активен | Точно описывает состояние на 2026-08-19 |
+| `docs/archive/ide/IDE_REDESIGN.md` | Активен | Фазы 1-8 закрыты |
 | `DEBUGGER.md` | Активен | Полный аудит отладчика |
 | `ARCHITECTURE.md` | В основном точен | Не хватает деталей IDE |
 
@@ -1238,7 +1238,7 @@ Regex-правило: `"[^"]*"?` — подсветка строк с подде
 - **TASK-IDE-006:** Добавить тесты edge cases для SmartIdentifierService
 
 ### ЭТАП 6 — Обновление документации
-- **TASK-IDE-007:** Обновить `IDE_FORENSIC_AUDIT.md` с учётом новых находок
+- **TASK-IDE-007:** Обновить `docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md` с учётом новых находок
 - **TASK-IDE-008:** Добавить секцию «Интеграция IDE и языка» в `ARCHITECTURE.md`
 
 ### ЭТАП 7 — Обновление IDE

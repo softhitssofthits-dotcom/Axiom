@@ -1,6 +1,6 @@
 # План работ 4
 
-Этот файл является активным планом проекта после перевода `docs/PLANS3.md` в исторический статус.
+Этот файл является активным планом проекта после перевода `docs/archive/plans/PLANS3.md` в исторический статус.
 Новые записи добавляются только в конец файла.
 
 ## Текущий этап
@@ -132,7 +132,7 @@
 ### 2026-08-18 - архитектурный анализ и план улучшений
 
 - Проведён полный архитектурный анализ проекта (параллельно 6 направлений).
-- Создан `docs/IMPROVEMENT_PLAN.md` с планом по 5 волнам.
+- Создан `docs/archive/audits-legacy/IMPROVEMENT_PLAN.md` с планом по 5 волнам.
 - Выполнены волны 1 (безопасность ресурсов), 4.1 (документы), 3.2 (диагностические коды) и 2.1 (прототип общего built-in слоя).
 - Следующий шаг: волна 3 плана — улучшение архитектуры (разбить MainWindowViewModel, создать Axiom.Syntax.Tests, разбить InterpreterTests.cs).
 
@@ -194,8 +194,8 @@
 ### 2026-08-18 - forensic audit и recovery roadmap
 
 - Проведён полный forensic audit проекта (28 проходов, 29 разделов).
-- Создан `docs/AUDIT_REPORT.md` с полным отчётом.
-- Создан `docs/RECOVERY_ROADMAP.md` с планом из 20 задач по 6 фазам.
+- Создан `docs/archive/audits-legacy/AUDIT_REPORT.md` с полным отчётом.
+- Создан `docs/archive/audits-legacy/RECOVERY_ROADMAP.md` с планом из 20 задач по 6 фазам.
 - Project Health Score: 7.5/10.
 - Следующие задачи по приоритету:
   1. [P1] TASK-001 — Fix String builtins divergence (BytecodeVm → BuiltinStringHelpers)
@@ -298,7 +298,7 @@
 - Исправлен STRING-001 [P1]: REVERSE fast path Unicode surrogate pair corruption.
 - Исправлен STRING-002 [P3]: JOIN single-element VM parity.
 - Добавлены 2 теста. Тесты: 897/897.
-- Создан `docs/STRING_AUDIT_REPORT.md`.
+- Создан `docs/archive/audits-legacy/STRING_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа или глубокий аудит массивов.
 
 ### 2026-08-20 - Deep Array forensic audit и исправление ARRAY-001..004
@@ -310,7 +310,7 @@
 - Исправлен ARRAY-003 [P3]: ROW/COLUMN/PI IDE highlighting.
 - Исправлен ARRAY-004 [P3]: Error message formatting parity (parentheses).
 - Тесты: 897/897 Runtime, 374/374 Semantics.
-- Создан `docs/ARRAY_AUDIT_REPORT.md`.
+- Создан `docs/audit/ARRAY_SEMANTICS.md`.
 - Следующий шаг: продуктовая работа.
 
 ### 2026-08-19 - Deep TYPE forensic audit и исправление TYPE-001..003
@@ -322,7 +322,7 @@
 - TYPE-003 [P4]: Manual constructor overload resolution — уже задокументировано.
 - Дополнительно: исправлен crash при дублированном TYPE (`DeclareTypeMethods` + `MethodsCompleted`).
 - Build: 0 errors. Тесты: 897 + 374 + 143 + 51 = 1,465.
-- Создан `docs/TYPE_AUDIT_REPORT.md`.
+- Создан `docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа или INPUT/PRINT/DATA аудит.
 
 ### 2026-08-20 - Deep I/O forensic audit и исправление IO-005
@@ -331,7 +331,7 @@
 - Health Score: 8.5/10.
 - IO-005 [P3]: I/O helpers вынесены в `BuiltinIOHelpers` (TryParseInputField, NormalizeInputField, CountInputFields).
 - Build: 0 errors. Тесты: 897 + 149 = 1,046.
-- Создан `docs/IO_AUDIT_REPORT.md`.
+- Создан `docs/archive/audits-legacy/IO_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа или реализация DATA/READ/RESTORE.
 
 ### 2026-08-20 - Deep File System / File I/O forensic audit
@@ -340,7 +340,7 @@
 - Health Score: 8.8/10.
 - READLINES duplication: вынесен в `BuiltinFileIOHelpers.EvaluateReadLines()`.
 - Build: 0 errors. Тесты: 897/897.
-- Создан `docs/FILE_SYSTEM_AUDIT_REPORT.md`.
+- Создан `docs/archive/audits-legacy/FILE_SYSTEM_AUDIT_REPORT.md`.
 - Следующий шаг: продуктовая работа или аудит системы ошибок (Error Handling, Level 10).
 
 ### 2026-08-19 - Deep Error Handling / Exceptions / Diagnostics forensic audit и исправление ERROR-003, ERROR-004
@@ -351,7 +351,7 @@
 - ERROR-004 [P1]: `BytecodeEvaluationStack.Pop()` бросает `EvaluationStackUnderflowException`, VM переводит в MB3005.
 - Создан `EvaluationStackUnderflowException.cs`.
 - Build: 0 errors. Тесты: 897 + 94 + 21 = 1,012.
-- Создан `docs/ERROR_HANDLING_AUDIT.md`.
+- Создан `docs/archive/audits-legacy/ERROR_HANDLING_AUDIT.md`.
 - Следующий шаг: аудит модулей/namespaces/project structure (Level 11).
 
 ### 2026-08-19 - Deep Modules / Namespaces / Program Structure forensic audit
@@ -362,7 +362,7 @@
 - Нет модулей, namespaces, imports, visibility modifiers, project file format.
 - Все P2/P3 findings — feature gaps, не баги.
 - Система стабильна для Bytecode/VM audit.
-- Создан `docs/MODULES_AUDIT.md`.
+- Создан `docs/archive/audits-legacy/MODULES_AUDIT.md`.
 - Следующий шаг: глубокий аудит Bytecode / VM (Level 12).
 
 ### 2026-08-19 - Deep Bytecode / VM Forensic + Performance Audit (Level 12) завершён
@@ -371,7 +371,7 @@
 - Health Score: **8.4/10**.
 - 48 benchmark scenarios: VM быстрее в 43/48 (90%), median speedup 0.63x.
 - 1046/1046 тестов проходят (897 Runtime + 149 Execution Pipeline).
-- Создан `docs/BYTECODE_VM_AUDIT_REPORT.md` с полным отчётом.
+- Создан `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` с полным отчётом.
 - Ключевые находки:
   - PERF-001 [P1]: RuntimeValue boxing — 2 unbox + 0-1 box per arithmetic op
   - PERF-002 [P2]: No constant folding in lowering
@@ -396,7 +396,7 @@
 
 - Все 5 ранее зафиксированных «регрессий» оказались шумом коротких прогонов (3 итерации, 1 прогрев).
 - На длинных прогонах (10 итераций, 3 прогрева): 46/48 VM быстрее, 2/48 паритет, 0/48 регрессий.
-- Обновлены `docs/BYTECODE_VM_AUDIT_REPORT.md` и `docs/WORKLOG5.md`.
+- Обновлены `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` и `docs/WORKLOG5.md`.
 - Следующий шаг: продуктовая работа или Phase B оптимизации.
 
 ### 2026-08-19 - Phase B оптимизации реализованы
@@ -427,12 +427,12 @@
   - Ожидаемый эффект: дополнительные 20-40% на CPU-heavy сценариях
   - Сложность: высокая — затрагивает core VM loop, все арифметические/comparison opcodes, frame model
   - Статус: **ОТЛОЖЕНО** — требует отдельного проектирования
-  - Документация: `docs/BYTECODE_VM_AUDIT_REPORT.md`, раздел20
+  - Документация: `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md`, раздел20
 - Следующий шаг: доработать отчёт аудита до полного формата (122 раздела).
 
 ### 2026-08-19 - Форензик-аудит IDE завершён, начато исправление находок
 
-Проведён глубокий аудит интеграции IDE с языком (уровень 13). Документ: `docs/IDE_FORENSIC_AUDIT.md`.
+Проведён глубокий аудит интеграции IDE с языком (уровень 13). Документ: `docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md`.
 
 **Исправлено (Session 1057):**
 - **IDE-004** [P3]: Исправлена двойная классификация STRING в XSHD

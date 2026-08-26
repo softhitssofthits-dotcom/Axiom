@@ -3,7 +3,7 @@
 
 **Дата:** 2026-08-21
 **Метод:** полный forensic-анализ всех слоёв подсистемы массивов: парсер, семантика, интерпретатор, Bytecode VM, built-in функции, тесты, samples, документация, IDE.
-**Предыдущий аудит:** `docs/ARRAY_AUDIT_REPORT.md` (Health Score 8.8/10, 4 дефекта — все исправлены).
+**Предыдущий аудит:** ранний отчёт `ARRAY_AUDIT_REPORT.md` (удалён как устаревший; Health Score 8.8/10, 4 дефекта — все исправлены).
 
 ---
 
@@ -844,7 +844,7 @@ Interpreter: EvaluateArrayIndexSlices → [Range(1, 5)]
 
 ### 33.3 Предыдущий аудит
 
-`docs/ARRAY_AUDIT_REPORT.md` — Health Score 8.8/10, 4 дефекта — все исправлены.
+`ARRAY_AUDIT_REPORT.md` (удалён как устаревший) — Health Score 8.8/10, 4 дефекта — все исправлены.
 
 ---
 

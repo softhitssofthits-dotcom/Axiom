@@ -193,21 +193,24 @@ powershell -ExecutionPolicy Bypass -File scripts/repo-sanity.ps1
 
 ## Основные документы
 
+- `docs/INDEX.md` — **главный навигационный индекс документации** (с чего начинать поиск любого документа)
+- `docs/meta/DOC_REGISTRY.md` — реестр всех `.md`-файлов со статусами (актуальное/планируемое/историческое/дублирующее)
+- `docs/meta/FEATURE_LEDGER.md` — сквозная карта функций и хвостов (реализовано/запланировано/недоделано)
 - `PROJECT.md` — описание проекта и ограничений
 - `docs/SPECIFICATION3.md` — активная спецификация языка и среды
 - `docs/TILEMAP_CONTRACT.md` — отдельный полный договор тайловой карты поверх слоя современной графики
-- `docs/SPECIFICATION2.md` — историческая вторая часть спецификации
-- `docs/SPECIFICATION.md` — историческая первая часть спецификации
+- `docs/archive/spec/SPECIFICATION2.md` — историческая вторая часть спецификации
+- `docs/archive/spec/SPECIFICATION.md` — историческая первая часть спецификации
 - `docs/ARCHITECTURE.md` — техническая структура
 - `docs/manual/index.html` — основной человекочитаемый справочник по Axiom
 - `docs/PLANS4.md` — текущий план
-- `docs/PLANS3.md` — историческая третья часть плана
-- `docs/PLANS2.md` — историческая вторая часть плана
-- `docs/PLANS.md` — историческая первая часть плана
+- `docs/archive/plans/PLANS3.md` — историческая третья часть плана
+- `docs/archive/plans/PLANS2.md` — историческая вторая часть плана
+- `docs/archive/plans/PLANS.md` — историческая первая часть плана
 - `docs/WORKLOG5.md` — активный журнал состояния
-- `docs/WORKLOG3.md` — историческая третья часть журнала (Session 310-480)
-- `docs/WORKLOG2.md` — историческая вторая часть журнала (Session 169-309)
-- `docs/WORKLOG.md` — историческая первая часть журнала до Session 168 включительно
+- `docs/archive/worklog/WORKLOG3.md` — историческая третья часть журнала (Session 310-480)
+- `docs/archive/worklog/WORKLOG2.md` — историческая вторая часть журнала (Session 169-309)
+- `docs/archive/worklog/WORKLOG.md` — историческая первая часть журнала до Session 168 включительно
 
 ## AI-контекст для агентных сессий
 

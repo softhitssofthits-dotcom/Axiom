@@ -129,7 +129,7 @@ Type-specialized stacks — параллельные типизированны�
 - **Тип:** PLANNED
 - **Описание:** Параллельные `int[]`, `long[]`, `double[]`, `decimal[]`, `bool[]` стеки рядом с `RuntimeValue[]`. Полное устранение boxing для горячих операций.
 - **Статус:** PLANNED (OPT-PERF-ARCH-001)
-- **Уровень уверенности:** CONFIRMED (запланировано в `FUTURE.md` и `BYTECODE_VM_AUDIT_REPORT.md`)
+- **Уровень уверенности:** CONFIRMED (запланировано в `FUTURE.md` и `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md`)
 
 ### SYS-008: AddLongInteger специализированная инструкция
 
@@ -230,7 +230,7 @@ ExecuteAddInstruction(frame, instructionIndex):
 | `src/Axiom.Bytecode/Model/LoweredInstruction.cs` | Lowered-инструкции с ValueType |
 | `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs` | Валидация с type stack tracking |
 | `docs/FUTURE.md` | План type-specialized stacks |
-| `docs/BYTECODE_VM_AUDIT_REPORT.md` | Анализ boxing overhead |
+| `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` | Анализ boxing overhead |
 
 ---
 
@@ -840,7 +840,7 @@ Boolean boxingуется в `object?`, хотя в кэше есть тольк�
 | Checked arithmetic | `RuntimeArithmeticHelpers.cs` |
 | Type annotations | `LoweredInstruction.ValueType` |
 | Type stack validation | `BytecodeModuleValidator.cs` |
-| План type-specialized stacks | `FUTURE.md`, `BYTECODE_VM_AUDIT_REPORT.md` |
+| План type-specialized stacks | `FUTURE.md`, `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` |
 
 **Архитектурная находка:** Единый источник истины для модели значений — `RuntimeValue.cs`. Все компоненты (Interpreter, VM, helpers) используют одну и ту же модель.
 
@@ -934,7 +934,7 @@ Engine-comparison сценарии в `samples/smoke/engine-compare/` косве
 - ✅ Сложность: высокая
 - ✅ Статус: ОТЛОЖЕНО
 
-### 33.2 BYTECODE_VM_AUDIT_REPORT.md
+### 33.2 docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md
 
 - ✅ Boxing overhead количественно описан
 - ✅ Fast paths каталогизированы

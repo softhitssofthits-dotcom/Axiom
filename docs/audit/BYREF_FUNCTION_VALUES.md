@@ -984,7 +984,7 @@ return new RuntimeReferenceStoredValue(
 
 ### 33.2 Спецификация
 
-- `SPECIFICATION.md` и `SPECIFICATION2.md` — полная спецификация SUB/FUNCTION/RETURN/BYVAL/BYREF
+- `docs/archive/spec/SPECIFICATION.md` и `docs/archive/spec/SPECIFICATION2.md` — полная спецификация SUB/FUNCTION/RETURN/BYVAL/BYREF
 - `SPECIFICATION3.md` — value-oriented модель записей для передачи BYREF/BYVAL
 
 ### 33.3 Архитектура

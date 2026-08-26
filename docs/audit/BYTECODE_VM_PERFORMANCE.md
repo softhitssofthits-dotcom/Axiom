@@ -990,13 +990,13 @@ JumpIfForDoneLocal: ~3,000
 |----------|--------|------------|
 | `docs/BYTECODE_COVERAGE.md` | АКТУАЛЕН | Полный реестр покрытия |
 | `docs/BYTECODE_PERF_MATRIX.md` | АКТУАЛЕН | Матрица производительности |
-| `docs/BYTECODE_VM_AUDIT_REPORT.md` | АКТУАЛЕН | Предыдущий глубокий аудит (1,508 строк) |
+| `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` | АКТУАЛЕН | Предыдущий глубокий аудит (1,508 строк) |
 | `docs/ARCHITECTURE.md` | АКТУАЛЕН | Архитектура проекта |
 | `docs/SPECIFICATION3.md` | АКТУАЛЕН | Спецификация языка |
 
 ### 33.2 Несоответствия документации и кода
 
-- `docs/BYTECODE_VM_AUDIT_REPORT.md` указывает 127 опкодов, фактически 122 — расхождение из-за разных подсчётов (некоторые опкоды перечислены как отдельные строки, но не являются реальными опкодами enum)
+- `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` указывает 127 опкодов, фактически 122 — расхождение из-за разных подсчётов (некоторые опкоды перечислены как отдельные строки, но не являются реальными опкодами enum)
 - `README.md` упоминает «режим Auto», но `ExecutionMode` больше не содержит `Auto` — legacy-описание
 
 ---
@@ -1161,7 +1161,7 @@ ROOT-SYS-003
 
 | ID | Серьёзность | Категория | Компонент | Проблема | Доказательства | Корневая причина | Уверенность |
 |----|-------------|-----------|-----------|----------|----------------|------------------|-------------|
-| SYS-001 | P2 | PERFORMANCE | RuntimeValue | Boxing через object? Value — каждая арифметическая операция выполняет 2 unboxing + 0-1 boxing | RuntimeValue.cs:217-222, BYTECODE_VM_AUDIT_REPORT.md §8 | Архитектура значений | CONFIRMED |
+| SYS-001 | P2 | PERFORMANCE | RuntimeValue | Boxing через object? Value — каждая арифметическая операция выполняет 2 unboxing + 0-1 boxing | RuntimeValue.cs:217-222, docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md §8 | Архитектура значений | CONFIRMED |
 | SYS-002 | P3 | PERFORMANCE | RuntimeValue | DOUBLE/DECIMAL не кэшированы — каждое значение аллокация | RuntimeValue.cs:111-113 | Отсутствие кэша | CONFIRMED |
 | SYS-003 | P3 | PERFORMANCE | RuntimeValue | Integer cache ограничен -1..1024 | RuntimeValue.cs | Выбор диапазона | CONFIRMED |
 | SYS-004 | P2 | ARCHITECTURE | Dispatch built-in | Два отдельных dispatch-пути для built-in функций | Interpreter.Builtins.cs + BytecodeVm.BuiltinDispatch.cs | Отсутствие единой таблицы | CONFIRMED |
@@ -1220,7 +1220,7 @@ ROOT-SYS-003
 ### ЭТАП 6 — Обновление документации
 
 - ⏳ Обновить README.md (удалить упоминание Auto-режима)
-- ⏳ Обновить BYTECODE_VM_AUDIT_REPORT.md (122 опкода, не 127)
+- ⏳ Обновить docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md (122 опкода, не 127)
 
 ### ЭТАП 7 — Обновление IDE
 

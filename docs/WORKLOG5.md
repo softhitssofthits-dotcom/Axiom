@@ -3,10 +3,10 @@
 Этот файл является активным журналом работ проекта начиная с Session 1032.
 
 Исторические части журнала:
-- `docs/WORKLOG.md` содержит записи до Session 168 включительно;
-- `docs/WORKLOG2.md` содержит записи с Session 169 по Session 309 включительно;
-- `docs/WORKLOG3.md` содержит записи с Session 310 по Session 831 включительно;
-- `docs/WORKLOG4.md` содержит записи с Session 832 по Session 1031 включительно.
+- `docs/archive/worklog/WORKLOG.md` содержит записи до Session 168 включительно;
+- `docs/archive/worklog/WORKLOG2.md` содержит записи с Session 169 по Session 309 включительно;
+- `docs/archive/worklog/WORKLOG3.md` содержит записи с Session 310 по Session 831 включительно;
+- `docs/archive/worklog/WORKLOG4.md` содержит записи с Session 832 по Session 1031 включительно.
 
 Правила ведения остаются прежними:
 - новые записи добавляются только в конец файла;
@@ -16,10 +16,10 @@
 
 ## Session 1032 - 2026-08-18 17:30 - ротация WORKLOG4 → WORKLOG5
 
-Задача: перевести `docs/WORKLOG4.md` в исторический статус, создать `docs/WORKLOG5.md` как активный журнал.
+Задача: перевести `docs/archive/worklog/WORKLOG4.md` в исторический статус, создать `docs/WORKLOG5.md` как активный журнал.
 
 Что сделано:
-1. `docs/WORKLOG4.md` переведён в исторический статус (записи Session 832-1031).
+1. `docs/archive/worklog/WORKLOG4.md` переведён в исторический статус (записи Session 832-1031).
 2. `docs/WORKLOG5.md` создан как активный журнал (начиная с Session 1032).
 3. Обновлены ссылки в `AGENTS.md` и `docs/agent/` файлах.
 
@@ -372,8 +372,8 @@
    - PASS 23-25: Second Review, Blind Spots, Health Score
 2. Проанализированы: 320 .cs файлов, 19 проектов, ~2,341 тестов, 350+ samples, 57 коммитов
 3. Созданы два аналитических документа:
-   - `docs/AUDIT_REPORT.md` — полный forensic audit (29 разделов)
-   - `docs/RECOVERY_ROADMAP.md` — практический план восстановления (20 задач)
+   - `docs/archive/audits-legacy/AUDIT_REPORT.md` — полный forensic audit (29 разделов)
+   - `docs/archive/audits-legacy/RECOVERY_ROADMAP.md` — практический план восстановления (20 задач)
 
 Ключевые находки:
 - Языковой pipeline (Lexer→Parser→AST→Semantics→Runtime→BytecodeVm) работает корректно
@@ -766,7 +766,7 @@ Health Score строковой подсистемы: **8.4/10**.
 
 ### Документация
 
-- Создан `docs/STRING_AUDIT_REPORT.md` с полным отчётом аудита
+- Создан `docs/archive/audits-legacy/STRING_AUDIT_REPORT.md` с полным отчётом аудита
 - Обновлены `docs/WORKLOG5.md` и `docs/PLANS4.md`
 
 ### Проверки
@@ -827,7 +827,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 
 ### Созданные файлы
 
-- `docs/TYPE_AUDIT_REPORT.md` — полный отчёт аудита
+- `docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md` — полный отчёт аудита
 - `samples/acceptance/negative/type_cyclic_reference.axm`
 - `samples/acceptance/negative/type_duplicate_declaration.axm`
 - `samples/acceptance/negative/type_unknown_field.axm`
@@ -857,7 +857,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 ### Что сделано
 
 1. Проведён полный forensic audit I/O-подсистемы (112 раздела, 101 секция отчёта).
-2. Создан `docs/IO_AUDIT_REPORT.md` с полным отчётом.
+2. Создан `docs/archive/audits-legacy/IO_AUDIT_REPORT.md` с полным отчётом.
 3. Исправлен IO-005 [P3]: вынесен общий слой I/O helpers:
    - создан `src/Axiom.Runtime/Builtins/BuiltinIOHelpers.cs`:
      - `TryParseInputField(TypeSymbol, string)` — парсинг одного поля ввода (string overload)
@@ -879,7 +879,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 
 ### Созданные файлы
 
-- `docs/IO_AUDIT_REPORT.md` — полный отчёт аудита
+- `docs/archive/audits-legacy/IO_AUDIT_REPORT.md` — полный отчёт аудита
 - `src/Axiom.Runtime/Builtins/BuiltinIOHelpers.cs` — общий слой I/O-логики
 
 ### Изменённые файлы
@@ -902,7 +902,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 ### Что сделано
 
 1. Проведён полный forensic audit файловой подсистемы (135 раздела, 126 секций отчёта).
-2. Создан `docs/FILE_SYSTEM_AUDIT_REPORT.md` с полным отчётом.
+2. Создан `docs/archive/audits-legacy/FILE_SYSTEM_AUDIT_REPORT.md` с полным отчётом.
 3. Извлечён дублированный READLINES в `BuiltinFileIOHelpers.EvaluateReadLines()`:
    - `Interpreter.FileIO.cs` делегирует в `BuiltinFileIOHelpers.EvaluateReadLines()`
    - `BytecodeVm.FileIO.cs` делегирует в `BuiltinFileIOHelpers.EvaluateReadLines()`
@@ -923,7 +923,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 
 ### Созданные файлы
 
-- `docs/FILE_SYSTEM_AUDIT_REPORT.md` — полный отчёт аудита
+- `docs/archive/audits-legacy/FILE_SYSTEM_AUDIT_REPORT.md` — полный отчёт аудита
 
 ### Изменённые файлы
 
@@ -945,7 +945,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 ### Что сделано
 
 1. Проведён полный forensic audit системы ошибок (135 раздела, 117 секций отчёта).
-2. Создан `docs/ERROR_HANDLING_AUDIT.md` с полным отчётом.
+2. Создан `docs/archive/audits-legacy/ERROR_HANDLING_AUDIT.md` с полным отчётом.
 3. Исправлен ERROR-003 [P0]: `InvalidOperationException` из `BuiltinDateTimeHelpers` теперь ловится и переводится в MB3007:
    - `BytecodeVm.Builtins.DateTime.cs` — `AddTemporalValue`, `EvaluateDateDiffBuiltin`, `EvaluateDatePartBuiltin`, `EvaluateDateAddBuiltin` обёрнуты в try-catch для `InvalidOperationException`
    - `Interpreter.Builtins.DateTime.cs` — аналогичные обёртки для `AddTemporalValue`, `EvaluateDateDiffBuiltin`, `EvaluateDatePartBuiltin`, `EvaluateDateAddBuiltin`
@@ -969,7 +969,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 
 ### Созданные файлы
 
-- `docs/ERROR_HANDLING_AUDIT.md` — полный отчёт аудита
+- `docs/archive/audits-legacy/ERROR_HANDLING_AUDIT.md` — полный отчёт аудита
 - `src/Axiom.Runtime/Execution/EvaluationStackUnderflowException.cs` — тип исключения для stack underflow
 
 ### Изменённые файлы
@@ -995,7 +995,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 ### Что сделано
 
 1. Проведён полный forensic audit программной модели (130 раздела, 118 секций отчёта).
-2. Создан `docs/MODULES_AUDIT.md` с полным отчётом.
+2. Создан `docs/archive/audits-legacy/MODULES_AUDIT.md` с полным отчётом.
 
 ### Главные выводы аудита
 
@@ -1012,7 +1012,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 
 ### Созданные файлы
 
-- `docs/MODULES_AUDIT.md` — полный отчёт аудита
+- `docs/archive/audits-legacy/MODULES_AUDIT.md` — полный отчёт аудита
 
 ### Проверки
 
@@ -1078,7 +1078,7 @@ Pipeline: `TYPE declaration → parser → TypeDeclarationSyntax → binder → 
 
 ### Созданные файлы
 
-- `docs/BYTECODE_VM_AUDIT_REPORT.md` — полный отчёт аудита (22 раздела, ~1200 строк)
+- `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` — полный отчёт аудита (22 раздела, ~1200 строк)
 
 ### Health Score
 
@@ -1195,7 +1195,7 @@ VM быстрее Interpreter в 96% сценариев (46/48), в2 случа�
 
 ### Обновлена документация
 
-- `docs/BYTECODE_VM_AUDIT_REPORT.md` — исправлены числа в Executive Summary, Speedup Matrix и Final Answer
+- `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` — исправлены числа в Executive Summary, Speedup Matrix и Final Answer
 - `docs/WORKLOG5.md` — исправлены числа, добавлена эта запись
 
 ### Вывод
@@ -1354,7 +1354,7 @@ Fast path работает через `PeekUnchecked` для проверки т
 
 ## Session 1063 - 2026-08-20 01:00 - Расширение отчёта аудита до полного формата
 
-Задача: расширить `docs/BYTECODE_VM_AUDIT_REPORT.md` до полного формата, покрывающего все122 темы спецификации Level 12.
+Задача: расширить `docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md` до полного формата, покрывающего все122 темы спецификации Level 12.
 
 ### Что сделано
 
@@ -1389,7 +1389,7 @@ Fast path работает через `PeekUnchecked` для проверки т
 
 ### Что сделано
 
-1. **Проведён полный форензик-аудит IDE** (`docs/IDE_FORENSIC_AUDIT.md`):
+1. **Проведён полный форензик-аудит IDE** (`docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md`):
    - 117 разделов, покрывающих все аспекты интеграции IDE с языком
    - Проверены: архитектура, подсветка, парсер, диагностики, автодополнение, навигация, форматтер, модель проекта, сборка, запуск, отладчик, кэши, производительность, тесты, документация
    - Итоговая оценка: 6.3/10
@@ -1419,7 +1419,7 @@ Fast path работает через `PeekUnchecked` для проверки т
 
 ### Изменённые файлы
 
-- `docs/IDE_FORENSIC_AUDIT.md` — создан (полный отчёт аудита)
+- `docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md` — создан (полный отчёт аудита)
 - `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` — подсветка операторов, убраны STRING/COLUMN/ROW/PI
 - `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd` — аналогично
 - `src/Axiom.Ide/Editor/Identifiers/AxiomSmartIdentifierService.cs` — инъекция парсинга
@@ -1461,7 +1461,7 @@ Fast path работает через `PeekUnchecked` для проверки т
    - Все операторы и типы (BinaryOperatorKind, UnaryOperatorKind, TypeSymbol, литералы)
    - Manual, samples, графика, клавиатура, мышь, события
 
-3. **Создан полный отчёт** `docs/LANGUAGE_FEATURE_INVENTORY.md` (79 разделов):
+3. **Создан полный отчёт** `docs/archive/audits-legacy/LANGUAGE_FEATURE_INVENTORY.md` (79 разделов):
 
 ### Ключевые цифры инвентаризации
 
@@ -1494,7 +1494,7 @@ Fast path работает через `PeekUnchecked` для проверки т
 
 ### Файлы
 
-- Создан: `docs/LANGUAGE_FEATURE_INVENTORY.md`
+- Создан: `docs/archive/audits-legacy/LANGUAGE_FEATURE_INVENTORY.md`
 
 Следующий шаг: продуктовая работа или реализация следующего шага по плану.
 
@@ -2049,7 +2049,7 @@ Health Score: 8.3/10.
 3. Проверен паритет Interpreter ↔ BytecodeVm — отладчик работает ТОЛЬКО с BytecodeVm (архитектурное решение).
 4. Проверены тесты: 25+ тестов покрывают breakpoints, stepping, resume, step-back.
 5. Проверен sample: 1 runnable sample (`samples/smoke/debug_step_controls.axm`).
-6. Проверена документация: IDE_FORENSIC_AUDIT.md §53-59.
+6. Проверена документация: docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md §53-59.
 
 Найденные проблемы (все P3/P4):
 - SYS-017 (P3): отладчик только для BytecodeVm (архитектурное решение, не баг)
@@ -2252,7 +2252,7 @@ Health Score: **9.0/10**.
 4. Проверен паритет Interpreter ↔ BytecodeVm — полный паритет, расхождений не обнаружено.
 5. Проверены benchmarks — VM быстрее на 48-60% (string_primitive_scan: 0.398x, string_concat_accumulator: 0.522x, string_array_loop_pipeline: 0.514x).
 6. Проверены тесты: 120 тестов + 51 sample.
-7. Проверена документация: 6 manual-страниц, спецификация, архитектура, STRING_AUDIT_REPORT.md.
+7. Проверена документация: 6 manual-страниц, спецификация, архитектура, docs/archive/audits-legacy/STRING_AUDIT_REPORT.md.
 
 ### Найденные проблемы
 
@@ -2348,7 +2348,7 @@ Health Score: **8.8/10**.
 7. Runtime (`RuntimeRecordValue`, copy semantics, structural equality)
 8. Tests (90+ тестов по всем уровням)
 9. Samples (22 файла в `samples/operators/type/`)
-10. Documentation (`docs/manual/type.html`, `docs/TYPE_AUDIT_REPORT.md`)
+10. Documentation (`docs/manual/type.html`, `docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md`)
 11. Engine-compare benchmark (`type_record_roundtrip.axm` ~0.891x)
 
 ### Результат
@@ -2470,7 +2470,7 @@ Health Score: **8.8/10**.
 1. Прочитаны обязательные документы: AGENTS.md, PROJECT.md, README.md, SPECIFICATION3.md, ARCHITECTURE.md, PLANS4.md, WORKLOG5.md.
 2. Проведён полный поиск по репозиторию: лексер, парсер, семантика, runtime, bytecode, IDE, тесты, samples, документация.
 3. Найдено: подсистема MULTI-FILE MODULE DESIGN **не реализована**. Axiom — строго однофайловый язык.
-4. Существующие аудиты: `docs/MODULES_AUDIT.md` (Session 1056), `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md` (Session 1057).
+4. Существующие аудиты: `docs/archive/audits-legacy/MODULES_AUDIT.md` (Session 1056), `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md` (Session 1057).
 5. Единственный эскиз модульной системы: `docs/FUTURE.md:498-545` (MODULE ... END MODULE, IMPORT, 4 правила).
 6. Создан полный forensic-отчёт: `docs/audit/MULTI_FILE_MODULE_DESIGN.md`.
 
@@ -3167,7 +3167,7 @@ Health Score: **8.8/10**.
 - Документы: docs/audit/DATETIME_FORENSIC_AUDIT.md (DT-004 выполнено, 46 регистраций, секции 3.4/5/7/9/10/12/14/15/16), docs/LANGUAGE_INVENTORY.md (LANG-0212/0213/0214 — нативные сигнатуры), docs/BYTECODE_COVERAGE.md (строки 120-121: MB2003, удаление строковых форм, актуальные имена Binder-тестов).
 - Верификация (AutoCoder, независимо): build 0 ошибок / 0 предупреждений; Runtime 958/958, Semantics 377/377, Parsing 146/146, Execution 950/950, Ide 577/581 (4 pre-existing падения UI-тестов, не связаны с сессией).
 
-- Дополнение к DT-004: docs/SPECIFICATION.md и docs/SPECIFICATION2.md — секции DATEADD/DATEDIFF/DATEPART переписаны на нативный контракт (value — нативное DATE/TIME/DATETIME; строковые формы не поддерживаются; смешение видов — ошибка компиляции MB2003; пример DATEADD("m", 1, DATEVALUE("2026-01-31"))). Финальный sweep по docs+samples: 0 оставшихся строковых форм (исключая исторические WORKLOG/PLANS/_old_version).
+- Дополнение к DT-004: docs/archive/spec/SPECIFICATION.md и docs/archive/spec/SPECIFICATION2.md — секции DATEADD/DATEDIFF/DATEPART переписаны на нативный контракт (value — нативное DATE/TIME/DATETIME; строковые формы не поддерживаются; смешение видов — ошибка компиляции MB2003; пример DATEADD("m", 1, DATEVALUE("2026-01-31"))). Финальный sweep по docs+samples: 0 оставшихся строковых форм (исключая исторические WORKLOG/PLANS/_old_version).
 
 - Новая защита: присваивание полной даты-времени в DATE/TIME запрещено на этапе компиляции (MB2003, сообщение «Cannot assign a full date-time value to 'DATE': the time component would be silently truncated.»). Binder: Binder.DeclarationStatements.cs (TryReportTruncatingTemporalAssignment — проверка в DIM/CONST/присваивании; срабатывает для нативного DATETIME и строкового литерала yyyy-MM-dd HH:mm:ss), Binder.Diagnostics.cs (ReportTruncatingTemporalAssignment). Биндинг инициализаторов переведён на двухшаговый (BindExpression -> ApplyExpectedType), чтобы видеть исходный тип до конверсии. +12 тестов BinderTests (6 негативных, 6 позитивных). Верификация (AutoCoder, независимо): build 0 ошибок/0 предупреждений; Semantics 389/389 (+12), Runtime 958/958, Parsing 146/146, Execution 950/950, Ide 577/581 (4 pre-existing). Пробник: DIM d AS DATE = ""2026-01-02 12:00:00"" -> SemanticFailure MB2003 (ранее Success с молчаливым усечением). Документы: manual data-types-conversions.html (абзац про запрет), DATETIME_FORENSIC_AUDIT.md (4.3 и 7.1).
 
@@ -3241,3 +3241,38 @@ Health Score: **8.8/10**.
 Исправление: в `BytecodeModuleValidator.GetBuiltinReturnType` политики `SameAsFirstArgument` и `PromotedNumeric` теперь применяются из дескриптора ДО отката к `builtin.Function.ReturnType` (совпадает с логикой биндера `ResolveNumericBuiltinReturnType`).
 
 Проверка: сборка 0 ошибок/0 предупреждений; Execution 950/950 (было 949/950). Полный прогон решения: Lexing 18/18, Parsing 146/146, Semantics 389/389, Runtime 965/965, Bytecode 233/233, Syntax 66/66, Execution 950/950, Ide 579/583 (4 pre-existing). Новых падений нет.
+## Session 1099 - 2026-08-26 18:05 - наведение порядка в документации (мета-слой)
+
+**Цель:** упорядочить Markdown-документацию репозитория: отделить актуальное от исторического и дублирующего, восстановить целостную картину реализованного/запланированного/недоделанного.
+
+**Сделано:**
+- Проведена полная инвентаризация всех .md-файлов (100 файлов, кроме node_modules/.git); контроль по зонам сходится.
+- Создан мета-слой docs/meta/: реестр DOC_REGISTRY.md, правила CLASSIFICATION.md, целевая структура TARGET_STRUCTURE.md, сквозная карта FEATURE_LEDGER.md, гид GUIDE.md, план миграции MIGRATION_PLAN.md, шаблоны 	emplates/.
+- Создан главный навигационный индекс docs/INDEX.md; в README.md добавлена ссылка на него.
+- Выявлены 10 дублирующих файлов (ранние отчёты аудитов, заменённые docs/audit/*), 18 исторических, 9 планируемых; спорные помечены.
+- Проверены ссылки на переносимые файлы: дублирующие отчёты цитируются из актуальных документов (PLANS4, WORKLOG5, LANGUAGE_INVENTORY), поэтому перенос требует одновременной правки ссылок.
+
+**Осталось / следующий шаг:** подтверждение владельца на перенос исторических/дублирующих файлов в docs/archive/ (план и таблица ссылок — в docs/meta/MIGRATION_PLAN.md); после переноса обновить реестр и прогнать проверку ссылок повторно.
+
+## Session 1100 - 2026-08-26 19:00 - перенос исторических документов в docs/archive/
+
+**Цель:** выполнить подтверждённый владельцем перенос исторических и дублирующих файлов из `docs/` в архивную зону `docs/archive/` без удаления (по `docs/meta/MIGRATION_PLAN.md`).
+
+**Сделано:**
+- Созданы архивные каталоги: `docs/archive/spec`, `plans`, `worklog`, `ide`, `audits-legacy`.
+- Перенесено **24 файла** через `git mv` (история git сохранена):
+  - spec — SPECIFICATION, SPECIFICATION2 (2);
+  - plans — PLANS, PLANS2, PLANS3 (3);
+  - worklog — WORKLOG…WORKLOG4 (4);
+  - ide — IDE_REDESIGN, «План развития TYPE…» → `plan-type-object-core.md` (2);
+  - audits-legacy — AUDIT_REPORT, RECOVERY_ROADMAP, IMPROVEMENT_PLAN, BYTECODE_VM_AUDIT_REPORT, ERROR_HANDLING_AUDIT, FILE_SYSTEM_AUDIT_REPORT, IO_AUDIT_REPORT, STRING_AUDIT_REPORT, TYPE_AUDIT_REPORT, MODULES_AUDIT, IDE_FORENSIC_AUDIT, LANGUAGE_FEATURE_INVENTORY, DATETIME_FORENSIC_AUDIT_old_version (13).
+- Обновлены ссылки на перенесённые файлы в 69 .md-документах (включая AGENTS.md, README.md, SPECIFICATION3.md, PLANS4.md, WORKLOG5.md, LANGUAGE_INVENTORY.md, docs/agent/*, docs/audit/*, docs/meta/*): старые пути заменены на архивные.
+- Приведены к каноническому верхнему регистру файлы мета-слоя (INDEX.md, CLASSIFICATION.md, DOC_REGISTRY.md, FEATURE_LEDGER.md, GUIDE.md, MIGRATION_PLAN.md, TARGET_STRUCTURE.md) — на диске они были в нижнем регистре.
+- Исправлены до-существовавшие битые ссылки на удалённый `docs/ARRAY_AUDIT_REPORT.md` (PLANS4.md, ARRAY_SEMANTICS.md).
+- Обновлены реестр DOC_REGISTRY.md (новые пути, зоны, контрольная сумма), INDEX.md, MIGRATION_PLAN.md (статус «выполнено»), TARGET_STRUCTURE.md, documentation-map.html.
+
+**Проверка целостности:** повторный обход не нашёл ни одной ссылки на старый путь перенесённых файлов; 0 битых ссылок (остались только намеренные отсылки к несуществующему `docs/LANGUAGE_GUIDE.md` в `.codex`-навыке — не ошибка).
+
+**Резервная копия:** `.artifacts/backup-docs-2026-08-26/` (полная копия `docs/` до переноса).
+
+**Следующий шаг:** закоммитить перенос отдельным коммитом; при необходимости — обновить `.codex`-навыки и HTML-справочник, если те ссылаются на перенесённые имена.

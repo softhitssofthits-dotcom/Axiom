@@ -199,7 +199,7 @@
 - **Категория:** PROGRAM STRUCTURE
 - **Тип:** PLANNED
 - **Назначение:** Модификаторы видимости для сущностей.
-- **Статус:** Не реализовано. Отложено "до модульности" (`SPECIFICATION.md:3465`).
+- **Статус:** Не реализовано. Отложено "до модульности" (`docs/archive/spec/SPECIFICATION.md:3465`).
 - **Текущий статус:** NOT_IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
 
@@ -1053,7 +1053,7 @@ TYPE методы хранятся в `_routines` наравне с обычны
 
 ### 33.1 Спецификация
 
-`SPECIFICATION3.md` не содержит отдельного раздела о структуре программы или модульной системе. Единственное упоминание: `SPECIFICATION.md:3465` — "откладывать до модульности: Public / Private TYPE".
+`SPECIFICATION3.md` не содержит отдельного раздела о структуре программы или модульной системе. Единственное упоминание: `docs/archive/spec/SPECIFICATION.md:3465` — "откладывать до модульности: Public / Private TYPE".
 
 ### 33.2 Архитектура
 
@@ -1074,9 +1074,9 @@ TYPE методы хранятся в `_routines` наравне с обычны
 - `variables-and-constants.html` — DIM/CONST.
 - `type.html` — TYPE.
 
-### 33.4 MODULES_AUDIT.md
+### 33.4 docs/archive/audits-legacy/MODULES_AUDIT.md
 
-Существующий аудит (`docs/MODULES_AUDIT.md`, 147 строк, Session 1056) — краткий, но точный. Подтверждает однофайловую модель и feature gaps.
+Существующий аудит (`docs/archive/audits-legacy/MODULES_AUDIT.md`, 147 строк, Session 1056) — краткий, но точный. Подтверждает однофайловую модель и feature gaps.
 
 ### 33.5 FUTURE.md
 
@@ -1125,7 +1125,7 @@ IDE имеет файловый менеджер (`FilesPaneViewModel`), но э
 ├── SYS-012: Нет Module/Namespace/Import
 ├── SYS-013: Нет visibility modifiers
 ├── SYS-014: Нет project file format
-└── MODULE-001..007 из MODULES_AUDIT.md
+└── MODULE-001..007 из docs/archive/audits-legacy/MODULES_AUDIT.md
 
 **Причина:** Осознанное отложение до отдельного проектирования (`PROJECT.md:42`).
 

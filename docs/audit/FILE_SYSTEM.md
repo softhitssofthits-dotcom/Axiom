@@ -2,7 +2,7 @@
 ## FILE SYSTEM / FILE I/O
 
 **Дата аудита:** 2026-08-21
-**Предыдущий аудит:** Session 1054 (2026-08-20), `docs/FILE_SYSTEM_AUDIT_REPORT.md` (1120 строк, Health Score 8.8/10)
+**Предыдущий аудит:** Session 1054 (2026-08-20), `docs/archive/audits-legacy/FILE_SYSTEM_AUDIT_REPORT.md` (1120 строк, Health Score 8.8/10)
 **Методология:** полная повторная верификация предыдущего аудита + углублённый анализ по 60 разделам forensic-методологии
 
 ---
@@ -926,11 +926,11 @@ private CloseStatementSyntax ParseCloseStatement()
 ### 33.2 Спецификация
 
 - **Активная спецификация** (`SPECIFICATION3.md`): **НЕ содержит** dedicated file-system section. Это структурный пробел.
-- **Историческая спецификация** (`SPECIFICATION.md`, `SPECIFICATION2.md`): Содержит Section 32 — полную спецификацию файловой подсистемы.
+- **Историческая спецификация** (`docs/archive/spec/SPECIFICATION.md`, `docs/archive/spec/SPECIFICATION2.md`): Содержит Section 32 — полную спецификацию файловой подсистемы.
 
 ### 33.3 Расхождения документации и кода
 
-1. **Спецификация в историческом документе**: Каноническая file-system спецификация живёт в `SPECIFICATION.md`/`SPECIFICATION2.md` (Section 32), а не в активной `SPECIFICATION3.md`. Нужно перенести или хотя бы сослаться.
+1. **Спецификация в историческом документе**: Каноническая file-system спецификация живёт в `docs/archive/spec/SPECIFICATION.md`/`docs/archive/spec/SPECIFICATION2.md` (Section 32), а не в активной `SPECIFICATION3.md`. Нужно перенести или хотя бы сослаться.
 
 2. **Encoding asymmetry**: `READFILE`/`READALLLINES` используют UTF-8 с Windows-1251 fallback, а потоковые `READLINE`/`READTOEND` используют strict UTF-8. Это различие документировано в аудите, но manual-страницы не явно подчёркивают разницу.
 

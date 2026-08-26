@@ -1,4 +1,4 @@
-﻿# AXIOM — COMPLETE LANGUAGE FEATURE INVENTORY / SUBSYSTEM DISCOVERY AUDIT
+﻿﻿# AXIOM — COMPLETE LANGUAGE FEATURE INVENTORY / SUBSYSTEM DISCOVERY AUDIT
 
 Полная инвентаризация языка Axiom: все конструкции, типы, операторы, built-ins, runtime-возможности, графика, события, Regex, Numeric, Date/Time, Random, I/O, модули и все остальные реально существующие возможности.
 
@@ -351,7 +351,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | Watch | Не реализовано | — |
 | Source mapping | Реализовано | BytecodeDebugInfo сопоставляет адреса с TextLocation |
 
-**Свидетельства:** docs/IDE_FORENSIC_AUDIT.md, src/Axiom.Ide/Services/Execution/IProgramDebuggerState.cs
+**Свидетельства:** docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md, src/Axiom.Ide/Services/Execution/IProgramDebuggerState.cs
 
 ---
 
@@ -370,7 +370,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | Автодополнение имён | Не реализовано | Запланировано |
 | Рефакторинг | Не реализовано | Запланировано |
 
-**Свидетельства:** docs/IDE_FORENSIC_AUDIT.md (Health Score: 6.3/10), 113 source files в IDE
+**Свидетельства:** docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md (Health Score: 6.3/10), 113 source files в IDE
 
 ---
 
@@ -386,7 +386,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | Visibility modifiers | Не реализовано | Нет PUBLIC, PRIVATE, INTERNAL |
 | Entry point | Глобальные операторы | Top-level statements, нет SUB Main |
 
-**Свидетельства:** docs/MODULES_AUDIT.md (Health Score: 8.5/10)
+**Свидетельства:** docs/archive/audits-legacy/MODULES_AUDIT.md (Health Score: 8.5/10)
 
 ---
 
@@ -447,7 +447,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | IDE | Подсветка 241 встроенной функции, включая все строковые |
 
 **Ключевые свидетельства:**
-- Health Score: 8.4/10 (STRING_AUDIT_REPORT.md)
+- Health Score: 8.4/10 (docs/archive/audits-legacy/STRING_AUDIT_REPORT.md)
 - 2 подтверждённых дефекта — оба исправлены (STRING-001: REVERSE surrogate pairs, STRING-002: JOIN single-element parity)
 - Тесты: `InterpreterTests.cs`, `BytecodeVmTests.cs`, acceptance samples
 - Samples: `samples/functions/len/`, `samples/functions/left/`, `samples/functions/right/`, `samples/functions/mid/`, и т.д.
@@ -503,7 +503,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | IDE | Подсветка TYPE, SELF, AS |
 
 **Ключевые свидетельства:**
-- Health Score: 8.6/10 (TYPE_AUDIT_REPORT.md)
+- Health Score: 8.6/10 (docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md)
 - 3 находки P3/P4 — ни одна не блокирует развитие
 - Full parity Interpreter ↔ VM confirmed
 - Тесты: ~20 parser, ~15 semantics, 30 runtime, 5+ negative acceptance, 20+ positive acceptance
@@ -624,7 +624,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | IDE | Консольный ввод/вывод через ProgramConsoleService |
 
 **Ключевые свидетельства:**
-- Health Score: 8.5/10 (IO_AUDIT_REPORT.md)
+- Health Score: 8.5/10 (docs/archive/audits-legacy/IO_AUDIT_REPORT.md)
 - Тесты: 15+ PRINT, 5 PRINT USING, 7 INPUT
 - Samples: `samples/operators/print/` (6), `samples/operators/input/` (4)
 - Manual: `docs/manual/print.html`, `docs/manual/input.html`
@@ -663,7 +663,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | IDE | Подсветка всех файловых функций |
 
 **Ключевые свидетельства:**
-- Health Score: 8.8/10 (FILE_SYSTEM_AUDIT_REPORT.md)
+- Health Score: 8.8/10 (docs/archive/audits-legacy/FILE_SYSTEM_AUDIT_REPORT.md)
 - Text-only mode (нет binary), UTF-8 encoding, deterministic handle lifecycle
 - Тесты: 40+ FileIO + FileSystem тестов
 - Samples: `samples/operators/open/`, `samples/operators/close/`, `samples/functions/*` (каждая функция в отдельной папке)
@@ -689,7 +689,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 | IDE | Панель диагностики с навигацией |
 
 **Ключевые свидетельства:**
-- Health Score: 8.5/10 (ERROR_HANDLING_AUDIT.md)
+- Health Score: 8.5/10 (docs/archive/audits-legacy/ERROR_HANDLING_AUDIT.md)
 - TRY/CATCH/FINALLY: VM да, Автотесты да, Sample да, Manual да, Сквозной VM да
 - ERROR: VM да, Автотесты да, Sample да, Manual да, Сквозной VM да
 - RETURN через FINALLY: работает в обоих движках
@@ -703,7 +703,7 @@ Axiom — это полноценный интерпретируемый BASIC-�
 
 **Статус: НЕ РЕАЛИЗОВАНО. Не является дефектом.**
 
-Axiom — строго однофайловый язык. Программа = один `.axm` файл. Нет модулей, нет namespaces, нет imports, нет visibility modifiers, нет project file format. Это текущий языковой контракт. Отсутствие модулей — feature gap, требующий отдельного проектирования (MODULE-001..MODULE-007 в MODULES_AUDIT.md).
+Axiom — строго однофайловый язык. Программа = один `.axm` файл. Нет модулей, нет namespaces, нет imports, нет visibility modifiers, нет project file format. Это текущий языковой контракт. Отсутствие модулей — feature gap, требующий отдельного проектирования (MODULE-001..MODULE-007 в docs/archive/audits-legacy/MODULES_AUDIT.md).
 
 ---
 
@@ -9066,7 +9066,7 @@ NOTES: Свёртка массива в одно значение.
 | Функция | Где задокументировано | Статус |
 |---------|----------------------|--------|
 | DATA/READ/RESTORE | PROJECT.md (упоминание) | Не реализовано на всех уровнях |
-| LINE INPUT | IO_AUDIT_REPORT.md | Не реализовано |
+| LINE INPUT | docs/archive/audits-legacy/IO_AUDIT_REPORT.md | Не реализовано |
 | Система модулей | PROJECT.md (отдельное направление) | Не реализовано |
 | Классы, объекты, указатели | PROJECT.md (отдельное направление) | Не реализовано |
 | Компиляция в exe/native | PROJECT.md (отдельное направление) | Не реализовано |

@@ -859,9 +859,9 @@ TRY/CATCH корректно работает внутри ветвей IF и SE
 
 ### 33.2 Спецификация
 
-- `SPECIFICATION2.md:401-434` — полная спецификация IF
-- `SPECIFICATION2.md:485-520` — полная спецификация SELECT CASE
-- `SPECIFICATION2.md:1250-1283` — блочная область видимости
+- `docs/archive/spec/SPECIFICATION2.md:401-434` — полная спецификация IF
+- `docs/archive/spec/SPECIFICATION2.md:485-520` — полная спецификация SELECT CASE
+- `docs/archive/spec/SPECIFICATION2.md:1250-1283` — блочная область видимости
 
 ### 33.3 Архитектура
 

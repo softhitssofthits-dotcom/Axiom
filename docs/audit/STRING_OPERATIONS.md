@@ -711,7 +711,7 @@ Interpreter реализует все 44 строковые функции че�
 
 ### 33.2 Предыдущий аудит
 
-`docs/STRING_AUDIT_REPORT.md` — Health Score 8.4/10, 2 дефекта исправлены.
+`docs/archive/audits-legacy/STRING_AUDIT_REPORT.md` — Health Score 8.4/10, 2 дефекта исправлены.
 
 ---
 

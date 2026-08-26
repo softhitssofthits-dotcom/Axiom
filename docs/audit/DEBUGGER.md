@@ -50,7 +50,7 @@
 - **IDE:** Да (`BreakpointMargin`, `SourceBreakpointLines`)
 - **Tests:** Да (`BytecodeVmTests`, `ProgramRunServiceTests`)
 - **Samples:** Да (`debug_step_controls.axm`)
-- **Documentation:** Частично (IDE_FORENSIC_AUDIT.md §53-59)
+- **Documentation:** Частично (docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md §53-59)
 
 ### SYS-002: Точки останова по позиции (строка + столбец)
 - **Категория:** BREAKPOINT
@@ -719,7 +719,7 @@ Fast path активен когда:
 ### 20.6 Редактирование кода во время остановки
 - `_stoppedRunState` хранит живое состояние VM
 - Если пользователь редактирует код, состояние VM становится несогласованным с исходником
-- **Это известная проблема** (упомянута в IDE_FORENSIC_AUDIT.md §61)
+- **Это известная проблема** (упомянута в docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md §61)
 
 ### 20.7 Множественные документы
 - Отладка работает только с активным документом
@@ -1037,7 +1037,7 @@ Fast path активен когда:
 
 ## 33. Анализ документации
 
-### 33.1 IDE_FORENSIC_AUDIT.md
+### 33.1 docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md
 
 Разделы §53-59 содержат краткую инвентаризацию отладчика. Точность: **высокая**.
 

@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+﻿﻿# AGENTS.md
 
 ## Purpose
 This repository must be developed in a structured, document-driven way.
@@ -34,7 +34,7 @@ At the beginning of every session, do this in order:
    - `docs/WORKLOG5.md`
    - `docs/BYTECODE_COVERAGE.md`
    - `docs/BYTECODE_PERF_MATRIX.md`
-   - `docs/SPECIFICATION2.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/WORKLOG3.md`, `docs/SPECIFICATION.md`, `docs/PLANS.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md` only when older historical context is needed
+   - `docs/archive/spec/SPECIFICATION2.md`, `docs/archive/plans/PLANS3.md`, `docs/archive/plans/PLANS2.md`, `docs/archive/worklog/WORKLOG3.md`, `docs/archive/spec/SPECIFICATION.md`, `docs/archive/plans/PLANS.md`, `docs/archive/worklog/WORKLOG2.md`, `docs/archive/worklog/WORKLOG.md` only when older historical context is needed
 
 Then:
 1. briefly summarize what this project is;
@@ -136,50 +136,50 @@ Current work plan:
 - deferred items;
 - append-only ordering from top to bottom for all evolving sections unless the document explicitly says otherwise.
 
-### `docs/PLANS3.md`
+### `docs/archive/plans/PLANS3.md`
 Historical third part of planning:
 - kept for historical context before `docs/PLANS4.md` became active;
 - no new planning updates should be added there after the switch.
 
-### `docs/SPECIFICATION2.md`
+### `docs/archive/spec/SPECIFICATION2.md`
 Historical second part of specification:
 - kept for historical context before `docs/SPECIFICATION3.md` became active;
 - no new updates should be added there after the switch.
 
-### `docs/SPECIFICATION.md`
+### `docs/archive/spec/SPECIFICATION.md`
 Historical first part of specification:
 - kept for historical context before `docs/SPECIFICATION3.md` became active;
 - no new updates should be added there after the switch.
 
-### `docs/PLANS2.md`
+### `docs/archive/plans/PLANS2.md`
 Historical second part of planning:
-- kept for historical context before `docs/PLANS3.md` became active;
+- kept for historical context before `docs/archive/plans/PLANS3.md` became active;
 - no new planning updates should be added there after the switch.
 
-### `docs/PLANS.md`
+### `docs/archive/plans/PLANS.md`
 Historical first part of planning:
-- kept for historical context before `docs/PLANS2.md` became active;
+- kept for historical context before `docs/archive/plans/PLANS2.md` became active;
 - no new planning updates should be added there after the switch.
 
-### `docs/WORKLOG3.md`
+### `docs/archive/worklog/WORKLOG3.md`
 Historical third part of session continuity:
 - kept for sessions from 310 to 480;
 - no new entries should be added there after `docs/WORKLOG5.md` is introduced;
 - read it when context from sessions 310-480 is needed.
 
-### `docs/WORKLOG2.md`
+### `docs/archive/worklog/WORKLOG2.md`
 Historical second part of session continuity:
 - kept for sessions from 169 to 309;
 - no new entries should be added there after `docs/WORKLOG5.md` is introduced;
 - read it when context from sessions 169-309 is needed.
 
-### `docs/WORKLOG.md`
+### `docs/archive/worklog/WORKLOG.md`
 Historical session continuity log:
 - kept for sessions up to and including Session 168;
 - no new entries should be added there after `docs/WORKLOG5.md` is introduced;
 - read it only when older historical context is needed.
 
-### `docs/WORKLOG4.md`
+### `docs/archive/worklog/WORKLOG4.md`
 Historical fourth part of session continuity:
 - kept for sessions from 481 to 1031;
 - no new entries should be added there after `docs/WORKLOG5.md` is introduced;
@@ -370,12 +370,12 @@ After every meaningful task, update `docs/WORKLOG5.md`.
 All repository documents must be maintained from top to bottom.
 
 Permanent requirements:
-- never prepend new records to the top of `docs/WORKLOG5.md`, `docs/WORKLOG4.md`, `docs/WORKLOG3.md`, `docs/WORKLOG2.md`, `docs/WORKLOG.md`, `docs/PLANS4.md`, `docs/PLANS3.md`, `docs/PLANS2.md`, `docs/PLANS.md`, or any other evolving project document;
+- never prepend new records to the top of `docs/WORKLOG5.md`, `docs/archive/worklog/WORKLOG4.md`, `docs/archive/worklog/WORKLOG3.md`, `docs/archive/worklog/WORKLOG2.md`, `docs/archive/worklog/WORKLOG.md`, `docs/PLANS4.md`, `docs/archive/plans/PLANS3.md`, `docs/archive/plans/PLANS2.md`, `docs/archive/plans/PLANS.md`, or any other evolving project document;
 - add new records only below the existing records in the same document;
 - preserve chronological reading order: earlier entries stay above later entries;
 - do not silently reorder old records unless the task is explicitly to normalize document chronology.
 
-For `docs/WORKLOG5.md`, continuing the sequence from `docs/WORKLOG.md`, `docs/WORKLOG2.md`, `docs/WORKLOG3.md` and `docs/WORKLOG4.md`, every new entry:
+For `docs/WORKLOG5.md`, continuing the sequence from `docs/archive/worklog/WORKLOG.md`, `docs/archive/worklog/WORKLOG2.md`, `docs/archive/worklog/WORKLOG3.md` and `docs/archive/worklog/WORKLOG4.md`, every new entry:
 - every new entry must use a heading in the form `## Session <N> - YYYY-MM-DD HH:mm - <title>`;
 - `<N>` must be the next sequential session number after the highest existing numbered session;
 - date and time are mandatory and must use the local project time zone;

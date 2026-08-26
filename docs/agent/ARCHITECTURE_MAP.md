@@ -77,7 +77,7 @@ Look at:
 - `src/Axiom.Ide/`
 - `tests/Axiom.Ide.Tests/`
 - `src/Axiom.Ide.SmokeHarness/`
-- `docs/IDE_REDESIGN.md`
+- `docs/archive/ide/IDE_REDESIGN.md`
 - `docs/ARCHITECTURE.md`
 
 ## Retrieval Notes

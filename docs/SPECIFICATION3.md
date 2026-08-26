@@ -3,8 +3,8 @@
 Этот файл является активной спецификацией проекта начиная с 2026-04-27.
 
 Исторические части спецификации:
-- `docs/SPECIFICATION.md` содержит первую часть истории проектного договора;
-- `docs/SPECIFICATION2.md` содержит вторую часть истории проектного договора и фиксирует активный период с 2026-04-23 по 2026-04-27.
+- `docs/archive/spec/SPECIFICATION.md` содержит первую часть истории проектного договора;
+- `docs/archive/spec/SPECIFICATION2.md` содержит вторую часть истории проектного договора и фиксирует активный период с 2026-04-23 по 2026-04-27.
 
 Новые изменения контракта языка, среды выполнения и IDE нужно вносить в `docs/SPECIFICATION3.md`.
 
@@ -3249,7 +3249,7 @@ END TRY
 - сквозная приёмочная проверка `BytecodeVm` без отката на интерпретатор;
 - отрицательная приёмочная проверка отсутствующего или неподдерживаемого файла с одинаковой диагностикой interpreter / `BytecodeVm`;
 - запускаемый пример `samples/graphics/images/load_and_draw_image.axm`;
-- обновление `docs/manual/`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`;
+- обновление `docs/manual/`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md`, `docs/archive/plans/PLANS3.md` и `docs/archive/worklog/WORKLOG4.md`;
 - `docs/BYTECODE_PERF_MATRIX.md` обновляется только если в этом же срезе будет добавлен отдельный производительный сценарий.
 
 ## Обновление 2026-06-02 - направление современной графики
@@ -3469,7 +3469,7 @@ END TRY
 - отрицательная приёмочная проверка неверного номера кадра или отсутствующего файла с одинаковой диагностикой interpreter / `BytecodeVm`;
 - запускаемый пример `samples/graphics/sprites/walk_cycle.axm` или другой короткий пример анимации с выходом по `ESC`;
 - если нужен постоянный графический ресурс, он должен лежать в `samples/graphics/sprites/assets/`;
-- обновление `docs/manual/`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`;
+- обновление `docs/manual/`, `docs/manual/scripts/manual.js`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md`, `docs/archive/plans/PLANS3.md` и `docs/archive/worklog/WORKLOG4.md`;
 - `docs/BYTECODE_PERF_MATRIX.md` обновляется только если в этом же срезе будет добавлен отдельный производительный сценарий.
 
 ## Обновление спецификации - 2026-06-02 - договор первого современного графического среза
@@ -3633,7 +3633,7 @@ END TRY
 - запускаемый пример в `samples/graphics/modern/`, например `rectangles_frame.axm`, с русскими сообщениями, локальными комментариями и паузами;
 - приёмочный пример, где `DRAWIMAGE` и `DRAWSPRITE` рисуются внутри `CANVAS` и публикуются через `PRESENT`;
 - пользовательский справочник в `docs/manual/` с новой страницей современного графического слоя и индексами `docs/manual/scripts/manual.js` / `docs/manual/scripts/search-index.js`;
-- обновление `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`;
+- обновление `docs/BYTECODE_COVERAGE.md`, `docs/archive/plans/PLANS3.md` и `docs/archive/worklog/WORKLOG4.md`;
 - обновление `docs/BYTECODE_PERF_MATRIX.md` только если в этом же срезе будет добавлен отдельный производительный сценарий современного кадра.
 
 ## Обновление спецификации - 2026-06-04 - договор второго современного графического среза
@@ -3768,7 +3768,7 @@ END TRY
 - отрицательные проверки для вызовов без `CANVAS`, отрицательного радиуса и координат вне поддерживаемого диапазона;
 - короткие runnable sample `samples/graphics/modern/hud_text.axm`, `samples/graphics/modern/camera_world.axm`, `samples/graphics/modern/lines_and_circles.axm`;
 - acceptance-запуск `samples/graphics/game/maze_chase.axm` через `BytecodeVm`;
-- обновление `docs/manual/modern-graphics.html`, `docs/manual/graphics.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS3.md` и `docs/WORKLOG4.md`.
+- обновление `docs/manual/modern-graphics.html`, `docs/manual/graphics.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md`, `docs/archive/plans/PLANS3.md` и `docs/archive/worklog/WORKLOG4.md`.
 
 ## Modern Graphics - viewport для CANVAS
 

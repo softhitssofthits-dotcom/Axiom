@@ -1101,7 +1101,7 @@ RETURN из TRY-блока корректно выполняет FINALLY пер�
 
 ### 33.2 Спецификация
 
-- `SPECIFICATION.md` и `SPECIFICATION2.md` — полная спецификация SUB/FUNCTION/RETURN/BYVAL/BYREF
+- `docs/archive/spec/SPECIFICATION.md` и `docs/archive/spec/SPECIFICATION2.md` — полная спецификация SUB/FUNCTION/RETURN/BYVAL/BYREF
 - `SPECIFICATION3.md` — EXIT через FINALLY, events, predeclared FOR counter
 
 ### 33.3 Архитектура

@@ -67,7 +67,7 @@
 - **Bytecode VM:** Не реализовано.
 - **Текущий статус:** NOT_IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
-- **Доказательства:** `docs/FUTURE.md:498-545`, `docs/MODULES_AUDIT.md:101-107`, `PROJECT.md:42`
+- **Доказательства:** `docs/FUTURE.md:498-545`, `docs/archive/audits-legacy/MODULES_AUDIT.md:101-107`, `PROJECT.md:42`
 
 ### SYS-002: Система импорта (IMPORT)
 
@@ -82,7 +82,7 @@
 - **Bytecode VM:** Не реализовано.
 - **Текущий статус:** NOT_IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
-- **Доказательства:** `docs/FUTURE.md:525`, `docs/MODULES_AUDIT.md:42`
+- **Доказательства:** `docs/FUTURE.md:525`, `docs/archive/audits-legacy/MODULES_AUDIT.md:42`
 
 ### SYS-003: Модификаторы видимости (PUBLIC/PRIVATE/INTERNAL)
 
@@ -95,7 +95,7 @@
 - **Binder:** Не реализовано.
 - **Текущий статус:** NOT_IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
-- **Доказательства:** `docs/MODULES_AUDIT.md:104`, `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md:1216`
+- **Доказательства:** `docs/archive/audits-legacy/MODULES_AUDIT.md:104`, `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md:1216`
 
 ### SYS-004: Формат проектного файла
 
@@ -108,7 +108,7 @@
 - **IDE:** Не реализовано.
 - **Текущий статус:** NOT_IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
-- **Доказательства:** `PROJECT.md:42`, `docs/MODULES_AUDIT.md:102`
+- **Доказательства:** `PROJECT.md:42`, `docs/archive/audits-legacy/MODULES_AUDIT.md:102`
 
 ### SYS-005: Пространства имён (NAMESPACE)
 
@@ -120,7 +120,7 @@
 - **Binder:** Не реализовано.
 - **Текущий статус:** NOT_IMPLEMENTED
 - **Уровень уверенности:** CONFIRMED
-- **Доказательства:** `docs/MODULES_AUDIT.md:105`, `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md:1217`
+- **Доказательства:** `docs/archive/audits-legacy/MODULES_AUDIT.md:105`, `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md:1217`
 
 ### SYS-006: Multi-file compilation pipeline
 
@@ -734,10 +734,10 @@ Runtime слой не имеет модульного概念:
 |---|---|
 | `PROJECT.md:42` | Упоминает "система проектов из множества модулей" как будущее направление |
 | `docs/FUTURE.md:498-545` | Эскиз модульной системы с `MODULE ... END MODULE` и `IMPORT` |
-| `docs/MODULES_AUDIT.md` | Краткий аудит, подтверждающий feature gap |
+| `docs/archive/audits-legacy/MODULES_AUDIT.md` | Краткий аудит, подтверждающий feature gap |
 | `docs/audit/MODULES_NAMESPACES_PROGRAM_STRUCTURE.md` | Полный аудит программной модели |
 | `docs/LANGUAGE_INVENTORY.md` | Фиксирует отсутствие модульной системы |
-| `docs/LANGUAGE_FEATURE_INVENTORY.md` | Фиксирует отсутствие модульной системы |
+| `docs/archive/audits-legacy/LANGUAGE_FEATURE_INVENTORY.md` | Фиксирует отсутствие модульной системы |
 
 ### 33.2 Пробелы в документации
 
