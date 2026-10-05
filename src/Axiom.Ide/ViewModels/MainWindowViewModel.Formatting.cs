@@ -1,5 +1,6 @@
 using Axiom.Ide.Documents;
 using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 using Axiom.Ide.Services.EventLog;
 
 namespace Axiom.Ide.ViewModels;

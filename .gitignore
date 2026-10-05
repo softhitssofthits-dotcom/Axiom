@@ -31,3 +31,10 @@ USER.md
 HEARTBEAT.md
 SOUL.md
 TOOLS.md
+# Electron IDE local dependencies and copied Monaco runtime
+ide/node_modules/
+ide/src/renderer/vs/
+ide/e2e/node_modules/
+ide/e2e/playwright-report/
+ide/e2e/test-results/
+ide/e2e/.tmp/

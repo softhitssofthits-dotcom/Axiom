@@ -1,4 +1,4 @@
-using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 
 namespace Axiom.Ide.Tests;
 

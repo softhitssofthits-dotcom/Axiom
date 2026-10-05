@@ -1,5 +1,5 @@
 using ICSharpCode.AvalonEdit.Document;
-using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 using Axiom.Ide.Editor.StructuralEditing;
 
 namespace Axiom.Ide.Tests;

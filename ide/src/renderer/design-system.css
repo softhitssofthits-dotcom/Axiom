@@ -1,0 +1,476 @@
+/* Axiom IDE visual system
+   The workbench intentionally keeps its dependency-free HTML structure. This layer
+   supplies a compact, editor-first visual language above the functional layout in
+   styles.css, so controls keep the same event handlers and keyboard behaviour. */
+
+:root {
+  --xs-canvas: #171a21;
+  --xs-surface: #1d212b;
+  --xs-surface-raised: #252b37;
+  --xs-surface-hover: #2c3442;
+  --xs-surface-active: #353f50;
+  --xs-editor: #1a1e27;
+  --xs-border: #343d4d;
+  --xs-border-subtle: #293140;
+  --xs-text: #e6eaf0;
+  --xs-text-muted: #a5afbf;
+  --xs-text-faint: #768296;
+  --xs-accent: #62a8ff;
+  --xs-accent-strong: #3e8cf5;
+  --xs-accent-wash: rgba(98, 168, 255, .16);
+  --xs-danger: #ff7b72;
+  --xs-warning: #e5b567;
+  --xs-success: #63c174;
+  --xs-shadow-menu: 0 14px 34px rgba(0, 0, 0, .34), 0 2px 7px rgba(0, 0, 0, .28);
+  --xs-radius-sm: 4px;
+  --xs-radius-md: 7px;
+
+  --bg-primary: var(--xs-editor);
+  --bg-secondary: var(--xs-surface);
+  --bg-tertiary: var(--xs-surface-raised);
+  --bg-hover: var(--xs-surface-hover);
+  --text-primary: var(--xs-text);
+  --text-secondary: var(--xs-text-muted);
+  --border-color: var(--xs-border);
+  --accent-color: var(--xs-accent);
+  --accent-hover: var(--xs-accent-strong);
+  --error-color: var(--xs-danger);
+  --warning-color: var(--xs-warning);
+  --success-color: var(--xs-success);
+  --status-bar-height: 25px;
+  --tab-height: 38px;
+}
+
+[data-theme="light"] {
+  --xs-canvas: #edf1f7;
+  --xs-surface: #f7f9fc;
+  --xs-surface-raised: #ffffff;
+  --xs-surface-hover: #e7edf6;
+  --xs-surface-active: #dce7f5;
+  --xs-editor: #ffffff;
+  --xs-border: #cbd5e1;
+  --xs-border-subtle: #dde5ef;
+  --xs-text: #182231;
+  --xs-text-muted: #536174;
+  --xs-text-faint: #718096;
+  --xs-accent: #0969da;
+  --xs-accent-strong: #0758ba;
+  --xs-accent-wash: rgba(9, 105, 218, .12);
+  --xs-danger: #cf222e;
+  --xs-warning: #9a6700;
+  --xs-success: #1a7f37;
+  --xs-shadow-menu: 0 14px 34px rgba(30, 41, 59, .16), 0 2px 8px rgba(30, 41, 59, .10);
+}
+
+body {
+  background: var(--xs-canvas);
+  color: var(--xs-text);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: .005em;
+}
+
+button, .menu-dropdown-item, .recent-item, .project-file, .outline-item {
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
+}
+
+button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visible,
+.project-file:focus-visible, .outline-item:focus-visible {
+  outline: 2px solid var(--xs-accent);
+  outline-offset: -2px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Main chrome */
+#menubar {
+  height: 30px;
+  padding: 0 5px;
+  background: var(--xs-surface);
+  border-bottom-color: var(--xs-border-subtle);
+}
+
+.menu-label {
+  height: 24px;
+  margin: 3px 1px;
+  padding: 0 9px;
+  border-radius: var(--xs-radius-sm);
+  color: var(--xs-text-muted);
+  font-size: 12px;
+}
+
+.menu-label:hover, .menu-item.open .menu-label {
+  background: var(--xs-surface-hover);
+  color: var(--xs-text);
+}
+
+.menu-dropdown, .submenu-dropdown {
+  top: calc(100% - 1px);
+  min-width: 252px;
+  padding: 5px;
+  background: var(--xs-surface-raised);
+  border-color: var(--xs-border);
+  border-radius: var(--xs-radius-md);
+  box-shadow: var(--xs-shadow-menu);
+}
+
+.submenu-dropdown { top: -5px; left: calc(100% + 3px); min-width: 200px; }
+
+.menu-dropdown-item, .recent-item {
+  min-height: 28px;
+  padding: 5px 8px;
+  border-radius: var(--xs-radius-sm);
+  color: var(--xs-text);
+  gap: 9px;
+}
+
+.menu-dropdown-item:hover, .recent-item:hover {
+  background: var(--xs-accent-wash);
+  color: var(--xs-text);
+}
+
+.menu-dropdown-item:hover .menu-icon, .menu-dropdown-item:hover .menu-shortcut,
+.recent-item:hover .recent-icon, .recent-item:hover .recent-path {
+  color: var(--xs-text-muted);
+}
+
+.menu-icon, .recent-icon { color: var(--xs-text-faint); }
+.menu-icon.codicon, .recent-icon.codicon, .submenu-arrow.codicon { font-size: 15px; }
+.menu-shortcut, .recent-path { color: var(--xs-text-faint); font-size: 11px; }
+.menu-separator { background: var(--xs-border-subtle); margin: 5px 4px; }
+.menu-check { color: var(--xs-accent); }
+
+/* Toolbar reads as a separate, calm action strip rather than a second menu row. */
+#toolbar {
+  height: 40px;
+  padding: 0 8px;
+  gap: 3px;
+  background: var(--xs-surface);
+  border-bottom-color: var(--xs-border-subtle);
+}
+
+.toolbar-btn {
+  width: 30px;
+  height: 29px;
+  border-radius: var(--xs-radius-sm);
+  color: var(--xs-text-muted);
+}
+
+.toolbar-btn:hover {
+  background: var(--xs-surface-hover);
+  border-color: transparent;
+  color: var(--xs-text);
+}
+
+.toolbar-btn:active { background: var(--xs-surface-active); }
+.toolbar-btn .codicon { font-size: 16px; line-height: 1; }
+.toolbar-btn.tb-run { color: var(--xs-success); }
+.toolbar-btn.tb-stop { color: var(--xs-danger); }
+.toolbar-btn.tb-run:hover { color: var(--xs-success); background: rgba(99, 193, 116, .13); }
+.toolbar-btn.tb-stop:hover { color: var(--xs-danger); background: rgba(255, 123, 114, .13); }
+.toolbar-sep { height: 19px; margin: 0 5px; background: var(--xs-border); }
+
+/* Project explorer */
+#project-explorer {
+  width: 248px;
+  flex-basis: 248px;
+  background: var(--xs-surface);
+  border-right-color: var(--xs-border-subtle);
+  color: var(--xs-text);
+}
+
+#project-explorer-header { min-height: 38px; border-bottom-color: var(--xs-border-subtle); }
+#project-title {
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+  color: var(--xs-text-muted);
+}
+#project-title.project-open { color: var(--xs-accent); }
+#project-title.project-open:hover { background: var(--xs-accent-wash); }
+.project-explorer-control, .project-explorer-close {
+  width: 30px;
+  height: 30px;
+  margin-right: 2px;
+  border-radius: var(--xs-radius-sm);
+  color: var(--xs-text-faint);
+  font-size: 18px;
+}
+.project-explorer-control:hover, .project-explorer-close:hover {
+  background: var(--xs-surface-hover);
+  color: var(--xs-text);
+}
+.project-file {
+  position: relative;
+  min-height: 29px;
+  padding: 6px 10px 6px 33px;
+  color: var(--xs-text-muted);
+  font-size: 12px;
+}
+.project-file::before {
+  content: "";
+  position: absolute;
+  left: 17px;
+  top: 50%;
+  width: 8px;
+  height: 10px;
+  border: 1px solid var(--xs-text-faint);
+  border-radius: 1px;
+  transform: translateY(-50%);
+  opacity: .8;
+}
+.project-file:hover { background: var(--xs-surface-hover); color: var(--xs-text); }
+#external-files { border-top-color: var(--xs-border-subtle); }
+#external-files-header { padding: 13px 12px 5px; color: var(--xs-text-faint); }
+#external-files-list .project-file.active { background: var(--xs-accent-wash); color: var(--xs-text); }
+#external-files-list .project-file.active::before { border-color: var(--xs-accent); }
+
+/* Editors and tabs */
+#editor-tabs {
+  min-height: var(--tab-height);
+  padding-left: 5px;
+  gap: 2px;
+  background: var(--xs-surface);
+  border-bottom-color: var(--xs-border-subtle);
+}
+
+.editor-tab {
+  position: relative;
+  height: 34px;
+  margin-top: 4px;
+  padding: 0 11px 0 13px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--xs-text-faint);
+  font-size: 12px;
+}
+
+.editor-tab::before {
+  content: "";
+  width: 7px;
+  height: 9px;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  opacity: .72;
+}
+
+.editor-tab.active {
+  background: var(--xs-editor);
+  color: var(--xs-text);
+  border-color: var(--xs-border-subtle);
+  border-bottom: 1px solid var(--xs-editor);
+}
+.editor-tab.active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: var(--xs-accent);
+  border-radius: 0 0 2px 2px;
+}
+.editor-tab:hover:not(.active) { background: var(--xs-surface-hover); color: var(--xs-text-muted); }
+.tab-close { width: 18px; height: 18px; border-radius: 3px; color: var(--xs-text-faint); }
+.tab-close:hover { color: var(--xs-text); background: var(--xs-surface-active); }
+.dirty-indicator { color: var(--xs-accent); }
+
+/* Resizer and lower panel */
+#panel-resizer { height: 7px; }
+#panel-resizer::before { left: 20px; right: 20px; height: 1px; background: var(--xs-border-subtle); }
+#panel-resizer:hover::before, body.panel-resizing #panel-resizer::before { background: var(--xs-accent); }
+#bottom-panel { background: var(--xs-surface); border-top-color: var(--xs-border-subtle); }
+#panel-tabs { min-height: 34px; padding: 0 8px; background: var(--xs-surface); border-bottom-color: var(--xs-border-subtle); gap: 2px; }
+.panel-tab {
+  position: relative;
+  padding: 0 9px;
+  color: var(--xs-text-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+.panel-tab.active { color: var(--xs-text); border-bottom-color: var(--xs-accent); }
+.panel-tab:hover { color: var(--xs-text); background: var(--xs-surface-hover); }
+.tab-content { color: var(--xs-text-muted); }
+#console-content, #terminal { background: #151820; }
+[data-theme="light"] #console-content, [data-theme="light"] #terminal { background: #ffffff; }
+.diagnostic-item { min-height: 32px; padding: 6px 12px; border-bottom-color: var(--xs-border-subtle); color: var(--xs-text-muted); }
+.diagnostic-item:hover { background: var(--xs-surface-hover); }
+.diagnostic-location { color: var(--xs-text-faint); }
+#outline-list { padding: 5px; }
+.outline-item { min-height: 28px; padding: 5px 8px; border-radius: var(--xs-radius-sm); color: var(--xs-text-muted); }
+.outline-item:hover { background: var(--xs-surface-hover); color: var(--xs-text); }
+.outline-icon { color: var(--xs-accent); }
+.outline-line { color: var(--xs-text-faint); }
+
+/* Status bar and scrollbars */
+#status-bar {
+  background: #242d3a;
+  border-top: 1px solid var(--xs-border-subtle);
+  color: var(--xs-text-muted);
+  padding: 0 10px;
+  font-size: 11px;
+}
+[data-theme="light"] #status-bar { background: #e8eef7; }
+#status-text { color: var(--xs-accent); font-weight: 600; }
+
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border: 3px solid transparent; border-radius: 999px; background-clip: content-box; }
+*:hover::-webkit-scrollbar-thumb { background-color: var(--xs-border); }
+::-webkit-scrollbar-thumb:hover { background-color: var(--xs-text-faint); }
+#terminal .xterm-viewport::-webkit-scrollbar-track { background: #151820; }
+#terminal .xterm-viewport::-webkit-scrollbar-thumb { background-color: #465064; border: 3px solid #151820; }
+[data-theme="light"] #terminal .xterm-viewport::-webkit-scrollbar-track { background: #ffffff; }
+[data-theme="light"] #terminal .xterm-viewport::-webkit-scrollbar-thumb { background-color: #aeb8c6; border-color: #ffffff; }
+
+/* Dialogs use the same elevated surface as menus. */
+.modal-overlay { background: rgba(8, 12, 18, .62); backdrop-filter: blur(3px); }
+.modal { background: var(--xs-surface-raised); border-color: var(--xs-border); border-radius: 10px; box-shadow: var(--xs-shadow-menu); }
+.modal h3 { color: var(--xs-text); }
+#about-close { border-color: var(--xs-border); border-radius: var(--xs-radius-sm); color: var(--xs-text); }
+#about-close:hover { background: var(--xs-surface-hover); }
+
+/* Monaco renders the right-click menu in a portal outside the editor.  Its stock
+   palette therefore does not inherit the workbench surfaces unless we style it here. */
+.monaco-menu-container .monaco-menu {
+  padding: 5px;
+  background: var(--xs-surface-raised) !important;
+  border: 1px solid var(--xs-border) !important;
+  border-radius: var(--xs-radius-md);
+  box-shadow: var(--xs-shadow-menu) !important;
+  color: var(--xs-text) !important;
+}
+.monaco-menu-container .monaco-menu .monaco-action-bar.vertical .action-item {
+  min-height: 28px;
+  margin: 0;
+  border-radius: var(--xs-radius-sm);
+}
+.monaco-menu-container .monaco-menu .action-label {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  padding: 0 9px !important;
+  color: var(--xs-text) !important;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif !important;
+  font-size: 12px !important;
+}
+.monaco-menu-container .monaco-menu .action-item.focused,
+.monaco-menu-container .monaco-menu .action-item:hover {
+  background: var(--xs-accent-wash) !important;
+}
+.monaco-menu-container .monaco-menu .action-item.focused .action-label,
+.monaco-menu-container .monaco-menu .action-item:hover .action-label { color: var(--xs-text) !important; }
+.monaco-menu-container .monaco-menu .action-item .keybinding { color: var(--xs-text-faint) !important; }
+.monaco-menu-container .monaco-menu .action-item.separator { border-bottom-color: var(--xs-border-subtle) !important; }
+.monaco-menu-container .monaco-menu .xs-context-icon {
+  width: 16px;
+  flex: 0 0 16px;
+  color: var(--xs-text-faint);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* The standalone editor puts the same menu under `.context-view` (not the workbench
+   `.monaco-menu-container`). Keep these selectors explicit so the right-click menu is
+   visually identical to our pull-down menus in both themes. */
+.context-view,
+.context-view .monaco-menu {
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif !important;
+}
+.context-view .monaco-menu {
+  min-width: 252px;
+  padding: 5px !important;
+  background: var(--xs-surface-raised) !important;
+  border: 1px solid var(--xs-border) !important;
+  border-radius: var(--xs-radius-md) !important;
+  box-shadow: var(--xs-shadow-menu) !important;
+  color: var(--xs-text) !important;
+}
+.context-view .monaco-menu .monaco-action-bar.vertical .action-item {
+  min-height: 28px;
+  margin: 0;
+  border-radius: var(--xs-radius-sm);
+}
+.context-view .monaco-menu .action-label {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  padding: 0 9px !important;
+  color: var(--xs-text) !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+}
+.context-view .monaco-menu .action-item.focused,
+.context-view .monaco-menu .action-item:hover {
+  background: var(--xs-accent-wash) !important;
+}
+.context-view .monaco-menu .action-item.focused .action-label,
+.context-view .monaco-menu .action-item:hover .action-label { color: var(--xs-text) !important; }
+.context-view .monaco-menu .action-item .keybinding { color: var(--xs-text-faint) !important; }
+.context-view .monaco-menu .xs-context-icon { color: var(--xs-text-faint); }
+
+/* Fallback for Monaco builds which mount the menu directly under body. */
+body > .monaco-menu,
+body > .context-view > .monaco-menu {
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif !important;
+  min-width: 252px;
+  padding: 5px !important;
+  background: var(--xs-surface-raised) !important;
+  border: 1px solid var(--xs-border) !important;
+  border-radius: var(--xs-radius-md) !important;
+  box-shadow: var(--xs-shadow-menu) !important;
+}
+body > .monaco-menu .action-label,
+body > .context-view > .monaco-menu .action-label {
+  font-family: inherit !important;
+  color: var(--xs-text) !important;
+}
+
+/* Editor context menu: deliberately uses the same geometry and tokens as pull-down
+   rows, while remaining a normal DOM menu that can be themed in Electron. */
+.xs-context-menu {
+  position: fixed;
+  z-index: 10000;
+  min-width: 252px;
+  padding: 5px;
+  background: var(--xs-surface-raised);
+  border: 1px solid var(--xs-border);
+  border-radius: var(--xs-radius-md);
+  box-shadow: var(--xs-shadow-menu);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  color: var(--xs-text);
+}
+.xs-context-menu[hidden] { display: none; }
+.xs-context-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding: 5px 8px;
+  gap: 9px;
+  border: 0;
+  border-radius: var(--xs-radius-sm);
+  background: transparent;
+  color: var(--xs-text);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: default;
+}
+.xs-context-item:hover, .xs-context-item:focus-visible {
+  background: var(--xs-accent-wash);
+  outline: 0;
+}
+.xs-context-item-icon { width: 18px; color: var(--xs-text-faint); font-size: 15px; text-align: center; }
+.xs-context-item-label { flex: 1; }
+.xs-context-item-key { margin-left: 20px; color: var(--xs-text-faint); font-size: 11px; }
+.xs-context-separator { height: 1px; margin: 5px 4px; background: var(--xs-border-subtle); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; }
+}

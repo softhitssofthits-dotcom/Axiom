@@ -1,4 +1,4 @@
-namespace Axiom.Ide.Editor.Formatting;
+namespace Axiom.Formatting;
 
 public enum CodeFormattingStyle
 {

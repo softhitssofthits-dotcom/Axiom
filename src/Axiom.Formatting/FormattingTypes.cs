@@ -1,4 +1,4 @@
-namespace Axiom.Ide.Editor.Formatting;
+namespace Axiom.Formatting;
 
 internal sealed record RawToken(string Text, RawTokenKind Kind);
 

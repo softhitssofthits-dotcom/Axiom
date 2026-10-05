@@ -1,7 +1,7 @@
 using System.Text;
 using Axiom.Lexing;
 
-namespace Axiom.Ide.Editor.Formatting;
+namespace Axiom.Formatting;
 
 internal static class LineFormatter
 {

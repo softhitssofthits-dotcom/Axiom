@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Axiom.Execution\Axiom.Execution.csproj" />
+    <ProjectReference Include="..\Axiom.Formatting\Axiom.Formatting.csproj" />
   </ItemGroup>
 
   <ItemGroup>

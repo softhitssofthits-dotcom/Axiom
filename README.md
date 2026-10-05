@@ -65,6 +65,41 @@ powershell -ExecutionPolicy Bypass -File scripts/dotnet-test-artifacts.ps1 tests
 dotnet run --project src/Axiom.Ide/Axiom.Ide.csproj
 ```
 
+## Консольный CLI `axiom`
+
+Проект `src/Axiom.Cli` собирает headless-CLI `axiom.exe` поверх `Axiom.Execution` (подробный план — `docs/ELECTRON_IDE_PLAN.md`):
+
+```powershell
+dotnet build src/Axiom.Cli -c Release
+.artifacts\bin\Axiom.Cli\Release\net10.0\axiom.exe run samples\smoke\engine-compare\string_primitive_scan.axm
+.artifacts\bin\Axiom.Cli\Release\net10.0\axiom.exe check samples\functions\len\basic_usage.axm --json
+.artifacts\bin\Axiom.Cli\Release\net10.0\axiom.exe fmt --stdin < myprogram.axm
+.artifacts\bin\Axiom.Cli\Release\net10.0\axiom.exe metadata
+.artifacts\bin\Axiom.Cli\Release\net10.0\axiom.exe --version
+```
+
+Контракт потоков: stdout несёт только вывод программы (`run`) или продукт команды (`check --json`, `fmt`, `metadata`); все диагностики, usage и версия идут в stderr. Коды возврата: 0 — успех, 1 — ошибки компиляции или рантайма, 2 — неверный usage или файл не найден. В `run` работают текстовые программы с `PRINT`/`INPUT`; графические операторы дают понятную диагностику «Графический режим не поддерживается при консольном запуске» — графика остаётся в WPF-IDE.
+
+## Как запустить Electron-IDE
+
+Помимо WPF-оболочки, в репозитории есть вторая среда — Electron + Monaco Editor + xterm.js в каталоге `ide\` (порт оболочки IDE проекта X# по `docs/ELECTRON_IDE_PLAN.md`). WPF-IDE при этом не изменяется и остаётся полноценной средой с отладчиком и графикой.
+
+Запуск в один клик из корня репозитория (сам проверит Node.js, соберёт `axiom.exe` при устаревании, поставит npm-зависимости и скопирует Monaco):
+
+```powershell
+.\run-ide.bat
+```
+
+Electron-IDE запускает текстовые программы через CLI в настоящем терминале ConPTY (интерактивный `INPUT`, Stop через `Shift+F5`), показывает живые диагностики при наборе, панель «Проблемы», «Структуру» (SUB/FUNCTION/TYPE), автоформат, темы и интерфейс ru/en. Запуск идёт по активному сохранённому файлу; проект — это просто папка с `.axm`-файлами.
+
+e2e-тесты Electron-IDE (Playwright, `_electron`):
+
+```powershell
+cd ide\e2e
+npm install
+node runner.js
+```
+
 ## Как запустить WPF smoke harness
 
 ```powershell

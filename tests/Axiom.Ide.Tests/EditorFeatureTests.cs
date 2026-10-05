@@ -1549,5 +1549,30 @@ public sealed class EditorFeatureTests
         throw new FileNotFoundException($"Repository file not found: {relativePath}");
     }
 
+    [Fact]
+    public void Highlighting_BuiltInVocabularyMatchesBuiltinFunctionRegistry()
+    {
+        // Слова, которые классифицируются раньше встроенных функций (ключевые слова и типы),
+        // могут отсутствовать в BuiltIn-категории XSHD — они подсвечиваются своими категориями.
+        var earlierClassified = new HashSet<string>(
+            AxiomLanguageKeywords.Keywords.Concat(AxiomLanguageKeywords.TypeNames),
+            StringComparer.OrdinalIgnoreCase);
+        var registryNames = BuiltinFunctions.All
+            .Select(static function => function.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var missingInXshd = registryNames
+            .Where(name => !earlierClassified.Contains(name) && !AxiomHighlightingVocabulary.BuiltIns.Contains(name))
+            .OrderBy(static name => name, StringComparer.Ordinal)
+            .ToArray();
+        var staleInXshd = AxiomHighlightingVocabulary.BuiltIns
+            .Where(name => !registryNames.Contains(name))
+            .OrderBy(static name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(missingInXshd.Length == 0, $"Built-in функции без подсветки в XSHD: {string.Join(", ", missingInXshd)}");
+        Assert.True(staleInXshd.Length == 0, $"Слова в BuiltIn-категории XSHD, отсутствующие в реестре: {string.Join(", ", staleInXshd)}");
+    }
+
 }
 

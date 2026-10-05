@@ -1,0 +1,744 @@
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #333333;
+  --text-primary: #cccccc;
+  --text-secondary: #999999;
+  --border-color: #404040;
+  --accent-color: #2196f3;
+  --accent-hover: #1976d2;
+  --error-color: #f44336;
+  --warning-color: #ff9800;
+  --success-color: #4caf50;
+  --status-bar-height: 24px;
+  --panel-height: 200px;
+  --tab-height: 36px;
+}
+
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f3f3;
+  --bg-tertiary: #e8e8e8;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #d4d4d4;
+  --accent-color: #007acc;
+  --accent-hover: #005a9e;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+#app.ready {
+  opacity: 1;
+}
+
+/* Menu bar */
+#menubar {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Window icon + caption live in the native title bar (main.js). The About
+   dialog keeps an in-page logo; both theme variants are always in the DOM,
+   CSS picks the one matching [data-theme]. */
+html[data-theme="dark"] .logo-light { display: none; }
+html[data-theme="light"] .logo-dark { display: none; }
+
+.menu-item {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.menu-label {
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: default;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.menu-label:hover,
+.menu-item.open .menu-label {
+  background: var(--bg-tertiary);
+}
+
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 240px;
+  padding: 4px 0;
+  z-index: 2000;
+  white-space: nowrap;
+}
+
+.menu-item.open .menu-dropdown {
+  display: block;
+}
+
+.menu-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: default;
+  gap: 10px;
+}
+
+.menu-dropdown-item:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+.menu-dropdown-item:hover .menu-icon {
+  color: white;
+}
+
+.menu-dropdown-item:hover .menu-shortcut {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.menu-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.menu-text {
+  flex: 1;
+}
+
+.menu-shortcut {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-left: 20px;
+}
+
+.menu-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+/* Submenu */
+.menu-item-submenu {
+  position: relative;
+}
+
+.submenu-trigger {
+  cursor: default;
+}
+
+.submenu-arrow {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.submenu-dropdown {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  max-width: 400px;
+  padding: 4px 0;
+  z-index: 2001;
+  white-space: nowrap;
+}
+
+.menu-item-submenu:hover .submenu-dropdown {
+  display: block;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: default;
+  gap: 10px;
+}
+
+.recent-item:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+.recent-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.recent-item:hover .recent-icon {
+  color: white;
+}
+
+.recent-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-path {
+  font-size: 10px;
+  color: var(--text-secondary);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-item:hover .recent-path {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.recent-empty {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.glyph-icon {
+  font-family: 'Segoe MDL2 Assets', 'Segoe UI Symbol', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Toolbar */
+#toolbar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 6px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.toolbar-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.toolbar-btn:active {
+  background: var(--border-color);
+}
+
+.toolbar-btn.tb-run:hover {
+  color: #4caf50;
+}
+
+.toolbar-btn.tb-stop:hover {
+  color: #f44336;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border-color);
+  margin: 0 4px;
+}
+
+/* Workspace */
+#workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#project-explorer { width: 220px; flex: 0 0 220px; overflow: auto; background: var(--bg-secondary); border-right: 1px solid var(--border-color); font-size: 13px; }
+#project-explorer.hidden { display: none; }
+#project-explorer-header { display: flex; align-items: center; border-bottom: 1px solid var(--border-color); }
+#project-title { flex: 1; min-width: 0; padding: 10px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; background: transparent; text-align: left; }
+#project-title.project-open { cursor: pointer; color: var(--accent-color); }
+#project-title.project-open:hover { background: var(--bg-hover); }
+.project-explorer-control, .project-explorer-close { width: 32px; height: 32px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 20px; line-height: 1; }
+.project-explorer-control:hover, .project-explorer-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+.project-file { display: block; width: 100%; border: 0; background: transparent; color: var(--text-primary); text-align: left; padding: 6px 10px 6px 18px; cursor: pointer; }
+.project-file:hover { background: var(--bg-hover); }
+
+/* "Прочие файлы": open saved documents that live outside the current project (Visual
+   Studio's Miscellaneous Files) — a neutral secondary list with the same look as the
+   project tree. Visible only while a project is open AND at least one such document
+   is open — otherwise it would list every file and mean nothing. */
+#external-files { border-top: 1px solid var(--border-color); }
+#external-files.hidden { display: none; }
+#external-files-header { padding: 8px 10px 4px; font-size: 10px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text-secondary); }
+#external-files-list .project-file.active { background: var(--bg-tertiary); }
+
+#main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#editor-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* D82: default min-height of a flex child is `auto` (its content), so this box could
+     never shrink below Monaco's height — the panel slid under the status bar (RESIZE-TZ §5.1). */
+  min-height: 0;
+  overflow: hidden;
+}
+
+#editor-tabs {
+  display: flex;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  min-height: var(--tab-height);
+}
+
+.editor-tab {
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border: none;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.editor-tab:hover {
+  background: var(--bg-tertiary);
+}
+
+.tab-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.tab-close:hover {
+  color: var(--error-color);
+}
+
+.dirty-indicator {
+  color: var(--warning-color);
+  font-weight: bold;
+}
+
+#editor {
+  flex: 1;
+  overflow: hidden; /* D82: same min-height fix — let Monaco clip instead of forcing the box taller */
+  min-height: 0;
+}
+
+/* Panel resizer (D79/D81): drag to resize the console; double-click resets to default.
+   9px grab zone (D81: a 5px strip was nearly impossible to catch at 125% scaling).
+   No static grip: the D81 gray tick read as a stray dot (user note on D82) — at rest the
+   strip is invisible; on hover the 2px marker line, the row-resize cursor and the
+   tooltip show it. */
+#panel-resizer {
+  height: 9px;
+  flex-shrink: 0;
+  cursor: row-resize;
+  background: transparent;
+  position: relative;
+  z-index: 5;
+  touch-action: none;
+}
+
+/* drag preview line (Axiom GridSplitter ShowsPreview): moves with the mouse, the panel
+   height is committed once on release */
+#panel-resize-preview {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-color);
+  z-index: 1000;
+  pointer-events: none;
+  display: none;
+}
+
+/* hover/drag marker (user note on D82): a thin 2px accent line, not a painted band —
+   the 9px grab zone itself stays transparent (D81 size untouched), so the feedback
+   reads as a line rather than a thick strip */
+#panel-resizer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: transparent;
+}
+
+#panel-resizer:hover::before,
+body.panel-resizing #panel-resizer::before {
+  background: var(--accent-color);
+}
+
+body.panel-resizing {
+  cursor: row-resize;
+  user-select: none;
+}
+
+/* while dragging, hit-testing must not steal the mouse from the window-level listeners */
+body.panel-resizing #editor-container,
+body.panel-resizing #bottom-panel {
+  pointer-events: none;
+}
+
+/* Bottom panel */
+#bottom-panel {
+  height: var(--panel-height);
+  /* D82: keeps the editor's guaranteed space intact when the window is resized AFTER a drag
+     (the JS clamp only runs on drag/restore). 149px = EDITOR_MIN(140) + RESIZER_H(9) from
+     setupPanelResizer() in app.js — keep the two in sync. */
+  max-height: calc(100% - 149px);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+#panel-tabs {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-tab {
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.panel-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-color);
+}
+
+.panel-tab:hover {
+  color: var(--text-primary);
+}
+
+#panel-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.tab-content {
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Integrated console (D76): xterm.js fills the tab; FitAddon drives its size. */
+/* white-space normal (D80): .tab-content's pre-wrap turned HTML indentation into blank
+   rows above the terminal — the console must start right under the panel tabs. */
+/* background #1e1e1e (D81): the terminal is created lazily on the first run — without a
+   CSS background the console area rendered light until then. Padding 0 (D81): no gray
+   frame around the black terminal; the dark webkit scrollbar replaces the light one. */
+#console-content {
+  padding: 0;
+  overflow: hidden;
+  display: none;
+  white-space: normal;
+  background: #1e1e1e;
+}
+
+#console-content.active {
+  display: block;
+}
+
+#terminal {
+  width: 100%;
+  height: 100%;
+  background: #1e1e1e;
+}
+
+#terminal .xterm,
+#terminal .xterm .xterm-viewport {
+  height: 100%;
+}
+
+/* dark scrollbar to match the always-dark terminal (D81) */
+#terminal .xterm-viewport::-webkit-scrollbar {
+  width: 10px;
+}
+
+#terminal .xterm-viewport::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+#terminal .xterm-viewport::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 5px;
+}
+
+#terminal .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}
+
+/* Diagnostics */
+#diagnostics-content {
+  padding: 0;
+  min-height: 50px;
+}
+
+.diagnostic-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.diagnostic-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.diagnostic-icon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.diagnostic-icon.error {
+  color: var(--error-color);
+}
+
+.diagnostic-icon.warning {
+  color: var(--warning-color);
+}
+
+.diagnostic-message {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diagnostic-location {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Status bar */
+#status-bar {
+  height: var(--status-bar-height);
+  background: var(--accent-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+#status-text {
+  margin-right: 16px;
+}
+
+#status-file-path {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#status-line-col {
+  margin-right: 16px;
+}
+
+#status-execution-time {
+  margin-left: 16px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px 24px;
+  min-width: 320px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.about-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.about-head h3 {
+  margin: 0;
+}
+
+.brand-logo-lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: block;
+}
+
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 0;
+}
+
+.about-row code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  color: var(--accent-color);
+}
+
+#about-close {
+  float: right;
+  margin-top: 14px;
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 3px;
+  padding: 4px 14px;
+  cursor: pointer;
+}
+
+#about-close:hover {
+  background: var(--bg-tertiary);
+}
+
+/* F3: check marks for the format-trigger toggles (Edit menu) */
+.menu-check { display: none; margin-right: 6px; color: #4da3ff; font-weight: 700; }
+.menu-check.on { display: inline; }
+
+/* F5: outline panel (Bottom panel tab "Structure") */
+#outline-list { overflow-y: auto; padding: 4px 0; }
+.outline-item { display: flex; align-items: center; gap: 8px; padding: 4px 12px; cursor: pointer; font-size: 13px; }
+.outline-item:hover { background: rgba(255,255,255,.04); }
+.outline-icon { width: 20px; text-align: center; font-weight: 700; color: #4da3ff; flex-shrink: 0; }
+.outline-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outline-line { color: var(--muted, #8ba1b7); font-size: 11px; flex-shrink: 0; }

@@ -38,6 +38,8 @@ src/
   Axiom.Bytecode/
   Axiom.Runtime/
   Axiom.Execution/
+  Axiom.Formatting/
+  Axiom.Cli/
   Axiom.Ide/
   Axiom.Ide.SmokeHarness/
 
@@ -50,6 +52,13 @@ tests/
   Axiom.Runtime.Tests/
   Axiom.Execution.Tests/
   Axiom.Ide.Tests/
+  Axiom.Cli.Tests/
+
+ide/
+  src/main/       главный процесс Electron (окно, IPC, ConPTY, freshness-guard CLI)
+  src/renderer/   Monaco/xterm-рендерер (вкладки, проблемы, структура, темы, i18n)
+  scripts/        prepare (копия Monaco), ensure-axiom, ensure-deps
+  e2e/            Playwright-сюита (`node runner.js`)
 ```
 
 Локальные результаты сборки не считаются частью этой структуры исходников: начиная с правил чистоты рабочей копии после v0.1.10 все `bin/`/`obj/` и прочие служебные артефакты сборки должны уходить в централизованный скрытый каталог `.artifacts/` в корне репозитория, а не накапливаться внутри `src/` и `tests/`.
@@ -448,8 +457,8 @@ samples/
 - `MainWindow.xaml.cs` запускает форматирование на событиях перехода между строками редактора: уход каретки на другую строку и потеря фокуса клавиатуры;
 - форматирование применяется только к одной строке и должно быть защищено от повторного входа, чтобы замена текста в `AvalonEdit` не запускала вторичное форматирование;
 - включение и выключение базового режима `Classic` живёт в модели представления оболочки (`IsClassicFormattingEnabled`);
-- ядро форматирования вынесено в `ICodeFormattingService` и `AxiomCodeFormattingService`, чтобы привязка к событиям интерфейса и логика нормализации текста не смешивались;
-- словарь для перевода ключевых слов в верхний регистр берётся из `Axiom.xshd` через `AxiomHighlightingVocabulary`, а не из второго жёстко заданного списка IDE, чтобы подсветка синтаксиса и форматирование развивались согласованно;
+- ядро форматирования вынесено в `ICodeFormattingService` и `AxiomCodeFormattingService`, чтобы привязка к событиям интерфейса и логика нормализации текста не смешивались; с извлечением в `Axiom.Formatting` (2026-10-05) эти типы живут в UI-независимой библиотеке, а `Axiom.Ide` и `Axiom.Cli` ссылаются на неё;
+- словарь для перевода ключевых слов в верхний регистр берётся из `AxiomLanguageKeywords` (ключевые слова и типы) и реестра `BuiltinFunctions` (встроенные функции) через `AxiomFormattingVocabulary`, а не из второго жёстко заданного списка IDE, чтобы подсветка синтаксиса, форматирование и CLI-команда `metadata` развивались согласованно;
 - режим `Modern` должен оставаться следующим слоем над той же сервисной границей, без переписывания событийного контура редактора.
 
 ## 12. Трассировка диагностики IDE
@@ -3923,3 +3932,36 @@ Runtime-снимок VM теперь допускает bytecode-значени�
 - `PCOPY` остаётся совместимым BASIC-путём, но не должен быть главным способом обучения современному игровому циклу.
 
 Перед добавлением новых графических пользовательских имён нужно сначала уточнить соответствующий пункт `docs/MODERN_GRAPHICS_PLAN.md`, затем зафиксировать точный договор в `docs/SPECIFICATION3.md`.
+
+## Обновление 2026-10-05 - Axiom.Formatting, Axiom.Cli и Electron-IDE
+
+Реализован план `docs/ELECTRON_IDE_PLAN.md` (этапы 1-4): headless-CLI, извлечение форматтера и вторая, Electron-оболочка IDE. WPF-IDE (`Axiom.Ide`) при этом не изменена и не деградирована.
+
+### Axiom.Formatting
+
+- UI-независимая библиотека форматирования: `LineFormatter`, `TokenClassifier`, `AxiomCodeFormattingService`, `ICodeFormattingService`, `CodeFormattingStyle` переехали из `src/Axiom.Ide/Editor/Formatting/` (история git сохранена через `git mv`);
+- словарь форматтера (`AxiomFormattingVocabulary`) берёт ключевые слова и типы из `AxiomLanguageKeywords` (`Axiom.Core`) и имена встроенных функций из реестра `BuiltinFunctions` (`Axiom.Semantics`); связка «XSHD-подсветка ↔ реестр встроенных функций» закреплена тестом `Highlighting_BuiltInVocabularyMatchesBuiltinFunctionRegistry` в `Axiom.Ide.Tests`;
+- `DocumentFormattingPolicy` остался в `Axiom.Ide` как зависящий от модели документов оболочки.
+
+### Axiom.Cli
+
+- консольный exe `axiom` поверх `AxiomExecutionPipeline`: команды `run <file>`, `check <file> [--json]`, `check --stdin [--json]`, `fmt <file>` / `fmt --stdin`, `metadata`, `--version`, `--help`;
+- контракт потоков: stdout — только вывод программы и продукт команды; stderr — все диагностики, usage и версия; коды возврата 0/1/2 (успех / ошибки компиляции или рантайма / неверный usage);
+- `ConsoleHost` реализует `IInputProvider`, `IOutputWriter`, `IRuntimeClock`, `IRuntimeRandom`, `IRuntimeCancellationProvider` и `IGraphicsHost`: `PRINT` идёт в stdout, `INPUT` читает строку из stdin (промпт печатается в stdout), Ctrl+C — штатная отмена; попытка войти в графику (`SCREEN`/`CANVAS` и любые мутации кадра) завершается понятной диагностикой «Графический режим не поддерживается при консольном запуске»;
+- `AXIOM_IDE_DIAGNOSTICS_PATH` — приватный канал для IDE: при запуске `run` с этой переменной диагностики пишутся в файл, чтобы в терминал IDE попадал только вывод программы;
+- git-ревизия сборки встраивается через AssemblyMetadata `AxiomSourceRevision` (target `CaptureAxiomSourceRevision`) и выставляется в `metadata.sourceRevision` — основа freshness-guard Electron-IDE;
+- контрактные тесты — `tests/Axiom.Cli.Tests` (22 теста: таблица потоков/кодов, run с подменой stdin/stdout, `check --json`, `fmt`, metadata-снапшот, версия).
+
+### Electron-IDE (`ide/`)
+
+- оболочка портирована с IDE проекта X# (Electron + Monaco + xterm.js + node-pty/ConPTY): `src/main/` (окно, IPC, freshness-guard `axiom-ensure.js`, ConPTY-запуск), `src/renderer/` (вкладки, живые диагностики, панель «Проблемы», «Структура» SUB/FUNCTION/TYPE, автоформат, темы, i18n ru/en), `scripts/`, лаунчер `run-ide.bat`;
+- IDE общается с языком ТОЛЬКО через CLI (`axiom check --stdin --json`, `axiom fmt`, `axiom run` в ConPTY, `axiom metadata`, `axiom --version`) — библиотечных ссылок на .NET нет;
+- Monarch-грамматика BASIC (ignoreCase, комментарии `'`/`REM`, строки с `""`, интерполяция `$"..."`, hex `&H`), словари — из `axiom metadata` с захардкоженным fallback;
+- запуск — активный сохранённый файл; проект — папка с `.axm`; отладчик и графика остаются в WPF-IDE (решения №2 и №3 плана);
+- e2e-сюита `ide/e2e` (Playwright `_electron`, 11 тестов: startup, открытие файла, run/stop, программа с `INPUT`, графика-диагностика, живые проблемы, явная проверка, i18n-parity и переключение локали) — все зелёные; скриншоты-доказательства в `ide/e2e/evidence/`.
+
+### Отклонения от исходного плана
+
+- бинарь CLI живут в `.artifacts/bin/Axiom.Cli/{Release,Debug}/net10.0/axiom.exe` (репозиторийный `Directory.Build.props` перенаправляет весь вывод), а не в `src/Axiom.Cli/bin/...` — пути в `axiom-ensure.js` и e2e это учитывают;
+- `fmt --line` не реализован: построчный режим форматирования Axiom не существует, автоформат IDE работает по всему документу (`fmt --stdin`);
+- проверка свежести CLI опирается на git-ревизию сборки против `HEAD` (версия CLI меняется редко и служит только признаком «бинарник живой»).

@@ -7,6 +7,7 @@ using Axiom.Ide.Documents;
 using Axiom.Ide.Editor;
 using Axiom.Ide.Editor.Breakpoints;
 using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 using Axiom.Ide.Editor.StructuralEditing;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.ViewModels;

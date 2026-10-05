@@ -3276,3 +3276,43 @@ Health Score: **8.8/10**.
 **Резервная копия:** `.artifacts/backup-docs-2026-08-26/` (полная копия `docs/` до переноса).
 
 **Следующий шаг:** закоммитить перенос отдельным коммитом; при необходимости — обновить `.codex`-навыки и HTML-справочник, если те ссылаются на перенесённые имена.
+
+## Session 1101 - 2026-10-05 19:28 - Electron-IDE по плану ELECTRON_IDE_PLAN: этапы 1-4
+
+**Цель:** выполнить `docs/ELECTRON_IDE_PLAN.md` — построить headless-CLI и Electron-IDE для Axiom по образцу IDE проекта X#, не изменяя WPF-IDE.
+
+**Сделано:**
+
+Этап 1a — извлечение форматтера:
+- новый проект `src/Axiom.Formatting` (net10.0); `git mv` шести файлов из `src/Axiom.Ide/Editor/Formatting/`; namespace `Axiom.Formatting`;
+- словарь форматтера `AxiomFormattingVocabulary` теперь из `AxiomLanguageKeywords` + реестра `BuiltinFunctions` (раньше читался из XSHD-ресурса IDE);
+- добавлен тест чётности `Highlighting_BuiltInVocabularyMatchesBuiltinFunctionRegistry` (XSHD BuiltIn ↔ реестр встроенных функций);
+- обновлены using-и в `Axiom.Ide` и тестах; `Axiom.Ide.csproj` ссылается на `Axiom.Formatting`.
+
+Этап 1b — headless CLI:
+- `src/Axiom.Cli` (exe `axiom`, net10.0): `run <file>`, `check <file> [--json]`, `check --stdin [--json]`, `fmt <file>` / `fmt --stdin`, `metadata`, `--version`, `--help`;
+- контракт потоков: stdout — только вывод программы/продукт команды; stderr — диагностики, usage, версия; коды 0/1/2;
+- `ConsoleHost`: PRINT → stdout, INPUT → stdin с промптом, Ctrl+C — штатная отмена; графика (SCREEN/CANVAS и мутации кадра) — понятная диагностика «Графический режим не поддерживается при консольном запуске» через исключение хоста;
+- `AXIOM_IDE_DIAGNOSTICS_PATH` — side-channel диагностик для IDE;
+- `metadata`: `{keywords, typeNames, builtins:[{name, params:[{name,type}], returnType}], sourceRevision}` — словари из `AxiomLanguageKeywords`, сигнатуры — все перегрузки из `BuiltinFunctions` (у DATEADD, например, три);
+- git-ревизия сборки в AssemblyMetadata (target `CaptureAxiomSourceRevision`, паттерн `XSharp.Cli.csproj`).
+
+Этап 1c — тесты и верификация:
+- `tests/Axiom.Cli.Tests`: 22 контрактных теста (потоки/коды, run с подменой stdin/stdout, INPUT из stdin, рантайм-сбой MB3007, графика-диагностика, check --json, fmt, metadata, версия, usage);
+- проекты добавлены в `Axiom.sln`; полный прогон `scripts/dotnet-test-artifacts.ps1 Axiom.sln`: Parsing 146/146, Lexing 18/18, Syntax 66/66, Semantics 389/389, Bytecode 233/233, Runtime 965/965, Execution 950/950, Cli 22/22, Ide 580/584 (те же 4 ранее существовавших падения).
+
+Этапы 2-3 — Electron-IDE в `ide/`:
+- `package.json` (axiom-ide 0.1.0), `run-ide.bat` в корне; скрипты `prepare.js` (копия Monaco), `ensure-axiom.js` (freshness-guard), `ensure-deps.js`;
+- `src/main/`: `main.js` (single instance, window-state, логирование), `axiom-ensure.js` (резолв `.artifacts/bin/Axiom.Cli/{Release,Debug}`, сверка git-ревизии, автосборка), `ipc.js` (check/fmt/run/metadata/version, ConPTY через node-pty, `AXIOM_IDE_DIAGNOSTICS_PATH`, файл-вотчер, настройки), `preload.js` (bridge `window.axiom`), `ide-logger.js`, `last-dir.js`;
+- `src/renderer/`: `index.html`, `app.js` (порт с адаптацией: язык `axiom`, Monarch-грамматика BASIC — ignoreCase, `'`/REM, `$"..."` с `{выражениями}`, `&H`; проект = папка; run-target = активный сохранённый файл; без messageRu-слоя; outline SUB/FUNCTION/TYPE), `lang-features.js` (новый: completion/signature help/hover по metadata с перегрузками, BASIC-сниппеты), `locale.js` (ru/en без fmtEnter), `styles.css`, `design-system.css`, логотипы извлечены из `Assets/axiom.ico` WPF-IDE;
+- `.gitignore`: `ide/node_modules/`, `ide/src/renderer/vs/`, e2e-артефакты.
+
+Этап 4 — e2e и документация:
+- `ide/e2e`: `runner.js`, `helpers.js` (порт), спеки startup/run/problems/i18n — 11 тестов, все зелёные (запуск, открытие файла, вывод программы, INPUT в ConPTY, Stop бесконечного цикла, графика-диагностика в «Проблемах», живые squiggle-диагностики, явная проверка, i18n-parity, переключение локали); скриншоты-доказательства в `ide/e2e/evidence/`;
+- обновлены `README.md` (разделы про CLI и Electron-IDE), `docs/ARCHITECTURE.md` (структура solution, §11, обновление 2026-10-05), `docs/PLANS4.md`, `docs/agent/*`.
+
+**Отклонения от плана:** бинарь CLI в `.artifacts/bin/...` из-за репозиторного `Directory.Build.props`; `fmt --line` не реализован (в Axiom нет построчного форматирования, автоформат IDE — по всему документу); freshness-guard опирается на git-ревизию, а не SemVer.
+
+**Осталось:** ручная приёмка Electron-IDE пользователем (`run-ide.bat`); отложено по разделу 8 плана: окно графики в Electron, отладчик, упаковка, CI для e2e.
+
+**Следующий шаг:** ручная приёмка `run-ide.bat` и возврат к продуктовому фокусу modern graphics (приёмка `maze_chase.axm` в WPF-IDE).

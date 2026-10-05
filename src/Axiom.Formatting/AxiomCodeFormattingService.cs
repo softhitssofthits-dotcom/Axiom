@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Axiom.Ide.Editor.Formatting;
+namespace Axiom.Formatting;
 
 public sealed class AxiomCodeFormattingService : ICodeFormattingService
 {

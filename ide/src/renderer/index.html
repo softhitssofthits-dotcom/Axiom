@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:;">
+  <title>Axiom IDE</title>
+  <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css">
+  <link rel="stylesheet" href="../../node_modules/@vscode/codicons/dist/codicon.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="design-system.css">
+</head>
+<body>
+  <div id="app">
+    <div id="ax-context-menu" class="xs-context-menu" role="menu" hidden></div>
+    <div id="menubar">
+      <div class="menu-item" data-menu="file">
+        <span class="menu-label" data-i18n="menu.file">Файл</span>
+        <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="new"><span class="menu-icon codicon codicon-new-file"></span><span class="menu-text" data-i18n="menu.file.new">Новый</span><span class="menu-shortcut">Ctrl+N</span></div>
+          <div class="menu-dropdown-item" data-action="new-project-file"><span class="menu-icon codicon codicon-file-add"></span><span class="menu-text" data-i18n="menu.file.newProjectFile">Новый файл в проекте…</span></div>
+          <div class="menu-dropdown-item" data-action="open"><span class="menu-icon codicon codicon-go-to-file"></span><span class="menu-text" data-i18n="menu.file.open">Открыть…</span><span class="menu-shortcut">Ctrl+O</span></div>
+          <div class="menu-dropdown-item" data-action="open-project"><span class="menu-icon codicon codicon-folder-opened"></span><span class="menu-text" data-i18n="menu.file.openProject">Открыть папку проекта…</span></div>
+          <div class="menu-dropdown-item" data-action="close-project"><span class="menu-icon codicon codicon-folder"></span><span class="menu-text" data-i18n="menu.file.closeProject">Закрыть проект</span></div>
+          <div class="menu-item-submenu" id="recent-submenu">
+            <div class="menu-dropdown-item submenu-trigger">
+              <span class="menu-icon codicon codicon-history"></span>
+              <span class="menu-text" data-i18n="menu.file.recent">Недавние файлы</span>
+              <span class="submenu-arrow codicon codicon-chevron-right"></span>
+            </div>
+            <div class="submenu-dropdown" id="recent-files-list"></div>
+          </div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="save"><span class="menu-icon codicon codicon-save"></span><span class="menu-text" data-i18n="menu.file.save">Сохранить</span><span class="menu-shortcut">Ctrl+S</span></div>
+          <div class="menu-dropdown-item" data-action="save-as"><span class="menu-icon codicon codicon-save-as"></span><span class="menu-text" data-i18n="menu.file.saveAs">Сохранить как…</span><span class="menu-shortcut">Ctrl+Shift+S</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="close-tab"><span class="menu-icon codicon codicon-close"></span><span class="menu-text" data-i18n="menu.file.closeTab">Закрыть вкладку</span><span class="menu-shortcut">Ctrl+W</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="exit"><span class="menu-icon codicon codicon-sign-out"></span><span class="menu-text" data-i18n="menu.file.exit">Выход</span></div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="edit">
+        <span class="menu-label" data-i18n="menu.edit">Правка</span>
+        <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="undo"><span class="menu-icon codicon codicon-arrow-left"></span><span class="menu-text" data-i18n="menu.edit.undo">Отменить</span><span class="menu-shortcut">Ctrl+Z</span></div>
+          <div class="menu-dropdown-item" data-action="redo"><span class="menu-icon codicon codicon-redo"></span><span class="menu-text" data-i18n="menu.edit.redo">Повторить</span><span class="menu-shortcut">Ctrl+Y</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="cut"><span class="menu-icon codicon codicon-screen-cut"></span><span class="menu-text" data-i18n="menu.edit.cut">Вырезать</span><span class="menu-shortcut">Ctrl+X</span></div>
+          <div class="menu-dropdown-item" data-action="copy"><span class="menu-icon codicon codicon-copy"></span><span class="menu-text" data-i18n="menu.edit.copy">Копировать</span><span class="menu-shortcut">Ctrl+C</span></div>
+          <div class="menu-dropdown-item" data-action="paste"><span class="menu-icon codicon codicon-files"></span><span class="menu-text" data-i18n="menu.edit.paste">Вставить</span><span class="menu-shortcut">Ctrl+V</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="find"><span class="menu-icon codicon codicon-search"></span><span class="menu-text" data-i18n="menu.edit.find">Найти</span><span class="menu-shortcut">Ctrl+F</span></div>
+          <div class="menu-dropdown-item" data-action="replace"><span class="menu-icon codicon codicon-replace"></span><span class="menu-text" data-i18n="menu.edit.replace">Заменить</span><span class="menu-shortcut">Ctrl+H</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="format"><span class="menu-icon codicon codicon-indent"></span><span class="menu-text" data-i18n="menu.edit.format">Форматировать документ</span><span class="menu-shortcut">Shift+Alt+F</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="toggle-format-on-blur"><span class="menu-check" data-check="formatOnBlur">✓</span><span class="menu-text" data-i18n="menu.edit.fmtBlur">Форматировать при потере фокуса</span></div>
+          <div class="menu-dropdown-item" data-action="toggle-format-on-save"><span class="menu-check" data-check="formatOnSave">✓</span><span class="menu-text" data-i18n="menu.edit.fmtSave">Форматировать при сохранении</span></div>
+          <div class="menu-dropdown-item" data-action="toggle-check-on-change"><span class="menu-check" data-check="checkOnChange">✓</span><span class="menu-text" data-i18n="menu.edit.checkLive">Проверять при наборе</span></div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="run">
+        <span class="menu-label" data-i18n="menu.run">Запуск</span>
+        <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="run"><span class="menu-icon codicon codicon-run" style="color:#63c174"></span><span class="menu-text" data-i18n="menu.run.run">Запустить</span><span class="menu-shortcut">F5</span></div>
+          <div class="menu-dropdown-item" data-action="check"><span class="menu-icon codicon codicon-pass"></span><span class="menu-text" data-i18n="menu.run.check">Проверить</span><span class="menu-shortcut">Ctrl+Shift+C</span></div>
+          <div class="menu-dropdown-item" data-action="stop"><span class="menu-icon codicon codicon-debug-stop" style="color:#ff7b72"></span><span class="menu-text" data-i18n="menu.run.stop">Остановить</span><span class="menu-shortcut">Shift+F5</span></div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="view">
+        <span class="menu-label" data-i18n="menu.view">Вид</span>
+        <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="toggle-project-explorer"><span class="menu-check" data-check="projectExplorer">✓</span><span class="menu-text" data-i18n="menu.view.projectExplorer">Файлы проекта</span><span class="menu-shortcut">Ctrl+Shift+E</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="toggle-output"><span class="menu-check" data-check="outputPanel">✓</span><span class="menu-text" data-i18n="menu.view.panel">Нижняя панель</span><span class="menu-shortcut">Ctrl+Shift+O</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-dropdown-item" data-action="theme-light"><span class="menu-icon codicon codicon-sun"></span><span class="menu-text" data-i18n="menu.view.themeLight">Светлая тема</span></div>
+          <div class="menu-dropdown-item" data-action="theme-dark"><span class="menu-icon codicon codicon-moon"></span><span class="menu-text" data-i18n="menu.view.themeDark">Тёмная тема</span></div>
+          <div class="menu-separator"></div>
+          <div class="menu-item-submenu" id="lang-submenu">
+            <div class="menu-dropdown-item submenu-trigger">
+              <span class="menu-icon codicon codicon-globe"></span>
+              <span class="menu-text" data-i18n="menu.view.language">Язык</span>
+              <span class="submenu-arrow codicon codicon-chevron-right"></span>
+            </div>
+            <div class="submenu-dropdown" id="lang-list">
+              <div class="menu-dropdown-item" data-action="lang-ru"><span class="menu-icon codicon codicon-globe"></span><span class="menu-text" data-i18n="menu.view.lang.ru">Русский</span></div>
+              <div class="menu-dropdown-item" data-action="lang-en"><span class="menu-icon codicon codicon-globe"></span><span class="menu-text" data-i18n="menu.view.lang.en">English</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="help">
+        <span class="menu-label" data-i18n="menu.help">Справка</span>
+        <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="open-log-folder"><span class="menu-icon codicon codicon-folder-opened"></span><span class="menu-text" data-i18n="menu.help.openLogs">Открыть папку журналов</span></div>
+          <div class="menu-dropdown-item" data-action="about"><span class="menu-icon codicon codicon-info"></span><span class="menu-text" data-i18n="menu.help.about">О Axiom IDE</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toolbar">
+      <button class="toolbar-btn" id="tb-new" title="Новый файл (Ctrl+N)" data-i18n-title="tb.new">
+        <span class="codicon codicon-new-file"></span>
+      </button>
+      <button class="toolbar-btn" id="tb-open" title="Открыть файл (Ctrl+O)" data-i18n-title="tb.open">
+        <span class="codicon codicon-go-to-file"></span>
+      </button>
+      <button class="toolbar-btn" id="tb-save" title="Сохранить (Ctrl+S)" data-i18n-title="tb.save">
+        <span class="tb-save-icon codicon codicon-save" id="tb-save-normal"></span>
+        <span class="tb-save-icon codicon codicon-save-as" id="tb-save-as" style="display:none"></span>
+      </button>
+      <span class="toolbar-sep"></span>
+      <button class="toolbar-btn tb-run" id="tb-run" title="Запустить (F5)" data-i18n-title="tb.run">
+        <span class="codicon codicon-run"></span>
+      </button>
+      <button class="toolbar-btn tb-stop" id="tb-stop" title="Остановить (Shift+F5)" data-i18n-title="tb.stop">
+        <span class="codicon codicon-debug-stop"></span>
+      </button>
+      <button class="toolbar-btn" id="tb-check" title="Проверить (Ctrl+Shift+C)" data-i18n-title="tb.check">
+        <span class="codicon codicon-pass"></span>
+      </button>
+      <button class="toolbar-btn" id="tb-format" title="Форматировать документ (Shift+Alt+F)" data-i18n-title="tb.format">
+        <span class="codicon codicon-indent"></span>
+      </button>
+      <span class="toolbar-sep"></span>
+      <button class="toolbar-btn" id="tb-find" title="Найти (Ctrl+F)" data-i18n-title="tb.find">
+        <span class="codicon codicon-search"></span>
+      </button>
+      <span class="toolbar-sep"></span>
+      <button class="toolbar-btn" id="tb-toggle-output" title="Нижняя панель (Ctrl+Shift+O)" data-i18n-title="tb.panel">
+        <span class="codicon codicon-output"></span>
+      </button>
+    </div>
+
+    <div id="workspace">
+      <aside id="project-explorer"><div id="project-explorer-header"><button id="project-title" class="project-open" data-i18n="project.open">Открыть проект</button><button id="project-new-file" class="project-explorer-control" title="Добавить файл в проект" aria-label="Добавить файл в проект"><span class="codicon codicon-new-file"></span></button><button id="project-explorer-close" class="project-explorer-close" title="Закрыть" aria-label="Закрыть"><span class="codicon codicon-close"></span></button></div><div id="project-files"></div><div id="external-files" class="hidden"><div id="external-files-header" data-i18n="project.miscellaneous">Прочие файлы</div><div id="external-files-list"></div></div></aside>
+      <div id="main-content">
+        <div id="editor-container">
+          <div id="editor-tabs"></div>
+          <div id="editor"></div>
+        </div>
+
+        <div id="panel-resizer" data-i18n-title="panel.resizeHint" title="Потяните, чтобы изменить размер консоли"></div>
+
+        <div id="bottom-panel">
+          <div id="panel-tabs">
+            <button class="panel-tab active" data-tab="console" data-i18n="panel.console">Консоль</button>
+            <button class="panel-tab" data-tab="diagnostics" data-i18n="panel.problems">Проблемы</button>
+            <button class="panel-tab" data-tab="structure" data-i18n="panel.structure">Структура</button>
+          </div>
+          <div id="panel-content">
+            <!-- no whitespace between these tags: .tab-content inherited pre-wrap and
+                 newlines/indent rendered as blank text rows above the terminal -->
+            <div id="console-content" class="tab-content active"><div id="terminal"></div></div>
+            <div id="diagnostics-content" class="tab-content"></div>
+            <div id="structure-content" class="tab-content"><div id="outline-list"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="status-bar">
+      <div id="panel-resize-preview"></div>
+      <span id="status-text" data-i18n="status.ready">Готово</span>
+      <span id="status-file-path"></span>
+      <span id="status-line-col">Ln 1, Col 1</span>
+      <span id="status-execution-time"></span>
+    </div>
+  </div>
+
+  <!-- xterm must load BEFORE Monaco's loader.js: loader defines a global AMD
+       `define`, which would send the xterm UMD build into the AMD registry instead of
+       window.Terminal. -->
+  <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="vs/loader.js"></script>
+  <script src="locale.js"></script>
+  <script src="lang-features.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

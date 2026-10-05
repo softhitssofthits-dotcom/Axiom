@@ -12,7 +12,7 @@ using ICSharpCode.AvalonEdit.Rendering;
 using ICSharpCode.AvalonEdit.Search;
 using Axiom.Ide.Editor;
 using Axiom.Ide.Editor.Breakpoints;
-using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 using Axiom.Ide.Editor.Highlighting;
 using Axiom.Ide.Editor.Identifiers;
 using Axiom.Ide.Editor.StructuralEditing;

@@ -1,0 +1,9 @@
+{
+  "name": "axiom-ide-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E suite for the Axiom IDE",
+  "dependencies": {
+    "playwright": "^1.62.1"
+  }
+}

@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>axiom</AssemblyName>
+    <RootNamespace>Axiom.Cli</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Axiom.Core\Axiom.Core.csproj" />
+    <ProjectReference Include="..\Axiom.Execution\Axiom.Execution.csproj" />
+    <ProjectReference Include="..\Axiom.Formatting\Axiom.Formatting.csproj" />
+    <ProjectReference Include="..\Axiom.Runtime\Axiom.Runtime.csproj" />
+    <ProjectReference Include="..\Axiom.Semantics\Axiom.Semantics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Axiom.Cli.Tests" />
+  </ItemGroup>
+
+  <!--
+    Встраивает точную git-ревизию в axiom.exe (паттерн XSharp.Cli). IDE читает её через
+    `axiom metadata` (поле sourceRevision) и сравнивает с HEAD репозитория: при несовпадении
+    выполняется пересборка Release. Значение `unknown` — для исходных архивов без git;
+    такая сборка считается устаревшей, когда IDE может прочитать ревизию checkout'а.
+  -->
+  <Target Name="CaptureAxiomSourceRevision" BeforeTargets="GetAssemblyAttributes">
+    <Exec Command="git -C &quot;$(MSBuildProjectDirectory)\..\..&quot; rev-parse HEAD"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_AxiomGitRevisionOutput" />
+    </Exec>
+    <PropertyGroup>
+      <_AxiomSourceRevision Condition="'$(_AxiomGitRevisionOutput)' != ''">$([System.String]::Copy('$(_AxiomGitRevisionOutput)').Trim())</_AxiomSourceRevision>
+      <_AxiomSourceRevision Condition="'$(_AxiomSourceRevision)' == ''">unknown</_AxiomSourceRevision>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="AxiomSourceRevision" Value="$(_AxiomSourceRevision)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

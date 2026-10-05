@@ -1,6 +1,6 @@
 using ICSharpCode.AvalonEdit.Document;
 using Axiom.Core;
-using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 
 namespace Axiom.Ide.Editor.StructuralEditing;
 

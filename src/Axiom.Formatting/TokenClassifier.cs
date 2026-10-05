@@ -1,6 +1,7 @@
-using Axiom.Ide.Editor.Highlighting;
+using Axiom.Core;
+using Axiom.Semantics;
 
-namespace Axiom.Ide.Editor.Formatting;
+namespace Axiom.Formatting;
 
 internal static class TokenClassifier
 {
@@ -37,17 +38,17 @@ internal static class TokenClassifier
 
     private static FormattedToken ClassifyWord(string text, RawToken? nextRaw, CodeFormattingStyle style)
     {
-        if (AxiomHighlightingVocabulary.Keywords.Contains(text))
+        if (AxiomFormattingVocabulary.Keywords.Contains(text))
         {
             return new FormattedToken(ApplyStyle(text, style), FormattedTokenKind.ReservedWord);
         }
 
-        if (AxiomHighlightingVocabulary.TypeNames.Contains(text))
+        if (AxiomFormattingVocabulary.TypeNames.Contains(text))
         {
             return new FormattedToken(ApplyStyle(text, style), FormattedTokenKind.ReservedWord);
         }
 
-        if (AxiomHighlightingVocabulary.BuiltIns.Contains(text) && nextRaw?.Kind == RawTokenKind.OpenParen)
+        if (AxiomFormattingVocabulary.BuiltIns.Contains(text) && nextRaw?.Kind == RawTokenKind.OpenParen)
         {
             return new FormattedToken(ApplyStyle(text, style), FormattedTokenKind.BuiltInWord);
         }
@@ -97,4 +98,21 @@ internal static class TokenClassifier
 
         return char.ToUpperInvariant(text[0]) + text[1..].ToLowerInvariant();
     }
+}
+
+/// <summary>
+/// Словарь языка для форматирования: ключевые слова и типы берутся из
+/// <see cref="AxiomLanguageKeywords"/>, имена встроенных функций — из реестра
+/// <see cref="BuiltinFunctions"/>. Это те же источники, по которым проверяется
+/// XSHD-подсветка IDE, поэтому форматтер и подсветка не расходятся.
+/// </summary>
+internal static class AxiomFormattingVocabulary
+{
+    public static IReadOnlySet<string> Keywords => AxiomLanguageKeywords.Keywords;
+
+    public static IReadOnlySet<string> TypeNames => AxiomLanguageKeywords.TypeNames;
+
+    public static IReadOnlySet<string> BuiltIns { get; } = new HashSet<string>(
+        BuiltinFunctions.All.Select(static function => function.Name),
+        StringComparer.OrdinalIgnoreCase);
 }

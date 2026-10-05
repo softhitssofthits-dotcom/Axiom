@@ -14,10 +14,16 @@
 - `src/Axiom.Runtime/` - runtime values, interpreter, built-ins, runtime diagnostics
 - `src/Axiom.Execution/` - `parse -> bind -> execute` orchestration boundary
 
+### CLI And Formatting
+
+- `src/Axiom.Cli/` - headless CLI `axiom` (run/check/fmt/metadata/version) over `AxiomExecutionPipeline`
+- `src/Axiom.Formatting/` - UI-independent code formatting (LineFormatter, AxiomCodeFormattingService)
+
 ### IDE
 
 - `src/Axiom.Ide/` - WPF shell, document handling, output/diagnostics, commands, services
 - `src/Axiom.Ide.SmokeHarness/` - automated live WPF smoke runner
+- `ide/` - Electron IDE (Monaco + xterm.js), talks to the language only via `axiom` CLI; see `docs/ELECTRON_IDE_PLAN.md`
 
 ## Test Ownership Map
 
@@ -27,6 +33,8 @@
 - `tests/Axiom.Runtime.Tests/` - interpreter and built-in runtime behavior
 - `tests/Axiom.Execution.Tests/` - end-to-end language pipeline
 - `tests/Axiom.Ide.Tests/` - non-UI and shell-level IDE regressions
+- `tests/Axiom.Cli.Tests/` - CLI stream/exit-code contract, metadata, fmt
+- `ide/e2e/` - Playwright Electron suite (`node runner.js`)
 
 ## Manual And Acceptance Samples
 

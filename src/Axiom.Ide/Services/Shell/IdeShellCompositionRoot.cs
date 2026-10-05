@@ -1,5 +1,5 @@
 using Axiom.Execution;
-using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 using Axiom.Ide.Editor.Identifiers;
 using Axiom.Ide.Editor.StructuralEditing;
 using Axiom.Ide.Files;

@@ -8,7 +8,7 @@ using System.ComponentModel;
 using Axiom.Execution;
 using Axiom.Ide.Commands;
 using Axiom.Ide.Documents;
-using Axiom.Ide.Editor.Formatting;
+using Axiom.Formatting;
 using Axiom.Ide.Editor.Identifiers;
 using Axiom.Ide.Files;
 using Axiom.Ide.Models;
