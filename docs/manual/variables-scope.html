@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Имена, регистр и область видимости переменных</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="variables-scope">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Где живут переменные и как имена связываются со значениями</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+                <nav id="manual-nav"></nav>
+            </div>
+        </aside>
+    <main class="content">
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="index.html">Главная</a>
+            <span>/</span>
+            <a href="reference.html">Алфавитный и тематический указатель</a>
+            <span>/</span>
+            <a href="variables-and-constants.html">Переменные и константы</a>
+            <span>/</span>
+            <span>Имена, регистр и область видимости</span>
+        </nav>
+
+            <p class="eyebrow">Раздел</p>
+            <h1 class="page-title">Имена, регистр и область видимости переменных</h1>
+            <p class="lead">Эта страница подробно объясняет три вопроса, которые чаще всего возникают у начинающих: можно ли писать имя переменной большими и маленькими буквами, где переменная «живёт» и откуда её видно, и что происходит с переменной, когда программа переходит из одной части кода в другую. Все примеры проверены на текущей версии Axiom.</p>
+
+        <section class="article-section">
+            <h2>Главные правила</h2>
+            <div class="summary-box">
+                <ul>
+                    <li><strong>Регистр букв не важен:</strong> <code>score</code>, <code>Score</code> и <code>SCORE</code> — это одно и то же имя.</li>
+                    <li><strong>Имя нужно объявить заранее</strong> через <code>DIM</code> (переменная) или <code>CONST</code> (константа). Простое присваивание само имя не создаёт.</li>
+                    <li><strong>Переменная видна не везде,</strong> а только в своей области видимости: глобальной, процедурной или блока.</li>
+                    <li><strong>Повторно объявлять имя внутри вложенной области нельзя</strong> — это ошибка перекрытия имён <code>MB2016</code>.</li>
+                    <li><strong>Переменная блока</strong> (<code>IF</code>, <code>FOR</code>, <code>WHILE</code>, <code>SELECT CASE</code> и других) исчезает сразу после конца блока.</li>
+                    <li><strong>Локальные переменные процедуры</strong> создаются заново при каждом её вызове и не видны снаружи.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="article-section" id="names">
+            <h2>Каким может быть имя переменной</h2>
+            <p>Имя переменной — это слово, по которому программа находит значение. В Axiom действуют простые правила:</p>
+            <ol>
+                <li>Имя начинается с буквы или знака подчёркивания <code>_</code>.</li>
+                <li>Дальше можно использовать буквы, цифры и знак подчёркивания.</li>
+                <li>Пробелы и знаки пунктуации (тире, точки, запятые) в имени запрещены.</li>
+                <li>Имя не должно совпадать с зарезервированным словом языка (<code>IF</code>, <code>PRINT</code>, <code>DIM</code> и другими).</li>
+                <li>Буквы могут быть любыми: латинские и русские работают одинаково.</li>
+            </ol>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Можно</th><th>Нельзя</th><th>Почему нельзя</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>name</code>, <code>total</code>, <code>version1</code></td><td><code>1value</code></td><td>имя не может начинаться с цифры</td></tr>
+                    <tr><td><code>_tmp</code>, <code>studentName</code></td><td><code>user-name</code></td><td>дефис — это знак пунктуации</td></tr>
+                    <tr><td><code>счётчик</code>, <code>сумма_1</code></td><td><code>user name</code></td><td>пробел внутри имени запрещён</td></tr>
+                    <tr><td><code>score</code>, <code>SCORE</code></td><td><code>PRINT</code></td><td>зарезервированное слово языка</td></tr>
+                </tbody>
+            </table>
+            <p>Русские буквы в именах полностью поддерживаются:</p>
+            <pre><code class="language-basic">DIM счётчик AS INTEGER = 3
+PRINT СЧЁТЧИК</code></pre>
+            <p>Вывод:</p>
+            <pre><code>3</code></pre>
+        </section>
+
+        <section class="article-section" id="case">
+            <h2>Регистр букв: большие или маленькие?</h2>
+            <p>Axiom <strong>не различает</strong> заглавные и строчные буквы в именах переменных. Имена <code>name</code>, <code>Name</code> и <code>NAME</code> обозначают одну и ту же переменную. Поэтому вы можете писать имя в любом регистре — программа поймёт вас правильно.</p>
+            <pre><code class="language-basic">DIM score AS INTEGER
+score = 10
+PRINT Score</code></pre>
+            <p>Вывод:</p>
+            <pre><code>10</code></pre>
+            <p>То же правило работает при любом сочетании регистров, даже в середине слова:</p>
+            <pre><code class="language-basic">DIM Total = 5
+total = total + 1
+PRINT ToTaL</code></pre>
+            <p>Вывод:</p>
+            <pre><code>6</code></pre>
+            <p>Регистр не важен и для русских имён, и для встроенных констант <code>PI</code>, <code>ROW</code>, <code>COLUMN</code>.</p>
+            <div class="note">
+                <p><strong>Что нельзя делать:</strong> объявить одно имя дважды в одной области, меняя только регистр. Для Axiom это одно и то же имя, поэтому второе объявление — ошибка <code>MB2002</code>.</p>
+            </div>
+            <pre><code class="language-basic">DIM value AS INTEGER = 1
+DIM VALUE AS INTEGER = 2
+PRINT value</code></pre>
+            <p>Вывод: программа не запускается: компилятор выдаёт диагностику (сообщение об ошибке) <code>MB2002: Имя 'VALUE' уже объявлено в этой области видимости.</code></p>
+            <p><strong>Совет новичку:</strong> хотя регистр не влияет на работу, старайтесь писать одно имя всегда одинаково (например, всегда <code>score</code> или всегда <code>Score</code>). Так код легче читать. Редактор Axiom может сам приводить написание имён к единому виду по мере ввода.</p>
+        </section>
+
+        <section class="article-section" id="what-is-scope">
+            <h2>Что такое область видимости</h2>
+            <p>Область видимости — это «территория» программы, на которой имя можно использовать. Представьте коробки: переменная лежит внутри коробки, и пока вы находитесь внутри этой коробки, вы её видите. Вышли из коробки — переменная исчезла из виду (а может и вовсе перестала существовать).</p>
+            <p>В Axiom есть четыре вида «коробок»:</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Область</th><th>Где объявляется</th><th>Кто её видит</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Глобальная</td><td>на верхнем уровне программы</td><td>вся программа: любые процедуры, функции и методы типов</td></tr>
+                    <tr><td>Процедурная</td><td>внутри <code>SUB</code> или <code>FUNCTION</code>, а также параметры</td><td>только эта процедура и вложенные в неё процедуры</td></tr>
+                    <tr><td>Блоковая</td><td>внутри <code>IF</code>, <code>FOR</code>, <code>WHILE</code>, <code>DO</code>, <code>SELECT CASE</code>, <code>TRY</code></td><td>только этот блок</td></tr>
+                    <tr><td>Типовая</td><td>поля внутри <code>TYPE</code></td><td>через переменную записи (<code>p.x</code>) и через <code>SELF</code> в методах</td></tr>
+                </tbody>
+            </table>
+            <p>Дальше каждая область разобрана отдельно, с примерами.</p>
+        </section>
+
+        <section class="article-section" id="global">
+            <h2>Глобальные переменные</h2>
+            <p>Глобальная переменная объявляется на верхнем уровне программы — вне всех процедур и типов. Она живёт с начала и до конца программы и видна отовсюду: из <code>SUB</code>, <code>FUNCTION</code> и методов <code>TYPE</code> её можно и читать, и изменять.</p>
+            <pre><code class="language-basic">DIM counter AS INTEGER = 100
+
+SUB Show()
+    PRINT counter
+END SUB
+
+SUB Bump()
+    counter = counter + 1
+END SUB
+
+Show()
+Bump()
+PRINT counter</code></pre>
+            <p>Вывод:</p>
+            <pre><code>100
+101</code></pre>
+            <p><code>Show</code> просто читает глобальную переменную, а <code>Bump</code> записывает в неё новое значение — это та же самая переменная, а не копия.</p>
+            <p><strong>Порядок объявления не важен.</strong> Axiom сначала находит все глобальные переменные и только потом разбирает тела процедур, поэтому процедура видит глобальную переменную, даже если <code>DIM</code> стоит ниже неё в файле:</p>
+            <pre><code class="language-basic">SUB Show()
+    PRINT laterGlobal
+END SUB
+
+DIM laterGlobal AS INTEGER = 42
+Show()</code></pre>
+            <p>Вывод:</p>
+            <pre><code>42</code></pre>
+            <p>То же самое касается методов <code>TYPE</code> — они тоже видят глобальные переменные независимо от порядка.</p>
+            <p><strong>Следствие правила «не перекрывай имена».</strong> Раз порядок больше не влияет на видимость, локальная переменная или параметр не могут носить то же имя, что и глобальная переменная, — в каком бы порядке они ни стояли. Такая программа не запустится с диагностикой <code>MB2016</code>:</p>
+            <pre><code class="language-basic">SUB Show(age AS INTEGER)   ' параметр age
+    PRINT age
+END SUB
+
+DIM age AS INTEGER = 30    ' глобальная age
+Show(age)</code></pre>
+            <p>Измените имя параметра — например, на <code>inputAge</code>, — и программа заработает.</p>
+            <p><strong>Значения по умолчанию.</strong> Если переменной не задать начальное значение, Axiom даст ей «пустое» значение по типу: числа — <code>0</code>, строка — <code>""</code> (пустая строка), логическое значение — <code>FALSE</code>.</p>
+        </section>
+
+        <section class="article-section" id="local">
+            <h2>Локальные переменные процедур</h2>
+            <p>Переменные, объявленные внутри <code>SUB</code> или <code>FUNCTION</code>, называются локальными. Параметры процедуры — тоже локальные имена. Локальные переменные:</p>
+            <ul>
+                <li>не видны снаружи процедуры — после <code>END SUB</code> к ним обратиться нельзя;</li>
+                <li>создаются заново при каждом вызове процедуры;</li>
+                <li>исчезают, когда процедура заканчивает работу.</li>
+            </ul>
+            <pre><code class="language-basic">SUB Test()
+    DIM n AS INTEGER = 0
+    n = n + 1
+    PRINT n
+END SUB
+
+Test()
+Test()</code></pre>
+            <p>Вывод:</p>
+            <pre><code>1
+1</code></pre>
+            <p>Хотя <code>Test</code> вызвана дважды, счётчик <code>n</code> каждый раз начинается с нуля: при каждом вызове создаётся новая переменная.</p>
+            <p>Попытка обратиться к локальной переменной (или параметру) снаружи — ошибка <code>MB2001</code>:</p>
+            <pre><code class="language-basic">FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value + value
+END FUNCTION
+
+PRINT DoubleValue(21)
+PRINT value</code></pre>
+            <p>Вывод: <code>PRINT DoubleValue(21)</code> напечатает <code>42</code>, но <code>PRINT value</code> уже за пределами функции — диагностика <code>MB2001: Имя 'value' не объявлено.</code></p>
+            <p>Константа, объявленная внутри процедуры, тоже локальна — это просто неизменяемая локальная переменная:</p>
+            <pre><code class="language-basic">SUB Show()
+    CONST LOCAL_LIMIT AS INTEGER = 3
+    PRINT LOCAL_LIMIT
+END SUB
+
+Show()</code></pre>
+            <p>Вывод:</p>
+            <pre><code>3</code></pre>
+            <p><strong>Параметры: по значению или по ссылке.</strong> По умолчанию параметр — копия значения (изменения внутри процедуры не влияют на исходную переменную). С ключевым словом <code>BYREF</code> процедура получает саму переменную и может её изменить:</p>
+            <pre><code class="language-basic">SUB Modify(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+DIM n AS INTEGER = 10
+Modify(n)
+PRINT n</code></pre>
+            <p>Вывод:</p>
+            <pre><code>11</code></pre>
+        </section>
+
+        <section class="article-section" id="nested">
+            <h2>Вложенные процедуры и замыкания</h2>
+            <p>Внутри <code>SUB</code> и <code>FUNCTION</code> можно объявлять свои собственные <code>SUB</code> и <code>FUNCTION</code>. Вложенная процедура видит и локальные переменные внешней процедуры, и глобальные:</p>
+            <pre><code class="language-basic">SUB Outer()
+    DIM localOuter AS INTEGER = 10
+
+    SUB Inner()
+        PRINT localOuter
+    END SUB
+
+    Inner()
+END SUB
+
+Outer()</code></pre>
+            <p>Вывод:</p>
+            <pre><code>10</code></pre>
+            <p>Если вложенная функция возвращается наружу как значение, она «забирает» с собой свои переменные. Такая функция называется замыканием, и её переменные продолжают жить между вызовами:</p>
+            <pre><code class="language-basic">DIM counter AS FUNCTION () AS INTEGER
+counter = MakeCounter()
+PRINT counter()
+PRINT counter()
+PRINT counter()
+
+FUNCTION MakeCounter() AS FUNCTION () AS INTEGER
+    DIM current AS INTEGER = 0
+
+    FUNCTION NextValue() AS INTEGER
+        current = current + 1
+        RETURN current
+    END FUNCTION
+
+    RETURN NextValue
+END FUNCTION</code></pre>
+            <p>Вывод:</p>
+            <pre><code>1
+2
+3</code></pre>
+            <p>Обратите внимание: <code>current</code> — локальная переменная <code>MakeCounter</code>, но она не исчезла после выхода из неё, потому что возвращённая функция продолжает на неё ссылаться.</p>
+        </section>
+
+        <section class="article-section" id="types">
+            <h2>Переменные в типах TYPE</h2>
+            <p>Тип <code>TYPE</code> описывает запись — набор полей. Поля похожи на переменные, встроенные в запись. Обращаются к ним через переменную записи и точку:</p>
+            <pre><code class="language-basic">TYPE Point
+    x AS INTEGER
+    y AS INTEGER
+END TYPE
+
+DIM p AS Point
+p.x = 1
+p.y = 2
+PRINT p.x + p.y</code></pre>
+            <p>Вывод:</p>
+            <pre><code>3</code></pre>
+            <p>Имена полей, как и обычные переменные, регистронезависимы: <code>p.X</code> и <code>p.x</code> — одно и то же поле.</p>
+            <p><strong>Методы и SELF.</strong> Внутри метода типа (<code>SUB</code> или <code>FUNCTION</code>, объявленной в <code>TYPE</code>) свои поля доступны только через специальное имя <code>SELF</code>. «Голое» имя поля без <code>SELF</code> компилятор (программа, которая проверяет и запускает код) не поймёт — это ошибка <code>MB2044</code>, и её текст сразу подсказывает решение:</p>
+            <pre><code class="language-basic">TYPE Counter
+    Value AS INTEGER
+
+    SUB Increment(stepValue AS INTEGER)
+        SELF.Value = SELF.Value + stepValue
+    END SUB
+END TYPE
+
+DIM counter AS Counter
+counter.Increment(5)
+PRINT counter.Value</code></pre>
+            <p>Вывод:</p>
+            <pre><code>5</code></pre>
+            <p>Если написать <code>SELF.Value</code> с опечаткой — например, <code>SELF.Valu</code>, — придёт ошибка <code>MB2023</code>, а к ней подсказка с ближайшим похожим полем: «Возможно, вы имели в виду поле 'Value'».</p>
+            <p>Глобальные переменные из методов видны независимо от порядка объявления, как и из обычных процедур.</p>
+            <p><strong>Записи копируются, массивы — нет.</strong> При присваивании одной переменной типа другой запись копируется целиком: изменения копии не затрагивают оригинал. А вот у массивов присваивание общее хранилище — обе переменные ссылаются на один и тот же массив:</p>
+            <pre><code class="language-basic">TYPE Box
+    v AS INTEGER
+END TYPE
+
+DIM b1 AS Box
+b1.v = 1
+
+DIM b2 AS Box
+b2 = b1
+b2.v = 99
+
+PRINT b1.v
+PRINT b2.v</code></pre>
+            <p>Вывод:</p>
+            <pre><code>1
+99</code></pre>
+        </section>
+
+        <section class="article-section" id="blocks">
+            <h2>Переменные в блоках</h2>
+            <p>Блоки <code>IF ... END IF</code>, <code>SELECT CASE ... END SELECT</code>, циклы <code>FOR ... NEXT</code>, <code>WHILE ... END WHILE</code>, <code>DO ... LOOP</code> и <code>TRY ... END TRY</code> создают собственную область видимости. Переменная, объявленная внутри блока, видна только внутри этого блока:</p>
+            <pre><code class="language-basic">IF TRUE THEN
+    DIM inner AS INTEGER = 3
+    PRINT inner
+END IF
+
+PRINT inner</code></pre>
+            <p>Вывод: первый <code>PRINT</code> напечатает <code>3</code>, а второй — ошибка <code>MB2001: Имя 'inner' не объявлено.</code> После <code>END IF</code> переменная исчезла.</p>
+            <p><strong>Разные ветви — разные области.</strong> Можно использовать одно и то же имя в разных ветвях <code>IF ... ELSE</code> или в разных ветках <code>CASE</code>, потому что эти ветви не видят друг друга:</p>
+            <pre><code class="language-basic">IF FALSE THEN
+    DIM branchText AS STRING = "one"
+ELSE
+    DIM branchText AS STRING = "two"
+    PRINT branchText
+END IF</code></pre>
+            <p>Вывод:</p>
+            <pre><code>two</code></pre>
+            <p>То же самое в <code>SELECT CASE</code>:</p>
+            <pre><code class="language-basic">SELECT CASE 2
+    CASE 1
+        DIM caseText AS STRING = "one"
+    CASE 2
+        DIM caseText AS STRING = "two"
+        PRINT caseText
+END SELECT</code></pre>
+            <p>Вывод:</p>
+            <pre><code>two</code></pre>
+            <p><strong>Счётчик FOR.</strong> Счётчик <code>FOR</code> всегда создаётся самим циклом и живёт только внутри него: после <code>NEXT</code> он исчезает.</p>
+            <pre><code class="language-basic">FOR i = 1 TO 2
+    PRINT i
+NEXT
+
+PRINT i</code></pre>
+            <p>Вывод: цикл напечатает <code>1</code> и <code>2</code>, а <code>PRINT i</code> после цикла — ошибка <code>MB2001</code>.</p>
+            <p>Имя счётчика не может быть занято во внешней области: <code>DIM i</code> и затем <code>FOR i</code> — ошибка <code>MB2016</code> (счётчик FOR всегда локальный). Если итоговое значение нужно после цикла, скопируйте его в свою переменную внутри тела:</p>
+            <pre><code class="language-basic">DIM lastValue AS INTEGER = 0
+
+FOR i = 1 TO 3
+    lastValue = i
+NEXT
+
+PRINT lastValue</code></pre>
+            <p>Вывод:</p>
+            <pre><code>3</code></pre>
+            <p><strong>Переменная CATCH.</strong> Переменная ошибки в <code>CATCH info</code> видна только внутри блока <code>CATCH</code>. После <code>END TRY</code> к ней обращаться нельзя.</p>
+        </section>
+
+        <section class="article-section" id="shadowing">
+            <h2>Перекрытие имён запрещено</h2>
+            <p>Перекрытие имён (по-английски shadowing) — это когда внутренняя область объявляет имя, которое уже занято во внешней. В Axiom это не разрешено: вместо «тихого» перекрытия вы получаете понятную ошибку <code>MB2016</code>. Так программа не может незаметно подменить одну переменную другой.</p>
+            <pre><code class="language-basic">DIM counter AS INTEGER = 100
+
+SUB Show()
+    DIM counter AS INTEGER = 5
+    PRINT counter
+END SUB</code></pre>
+            <p>Вывод: диагностика <code>MB2016: Имя 'counter' уже объявлено во внешней области видимости. В этом месте нельзя объявить его повторно.</code></p>
+            <p>То же самое происходит, если параметр процедуры повторяет имя глобальной переменной, или если вложенная процедура повторяет имя внешней процедуры, или блок повторяет имя переменной родительского блока. Решение простое: придумайте другое имя. В процедуре, которая хочет работать с глобальной <code>counter</code>, просто читайте и пишите её напрямую — отдельное объявление не нужно.</p>
+        </section>
+
+        <section class="article-section" id="diagnostics">
+            <h2>Диагностика: что означает каждая ошибка</h2>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Код</th><th>Когда возникает</th><th>Что делать</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>MB2001</code></td><td>имя не объявлено: опечатка, использование до объявления или обращение к переменной за пределами её области</td><td>проверить написание и место объявления; объявить имя через <code>DIM</code>/<code>CONST</code></td></tr>
+                    <tr><td><code>MB2002</code></td><td>повторное объявление имени в той же области (в том числе в другом регистре)</td><td>убрать лишнее объявление</td></tr>
+                    <tr><td><code>MB2003</code></td><td>несовместимый тип; если имя одновременно обозначает переменную и функцию, в тексте будет подсказка «Возможно, вы хотели присвоить ссылку на функцию …»</td><td>привести значение к нужному типу; для функции-значения присвоить <code>FUNCTION</code>-переменной саму функцию</td></tr>
+                    <tr><td><code>MB2010</code></td><td>попытка присвоить значение константе (<code>CONST</code>)</td><td>не записывать в константу; для изменяемого значения использовать <code>DIM</code></td></tr>
+                    <tr><td><code>MB2016</code></td><td>объявление имени, которое уже существует во внешней области видимости; порядок объявлений больше не влияет: поздняя глобальная переменная так же запрещает одноимённые параметры и локальные имена; счётчик <code>FOR</code> всегда локальный, поэтому <code>DIM i</code> + <code>FOR i</code> — тоже <code>MB2016</code></td><td>переименовать новую переменную; для счётчика — удалить <code>DIM</code> или использовать другое имя</td></tr>
+                    <tr><td><code>MB2017</code></td><td><code>DIM</code> без типа и без начального значения</td><td>указать тип через <code>AS</code> или добавить <code>= значение</code></td></tr>
+                    <tr><td><code>MB2023</code></td><td>в типе нет поля, к которому обращаются через точку или <code>SELF</code>; при опечатке добавляется подсказка «Возможно, вы имели в виду поле …»</td><td>проверить написание имени поля</td></tr>
+                    <tr><td><code>MB2044</code></td><td>внутри метода <code>TYPE</code> использовано голое имя поля без <code>SELF</code></td><td>написать <code>SELF.ИмяПоля</code></td></tr>
+                    <tr><td><code>MB2045</code></td><td>предупреждение: одно имя используется и как переменная, и как процедура (<code>SUB</code>/<code>FUNCTION</code>)</td><td>это не ошибка — программа работает; проверьте, не опечатка ли это, иначе оставьте как есть</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="article-section" id="lifetime">
+            <h2>Время жизни переменных</h2>
+            <p>Время жизни — это промежуток, в течение которого переменная существует и хранит своё значение. Сводка:</p>
+            <table class="compact-table">
+                <thead>
+                    <tr><th>Переменная</th><th>Когда создаётся</th><th>Когда исчезает</th><th>Кто видит</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Глобальная</td><td>при запуске программы</td><td>при завершении программы</td><td>вся программа</td></tr>
+                    <tr><td>Локальная в <code>SUB</code>/<code>FUNCTION</code></td><td>при вызове процедуры</td><td>при выходе из процедуры</td><td>только эта процедура и вложенные</td></tr>
+                    <tr><td>Параметр</td><td>при вызове процедуры</td><td>при выходе из процедуры</td><td>только эта процедура</td></tr>
+                    <tr><td>Поле <code>TYPE</code></td><td>при создании переменной записи</td><td>когда исчезает переменная записи</td><td>через переменную записи и <code>SELF</code></td></tr>
+                    <tr><td>Переменная блока</td><td>при входе в блок</td><td>при выходе из блока</td><td>только блок</td></tr>
+                    <tr><td>Счётчик <code>FOR</code></td><td>при входе в цикл</td><td>после <code>NEXT</code></td><td>только цикл; всегда создаётся самим циклом</td></tr>
+                    <tr><td>Переменная замыкания</td><td>при вызове внешней процедуры</td><td>живёт, пока живёт возвращённая функция</td><td>только через замыкание</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="article-section">
+            <h2>Ручная проверка</h2>
+            <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки описанных правил.</p>
+            <ul class="resource-list">
+                <li><a href="../../samples/smoke/variables_scope_case.axm">Регистр имён: большие и маленькие буквы</a></li>
+                <li><a href="../../samples/smoke/variables_scope_global_local.axm">Глобальные и локальные переменные</a></li>
+                <li><a href="../../samples/smoke/variables_scope_blocks.axm">Области блоков IF, SELECT CASE, FOR</a></li>
+                <li><a href="../../samples/smoke/variables_scope_forward_global.axm">Процедура видит глобальную переменную, объявленную ниже</a></li>
+                <li><a href="../../samples/smoke/variables_name_collision_warning.axm">Предупреждение MB2045: переменная и процедура с одним именем</a></li>
+                <li><a href="../../samples/acceptance/negative/scope_shadow_declaration.axm">Ошибка: перекрытие имени (MB2016)</a></li>
+                <li><a href="../../samples/acceptance/negative/scope_block_escape.axm">Ошибка: переменная блока вне блока (MB2001)</a></li>
+                <li><a href="../../samples/acceptance/negative/scope_field_requires_self.axm">Ошибка: голое имя поля без SELF (MB2044)</a></li>
+                <li><a href="../../samples/acceptance/negative/scope_field_typo_suggestion.axm">Ошибка: опечатка в поле SELF (MB2023 с подсказкой)</a></li>
+                <li><a href="../../samples/acceptance/negative/call_operator_hint.axm">Ошибка: оператор CALL отсутствует (MB2001 с подсказкой)</a></li>
+            </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>См. также</h2>
+            <div class="link-list">
+                <a href="variables-and-constants.html">Переменные и константы</a>
+                <a href="variables-glossary.html">Словарик терминов</a>
+                <a href="dim.html">Оператор DIM</a>
+                <a href="const.html">Оператор CONST</a>
+                <a href="type.html">Тип TYPE</a>
+                <a href="sub.html">Подпрограмма SUB</a>
+                <a href="function.html">Функция FUNCTION</a>
+                <a href="procedures-and-functions.html">Процедуры и функции</a>
+                <a href="for.html">Цикл FOR ... NEXT</a>
+                <a href="diagnostics.html">Диагностика</a>
+            </div>
+        </section>
+
+        <div id="page-pager" class="pager"></div>
+    </main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

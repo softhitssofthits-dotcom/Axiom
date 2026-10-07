@@ -1,0 +1,7 @@
+' Ошибка MB2001: переменная блока IF не видна после END IF.
+IF TRUE THEN
+    DIM inner AS INTEGER = 3
+    PRINT inner
+END IF
+
+PRINT inner

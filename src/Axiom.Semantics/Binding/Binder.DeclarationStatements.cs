@@ -188,6 +188,11 @@ public sealed partial class Binder
         }
         else
         {
+            if (TryReportFunctionReferenceNote(expression, targetType, GetLocation(expressionSyntax)))
+            {
+                return new BoundErrorExpression(GetLocation(expressionSyntax));
+            }
+
             ReportTypeMismatch(expression.Type, targetType, GetLocation(expressionSyntax));
         }
 

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Axiom - Сводка: переменные (регистр, область видимости, время жизни)</title>
+    <style>
+        :root {
+            --ink: #1a2233;
+            --muted: #5b6472;
+            --line: #d9dee6;
+            --bg: #ffffff;
+            --soft: #f4f6f9;
+            --accent: #1f5fbf;
+            --ok: #1e7d43;
+            --warn: #b26a00;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, Arial, sans-serif;
+            color: var(--ink);
+            background: var(--soft);
+            line-height: 1.55;
+        }
+        header {
+            background: var(--ink);
+            color: #fff;
+            padding: 28px 32px 24px;
+        }
+        header p { margin: 6px 0 0; color: #c7d0dd; font-size: 14px; }
+        header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        main { max-width: 980px; margin: 0 auto; padding: 28px 32px 48px; }
+        section { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; margin: 18px 0; }
+        h2 { font-size: 18px; margin: 0 0 12px; }
+        table { border-collapse: collapse; width: 100%; font-size: 14px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { background: var(--soft); font-weight: 600; }
+        code { background: var(--soft); border-radius: 4px; padding: 1px 5px; font-family: Consolas, monospace; font-size: 13px; }
+        .tag { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+        .tag-ok { background: #e3f4e9; color: var(--ok); }
+        .tag-warn { background: #fdf0dc; color: var(--warn); }
+        .tag-doc { background: #e7effc; color: var(--accent); }
+        ul { margin: 8px 0; padding-left: 20px; }
+        li { margin: 4px 0; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } main { padding: 16px; } }
+        .muted { color: var(--muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Axiom: сводка по переменным</h1>
+    <p>Регистр имён, область видимости, время жизни. Итоги исследования и передачи мейнтейнерам · 2026-08-26</p>
+</header>
+<main>
+
+    <section>
+        <h2>Что сделано</h2>
+        <p>Проведено исследование механики переменных языка Axiom: 40 проверочных сценариев прогнаны на актуальной сборке через <code>AxiomExecutionPipeline</code> (движки <code>Interpreter</code> и <code>BytecodeVm</code>), результаты сверены с документацией. На основе фактов написаны две новые страницы справочника и отчёт.</p>
+        <div class="grid2">
+            <div>
+                <span class="tag tag-doc">Документация</span>
+                <ul>
+                    <li><code>docs/manual/variables-scope.html</code> — правила имён, регистр, области видимости, время жизни;</li>
+                    <li><code>docs/manual/variables-glossary.html</code> — словарик терминов для новичков;</li>
+                    <li>обновлены навигация, <code>variables-and-constants.html</code>, <code>reference.html</code>.</li>
+                </ul>
+            </div>
+            <div>
+                <span class="tag tag-ok">Проверяемые примеры</span>
+                <ul>
+                    <li>3 позитивных примера в <code>samples/smoke/</code> — запущены, вывод совпадает;</li>
+                    <li>2 негативных в <code>samples/acceptance/negative/</code> — коды <code>MB2016</code>, <code>MB2001</code> подтверждены;</li>
+                    <li>полная таблица верификации — в <code>docs/audit/VARIABLES_SCOPE_AUDIT.md</code>.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Ключевые подтверждённые правила</h2>
+        <table>
+            <thead>
+                <tr><th>Правило</th><th>Проверка</th><th>Результат</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Имена регистронезависимы (включая кириллицу, поля TYPE, имена SUB/FUNCTION, PI/ROW/COLUMN)</td><td><code>DIM score: PRINT Score</code>; <code>счётчик/СЧЁТЧИК</code></td><td><code>10</code>, <code>3</code></td></tr>
+                <tr><td>Повторное объявление в другом регистре — ошибка</td><td><code>DIM value: DIM VALUE</code></td><td><code>MB2002</code></td></tr>
+                <tr><td>Перекрытие имён запрещено (локальная, параметр, блок, вложенная процедура)</td><td>4 сценария</td><td><code>MB2016</code></td></tr>
+                <tr><td>Глобальные видны из SUB/FUNCTION/методов TYPE; порядок объявления важен</td><td>чтение, запись, метод TYPE; «глобальная после»</td><td>работает; иначе <code>MB2001</code></td></tr>
+                <tr><td>Переменные блоков исчезают после блока; ветви IF/CASE изолированы</td><td><code>END IF</code>, ветви <code>IF/ELSE</code>, <code>CASE</code></td><td><code>MB2001</code>; имена в ветвях допустимы</td></tr>
+                <tr><td>FOR: созданный счётчик исчезает; существующая переменная переиспользуется</td><td><code>PRINT i</code> после цикла; <code>DIM i: FOR i</code></td><td><code>MB2001</code>; <code>4</code></td></tr>
+                <tr><td>Методы TYPE: поля только через SELF</td><td><code>x = x + dx</code> без SELF</td><td><code>MB2001</code></td></tr>
+                <tr><td>Записи копируются, массивы разделяют хранилище</td><td><code>b2 = b1</code>; <code>b = a</code></td><td><code>1/99</code>; <code>222/222</code></td></tr>
+                <tr><td>Паритет Interpreter ↔ BytecodeVm (включая DIM в WHILE/DO)</td><td>10 парных прогонов</td><td>идентично</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Найденные несоответствия</h2>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Тип</th><th>Суть</th><th>Статус</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>DOC-001</td><td>документация</td><td>не было страницы справочника по областям видимости (пробел SYS-001 из BLOCK_SCOPE.md)</td><td><span class="tag tag-ok">устранено</span></td></tr>
+                <tr><td>AUDIT-STALE-001</td><td>устаревший аудит</td><td>BLOCK_SCOPE.md SYS-025.2: «per-iteration scope не реализован в VM» — на текущей сборке обе машины дают <code>1 1 1</code></td><td><span class="tag tag-ok">паритет подтверждён</span></td></tr>
+                <tr><td>NIT-001</td><td>дизайн языка</td><td>переменная и SUB с одним именем могут сосуществовать (в выражении побеждает переменная)</td><td><span class="tag tag-warn">на решение команды</span></td></tr>
+                <tr><td>NIT-002</td><td>документация</td><td>повторное использование счётчика FOR не было описано; теперь задокументировано</td><td><span class="tag tag-ok">устранено</span></td></tr>
+                <tr><td>NIT-003</td><td>UX диагностики</td><td>поле без SELF в методе TYPE даёт общий MB2001, а не подсказку про SELF</td><td><span class="tag tag-warn">предложение</span></td></tr>
+                <tr><td>NIT-004</td><td>дизайн языка</td><td>порядок объявления глобальных имён влияет на видимость (двухпроходное связывание не реализовано)</td><td><span class="tag tag-warn">на решение команды</span></td></tr>
+            </tbody>
+        </table>
+        <p class="muted">Критических багов в самом языке не обнаружено; расхождений между движками выполнения нет.</p>
+    </section>
+
+    <section>
+        <h2>Проверка читабельности для новичка</h2>
+        <p>Контрольная перечитка страниц «глазами начинающего программиста» (2026-08-26):</p>
+        <ul>
+            <li><span class="tag tag-ok">да</span> каждый термин объяснён при первом появлении;</li>
+            <li><span class="tag tag-ok">да</span> словарик покрывает все термины страниц (20 статей, включая добавленную «Компилятор»);</li>
+            <li><span class="tag tag-ok">да</span> у правил есть таблицы «можно/нельзя» и примеры с ожидаемым выводом;</li>
+            <li><span class="tag tag-ok">да</span> у каждой диагностики MB… есть пояснение «когда возникает / что делать»;</li>
+            <li><span class="tag tag-ok">да</span> жаргон binder/lowerer/VM/стек/литерал на страницах справочника отсутствует.</li>
+        </ul>
+        <p class="muted">По итогам перечитки внесены правки: статья «Компилятор» в словарик, пояснение слов «диагностика» и «компилятор» на странице variables-scope.html, замена англицизма «reuse-семантика» на «повторное использование» в отчётах.</p>
+    </section>
+
+    <section>
+        <h2>Открытые вопросы команде языка</h2>
+        <ol>
+            <li>Запрещать ли совпадение имени переменной и имени процедуры (NIT-001)?</li>
+            <li>Унифицировать ли счётчик FOR: всегда локальный или всегда переиспользование (NIT-002)?</li>
+            <li>Добавить ли специальную диагностику для полей без <code>SELF</code> в методах TYPE (NIT-003)?</li>
+            <li>Вводить ли двухпроходное связывание глобальных имён (NIT-004)?</li>
+        </ol>
+        <p>Детали, примеры воспроизведения и полная таблица верификации: <code>docs/audit/VARIABLES_SCOPE_AUDIT.md</code>.</p>
+    </section>
+
+    <section>
+        <h2>Как посмотреть</h2>
+        <p>Откройте <code>docs/manual/variables-scope.html</code> в браузере (навигация слева, «Переменные и константы» → «Имена, регистр и область видимости»). Примеры из раздела «Ручная проверка» запускаются в <code>Axiom.Ide</code>.</p>
+    </section>
+
+</main>
+</body>
+</html>

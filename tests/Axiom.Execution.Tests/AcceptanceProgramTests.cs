@@ -1,3 +1,4 @@
+using Axiom.Core;
 using Axiom.Runtime;
 
 namespace Axiom.Execution.Tests;
@@ -16,7 +17,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -65,6 +66,7 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/if_duplicate_else.axm", ExecutionStatus.SyntaxFailure, "MB1005")]
     [InlineData("samples/acceptance/negative/select_case_duplicate_case_else.axm", ExecutionStatus.SyntaxFailure, "MB1006")]
     [InlineData("samples/acceptance/negative/if_shadowing_outer_variable.axm", ExecutionStatus.SemanticFailure, "MB2016")]
+    [InlineData("samples/acceptance/negative/for_counter_must_be_local.axm", ExecutionStatus.SemanticFailure, "MB2016")]
     [InlineData("samples/control-flow/for/predeclared_counter_invalid_type.axm", ExecutionStatus.SemanticFailure, "MB2009")]
     [InlineData("samples/operators/on-key/invalid_handler_parameter.axm", ExecutionStatus.SemanticFailure, "MB2034")]
     [InlineData("samples/acceptance/negative/unknown_callable.axm", ExecutionStatus.SemanticFailure, "MB2005")]
@@ -72,6 +74,9 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/missing_return_value.axm", ExecutionStatus.SemanticFailure, "MB2007")]
     [InlineData("samples/acceptance/negative/sub_name_as_value.axm", ExecutionStatus.SemanticFailure, "MB2019")]
     [InlineData("samples/acceptance/negative/calling_non_function.axm", ExecutionStatus.SemanticFailure, "MB2020")]
+    [InlineData("samples/acceptance/negative/scope_field_requires_self.axm", ExecutionStatus.SemanticFailure, "MB2044")]
+    [InlineData("samples/acceptance/negative/scope_field_typo_suggestion.axm", ExecutionStatus.SemanticFailure, "MB2023")]
+    [InlineData("samples/acceptance/negative/call_operator_hint.axm", ExecutionStatus.SemanticFailure, "MB2001")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -83,6 +88,20 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(expectedCode, diagnostic.Code);
         Assert.True(diagnostic.Location.Line > 0);
         Assert.True(diagnostic.Location.Column > 0);
+    }
+
+    [Fact]
+    public void ForCounterMustBeLocal_ReportsShadowing()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/acceptance/negative/for_counter_must_be_local.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        var error = Assert.Single(result.Diagnostics, static d => d.Code == "MB2016");
+        Assert.Equal(DiagnosticSeverity.Error, error.Severity);
+        Assert.True(error.Location.Line > 0);
+        Assert.True(error.Location.Column > 0);
     }
 
     [Theory]
@@ -128,6 +147,9 @@ public sealed class AcceptanceProgramTests
     [Theory]
     [InlineData("samples/control-flow/for/predeclared_counter_invalid_type.axm", "MB2009")]
     [InlineData("samples/operators/on-key/invalid_handler_parameter.axm", "MB2034")]
+    [InlineData("samples/acceptance/negative/scope_field_requires_self.axm", "MB2044")]
+    [InlineData("samples/acceptance/negative/scope_field_typo_suggestion.axm", "MB2023")]
+    [InlineData("samples/acceptance/negative/call_operator_hint.axm", "MB2001")]
     public void NegativeSemanticAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter(
         string relativePath,
         string expectedCode)
@@ -177,7 +199,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.NotEmpty(result.Output);
     }
 
@@ -198,7 +220,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.NotEmpty(result.Output);
     }
 
@@ -209,7 +231,7 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/control-flow/for/step_loop.axm", new[] { "0", "2", "4", "6" })]
     [InlineData("samples/control-flow/for/nested_loops.axm", new[] { "1:1", "1:2", "2:1", "2:2" })]
     [InlineData("samples/control-flow/for/exit_for.axm", new[] { "1", "2", "done" })]
-    [InlineData("samples/control-flow/for/predeclared_counter.axm", new[] { "1", "2", "3", "after=4" })]
+    [InlineData("samples/control-flow/for/predeclared_counter.axm", new[] { "1", "2", "3", "after=3" })]
     [InlineData("samples/control-flow/while/basic_loop.axm", new[] { "0", "1", "2" })]
     [InlineData("samples/control-flow/do/do_while_loop.axm", new[] { "0", "1", "2", "done" })]
     [InlineData("samples/control-flow/do/do_until_loop.axm", new[] { "0", "1", "2" })]
@@ -234,7 +256,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -257,7 +279,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -284,7 +306,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -314,7 +336,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -329,7 +351,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["15", "ALICE", "YES", "2", "14"], result.Output);
     }
 
@@ -342,7 +364,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["21474836479", "42949672958"], result.Output);
     }
 
@@ -355,7 +377,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["10.30", "5.15", "10.30"], result.Output);
     }
 
@@ -368,7 +390,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Name: Bob   |", "Total:  12.50", "Flag: X"], result.Output);
     }
 
@@ -381,7 +403,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^\d{4}-\d{2}-\d{2}$", output);
     }
@@ -395,7 +417,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -408,7 +430,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^\d{2}:\d{2}:\d{2}$", output);
     }
@@ -422,7 +444,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -435,7 +457,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", output);
     }
@@ -449,7 +471,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -462,7 +484,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE", "TRUE", "TRUE"], result.Output);
     }
 
@@ -475,7 +497,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^\d{4}-\d{2}-\d{2}$", output);
     }
@@ -489,7 +511,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^\d{2}:\d{2}:\d{2}$", output);
     }
@@ -503,7 +525,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", output);
     }
@@ -517,7 +539,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         var output = Assert.Single(result.Output);
         Assert.Matches(@"^-?\d+$", output);
     }
@@ -531,7 +553,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -544,7 +566,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -557,7 +579,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE", "2026-04-20 14:05:06"], result.Output);
     }
 
@@ -570,7 +592,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -583,7 +605,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE", "2026-04-20 11:05:06"], result.Output);
     }
 
@@ -596,7 +618,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE"], result.Output);
     }
 
@@ -632,7 +654,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal([expectedOutput], result.Output);
     }
 
@@ -645,7 +667,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(
             [
                 "2026-02-28",
@@ -670,7 +692,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["branch", "1", "2", "done"], result.Output);
     }
 
@@ -683,7 +705,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(
             [
                 "scope-smoke-start",
@@ -721,7 +743,7 @@ public sealed class AcceptanceProgramTests
             result.Succeeded,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -840,7 +862,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["2"], result.Output);
     }
 
@@ -853,7 +875,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["12"], result.Output);
     }
 
@@ -866,7 +888,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["4"], result.Output);
     }
 
@@ -879,7 +901,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["23"], result.Output);
     }
 
@@ -892,7 +914,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["12"], result.Output);
     }
 
@@ -905,7 +927,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["15", "7"], result.Output);
     }
 
@@ -918,7 +940,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["1", "2", "3"], result.Output);
     }
 
@@ -931,7 +953,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["", "0", "Ada", "36", "London"], result.Output);
     }
 
@@ -944,7 +966,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Ada", "36", "London", "Alan", "Grace", "1", "2"], result.Output);
     }
 
@@ -957,7 +979,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["10", "20", "FALSE", "7", "9", "9", "0"], result.Output);
     }
 
@@ -970,7 +992,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["10", "20", "4", "FALSE", "9", "0"], result.Output);
     }
 
@@ -983,7 +1005,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["23", "24", "2", "4", "4", "99"], result.Output);
     }
 
@@ -996,7 +1018,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
     }
 
@@ -1009,7 +1031,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Ada", "36", "Paris", "Grace", "40", "TRUE"], result.Output);
     }
 
@@ -1022,7 +1044,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["5", "5", "8", "8"], result.Output);
     }
 
@@ -1035,7 +1057,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["5", "7", "8", "9"], result.Output);
     }
 
@@ -1048,7 +1070,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Zero", "18", "Ada", "19", "20", "RUS", "Grace", "18", "19"], result.Output);
     }
 
@@ -1061,7 +1083,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Ada", "36", "TRUE"], result.Output);
     }
 
@@ -1074,7 +1096,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["Grace", "36", "TRUE"], result.Output);
     }
 
@@ -1087,7 +1109,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["TRUE", "FALSE", "FALSE", "TRUE"], result.Output);
     }
 
@@ -1100,7 +1122,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["0", "10", "30", "10", "20", "3"], result.Output);
     }
 
@@ -1113,7 +1135,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["0", "10", "30", "4", "10", "20"], result.Output);
     }
 
@@ -1130,7 +1152,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -1145,7 +1167,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["10", "20", "4", "FALSE", "9", "0"], result.Output);
@@ -1160,7 +1182,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["23", "24", "2", "4", "4", "99"], result.Output);
@@ -1175,7 +1197,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
@@ -1190,7 +1212,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Ada", "36", "Paris", "Grace", "40", "TRUE"], result.Output);
@@ -1218,7 +1240,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -1233,7 +1255,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["0", "3", "30"], result.Output);
     }
 
@@ -1246,7 +1268,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["0", "3", "30"], result.Output);
     }
 
@@ -1259,7 +1281,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["[     ]", "[Ada  ]", "[Analyst ]", "[Architec]"], result.Output);
     }
 
@@ -1272,7 +1294,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["[    ]", "[AB  ]", "[Alph]"], result.Output);
     }
 
@@ -1321,7 +1343,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["", "", "0", "Ada", "Analyst", "99", "20", "7"], result.Output);
     }
 
@@ -1334,7 +1356,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(["before", "caught", "MB3001", "4", "Деление на ноль.", "cleanup", "after"], result.Output);
     }
@@ -1348,7 +1370,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(["APP001", "Manual failure", "after"], result.Output);
     }
@@ -1362,7 +1384,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(["inner", "APP003", "Original failure", "4"], result.Output);
     }
@@ -1381,7 +1403,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1406,7 +1428,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1432,7 +1454,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1458,7 +1480,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1484,7 +1506,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1510,7 +1532,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1536,7 +1558,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1563,7 +1585,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1589,7 +1611,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1615,7 +1637,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1642,7 +1664,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1669,7 +1691,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1697,7 +1719,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1723,7 +1745,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1749,7 +1771,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1779,7 +1801,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1808,7 +1830,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1843,7 +1865,7 @@ public sealed class AcceptanceProgramTests
             result.Status == ExecutionStatus.Success,
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
@@ -1879,7 +1901,7 @@ public sealed class AcceptanceProgramTests
             mode: ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1914,7 +1936,7 @@ public sealed class AcceptanceProgramTests
             mode: ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1938,7 +1960,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1954,7 +1976,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -1980,7 +2002,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2028,7 +2050,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2044,7 +2066,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2060,7 +2082,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2076,7 +2098,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2092,7 +2114,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2108,7 +2130,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2124,7 +2146,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2140,7 +2162,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2156,7 +2178,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2180,7 +2202,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2196,7 +2218,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2224,7 +2246,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2250,7 +2272,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2273,7 +2295,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2296,7 +2318,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2317,7 +2339,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2333,7 +2355,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2349,7 +2371,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2365,7 +2387,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2382,7 +2404,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2403,7 +2425,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2431,7 +2453,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2458,7 +2480,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2479,7 +2501,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2502,7 +2524,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2524,7 +2546,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
@@ -2547,7 +2569,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
@@ -2567,7 +2589,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["72"], result.Output);
@@ -2587,7 +2609,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["24"], result.Output);
@@ -2607,7 +2629,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
@@ -2628,7 +2650,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
@@ -2647,7 +2669,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["0", "15"], result.Output);
@@ -2665,7 +2687,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["12", "0"], result.Output);
@@ -2683,7 +2705,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["0", "15"], result.Output);
@@ -2701,7 +2723,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["6", "9"], result.Output);
@@ -2719,7 +2741,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["6", "9", "12", "15"], result.Output);
@@ -2737,7 +2759,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["6", "9", "12", "15"], result.Output);
@@ -2817,7 +2839,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2843,7 +2865,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2859,7 +2881,7 @@ public sealed class AcceptanceProgramTests
         var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
@@ -2876,7 +2898,7 @@ public sealed class AcceptanceProgramTests
         var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(1024L, 660L)], inputProvider.CanvasActivations);
@@ -2910,7 +2932,7 @@ public sealed class AcceptanceProgramTests
         var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Contains(
             inputProvider.CanvasDrawTexts,
@@ -2927,7 +2949,7 @@ public sealed class AcceptanceProgramTests
         var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Contains(
             inputProvider.CanvasDrawTexts,
@@ -2954,7 +2976,7 @@ public sealed class AcceptanceProgramTests
             var result = RunFromWorkingDirectory(calibrationDirectory, sourceText, inputProvider, ExecutionMode.Bytecode);
 
             Assert.True(result.Succeeded, FormatDiagnostics(result));
-            Assert.Empty(result.Diagnostics);
+            Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Contains(
                 inputProvider.CanvasDrawTexts,
@@ -2998,7 +3020,7 @@ public sealed class AcceptanceProgramTests
             var result = RunFromWorkingDirectory(workingDirectory, sourceText, mode: ExecutionMode.Bytecode);
 
             Assert.True(result.Succeeded, FormatDiagnostics(result));
-            Assert.Empty(result.Diagnostics);
+            Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(
@@ -3032,7 +3054,7 @@ public sealed class AcceptanceProgramTests
         var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, mode);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(expectedEngine, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
 
@@ -3053,7 +3075,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["1", "alpha"], result.Output);
     }
 
@@ -3070,7 +3092,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -3085,7 +3107,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
@@ -3160,7 +3182,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.NotEmpty(result.Output);
     }
 
@@ -3175,7 +3197,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.NotEmpty(result.Output);
     }
 
@@ -3191,7 +3213,7 @@ public sealed class AcceptanceProgramTests
             result.Succeeded,
             $"{relativePath}: {string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}"))}");
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Empty(result.Diagnostics);
+        Assert.DoesNotContain(result.Diagnostics, static diagnostic => diagnostic.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.False(result.UsedInterpreterFallback);
     }

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Счётчик FOR в Axiom: текущее поведение и предложения по улучшению</title>
+<style>
+  :root { --bg:#f7f5f0; --panel:#ffffff; --ink:#1f2430; --muted:#5c6470; --line:#e3ded2; --accent:#b3541e; --ok:#1e7d46; --warn:#9a6a00; --err:#b3261e; --blue:#2b5aa0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 "Segoe UI", system-ui, sans-serif; }
+  header { background:#2a2e3a; color:#fff; padding:28px 40px; }
+  header h1 { margin:0 0 6px; font-size:24px; }
+  header p { margin:0; color:#c9cedb; }
+  main { max-width:1000px; margin:0 auto; padding:28px 20px 60px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:20px 24px; margin:18px 0; }
+  .card h2 { margin:0 0 12px; font-size:19px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:13px; font-weight:600; }
+  .b-ok { background:#e3f3e9; color:var(--ok); }
+  .b-warn { background:#fdf3dc; color:var(--warn); }
+  .b-err { background:#fbe4e2; color:var(--err); }
+  .b-blue { background:#e4ebf7; color:var(--blue); }
+  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:14.5px; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#f1ede4; }
+  code { background:#efece4; border-radius:4px; padding:1px 5px; font-size:13.5px; }
+  pre { background:#f1ede4; border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:13.5px; }
+  .metrics { display:flex; gap:14px; flex-wrap:wrap; margin:12px 0; }
+  .metric { flex:1 1 160px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; text-align:center; }
+  .metric b { display:block; font-size:24px; }
+  .metric span { color:var(--muted); font-size:13px; }
+  .compare { display:flex; gap:14px; flex-wrap:wrap; margin:12px 0; }
+  .compare .side { flex:1 1 300px; background:var(--panel); border:1px solid var(--line); border-top:4px solid var(--blue); border-radius:8px; padding:16px 18px; }
+  .compare .side.reuse { border-top-color:var(--accent); }
+  .compare h3 { margin:0 0 8px; font-size:16px; }
+  .note { color:var(--muted); font-size:14px; }
+  .danger { border-left:4px solid var(--err); background:#fdf5f4; padding:12px 16px; border-radius:8px; margin:12px 0; }
+  ul { margin:8px 0 8px 20px; padding:0; }
+  li { margin:4px 0; }
+  .prio { display:inline-block; min-width:64px; text-align:center; padding:2px 8px; border-radius:999px; font-size:13px; font-weight:600; }
+  .p1 { background:#fbe4e2; color:var(--err); }
+  .p2 { background:#fdf3dc; color:var(--warn); }
+  .p3 { background:#e4ebf7; color:var(--blue); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Счётчик FOR в Axiom</h1>
+  <p>Текущее поведение (подтверждено пробами на текущей сборке, сессия 1113) и предложения по улучшению</p>
+</header>
+<main>
+
+  <div class="banner" style="background:#e4ebf7; border:1px solid var(--blue); border-radius:8px; padding:12px 16px; margin-bottom:16px;">
+    <p><b>Решение принято (сессия 1115): вариант B — счётчик FOR всегда локальный.</b>
+    Документ сохранён как история анализа. Реализовано: единая модель счётчика, переиспользование имени — ошибка <code>MB2016</code>,
+    неподходящий тип — <code>MB2009</code>; диагностики <code>MB2042</code>/<code>MB2043</code> удалены; корпус сэмплов и тесты мигрированы.</p>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><b>2</b><span>режима счётчика</span></div>
+    <div class="metric"><b>15</b><span>проб выполнено</span></div>
+    <div class="metric"><b>1</b><span>тихая ловушка (вложенные циклы)</span></div>
+    <div class="metric"><b>3</b><span>уровня улучшений</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Два режима счётчика</h2>
+    <div class="compare">
+      <div class="side">
+        <h3>Неявный счётчик</h3>
+        <p>Имя не объявлено заранее — цикл создаёт счётчик сам:</p>
+        <ul>
+          <li>видим только внутри тела цикла;</li>
+          <li>после <code>NEXT</code> недоступен: обращение даёт <code>MB2001</code>;</li>
+          <li>подчиняется блочной области: внутри <code>IF</code> исчезает вместе с блоком;</li>
+          <li>повторное объявление того же имени в теле цикла — <code>MB2002</code>;</li>
+          <li>вложенный неявный <code>FOR i</code> в <code>FOR i</code> — <code>MB2016</code>.</li>
+        </ul>
+        <pre>FOR i = 1 TO 3
+    PRINT i
+NEXT
+PRINT i   ' MB2001: имя 'i' не объявлено</pre>
+      </div>
+      <div class="side reuse">
+        <h3>Переиспользуемый счётчик</h3>
+        <p>Переменная <code>INTEGER</code>/<code>LONG</code>/<code>DOUBLE</code> с тем же именем уже объявлена — цикл использует её:</p>
+        <ul>
+          <li>после нормального завершения хранит значение «на шаг за концом»: <code>FOR i = 1 TO 3</code> → <code>i = 4</code>;</li>
+          <li>после <code>EXIT FOR</code> хранит значение на момент выхода;</li>
+          <li>доступна и после цикла (паттерн «нужно итоговое значение»);</li>
+          <li>работает и с глобальной переменной из процедуры;</li>
+          <li>регистр имени не важен: <code>FOR I</code> и <code>DIM i</code> — одна переменная.</li>
+        </ul>
+        <pre>DIM i AS INTEGER = 0
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+PRINT i   ' 4 — значение «на шаг за концом»</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Проверенные факты (пробы на текущей сборке)</h2>
+    <table>
+      <tr><th>Сценарий</th><th>Результат</th></tr>
+      <tr><td>Неявный счётчик, обращение после <code>NEXT</code></td><td><code>MB2001</code> (и в процедуре, и в блоке <code>IF</code>)</td></tr>
+      <tr><td>Существующая переменная как счётчик, нормальное завершение</td><td>вывод <code>1 2 3</code>, после цикла <code>i = 4</code></td></tr>
+      <tr><td>Существующая переменная как счётчик, <code>EXIT FOR</code></td><td>после цикла <code>i = 3</code> (значение на момент выхода)</td></tr>
+      <tr><td><code>CONST</code> как счётчик</td><td><code>MB2010</code> «Нельзя присваивать значение константе»</td></tr>
+      <tr><td>Счётчик <code>STRING</code></td><td><code>MB2009</code> (допустимы только INTEGER/LONG/DOUBLE)</td></tr>
+      <tr><td>Счётчик <code>DOUBLE</code></td><td>работает: <code>0.5 1.5 2.5</code>, после цикла <code>3.5</code></td></tr>
+      <tr><td>Последовательные циклы с одним именем</td><td>работают: первый неявный счётчик исчезает, второй создаётся заново</td></tr>
+      <tr><td>Регистр имени счётчика</td><td>не важен: <code>FOR I</code> + <code>DIM i</code> — одна переменная</td></tr>
+      <tr><td><code>DIM i</code> внутри тела цикла с неявным <code>FOR i</code></td><td><code>MB2002</code> (дубликат в области видимости)</td></tr>
+      <tr><td>Вложенный неявный <code>FOR i</code> в <code>FOR i</code></td><td><code>MB2016</code> «В цикле FOR нельзя объявить его повторно»</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Главная ловушка: вложенные циклы с переиспользуемым счётчиком</h2>
+    <div class="danger">
+      <p><strong>Внутренний <code>FOR i</code> внутри внешнего <code>FOR i</code>, когда переменная объявлена заранее, молча ломает внешний цикл.</strong> Диагностики нет — цикл просто выполняется не так, как ожидалось:</p>
+      <pre>DIM i AS INTEGER = 0
+FOR i = 1 TO 3
+    FOR i = 1 TO 2        ' переиспользует СЧЁТЧИК ВНЕШНЕГО цикла
+        PRINT "in " + STR(i)
+    NEXT                  ' после внутреннего цикла i = 3
+    PRINT "out " + STR(i) ' печатает 3, а не 1
+NEXT                      ' i = 4 — внешний цикл завершился за ОДНУ итерацию
+PRINT i</pre>
+      <p><strong>Реальный вывод:</strong> <code>in 1 | in 2 | out 3 | 4</code> — внешний цикл выполнился один раз вместо трёх, без единого предупреждения. Для новичка это самый опасный сценарий из всех.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Предложения по улучшению</h2>
+    <table>
+      <tr><th>Приоритет</th><th>Уровень</th><th>Предложение</th><th>Почему</th><th>Статус</th></tr>
+      <tr>
+        <td><span class="prio p1">P1</span></td>
+        <td>Диагностика</td>
+        <td><b>Ошибка для вложенного переиспользования:</b> внутренний <code>FOR i</code>, переиспользующий счётчик внешнего цикла, — новая диагностика <code>MB2042</code>: «Внутренний цикл FOR переиспользует счётчик внешнего цикла 'i' и сломает его; используйте другое имя».</td>
+        <td>Сейчас поведение тихое и почти наверняка не то, что хотел автор. Это единственный сценарий, где я бы предложил <b>ошибку</b>, а не предупреждение: правильного использования у переиспользования во вложенном цикле нет.</td>
+        <td><b>Заменено вариантом B</b> (сессия 1115): переиспользование запрещено контрактом, ошибка MB2042 удалена.</td>
+      </tr>
+      <tr>
+        <td><span class="prio p2">P2</span></td>
+        <td>Диагностика</td>
+        <td><b>Предупреждение при переиспользовании</b> существующей переменной (в стиле MB2045/NIT-001): <code>MB2043</code> «Цикл FOR переиспользует переменную 'i'; после NEXT она сохранит итоговое значение».</td>
+        <td>Режим переиспользования — осознанная фича (паттерн «нужно значение после цикла»), поэтому не ошибка, но новичок часто не ожидает, что его <code>i</code> изменится. Семантика не меняется.</td>
+        <td><b>Заменено вариантом B</b> (сессия 1115): переиспользование — теперь ошибка MB2016, предупреждение MB2043 удалено.</td>
+      </tr>
+      <tr>
+        <td><span class="prio p2">P2</span></td>
+        <td>Документация</td>
+        <td>В <code>docs/manual/for.html</code> — раздел «Значение счётчика после цикла»: итоговое значение «на шаг за концом» при нормальном завершении; значение на момент выхода при <code>EXIT FOR</code>; явный пример-ловушка вложенных циклов.</td>
+        <td>Сейчас документированы два режима, но не сказано, какое именно значение остаётся в переменной и почему вложенные циклы с одним именем опасны.</td>
+        <td><b>Переписано</b> (сессия 1115): раздел описывает единую модель локального счётчика; строки MB2042/MB2043 удалены из <code>diagnostics.html</code>.</td>
+      </tr>
+      <tr>
+        <td><span class="prio p2">P2</span></td>
+        <td>UX</td>
+        <td>Подсказки в существующих кодах: <code>MB2009</code> — «объявите счётчик через <code>DIM</code> как <code>INTEGER</code>/<code>LONG</code>/<code>DOUBLE</code>»; <code>MB2010</code> — «для изменяемого счётчика используйте <code>DIM</code>, а не <code>CONST</code>».</td>
+        <td>Диагностики уже точные, не хватает только «что делать дальше».</td>
+        <td><b>Переписано</b> (сессия 1115): подсказки MB2009/MB2016 объясняют контракт «счётчик FOR всегда локальный».</td>
+      </tr>
+      <tr>
+        <td><span class="prio p3">P3</span></td>
+        <td>Дизайн языка</td>
+        <td><b>Вариант A (рекомендуется):</b> сохранить два режима как есть, добавить P1/P2. Паттерн QuickBASIC «счётчик нужен после цикла» продолжает работать.</td>
+        <td>Ничего не ломает, закрывает главную ловушку.</td>
+        <td><b>Заменён вариантом B</b> (сессия 1115): два режима счётчика отменены, модель одна.</td>
+      </tr>
+      <tr>
+        <td><span class="prio p3">P3</span></td>
+        <td>Дизайн языка</td>
+        <td><b>Вариант B (не рекомендуется):</b> счётчики всегда локальны для цикла (стиль C#/Python), переиспользование запрещено.</td>
+        <td>Ломает существующие программы и документацию («после цикла <code>i = 4</code>»), лишает паттерна «итоговое значение». Только если команда языка явно захочет современной строгости.</td>
+        <td><b>Принят и реализован</b> (сессия 1115): счётчик FOR всегда локальный, переиспользование — ошибка MB2016.</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Итог</h2>
+    <p>Ядро поведения корректное и предсказуемое: регистронезависимость, контроль типа, запрет констант. Единственный реальный дефект — <b>тихая поломка вложенных циклов</b> при переиспользовании счётчика. В сессии 1114 дефект закрыт диагностиками MB2042/MB2043 (вариант A). В сессии 1115 команда языка приняла <b>вариант B</b>: счётчик FOR всегда локальный, ловушка вложенных циклов исчезает на уровне контракта, а не диагностики. MB2042/MB2043 удалены; переиспользование имени — ошибка MB2016, неподходящий тип — MB2009; корпус сэмплов (617 файлов) и все тестовые проекты мигрированы; ментальная модель совпадает с C#/Python/JS.</p>
+  </div>
+
+</main>
+</body>
+</html>

@@ -303,8 +303,6 @@ SUB InitMaze()                                                                  
     mazeCols = LEN(maze(1))                                                                     ' Вычисляем число столбцов по длине первой строки.
     pelletsLeft = 0                                                                             ' Перед пересчётом начинаем с нуля точек.
 
-    DIM rowIndex AS INTEGER                                                                     ' Номер текущей строки при обходе карты.
-    DIM columnIndex AS INTEGER                                                                  ' Номер текущего столбца при обходе карты.
     DIM tileText AS STRING                                                                      ' Символ текущей клетки карты.
 
     FOR rowIndex = 1 TO mazeRows                                                                ' Проходим все строки карты.
@@ -472,8 +470,6 @@ SUB DrawVisibleWalls(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGE
 END SUB                                                                                         ' Завершаем рисование стен.
 
 SUB DrawVisiblePellets(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
-    DIM rowIndex AS INTEGER                                                                     ' Номер строки точки, которую сейчас рисуем.
-    DIM columnIndex AS INTEGER                                                                  ' Номер столбца точки, которую сейчас рисуем.
     DIM tileText AS STRING                                                                      ' Символ клетки, чтобы понять, есть ли здесь точка.
 
     FOR rowIndex = firstRow TO lastRow                                                          ' Проходим все видимые строки.
@@ -623,8 +619,6 @@ END SUB                                                                         
 
 SUB SaveAllCalibrationValues()                                                                  ' Процедура перезаписывает файл свежим полным снимком всех координат точек.
     DIM ok AS BOOLEAN = TRUE                                                                    ' Общий флаг успеха полной записи.
-    DIM rowIndex AS INTEGER                                                                     ' Номер строки при обходе таблицы вертикальных центров.
-    DIM colIndex AS INTEGER                                                                     ' Номер столбца при обходе таблицы горизонтальных центров.
     DIM snapshotText AS STRING = "' Полный снимок текущей калибровки maze_chase" + CHR(13) + CHR(10) ' Начинаем текст файла с понятного заголовка снимка.
 
     FOR rowIndex = 1 TO mazeRows                                                                ' Проходим все строки таблицы центров.
@@ -790,7 +784,6 @@ FUNCTION SpriteSlot(dir AS INTEGER, frameNumber AS INTEGER) AS INTEGER          
 END FUNCTION                                                                                    ' Завершаем вычисление индекса спрайта.
 
 FUNCTION ChooseGhostDirection() AS INTEGER                                                      ' Функция выбирает, куда призраку идти дальше.
-    DIM candidate AS INTEGER                                                                    ' Кандидат на новое направление.
     DIM bestDirection AS INTEGER = 0                                                            ' Лучшее найденное направление.
     DIM bestScore AS INTEGER = 1000000                                                          ' Лучшая оценка расстояния до героя.
     DIM availableMoves AS INTEGER = CountAvailableMoves(ghostCol, ghostRow)                     ' Сколько путей доступно призраку в текущем узле.
@@ -826,7 +819,6 @@ FUNCTION ChooseGhostDirection() AS INTEGER                                      
 END FUNCTION                                                                                    ' Завершаем выбор направления призрака.
 
 FUNCTION CountAvailableMoves(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER                 ' Функция считает, сколько ходов доступно из текущей клетки.
-    DIM candidate AS INTEGER                                                                    ' Кандидат на направление движения.
     DIM total AS INTEGER = 0                                                                    ' Счётчик доступных направлений.
 
     FOR candidate = 1 TO 4                                                                     ' Проверяем все четыре стороны.

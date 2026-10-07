@@ -1,0 +1,29 @@
+' Глобальные переменные видны внутри процедур; локальные - свежие при каждом вызове.
+' Ожидаемый вывод:
+' 100
+' 101
+' 1
+' 1
+
+DIM counter AS INTEGER = 100
+
+SUB Show()
+    PRINT counter
+END SUB
+
+SUB Bump()
+    counter = counter + 1
+END SUB
+
+Show()
+Bump()
+PRINT counter
+
+SUB Test()
+    DIM n AS INTEGER = 0
+    n = n + 1
+    PRINT n
+END SUB
+
+Test()
+Test()

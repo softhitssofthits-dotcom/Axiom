@@ -140,6 +140,121 @@ public sealed class ExecutionPipelineTests
     }
 
     [Fact]
+    public void Run_WithWarningDiagnostic_SucceedsAndCarriesWarning()
+    {
+        var result = Run("""
+            SUB Foo()
+            END SUB
+
+            DIM Foo AS INTEGER = 7
+            PRINT Foo
+            """);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["7"], result.Output);
+
+        var warning = Assert.Single(result.Diagnostics);
+        Assert.Equal(DiagnosticCodes.NameClassCollision, warning.Code);
+        Assert.Equal(DiagnosticSeverity.Warning, warning.Severity);
+    }
+
+    [Fact]
+    public void Run_InterpreterMode_WithWarningDiagnostic_SucceedsAndCarriesWarning()
+    {
+        var pipeline = new AxiomExecutionPipeline();
+
+        var result = pipeline.Run(new ExecutionRequest(
+            """
+            DIM Foo AS INTEGER = 7
+
+            SUB Foo()
+            END SUB
+
+            PRINT Foo
+            """,
+            mode: ExecutionMode.Interpreter));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["7"], result.Output);
+
+        var warning = Assert.Single(result.Diagnostics);
+        Assert.Equal(DiagnosticCodes.NameClassCollision, warning.Code);
+        Assert.Equal(DiagnosticSeverity.Warning, warning.Severity);
+    }
+
+    [Fact]
+    public void Run_WithForCounterReuse_ReportsError()
+    {
+        var result = Run("""
+            DIM i AS INTEGER
+
+            FOR i = 1 TO 3
+                PRINT i
+            NEXT
+            """);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+
+        var error = Assert.Single(result.Diagnostics, static d => d.Code == "MB2016");
+        Assert.Equal(DiagnosticSeverity.Error, error.Severity);
+        Assert.Contains("локальный", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Run_InterpreterMode_WithForCounterReuse_ReportsError()
+    {
+        var pipeline = new AxiomExecutionPipeline();
+
+        var result = pipeline.Run(new ExecutionRequest(
+            """
+            DIM i AS INTEGER
+
+            FOR i = 1 TO 3
+                PRINT i
+            NEXT
+            """,
+            mode: ExecutionMode.Interpreter));
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+
+        var error = Assert.Single(result.Diagnostics, static d => d.Code == "MB2016");
+        Assert.Equal(DiagnosticSeverity.Error, error.Severity);
+    }
+
+    [Fact]
+    public void Run_WithImplicitForCounter_SucceedsWithoutDiagnostics()
+    {
+        var result = Run("""
+            FOR i = 1 TO 3
+                PRINT i
+            NEXT
+            """);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["1", "2", "3"], result.Output);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Run_WithCounterValueCopiedInsideBody_Succeeds()
+    {
+        var result = Run("""
+            DIM afterValue AS INTEGER
+
+            FOR i = 1 TO 3
+                PRINT i
+                afterValue = i
+            NEXT
+
+            PRINT "after="; afterValue
+            """);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["1", "2", "3", "after=3"], result.Output);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
     public void Run_WithInterpreterMode_UsesInterpreterEngine()
     {
         var pipeline = new AxiomExecutionPipeline();

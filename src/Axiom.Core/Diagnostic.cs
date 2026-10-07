@@ -1,8 +1,14 @@
 namespace Axiom.Core;
 
+public enum DiagnosticSeverity
+{
+    Error = 0,
+    Warning = 1,
+}
+
 public sealed record Diagnostic
 {
-    public Diagnostic(string code, string message, TextLocation location)
+    public Diagnostic(string code, string message, TextLocation location, DiagnosticSeverity severity = DiagnosticSeverity.Error)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -17,6 +23,7 @@ public sealed record Diagnostic
         Code = code;
         Message = message;
         Location = location;
+        Severity = severity;
     }
 
     public string Code { get; }
@@ -24,6 +31,8 @@ public sealed record Diagnostic
     public string Message { get; }
 
     public TextLocation Location { get; }
+
+    public DiagnosticSeverity Severity { get; }
 
     public override string ToString() => $"{Code}: {Message} ({Location})";
 }

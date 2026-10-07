@@ -4,7 +4,6 @@
 SCREEN 0
 PRINT "SCREEN 0 text scroll"
 
-DIM i AS INTEGER
 FOR i = 1 TO 27
     PRINT "line "; i
 NEXT

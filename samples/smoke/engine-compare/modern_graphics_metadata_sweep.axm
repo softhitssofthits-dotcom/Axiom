@@ -2,7 +2,6 @@
 ' Сценарий нужен для сравнения Interpreter и BytecodeVm на IMAGEWIDTH, IMAGEHEIGHT, SPRITEWIDTH, SPRITEHEIGHT и SPRITECOUNT.
 
 DIM PASSES AS INTEGER = 3000
-DIM index AS INTEGER
 DIM total AS LONG
 
 DIM background AS IMAGE

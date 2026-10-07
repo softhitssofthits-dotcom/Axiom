@@ -1,4 +1,5 @@
-﻿using Axiom.Parsing;
+using Axiom.Core;
+using Axiom.Parsing;
 using Axiom.Semantics;
 using System.Text;
 
@@ -197,7 +198,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var host = new TestRuntimeHost(inputs);
         var result = Interpreter.Execute(program, host);
@@ -210,7 +211,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var result = Interpreter.Execute(program, host);
         return (program, host, result);
@@ -222,7 +223,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var host = new TestRuntimeHost([], keys: keys);
         var result = Interpreter.Execute(program, host);
@@ -235,7 +236,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var host = new TestRuntimeHost([], pressedKeys: pressedKeys);
         var result = Interpreter.Execute(program, host);
@@ -251,7 +252,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var host = new TestRuntimeHost([], keys: keys, pressedKeys: pressedKeys);
         var result = Interpreter.Execute(program, host);
@@ -270,7 +271,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var host = new TestRuntimeHost([], mouseX: mouseX, mouseY: mouseY, pressedMouseButtons: pressedMouseButtons, mousePresses: mousePresses, mouseEvents: mouseEvents);
         var result = Interpreter.Execute(program, host);
@@ -305,7 +306,7 @@ END TRY
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var host = new TestRuntimeHost(inputs, localNow, localTimeZone, namedTimeZones);
         var result = Interpreter.Execute(program, host);

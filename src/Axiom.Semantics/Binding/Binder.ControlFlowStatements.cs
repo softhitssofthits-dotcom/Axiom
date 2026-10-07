@@ -170,60 +170,66 @@ public sealed partial class Binder
     private BoundStatement BindForStatement(ForStatementSyntax statement)
     {
         var startExpression = BindExpression(statement.StartExpression);
-        var reusesExistingVariable = _scope.TryLookupVariable(statement.Identifier.Text, out var existingVariable)
-            && existingVariable is not null
-            && !_implicitForVariables.Contains(existingVariable);
 
-        var provisionalType = reusesExistingVariable
-            ? existingVariable!.Type
-            : startExpression.Type == TypeSymbol.Double ? TypeSymbol.Double : TypeSymbol.Integer;
+        // Вариант B (сессия 1107): счётчик FOR всегда создаётся самим циклом и живёт
+        // только внутри тела. Переиспользование существующей переменной запрещено:
+        // занятое имя — это ошибка MB2016, а для имени с неподходящим типом — MB2009.
+        var provisionalType = startExpression.Type == TypeSymbol.Double ? TypeSymbol.Double : TypeSymbol.Integer;
 
         EnterScope(DeclarationContexts.ForLoop);
 
         try
         {
-            if (!reusesExistingVariable)
-            {
-                var provisionalVariable = new VariableSymbol(
-                    statement.Identifier.Text,
-                    provisionalType,
-                    isReadOnly: false,
-                    isGlobal: false);
-
-                _scope.TryDeclareVariable(provisionalVariable);
-            }
+            _scope.TryDeclareVariable(new VariableSymbol(
+                statement.Identifier.Text,
+                provisionalType,
+                isReadOnly: false,
+                isGlobal: false));
 
             var boundEndExpression = BindExpression(statement.EndExpression);
             var boundStepExpression = statement.StepClause is null
                 ? null
                 : BindExpression(statement.StepClause.Expression);
 
-            var variableType = reusesExistingVariable
-                ? existingVariable!.Type
-                : InferForControlVariableType(startExpression, boundEndExpression, boundStepExpression);
-
-            if (variableType == TypeSymbol.Error || !IsValidForControlVariableType(variableType))
-            {
-                ReportInvalidForControlVariable(statement.Identifier.Text, variableType, statement.Identifier.Location);
-            }
-
-            if (reusesExistingVariable && existingVariable!.IsReadOnly)
-            {
-                ReportAssignToConst(existingVariable.Name, statement.Identifier.Location);
-            }
+            var variableType = InferForControlVariableType(startExpression, boundEndExpression, boundStepExpression);
 
             LeaveScope();
             EnterScope(DeclarationContexts.ForLoop);
 
-            VariableSymbol variable;
-            var declaresVariable = !reusesExistingVariable;
+            // Имя занято во внешней области (DIM, CONST, параметр, активный счётчик
+            // внешнего цикла): локальный счётчик FOR объявить нельзя.
+            var nameCollision = _scope.TryLookupVariable(statement.Identifier.Text, out var existingVariable)
+                && existingVariable is not null
+                && !_implicitForVariables.Contains(existingVariable);
 
-            if (reusesExistingVariable)
+            VariableSymbol variable;
+            if (nameCollision)
             {
-                variable = existingVariable!;
+                // Занявшее имя не годится в счётчики по типу — говорим про тип (MB2009)
+                // и не объявляем локальную переменную, чтобы не было каскада MB2009 + MB2016.
+                if (!IsValidForControlVariableType(existingVariable!.Type))
+                {
+                    ReportInvalidForControlVariable(statement.Identifier.Text, existingVariable.Type, statement.Identifier.Location);
+                    variable = new VariableSymbol(statement.Identifier.Text, TypeSymbol.Error, isReadOnly: false, isGlobal: false);
+                }
+                else
+                {
+                    variable = new VariableSymbol(
+                        statement.Identifier.Text,
+                        variableType == TypeSymbol.Error ? TypeSymbol.Integer : variableType,
+                        isReadOnly: false,
+                        isGlobal: false);
+
+                    TryDeclareScopedVariable(variable, statement.Identifier.Location); // MB2016: имя занято
+                }
             }
             else
             {
+                if (variableType == TypeSymbol.Error || !IsValidForControlVariableType(variableType))
+                {
+                    ReportInvalidForControlVariable(statement.Identifier.Text, variableType, statement.Identifier.Location);
+                }
+
                 variable = new VariableSymbol(
                     statement.Identifier.Text,
                     variableType == TypeSymbol.Error ? TypeSymbol.Integer : variableType,
@@ -260,7 +266,7 @@ public sealed partial class Binder
                 _forDepth--;
             }
 
-            return new BoundForStatement(GetLocation(statement), variable, declaresVariable, startExpression, endExpression, stepExpression, statements);
+            return new BoundForStatement(GetLocation(statement), variable, declaresVariable: true, startExpression, endExpression, stepExpression, statements);
         }
         finally
         {

@@ -318,7 +318,7 @@ public sealed class AxiomExecutionPipeline
         {
             return CreateExecutionResult(
                 ExecutionStatus.BackendFailure,
-                compilation.BackendDiagnostics,
+                compilation.Diagnostics.Concat(compilation.BackendDiagnostics).ToArray(),
                 [],
                 request.DiagnosticSink,
                 request.Mode,
@@ -330,10 +330,42 @@ public sealed class AxiomExecutionPipeline
 
         var execution = RunCompiled(compilation.CompiledProgram!, request);
         return WithPreparationDurations(
-            execution,
+            MergeFrontendDiagnostics(execution, compilation.Diagnostics),
             compilation.FrontendPreparationDuration,
             compilation.LoweringDuration,
             compilation.BytecodeEmissionDuration);
+    }
+
+    private static ExecutionResult MergeFrontendDiagnostics(
+        ExecutionResult execution,
+        IReadOnlyList<Diagnostic> frontendDiagnostics)
+    {
+        if (frontendDiagnostics.Count == 0)
+        {
+            return execution;
+        }
+
+        var merged = new List<Diagnostic>(frontendDiagnostics.Count + execution.Diagnostics.Count);
+        merged.AddRange(frontendDiagnostics);
+        merged.AddRange(execution.Diagnostics);
+
+        return new ExecutionResult(
+            execution.Status,
+            merged,
+            execution.Output,
+            execution.RequestedMode,
+            execution.ActualEngine,
+            execution.UsedInterpreterFallback,
+            execution.InterpreterFallbackReason,
+            execution.FrontendPreparationDuration,
+            execution.LoweringDuration,
+            execution.BytecodeEmissionDuration,
+            execution.RuntimeExecutionDuration,
+            execution.UsedCompiledCache,
+            execution.UsedLoweredCache,
+            execution.UsedBytecodeCache,
+            execution.StopState,
+            execution.PendingOutput);
     }
 
     public ExecutionResult RunCompiled(CompiledProgram compiledProgram, ExecutionRequest request)
@@ -386,8 +418,10 @@ public sealed class AxiomExecutionPipeline
         progressReporter?.Report(55);
         var boundProgram = Binder.Bind(syntax, out var semanticDiagnostics);
 
-        if (semanticDiagnostics.Count > 0)
+        if (semanticDiagnostics.Any(static diagnostic => diagnostic.Severity != DiagnosticSeverity.Warning))
         {
+            // Предупреждения (например, MB2045 о совпадении имён переменной и процедуры)
+            // не блокируют компиляцию и выполнение — они остаются в списке диагностик.
             frontendStopwatch.Stop();
             progressReporter?.Report(100);
             return new CompilationResult(
@@ -412,7 +446,7 @@ public sealed class AxiomExecutionPipeline
             progressReporter?.Report(100);
             return new CompilationResult(
                 CompilationStatus.Success,
-                [],
+                semanticDiagnostics.ToArray(),
                 compiledProgram,
                 loweringResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
                 backendSucceeded: false,
@@ -438,7 +472,7 @@ public sealed class AxiomExecutionPipeline
         {
             return new CompilationResult(
                 CompilationStatus.Success,
-                [],
+                semanticDiagnostics.ToArray(),
                 compiledProgram,
                 bytecodeResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
                 backendSucceeded: false,
@@ -453,7 +487,7 @@ public sealed class AxiomExecutionPipeline
         {
             return new CompilationResult(
                 CompilationStatus.Success,
-                [],
+                semanticDiagnostics.ToArray(),
                 compiledProgram,
                 [snapshotDiagnostic],
                 backendSucceeded: false,
@@ -472,7 +506,7 @@ public sealed class AxiomExecutionPipeline
 
         return new CompilationResult(
             CompilationStatus.Success,
-            [],
+            semanticDiagnostics.ToArray(),
             compiledProgram,
             backendDiagnostics: [],
             backendSucceeded: true,

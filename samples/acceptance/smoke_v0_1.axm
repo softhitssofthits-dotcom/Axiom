@@ -8,8 +8,8 @@ FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER
     RETURN a + b
 END FUNCTION
 
-FUNCTION IsAdult(age AS INTEGER) AS BOOLEAN
-    RETURN age >= 18
+FUNCTION IsAdult(inputAge AS INTEGER) AS BOOLEAN
+    RETURN inputAge >= 18
 END FUNCTION
 
 FUNCTION Half(value AS DOUBLE) AS DOUBLE
@@ -22,9 +22,9 @@ SUB PrintHeader(title AS STRING)
     PRINT "=============================="
 END SUB
 
-SUB PrintUser(name AS STRING, age AS INTEGER)
+SUB PrintUser(name AS STRING, inputAge AS INTEGER)
     PRINT "User: " + name
-    PRINT "Age: " + STR(age)
+    PRINT "Age: " + STR(inputAge)
 END SUB
 
 DIM userName AS STRING

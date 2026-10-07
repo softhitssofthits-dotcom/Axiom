@@ -287,7 +287,6 @@ FUNCTION ChoosePlayerScriptDirection(lapIndex AS INTEGER, frameIndex AS INTEGER)
 END FUNCTION
 
 FUNCTION ChooseGhostDirection() AS INTEGER
-    DIM candidate AS INTEGER
     DIM bestDirection AS INTEGER = 0
     DIM bestScore AS INTEGER = 1000000
     DIM availableMoves AS INTEGER = CountAvailableMoves(ghostCol, ghostRow)

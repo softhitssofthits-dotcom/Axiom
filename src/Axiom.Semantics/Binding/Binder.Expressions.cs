@@ -49,6 +49,12 @@ public sealed partial class Binder
             return new BoundConversionExpression(boundExpression.Location, expectedType, boundExpression);
         }
 
+        if (expectedType is FunctionTypeSymbol
+            && TryReportFunctionReferenceNote(boundExpression, expectedType, GetLocation(syntax)))
+        {
+            return new BoundErrorExpression(GetLocation(syntax));
+        }
+
         ReportTypeMismatch(boundExpression.Type, expectedType, GetLocation(syntax));
         return new BoundErrorExpression(GetLocation(syntax));
     }

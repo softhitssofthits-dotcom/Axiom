@@ -1,4 +1,4 @@
-﻿using Axiom.Parsing;
+using Axiom.Parsing;
 using Axiom.Semantics;
 using System.Text;
 
@@ -564,8 +564,8 @@ TYPE Person
     Age AS INTEGER
 END TYPE
 
-SUB Birthday(BYREF user AS Person)
-    user.Age = user.Age + 1
+SUB Birthday(BYREF person AS Person)
+    person.Age = person.Age + 1
 END SUB
 
 DIM user AS Person
@@ -610,9 +610,9 @@ TYPE Person
     Age AS INTEGER
 END TYPE
 
-SUB Rewrite(user AS Person)
-    user.Name = "Changed"
-    user.Age = 99
+SUB Rewrite(person AS Person)
+    person.Name = "Changed"
+    person.Age = 99
 END SUB
 
 DIM user AS Person

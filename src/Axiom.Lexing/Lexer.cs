@@ -547,7 +547,7 @@ public sealed class Lexer
         return CreateToken(TokenKind.BadToken, _position++, 1);
     }
 
-    private Token ReadInterpolatedStringText()
+    private Token? ReadInterpolatedStringText()
     {
         var start = _position;
         var content = new System.Text.StringBuilder();

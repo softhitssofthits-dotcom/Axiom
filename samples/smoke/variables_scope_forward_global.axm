@@ -1,0 +1,24 @@
+' Глобальные переменные видны в процедурах независимо от порядка объявления (NIT-004).
+' Ожидаемый вывод:
+' 42
+' 105
+
+SUB PrintX()
+    PRINT x
+END SUB
+
+TYPE Point
+    X AS INTEGER
+    FUNCTION Twice() AS INTEGER
+        RETURN SELF.X + offset
+    END FUNCTION
+END TYPE
+
+DIM x AS INTEGER = 42
+
+PrintX()
+
+DIM offset AS INTEGER = 100
+DIM p AS Point
+p.X = 5
+PRINT p.Twice()

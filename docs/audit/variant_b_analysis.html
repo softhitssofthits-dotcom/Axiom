@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вариант B: всегда локальные счётчики FOR — подробный разбор</title>
+<style>
+  :root { --bg:#f7f5f0; --panel:#ffffff; --ink:#1f2430; --muted:#5c6470; --line:#e3ded2; --accent:#b3541e; --ok:#1e7d46; --warn:#9a6a00; --err:#b3261e; --blue:#2b5aa0; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 "Segoe UI", system-ui, sans-serif; }
+  header { background:#2a2e3a; color:#fff; padding:28px 40px; }
+  header h1 { margin:0 0 6px; font-size:24px; }
+  header p { margin:0; color:#c9cedb; }
+  main { max-width:1000px; margin:0 auto; padding:28px 20px 60px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:20px 24px; margin:16px 0; }
+  h2 { font-size:20px; margin:0 0 12px; }
+  h3 { font-size:17px; margin:18px 0 8px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#f0ede6; font-weight:600; }
+  code { background:#f0ede6; padding:1px 6px; border-radius:4px; font-size:14px; }
+  pre { background:#2a2e3a; color:#e8eaf0; padding:14px 16px; border-radius:8px; overflow:auto; font-size:14px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:13px; font-weight:600; }
+  .b-ok { background:#e4f2e9; color:var(--ok); }
+  .b-warn { background:#fdf3dc; color:var(--warn); }
+  .b-err { background:#fbe4e2; color:var(--err); }
+  .b-blue { background:#e4ebf7; color:var(--blue); }
+  .compare { display:flex; gap:16px; flex-wrap:wrap; }
+  .compare > div { flex:1; min-width:280px; border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .compare h3 { margin-top:0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Вариант B: «счётчик FOR всегда локальный»</h1>
+  <p>Подробный разбор · <b>решение принято и реализовано в сессии 1115</b> · Axiom</p>
+</header>
+<main>
+
+  <div class="card" style="background:#e4ebf7; border:1px solid var(--blue, #2f5aa8); border-radius:8px; padding:12px 16px;">
+    <p><b>Решение (сессия 1115): вариант B принят.</b> Счётчик FOR всегда локальный — одна модель вместо двух. Причины: проще учить и объяснять; новичок не может случайно изменить свою переменную циклом; ловушка вложенных циклов исчезает на уровне контракта (MB2042 не нужен); ментальная модель совпадает с C#/Python/JS. Реализация: переиспользование имени — ошибка <code>MB2016</code>, неподходящий тип — <code>MB2009</code>; <code>MB2042</code>/<code>MB2043</code> удалены; корпус сэмплов мигрирован (включая <code>maze_chase.axm</code> — копирование итога внутри тела); рекомендация ниже («остаться на варианте A») исторически заменена решением команды языка.</p>
+  </div>
+
+  <div class="card">
+    <h2>Что это значит</h2>
+    <p>Сегодня в Axiom два режима счётчика (вариант A):</p>
+    <table>
+      <tr><th>Режим</th><th>Пример</th><th>После <code>NEXT</code></th></tr>
+      <tr><td>Неявный счётчик (создаётся циклом)</td><td><code>FOR i = 1 TO 3 ... NEXT</code></td><td><span class="badge b-ok">недоступен</span> <code>MB2001</code> при обращении</td></tr>
+      <tr><td>Переиспользование объявленной переменной</td><td><code>DIM i: FOR i = 1 TO 3 ... NEXT</code></td><td><span class="badge b-blue">доступен</span> содержит итог («на шаг за концом» = 4)</td></tr>
+    </table>
+    <p><b>Вариант B</b> — оставить только первый режим: <code>FOR</code> на уже существующей переменной становится <b>ошибкой</b>, счётчик всегда живёт только внутри цикла. Считывание итога — только через копирование в другую переменную внутри тела.</p>
+    <p class="badge b-ok">Важно: неявный счётчик в Axiom уже ведёт себя «по варианту B» (умирает после NEXT). Вариант B — не новая механика, а <b>запрет второго режима</b>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Что сломается: факты по корпусу</h2>
+    <table>
+      <tr><th>Зависимость</th><th>Сколько</th><th>Примеры</th></tr>
+      <tr><td>Сэмплы с переиспользованием (DIM + FOR)</td><td>11 файлов</td><td>maze_chase.axm (9 циклов), text_scroll, scrolling_region, modern_canvas_*, for_counter_reuse_warning и др.</td></tr>
+      <tr><td>Из них — реальное чтение счётчика ПОСЛЕ <code>NEXT</code></td><td>6+ файлов</td><td>predeclared_counter.axm (канонический acceptance-сэмпл «after=4»), array_staging_roundtrip, temp_size_cleanup_cycle, type_record_roundtrip, variables_scope_blocks</td></tr>
+      <tr><td>Чтение после цикла во флагманском игровом сэмпле</td><td>maze_chase.axm</td><td><code>playerStartRow = rowIndex</code>, <code>ghostStartCol = columnIndex</code> — поиск стартовых позиций</td></tr>
+      <tr><td>Тесты, завязанные на переиспользование</td><td>~15</td><td>BinderTests (2 старых + 8 новых), Runtime ×2, Execution ×5, AcceptanceProgramTests</td></tr>
+      <tr><td>Документы</td><td>5</td><td>for.html (2 раздела), variables-scope.html, FOR_COUNTER_ANALYSIS.html, VARIABLES_SCOPE_AUDIT.md, WORKLOG5</td></tr>
+    </table>
+    <p>Ключевой аргумент — не числа, а <b>живой пример</b>: <code>maze_chase</code> ищет стартовую позицию игрока циклом и читает координаты из счётчиков <i>после</i> <code>NEXT</code>. Это ровно тот паттерн QuickBASIC, ради которого режим переиспользования существует.</p>
+  </div>
+
+  <div class="card">
+    <h2>Как выглядела бы миграция</h2>
+    <p>Сэмплы, которые не читают счётчик после цикла (просто переиспользуют имя), чинятся механически — удалить <code>DIM</code>: неявный счётчик уже работает и ведёт себя так же.</p>
+    <pre>DIM rowIndex AS INTEGER          ' ← удалить
+FOR rowIndex = 1 TO 5
+    ...
+NEXT</pre>
+    <p>Сэмплы, которые читают итог (maze_chase, predeclared_counter, …), требуют рефакторинга — копирование внутри тела:</p>
+    <pre>DIM foundRow AS INTEGER
+FOR rowIndex = 1 TO 5
+    IF maze(rowIndex) = "P" THEN
+        foundRow = rowIndex        ' копия до NEXT
+        EXIT FOR
+    END IF
+NEXT
+PRINT foundRow                     ' было: PRINT rowIndex</pre>
+  </div>
+
+  <div class="card">
+    <h2>Что это даст и что отнимет</h2>
+    <div class="compare">
+      <div>
+        <h3><span class="badge b-ok">Плюсы</span></h3>
+        <ul>
+          <li>Одна модель вместо двух — проще учить и объяснять;</li>
+          <li>Новичок физически не может случайно изменить свою переменную циклом (главный источник путаницы, из-за которого придуман <code>MB2043</code>);</li>
+          <li>Ловушка вложенных циклов исчезает на уровне контракта, а не диагностики (<code>MB2042</code> становится не нужен);</li>
+          <li>Ментальная модель совпадает с C#/Python/JS.</li>
+        </ul>
+      </div>
+      <div>
+        <h3><span class="badge b-err">Минусы</span></h3>
+        <ul>
+          <li>Разрыв с BASIC-линейкой: «после <code>NEXT</code> счётчик равен шагу за концом» — классическая идиома QuickBASIC, а Axiom позиционируется как BASIC-совместимый язык;</li>
+          <li>Ломается документированный паттерн «нужно значение после цикла» и флагманский сэмпл <code>maze_chase</code>;</li>
+          <li>Разовая цена миграции: ~11 сэмплов, ~15 тестов, 5 документов;</li>
+          <li><code>MB2042</code>/<code>MB2043</code>, только что реализованные в сессии 1114, становятся мёртвым кодом.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Промежуточные варианты (строгость без разрыва)</h2>
+    <table>
+      <tr><th>Вариант</th><th>Суть</th><th>Цена</th></tr>
+      <tr><td><b>A + подавление MB2043</b></td><td>Текущее поведение; добавить возможность отключить предупреждение о переиспользовании (директива/настройка) — снять шум для опытных авторов</td><td><span class="badge b-ok">малая</span></td></tr>
+      <tr><td><b>D: счётчик read-only в теле</b></td><td>Переиспользование разрешено, итог читается после цикла, но присваивание счётчику внутри тела — новая ошибка (защита от порчи)</td><td><span class="badge b-warn">средняя</span> новая диагностика, тесты, документация</td></tr>
+      <tr><td><b>B: всегда локальный</b></td><td>Запрет переиспользования: ошибка при <code>DIM i</code> + <code>FOR i</code></td><td><span class="badge b-err">высокая</span> разрыв с BASIC-идиомой, миграция корпуса</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Вывод</h2>
+    <p>Вариант B решает проблему, которую вариант A закрывал диагностиками: ловушка вложенных циклов — ошибкой <code>MB2042</code>, неожиданное изменение переменной — предупреждением <code>MB2043</code>. При этом B ломает BASIC-идиому, собственный флагманский сэмпл и требует миграции корпуса.</p>
+    <p>Первоначальная рекомендация («остаться на варианте A») была исторически заменена решением команды языка: переход на B принят как осознанное стратегическое решение «Axiom отходит от BASIC-совместимости в сторону современных языков» и реализован в сессии 1115 (см. баннер в начале документа).</p>
+  </div>
+
+</main>
+</body>
+</html>

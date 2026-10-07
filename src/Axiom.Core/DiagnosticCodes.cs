@@ -56,6 +56,8 @@ public static class DiagnosticCodes
     public const string InvalidContinueWhileContext = "MB2038";
     public const string InvalidContinueDoContext = "MB2039";
     public const string ExpressionStatementHasNoEffect = "MB2040";
+    public const string FieldRequiresSelf = "MB2044";
+    public const string NameClassCollision = "MB2045";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

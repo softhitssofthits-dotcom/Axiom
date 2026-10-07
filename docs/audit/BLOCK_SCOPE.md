@@ -969,6 +969,7 @@ Block scope не зависит от host/platform. Вся логика scope-о
 
 ### ROOT-SYS-002: Схлопывание scope-ов в BytecodeVm
 - SYS-025.2: Per-iteration scope WHILE/DO не реализован в VM
+  - Примечание (2026-08-26): паритет подтверждён — и Interpreter, и BytecodeVm пересоздают переменные WHILE/DO на каждой итерации (вывод `1 1 1` в обоих движках). Запись устарела.
 - SYS-025.3: Слоты из невыполняемых ветвей выделяются
 
 ### ROOT-SYS-003: Lowerer дублирует знание о scope-ах
@@ -1039,9 +1040,9 @@ Block scope не зависит от host/platform. Вся логика scope-о
 
 | ID | Серьёзность | Категория | Компонент | Проблема | Доказательства | Корневая причина | Уверенность |
 |---|---|---|---|---|---|---|---|
-| SYS-001 | P3 | DOCS | Manual | Нет выделенной страницы manual для block scope | Поиск по docs/manual/ | Не создана | CONFIRMED |
-| SYS-002 | P3 | DOCS | Manual | WHILE/DO per-iteration scope не документирован | Анализ кода Interpreter | Не документировано | CONFIRMED |
-| SYS-003 | P3 | DOCS | Manual | Различие FOR vs WHILE/DO scope не объяснено | Анализ кода | Не документировано | CONFIRMED |
+| SYS-001 | P3 | DOCS | Manual | Нет выделенной страницы manual для block scope | Создана docs/manual/variables-scope.html (2026-08-26) | Выполнено | RESOLVED |
+| SYS-002 | P3 | DOCS | Manual | WHILE/DO per-iteration scope не документирован | Описано на docs/manual/variables-scope.html (раздел «Переменные в блоках», 2026-08-26) | Выполнено | RESOLVED |
+| SYS-003 | P3 | DOCS | Manual | Различие FOR vs WHILE/DO scope не объяснено | Описано на docs/manual/variables-scope.html (2026-08-26) | Выполнено | RESOLVED |
 | SYS-004 | P2 | TESTS | Tests | Нет тестов WHILE с DIM в теле | Поиск по tests/ | Не написаны | CONFIRMED |
 | SYS-005 | P2 | TESTS | Tests | Нет тестов DO LOOP с DIM в теле | Поиск по tests/ | Не написаны | CONFIRMED |
 | SYS-006 | P2 | TESTS | Tests | Нет тестов SELECT CASE с DIM в разных ветвях | Поиск по tests/ | Не написаны | CONFIRMED |

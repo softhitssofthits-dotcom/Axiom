@@ -25,7 +25,9 @@
         {
           title: "Переменные и константы",
           items: [
-            { id: "variables-constants", href: "variables-and-constants.html", label: "Переменные и константы" }
+            { id: "variables-constants", href: "variables-and-constants.html", label: "Переменные и константы" },
+            { id: "variables-scope", href: "variables-scope.html", label: "Имена, регистр и область видимости" },
+            { id: "variables-glossary", href: "variables-glossary.html", label: "Словарик терминов" }
           ]
         }
       ]
