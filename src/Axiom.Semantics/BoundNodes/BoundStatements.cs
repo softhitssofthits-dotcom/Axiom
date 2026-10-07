@@ -222,6 +222,19 @@ public sealed class BoundSleepStatement : BoundStatement
     public BoundExpression? DurationExpression { get; }
 }
 
+public sealed class BoundRandomizeStatement : BoundStatement
+{
+    public BoundRandomizeStatement(TextLocation location, BoundExpression? seedExpression)
+        : base(location)
+    {
+        SeedExpression = seedExpression;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.RandomizeStatement;
+
+    public BoundExpression? SeedExpression { get; }
+}
+
 public sealed class BoundScreenStatement : BoundStatement
 {
     public BoundScreenStatement(

@@ -118,6 +118,7 @@ public enum Opcode
     PrintLine,
     Input,
     Sleep,
+    ReseedRandom,
     FormatInterpolatedPart,
     OpenFile,
     CloseFile,

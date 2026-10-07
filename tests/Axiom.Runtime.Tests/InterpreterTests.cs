@@ -102,6 +102,20 @@ PRINT value MOD 2
     }
 
     [Fact]
+    public void Execute_NegativeBaseWithFractionalExponentReportsDomainError()
+    {
+        const string text = """
+PRINT (-8) ^ (1.0 / 3.0)
+""";
+
+        var (_, _, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3012");
+        Assert.Contains("отрицательного основания", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Execute_ExponentiationAndHexLiterals()
     {
         const string text = """
@@ -611,7 +625,7 @@ PRINT value < 1
         Assert.Contains("LEFT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("count", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, diagnostic.Location.Line);
-        Assert.Equal(21, diagnostic.Location.Column);
+        Assert.Equal(7, diagnostic.Location.Column);
     }
 
     [Theory]
@@ -626,7 +640,7 @@ PRINT value < 1
         Assert.Contains("RIGHT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("count", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, diagnostic.Location.Line);
-        Assert.Equal(22, diagnostic.Location.Column);
+        Assert.Equal(7, diagnostic.Location.Column);
     }
 
     [Fact]
@@ -638,7 +652,7 @@ PRINT value < 1
         Assert.Contains("MID", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("start", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, diagnostic.Location.Line);
-        Assert.Equal(20, diagnostic.Location.Column);
+        Assert.Equal(7, diagnostic.Location.Column);
     }
 
     [Theory]
@@ -653,7 +667,7 @@ PRINT value < 1
         Assert.Contains("MID", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("count", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, diagnostic.Location.Line);
-        Assert.Equal(23, diagnostic.Location.Column);
+        Assert.Equal(7, diagnostic.Location.Column);
     }
 
     [Fact]
@@ -714,14 +728,14 @@ PRINT RIGHT("Hello", 1)
         var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3008");
         Assert.Contains("INT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, diagnostic.Location.Line);
-        Assert.Equal(11, diagnostic.Location.Column);
+        Assert.Equal(7, diagnostic.Location.Column);
     }
 
     [Theory]
     [InlineData("PRINT SQR(-1)", "SQR", "value")]
     [InlineData("PRINT LOG(0)", "LOG", "value")]
     [InlineData("PRINT LOG10(-10)", "LOG10", "value")]
-    [InlineData("PRINT CLAMP(5, 10, 1)", "CLAMP", "high")]
+    [InlineData("PRINT CLAMP(5, 10, 1)", "CLAMP", "low")]
     [InlineData("PRINT POW(-1, 0.5)", "POW", "value")]
     [InlineData("PRINT ASIN(2)", "ASIN", "value")]
     [InlineData("PRINT ACOS(-2)", "ACOS", "value")]

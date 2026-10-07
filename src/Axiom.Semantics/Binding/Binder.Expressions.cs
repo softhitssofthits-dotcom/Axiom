@@ -181,6 +181,7 @@ public sealed partial class Binder
             SyntaxKind.BackslashToken or SyntaxKind.ModKeyword => BindIntegralBinaryExpression(left, right, expression),
             SyntaxKind.EqualsToken or SyntaxKind.NotEqualsToken or SyntaxKind.LessToken or SyntaxKind.LessOrEqualsToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualsToken
                 => BindComparisonExpression(left, right, expression),
+            SyntaxKind.AndAlsoKeyword or SyntaxKind.OrElseKeyword => BindShortCircuitExpression(left, right, expression),
             SyntaxKind.AndKeyword or SyntaxKind.OrKeyword or SyntaxKind.XorKeyword or SyntaxKind.EqvKeyword or SyntaxKind.ImpKeyword => BindLogicalExpression(left, right, expression),
             SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => BindShiftExpression(left, right, expression),
             _ => ReportInvalidBinaryOperator(expression.OperatorToken.Kind, left.Type, right.Type, expression.OperatorToken.Location)
@@ -392,6 +393,16 @@ public sealed partial class Binder
         }
 
         return ReportInvalidBinaryOperator(syntax.OperatorToken.Kind, left.Type, right.Type, syntax.OperatorToken.Location);
+    }
+
+    private BoundExpression BindShortCircuitExpression(BoundExpression left, BoundExpression right, BinaryExpressionSyntax syntax)
+    {
+        if (left.Type != TypeSymbol.Boolean || right.Type != TypeSymbol.Boolean)
+        {
+            return ReportInvalidBinaryOperator(syntax.OperatorToken.Kind, left.Type, right.Type, syntax.OperatorToken.Location);
+        }
+
+        return new BoundBinaryExpression(syntax.OperatorToken.Location, left, syntax.OperatorToken.Kind, right, TypeSymbol.Boolean);
     }
 
     private BoundExpression BindLogicalExpression(BoundExpression left, BoundExpression right, BinaryExpressionSyntax syntax)

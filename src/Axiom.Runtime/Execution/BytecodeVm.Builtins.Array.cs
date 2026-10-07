@@ -671,6 +671,38 @@ public sealed partial class BytecodeVm
         return removed;
     }
 
+    private RuntimeValue EvaluateArraySumBuiltin(RuntimeValue value, TextLocation location)
+    {
+        var array = RequireAllocatedArrayArgument(value, "ARRAYSUM", location);
+        return BuiltinArrayAggregateHelpers.Sum(
+            array,
+            location,
+            (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYSUM", "array", detail, errorLocation),
+            (message, errorLocation) => ReportResultOverflow(message, errorLocation));
+    }
+
+    private RuntimeValue EvaluateArrayMinBuiltin(RuntimeValue value, TextLocation location)
+    {
+        var array = RequireAllocatedArrayArgument(value, "ARRAYMIN", location);
+        return BuiltinArrayAggregateHelpers.Min(array, location, (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYMIN", "array", detail, errorLocation));
+    }
+
+    private RuntimeValue EvaluateArrayMaxBuiltin(RuntimeValue value, TextLocation location)
+    {
+        var array = RequireAllocatedArrayArgument(value, "ARRAYMAX", location);
+        return BuiltinArrayAggregateHelpers.Max(array, location, (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYMAX", "array", detail, errorLocation));
+    }
+
+    private RuntimeValue EvaluateArrayAverageBuiltin(RuntimeValue value, TextLocation location)
+    {
+        var array = RequireAllocatedArrayArgument(value, "ARRAYAVERAGE", location);
+        return BuiltinArrayAggregateHelpers.Average(
+            array,
+            location,
+            (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYAVERAGE", "array", detail, errorLocation),
+            (message, errorLocation) => ReportResultOverflow(message, errorLocation));
+    }
+
     private bool EvaluateArrayContainsBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYCONTAINS", location);
@@ -1343,7 +1375,7 @@ public sealed partial class BytecodeVm
             ReportBuiltInArgumentError(
                 functionName,
                 "dimension",
-                $"должен быть целым числом от 1 до {array.Rank}.",
+                $"должен быть в диапазоне от 1 до {array.Rank}.",
                 location);
             throw new RuntimeFailureException();
         }
@@ -1374,7 +1406,7 @@ public sealed partial class BytecodeVm
             ReportBuiltInArgumentError(
                 functionName,
                 "dimension",
-                $"должен быть целым числом от 1 до {array.Rank}.",
+                $"должен быть в диапазоне от 1 до {array.Rank}.",
                 location);
             throw new RuntimeFailureException();
         }

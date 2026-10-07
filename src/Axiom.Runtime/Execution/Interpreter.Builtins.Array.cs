@@ -19,6 +19,38 @@ public sealed partial class Interpreter
         return RuntimeValue.FromInteger(array.GetUpperBound(dimension));
     }
 
+    private RuntimeValue EvaluateArraySumBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYSUM", "array", 0, value);
+        return BuiltinArrayAggregateHelpers.Sum(
+            array,
+            expression.Location,
+            (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYSUM", "array", detail, errorLocation),
+            (message, errorLocation) => ReportResultOverflow(message, errorLocation));
+    }
+
+    private RuntimeValue EvaluateArrayMinBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYMIN", "array", 0, value);
+        return BuiltinArrayAggregateHelpers.Min(array, expression.Location, (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYMIN", "array", detail, errorLocation));
+    }
+
+    private RuntimeValue EvaluateArrayMaxBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYMAX", "array", 0, value);
+        return BuiltinArrayAggregateHelpers.Max(array, expression.Location, (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYMAX", "array", detail, errorLocation));
+    }
+
+    private RuntimeValue EvaluateArrayAverageBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        var array = RequireAllocatedArrayArgument(expression, "ARRAYAVERAGE", "array", 0, value);
+        return BuiltinArrayAggregateHelpers.Average(
+            array,
+            expression.Location,
+            (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYAVERAGE", "array", detail, errorLocation),
+            (message, errorLocation) => ReportResultOverflow(message, errorLocation));
+    }
+
     private RuntimeValue EvaluateArrayLength(RuntimeValue argument)
     {
         var array = RequireArrayArgument(argument);

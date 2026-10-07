@@ -55,6 +55,7 @@ public static class DiagnosticCodes
     public const string InvalidContinueForContext = "MB2037";
     public const string InvalidContinueWhileContext = "MB2038";
     public const string InvalidContinueDoContext = "MB2039";
+    public const string ExpressionStatementHasNoEffect = "MB2040";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";
@@ -68,6 +69,7 @@ public static class DiagnosticCodes
     public const string EmptyFunctionValue = "MB3009";
     public const string MissingGraphicsMode = "MB3010";
     public const string CallStackOverflow = "MB3011";
+    public const string NumericDomain = "MB3012";
 
     // Конвейер выполнения (MB4xxx)
     public const string BytecodeCoverage = "MB4001";

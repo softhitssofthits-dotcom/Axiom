@@ -75,6 +75,10 @@ internal sealed class ConsoleHost : IInputProvider, IOutputWriter, IRuntimeClock
 
     public double NextRandomDouble() => Random.Shared.NextDouble();
 
+    // ConsoleHost не владеет состоянием генератора (Random.Shared), поэтому
+    // RANDOMIZE в headless-режиме лишь фиксирует договор: Reseed недоступен.
+    public void Reseed(int seed) { }
+
     // ---- Графика: вход в графический режим и любые мутации кадра недоступны в консоли ----
 
     public void ActivateScreen(int mode) => throw new ConsoleGraphicsNotSupportedException();

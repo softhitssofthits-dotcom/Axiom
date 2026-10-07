@@ -289,7 +289,11 @@ public static partial class BuiltinFunctions
                 ],
                 ArrayTypeSymbol.Create(TypeSymbol.Integer),
                 bindingKind: BuiltinBindingKind.Array,
-                resultTypePolicy: BuiltinResultTypePolicy.SameAsFirstArgument)
+                resultTypePolicy: BuiltinResultTypePolicy.SameAsFirstArgument),
+            CreateArraySameType(BuiltinFunctionId.ArraySum, "ARRAYSUM"),
+            CreateArraySameType(BuiltinFunctionId.ArrayMin, "ARRAYMIN"),
+            CreateArraySameType(BuiltinFunctionId.ArrayMax, "ARRAYMAX"),
+            CreateArrayDouble(BuiltinFunctionId.ArrayAverage, "ARRAYAVERAGE")
         ];
     }
 }

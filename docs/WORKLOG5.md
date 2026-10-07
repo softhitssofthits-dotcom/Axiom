@@ -3316,3 +3316,229 @@ Health Score: **8.8/10**.
 **Осталось:** ручная приёмка Electron-IDE пользователем (`run-ide.bat`); отложено по разделу 8 плана: окно графики в Electron, отладчик, упаковка, CI для e2e.
 
 **Следующий шаг:** ручная приёмка `run-ide.bat` и возврат к продуктовому фокусу modern graphics (приёмка `maze_chase.axm` в WPF-IDE).
+
+## Session 1102 - 2026-10-06 21:11 - полный доказательный аудит языка: built-ins, стандартная библиотека, паритет движков
+
+Проведён аудит всего языка Axiom (задача «LANGUAGE_FUNCTIONS_FULL_AUDIT»), режим «только чтение», без правок кода.
+
+Что сделано:
+- Baseline зафиксирован: commit `2904ee9`, .NET SDK 10.0.401, полный прогон решения — 2359/2363, 4 падения Axiom.Ide.Tests совпадают с ранее задокументированными (PRE-EXISTING).
+- Инвентаризация built-ins из исходников: 295 дескрипторов, 241 имя, 282/285 ID исполняются; 3 orphan-ID (`DateAdd/DateDiff/DatePart`) — сознательные плейсхолдеры сериализации.
+- Собран дифференциальный harness `.artifacts/audit/harness/` (Interpreter ↔ BytecodeVm, детерминированные clock/random/input, режимы expr/run/eval/prog) и ~700 кейсов по 9 подсистемам: математика, RND, строки, Unicode, regex, массивы, дата/время, преобразования, файлы/ФС/кодировки, процедуры/BYREF/замыкания/TYPE, операторы, управление, TRY/ERROR.
+- Полный дифференциальный sweep всех 606 `.axm`-примеров: SAME=581, DIFF=8 (все — диагностические расхождения уже зафиксированных семейств; 1 ложное от temp-имён), TIMEOUT=17 (интерактивные, ограничение headless).
+- Матрица покрытия tests/samples/manual/IDE (агент): все 241 имя покрыты; синхронизация реестр↔VM↔manual↔samples автоматизирована (Axiom.ManualChecks); подсветка IDE — три ручные копии без генератора.
+
+Найдено (полный реестр с репродьюсерами — `docs/audit/LANGUAGE_DEFECT_REGISTRY.md`):
+- P1 AXD-001: Interpreter пропускает FINALLY при повторном выбросе из CATCH (спецификация нарушена; VM корректен).
+- P1 AXD-002: builtin-вызовы без скобок в позиции оператора — молчаливый no-op (`WRITELINE f "x"` не пишет данные).
+- P2: mojibake в 7 диагностиках Interpreter.Builtins.FileSystem.cs; кодировочная асимметрия READFILE↔OPEN INPUT (BOM/1251); 6+ расхождений текстов диагностик движков; систематическое расхождение локализаций (аргумент vs вызов); расхождение цепочек вызовов в диагностике (в обе стороны); MB3006 vs BC4054 (функция без RETURN); `^` с отрицательным основанием — неверная категория ошибки.
+- P3/P4: правоассоциативный `^` против QB/VB без документации; смешанная Unicode-модель (code units/scalars/pair-aware REVERSE); VAL-запятая (15); MONTHNAME/WEEKDAYNAME англ.; отсутствие RANDOMIZE/Cxxx/ANDALSO/ORELSE/SHL/SHR/binary I/O/выбора кодировки; дублирование диспетчеризации движков; подсветка без синхронизации с реестром; тонкие тесты ~45 ФС-функций; неидемпотентные samples.
+
+Файлы:
+- `docs/audit/LANGUAGE_FUNCTIONS_FULL_AUDIT.md` — мастер-отчёт (42 раздела, health score, вердикты).
+- `docs/audit/LANGUAGE_FUNCTION_MATRIX.md` — полная матрица 295 дескрипторов.
+- `docs/audit/LANGUAGE_DEFECT_REGISTRY.md` — реестр дефектов с репродьюсерами.
+- `.artifacts/audit/` — harness, кейсы, протоколы (временные).
+
+Ключевой вывод: значения и stdout валидных программ идентичны в обоих движках во всех проверенных сценариях; все найденные расхождения — в диагностике (тексты/локализации/цепочки) плюс один P1 исполнения (FINALLY) и одна ловушка молчаливых no-op. Стандартная библиотека зрелая (7.3/10 среднее); расширение языка безопасно после Wave 0-1 дорожной карты (FINALLY, no-op-диагностика, единые тексты диагностик, кодировочный контракт).
+
+Следующий шаг: Wave 0 из дорожной карты аудита (`docs/audit/LANGUAGE_FUNCTIONS_FULL_AUDIT.md`, раздел 40) — FINALLY-rethrow и диагностика безскобочных вызовов.
+
+## Session 1103 - 2026-10-06 21:49 - Wave 0 аудита: FINALLY-rethrow, диагностика MB2040, mojibake
+
+Исправлены дефекты Wave 0 и один пункт Wave 1 из дорожной карты аудита `docs/audit/LANGUAGE_FUNCTIONS_FULL_AUDIT.md` (раздел 40).
+
+Что сделано:
+
+1. W0.1, AXD-001 (P1): Interpreter.Statements.cs `ExecuteTry` теперь захватывает runtime-ошибку, возникшую в теле CATCH (включая повторный выброс `ERROR err`), исполняет FINALLY и только затем продолжает путь необработанной ошибки. Раньше FINALLY на этом пути пропускался, BytecodeVm вёл себя по спецификации.
+2. W0.2, AXD-002 (P1): введена семантическая диагностика `MB2040` «оператор-выражение не имеет эффекта» — оператор-выражение обязан быть вызовом процедуры/функции. Корень проблемы: `FLUSH f` парсился как два оператора-имени (`FLUSH` и `f`), оба молча выбрасывались, поэтому `WRITELINE f "текст"` не записывал данные. Проверка в биндере (`Binder.Statements.cs BindExpressionStatement`), движко-независима; на уже ошибочные выражения не дублируется (MB2019 сохраняется без MB2040).
+3. W1.4, AXD-003 (P2): перекодированы все 8 mojibake-литералов `Interpreter.Builtins.FileSystem.cs` (7 из аудита + DIRSIZE-текст, обнаруженный при исправлении); тексты Interpreter совпадают с VM.
+4. Дополнение к аудиту: строковая интерполяция `$"..."` из SPECIFICATION3 проверена дифференциально (F2, выравнивание, X, `-20`) — работает, паритет полный; пробелов не найдено.
+
+Файлы:
+- `src/Axiom.Runtime/Execution/Interpreter.Statements.cs` — фикс ExecuteTry;
+- `src/Axiom.Semantics/Binding/Binder.Statements.cs`, `src/Axiom.Semantics/Binding/Binder.Diagnostics.cs` — MB2040;
+- `src/Axiom.Core/DiagnosticCodes.cs` — код MB2040;
+- `src/Axiom.Runtime/Execution/Interpreter.Builtins.FileSystem.cs` — 8 строк;
+- тесты: `InterpreterTests.TryCatch` (+2), `InterpreterTests.FileSystem` (+1 mojibake-регрессия), `BinderTests` (+3), `ExecutionPipelineTests` (+2 VM-паритета);
+- samples: `samples/operators/try/rethrow_from_catch_runs_finally.axm`, `samples/acceptance/negative/expression_statement_no_effect.axm`;
+- документация: `docs/manual/try.html` (гарантия FINALLY + ссылка на sample), `docs/manual/diagnostics.html` (строка MB2040), `docs/SPECIFICATION3.md` (два датированных раздела), `docs/audit/LANGUAGE_DEFECT_REGISTRY.md` (статусы AXD-001/002/003), `docs/PLANS4.md`.
+
+Валидация:
+- полный прогон решения `scripts/dotnet-test-artifacts.ps1 Axiom.sln`: все проекты зелёные, кроме тех же 4 ранее существовавших падений Axiom.Ide.Tests (PRE-EXISTING, совпадают с baseline аудита);
+- `audit-diagnostics-table`: PASS (63 исходных кода, синхронизация с manual);
+- дифференциальный sweep всех samples после правок: SAME=582, DIFF=8 (те же известные диагностические расхождения AXD-005/007, ни одного нового), TIMEOUT=17 (интерактивные);
+- harness-репродьюсер `rethrow_min.axm`: SAME на обоих движках;
+- `audit-bytecode-coverage`: FAIL, ранее существовавший — графические функции отсутствуют в search-index/samples/functions (IMAGE*, MAP*, TILE*, SPRITE* и т.п.); к правкам Session 1103 отношения не имеет, зафиксирован как отдельный долг.
+
+Следующий шаг: Wave 1 остаток — единые тексты/локализации/цепочки вызовов диагностик движков (W1.1-W1.3, AXD-005/006/007), затем W1.5 (кодировочный контракт) и W1.6 (категория ошибки `^`).
+
+## Session 1104 - 2026-10-06 22:45 - Wave 1 аудита: единый договор диагностик и кодировок движков
+
+Закрыты пункты W1.1-W1.3, W1.5, W1.6 дорожной карты аудита (`docs/audit/LANGUAGE_FUNCTIONS_FULL_AUDIT.md`, раздел 40).
+
+Что сделано:
+
+1. W1.6, AXD-008 (P2): оператор `^` при отрицательном основании и нецелой степени сообщает доменную ошибку `MB3012` «Оператор '^' не определён для отрицательного основания и нецелой степени.» вместо вводящей в заблуждение MB3008 «выходит за диапазон». Общий helper `RuntimeArithmeticHelpers.EvaluatePowerOperation` используется обоими движками; встроенный `POW` сохраняет свою MB3007.
+2. W1.1, AXD-005 (P2): шесть пар расхождений текстов диагностик унифицированы: CLAMP (русский текст с именами параметров дескриптора low/high), STEP 0 (краткая формулировка), MB3005-границы массива (точная формулировка с «канонической пустой формой 1 TO 0»), диапазон измерения LBOUND/UBOUND, переполнение унарного минуса («Результат операции унарного '-'»), переполнение ABS («Результат ABS»); заодно приведён к русскому языку подробный текст ABS в общем helper.
+3. W1.2, AXD-006 (P2): локации builtin-диагностик унифицированы на вызов (договор VM): `GetBuiltInArgumentLocation` Interpreter возвращает локацию вызова — пер-аргументные локации VM недостижимы без изменения lowering, а имя нарушенного аргумента названо в тексте. Обновлены ожидания локаций в 11 ассертах `InterpreterTests`.
+4. W1.3, AXD-007 (P2, частично): создан общий форматтер `RuntimeCallChainFormatter`; VM использует `BytecodeRoutine.Symbol` и теперь именует локальные функции так же, как Interpreter («локальная функция 'Inner', объявлена внутри функции 'Outer'»); кадр `<global>` исключён из цепочек в обоих движках. Дифференциально подтверждено: nested_runtime_diagnostic, snake_arrow_controls, maze_chase — SAME. Остаток: инвариант TYPE в VM исполняется после выгрузки кадра конструктора, цепочки нет — зафиксировано в DEFECT_REGISTRY как отдельная lowering-задача.
+5. W1.5, AXD-004 (P2): единый кодировочный контракт — `RuntimeTextFile` при OPEN INPUT детектирует кодировку один раз при открытии: строгий UTF-8 с пропуском BOM, при невалидном UTF-8 — Windows-1251 (как READFILE); FILEPOS/FILELENGTH/SEEKFILE/REWIND работают в содержательных байтах, BOM никогда не виден пользователю. Прежняя ошибка «не удалось прочитать текст как UTF-8» для 1251-файлов устранена.
+
+Файлы:
+- `src/Axiom.Core/DiagnosticCodes.cs` — MB3012 NumericDomain;
+- `src/Axiom.Runtime/Values/RuntimeArithmeticHelpers.cs` — EvaluatePowerOperation;
+- `src/Axiom.Runtime/Values/RuntimeTextFile.cs` — DetectInputEncoding, BOM-skip, контентно-относительные позиции;
+- `src/Axiom.Runtime/Builtins/RuntimeCallChainFormatter.cs` — новый общий форматтер;
+- `src/Axiom.Runtime/Execution/Interpreter.Helpers.cs`, `Interpreter.Expressions.cs`, `Interpreter.Statements.cs`, `Interpreter.Builtins.Numeric.cs`, `BytecodeVm.cs`, `BytecodeVm.Builtins.cs`, `BytecodeVm.Builtins.Array.cs`, `BytecodeVm.Arrays.cs` — унификация текстов/локаций/цепочек;
+- `src/Axiom.Runtime/Builtins/BuiltinNumericHelpers.cs` — русский текст ABS;
+- тесты: `InterpreterTests` (+2, обновлены 11 локаций), `InterpreterTests.FileIO` (+2), `ExecutionPipelineTests` (+2 Theory на оба движка);
+- документация: `docs/manual/diagnostics.html` (MB3012), `docs/SPECIFICATION3.md` (два датированных раздела), `docs/audit/LANGUAGE_DEFECT_REGISTRY.md` (статусы AXD-004…008), `docs/PLANS4.md`.
+
+Валидация:
+- полный прогон решения: все проекты зелёные, кроме тех же 4 PRE-EXISTING падений Axiom.Ide.Tests;
+- `audit-diagnostics-table`: PASS (63 кода, 61 в manual + 2 служебных MB4xxx);
+- дифференциальные батареи harness (~700 кейсов): 0 расхождений во всех батареях, кроме 1 известной (инвариант TYPE);
+- полный sweep 608 samples: SAME=589, DIFF=2 (инвариант TYPE — известный остаток; filepath — ложное срабатывание от случайных temp-имён), TIMEOUT=17 (интерактивные). Против Session 1102: DIFF 8 → 2.
+
+Следующий шаг: по `docs/PLANS4.md` — остаток AXD-007 (цепочка вызовов при инварианте TYPE в VM, lowering-задача), затем Wave 2 (полнота тестов: паритет-тесты текстов/локализаций, non-BMP-строки, тонкие filesystem builtins) и Wave 5 (документационные контракты `^`-ассоциативности, WEEKDAY, VAL, Unicode-единиц) — после одобрения пользователя.
+
+## Session 1105 - 2026-10-07 08:14 - закрытие остатка AXD-007 и первые шаги Wave 3
+
+Завершены оставшиеся пункты Wave 1 и начата Wave 3 дорожной карты аудита.
+
+Что сделано:
+
+1. AXD-007 остаток (P2): цепочка вызовов при инварианте TYPE теперь одинакова в обоих движках. Lowering передаёт конструктор в `LoweredInstruction.ValidateTypeInvariant`; эмиттер (`BytecodeCompiler.EmitValidateTypeInvariant`) добавляет идентификатор процедуры конструктора вторым операндом инструкции; валидатор (`BytecodeModuleValidator`) допускает 1-2 операнда (сериализация операндов generic, обратная совместимость не требуется — свежая компиляция); VM (`ValidateTypeInvariant`) при недостижимой в стеке проверке синтезирует кадр конструктора из операнда и включает его в цепочку через `ReportInvalidRuntimeStateWithChain`. Дифференциально: `type_constructor_invariant_false.axm` — SAME. Паритет-тест `Run_TypeInvariantFailureReportsConstructorCallChainInBothEngines`.
+2. Wave 3, AXD-015 (P3) — первые три шага:
+   - фолбэк-свитч `BytecodeVm.Builtins.cs` сокращён со ~300 case до 15 живых variadic-ID (остальные были недостижимы: dispatch-таблица маршрутизирует их в специализированные делегаты; проверено анализом вызовов `ExecuteBuiltin`);
+   - `ToInt32Checked` (3 перегрузки) сведён к общим перегрузкам в `RuntimeArithmeticHelpers`; движковые методы делегируют, все ~30 мест вызовов не тронуты;
+   - `EvaluateIntBuiltin` перенесён из `Interpreter.Builtins.String.cs` в `Interpreter.Builtins.Numeric.cs` (числовая функция больше не живёт в строковом файле).
+
+Инцидент: при групповой правке heredoc-скрипт был обрезан оболочкой и обнулил `Interpreter.Builtins.Numeric.cs`; файл восстановлен из git, правки Session 1104 (CLAMP/ABS) и новые переносы применены заново проверяемым скриптом `.artifacts/audit/patch_numeric.py`. Урок: длинные python-правки — только через файл-скрипт, не через heredoc.
+
+Валидация:
+- Bytecode.Tests 233/233 (сериализация с новым операндом), Runtime.Tests 971/971, Execution.Tests 959/959, Semantics.Tests 392/392;
+- полный дифференциальный sweep 608 samples: SAME=590, DIFF=1 (только ложное срабатывание `filepath/basic_usage` от случайных temp-имён), TIMEOUT=17 (интерактивные). Все содержательные расхождения движков из аудита закрыты.
+
+Файлы: `src/Axiom.Bytecode/Model/LoweredInstruction.cs`, `src/Axiom.Bytecode/Lowering/BoundProgramLowerer.cs`, `src/Axiom.Bytecode/Emission/BytecodeCompiler.cs`, `src/Axiom.Bytecode/Diagnostics/BytecodeModuleValidator.cs`, `src/Axiom.Runtime/Execution/BytecodeVm.cs`, `BytecodeVm.Builtins.cs`, `BytecodeVm.Builtins.Numeric.cs`, `Interpreter.Helpers.cs`, `Interpreter.Builtins.String.cs`, `Interpreter.Builtins.Numeric.cs`, `Values/RuntimeArithmeticHelpers.cs`; тест `ExecutionPipelineTests` (+1 Theory); документация: SPECIFICATION3, DEFECT_REGISTRY (AXD-007 закрыт, AXD-015 частично), PLANS4.
+
+Следующий шаг: по PLANS4 — продолжение Wave 2/3 по мере задач (non-BMP тесты строк, тонкие filesystem builtins, генератор BuiltIn-секции подсветки из реестра); Waves 4-5 — после решения пользователя.
+
+## Session 1106 - 2026-10-07 09:14 - Wave 2: подсветка из реестра, non-BMP контракт, тонкие filesystem builtins
+
+Закрыта Wave 2 дорожной карты аудита (генератор подсветки — AXD-016 полностью, тестовые пробелы — AXD-017 в основном).
+
+Что сделано:
+
+1. AXD-016 (подсветка без синхронизации): генератор `scripts/Generate-XshdKeywords.ps1` дополнен BuiltIn-секцией — имена берутся из реестра `BuiltinFunctions` через `axiom metadata`, добавлен режим `-Write` для замены секций Keyword/TypeName/BuiltIn в обеих схемах. Прогоном генератора устранён уже накопившийся рассинхрон: в BuiltIn-секции xshd отсутствовала `STRING` (единственная дельта множества; остальное — нормализация сортировки). Добавлены `tests/Axiom.Ide.Tests/HighlightingVocabularySyncTests.cs` (3 теста): светлая и тёмная схемы и словарь форматирования `AxiomFormattingVocabulary.BuiltIns` обязаны точно совпадать с реестром; для доступа к internal-словарю в `Axiom.Formatting.csproj` добавлен `InternalsVisibleTo("Axiom.Ide.Tests")`.
+2. AXD-011 (фиксация Unicode-контракта): `tests/Axiom.Runtime.Tests/InterpreterTests.StringNonBmp.cs` (7 тестов) — LEN считает UTF-16 code units; LEFT/MID/REMOVE режут суррогатную пару (ожидания строятся из `(char)0xD83D` — xUnit искажает одиночные суррогаты при сериализации theory-данных); REVERSE сохраняет пары; ASC/ASCW читают скаляры (128512 для эмодзи); CHR строит скаляры до U+10FFFF и отвергает суррогатные половины и >U+10FFFF (MB3007).
+3. AXD-017 (тонкие filesystem builtins): `tests/Axiom.Runtime.Tests/InterpreterTests.FileSystemDiagnostics.cs` (6 тестов) — smoke-прогон DRIVE*/FILEDATE*/DIRSIZE/FREESPACE/TOTALSPACE/ISREADONLY/ISHIDDEN/PATHROOT/FULLPATH с проверкой значений; MAKETEMPFILE/MAKETEMPDIR создают реальные записи; фиксация читаемых русских текстов исправленных mojibake-валидаций (RENAMEFILE — простое имя, MAKETEMPFILE — префикс, GETFILES — пустой pattern, RENAMEDIR корня — родительская папка). Попутно зафиксирована фактическая семантика: FREESPACE для относительного пути резолвится к диску запуска (нормализация делает путь абсолютным до DriveInfo) — тест `Execute_FreeSpaceResolvesRelativePathToHostDrive`.
+4. Открытие по ходу: переменную нельзя назвать `file` — регистронезависимое имя встроенного типа FILE (парсер: «Ожидался идентификатор»); найдено при написании тестов, поведение консистентно.
+
+Валидация:
+- Runtime.Tests 986/986, Ide.Tests 588 (4 PRE-EXISTING падения — те же), остальные проекты — в составе полного прогона все зелёные;
+- дифференциальный sweep 608 samples: SAME=590, DIFF=1 (ложное срабатывание filepath от случайных temp-имён), TIMEOUT=17;
+- `audit-diagnostics-table` не затронут (новых кодов нет).
+
+Файлы: `scripts/Generate-XshdKeywords.ps1`, `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd`, `Axiom.Dark.xshd`, `src/Axiom.Formatting/Axiom.Formatting.csproj`, `tests/Axiom.Ide.Tests/HighlightingVocabularySyncTests.cs`, `tests/Axiom.Runtime.Tests/InterpreterTests.StringNonBmp.cs`, `tests/Axiom.Runtime.Tests/InterpreterTests.FileSystemDiagnostics.cs`; документация: `docs/audit/LANGUAGE_DEFECT_REGISTRY.md` (AXD-016 закрыт, AXD-017 в основном), `docs/PLANS4.md`.
+
+Следующий шаг: по `docs/PLANS4.md` — на усмотрение пользователя: Wave 5 (документационные контракты: ассоциативность `^`, WEEKDAY Monday-first, контракт VAL, Unicode-единицы в manual), полный per-function разброс ~45 тонких filesystem builtins, хвост Wave 3 (параллельные Graphics/Keyboard/Mouse-файлы), либо Waves 4-5 языковых расширений после одобрения.
+
+## Session 1107 - 2026-10-07 18:25 - Wave 5: документационные контракты и исправление ошибок аудита
+
+Закрыт документационный хвост аудита языка.
+
+Что сделано:
+
+1. Manual: LF-концы строк — на странице «Файловая система: открытые файлы» для WRITELINE и NEWLINE зафиксировано, что перевод строки записывается одним байтом LF (0x0A), а не CRLF (чтение принимает оба).
+2. Manual: Unicode-единицы строк — на странице «Длина строки и фрагменты» зафиксирован договор: LEN/индексация считают UTF-16 кодовые единицы (эмодзи — две), LEFT/RIGHT/MID могут разрезать суррогатную пару, ASC/ASCW/CHR/CHRW работают со скалярами, REVERSE сохраняет пары.
+3. Manual: контракт VAL — на странице «INT, STR и VAL» добавлен раздел «Правила чтения числа»: точка — единственный десятичный разделитель, запятая игнорируется как разделитель разрядов (VAL("1,5")=15), пробелы допустимы, экспонента читается (VAL("1e2")=100), &H не читается (0), ведущая числовая часть читается (VAL("12abc")=12).
+4. SPECIFICATION3: датированный раздел фиксирует строковые единицы, контракт VAL, LF-концы строк, отсутствие esc-последовательностей (спецсимволы через CHR, кавычка удваивается), отказ от QB-идиомы `FuncName = value` (только RETURN) и построчность языка (нет `:`-разделителя).
+5. Исправлены три ошибки исходного аудита (реестр дефектов скорректирован):
+   - AXD-009 снят: правая ассоциативность `^` УЖЕ была задокументирована в «Арифметике и логике» (`2 ^ 3 ^ 2 = 2 ^ (3 ^ 2)`) — аудит не проверил эту страницу;
+   - AXD-014 частично снят: WEEKDAY Monday-first (`1 = Monday … 7 = Sunday`) УЖЕ был на странице календарных частей;
+   - AXD-018 частично снят: операторы сдвига существуют под именами `<<`/`>>` (проверено исполнением `1 << 3 = 8`, `16 >> 2 = 4` в обоих движках; приоритет в таблице «Арифметики и логики») — аудит сопоставил имена, а не операторы; пункт SHL/SHR снят, из Wave 4 исключён.
+   - AXD-020 закрыт: перечисленные пробелы либо закрыты этим проходом (LF, Unicode, VAL, esc, FuncName=value, построчность — в manual/spec), либо оказались ложными.
+
+Валидация: HTML-вставки сбалансированы по тегам (проверено сравнением с HEAD); `audit-bytecode-coverage` — прежний PRE-EXISTING FAIL (графические функции вне search-index, зафиксирован в Session 1103); полный прогон решения — все проекты зелёные, кроме тех же 4 PRE-EXISTING падений Axiom.Ide.Tests; поведение языка не менялось (документационная сессия).
+
+Файлы: `docs/manual/file-system-functions-open-files.html`, `docs/manual/string-functions-slices-and-length.html`, `docs/manual/numeric-functions-conversion-and-legacy.html`, `docs/SPECIFICATION3.md`, `docs/audit/LANGUAGE_DEFECT_REGISTRY.md`, `docs/PLANS4.md`.
+
+Состояние дорожной карты аудита: Waves 0-3 и 5 закрыты (кроме отложенного хвоста), Wave 4 (новые языковые сущности) и два служебных пункта ждут решения пользователя.
+
+Следующий шаг: по `docs/PLANS4.md` — только по решению пользователя: Wave 4 (RANDOMIZE, CINT/CLNG/CDBL/CDEC, ANDALSO/ORELSE, ARRAY-агрегаты) после одобрения имён и семантики; полный per-function разброс ~45 filesystem builtins; хвост Wave 3 (параллельные Graphics/Keyboard/Mouse-файлы движков).
+
+## Session 1108 - 2026-10-07 21:20 - Wave 4: RANDOMIZE, CINT/CLNG/CDBL/CDEC, агрегаты массива, ANDALSO/ORELSE
+
+Реализованы все четыре одобренные пользователем группы Wave 4. Каждая сущность исполнится в обоих движках, покрыта тестами, примером и manual.
+
+RANDOMIZE (оператор):
+- `IRuntimeRandom` получил `Reseed(int seed)`; реализован во всех хостах (NullRuntimeHost, ConsoleHost, ExecutionRuntimeHostAdapter, тестовые хосты, harness, ManualChecks);
+- весь стек: ключевые слова (lexer/syntax/keywords-set), `RandomizeStatementSyntax`, парсер (опциональное выражение), `BoundRandomizeStatement`, биндер (seed → LONG), lowering (`ReseedRandom` + операнд-наличие), новый `Opcode.ReseedRandom` (сериализация по имени — безопасно), emission, валидатор (три таблицы), исполнение в VM и Interpreter;
+- seed LONG→INTEGER проверяется, переполнение — MB3008; оба движка управляются одним источником, серия RND побитово одинакова.
+
+CINT/CLNG/CDBL/CDEC (встроенные):
+- дескрипторы `CreateNumeric(..., PreserveNumericArguments, Declared)`; общий helper в `BuiltinNumericHelpers`; усечение к нулю (`CINT(-2.9)=-2`), диапазонные проверки (MB3008), CDEC из DOUBLE — checked;
+- диспетчеризация: Interpreter switch + VM `BuiltinDispatch` Unary-делегаты.
+
+ARRAYSUM/ARRAYMIN/ARRAYMAX/ARRAYAVERAGE (встроенные):
+- дескрипторы `CreateArraySameType` ×3 + новая фабрика `CreateArrayDouble`; общий `BuiltinArrayAggregateHelpers` (два колбэка: аргументная ошибка MB3007 через адаптер движка, результатная MB3008 полным текстом);
+- SUM/MIN/MAX сохраняют тип элементов, MIN/MAX работают со строками (ординально), AVERAGE — DOUBLE; пустой/невыделенный массив и нечисловые элементы — MB3007;
+- диспетчеризация обоих движков.
+
+ANDALSO/ORELSE (операторы):
+- ключевые слова, приоритет 5 и 3 (уровни AND/OR), биндер `BindShortCircuitExpression` (только BOOLEAN, иначе MB2003);
+- Interpreter: ленивый случай до вычисления правого операнда; BytecodeVm: двухметочная схема lowering (`JumpIfTrue/JumpIfFalse` → `LoadLiteral` решившего исход значения → `Jump` → метка → правый операнд → `LabelMarker`);
+- GetOperatorText дополнен читаемыми именами.
+
+Попутное исправление (найдено тестами агрегатов): оператор `NEXT` теперь допускает завершающее имя счётчика (`NEXT i`) — QB-наследие; имя принимается и игнорируется. Ранее `NEXT` не съедал имя, и оно молча отбрасывалось как выражение; MB2040 (Session 1103) сделал это видимым. Manual `for.html` уточнён.
+
+IDE и документация:
+- xshd обеих схем перегенерированы (249 builtins + RANDOMIZE/ANDALSO/ORELSE в Keyword); в `AxiomLanguageKeywords` добавлены "ANDALSO", "ORELSE", "RANDOMIZE";
+- manual: раздел «Агрегаты» на странице массивов, «CINT, CLNG, CDBL и CDEC» на странице преобразований, «ANDALSO и ORELSE» на странице арифметики, новая страница `randomize.html`; search-index дополнен 11 записями;
+- samples: 9 русскоязычных примеров (`samples/functions/{arraysum,arraymin,arraymax,arrayaverage,cint,clng,cdbl,cdec}/basic_usage.axm`, `samples/operators/randomize/basic_usage.axm`);
+- SPECIFICATION3: датированный раздел Wave 4.
+
+Тесты: `InterpreterTests.Wave4` (13), `ExecutionPipelineTests.Run_Wave4FeaturesMatchInBothEngines` (Theory ×2 движка). Валидация: полный прогон решения — все проекты зелёные, Ide 4 PRE-EXISTING; sweep 617 samples: SAME=599, DIFF=1 (прежнее ложное срабатывание filepath от temp-имён), TIMEOUT=17; `audit-bytecode-coverage` — новые имена полностью покрыты (FAIL остаётся только на прежних графических), `audit-diagnostics-table` — PASS.
+
+Открытая находка (в DEFECT_REGISTRY не внесена, мелочь): тексты диагностик невыделенного массива расходятся (Interpreter: «Функция X: аргумент 'array' содержит массив, который ещё не выделен.», VM: «Массив 'array' объявлен, но ещё не выделен.») — хвост AXD-005.
+
+Следующий шаг: по `docs/PLANS4.md` — остатки вне Wave 4: полный per-function разброс тонких filesystem builtins, хвост Wave 3 (параллельные Graphics/Keyboard/Mouse-файлы), выравнивание текста unallocated-диагностики.
+
+## Session 1108 - 2026-10-07 20:38 - Wave 4: RANDOMIZE, CINT/CLNG/CDBL/CDEC, агрегаты массива, ANDALSO/ORELSE
+
+Реализованы все четыре одобренные пользователем группы Wave 4. Каждая сущность исполнится в обоих движках, покрыта тестами, примером и manual.
+
+RANDOMIZE (оператор):
+- IRuntimeRandom получил Reseed(int seed); реализован во всех хостах (NullRuntimeHost, ConsoleHost, ExecutionRuntimeHostAdapter, тестовые хосты, harness, ManualChecks);
+- весь стек: ключевые слова (lexer/syntax/keywords-set), RandomizeStatementSyntax, парсер (опциональное выражение), BoundRandomizeStatement, биндер (seed → LONG), lowering (ReseedRandom + операнд-наличие), новый Opcode.ReseedRandom (сериализация по имени — безопасно), emission, валидатор (три таблицы), исполнение в VM и Interpreter;
+- seed LONG→INTEGER проверяется, переполнение — MB3008; оба движка управляются одним источником, серия RND побитово одинакова.
+
+CINT/CLNG/CDBL/CDEC (встроенные):
+- дескрипторы CreateNumeric(..., PreserveNumericArguments, Declared); общий helper в BuiltinNumericHelpers; усечение к нулю (CINT(-2.9)=-2), диапазонные проверки (MB3008), CDEC из DOUBLE — checked;
+- диспетчеризация: Interpreter switch + VM BuiltinDispatch Unary-делегаты.
+
+ARRAYSUM/ARRAYMIN/ARRAYMAX/ARRAYAVERAGE (встроенные):
+- дескрипторы CreateArraySameType ×3 + новая фабрика CreateArrayDouble; общий BuiltinArrayAggregateHelpers (два колбэка: аргументная ошибка MB3007 через адаптер движка, результатная MB3008 полным текстом);
+- SUM/MIN/MAX сохраняют тип элементов, MIN/MAX работают со строками (ординально), AVERAGE — DOUBLE; пустой/невыделенный массив и нечисловые элементы — MB3007;
+- диспетчеризация обоих движков.
+
+ANDALSO/ORELSE (операторы):
+- ключевые слова, приоритет 5 и 3 (уровни AND/OR), биндер BindShortCircuitExpression (только BOOLEAN, иначе MB2003);
+- Interpreter: ленивый случай до вычисления правого операнда; BytecodeVm: двухметочная схема lowering (JumpIfTrue/JumpIfFalse → LoadLiteral решившего исход значения → Jump → метка → правый операнд → LabelMarker);
+- GetOperatorText дополнен читаемыми именами.
+
+Попутное исправление (найдено тестами агрегатов): оператор NEXT теперь допускает завершающее имя счётчика (NEXT i) — QB-наследие; имя принимается и игнорируется. Ранее NEXT не съедал имя, и оно молча отбрасывалось как выражение; MB2040 (Session 1103) сделал это видимым. Manual for.html уточнён.
+
+IDE и документация:
+- xshd обеих схем перегенерированы (249 builtins + RANDOMIZE/ANDALSO/ORELSE в Keyword); в AxiomLanguageKeywords добавлены "ANDALSO", "ORELSE", "RANDOMIZE";
+- manual: раздел «Агрегаты» на странице массивов, «CINT, CLNG, CDBL и CDEC» на странице преобразований, «ANDALSO и ORELSE» на странице арифметики, новая страница randomize.html; search-index дополнен 11 записями;
+- samples: 9 русскоязычных примеров (samples/functions/{arraysum,arraymin,arraymax,arrayaverage,cint,clng,cdbl,cdec}/basic_usage.axm, samples/operators/randomize/basic_usage.axm);
+- SPECIFICATION3: датированный раздел Wave 4.
+
+Тесты: InterpreterTests.Wave4 (13), ExecutionPipelineTests.Run_Wave4FeaturesMatchInBothEngines (Theory ×2 движка). Валидация: полный прогон решения — все проекты зелёные, Ide 4 PRE-EXISTING; sweep 617 samples: SAME=599, DIFF=1 (прежнее ложное срабатывание filepath от temp-имён), TIMEOUT=17; audit-bytecode-coverage — новые имена полностью покрыты (FAIL остаётся только на прежних графических), audit-diagnostics-table — PASS.
+
+Открытая находка (хвост AXD-005, в реестре отмечена): тексты диагностик невыделенного массива расходятся (Interpreter: «Функция X: аргумент 'array' содержит массив, который ещё не выделен.», VM: «Массив 'array' объявлен, но ещё не выделен.»).
+
+Следующий шаг: по docs/PLANS4.md — остатки вне Wave 4: полный per-function разброс тонких filesystem builtins, хвост Wave 3 (параллельные Graphics/Keyboard/Mouse-файлы), выравнивание текста unallocated-диагностики.

@@ -352,35 +352,17 @@ public sealed partial class Interpreter
 
     private int ToInt32Checked(double value, TextLocation location, string detail)
     {
-        if (value < int.MinValue || value > int.MaxValue)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
-
-        return checked((int)value);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
     }
 
     private int ToInt32Checked(long value, TextLocation location, string detail)
     {
-        if (value < int.MinValue || value > int.MaxValue)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
-
-        return checked((int)value);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
     }
 
     private int ToInt32Checked(decimal value, TextLocation location, string detail)
     {
-        if (value < int.MinValue || value > int.MaxValue)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
-
-        return checked((int)value);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
     }
 
     private RuntimeValue EvaluateCheckedIntegerOperation(Func<int> operation, string detail, TextLocation location)
@@ -398,18 +380,26 @@ public sealed partial class Interpreter
         return RuntimeArithmeticHelpers.EnsureFiniteDoubleResult(value, detail, location, ReportNumericOverflow);
     }
 
+    private RuntimeValue EvaluatePowerOperation(double baseValue, double exponentValue, string detail, TextLocation location)
+    {
+        return RuntimeArithmeticHelpers.EvaluatePowerOperation(baseValue, exponentValue, detail, location, ReportRuntimeDiagnostic);
+    }
+
     private RuntimeValue EvaluateCheckedDecimalOperation(Func<decimal> operation, string detail, TextLocation location)
     {
         return RuntimeArithmeticHelpers.EvaluateCheckedDecimalOperation(operation, detail, location, ReportNumericOverflow);
     }
 
+    private void ReportResultOverflow(string message, TextLocation location)
+    {
+        ReportRuntimeDiagnostic(DiagnosticCodes.NumericOverflow, message, location);
+    }
+
     private TextLocation GetBuiltInArgumentLocation(BoundCallExpression expression, int argumentIndex)
     {
-        if (argumentIndex >= 0 && argumentIndex < expression.Arguments.Count)
-        {
-            return expression.Arguments[argumentIndex].Location;
-        }
-
+        // Локация builtin-диагностик унифицирована с BytecodeVm: координаты
+        // указывают на вызов целиком, а нарушенный аргумент назван в тексте.
+        _ = argumentIndex;
         return expression.Location;
     }
 
@@ -495,11 +485,11 @@ public sealed partial class Interpreter
             location);
     }
 
-    private void ReportStepZero(string variableName, TextLocation location)
+    private void ReportStepZero(TextLocation location)
     {
         ReportRuntimeDiagnostic(
             DiagnosticCodes.StepZero,
-            $"В цикле FOR для переменной '{variableName}' недопустим STEP 0.",
+            "В цикле FOR недопустим STEP 0.",
             location);
     }
 
@@ -560,34 +550,13 @@ public sealed partial class Interpreter
 
     private string AppendCallChain(string message)
     {
-        if (_callStack.Count == 0)
-        {
-            return message;
-        }
-
-        var builder = new StringBuilder(message);
-        builder.AppendLine();
-        builder.AppendLine("Цепочка вызовов:");
-
+        var frames = new List<RuntimeCallChainFrame>(_callStack.Count);
         foreach (var frame in _callStack)
         {
-            builder.Append("- ");
-            builder.Append(FormatRoutineLabel(frame.Function));
-            builder.Append(", вызов в ");
-            builder.Append(frame.CallSiteLocation.Line);
-            builder.Append(':');
-            builder.Append(frame.CallSiteLocation.Column);
-
-            if (frame.Function.ContainingRoutine is not null)
-            {
-                builder.Append(", объявлена внутри ");
-                builder.Append(FormatContainingRoutineLabel(frame.Function.ContainingRoutine));
-            }
-
-            builder.AppendLine(".");
+            frames.Add(new RuntimeCallChainFrame(frame.Function, frame.Function.Name, frame.CallSiteLocation));
         }
 
-        return builder.ToString().TrimEnd();
+        return RuntimeCallChainFormatter.AppendCallChain(message, frames);
     }
 
     private static string FormatRoutineLabel(FunctionSymbol function)
@@ -600,22 +569,6 @@ public sealed partial class Interpreter
         }
 
         builder.Append(function.IsSub ? "процедура" : "функция");
-        builder.Append(" '");
-        builder.Append(function.Name);
-        builder.Append('\'');
-        return builder.ToString();
-    }
-
-    private static string FormatContainingRoutineLabel(FunctionSymbol function)
-    {
-        var builder = new StringBuilder();
-
-        if (function.IsLocal)
-        {
-            builder.Append("локальной ");
-        }
-
-        builder.Append(function.IsSub ? "процедуры" : "функции");
         builder.Append(" '");
         builder.Append(function.Name);
         builder.Append('\'');

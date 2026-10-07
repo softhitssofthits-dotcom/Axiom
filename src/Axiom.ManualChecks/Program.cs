@@ -1129,6 +1129,8 @@ sealed class ProfilingRuntimeHost : IRuntimeHost, IReversibleOutputWriter
 
     public double NextRandomDouble() => _runtimeRandom.NextRandomDouble();
 
+    public void Reseed(int seed) => _runtimeRandom.Reseed(seed);
+
     public bool IsCanvasActive =>
         _inputProvider is IGraphicsHost graphicsHost && graphicsHost.IsCanvasActive;
 
@@ -1745,7 +1747,7 @@ sealed class FixedRuntimeClock : IRuntimeClock
 
 sealed class SeededRuntimeRandom : IRuntimeRandom
 {
-    private readonly Random _random;
+    private Random _random;
 
     public SeededRuntimeRandom(int seed)
     {
@@ -1753,6 +1755,8 @@ sealed class SeededRuntimeRandom : IRuntimeRandom
     }
 
     public double NextRandomDouble() => _random.NextDouble();
+
+    public void Reseed(int seed) => _random = new Random(seed);
 }
 
 sealed record BenchmarkOptions(string OutputPath, int Iterations, int WarmupIterations, string? Filter);

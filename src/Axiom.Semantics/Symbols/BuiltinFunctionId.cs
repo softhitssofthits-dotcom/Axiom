@@ -290,5 +290,13 @@ public enum BuiltinFunctionId
     Sinh,
     Cosh,
     Tanh,
-    SetSign
+    SetSign,
+    CInt,
+    CLng,
+    CDbl,
+    CDec,
+    ArraySum,
+    ArrayMin,
+    ArrayMax,
+    ArrayAverage
 }

@@ -11,25 +11,59 @@ public sealed partial class Interpreter
         return BuiltinNumericHelpers.EvaluateRnd(() => _host.NextRandomDouble());
     }
 
+    private RuntimeValue EvaluateCintBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        return BuiltinNumericHelpers.EvaluateCint(value, expression.Location, ReportRuntimeDiagnostic);
+    }
+
+    private RuntimeValue EvaluateClngBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        return BuiltinNumericHelpers.EvaluateClng(value, expression.Location, ReportRuntimeDiagnostic);
+    }
+
+    private RuntimeValue EvaluateCdblBuiltin(RuntimeValue value)
+    {
+        return BuiltinNumericHelpers.EvaluateCdbl(value);
+    }
+
+    private RuntimeValue EvaluateCdecBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        return BuiltinNumericHelpers.EvaluateCdec(value, expression.Location, ReportRuntimeDiagnostic);
+    }
+
+    private int EvaluateIntBuiltin(BoundCallExpression expression, RuntimeValue value)
+    {
+        var floored = value.Type switch
+        {
+            var type when type == TypeSymbol.Integer => value.AsInteger(),
+            var type when type == TypeSymbol.Long => ToInt32Checked(value.AsLong(), GetBuiltInArgumentLocation(expression, 0), "Result of INT(value)"),
+            var type when type == TypeSymbol.Double => ToInt32Checked(Math.Floor(value.AsDouble()), GetBuiltInArgumentLocation(expression, 0), "Result of INT(value)"),
+            var type when type == TypeSymbol.Decimal => ToInt32Checked(decimal.Floor(value.AsDecimal()), GetBuiltInArgumentLocation(expression, 0), "Result of INT(value)"),
+            _ => ReportInvalidRuntimeState<int>($"Unsupported INT argument type '{value.Type.Name}'.", expression.Location)
+        };
+
+        return floored;
+    }
+
     private RuntimeValue EvaluateAbsBuiltin(BoundCallExpression expression, RuntimeValue value)
     {
         return value.Type switch
         {
             var type when type == TypeSymbol.Integer => EvaluateCheckedIntegerOperation(
                 () => checked(Math.Abs(value.AsInteger())),
-                "Result of ABS(value)",
+                "Результат ABS",
                 GetBuiltInArgumentLocation(expression, 0)),
             var type when type == TypeSymbol.Long => EvaluateCheckedLongOperation(
                 () => checked(Math.Abs(value.AsLong())),
-                "Result of ABS(value)",
+                "Результат ABS",
                 GetBuiltInArgumentLocation(expression, 0)),
             var type when type == TypeSymbol.Double => EnsureFiniteDoubleResult(
                 Math.Abs(value.AsDouble()),
-                "Result of ABS(value)",
+                "Результат ABS",
                 GetBuiltInArgumentLocation(expression, 0)),
             var type when type == TypeSymbol.Decimal => EvaluateCheckedDecimalOperation(
                 () => decimal.Abs(value.AsDecimal()),
-                "Result of ABS(value)",
+                "Результат ABS",
                 GetBuiltInArgumentLocation(expression, 0)),
             _ => ReportInvalidRuntimeState<RuntimeValue>($"Unsupported ABS argument type '{value.Type.Name}'.", expression.Location)
         };
@@ -60,8 +94,8 @@ public sealed partial class Interpreter
         {
             ReportBuiltInArgumentError(
                 "CLAMP",
-                "high",
-                "must be greater than or equal to low.",
+                "low",
+                "не должен быть больше аргумента 'high'.",
                 GetBuiltInArgumentLocation(expression, 2));
             throw new RuntimeFailureException();
         }

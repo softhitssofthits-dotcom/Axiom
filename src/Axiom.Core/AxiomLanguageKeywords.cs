@@ -12,7 +12,7 @@ public static class AxiomLanguageKeywords
     /// </summary>
     public static readonly IReadOnlySet<string> Keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "AND", "APPEND", "AS", "BEGINFRAME", "BYREF", "BYVAL",
+        "AND", "ANDALSO", "APPEND", "AS", "BEGINFRAME", "BYREF", "BYVAL",
         "CAMERA", "CANVAS", "CASE", "CATCH", "CIRCLE", "CLOSE", "CLS", "COLOR",
         "CONST", "CONTINUE",
         "DIM", "DO", "DRAW", "DRAWCIRCLE", "DRAWIMAGE", "DRAWLINE", "DRAWRECT",
@@ -26,8 +26,8 @@ public static class AxiomLanguageKeywords
         "LINE", "LOCATE", "LOOP",
         "MOD", "MOUSE",
         "NEXT", "NOT",
-        "OFF", "ON", "OPEN", "OR", "OUTPUT",
-        "PAINT", "PALETTE", "PCOPY", "PRESERVE", "PRESENT", "PRESET", "PRINT", "PSET", "PUT",
+        "OFF", "ON", "OPEN", "ORELSE", "OR", "OUTPUT",
+        "PAINT", "PALETTE", "PCOPY", "PRESERVE", "PRESENT", "PRESET", "PRINT", "RANDOMIZE", "PSET", "PUT",
         "REDIM", "RESETCAMERA", "RETURN",
         "SCREEN", "SELECT", "SELF", "SETMAPTILE", "SLEEP", "STEP", "STOP", "SUB",
         "THEN", "TO", "TRANSPARENT", "TRY", "TYPE",

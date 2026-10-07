@@ -28,6 +28,8 @@ public sealed partial class Binder
             SyntaxKind.GreaterOrEqualsToken => ">=",
             SyntaxKind.GreaterGreaterToken => ">>",
             SyntaxKind.AndKeyword => "AND",
+            SyntaxKind.AndAlsoKeyword => "ANDALSO",
+            SyntaxKind.OrElseKeyword => "ORELSE",
             SyntaxKind.EqvKeyword => "EQV",
             SyntaxKind.ImpKeyword => "IMP",
             SyntaxKind.ModKeyword => "MOD",
@@ -66,6 +68,7 @@ public sealed partial class Binder
                 ? inputStatement.Identifiers[0].Location
                 : inputStatement.InputKeyword.Location,
             SleepStatementSyntax sleepStatement => sleepStatement.SleepKeyword.Location,
+            RandomizeStatementSyntax randomizeStatement => randomizeStatement.RandomizeKeyword.Location,
             ScreenStatementSyntax screenStatement => screenStatement.ScreenKeyword.Location,
             CanvasStatementSyntax canvasStatement => canvasStatement.CanvasKeyword.Location,
             BeginFrameStatementSyntax beginFrameStatement => beginFrameStatement.BeginFrameKeyword.Location,

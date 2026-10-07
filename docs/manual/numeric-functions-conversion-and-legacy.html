@@ -77,6 +77,16 @@ PRINT "Сумма: " + STR(amount)</code></pre>
                 <h3>Аргументы</h3><p><code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
                 <h3>Некорректный текст</h3>
                 <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
+                <h3>Правила чтения числа</h3>
+                <ul>
+                <li>десятичным разделителем служит только точка: <code>VAL("1.5")</code> даёт <code>1.5</code>;</li>
+                <li>запятая внутри числа игнорируется как разделитель групп разрядов, поэтому <code>VAL("1,5")</code> даёт <code>15</code>, а не <code>1.5</code>;</li>
+                <li>начальные и конечные пробелы допустимы: <code>VAL(" 12 ")</code> даёт <code>12</code>;</li>
+                <li>знак ставится перед числом: <code>VAL("-4.5")</code> даёт <code>-4.5</code>, а <code>VAL("+7")</code> даёт <code>7</code>;</li>
+                <li>экспоненциальная запись поддерживается: <code>VAL("1e2")</code> даёт <code>100</code>;</li>
+                <li>шестнадцатеричные записи вида <code>&amp;HFF</code> не читаются: <code>VAL("&amp;HFF")</code> даёт <code>0</code>;</li>
+                <li>если число стоит в начале строки, а дальше следует текст, числовая часть читается: <code>VAL("12abc")</code> даёт <code>12</code>.</li>
+                </ul>
                 <h3>Пример чтения числа из строки</h3>
                 <pre><code class="language-basic">' Преобразование строкового значения в число
 DIM text AS STRING
@@ -88,6 +98,27 @@ PRINT VAL(text) + 10</code></pre>
             </section>
 
             <section class="article-section">
+                <h2>CINT, CLNG, CDBL и CDEC</h2>
+                <p>Функции <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code> явно преобразуют числовое значение к целевому типу: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>. Явные сужающие присваивания в языке запрещены, поэтому эти функции — законная дверь для сужения.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = CINT(value)
+result = CLNG(value)
+result = CDBL(value)
+result = CDEC(value)</code></pre>
+                <h3>Аргументы</h3><p>Аргумент <code>value</code> задаёт числовое значение любого числового типа.</p>
+                <h3>Правила преобразования</h3>
+                <ul>
+                <li>дробная часть отбрасывается усечением к нулю: <code>CINT(-2.9)</code> даёт <code>-2</code> (для округления по правилам используйте <code>ROUND</code>, для пола — <code>INT</code>);</li>
+                <li>выход за диапазон целевого типа даёт диагностику <code>MB3008</code> о переполнении;</li>
+                <li><code>CDBL</code> и <code>CDEC</code> расширяют значение без потерь для целых исходных типов.</li>
+                </ul>
+                <h3>Пример явного сужения</h3>
+                <pre><code class="language-basic">' LONG в INTEGER через явное преобразование
+DIM big AS LONG
+DIM small AS INTEGER
+big = 42
+small = CINT(big)
+PRINT small</code></pre>
                 <h2>Выбор между INT, STR и VAL</h2>
                 <ul>
                     <li><code>INT</code> и <code>FIX</code> похожи только на первый взгляд: <code>INT</code> округляет вниз, а <code>FIX</code> отбрасывает дробную часть к нулю.</li>

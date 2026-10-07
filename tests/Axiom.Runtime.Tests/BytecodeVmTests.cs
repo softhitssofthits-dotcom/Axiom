@@ -7141,7 +7141,7 @@ END FUNCTION
         private readonly Queue<MouseInputEvent> _mouseEvents;
         private readonly HashSet<string> _pressedKeys;
         private readonly HashSet<int> _pressedMouseButtons;
-        private readonly Random _random = new();
+        private Random _random = new();
         private readonly DateTimeOffset _localNow;
         private readonly TimeZoneInfo _localTimeZone;
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
@@ -7890,6 +7890,8 @@ END FUNCTION
         public TimeZoneInfo GetLocalTimeZone() => _localTimeZone;
 
         public double NextRandomDouble() => _random.NextDouble();
+
+        public void Reseed(int seed) => _random = new Random(seed);
 
         public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
         {

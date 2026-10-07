@@ -1,0 +1,8 @@
+' CDEC приводит значение к DECIMAL — точная десятичная арифметика.
+' Ожидаемый вывод:
+' 0.3
+DIM a AS DECIMAL
+DIM b AS DECIMAL
+a = CDEC(0.1)
+b = CDEC(0.2)
+PRINT a + b

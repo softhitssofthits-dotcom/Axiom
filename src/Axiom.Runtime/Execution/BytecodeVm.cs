@@ -846,6 +846,10 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.ReseedRandom:
+                ExecuteReseedRandomInstruction(frame, instruction, instructionIndex);
+                break;
+
             case Opcode.FormatInterpolatedPart:
                 ExecuteFormatInterpolatedPart(frame, instructionIndex);
                 break;
@@ -4933,10 +4937,37 @@ public sealed partial class BytecodeVm
         }
 
         var typeName = ReadConstantUnchecked(instruction.GetOperand(0)).AsString();
-        ReportInvalidRuntimeState(
-            $"Инвариант TYPE '{typeName}' вернул FALSE после завершения конструктора.",
-            ResolveLocation(frame.Routine.Id, instructionIndex));
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var constructorChainFrames = CreateConstructorChainFrames(instruction, location);
+        if (constructorChainFrames is null)
+        {
+            ReportInvalidRuntimeState(
+                $"Инвариант TYPE '{typeName}' вернул FALSE после завершения конструктора.",
+                location);
+        }
+        else
+        {
+            ReportInvalidRuntimeStateWithChain(
+                $"Инвариант TYPE '{typeName}' вернул FALSE после завершения конструктора.",
+                location,
+                constructorChainFrames);
+        }
+
         throw new RuntimeFailureException();
+    }
+
+    private IReadOnlyList<RuntimeCallChainFrame>? CreateConstructorChainFrames(BytecodeInstruction instruction, TextLocation callSite)
+    {
+        // Кадр конструктора к моменту проверки инварианта уже выгружен, поэтому
+        // цепочка строится по операнду инструкции: он повторяет договор Interpreter,
+        // где проверка исполняется, пока кадр конструктора ещё в стеке.
+        if (instruction.OperandCount < 2
+            || !_routines.TryGetValue(instruction.GetOperand(1), out var constructorRoutine))
+        {
+            return null;
+        }
+
+        return [new RuntimeCallChainFrame(constructorRoutine.Symbol, constructorRoutine.Name, callSite)];
     }
 
     private void ExecuteReturn(BytecodeCallFrame frame, int instructionIndex)
@@ -5718,19 +5749,19 @@ public sealed partial class BytecodeVm
         {
             var type when type == TypeSymbol.Integer => EvaluateCheckedIntegerOperation(
                 () => checked(-operand.AsInteger()),
-                "Результат унарного '-'",
+                "Результат операции унарного '-'",
                 location),
             var type when type == TypeSymbol.Long => EvaluateCheckedLongOperation(
                 () => checked(-operand.AsLong()),
-                "Результат унарного '-'",
+                "Результат операции унарного '-'",
                 location),
             var type when type == TypeSymbol.Double => EnsureFiniteDoubleResult(
                 -operand.AsDouble(),
-                "Результат унарного '-'",
+                "Результат операции унарного '-'",
                 location),
             var type when type == TypeSymbol.Decimal => EvaluateCheckedDecimalOperation(
                 () => checked(-operand.AsDecimal()),
-                "Результат унарного '-'",
+                "Результат операции унарного '-'",
                 location),
             _ => ReportInvalidRuntimeState<RuntimeValue>(
                 $"Унарный '-' не поддерживает тип '{operand.Type.Name}'.",
@@ -6006,8 +6037,9 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluatePower(RuntimeValue left, RuntimeValue right, TextLocation location)
     {
-        return EnsureFiniteDoubleResult(
-            Math.Pow(left.AsDouble(), right.AsDouble()),
+        return EvaluatePowerOperation(
+            left.AsDouble(),
+            right.AsDouble(),
             "Результат операции '^'",
             location);
     }
@@ -6238,6 +6270,11 @@ public sealed partial class BytecodeVm
         return RuntimeArithmeticHelpers.EnsureFiniteDoubleResult(value, detail, location, ReportNumericOverflow);
     }
 
+    private RuntimeValue EvaluatePowerOperation(double baseValue, double exponentValue, string detail, TextLocation location)
+    {
+        return RuntimeArithmeticHelpers.EvaluatePowerOperation(baseValue, exponentValue, detail, location, ReportRuntimeDiagnostic);
+    }
+
     private void ReportDivisionByZero(TextLocation location)
     {
         RuntimeArithmeticHelpers.ReportDivisionByZero(location, ReportRuntimeDiagnostic);
@@ -6272,9 +6309,27 @@ public sealed partial class BytecodeVm
             location);
     }
 
+    private void ReportResultOverflow(string message, TextLocation location)
+    {
+        ReportRuntimeDiagnostic(DiagnosticCodes.NumericOverflow, message, location);
+    }
+
     private void ReportInvalidRuntimeState(string message, TextLocation? location = null)
     {
         ReportRuntimeDiagnostic(DiagnosticCodes.InvalidRuntimeState, message, location ?? FallbackRuntimeLocation);
+    }
+
+    private void ReportInvalidRuntimeStateWithChain(
+        string message,
+        TextLocation location,
+        IReadOnlyList<RuntimeCallChainFrame> extraChainFrames)
+    {
+        var diagnostic = new Diagnostic(
+            DiagnosticCodes.InvalidRuntimeState,
+            AppendCallChain(message, extraChainFrames),
+            location);
+        _diagnostics.Report(diagnostic);
+        _lastRuntimeFailureDiagnostic = diagnostic;
     }
 
     private T ReportInvalidRuntimeState<T>(string message, TextLocation? location = null)
@@ -6290,29 +6345,27 @@ public sealed partial class BytecodeVm
         _lastRuntimeFailureDiagnostic = diagnostic;
     }
 
-    private string AppendCallChain(string message)
+    private string AppendCallChain(string message, IReadOnlyList<RuntimeCallChainFrame>? extraChainFrames = null)
     {
-        if (_callStack.Count <= 1)
+        // Точка входа не является пользовательской процедурой и в цепочку не входит:
+        // кадры начинаются с первой вызванной процедуры, как в Interpreter.
+        var frames = new List<RuntimeCallChainFrame>(_callStack.Count + (extraChainFrames?.Count ?? 0));
+        if (extraChainFrames is not null)
         {
-            return message;
+            frames.AddRange(extraChainFrames);
         }
-
-        var builder = new StringBuilder(message);
-        builder.AppendLine();
-        builder.AppendLine("Цепочка вызовов:");
 
         foreach (var frame in _callStack)
         {
-            builder.Append("- процедура '");
-            builder.Append(frame.Routine.Name);
-            builder.Append("', вызов в ");
-            builder.Append(frame.CallSiteLocation.Line);
-            builder.Append(':');
-            builder.Append(frame.CallSiteLocation.Column);
-            builder.AppendLine(".");
+            if (frame.Routine.IsEntryPoint)
+            {
+                continue;
+            }
+
+            frames.Add(new RuntimeCallChainFrame(frame.Routine.Symbol, frame.Routine.Name, frame.CallSiteLocation));
         }
 
-        return builder.ToString().TrimEnd();
+        return RuntimeCallChainFormatter.AppendCallChain(message, frames);
     }
 
     private readonly record struct DebugStepBoundary(DebugStepMode Mode, int StartLine, int StartCallDepth);

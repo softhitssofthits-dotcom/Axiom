@@ -250,7 +250,7 @@ CLOSE f</code></pre>
 
             <section class="article-section" id="writeline">
                 <h2>WRITELINE</h2>
-                <p>Функция <code>WRITELINE</code> записывает строку и сразу завершает её переводом строки.</p>
+                <p>Функция <code>WRITELINE</code> записывает строку и сразу завершает её переводом строки. Перевод строки записывается одним байтом <code>LF</code> (0x0A), а не парой <code>CRLF</code>: это нужно учитывать при обмене файлами с программами, ожидающими классические текстовые концы строк Windows.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = WRITELINE(file, text)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт содержимое строки. Возвращается <code>TRUE</code>, если запись выполнена.</p>
@@ -266,7 +266,7 @@ CLOSE f</code></pre>
 
             <section class="article-section" id="newline">
                 <h2>NEWLINE</h2>
-                <p>Функция <code>NEWLINE</code> добавляет в открытый файл перевод строки без дополнительного текста.</p>
+                <p>Функция <code>NEWLINE</code> добавляет в открытый файл перевод строки без дополнительного текста. Как и у <code>WRITELINE</code>, перевод строки записывается одним байтом <code>LF</code> (0x0A).</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = NEWLINE(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. Результат имеет тип <code>BOOLEAN</code>.</p>

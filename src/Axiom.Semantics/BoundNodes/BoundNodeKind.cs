@@ -13,6 +13,7 @@ public enum BoundNodeKind
     PrintUsingStatement,
     InputStatement,
     SleepStatement,
+    RandomizeStatement,
     ScreenStatement,
     CanvasStatement,
     BeginFrameStatement,

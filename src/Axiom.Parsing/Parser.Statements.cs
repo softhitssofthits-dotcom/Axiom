@@ -28,6 +28,7 @@ public sealed partial class Parser
             SyntaxKind.PrintKeyword => ParsePrintStatement(),
             SyntaxKind.InputKeyword => ParseInputStatement(),
             SyntaxKind.SleepKeyword => ParseSleepStatement(),
+            SyntaxKind.RandomizeKeyword => ParseRandomizeStatement(),
             SyntaxKind.ScreenKeyword => ParseScreenStatement(),
             SyntaxKind.CanvasKeyword => ParseCanvasStatement(),
             SyntaxKind.BeginFrameKeyword => new BeginFrameStatementSyntax(Match(SyntaxKind.BeginFrameKeyword, "BEGINFRAME")),
@@ -220,6 +221,13 @@ public sealed partial class Parser
         var sleepKeyword = Match(SyntaxKind.SleepKeyword, "SLEEP");
         var durationExpression = IsStatementTerminator(Current.Kind) ? null : ParseExpression();
         return new SleepStatementSyntax(sleepKeyword, durationExpression);
+    }
+
+    private RandomizeStatementSyntax ParseRandomizeStatement()
+    {
+        var randomizeKeyword = Match(SyntaxKind.RandomizeKeyword, "RANDOMIZE");
+        var seedExpression = IsStatementTerminator(Current.Kind) ? null : ParseExpression();
+        return new RandomizeStatementSyntax(randomizeKeyword, seedExpression);
     }
 
     private ScreenStatementSyntax ParseScreenStatement()
@@ -1318,6 +1326,10 @@ public sealed partial class Parser
         var statements = ParseStatementsUntil(static parser => parser.Current.Kind == SyntaxKind.NextKeyword);
         var nextKeyword = Match(SyntaxKind.NextKeyword, "NEXT");
 
+        // QB-наследие: разрешаем имя счётчика после NEXT и игнорируем его,
+        // чтобы привычная форма не всплывала как оператор-выражение без эффекта.
+        SyntaxToken? nextCounterIdentifier = Current.Kind == SyntaxKind.IdentifierToken ? NextToken() : null;
+
         return new ForStatementSyntax(
             forKeyword,
             identifier,
@@ -1327,7 +1339,8 @@ public sealed partial class Parser
             endExpression,
             stepClause,
             statements,
-            nextKeyword);
+            nextKeyword,
+            nextCounterIdentifier);
     }
 
     private SelectCaseStatementSyntax ParseSelectCaseStatement()

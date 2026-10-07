@@ -56,6 +56,13 @@ public sealed partial class Binder
             statement.DurationExpression is null ? null : BindExpression(statement.DurationExpression, TypeSymbol.Long));
     }
 
+    private BoundStatement BindRandomizeStatement(RandomizeStatementSyntax statement)
+    {
+        return new BoundRandomizeStatement(
+            GetLocation(statement),
+            statement.SeedExpression is null ? null : BindExpression(statement.SeedExpression, TypeSymbol.Long));
+    }
+
     private BoundStatement BindScreenStatement(ScreenStatementSyntax statement)
     {
         if (statement.ColorSwitchExpression is not null)

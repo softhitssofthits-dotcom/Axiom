@@ -133,6 +133,19 @@ public static partial class BuiltinFunctions
             resultTypePolicy: resultTypePolicy);
     }
 
+    private static BuiltinFunctionDescriptor CreateArrayDouble(
+        BuiltinFunctionId id,
+        string name)
+    {
+        return new BuiltinFunctionDescriptor(
+            id,
+            name,
+            [Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer))],
+            TypeSymbol.Double,
+            bindingKind: BuiltinBindingKind.Array,
+            resultTypePolicy: BuiltinResultTypePolicy.Double);
+    }
+
     private static BuiltinFunctionDescriptor CreateArrayIntegerArray(
         BuiltinFunctionId id,
         string name,

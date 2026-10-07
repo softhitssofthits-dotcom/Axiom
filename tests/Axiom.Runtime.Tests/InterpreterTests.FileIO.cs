@@ -32,6 +32,52 @@ CLOSE f
     }
 
     [Fact]
+    public void Execute_OpenInputStripsUtf8Bom()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "axiom-file-io-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var filePath = Path.Combine(root, "bom.txt");
+        File.WriteAllBytes(filePath, new byte[] { 0xEF, 0xBB, 0xBF }.Concat(System.Text.Encoding.UTF8.GetBytes("тест")).ToArray());
+
+        var text = $"""
+DIM f AS FILE
+OPEN "{ToBasicString(filePath)}" FOR INPUT AS f
+PRINT READTOEND(f)
+PRINT FILEPOS(f)
+REWIND(f)
+PRINT FILEPOS(f)
+CLOSE f
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["тест", "8", "0"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_OpenInputFallsBackToWindows1251()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "axiom-file-io-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var filePath = Path.Combine(root, "cp1251.txt");
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        File.WriteAllBytes(filePath, System.Text.Encoding.GetEncoding(1251).GetBytes("тест"));
+
+        var text = $"""
+DIM f AS FILE
+OPEN "{ToBasicString(filePath)}" FOR INPUT AS f
+PRINT READTOEND(f)
+CLOSE f
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["тест"], host.Output);
+    }
+
+    [Fact]
     public void Execute_FileStateBuiltins()
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-file-io-tests", Guid.NewGuid().ToString("N"));

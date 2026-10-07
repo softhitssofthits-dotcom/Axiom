@@ -41,6 +41,7 @@ public sealed partial class Interpreter
             BoundPrintUsingStatement printUsing => ExecutePrintUsing(printUsing),
             BoundInputStatement input => ExecuteInput(input),
             BoundSleepStatement sleep => ExecuteSleep(sleep),
+            BoundRandomizeStatement randomize => ExecuteRandomize(randomize),
             BoundScreenStatement screen => ExecuteScreen(screen),
             BoundCanvasStatement canvas => ExecuteCanvas(canvas),
             BoundBeginFrameStatement beginFrame => ExecuteBeginFrame(beginFrame),
@@ -201,6 +202,19 @@ public sealed partial class Interpreter
     {
         DispatchKeyboardHandlers(location);
         DispatchMouseHandlers(location);
+    }
+
+    private ExecutionSignal ExecuteRandomize(BoundRandomizeStatement statement)
+    {
+        if (statement.SeedExpression is not null)
+        {
+            _host.Reseed(ToInt32Checked(
+                EvaluateExpression(statement.SeedExpression).AsLong(),
+                statement.Location,
+                "Результат seed оператора RANDOMIZE"));
+        }
+
+        return ExecutionSignal.None;
     }
 
     private ExecutionSignal ExecuteSleep(BoundSleepStatement statement)
@@ -608,7 +622,16 @@ public sealed partial class Interpreter
                 var error = ConsumeLastRuntimeError();
                 var catchScope = new RuntimeScope(CurrentScope);
                 catchScope.Define(statement.CatchVariable, error);
-                signal = ExecuteStatementsInScope(catchScope, statement.CatchStatements);
+                try
+                {
+                    signal = ExecuteStatementsInScope(catchScope, statement.CatchStatements);
+                }
+                catch (RuntimeFailureException catchFailure)
+                {
+                    // Ошибка из тела CATCH не отменяет FINALLY: она продолжает путь
+                    // необработанной ошибки после гарантированного выполнения FINALLY.
+                    unhandledFailure = catchFailure;
+                }
             }
         }
 
@@ -822,7 +845,7 @@ public sealed partial class Interpreter
 
         if (IsZero(step))
         {
-            ReportStepZero(statement.Variable.Name, statement.StepExpression.Location);
+            ReportStepZero(statement.StepExpression.Location);
             throw new RuntimeFailureException();
         }
 

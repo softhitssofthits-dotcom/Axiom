@@ -1,0 +1,6 @@
+' CDBL приводит значение к DOUBLE — удобно перед целочисленным делением.
+' Ожидаемый вывод:
+' 3.5
+DIM whole AS INTEGER
+whole = 7
+PRINT CDBL(whole) / 2

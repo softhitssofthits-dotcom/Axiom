@@ -147,6 +147,50 @@ END TRY
         Assert.Equal(2, diagnostic.Location.Line);
     }
 
+    [Fact]
+    public void Execute_TryFinallyRunsWhenCatchBodyRethrows()
+    {
+        const string text = """
+TRY
+    TRY
+        ERROR "APP010", "Original failure"
+    CATCH inner
+        ERROR inner
+    FINALLY
+        PRINT "inner-cleanup"
+    END TRY
+CATCH outer
+    PRINT outer.Code
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["inner-cleanup", "APP010"], host.Output);
+    }
+
+    [Fact]
+    public void Execute_TryFinallyRunsWhenCatchBodyRaisesNewError()
+    {
+        const string text = """
+TRY
+    ERROR "APP011"
+CATCH err
+    ERROR "APP012", "Replacement failure"
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var (_, host, result) = ExecuteProgram(text);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(["cleanup"], host.Output);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "APP012");
+        Assert.Contains("Replacement failure", diagnostic.Message, StringComparison.Ordinal);
+    }
+
     private static (BoundProgram program, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(string text, params string[] inputs)
     {
         var syntax = Parser.Parse(text, out var parserDiagnostics);
@@ -438,7 +482,7 @@ END TRY
         private readonly Queue<MouseInputEvent> _mouseEvents;
         private readonly HashSet<string> _pressedKeys;
         private readonly HashSet<int> _pressedMouseButtons;
-        private readonly Random _random = new();
+        private Random _random = new();
         private readonly DateTimeOffset _localNow;
         private readonly TimeZoneInfo _localTimeZone;
         private readonly IReadOnlyDictionary<string, TimeZoneInfo> _namedTimeZones;
@@ -1163,6 +1207,8 @@ END TRY
         public TimeZoneInfo GetLocalTimeZone() => _localTimeZone;
 
         public double NextRandomDouble() => _random.NextDouble();
+
+        public void Reseed(int seed) => _random = new Random(seed);
 
         public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
         {

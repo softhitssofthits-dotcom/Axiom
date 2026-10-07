@@ -256,10 +256,10 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.CloseFile, location);
     }
 
-    public static LoweredInstruction ValidateTypeInvariant(TextLocation location, string displayName)
+    public static LoweredInstruction ValidateTypeInvariant(TextLocation location, string displayName, FunctionSymbol? constructor = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        return new LoweredInstruction(LoweredInstructionKind.ValidateTypeInvariant, location, displayName: displayName);
+        return new LoweredInstruction(LoweredInstructionKind.ValidateTypeInvariant, location, displayName: displayName, function: constructor);
     }
 
     public static LoweredInstruction ValidateForStep(TextLocation location)
@@ -692,6 +692,11 @@ public sealed class LoweredInstruction
             variables: variables,
             promptText: promptText,
             valueCount: variables.Count);
+    }
+
+    public static LoweredInstruction ReseedRandom(TextLocation location, bool hasSeed)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.ReseedRandom, location, valueCount: hasSeed ? 1 : 0);
     }
 
     public static LoweredInstruction Sleep(TextLocation location, bool hasDuration)

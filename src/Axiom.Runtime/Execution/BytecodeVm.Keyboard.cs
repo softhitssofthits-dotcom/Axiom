@@ -1,5 +1,6 @@
 using Axiom.Bytecode;
 using Axiom.Core;
+using Axiom.Semantics;
 
 namespace Axiom.Runtime;
 
@@ -147,6 +148,23 @@ public sealed partial class BytecodeVm
         return TryReadKeyboardKey(out var keyText)
             ? keyText
             : string.Empty;
+    }
+
+    private void ExecuteReseedRandomInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        if (instruction.GetOperand(0) == 0)
+        {
+            return;
+        }
+
+        var seed = PopValue(frame, instructionIndex).AsLong();
+        if (seed < int.MinValue || seed > int.MaxValue)
+        {
+            ReportNumericOverflow("Результат seed оператора RANDOMIZE", TypeSymbol.Integer, ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+
+        _host.Reseed((int)seed);
     }
 
     private void ExecuteSleepInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)

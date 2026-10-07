@@ -1,0 +1,12 @@
+' ARRAYSUM складывает все числовые элементы массива без ручного цикла.
+' Ожидаемый вывод:
+' 150
+DIM prices(1 TO 5) AS INTEGER
+
+prices(1) = 10
+prices(2) = 20
+prices(3) = 30
+prices(4) = 40
+prices(5) = 50
+
+PRINT ARRAYSUM(prices)

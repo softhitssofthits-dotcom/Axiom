@@ -11,6 +11,26 @@ public sealed partial class BytecodeVm
         return BuiltinNumericHelpers.EvaluateRnd(() => _host.NextRandomDouble());
     }
 
+    private RuntimeValue EvaluateCintBuiltin(RuntimeValue value, TextLocation location)
+    {
+        return BuiltinNumericHelpers.EvaluateCint(value, location, ReportRuntimeDiagnostic);
+    }
+
+    private RuntimeValue EvaluateClngBuiltin(RuntimeValue value, TextLocation location)
+    {
+        return BuiltinNumericHelpers.EvaluateClng(value, location, ReportRuntimeDiagnostic);
+    }
+
+    private RuntimeValue EvaluateCdblBuiltin(RuntimeValue value)
+    {
+        return BuiltinNumericHelpers.EvaluateCdbl(value);
+    }
+
+    private RuntimeValue EvaluateCdecBuiltin(RuntimeValue value, TextLocation location)
+    {
+        return BuiltinNumericHelpers.EvaluateCdec(value, location, ReportRuntimeDiagnostic);
+    }
+
     private int EvaluateIntBuiltin(RuntimeValue value, TextLocation location)
     {
         return value.Type switch
@@ -227,35 +247,17 @@ public sealed partial class BytecodeVm
 
     private int ToInt32Checked(double value, TextLocation location, string detail)
     {
-        if (value < int.MinValue || value > int.MaxValue)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
-
-        return checked((int)value);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
     }
 
     private int ToInt32Checked(long value, TextLocation location, string detail)
     {
-        if (value < int.MinValue || value > int.MaxValue)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
-
-        return checked((int)value);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
     }
 
     private int ToInt32Checked(decimal value, TextLocation location, string detail)
     {
-        if (value < int.MinValue || value > int.MaxValue)
-        {
-            ReportNumericOverflow(detail, TypeSymbol.Integer, location);
-            throw new RuntimeFailureException();
-        }
-
-        return checked((int)value);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
     }
 
     private bool HasNegativeSign(RuntimeValue value, TextLocation location)

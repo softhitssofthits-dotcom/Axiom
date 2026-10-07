@@ -826,6 +826,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.PrintLine => new BytecodeInstruction(Opcode.PrintLine),
             LoweredInstructionKind.Input => EmitInput(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.Sleep => new BytecodeInstruction(Opcode.Sleep, [instruction.ValueCount]),
+            LoweredInstructionKind.ReseedRandom => new BytecodeInstruction(Opcode.ReseedRandom, [instruction.ValueCount]),
             LoweredInstructionKind.FormatInterpolatedPart => new BytecodeInstruction(Opcode.FormatInterpolatedPart),
             LoweredInstructionKind.PushErrorHandler => EmitPushErrorHandler(routine, instruction, parameterSlots, localSlots, captureSlots, labelTargets),
             LoweredInstructionKind.PopErrorHandler => new BytecodeInstruction(Opcode.PopErrorHandler),
@@ -1320,6 +1321,16 @@ public sealed class BytecodeCompiler
 
     private BytecodeInstruction EmitValidateTypeInvariant(LoweredInstruction instruction)
     {
+        // Второй операнд — идентификатор процедуры конструктора: VM использует его,
+        // чтобы показать кадр конструктора в цепочке вызовов диагностики инварианта.
+        if (instruction.Function is not null
+            && _routineIds.TryGetValue(instruction.Function, out var constructorRoutineId))
+        {
+            return new BytecodeInstruction(
+                Opcode.ValidateTypeInvariant,
+                [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName), constructorRoutineId]);
+        }
+
         return new BytecodeInstruction(Opcode.ValidateTypeInvariant, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
     }
 

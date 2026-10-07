@@ -662,7 +662,16 @@ public sealed class BytecodeModuleValidator
 
                 case Opcode.CreateRecord:
                 case Opcode.ValidateTypeInvariant:
-                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.OperandCount != 1 && instruction.OperandCount != 2)
+                    {
+                        Report(
+                            "BC4012",
+                            $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' ожидает 1 или 2 операнда, но получила {instruction.OperandCount}.",
+                            module,
+                            routine.Id,
+                            instructionIndex);
+                    }
+
                     ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя TYPE");
                     break;
 
@@ -706,6 +715,10 @@ public sealed class BytecodeModuleValidator
                 case Opcode.Sleep:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidateSleepInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.ReseedRandom:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     break;
 
                 case Opcode.Color:
@@ -1500,6 +1513,17 @@ public sealed class BytecodeModuleValidator
                 {
                     var durationType = Pop();
                     ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, durationType, TypeSymbol.Long, "длительность SLEEP");
+                }
+
+                break;
+            }
+
+            case Opcode.ReseedRandom:
+            {
+                if (instruction.GetOperand(0) == 1)
+                {
+                    var seedType = Pop();
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, seedType, TypeSymbol.Long, "seed оператора RANDOMIZE");
                 }
 
                 break;
@@ -3849,6 +3873,7 @@ public sealed class BytecodeModuleValidator
             case Opcode.BeginFrame:
             case Opcode.Present:
             case Opcode.ResetCamera:
+            case Opcode.ReseedRandom when instruction.GetOperand(0) == 0:
             case Opcode.Sleep when instruction.GetOperand(0) == 0:
             case Opcode.PushErrorHandler:
             case Opcode.PopErrorHandler:

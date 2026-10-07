@@ -1,0 +1,10 @@
+' CINT явно преобразует число к INTEGER, отбрасывая дробную часть к нулю.
+' Ожидаемый вывод:
+' 2
+' -2
+DIM value AS DOUBLE
+DIM negative AS DOUBLE
+value = 2.9
+negative = -2.9
+PRINT CINT(value)
+PRINT CINT(negative)

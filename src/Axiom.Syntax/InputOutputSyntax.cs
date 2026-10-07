@@ -120,6 +120,23 @@ public sealed class SleepStatementSyntax : StatementSyntax
     public ExpressionSyntax? DurationExpression { get; }
 }
 
+public sealed class RandomizeStatementSyntax : StatementSyntax
+{
+    public RandomizeStatementSyntax(SyntaxToken randomizeKeyword, ExpressionSyntax? seedExpression)
+    {
+        ArgumentNullException.ThrowIfNull(randomizeKeyword);
+
+        RandomizeKeyword = randomizeKeyword;
+        SeedExpression = seedExpression;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.RandomizeStatement;
+
+    public SyntaxToken RandomizeKeyword { get; }
+
+    public ExpressionSyntax? SeedExpression { get; }
+}
+
 public sealed class OpenStatementSyntax : StatementSyntax
 {
     public OpenStatementSyntax(

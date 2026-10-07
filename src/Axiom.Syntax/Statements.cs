@@ -568,7 +568,8 @@ public sealed class ForStatementSyntax : StatementSyntax
         ExpressionSyntax endExpression,
         StepClauseSyntax? stepClause,
         IReadOnlyList<StatementSyntax> statements,
-        SyntaxToken nextKeyword)
+        SyntaxToken nextKeyword,
+        SyntaxToken? nextCounterIdentifier = null)
     {
         ArgumentNullException.ThrowIfNull(forKeyword);
         ArgumentNullException.ThrowIfNull(identifier);
@@ -588,6 +589,7 @@ public sealed class ForStatementSyntax : StatementSyntax
         StepClause = stepClause;
         Statements = statements;
         NextKeyword = nextKeyword;
+        NextCounterIdentifier = nextCounterIdentifier;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ForStatement;
@@ -609,6 +611,8 @@ public sealed class ForStatementSyntax : StatementSyntax
     public IReadOnlyList<StatementSyntax> Statements { get; }
 
     public SyntaxToken NextKeyword { get; }
+    // QB-наследие: NEXT может завершаться именем счётчика; язык принимает имя и игнорирует его.
+    public SyntaxToken? NextCounterIdentifier { get; }
 }
 
 public sealed class WhileStatementSyntax : StatementSyntax

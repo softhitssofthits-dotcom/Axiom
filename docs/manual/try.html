@@ -76,6 +76,7 @@ PRINT "after"</code></pre>
 <li><code>CATCH</code> в текущем срезе не фильтрует ошибки по типу: он перехватывает любую ошибку времени выполнения из соответствующего <code>TRY</code>.</li>
 <li>Поддерживается не более одного <code>CATCH</code> в одном блоке <code>TRY</code>.</li>
 <li>Пользовательскую runtime-ошибку можно создать оператором <code>ERROR</code>; пойманную ошибку можно передать дальше формой <code>ERROR err</code>.</li>
+<li><code>FINALLY</code> выполняется гарантированно: после обычного тела <code>TRY</code>, после обработанной в <code>CATCH</code> ошибки, а также перед выходом с необработанной ошибкой. Это касается и повторного выброса (<code>ERROR err</code>), и новой ошибки, возникшей внутри тела <code>CATCH</code>: сначала выполняется <code>FINALLY</code>, и только затем ошибка передаётся внешнему обработчику или останавливает программу.</li>
 <li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
 <li>Тело <code>TRY</code>, <code>CATCH</code> и <code>FINALLY</code> образуют отдельные блочные области видимости.</li>
 </ul>
@@ -83,7 +84,7 @@ PRINT "after"</code></pre>
 
 <section class="article-section">
 <h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li></ul>
+<ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li><li><a href="../../samples/operators/try/rethrow_from_catch_runs_finally.axm">TRY: FINALLY при повторном выбросе из CATCH</a></li><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li></ul>
 </section>
 
 <section class="article-section">

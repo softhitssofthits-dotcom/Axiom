@@ -71,6 +71,39 @@ public static class RuntimeArithmeticHelpers
         return RuntimeValue.FromDouble(value);
     }
 
+    public static int ToInt32Checked(double value, TextLocation location, string detail, Action<string, string, TextLocation> reportDiagnostic)
+    {
+        if (value < int.MinValue || value > int.MaxValue)
+        {
+            ReportNumericOverflow(detail, TypeSymbol.Integer, location, reportDiagnostic);
+            throw new RuntimeFailureException();
+        }
+
+        return checked((int)value);
+    }
+
+    public static int ToInt32Checked(long value, TextLocation location, string detail, Action<string, string, TextLocation> reportDiagnostic)
+    {
+        if (value < int.MinValue || value > int.MaxValue)
+        {
+            ReportNumericOverflow(detail, TypeSymbol.Integer, location, reportDiagnostic);
+            throw new RuntimeFailureException();
+        }
+
+        return checked((int)value);
+    }
+
+    public static int ToInt32Checked(decimal value, TextLocation location, string detail, Action<string, string, TextLocation> reportDiagnostic)
+    {
+        if (value < int.MinValue || value > int.MaxValue)
+        {
+            ReportNumericOverflow(detail, TypeSymbol.Integer, location, reportDiagnostic);
+            throw new RuntimeFailureException();
+        }
+
+        return checked((int)value);
+    }
+
     public static void ReportNumericOverflow(
         string detail,
         TypeSymbol type,
@@ -81,6 +114,33 @@ public static class RuntimeArithmeticHelpers
             DiagnosticCodes.NumericOverflow,
             $"{detail} выходит за диапазон {type.Name}.",
             location);
+    }
+
+    public static RuntimeValue EvaluatePowerOperation(
+        double baseValue,
+        double exponentValue,
+        string detail,
+        TextLocation location,
+        Action<string, string, TextLocation> reportDiagnostic)
+    {
+        if (baseValue < 0 && !double.IsInteger(exponentValue))
+        {
+            reportDiagnostic(
+                DiagnosticCodes.NumericDomain,
+                "Оператор '^' не определён для отрицательного основания и нецелой степени.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        var result = Math.Pow(baseValue, exponentValue);
+
+        if (!double.IsFinite(result))
+        {
+            ReportNumericOverflow(detail, TypeSymbol.Double, location, reportDiagnostic);
+            throw new RuntimeFailureException();
+        }
+
+        return RuntimeValue.FromDouble(result);
     }
 
     public static void ReportDivisionByZero(

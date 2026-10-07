@@ -29,6 +29,7 @@ public sealed partial class Binder
             PrintUsingStatementSyntax printUsingStatement => BindPrintUsingStatement(printUsingStatement),
             InputStatementSyntax inputStatement => BindInputStatement(inputStatement),
             SleepStatementSyntax sleepStatement => BindSleepStatement(sleepStatement),
+            RandomizeStatementSyntax randomizeStatement => BindRandomizeStatement(randomizeStatement),
             ScreenStatementSyntax screenStatement => BindScreenStatement(screenStatement),
             CanvasStatementSyntax canvasStatement => BindCanvasStatement(canvasStatement),
             BeginFrameStatementSyntax beginFrameStatement => new BoundBeginFrameStatement(GetLocation(beginFrameStatement)),
@@ -80,8 +81,23 @@ public sealed partial class Binder
             ContinueWhileStatementSyntax continueWhileStatement => BindContinueWhileStatement(continueWhileStatement),
             ContinueDoStatementSyntax continueDoStatement => BindContinueDoStatement(continueDoStatement),
             ReturnStatementSyntax returnStatement => BindReturnStatement(returnStatement),
-            ExpressionStatementSyntax expressionStatement => new BoundExpressionStatement(GetLocation(expressionStatement), BindExpression(expressionStatement.Expression)),
+            ExpressionStatementSyntax expressionStatement => BindExpressionStatement(expressionStatement),
             _ => throw new ArgumentOutOfRangeException(nameof(statement), statement, "Unsupported statement.")
         };
+    }
+
+    private BoundStatement BindExpressionStatement(ExpressionStatementSyntax statement)
+    {
+        var expression = BindExpression(statement.Expression);
+
+        // Смысл оператора-выражения — побочный эффект вызова. Одиночное имя,
+        // литерал, индекс или чтение поля ничего не изменяют и молча терялись:
+        // например `FLUSH f` без скобок выглядел исполнившимся, но не выполнялся.
+        if (expression is not (BoundCallExpression or BoundErrorExpression))
+        {
+            ReportExpressionStatementHasNoEffect(GetLocation(statement));
+        }
+
+        return new BoundExpressionStatement(GetLocation(statement), expression);
     }
 }

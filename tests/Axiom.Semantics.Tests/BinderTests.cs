@@ -5012,6 +5012,57 @@ NEXT
     }
 
     [Fact]
+    public void Bind_ReportsBuiltinNameStatementWithoutCall()
+    {
+        const string text = """
+DIM f AS FILE
+FLUSH f
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        // `FLUSH f` парсится как два отдельных оператора-выражения: `FLUSH` и `f`.
+        // Оба не содержат вызова и получают MB2040 вместо прежнего молчаливого no-op.
+        var flushDiagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2040" && d.Location.Line == 2 && d.Location.Column == 1);
+        Assert.Contains("FLUSH(f)", flushDiagnostic.Message, StringComparison.Ordinal);
+        Assert.Equal(2, diagnostics.Count(static d => d.Code == "MB2040"));
+    }
+
+    [Fact]
+    public void Bind_ReportsBareIdentifierStatementWithoutCall()
+    {
+        const string text = """
+DIM x AS INTEGER
+x = 3
+x
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2040");
+        Assert.Equal(3, diagnostic.Location.Line);
+    }
+
+    [Fact]
+    public void Bind_AllowsProcedureAndBuiltinCallsAsStatements()
+    {
+        const string text = """
+DIM a(1 TO 2) AS INTEGER
+ARRAYFILL(a, 9)
+Run()
+PRINT a(1)
+
+SUB Run()
+PRINT "ran"
+END SUB
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
     public void Bind_ReturnInFunction()
     {
         const string text = """

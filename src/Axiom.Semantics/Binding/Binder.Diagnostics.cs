@@ -227,6 +227,14 @@ public sealed partial class Binder
         _diagnostics.Report(DiagnosticCodes.ProcedureValue, $"Процедуру '{name}' нельзя использовать как значение.", location);
     }
 
+    private void ReportExpressionStatementHasNoEffect(TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.ExpressionStatementHasNoEffect,
+            "Оператор-выражение не имеет эффекта: выражение не вызывает процедуру или функцию. Если это вызов, добавьте скобки, например FLUSH(f).",
+            location);
+    }
+
     private void ReportInvalidOnKeyHandler(string name, TextLocation location)
     {
         _diagnostics.Report(

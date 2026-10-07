@@ -271,6 +271,14 @@ public sealed class BoundProgramLowerer
             case BoundInputStatement input:
                 LowerInput(input, instructions);
                 break;
+            case BoundRandomizeStatement randomize:
+                if (randomize.SeedExpression is not null)
+                {
+                    LowerExpression(randomize.SeedExpression, instructions);
+                }
+
+                instructions.Add(LoweredInstruction.ReseedRandom(randomize.Location, randomize.SeedExpression is not null));
+                break;
             case BoundSleepStatement sleep:
                 if (sleep.DurationExpression is not null)
                 {
@@ -1601,7 +1609,7 @@ public sealed class BoundProgramLowerer
                             [new BoundVariableExpression(typeConstructor.Location, constructorTemporary)],
                             TypeSymbol.Boolean),
                         instructions);
-                    instructions.Add(LoweredInstruction.ValidateTypeInvariant(typeConstructor.Location, typeConstructor.RecordType.Name));
+                    instructions.Add(LoweredInstruction.ValidateTypeInvariant(typeConstructor.Location, typeConstructor.RecordType.Name, typeConstructor.Constructor));
                 }
 
                 instructions.Add(LoweredInstruction.LoadVariable(typeConstructor.Location, constructorTemporary));
@@ -1622,6 +1630,27 @@ public sealed class BoundProgramLowerer
                 break;
 
             case BoundBinaryExpression binary:
+                if (binary.OperatorKind is SyntaxKind.AndAlsoKeyword or SyntaxKind.OrElseKeyword)
+                {
+                    // Короткое замыкание: левый операнд решает исход, правый
+                    // вычисляется только когда он ещё может повлиять на результат.
+                    var rightLabel = CreateLabel();
+                    var endLabel = CreateLabel();
+                    LowerExpression(binary.Left, instructions);
+                    instructions.Add(binary.OperatorKind == SyntaxKind.AndAlsoKeyword
+                        ? LoweredInstruction.JumpIfTrue(binary.Location, rightLabel)
+                        : LoweredInstruction.JumpIfFalse(binary.Location, rightLabel));
+                    instructions.Add(LoweredInstruction.LoadLiteral(
+                        binary.Location,
+                        binary.OperatorKind == SyntaxKind.AndAlsoKeyword ? (object)false : true,
+                        TypeSymbol.Boolean));
+                    instructions.Add(LoweredInstruction.Jump(binary.Location, endLabel));
+                    instructions.Add(LoweredInstruction.LabelMarker(binary.Location, rightLabel));
+                    LowerExpression(binary.Right, instructions);
+                    instructions.Add(LoweredInstruction.LabelMarker(binary.Location, endLabel));
+                    break;
+                }
+
                 if (binary.Left is BoundLiteralExpression leftLiteral
                     && binary.Right is BoundLiteralExpression rightLiteral
                     && TryFoldBinary(binary.OperatorKind, leftLiteral.Value, leftLiteral.Type, rightLiteral.Value, rightLiteral.Type, binary.Type, out var foldedBinaryValue))

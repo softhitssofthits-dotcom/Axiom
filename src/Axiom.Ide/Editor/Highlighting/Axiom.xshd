@@ -59,11 +59,12 @@
 
         <Keywords color="Keyword">
             <Word>AND</Word>
+            <Word>ANDALSO</Word>
             <Word>APPEND</Word>
             <Word>AS</Word>
+            <Word>BEGINFRAME</Word>
             <Word>BYREF</Word>
             <Word>BYVAL</Word>
-            <Word>BEGINFRAME</Word>
             <Word>CAMERA</Word>
             <Word>CANVAS</Word>
             <Word>CASE</Word>
@@ -82,16 +83,16 @@
             <Word>DRAWLINE</Word>
             <Word>DRAWRECT</Word>
             <Word>DRAWSPRITE</Word>
+            <Word>DRAWTEXT</Word>
             <Word>DRAWTILE</Word>
             <Word>DRAWTILELAYER</Word>
             <Word>DRAWTILEMAP</Word>
-            <Word>DRAWTEXT</Word>
             <Word>ELSE</Word>
             <Word>ELSEIF</Word>
             <Word>END</Word>
-            <Word>ERROR</Word>
             <Word>EQV</Word>
             <Word>ERASE</Word>
+            <Word>ERROR</Word>
             <Word>EXIT</Word>
             <Word>FALSE</Word>
             <Word>FILLCIRCLE</Word>
@@ -116,22 +117,24 @@
             <Word>ON</Word>
             <Word>OPEN</Word>
             <Word>OR</Word>
+            <Word>ORELSE</Word>
             <Word>OUTPUT</Word>
             <Word>PAINT</Word>
             <Word>PALETTE</Word>
             <Word>PCOPY</Word>
-            <Word>PRESERVE</Word>
-            <Word>PRINT</Word>
-            <Word>PRESET</Word>
             <Word>PRESENT</Word>
+            <Word>PRESERVE</Word>
+            <Word>PRESET</Word>
+            <Word>PRINT</Word>
             <Word>PSET</Word>
             <Word>PUT</Word>
+            <Word>RANDOMIZE</Word>
             <Word>REDIM</Word>
             <Word>RESETCAMERA</Word>
             <Word>RETURN</Word>
             <Word>SCREEN</Word>
-            <Word>SELF</Word>
             <Word>SELECT</Word>
+            <Word>SELF</Word>
             <Word>SETMAPTILE</Word>
             <Word>SLEEP</Word>
             <Word>STEP</Word>
@@ -140,33 +143,33 @@
             <Word>THEN</Word>
             <Word>TO</Word>
             <Word>TRANSPARENT</Word>
-            <Word>TRY</Word>
             <Word>TRUE</Word>
+            <Word>TRY</Word>
             <Word>TYPE</Word>
             <Word>UNTIL</Word>
             <Word>USING</Word>
             <Word>VIEW</Word>
             <Word>VIEWPORT</Word>
-            <Word>WINDOW</Word>
             <Word>WHILE</Word>
+            <Word>WINDOW</Word>
             <Word>XOR</Word>
         </Keywords>
 
         <Keywords color="TypeName">
             <Word>BOOLEAN</Word>
-            <Word>DECIMAL</Word>
-            <Word>DOUBLE</Word>
             <Word>DATE</Word>
             <Word>DATETIME</Word>
-            <Word>TIME</Word>
+            <Word>DECIMAL</Word>
+            <Word>DOUBLE</Word>
             <Word>FILE</Word>
             <Word>IMAGE</Word>
             <Word>INTEGER</Word>
             <Word>LONG</Word>
             <Word>SPRITE</Word>
+            <Word>STRING</Word>
             <Word>TILEMAP</Word>
             <Word>TILESET</Word>
-            <Word>STRING</Word>
+            <Word>TIME</Word>
         </Keywords>
 
         <Keywords color="BuiltIn">
@@ -174,52 +177,60 @@
             <Word>ACOS</Word>
             <Word>ACOSH</Word>
             <Word>APPENDFILE</Word>
-            <Word>ASC</Word>
-            <Word>ASCW</Word>
+            <Word>ARRAYAVERAGE</Word>
+            <Word>ARRAYBINARYSEARCH</Word>
+            <Word>ARRAYBOUNDS</Word>
             <Word>ARRAYCLONE</Word>
             <Word>ARRAYCONCAT</Word>
             <Word>ARRAYCONTAINS</Word>
             <Word>ARRAYCOUNT</Word>
-            <Word>ARRAYBINARYSEARCH</Word>
+            <Word>ARRAYDISTINCT</Word>
+            <Word>ARRAYEVERY</Word>
             <Word>ARRAYFILL</Word>
+            <Word>ARRAYFILTER</Word>
             <Word>ARRAYFINDALL</Word>
-            <Word>ARRAYINDEXOF</Word>
-            <Word>ARRAYISALLOCATED</Word>
-            <Word>ARRAYINSERT</Word>
-            <Word>ARRAYLASTINDEXOF</Word>
-            <Word>ARRAYBOUNDS</Word>
-            <Word>ARRAYLENGTH</Word>
-            <Word>ARRAYRANK</Word>
-            <Word>ARRAYREMOVE</Word>
-            <Word>ARRAYREVERSE</Word>
             <Word>ARRAYFLATTEN</Word>
+            <Word>ARRAYINDEXOF</Word>
+            <Word>ARRAYINSERT</Word>
+            <Word>ARRAYISALLOCATED</Word>
+            <Word>ARRAYLASTINDEXOF</Word>
+            <Word>ARRAYLENGTH</Word>
+            <Word>ARRAYMAP</Word>
+            <Word>ARRAYMAX</Word>
+            <Word>ARRAYMIN</Word>
             <Word>ARRAYPOP</Word>
             <Word>ARRAYPUSH</Word>
-            <Word>ARRAYSLICE</Word>
-            <Word>ARRAYSORT</Word>
-            <Word>ARRAYSKIP</Word>
-            <Word>ARRAYTAKE</Word>
-            <Word>ARRAYTOSORTED</Word>
-            <Word>ARRAYDISTINCT</Word>
-            <Word>ARRAYRESHAPE</Word>
-            <Word>ARRAYEVERY</Word>
-            <Word>ARRAYFILTER</Word>
-            <Word>ARRAYMAP</Word>
+            <Word>ARRAYRANK</Word>
             <Word>ARRAYREDUCE</Word>
-            <Word>ARRAYTOREVERSED</Word>
+            <Word>ARRAYREMOVE</Word>
+            <Word>ARRAYRESHAPE</Word>
+            <Word>ARRAYREVERSE</Word>
+            <Word>ARRAYSKIP</Word>
+            <Word>ARRAYSLICE</Word>
             <Word>ARRAYSOME</Word>
+            <Word>ARRAYSORT</Word>
+            <Word>ARRAYSUM</Word>
+            <Word>ARRAYTAKE</Word>
+            <Word>ARRAYTOREVERSED</Word>
+            <Word>ARRAYTOSORTED</Word>
+            <Word>ASC</Word>
+            <Word>ASCW</Word>
             <Word>ASIN</Word>
             <Word>ASINH</Word>
             <Word>ATANH</Word>
             <Word>ATN</Word>
             <Word>ATN2</Word>
             <Word>CBRT</Word>
+            <Word>CDBL</Word>
+            <Word>CDEC</Word>
             <Word>CEIL</Word>
             <Word>CENTER</Word>
             <Word>CHANGEDIR</Word>
             <Word>CHR</Word>
             <Word>CHRW</Word>
+            <Word>CINT</Word>
             <Word>CLAMP</Word>
+            <Word>CLNG</Word>
             <Word>COMBINEPATH</Word>
             <Word>CONTAINS</Word>
             <Word>COPYDIR</Word>
@@ -264,8 +275,8 @@
             <Word>FIX</Word>
             <Word>FLOOR</Word>
             <Word>FLUSH</Word>
-            <Word>FROMUTC</Word>
             <Word>FREESPACE</Word>
+            <Word>FROMUTC</Word>
             <Word>FULLPATH</Word>
             <Word>GETDIRS</Word>
             <Word>GETFILES</Word>
@@ -283,14 +294,14 @@
             <Word>ISLEAPYEAR</Word>
             <Word>ISOPEN</Word>
             <Word>ISREADONLY</Word>
+            <Word>JOIN</Word>
             <Word>KEYDOWN</Word>
             <Word>KEYPRESS</Word>
-            <Word>JOIN</Word>
+            <Word>LBOUND</Word>
             <Word>LCASE</Word>
             <Word>LEFT</Word>
             <Word>LEN</Word>
             <Word>LINENUMBER</Word>
-            <Word>LBOUND</Word>
             <Word>LOADIMAGE</Word>
             <Word>LOADSPRITE</Word>
             <Word>LOADTILEMAP</Word>
@@ -302,7 +313,6 @@
             <Word>MAKEDIR</Word>
             <Word>MAKETEMPDIR</Word>
             <Word>MAKETEMPFILE</Word>
-            <Word>MAX</Word>
             <Word>MAPHEIGHT</Word>
             <Word>MAPLAYERCOUNT</Word>
             <Word>MAPPIXELHEIGHT</Word>
@@ -313,17 +323,18 @@
             <Word>MAPTILESET</Word>
             <Word>MAPTILEWIDTH</Word>
             <Word>MAPWIDTH</Word>
+            <Word>MAX</Word>
             <Word>MID</Word>
             <Word>MIN</Word>
             <Word>MINUTE</Word>
             <Word>MONTH</Word>
             <Word>MONTHNAME</Word>
-            <Word>MOVEDIR</Word>
-            <Word>MOVEFILE</Word>
             <Word>MOUSEBUTTON</Word>
             <Word>MOUSEPRESS</Word>
             <Word>MOUSEX</Word>
             <Word>MOUSEY</Word>
+            <Word>MOVEDIR</Word>
+            <Word>MOVEFILE</Word>
             <Word>NEWLINE</Word>
             <Word>NOW</Word>
             <Word>PADLEFT</Word>
@@ -331,8 +342,8 @@
             <Word>PATHEXISTS</Word>
             <Word>PATHROOT</Word>
             <Word>PMAP</Word>
-            <Word>POW</Word>
             <Word>POINT</Word>
+            <Word>POW</Word>
             <Word>READALLLINES</Word>
             <Word>READFILE</Word>
             <Word>READLINE</Word>
@@ -355,24 +366,19 @@
             <Word>REPLACEMANY</Word>
             <Word>REVERSE</Word>
             <Word>REWIND</Word>
-            <Word>RIGHT</Word>
             <Word>RGB</Word>
+            <Word>RIGHT</Word>
             <Word>RND</Word>
             <Word>ROUND</Word>
             <Word>RTRIM</Word>
-            <Word>SECOND</Word>
-            <Word>SEEKFILE</Word>
-            <Word>SETSIGN</Word>
-            <Word>SGN</Word>
             <Word>SCREENHEIGHT</Word>
             <Word>SCREENISACTIVE</Word>
             <Word>SCREENMODE</Word>
             <Word>SCREENWIDTH</Word>
-            <Word>TEXTHEIGHT</Word>
-            <Word>TEXTWIDTH</Word>
-            <Word>TILECOUNT</Word>
-            <Word>TILEHEIGHT</Word>
-            <Word>TILEWIDTH</Word>
+            <Word>SECOND</Word>
+            <Word>SEEKFILE</Word>
+            <Word>SETSIGN</Word>
+            <Word>SGN</Word>
             <Word>SIN</Word>
             <Word>SINH</Word>
             <Word>SKIPLINE</Word>
@@ -386,16 +392,22 @@
             <Word>STARTOFYEAR</Word>
             <Word>STARTSWITH</Word>
             <Word>STR</Word>
+            <Word>STRING</Word>
             <Word>SUBSTRCOUNT</Word>
             <Word>TAN</Word>
             <Word>TANH</Word>
+            <Word>TEXTHEIGHT</Word>
+            <Word>TEXTWIDTH</Word>
+            <Word>TILECOUNT</Word>
+            <Word>TILEHEIGHT</Word>
+            <Word>TILEWIDTH</Word>
             <Word>TIME</Word>
             <Word>TIMER</Word>
             <Word>TIMESERIAL</Word>
             <Word>TIMEVALUE</Word>
-            <Word>TOUTC</Word>
             <Word>TOTALFREESPACE</Word>
             <Word>TOTALSPACE</Word>
+            <Word>TOUTC</Word>
             <Word>TRIM</Word>
             <Word>UBOUND</Word>
             <Word>UCASE</Word>

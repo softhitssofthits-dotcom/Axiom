@@ -43,7 +43,7 @@ public sealed partial class BytecodeVm
         if (!IsValidArrayBounds(lowerBounds, upperBounds))
         {
             ReportInvalidRuntimeState(
-                $"Массив '{displayName}' имеет неверные границы. Для каждого измерения верхняя граница не может быть меньше нижней, кроме пустой формы 1 TO 0.",
+                $"Массив '{displayName}' имеет недопустимые границы. В каждом измерении верхняя граница не может быть меньше нижней, кроме канонической пустой формы 1 TO 0.",
                 location);
             throw new RuntimeFailureException();
         }

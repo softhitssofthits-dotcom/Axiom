@@ -757,3 +757,23 @@
 - WPF-IDE не изменена и не деградирована; полный прогон решения зелёный (Ide — те же 4 ранее существовавших падения), CLI-тесты 22/22.
 - Ключевые отклонения от плана: бинарь CLI в `.artifacts/bin/...` (репозиторный `Directory.Build.props`), `fmt --line` не реализован (построчного режима форматирования в Axiom нет), freshness-guard — по git-ревизии.
 - Следующий шаг: ручная приёмка Electron-IDE пользователем через `run-ide.bat`.
+
+## 2026-10-06 — после Session 1102: исправления по аудиту языка
+
+Текущий приоритет: Wave 0 дорожной карты `docs/audit/LANGUAGE_FUNCTIONS_FULL_AUDIT.md` (раздел 40), затем Wave 1.
+
+1. [x] W0.1 (P1, AXD-001): FINALLY при повторном выбросе из CATCH — исправлено 2026-10-06 (Session 1103): `Interpreter.Statements.cs ExecuteTry` захватывает ошибку тела CATCH, исполняет FINALLY, затем выбрасывает; 4 автотеста (2 Interpreter + 2 BytecodeVm), sample `samples/operators/try/rethrow_from_catch_runs_finally.axm`, manual `try.html`, раздел SPECIFICATION3.
+2. [x] W0.2 (P1, AXD-002): решён запретом — новая диагностика `MB2040` (биндер, движко-независима): оператор-выражение обязан быть вызовом; `FLUSH f` даёт две MB2040; 3 теста BinderTests, негативный sample `samples/acceptance/negative/expression_statement_no_effect.axm`, строка в manual `diagnostics.html`, раздел SPECIFICATION3. Полный sweep samples не выявил ни одной сломанной программы.
+3. [x] W1.1 (P2, AXD-005): единые тексты диагностик — шесть пар унифицированы; паритет-тест `Run_UnifiedDiagnosticTextsMatchInBothEngines`.
+4. [x] W1.2 (P2, AXD-006): локализация builtin-диагностик — эталон выбран: локация вызова (договор VM); Interpreter приведён (`GetBuiltInArgumentLocation`).
+5. [x] W1.3 (P2, AXD-007): общий форматтер `RuntimeCallChainFormatter`; VM именует локальные функции по `BytecodeRoutine.Symbol`, `<global>`-кадр исключён. Остаток закрыт (Session 1105): идентификатор конструктора передаётся операндом `ValidateTypeInvariant`, VM синтезирует кадр конструктора в цепочке; паритет-тест в `ExecutionPipelineTests`.
+6. [x] W1.4 (P2, AXD-003): перекодированы все 8 mojibake-литералов (7 из аудита + DIRSIZE-текст, найденный при исправлении); регрессионный тест `Execute_RenameFileWithPathArgumentReportsReadableRussianDiagnostic`.
+7. [x] W1.5 (P2, AXD-004): единый кодировочный контракт — `RuntimeTextFile` при OPEN INPUT проверяет строгий UTF-8 + пропускает BOM, при невалидном UTF-8 читает Windows-1251; FILEPOS/SEEKFILE контентно-относительны.
+8. [x] W1.6 (P2, AXD-008): новый код `MB3012` NumericDomain + общий helper `EvaluatePowerOperation`; оператор `^` даёт доменную ошибку в обоих движках.
+9. [x] Wave 3 начало (P3, AXD-015, Session 1105): фолбэк-свитч VM сокращён до 15 живых variadic-ID; `ToInt32Checked` сведён к общим перегрузкам `RuntimeArithmeticHelpers`; `EvaluateIntBuiltin` перенесён в `Interpreter.Builtins.Numeric.cs`.
+10. [x] Wave 2 (Session 1106): генератор подсветки дополнен BuiltIn-секцией из `axiom metadata` + режим `-Write`; sync-тесты `HighlightingVocabularySyncTests` (xshd ×2 и словарь форматирования ↔ реестр); устранён накопившийся рассинхрон (STRING отсутствовала в BuiltIn); non-BMP-контракт строк — `InterpreterTests.StringNonBmp`; тонкие filesystem builtins и фиксация русских текстов диагностики — `InterpreterTests.FileSystemDiagnostics` (AXD-016 закрыт, AXD-017 в основном закрыт).
+11. [x] Wave 5, документационные контракты (Session 1107): LF-концы строк (WRITELINE/NEWLINE) и Unicode-единицы строк (LEN) отражены в manual; правила чтения VAL добавлены в manual; датированный раздел в SPECIFICATION3 фиксирует строковые единицы, контракт VAL, LF, отсутствие esc-последовательностей, отказ от `FuncName = value` и построчность; исправлены ошибки аудита: `^`-ассоциативность и WEEKDAY Monday-first уже были в manual, операторы `<<`/`>>` существуют (AXD-009/014/018 частично сняты, AXD-020 закрыт).
+12. [x] Wave 4 (Session 1108, одобрено пользователем): RANDOMIZE (Reseed в IRuntimeRandom + новый Opcode.ReseedRandom), CINT/CLNG/CDBL/CDEC (усечение к нулю, MB3008), ARRAYSUM/MIN/MAX/AVERAGE (общий helper, MIN/MAX со строками), ANDALSO/ORELSE (короткое замыкание: ленивый Interpreter + двухметочная схема в VM); попутно NEXT принял опциональное имя счётчика (QB-наследие); 13 тестов + паритетный Theory, 9 примеров, manual ×4 страницы + search-index, подсветка из реестра.
+13. Отложено: полный per-function разброс тонких filesystem builtins (сейчас smoke-уровень); хвост Wave 3 — параллельные Graphics/Keyboard/Mouse-файлы движков; выравнивание текста unallocated-диагностики массива (хвост AXD-005).
+
+Ручная приёмка Electron-IDE (из Session 1101) сохраняется как параллельный шаг пользователя.

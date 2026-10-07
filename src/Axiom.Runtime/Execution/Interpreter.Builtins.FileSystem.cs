@@ -445,7 +445,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "RENAMEFILE",
                     "path",
-                    "РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЂРѕРґРёС‚РµР»СЊСЃРєСѓСЋ РїР°РїРєСѓ.",
+                    "не содержит родительскую папку.",
                     GetBuiltInArgumentLocation(expression, 0));
                 throw new RuntimeFailureException();
             }
@@ -564,7 +564,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "RENAMEDIR",
                     "path",
-                    "РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЂРѕРґРёС‚РµР»СЊСЃРєСѓСЋ РїР°РїРєСѓ.",
+                    "не содержит родительскую папку.",
                     GetBuiltInArgumentLocation(expression, 0));
                 throw new RuntimeFailureException();
             }
@@ -630,7 +630,7 @@ public sealed partial class Interpreter
         }
         catch (OverflowException)
         {
-            ReportNumericOverflow("РЎСѓРјРјР°СЂРЅС‹Р№ СЂР°Р·РјРµСЂ РїР°РїРєРё РІ С„СѓРЅРєС†РёРё DIRSIZE", TypeSymbol.Long, expression.Location);
+            ReportNumericOverflow("Суммарный размер папки в функции DIRSIZE", TypeSymbol.Long, expression.Location);
             throw new RuntimeFailureException();
         }
         catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
@@ -652,7 +652,7 @@ public sealed partial class Interpreter
                 ReportBuiltInArgumentError(
                     "FREESPACE",
                     "path",
-                    "РЅРµ СѓРєР°Р·С‹РІР°РµС‚ РЅР° РґРёСЃРє РёР»Рё РєРѕСЂРµРЅСЊ С„Р°Р№Р»РѕРІРѕР№ СЃРёСЃС‚РµРјС‹.",
+                    "не указывает на диск или корень файловой системы.",
                     GetBuiltInArgumentLocation(expression, 0));
                 throw new RuntimeFailureException();
             }
@@ -869,7 +869,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             "pattern",
-            "РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚РѕР№ СЃС‚СЂРѕРєРѕР№.",
+            "не может быть пустой строкой.",
             GetBuiltInArgumentLocation(expression, argumentIndex < 0 ? 0 : argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -891,7 +891,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             argumentName,
-            "РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїСЂРѕСЃС‚С‹Рј РёРјРµРЅРµРј Р±РµР· РїСѓС‚Рё.",
+            "должен быть простым именем без пути.",
             GetBuiltInArgumentLocation(expression, argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -912,7 +912,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             "prefix",
-            "РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїСЂРѕСЃС‚С‹Рј РїСЂРµС„РёРєСЃРѕРј РёРјРµРЅРё Р±РµР· РїСѓС‚Рё.",
+            "должен быть простым префиксом имени без пути.",
             GetBuiltInArgumentLocation(expression, argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -939,7 +939,7 @@ public sealed partial class Interpreter
         ReportBuiltInArgumentError(
             functionName,
             argumentName,
-            "СѓРєР°Р·С‹РІР°РµС‚ РЅР° С„Р°Р№Р» РёР»Рё РїР°РїРєСѓ, РєРѕС‚РѕСЂС‹Рµ РЅРµ СЃСѓС‰РµСЃС‚РІСѓСЋС‚.",
+            "указывает на файл или папку, которые не существуют.",
             GetBuiltInArgumentLocation(expression, argumentIndex));
         throw new RuntimeFailureException();
     }
@@ -959,7 +959,7 @@ public sealed partial class Interpreter
             ReportBuiltInArgumentError(
                 functionName,
                 argumentName,
-                "РЅРµ СѓРєР°Р·С‹РІР°РµС‚ РЅР° РґРёСЃРє РёР»Рё РєРѕСЂРµРЅСЊ С„Р°Р№Р»РѕРІРѕР№ СЃРёСЃС‚РµРјС‹.",
+                "не указывает на диск или корень файловой системы.",
                 GetBuiltInArgumentLocation(expression, argumentIndex));
             throw new RuntimeFailureException();
         }

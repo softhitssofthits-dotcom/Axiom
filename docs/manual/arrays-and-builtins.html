@@ -190,6 +190,35 @@ PRINT ARRAYCONTAINS(values, 99)
 hits = ARRAYFINDALL(board, 4)</code></pre>
             </section>
 
+            <section class="article-section" id="aggregates">
+                <h2>Агрегаты: сумма, минимум, максимум и среднее</h2>
+                <p>Функции <code>ARRAYSUM</code>, <code>ARRAYMIN</code>, <code>ARRAYMAX</code> и <code>ARRAYAVERAGE</code> сводят элементы массива к одному итоговому значению и избавляют от ручного цикла накопления. Все четыре функции обходят видимые элементы массива любого ранга.</p>
+                <h3>Синтаксис</h3>
+                <pre><code class="language-basic">result = ARRAYSUM(array)
+result = ARRAYMIN(array)
+result = ARRAYMAX(array)
+result = ARRAYAVERAGE(array)</code></pre>
+                <h3>Аргументы</h3><p>Аргумент <code>array</code> задаёт выделенный массив. Для <code>ARRAYSUM</code>, <code>ARRAYMIN</code> и <code>ARRAYMAX</code> элементы должны быть числовыми, а для <code>ARRAYMIN</code> и <code>ARRAYMAX</code> дополнительно допускаются строковые массивы со сравнением по кодам символов.</p>
+                <h3>Результат</h3><p><code>ARRAYSUM</code>, <code>ARRAYMIN</code> и <code>ARRAYMAX</code> возвращают значение того же типа, что и элементы: сумма целого массива остаётся целым числом и проверяется на переполнение. <code>ARRAYAVERAGE</code> всегда возвращает <code>DOUBLE</code>.</p>
+                <h3>Ограничения</h3>
+                <ul>
+                <li>для пустого выделенного или ещё не выделенного массива функция сообщает диагностику <code>MB3007</code>;</li>
+                <li>смешивать строки и числа в одном массиве нельзя: такая диагностика тоже будет <code>MB3007</code>.</li>
+                </ul>
+                <h3>Пример агрегатов</h3>
+                <pre><code class="language-basic">' Сводка оценок без ручного цикла
+DIM scores(1 TO 4) AS INTEGER
+scores(1) = 5
+scores(2) = 4
+scores(3) = 5
+scores(4) = 3
+
+PRINT ARRAYSUM(scores)
+PRINT ARRAYMIN(scores)
+PRINT ARRAYMAX(scores)
+PRINT ARRAYAVERAGE(scores)</code></pre>
+            </section>
+
             <section class="article-section" id="order">
                 <h2>Порядок элементов</h2>
                 <p>Для изменения порядка есть две пары функций: одни меняют исходный массив, другие возвращают новую копию. Выбирайте форму по тому, нужно ли сохранить исходные данные.</p>

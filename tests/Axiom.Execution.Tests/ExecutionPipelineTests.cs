@@ -2168,6 +2168,178 @@ END TRY
     }
 
     [Fact]
+    public void Run_WithBytecodeMode_RunsFinallyWhenCatchBodyRethrows()
+    {
+        const string text = """
+TRY
+    TRY
+        ERROR "APP010", "Original failure"
+    CATCH inner
+        ERROR inner
+    FINALLY
+        PRINT "inner-cleanup"
+    END TRY
+CATCH outer
+    PRINT outer.Code
+END TRY
+
+PRINT "after"
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(["inner-cleanup", "APP010", "after"], result.Output);
+    }
+
+    [Fact]
+    public void Run_WithBytecodeMode_RunsFinallyWhenCatchBodyRaisesUnhandledError()
+    {
+        const string text = """
+TRY
+    ERROR "APP011"
+CATCH err
+    ERROR "APP012", "Replacement failure"
+FINALLY
+    PRINT "cleanup"
+END TRY
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+
+        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Equal(["cleanup"], result.Output);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("APP012", diagnostic.Code);
+    }
+
+    [Theory]
+    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
+    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
+    public void Run_PowerDomainErrorMatchesInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    {
+        const string text = "PRINT (-8) ^ (1.0 / 3.0)";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+
+        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
+        Assert.Equal(expectedEngine, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3012", diagnostic.Code);
+        Assert.Equal("Оператор '^' не определён для отрицательного основания и нецелой степени.", diagnostic.Message);
+    }
+
+    [Theory]
+    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
+    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
+    public void Run_UnifiedDiagnosticTextsMatchInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    {
+        const string text = """
+DIM low AS DOUBLE
+DIM high AS DOUBLE
+low = 10
+high = 1
+PRINT CLAMP(5, low, high)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+
+        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
+        Assert.Equal(expectedEngine, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3007", diagnostic.Code);
+        Assert.Equal("Функция CLAMP: аргумент 'low' не должен быть больше аргумента 'high'.", diagnostic.Message);
+    }
+
+    [Theory]
+    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
+    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
+    public void Run_Wave4FeaturesMatchInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    {
+        const string text = """
+RANDOMIZE 42
+PRINT RND()
+PRINT CINT(-2.9)
+PRINT CLNG(7.9)
+PRINT CDBL(3)
+PRINT CDEC(0.5)
+
+DIM a(1 TO 3) AS INTEGER
+a(1) = 10
+a(2) = 20
+a(3) = 30
+PRINT ARRAYSUM(a)
+PRINT ARRAYMIN(a)
+PRINT ARRAYMAX(a)
+PRINT ARRAYAVERAGE(a)
+
+PRINT a(1) <= 3 ANDALSO a(2) = 0
+PRINT a(1) <= 3 ORELSE a(2) = 0
+PRINT a(1) >= 3 ANDALSO a(1) = 10
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(expectedEngine, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(
+        [
+            "-2", "7", "3", "0.5",
+            "60", "10", "30", "20",
+            "FALSE", "FALSE", "TRUE"
+        ], result.Output.Skip(1).ToList());
+    }
+
+    [Theory]
+    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
+    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
+    public void Run_TypeInvariantFailureReportsConstructorCallChainInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    {
+        const string text = """
+TYPE Person
+    Age AS INTEGER
+
+    SUB New(age AS INTEGER)
+        SELF.Age = age
+    END SUB
+
+    FUNCTION IsValid() AS BOOLEAN
+        RETURN SELF.Age >= 0
+    END FUNCTION
+END TYPE
+
+DIM p AS Person
+p = Person(-1)
+""";
+
+        var pipeline = new AxiomExecutionPipeline();
+        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+
+        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
+        Assert.Equal(expectedEngine, result.ActualEngine);
+        Assert.False(result.UsedInterpreterFallback);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB3005", diagnostic.Code);
+        Assert.Contains("Инвариант TYPE 'Person' вернул FALSE", diagnostic.Message, StringComparison.Ordinal);
+        Assert.Contains("Цепочка вызовов:", diagnostic.Message, StringComparison.Ordinal);
+        Assert.Contains("процедура 'Person.New', вызов в 14:5.", diagnostic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Run_SupportsLocalSubWithoutCaptureOnBytecodeVm()
     {
         const string text = """
@@ -4243,6 +4415,8 @@ INPUT value
         }
 
         public double NextRandomDouble() => _values.Count > 0 ? _values.Dequeue() : 0.0;
+
+        public void Reseed(int seed) { }
     }
 
     private sealed class CollectingOutputWriter : IOutputWriter

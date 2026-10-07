@@ -502,4 +502,6 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone) => _runtimeClock.TryResolveTimeZone(id, out timeZone);
 
     public double NextRandomDouble() => _runtimeRandom.NextRandomDouble();
+
+    public void Reseed(int seed) => _runtimeRandom.Reseed(seed);
 }

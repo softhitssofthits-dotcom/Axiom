@@ -248,9 +248,9 @@ public sealed partial class Parser
             SyntaxKind.PlusToken or SyntaxKind.MinusToken or SyntaxKind.AmpersandToken => 8,
             SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => 7,
             SyntaxKind.EqualsToken or SyntaxKind.NotEqualsToken or SyntaxKind.LessToken or SyntaxKind.LessOrEqualsToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualsToken => 6,
-            SyntaxKind.AndKeyword => 5,
+            SyntaxKind.AndKeyword or SyntaxKind.AndAlsoKeyword => 5,
             SyntaxKind.XorKeyword => 4,
-            SyntaxKind.OrKeyword => 3,
+            SyntaxKind.OrKeyword or SyntaxKind.OrElseKeyword => 3,
             SyntaxKind.EqvKeyword => 2,
             SyntaxKind.ImpKeyword => 1,
             _ => 0

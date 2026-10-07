@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom - Оператор RANDOMIZE</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="randomize">
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Задание зерна генератора случайных чисел</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content">
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Числа и случайность</span><span>/</span><span>RANDOMIZE</span></nav>
+<p class="eyebrow">Оператор</p>
+<h1 class="page-title">Оператор RANDOMIZE</h1>
+<p class="lead"><code>RANDOMIZE</code> — оператор языка Axiom, который заново сеет генератор случайных чисел, используемый функцией <code>RND</code>. После <code>RANDOMIZE</code> с одним и тем же зерном последовательность <code>RND</code> повторяется от запуска к запуску.</p>
+
+<section class="article-section">
+<h2>Для чего нужен оператор RANDOMIZE</h2>
+<p>Оператор <code>RANDOMIZE</code> нужен там, где случайность должна быть воспроизводимой: повторяемые тесты, одинаковые расклады уровней игры, отладка сценариев. Без явного посева источник случайности управляется средой запуска, и последовательность <code>RND</code> от программы не контролируется.</p>
+</section>
+
+<section class="article-section">
+<h2>Синтаксис</h2>
+<pre><code class="language-basic">RANDOMIZE
+RANDOMIZE seed</code></pre>
+<p>Аргумент <code>seed</code> задаёт зерно генератора — число типа <code>INTEGER</code> или <code>LONG</code>. Форма без аргумента оставляет посев на усмотрение среды запуска.</p>
+</section>
+
+<section class="article-section">
+<h2>Правила работы</h2>
+<ul>
+<li>после <code>RANDOMIZE seed</code> последовательность <code>RND()</code> одинакова при каждом прогоне программы с тем же зерном;</li>
+<li>оператор влияет только на будущие вызовы <code>RND</code> и не возвращает значения;</li>
+<li>зерно типа <code>LONG</code> должно умещаться в диапазон <code>INTEGER</code>, иначе оператор сообщает диагностику <code>MB3008</code>.</li>
+</ul>
+</section>
+
+<section class="article-section">
+<h2>Пример повторяемой последовательности</h2>
+<pre><code class="language-basic">' Одна и та же серия случайных чисел при каждом запуске
+RANDOMIZE 42
+PRINT RND()
+PRINT RND()
+
+' Повторный посев тем же зерном продолжает ту же серию заново
+RANDOMIZE 42
+PRINT RND()</code></pre>
+</section>
+
+<section class="article-section">
+<h2>Ручная проверка</h2>
+<ul class="resource-list"><li><a href="../../samples/operators/randomize/basic_usage.axm">RANDOMIZE: повторяемая последовательность RND</a></li></ul>
+</section>
+
+<section class="article-section">
+<h2>См. также</h2>
+<div class="link-list"><a href="numeric-functions-core.html">RND</a><a href="arithmetic-and-logic.html">Арифметика и логика</a></div>
+</section>
+
+<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

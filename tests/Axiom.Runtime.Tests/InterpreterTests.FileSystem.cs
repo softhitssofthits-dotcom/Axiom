@@ -407,6 +407,37 @@ PRINT DELETEFILE(renamedPath)
     }
 
     [Fact]
+    public void Execute_RenameFileWithPathArgumentReportsReadableRussianDiagnostic()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "axiom-fs-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var sourcePath = Path.Combine(root, "source.txt");
+            var targetPath = Path.Combine(root, "target.txt");
+
+            var text = $"""
+DIM sourcePath AS STRING = "{ToBasicString(sourcePath)}"
+DIM targetPath AS STRING = "{ToBasicString(targetPath)}"
+PRINT WRITEFILE(sourcePath, "one")
+PRINT RENAMEFILE(sourcePath, targetPath)
+""";
+
+            var (_, _, result) = ExecuteProgram(text);
+
+            Assert.False(result.Succeeded);
+            var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+            Assert.Contains("должен быть простым именем без пути", diagnostic.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("РґРѕР»Р¶РµРЅ", diagnostic.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Execute_BuiltinFileSystemCopiesMovesRenamesAndDeletesDirectories()
     {
             var root = Path.Combine(Path.GetTempPath(), "axiom-fs-tests", Guid.NewGuid().ToString("N"));

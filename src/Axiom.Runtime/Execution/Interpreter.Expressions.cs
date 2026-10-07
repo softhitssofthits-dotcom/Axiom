@@ -198,6 +198,20 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluateBinaryExpression(BoundBinaryExpression expression)
     {
+        // Короткое замыкание: правый операнд вычисляется только когда левый
+        // не решил исход; generic-путь ниже вычисляет оба операнда сразу.
+        if (expression.OperatorKind is SyntaxKind.AndAlsoKeyword or SyntaxKind.OrElseKeyword)
+        {
+            var isAnd = expression.OperatorKind == SyntaxKind.AndAlsoKeyword;
+            var leftValue = EvaluateExpression(expression.Left).AsBoolean();
+            if (leftValue != isAnd)
+            {
+                return RuntimeValue.FromBoolean(!isAnd);
+            }
+
+            return RuntimeValue.FromBoolean(EvaluateExpression(expression.Right).AsBoolean());
+        }
+
         var left = EvaluateExpression(expression.Left);
         var right = EvaluateExpression(expression.Right);
 
@@ -293,8 +307,9 @@ public sealed partial class Interpreter
 
     private RuntimeValue EvaluatePower(BoundBinaryExpression expression, RuntimeValue left, RuntimeValue right)
     {
-        return EnsureFiniteDoubleResult(
-            Math.Pow(left.AsDouble(), right.AsDouble()),
+        return EvaluatePowerOperation(
+            left.AsDouble(),
+            right.AsDouble(),
             "Результат операции '^'",
             expression.Location);
     }

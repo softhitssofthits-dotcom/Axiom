@@ -2,7 +2,7 @@ namespace Axiom.Runtime;
 
 public sealed class NullRuntimeHost : IRuntimeHost, IReversibleOutputWriter
 {
-    private readonly Random _random = new();
+    private Random _random = new();
 
     public static NullRuntimeHost Instance { get; } = new();
 
@@ -73,6 +73,8 @@ public sealed class NullRuntimeHost : IRuntimeHost, IReversibleOutputWriter
     }
 
     public double NextRandomDouble() => _random.NextDouble();
+
+    public void Reseed(int seed) => _random = new Random(seed);
 
     public bool IsCancellationRequested => false;
 }
