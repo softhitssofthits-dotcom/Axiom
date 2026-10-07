@@ -1,0 +1,11 @@
+' Ошибка MB2023 с подсказкой ближайшего поля (NIT-003).
+TYPE Counter
+    Value AS INTEGER
+    SUB Increment()
+        SELF.Valu = SELF.Value + 1
+    END SUB
+END TYPE
+
+DIM c AS Counter
+c.Increment()
+PRINT c.Value

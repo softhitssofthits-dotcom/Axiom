@@ -1,0 +1,9 @@
+' Ошибка MB2016: нельзя объявлять имя, уже существующее во внешней области видимости.
+DIM counter AS INTEGER = 100
+
+SUB Show()
+    DIM counter AS INTEGER = 5
+    PRINT counter
+END SUB
+
+Show()

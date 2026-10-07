@@ -31,7 +31,7 @@
 
             <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Переменные и константы</h1>
-            <p class="lead">Раздел переменных и констант описывает, как в программе Axiom появляются именованные значения: переменная хранит значение, которое программа может изменить, а константа закрепляет значение, которое после объявления остаётся неизменным.</p>
+            <p class="lead">Раздел переменных и констант описывает, как в языке программирования Axiom появляются именованные значения: переменная хранит значение, которое программа может изменить, а константа закрепляет значение, которое после объявления остаётся неизменным.</p>
 
         <section class="article-section">
             <h2>Главные правила</h2>
@@ -42,6 +42,7 @@
                 <li>Тип переменной задаётся после <code>AS</code> или выводится из инициализатора.</li>
                 <li>Форма <code>DIM &lt;имя&gt;</code> без типа и без начального значения недопустима.</li>
                 <li>Имена регистронезависимы: <code>name</code>, <code>Name</code> и <code>NAME</code> обозначают одно и то же имя.</li>
+                <li>Область видимости определяет, откуда к переменной можно обращаться; подробно это описано на странице <a href="variables-scope.html">Имена, регистр и область видимости</a>.</li>
             </ul>
         </section>
 
@@ -112,6 +113,17 @@ PRINT UBOUND(board, COLUMN)</code></pre>
             <p>Примеры некорректных имён: <code>1value</code>, <code>PRINT</code>, <code>user-name</code>, <code>user name</code>.</p>
         </section>
 
+        <section class="article-section" id="case-and-scope">
+            <h2>Регистр букв и область видимости</h2>
+            <p>Имена в Axiom <strong>регистронезависимы</strong>: <code>score</code>, <code>Score</code> и <code>SCORE</code> — одно и то же имя. Повторно объявить имя, отличающееся только регистром, нельзя — это ошибка <code>MB2002</code>.</p>
+            <pre><code class="language-basic">DIM score AS INTEGER
+score = 10
+PRINT Score</code></pre>
+            <p>Вывод:</p>
+            <pre><code>10</code></pre>
+            <p>Переменная видна только в своей области видимости: глобальной (вся программа), процедурной (одна <code>SUB</code> или <code>FUNCTION</code>), блоковой (один <code>IF</code>, <code>FOR</code> и так далее) или типовой (поля записи). Подробные правила с примерами «можно/нельзя» — на странице <a href="variables-scope.html">Имена, регистр и область видимости переменных</a>, короткие определения терминов — в <a href="variables-glossary.html">словарике терминов</a>.</p>
+        </section>
+
         <section class="article-section" id="strict">
             <h2>Явность объявлений</h2>
             <p>Axiom работает в строгой модели объявлений. Имя должно быть известно до использования, а тип должен быть понятен уже в момент объявления.</p>
@@ -136,12 +148,17 @@ count = 5</code></pre>
                 <li><a href="../../samples/operators/const/basic_constant.axm">CONST: базовое объявление константы</a></li>
                 <li><a href="../../samples/operators/const/predefined_constants.axm">Предопределённые константы: PI, ROW, COLUMN</a></li>
                 <li><a href="../../samples/operators/const/fixed_string_error.axm">Ошибка: фиксированная строка в CONST</a></li>
+                <li><a href="../../samples/smoke/variables_scope_case.axm">Области и регистр: смешанный регистр имён</a></li>
+                <li><a href="../../samples/smoke/variables_scope_global_local.axm">Области и регистр: глобальные и локальные переменные</a></li>
+                <li><a href="../../samples/smoke/variables_scope_blocks.axm">Области и регистр: переменные блоков</a></li>
             </ul>
         </section>
 
         <section class="article-section">
             <h2>См. также</h2>
             <div class="link-list">
+                <a href="variables-scope.html">Имена, регистр и область видимости переменных</a>
+                <a href="variables-glossary.html">Словарик терминов</a>
                 <a href="dim.html">Оператор DIM</a>
                 <a href="const.html">Оператор CONST</a>
                 <a href="type.html">Тип TYPE</a>

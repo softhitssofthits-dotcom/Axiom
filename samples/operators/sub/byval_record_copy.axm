@@ -3,9 +3,9 @@ TYPE Person
     Age AS INTEGER
 END TYPE
 
-SUB Rewrite(user AS Person)
-    user.Name = "Changed"
-    user.Age = 99
+SUB Rewrite(person AS Person)
+    person.Name = "Changed"
+    person.Age = 99
 END SUB
 
 DIM user AS Person

@@ -1,0 +1,16 @@
+' Имена переменных регистронезависимы: score, Score и SCORE - одно имя.
+' Ожидаемый вывод:
+' 10
+' 6
+' 3
+
+DIM score AS INTEGER
+score = 10
+PRINT Score
+
+DIM Total = 5
+total = total + 1
+PRINT ToTaL
+
+DIM счётчик AS INTEGER = 3
+PRINT СЧЁТЧИК

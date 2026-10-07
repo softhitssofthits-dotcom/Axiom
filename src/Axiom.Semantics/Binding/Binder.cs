@@ -18,7 +18,7 @@ public sealed partial class Binder
         public const string FinallyBlock = "блоке FINALLY";
         public const string WhileBlock = "блоке WHILE";
         public const string DoBlock = "блоке DO";
-        public const string ForLoop = "цикле FOR";
+        public const string ForLoop = "цикле FOR (счётчик FOR всегда локальный)";
         public const string CaseBranch = "ветви CASE";
         public const string CaseElseBranch = "ветви CASE ELSE";
     }
@@ -37,6 +37,7 @@ public sealed partial class Binder
     private readonly BoundScope _globalScope;
     private BoundScope _scope;
     private FunctionSymbol? _currentFunction;
+    private UserDefinedTypeSymbol? _currentMethodOwner;
     private int _forDepth;
     private int _whileDepth;
     private int _doLoopDepth;
@@ -71,16 +72,24 @@ public sealed partial class Binder
         DeclareFunctions(program.Members);
         DeclareTypeMethods(program.Members);
 
+        // Проход A: связываем все глобальные операторы (DIM/CONST и др.) раньше,
+        // чем тела процедур, чтобы процедуры и методы TYPE видели глобальные
+        // имена независимо от порядка их объявления в исходнике.
+        foreach (var member in program.Members)
+        {
+            if (member is GlobalStatementSyntax globalStatement)
+            {
+                _globalStatements.Add(BindStatement(globalStatement.Statement));
+            }
+        }
+
+        // Проход B: связываем тела процедур и методы TYPE.
         foreach (var member in program.Members)
         {
             switch (member)
             {
-                case TypeDeclarationSyntax:
-                    BindTypeMethods((TypeDeclarationSyntax)member);
-                    break;
-
-                case GlobalStatementSyntax globalStatement:
-                    _globalStatements.Add(BindStatement(globalStatement.Statement));
+                case TypeDeclarationSyntax typeDeclaration:
+                    BindTypeMethods(typeDeclaration);
                     break;
 
                 case SubDeclarationSyntax subDeclaration:

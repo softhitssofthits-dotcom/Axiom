@@ -1,4 +1,5 @@
-﻿using Axiom.Parsing;
+﻿using Axiom.Core;
+using Axiom.Parsing;
 using Axiom.Semantics;
 using System.Text;
 
@@ -54,20 +55,21 @@ PRINT result
     }
 
     [Fact]
-    public void Execute_ForReusesPredeclaredControlVariable()
+    public void Execute_ForLoopCounterIsLocalToLoop()
     {
         const string text = """
-DIM i AS INTEGER
+DIM afterValue AS INTEGER
 FOR i = 1 TO 3
     PRINT i
+    afterValue = i
 NEXT
-PRINT "after=" & i
+PRINT "after=" & afterValue
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["1", "2", "3", "after=4"], host.Output);
+        Assert.Equal(["1", "2", "3", "after=3"], host.Output);
     }
 
     [Fact]
@@ -276,7 +278,7 @@ PRINT "after"
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var result = Interpreter.Execute(program, host);
 
@@ -299,7 +301,7 @@ PRINT "after"
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var result = Interpreter.Execute(program, host);
 

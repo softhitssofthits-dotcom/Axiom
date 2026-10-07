@@ -7,7 +7,27 @@ public sealed partial class Binder
 {
     private void ReportUnknownName(string name, TextLocation location)
     {
-        _diagnostics.Report(DiagnosticCodes.UnknownName, $"Имя '{name}' не объявлено.", location);
+        if (_currentMethodOwner is not null
+            && _currentMethodOwner.TryGetField(name, out _))
+        {
+            // NIT-003: внутри метода TYPE поле доступно только через SELF —
+            // даём специализированную диагностику вместо общего «не объявлено».
+            _diagnostics.Report(
+                DiagnosticCodes.FieldRequiresSelf,
+                $"Поле '{name}' типа '{_currentMethodOwner.Name}' доступно только через SELF: напишите SELF.{name}.",
+                location);
+            return;
+        }
+
+        var message = $"Имя '{name}' не объявлено.";
+
+        if (string.Equals(name, "CALL", StringComparison.OrdinalIgnoreCase))
+        {
+            // NIT-005: у Axiom нет оператора CALL — подсказываем мигрантам из BASIC.
+            message += " Оператор CALL в Axiom отсутствует: для вызова процедуры просто напишите Foo().";
+        }
+
+        _diagnostics.Report(DiagnosticCodes.UnknownName, message, location);
     }
 
     private void ReportDuplicateDeclaration(string name, TextLocation location)
@@ -40,9 +60,15 @@ public sealed partial class Binder
             location);
     }
 
-    private void ReportTypeMismatch(TypeSymbol actualType, TypeSymbol expectedType, TextLocation location)
+    private void ReportTypeMismatch(TypeSymbol actualType, TypeSymbol expectedType, TextLocation location, string? note = null)
     {
-        _diagnostics.Report(DiagnosticCodes.TypeMismatch, $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.", location);
+        var message = $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}.";
+        if (!string.IsNullOrWhiteSpace(note))
+        {
+            message += $" {note}";
+        }
+
+        _diagnostics.Report(DiagnosticCodes.TypeMismatch, message, location);
     }
 
     private void ReportTruncatingTemporalAssignment(TypeSymbol targetType, TextLocation location)
@@ -305,7 +331,10 @@ public sealed partial class Binder
 
     private void ReportInvalidForControlVariable(string name, TypeSymbol type, TextLocation location)
     {
-        _diagnostics.Report(DiagnosticCodes.InvalidForControl, $"Управляющая переменная FOR '{name}' должна иметь тип INTEGER, LONG или DOUBLE, получен {type.Name}.", location);
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidForControl,
+            $"Управляющая переменная FOR '{name}' должна иметь тип INTEGER, LONG или DOUBLE, получен {type.Name}. Счётчик FOR всегда локальный: используйте числовые границы и не объявляйте переменную с именем счётчика заранее.",
+            location);
     }
 
     private void ReportAssignToConst(string name, TextLocation location)
@@ -376,7 +405,94 @@ public sealed partial class Binder
 
     private void ReportUnknownField(TypeSymbol type, string fieldName, TextLocation location)
     {
-        _diagnostics.Report(DiagnosticCodes.UnknownField, $"Тип {type.Name} не содержит поле '{fieldName}'.", location);
+        var message = $"Тип {type.Name} не содержит поле '{fieldName}'.";
+
+        if (type is UserDefinedTypeSymbol userDefinedType)
+        {
+            // NIT-003: подсказываем ближайшее похожее поле — типичная опечатка.
+            var closest = userDefinedType.Fields
+                .Select(static field => field.Name)
+                .Where(candidate => !string.Equals(candidate, fieldName, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(candidate => LevenshteinDistance(candidate, fieldName))
+                .ThenBy(candidate => candidate, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+
+            if (closest is not null)
+            {
+                message += $" Возможно, вы имели в виду поле '{closest}'.";
+            }
+        }
+
+        _diagnostics.Report(DiagnosticCodes.UnknownField, message, location);
+    }
+
+    private void ReportNameClassCollision(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            new Diagnostic(
+                DiagnosticCodes.NameClassCollision,
+                $"Имя '{name}' используется и как переменная, и как процедура (SUB/FUNCTION). Проверьте, не опечатка ли это.",
+                location,
+                DiagnosticSeverity.Warning));
+    }
+
+    private bool TryReportFunctionReferenceNote(BoundExpression expression, TypeSymbol expectedType, TextLocation location)
+    {
+        // NIT-001: имя одновременно обозначает переменную и функцию —
+        // в выражении победила переменная; подсказываем про ссылку на функцию.
+        if (expectedType is FunctionTypeSymbol
+            && expression is BoundVariableExpression boundVariable
+            && _scope.TryLookupFunction(boundVariable.Variable.Name, out var collidingFunction)
+            && collidingFunction is not null
+            && !collidingFunction.IsBuiltIn)
+        {
+            ReportTypeMismatch(
+                expression.Type,
+                expectedType,
+                location,
+                $"Возможно, вы хотели присвоить ссылку на функцию '{boundVariable.Variable.Name}'.");
+            return true;
+        }
+
+        return false;
+    }
+
+    private static int LevenshteinDistance(string left, string right)
+    {
+        if (string.IsNullOrEmpty(left))
+        {
+            return string.IsNullOrEmpty(right) ? 0 : right.Length;
+        }
+
+        if (string.IsNullOrEmpty(right))
+        {
+            return left.Length;
+        }
+
+        var previous = new int[right.Length + 1];
+        var current = new int[right.Length + 1];
+
+        for (var column = 0; column <= right.Length; column++)
+        {
+            previous[column] = column;
+        }
+
+        for (var row = 1; row <= left.Length; row++)
+        {
+            current[0] = row;
+
+            for (var column = 1; column <= right.Length; column++)
+            {
+                var cost = left[row - 1] == right[column - 1] ? 0 : 1;
+                current[column] = Math.Min(
+                    Math.Min(current[column - 1] + 1, previous[column] + 1),
+                    previous[column - 1] + cost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[right.Length];
     }
 
     private void ReportInvalidByRefArgument(TextLocation location)

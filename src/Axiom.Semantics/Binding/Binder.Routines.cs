@@ -52,7 +52,17 @@ public sealed partial class Binder
                 continue;
             }
 
-            _routines.Add(BindRoutine(methodDeclaration, symbol));
+            var savedOwner = _currentMethodOwner;
+            _currentMethodOwner = _declaredMethodOwners[methodDeclaration];
+
+            try
+            {
+                _routines.Add(BindRoutine(methodDeclaration, symbol));
+            }
+            finally
+            {
+                _currentMethodOwner = savedOwner;
+            }
         }
     }
 
@@ -125,7 +135,16 @@ public sealed partial class Binder
             ReportShadowedDeclaration(symbol.Name, location, "теле процедуры или функции");
         }
 
-        _scope.TryDeclareFunction(symbol);
+        var declared = _scope.TryDeclareFunction(symbol);
+
+        if (declared
+            && _scope.TryLookupVariable(symbol.Name, out _)
+            && !symbol.IsBuiltIn)
+        {
+            // NIT-001: переменная и процедура могут сосуществовать (разные классы имён),
+            // но это подозрительно — предупреждаем, не запрещая.
+            ReportNameClassCollision(symbol.Name, location);
+        }
     }
 
     private static IReadOnlyList<StatementSyntax> GetRoutineStatements(MemberSyntax declaration)

@@ -1,0 +1,9 @@
+' Ошибка MB2040: поле TYPE доступно внутри метода только через SELF (NIT-003).
+TYPE Counter
+    Value AS INTEGER
+    SUB Show()
+        PRINT Value
+    END SUB
+END TYPE
+
+DIM c AS Counter

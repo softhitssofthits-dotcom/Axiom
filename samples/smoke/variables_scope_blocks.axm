@@ -1,0 +1,37 @@
+' Переменные блока видны только внутри блока; разные ветви - разные области.
+' Ожидаемый вывод:
+' if-branch
+' two
+' two
+' 1
+' 2
+' 10
+' 11
+
+IF TRUE THEN
+    DIM branchText AS STRING = "if-branch"
+    PRINT branchText
+END IF
+
+IF FALSE THEN
+    DIM branchText AS STRING = "one"
+ELSE
+    DIM branchText AS STRING = "two"
+    PRINT branchText
+END IF
+
+SELECT CASE 2
+    CASE 1
+        DIM caseText AS STRING = "one"
+    CASE 2
+        DIM caseText AS STRING = "two"
+        PRINT caseText
+END SELECT
+
+FOR i = 1 TO 2
+    PRINT i
+NEXT
+
+FOR i = 10 TO 11
+    PRINT i
+NEXT

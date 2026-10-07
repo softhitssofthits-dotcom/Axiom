@@ -4717,7 +4717,7 @@ NEXT
     }
 
     [Fact]
-    public void Bind_ForReusesPredeclaredNumericControlVariable()
+    public void Bind_ForRejectsReuseOfDeclaredVariable()
     {
         const string text = """
 DIM i AS INTEGER
@@ -4728,11 +4728,13 @@ NEXT
 
         var program = BindProgram(text, out var diagnostics);
 
-        Assert.Empty(diagnostics);
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2016");
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Contains("локальный", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
         var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
         var statement = Assert.IsType<BoundForStatement>(program.GlobalStatements[1]);
-        Assert.Same(declaration.Variable, statement.Variable);
-        Assert.False(statement.DeclaresVariable);
+        Assert.NotSame(declaration.Variable, statement.Variable);
+        Assert.True(statement.DeclaresVariable);
     }
 
     [Fact]
@@ -4838,7 +4840,7 @@ END IF
     }
 
     [Fact]
-    public void Bind_ForReusesPredeclaredControlVariableWithInitializer()
+    public void Bind_ForRejectsReuseOfDeclaredVariableWithInitializer()
     {
         const string text = """
 DIM i AS INTEGER = 10
@@ -4849,11 +4851,12 @@ NEXT
 
         var program = BindProgram(text, out var diagnostics);
 
-        Assert.Empty(diagnostics);
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2016");
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
         var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
         var statement = Assert.IsType<BoundForStatement>(program.GlobalStatements[1]);
-        Assert.Same(declaration.Variable, statement.Variable);
-        Assert.False(statement.DeclaresVariable);
+        Assert.NotSame(declaration.Variable, statement.Variable);
+        Assert.True(statement.DeclaresVariable);
     }
 
     [Fact]
@@ -4870,6 +4873,150 @@ LOOP
         Assert.Empty(diagnostics);
         var doLoopStatement = Assert.IsType<BoundDoLoopStatement>(Assert.Single(program.GlobalStatements));
         Assert.IsType<BoundExitDoStatement>(Assert.Single(doLoopStatement.Statements));
+    }
+
+    [Fact]
+    public void Bind_ForReportsNestedOccupiedNameShadowing()
+    {
+        // Вариант B: DIM + вложенные FOR с тем же именем — обе строки FOR дают MB2016
+        // (счётчик FOR всегда локальный, имя занято во внешней области).
+        const string text = """
+DIM i AS INTEGER
+FOR i = 1 TO 3
+    FOR i = 1 TO 2
+        PRINT i
+    NEXT
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.Equal(2, diagnostics.Count(static d => d.Code == "MB2016"));
+        Assert.All(
+            diagnostics.Where(static d => d.Code == "MB2016"),
+            static d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+    }
+
+    [Fact]
+    public void Bind_ForAllowsSequentialLoopsWithSameName()
+    {
+        const string text = """
+FOR i = 1 TO 2
+    PRINT i
+NEXT
+FOR i = 5 TO 6
+    PRINT i
+NEXT
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var first = Assert.IsType<BoundForStatement>(program.GlobalStatements[0]);
+        var second = Assert.IsType<BoundForStatement>(program.GlobalStatements[1]);
+        Assert.True(first.DeclaresVariable);
+        Assert.True(second.DeclaresVariable);
+        Assert.NotSame(first.Variable, second.Variable);
+    }
+
+    [Fact]
+    public void Bind_ForReportsNoDiagnosticsForImplicitCounter()
+    {
+        const string text = """
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_ForRejectsConstCounterName()
+    {
+        const string text = """
+CONST i AS INTEGER = 10
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2016");
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Contains("локальный", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ForReportsInvalidTypeForOccupiedName()
+    {
+        const string text = """
+DIM i AS STRING
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2009");
+        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(diagnostics, static d => d.Code == "MB2016");
+    }
+
+    [Fact]
+    public void Bind_ForRejectMessageExplainsLocalCounter()
+    {
+        const string text = """
+DIM i AS INTEGER
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2016");
+        Assert.Contains("FOR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("локальный", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("повторно", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ForNestedOccupiedNameMessage()
+    {
+        const string text = """
+DIM i AS INTEGER
+FOR i = 1 TO 3
+    FOR i = 1 TO 2
+    NEXT
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var shadowing = diagnostics.Where(static d => d.Code == "MB2016").ToArray();
+        Assert.Equal(2, shadowing.Length);
+        Assert.Contains("локальный", shadowing[0].Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_ForInvalidControlVariableMessageExplainsLocalCounter()
+    {
+        const string text = """
+DIM i AS STRING
+FOR i = 1 TO 3
+    PRINT i
+NEXT
+""";
+
+        BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2009");
+        Assert.Contains("локальный", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -5591,6 +5738,200 @@ PRINT user.Scores(3)
         var printExpression = AssertSinglePrintExpression(program.GlobalStatements[3]);
         var printTarget = Assert.IsType<BoundArrayAccessExpression>(printExpression);
         Assert.Equal(field, Assert.IsType<BoundFieldAccessExpression>(printTarget.Target).Field);
+    }
+
+    [Fact]
+    public void Bind_VariableFunctionNameCollision_ReportsWarning()
+    {
+        var program = BindProgram("""
+            SUB Foo()
+            END SUB
+
+            DIM Foo AS INTEGER = 7
+            """, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticCodes.NameClassCollision, diagnostic.Code);
+        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+        Assert.Contains("Foo", diagnostic.Message);
+        Assert.Single(program.GlobalStatements);
+    }
+
+    [Fact]
+    public void Bind_VariableFunctionNameCollision_FunctionDeclaredAfterVariable_ReportsWarningOnce()
+    {
+        var program = BindProgram("""
+            DIM Foo AS INTEGER = 7
+
+            SUB Foo()
+            END SUB
+
+            PRINT Foo
+            """, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticCodes.NameClassCollision, diagnostic.Code);
+        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+    }
+
+    [Fact]
+    public void Bind_VariableBuiltinNameCollision_DoesNotReportWarning()
+    {
+        BindProgram("DIM len = 3", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Bind_FunctionReferenceMismatch_AddsFunctionReferenceNote()
+    {
+        BindProgram("""
+            FUNCTION Make() AS INTEGER
+                RETURN 1
+            END FUNCTION
+
+            DIM Make AS INTEGER = 5
+            DIM f AS FUNCTION () AS INTEGER
+            f = Make
+            """, out var diagnostics);
+
+        var mismatch = Assert.Single(diagnostics, static d => d.Code == DiagnosticCodes.TypeMismatch);
+        Assert.Contains("ссылку на функцию 'Make'", mismatch.Message);
+    }
+
+    [Fact]
+    public void Bind_BareFieldNameInTypeMethod_ReportsFieldRequiresSelf()
+    {
+        BindProgram("""
+            TYPE Counter
+                Value AS INTEGER
+                SUB Increment()
+                    Value = Value + 1
+                END SUB
+            END TYPE
+
+            DIM c AS Counter
+            """, out var diagnostics);
+
+        var fieldDiagnostics = diagnostics.Where(static d => d.Code == DiagnosticCodes.FieldRequiresSelf).ToArray();
+        Assert.Equal(2, fieldDiagnostics.Length);
+        Assert.All(fieldDiagnostics, static d => Assert.Contains("SELF.Value", d.Message));
+    }
+
+    [Fact]
+    public void Bind_LocalVariableNamedLikeFieldInTypeMethod_DoesNotReportFieldRequiresSelf()
+    {
+        BindProgram("""
+            TYPE Counter
+                Value AS INTEGER
+                SUB Increment()
+                    DIM Value AS INTEGER = 10
+                    PRINT Value
+                END SUB
+            END TYPE
+
+            DIM c AS Counter
+            """, out var diagnostics);
+
+        Assert.DoesNotContain(diagnostics, static d => d.Code == DiagnosticCodes.FieldRequiresSelf);
+    }
+
+    [Fact]
+    public void Bind_SelfFieldTypo_SuggestsClosestField()
+    {
+        BindProgram("""
+            TYPE Counter
+                Value AS INTEGER
+                SUB Increment()
+                    SELF.Valu = SELF.Value + 1
+                END SUB
+            END TYPE
+
+            DIM c AS Counter
+            """, out var diagnostics);
+
+        var fieldDiagnostic = Assert.Single(diagnostics, static d => d.Code == DiagnosticCodes.UnknownField);
+        Assert.Contains("Возможно, вы имели в виду поле 'Value'", fieldDiagnostic.Message);
+    }
+
+    [Fact]
+    public void Bind_CallStatement_AddsCallHint()
+    {
+        BindProgram("""
+            SUB Foo()
+            END SUB
+
+            CALL Foo
+            """, out var diagnostics);
+
+        var callDiagnostic = Assert.Single(diagnostics, static d => d.Code == DiagnosticCodes.UnknownName);
+        Assert.Contains("CALL в Axiom отсутствует", callDiagnostic.Message);
+    }
+
+    [Fact]
+    public void Bind_GlobalDeclaredAfterRoutine_IsVisibleToRoutineBody()
+    {
+        var program = BindProgram("""
+            SUB PrintX()
+                PRINT x
+            END SUB
+
+            DIM x AS INTEGER = 42
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.Single(program.GlobalStatements);
+    }
+
+    [Fact]
+    public void Bind_TypeMethodSeesGlobalDeclaredAfterType()
+    {
+        var program = BindProgram("""
+            TYPE Point
+                X AS INTEGER
+                FUNCTION Twice() AS INTEGER
+                    RETURN SELF.X + offset
+                END FUNCTION
+            END TYPE
+
+            DIM offset AS INTEGER = 100
+            DIM p AS Point
+            """, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.Equal(2, program.GlobalStatements.Count);
+    }
+
+    [Fact]
+    public void Bind_LocalVariableShadowingLaterGlobal_ReportsShadowedDeclaration()
+    {
+        BindProgram("""
+            SUB Outer()
+                DIM counter = 1
+                PRINT counter
+            END SUB
+
+            DIM counter = 2
+            """, out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == DiagnosticCodes.ShadowedDeclaration);
+    }
+
+    [Fact]
+    public void Bind_ParameterShadowingLaterGlobal_ReportsShadowedDeclaration()
+    {
+        BindProgram("""
+            SUB Rewrite(person AS Person)
+            END SUB
+
+            TYPE Person
+                Name AS STRING
+            END TYPE
+
+            DIM person AS Person
+            """, out var diagnostics);
+
+        Assert.Contains(diagnostics, static d => d.Code == DiagnosticCodes.ShadowedDeclaration);
     }
 
     [Fact]

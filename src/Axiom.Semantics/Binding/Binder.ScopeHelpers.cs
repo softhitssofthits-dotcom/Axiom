@@ -66,16 +66,32 @@ public sealed partial class Binder
             return false;
         }
 
+        bool declared;
+
         if (_scope.TryLookupVariableInParents(variable.Name, out _))
         {
             ReportShadowedDeclaration(
                 variable.Name,
                 location,
                 declarationContextOverride ?? GetCurrentDeclarationContext());
-            return _scope.TryDeclareVariable(variable);
+            declared = _scope.TryDeclareVariable(variable);
+        }
+        else
+        {
+            declared = _scope.TryDeclareVariable(variable);
         }
 
-        return _scope.TryDeclareVariable(variable);
+        if (declared
+            && _scope.TryLookupFunction(variable.Name, out var function)
+            && function is not null
+            && !function.IsBuiltIn)
+        {
+            // NIT-001: имена разных классов (переменная vs процедура) могут совпадать,
+            // но это подозрительно — предупреждаем, не запрещая.
+            ReportNameClassCollision(variable.Name, location);
+        }
+
+        return declared;
     }
 
     private static TypeSymbol InferForControlVariableType(params BoundExpression?[] expressions)

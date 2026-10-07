@@ -1,4 +1,5 @@
 using Axiom.Bytecode;
+using Axiom.Core;
 using Axiom.Parsing;
 using Axiom.Semantics;
 using System.Linq;
@@ -68,20 +69,21 @@ PRINT result
     }
 
     [Fact]
-    public void Execute_CompiledForReusesPredeclaredControlVariable()
+    public void Execute_CompiledForLoopCounterIsLocalToLoop()
     {
         const string text = """
-DIM i AS INTEGER
+DIM afterValue AS INTEGER
 FOR i = 1 TO 3
     PRINT i
+    afterValue = i
 NEXT
-PRINT "after=" & i
+PRINT "after=" & afterValue
 """;
 
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["1", "2", "3", "after=4"], host.Output);
+        Assert.Equal(["1", "2", "3", "after=3"], host.Output);
     }
 
     [Fact]
@@ -6574,8 +6576,8 @@ TYPE Person
     Age AS INTEGER
 END TYPE
 
-SUB Birthday(BYREF user AS Person)
-    user.Age = user.Age + 1
+SUB Birthday(BYREF person AS Person)
+    person.Age = person.Age + 1
 END SUB
 
 DIM user AS Person
@@ -6620,9 +6622,9 @@ TYPE Person
     Age AS INTEGER
 END TYPE
 
-SUB Rewrite(user AS Person)
-    user.Name = "Changed"
-    user.Age = 99
+SUB Rewrite(person AS Person)
+    person.Name = "Changed"
+    person.Age = 99
 END SUB
 
 DIM user AS Person
@@ -6991,7 +6993,7 @@ END FUNCTION
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var loweringResult = new BoundProgramLowerer().Lower(program);
         Assert.True(loweringResult.Succeeded);
@@ -7018,7 +7020,7 @@ END FUNCTION
         Assert.Empty(parserDiagnostics);
 
         var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.Empty(binderDiagnostics);
+        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var loweringResult = new BoundProgramLowerer().Lower(program);
         Assert.True(

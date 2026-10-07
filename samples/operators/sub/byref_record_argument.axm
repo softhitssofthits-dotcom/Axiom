@@ -3,8 +3,8 @@ TYPE Person
     Age AS INTEGER
 END TYPE
 
-SUB Birthday(BYREF user AS Person)
-    user.Age = user.Age + 1
+SUB Birthday(BYREF person AS Person)
+    person.Age = person.Age + 1
 END SUB
 
 DIM user AS Person
