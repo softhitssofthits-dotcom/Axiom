@@ -37,6 +37,7 @@
 
         <section class="article-section">
             <h2>Куда PRINT выводит текст</h2>
+            <p>При запуске через <code>axiom run</code> оператор <code>PRINT</code> выводит текст в стандартный поток консоли. Каждая завершённая строка получает системный перевод строки, включая пустой оператор <code>PRINT</code>. Завершающий разделитель откладывает завершение строки: следующий оператор продолжает её. Подсказка оператора <code>INPUT</code> сама по себе перевод строки не добавляет.</p>
             <p>Оператор <code>PRINT</code> выводит одно значение, несколько значений или пустую строку. Если программа не выбирала экранный режим через <code>SCREEN</code>, вывод попадает во вкладку IDE <code>Output</code>. В активном <code>SCREEN</code> тот же оператор пишет в окно программы.</p>
             <p>Обычная форма <code>PRINT</code> подходит для прямого вывода значений. Форма <code>PRINT USING</code> нужна, когда требуется управлять шириной поля, количеством десятичных знаков или длиной выводимой строки.</p>
         </section>
@@ -202,6 +203,7 @@ Hex: FF
             <ul class="resource-list">
                 <li><a href="../../samples/operators/print/basic_expression.axm">PRINT: базовое выражение</a></li>
                 <li><a href="../../samples/operators/print/empty_print.axm">PRINT: пустой оператор</a></li>
+                <li><a href="../../samples/operators/print/console_line_boundaries.axm">PRINT: отдельные, пустые и соединённые строки в консоли</a></li>
                 <li><a href="../../samples/operators/print/separator_semicolon.axm">PRINT: разделитель ;</a></li>
                 <li><a href="../../samples/operators/print/separator_comma.axm">PRINT: разделитель ,</a></li>
                 <li><a href="../../samples/operators/print/mixed_list.axm">PRINT: смешанный список вывода</a></li>

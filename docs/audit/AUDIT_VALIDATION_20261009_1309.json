@@ -1,0 +1,85 @@
+{
+  "LocalTime": "2026-10-09 19:20",
+  "Command": "dotnet test Axiom.sln --no-restore --logger trx --results-directory .artifacts/test-results/full-audit-1309 --diag .artifacts/test-results/full-audit-1309/vstest.log",
+  "ExitCode": 1,
+  "Projects": 9,
+  "Total": 7353.0,
+  "Passed": 7352.0,
+  "Failed": 1.0,
+  "NotExecuted": 0.0,
+  "Scope": "После исправления CLI: одна проверка IDE превысила ожидание 5000 мс; исходная общая команда неуспешна. Аварии процесса нет. Повтор IDE сохраняется отдельно.",
+  "Rows": [
+    {
+      "Project": "Axiom.Lexing.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 18,
+      "Passed": 18,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Syntax.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 66,
+      "Passed": 66,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Parsing.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 146,
+      "Passed": 146,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Semantics.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 416,
+      "Passed": 416,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Runtime.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 1079,
+      "Passed": 1079,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Execution.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 4122,
+      "Passed": 4122,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Bytecode.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 242,
+      "Passed": 242,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Cli.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 30,
+      "Passed": 30,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Ide.Tests.dll",
+      "Outcome": "Failed",
+      "Total": 1234,
+      "Passed": 1233,
+      "Failed": 1,
+      "NotExecuted": 0
+    }
+  ]
+}

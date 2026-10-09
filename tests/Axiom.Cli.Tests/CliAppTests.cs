@@ -55,7 +55,7 @@ NEXT i
         {
             var random = new Random(seed);
             var sequence = string.Concat(Enumerable.Range(0, 4).Select(_ =>
-                ((int)Math.Floor(random.NextDouble()*1000000)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "|"));
+                ((int)Math.Floor(random.NextDouble()*1000000)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "|" + Environment.NewLine));
             foreach (var invocation in Enumerable.Range(0, 2))
             {
                 var (exitCode, stdout, stderr) = Run(["run", path]);

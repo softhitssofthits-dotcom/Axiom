@@ -39,7 +39,7 @@ internal sealed class ConsoleHost : IInputProvider, IOutputWriter, IRuntimeClock
 
     public bool IsCancellationRequested => _cancellationRequested;
 
-    public void WriteOutput(string text) => _stdout.Write(text);
+    public void WriteOutput(string text) => _stdout.WriteLine(text);
 
     public string ReadInput(InputRequest request)
     {

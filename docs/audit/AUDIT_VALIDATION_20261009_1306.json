@@ -1,0 +1,86 @@
+{
+  "LocalTime": "2026-10-09 19:11",
+  "Command": "dotnet test Axiom.sln --logger trx --results-directory .artifacts/test-results/full-audit-1306 --diag .artifacts/test-results/full-audit-1306/vstest.log",
+  "ExitCode": 0,
+  "GitBase": "379b54ae8777feaff9e97adb5510fd9a6b96c152",
+  "Projects": 9,
+  "Total": 7345,
+  "Passed": 7345,
+  "Failed": 0,
+  "NotExecuted": 0,
+  "Scope": "Состояние перед последующим исправлением CLI; новый пример POW добавлен после обнаружения тестов и требует отдельной проверки",
+  "Rows": [
+    {
+      "Project": "Axiom.Syntax.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 66,
+      "Passed": 66,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Lexing.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 18,
+      "Passed": 18,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Semantics.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 416,
+      "Passed": 416,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Parsing.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 146,
+      "Passed": 146,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Runtime.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 1079,
+      "Passed": 1079,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Bytecode.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 242,
+      "Passed": 242,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Execution.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 4116,
+      "Passed": 4116,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Cli.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 28,
+      "Passed": 28,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "Project": "Axiom.Ide.Tests.dll",
+      "Outcome": "Completed",
+      "Total": 1234,
+      "Passed": 1234,
+      "Failed": 0,
+      "NotExecuted": 0
+    }
+  ]
+}
