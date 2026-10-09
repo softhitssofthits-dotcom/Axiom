@@ -153,6 +153,12 @@ SLEEP</code></pre>
                     <li><a href="../../samples/functions/spritecount/loaded_resource_property.axm">SPRITECOUNT: короткая проверка результата</a></li>
                     <li><a href="../../samples/functions/loadsprite/loaded_resource_property.axm">LOADSPRITE: короткая проверка результата</a></li>
                 </ul></section>
+<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-basic">DIM picture AS IMAGE
+TRY
+    picture = LOADIMAGE("рисунок.png" + CHR(0) + "другой.png")
+CATCH err
+    PRINT "Отказ загрузки: "; err.Code
+END TRY</code></pre></section>
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
         </main>
     </div>

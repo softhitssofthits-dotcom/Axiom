@@ -1,0 +1,18 @@
+' Большое количество задаёт предел, а не число строк в существующем файле.
+' Временные данные примера находятся только в .artifacts.
+IF NOT DIREXISTS(".artifacts") THEN
+    PRINT MAKEDIR(".artifacts")
+END IF
+DIM path AS STRING = ".artifacts/readlines_maximum_count.txt"
+PRINT WRITEFILE(path, "Первая строка" + CHR(10) + "Вторая строка", "UTF-8")
+DIM f AS FILE
+DIM lines() AS STRING
+' Даже при максимальном INTEGER чтение остановится после двух строк.
+OPEN path FOR INPUT AS f USING "UTF-8"
+lines = READLINES(f, 2147483647)
+PRINT "Прочитано строк: "; ARRAYLENGTH(lines)
+PRINT lines(1)
+PRINT lines(2)
+CLOSE f
+' После закрытия файл примера больше не нужен.
+PRINT DELETEFILE(path)

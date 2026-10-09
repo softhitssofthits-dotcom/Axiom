@@ -1,0 +1,8 @@
+' Среднее DECIMAL возвращается как DOUBLE: ожидаются 0.5 и TRUE.
+DIM values(-1 TO 0) AS DECIMAL
+' Сначала заполняем массив точными десятичными значениями.
+values(-1) = CDEC(1) / CDEC(4)
+values(0) = CDEC(3) / CDEC(4)
+' Функция преобразует элементы в DOUBLE и не меняет исходный массив.
+PRINT ARRAYAVERAGE(values)
+PRINT values(-1) = CDEC(1) / CDEC(4)

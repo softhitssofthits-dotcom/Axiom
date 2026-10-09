@@ -247,7 +247,9 @@ public sealed class RuntimeTextFile : IDisposable
         }
 
         var startPosition = _position;
-        var lines = new List<string>(count);
+        // Запрошенный предел может быть большим при пустом или коротком файле.
+        // Начальная ёмкость не должна зависеть от всего предела чтения.
+        var lines = new List<string>(Math.Min(count, 256));
 
         try
         {
@@ -477,7 +479,8 @@ public sealed class RuntimeTextFile : IDisposable
 
         try
         {
-            var builder = new StringBuilder(maxCharacters ?? 256);
+            // Предел чтения не требует выделения памяти для отсутствующего текста.
+            var builder = new StringBuilder(Math.Min(maxCharacters ?? 256, 256));
             var decoder = _strictEncoding.GetDecoder();
             var byteBuffer = new byte[256];
             var charBuffer = new char[256];

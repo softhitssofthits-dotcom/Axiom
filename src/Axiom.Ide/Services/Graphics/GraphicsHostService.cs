@@ -895,7 +895,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             source.CopyPixels(pixels, width * sizeof(uint), offset: 0);
             return new RuntimeImageValue(width, height, pixels);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException or ArgumentException)
         {
             return null;
         }
@@ -1369,6 +1369,8 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private string ResolveResourcePath(string path)
     {
+        if (path.IndexOf('\0') >= 0)
+            throw new ArgumentException("Путь ресурса не должен содержать нулевой символ.", nameof(path));
         var expandedPath = Environment.ExpandEnvironmentVariables(path);
         if (Path.IsPathFullyQualified(expandedPath))
         {

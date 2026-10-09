@@ -90,6 +90,17 @@ PRINT text</code></pre>
                 <pre><code class="language-basic">lines = READALLLINES(path)</code></pre>
                 <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">lines = READALLLINES(path, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является массив <code>STRING()</code> с границами <code>1 TO N</code>.</p>
+                <h3>Правила чтения строк</h3>
+                <p>Функция распознаёт CR, LF и CRLF как разделители строк и не включает их в результат. Два соседних разделителя сохраняют пустую строку между ними. Конечный разделитель не создаёт дополнительной строки. Пустой файл возвращает выделенный пустой массив с границами <code>1 TO 0</code>. Эти правила одинаковы для формы с явной кодировкой и без неё.</p>
+                <h3>Диагностика</h3><p>Если файл отсутствует, функция сообщает <code>MB3007</code> и не создаёт файл. Ошибка при чтении также обрабатывается через <code>TRY/CATCH</code>; присваивание результата не меняет прежний массив, если вызов завершился ошибкой.</p>
+                <h3>Пример разных переводов строки</h3>
+                <pre><code class="language-basic">PRINT MAKEDIR(".artifacts")
+PRINT WRITEFILE(".artifacts/lines.txt", "А" + CHRW(13) + "Б" + CHRW(10))
+DIM rows() AS STRING
+rows = READALLLINES(".artifacts/lines.txt")
+PRINT JOIN(rows, "/") ' А/Б
+PRINT DELETEFILE(".artifacts/lines.txt")</code></pre>
+                <p>Запускаемая проверка: <a href="../../samples/functions/readalllines/carriage_return.axm">CR, LF и CRLF в одном файле</a>.</p>
                 <h3>Пример вызова READALLLINES</h3>
                 <pre><code class="language-basic">' Чтение файла в массив строк
 DIM lines() AS STRING

@@ -92,7 +92,7 @@ internal static class BuiltinArrayAggregateHelpers
         ForEach(array, v =>
         {
             RequireNumeric("ARRAYAVERAGE", v, location, reportArgumentError);
-            var value = v.AsDouble();
+            var value = v.Type == TypeSymbol.Decimal ? (double)v.AsDecimal() : v.AsDouble();
             RequireFinite("ARRAYAVERAGE", value, location, reportResultError);
             // Каждый конечный DOUBLE точно представим целым числом единиц 2^-1074.
             var bits = BitConverter.DoubleToUInt64Bits(value);

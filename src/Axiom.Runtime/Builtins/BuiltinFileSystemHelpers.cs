@@ -12,6 +12,10 @@ internal static class BuiltinFileSystemHelpers
 
     public static string NormalizeFileSystemPath(string path, string? baseDirectory = null)
     {
+        // Раскрытие переменных окружения Windows может обрезать строку по NUL.
+        // Проверяем исходный путь до обращения к этому API.
+        if (path.IndexOf('\0') >= 0)
+            throw new ArgumentException("Путь не должен содержать нулевой символ.", nameof(path));
         var expanded = Environment.ExpandEnvironmentVariables(path);
 
         if (baseDirectory is not null && !Path.IsPathFullyQualified(expanded))
@@ -52,20 +56,11 @@ internal static class BuiltinFileSystemHelpers
         if (string.IsNullOrEmpty(text))
             return [];
 
-        var lines = text.Split('\n');
-        for (var i = 0; i < lines.Length; i++)
-        {
-            var line = lines[i];
-            if (line.Length > 0 && line[^1] == '\r')
-                lines[i] = line[..^1];
-        }
-
-        if (lines.Length > 0 && lines[^1].Length == 0)
-        {
-            Array.Resize(ref lines, lines.Length - 1);
-        }
-
-        return lines;
+        var lines = new List<string>();
+        using var reader = new StringReader(text);
+        while (reader.ReadLine() is { } line)
+            lines.Add(line);
+        return lines.ToArray();
     }
 
     public static void CopyDirectory(string sourceDir, string destDir, bool overwrite)

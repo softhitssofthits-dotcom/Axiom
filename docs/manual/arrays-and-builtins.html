@@ -397,10 +397,16 @@ PRINT ARRAYMAX(numbers)     ' 4
 PRINT ARRAYAVERAGE(numbers) ' 2.5</code></pre>
                 <p>Запускаемые проверки: <a href="../../samples/functions/arraysum/multidimensional_totals.axm">многомерные агрегаты</a>, <a href="../../samples/functions/arrayaverage/audit_large_finite_mean.axm">среднее больших чисел</a> и <a href="../../samples/functions/arraymin/unsupported_singleton.axm">отклонение логического массива</a>.</p>
                 <ul>
-                <li>для пустого выделенного или ещё не выделенного массива функция сообщает диагностику <code>MB3007</code>;</li>
+                <li>для пустого выделенного массива функция сообщает диагностику <code>MB3007</code>; для ещё не выделенного массива — <code>MB3005</code>;</li>
                 <li>смешивать строки и числа в одном массиве нельзя: такая диагностика тоже будет <code>MB3007</code>.</li>
                 </ul>
                 <h3>Пример агрегатов</h3>
+                <p>Функция <code>ARRAYAVERAGE</code> принимает также массив <code>DECIMAL</code>. Перед накоплением каждый элемент преобразуется в <code>DOUBLE</code>, поэтому точность исходного десятичного числа может уменьшиться. Например, среднее четверти и трёх четвертей равно половине:</p>
+                <pre><code class="language-basic">DIM fractions(-1 TO 0) AS DECIMAL
+fractions(-1) = CDEC(1) / CDEC(4)
+fractions(0) = CDEC(3) / CDEC(4)
+PRINT ARRAYAVERAGE(fractions) ' 0.5</code></pre>
+                <p>Запускаемая проверка: <a href="../../samples/functions/arrayaverage/decimal_mean.axm">среднее десятичных элементов и сохранность массива</a>.</p>
                 <pre><code class="language-basic">' Сводка оценок без ручного цикла
 DIM scores(1 TO 4) AS INTEGER
 scores(1) = 5

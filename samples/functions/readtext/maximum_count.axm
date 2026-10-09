@@ -1,0 +1,14 @@
+' Максимальный предел не требует большого файла или буфера заранее.
+IF NOT DIREXISTS(".artifacts") THEN
+    PRINT MAKEDIR(".artifacts")
+END IF
+DIM path AS STRING = ".artifacts/readtext_maximum_count.txt"
+' Записываем два символа Unicode, один из которых занимает пару UTF-16.
+PRINT WRITEFILE(path, "А😀", "UTF-8")
+DIM f AS FILE
+OPEN path FOR INPUT AS f USING "UTF-8"
+PRINT READTEXT(f, 2147483647)
+' Позиция измеряется в байтах: два плюс четыре.
+PRINT "Прочитано байт: "; FILEPOS(f)
+CLOSE f
+PRINT DELETEFILE(path)

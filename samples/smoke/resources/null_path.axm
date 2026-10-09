@@ -1,0 +1,11 @@
+' Указанный PNG существует, но нулевой символ делает путь недопустимым.
+DIM path AS STRING = "../../graphics/sprites/assets/walk_sheet.png" + CHR(0) + "другой.png"
+DIM picture AS IMAGE
+' Загрузчик не должен использовать часть пути перед нулевым символом.
+TRY
+    picture = LOADIMAGE(path)
+    PRINT "Ошибка: загружен другой путь"
+CATCH err
+    PRINT "Отказ загрузки: "; err.Code
+END TRY
+PRINT "Программа продолжает работу"

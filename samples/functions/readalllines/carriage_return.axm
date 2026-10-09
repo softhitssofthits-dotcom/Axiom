@@ -1,0 +1,11 @@
+' CR, LF и CRLF разделяют строки одинаково. Ожидаются 3 и А/Б/В.
+PRINT MAKEDIR(".artifacts")
+DIM path AS STRING = ".artifacts/readalllines_carriage_return.txt"
+' Создаём текст с тремя разными переводами строки.
+PRINT WRITEFILE(path, "А" + CHRW(13) + "Б" + CHRW(10) + "В" + CHRW(13) + CHRW(10))
+DIM lines() AS STRING
+lines = READALLLINES(path)
+PRINT ARRAYLENGTH(lines)
+PRINT JOIN(lines, "/")
+' Удаляем только созданный этим примером файл.
+PRINT DELETEFILE(path)
