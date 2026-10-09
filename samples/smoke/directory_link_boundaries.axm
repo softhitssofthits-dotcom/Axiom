@@ -1,0 +1,21 @@
+' Подготовка Windows: powershell -File scripts/language-audit/Prepare-DirectoryLinkSample.ps1
+' Ищем корень репозитория от рабочей папки CLI или папки примера в IDE.
+DIM root AS STRING = FULLPATH(".")
+WHILE NOT FILEEXISTS(COMBINEPATH(root, "PROJECT.md")) AND LEN(DIRNAME(root)) > 0
+    root = DIRNAME(root)
+END WHILE
+DIM fixture AS STRING = COMBINEPATH(root, ".artifacts/unicode-directory-links")
+DIM sourceDir AS STRING = COMBINEPATH(fixture, "source")
+DIM targetDir AS STRING = COMBINEPATH(fixture, "copy")
+IF DIREXISTS(sourceDir) THEN
+    ' Внешние 11 байт и циклическая ссылка не включаются в размер.
+    PRINT "Размер источника, ожидается 3: ", DIRSIZE(sourceDir)
+    PRINT COPYDIR(sourceDir, targetDir, TRUE)
+    PRINT "Размер копии, ожидается 3: ", DIRSIZE(targetDir)
+    PRINT "Внешняя ссылка пропущена: ", NOT DIREXISTS(COMBINEPATH(targetDir, "linked"))
+    PRINT "Циклическая ссылка пропущена: ", NOT DIREXISTS(COMBINEPATH(targetDir, "loop"))
+    ' Удаляем только собственную копию; исходные ссылки остаются для следующего запуска.
+    PRINT DELETEDIRRECURSIVE(targetDir)
+ELSE
+    PRINT "Сначала подготовьте проверочные ссылки указанной в начале файла командой."
+END IF

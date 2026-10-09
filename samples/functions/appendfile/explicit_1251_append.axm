@@ -1,0 +1,9 @@
+' Явная кодировка сохраняет русские буквы при дописывании старого формата.
+PRINT MAKEDIR(".artifacts/encoding_examples")
+DIM path AS STRING = ".artifacts/encoding_examples/russian_1251.txt"
+
+' Записываем «А» одним байтом C0 и дописываем «я» одним байтом FF.
+PRINT WRITEFILE(path, "А", "WINDOWS-1251")
+PRINT APPENDFILE(path, "я", "WINDOWS-1251")
+PRINT FILESIZE(path) = 2
+PRINT READFILE(path, "WINDOWS-1251")

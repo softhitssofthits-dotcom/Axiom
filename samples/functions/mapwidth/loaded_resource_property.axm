@@ -1,0 +1,6 @@
+' Ожидается 2. Пример запускается в IDE.
+DIM level AS TILEMAP
+' Карта имеет 2 на 2 клетки и три слоя, включая объектный.
+level = LOADTILEMAP("../../operators/drawtilemap/simple_map.tmj")
+PRINT "Результат MAPWIDTH:"
+PRINT MAPWIDTH(level)

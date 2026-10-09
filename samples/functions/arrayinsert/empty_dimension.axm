@@ -1,0 +1,18 @@
+REM Создаём пустую таблицу с нестандартными границами строк.
+DIM seed(-4 TO -4, 7 TO 8) AS INTEGER
+DIM table(,) AS INTEGER
+DIM values(7 TO 8) AS INTEGER
+values(7) = 42
+values(8) = 43
+table = ARRAYTAKE(seed, 0, 1)
+REM Первый срез вставляется по индексу 1; столбцы сохраняются.
+ARRAYINSERT(table, 1, values, 1)
+PRINT "Границы строк после вставки:"
+PRINT LBOUND(table, 1)
+PRINT UBOUND(table, 1)
+PRINT "Границы столбцов остались 7 и 8:"
+PRINT LBOUND(table, 2)
+PRINT UBOUND(table, 2)
+PRINT "Вставленные значения:"
+PRINT table(1, 7)
+PRINT table(1, 8)

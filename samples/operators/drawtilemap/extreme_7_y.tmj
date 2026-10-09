@@ -1,0 +1,1 @@
+{"orientation": "orthogonal", "width": 1, "height": 1, "tilewidth": 32, "tileheight": 32, "tilesets": [{"firstgid": 1, "image": "../../graphics/sprites/assets/walk_sheet.png", "tilewidth": 32, "tileheight": 32, "margin": 0, "spacing": 2147483647}], "layers": [{"type": "tilelayer", "width": 1, "height": 1, "data": [1], "offsety": -1e+100, "parallaxy": -1e+100}]}

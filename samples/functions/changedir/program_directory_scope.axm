@@ -1,0 +1,22 @@
+' Рабочая папка принадлежит текущему запуску программы.
+DIM initialDirectory AS STRING
+initialDirectory = CURRENTDIR()
+
+IF DIREXISTS(".artifacts/directory_scope_check") THEN
+    PRINT "Папка проверки уже существует. Выберите другую папку запуска."
+ELSE
+    ' Создаём свою папку для проверки и переходим в неё.
+    PRINT MAKEDIR(".artifacts/directory_scope_check")
+    PRINT CHANGEDIR(".artifacts/directory_scope_check")
+    PRINT CURRENTDIR() = FULLPATH(".")
+
+' Относительная запись теперь попадает в выбранную папку.
+    PRINT WRITEFILE("message.txt", "Проверка рабочей папки")
+    PRINT READFILE("message.txt")
+
+' Возвращаемся по полному пути и удаляем только файл этого примера.
+    PRINT CHANGEDIR(initialDirectory)
+    PRINT DELETEFILE(".artifacts/directory_scope_check/message.txt")
+    PRINT DELETEDIR(".artifacts/directory_scope_check")
+    PRINT CURRENTDIR() = initialDirectory
+END IF

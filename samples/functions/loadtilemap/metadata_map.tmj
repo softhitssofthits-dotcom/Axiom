@@ -1,0 +1,1 @@
+{"orientation":"orthogonal","width":1,"height":1,"tilewidth":16,"tileheight":16,"tilesets":[],"properties":[{"name":"role","type":"string","value":"выход😀"}],"layers":[{"type":"objectgroup","name":"Объекты","objects":[{"name":"Выход","type":"portal","x":12.5,"y":24,"width":8,"height":16}]}]}

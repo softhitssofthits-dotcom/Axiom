@@ -245,10 +245,10 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.StoreField, location, displayName: displayName);
     }
 
-    public static LoweredInstruction OpenFile(TextLocation location, BoundFileOpenMode mode, string displayName)
+    public static LoweredInstruction OpenFile(TextLocation location, BoundFileOpenMode mode, string displayName, bool hasEncoding = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        return new LoweredInstruction(LoweredInstructionKind.OpenFile, location, fileOpenMode: mode, displayName: displayName);
+        return new LoweredInstruction(LoweredInstructionKind.OpenFile, location, fileOpenMode: mode, displayName: displayName, flags: hasEncoding ? 1 : 0);
     }
 
     public static LoweredInstruction CloseFile(TextLocation location)

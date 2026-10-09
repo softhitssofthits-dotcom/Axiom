@@ -55,11 +55,18 @@ internal static class AxiomMetadata
                 builder.Append('{')
                     .Append(Q).Append("name").Append(Q).Append(':').Append(Q).Append(JsonText.Escape(parameter.Name)).Append(Q)
                     .Append(',').Append(Q).Append("type").Append(Q).Append(':').Append(Q).Append(JsonText.Escape(parameter.Type.Name)).Append(Q)
+                    .Append(',').Append(Q).Append("displayType").Append(Q).Append(':').Append(Q)
+                    .Append(JsonText.Escape(ParameterDisplayType(descriptor, index))).Append(Q)
                     .Append('}');
             }
 
             builder.Append("],").Append(Q).Append("returnType").Append(Q).Append(':').Append(Q)
                 .Append(JsonText.Escape(descriptor.DeclaredReturnType.Name)).Append(Q)
+                .Append(',').Append(Q).Append("bindingKind").Append(Q).Append(':').Append(Q).Append(descriptor.BindingKind).Append(Q)
+                .Append(',').Append(Q).Append("operandBindingPolicy").Append(Q).Append(':').Append(Q).Append(descriptor.OperandBindingPolicy).Append(Q)
+                .Append(',').Append(Q).Append("resultTypePolicy").Append(Q).Append(':').Append(Q).Append(descriptor.ResultTypePolicy).Append(Q)
+                .Append(',').Append(Q).Append("displayReturnType").Append(Q).Append(':').Append(Q)
+                .Append(JsonText.Escape(ReturnDisplayType(descriptor))).Append(Q)
                 .Append("},");
         }
 
@@ -75,6 +82,32 @@ internal static class AxiomMetadata
     }
 
     public static string SourceRevision { get; } = LoadSourceRevision();
+
+    private static string ParameterDisplayType(BuiltinFunctionDescriptor descriptor, int index)
+    {
+        var type = descriptor.Parameters[index].Type;
+        if (index == 0 && descriptor.BindingKind == BuiltinBindingKind.Array && type is ArrayTypeSymbol)
+            return "T()";
+        if (descriptor.BindingKind == BuiltinBindingKind.Numeric
+            && descriptor.OperandBindingPolicy is BuiltinOperandBindingPolicy.PreserveNumericArguments or BuiltinOperandBindingPolicy.PromoteNumericArguments)
+            return "T";
+        return type.Name;
+    }
+
+    private static string ReturnDisplayType(BuiltinFunctionDescriptor descriptor) => descriptor.ResultTypePolicy switch
+    {
+        BuiltinResultTypePolicy.SameAsFirstArgument => ParameterDisplayType(descriptor, 0),
+        BuiltinResultTypePolicy.SameAsSecondArgument => ParameterDisplayType(descriptor, 1),
+        BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => "T",
+        BuiltinResultTypePolicy.ArrayOfFirstArrayElementType => "T()",
+        BuiltinResultTypePolicy.ArrayDynamicSliceResult => "элемент или массив T",
+        BuiltinResultTypePolicy.ArrayIndexCoordinateResult => "INTEGER или INTEGER()",
+        BuiltinResultTypePolicy.ArrayFindAllCoordinateResult => "INTEGER() или INTEGER(,)",
+        BuiltinResultTypePolicy.ArrayMapSelectorReturnArray => "массив результатов selector",
+        BuiltinResultTypePolicy.ArrayReduceAccumulator => "тип начального значения",
+        BuiltinResultTypePolicy.PromotedNumeric => "общий числовой тип",
+        _ => descriptor.DeclaredReturnType.Name
+    };
 
     private static string LoadSourceRevision()
     {

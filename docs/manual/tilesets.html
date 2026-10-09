@@ -93,6 +93,7 @@ DRAWTILE tileset, tileIndex, x, y</code></pre>
                     <li>Для пустого значения <code>TILESET</code> функции <code>TILECOUNT</code>, <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> возвращают <code>0</code>.</li>
                     <li>Попытка вызвать оператор <code>DRAWTILE</code> для пустого значения <code>TILESET</code> считается ошибкой времени выполнения.</li>
                     <li>Сетка тайлов должна точно совпадать с размерами изображения с учётом <code>margin</code> и <code>spacing</code>. Частично заполненный последний ряд или последний столбец не допускается.</li>
+                    <li>Отступ <code>margin</code> применяется с обеих сторон каждой оси. Если после его вычитания не помещается полный тайл, загрузка завершается ошибкой <code>MB3005</code>, даже для очень большого положительного отступа. Промежуток <code>spacing</code> применяется только между соседними тайлами: для атласа из одного тайла допустим большой неотрицательный промежуток, который не меняет число тайлов. После неудачной загрузки прежнее значение переменной тайлсета сохраняется. Проверить оба случая можно в <a href="../../samples/functions/loadtileset/arithmetic_boundaries.axm">примере числовых границ</a>.</li>
                     <li>Тайлсеты в текущем срезе работают только как источник одинаковых тайлов. На этой странице не описываются <code>TILEMAP</code>, слои тайловой карты и загрузка карт Tiled.</li>
                     <li>Оператор <code>DRAWTILE</code> рисует тайл в натуральном размере <code>tileWidth x tileHeight</code>. Если нужна произвольная масштабируемая графика, для этого подходят <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code>.</li>
                 </ul>
@@ -153,6 +154,14 @@ SLEEP</code></pre>
                 </div>
             </section>
 
+            <section class="article-section"><h2>Проверка свойств без графического окна</h2><p>Эти короткие примеры загружают существующие ресурсы репозитория и выводят свойства тайлсета или карты в текстовую панель IDE. Оператор CANVAS не требуется. Для запуска нужен загрузчик ресурсов IDE; консольный CLI не загружает TILESET и TILEMAP.</p><ul>
+                    <li><a href="../../samples/functions/tilecount/atlas_property.axm">TILECOUNT: проверка свойства</a></li>
+                    <li><a href="../../samples/functions/tilewidth/atlas_property.axm">TILEWIDTH: проверка свойства</a></li>
+                    <li><a href="../../samples/functions/tileheight/atlas_property.axm">TILEHEIGHT: проверка свойства</a></li>
+                </ul></section>
+            <section class="article-section"><h2>Короткие проверки функций</h2><p>Короткие примеры выводят ожидаемый результат в текстовую панель IDE. Примеры загрузки используют существующие ресурсы репозитория и реальные относительные пути; отдельный графический холст для чтения свойств не требуется.</p><ul>
+                    <li><a href="../../samples/functions/loadtileset/loaded_resource_property.axm">LOADTILESET: короткая проверка результата</a></li>
+                </ul></section>
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
         </main>
     </div>

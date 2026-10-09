@@ -1,4 +1,4 @@
-﻿using Axiom.Semantics;
+using Axiom.Semantics;
 using Axiom.Syntax;
 
 namespace Axiom.Bytecode;
@@ -740,6 +740,18 @@ public sealed class BoundProgramLowerer
 
         if (declaration.Initializer is null)
         {
+            if (declaration.Variable.Type == TypeSymbol.Date
+                || declaration.Variable.Type == TypeSymbol.Time
+                || declaration.Variable.Type == TypeSymbol.DateTime)
+            {
+                var initialText = declaration.Variable.Type == TypeSymbol.Date ? "0001-01-01"
+                    : declaration.Variable.Type == TypeSymbol.Time ? "00:00:00" : "0001-01-01 00:00:00";
+                instructions.Add(LoweredInstruction.LoadLiteral(declaration.Location, initialText, TypeSymbol.String));
+                instructions.Add(LoweredInstruction.Convert(declaration.Location, declaration.Variable.Type));
+                instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
+                return;
+            }
+
             if (!TryCreateDefaultLiteral(declaration.Variable.Type, out var defaultValue))
             {
                 if (CanUseImplicitDefaultSlotValue(declaration.Variable.Type))
@@ -1004,8 +1016,12 @@ public sealed class BoundProgramLowerer
     private void LowerOpen(BoundOpenStatement open, List<LoweredInstruction> instructions)
     {
         LowerExpression(open.PathExpression, instructions);
+        if (open.EncodingExpression is not null)
+        {
+            LowerExpression(open.EncodingExpression, instructions);
+        }
         instructions.Add(LoweredInstruction.LoadVariable(open.Location, open.FileVariable));
-        instructions.Add(LoweredInstruction.OpenFile(open.Location, open.Mode, open.FileVariable.Name));
+        instructions.Add(LoweredInstruction.OpenFile(open.Location, open.Mode, open.FileVariable.Name, open.EncodingExpression is not null));
         instructions.Add(LoweredInstruction.StoreVariable(open.Location, open.FileVariable));
     }
 

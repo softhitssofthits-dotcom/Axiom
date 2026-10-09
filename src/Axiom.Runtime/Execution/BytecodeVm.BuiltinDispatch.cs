@@ -24,6 +24,18 @@ public sealed partial class BytecodeVm
 
         return builtin.CanonicalId switch
         {
+            BuiltinFunctionId.LenUnits => BuiltinExecution.Binary(static (vm, text, unit, location) => RuntimeValue.FromInteger(
+                BuiltinStringUnitHelpers.Length(GetStringUnchecked(text), BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "LEN", location, vm.ReportBuiltInArgumentError)))),
+            BuiltinFunctionId.LeftUnits => BuiltinExecution.Ternary(static (vm, text, count, unit, location) => BuiltinStringUnitHelpers.Slice(
+                GetStringUnchecked(text), 1, vm.RequirePositiveCount("LEFT", "count", GetIntegerUnchecked(count), location),
+                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "LEFT", location, vm.ReportBuiltInArgumentError))),
+            BuiltinFunctionId.RightUnits => BuiltinExecution.Ternary(static (vm, text, count, unit, location) => BuiltinStringUnitHelpers.Slice(
+                GetStringUnchecked(text), 1, vm.RequirePositiveCount("RIGHT", "count", GetIntegerUnchecked(count), location),
+                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "RIGHT", location, vm.ReportBuiltInArgumentError), fromRight: true)),
+            BuiltinFunctionId.MidUnits => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinStringUnitHelpers.Slice(
+                GetStringUnchecked(arguments[0]), vm.RequirePositiveStart("MID", GetIntegerUnchecked(arguments[1]), location),
+                vm.RequirePositiveCount("MID", "count", GetIntegerUnchecked(arguments[2]), location),
+                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(arguments[3]), "MID", location, vm.ReportBuiltInArgumentError))),
             BuiltinFunctionId.Len => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromInteger(GetStringUnchecked(value).Length)),
             BuiltinFunctionId.Left => BuiltinExecution.Binary(static (vm, text, count, location) =>
                 BytecodeVm.EvaluateLeft(
@@ -177,6 +189,27 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.MapTile => BuiltinExecution.Variadic(static (vm, arguments, location) => RuntimeValue.FromInteger(BytecodeVm.GetMapTile(arguments[0], GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3])))),
             BuiltinFunctionId.MapTileset => BuiltinExecution.Variadic(static (vm, arguments, location) => RuntimeValue.FromInteger(BytecodeVm.GetMapTileset(arguments[0], GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3])))),
             BuiltinFunctionId.MapTileFlags => BuiltinExecution.Variadic(static (vm, arguments, location) => RuntimeValue.FromInteger(BytecodeVm.GetMapTileFlags(arguments[0], GetLongUnchecked(arguments[1]), GetLongUnchecked(arguments[2]), GetLongUnchecked(arguments[3])))),
+            BuiltinFunctionId.MapTilesetCount => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapTilesetCount, arguments)),
+            BuiltinFunctionId.MapProperty => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapProperty, arguments)),
+            BuiltinFunctionId.MapLayerProperty => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapLayerProperty, arguments)),
+            BuiltinFunctionId.MapTileProperty => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapTileProperty, arguments)),
+            BuiltinFunctionId.MapObjectProperty => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectProperty, arguments)),
+            BuiltinFunctionId.MapLayerName => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapLayerName, arguments)),
+            BuiltinFunctionId.MapLayerType => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapLayerType, arguments)),
+            BuiltinFunctionId.MapLayerVisible => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapLayerVisible, arguments)),
+            BuiltinFunctionId.MapObjectCount => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectCount, arguments)),
+            BuiltinFunctionId.MapObjectName => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectName, arguments)),
+            BuiltinFunctionId.MapObjectClass => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectClass, arguments)),
+            BuiltinFunctionId.MapObjectKind => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectKind, arguments)),
+            BuiltinFunctionId.MapObjectVisible => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectVisible, arguments)),
+            BuiltinFunctionId.MapObjectX => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectX, arguments)),
+            BuiltinFunctionId.MapObjectY => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectY, arguments)),
+            BuiltinFunctionId.MapObjectWidth => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectWidth, arguments)),
+            BuiltinFunctionId.MapObjectHeight => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapObjectHeight, arguments)),
+            BuiltinFunctionId.MapColumn => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapColumn, arguments)),
+            BuiltinFunctionId.MapRow => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapRow, arguments)),
+            BuiltinFunctionId.MapWorldX => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapWorldX, arguments)),
+            BuiltinFunctionId.MapWorldY => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinTilemapMetadataHelpers.Evaluate(BuiltinFunctionId.MapWorldY, arguments)),
             BuiltinFunctionId.Rgb => BuiltinExecution.Ternary(static (vm, red, green, blue, location) => RuntimeValue.FromInteger(vm.EvaluateRgbBuiltin(GetLongUnchecked(red), GetLongUnchecked(green), GetLongUnchecked(blue), location))),
             BuiltinFunctionId.Int => BuiltinExecution.Unary(static (vm, value, location) => RuntimeValue.FromInteger(vm.EvaluateIntBuiltin(value, location))),
             BuiltinFunctionId.CInt => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateCintBuiltin(value, location)),
@@ -189,6 +222,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ArrayAverage => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateArrayAverageBuiltin(value, location)),
             BuiltinFunctionId.Str => BuiltinExecution.UnaryNoLocation(static (vm, value) => value.ToDisplayRuntimeValue()),
             BuiltinFunctionId.Val => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromDouble(BuiltinStringHelpers.ParseVal(GetStringUnchecked(value)))),
+            BuiltinFunctionId.IsNumeric => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromBoolean(BuiltinStringHelpers.IsNumeric(GetStringUnchecked(value)))),
             BuiltinFunctionId.LCase => BuiltinExecution.UnaryNoLocation(static (vm, value) => EvaluateLowerCaseBuiltin(value)),
             BuiltinFunctionId.UCase => BuiltinExecution.UnaryNoLocation(static (vm, value) => EvaluateUpperCaseBuiltin(value)),
             BuiltinFunctionId.Rnd => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateRndBuiltin()),
@@ -318,6 +352,10 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ReadAllLines => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateReadAllLinesBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.WriteFile => BuiltinExecution.Binary(static (vm, path, text, location) => vm.EvaluateWriteFileBuiltin(GetStringUnchecked(path), GetStringUnchecked(text), location)),
             BuiltinFunctionId.AppendFile => BuiltinExecution.Binary(static (vm, path, text, location) => vm.EvaluateAppendFileBuiltin(GetStringUnchecked(path), GetStringUnchecked(text), location)),
+            BuiltinFunctionId.ReadFileEncoding => BuiltinExecution.Binary(static (vm, path, encoding, location) => vm.EvaluateReadFileBuiltin(GetStringUnchecked(path), location, GetStringUnchecked(encoding))),
+            BuiltinFunctionId.ReadAllLinesEncoding => BuiltinExecution.Binary(static (vm, path, encoding, location) => vm.EvaluateReadAllLinesBuiltin(GetStringUnchecked(path), location, GetStringUnchecked(encoding))),
+            BuiltinFunctionId.WriteFileEncoding => BuiltinExecution.Ternary(static (vm, path, text, encoding, location) => vm.EvaluateWriteFileBuiltin(GetStringUnchecked(path), GetStringUnchecked(text), location, GetStringUnchecked(encoding))),
+            BuiltinFunctionId.AppendFileEncoding => BuiltinExecution.Ternary(static (vm, path, text, encoding, location) => vm.EvaluateAppendFileBuiltin(GetStringUnchecked(path), GetStringUnchecked(text), location, GetStringUnchecked(encoding))),
             BuiltinFunctionId.FileSize => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileSizeBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.FileDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileDateBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.FileCreateDate => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFileCreateDateBuiltin(GetStringUnchecked(value), location)),

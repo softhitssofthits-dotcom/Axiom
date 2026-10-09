@@ -18,6 +18,19 @@ namespace Axiom.Ide.Tests;
 public sealed class DocumentOpenFormattingTests
 {
     [Fact]
+    public void ApplySmartIdentifier_NormalizesActiveEditedDocument()
+    {
+        var vm = CreateViewModel(string.Empty, @"C:\temp\edited.axm");
+        if (!vm.IsSmartIdentifierEnabled) vm.ToggleSmartIdentifierCommand.Execute(null);
+        var document = vm.Documents.CreateNewDocument();
+        document.SourceText = "DIM MyScore AS INTEGER\r\nmyscore = 10\r\nPRINT MYSCORE";
+
+        vm.ApplySmartIdentifierToActiveDocument();
+
+        Assert.Equal("DIM MyScore AS INTEGER\r\nMyScore = 10\r\nPRINT MyScore", document.SourceText);
+        Assert.True(document.IsDirty);
+    }
+    [Fact]
     public void DocumentOpenFormatting_FormatsInterpolatedStringExpressionsOnOpen()
     {
         const string source = "DIM name AS STRING = \"Алиса\"\r\nprint $\"Длина имени: {len(name)} символов\"\r\n";

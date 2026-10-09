@@ -73,7 +73,8 @@ public static class RuntimeArithmeticHelpers
 
     public static int ToInt32Checked(double value, TextLocation location, string detail, Action<string, string, TextLocation> reportDiagnostic)
     {
-        if (value < int.MinValue || value > int.MaxValue)
+        value = Math.Truncate(value);
+        if (!double.IsFinite(value) || value < int.MinValue || value > int.MaxValue)
         {
             ReportNumericOverflow(detail, TypeSymbol.Integer, location, reportDiagnostic);
             throw new RuntimeFailureException();
@@ -95,6 +96,7 @@ public static class RuntimeArithmeticHelpers
 
     public static int ToInt32Checked(decimal value, TextLocation location, string detail, Action<string, string, TextLocation> reportDiagnostic)
     {
+        value = decimal.Truncate(value);
         if (value < int.MinValue || value > int.MaxValue)
         {
             ReportNumericOverflow(detail, TypeSymbol.Integer, location, reportDiagnostic);

@@ -32,6 +32,45 @@ public sealed class CliAppTests
         return path;
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(42)]
+    [InlineData(43)]
+    [InlineData(int.MinValue)]
+    [InlineData(int.MaxValue)]
+    public void Run_RandomizeRepeatsSeededSequenceWithinAndAcrossInvocations(int seed)
+    {
+        var source = $$"""
+RANDOMIZE {{seed}}
+FOR i = 1 TO 4
+    PRINT INT(RND()*1000000); "|"
+NEXT i
+RANDOMIZE {{seed}}
+FOR i = 1 TO 4
+    PRINT INT(RND()*1000000); "|"
+NEXT i
+""";
+        var path = MakeSampleFile("seeded_sequence.axm", source);
+        try
+        {
+            var random = new Random(seed);
+            var sequence = string.Concat(Enumerable.Range(0, 4).Select(_ =>
+                ((int)Math.Floor(random.NextDouble()*1000000)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "|"));
+            foreach (var invocation in Enumerable.Range(0, 2))
+            {
+                var (exitCode, stdout, stderr) = Run(["run", path]);
+                Assert.Equal(0, exitCode);
+                Assert.Equal(string.Empty, stderr);
+                Assert.Equal(sequence + sequence, stdout);
+            }
+        }
+        finally
+        {
+            File.Delete(path);
+            Directory.Delete(Path.GetDirectoryName(path)!);
+        }
+    }
+
     // ---- контракт потоков и кодов возврата ----
 
     [Fact]
@@ -255,6 +294,26 @@ public sealed class CliAppTests
     }
 
     // ---- metadata ----
+
+    [Fact]
+    public void Metadata_ExportsBoundDimensionFormsAndPolymorphicPolicies()
+    {
+        var (_, stdout, _) = Run(["metadata"]);
+        using var document = System.Text.Json.JsonDocument.Parse(stdout);
+        var builtins = document.RootElement.GetProperty("builtins").EnumerateArray().ToArray();
+        foreach (var name in new[] { "LBOUND", "UBOUND" })
+        {
+            Assert.Contains(builtins, b => b.GetProperty("name").GetString() == name
+                && b.GetProperty("params").GetArrayLength() == 2);
+        }
+        var sum = Assert.Single(builtins, b => b.GetProperty("name").GetString() == "ARRAYSUM");
+        Assert.Equal("ElementTypeOfFirstArrayArgument", sum.GetProperty("resultTypePolicy").GetString());
+        Assert.Equal("T", sum.GetProperty("displayReturnType").GetString());
+        Assert.Equal("T()", sum.GetProperty("params")[0].GetProperty("displayType").GetString());
+        var abs = Assert.Single(builtins, b => b.GetProperty("name").GetString() == "ABS");
+        Assert.Equal("SameAsFirstArgument", abs.GetProperty("resultTypePolicy").GetString());
+        Assert.Equal("T", abs.GetProperty("displayReturnType").GetString());
+    }
 
     [Fact]
     public void Metadata_ContainsKeywordsTypesBuiltinsAndRevision()

@@ -1,0 +1,9 @@
+DIM tail AS STRING = ""
+' Создаём остаток, на котором полный поиск был бы слишком долгим.
+FOR i = 1 TO 12000
+    tail = tail + "a"
+NEXT i
+DIM text AS STRING = "x" + tail + "!a"
+' Нужна только первая замена; остаток искать не требуется.
+DIM changed AS STRING = REGEXREPLACE(text, "x|(?:a|aa)+$", "y", 1)
+PRINT "Изменён только первый символ: "; changed = "y" + tail + "!a"

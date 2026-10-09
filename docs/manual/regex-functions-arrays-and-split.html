@@ -50,11 +50,16 @@ PRINT values(2)</code></pre>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">results = REGEXEXTRACTALL(text, pattern, groupNumber[, modes])</code></pre>
                 <h3>Аргументы</h3><p><code>groupNumber</code> задаёт номер группы. Группа <code>0</code> означает всё совпадение целиком.</p>
-                <h3>Пустая строка вместо отсутствующей группы</h3>
+                <h3>Явно заданный номер группы</h3><p>Аргумент groupNumber — номер захватывающей группы, который не обязан быть её порядковым местом. Конструкция (?&lt;10&gt;...) задаёт номер 10. Для отсутствующей положительной группы или необязательной группы без захвата в массив помещается пустая строка. Отрицательный номер даёт MB3007.</p><pre><code class="language-basic">DIM values() AS STRING
+' Собираем значения одной группы из двух совпадений.
+values = REGEXEXTRACTALL("код12 код34", "код(?&lt;10&gt;[0-9]+)", 10)
+PRINT values(1)
+PRINT values(2)</code></pre><p>Результаты: «12» и «34». Запускаемый пример: <a href="../../samples/functions/regexextractall/explicit_group_values.axm">значения группы 10</a>.</p>
+<h3>Пустая строка вместо отсутствующей группы</h3>
                 <p>Если в отдельном совпадении нужной группы нет, соответствующий элемент массива получает пустую строку.</p>
                 <h3>Пример массива групп</h3>
                 <pre><code class="language-basic">DIM values() AS STRING
-values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\\d+)", 2)
+values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
 PRINT values(1)
 PRINT values(2)</code></pre>
                 <p>Результат:</p>

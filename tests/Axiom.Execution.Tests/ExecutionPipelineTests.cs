@@ -3259,7 +3259,7 @@ CLOSE target
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["first", "second", "FALSE", "TRUE"], result.Output);
-            Assert.Equal($"saved{Environment.NewLine}", File.ReadAllText(outputPath));
+            Assert.Equal("saved\n", File.ReadAllText(outputPath));
         }
         finally
         {

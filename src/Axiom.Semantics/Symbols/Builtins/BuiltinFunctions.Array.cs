@@ -7,7 +7,13 @@ public static partial class BuiltinFunctions
         return
         [
             CreateArrayInfo(BuiltinFunctionId.LBound, "LBOUND", TypeSymbol.Integer),
+            new BuiltinFunctionDescriptor(BuiltinFunctionId.LBound, "LBOUND",
+                [Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer)), Parameter("dimension", TypeSymbol.Integer)],
+                TypeSymbol.Integer, bindingKind: BuiltinBindingKind.Array),
             CreateArrayInfo(BuiltinFunctionId.UBound, "UBOUND", TypeSymbol.Integer),
+            new BuiltinFunctionDescriptor(BuiltinFunctionId.UBound, "UBOUND",
+                [Parameter("array", ArrayTypeSymbol.Create(TypeSymbol.Integer)), Parameter("dimension", TypeSymbol.Integer)],
+                TypeSymbol.Integer, bindingKind: BuiltinBindingKind.Array),
             CreateArrayInfo(BuiltinFunctionId.ArrayLength, "ARRAYLENGTH", TypeSymbol.Integer),
             CreateArrayInfo(BuiltinFunctionId.ArrayIsAllocated, "ARRAYISALLOCATED", TypeSymbol.Boolean),
             CreateArrayInfo(BuiltinFunctionId.ArrayRank, "ARRAYRANK", TypeSymbol.Integer),
@@ -290,9 +296,9 @@ public static partial class BuiltinFunctions
                 ArrayTypeSymbol.Create(TypeSymbol.Integer),
                 bindingKind: BuiltinBindingKind.Array,
                 resultTypePolicy: BuiltinResultTypePolicy.SameAsFirstArgument),
-            CreateArraySameType(BuiltinFunctionId.ArraySum, "ARRAYSUM"),
-            CreateArraySameType(BuiltinFunctionId.ArrayMin, "ARRAYMIN"),
-            CreateArraySameType(BuiltinFunctionId.ArrayMax, "ARRAYMAX"),
+            CreateArrayElementType(BuiltinFunctionId.ArraySum, "ARRAYSUM"),
+            CreateArrayElementType(BuiltinFunctionId.ArrayMin, "ARRAYMIN"),
+            CreateArrayElementType(BuiltinFunctionId.ArrayMax, "ARRAYMAX"),
             CreateArrayDouble(BuiltinFunctionId.ArrayAverage, "ARRAYAVERAGE")
         ];
     }

@@ -35,14 +35,17 @@ public readonly record struct RuntimeTilemapCell(
 
 public sealed class RuntimeTilemapTilesetReference
 {
-    public RuntimeTilemapTilesetReference(int firstGlobalId, RuntimeTilesetValue tileset)
+    public RuntimeTilemapTilesetReference(int firstGlobalId, RuntimeTilesetValue tileset, IReadOnlyDictionary<int, IReadOnlyDictionary<string, string>>? tileProperties = null)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(firstGlobalId, 1);
         ArgumentNullException.ThrowIfNull(tileset);
 
+        TileProperties = tileProperties ?? new Dictionary<int, IReadOnlyDictionary<string, string>>();
         FirstGlobalId = firstGlobalId;
         Tileset = tileset;
     }
+
+    public IReadOnlyDictionary<int, IReadOnlyDictionary<string, string>> TileProperties { get; }
 
     public int FirstGlobalId { get; }
 
@@ -62,7 +65,7 @@ public sealed class RuntimeTilemapLayer
         double offsetY,
         double parallaxX,
         double parallaxY,
-        RuntimeTilemapCell[]? cells)
+        RuntimeTilemapCell[]? cells, IReadOnlyDictionary<string, string>? properties = null, IReadOnlyList<RuntimeTilemapObject>? objects = null)
     {
         ArgumentNullException.ThrowIfNull(name);
         if (width < 0)
@@ -91,6 +94,8 @@ public sealed class RuntimeTilemapLayer
         ParallaxX = parallaxX;
         ParallaxY = parallaxY;
         Cells = cells;
+        Properties = properties ?? RuntimeTilemapMetadata.Empty;
+        Objects = objects ?? Array.Empty<RuntimeTilemapObject>();
     }
 
     public string Name { get; }
@@ -112,6 +117,10 @@ public sealed class RuntimeTilemapLayer
     public double ParallaxX { get; }
 
     public double ParallaxY { get; }
+
+    public IReadOnlyDictionary<string, string> Properties { get; }
+
+    public IReadOnlyList<RuntimeTilemapObject> Objects { get; }
 
     public RuntimeTilemapCell[]? Cells { get; }
 
@@ -147,7 +156,7 @@ public sealed class RuntimeTilemapValue
         int tileHeight,
         RuntimeTilemapRenderOrder renderOrder,
         IReadOnlyList<RuntimeTilemapTilesetReference> tilesets,
-        IReadOnlyList<RuntimeTilemapLayer> layers)
+        IReadOnlyList<RuntimeTilemapLayer> layers, IReadOnlyDictionary<string, string>? properties = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(width);
         ArgumentOutOfRangeException.ThrowIfNegative(height);
@@ -165,6 +174,7 @@ public sealed class RuntimeTilemapValue
         RenderOrder = renderOrder;
         Tilesets = tilesets;
         Layers = layers;
+        Properties = properties ?? RuntimeTilemapMetadata.Empty;
 
         LayerCount = layers.Count;
         TilesetCount = tilesets.Count;
@@ -189,17 +199,19 @@ public sealed class RuntimeTilemapValue
 
     public IReadOnlyList<RuntimeTilemapLayer> Layers { get; }
 
+    public IReadOnlyDictionary<string, string> Properties { get; }
+
     public int TilesetCount { get; }
 
     public int LayerCount { get; }
 
-    public int MinTileLeft { get; }
+    public long MinTileLeft { get; }
 
-    public int MaxTileRight { get; }
+    public long MaxTileRight { get; }
 
-    public int MinTileTop { get; }
+    public long MinTileTop { get; }
 
-    public int MaxTileBottom { get; }
+    public long MaxTileBottom { get; }
 
     public RuntimeTilemapLayer GetLayer1Based(int layerIndex)
     {
@@ -230,16 +242,16 @@ public sealed class RuntimeTilemapValue
         var root = document.RootElement;
         ValidateMapRoot(root, mapPath);
 
-        var width = root.GetProperty("width").GetInt32();
-        var height = root.GetProperty("height").GetInt32();
-        var tileWidth = root.GetProperty("tilewidth").GetInt32();
-        var tileHeight = root.GetProperty("tileheight").GetInt32();
+        var width = ReadMapInteger(root, "width", positive: false);
+        var height = ReadMapInteger(root, "height", positive: false);
+        var tileWidth = ReadMapInteger(root, "tilewidth", positive: true);
+        var tileHeight = ReadMapInteger(root, "tileheight", positive: true);
         var renderOrder = ParseRenderOrder(root.TryGetProperty("renderorder", out var renderOrderElement) ? renderOrderElement.GetString() : null);
 
         var baseDirectory = Path.GetDirectoryName(mapPath) ?? Environment.CurrentDirectory;
-        var tilesets = LoadTilesets(baseDirectory, root.GetProperty("tilesets"), loadResolvedImage);
-        var layers = LoadLayers(root.GetProperty("layers"), width, height, tilesets);
-        return new RuntimeTilemapValue(width, height, tileWidth, tileHeight, renderOrder, tilesets, layers);
+        var tilesets = LoadTilesets(baseDirectory, ReadMapArray(root, "tilesets"), loadResolvedImage);
+        var layers = LoadLayers(ReadMapArray(root, "layers"), width, height, tilesets);
+        return new RuntimeTilemapValue(width, height, tileWidth, tileHeight, renderOrder, tilesets, layers, RuntimeTilemapMetadata.ReadProperties(root));
     }
 
     private static void ValidateMapRoot(JsonElement root, string mapPath)
@@ -250,10 +262,37 @@ public sealed class RuntimeTilemapValue
             throw new InvalidDataException($"LOADTILEMAP: карта '{Path.GetFileName(mapPath)}' должна быть ортогональной.");
         }
 
-        if (root.TryGetProperty("infinite", out var infiniteElement) && infiniteElement.ValueKind is JsonValueKind.True)
+        foreach (var field in new[] { "parallaxoriginx", "parallaxoriginy" })
         {
-            throw new InvalidDataException($"LOADTILEMAP: бесконечные карты Tiled в '{Path.GetFileName(mapPath)}' пока не поддерживаются.");
+            if (root.TryGetProperty(field, out var origin)
+                && (origin.ValueKind != JsonValueKind.Number || !origin.TryGetDouble(out var value) || !double.IsFinite(value) || value != 0d))
+                throw RuntimeTilemapMetadata.Invalid($"Поле {field} карты поддерживает только числовой ноль.");
         }
+
+        if (root.TryGetProperty("infinite", out var infiniteElement))
+        {
+            if (infiniteElement.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                throw RuntimeTilemapMetadata.Invalid("Поле infinite должно быть BOOLEAN.");
+            if (infiniteElement.GetBoolean())
+                throw new InvalidDataException($"LOADTILEMAP: бесконечные карты Tiled в '{Path.GetFileName(mapPath)}' пока не поддерживаются.");
+        }
+    }
+
+    private static int ReadMapInteger(JsonElement root, string name, bool positive)
+    {
+        if (!root.TryGetProperty(name, out var value)) throw RuntimeTilemapMetadata.Invalid($"Отсутствует поле {name}.");
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var number))
+            throw RuntimeTilemapMetadata.Invalid($"Поле {name} должно быть целым числом INTEGER.");
+        if (positive ? number <= 0 : number < 0)
+            throw RuntimeTilemapMetadata.Invalid($"Поле {name} должно быть " + (positive ? "положительным." : "неотрицательным."));
+        return number;
+    }
+
+    private static JsonElement ReadMapArray(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var value)) throw RuntimeTilemapMetadata.Invalid($"Отсутствует поле {name}.");
+        if (value.ValueKind != JsonValueKind.Array) throw RuntimeTilemapMetadata.Invalid($"Поле {name} должно быть массивом.");
+        return value;
     }
 
     private static IReadOnlyList<RuntimeTilemapTilesetReference> LoadTilesets(
@@ -264,7 +303,8 @@ public sealed class RuntimeTilemapValue
         var tilesets = new List<RuntimeTilemapTilesetReference>();
         foreach (var tilesetEntry in tilesetsElement.EnumerateArray())
         {
-            var firstGlobalId = tilesetEntry.GetProperty("firstgid").GetInt32();
+            var firstGlobalId = ReadMapInteger(tilesetEntry, "firstgid", positive: true);
+            if (firstGlobalId > 0x0fffffff) throw RuntimeTilemapMetadata.Invalid("firstgid содержит зарезервированные биты Tiled.");
             var resolvedTileset = ResolveTileset(baseDirectory, tilesetEntry);
             var imagePath = ResolveRelativePath(resolvedTileset.BaseDirectory, resolvedTileset.ImagePath);
             var image = loadResolvedImage(imagePath);
@@ -281,9 +321,24 @@ public sealed class RuntimeTilemapValue
                 resolvedTileset.Spacing,
                 resolvedTileset.TileOffsetX,
                 resolvedTileset.TileOffsetY);
-            tilesets.Add(new RuntimeTilemapTilesetReference(firstGlobalId, tileset));
+            foreach (var field in new[] { "columns", "tilecount", "imagewidth", "imageheight" })
+            {
+                var expected = field switch { "columns" => tileset.Columns, "tilecount" => tileset.TileCount, "imagewidth" => image.Width, _ => image.Height };
+                if (resolvedTileset.Definition.TryGetProperty(field, out var declared)
+                    && (declared.ValueKind != JsonValueKind.Number || !declared.TryGetInt32(out var number) || number != expected))
+                    throw RuntimeTilemapMetadata.Invalid($"Поле {field} тайлсета не соответствует изображению и сетке.");
+            }
+            if (resolvedTileset.TileProperties.Keys.Any(index => index < 1 || index > tileset.TileCount))
+                throw RuntimeTilemapMetadata.Invalid("id тайла выходит за границы атласа.");
+            tilesets.Add(new RuntimeTilemapTilesetReference(firstGlobalId, tileset, resolvedTileset.TileProperties));
         }
 
+        var ordered = tilesets.OrderBy(reference => reference.FirstGlobalId).ToArray();
+        for (var index = 1; index < ordered.Length; index++)
+        {
+            if ((long)ordered[index - 1].FirstGlobalId + ordered[index - 1].Tileset.TileCount > ordered[index].FirstGlobalId)
+                throw RuntimeTilemapMetadata.Invalid("Диапазоны firstgid тайлсетов пересекаются.");
+        }
         return tilesets;
     }
 
@@ -302,26 +357,28 @@ public sealed class RuntimeTilemapValue
                 throw new InvalidDataException("LOADTILEMAP: group layers Tiled пока не поддерживаются.");
             }
 
+            ValidateLayerAppearance(layerElement);
             var name = layerElement.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty;
             var visible = !layerElement.TryGetProperty("visible", out var visibleElement) || visibleElement.GetBoolean();
-            var opacity = layerElement.TryGetProperty("opacity", out var opacityElement) ? opacityElement.GetDouble() : 1d;
-            var offsetX = layerElement.TryGetProperty("offsetx", out var offsetXElement) ? offsetXElement.GetDouble() : 0d;
-            var offsetY = layerElement.TryGetProperty("offsety", out var offsetYElement) ? offsetYElement.GetDouble() : 0d;
-            var parallaxX = layerElement.TryGetProperty("parallaxx", out var parallaxXElement) ? parallaxXElement.GetDouble() : 1d;
-            var parallaxY = layerElement.TryGetProperty("parallaxy", out var parallaxYElement) ? parallaxYElement.GetDouble() : 1d;
+            var opacity = ReadLayerNumber(layerElement, "opacity", 1d);
+            if (opacity < 0d || opacity > 1d) throw RuntimeTilemapMetadata.Invalid("Поле opacity слоя должно быть от 0 до 1.");
+            var offsetX = ReadLayerNumber(layerElement, "offsetx", 0d);
+            var offsetY = ReadLayerNumber(layerElement, "offsety", 0d);
+            var parallaxX = ReadLayerNumber(layerElement, "parallaxx", 1d);
+            var parallaxY = ReadLayerNumber(layerElement, "parallaxy", 1d);
 
             if (string.Equals(type, "tilelayer", StringComparison.OrdinalIgnoreCase))
             {
                 var width = layerElement.TryGetProperty("width", out var widthElement) ? widthElement.GetInt32() : mapWidth;
                 var height = layerElement.TryGetProperty("height", out var heightElement) ? heightElement.GetInt32() : mapHeight;
                 var cells = ParseLayerCells(layerElement, width, height, tilesets);
-                layers.Add(new RuntimeTilemapLayer(name, RuntimeTilemapLayerKind.Tile, width, height, visible, opacity, offsetX, offsetY, parallaxX, parallaxY, cells));
+                layers.Add(new RuntimeTilemapLayer(name, RuntimeTilemapLayerKind.Tile, width, height, visible, opacity, offsetX, offsetY, parallaxX, parallaxY, cells, RuntimeTilemapMetadata.ReadProperties(layerElement)));
                 continue;
             }
 
             if (string.Equals(type, "objectgroup", StringComparison.OrdinalIgnoreCase))
             {
-                layers.Add(new RuntimeTilemapLayer(name, RuntimeTilemapLayerKind.Object, mapWidth, mapHeight, visible, opacity, offsetX, offsetY, parallaxX, parallaxY, cells: null));
+                layers.Add(new RuntimeTilemapLayer(name, RuntimeTilemapLayerKind.Object, mapWidth, mapHeight, visible, opacity, offsetX, offsetY, parallaxX, parallaxY, cells: null, RuntimeTilemapMetadata.ReadProperties(layerElement), RuntimeTilemapMetadata.ReadObjects(layerElement)));
                 continue;
             }
 
@@ -331,8 +388,37 @@ public sealed class RuntimeTilemapValue
         return layers;
     }
 
+    private static void ValidateLayerAppearance(JsonElement layer)
+    {
+        if (layer.TryGetProperty("mode", out var mode)
+            && (mode.ValueKind != JsonValueKind.String || mode.GetString() != "normal"))
+            throw RuntimeTilemapMetadata.Invalid("Поле mode слоя поддерживает только строку normal.");
+        if (layer.TryGetProperty("tintcolor", out var tint))
+        {
+            var color = tint.ValueKind == JsonValueKind.String ? tint.GetString() : null;
+            if (!string.Equals(color, "#FFFFFF", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(color, "#FFFFFFFF", StringComparison.OrdinalIgnoreCase))
+                throw RuntimeTilemapMetadata.Invalid("Поле tintcolor слоя поддерживает только непрозрачный белый цвет.");
+        }
+    }
+
+    private static double ReadLayerNumber(JsonElement layer, string name, double defaultValue)
+    {
+        if (!layer.TryGetProperty(name, out var value)) return defaultValue;
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var number) || !double.IsFinite(number))
+            throw RuntimeTilemapMetadata.Invalid($"Поле {name} слоя должно быть конечным числом DOUBLE.");
+        return number;
+    }
+
     private static RuntimeTilemapCell[] ParseLayerCells(JsonElement layerElement, int width, int height, IReadOnlyList<RuntimeTilemapTilesetReference> tilesets)
     {
+        if (layerElement.TryGetProperty("chunks", out _)) throw RuntimeTilemapMetadata.Invalid("Слои chunks пока не поддерживаются.");
+        if (layerElement.TryGetProperty("encoding", out var encoding)
+            && (encoding.ValueKind != JsonValueKind.String || encoding.GetString() != "csv"))
+            throw RuntimeTilemapMetadata.Invalid("Поддерживается только JSON-массив data с encoding csv.");
+        if (layerElement.TryGetProperty("compression", out var compression)
+            && (compression.ValueKind != JsonValueKind.String || compression.GetString() != ""))
+            throw RuntimeTilemapMetadata.Invalid("Сжатые данные слоя пока не поддерживаются.");
         if (!layerElement.TryGetProperty("data", out var dataElement) || dataElement.ValueKind != JsonValueKind.Array)
         {
             throw new InvalidDataException("LOADTILEMAP: tile layer должен содержать JSON-массив data.");
@@ -363,7 +449,7 @@ public sealed class RuntimeTilemapValue
         const uint flipHorizontal = 0x80000000;
         const uint flipVertical = 0x40000000;
         const uint flipDiagonal = 0x20000000;
-        const uint flipMask = flipHorizontal | flipVertical | flipDiagonal;
+        const uint flipMask = flipHorizontal | flipVertical | flipDiagonal | 0x10000000;
 
         if (rawValue == 0)
         {
@@ -387,17 +473,13 @@ public sealed class RuntimeTilemapValue
         }
 
         var normalizedGlobalId = checked((int)(rawValue & ~flipMask));
+        if (normalizedGlobalId == 0) return default;
         var selectedIndex = -1;
         for (var index = 0; index < tilesets.Count; index++)
         {
-            if (tilesets[index].FirstGlobalId <= normalizedGlobalId)
-            {
+            if (tilesets[index].FirstGlobalId <= normalizedGlobalId
+                && (selectedIndex < 0 || tilesets[index].FirstGlobalId > tilesets[selectedIndex].FirstGlobalId))
                 selectedIndex = index;
-            }
-            else
-            {
-                break;
-            }
         }
 
         if (selectedIndex < 0)
@@ -415,24 +497,24 @@ public sealed class RuntimeTilemapValue
         return new RuntimeTilemapCell(selectedIndex + 1, tileIndex, flags);
     }
 
-    private static (int MinLeft, int MaxRight, int MinTop, int MaxBottom) ComputeTileExtents(IReadOnlyList<RuntimeTilemapTilesetReference> tilesets)
+    private static (long MinLeft, long MaxRight, long MinTop, long MaxBottom) ComputeTileExtents(IReadOnlyList<RuntimeTilemapTilesetReference> tilesets)
     {
         if (tilesets.Count == 0)
         {
             return (0, 0, 0, 0);
         }
 
-        var minLeft = int.MaxValue;
-        var maxRight = int.MinValue;
-        var minTop = int.MaxValue;
-        var maxBottom = int.MinValue;
+        var minLeft = long.MaxValue;
+        var maxRight = long.MinValue;
+        var minTop = long.MaxValue;
+        var maxBottom = long.MinValue;
         foreach (var tilesetRef in tilesets)
         {
             var tileset = tilesetRef.Tileset;
             minLeft = Math.Min(minLeft, tileset.TileOffsetX);
-            maxRight = Math.Max(maxRight, tileset.TileOffsetX + tileset.TileWidth - 1);
+            maxRight = Math.Max(maxRight, (long)tileset.TileOffsetX + tileset.TileWidth - 1);
             minTop = Math.Min(minTop, tileset.TileOffsetY);
-            maxBottom = Math.Max(maxBottom, tileset.TileOffsetY + tileset.TileHeight - 1);
+            maxBottom = Math.Max(maxBottom, (long)tileset.TileOffsetY + tileset.TileHeight - 1);
         }
 
         return (minLeft, maxRight, minTop, maxBottom);
@@ -450,14 +532,15 @@ public sealed class RuntimeTilemapValue
         };
     }
 
-    private static (string BaseDirectory, string ImagePath, int TileWidth, int TileHeight, int Margin, int Spacing, int TileOffsetX, int TileOffsetY) ResolveTileset(string baseDirectory, JsonElement tilesetEntry)
+    private static (string BaseDirectory, string ImagePath, int TileWidth, int TileHeight, int Margin, int Spacing, int TileOffsetX, int TileOffsetY, IReadOnlyDictionary<int, IReadOnlyDictionary<string, string>> TileProperties, JsonElement Definition) ResolveTileset(string baseDirectory, JsonElement tilesetEntry)
     {
         JsonElement definition = tilesetEntry;
         var definitionBaseDirectory = baseDirectory;
         if (tilesetEntry.TryGetProperty("source", out var sourceElement))
         {
             var sourcePath = ResolveRelativePath(baseDirectory, sourceElement.GetString() ?? string.Empty);
-            definition = JsonDocument.Parse(File.ReadAllText(sourcePath)).RootElement.Clone();
+            using var tilesetDocument = JsonDocument.Parse(File.ReadAllText(sourcePath));
+            definition = tilesetDocument.RootElement.Clone();
             definitionBaseDirectory = Path.GetDirectoryName(sourcePath) ?? baseDirectory;
         }
 
@@ -466,6 +549,20 @@ public sealed class RuntimeTilemapValue
             throw new InvalidDataException("LOADTILEMAP: image collection tilesets пока не поддерживаются.");
         }
 
+        foreach (var unsupported in new[] { "wangsets", "terrains" })
+        {
+            if (definition.TryGetProperty(unsupported, out _))
+                throw RuntimeTilemapMetadata.Invalid($"Метаданные {unsupported} пока не поддерживаются.");
+        }
+
+        if (definition.TryGetProperty("tilerendersize", out var renderSize)
+            && (renderSize.ValueKind != JsonValueKind.String || renderSize.GetString() != "tile"))
+            throw RuntimeTilemapMetadata.Invalid("tilerendersize поддерживает только tile.");
+        if (definition.TryGetProperty("fillmode", out var fillMode)
+            && (fillMode.ValueKind != JsonValueKind.String || fillMode.GetString() is not ("stretch" or "preserve-aspect-fit")))
+            throw RuntimeTilemapMetadata.Invalid("Неподдерживаемый fillmode тайлсета.");
+        if (definition.TryGetProperty("transparentcolor", out _))
+            throw RuntimeTilemapMetadata.Invalid("transparentcolor тайлсета пока не поддерживается; используйте альфа-канал изображения.");
         var tileOffsetX = 0;
         var tileOffsetY = 0;
         if (definition.TryGetProperty("tileoffset", out var tileOffsetElement))
@@ -474,6 +571,22 @@ public sealed class RuntimeTilemapValue
             tileOffsetY = tileOffsetElement.TryGetProperty("y", out var offsetYElement) ? offsetYElement.GetInt32() : 0;
         }
 
+        var tileProperties = new Dictionary<int, IReadOnlyDictionary<string, string>>();
+        if (definition.TryGetProperty("tiles", out var tileEntries))
+        {
+            if (tileEntries.ValueKind != JsonValueKind.Array) throw RuntimeTilemapMetadata.Invalid("tiles должен быть массивом.");
+            foreach (var tile in tileEntries.EnumerateArray())
+            {
+                if (tile.ValueKind != JsonValueKind.Object || !tile.TryGetProperty("id", out var id)
+                    || !id.TryGetInt32(out var index) || index < 0 || index == int.MaxValue) throw RuntimeTilemapMetadata.Invalid("Неверный id тайла.");
+                if (new[] { "x", "y", "width", "height", "image" }.Any(field => tile.TryGetProperty(field, out _)))
+                    throw RuntimeTilemapMetadata.Invalid("Отдельное изображение или прямоугольник тайла пока не поддерживается.");
+                if (tile.TryGetProperty("terrain", out _)) throw RuntimeTilemapMetadata.Invalid("Метаданные terrain тайла пока не поддерживаются.");
+                if (tile.TryGetProperty("animation", out _)) throw RuntimeTilemapMetadata.Invalid("Анимация тайлов пока не поддерживается.");
+                if (!tileProperties.TryAdd(index + 1, RuntimeTilemapMetadata.ReadProperties(tile)))
+                    throw RuntimeTilemapMetadata.Invalid("id тайла повторяется.");
+            }
+        }
         return (
             definitionBaseDirectory,
             imageElement.GetString() ?? string.Empty,
@@ -482,7 +595,7 @@ public sealed class RuntimeTilemapValue
             definition.TryGetProperty("margin", out var marginElement) ? marginElement.GetInt32() : 0,
             definition.TryGetProperty("spacing", out var spacingElement) ? spacingElement.GetInt32() : 0,
             tileOffsetX,
-            tileOffsetY);
+            tileOffsetY, new System.Collections.ObjectModel.ReadOnlyDictionary<int, IReadOnlyDictionary<string, string>>(tileProperties), definition);
     }
 
     private static string ResolveRelativePath(string baseDirectory, string relativePath)

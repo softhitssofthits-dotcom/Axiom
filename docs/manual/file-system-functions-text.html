@@ -70,9 +70,10 @@ PRINT PATHEXISTS("docs")</code></pre>
 
             <section class="article-section" id="readfile">
                 <h2>READFILE</h2>
-                <p>Функция <code>READFILE</code> читает весь текстовый файл целиком и возвращает одну строку.</p>
+                <p><code>READFILE</code> — встроенная функция языка Axiom, которая читает весь текстовый файл целиком и возвращает одну строку.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">text = READFILE(path)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">text = READFILE(path, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является строка с полным содержимым файла.</p>
                 <h3>Пример вызова READFILE</h3>
                 <pre><code class="language-basic">' Чтение всего файла одной строкой
@@ -84,9 +85,10 @@ PRINT text</code></pre>
 
             <section class="article-section" id="readalllines">
                 <h2>READALLLINES</h2>
-                <p>Функция <code>READALLLINES</code> читает текстовый файл построчно и возвращает массив строк.</p>
+                <p><code>READALLLINES</code> — встроенная функция языка Axiom, которая читает текстовый файл построчно и возвращает массив строк.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">lines = READALLLINES(path)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">lines = READALLLINES(path, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является массив <code>STRING()</code> с границами <code>1 TO N</code>.</p>
                 <h3>Пример вызова READALLLINES</h3>
                 <pre><code class="language-basic">' Чтение файла в массив строк
@@ -99,9 +101,10 @@ PRINT lines(1)</code></pre>
 
             <section class="article-section" id="writefile">
                 <h2>WRITEFILE</h2>
-                <p>Функция <code>WRITEFILE</code> записывает текст в файл с начала. Если файл уже существует, его содержимое заменяется.</p>
+                <p><code>WRITEFILE</code> — встроенная функция языка Axiom, которая записывает текст в файл с начала. Если файл уже существует, его содержимое заменяется.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = WRITEFILE(path, text)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">result = WRITEFILE(path, text, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова WRITEFILE</h3>
                 <pre><code class="language-basic">' Полная перезапись файла
@@ -110,21 +113,56 @@ PRINT WRITEFILE("notes.txt", "Первая строка")</code></pre>
 
             <section class="article-section" id="appendfile">
                 <h2>APPENDFILE</h2>
-                <p>Функция <code>APPENDFILE</code> дописывает текст в конец файла. Если файла ещё нет, он создаётся.</p>
+                <p><code>APPENDFILE</code> — встроенная функция языка Axiom, которая дописывает текст в конец файла. Если файла ещё нет, он создаётся.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = APPENDFILE(path, text)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">result = APPENDFILE(path, text, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку, которую нужно добавить в конец файла. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова APPENDFILE</h3>
                 <pre><code class="language-basic">' Добавление новой строки в конец файла
 PRINT APPENDFILE("notes.txt", CHR(10) + "Вторая строка")</code></pre>
             </section>
 
+            <section class="article-section" id="explicit-encoding">
+                <h2>Выбор кодировки</h2>
+                <p>Аргументы <code>path</code>, <code>text</code> и <code>encoding</code> должны быть строками. Явная кодировка нужна для обмена с программой, формат файлов которой известен заранее. Новые формы работают в обоих движках, в IDE и CLI. Относительные пути вычисляются от текущей папки программы; отсутствующие родительские папки автоматически не создаются.</p>
+                <table><thead><tr><th>Имя кодировки</th><th>Чтение и запись</th></tr></thead><tbody>
+                    <tr><td><code>UTF-8</code></td><td>Строгое UTF-8. Запись без BOM; соответствующий BOM при чтении пропускается.</td></tr>
+                    <tr><td><code>WINDOWS-1251</code></td><td>Однобайтовая кириллическая кодировка, без BOM. Все входные байты читаются как WINDOWS-1251; похожие на Unicode BOM префиксы остаются обычным текстом. Непредставимые символы не заменяются знаком вопроса, а вызывают ошибку.</td></tr>
+                    <tr><td><code>UTF-16LE</code></td><td>Строгое UTF-16 с младшим байтом первым. Новый файл получает BOM FF FE.</td></tr>
+                    <tr><td><code>UTF-16BE</code></td><td>Строгое UTF-16 со старшим байтом первым. Новый файл получает BOM FE FF.</td></tr>
+                </tbody></table>
+                <p>Регистр имени кодировки не важен, пробелы по краям игнорируются. Другие имена не поддерживаются. Явное чтение Unicode-кодировок допускает отсутствие BOM, но отвергает противоречащий выбранной кодировке распознанный BOM. Для WINDOWS-1251 BOM не распознаётся: байты FF FE могут означать обычный текст «яю», поэтому функция не угадывает Unicode вместо явно выбранной однобайтовой кодировки. Некорректные байты UTF-8/UTF-16 вызывают ошибку; функция не переключается на другую кодировку. Первая подпись EF BB BF в UTF-8 считается BOM, поэтому начальный символ U+FEFF при таком чтении не возвращается как текст. Пустой файл возвращает пустую строку или пустой массив строк.</p>
+                <p>Функция <code>WRITEFILE</code> проверяет возможность кодирования всего текста до создания или обнуления файла. При ошибке кодирования прежнее содержимое сохраняется. Функция <code>APPENDFILE</code> сначала проверяет весь существующий файл по выбранной кодировке, затем добавляет текст без повторного BOM. Для отсутствующего или пустого файла применяется правило создания из таблицы. Обе функции возвращают <code>TRUE</code> при успехе и сами не добавляют перевод строки.</p>
+                <p>Проверка декодирования не доказывает, какой формат задумал автор файла без BOM: одни байты могут быть корректны сразу в нескольких кодировках. Например, байты C3 A9 означают «é» в UTF-8 и «Г©» в WINDOWS-1251. Выбирайте кодировку по договору внешнего формата. Ошибки доступа и записи не делают операцию транзакционной: успешная проверка текста не исключает последующий сбой диска.</p>
+                <h3>Диагностика явных форм</h3>
+                <ul>
+                    <li><code>MB3007</code> при неизвестном имени кодировки: используйте одно из четырёх имён в таблице.</li>
+                    <li><code>MB3007</code> при противоречащем BOM: выбранная кодировка не совпала с распознанной меткой файла.</li>
+                    <li><code>MB3007</code> при некорректных байтах UTF-8/UTF-16: чтение или проверка перед дописыванием не заменяет повреждённый текст.</li>
+                    <li><code>MB3007</code> при непредставимом символе: запись WINDOWS-1251 не заменяет эмодзи знаком вопроса; явные кодировки отвергают непарные суррогаты UTF-16.</li>
+                    <li><code>MB3007</code> при отсутствии файла для чтения, недоступной папке или другой ошибке файловой системы.</li>
+                </ul>
+                <h3>Пример записи и дописывания WINDOWS-1251</h3>
+                <pre><code class="language-basic">PRINT MAKEDIR(".artifacts/encoding_examples")
+PRINT WRITEFILE(".artifacts/encoding_examples/letters.txt", "А", "WINDOWS-1251")
+PRINT APPENDFILE(".artifacts/encoding_examples/letters.txt", "я", "WINDOWS-1251")
+PRINT READFILE(".artifacts/encoding_examples/letters.txt", "WINDOWS-1251")</code></pre>
+                <h3>Пример чтения UTF-16LE построчно</h3>
+                <pre><code class="language-basic">PRINT MAKEDIR(".artifacts/encoding_examples")
+DIM lines() AS STRING
+PRINT WRITEFILE(".artifacts/encoding_examples/lines.txt", "Первая" + CHR(10) + "Вторая", "UTF-16LE")
+lines = READALLLINES(".artifacts/encoding_examples/lines.txt", "UTF-16LE")
+PRINT ARRAYLENGTH(lines)</code></pre>
+                <p>Полные запускаемые программы: <a href="../../samples/functions/readfile/explicit_encoding_choice.axm">выбор формата READFILE</a>, <a href="../../samples/functions/readalllines/explicit_utf16_lines.axm">строки UTF-16</a>, <a href="../../samples/functions/writefile/reject_unrepresentable_text.axm">отказ записи непредставимого символа</a>, <a href="../../samples/functions/appendfile/explicit_1251_append.axm">дописывание WINDOWS-1251</a>.</p>
+                <p>Существующие формы без аргумента кодировки сохраняют прежние правила: чтение угадывает UTF-8/1251, запись использует UTF-8 без BOM. Оператор <a href="open.html"><code>OPEN</code></a> поддерживает тот же выбор через <code>USING encoding</code>.</p>
+            </section>
             <section class="article-section">
                 <h2>Когда использовать чтение целиком и построчно</h2>
                 <ul>
-                    <li><code>READFILE</code> и <code>READALLLINES</code> сначала пытаются читать файл как UTF-8, а при недопустимых байтах переходят к Windows-1251.</li>
+                    <li>Формы <code>READFILE</code> и <code>READALLLINES</code> без аргумента кодировки сначала пытаются читать UTF-8, а при недопустимых байтах переходят к Windows-1251.</li>
                     <li><code>READALLLINES</code> возвращает компактный массив строк. Для пустого файла это будет пустой массив с границами <code>1 TO 0</code>.</li>
-                    <li><code>WRITEFILE</code> и <code>APPENDFILE</code> записывают текст в UTF-8 без BOM.</li>
+                    <li>Формы <code>WRITEFILE</code> и <code>APPENDFILE</code> без аргумента кодировки записывают UTF-8 без BOM; явные формы описаны выше.</li>
                     <li>Если нужно читать файл частями или управлять позицией вручную, используйте страницу <a href="file-system-functions-open-files.html">Функции для открытого файла</a>.</li>
                 </ul>
             </section>
@@ -164,6 +202,7 @@ PRINT APPENDFILE("notes.txt", CHR(10) + "Вторая строка")</code></pre
                 </div>
             </section>
 
+            <section class="article-section"><h2>Однобайтовое чтение и повторная запись</h2><p><a href="../../samples/functions/readfile/single_byte_round_trip.axm">Пример READFILE с явной WINDOWS-1251</a> читает ресурс со всеми значениями байта и записывает полученную строку той же кодировкой. Пример проверяет количество позиций и повторное чтение. Это обходной путь через текстовую кодировку, а не получение числового массива байтов. Операция держит весь файл в памяти. Для простого копирования файла используй COPYFILE.</p><p>В IDE ресурс ищется относительно каталога запускаемого исходника. При запуске этого примера через CLI перейди в его каталог, чтобы относительный путь byte_values.bin указывал на приложенный ресурс.</p></section>
             <div id="page-pager" class="pager"></div>
         </main>
     </div>

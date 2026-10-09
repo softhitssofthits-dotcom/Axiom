@@ -1,0 +1,7 @@
+' Ожидаемый результат: TRUE. Пример запускается в IDE.
+DIM level AS TILEMAP
+' Загружаем карту с клетками, свойствами и двумя объектами.
+level = LOADTILEMAP("../loadtilemap/access_map.tmj")
+' Читаем одно значение без графического холста.
+PRINT "Результат MAPTILEPROPERTY:"
+PRINT MAPTILEPROPERTY(level, 1, 1, 1, "solid")

@@ -16,7 +16,7 @@ internal static class BuiltinFileSystemHelpers
 
         if (baseDirectory is not null && !Path.IsPathFullyQualified(expanded))
         {
-            return Path.GetFullPath(Path.Combine(baseDirectory, expanded));
+            return Path.GetFullPath(expanded, baseDirectory);
         }
 
         return Path.GetFullPath(expanded);
@@ -70,36 +70,12 @@ internal static class BuiltinFileSystemHelpers
 
     public static void CopyDirectory(string sourceDir, string destDir, bool overwrite)
     {
-        Directory.CreateDirectory(destDir);
-
-        foreach (var file in Directory.GetFiles(sourceDir))
-        {
-            var destFile = Path.Combine(destDir, Path.GetFileName(file));
-            File.Copy(file, destFile, overwrite);
-        }
-
-        foreach (var dir in Directory.GetDirectories(sourceDir))
-        {
-            var destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
-            CopyDirectory(dir, destSubDir, overwrite);
-        }
+        BuiltinDirectoryHelpers.CopyDirectory(sourceDir, destDir, overwrite);
     }
 
     public static long GetDirectorySize(string dirPath)
     {
-        long size = 0;
-
-        foreach (var file in Directory.GetFiles(dirPath))
-        {
-            checked { size += new FileInfo(file).Length; }
-        }
-
-        foreach (var dir in Directory.GetDirectories(dirPath))
-        {
-            checked { size += GetDirectorySize(dir); }
-        }
-
-        return size;
+        return BuiltinDirectoryHelpers.GetDirectorySize(dirPath);
     }
 
     public static string CreateTemporaryFile(string prefix)

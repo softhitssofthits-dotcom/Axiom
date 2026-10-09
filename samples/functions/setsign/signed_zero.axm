@@ -1,0 +1,10 @@
+' Оба нуля равны при сравнении, но имеют разные знаки DOUBLE.
+DIM positive AS DOUBLE = 0.0
+DIM negative AS DOUBLE = -0.0
+PRINT "Нули равны: "; positive = negative
+' SETSIGN переносит знак, в том числе знак отрицательного нуля.
+PRINT "Положительный знак: "; SETSIGN(3, positive)
+PRINT "Отрицательный знак: "; SETSIGN(3, negative)
+' Для точки на отрицательной полуоси знак нуля определяет сторону угла.
+PRINT "Угол ниже оси: "; ATN2(negative, -1) < 0
+PRINT "Угол выше оси: "; ATN2(positive, -1) > 0

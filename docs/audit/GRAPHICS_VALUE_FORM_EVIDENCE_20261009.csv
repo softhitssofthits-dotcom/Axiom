@@ -1,0 +1,2 @@
+﻿Name,Id,Arity,Evidence,Scope,Limit,Results
+RGB,Rgb,3,RgbIndependentEvidenceTests,"Без SCREEN/CANVAS; чёрный/белый/основные цвета/1,2,3; каждый компонент -1/256/LONG.MaxValue; неверные типы и число аргументов","Не отрисовка цвета, альфа-канал, палитра SCREEN или все ошибки типов",34/34; rgb-1186.trx

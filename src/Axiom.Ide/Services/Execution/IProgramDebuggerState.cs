@@ -10,7 +10,8 @@ public sealed record DebuggerStopInfo(
     int? Column,
     string? Opcode,
     int CallDepth,
-    bool CanStepBack);
+    bool CanStepBack,
+    Axiom.Core.TextLocation? SourceLocation = null);
 
 /// <summary>
 /// Абстракция состояния отладчика, скрывающая внутренности runtime от IDE.

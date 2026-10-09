@@ -1,0 +1,17 @@
+' Создаём отдельную пустую временную папку, исходные файлы не меняем.
+DIM initialDirectory AS STRING = CURRENTDIR()
+DIM folder AS STRING = MAKETEMPDIR("axiom-path-scope-")
+PRINT "Переход во временную папку: "; CHANGEDIR(folder)
+DIM root AS STRING = PATHROOT(folder)
+' На локальном диске запись C:имя должна использовать каталог программы.
+IF MID(root, 2, 1) = ":" THEN
+    DIM driveRelative AS STRING = LEFT(root, 2) + "проверка.txt"
+    PRINT "Путь с буквой диска использует выбранную папку: "; FULLPATH(driveRelative) = COMBINEPATH(folder, "проверка.txt")
+END IF
+' Запись от корня сохраняет диск или сетевой корень текущего каталога.
+PRINT "Путь от корня использует правильный корень: "; FULLPATH("\проверка.txt") = COMBINEPATH(root, "проверка.txt")
+' FULLPATH сворачивает переходы, даже если файл и подкаталог не существуют.
+PRINT "Переход через подкаталог свёрнут: "; FULLPATH("подкаталог\..\проверка.txt") = COMBINEPATH(folder, "проверка.txt")
+' Возвращаемся перед удалением только созданной нами пустой папки.
+PRINT "Исходная папка восстановлена: "; CHANGEDIR(initialDirectory)
+PRINT "Временная папка удалена: "; DELETEDIR(folder)

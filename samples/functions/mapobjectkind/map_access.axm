@@ -1,0 +1,7 @@
+' Ожидаемый результат: POINT. Пример запускается в IDE.
+DIM level AS TILEMAP
+' Загружаем карту с клетками, свойствами и двумя объектами.
+level = LOADTILEMAP("../loadtilemap/access_map.tmj")
+' Читаем одно значение без графического холста.
+PRINT "Результат MAPOBJECTKIND:"
+PRINT MAPOBJECTKIND(level, 3, 2)

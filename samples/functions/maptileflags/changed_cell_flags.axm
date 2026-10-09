@@ -1,0 +1,10 @@
+' Ожидается 0, 3, 0: исходная маска, изменённая маска, выход за границу.
+DIM level AS TILEMAP
+level = LOADTILEMAP("../../operators/drawtilemap/simple_map.tmj")
+PRINT "Маски отражения клетки:"
+PRINT MAPTILEFLAGS(level, 1, 1, 1)
+' Изменяем маску в памяти; файл карты не перезаписывается.
+SETMAPTILE level, 1, 1, 1, 1, 1, 3
+PRINT MAPTILEFLAGS(level, 1, 1, 1)
+' Чтение за пределами карты возвращает ноль.
+PRINT MAPTILEFLAGS(level, 1, 3, 1)

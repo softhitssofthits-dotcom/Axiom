@@ -1,0 +1,4 @@
+' Флаг состоит из двух Unicode-кодов, но является одной графемой.
+DIM text AS STRING = "Страна: 🇷🇺"
+PRINT "Флаг целиком: "; RIGHT(text, 1, "GRAPHEME")
+PRINT "Длина флага в Unicode-кодах: "; LEN(RIGHT(text, 1, "GRAPHEME"), "CODEPOINT")

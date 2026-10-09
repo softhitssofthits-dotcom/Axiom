@@ -1,0 +1,14 @@
+builtin_id,call,expected,result_type,test,manual,boundary_status
+TrimWhitespace,"TRIM(""  Я  "")",Я,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+TrimCharacters,"TRIM(""абЯба"", ""аб"")",Я,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+LTrimWhitespace,"LTRIM(""  Я  "")",Я  ,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+LTrimCharacters,"LTRIM(""абЯба"", ""аб"")",Яба,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+RTrimWhitespace,"RTRIM(""  Я  "")",  Я,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+RTrimCharacters,"RTRIM(""абЯба"", ""аб"")",абЯ,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+LCase,"LCASE(""ЯABC😀"")",яabc😀,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+UCase,"UCASE(""яabc😀"")",ЯABC😀,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+Reverse,"REVERSE(""А😀Б"")",Б😀А,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,string-functions-trim-and-case.html,Выбранные границы проверены; все Unicode-значения не перебраны
+Asc,"ASC(""Я"")",159,INTEGER,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,characters.html,Выбранные границы проверены; все Unicode-значения не перебраны
+AscW,"ASCW(""Я"")",1071,INTEGER,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,characters.html,Выбранные границы проверены; все Unicode-значения не перебраны
+Chr,CHR(159),Я,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,characters.html,Выбранные границы проверены; все Unicode-значения не перебраны
+ChrW,CHRW(128512),😀,STRING,StringCaseFormEvidenceTests; StringCaseIndependentContractTests,characters.html,Выбранные границы проверены; все Unicode-значения не перебраны

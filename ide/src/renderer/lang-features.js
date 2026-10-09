@@ -71,8 +71,12 @@ const LangFeatures = (() => {
   // Registry builtins come one entry per overload: {name, params:[{name,type}], returnType}.
   // Signature string in the BASIC style: NAME(arg AS TYPE, ...) AS RET.
   function builtinSignature(b) {
-    const args = (b.params || []).map((p) => p.name + (p.type ? ' AS ' + p.type : '')).join(', ');
-    const ret = b.returnType && b.returnType !== 'VOID' ? ' AS ' + b.returnType : '';
+    const args = (b.params || []).map((p) => {
+      const type = p.displayType || p.type;
+      return p.name + (type ? ' AS ' + type : '');
+    }).join(', ');
+    const returnType = b.displayReturnType || b.returnType;
+    const ret = returnType && returnType !== 'VOID' ? ' AS ' + returnType : '';
     return (b.name || '') + '(' + args + ')' + ret;
   }
 

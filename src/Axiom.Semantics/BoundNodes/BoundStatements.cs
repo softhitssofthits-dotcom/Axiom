@@ -1357,7 +1357,7 @@ public enum BoundFileOpenMode
 
 public sealed class BoundOpenStatement : BoundStatement
 {
-    public BoundOpenStatement(TextLocation location, BoundExpression pathExpression, VariableSymbol fileVariable, BoundFileOpenMode mode)
+    public BoundOpenStatement(TextLocation location, BoundExpression pathExpression, VariableSymbol fileVariable, BoundFileOpenMode mode, BoundExpression? encodingExpression = null)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(pathExpression);
@@ -1366,6 +1366,7 @@ public sealed class BoundOpenStatement : BoundStatement
         PathExpression = pathExpression;
         FileVariable = fileVariable;
         Mode = mode;
+        EncodingExpression = encodingExpression;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.OpenStatement;
@@ -1375,6 +1376,8 @@ public sealed class BoundOpenStatement : BoundStatement
     public VariableSymbol FileVariable { get; }
 
     public BoundFileOpenMode Mode { get; }
+
+    public BoundExpression? EncodingExpression { get; }
 }
 
 public sealed class BoundCloseStatement : BoundStatement

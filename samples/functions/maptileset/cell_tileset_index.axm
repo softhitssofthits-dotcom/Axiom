@@ -1,0 +1,10 @@
+' Ожидается 1, 0, 0: заполненная клетка, пустая клетка, выход за границу.
+DIM level AS TILEMAP
+level = LOADTILEMAP("../../operators/drawtilemap/simple_map.tmj")
+PRINT "Номера тайлсетов для трёх клеток:"
+' Номера слоя, столбца и строки начинаются с единицы.
+PRINT MAPTILESET(level, 1, 1, 1)
+' Первая клетка второй строки пуста.
+PRINT MAPTILESET(level, 1, 1, 2)
+' Чтение за пределами карты возвращает ноль.
+PRINT MAPTILESET(level, 1, 3, 1)

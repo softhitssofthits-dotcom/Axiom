@@ -1,0 +1,10 @@
+' WRITELINE и NEWLINE добавляют ровно один байт LF.
+DIM path AS STRING = MAKETEMPFILE("writeline_lf_")
+DIM f AS FILE
+OPEN path FOR OUTPUT AS f
+PRINT WRITELINE(f, "А")
+PRINT "Позиция после буквы и LF равна трём:", FILEPOS(f)
+PRINT NEWLINE(f)
+PRINT "Позиция после пустой строки равна четырём:", FILEPOS(f)
+CLOSE f
+PRINT "Временный файл удалён:", DELETEFILE(path)

@@ -15,57 +15,90 @@ public sealed class RuntimeTextFile : IDisposable
     private readonly Encoding _encoding;
     private readonly Encoding _strictEncoding;
     private readonly FileStream _stream;
-    private readonly StringBuilder _writeBuffer = new();
+    private readonly List<byte> _writeBuffer = new();
     private long? _bufferedWriteStartPosition;
-    // В режиме INPUT файл может начинаться с UTF-8 BOM: он не является частью
-    // текста, поэтому все пользовательские позиции отсчитываются от его конца.
+    // Распознанный BOM не является частью текста: пользовательские позиции
+    // отсчитываются от его конца, включая явные UTF-16 OUTPUT/APPEND.
     private readonly long _contentStart;
     private long _position;
     private long _length;
     private bool _disposed;
 
-    public RuntimeTextFile(string path, RuntimeTextFileMode mode, Encoding encoding)
+    public RuntimeTextFile(string path, RuntimeTextFileMode mode, Encoding encoding, string? explicitEncodingName = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(encoding);
 
         Path = path;
         Mode = mode;
-        _encoding = encoding;
-        _strictEncoding = CreateStrictEncoding(encoding);
+        _encoding = explicitEncodingName is null ? encoding : BuiltinTextEncodingHelpers.Resolve(explicitEncodingName);
+        _strictEncoding = CreateStrictEncoding(_encoding);
 
-        switch (mode)
+        FileStream? openedStream = null;
+        try
         {
-            case RuntimeTextFileMode.Input:
+            switch (mode)
             {
-                // Единый контракт чтения с READFILE: строгий UTF-8 с BOM,
-                // при невалидном UTF-8 — Windows-1251.
-                var (inputEncoding, contentStart) = DetectInputEncoding(path, encoding);
-                _encoding = inputEncoding;
-                _strictEncoding = ReferenceEquals(inputEncoding, encoding)
-                    ? _strictEncoding
-                    : inputEncoding;
-                _stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                _contentStart = contentStart;
-                _stream.Seek(_contentStart, SeekOrigin.Begin);
-                break;
+                case RuntimeTextFileMode.Input:
+                {
+                    if (explicitEncodingName is not null)
+                    {
+                        _stream = openedStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        _contentStart = BuiltinTextEncodingHelpers.ValidateStream(_stream, _strictEncoding);
+                        _stream.Position = _contentStart;
+                        break;
+                    }
+                    // Единый контракт чтения с READFILE: строгий UTF-8 с BOM,
+                    // при невалидном UTF-8 — Windows-1251.
+                    var (inputEncoding, contentStart) = DetectInputEncoding(path, encoding);
+                    _encoding = inputEncoding;
+                    _strictEncoding = ReferenceEquals(inputEncoding, encoding)
+                        ? _strictEncoding
+                        : inputEncoding;
+                    _stream = openedStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    _contentStart = contentStart;
+                    _stream.Seek(_contentStart, SeekOrigin.Begin);
+                    break;
+                }
+
+                case RuntimeTextFileMode.Output:
+                    _stream = openedStream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+                    if (explicitEncodingName is not null)
+                    {
+                        var preamble = _encoding.GetPreamble();
+                        _stream.Write(preamble);
+                        _contentStart = preamble.Length;
+                    }
+                    break;
+
+                case RuntimeTextFileMode.Append:
+                    _stream = openedStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                    if (explicitEncodingName is not null)
+                    {
+                        if (_stream.Length > 0)
+                            _contentStart = BuiltinTextEncodingHelpers.ValidateStream(_stream, _strictEncoding);
+                        else
+                        {
+                            var preamble = _encoding.GetPreamble();
+                            _stream.Write(preamble);
+                            _contentStart = preamble.Length;
+                        }
+                    }
+                    _stream.Seek(0, SeekOrigin.End);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unsupported file mode.");
             }
 
-            case RuntimeTextFileMode.Output:
-                _stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-                break;
-
-            case RuntimeTextFileMode.Append:
-                _stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-                _stream.Seek(0, SeekOrigin.End);
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unsupported file mode.");
+            _position = _stream.Position;
+            _length = _stream.Length;
         }
-
-        _position = _stream.Position;
-        _length = _stream.Length;
+        catch
+        {
+            openedStream?.Dispose();
+            throw;
+        }
     }
 
     private static Encoding CreateStrictEncoding(Encoding encoding)
@@ -92,6 +125,9 @@ public sealed class RuntimeTextFile : IDisposable
             contentStart = header.Length;
         }
 
+        // Без BOM первые три байта также являются текстом и должны
+        // участвовать в проверке, включая короткие файлы.
+        probe.Seek(contentStart, SeekOrigin.Begin);
         if (IsStrictUtf8(probe))
         {
             return (defaultEncoding, contentStart);
@@ -257,8 +293,11 @@ public sealed class RuntimeTextFile : IDisposable
             throw new InvalidOperationException($"File '{Path}' is not open for writing.");
         }
 
-        var chunk = appendLineBreak ? text + Environment.NewLine : text;
-        var byteCount = _encoding.GetByteCount(chunk);
+        var chunk = appendLineBreak ? text + "\n" : text;
+        // Каждый вызов кодируется отдельно: FLUSH не должен менять текст
+        // или объединять изолированные половины UTF-16 из разных вызовов.
+        var bytes = _encoding.GetBytes(chunk);
+        var byteCount = bytes.Length;
 
         if (byteCount == 0)
         {
@@ -270,7 +309,7 @@ public sealed class RuntimeTextFile : IDisposable
             _bufferedWriteStartPosition = _position;
         }
 
-        _writeBuffer.Append(chunk);
+        _writeBuffer.AddRange(bytes);
         _position += byteCount;
         _length = Math.Max(_length, _position);
     }
@@ -323,9 +362,15 @@ public sealed class RuntimeTextFile : IDisposable
             return;
         }
 
-        FlushWriteBuffer();
-        _disposed = true;
-        _stream.Dispose();
+        try
+        {
+            FlushWriteBuffer();
+        }
+        finally
+        {
+            _disposed = true;
+            _stream.Dispose();
+        }
     }
 
     private void EnsureMode(RuntimeTextFileMode expectedMode)
@@ -350,12 +395,12 @@ public sealed class RuntimeTextFile : IDisposable
     {
         EnsureNotDisposed();
 
-        if (_writeBuffer.Length == 0 || _bufferedWriteStartPosition is null)
+        if (_writeBuffer.Count == 0 || _bufferedWriteStartPosition is null)
         {
             return;
         }
 
-        var bytes = _encoding.GetBytes(_writeBuffer.ToString());
+        var bytes = _writeBuffer.ToArray();
         _stream.Seek(_bufferedWriteStartPosition.Value, SeekOrigin.Begin);
         _stream.Write(bytes, 0, bytes.Length);
         _stream.Flush();
@@ -368,6 +413,7 @@ public sealed class RuntimeTextFile : IDisposable
 
     private string ReadLineCore()
     {
+        if (IsUtf16) return ReadUtf16LineCore();
         var startPosition = _position;
         var bytes = new List<byte>();
 
@@ -426,6 +472,7 @@ public sealed class RuntimeTextFile : IDisposable
             return string.Empty;
         }
 
+        EnsureUtf16Alignment();
         _stream.Seek(startPosition, SeekOrigin.Begin);
 
         try
@@ -460,8 +507,13 @@ public sealed class RuntimeTextFile : IDisposable
                     }
 
                     var charCapacity = remainingCharacters.HasValue
-                        ? Math.Min(charBuffer.Length, Math.Max(remainingCharacters.Value, 1))
+                        ? Math.Min(charBuffer.Length, Math.Max(remainingCharacters.Value, 2))
                         : charBuffer.Length;
+                    // Последний символ может занять два места UTF-16. Подача
+                    // по одному байту не позволяет захватить следующий символ.
+                    var bytesToConvert = remainingCharacters == 1
+                        ? 1
+                        : bytesRead - bufferOffset;
 
                     int bytesUsed;
                     int charsUsed;
@@ -471,7 +523,7 @@ public sealed class RuntimeTextFile : IDisposable
                         decoder.Convert(
                             byteBuffer,
                             bufferOffset,
-                            bytesRead - bufferOffset,
+                            bytesToConvert,
                             charBuffer,
                             0,
                             charCapacity,
@@ -496,7 +548,7 @@ public sealed class RuntimeTextFile : IDisposable
 
                         if (remainingCharacters.HasValue)
                         {
-                            remainingCharacters -= charsUsed;
+                            remainingCharacters -= CountUnicodeScalars(charBuffer, charsUsed);
                         }
                     }
 
@@ -544,7 +596,7 @@ public sealed class RuntimeTextFile : IDisposable
             }
 
             var charCapacity = remainingCharacters.HasValue
-                ? Math.Min(charBuffer.Length, Math.Max(remainingCharacters.Value, 1))
+                ? Math.Min(charBuffer.Length, Math.Max(remainingCharacters.Value, 2))
                 : charBuffer.Length;
 
             try
@@ -567,7 +619,7 @@ public sealed class RuntimeTextFile : IDisposable
 
                     if (remainingCharacters.HasValue)
                     {
-                        remainingCharacters -= charsUsed;
+                        remainingCharacters -= CountUnicodeScalars(charBuffer, charsUsed);
                     }
                 }
 
@@ -583,10 +635,29 @@ public sealed class RuntimeTextFile : IDisposable
         }
     }
 
+    private static int CountUnicodeScalars(char[] buffer, int length)
+    {
+        var count = 0;
+        foreach (var rune in buffer.AsSpan(0, length).EnumerateRunes())
+        {
+            count++;
+        }
+
+        return count;
+    }
+
     private InvalidOperationException CreateInvalidTextReadException(long position, Exception innerException)
     {
+        var encodingName = _strictEncoding.CodePage switch
+        {
+            65001 => "UTF-8",
+            1251 => "WINDOWS-1251",
+            1200 => "UTF-16LE",
+            1201 => "UTF-16BE",
+            _ => _strictEncoding.WebName
+        };
         return new InvalidOperationException(
-            $"Текст с байтовой позиции {position} не удаётся прочитать как UTF-8. Убедитесь, что позиция указывает на корректную границу символа.",
+            $"Текст с байтовой позиции {position} не удаётся прочитать как {encodingName}. Убедитесь, что позиция указывает на корректную границу символа.",
             innerException);
     }
 
@@ -598,18 +669,19 @@ public sealed class RuntimeTextFile : IDisposable
 
     private long CountLinesBeforePosition(long position)
     {
+        EnsureUtf16Alignment();
         var savedPosition = _stream.Position;
 
         try
         {
-            _stream.Seek(0, SeekOrigin.Begin);
+            _stream.Seek(_contentStart, SeekOrigin.Begin);
 
             var lineNumber = 1L;
             var previousWasCarriageReturn = false;
 
-            for (long index = 0; index < position; index++)
+            for (long index = _contentStart; index < position; index += IsUtf16 ? 2 : 1)
             {
-                var next = _stream.ReadByte();
+                var next = IsUtf16 ? ReadUtf16Unit() : _stream.ReadByte();
 
                 if (next < 0)
                 {
@@ -642,6 +714,64 @@ public sealed class RuntimeTextFile : IDisposable
         finally
         {
             _stream.Seek(savedPosition, SeekOrigin.Begin);
+        }
+    }
+
+    private bool IsUtf16 => _strictEncoding.CodePage is 1200 or 1201;
+
+    private void EnsureUtf16Alignment()
+    {
+        if (IsUtf16 && (_position - _contentStart) % 2 != 0)
+            throw new InvalidOperationException("Позиция UTF-16-файла должна указывать на границу двухбайтовой единицы.");
+    }
+
+    private int ReadUtf16Unit()
+    {
+        var first = _stream.ReadByte();
+        if (first < 0) return -1;
+        var second = _stream.ReadByte();
+        if (second < 0) throw new InvalidOperationException("UTF-16-файл заканчивается неполной двухбайтовой единицей.");
+        return _strictEncoding.CodePage == 1200 ? first | (second << 8) : (first << 8) | second;
+    }
+
+    private string ReadUtf16LineCore()
+    {
+        EnsureUtf16Alignment();
+        var start = _position;
+        var bytes = new List<byte>();
+        _stream.Position = start;
+        try
+        {
+            while (true)
+            {
+                var unit = ReadUtf16Unit();
+                if (unit < 0) break;
+                _position += 2;
+                if (unit == '\n') break;
+                if (unit == '\r')
+                {
+                    var next = ReadUtf16Unit();
+                    if (next == '\n') _position += 2;
+                    else if (next >= 0) _stream.Seek(-2, SeekOrigin.Current);
+                    break;
+                }
+                if (_strictEncoding.CodePage == 1200)
+                {
+                    bytes.Add((byte)unit);
+                    bytes.Add((byte)(unit >> 8));
+                }
+                else
+                {
+                    bytes.Add((byte)(unit >> 8));
+                    bytes.Add((byte)unit);
+                }
+            }
+            return DecodeStrict(bytes.ToArray(), start);
+        }
+        catch
+        {
+            RestoreReadPosition(start);
+            throw;
         }
     }
 }

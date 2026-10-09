@@ -1,0 +1,5 @@
+' Сравниваем длину одного составного эмодзи в трёх единицах.
+DIM text AS STRING = "👨‍👩‍👧‍👦"
+PRINT "Единицы UTF-16: "; LEN(text)
+PRINT "Unicode-коды: "; LEN(text, "CODEPOINT")
+PRINT "Целые составные символы: "; LEN(text, "GRAPHEME")

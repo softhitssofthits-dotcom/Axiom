@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -23,4 +23,7 @@
     <ProjectReference Include="..\..\src\Axiom.Execution\Axiom.Execution.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="../../src/Axiom.ManualChecks/BytecodeCoverageAudit.cs" Link="Audit/BytecodeCoverageAudit.cs" />
+  </ItemGroup>
 </Project>

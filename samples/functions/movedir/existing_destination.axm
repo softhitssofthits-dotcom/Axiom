@@ -1,0 +1,24 @@
+' MOVEDIR не объединяет две существующие папки.
+DIM root AS STRING = MAKETEMPDIR("move_conflict_")
+DIM source AS STRING = COMBINEPATH(root, "источник")
+DIM target AS STRING = COMBINEPATH(root, "назначение")
+PRINT MAKEDIR(source)
+PRINT MAKEDIR(target)
+DIM sourceFile AS STRING = COMBINEPATH(source, "данные.txt")
+DIM targetFile AS STRING = COMBINEPATH(target, "данные.txt")
+PRINT WRITEFILE(sourceFile, "Источник")
+PRINT WRITEFILE(targetFile, "Назначение")
+' Конфликт назначения должен дать MB3007 без замены его содержимого.
+TRY
+    PRINT MOVEDIR(source, target)
+CATCH err
+    PRINT "Ожидается MB3007:", err.Code
+END TRY
+PRINT "Источник сохранён:", READFILE(sourceFile) = "Источник"
+PRINT "Назначение сохранено:", READFILE(targetFile) = "Назначение"
+' Удаляем только созданные этим примером файлы и пустые папки.
+PRINT DELETEFILE(sourceFile)
+PRINT DELETEFILE(targetFile)
+PRINT DELETEDIR(source)
+PRINT DELETEDIR(target)
+PRINT DELETEDIR(root)

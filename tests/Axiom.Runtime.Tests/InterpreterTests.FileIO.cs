@@ -291,7 +291,7 @@ CLOSE f
 
         Assert.True(result.Succeeded);
         Assert.Equal(["TRUE", "TRUE", "TRUE"], host.Output);
-        Assert.Equal($"alpha{Environment.NewLine}{Environment.NewLine}beta{Environment.NewLine}", File.ReadAllText(filePath));
+        Assert.Equal("alpha\n\nbeta\n", File.ReadAllText(filePath));
     }
 
     [Fact]
@@ -313,7 +313,7 @@ CLOSE f
 
         Assert.True(result.Succeeded);
         Assert.Equal(["TRUE", "TRUE"], host.Output);
-        Assert.Equal($"first{Environment.NewLine}second{Environment.NewLine}", File.ReadAllText(filePath));
+        Assert.Equal("first\nsecond\n", File.ReadAllText(filePath));
     }
 
     [Fact]

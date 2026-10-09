@@ -958,9 +958,9 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
                 resolvedPath,
                 staticResolvedPath => LoadImageFromResolvedPath(staticResolvedPath));
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or InvalidDataException or JsonException or OverflowException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or InvalidDataException or JsonException or OverflowException or ArgumentException or KeyNotFoundException or FormatException)
         {
-            return null;
+            throw new InvalidDataException(exception.Message, exception);
         }
     }
 

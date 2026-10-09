@@ -1465,6 +1465,61 @@ public sealed class BytecodeModuleValidatorTests
         Assert.Equal(10, diagnostic.Location.Line);
     }
 
+    [Theory]
+    [InlineData(0, 1, "BC4111")]
+    [InlineData(1, 0, "BC4023")]
+    public void Validate_OpenExplicitEncodingRejectsWrongTypeOrFlag(int encodingConstant, int flag, string code)
+    {
+        var routine = CreateEntryPointWithLocal(TypeSymbol.File,
+        [
+            new BytecodeInstruction(Opcode.PushConst, [1]),
+            new BytecodeInstruction(Opcode.PushConst, [encodingConstant]),
+            new BytecodeInstruction(Opcode.LoadLocal, [0]),
+            new BytecodeInstruction(Opcode.OpenFile, [0, 1, flag]),
+            new BytecodeInstruction(Opcode.Pop),
+            new BytecodeInstruction(Opcode.Return)
+        ]);
+        var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));
+        var result = new BytecodeModuleValidator().Validate(module);
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, d => d.Code == code);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Validate_OpenLegacyAndExplicitEncodingHaveCorrectStackEffects(bool explicitEncoding)
+    {
+        var instructions = new List<BytecodeInstruction> { new(Opcode.PushConst, [1]) };
+        if (explicitEncoding) instructions.Add(new(Opcode.PushConst, [1]));
+        instructions.Add(new(Opcode.LoadLocal, [0]));
+        instructions.Add(new(Opcode.OpenFile, explicitEncoding ? [0, 1, 1] : [0, 1]));
+        instructions.Add(new(Opcode.Pop));
+        instructions.Add(new(Opcode.Return));
+        var routine = CreateEntryPointWithLocal(TypeSymbol.File, instructions);
+        var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));
+        var result = new BytecodeModuleValidator().Validate(module);
+        Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
+        Assert.Equal(explicitEncoding ? 3 : 2, routine.MaxEvaluationStackDepth);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Validate_OpenExplicitEncodingRejectsMissingStackValues(int availableValues)
+    {
+        var instructions = Enumerable.Range(0, availableValues).Select(_ => new BytecodeInstruction(Opcode.PushConst, [1])).ToList();
+        instructions.Add(new(Opcode.OpenFile, [0, 1, 1]));
+        instructions.Add(new(Opcode.Pop));
+        instructions.Add(new(Opcode.Return));
+        var routine = CreateEntryPointWithLocal(TypeSymbol.File, instructions);
+        var module = CreateValidModule(routines: [routine], debugInfo: CreateDebugInfo(routine));
+        var result = new BytecodeModuleValidator().Validate(module);
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, d => d.Code == "BC4053");
+    }
+
     [Fact]
     public void Validate_RedimArrayWithNonArrayStackValue_ReturnsDiagnostic()
     {

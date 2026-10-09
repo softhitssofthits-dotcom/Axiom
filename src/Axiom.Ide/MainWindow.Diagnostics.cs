@@ -90,9 +90,9 @@ public partial class MainWindow
 
         SetStoppedRunLineHighlight(editor, true);
         var stopInfo = viewModel.StoppedRunState?.StopInfo;
-        if (stopInfo is { Line: > 0, Column: > 0 })
+        if (stopInfo?.SourceLocation is { } sourceLocation && sourceLocation.Span.Length > 0)
         {
-            SetStoppedRunExecutionSpan(editor, new Axiom.Core.TextLocation(new Axiom.Core.TextSpan(0, 0), stopInfo.Line.Value, stopInfo.Column.Value));
+            SetStoppedRunExecutionSpan(editor, sourceLocation);
         }
         TraceEditorEvent("editor.breakpoint.stopped-line", editor, $"line={line} | stopInfo=({stopInfo?.Line}, {stopInfo?.Column})");
         UpdateCaretStatusFromActiveEditor();

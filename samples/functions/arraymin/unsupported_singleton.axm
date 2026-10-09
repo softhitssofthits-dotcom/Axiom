@@ -1,0 +1,13 @@
+' Логический массив не допускается даже при единственном элементе.
+DIM flags(1 TO 1) AS BOOLEAN
+flags(1) = TRUE
+TRY
+    PRINT ARRAYMIN(flags)
+CATCH err
+    PRINT "Минимум отклонён:", err.Code
+END TRY
+TRY
+    PRINT ARRAYMAX(flags)
+CATCH err
+    PRINT "Максимум отклонён:", err.Code
+END TRY

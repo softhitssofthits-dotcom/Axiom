@@ -1,0 +1,11 @@
+REM Проверяем явный отказ для отложенных метаданных тайлсета.
+DIM m AS TILEMAP
+REM Причину загрузки можно прочитать в обработчике ошибки.
+TRY
+    m = LOADTILEMAP("unsupported_wangsets.tmj")
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+REM После отказа карта остаётся пустой.
+PRINT MAPWIDTH(m)

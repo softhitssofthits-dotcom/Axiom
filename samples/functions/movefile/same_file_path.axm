@@ -1,0 +1,13 @@
+' MOVEFILE по тому же пути успешен, но не удаляет и не меняет файл.
+DIM path AS STRING = MAKETEMPFILE("same_file_")
+PRINT WRITEFILE(path, "Сохранить😀")
+PRINT "Перенос по тому же пути:", MOVEFILE(path, path, FALSE)
+PRINT "Файл сохранился:", READFILE(path) = "Сохранить😀"
+' COPYFILE не копирует файл поверх самого себя, даже с overwrite TRUE.
+TRY
+    PRINT COPYFILE(path, path, TRUE)
+CATCH err
+    PRINT "Копирование должно дать MB3007:", err.Code
+END TRY
+PRINT "Текст после отказа сохранён:", READFILE(path) = "Сохранить😀"
+PRINT "Временный файл удалён:", DELETEFILE(path)

@@ -35,6 +35,10 @@
                 <p>Аргумент <code>value</code> принимает только нативное значение <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code> — строковые формы не поддерживаются (для получения нативного значения из строки используйте <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>DATEVALUE</code> или <code>TIMEVALUE</code>). Функция возвращает нативное значение того же вида: <code>DATE</code> даёт <code>DATE</code>, <code>TIME</code> даёт <code>TIME</code>, <code>DATETIME</code> даёт <code>DATETIME</code>, без промежуточного преобразования в строку.</p>
                 <h3>Единицы прибавления даты и времени</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходного значения: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем. Интервалы <code>yyyy</code>, <code>q</code>, <code>m</code> и <code>d</code> требуют значения вида <code>DATE</code> или <code>DATETIME</code>, а интервалы <code>h</code>, <code>n</code> и <code>s</code> — значения вида <code>TIME</code> или <code>DATETIME</code>.</p>
+                <p>Для значения <code>TIME</code> функция DATEADD возвращает время суток: сдвиги <code>h</code>, <code>n</code> и <code>s</code> приводятся к одним суткам. Число интервалов может быть любым значением <code>INTEGER</code>, включая крайние значения. Например, большой сдвиг часов не вызывает переполнение промежуточной длительности. Для <code>DATETIME</code> сохраняется дата; выход за диапазон годов 1–9999 вызывает <code>MB3007</code>.</p>
+                <pre><code class="language-basic">PRINT DATEADD("h", 2147483647, TIMESERIAL(23, 59, 59)) ' 06:59:59
+PRINT DATEADD("h", (-2147483647 - 1), TIMESERIAL(0, 0, 0)) ' 16:00:00</code></pre>
+                <p><a href="../../samples/functions/dateadd/large_time_shift.axm">Большой сдвиг времени суток</a></p>
             </section>
 
             <section class="article-section" id="datediff">

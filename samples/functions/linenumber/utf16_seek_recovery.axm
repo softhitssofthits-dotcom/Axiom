@@ -1,0 +1,20 @@
+DIM folder AS STRING = MAKETEMPDIR("line_seek_")
+DIM path AS STRING = COMBINEPATH(folder, "text.txt")
+DIM f AS FILE
+PRINT WRITEFILE(path, "А" + CHR(13) + CHR(10) + "😀", "UTF-16LE")
+OPEN path FOR INPUT AS f USING "UTF-16LE"
+' Позиция 1 находится внутри двухбайтовой единицы UTF-16.
+PRINT SEEKFILE(f, 1)
+TRY
+    PRINT LINENUMBER(f)
+CATCH err
+    PRINT "Ожидаемая ошибка позиции: "; err.Code
+END TRY
+PRINT "Позиция после отказа: "; FILEPOS(f)
+' Возвращаемся к началу: корректное чтение снова работает.
+PRINT REWIND(f)
+PRINT READLINE(f)
+PRINT "Следующая строка: "; LINENUMBER(f)
+CLOSE f
+PRINT DELETEFILE(path)
+PRINT DELETEDIR(folder)

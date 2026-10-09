@@ -1,0 +1,12 @@
+REM Сохраняем исправную карту перед ошибочной загрузкой.
+DIM m AS TILEMAP
+m = LOADTILEMAP("metadata_map.tmj")
+REM Смещение 1e400 не помещается в конечное число DOUBLE.
+TRY
+    m = LOADTILEMAP("nonfinite_layer.tmj")
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+REM После отказа прежняя карта остаётся доступной.
+PRINT MAPWIDTH(m)

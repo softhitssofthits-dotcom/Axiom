@@ -1,0 +1,8 @@
+' Одни байты могут быть допустимы в двух кодировках; выбор делает программа.
+PRINT MAKEDIR(".artifacts/encoding_examples")
+DIM path AS STRING = ".artifacts/encoding_examples/ambiguous_text.txt"
+PRINT WRITEFILE(path, "é", "UTF-8")
+
+' Читаем именно UTF-8, без попытки угадать другой формат.
+PRINT "В UTF-8: "; READFILE(path, "UTF-8")
+PRINT "Те же байты в WINDOWS-1251: "; READFILE(path, "WINDOWS-1251")

@@ -1,0 +1,6 @@
+' Ожидается 4. Пример запускается в IDE.
+DIM tiles AS TILESET
+' Атлас содержит четыре тайла 16 на 16.
+tiles = LOADTILESET("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
+PRINT "Результат LOADTILESET:"
+PRINT TILECOUNT(tiles)

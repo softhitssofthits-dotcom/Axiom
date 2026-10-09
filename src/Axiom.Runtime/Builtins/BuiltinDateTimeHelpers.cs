@@ -301,8 +301,12 @@ internal static class BuiltinDateTimeHelpers
         };
     }
 
-    internal static CanonicalTemporalValue AddTimeBasedTemporal(CanonicalTemporalValue value, long deltaTicks)
+    internal static CanonicalTemporalValue AddTimeBasedTemporal(CanonicalTemporalValue value, int number, long ticksPerUnit)
     {
+        var effectiveNumber = value.Kind == TemporalValueKind.Time
+            ? number % (TimeSpan.TicksPerDay / ticksPerUnit)
+            : number;
+        var deltaTicks = checked(effectiveNumber * ticksPerUnit);
         return value.Kind switch
         {
             TemporalValueKind.Time => CanonicalTemporalValue.FromTime(AddWrappedTime(value.Time, deltaTicks)),
@@ -313,7 +317,7 @@ internal static class BuiltinDateTimeHelpers
 
     internal static TimeOnly AddWrappedTime(TimeOnly time, long deltaTicks)
     {
-        var resultTicks = NormalizeTimeOfDayTicks(time.ToTimeSpan().Ticks + deltaTicks);
+        var resultTicks = NormalizeTimeOfDayTicks(time.ToTimeSpan().Ticks + NormalizeTimeOfDayTicks(deltaTicks));
         return new TimeOnly(resultTicks);
     }
 
@@ -671,9 +675,9 @@ internal static class BuiltinDateTimeHelpers
                 DateTimeIntervalKind.Quarter => AddDateBasedTemporal(value, static (date, amount) => date.AddMonths(checked(amount * 3)), static (dateTime, amount) => dateTime.AddMonths(checked(amount * 3)), number),
                 DateTimeIntervalKind.Month => AddDateBasedTemporal(value, static (date, amount) => date.AddMonths(amount), static (dateTime, amount) => dateTime.AddMonths(amount), number),
                 DateTimeIntervalKind.Day => AddDateBasedTemporal(value, static (date, amount) => date.AddDays(amount), static (dateTime, amount) => dateTime.AddDays(amount), number),
-                DateTimeIntervalKind.Hour => AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerHour)),
-                DateTimeIntervalKind.Minute => AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerMinute)),
-                DateTimeIntervalKind.Second => AddTimeBasedTemporal(value, checked((long)number * TimeSpan.TicksPerSecond)),
+                DateTimeIntervalKind.Hour => AddTimeBasedTemporal(value, number, TimeSpan.TicksPerHour),
+                DateTimeIntervalKind.Minute => AddTimeBasedTemporal(value, number, TimeSpan.TicksPerMinute),
+                DateTimeIntervalKind.Second => AddTimeBasedTemporal(value, number, TimeSpan.TicksPerSecond),
                 _ => throw new InvalidOperationException($"Unsupported interval '{interval}'.")
             };
         }

@@ -13,7 +13,7 @@
 <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Файлы и файловая система</span><span>/</span><span>OPEN</span></nav>
 <p class="eyebrow">Оператор</p>
 <h1 class="page-title">Оператор OPEN</h1>
-<p class="lead"><code>OPEN</code> — оператор языка Axiom, который открывает файл для чтения, записи или дописывания. Оператор создаёт переменную типа <code>FILE</code>, через которую далее работают все файловые операции.</p>
+<p class="lead"><code>OPEN</code> — оператор языка Axiom, который открывает файл для чтения, записи или дописывания. Оператор связывает файл с заранее объявленной переменной типа <code>FILE</code>, через которую далее работают все файловые операции.</p>
 
 <section class="article-section">
 <h2>Как OPEN связывает файл с переменной</h2>
@@ -27,18 +27,29 @@
 
 <section class="article-section">
 <h2>Синтаксис</h2>
-<pre><code class="language-basic">OPEN path FOR INPUT AS fileVariable
-OPEN path FOR OUTPUT AS fileVariable
-OPEN path FOR APPEND AS fileVariable</code></pre>
+<h3>Чтение с автоматическим выбором кодировки</h3><pre><code>OPEN path FOR INPUT AS fileVariable</code></pre>
+<h3>Запись в UTF-8 без BOM</h3><pre><code>OPEN path FOR OUTPUT AS fileVariable</code></pre>
+<h3>Дописывание в UTF-8 без BOM</h3><pre><code>OPEN path FOR APPEND AS fileVariable</code></pre>
+<h3>Чтение с выбранной кодировкой</h3><pre><code>OPEN path FOR INPUT AS fileVariable USING encoding</code></pre>
+<h3>Запись с выбранной кодировкой</h3><pre><code>OPEN path FOR OUTPUT AS fileVariable USING encoding</code></pre>
+<h3>Дописывание с выбранной кодировкой</h3><pre><code>OPEN path FOR APPEND AS fileVariable USING encoding</code></pre>
+<p>USING encoding — расширение Axiom, а не историческая форма кодировки QuickBASIC.</p>
 </section>
 
 <section class="article-section">
 <h2>Части записи</h2>
 <p><code>path</code> задаёт путь к файлу. <code>fileVariable</code> обозначает переменную типа <code>FILE</code>, с которой будет связан открытый файл.</p>
 <p>Режим <code>INPUT</code> открывает существующий файл для чтения, <code>OUTPUT</code> создаёт новый файл или полностью перезаписывает существующий, а <code>APPEND</code> открывает файл для дописывания в конец.</p>
+<p>В режиме <code>INPUT</code> Axiom проверяет весь текст файла как UTF-8, включая первые байты и короткие файлы. Если текст не является корректным UTF-8, используется Windows-1251. Начальный BOM UTF-8 пропускается и не входит в позиции <code>FILEPOS</code>. При чтении функцией <code>READTEXT</code> один символ Unicode, в том числе emoji, читается целиком; байтовые позиции файла при этом сохраняются.</p>
 </section>
 
 <section class="article-section">
+<h2>Явная кодировка и границы текста</h2>
+<p>Аргументы path и encoding должны быть строками. Допустимые имена кодировок: UTF-8, WINDOWS-1251, UTF-16LE, UTF-16BE; регистр и внешние пробелы не учитываются. Слово encoding остаётся обычным именем переменной.</p>
+<p>Относительный путь считается от рабочей папки текущего запуска. INPUT требует существующий файл; OUTPUT создаёт или перезаписывает его; APPEND создаёт отсутствующий файл или дописывает существующий. Родительские каталоги автоматически не создаются.</p>
+<p>При явной кодировке INPUT и APPEND строго проверяют весь существующий текст. Совпадающий Unicode BOM пропускается, противоречащий BOM отвергается, отсутствие BOM допускается. Windows-1251 не распознаёт Unicode BOM и трактует любые байты как выбранную однобайтовую кодировку. Новый UTF-16-файл получает соответствующую подпись; UTF-8 и Windows-1251 записываются без BOM. APPEND сохраняет существующую подпись или её отсутствие и не добавляет вторую.</p>
+<p>При явной кодировке FILEPOS и FILELENGTH измеряются в байтах текста без распознанного BOM. READTEXT считает символы Unicode, включая целые эмодзи. READLINE распознаёт CR, LF и CRLF по символам; байт 0A внутри символа UTF-16 не разделяет строку. После SEEKFILE нечётная позиция UTF-16 или середина суррогатной пары отвергается при чтении с сохранением позиции. Нулевое количество READTEXT не читает текст.</p>
+<p>WRITE и WRITELINE проверяют возможность кодирования до изменения буфера и позиции. При непредставимом символе или непарном суррогате возникает перехватываемая ошибка MB3007. LINENUMBER на нечётной позиции UTF-16 также даёт MB3007 без изменения позиции. Байтовое редактирование через SEEKFILE может повредить текст. Запись при ошибках диска не является транзакцией. Общий договор описан на странице <a href="file-system-functions-text.html">текстовых файловых функций</a>.</p>
 <h2>Состояние FILE-переменной</h2>
 <ul>
 <li>Переменная после <code>AS</code> должна иметь тип <code>FILE</code>.</li>
@@ -48,29 +59,21 @@ OPEN path FOR APPEND AS fileVariable</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Пример чтения открытого файла</h2>
-<pre><code class="language-basic">DIM sourceFile AS FILE
-DIM line AS STRING
-
-OPEN "data.txt" FOR INPUT AS sourceFile
-
-WHILE NOT EOF(sourceFile)
-    line = READLINE(sourceFile)
-    PRINT line
-END WHILE
-
-CLOSE sourceFile</code></pre>
-</section>
-
-<section class="article-section">
-<h2>Ручная проверка</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/open/basic_usage.axm">OPEN: базовое открытие файла</a></li><li><a href="../../samples/functions/eof/basic_usage.axm">EOF: чтение до конца файла</a></li><li><a href="../../samples/functions/readline/basic_usage.axm">READLINE: построчное чтение</a></li><li><a href="../../samples/functions/write/basic_usage.axm">WRITE: запись без перевода строки</a></li><li><a href="../../samples/functions/writeline/basic_usage.axm">WRITELINE: запись строки</a></li></ul>
-</section>
-
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Ошибки возникают, если после <code>AS</code> указана переменная неверного типа, если файл невозможно открыть в выбранном режиме или если предпринимается повторное открытие уже занятой переменной <code>FILE</code>.</p>
-</section>
+<h2>Диагностика</h2><p>Нестрочные аргументы и переменная неверного типа после AS отклоняются при проверке программы. MB3007 возникает при неизвестной кодировке, конфликтующем BOM, повреждённом Unicode в INPUT/APPEND, недоступном пути, отсутствии файла INPUT и повторном открытии занятой переменной. Отказ из-за неизвестной кодировки не стирает файл OUTPUT. При отказе проверки INPUT/APPEND файл не изменяется, а системный поток освобождается.</p></section>
+<section class="article-section"><h2>Пример явной кодировки</h2>
+<pre><code class="language-basic">DIM folder AS STRING = MAKETEMPDIR("open_encoding_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+DIM f AS FILE
+' Создаём текст UTF-16LE с подписью.
+OPEN path FOR OUTPUT AS f USING "UTF-16LE"
+PRINT WRITELINE(f, "Привет 😀")
+CLOSE f
+' Читаем в той же кодировке; подпись не входит в позицию.
+OPEN path FOR INPUT AS f USING "UTF-16LE"
+PRINT FILEPOS(f)
+PRINT READLINE(f)
+CLOSE f</code></pre>
+<p>Программа выводит TRUE, начальную позицию 0 и строку «Привет 😀». Запускаемый пример: <a href="../../samples/operators/open/explicit_utf16_read.axm">чтение UTF-16LE</a>.</p></section>
 
 <section class="article-section">
 <h2>См. также</h2>

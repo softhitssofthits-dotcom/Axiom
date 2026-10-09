@@ -6,6 +6,35 @@ namespace Axiom.Bytecode.Tests;
 
 public sealed class BytecodeCompilerTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Compile_DoubleConstantsPreserveSignedZeroAndDeduplicateIdenticalBits(bool negativeFirst)
+    {
+        var negativeZero = BitConverter.Int64BitsToDouble(long.MinValue);
+        var first = negativeFirst ? negativeZero : 0d;
+        var second = negativeFirst ? 0d : negativeZero;
+        var entryPoint = new LoweredRoutine(0, LoweredProgram.EntryPointName, Location(1), TypeSymbol.Void,
+            [
+                LoweredInstruction.LoadLiteral(Location(2), first, TypeSymbol.Double),
+                LoweredInstruction.PrintValue(Location(2)),
+                LoweredInstruction.LoadLiteral(Location(3), second, TypeSymbol.Double),
+                LoweredInstruction.PrintValue(Location(3)),
+                LoweredInstruction.LoadLiteral(Location(4), first, TypeSymbol.Double),
+                LoweredInstruction.PrintValue(Location(4)),
+                LoweredInstruction.Return(Location(5))
+            ], isEntryPoint: true);
+        var result = new BytecodeCompiler().Compile(new LoweredProgram(Location(1), entryPoint, []));
+        Assert.True(result.Succeeded);
+        var constants = result.Module!.ConstantPool.Entries.Where(c => c.Kind == BytecodeConstantKind.Double).ToArray();
+        Assert.Equal(2, constants.Length);
+        Assert.Equal(BitConverter.DoubleToInt64Bits(first), BitConverter.DoubleToInt64Bits((double)constants[0].Value!));
+        Assert.Equal(BitConverter.DoubleToInt64Bits(second), BitConverter.DoubleToInt64Bits((double)constants[1].Value!));
+        var loads = result.Module.Routines.Single().Instructions.Where(i => i.Opcode == Opcode.PushConst).ToArray();
+        Assert.Equal(loads[0].GetOperand(0), loads[2].GetOperand(0));
+        Assert.NotEqual(loads[0].GetOperand(0), loads[1].GetOperand(0));
+    }
+
     [Fact]
     public void Compile_ScalarProgram_ProducesValidatedModule()
     {

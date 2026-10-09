@@ -1,0 +1,6 @@
+BuiltinId,Call,ResultType,Rank,Test
+ArrayFlatten,ARRAYFLATTEN(m),INTEGER[],1,ArrayShapeContractTests
+ArrayReshape,"ARRAYRESHAPE(m, template)","INTEGER[,]",2,ArrayShapeContractTests
+ArrayConcat,"ARRAYCONCAT(m(-2), m(-1))",INTEGER[],1,ArrayShapeContractTests
+ArrayConcat,"ARRAYCONCAT(m(-2), m(-1), 1)",INTEGER[],1,ArrayShapeContractTests
+ArrayConcat,"ARRAYCONCAT(m, m, 2)","INTEGER[,]",2,ArrayShapeContractTests

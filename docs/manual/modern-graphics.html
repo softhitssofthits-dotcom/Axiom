@@ -108,6 +108,7 @@ DRAWTILELAYER &lt;tilemap&gt;, &lt;слой&gt;, &lt;x&gt;, &lt;y&gt;</code></pr
                 <p><code>VIEWPORT</code> без аргументов сбрасывает область рисования на весь <code>CANVAS</code>. Форма <code>VIEWPORT (left, top)-(right, bottom)</code> задаёт прямоугольную экранную область внутри холста, в которой становится видимым современный графический вывод.</p>
                 <p>Viewport измеряется в экранных координатах <code>CANVAS</code>, а не в мировых. Камера смещает мир внутри уже выбранного viewport. Оператор <code>RESETCAMERA</code> не сбрасывает viewport, а оператор <code>VIEWPORT</code> не сбрасывает камеру.</p>
                 <p>Форма <code>POINT(x, y)</code> тоже может читать пиксели из <code>CANVAS</code>, но делает это по физическим координатам холста. Аргументы <code>x</code> и <code>y</code> не проходят через <code>CAMERA</code> и <code>VIEWPORT</code>. Историческая форма <code>POINT(selector)</code> остаётся на стороне <code>SCREEN</code>.</p>
+                <p>Запускаемый пример <a href="../../samples/functions/point/physical_canvas_coordinates.axm">чтение физической точки после смещения камеры</a> показывает различие координат: мировая точка <code>(100, 50)</code> рисуется в физической точке <code>(10, 6)</code>, и её цвет читается через <code>POINT(10, 6)</code>.</p>
                 <p>Операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> теперь тоже могут работать при активном <code>CANVAS</code>. В современном слое они принимают мировые координаты, проходят через <code>CAMERA</code> и попадают в активный <code>VIEWPORT</code>.</p>
                 <p>Правая и нижняя границы viewport исключающие. Если после обрезки по границам <code>CANVAS</code> прямоугольник становится пустым, выполнение сообщает ошибку. Все современные примитивы, <code>DRAWTEXT</code>, <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code> обрезаются по активному viewport.</p>
                 <p><code>VIEW</code> и <code>WINDOW</code> не являются частью современного пути. Для новых игр их заменяют камера и viewport внутри <code>CANVAS</code>.</p>
@@ -202,6 +203,9 @@ SLEEP</code></pre>
                 </div>
             </section>
 
+            <section class="article-section"><h2>Короткие проверки функций</h2><p>Короткие примеры выводят ожидаемый результат в текстовую панель IDE. Примеры загрузки используют существующие ресурсы репозитория и реальные относительные пути; отдельный графический холст для чтения свойств не требуется.</p><ul>
+                    <li><a href="../../samples/functions/rgb/packed_channels.axm">RGB: короткая проверка результата</a></li>
+                </ul></section>
             <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
         </main>
     </div>

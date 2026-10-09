@@ -27,6 +27,7 @@ internal sealed class ConsoleHost : IInputProvider, IOutputWriter, IRuntimeClock
     private readonly TextWriter _stdout;
     private readonly TextReader _stdin;
     private volatile bool _cancellationRequested;
+    private Random _random = new();
 
     public ConsoleHost(TextWriter stdout, TextReader stdin)
     {
@@ -73,11 +74,9 @@ internal sealed class ConsoleHost : IInputProvider, IOutputWriter, IRuntimeClock
         return TimeZoneInfo.TryFindSystemTimeZoneById(id, out timeZone!);
     }
 
-    public double NextRandomDouble() => Random.Shared.NextDouble();
+    public double NextRandomDouble() => _random.NextDouble();
 
-    // ConsoleHost не владеет состоянием генератора (Random.Shared), поэтому
-    // RANDOMIZE в headless-режиме лишь фиксирует договор: Reseed недоступен.
-    public void Reseed(int seed) { }
+    public void Reseed(int seed) => _random = new Random(seed);
 
     // ---- Графика: вход в графический режим и любые мутации кадра недоступны в консоли ----
 

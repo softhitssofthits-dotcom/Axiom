@@ -706,7 +706,7 @@ PRINT "PUT sample finished"
     }
 
     [Fact]
-    public void Run_GetCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    public void Run_GetCanvasAcceptanceProgram_WritesExpectedConsoleOutputOnBytecodeVm()
     {
         var traceService = new FakeIdeTraceService();
         var consoleService = new ProgramConsoleService(traceService);
@@ -714,18 +714,20 @@ PRINT "PUT sample finished"
         var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "operators", "get", "canvas_block_capture.axm")));
 
         var result = service.Run(sourceText, ExecutionMode.Bytecode);
-        var graphicsOutput = traceService.Entries
-            .Where(static entry => entry.Category == "screen.output")
+        var consoleOutput = traceService.Entries
+            .Where(static entry => entry.Category == "console.output")
             .Select(static entry => entry.Message)
             .ToArray();
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.Equal(["6", "9", "12", "15"], graphicsOutput);
+        Assert.Equal(["6", "9", "12", "15"], consoleOutput);
+        Assert.Equal(string.Join(Environment.NewLine, "6", "9", "12", "15"), result.OutputText);
+        Assert.DoesNotContain(traceService.Entries, static entry => entry.Category == "screen.output");
     }
 
     [Fact]
-    public void Run_PutCanvasAcceptanceProgram_WritesExpectedGraphicsOutputOnBytecodeVm()
+    public void Run_PutCanvasAcceptanceProgram_WritesExpectedConsoleOutputOnBytecodeVm()
     {
         var traceService = new FakeIdeTraceService();
         var consoleService = new ProgramConsoleService(traceService);
@@ -733,14 +735,16 @@ PRINT "PUT sample finished"
         var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "operators", "put", "canvas_block_restore.axm")));
 
         var result = service.Run(sourceText, ExecutionMode.Bytecode);
-        var graphicsOutput = traceService.Entries
-            .Where(static entry => entry.Category == "screen.output")
+        var consoleOutput = traceService.Entries
+            .Where(static entry => entry.Category == "console.output")
             .Select(static entry => entry.Message)
             .ToArray();
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.Equal(["6", "9", "12", "15"], graphicsOutput);
+        Assert.Equal(["6", "9", "12", "15"], consoleOutput);
+        Assert.Equal(string.Join(Environment.NewLine, "6", "9", "12", "15"), result.OutputText);
+        Assert.DoesNotContain(traceService.Entries, static entry => entry.Category == "screen.output");
     }
 
     [Fact]

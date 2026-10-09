@@ -878,7 +878,7 @@ public sealed class BytecodeModuleValidator
                     break;
 
                 case Opcode.OpenFile:
-                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, instruction.OperandCount == 3 ? 3 : 2);
                     ValidateOpenFileInstruction(module, routine, instructionIndex, instruction);
                     break;
 
@@ -2094,6 +2094,10 @@ public sealed class BytecodeModuleValidator
             case Opcode.OpenFile:
             {
                 var fileType = Pop();
+                if (instruction.OperandCount == 3)
+                {
+                    ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, Pop(), TypeSymbol.String, "кодировка файла");
+                }
                 var pathType = Pop();
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, pathType, TypeSymbol.String, "путь файла");
                 ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, fileType, TypeSymbol.File, "файловую переменную");
@@ -3621,6 +3625,11 @@ public sealed class BytecodeModuleValidator
                 pushCount = instruction.Opcode is Opcode.Negate or Opcode.Not or Opcode.Convert ? 1 : 0;
                 return true;
 
+            case Opcode.OpenFile:
+                popCount = instruction.OperandCount == 3 ? 3 : 2;
+                pushCount = 1;
+                return true;
+
             case Opcode.AddLongInteger:
             case Opcode.Add:
             case Opcode.Subtract:
@@ -3642,7 +3651,6 @@ public sealed class BytecodeModuleValidator
             case Opcode.CompareLessOrEqual:
             case Opcode.CompareGreater:
             case Opcode.CompareGreaterOrEqual:
-            case Opcode.OpenFile:
             case Opcode.StoreField:
                 popCount = 2;
                 pushCount = instruction.Opcode is Opcode.StoreField ? 0 : 1;
@@ -4058,6 +4066,11 @@ public sealed class BytecodeModuleValidator
         if (instruction.OperandCount < 2)
         {
             return;
+        }
+
+        if (instruction.OperandCount == 3 && instruction.GetOperand(2) != 1)
+        {
+            Report("BC4023", "Инструкция OpenFile содержит неизвестный признак явной кодировки.", module, routine.Id, instructionIndex);
         }
 
         var mode = instruction.GetOperand(0);

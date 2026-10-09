@@ -147,6 +147,7 @@
             <Word>TRY</Word>
             <Word>TYPE</Word>
             <Word>UNTIL</Word>
+            <!-- USING: PRINT и явная кодировка OPEN. -->
             <Word>USING</Word>
             <Word>VIEW</Word>
             <Word>VIEWPORT</Word>
@@ -292,6 +293,7 @@
             <Word>ISDATE</Word>
             <Word>ISHIDDEN</Word>
             <Word>ISLEAPYEAR</Word>
+            <Word>ISNUMERIC</Word>
             <Word>ISOPEN</Word>
             <Word>ISREADONLY</Word>
             <Word>JOIN</Word>
@@ -313,16 +315,37 @@
             <Word>MAKEDIR</Word>
             <Word>MAKETEMPDIR</Word>
             <Word>MAKETEMPFILE</Word>
+            <Word>MAPCOLUMN</Word>
             <Word>MAPHEIGHT</Word>
             <Word>MAPLAYERCOUNT</Word>
+            <Word>MAPLAYERNAME</Word>
+            <Word>MAPLAYERPROPERTY</Word>
+            <Word>MAPLAYERTYPE</Word>
+            <Word>MAPLAYERVISIBLE</Word>
+            <Word>MAPOBJECTCLASS</Word>
+            <Word>MAPOBJECTCOUNT</Word>
+            <Word>MAPOBJECTHEIGHT</Word>
+            <Word>MAPOBJECTKIND</Word>
+            <Word>MAPOBJECTNAME</Word>
+            <Word>MAPOBJECTPROPERTY</Word>
+            <Word>MAPOBJECTVISIBLE</Word>
+            <Word>MAPOBJECTWIDTH</Word>
+            <Word>MAPOBJECTX</Word>
+            <Word>MAPOBJECTY</Word>
             <Word>MAPPIXELHEIGHT</Word>
             <Word>MAPPIXELWIDTH</Word>
+            <Word>MAPPROPERTY</Word>
+            <Word>MAPROW</Word>
             <Word>MAPTILE</Word>
             <Word>MAPTILEFLAGS</Word>
             <Word>MAPTILEHEIGHT</Word>
+            <Word>MAPTILEPROPERTY</Word>
             <Word>MAPTILESET</Word>
+            <Word>MAPTILESETCOUNT</Word>
             <Word>MAPTILEWIDTH</Word>
             <Word>MAPWIDTH</Word>
+            <Word>MAPWORLDX</Word>
+            <Word>MAPWORLDY</Word>
             <Word>MAX</Word>
             <Word>MID</Word>
             <Word>MIN</Word>

@@ -12,8 +12,9 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     private readonly IRuntimeCancellationProvider? _inputCancellationProvider;
     private readonly IRuntimeCancellationProvider? _outputCancellationProvider;
     private readonly IRuntimeCancellationProvider? _externalCancellationProvider;
+    private string _currentDirectory;
 
-    public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter, IRuntimeClock runtimeClock, IRuntimeRandom runtimeRandom, IRuntimeCancellationProvider? externalCancellationProvider = null)
+    public ExecutionRuntimeHostAdapter(IInputProvider inputProvider, IOutputWriter outputWriter, IRuntimeClock runtimeClock, IRuntimeRandom runtimeRandom, IRuntimeCancellationProvider? externalCancellationProvider = null, string? resourceBaseDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(inputProvider);
         ArgumentNullException.ThrowIfNull(outputWriter);
@@ -29,7 +30,15 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
             ? null
             : outputWriter as IRuntimeCancellationProvider;
         _externalCancellationProvider = externalCancellationProvider;
+        ResourceBaseDirectory = resourceBaseDirectory ?? (inputProvider as IRuntimeHost)?.ResourceBaseDirectory;
+        _currentDirectory = Path.GetFullPath(ResourceBaseDirectory ?? Environment.CurrentDirectory);
     }
+
+    public string? ResourceBaseDirectory { get; }
+
+    public string CurrentDirectory => _currentDirectory;
+
+    public void ChangeCurrentDirectory(string path) => _currentDirectory = Path.GetFullPath(path);
 
     public IReadOnlyList<string> Output => _output;
 

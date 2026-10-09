@@ -1,0 +1,6 @@
+DIM values() AS STRING
+' Все значения группы с явно заданным номером 10.
+values = REGEXEXTRACTALL("код12 код34", "код(?<10>[0-9]+)", 10)
+PRINT "Количество: "; ARRAYLENGTH(values)
+PRINT "Первое значение: "; values(1)
+PRINT "Второе значение: "; values(2)

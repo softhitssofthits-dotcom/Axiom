@@ -35,7 +35,7 @@ internal static class BuiltinNumericHelpers
 
     public static RuntimeValue EvaluateCdbl(RuntimeValue value)
     {
-        return RuntimeValue.FromDouble(value.AsDouble());
+        return RuntimeValue.FromDouble(value.Type == TypeSymbol.Decimal ? (double)value.AsDecimal() : value.AsDouble());
     }
 
     public static RuntimeValue EvaluateCdec(RuntimeValue value, TextLocation location, Action<string, string, TextLocation> reportOverflow)
@@ -53,13 +53,14 @@ internal static class BuiltinNumericHelpers
     private static long CheckedDoubleToLong(double value, string detail, TextLocation location, Action<string, string, TextLocation> reportOverflow)
     {
         var truncated = Math.Truncate(value);
-        if (truncated < long.MinValue || truncated > long.MaxValue)
+        // LONG.MaxValue округляется в DOUBLE до 2^63: верхняя граница исключена.
+        if (!double.IsFinite(truncated) || truncated < -9223372036854775808d || truncated >= 9223372036854775808d)
         {
             RuntimeArithmeticHelpers.ReportNumericOverflow(detail, TypeSymbol.Long, location, reportOverflow);
             throw new RuntimeFailureException();
         }
 
-        return (long)truncated;
+        return checked((long)truncated);
     }
 
     private static long CheckedDecimalToLong(decimal value, string detail, TextLocation location, Action<string, string, TextLocation> reportOverflow)

@@ -3312,7 +3312,9 @@ public sealed class AcceptanceProgramTests
 
             try
             {
-                Environment.CurrentDirectory = repositoryRoot;
+                Environment.CurrentDirectory = relativePath.Equals("samples/functions/readfile/single_byte_round_trip.axm", StringComparison.OrdinalIgnoreCase)
+                    ? Path.GetDirectoryName(Path.Combine(repositoryRoot, relativePath))!
+                    : repositoryRoot;
 
                 return Run(sourceText, inputProvider: CreateAuditInputProvider(relativePath), mode: ExecutionMode.Bytecode);
             }

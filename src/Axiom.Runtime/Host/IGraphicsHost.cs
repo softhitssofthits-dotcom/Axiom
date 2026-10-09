@@ -209,6 +209,7 @@ public interface IGraphicsHost
         }
     }
 
+    // null означает недоступный ресурс; InvalidDataException передаёт причину отказа загрузчика.
     RuntimeTilemapValue? LoadTilemap(string path) => null;
 
     void DrawImage(RuntimeImageValue image, long x, long y, int width, int height)

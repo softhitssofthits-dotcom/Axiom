@@ -77,6 +77,7 @@ PRINT "Сумма: " + STR(amount)</code></pre>
                 <h3>Аргументы</h3><p><code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
                 <h3>Некорректный текст</h3>
                 <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
+                <p>Функция <code>VAL</code> возвращает только конечное число <code>DOUBLE</code>. Строки <code>"NaN"</code>, <code>"Infinity"</code> и числа, выходящие за диапазон <code>DOUBLE</code>, например <code>"1e309"</code>, дают <code>0</code>. Числовое начало строки сохраняется: <code>VAL("12abc")</code> возвращает <code>12</code>.</p>
                 <h3>Правила чтения числа</h3>
                 <ul>
                 <li>десятичным разделителем служит только точка: <code>VAL("1.5")</code> даёт <code>1.5</code>;</li>
@@ -101,17 +102,30 @@ PRINT VAL(text) + 10</code></pre>
                 <h2>CINT, CLNG, CDBL и CDEC</h2>
                 <p>Функции <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code> явно преобразуют числовое значение к целевому типу: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>. Явные сужающие присваивания в языке запрещены, поэтому эти функции — законная дверь для сужения.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = CINT(value)
-result = CLNG(value)
-result = CDBL(value)
-result = CDEC(value)</code></pre>
+                <pre><code class="language-basic">result = CINT(value)</code></pre>
+<pre><code class="language-basic">result = CLNG(value)</code></pre>
+<pre><code class="language-basic">result = CDBL(value)</code></pre>
+<pre><code class="language-basic">result = CDEC(value)</code></pre>
                 <h3>Аргументы</h3><p>Аргумент <code>value</code> задаёт числовое значение любого числового типа.</p>
                 <h3>Правила преобразования</h3>
                 <ul>
                 <li>дробная часть отбрасывается усечением к нулю: <code>CINT(-2.9)</code> даёт <code>-2</code> (для округления по правилам используйте <code>ROUND</code>, для пола — <code>INT</code>);</li>
+                <li>диапазон <code>CINT</code> проверяется после усечения: <code>CINT(2147483647.9)</code> возвращает <code>2147483647</code>, а <code>CINT(-2147483648.9)</code> — <code>-2147483648</code>;</li>
+                <li>для функции <code>CLNG</code> значение <code>DOUBLE</code>, равное <code>2^63</code>, уже выходит за верхнюю границу <code>LONG</code> и даёт <code>MB3008</code>; значение <code>-2^63</code> допустимо;</li>
                 <li>выход за диапазон целевого типа даёт диагностику <code>MB3008</code> о переполнении;</li>
-                <li><code>CDBL</code> и <code>CDEC</code> расширяют значение без потерь для целых исходных типов.</li>
+                <li>функция <code>CINT</code> также сообщает <code>MB3008</code>, если исходное значение <code>DOUBLE</code> равно <code>NaN</code> или положительной либо отрицательной бесконечности: такие значения нельзя представить целым числом;</li>
+                <li><code>CDEC</code> точно представляет все значения INTEGER и LONG. <code>CDBL</code> точно представляет INTEGER, но большие LONG и значения DECIMAL могут округляться при переходе к двоичному DOUBLE.</li>
                 </ul>
+                <h3>Явный переход из DECIMAL в DOUBLE</h3>
+                <p>CDBL — встроенная функция языка Axiom, которая возвращает DOUBLE для числового аргумента. Она работает в обоих движках без экранного или файлового режима. Аргумент может иметь тип INTEGER, LONG, DOUBLE или DECIMAL. Преобразование не меняет исходную переменную, но может уменьшить точность результата.</p>
+                <p>MIN, MAX и CLAMP не принимают DECIMAL вместе с DOUBLE без явного преобразования. Если для расчёта выбрана двоичная арифметика, используйте CDBL для десятичного аргумента. Весь диапазон конечных значений DECIMAL помещается в диапазон DOUBLE; это не означает сохранения всех значащих цифр. Неверный нечисловой аргумент отклоняется при проверке типов.</p>
+                <pre><code class="language-basic">DIM exact AS DECIMAL = CDEC(CLNG(9007199254740993))
+' DOUBLE округляет это целое до соседнего представимого значения.
+PRINT CLNG(CDBL(exact))  ' 9007199254740992
+' Исходное десятичное значение осталось точным.
+PRINT exact = CDEC(CLNG(9007199254740993))  ' TRUE
+PRINT MIN(CDBL(CDEC(2)), 3.0)  ' 2</code></pre>
+                <p>Запускаемый пример: <a href="../../samples/functions/cdbl/decimal_precision.axm">Десятичное значение и точность DOUBLE</a>.</p>
                 <h3>Пример явного сужения</h3>
                 <pre><code class="language-basic">' LONG в INTEGER через явное преобразование
 DIM big AS LONG
@@ -119,6 +133,16 @@ DIM small AS INTEGER
 big = 42
 small = CINT(big)
 PRINT small</code></pre>
+                <h3>Обработка ошибки CINT</h3>
+                <p>Диагностику <code>MB3008</code> функции <code>CINT</code> можно обработать в блоке <code>CATCH</code>. Блок <code>FINALLY</code> выполняется после ошибки, а после завершения оператора <code>TRY</code> программа продолжает работу.</p>
+                <pre><code class="language-basic">TRY
+    ' Число выходит за диапазон INTEGER.
+    PRINT CINT(2147483648.0)
+CATCH err
+    PRINT "Поймана ошибка:", err.Code
+FINALLY
+    PRINT "Обработка завершена."
+END TRY</code></pre>
                 <h2>Выбор между INT, STR и VAL</h2>
                 <ul>
                     <li><code>INT</code> и <code>FIX</code> похожи только на первый взгляд: <code>INT</code> округляет вниз, а <code>FIX</code> отбрасывает дробную часть к нулю.</li>
@@ -151,6 +175,7 @@ PRINT small</code></pre>
                 </div>
             </section>
 
+            <section class="article-section"><h2>Проверка строки до преобразования</h2><p>Для проверки полного конечного числа используй <a href="isnumeric.html">встроенную функцию ISNUMERIC</a>. В отличие от VAL, она отклоняет строку с числовым префиксом и текстовым хвостом.</p></section>
             <div id="page-pager" class="pager"></div>
         </main>
     </div>

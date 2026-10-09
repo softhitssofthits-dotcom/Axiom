@@ -44,7 +44,8 @@ public sealed class BytecodeVmDebuggerAdapter : IProgramDebuggerState
             snapshot.SourceLocation.Column,
             snapshot.Opcode.ToString(),
             snapshot.CallDepth,
-            stopState.CanStepBack);
+            stopState.CanStepBack,
+            snapshot.SourceLocation);
     }
 
     public DebuggerStopInfo StopInfo { get; }

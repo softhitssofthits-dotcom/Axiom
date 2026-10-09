@@ -204,11 +204,11 @@ PRINT KEYDOWN("CTRL") AND KEYDOWN("LEFT")
 PRINT INKEY()
 """;
 
-        var host = new TestRuntimeHost(pressedKeys: ["LEFT", "CTRL"]);
+        var host = new TestRuntimeHost(keys: ["A"], pressedKeys: ["LEFT", "CTRL"]);
         var (_, _, result) = ExecuteProgram(text, host);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "TRUE", ""], host.Output);
+        Assert.Equal(["TRUE", "TRUE", "A"], host.Output);
     }
 
     [Fact]
@@ -6485,7 +6485,7 @@ CLOSE f
                 result.Succeeded,
                 string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
             Assert.Equal(["TRUE", "OUTPUT", "TRUE", "TRUE", "FALSE", "TRUE"], host.Output);
-            Assert.Equal($"alpha{Environment.NewLine}beta-gamma{Environment.NewLine}", File.ReadAllText(outputPath));
+            Assert.Equal("alpha\nbeta-gamma\n", File.ReadAllText(outputPath));
         }
         finally
         {

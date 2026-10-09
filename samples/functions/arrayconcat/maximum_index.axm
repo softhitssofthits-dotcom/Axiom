@@ -1,0 +1,15 @@
+REM Два элемента помещаются вплоть до последнего индекса INTEGER.
+DIM source(7 TO 7, 2147483646 TO 2147483646) AS INTEGER
+DIM merged(,) AS INTEGER
+source(7, 2147483646) = 42
+REM Объединяем столбцы и проверяем верхнюю границу.
+merged = ARRAYCONCAT(source, source, 2)
+PRINT "Верхняя граница: "; UBOUND(merged, 2)
+PRINT "Последнее значение: "; merged(7, 2147483647)
+DIM edge(7 TO 7, 2147483647 TO 2147483647) AS INTEGER
+REM Второй столбец уже не помещается в диапазон индексов.
+TRY
+    merged = ARRAYCONCAT(edge, edge, 2)
+CATCH err
+    PRINT "Ошибка границы: "; err.Code
+END TRY

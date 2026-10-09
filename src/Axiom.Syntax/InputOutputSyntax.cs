@@ -145,7 +145,9 @@ public sealed class OpenStatementSyntax : StatementSyntax
         SyntaxToken forKeyword,
         SyntaxToken modeKeyword,
         SyntaxToken asKeyword,
-        SyntaxToken fileIdentifier)
+        SyntaxToken fileIdentifier,
+        SyntaxToken? usingKeyword = null,
+        ExpressionSyntax? encodingExpression = null)
     {
         ArgumentNullException.ThrowIfNull(openKeyword);
         ArgumentNullException.ThrowIfNull(pathExpression);
@@ -160,6 +162,8 @@ public sealed class OpenStatementSyntax : StatementSyntax
         ModeKeyword = modeKeyword;
         AsKeyword = asKeyword;
         FileIdentifier = fileIdentifier;
+        UsingKeyword = usingKeyword;
+        EncodingExpression = encodingExpression;
     }
 
     public override SyntaxKind Kind => SyntaxKind.OpenStatement;
@@ -175,6 +179,10 @@ public sealed class OpenStatementSyntax : StatementSyntax
     public SyntaxToken AsKeyword { get; }
 
     public SyntaxToken FileIdentifier { get; }
+
+    public SyntaxToken? UsingKeyword { get; }
+
+    public ExpressionSyntax? EncodingExpression { get; }
 }
 
 public sealed class CloseStatementSyntax : StatementSyntax

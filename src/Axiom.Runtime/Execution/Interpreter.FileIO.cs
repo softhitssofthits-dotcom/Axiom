@@ -9,6 +9,7 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteOpen(BoundOpenStatement statement)
     {
         var path = EvaluateExpression(statement.PathExpression).AsString();
+        var encodingName = statement.EncodingExpression is null ? null : EvaluateExpression(statement.EncodingExpression).AsString();
         var existingFile = GetVariableValue(statement.FileVariable).AsFile();
 
         if (existingFile is not null && existingFile.IsOpen)
@@ -30,7 +31,7 @@ public sealed partial class Interpreter
                 _ => throw new ArgumentOutOfRangeException(nameof(statement), statement.Mode, "Unsupported file mode.")
             };
 
-            var file = new RuntimeTextFile(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory), runtimeMode, BuiltinFileSystemHelpers.FileSystemTextEncoding);
+            var file = new RuntimeTextFile(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.CurrentDirectory), runtimeMode, BuiltinFileSystemHelpers.FileSystemTextEncoding, encodingName);
             _openFiles.Add(file);
             AssignVariable(statement.FileVariable, RuntimeValue.FromFile(file));
             return ExecutionSignal.None;
@@ -48,7 +49,15 @@ public sealed partial class Interpreter
     private ExecutionSignal ExecuteClose(BoundCloseStatement statement)
     {
         var file = RequireOpenFile(statement.FileVariable, statement.Location, "CLOSE");
-        BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+        try
+        {
+            BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+        }
+        catch (Exception ex) when (BuiltinFileIOHelpers.IsFileIoException(ex))
+        {
+            ReportFileIOError($"Оператор CLOSE: не удалось завершить запись файла: {ex.Message}", statement.Location);
+            throw new RuntimeFailureException();
+        }
         AssignVariable(statement.FileVariable, RuntimeValue.FromFile(value: null));
         return ExecutionSignal.None;
     }
@@ -178,7 +187,8 @@ public sealed partial class Interpreter
 
     private void CloseAllOpenFiles()
     {
-        BuiltinFileIOHelpers.CloseAllOpenFiles(_openFiles);
+        BuiltinFileIOHelpers.CloseAllOpenFiles(_openFiles, (file, ex) =>
+            ReportFileIOError($"Не удалось закрыть файл '{file.Path}' при завершении программы: {ex.Message}", Program.Location));
     }
 
     private void CloseFile(RuntimeTextFile file)

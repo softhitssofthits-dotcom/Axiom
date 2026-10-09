@@ -1,0 +1,14 @@
+' Точечные и прямоугольные объекты сохраняются при загрузке карты.
+DIM level AS TILEMAP
+level = LOADTILEMAP("metadata_map.tmj")
+PRINT "Слои карты:"
+PRINT MAPLAYERCOUNT(level)
+' Эллипс пока не входит в поддержанный объём: загрузка должна отказать.
+TRY
+    level = LOADTILEMAP("unsupported_object.tmj")
+CATCH err
+    PRINT "Неподдержанный объект:"
+    PRINT err.Code
+    ' Причина отказа доходит от загрузчика до обработчика языка.
+    PRINT err.Message
+END TRY

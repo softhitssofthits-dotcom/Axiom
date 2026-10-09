@@ -1,0 +1,18 @@
+' Каждый вызов WRITE кодирует свою строку независимо от FLUSH.
+DIM path AS STRING = MAKETEMPFILE("axiom_write_unicode_")
+DIM f AS FILE
+OPEN path FOR OUTPUT AS f
+' Половина эмодзи является изолированной единицей UTF-16 и заменяется символом �.
+PRINT WRITE(f, LEFT("😀", 1))
+PRINT "Позиция после первой половины, ожидается 3: ", FILEPOS(f)
+PRINT WRITE(f, RIGHT("😀", 1))
+PRINT "Длина двух замен, ожидается 6: ", FILELENGTH(f)
+CLOSE f
+PRINT "Две независимые замены: ", READFILE(path) = "��"
+' Целая пара UTF-16 в одном вызове сохраняет эмодзи и занимает четыре байта.
+OPEN path FOR OUTPUT AS f
+PRINT WRITE(f, "😀")
+PRINT "Длина целого эмодзи, ожидается 4: ", FILEPOS(f)
+CLOSE f
+PRINT "Целый эмодзи сохранён: ", READFILE(path) = "😀"
+PRINT DELETEFILE(path)

@@ -1,0 +1,12 @@
+' WINDOWS-1251 не содержит эмодзи; ошибка записи сохраняет прежний файл.
+PRINT MAKEDIR(".artifacts/encoding_examples")
+DIM path AS STRING = ".artifacts/encoding_examples/strict_write.txt"
+PRINT WRITEFILE(path, "А", "WINDOWS-1251")
+
+' TRY позволяет проверить отказ и продолжить программу.
+TRY
+    PRINT WRITEFILE(path, "😀", "WINDOWS-1251")
+CATCH err
+    PRINT "Ожидается MB3007: "; err.Code
+END TRY
+PRINT "Прежний текст сохранён: "; READFILE(path, "WINDOWS-1251") = "А"

@@ -1,0 +1,18 @@
+DIM folder AS STRING = MAKETEMPDIR("strict_write_")
+DIM path AS STRING = COMBINEPATH(folder, "text.txt")
+DIM f AS FILE
+' Кириллица представима в Windows-1251, эмодзи — нет.
+OPEN path FOR OUTPUT AS f USING "WINDOWS-1251"
+PRINT WRITE(f, "А")
+TRY
+    PRINT WRITELINE(f, "😀")
+CATCH err
+    PRINT "Ожидаемая ошибка записи: "; err.Code
+END TRY
+' После отказа позиция равна 1; следующая запись остаётся возможной.
+PRINT "Позиция: "; FILEPOS(f)
+PRINT WRITE(f, "я")
+CLOSE f
+PRINT "Сохранённый текст: "; READFILE(path, "WINDOWS-1251")
+PRINT DELETEFILE(path)
+PRINT DELETEDIR(folder)

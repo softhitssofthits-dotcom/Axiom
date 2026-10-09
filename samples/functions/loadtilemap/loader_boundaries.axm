@@ -1,0 +1,19 @@
+REM Выбор тайлсета определяется firstgid, а не порядком поиска.
+DIM m AS TILEMAP
+m = LOADTILEMAP("loader_reordered.tmj")
+PRINT "Тайлсет и тайл:"
+PRINT MAPTILESET(m, 1, 1, 1)
+PRINT MAPTILE(m, 1, 1, 1)
+REM Старый шестигранный бит очищается у ортогональной карты.
+m = LOADTILEMAP("loader_reserved_bit.tmj")
+PRINT "Тайл и флаги после очистки:"
+PRINT MAPTILE(m, 1, 1, 1)
+PRINT MAPTILEFLAGS(m, 1, 1, 1)
+REM Отложенное начало параллакса нельзя молча потерять.
+TRY
+    m = LOADTILEMAP("loader_parallax_origin.tmj")
+CATCH err
+    PRINT "Отказ для начала параллакса:"
+    PRINT err.Code
+    PRINT err.Message
+END TRY

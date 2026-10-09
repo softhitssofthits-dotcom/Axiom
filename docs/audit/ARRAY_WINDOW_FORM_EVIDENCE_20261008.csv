@@ -1,0 +1,16 @@
+builtin_id,call,result_kind,expected_elements,test,limits
+LBound,LBOUND(m),INTEGER,-2,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+LBound,"LBOUND(m, 2)",INTEGER,4,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+UBound,UBOUND(m),INTEGER,-1,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+UBound,"UBOUND(m, 2)",INTEGER,6,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayLength,ARRAYLENGTH(m),INTEGER,6,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayIsAllocated,ARRAYISALLOCATED(m),BOOLEAN,TRUE,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayRank,ARRAYRANK(m),INTEGER,2,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayBounds,ARRAYBOUNDS(m),array2,-2;-1;4;6,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayClone,ARRAYCLONE(a),array1,30;10;20,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArraySlice,"ARRAYSLICE(a, 6, 2)",array1,10;20,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArraySlice,"ARRAYSLICE(m, 5, 1, 2)",array2,2;5,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayTake,"ARRAYTAKE(a, 2)",array1,30;10,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArrayTake,"ARRAYTAKE(m, 1, 2)",array2,1;4,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArraySkip,"ARRAYSKIP(a, 1)",array1,10;20,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны
+ArraySkip,"ARRAYSKIP(m, 1, 2)",array2,2;3;5;6,ArrayWindowFormEvidenceTests,Обычный вызов и выбранные границы; крайние индексы не доказаны

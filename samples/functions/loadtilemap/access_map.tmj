@@ -1,0 +1,143 @@
+{
+  "compressionlevel": -1,
+  "height": 2,
+  "infinite": false,
+  "layers": [
+    {
+      "data": [
+        1,
+        2,
+        0,
+        4
+      ],
+      "height": 2,
+      "id": 1,
+      "name": "Земля",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 2,
+      "x": 0,
+      "y": 0,
+      "properties": [
+        {
+          "name": "role",
+          "type": "string",
+          "value": "стена"
+        }
+      ]
+    },
+    {
+      "data": [
+        2,
+        1,
+        4,
+        0
+      ],
+      "height": 2,
+      "id": 2,
+      "name": "hidden",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": false,
+      "width": 2,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 3,
+      "name": "Объекты",
+      "objects": [
+        {
+          "name": "Выход",
+          "type": "portal",
+          "visible": true,
+          "x": 12.5,
+          "y": 24,
+          "width": 8,
+          "height": 16,
+          "properties": [
+            {
+              "name": "role",
+              "type": "string",
+              "value": "переход"
+            }
+          ]
+        },
+        {
+          "name": "Старт",
+          "class": "spawn",
+          "point": true,
+          "visible": false,
+          "x": -0.5,
+          "y": 2
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "nextlayerid": 4,
+  "nextobjectid": 1,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tiledversion": "1.11.0",
+  "tileheight": 16,
+  "tilesets": [
+    {
+      "columns": 2,
+      "firstgid": 1,
+      "image": "../../graphics/sprites/assets/walk_sheet.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "margin": 0,
+      "name": "walk_sheet",
+      "spacing": 0,
+      "tilecount": 4,
+      "tileheight": 16,
+      "tilewidth": 16,
+      "tiles": [
+        {
+          "id": 0,
+          "properties": [
+            {
+              "name": "solid",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "properties": [
+            {
+              "name": "solid",
+              "type": "bool",
+              "value": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tilewidth": 16,
+  "type": "map",
+  "version": "1.10",
+  "width": 2,
+  "properties": [
+    {
+      "name": "role",
+      "type": "string",
+      "value": "выход😀"
+    },
+    {
+      "name": "exact",
+      "type": "int",
+      "value": 9007199254740993
+    }
+  ]
+}

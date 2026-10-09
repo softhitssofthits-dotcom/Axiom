@@ -66,6 +66,7 @@ internal static class BytecodeCoverageAudit
         report.AppendLine($"Generated: {reportTime:yyyy-MM-dd HH:mm:ss zzz}");
         report.AppendLine($"Repository: {root}");
         report.AppendLine($"Declared builtin families: {declaredFamilies.Count}");
+        report.AppendLine($"Declared builtin variants: {declaredFamilies.Sum(static family => family.Variants.Count)}");
         report.AppendLine($"Manual index function entries: {indexedFunctions.Count}");
         report.AppendLine($"Sample directories under samples/functions: {sampleDirectories.Count}");
         report.AppendLine($"Manual entries matched to declared builtins: {manualOnly.Count}");
@@ -120,12 +121,11 @@ internal static class BytecodeCoverageAudit
 
     private static List<BuiltinFamily> GetDeclaredBuiltinFamilies()
     {
-        return Enum.GetValues<BuiltinFunctionId>()
-            .Where(static id => BuiltinFunctions.TryGetDescriptor(id, out _))
-            .Select(static id =>
+        return BuiltinFunctions.All
+            .SelectMany(static function =>
             {
-                BuiltinFunctions.TryGetDescriptor(id, out var descriptor);
-                return descriptor;
+                BuiltinFunctions.TryGetDescriptors(function.Name, out var descriptors);
+                return descriptors;
             })
             .GroupBy(static descriptor => descriptor.Name, StringComparer.OrdinalIgnoreCase)
             .Select(static group => new BuiltinFamily(
@@ -147,7 +147,8 @@ internal static class BytecodeCoverageAudit
 
         foreach (var line in File.ReadLines(path, Encoding.UTF8))
         {
-            if (!line.Contains("kind: \"Функция\"", StringComparison.Ordinal))
+            if (!line.Contains("kind: \"Функция\"", StringComparison.Ordinal) &&
+                !line.Contains("kind: \"Функции\"", StringComparison.Ordinal))
             {
                 continue;
             }
@@ -158,7 +159,17 @@ internal static class BytecodeCoverageAudit
                 continue;
             }
 
+            var explicitNames = Regex.Match(line, @"functions:\s*\[(?<names>[^\]]*)\]", RegexOptions.CultureInvariant);
+            if (explicitNames.Success)
+            {
+                foreach (Match name in Regex.Matches(explicitNames.Groups["names"].Value, "\"(?<name>[^\"]+)\"", RegexOptions.CultureInvariant))
+                    titles.Add(name.Groups["name"].Value.Trim());
+                continue;
+            }
+
             var title = match.Groups["title"].Value.Trim();
+            if (title.StartsWith("Функция ", StringComparison.Ordinal))
+                title = title["Функция ".Length..].Trim();
             if (title.Length > 0)
             {
                 titles.Add(title);

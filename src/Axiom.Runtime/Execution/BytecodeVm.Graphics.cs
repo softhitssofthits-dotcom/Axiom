@@ -984,7 +984,13 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var tilemap = _host.LoadTilemap(path);
+        RuntimeTilemapValue? tilemap;
+        try { tilemap = _host.LoadTilemap(path); }
+        catch (InvalidDataException exception)
+        {
+            ReportInvalidRuntimeState(exception.Message, location);
+            throw new RuntimeFailureException();
+        }
         if (tilemap is null)
         {
             ReportInvalidRuntimeState($"LOADTILEMAP: не удалось загрузить тайловую карту '{path}'.", location);
@@ -1597,7 +1603,7 @@ public sealed partial class BytecodeVm
     private int EvaluatePointPixelWithDrawableSurface(long x, long y, TextLocation location)
     {
         RequireDrawableSurfaceActive("POINT", location);
-        return _host.GetPixel(x, y);
+        return _host.IsCanvasActive ? _host.GetAbsolutePixel(x, y) : _host.GetPixel(x, y);
     }
 
     private RuntimeValue EvaluatePMapBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)

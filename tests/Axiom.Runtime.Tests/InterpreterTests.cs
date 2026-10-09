@@ -1,4 +1,4 @@
-﻿using Axiom.Core;
+using Axiom.Core;
 using Axiom.Parsing;
 using Axiom.Semantics;
 using System.Text;
@@ -334,10 +334,11 @@ PRINT KEYDOWN("CTRL") AND KEYDOWN("LEFT")
 PRINT INKEY()
 """;
 
-        var (_, host, result) = ExecuteProgramWithPressedKeys(text, "LEFT", "CTRL");
+        var host = new TestRuntimeHost([], keys: ["A"], pressedKeys: ["LEFT", "CTRL"]);
+        var (_, _, result) = ExecuteProgram(text, host);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "TRUE", ""], host.Output);
+        Assert.Equal(["TRUE", "TRUE", "A"], host.Output);
     }
 
     [Fact]

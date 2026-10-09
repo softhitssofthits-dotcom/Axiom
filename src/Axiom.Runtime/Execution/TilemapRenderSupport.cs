@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Axiom.Runtime;
 
 internal readonly record struct TileTransformCacheKey(
@@ -57,49 +59,33 @@ internal static class TilemapRenderSupport
             return false;
         }
 
-        var viewportWidth = host.ViewportRight - host.ViewportLeft + 1L;
-        var viewportHeight = host.ViewportBottom - host.ViewportTop + 1L;
+        var viewportWidth = (Int128)host.ViewportRight - host.ViewportLeft + 1;
+        var viewportHeight = (Int128)host.ViewportBottom - host.ViewportTop + 1;
         if (viewportWidth <= 0 || viewportHeight <= 0)
         {
             return false;
         }
 
-        var layerOffsetX = RoundToLong(layer.OffsetX);
-        var layerOffsetY = RoundToLong(layer.OffsetY);
-        var effectiveCameraX = RoundToLong(host.CanvasCameraX * layer.ParallaxX);
-        var effectiveCameraY = RoundToLong(host.CanvasCameraY * layer.ParallaxY);
-        var layerOriginX = checked(mapX + layerOffsetX);
-        var layerOriginY = checked(mapY + layerOffsetY);
-
-        var firstColumn = CeilingDivide(
-            checked(effectiveCameraX - tilemap.MaxTileRight - layerOriginX),
-            tilemap.TileWidth) - 1;
-        var lastColumn = FloorDivide(
-            checked((effectiveCameraX + viewportWidth - 1L) - tilemap.MinTileLeft - layerOriginX),
-            tilemap.TileWidth) + 1;
-        var firstRow = CeilingDivide(
-            checked(effectiveCameraY - tilemap.MaxTileBottom - layerOriginY),
-            tilemap.TileHeight) - 1;
-        var lastRow = FloorDivide(
-            checked((effectiveCameraY + viewportHeight - 1L) - tilemap.MinTileTop - layerOriginY),
-            tilemap.TileHeight) + 1;
-
-        firstColumn = Math.Max(0, firstColumn);
-        firstRow = Math.Max(0, firstRow);
-        lastColumn = Math.Min(layer.Width - 1, lastColumn);
-        lastRow = Math.Min(layer.Height - 1, lastRow);
-        if (lastColumn < firstColumn || lastRow < firstRow)
-        {
+        if (!TryComputeRelativeOrigin(mapX, layer.OffsetX, host.CanvasCameraX, layer.ParallaxX, out var originX)
+            || !TryComputeRelativeOrigin(mapY, layer.OffsetY, host.CanvasCameraY, layer.ParallaxY, out var originY))
             return false;
-        }
+
+        var firstColumn = CeilingDivide(-tilemap.MaxTileRight - originX, tilemap.TileWidth) - 1;
+        var lastColumn = FloorDivide(viewportWidth - 1 - tilemap.MinTileLeft - originX, tilemap.TileWidth) + 1;
+        var firstRow = CeilingDivide(-tilemap.MaxTileBottom - originY, tilemap.TileHeight) - 1;
+        var lastRow = FloorDivide(viewportHeight - 1 - tilemap.MinTileTop - originY, tilemap.TileHeight) + 1;
+
+        firstColumn = firstColumn < 0 ? 0 : firstColumn;
+        firstRow = firstRow < 0 ? 0 : firstRow;
+        lastColumn = lastColumn > layer.Width - 1 ? layer.Width - 1 : lastColumn;
+        lastRow = lastRow > layer.Height - 1 ? layer.Height - 1 : lastRow;
+        if (lastColumn < firstColumn || lastRow < firstRow) return false;
 
         range = new TilemapVisibleRange(
-            checked(layerOriginX + host.CanvasCameraX - effectiveCameraX),
-            checked(layerOriginY + host.CanvasCameraY - effectiveCameraY),
-            firstColumn,
-            lastColumn,
-            firstRow,
-            lastRow);
+            checked((long)(originX + host.CanvasCameraX)),
+            checked((long)(originY + host.CanvasCameraY)),
+            checked((int)firstColumn), checked((int)lastColumn),
+            checked((int)firstRow), checked((int)lastRow));
         return true;
     }
 
@@ -235,45 +221,53 @@ internal static class TilemapRenderSupport
             : Math.Clamp((int)Math.Round(v * (height - 1), MidpointRounding.AwayFromZero), 0, height - 1);
     }
 
-    private static int FloorDivide(long numerator, int denominator)
+    private static Int128 FloorDivide(Int128 numerator, int denominator)
     {
-        var quotient = Math.DivRem(numerator, denominator, out var remainder);
+        var quotient = numerator / denominator;
+        var remainder = numerator % denominator;
         if (remainder < 0)
         {
             quotient--;
         }
 
-        return checked((int)quotient);
+        return quotient;
     }
 
-    private static int CeilingDivide(long numerator, int denominator)
+    private static Int128 CeilingDivide(Int128 numerator, int denominator)
     {
-        var quotient = Math.DivRem(numerator, denominator, out var remainder);
+        var quotient = numerator / denominator;
+        var remainder = numerator % denominator;
         if (remainder > 0)
         {
             quotient++;
         }
 
-        return checked((int)quotient);
+        return quotient;
     }
 
-    private static long RoundToLong(double value)
+    private static bool TryComputeRelativeOrigin(long mapOrigin, double offset, long camera, double parallax, out Int128 origin)
     {
-        if (!double.IsFinite(value))
+        origin = 0;
+        var effectiveCamera = camera * parallax;
+        // Бесконечное произведение не компенсируется конечным смещением слоя.
+        if (!double.IsFinite(offset) || !double.IsFinite(effectiveCamera)) return false;
+        var roundedOffset = Math.Round(offset, MidpointRounding.AwayFromZero);
+        var roundedCamera = Math.Round(effectiveCamera, MidpointRounding.AwayFromZero);
+        const double exclusiveMaximum = 9223372036854775808d;
+        if (roundedOffset >= long.MinValue && roundedOffset < exclusiveMaximum
+            && roundedCamera >= long.MinValue && roundedCamera < exclusiveMaximum)
         {
-            return 0L;
+            origin = (Int128)(long)roundedOffset - (long)roundedCamera + mapOrigin;
+            return true;
         }
 
-        if (value <= long.MinValue)
-        {
-            return long.MinValue;
-        }
-
-        if (value >= long.MaxValue)
-        {
-            return long.MaxValue;
-        }
-
-        return checked((long)Math.Round(value, MidpointRounding.AwayFromZero));
+        // В редком большом случае сохраняем точную компенсацию округлённых DOUBLE.
+        var difference = new BigInteger(roundedOffset) - new BigInteger(roundedCamera) + mapOrigin;
+        // Координата вне этого диапазона заведомо не пересекает конечную карту.
+        // Ограничение оставляет запас для размеров окна и тайлов при отсечении.
+        var bound = BigInteger.One << 100;
+        if (difference <= -bound || difference >= bound) return false;
+        origin = (Int128)difference;
+        return true;
     }
 }

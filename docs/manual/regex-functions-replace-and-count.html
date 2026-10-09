@@ -31,13 +31,15 @@
                 <p>Функция <code>REGEXREPLACE</code> возвращает новую строку, где найденные совпадения заменены указанным текстом.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = REGEXREPLACE(text, pattern, replacement[, modes][, count])</code></pre>
-                <h3>Аргументы</h3><p><code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве.</p>
+                <h3>Аргументы</h3><p><code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве. После достижения count функция не ищет следующие совпадения; оставшаяся часть строки сохраняется без изменений.</p>
                 <h3>Количество замен и ссылки на группы</h3>
                 <p>Если <code>count</code> равен нулю, функция возвращает исходный текст без изменений. Отрицательное количество замен даёт <code>MB3007</code>. В строке замены можно использовать ссылки на группы через <code>$1</code>, <code>$2</code> и далее.</p>
-                <h3>Пример замены по шаблону</h3>
+                <h3>Ограничение количества замен</h3><pre><code class="language-basic">' Меняем только первое найденное совпадение.
+PRINT REGEXREPLACE("код12 код34", "[0-9]+", "#", 1)</code></pre><p>Результат: «код# код34». Проверочный пример: <a href="../../samples/functions/regexreplace/stop_at_count.axm">остановка поиска после count</a>.</p>
+<h3>Пример замены по шаблону</h3>
                 <pre><code class="language-basic">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
 PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
-PRINT REGEXREPLACE("A12 B34", "([A-Z])(\\d+)", "$1-$2")</code></pre>
+PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")</code></pre>
                 <p>Результат:</p>
                 <pre><code>one # two #
 one # two 34

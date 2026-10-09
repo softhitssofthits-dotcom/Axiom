@@ -1,0 +1,13 @@
+REM Большое смещение тайлсета компенсируется смещением слоя.
+CANVAS 64, 64
+DIM m AS TILEMAP
+m = LOADTILEMAP("offset_limit_x.tmj")
+DRAWTILEMAP m, 0, 0
+PRINT "Пиксель видимого тайла:"
+PRINT POINT(8, 8)
+REM Пауза позволяет увидеть тайл на холсте.
+SLEEP 1000
+REM Карта далеко за экраном должна пропускаться без ошибки.
+m = LOADTILEMAP("far_layer_positive.tmj")
+DRAWTILEMAP m, 0, 0
+PRINT "Далёкая карта обработана."

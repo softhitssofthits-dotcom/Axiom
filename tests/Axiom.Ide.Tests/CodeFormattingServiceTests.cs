@@ -6,6 +6,80 @@ public sealed class CodeFormattingServiceTests
 {
     private readonly AxiomCodeFormattingService _service = new();
 
+    [Theory]
+    [InlineData("maptilesetcount", "level")]
+    [InlineData("mapproperty", "level, \"role\"")]
+    [InlineData("maplayerproperty", "level, 1, \"role\"")]
+    [InlineData("maptileproperty", "level, 1, 1, 1, \"solid\"")]
+    [InlineData("mapobjectproperty", "level, 3, 1, \"role\"")]
+    [InlineData("maplayername", "level, 1")]
+    [InlineData("maplayertype", "level, 3")]
+    [InlineData("maplayervisible", "level, 2")]
+    [InlineData("mapobjectcount", "level, 3")]
+    [InlineData("mapobjectname", "level, 3, 1")]
+    [InlineData("mapobjectclass", "level, 3, 1")]
+    [InlineData("mapobjectkind", "level, 3, 2")]
+    [InlineData("mapobjectvisible", "level, 3, 2")]
+    [InlineData("mapobjectx", "level, 3, 1")]
+    [InlineData("mapobjecty", "level, 3, 1")]
+    [InlineData("mapobjectwidth", "level, 3, 1")]
+    [InlineData("mapobjectheight", "level, 3, 1")]
+    [InlineData("mapcolumn", "level, 100, 116")]
+    [InlineData("maprow", "level, 200, 215.5")]
+    [InlineData("mapworldx", "level, 100, 2")]
+    [InlineData("mapworldy", "level, 200, 2")]
+    public void TileMetadataFunctionsAreHighlightedAndFormatted(string name, string arguments)
+    {
+        Assert.Contains(name.ToUpperInvariant(), Axiom.Ide.Editor.Highlighting.AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Equal($"PRINT {name.ToUpperInvariant()}({arguments})", _service.FormatLine($"print {name}({arguments})", CodeFormattingStyle.Classic));
+    }
+
+    [Theory]
+    [InlineData("len", "\"😀\", \"GRAPHEME\"")]
+    [InlineData("left", "\"😀\", 1, \"CODEPOINT\"")]
+    [InlineData("right", "\"🇷🇺\", 1, \"GRAPHEME\"")]
+    [InlineData("mid", "\"А😀Б\", 2, 1, \"GRAPHEME\"")]
+    public void UnicodeUnitFormsKeepBuiltinHighlightingAndStringArguments(string name, string arguments)
+    {
+        Assert.Contains(name.ToUpperInvariant(), Axiom.Ide.Editor.Highlighting.AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Equal($"PRINT {name.ToUpperInvariant()}({arguments})", _service.FormatLine($"print {name}({arguments})", CodeFormattingStyle.Classic));
+    }
+
+    [Fact]
+    public void IsNumericIsHighlightedAndFormattedAsBuiltin()
+    {
+        Assert.Contains("ISNUMERIC", Axiom.Ide.Editor.Highlighting.AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Equal("PRINT ISNUMERIC(\"12.5\")", _service.FormatLine("print isnumeric(\"12.5\")", CodeFormattingStyle.Classic));
+    }
+
+    [Theory]
+    [InlineData("readfile", "\"file.txt\", \"UTF-8\"")]
+    [InlineData("readalllines", "\"file.txt\", \"UTF-16LE\"")]
+    [InlineData("writefile", "\"file.txt\", \"я\", \"WINDOWS-1251\"")]
+    [InlineData("appendfile", "\"file.txt\", \"я\", \"UTF-16BE\"")]
+    public void ExplicitEncodingFormsAreHighlightedAndFormattedAsBuiltinCalls(string name, string arguments)
+    {
+        Assert.Contains(name.ToUpperInvariant(), Axiom.Ide.Editor.Highlighting.AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Equal($"PRINT {name.ToUpperInvariant()}({arguments})", _service.FormatLine($"print {name}({arguments})", CodeFormattingStyle.Classic));
+    }
+
+    [Theory]
+    [InlineData("regexextract", "\"код42\", \"код(?<10>[0-9]+)\", 10")]
+    [InlineData("regexextractall", "\"код12 код34\", \"код(?<10>[0-9]+)\", 10")]
+    [InlineData("regexreplace", "\"код12 код34\", \"[0-9]+\", \"#\", 1")]
+    public void RegexFormsPreservePatternsAndHighlightBuiltinNames(string name, string args)
+    {
+        Assert.Contains(name.ToUpperInvariant(), Axiom.Ide.Editor.Highlighting.AxiomHighlightingVocabulary.BuiltIns);
+        Assert.Equal($"PRINT {name.ToUpperInvariant()}({args})", _service.FormatLine($"print {name}({args})", CodeFormattingStyle.Classic));
+    }
+
+    [Fact]
+    public void OpenEncodingUsesExistingKeywordAndPreservesVariableName()
+    {
+        Assert.Contains("USING", Axiom.Ide.Editor.Highlighting.AxiomHighlightingVocabulary.Keywords);
+        Assert.Equal("OPEN \"file.txt\" FOR INPUT AS f USING encoding", _service.FormatLine("open \"file.txt\" for input as f using encoding", CodeFormattingStyle.Classic));
+    }
+
     [Fact]
     public void FormatLine_Classic_UppercasesKeywordsAndAddsOperatorSpacing()
     {

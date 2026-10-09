@@ -1095,7 +1095,15 @@ public sealed partial class Parser
         var asKeyword = Match(SyntaxKind.AsKeyword, "AS");
         var fileIdentifier = MatchIdentifier();
 
-        return new OpenStatementSyntax(openKeyword, pathExpression, forKeyword, modeKeyword, asKeyword, fileIdentifier);
+        SyntaxToken? usingKeyword = null;
+        ExpressionSyntax? encodingExpression = null;
+        if (Current.Kind == SyntaxKind.UsingKeyword)
+        {
+            usingKeyword = NextToken();
+            encodingExpression = ParseExpression();
+        }
+
+        return new OpenStatementSyntax(openKeyword, pathExpression, forKeyword, modeKeyword, asKeyword, fileIdentifier, usingKeyword, encodingExpression);
     }
 
     private CloseStatementSyntax ParseCloseStatement()

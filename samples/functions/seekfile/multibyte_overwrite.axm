@@ -1,0 +1,19 @@
+' SEEKFILE считает байты и не выполняет замену целого символа.
+DIM path AS STRING = MAKETEMPFILE("seek_unicode_")
+DIM f AS FILE
+OPEN path FOR OUTPUT AS f USING "UTF-8"
+PRINT WRITE(f, "A😀B")
+' Emoji занимает байты 1..4. Короткая запись оставляет три старых байта.
+PRINT SEEKFILE(f, 1)
+PRINT WRITE(f, "Z")
+CLOSE f
+TRY
+    PRINT READFILE(path, "UTF-8")
+CATCH err
+    PRINT "Строгое чтение должно сообщить MB3007:", err.Code
+END TRY
+' Для замены текста меняем строку целиком и заново записываем файл.
+DIM text AS STRING = REPLACE("A😀B", "😀", "Z")
+PRINT WRITEFILE(path, text, "UTF-8")
+PRINT "После полной записи должно быть AZB:", READFILE(path, "UTF-8")
+PRINT "Временный файл удалён:", DELETEFILE(path)

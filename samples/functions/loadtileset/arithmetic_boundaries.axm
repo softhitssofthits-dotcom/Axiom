@@ -1,0 +1,15 @@
+REM Промежуток не используется, если атлас состоит из одного тайла.
+DIM tiles AS TILESET
+tiles = LOADTILESET("../../graphics/sprites/assets/walk_sheet.png", 32, 32, 0, 2147483647)
+PRINT "Тайлов в атласе:"
+PRINT TILECOUNT(tiles)
+REM Огромный отступ не должен создавать сетку за границами изображения.
+TRY
+    tiles = LOADTILESET("../../graphics/sprites/assets/walk_sheet.png", 17, 17, 2147483647, 0)
+CATCH err
+    PRINT "Ошибка отступа:"
+    PRINT err.Code
+END TRY
+REM Предыдущий корректный тайлсет сохранён.
+PRINT "Сохранено тайлов:"
+PRINT TILECOUNT(tiles)

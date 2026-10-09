@@ -40,8 +40,8 @@ public sealed class RuntimeTilesetValue
         TileOffsetX = tileOffsetX;
         TileOffsetY = tileOffsetY;
 
-        var usableWidth = image.Width - (margin * 2);
-        var usableHeight = image.Height - (margin * 2);
+        var usableWidth = image.Width - ((long)margin * 2);
+        var usableHeight = image.Height - ((long)margin * 2);
         Columns = ComputeAxisTileCount(usableWidth, tileWidth, spacing, nameof(image));
         Rows = ComputeAxisTileCount(usableHeight, tileHeight, spacing, nameof(image));
         TileCount = checked(Columns * Rows);
@@ -76,13 +76,13 @@ public sealed class RuntimeTilesetValue
     public int GetTileLeft(int tileIndex)
     {
         var zeroBasedIndex = GetZeroBasedIndex(tileIndex);
-        return Margin + ((zeroBasedIndex % Columns) * (TileWidth + Spacing));
+        return checked((int)(Margin + ((long)(zeroBasedIndex % Columns) * ((long)TileWidth + Spacing))));
     }
 
     public int GetTileTop(int tileIndex)
     {
         var zeroBasedIndex = GetZeroBasedIndex(tileIndex);
-        return Margin + ((zeroBasedIndex / Columns) * (TileHeight + Spacing));
+        return checked((int)(Margin + ((long)(zeroBasedIndex / Columns) * ((long)TileHeight + Spacing))));
     }
 
     private int GetZeroBasedIndex(int tileIndex)
@@ -95,7 +95,7 @@ public sealed class RuntimeTilesetValue
         return tileIndex - 1;
     }
 
-    private static int ComputeAxisTileCount(int usableLength, int tileLength, int spacing, string parameterName)
+    private static int ComputeAxisTileCount(long usableLength, int tileLength, int spacing, string parameterName)
     {
         if (usableLength < tileLength)
         {
@@ -103,7 +103,7 @@ public sealed class RuntimeTilesetValue
         }
 
         var numerator = usableLength + spacing;
-        var denominator = tileLength + spacing;
+        var denominator = (long)tileLength + spacing;
         if (numerator <= 0 || numerator % denominator != 0)
         {
             throw new ArgumentException("Tileset atlas dimensions do not match the requested tile grid.", parameterName);
@@ -115,6 +115,6 @@ public sealed class RuntimeTilesetValue
             throw new ArgumentException("Tileset atlas does not contain any tiles.", parameterName);
         }
 
-        return count;
+        return checked((int)count);
     }
 }

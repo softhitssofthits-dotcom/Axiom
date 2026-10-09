@@ -24,24 +24,24 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Дата и время</span></nav>
             <p class="eyebrow">Раздел</p>
             <h1 class="page-title">Сборка даты и календарные части</h1>
-            <p class="lead">Раздел сборки даты и календарных частей описывает функции <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code>, <code>MINUTE</code>, <code>SECOND</code>, <code>WEEKDAY</code> и <code>WEEKYEAR</code> — построение канонических значений и извлечение календарных компонентов.</p>
+            <p class="lead">Раздел сборки даты и календарных частей описывает функции <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code>, <code>MINUTE</code>, <code>SECOND</code>, <code>WEEKDAY</code>, <code>WEEKDAYNAME</code> и <code>MONTHNAME</code> — построение канонических значений и извлечение календарных компонентов.</p>
 
             <section class="article-section" id="dateserial">
                 <h2>DATESERIAL</h2>
-                <p>Функция <code>DATESERIAL</code> строит строку даты из года, месяца и дня.</p>
+                <p>Функция <code>DATESERIAL</code> строит значение типа <code>DATE</code> из года, месяца и дня.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = DATESERIAL(year, month, day)</code></pre>
-                <h3>Аргументы</h3><p><code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат возвращается как строка формата <code>yyyy-MM-dd</code>.</p>
+                <h3>Аргументы</h3><p><code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат имеет тип <code>DATE</code> и при выводе записывается в формате <code>yyyy-MM-dd</code>. Год задаётся целым числом от 1 до 9999, месяц — от 1 до 12, день — от 1 до числа дней выбранного месяца. Годы от 1 до 99 обозначают именно эти годы, без преобразования в двадцатый или двадцать первый век.</p>
                 <h3>Проверка реальной календарной даты</h3>
                 <p>Компоненты должны образовывать реальную календарную дату. Автоматического переноса переполненных значений вроде тринадцатого месяца здесь нет.</p>
             </section>
 
             <section class="article-section" id="timeserial">
                 <h2>TIMESERIAL</h2>
-                <p>Функция <code>TIMESERIAL</code> строит строку времени из часов, минут и секунд.</p>
+                <p>Функция <code>TIMESERIAL</code> строит значение типа <code>TIME</code> из часов, минут и секунд.</p>
                 <h3>Синтаксис</h3>
                 <pre><code class="language-basic">result = TIMESERIAL(hour, minute, second)</code></pre>
-                <h3>Аргументы</h3><p><code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат возвращается как строка формата <code>HH:mm:ss</code>.</p>
+                <h3>Аргументы</h3><p><code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат имеет тип <code>TIME</code> и при выводе записывается в формате <code>HH:mm:ss</code>. Часы задаются целым числом от 0 до 23, минуты и секунды — от 0 до 59. Функция TIMESERIAL не переносит переполнение: например, 60 секунд вызывают диагностику <code>MB3007</code>.</p>
             </section>
 
             <section class="article-section" id="year-month-day">
@@ -89,7 +89,7 @@ result = STARTOFMONTH(value)
 result = ENDOFMONTH(value)
 result = STARTOFYEAR(value)
 result = ENDOFYEAR(value)</code></pre>
-                <h3>Аргументы</h3><p><code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают строку даты формата <code>yyyy-MM-dd</code>.</p>
+                <h3>Аргументы</h3><p><code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают значение типа <code>DATE</code>, которое при выводе записывается в формате <code>yyyy-MM-dd</code>.</p>
                 <h3>Пример сборки и чтения даты</h3>
                 <pre><code class="language-basic">' Сборка даты и работа с календарными частями
 PRINT DATESERIAL(2026, 4, 20)

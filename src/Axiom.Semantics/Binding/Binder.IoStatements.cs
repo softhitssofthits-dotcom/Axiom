@@ -779,7 +779,10 @@ public sealed partial class Binder
             _ => BoundFileOpenMode.Input
         };
 
-        return new BoundOpenStatement(GetLocation(statement), pathExpression, fileVariable, mode);
+        var encodingExpression = statement.EncodingExpression is null
+            ? null
+            : BindExpression(statement.EncodingExpression, TypeSymbol.String);
+        return new BoundOpenStatement(GetLocation(statement), pathExpression, fileVariable, mode, encodingExpression);
     }
 
     private BoundStatement BindCloseStatement(CloseStatementSyntax statement)

@@ -1,0 +1,50 @@
+' Пользовательский разбор: знак, цифры и одна точка; без пробелов и экспоненты.
+FUNCTION ParseFixedDecimal(text AS STRING) AS DECIMAL
+    DIM negative AS BOOLEAN = FALSE
+    DIM position AS INTEGER = 1
+    IF LEFT(text, 1) = "-" OR LEFT(text, 1) = "+" THEN
+        negative = LEFT(text, 1) = "-"
+        position = 2
+    END IF
+    DIM value AS DECIMAL = CDEC(0)
+    DIM scale AS DECIMAL = CDEC(1)
+    DIM afterPoint AS BOOLEAN = FALSE
+    DIM digits AS INTEGER = 0
+    ' Собираем целую мантиссу, не пропуская число через DOUBLE.
+    WHILE position <= LEN(text)
+        DIM character AS STRING = MID(text, position, 1)
+        IF character = "." AND NOT afterPoint THEN
+            afterPoint = TRUE
+        ELSE
+            DIM code AS INTEGER = ASCW(character)
+            IF code < 48 OR code > 57 THEN
+                ERROR "APP_DECIMAL", "Ожидалась цифра или одна десятичная точка."
+            END IF
+            value = value * CDEC(10) + CDEC(code - 48)
+            IF afterPoint THEN
+                scale = scale * CDEC(10)
+            END IF
+            digits = digits + 1
+        END IF
+        position = position + 1
+    END WHILE
+    IF digits = 0 THEN
+        ERROR "APP_DECIMAL", "В строке нет цифр."
+    END IF
+    ' Мантисса и масштаб должны помещаться в DECIMAL по отдельности.
+    IF negative THEN
+        value = -value
+    END IF
+    RETURN value / scale
+END FUNCTION
+
+' Эти значения сохраняются без промежуточного округления DOUBLE.
+PRINT "Целое число: "; ParseFixedDecimal("9007199254740993")
+PRINT "Длинная дробь: "; ParseFixedDecimal("1.0000000000000000000000000001")
+PRINT "Отрицательное число: "; ParseFixedDecimal("-0.1234567890123456789012345678")
+' Ограничение алгоритма: лишний ноль переполняет целую мантиссу.
+TRY
+    PRINT ParseFixedDecimal("79228162514264337593543950335.0")
+CATCH err
+    PRINT "Ограничение разбора: "; err.Code
+END TRY

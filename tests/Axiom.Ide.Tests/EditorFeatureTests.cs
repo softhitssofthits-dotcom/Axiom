@@ -995,8 +995,8 @@ public sealed class EditorFeatureTests
         Assert.Contains("TryApplyBlockEditingAfterEnter", code, StringComparison.Ordinal);
         Assert.Contains("TraceEditorEvent(\"editor.enter.line-transition\"", code, StringComparison.Ordinal);
         Assert.Contains("TraceEditorEvent(\"editor.caret.line-transition\"", code, StringComparison.Ordinal);
-        Assert.Contains("\"editor.line-format.applied\",", code, StringComparison.Ordinal);
-        Assert.Contains("\"editor.identifier-normalized\",", code, StringComparison.Ordinal);
+        Assert.Contains("_isApplyingLineFormatting = true;", code, StringComparison.Ordinal);
+        Assert.Contains("ApplySmartIdentifierToActiveDocument();", code, StringComparison.Ordinal);
         Assert.Contains("DocumentFormattingPolicy.CanApplyFormatting(viewModel.Documents.ActiveDocument)", code, StringComparison.Ordinal);
         Assert.Contains("HandleEditorInteractionException(\"editor.caret.line-transition.exception\"", code, StringComparison.Ordinal);
         Assert.Contains("AxiomSmartIdentifierService", code, StringComparison.Ordinal);
@@ -1012,7 +1012,7 @@ public sealed class EditorFeatureTests
         Assert.Contains("DebugExecutionSpanRenderer", code, StringComparison.Ordinal);
         Assert.Contains("StoppedRunExecutionSpanBrush", code, StringComparison.Ordinal);
         Assert.Contains("StoppedRunExecutionSpanBorderPen", code, StringComparison.Ordinal);
-        Assert.Contains("SourceLocation.Span", code, StringComparison.Ordinal);
+        Assert.Contains("sourceLocation.Span.Length > 0", code, StringComparison.Ordinal);
         Assert.Contains("NavigateToStoppedRunLine", code, StringComparison.Ordinal);
         Assert.Contains("nameof(MainWindowViewModel.StoppedRunLine)", code, StringComparison.Ordinal);
         Assert.Contains("StopDebuggingCommand", code, StringComparison.Ordinal);

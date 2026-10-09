@@ -100,6 +100,9 @@ public sealed partial class Interpreter
 
         if (array.Rank == 1)
         {
+            if (arguments.Count > 3)
+                _ = ResolveTransformDimension(expression, "ARRAYSLICE", array, arguments, dimensionArgumentIndex: 3);
+
             return EvaluateOneDimensionalArraySlice(expression, arrayType, array, start, count);
         }
 
@@ -110,7 +113,7 @@ public sealed partial class Interpreter
             return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, start, start - 1));
+                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension, start));
         }
 
         var end = (long)start + count - 1L;
@@ -180,6 +183,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYTOREVERSED", "array", 0, arguments[0]);
+        var explicitDimension = arguments.Count > 1
+            ? ResolveTransformDimension(expression, "ARRAYTOREVERSED", array, arguments, dimensionArgumentIndex: 1)
+            : (int?)null;
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
         if (array.Rank == 1)
@@ -191,7 +197,7 @@ public sealed partial class Interpreter
             return BuiltinArrayHelpers.CreateCompactArrayValue(arrayType, values);
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYTOREVERSED", array, arguments, dimensionArgumentIndex: 1);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYTOREVERSED", array, arguments, dimensionArgumentIndex: 1);
         return BuiltinArrayHelpers.CreateReversedArrayCopy(arrayType, array, dimension);
     }
 
@@ -200,6 +206,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYTOSORTED", "array", 0, arguments[0]);
+        var explicitDimension = arguments.Count > 1
+            ? ResolveTransformDimension(expression, "ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1)
+            : (int?)null;
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
         if (array.Length == 0)
@@ -209,7 +218,7 @@ public sealed partial class Interpreter
 
         if (array.Rank != 1)
         {
-            var dimension = ResolveTransformDimension(expression, "ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1);
+            var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1);
             var clone = BuiltinArrayHelpers.CloneArrayValue(arrayType, array).AsArray();
             SortArrayAlongDimension(clone, dimension);
             return RuntimeValue.FromArray(arrayType, clone);
@@ -249,6 +258,9 @@ public sealed partial class Interpreter
 
         if (array.Rank == 1)
         {
+            if (arguments.Count > 2)
+                _ = ResolveTransformDimension(expression, "ARRAYTAKE", array, arguments, dimensionArgumentIndex: 2);
+
             return EvaluateOneDimensionalArrayTake(arrayType, array, count);
         }
 
@@ -276,6 +288,9 @@ public sealed partial class Interpreter
 
         if (array.Rank == 1)
         {
+            if (arguments.Count > 2)
+                _ = ResolveTransformDimension(expression, "ARRAYSKIP", array, arguments, dimensionArgumentIndex: 2);
+
             return EvaluateOneDimensionalArraySkip(arrayType, array, count);
         }
 
@@ -297,7 +312,7 @@ public sealed partial class Interpreter
             return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                BuiltinArrayHelpers.CreateAdjustedBounds(array, dimension, upperBound + 1, upperBound));
+                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension, (long)upperBound + 1L));
         }
 
         return BuiltinArrayHelpers.CreateArrayWindowCopy(
@@ -475,10 +490,13 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYBINARYSEARCH", "array", 0, arguments[0]);
+        var explicitDimension = arguments.Count > 2
+            ? ResolveTransformDimension(expression, "ARRAYBINARYSEARCH", array, arguments, dimensionArgumentIndex: 2)
+            : (int?)null;
 
         if (array.Rank != 1)
         {
-            var dimension = ResolveTransformDimension(expression, "ARRAYBINARYSEARCH", array, arguments, dimensionArgumentIndex: 2);
+            var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYBINARYSEARCH", array, arguments, dimensionArgumentIndex: 2);
             return FindArrayBinarySearchCoordinates(array, arguments[1], dimension);
         }
 
@@ -502,6 +520,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYREVERSE", "array", 0, arguments[0]);
+        var explicitDimension = arguments.Count > 1
+            ? ResolveTransformDimension(expression, "ARRAYREVERSE", array, arguments, dimensionArgumentIndex: 1)
+            : (int?)null;
 
         if (array.Rank == 1)
         {
@@ -509,7 +530,7 @@ public sealed partial class Interpreter
             return RuntimeValue.Void;
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYREVERSE", array, arguments, dimensionArgumentIndex: 1);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYREVERSE", array, arguments, dimensionArgumentIndex: 1);
         BuiltinArrayHelpers.ReverseArrayAlongDimension(array, dimension);
         return RuntimeValue.Void;
     }
@@ -519,6 +540,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireAllocatedArrayArgument(expression, "ARRAYSORT", "array", 0, arguments[0]);
+        var explicitDimension = arguments.Count > 1
+            ? ResolveTransformDimension(expression, "ARRAYSORT", array, arguments, dimensionArgumentIndex: 1)
+            : (int?)null;
 
         if (array.Length <= 1)
         {
@@ -527,7 +551,7 @@ public sealed partial class Interpreter
 
         if (array.Rank != 1)
         {
-            var dimension = ResolveTransformDimension(expression, "ARRAYSORT", array, arguments, dimensionArgumentIndex: 1);
+            var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYSORT", array, arguments, dimensionArgumentIndex: 1);
             SortArrayAlongDimension(array, dimension);
             return RuntimeValue.Void;
         }
@@ -559,6 +583,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireResizableArrayArgument(expression, "ARRAYPUSH", arguments[0]);
+        var explicitDimension = arguments.Count > 2
+            ? ResolveTransformDimension(expression, "ARRAYPUSH", array, arguments, dimensionArgumentIndex: 2)
+            : (int?)null;
 
         if (array.Rank == 1)
         {
@@ -568,7 +595,7 @@ public sealed partial class Interpreter
             return RuntimeValue.Void;
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYPUSH", array, arguments, dimensionArgumentIndex: 2);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYPUSH", array, arguments, dimensionArgumentIndex: 2);
         var valueArray = RequireAllocatedArrayArgument(expression, "ARRAYPUSH", "value", 1, arguments[1]);
         EnsureCompatibleDynamicArrayValueShape(expression, "ARRAYPUSH", array, valueArray, dimension, valueArgumentIndex: 1);
 
@@ -593,6 +620,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireResizableArrayArgument(expression, "ARRAYPOP", arguments[0]);
+        var explicitDimension = arguments.Count > 1
+            ? ResolveTransformDimension(expression, "ARRAYPOP", array, arguments, dimensionArgumentIndex: 1)
+            : (int?)null;
 
         if (array.Rank == 1)
         {
@@ -618,7 +648,7 @@ public sealed partial class Interpreter
             return poppedValue;
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYPOP", array, arguments, dimensionArgumentIndex: 1);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYPOP", array, arguments, dimensionArgumentIndex: 1);
         var removalIndex = RequireArrayRemovalIndex(expression, "ARRAYPOP", array, array.GetUpperBound(dimension), dimension, argumentIndex: 0, emptyParameterName: "array");
         var resultType = (ArrayTypeSymbol)expression.Type;
         var resultBounds = BuiltinArrayHelpers.CreateReducedBounds(array, dimension);
@@ -637,15 +667,19 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireResizableArrayArgument(expression, "ARRAYINSERT", arguments[0]);
+        var explicitDimension = arguments.Count > 3
+            ? ResolveTransformDimension(expression, "ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3)
+            : (int?)null;
         var index = arguments[1].AsInteger();
 
         if (array.Rank == 1)
         {
             var insertionIndex = RequireArrayInsertionIndex(expression, "ARRAYINSERT", array, index, dimension: 1, argumentIndex: 1);
-            var newUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array, dimension: 1);
-            var previousUpperBound = array.UpperBound;
+            var isEmpty = array.Length == 0;
+            var newUpperBound = isEmpty ? 1 : GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array, dimension: 1);
+            var previousUpperBound = isEmpty ? 0 : array.UpperBound;
 
-            array.AllocatePreserving(array.LowerBound, newUpperBound);
+            array.AllocatePreserving(isEmpty ? 1 : array.LowerBound, newUpperBound);
 
             for (var currentIndex = previousUpperBound; currentIndex >= insertionIndex; currentIndex--)
             {
@@ -656,14 +690,20 @@ public sealed partial class Interpreter
             return RuntimeValue.Void;
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3);
         var valueArray = RequireAllocatedArrayArgument(expression, "ARRAYINSERT", "value", 2, arguments[2]);
         EnsureCompatibleDynamicArrayValueShape(expression, "ARRAYINSERT", array, valueArray, dimension, valueArgumentIndex: 2);
         var insertionDimensionIndex = RequireArrayInsertionIndex(expression, "ARRAYINSERT", array, index, dimension, argumentIndex: 1);
-        var previousDimensionUpperBound = array.GetUpperBound(dimension);
-        var expandedUpperBound = GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array, dimension);
+        var selectedDimensionIsEmpty = BuiltinArrayHelpers.GetDimensionLength(array, dimension) == 0;
+        var previousDimensionUpperBound = selectedDimensionIsEmpty ? 0 : array.GetUpperBound(dimension);
+        var expandedUpperBound = selectedDimensionIsEmpty ? 1 : GetExpandedArrayUpperBound(expression, "ARRAYINSERT", array, dimension);
         var nextLowerBounds = array.LowerBounds.ToArray();
         var nextUpperBounds = array.UpperBounds.ToArray();
+        if (selectedDimensionIsEmpty)
+        {
+            nextLowerBounds[dimension - 1] = 1;
+        }
+
         nextUpperBounds[dimension - 1] = expandedUpperBound;
         array.AllocatePreserving(nextLowerBounds, nextUpperBounds);
 
@@ -691,6 +731,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var array = RequireResizableArrayArgument(expression, "ARRAYREMOVE", arguments[0]);
+        var explicitDimension = arguments.Count > 2
+            ? ResolveTransformDimension(expression, "ARRAYREMOVE", array, arguments, dimensionArgumentIndex: 2)
+            : (int?)null;
         var index = arguments[1].AsInteger();
 
         if (array.Rank == 1)
@@ -713,7 +756,7 @@ public sealed partial class Interpreter
             return removedValue;
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYREMOVE", array, arguments, dimensionArgumentIndex: 2);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYREMOVE", array, arguments, dimensionArgumentIndex: 2);
         var multidimensionalRemovalIndex = RequireArrayRemovalIndex(expression, "ARRAYREMOVE", array, index, dimension, argumentIndex: 1, emptyParameterName: "index");
         var resultType = (ArrayTypeSymbol)expression.Type;
         var resultBounds = BuiltinArrayHelpers.CreateReducedBounds(array, dimension);
@@ -841,6 +884,9 @@ public sealed partial class Interpreter
         IReadOnlyList<RuntimeValue> arguments)
     {
         var left = RequireAllocatedArrayArgument(expression, "ARRAYCONCAT", "left", 0, arguments[0]);
+        var explicitDimension = arguments.Count > 2
+            ? ResolveTransformDimension(expression, "ARRAYCONCAT", left, arguments, dimensionArgumentIndex: 2)
+            : (int?)null;
         var right = RequireAllocatedArrayArgument(expression, "ARRAYCONCAT", "right", 1, arguments[1]);
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
@@ -862,7 +908,7 @@ public sealed partial class Interpreter
             return BuiltinArrayHelpers.CreateCompactArrayValue(arrayType, values);
         }
 
-        var dimension = ResolveTransformDimension(expression, "ARRAYCONCAT", left, arguments, dimensionArgumentIndex: 2);
+        var dimension = explicitDimension ?? ResolveTransformDimension(expression, "ARRAYCONCAT", left, arguments, dimensionArgumentIndex: 2);
         EnsureCompatibleConcatShapes(expression, left, right, dimension);
 
         if (BuiltinArrayHelpers.GetDimensionLength(left, dimension) == 0)
@@ -878,7 +924,20 @@ public sealed partial class Interpreter
         var resultLowerBounds = left.LowerBounds.ToArray();
         var resultUpperBounds = left.UpperBounds.ToArray();
         var selectedIndex = dimension - 1;
-        resultUpperBounds[selectedIndex] = checked(resultLowerBounds[selectedIndex] + BuiltinArrayHelpers.GetDimensionLength(left, dimension) + BuiltinArrayHelpers.GetDimensionLength(right, dimension) - 1);
+        var resultUpperBound = (long)resultLowerBounds[selectedIndex]
+            + BuiltinArrayHelpers.GetDimensionLength(left, dimension)
+            + BuiltinArrayHelpers.GetDimensionLength(right, dimension) - 1L;
+        if (resultUpperBound > int.MaxValue)
+        {
+            ReportBuiltInArgumentError(
+                "ARRAYCONCAT",
+                "right",
+                "задаёт верхнюю границу результата вне диапазона INTEGER.",
+                GetBuiltInArgumentLocation(expression, 1));
+            throw new RuntimeFailureException();
+        }
+
+        resultUpperBounds[selectedIndex] = (int)resultUpperBound;
         var leftLength = BuiltinArrayHelpers.GetDimensionLength(left, dimension);
         var leftLowerBound = left.GetLowerBound(dimension);
         var rightLowerBound = right.GetLowerBound(dimension);

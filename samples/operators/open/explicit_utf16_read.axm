@@ -1,0 +1,15 @@
+DIM folder AS STRING = MAKETEMPDIR("open_encoding_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+DIM f AS FILE
+' Создаём текст UTF-16LE с подписью.
+OPEN path FOR OUTPUT AS f USING "UTF-16LE"
+PRINT WRITELINE(f, "Привет 😀")
+CLOSE f
+' Читаем в той же кодировке; подпись не входит в позицию.
+OPEN path FOR INPUT AS f USING "UTF-16LE"
+PRINT "Начальная позиция: "; FILEPOS(f)
+PRINT READLINE(f)
+CLOSE f
+' Удаляем только файл и папку этого примера.
+PRINT DELETEFILE(path)
+PRINT DELETEDIR(folder)

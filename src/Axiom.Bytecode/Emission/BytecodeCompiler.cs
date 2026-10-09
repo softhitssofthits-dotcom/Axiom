@@ -1354,7 +1354,9 @@ public sealed class BytecodeCompiler
 
         return new BytecodeInstruction(
             Opcode.OpenFile,
-            [mode, RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+            instruction.Flags == 1
+                ? [mode, RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName), 1]
+                : [mode, RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
     }
 
     private BytecodeInstruction EmitPrintSeparator(LoweredInstruction instruction)
@@ -1572,7 +1574,11 @@ public sealed class BytecodeCompiler
 
     private int RegisterConstant(BytecodeConstantKind kind, object? value)
     {
-        var key = new ConstantKey(kind, value);
+        // Равенство DOUBLE объединяет +0 и -0, но знак наблюдаем через SETSIGN/ATN2.
+        var keyValue = kind == BytecodeConstantKind.Double && value is double number
+            ? (object)BitConverter.DoubleToInt64Bits(number)
+            : value;
+        var key = new ConstantKey(kind, keyValue);
         if (_constantIndices.TryGetValue(key, out var index))
         {
             return index;

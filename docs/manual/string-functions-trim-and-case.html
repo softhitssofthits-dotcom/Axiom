@@ -19,11 +19,21 @@
 <p>Функции этой страницы возвращают новую строку на основе исходной: удаляют лишние символы по краям, переводят буквы в другой регистр или меняют порядок символов на обратный. Исходное значение при этом не изменяется само по себе.</p>
 </section>
 
+<section class="article-section" id="boundaries">
+<h2>Общие правила и границы</h2>
+<p>Ни одна из функций не требует экранного или файлового режима. Все аргументы text и chars должны быть строками; результаты имеют тип STRING. Неверный тип отклоняется при проверке типов до исполнения. Пустая исходная строка даёт пустую строку во всех функциях этой страницы.</p>
+<p>TRIM, LTRIM и RTRIM без chars удаляют пробельные символы Unicode, включая неразрывный пробел U+00A0 и U+2003. Символ U+200B не удаляется. Явный chars является набором отдельных единиц UTF-16, а не искомой подстрокой: TRIM("абЯба", "аб") возвращает "Я". Пустой набор ничего не удаляет. Если в chars включён эмодзи, его две единицы участвуют в наборе отдельно; обрезка может оставить изолированный суррогат. Для обработки целых фрагментов используйте строковый поиск и срезы с проверенными границами.</p>
+<p>LCASE и UCASE используют правила регистра, не зависящие от выбранной культуры компьютера. Кириллица преобразуется непосредственно: UCASE("пример") возвращает "ПРИМЕР". Самодельная функция перекодировки русских букв не требуется. Изолированные единицы UTF-16 сохраняются. Смена регистра не выполняет нормализацию Unicode.</p>
+</section>
+
 <section class="article-section" id="trim">
 <h2>TRIM</h2>
-<p>Функция <code>TRIM</code> убирает символы с обоих краёв строки.</p>
+<p>Встроенная функция <code>TRIM</code> убирает символы с обоих краёв строки.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = TRIM(text[, chars])</code></pre>
+<p>Удаление пробельных символов:</p>
+<pre><code class="language-basic">result = TRIM(text)</code></pre>
+<p>Удаление указанного набора:</p>
+<pre><code class="language-basic">result = TRIM(text, chars)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются по краям.</p>
 <h3>Удаляемые символы</h3>
@@ -40,9 +50,12 @@ PRINT "[" + TRIM("...abc...", ".") + "]"</code></pre>
 
 <section class="article-section" id="ltrim">
 <h2>LTRIM</h2>
-<p>Функция <code>LTRIM</code> убирает символы только слева.</p>
+<p>Встроенная функция <code>LTRIM</code> убирает символы только слева.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = LTRIM(text[, chars])</code></pre>
+<p>Удаление пробельных символов:</p>
+<pre><code class="language-basic">result = LTRIM(text)</code></pre>
+<p>Удаление указанного набора:</p>
+<pre><code class="language-basic">result = LTRIM(text, chars)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются слева.</p>
 <h3>Удаляемые символы</h3>
@@ -57,9 +70,12 @@ PRINT "[" + LTRIM("...abc", ".") + "]"</code></pre>
 
 <section class="article-section" id="rtrim">
 <h2>RTRIM</h2>
-<p>Функция <code>RTRIM</code> убирает символы только справа.</p>
+<p>Встроенная функция <code>RTRIM</code> убирает символы только справа.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = RTRIM(text[, chars])</code></pre>
+<p>Удаление пробельных символов:</p>
+<pre><code class="language-basic">result = RTRIM(text)</code></pre>
+<p>Удаление указанного набора:</p>
+<pre><code class="language-basic">result = RTRIM(text, chars)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются справа.</p>
 <h3>Удаляемые символы</h3>
@@ -76,8 +92,8 @@ PRINT "[" + RTRIM("abc...", ".") + "]"</code></pre>
 <h2>LCASE и UCASE</h2>
 <p>Функции <code>LCASE</code> и <code>UCASE</code> возвращают строку в нижнем или верхнем регистре.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">lowerText = LCASE(text)
-upperText = UCASE(text)</code></pre>
+<pre><code class="language-basic">lowerText = LCASE(text)</code></pre>
+<pre><code class="language-basic">upperText = UCASE(text)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку.</p>
 <h3>Возвращаемое значение</h3>
@@ -93,6 +109,7 @@ PRINT UCASE("пример")</code></pre>
 <section class="article-section" id="reverse">
 <h2>REVERSE</h2>
 <p>Функция <code>REVERSE</code> возвращает строку в обратном порядке символов.</p>
+<p>Корректные пары UTF-16 остаются целыми: <code>REVERSE("А😀Б")</code> возвращает <code>"Б😀А"</code>. Изолированные единицы UTF-16, полученные, например, функцией <code>LEFT</code>, сохраняются без подмены символом <code>U+FFFD</code>. Комбинируемые знаки разворачиваются отдельно от букв; функция не объединяет графемы. Пустая строка возвращается без изменений.</p>
 <h3>Синтаксис</h3>
 <pre><code class="language-basic">result = REVERSE(text)</code></pre>
 <h3>Аргументы</h3>

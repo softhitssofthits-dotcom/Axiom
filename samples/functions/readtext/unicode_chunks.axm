@@ -1,0 +1,14 @@
+' READTEXT считает символы Unicode: эмодзи читается целиком.
+DIM path AS STRING = MAKETEMPFILE("readtext_unicode_")
+DIM f AS FILE
+PRINT WRITEFILE(path, "😀А")
+OPEN path FOR INPUT AS f
+' Один символ Unicode занимает четыре байта в UTF-8.
+PRINT "Эмодзи:", READTEXT(f, 1)
+PRINT "Позиция после эмодзи должна быть 4:", FILEPOS(f)
+' Следующий вызов читает букву, а не часть эмодзи.
+PRINT "Следующая буква:", READTEXT(f, 1)
+PRINT "Файл прочитан:", EOF(f)
+CLOSE f
+' Удаляем созданный этим примером временный файл.
+PRINT "Временный файл удалён:", DELETEFILE(path)

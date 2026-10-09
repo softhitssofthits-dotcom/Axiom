@@ -750,11 +750,6 @@ public sealed partial class Binder
 
         if (arityMatches.Length == 0)
         {
-            if (TryBindSpecialArrayInfoInvocation(target, expression, location, callableName, out var specialInvocation))
-            {
-                return specialInvocation;
-            }
-
             ReportWrongArgumentCount(
                 callableName,
                 descriptors.Select(static descriptor => descriptor.Parameters.Count).ToArray(),
@@ -1610,40 +1605,15 @@ public sealed partial class Binder
         };
     }
 
-    private bool TryBindSpecialArrayInfoInvocation(
-        BoundFunctionExpression target,
-        CallExpressionSyntax expression,
-        TextLocation location,
-        string callableName,
-        out BoundExpression result)
-    {
-        result = null!;
-
-        if (target.Function.BuiltinId is not (BuiltinFunctionId.LBound or BuiltinFunctionId.UBound)
-            || expression.Arguments.Count != 2)
-        {
-            return false;
-        }
-
-        var descriptor = new BuiltinFunctionDescriptor(
-            target.Function.BuiltinId.Value,
-            callableName,
-            [
-                new BuiltinParameterDescriptor("array", ArrayTypeSymbol.Create(TypeSymbol.Integer)),
-                new BuiltinParameterDescriptor("dimension", TypeSymbol.Integer)
-            ],
-            TypeSymbol.Integer,
-            bindingKind: BuiltinBindingKind.Array);
-
-        result = BindArrayBuiltInCall(expression, descriptor, location);
-        return true;
-    }
-
     private static bool RequiresOneDimensionalArray(BuiltinFunctionId id)
     {
         return id is not (BuiltinFunctionId.LBound
             or BuiltinFunctionId.UBound
             or BuiltinFunctionId.ArrayLength
+            or BuiltinFunctionId.ArraySum
+            or BuiltinFunctionId.ArrayMin
+            or BuiltinFunctionId.ArrayMax
+            or BuiltinFunctionId.ArrayAverage
             or BuiltinFunctionId.ArrayIsAllocated
             or BuiltinFunctionId.ArrayRank
             or BuiltinFunctionId.ArrayBounds

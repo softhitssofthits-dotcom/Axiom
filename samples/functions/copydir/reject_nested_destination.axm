@@ -1,0 +1,14 @@
+' COPYDIR отклоняет копирование в собственную вложенную папку до изменения файлов.
+DIM sourceDir AS STRING = MAKETEMPDIR("axiom_copy_guard_")
+DIM targetDir AS STRING = COMBINEPATH(sourceDir, "copy")
+DIM sourceFile AS STRING = COMBINEPATH(sourceDir, "notes.txt")
+PRINT WRITEFILE(sourceFile, "Сохранить исходный текст")
+TRY
+    PRINT COPYDIR(sourceDir, targetDir, TRUE)
+CATCH err
+    PRINT "Ожидается MB3007: ", err.Code
+END TRY
+' Папка назначения не должна появиться, исходный файл должен сохраниться.
+PRINT "Вложенная копия не создана: ", NOT DIREXISTS(targetDir)
+PRINT "Исходный текст сохранён: ", READFILE(sourceFile) = "Сохранить исходный текст"
+PRINT DELETEDIRRECURSIVE(sourceDir)

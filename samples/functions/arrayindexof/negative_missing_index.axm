@@ -1,0 +1,14 @@
+REM Массив с отрицательными индексами уже отсортирован.
+DIM values(-4 TO -2) AS INTEGER
+values(-4) = 2
+values(-3) = 2
+values(-2) = 4
+REM Признак отсутствия — нижняя граница минус один, то есть -5.
+PRINT "Индексы отсутствующего значения, ожидается -5:"
+PRINT ARRAYINDEXOF(values, 99)
+PRINT ARRAYLASTINDEXOF(values, 99)
+PRINT ARRAYBINARYSEARCH(values, 99)
+REM При повторении возвращаются настоящие индексы массива.
+PRINT "Первое и последнее совпадения, ожидается -4 и -3:"
+PRINT ARRAYINDEXOF(values, 2)
+PRINT ARRAYLASTINDEXOF(values, 2)

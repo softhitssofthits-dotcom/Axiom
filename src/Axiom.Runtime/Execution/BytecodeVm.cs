@@ -309,6 +309,10 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.ReadAllLines => false,
             BuiltinFunctionId.WriteFile => false,
             BuiltinFunctionId.AppendFile => false,
+            BuiltinFunctionId.ReadFileEncoding => false,
+            BuiltinFunctionId.ReadAllLinesEncoding => false,
+            BuiltinFunctionId.WriteFileEncoding => false,
+            BuiltinFunctionId.AppendFileEncoding => false,
             BuiltinFunctionId.FileSize => false,
             BuiltinFunctionId.FileDate => false,
             BuiltinFunctionId.FileCreateDate => false,
@@ -484,7 +488,7 @@ public sealed partial class BytecodeVm
         return argumentSlots;
     }
 
-    private void ExecuteCurrentInstruction()
+    private void ExecuteCurrentInstruction(int runtimeFailureBoundaryDepth = 0)
     {
         var frame = CurrentFrame;
         var instructions = frame.Routine.InstructionArray;
@@ -512,7 +516,7 @@ public sealed partial class BytecodeVm
                 ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
                 throw new RuntimeFailureException();
             }
-            catch (RuntimeFailureException) when (TryHandleRuntimeFailure())
+            catch (RuntimeFailureException) when (TryHandleRuntimeFailure(runtimeFailureBoundaryDepth))
             {
             }
             return;
@@ -548,7 +552,7 @@ public sealed partial class BytecodeVm
             ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
             throw new RuntimeFailureException();
         }
-        catch (RuntimeFailureException) when (TryHandleRuntimeFailure())
+        catch (RuntimeFailureException) when (TryHandleRuntimeFailure(runtimeFailureBoundaryDepth))
         {
         }
     }
@@ -1161,9 +1165,9 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
-    private bool TryHandleRuntimeFailure()
+    private bool TryHandleRuntimeFailure(int minimumCallStackDepth)
     {
-        while (_callStack.Count > 0)
+        while (_callStack.Count > minimumCallStackDepth)
         {
             var frame = CurrentFrame;
             while (frame.PeekErrorHandler() is { } handler)
@@ -3265,7 +3269,7 @@ public sealed partial class BytecodeVm
         int instructionIndex,
         out RuntimeValue result)
     {
-        if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, out result))
+        if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out result))
         {
             return true;
         }
@@ -3281,6 +3285,7 @@ public sealed partial class BytecodeVm
     private bool TryExecuteFastGraphicsBuiltin(
         BytecodeCallFrame frame,
         BuiltinExecutionInfo executionInfo,
+        int instructionIndex,
         out RuntimeValue result)
     {
         result = RuntimeValue.Void;
@@ -3588,14 +3593,8 @@ public sealed partial class BytecodeVm
                     return false;
                 }
 
-                var tilemap = _host.LoadTilemap(path);
-                if (tilemap is null)
-                {
-                    return false;
-                }
-
+                result = EvaluateLoadTilemapBuiltin(path, ResolveLocation(frame.Routine.Id, instructionIndex));
                 stack.PopUnchecked();
-                result = RuntimeValue.FromTilemap(tilemap);
                 return true;
             }
 
@@ -3845,7 +3844,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.ResourceBaseDirectory);
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.CurrentDirectory);
                     if (!Directory.Exists(fullPath))
                     {
                         ReportBuiltInArgumentError("DIRSIZE", "path", "указывает на папку, которая не существует.", ResolveLocation(frame.Routine.Id, instructionIndex));
@@ -3888,7 +3887,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.ResourceBaseDirectory), GetStringUnchecked(textValue), BuiltinFileSystemHelpers.FileSystemTextEncoding);
+                    File.WriteAllText(BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.CurrentDirectory), GetStringUnchecked(textValue), BuiltinFileSystemHelpers.FileSystemTextEncoding);
                     stack.PopUnchecked();
                     stack.PopUnchecked();
                     result = RuntimeValue.FromBoolean(true);
@@ -3916,7 +3915,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.ResourceBaseDirectory);
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.CurrentDirectory);
                     if (!File.Exists(fullPath))
                     {
                         stack.PopUnchecked();
@@ -3951,7 +3950,7 @@ public sealed partial class BytecodeVm
 
                 try
                 {
-                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.ResourceBaseDirectory);
+                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.CurrentDirectory);
                     try
                     {
                         Directory.Delete(fullPath, recursive: true);
@@ -3981,51 +3980,18 @@ public sealed partial class BytecodeVm
             }
 
             case BuiltinFunctionId.CurrentDir:
-            {
-                try
-                {
-                    result = RuntimeValue.FromString(_host.ResourceBaseDirectory ?? Environment.CurrentDirectory);
-                    return true;
-                }
-                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
-                {
-                    ReportFileSystemFailure("CURRENTDIR", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
-                    throw new RuntimeFailureException();
-                }
-            }
+                result = EvaluateCurrentDirBuiltin(ResolveLocation(frame.Routine.Id, instructionIndex));
+                return true;
 
             case BuiltinFunctionId.ChangeDir:
             {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
+                if (stack.Count < 1) return false;
                 var pathValue = stack.PeekUnchecked();
-                if (pathValue.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                try
-                {
-                    var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(GetStringUnchecked(pathValue), _host.ResourceBaseDirectory);
-                    Directory.SetCurrentDirectory(fullPath);
-                    stack.PopUnchecked();
-                    result = RuntimeValue.FromBoolean(true);
-                    return true;
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    return false;
-                }
-                catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
-                {
-                    ReportFileSystemFailure("CHANGEDIR", "path", ex, ResolveLocation(frame.Routine.Id, instructionIndex));
-                    throw new RuntimeFailureException();
-                }
+                if (pathValue.Type != TypeSymbol.String) return false;
+                result = EvaluateChangeDirBuiltin(GetStringUnchecked(pathValue), ResolveLocation(frame.Routine.Id, instructionIndex));
+                stack.PopUnchecked();
+                return true;
             }
-
             case BuiltinFunctionId.CopyFile:
             case BuiltinFunctionId.MoveFile:
             case BuiltinFunctionId.CopyDir:
@@ -4441,8 +4407,8 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.CurrentDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.CurrentDirectory);
             if (!File.Exists(sourcePath))
             {
                 return false;
@@ -4488,7 +4454,7 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.CurrentDirectory);
             var exists = isDirectory ? Directory.Exists(sourcePath) : File.Exists(sourcePath);
             if (!exists
                 || string.IsNullOrWhiteSpace(newName)
@@ -4541,8 +4507,8 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.ResourceBaseDirectory);
-            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.ResourceBaseDirectory);
+            var sourcePath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(source, _host.CurrentDirectory);
+            var destinationPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(destination, _host.CurrentDirectory);
             if (!Directory.Exists(sourcePath))
             {
                 return false;
@@ -4693,7 +4659,7 @@ public sealed partial class BytecodeVm
 
         while (_callStack.Count > callStackDepth)
         {
-            ExecuteCurrentInstruction();
+            ExecuteCurrentInstruction(callStackDepth);
         }
 
         if (routine.ResultType == TypeSymbol.Void)

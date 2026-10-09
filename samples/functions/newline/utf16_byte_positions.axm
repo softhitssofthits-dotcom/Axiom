@@ -1,0 +1,16 @@
+' В UTF-16 перевод строки LF занимает два байта; BOM не входит в FILEPOS.
+DIM path AS STRING = MAKETEMPFILE("newline_utf16_")
+DIM f AS FILE
+OPEN path FOR OUTPUT AS f USING "UTF-16LE"
+' Пустой текст после BOM имеет позицию и длину 0.
+PRINT "Начальная позиция:", FILEPOS(f)
+PRINT NEWLINE(f)
+PRINT "После NEWLINE должно быть 2:", FILEPOS(f)
+' WRITELINE с пустой строкой записывает ещё один LF.
+PRINT WRITELINE(f, "")
+PRINT "После WRITELINE должно быть 4:", FILEPOS(f)
+PRINT "Длина текста должна быть 4:", FILELENGTH(f)
+CLOSE f
+' Читаем в той же кодировке: получились два символа LF.
+PRINT "Два перевода строки:", READFILE(path, "UTF-16LE") = CHRW(10) + CHRW(10)
+PRINT "Временный файл удалён:", DELETEFILE(path)

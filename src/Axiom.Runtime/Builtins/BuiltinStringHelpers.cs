@@ -34,9 +34,21 @@ internal static class BuiltinStringHelpers
 
     public static RuntimeValue EvaluateReverse(string text)
     {
-        var runes = text.EnumerateRunes().ToArray();
-        runes.AsSpan().Reverse();
-        return RuntimeValue.FromString(string.Concat(runes.Select(r => r.ToString())));
+        var result = new StringBuilder(text.Length);
+        for (var index = text.Length - 1; index >= 0; index--)
+        {
+            if (char.IsLowSurrogate(text[index]) && index > 0 && char.IsHighSurrogate(text[index - 1]))
+            {
+                result.Append(text[index - 1]).Append(text[index]);
+                index--;
+            }
+            else
+            {
+                // Изолированные единицы UTF-16 сохраняются без подмены U+FFFD.
+                result.Append(text[index]);
+            }
+        }
+        return RuntimeValue.FromString(result.ToString());
     }
 
     public static RuntimeValue EvaluateInsert(string text, int start, string insert)
@@ -150,6 +162,10 @@ internal static class BuiltinStringHelpers
 
     public static string RightTrimWhitespace(string text) => text.TrimEnd();
 
+    public static bool IsNumeric(string text) =>
+        text.IndexOf('\0') < 0 && double.TryParse(text, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var value) && double.IsFinite(value);
+
     public static double ParseVal(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return 0d;
@@ -157,7 +173,7 @@ internal static class BuiltinStringHelpers
         var trimmed = text.Trim();
 
         if (double.TryParse(trimmed, System.Globalization.CultureInfo.InvariantCulture, out var value))
-            return value;
+            return double.IsFinite(value) ? value : 0d;
 
         var i = 0;
         var hasDigits = false;
@@ -197,6 +213,6 @@ internal static class BuiltinStringHelpers
             trimmed = trimmed[..i];
 
         return double.TryParse(trimmed, System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed : 0d;
+            System.Globalization.CultureInfo.InvariantCulture, out var parsed) && double.IsFinite(parsed) ? parsed : 0d;
     }
 }

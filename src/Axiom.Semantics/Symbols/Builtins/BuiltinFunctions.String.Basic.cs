@@ -10,6 +10,10 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.Left, "LEFT", TypeSymbol.String, [Parameter("text", TypeSymbol.String), Parameter("count", TypeSymbol.Integer)]),
             CreateDefault(BuiltinFunctionId.Right, "RIGHT", TypeSymbol.String, [Parameter("text", TypeSymbol.String), Parameter("count", TypeSymbol.Integer)]),
             CreateDefault(BuiltinFunctionId.Mid, "MID", TypeSymbol.String, [Parameter("text", TypeSymbol.String), Parameter("start", TypeSymbol.Integer), Parameter("count", TypeSymbol.Integer)]),
+            CreateDefault(BuiltinFunctionId.LenUnits, "LEN", TypeSymbol.Integer, [Parameter("text", TypeSymbol.String), Parameter("unit", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.LeftUnits, "LEFT", TypeSymbol.String, [Parameter("text", TypeSymbol.String), Parameter("count", TypeSymbol.Integer), Parameter("unit", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.RightUnits, "RIGHT", TypeSymbol.String, [Parameter("text", TypeSymbol.String), Parameter("count", TypeSymbol.Integer), Parameter("unit", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.MidUnits, "MID", TypeSymbol.String, [Parameter("text", TypeSymbol.String), Parameter("start", TypeSymbol.Integer), Parameter("count", TypeSymbol.Integer), Parameter("unit", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.LCase, "LCASE", TypeSymbol.String, [Parameter("text", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.UCase, "UCASE", TypeSymbol.String, [Parameter("text", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.Reverse, "REVERSE", TypeSymbol.String, [Parameter("text", TypeSymbol.String)])

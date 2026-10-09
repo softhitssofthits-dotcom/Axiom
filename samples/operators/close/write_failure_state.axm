@@ -1,0 +1,27 @@
+' Без внешнего отказа оба файла закрываются и сохраняют записанный текст.
+' Для проверки отказа можно заблокировать первый файл во время паузы.
+DIM first AS STRING = MAKETEMPFILE("close_first_")
+DIM second AS STRING = MAKETEMPFILE("close_second_")
+DIM a AS FILE
+DIM b AS FILE
+OPEN first FOR OUTPUT AS a
+OPEN second FOR OUTPUT AS b
+PRINT WRITE(a, "Первый файл")
+PRINT WRITE(b, "Второй файл")
+PRINT "Путь первого файла:", first
+' Пауза позволяет рассмотреть путь и состояние перед закрытием.
+PRINT "Закрытие через три секунды."
+SLEEP 3000
+TRY
+    CLOSE a
+CATCH err
+    PRINT "Ошибка завершения записи:", err.Code
+END TRY
+' Даже при ошибке CLOSE первый ресурс уже закрыт.
+PRINT "Первый файл закрыт:", NOT ISOPEN(a)
+CLOSE b
+PRINT "Второй файл закрыт:", NOT ISOPEN(b)
+PRINT "Текст второго файла сохранён:", READFILE(second) = "Второй файл"
+' Удаляем только два собственных временных файла.
+PRINT "Первый временный файл удалён:", DELETEFILE(first)
+PRINT "Второй временный файл удалён:", DELETEFILE(second)

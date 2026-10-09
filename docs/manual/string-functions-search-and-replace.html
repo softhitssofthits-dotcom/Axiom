@@ -80,12 +80,25 @@ PRINT REPLACEMANY("abc ab", oldItems, newItems)</code></pre>
 <h2>INSTR и INSTRREV</h2>
 <p>Функции <code>INSTR</code> и <code>INSTRREV</code> возвращают позицию найденного фрагмента, считая с единицы.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">position = INSTR([start, ]text, fragment)
-position = INSTRREV([start, ]text, fragment)</code></pre>
+<p>Поиск INSTR от начала строки:</p>
+<pre><code class="language-basic">position = INSTR(text, fragment)</code></pre>
+<p>Поиск INSTR от указанной позиции:</p>
+<pre><code class="language-basic">position = INSTR(start, text, fragment)</code></pre>
+<p>Поиск INSTRREV от конца строки:</p>
+<pre><code class="language-basic">position = INSTRREV(text, fragment)</code></pre>
+<p>Поиск INSTRREV в части строки до указанной позиции включительно:</p>
+<pre><code class="language-basic">position = INSTRREV(start, text, fragment)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент. Необязательный <code>start</code> задаёт начальную позицию поиска.</p>
 <h3>Начальная позиция и отсутствие совпадения</h3>
 <p>Если аргумент <code>start</code> не указан, поиск начинается с естественного начала или конца строки. Если совпадение не найдено, результат равен <code>0</code>.</p>
+<p>Позиции INSTR и INSTRREV считаются с единицы в единицах UTF-16. Эмодзи вне основной плоскости занимает две позиции: в строке <code>А😀Б</code> буква Б находится на позиции 4. Поиск сравнивает точные единицы UTF-16, учитывает регистр и не нормализует Unicode. Поэтому <code>é</code> и <code>e</code> с отдельным знаком ударения различаются.</p>
+<p>Аргумент <code>start</code> должен быть целым числом не меньше 1; иначе возникает <code>MB3007</code>. Для INSTR позиция правее <code>LEN(text) + 1</code> даёт 0. Для INSTRREV слишком большая позиция ограничивается концом строки; найденный фрагмент должен целиком помещаться до этой позиции.</p>
+<p>Пустой <code>fragment</code> имеет отдельный договор: INSTR возвращает допустимую начальную позицию, включая позицию сразу после строки; INSTRREV с явным start возвращает меньшее из <code>start</code> и <code>LEN(text)</code>, увеличенное на 1. Без start вызов <code>INSTRREV("", "")</code> возвращает 0, а <code>INSTRREV(1, "", "")</code> — 1. Эти правила Axiom не следует заменять правилами исторического BASIC.</p>
+<pre><code class="language-basic">PRINT INSTR("А😀Б", "Б")       ' 4
+PRINT INSTRREV(3, "А😀Б", "😀") ' 2
+PRINT INSTR(4, "abc", "")      ' 4</code></pre>
+<p><a href="../../samples/functions/instr/utf16_positions.axm">Позиции Unicode и извлечение найденного фрагмента</a></p>
 <h3>Пример поиска позиции</h3>
 <pre><code class="language-basic">PRINT INSTR("banana", "na")
 PRINT INSTRREV("banana", "na")</code></pre>
@@ -101,6 +114,7 @@ PRINT INSTRREV("banana", "na")</code></pre>
 <pre><code class="language-basic">count = SUBSTRCOUNT(text, fragment)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент.</p>
+<p>Пустой fragment вызывает <code>MB3007</code>, даже если исходная строка пустая. Пустая исходная строка с непустым fragment даёт 0. Подсчёт использует точное сравнение UTF-16 и не учитывает перекрывающиеся вхождения: <code>SUBSTRCOUNT("aaa", "aa")</code> возвращает 1.</p>
 <h3>Пример подсчёта вхождений</h3>
 <pre><code class="language-basic">PRINT SUBSTRCOUNT("banana", "na")</code></pre>
 <p>Результат:</p>

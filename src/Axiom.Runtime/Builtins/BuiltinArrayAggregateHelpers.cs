@@ -1,3 +1,4 @@
+using System.Numerics;
 using Axiom.Core;
 using Axiom.Semantics;
 
@@ -21,49 +22,57 @@ internal static class BuiltinArrayAggregateHelpers
         var first = FirstValue(array, "ARRAYSUM", location, reportArgumentError);
         RequireNumeric("ARRAYSUM", first, location, reportArgumentError);
 
-        switch (first.Type)
+        try
         {
-            case var t when t == TypeSymbol.Integer:
+            switch (first.Type)
             {
-                var acc = first.AsInteger();
-                ForEachAfterFirst(array, v =>
+                case var t when t == TypeSymbol.Integer:
                 {
-                    RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
-                    acc = checked(acc + v.AsInteger());
-                });
-                return RuntimeValue.FromInteger(acc);
-            }
-            case var t when t == TypeSymbol.Long:
-            {
-                var acc = first.AsLong();
-                ForEachAfterFirst(array, v =>
+                    var acc = first.AsInteger();
+                    ForEachAfterFirst(array, v =>
+                    {
+                        RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
+                        acc = checked(acc + v.AsInteger());
+                    });
+                    return RuntimeValue.FromInteger(acc);
+                }
+                case var t when t == TypeSymbol.Long:
                 {
-                    RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
-                    acc = checked(acc + v.AsLong());
-                });
-                return RuntimeValue.FromLong(acc);
-            }
-            case var t when t == TypeSymbol.Decimal:
-            {
-                var acc = first.AsDecimal();
-                ForEachAfterFirst(array, v =>
+                    var acc = first.AsLong();
+                    ForEachAfterFirst(array, v =>
+                    {
+                        RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
+                        acc = checked(acc + v.AsLong());
+                    });
+                    return RuntimeValue.FromLong(acc);
+                }
+                case var t when t == TypeSymbol.Decimal:
                 {
-                    RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
-                    acc += v.AsDecimal();
-                });
-                return RuntimeValue.FromDecimal(acc);
-            }
-            default:
-            {
-                var acc = first.AsDouble();
-                ForEachAfterFirst(array, v =>
+                    var acc = first.AsDecimal();
+                    ForEachAfterFirst(array, v =>
+                    {
+                        RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
+                        acc += v.AsDecimal();
+                    });
+                    return RuntimeValue.FromDecimal(acc);
+                }
+                default:
                 {
-                    RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
-                    acc += v.AsDouble();
-                });
-                RequireFinite("ARRAYSUM", acc, location, reportResultError);
-                return RuntimeValue.FromDouble(acc);
+                    var acc = first.AsDouble();
+                    ForEachAfterFirst(array, v =>
+                    {
+                        RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
+                        acc += v.AsDouble();
+                    });
+                    RequireFinite("ARRAYSUM", acc, location, reportResultError);
+                    return RuntimeValue.FromDouble(acc);
+                }
             }
+        }
+        catch (OverflowException)
+        {
+            reportResultError($"Результат функции ARRAYSUM выходит за диапазон типа {first.Type.Name}.", location);
+            throw new RuntimeFailureException();
         }
     }
 
@@ -74,23 +83,84 @@ internal static class BuiltinArrayAggregateHelpers
         Action<string, TextLocation> reportResultError)
     {
         var count = 0L;
-        var sum = 0d;
+        Int128 lowestUnits = 0;
+        Int128[]? exponentSums = null;
+        Dictionary<int, Int128>? smallExponentSums = null;
+        var useSmallGroups = array.Length < 128;
+        var firstShift = 2046;
+        var lastShift = 0;
         ForEach(array, v =>
         {
             RequireNumeric("ARRAYAVERAGE", v, location, reportArgumentError);
-            sum += v.AsDouble();
+            var value = v.AsDouble();
+            RequireFinite("ARRAYAVERAGE", value, location, reportResultError);
+            // Каждый конечный DOUBLE точно представим целым числом единиц 2^-1074.
+            var bits = BitConverter.DoubleToUInt64Bits(value);
+            var exponent = (int)((bits >> 52) & 0x7ff);
+            var significand = bits & 0x000fffffffffffffUL;
+            if (exponent != 0)
+                significand |= 1UL << 52;
+            if (significand != 0)
+            {
+                var signedMantissa = (bits >> 63) == 0 ? (Int128)significand : -(Int128)significand;
+                var binaryShift = Math.Max(0, exponent - 1);
+                // Мантисса меньше 2^53, число элементов не больше LONG.MaxValue:
+                // модуль суммы группы меньше 2^116 и точно помещается в Int128.
+                if (binaryShift == 0)
+                    lowestUnits += signedMantissa;
+                else if (useSmallGroups)
+                {
+                    smallExponentSums ??= new Dictionary<int, Int128>();
+                    smallExponentSums.TryGetValue(binaryShift, out var previous);
+                    smallExponentSums[binaryShift] = previous + signedMantissa;
+                }
+                else
+                {
+                    exponentSums ??= new Int128[2046];
+                    exponentSums[binaryShift] += signedMantissa;
+                    firstShift = Math.Min(firstShift, binaryShift);
+                    lastShift = Math.Max(lastShift, binaryShift);
+                }
+            }
             count++;
         });
-
         if (count == 0)
         {
-            // Пустой массив уже отклонён RequireAllocatedArrayArgument движка,
-            // но страховка нужна: деление на ноль здесь недопустимо.
             reportArgumentError("не может быть пустым выделенным массивом.", location);
             throw new RuntimeFailureException();
         }
-
-        var result = sum / count;
+        var exactSum = (BigInteger)lowestUnits;
+        if (smallExponentSums is not null)
+        {
+            foreach (var group in smallExponentSums)
+            {
+                if (group.Value != 0)
+                    exactSum += (BigInteger)group.Value << group.Key;
+            }
+        }
+        if (exponentSums is not null)
+        {
+            for (var binaryShift = firstShift; binaryShift <= lastShift; binaryShift++)
+            {
+                if (exponentSums[binaryShift] != 0)
+                    exactSum += (BigInteger)exponentSums[binaryShift] << binaryShift;
+            }
+        }
+        var magnitude = BigInteger.Abs(exactSum);
+        var divisor = new BigInteger(count);
+        // Выбираем шаг DOUBLE и округляем частное один раз, к ближайшему чётному.
+        var power = (int)(magnitude.GetBitLength() - divisor.GetBitLength());
+        if (power >= 0 && magnitude < (divisor << power))
+            power--;
+        var shift = Math.Max(0, power - 52);
+        var denominator = divisor << shift;
+        var rounded = BigInteger.DivRem(magnitude, denominator, out var remainder);
+        var halfway = (remainder << 1).CompareTo(denominator);
+        if (halfway > 0 || (halfway == 0 && !rounded.IsEven))
+            rounded++;
+        var result = Math.ScaleB((double)rounded, shift - 1074);
+        if (exactSum.Sign < 0)
+            result = -result;
         RequireFinite("ARRAYAVERAGE", result, location, reportResultError);
         return RuntimeValue.FromDouble(result);
     }
@@ -116,6 +186,10 @@ internal static class BuiltinArrayAggregateHelpers
     {
         var best = FirstValue(array, functionName, location, reportArgumentError);
         var strings = best.Type == TypeSymbol.String;
+        if (!strings)
+        {
+            RequireNumeric(functionName, best, location, reportArgumentError);
+        }
 
         ForEachAfterFirst(array, v =>
         {

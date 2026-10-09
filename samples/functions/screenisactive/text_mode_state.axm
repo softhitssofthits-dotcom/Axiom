@@ -1,0 +1,4 @@
+' Ожидается FALSE. Пример запускается в IDE.
+' Текстовый режим не открывает графическое окно.
+PRINT "Результат SCREENISACTIVE:"
+PRINT SCREENISACTIVE()

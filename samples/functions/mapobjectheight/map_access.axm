@@ -1,0 +1,7 @@
+' Ожидаемый результат: 16. Пример запускается в IDE.
+DIM level AS TILEMAP
+' Загружаем карту с клетками, свойствами и двумя объектами.
+level = LOADTILEMAP("../loadtilemap/access_map.tmj")
+' Читаем одно значение без графического холста.
+PRINT "Результат MAPOBJECTHEIGHT:"
+PRINT MAPOBJECTHEIGHT(level, 3, 1)

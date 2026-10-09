@@ -1,0 +1,19 @@
+' Начальные значения DATE, TIME и DATETIME одинаковы в обоих движках.
+FOR i = 1 TO 2
+    ' Повторное выполнение DIM снова задаёт начальное значение.
+    DIM d AS DATE
+    DIM t AS TIME
+    DIM dt AS DATETIME
+    PRINT "Проход: "
+    PRINT i
+    PRINT "Начальная дата: "
+    PRINT d
+    PRINT "Начальное время: "
+    PRINT t
+    PRINT "Начальные дата и время: "
+    PRINT dt
+    ' Эти присваивания не должны сохраняться после следующего DIM.
+    d = DATESERIAL(2024, 2, 29)
+    t = TIMESERIAL(23, 59, 59)
+    dt = "2024-02-29 23:59:59"
+NEXT i

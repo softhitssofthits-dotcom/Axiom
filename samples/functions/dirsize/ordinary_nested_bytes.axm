@@ -1,0 +1,9 @@
+' DIRSIZE считает байты обычных файлов; вложенные ссылки не обходятся.
+DIM folder AS STRING = MAKETEMPDIR("axiom_size_guard_")
+DIM nested AS STRING = COMBINEPATH(folder, "nested")
+PRINT MAKEDIR(nested)
+' Русская буква занимает два байта UTF-8, эмодзи — четыре.
+PRINT WRITEFILE(COMBINEPATH(folder, "letter.txt"), "А")
+PRINT WRITEFILE(COMBINEPATH(nested, "emoji.txt"), "😀")
+PRINT "Суммарный размер, ожидается 6: ", DIRSIZE(folder)
+PRINT DELETEDIRRECURSIVE(folder)

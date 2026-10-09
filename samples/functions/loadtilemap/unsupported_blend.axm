@@ -1,0 +1,12 @@
+REM Сначала загружаем поддержанную карту.
+DIM m AS TILEMAP
+m = LOADTILEMAP("metadata_map.tmj")
+REM Режим multiply нельзя молча заменить обычным смешиванием.
+TRY
+    m = LOADTILEMAP("unsupported_blend.tmj")
+CATCH err
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+REM После отказа прежняя карта сохранена.
+PRINT MAPWIDTH(m)

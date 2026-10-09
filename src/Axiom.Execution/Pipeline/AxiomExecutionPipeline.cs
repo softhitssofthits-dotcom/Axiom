@@ -608,7 +608,7 @@ public sealed class AxiomExecutionPipeline
         bool usedInterpreterFallback,
         string? interpreterFallbackReason)
     {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider);
+        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider, request.ResourceBaseDirectory);
         var executionStopwatch = Stopwatch.StartNew();
         var runtimeResult = Interpreter.Execute(compiledProgram.BoundProgram, runtimeHost);
         executionStopwatch.Stop();
@@ -630,7 +630,7 @@ public sealed class AxiomExecutionPipeline
 
     private static ExecutionResult RunThroughBytecodeVm(BytecodeModule module, ExecutionRequest request)
     {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider);
+        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider, request.ResourceBaseDirectory);
         var executionStopwatch = Stopwatch.StartNew();
         var breakpoints = request.SourceBreakpointLines.Count == 0
             ? null
@@ -912,7 +912,8 @@ public sealed class AxiomExecutionPipeline
                 break;
 
             case BoundOpenStatement openStatement:
-                if (TryGetCapturedVariable(openStatement.PathExpression, ownVariables, out variable, out location)
+                if ((openStatement.EncodingExpression is not null && TryGetCapturedVariable(openStatement.EncodingExpression, ownVariables, out variable, out location))
+                    || TryGetCapturedVariable(openStatement.PathExpression, ownVariables, out variable, out location)
                     || TryGetCapturedVariable(openStatement.FileVariable, statement.Location, ownVariables, out variable, out location))
                 {
                     return true;

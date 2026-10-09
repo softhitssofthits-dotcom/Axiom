@@ -166,7 +166,7 @@ public sealed class BytecodeRoutine
             Opcode.PrintLine => 0,
             Opcode.Input => 0,
             Opcode.Sleep => -instruction.GetOperand(0),
-            Opcode.OpenFile => -1,
+            Opcode.OpenFile => instruction.OperandCount == 3 ? -2 : -1,
             Opcode.CloseFile => 0,
             Opcode.Convert => 0,
             Opcode.Viewport => -instruction.GetOperand(0),

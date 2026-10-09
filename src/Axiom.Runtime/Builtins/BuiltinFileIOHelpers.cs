@@ -102,7 +102,15 @@ internal static class BuiltinFileIOHelpers
         Action<string, TextLocation> reportError)
     {
         var file = RequireReadableFile(fileValue, location, "LINENUMBER", reportError);
-        return RuntimeValue.FromLong(file.LineNumber);
+        try
+        {
+            return RuntimeValue.FromLong(file.LineNumber);
+        }
+        catch (Exception ex) when (IsFileIoException(ex))
+        {
+            reportError($"Функция LINENUMBER: не удалось определить номер строки: {ex.Message}", location);
+            throw new RuntimeFailureException();
+        }
     }
 
     public static RuntimeValue EvaluateEof(
@@ -384,16 +392,34 @@ internal static class BuiltinFileIOHelpers
     {
         ArgumentNullException.ThrowIfNull(file);
 
-        file.Dispose();
-        openFiles.Remove(file);
+        try
+        {
+            file.Dispose();
+        }
+        finally
+        {
+            if (!file.IsOpen) openFiles.Remove(file);
+        }
     }
 
-    public static void CloseAllOpenFiles(HashSet<RuntimeTextFile> openFiles)
+    public static void CloseAllOpenFiles(HashSet<RuntimeTextFile> openFiles,
+        Action<RuntimeTextFile, Exception>? reportFailure = null)
     {
+        Exception? firstFailure = null;
         foreach (var file in openFiles.ToArray())
         {
-            CloseFile(file, openFiles);
+            try
+            {
+                CloseFile(file, openFiles);
+            }
+            catch (Exception ex) when (IsFileIoException(ex))
+            {
+                if (reportFailure is not null) reportFailure(file, ex);
+                else firstFailure ??= ex;
+            }
         }
+        if (firstFailure is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     public static string GetFileModeName(RuntimeTextFileMode mode)
@@ -413,6 +439,8 @@ internal static class BuiltinFileIOHelpers
             or UnauthorizedAccessException
             or System.Security.SecurityException
             or ObjectDisposedException
-            or InvalidOperationException;
+            or InvalidOperationException
+            or System.Text.EncoderFallbackException
+            or System.Text.DecoderFallbackException;
     }
 }

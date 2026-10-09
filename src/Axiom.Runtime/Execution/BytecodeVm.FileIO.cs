@@ -10,6 +10,7 @@ public sealed partial class BytecodeVm
     private void ExecuteOpenFile(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var existingFileValue = PopValue(frame, instructionIndex);
+        var encodingName = instruction.OperandCount == 3 ? PopValue(frame, instructionIndex).AsString() : null;
         var path = PopValue(frame, instructionIndex).AsString();
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var variableName = ReadDebugName(instruction.GetOperand(1));
@@ -27,9 +28,10 @@ public sealed partial class BytecodeVm
         try
         {
             var file = new RuntimeTextFile(
-                BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.ResourceBaseDirectory),
+                BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.CurrentDirectory),
                 ReadOpenMode(instruction.GetOperand(0), location),
-                BuiltinFileSystemHelpers.FileSystemTextEncoding);
+                BuiltinFileSystemHelpers.FileSystemTextEncoding,
+                encodingName);
 
             _openFiles.Add(file);
             InvalidateReverseExecutionHistory();
@@ -54,7 +56,15 @@ public sealed partial class BytecodeVm
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var file = BuiltinFileIOHelpers.RequireOpenFile(PopValue(frame, instructionIndex), location, "CLOSE", ReportFileIOError);
 
-        BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+        try
+        {
+            BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+        }
+        catch (Exception ex) when (BuiltinFileIOHelpers.IsFileIoException(ex))
+        {
+            ReportFileIOError($"Оператор CLOSE: не удалось завершить запись файла: {ex.Message}", location);
+            throw new RuntimeFailureException();
+        }
         InvalidateReverseExecutionHistory();
         frame.EvaluationStack.Push(RuntimeValue.FromFile(value: null));
     }
@@ -164,7 +174,8 @@ public sealed partial class BytecodeVm
 
     private void CloseAllOpenFiles()
     {
-        BuiltinFileIOHelpers.CloseAllOpenFiles(_openFiles);
+        BuiltinFileIOHelpers.CloseAllOpenFiles(_openFiles, (file, ex) =>
+            ReportFileIOError($"Не удалось закрыть файл '{file.Path}' при завершении программы: {ex.Message}", FallbackRuntimeLocation));
     }
 
     private void CloseFile(RuntimeTextFile file)

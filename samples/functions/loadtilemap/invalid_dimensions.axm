@@ -1,0 +1,14 @@
+' Неверная ширина файла карты должна дать ошибку языка, а не сбой IDE.
+DIM level AS TILEMAP
+' Сначала сохраняем корректную карту, чтобы проверить отказ присваивания.
+level = LOADTILEMAP("metadata_map.tmj")
+TRY
+    level = LOADTILEMAP("negative_dimensions.tmj")
+CATCH err
+    PRINT "Ошибка размеров карты:"
+    PRINT err.Code
+    PRINT err.Message
+END TRY
+' После отказа переменная всё ещё хранит прежнюю карту шириной в одну клетку.
+PRINT "Сохранена прежняя карта:"
+PRINT MAPWIDTH(level)

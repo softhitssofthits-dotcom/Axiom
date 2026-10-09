@@ -1,0 +1,14 @@
+' Ширина полного INTEGER-диапазона не помещается в INTEGER.
+DIM low AS LONG = -2147483648
+DIM high AS LONG = 2147483647
+DIM width AS LONG = high-low+1
+' Одинаковое зерно позволяет повторить этот запуск.
+RANDOMIZE 42
+DIM first AS LONG = CLNG(FLOOR(RND()*width))+low
+PRINT "Случайное значение: "; first
+PRINT "Значение внутри границ: "; first >= low AND first <= high
+' Сначала приводим смещение к LONG, затем прибавляем целую границу.
+RANDOMIZE 42
+DIM repeated AS LONG = CLNG(FLOOR(RND()*width))+low
+PRINT "Повторный посев дал то же значение: "; first = repeated
+' Пример не обещает строго равные вероятности для всех значений LONG.

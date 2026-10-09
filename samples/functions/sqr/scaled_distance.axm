@@ -1,0 +1,20 @@
+' Масштабирование позволяет не возводить огромные числа в квадрат.
+FUNCTION StableDistance(x AS DOUBLE, y AS DOUBLE) AS DOUBLE
+    ' Выбираем большую абсолютную координату как масштаб.
+    DIM scale AS DOUBLE = MAX(ABS(x), ABS(y))
+    ' Нулевой вектор обрабатываем до деления.
+    IF scale = 0 THEN
+        RETURN 0
+    END IF
+    ' После деления координаты по модулю не больше единицы.
+    DIM scaledX AS DOUBLE = x / scale
+    DIM scaledY AS DOUBLE = y / scale
+    RETURN scale * SQR(scaledX * scaledX + scaledY * scaledY)
+END FUNCTION
+
+
+' На больших координатах прямое x*x переполнило бы DOUBLE.
+PRINT "Большое расстояние: "; StableDistance(VAL("3e200"), VAL("4e200"))
+' На малых координатах прямые квадраты округлились бы до нуля.
+PRINT "Малое расстояние: "; StableDistance(VAL("3e-200"), VAL("4e-200"))
+PRINT "Нулевой вектор: "; StableDistance(0, 0)

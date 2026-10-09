@@ -2898,6 +2898,25 @@ OPEN "notes.txt" FOR INPUT AS fileHandle
         Assert.Equal(TypeSymbol.String, statement.PathExpression.Type);
     }
 
+    [Theory]
+    [InlineData("INPUT")]
+    [InlineData("OUTPUT")]
+    [InlineData("APPEND")]
+    public void Bind_OpenWithEncodingExpression(string mode)
+    {
+        var program = BindProgram($"DIM f AS FILE\nDIM encoding AS STRING = \"UTF-16LE\"\nOPEN \"notes.txt\" FOR {mode} AS f USING encoding", out var diagnostics);
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundOpenStatement>(program.GlobalStatements[2]);
+        Assert.Equal(TypeSymbol.String, statement.EncodingExpression!.Type);
+    }
+
+    [Fact]
+    public void Bind_OpenEncodingRequiresString()
+    {
+        BindProgram("DIM f AS FILE\nOPEN \"notes.txt\" FOR INPUT AS f USING 123", out var diagnostics);
+        Assert.NotEmpty(diagnostics);
+    }
+
     [Fact]
     public void Bind_CloseStatement()
     {
@@ -3163,7 +3182,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinLenReportsWrongArityWhenTooManyArguments()
     {
-        BindProgram("PRINT LEN(\"A\", \"B\")", out var diagnostics);
+        BindProgram("PRINT LEN(\"A\", \"UTF16\", 1)", out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2004");
         Assert.Contains("LEN", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -3181,7 +3200,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinRightReportsWrongArityWhenTooManyArguments()
     {
-        BindProgram("PRINT RIGHT(\"Hello\", 1, 2)", out var diagnostics);
+        BindProgram("PRINT RIGHT(\"Hello\", 1, \"UTF16\", 2)", out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2004");
         Assert.Contains("RIGHT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);

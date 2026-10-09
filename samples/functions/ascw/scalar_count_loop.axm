@@ -1,0 +1,18 @@
+' Семейный эмодзи содержит 11 единиц UTF-16 и 7 Unicode-кодов.
+DIM text AS STRING = "👨‍👩‍👧‍👦"
+DIM position AS INTEGER = 1
+DIM count AS INTEGER = 0
+DIM reconstructed AS STRING = ""
+DO WHILE position <= LEN(text)
+    ' Берём первый полный Unicode-код из одной или двух единиц UTF-16.
+    DIM code AS INTEGER = ASCW(MID(text, position, 2))
+    DIM fragment AS STRING = CHRW(code)
+    reconstructed = reconstructed + fragment
+    count = count + 1
+    position = position + LEN(fragment)
+LOOP
+PRINT "Длина в единицах UTF-16: "; LEN(text)
+PRINT "Число Unicode-кодов: "; count
+PRINT "Исходная строка восстановлена: "; reconstructed = text
+' Отдельный код не равен целому составному эмодзи.
+PRINT "Первый Unicode-код равен всему эмодзи: "; CHRW(ASCW(text)) = text

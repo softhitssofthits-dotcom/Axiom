@@ -1,0 +1,7 @@
+' Ожидается 32: карта 2 на 2 клетки, клетка 16 на 16 пикселей.
+DIM level AS TILEMAP
+' Карта сама ссылается на существующий PNG-атлас.
+level = LOADTILEMAP("../../operators/drawtilemap/simple_map.tmj")
+PRINT "Высота карты в пикселях:"
+' Размер читается из карты без открытия графического окна.
+PRINT MAPPIXELHEIGHT(level)

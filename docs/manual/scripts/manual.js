@@ -214,6 +214,7 @@
           title: "Числа",
           items: [
             { id: "numeric-functions", href: "numeric-functions.html", label: "Числовые функции" },
+            { id: "isnumeric", href: "isnumeric.html", label: "ISNUMERIC — проверка числовой строки" },
             { id: "numeric-functions-conversion-and-legacy", href: "numeric-functions-conversion-and-legacy.html", label: "INT, STR и VAL" },
             { id: "numeric-functions-core", href: "numeric-functions-core.html", label: "Базовая математика" },
             { id: "numeric-functions-trigonometry", href: "numeric-functions-trigonometry.html", label: "Тригонометрия" },

@@ -1,0 +1,6 @@
+' Ожидается 32. Пример запускается в IDE.
+DIM picture AS IMAGE
+' Загружаем существующее изображение 32 на 32 пикселя.
+picture = LOADIMAGE("../../graphics/sprites/assets/walk_sheet.png")
+PRINT "Результат IMAGEHEIGHT:"
+PRINT IMAGEHEIGHT(picture)

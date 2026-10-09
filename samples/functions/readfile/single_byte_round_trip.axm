@@ -1,0 +1,17 @@
+' Проверка однобайтового обходного пути: ожидается 256, TRUE, TRUE, TRUE.
+' Это не пример чтения массива числовых байтов.
+DIM dataText AS STRING
+DIM target AS STRING
+' В явной WINDOWS-1251 каждая позиция файла становится одним символом.
+dataText = READFILE("byte_values.bin", "WINDOWS-1251")
+PRINT "Количество позиций в строке:"
+PRINT LEN(dataText)
+' Временный файл уникален; исходный ресурс не меняется.
+target = MAKETEMPFILE("axiom-byte-roundtrip-")
+PRINT "Запись той же однобайтовой кодировкой:"
+PRINT WRITEFILE(target, dataText, "WINDOWS-1251")
+PRINT "Строка после повторного чтения совпадает:"
+PRINT READFILE(target, "WINDOWS-1251") = dataText
+' Удаляем только созданный этим примером временный файл.
+PRINT "Удаление временного файла:"
+PRINT DELETEFILE(target)

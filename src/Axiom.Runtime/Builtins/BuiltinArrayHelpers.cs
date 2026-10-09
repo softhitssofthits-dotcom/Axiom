@@ -193,6 +193,19 @@ internal static class BuiltinArrayHelpers
         return (lowerBounds, upperBounds);
     }
 
+    public static (int[] LowerBounds, int[] UpperBounds) CreateEmptyWindowBounds(
+        RuntimeArrayValue array,
+        int dimension,
+        long selectedLowerBound)
+    {
+        // Для пустого диапазона нужна пара lower, lower - 1. Минимальный
+        // INTEGER зарезервирован для поиска; край за MaxValue не представим.
+        if (selectedLowerBound <= int.MinValue || selectedLowerBound > int.MaxValue)
+            return CreateAdjustedBounds(array, dimension, 1, 0);
+
+        return CreateAdjustedBounds(array, dimension, (int)selectedLowerBound, (int)(selectedLowerBound - 1L));
+    }
+
     public static (int[] LowerBounds, int[] UpperBounds) CreateReducedBounds(RuntimeArrayValue array, int dimension)
     {
         var lowerBounds = new int[array.Rank - 1];
@@ -476,6 +489,10 @@ internal static class BuiltinArrayHelpers
             indices[selectedIndex] = index;
             values.Add((array.GetValue(indices), originalOrder));
             originalOrder++;
+            if (index == upperBound)
+            {
+                break;
+            }
         }
 
         values.Sort((left, right) =>

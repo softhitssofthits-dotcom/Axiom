@@ -15,7 +15,8 @@ public sealed class ExecutionRequest
         ExecutionMode mode = ExecutionMode.Bytecode,
         string? bytecodeSnapshotPath = null,
         IEnumerable<int>? sourceBreakpointLines = null,
-        bool stopBeforeFirstInstruction = false)
+        bool stopBeforeFirstInstruction = false,
+        string? resourceBaseDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
 
@@ -30,6 +31,7 @@ public sealed class ExecutionRequest
         BytecodeSnapshotPath = bytecodeSnapshotPath;
         SourceBreakpointLines = NormalizeSourceBreakpointLines(sourceBreakpointLines);
         StopBeforeFirstInstruction = stopBeforeFirstInstruction;
+        ResourceBaseDirectory = resourceBaseDirectory is null ? null : Path.GetFullPath(resourceBaseDirectory);
     }
 
     public string SourceText { get; }
@@ -53,6 +55,8 @@ public sealed class ExecutionRequest
     public IReadOnlyList<int> SourceBreakpointLines { get; }
 
     public bool StopBeforeFirstInstruction { get; }
+
+    public string? ResourceBaseDirectory { get; }
 
     private static IReadOnlyList<int> NormalizeSourceBreakpointLines(IEnumerable<int>? lines)
     {

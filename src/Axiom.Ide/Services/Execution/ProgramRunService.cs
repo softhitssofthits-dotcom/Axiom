@@ -184,7 +184,8 @@ public sealed class ProgramRunService : IProgramRunService
                     cancellationProvider: effectiveCancellation,
                     mode: mode,
                     sourceBreakpointLines: sourceBreakpointLines,
-                    stopBeforeFirstInstruction: stopBeforeFirstInstruction));
+                    stopBeforeFirstInstruction: stopBeforeFirstInstruction,
+                    resourceBaseDirectory: runBaseDirectory));
 
             var diagnostics = executionResult.Diagnostics
                 .Select(ProgramDiagnosticItem.FromDiagnostic)

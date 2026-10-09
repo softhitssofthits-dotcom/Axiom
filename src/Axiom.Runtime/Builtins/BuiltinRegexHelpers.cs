@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Axiom.Core;
 
@@ -90,7 +89,7 @@ internal static class BuiltinRegexHelpers
         {
             var match = regex.Match(text);
 
-            if (!match.Success || group >= match.Groups.Count)
+            if (!match.Success)
             {
                 return RuntimeValue.FromString(string.Empty);
             }
@@ -135,11 +134,6 @@ internal static class BuiltinRegexHelpers
                 .Matches(text)
                 .Select(match =>
                 {
-                    if (group >= match.Groups.Count)
-                    {
-                        return string.Empty;
-                    }
-
                     var capturedGroup = match.Groups[group];
                     return capturedGroup.Success ? capturedGroup.Value : string.Empty;
                 })
@@ -178,7 +172,7 @@ internal static class BuiltinRegexHelpers
         {
             return count is null
                 ? regex.Replace(text, replacement)
-                : ReplaceRegexMatches(regex, text, replacement, count.Value);
+                : regex.Replace(text, replacement, count.Value);
         }
         catch (RegexMatchTimeoutException)
         {
@@ -208,37 +202,6 @@ internal static class BuiltinRegexHelpers
             reportArgumentError(functionName, "pattern", "выполняется слишком долго.", location);
             throw new RuntimeFailureException();
         }
-    }
-
-    public static string ReplaceRegexMatches(Regex regex, string text, string replacement, int count)
-    {
-        var matches = regex.Matches(text);
-
-        if (matches.Count == 0)
-        {
-            return text;
-        }
-
-        var builder = new StringBuilder(text.Length);
-        var cursor = 0;
-        var replaced = 0;
-
-        foreach (Match match in matches)
-        {
-            if (replaced >= count)
-            {
-                break;
-            }
-
-            builder.Append(text, cursor, match.Index - cursor);
-            builder.Append(match.Result(replacement));
-
-            cursor = match.Index + match.Length;
-            replaced++;
-        }
-
-        builder.Append(text, cursor, text.Length - cursor);
-        return builder.ToString();
     }
 
     private static RuntimeFailureException ReportAndThrowInvalidMode(

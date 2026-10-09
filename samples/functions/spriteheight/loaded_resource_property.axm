@@ -1,0 +1,6 @@
+' Ожидается 16. Пример запускается в IDE.
+DIM walk AS SPRITE
+' Лист 32 на 32 содержит четыре кадра 16 на 16.
+walk = LOADSPRITE("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
+PRINT "Результат SPRITEHEIGHT:"
+PRINT SPRITEHEIGHT(walk)

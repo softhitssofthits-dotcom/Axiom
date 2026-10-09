@@ -1,0 +1,18 @@
+REM Огромный параллакс уносит слой за экран, а не возвращает его в ноль.
+CANVAS 64, 64
+CAMERA 1000, 0
+DIM m AS TILEMAP
+m = LOADTILEMAP("extreme_4_x.tmj")
+DRAWTILEMAP m, 0, 0
+PRINT "Невидимый слой:"
+PRINT POINT(8, 8)
+REM Пауза позволяет увидеть пустой холст.
+SLEEP 1000
+REM Равные огромные смещение и параллакс при камере 1 компенсируются.
+CAMERA 1, 0
+m = LOADTILEMAP("extreme_6_x.tmj")
+DRAWTILELAYER m, 1, 0, 0
+PRINT "Компенсированный слой:"
+PRINT POINT(8, 8)
+REM Пауза позволяет рассмотреть появившийся тайл.
+SLEEP 1000

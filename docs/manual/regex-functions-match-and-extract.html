@@ -27,8 +27,11 @@ PRINT "[" + REGEXMATCH("Order", "\d+") + "]"</code></pre>
 <pre><code>42
 []</code></pre></section>
 
-<section class="article-section" id="regexextract"><h2>REGEXEXTRACT</h2><p>Функция <code>REGEXEXTRACT</code> возвращает значение указанной группы из первого найденного совпадения.</p><h3>Синтаксис</h3><pre><code class="language-basic">result = REGEXEXTRACT(text, pattern, groupNumber[, modes])</code></pre><h3>Аргументы</h3><p><code>groupNumber</code> задаёт номер группы. Ноль означает всё совпадение целиком, единица первую группу в скобках, двойка вторую и так далее.</p><h3>Группа и отсутствие значения</h3><p>Если совпадение не найдено или нужной группы в нём нет, функция возвращает пустую строку. Отрицательный номер группы даёт <code>MB3007</code>.</p><h3>Пример извлечения группы</h3><pre><code class="language-basic">PRINT REGEXEXTRACT("A12", "([A-Z])(\\d+)", 2)
-PRINT REGEXEXTRACT("a12", "([A-Z])(\\d+)", 1, "i")</code></pre>
+<section class="article-section" id="regexextract"><h2>REGEXEXTRACT</h2><p>Функция <code>REGEXEXTRACT</code> возвращает значение указанной группы из первого найденного совпадения.</p><h3>Синтаксис</h3><pre><code class="language-basic">result = REGEXEXTRACT(text, pattern, groupNumber[, modes])</code></pre><h3>Аргументы</h3><p><code>groupNumber</code> задаёт номер группы. Ноль означает всё совпадение целиком, единица первую группу в скобках, двойка вторую и так далее.</p><h3>Группа и отсутствие значения</h3><p>Если совпадение не найдено или нужной группы в нём нет, функция возвращает пустую строку. Отрицательный номер группы даёт <code>MB3007</code>.</p><h3>Явно заданный номер группы</h3><p>Аргумент groupNumber — номер захватывающей группы, а не её порядковое место в массиве. Нумерация соответствует .NET; конструкция (?&lt;10&gt;...) задаёт номер 10. Несуществующий положительный номер или группа без захвата возвращает пустую строку, отрицательный номер даёт MB3007.</p><pre><code class="language-basic">' Извлекаем группу с явно заданным номером.
+PRINT REGEXEXTRACT("код42", "код(?&lt;10&gt;[0-9]+)", 10)
+PRINT REGEXEXTRACT("КОД42", "код(?&lt;10&gt;[0-9]+)", 10, "i")</code></pre><p>Оба вызова возвращают «42». Запускаемый пример: <a href="../../samples/functions/regexextract/explicit_group_number.axm">явный номер группы</a>.</p>
+<h3>Пример извлечения группы</h3><pre><code class="language-basic">PRINT REGEXEXTRACT("A12", "([A-Z])(\d+)", 2)
+PRINT REGEXEXTRACT("a12", "([A-Z])(\d+)", 1, "i")</code></pre>
 <p>Результат:</p>
 <pre><code>12
 a</code></pre></section>
