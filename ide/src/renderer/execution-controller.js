@@ -5,24 +5,25 @@ class ExecutionController {
     this.disposers = [api.onBackendEvent(message => this.event(message)),
       api.onBackendFault(fault => this.fault(fault.message))];
   }
-  async start(file, launchKind = 'run', breakpoints = []) {
+  async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
     const ide = this.ide;
     ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.inputRequestId = null; this.stopId = null;
+    this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
-    ide.setStatus('Подготовка программы…');
-    if (!ide.ensureConsole()) { ide.running = false; this.starting = false; return; }
+    ide.setStatus(I18N.t('trace.preparing'));
+    if (!ide.ensureConsole()) { ide.running = false; this.starting = false; ide.trace?.finished(); return; }
     ide.term.reset(); this.startedAt = performance.now();
     const document = ide.openFiles.get(file);
     const response = await this.api.startExecution({ documentId: document.documentId,
       documentRevision: document.revision, sourceText: document.model.getValue(), sourceFilePath: file,
-      launchKind, breakpointLines: breakpoints, stopBeforeFirstInstruction: launchKind === 'debug' });
+      launchKind, breakpointLines: breakpoints, stopBeforeFirstInstruction: launchKind === 'debug' && stopFirst });
     this.starting = false;
     if (!response.ok) { this.fault(response.error?.message || 'Не удалось начать выполнение.'); return; }
     this.sessionId = response.payload.sessionId;
     for (const event of this.pendingEvents) this.event(event);
     this.pendingEvents = [];
     if (this.pendingStop && this.sessionId) await this.stop();
-    ide.term.focus();
+    if(this.stopId) ide.editor.focus(); else ide.term.focus();
   }
   event(message) {
     if (this.starting) { this.pendingEvents.push(message); return; }
@@ -30,7 +31,7 @@ class ExecutionController {
     const payload = message.payload;
     switch (message.event) {
       case 'execution.state':
-        this.ide.setStatus(({ Compiling: 'Компиляция…', Running: 'Выполняется', WaitingForInput: 'Ожидание ввода', Paused: 'Пауза отладки' })[payload.state] || payload.state);
+        this.ide.setStatus(I18N.t(({Compiling:'trace.compiling',Running:'status.running',WaitingForInput:'trace.waiting',Paused:'trace.running'})[payload.state] || 'trace.running'));
         break;
       case 'output.append': case 'output.replace':
         this.outputText = message.event === 'output.append' ? this.outputText + payload.text : payload.text;
@@ -40,9 +41,10 @@ class ExecutionController {
         this.outputText = payload.outputText; this.renderOutput();
         this.ide.term.write(payload.prompt); this.ide.term.focus(); break;
       case 'debug.paused':
+        this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
         this.outputText = payload.outputText; this.renderOutput();
-        this.ide.setStatus(`Пауза отладки: строка ${payload.line ?? '—'}`);
+        this.ide.setStatus(I18N.t('trace.paused',payload.line ?? '—'));
         if (payload.line) { this.ide.editor.revealLineInCenter(payload.line); this.ide.editor.setPosition({ lineNumber: payload.line, column: payload.column || 1 }); }
         this.ide.editor.focus(); break;
       case 'graphics.surface':
@@ -53,14 +55,16 @@ class ExecutionController {
       case 'execution.finished':
         this.outputText = payload.outputText; this.renderOutput();
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
-        this.ide.setStatus(({ Succeeded: 'Завершено', Cancelled: 'Остановлено', CompilationFailed: 'Ошибка компиляции', RuntimeFailed: 'Ошибка выполнения' })[payload.status] || 'Ошибка служебного процесса');
+        this.ide.setStatus(I18N.t(({Succeeded:'status.finished',Cancelled:'status.stopped',CompilationFailed:'trace.compileFailed',RuntimeFailed:'trace.runtimeFailed'})[payload.status] || 'trace.failed'));
         if (payload.diagnostics?.length) {
           this.ide.applyDiagnostics(payload.diagnostics.map(d => ({ ...d, file: this.ide._runFile, col: d.column, severity: 'error' })), true);
           this.ide.switchPanel('diagnostics');
         }
-        document.getElementById('status-execution-time').textContent = `Время: ${Math.round(performance.now() - this.startedAt)} мс`;
+        document.getElementById('status-execution-time').textContent = I18N.t('trace.elapsed',Math.round(performance.now() - this.startedAt));
         this.ide.focusEditor(); break;
     }
+    if(message.event==='execution.finished') this.ide.trace?.finished();
+    else this.ide.trace?.update();
   }
   renderOutput() {
     if (!this.ide.term) return;
@@ -91,15 +95,19 @@ class ExecutionController {
     if (!this.stopId || !this.sessionId) return;
     const stopId = this.stopId;
     this.stopId = null;
+    this.debugBusy=true;this.ide.trace?.clearMarker();this.ide.trace?.update();
+    this.ide.setStatus(I18N.t('trace.running'));
     const result = await this.api.debugCommand(this.sessionId, command, stopId);
     if (!result.ok) {
       if (this.sessionId && !this.stopId) this.stopId = stopId;
       this.ide.setStatus(result.error.message);
     }
+    this.debugBusy=false;this.ide.trace?.update();
   }
   fault(message) {
     this.ide.running = false; this.sessionId = null; this.stopId = null; this.inputRequestId = null;
-    this.ide.showIdeProblem('status.runFailed', message); this.ide.setStatus('Ошибка служебного процесса');
+    this.ide.showIdeProblem('status.runFailed', message); this.ide.setStatus(I18N.t('trace.failed'));
+    this.ide.trace?.finished();
   }
 }
 window.ExecutionController = ExecutionController;

@@ -695,3 +695,7 @@ body.splitter-y { cursor: row-resize; }
 .outline-icon { width: 20px; text-align: center; font-weight: 700; color: #4da3ff; flex-shrink: 0; }
 .outline-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .outline-line { color: var(--muted, #8ba1b7); font-size: 11px; flex-shrink: 0; }
+.trace-breakpoint { background: radial-gradient(circle, #e95656 0 35%, transparent 40%); }
+.trace-current-arrow::before { content: '➜'; color: #d8a522; font-weight: bold; }
+.trace-current-line { background: #d8a52233; border-left: 2px solid #d8a522; }
+.menu-dropdown-item.disabled { opacity: .45; cursor: default; }

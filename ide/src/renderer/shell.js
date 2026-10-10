@@ -7,16 +7,29 @@ const toolbar=document.getElementById('toolbar');
 const buttons=[['tb-new','new'],['tb-open','open'],['tb-save','save'],['tb-check','compile'],['tb-run','run'],['tb-stop','stop'],['tb-format','format'],['tb-find','search'],['tb-toggle-output','output']];
 buttons.forEach(([id,key])=>{const b=document.getElementById(id);if(id==='tb-save'){b.querySelectorAll('span').forEach(s=>{s.className='tb-save-icon';s.innerHTML=svg(key);});}else b.innerHTML=svg(key);});
 function add(id,key,label,action){const b=document.createElement('button');b.id=id;b.className='toolbar-btn';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=svg(key);b.onclick=action;toolbar.append(b);return b;}
-const startDebug=()=>window.__ide.execution.stopId?window.__ide.execution.debug('continue'):window.__ide.run('debug');
+const traceCommand=command=>window.__ide.trace.command(command);
+const startDebug=()=>traceCommand('start');
 add('tb-save-all','all',I18N.t('menu.file.saveAll'),()=>window.__ide.saveAll()).setAttribute('data-i18n-title','menu.file.saveAll');
 add('tb-toggle-sidebar','sidebar',I18N.t('menu.view.sidebar'),()=>window.__ide.handleAction('toggle-sidebar')).setAttribute('data-i18n-title','menu.view.sidebar');
-add('tb-debug','debug','Отладка (F5)',startDebug);
-for(const [key,command,label] of [['over','stepOver','Шаг с обходом (F10)'],['into','stepInto','Шаг с заходом (F11)'],['out','stepOut','Шаг с выходом (Shift+F11)'],['back','stepBack','Шаг назад (Ctrl+F10)']])add('tb-'+command,key,label,()=>window.__ide.execution.debug(command));
-const stepButtons=[...toolbar.querySelectorAll('[id^="tb-step"]')];
-stepButtons.forEach(b=>b.disabled=true);document.getElementById('tb-stop').disabled=true;
-window.axiom.onBackendEvent(m=>{if(m.event==='execution.state')document.getElementById('tb-stop').disabled=false;
-if(m.event==='debug.paused')stepButtons.forEach(b=>b.disabled=b.id==='tb-stepBack'&&!m.payload.canStepBack);
-if(m.event==='execution.finished'){stepButtons.forEach(b=>b.disabled=true);document.getElementById('tb-stop').disabled=true;}});
+add('tb-debug','debug',I18N.t('trace.start'),startDebug).dataset.traceCommand='start';
+for(const [key,command] of [['over','stepOver'],['into','stepInto'],['out','stepOut'],['back','stepBack']])
+  add('tb-'+command,key,I18N.t('trace.'+command),()=>traceCommand(command)).dataset.traceCommand=command;
+const shortcuts={start:'F5',stepOver:'F10',stepInto:'F11',stepOut:'Shift+F11',stepBack:'Ctrl+F10',stop:'Shift+F5',restart:'Ctrl+Shift+F5',breakpoint:'F9',clear:'Ctrl+Shift+F9'};
+const traceMenu=document.createElement('div');traceMenu.className='menu-item';traceMenu.id='menu-trace';
+traceMenu.innerHTML='<span class="menu-label" data-i18n="menu.trace">'+I18N.t('menu.trace')+'</span><div class="menu-dropdown"></div>';
+for(const command of ['start','stepBack','stepInto','stepOver','stepOut','stop','restart','breakpoint','clear']) {
+ const item=document.createElement('div');item.className='menu-dropdown-item';item.dataset.action='trace-'+command;item.dataset.traceCommand=command;
+ const key=command==='stop'?'menu.run.stop':'trace.'+command;
+ item.innerHTML='<span class="menu-icon"></span><span class="menu-text" data-i18n="'+key+'">'+I18N.t(key)+'</span><span class="menu-shortcut">'+shortcuts[command]+'</span>';
+ traceMenu.lastElementChild.append(item);
+}
+document.querySelector('[data-i18n="menu.view"]').parentElement.before(traceMenu);
+function translateTrace(){
+ toolbar.querySelectorAll('[data-trace-command]').forEach(b=>{b.title=I18N.t('trace.'+b.dataset.traceCommand)+' ('+shortcuts[b.dataset.traceCommand]+')';b.setAttribute('aria-label',b.title);});
+ window.__ide?.trace?.update();
+}
+new MutationObserver(translateTrace).observe(traceMenu.querySelector('.menu-label'),{childList:true});
+translateTrace();
 const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-check','tb-run','tb-debug','tb-stop'],['tb-stepOver','tb-stepInto','tb-stepOut','tb-stepBack'],['tb-format','tb-find','tb-toggle-sidebar','tb-toggle-output']];
 toolbar.querySelectorAll('.toolbar-sep').forEach(s=>s.remove());groups.forEach(ids=>{const group=document.createElement('div');group.className='command-group';ids.forEach(id=>group.append(document.getElementById(id)));toolbar.append(group);});
 toolbar.querySelectorAll('button').forEach(b=>b.setAttribute('aria-label',b.title));
@@ -32,10 +45,6 @@ new ResizeObserver(fit).observe(bar);
 document.addEventListener('mousedown',e=>{if(!bar.contains(e.target)){overflow.hidden=true;more.setAttribute('aria-expanded','false');}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){overflow.hidden=true;more.setAttribute('aria-expanded','false');}});
 // Клавиши с модификаторами проверяются до прежнего обработчика F5.
-document.addEventListener('keydown',e=>{let action=null;if(e.key==='F5'&&!e.shiftKey)action=e.ctrlKey?()=>window.__ide.run('run'):startDebug;
-else if(e.key==='F10')action=()=>window.__ide.execution.debug(e.ctrlKey?'stepBack':'stepOver');
-else if(e.key==='F11')action=()=>window.__ide.execution.debug(e.shiftKey?'stepOut':'stepInto');
-if(action){e.preventDefault();e.stopImmediatePropagation();action();}},true);
 document.querySelector('#tb-run').title='Запустить (Ctrl+F5)';
 // Структура переносится в левую область без замены её навигации.
 const sidebar=document.createElement('aside');sidebar.id='shell-sidebar';

@@ -333,6 +333,7 @@ class AxiomIDE {
       insertSpaces: true,
     });
 
+    this.trace = new window.TraceController(this);
     this.editor.onDidChangeCursorPosition((e) => {
       document.getElementById('status-line-col').textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
       this.log('editor.cursor', { line: e.position.lineNumber, col: e.position.column, reason: e.reason });
@@ -576,7 +577,14 @@ class AxiomIDE {
       if (mod && shortcutKey === 'n') { consume(); this.handleAction('new'); return; }
       if (mod && shortcutKey === 'o') { consume(); this.handleAction('open'); return; }
       if (mod && shortcutKey === 'w') { consume(); this.handleAction('close-tab'); return; }
-      if (e.key === 'F5') { consume(); e.shiftKey ? this.handleAction('stop') : this.handleAction('run'); return; }
+      if (['F5','F9','F10','F11'].includes(e.key) && !e.altKey) {
+        consume();
+        if(e.key==='F5' && mod && !e.shiftKey) this.run('run');
+        else this.trace.command(e.key==='F5' ? (e.shiftKey ? (mod?'restart':'stop') : 'start') :
+          e.key==='F9' ? (mod&&e.shiftKey?'clear':'breakpoint') :
+          e.key==='F10' ? (mod?'stepBack':'stepOver') : (e.shiftKey?'stepOut':'stepInto'));
+        return;
+      }
     }, true);
 
     window.addEventListener('beforeunload', () => this.saveOpenTabs(true));
@@ -600,6 +608,7 @@ class AxiomIDE {
   }
 
   handleAction(action) {
+    if (action.startsWith('trace-')) return this.trace.command(action.slice(6));
     const editor = this.editor;
     switch (action) {
       case 'new': this.newFile(); break;
@@ -861,6 +870,7 @@ class AxiomIDE {
   }
 
   async closeFile(p, approved = false) {
+    if (this.running && p === this._runFile) return false;
     const f = this.openFiles.get(p);
     if (!f || f.closing) return false;
     f.closing = true;
@@ -1011,6 +1021,7 @@ class AxiomIDE {
   // ================= autoformat triggers =================
 
   async formatWholeDocument(owner, path = this.activeFile) {
+    if (this.running && path === this._runFile) return false;
     const document = this.openFiles.get(path);
     const model = document?.model;
     if (!model) return;
@@ -1217,7 +1228,7 @@ class AxiomIDE {
     if (explicit) this.focusEditor();
   }
 
-  async run(launchKind = 'run') {
+  async run(launchKind = 'run', stopFirst = true) {
     if (this.running) return;
     let target = this.runTarget();
     if (!target) return;
@@ -1230,7 +1241,7 @@ class AxiomIDE {
     // The integrated ConPTY console is the only run path: output, stderr and interactive
     // input all live in the terminal.
     document.getElementById('program-canvas')?.setAttribute('hidden', '');
-    await this.execution.start(target, launchKind);
+    await this.execution.start(target, launchKind, launchKind === 'debug' ? this.trace.lines(this.openFiles.get(target).model) : [], stopFirst);
   }
 
   stop() {
@@ -1438,6 +1449,7 @@ class AxiomIDE {
   }
 
   async editLineTransition(model, previousLineNumber, position) {
+    if (this.running && this.openFiles.get(this._runFile)?.model === model) return;
     if (this._autoFormatting || this._formatBusy || !this.activeFile || model !== this.editor.getModel()) return;
     const document = this.openFiles.get(this.activeFile);
     if (!document || document.readonly || model.getLanguageId() !== 'axiom') return;
