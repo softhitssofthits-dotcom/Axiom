@@ -6,7 +6,7 @@ const path = require('node:path');
 const net = require('node:net');
 const { randomUUID } = require('node:crypto');
 const root = path.resolve(__dirname, '../..');
-const exe = path.join(root, '.artifacts/bin/Axiom.DesktopHost/Debug/net10.0-windows/Axiom.DesktopHost.exe');
+const exe = process.env.AXIOM_DESKTOP_HOST_EXE || path.join(root, '.artifacts/bin/Axiom.DesktopHost/Debug/net10.0-windows/Axiom.DesktopHost.exe');
 
 class Host {
   constructor(framePipe) {
@@ -223,6 +223,16 @@ test('Документ: форматирование и структурная �
 test('Метаданные Host используют полный общий реестр языка', async()=>{
  const host=new Host();try{await host.wait(m=>m.event==='host.ready');const r=await host.request('language.metadata');
  assert.equal(r.ok,true);assert.ok(r.payload.keywords.includes('CANVAS'));assert.ok(r.payload.builtins.some(f=>f.name==='LEN'));
+ }finally{await host.close();}
+});
+test('Переход строки форматирует предыдущую строку и создаёт блок за одну команду в обоих стилях', async()=>{
+ const host=new Host();try{await host.wait(m=>m.event==='host.ready');
+ for(const [style,expected,close] of [['Classic','FOR index = 1 TO 3','NEXT'],['Modern','For index = 1 To 3','Next']]) {
+  const sourceText='for index = 1 to 3\r\n';
+  const r=await host.request('document.editTransition',{documentId:'enter',documentRevision:1,sourceText,formattingStyle:style,previousLineNumber:1,currentLineNumber:2,caretOffset:sourceText.length});
+  assert.equal(r.ok,true);let text=sourceText;for(const e of [...r.payload.edits].reverse())text=text.slice(0,e.start)+e.newText+text.slice(e.start+e.length);
+  assert.equal(text.split('\r\n')[0],expected);assert.ok(text.includes(close));assert.equal(text.slice(0,r.payload.newCaretOffset).split('\r\n').at(-1),'    ');
+ }
  }finally{await host.close();}
 });
 

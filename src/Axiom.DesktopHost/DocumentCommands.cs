@@ -27,12 +27,19 @@ internal static class DocumentCommands
                 sourceText = formatter.FormatDocument(snapshot.SourceText, style) };
         if (method == "document.editTransition")
         {
-            var plan = new BlockEditPlanner(formatter).Plan(snapshot.SourceText,
-                payload.GetProperty("previousLineNumber").GetInt32(),
+            var previous = payload.GetProperty("previousLineNumber").GetInt32();
+            var caret = payload.GetProperty("caretOffset").GetInt32();
+            var source = FormatPreviousLine(snapshot.SourceText, previous, formatter, style, ref caret);
+            var plan = new BlockEditPlanner(formatter).Plan(source, previous,
                 payload.GetProperty("currentLineNumber").GetInt32(),
-                payload.GetProperty("caretOffset").GetInt32(), style);
+                caret, style);
+            var resultText = source[..plan.Start] + plan.NewText + source[(plan.Start + plan.Length)..];
+            var prefix = 0;
+            while (prefix < snapshot.SourceText.Length && prefix < resultText.Length && snapshot.SourceText[prefix] == resultText[prefix]) prefix++;
+            var suffix = 0;
+            while (suffix < snapshot.SourceText.Length - prefix && suffix < resultText.Length - prefix && snapshot.SourceText[^(suffix + 1)] == resultText[^(suffix + 1)]) suffix++;
             return new { snapshot.DocumentId, snapshot.DocumentRevision,
-                edits = plan.HasChanges ? new[] { new TextEdit(plan.Start, plan.Length, plan.NewText) } : [],
+                edits = resultText != snapshot.SourceText ? new[] { new TextEdit(prefix, snapshot.SourceText.Length - prefix - suffix, resultText.Substring(prefix, resultText.Length - prefix - suffix)) } : [],
                 plan.NewCaretOffset };
         }
         var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText));
@@ -47,5 +54,25 @@ internal static class DocumentCommands
             }).ToArray();
         return new { snapshot.DocumentId, snapshot.DocumentRevision,
             status = result.Status.ToString(), diagnostics };
+    }
+
+    private static string FormatPreviousLine(string source, int lineNumber, ICodeFormattingService formatter, CodeFormattingStyle style, ref int caret)
+    {
+        var start = 0;
+        for (var line = 1; line < lineNumber; line++)
+        {
+            var end = source.IndexOfAny(['\r', '\n'], start);
+            if (end < 0) return source;
+            start = end + (source[end] == '\r' && end + 1 < source.Length && source[end + 1] == '\n' ? 2 : 1);
+        }
+        if (lineNumber < 1) return source;
+        var lineEnd = source.IndexOfAny(['\r', '\n'], start);
+        if (lineEnd < 0) lineEnd = source.Length;
+        var text = source[start..lineEnd];
+        if (string.IsNullOrWhiteSpace(text) || !formatter.IsLineSyntaxValid(text)) return source;
+        var formatted = formatter.FormatLine(text, style);
+        if (caret >= lineEnd) caret += formatted.Length - text.Length;
+        else if (caret > start) caret = start + Math.Min(caret - start, formatted.Length);
+        return source[..start] + formatted + source[lineEnd..];
     }
 }

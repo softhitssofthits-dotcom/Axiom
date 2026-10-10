@@ -695,6 +695,8 @@ class AxiomIDE {
       case 'find': editor?.getAction('actions.find')?.run(); break;
       case 'replace': editor?.getAction('editor.action.startFindReplaceAction')?.run(); break;
       case 'format': this.formatDocument(); break;
+      case 'format-classic': this.setFormattingStyle('Classic'); break;
+      case 'format-modern': this.setFormattingStyle('Modern'); break;
       case 'toggle-format-on-blur': this.toggleSetting('formatOnBlur'); break;
       case 'toggle-format-on-save': this.toggleSetting('formatOnSave'); break;
       case 'toggle-check-on-change': this.toggleSetting('checkOnChange'); break;
@@ -1178,7 +1180,17 @@ class AxiomIDE {
     this.focusEditor();
   }
 
+  async setFormattingStyle(style) {
+    if (!['Classic', 'Modern'].includes(style)) return;
+    this.saveSettings({ formattingStyle: style });
+    this.updateFormatMenuChecks();
+    for (const path of [...this.openFiles.keys()]) await this.formatWholeDocument('ax-style-switch', path);
+  }
+
   updateFormatMenuChecks() {
+    for (const [key, style] of [['formatClassic', 'Classic'], ['formatModern', 'Modern']]) {
+      document.querySelector('.menu-check[data-check="' + key + '"]')?.classList.toggle('on', (this.settings.formattingStyle || 'Classic') === style);
+    }
     for (const key of ['formatOnBlur', 'formatOnSave', 'checkOnChange']) {
       const el = document.querySelector(`.menu-check[data-check="${key}"]`);
       if (el) el.classList.toggle('on', !!this.settings[key]);
@@ -1672,9 +1684,8 @@ class AxiomIDE {
     this.editor.focus();
   }
 
-  // Диагностики Axiom изначально на русском — слой перевода из X#-IDE не нужен.
   localizedDiagText(d) {
-    return `${d.code}: ${d.message}`;
+    return window.DiagnosticLanguage.text(d, this.settings.language);
   }
 
   findMarkerAt(pos) {

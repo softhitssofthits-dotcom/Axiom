@@ -163,3 +163,7 @@ CANVAS показывается самостоятельным окном Electr
 Поле стиля — formattingStyle со значением Classic или Modern. documentRevision в текущих DTO передаётся как обязательный неотрицательный Int32; renderer меняет documentId при достижении 2147483647. document.format возвращает sourceText и исходные documentId/documentRevision; document.editTransition — edits и newCaretOffset; analyse/compile — полный статус и diagnostics. Обработка ограничена восемью незавершёнными запросами, лишний запрос получает BUSY.
 
 Диагностики включают severity, documentId/documentRevision/sourceFilePath, line/column и UTF-16 spanStart/spanLength. Ответ применяется только к исходной версии модели, неизменившемуся пути и последнему запросу соответствующего вида. Переставленные ответы, закрытая вкладка и SaveAs не меняют новый документ. Форматирование и проверка не требуют сохранения; запуск требует действительно сохранённого файла. smartIdentifier пока не реализован в документной команде, полный договор этого режима остаётся незавершённым пунктом плана.
+
+### document.editTransition — уточнение Session 1335
+
+Команда форматирует предыдущую синтаксически корректную строку через FormatLine выбранного Classic/Modern, затем передаёт преобразованный снимок в BlockEditPlanner. Ответ содержит объединённую правку относительно исходного снимка и итоговый NewCaretOffset; проверка documentId/revision перед применением сохраняется. Представление диагностик ru/en выбирается оболочкой по текущей локали, исходное message не изменяется.
