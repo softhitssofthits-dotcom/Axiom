@@ -4,7 +4,7 @@
 ' 2
 ' 254
 ' 253
-' PUT sample finished
+' Проверка PUT завершена
 
 SCREEN 1
 
@@ -25,4 +25,4 @@ PRINT xorLeft
 PRINT xorRight
 PRINT presetLeft
 PRINT presetRight
-PRINT "PUT sample finished"
+PRINT "Проверка PUT завершена"

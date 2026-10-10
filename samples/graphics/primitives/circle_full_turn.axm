@@ -1,17 +1,17 @@
-' Expected: CIRCLE with start = 0 and end = 2 * PI draws a full contour.
+' Ожидается: при начальном угле 0 и конечном угле 2 * PI оператор CIRCLE рисует полный контур.
 SCREEN 8
 CLS
 
 CIRCLE (160, 100), 40, 14, 0, 2 * PI
 
-PRINT "right="; POINT(200, 100)
-PRINT "left="; POINT(120, 100)
-PRINT "top="; POINT(160, 60)
-PRINT "bottom="; POINT(160, 140)
-PRINT "Press ESC to return to Output"
+PRINT "Справа: "; POINT(200, 100)
+PRINT "Слева: "; POINT(120, 100)
+PRINT "Сверху: "; POINT(160, 60)
+PRINT "Снизу: "; POINT(160, 140)
+PRINT "Нажмите ESC, чтобы вернуться к текстовому окну"
 
 DO WHILE NOT KEYPRESS("ESC")
 LOOP
 
 SCREEN 0
-PRINT "Circle full turn sample finished"
+PRINT "Проверка полного оборота завершена"

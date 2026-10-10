@@ -1,6 +1,13 @@
-DIM path AS STRING = ".artifacts/axiom_sample_pathexists.txt"
+' Отдельная временная папка не зависит от файлов проекта пользователя.
+DIM folder AS STRING = MAKETEMPDIR("axiom_path_exists_")
+DIM path AS STRING = COMBINEPATH(folder, "sample.txt")
 
+' До создания файла путь не существует.
 PRINT PATHEXISTS(path)
-PRINT WRITEFILE(path, "Hello")
+' Создаём файл и проверяем путь ещё раз.
+PRINT WRITEFILE(path, "Привет")
 PRINT PATHEXISTS(path)
+' Точка обозначает текущую существующую папку.
 PRINT PATHEXISTS(".")
+DELETEFILE(path)
+DELETEDIR(folder)

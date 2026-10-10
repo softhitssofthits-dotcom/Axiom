@@ -58,6 +58,8 @@ public static class DiagnosticCodes
     public const string ExpressionStatementHasNoEffect = "MB2040";
     public const string FieldRequiresSelf = "MB2044";
     public const string NameClassCollision = "MB2045";
+    public const string InvalidGraphicsContext = "MB2046";
+    public const string UnusedVariable = "MB2047";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

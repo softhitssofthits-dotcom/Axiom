@@ -1,8 +1,8 @@
-﻿' Manual smoke sample for IDE block auto-completion and structural indent.
-' Recommended use:
-' 1. Open this file in Axiom.Ide or retype it line by line in a new document.
-' 2. Pay special attention to Enter, repeated ElseIf, Case/Case Else, nested If,
-'    nested Select Case, For, While, Do ... Loop, Sub, and Function blocks.
+﻿' Ручная проверка автоматического дополнения блоков и отступов в редакторе IDE.
+' Как проверять:
+' 1. Откройте этот файл в Axiom IDE или вводите его построчно в новом документе.
+' 2. Проверьте клавишу Enter, повторные ElseIf, Case и Case Else, вложенные If и
+'    Select Case, а также блоки For, While, Do ... Loop, Sub и Function.
 
 DIM source AS INTEGER = 2
 DIM result AS INTEGER = EvaluateScenario(source)
@@ -13,30 +13,30 @@ IF result > 0 THEN
             FOR outer = 1 TO 2
                 IF outer = 1 THEN
                     DO
-                        PRINT "case1-do"
+                        PRINT "блок 1: цикл DO"
                         EXIT DO
                     LOOP
                 ELSEIF outer = 2 THEN
                     WHILE source < 4
                         source = source + 1
-                        PRINT "case1-while"; source
+                        PRINT "блок 1: цикл WHILE"; source
                     END WHILE
                 ELSE
-                    PRINT "case1-else"
+                    PRINT "иначе в блоке 1"
                 END IF
             NEXT
         CASE 2
             IF source = 2 THEN
                 SELECT CASE source + 1
                     CASE 3
-                        PRINT "nested-select"
+                        PRINT "вложенный SELECT CASE"
                     CASE ELSE
-                        PRINT "nested-case-else"
+                        PRINT "вложенный CASE ELSE"
                 END SELECT
             ELSEIF source = 3 THEN
-                PRINT "case2-elseif"
+                PRINT "иначе если: блок 2"
             ELSE
-                PRINT "case2-else"
+                PRINT "иначе: блок 2"
             END IF
         CASE ELSE
             ShowSummary(result)
@@ -44,17 +44,17 @@ IF result > 0 THEN
 ELSEIF result = 0 THEN
     FOR retry = 1 TO 2
         IF retry = 1 THEN
-            PRINT "retry-one"
+            PRINT "повтор: шаг 1"
         ELSEIF retry = 2 THEN
-            PRINT "retry-two"
+            PRINT "повтор: шаг 2"
         ELSE
-            PRINT "retry-else"
+            PRINT "иначе при повторе"
         END IF
     NEXT
 ELSE
     DO WHILE source > 0
         source = source - 1
-        PRINT "fallback"; source
+        PRINT "резервный путь"; source
     LOOP
 END IF
 
@@ -68,9 +68,9 @@ SUB ExerciseLoops(seed AS INTEGER)
     DO WHILE counter < 2
         counter = counter + 1
         IF counter = 1 THEN
-            PRINT "do-while"; counter
+            PRINT "цикл DO WHILE"; counter
         ELSE
-            PRINT "do-while-else"; counter
+            PRINT "иначе в DO WHILE"; counter
         END IF
     LOOP
 
@@ -78,38 +78,38 @@ SUB ExerciseLoops(seed AS INTEGER)
         counter = counter + 1
         SELECT CASE counter
             CASE 3
-                PRINT "do-until-case"; counter
+                PRINT "ветвь DO UNTIL"; counter
             CASE ELSE
-                PRINT "do-until-else"; counter
+                PRINT "иначе в DO UNTIL"; counter
         END SELECT
     LOOP
 
     DO
         counter = counter - 1
         IF counter > 1 THEN
-            PRINT "loop-while"; counter
+            PRINT "цикл LOOP WHILE"; counter
         ELSE
-            PRINT "loop-while-last"; counter
+            PRINT "последний шаг LOOP WHILE"; counter
         END IF
     LOOP WHILE counter > 1
 
     DO
         counter = counter + 1
         IF counter = 2 THEN
-            PRINT "loop-until"; counter
+            PRINT "цикл LOOP UNTIL"; counter
         ELSE
-            PRINT "loop-until-last"; counter
+            PRINT "последний шаг LOOP UNTIL"; counter
         END IF
     LOOP UNTIL counter = 3
 END SUB
 
 SUB ShowSummary(value AS INTEGER)
     IF value > 10 THEN
-        PRINT "big"
+        PRINT "большое значение"
     ELSEIF value > 5 THEN
-        PRINT "medium"
+        PRINT "среднее значение"
     ELSE
-        PRINT "small"
+        PRINT "малое значение"
     END IF
 END SUB
 

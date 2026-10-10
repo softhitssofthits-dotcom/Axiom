@@ -7225,7 +7225,7 @@ VIEWPORT (1, 2)-(10, 20)
     {
         var syntax = Parser.Parse(text, out var parserDiagnostics);
         Assert.Empty(parserDiagnostics);
-        return Binder.Bind(syntax, out diagnostics);
+        return Binder.Bind(syntax, out diagnostics, checkGraphicsModes: false);
     }
 
     private static FunctionSymbol AssertCalledFunction(BoundCallExpression call)

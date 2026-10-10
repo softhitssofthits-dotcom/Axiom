@@ -24,7 +24,8 @@ public sealed class InputStateFormEvidenceTests
     {
         var syntax = Parser.Parse("PRINT " + expression, out var parsing);
         Assert.Empty(parsing);
-        var program = Binder.Bind(syntax, out var binding);
+        // Здесь проверяется тип вызова, а не допустимость состояния экрана.
+        var program = Binder.Bind(syntax, out var binding, checkGraphicsModes: false);
         Assert.Empty(binding);
         var print = Assert.IsType<BoundPrintStatement>(Assert.Single(program.GlobalStatements));
         var call = Assert.IsType<BoundCallExpression>(Assert.Single(print.Items).Expression);

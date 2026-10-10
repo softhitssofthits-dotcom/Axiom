@@ -1,10 +1,10 @@
-' Expected: graphics screen reports active mode and dimensions, then SCREEN 0 switches to text window.
+' Ожидается: программа сообщает номер и размеры графического режима, а SCREEN 0 возвращает текстовое окно.
 SCREEN 5
-PRINT "active="; SCREENISACTIVE()
-PRINT "mode="; SCREENMODE()
-PRINT "size="; SCREENWIDTH(); "x"; SCREENHEIGHT()
-PRINT "Press ESC to close SCREEN"
+PRINT "Экран включён: "; SCREENISACTIVE()
+PRINT "Номер режима: "; SCREENMODE()
+PRINT "Размер: "; SCREENWIDTH(); " × "; SCREENHEIGHT()
+PRINT "Нажмите ESC, чтобы закрыть графический экран"
 DO WHILE NOT KEYPRESS("ESC")
 LOOP
 SCREEN 0
-PRINT "text mode screen"
+PRINT "Текстовый экран"

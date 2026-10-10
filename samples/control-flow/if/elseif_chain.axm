@@ -1,11 +1,11 @@
 ' Пример показывает цепочку IF ... ELSEIF ... ELSE.
-' При текущем значении value ожидается вывод: medium.
+' При текущем значении value ожидается вывод: «среднее значение».
 DIM value AS INTEGER = 7
 
 IF value > 10 THEN
-    PRINT "large"
+    PRINT "большое значение"
 ELSEIF value > 5 THEN
-    PRINT "medium"
+    PRINT "среднее значение"
 ELSE
-    PRINT "small"
+    PRINT "малое значение"
 END IF

@@ -88,12 +88,12 @@ PRINT frameChecksum
 PRINT lives
 
 SUB LoadResources()
-    mazeBackground = LOADIMAGE("samples/graphics/game/art/Background.gif")
-    playerFrames(DIR_RIGHT) = LOADSPRITE("samples/graphics/game/art/pacman-right/1.png", 16, 16)
-    playerFrames(DIR_LEFT) = LOADSPRITE("samples/graphics/game/art/pacman-left/1.png", 16, 16)
-    playerFrames(DIR_UP) = LOADSPRITE("samples/graphics/game/art/pacman-up/1.png", 16, 16)
-    playerFrames(DIR_DOWN) = LOADSPRITE("samples/graphics/game/art/pacman-down/1.png", 16, 16)
-    ghostSprite = LOADSPRITE("samples/graphics/game/art/ghosts/blinky.png", 16, 16)
+    mazeBackground = LOADIMAGE("../../graphics/game/art/Background.gif")
+    playerFrames(DIR_RIGHT) = LOADSPRITE("../../graphics/game/art/pacman-right/1.png", 16, 16)
+    playerFrames(DIR_LEFT) = LOADSPRITE("../../graphics/game/art/pacman-left/1.png", 16, 16)
+    playerFrames(DIR_UP) = LOADSPRITE("../../graphics/game/art/pacman-up/1.png", 16, 16)
+    playerFrames(DIR_DOWN) = LOADSPRITE("../../graphics/game/art/pacman-down/1.png", 16, 16)
+    ghostSprite = LOADSPRITE("../../graphics/game/art/ghosts/blinky.png", 16, 16)
 END SUB
 
 SUB InitMaze()

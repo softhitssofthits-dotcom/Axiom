@@ -1,6 +1,6 @@
 ' Сравнительный сценарий: адресная нагрузка на ветвления и циклы.
-' Намеренно держит built-in-слой минимальным, чтобы compare-engines
-' мерил прежде всего FOR/WHILE/DO ... LOOP, IF/ELSEIF и SELECT CASE.
+' Здесь намеренно мало вызовов встроенных функций, чтобы основная нагрузка приходилась
+' на циклы FOR/WHILE/DO ... LOOP, ветвления IF/ELSEIF и SELECT CASE.
 
 DIM total AS LONG = 0
 DIM branchChecksum AS LONG = 0

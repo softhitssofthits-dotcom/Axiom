@@ -1,5 +1,5 @@
 ' KEYDOWN() принимает документированные алиасы имён клавиш.
-' В IDE щёлкните по Output и удерживайте CTRL+PAGEUP.
+' В IDE щёлкните по вкладке «Консоль» и удерживайте CTRL+PAGEUP.
 PRINT "Удерживайте CTRL+PAGEUP."
 
 DIM matched AS BOOLEAN = FALSE

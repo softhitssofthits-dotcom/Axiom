@@ -1,6 +1,6 @@
-' Сравнительный сценарий: поисковые ARRAY-builtins без callback-слоя.
-' Нагружает ARRAYCONTAINS, ARRAYINDEXOF, ARRAYLASTINDEXOF, ARRAYCOUNT,
-' ARRAYFINDALL и ARRAYBINARYSEARCH на 1D и 2D-массивах.
+' РџСЂРѕРІРµСЂРєР° РІСЃС‚СЂРѕРµРЅРЅС‹С… С„СѓРЅРєС†РёР№ РїРѕРёСЃРєР° РїРѕ РјР°СЃСЃРёРІР°Рј Р±РµР· С„СѓРЅРєС†РёР№ РѕР±СЂР°С‚РЅРѕРіРѕ РІС‹Р·РѕРІР°.
+' РџСЂРѕРІРµСЂСЏСЋС‚СЃСЏ ARRAYCONTAINS, ARRAYINDEXOF, ARRAYLASTINDEXOF Рё ARRAYCOUNT,
+' Р° С‚Р°РєР¶Рµ ARRAYFINDALL Рё ARRAYBINARYSEARCH РЅР° РѕРґРЅРѕРјРµСЂРЅС‹С… Рё РґРІСѓРјРµСЂРЅС‹С… РјР°СЃСЃРёРІР°С….
 
 DIM values(1 TO 360) AS INTEGER
 DIM board(1 TO 18, 1 TO 20) AS INTEGER

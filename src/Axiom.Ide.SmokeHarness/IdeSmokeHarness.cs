@@ -52,6 +52,7 @@ internal sealed class IdeSmokeHarness
     private readonly string _hiddenFilePath;
     private readonly string _successProgramPath;
     private readonly string _syntaxErrorProgramPath;
+    private readonly string _runtimeDiagnosticProgramPath;
     private readonly string _inKeyProgramPath;
     private readonly string _onMouseProgramPath;
     private readonly string _getProgramPath;
@@ -86,6 +87,7 @@ internal sealed class IdeSmokeHarness
         _hiddenFilePath = Path.Combine(_workspaceRootPath, "hidden-note.txt");
         _successProgramPath = Path.Combine(_workspaceRootPath, "success.axm");
         _syntaxErrorProgramPath = Path.Combine(_workspaceRootPath, "syntax_error.axm");
+        _runtimeDiagnosticProgramPath = Path.Combine(_workspaceRootPath, "runtime_diagnostic.axm");
         _inKeyProgramPath = Path.Combine(_workspaceRootPath, "poll_keys.axm");
         _onMouseProgramPath = Path.Combine(_workspaceRootPath, "on_mouse.axm");
         _getProgramPath = Path.Combine(_workspaceRootPath, "samples", "operators", "get", "rectangle_capture.axm");
@@ -118,6 +120,19 @@ internal sealed class IdeSmokeHarness
             {
                 RunInputCanvasSmoke(mainWindow);
                 Console.WriteLine("Проверка INPUT и CANVAS в настоящем окне завершена.");
+                return;
+            }
+
+            if (_options.RuntimeDiagnosticLanguageOnly)
+            {
+                RunRuntimeDiagnosticLanguageSmoke(mainWindow);
+                Console.WriteLine("Проверка диагностики выполнения после смены языка завершена.");
+                return;
+            }
+
+            if (_options.VisualSamplesOnly)
+            {
+                RunVisualSamplesOnlySmoke(mainWindow);
                 return;
             }
 
@@ -230,6 +245,209 @@ internal sealed class IdeSmokeHarness
         WaitForText("OutputTextBox", static text => text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Contains("15")
             && text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Contains("0"));
         ReportStepCompleted();
+    }
+
+    private void RunVisualSamplesOnlySmoke(AutomationElement mainWindow)
+    {
+        var sampleRoot = Path.Combine(_repositoryRoot, "samples");
+        var graphicsPattern = new Regex(
+            @"\b(SCREEN|CANVAS|LOADIMAGE|LOADSPRITE|LOADTILESET|LOADTILEMAP|DRAWTILE|DRAWTILEMAP|DRAWTILELAYER|DRAWRECT|FILLRECT|DRAWLINE|DRAWCIRCLE|FILLCIRCLE|DRAWTEXT|PRESENT)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        var interactionPattern = new Regex(
+            @"\b(INPUT|INKEY|KEYDOWN|KEYPRESS|MOUSEBUTTON|MOUSEPRESS|MOUSEX|MOUSEY)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        var keyWaitSleepPattern = new Regex(
+            @"(?im)^\s*SLEEP\s*(?:'[^\r\n]*)?$",
+            RegexOptions.Compiled);
+        var absolutePathPattern = new Regex(
+            "\\\"(?:[A-Za-z]:[\\\\/]|\\\\\\\\)[^\\\"]*\\\"",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        var samples = Directory.GetFiles(sampleRoot, "*.axm", SearchOption.AllDirectories)
+            .Select(path => new
+            {
+                SourcePath = path,
+                RelativePath = Path.GetRelativePath(_repositoryRoot, path).Replace('\\', '/'),
+                Source = File.ReadAllText(path)
+            })
+            .Where(sample => graphicsPattern.IsMatch(sample.Source)
+                && !interactionPattern.IsMatch(sample.Source)
+                && !keyWaitSleepPattern.IsMatch(sample.Source)
+                && !absolutePathPattern.IsMatch(sample.Source)
+                && (_options.VisualSampleFilter is null
+                    || sample.RelativePath.Contains(_options.VisualSampleFilter, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(sample => sample.RelativePath, StringComparer.Ordinal)
+            .ToArray();
+
+        Console.WriteLine($"Найдено графических примеров без ручного ввода и ожидания нажатия клавиши: {samples.Length}.");
+        var failures = new List<string>();
+        var successCount = 0;
+        var expectedFailureCount = 0;
+
+        for (var index = 0; index < samples.Length; index++)
+        {
+            var sample = samples[index];
+            var workspacePath = Path.Combine(_workspaceRootPath, sample.RelativePath.Replace('/', Path.DirectorySeparatorChar));
+            ReportStep($"Графический пример {index + 1}/{samples.Length}: {sample.RelativePath}");
+            OpenWorkspaceFileFromTree(mainWindow, workspacePath);
+            SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "запуск графического примера");
+
+            string? status = null;
+            WaitFor(
+                () =>
+                {
+                    status = ReadLatestRunStatus(workspacePath);
+                    return status is null ? null : true;
+                },
+                $"Не завершился запуск графического примера: {sample.RelativePath}");
+
+            var statusText = ReadElementText(mainWindow, "StatusBarTextBlock");
+            var statusWait = Stopwatch.StartNew();
+            while (IsRunStatusActive(statusText) && statusWait.Elapsed < TimeSpan.FromSeconds(5))
+            {
+                Thread.Sleep(PollDelayMilliseconds);
+                statusText = ReadElementText(mainWindow, "StatusBarTextBlock");
+            }
+
+            if (IsRunStatusActive(statusText))
+            {
+                throw new InvalidOperationException(
+                    $"Программа завершилась со статусом {status} по журналу ProgramRunService, но IDE оставила строку состояния в активном режиме: '{statusText}'. Пример: {sample.RelativePath}");
+            }
+
+            var expectedError = IsExpectedErrorSample(sample.RelativePath, sample.Source);
+            if (string.Equals(status, "Success", StringComparison.Ordinal))
+            {
+                successCount++;
+            }
+            else if (expectedError && (string.Equals(status, "RuntimeFailure", StringComparison.Ordinal)
+                || string.Equals(status, "CompilationFailure", StringComparison.Ordinal)))
+            {
+                expectedFailureCount++;
+            }
+            else
+            {
+                failures.Add($"{sample.RelativePath}: {status}");
+            }
+
+            SendSmokeCommand(mainWindow, WmAppSmokeHarnessCloseTab, "закрыть проверенный пример");
+            ReportStepCompleted();
+        }
+
+        Console.WriteLine($"Успешные графические запуски: {successCount}; ожидаемые отрицательные примеры: {expectedFailureCount}; прочие сбои: {failures.Count}.");
+        if (failures.Count > 0)
+        {
+            throw new InvalidOperationException("Есть графические примеры с неожиданным результатом:\n" + string.Join(Environment.NewLine, failures));
+        }
+
+        CloseWindow(mainWindow, expectProcessExit: true);
+        Console.WriteLine("Пакетный запуск графических примеров в настоящей IDE завершён.");
+    }
+
+    private static bool IsExpectedErrorSample(string relativePath, string source)
+    {
+        return relativePath.Contains("/acceptance/negative/", StringComparison.OrdinalIgnoreCase)
+            || Path.GetFileNameWithoutExtension(relativePath).Contains("_error", StringComparison.OrdinalIgnoreCase)
+            || source.Contains("Ожидаемая диагностика", StringComparison.OrdinalIgnoreCase)
+            || source.Contains("Ожидаемая ошибка", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRunStatusActive(string statusText)
+    {
+        return statusText.Contains("Running...", StringComparison.OrdinalIgnoreCase)
+            || statusText.Contains("Выполнение...", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string? ReadLatestRunStatus(string sourcePath)
+    {
+        var logsDirectories = new[]
+        {
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Axiom",
+                "Logs",
+                "Events"),
+            Path.Combine(Path.GetDirectoryName(_ideExecutablePath) ?? _repositoryRoot, "Logs", "Events"),
+            Path.Combine(Path.GetDirectoryName(_ideExecutablePath) ?? _repositoryRoot, "Logs")
+        };
+        var latestLog = logsDirectories
+            .Where(Directory.Exists)
+            .SelectMany(static directory => Directory.EnumerateFiles(directory, "*.jsonl"))
+            .Select(static path => new FileInfo(path))
+            .OrderByDescending(static file => file.LastWriteTimeUtc)
+            .FirstOrDefault();
+        if (latestLog is null)
+        {
+            return null;
+        }
+
+        var expectedPath = Path.GetFullPath(sourcePath);
+        string? lastStatus = null;
+        string? lastRunDocumentPath = null;
+        try
+        {
+            using var stream = new FileStream(latestLog.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            while (reader.ReadLine() is { } line)
+            {
+                try
+                {
+                    using var json = JsonDocument.Parse(line);
+                    var entry = json.RootElement;
+                    var eventName = entry.TryGetProperty("eventName", out var name) ? name.GetString() : null;
+
+                    if (string.Equals(eventName, "command.executed", StringComparison.Ordinal)
+                        && entry.TryGetProperty("commandName", out var commandName)
+                        && string.Equals(commandName.GetString(), "Run", StringComparison.Ordinal))
+                    {
+                        lastRunDocumentPath = entry.TryGetProperty("documentPath", out var runDocumentPath)
+                            ? Path.GetFullPath(runDocumentPath.GetString() ?? string.Empty)
+                            : null;
+                    }
+
+                    var isServiceCompletion = eventName is "run.completed" or "run.stopped";
+                    var hasMatchingDocument = entry.TryGetProperty("documentPath", out var documentPath)
+                        && string.Equals(Path.GetFullPath(documentPath.GetString() ?? string.Empty), expectedPath, StringComparison.OrdinalIgnoreCase);
+                    var completionMatchesRequestedRun = isServiceCompletion
+                        && string.Equals(lastRunDocumentPath, expectedPath, StringComparison.OrdinalIgnoreCase);
+                    if ((!hasMatchingDocument || eventName is not ("debugger.run-finished" or "debugger.stopped"))
+                        && !completionMatchesRequestedRun)
+                    {
+                        continue;
+                    }
+
+                    if (entry.TryGetProperty("properties", out var properties)
+                        && properties.TryGetProperty("status", out var status))
+                    {
+                        lastStatus = status.GetString();
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Незавершённая строка журнала появится целиком при следующем опросе.
+                }
+            }
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+
+        return lastStatus;
+    }
+
+    private void RunRuntimeDiagnosticLanguageSmoke(AutomationElement mainWindow)
+    {
+        ReportStep("Run: MB3010 остаётся в списке после смены языка IDE");
+        OpenFileFromTree(mainWindow, Path.GetFileName(_runtimeDiagnosticProgramPath));
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "запуск примера с MB3010");
+        WaitForDataGridRows(mainWindow, "DiagnosticsDataGrid", minimumRowCount: 1);
+
+        InvokeMenuItem(mainWindow, "ViewMenuItem", "ViewLanguageMenuItem", "ViewLanguageRussianMenuItem");
+        WaitForDataGridRows(mainWindow, "DiagnosticsDataGrid", minimumRowCount: 1);
+        InvokeMenuItem(mainWindow, "ViewMenuItem", "ViewLanguageMenuItem", "ViewLanguageEnglishMenuItem");
+        WaitForDataGridRows(mainWindow, "DiagnosticsDataGrid", minimumRowCount: 1);
+        ReportStepCompleted();
+        CloseWindow(mainWindow, expectProcessExit: true);
     }
 
     private void RunDebuggerSmoke(AutomationElement mainWindow)
@@ -506,7 +724,7 @@ internal sealed class IdeSmokeHarness
             "9",
             "12",
             "15",
-            "GET sample finished");
+            "Проверка GET завершена");
 
         RunGraphicsSampleSmoke(
             mainWindow,
@@ -516,7 +734,7 @@ internal sealed class IdeSmokeHarness
             "2",
             "254",
             "253",
-            "PUT sample finished");
+            "Проверка PUT завершена");
 
         ReportStep("Close IDE after GET/PUT smoke");
         CloseWindow(mainWindow, expectProcessExit: true);
@@ -1910,10 +2128,20 @@ internal sealed class IdeSmokeHarness
     {
         Directory.CreateDirectory(_workspaceRootPath);
 
+        if (_options.VisualSamplesOnly)
+        {
+            CopyRepositoryDirectoryToWorkspace("samples", "samples");
+            CopyRepositoryFileToWorkspace(
+                Path.Combine("src", "Axiom.Ide", "Assets", "axiom.ico"),
+                Path.Combine(_workspaceRootPath, "src", "Axiom.Ide", "Assets", "axiom.ico"));
+        }
+
         CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "input", "single_variable.axm"),
             Path.Combine(_workspaceRootPath, "input.axm"));
         CopyRepositoryFileToWorkspaceForSmoke(Path.Combine("samples", "functions", "point", "canvas_pixel_read.axm"),
             Path.Combine(_workspaceRootPath, "canvas.axm"), static source => source.Replace("SLEEP 500", "SLEEP 2000", StringComparison.Ordinal));
+        CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "circle", "text_screen_error.axm"),
+            _runtimeDiagnosticProgramPath);
 
         File.WriteAllText(Path.Combine(_workspaceRootPath, "debugger.axm"),
             "PRINT 1\nPRINT Twice(21)\nPRINT \"Готово\"\nFUNCTION Twice(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION\n", Encoding.UTF8);
@@ -1974,11 +2202,10 @@ internal sealed class IdeSmokeHarness
             """
             ' События мыши работают в графическом окне.
             SCREEN 1
+            PRINT "Нажмите кнопку мыши, прокрутите колесо и нажмите ESC."
             ON MOUSE(1), Pressed
             ON MOUSE(1, "UP"), Released
             ON MOUSE("WHEEL"), Wheeled
-
-            PRINT "Нажмите кнопку мыши, прокрутите колесо и нажмите ESC."
 
             DO WHILE NOT KEYPRESS("ESC")
                 DIM idle AS INTEGER = 1
@@ -2023,6 +2250,37 @@ internal sealed class IdeSmokeHarness
         var sourcePath = Path.Combine(_repositoryRoot, repositoryRelativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(workspacePath) ?? _workspaceRootPath);
         File.Copy(sourcePath, workspacePath, overwrite: true);
+    }
+
+    private void CopyRepositoryDirectoryToWorkspace(string repositoryRelativePath, string workspaceRelativePath)
+    {
+        var sourceRoot = Path.Combine(_repositoryRoot, repositoryRelativePath);
+        var destinationRoot = Path.Combine(_workspaceRootPath, workspaceRelativePath);
+        CopyDirectoryTree(sourceRoot, destinationRoot);
+    }
+
+    private static void CopyDirectoryTree(string sourceRoot, string destinationRoot)
+    {
+        Directory.CreateDirectory(destinationRoot);
+        foreach (var file in Directory.EnumerateFiles(sourceRoot))
+        {
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
+            {
+                continue;
+            }
+
+            File.Copy(file, Path.Combine(destinationRoot, Path.GetFileName(file)), overwrite: true);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(sourceRoot))
+        {
+            if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+            {
+                continue;
+            }
+
+            CopyDirectoryTree(directory, Path.Combine(destinationRoot, Path.GetFileName(directory)));
+        }
     }
 
     private void CopyRepositoryFileToWorkspaceForSmoke(string repositoryRelativePath, string workspacePath, Func<string, string> transform)
@@ -2085,7 +2343,8 @@ internal sealed class IdeSmokeHarness
                 _inKeyProgramPath,
                 _configFilePath,
                 _styleFilePath,
-                _syntaxErrorProgramPath
+                _syntaxErrorProgramPath,
+                _runtimeDiagnosticProgramPath
             },
             LastDirectoryPath = _workspaceRootPath,
             IsFilesPaneVisible = isFilesPaneVisible,

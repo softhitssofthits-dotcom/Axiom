@@ -1323,9 +1323,9 @@ PRINT MOUSEBUTTON(1)
 """,
             inputProvider: new QueueInputProvider());
 
-        Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
-        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        Assert.Null(result.ActualEngine);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB2046");
     }
 
     [Fact]

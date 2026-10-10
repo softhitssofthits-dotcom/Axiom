@@ -1,5 +1,5 @@
 ' Детерминированная нагрузка на LOADIMAGE, LOADSPRITE, DRAWIMAGE и DRAWSPRITE без ручного ввода.
-' Сценарий нужен для сравнения Interpreter и BytecodeVm на современном CANVAS-пути со спрайтами и изображениями.
+' Сценарий создаёт графическую нагрузку на спрайты и изображения в CANVAS для замера производительности BytecodeVm.
 
 DIM WIDTH AS INTEGER = 320
 DIM HEIGHT AS INTEGER = 180
@@ -12,15 +12,15 @@ DIM background AS IMAGE
 DIM icon AS IMAGE
 DIM walker AS SPRITE
 
-background = LOADIMAGE("samples/graphics/game/art/Background.gif")
-icon = LOADIMAGE("src/Axiom.Ide/Assets/axiom.ico")
-walker = LOADSPRITE("samples/graphics/sprites/assets/walk_sheet.png", 16, 16)
+background = LOADIMAGE("../../graphics/game/art/Background.gif")
+icon = LOADIMAGE("../../../src/Axiom.Ide/Assets/axiom.ico")
+walker = LOADSPRITE("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
 
 CANVAS WIDTH, HEIGHT
 
 FOR frameIndex = 0 TO FRAMES - 1
     BEGINFRAME
-    ' Очищаем кадр и чуть сдвигаем камеру, чтобы часть спрайтов шла через world-координаты.
+' Очищаем кадр и немного сдвигаем камеру, чтобы часть спрайтов рисовалась в мировых координатах.
     CLS RGB(10 + (frameIndex MOD 5) * 6, 14, 22 + (frameIndex MOD 4) * 8)
     CAMERA (frameIndex MOD 6) * 3, (frameIndex MOD 4) * 2
 

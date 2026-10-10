@@ -2659,10 +2659,10 @@ public sealed class AcceptanceProgramTests
     }
 
     [Theory]
-    [InlineData("samples/operators/circle/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/operators/circle/text_screen_error.axm", "MB2046")]
     [InlineData("samples/functions/point/invalid_selector_error.axm", "MB3007")]
-    [InlineData("samples/operators/color/text_screen_error.axm", "MB3010")]
-    [InlineData("samples/operators/paint/text_screen_error.axm", "MB3010")]
+    [InlineData("samples/operators/color/text_screen_error.axm", "MB2046")]
+    [InlineData("samples/operators/paint/text_screen_error.axm", "MB2046")]
     [InlineData("samples/operators/view/invalid_bounds_error.axm", "MB3007")]
     [InlineData("samples/operators/window/zero_size_error.axm", "MB3007")]
     [InlineData("samples/operators/paint/empty_pattern_error.axm", "MB3007")]
@@ -2670,12 +2670,12 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/functions/pmap/invalid_selector_error.axm", "MB3007")]
     [InlineData("samples/graphics/screen/invalid_page_error.axm", "MB3007")]
     [InlineData("samples/operators/pcopy/invalid_page_error.axm", "MB3007")]
-    [InlineData("samples/operators/pcopy/text_screen_error.axm", "MB3010")]
-    [InlineData("samples/operators/palette/text_screen_error.axm", "MB3010")]
-    [InlineData("samples/operators/palette/using_without_screen_error.axm", "MB3010")]
+    [InlineData("samples/operators/pcopy/text_screen_error.axm", "MB2046")]
+    [InlineData("samples/operators/palette/text_screen_error.axm", "MB2046")]
+    [InlineData("samples/operators/palette/using_without_screen_error.axm", "MB2046")]
     [InlineData("samples/graphics/images/missing_image_error.axm", "MB3005")]
     [InlineData("samples/graphics/sprites/invalid_frame_error.axm", "MB3007")]
-    [InlineData("samples/graphics/modern/missing_canvas_error.axm", "MB3010")]
+    [InlineData("samples/graphics/modern/missing_canvas_error.axm", "MB2046")]
     [InlineData("samples/graphics/modern/negative_radius_error.axm", "MB3007")]
     [InlineData("samples/graphics/modern/invalid_text_position_error.axm", "MB3007")]
     public void GraphicsNegativeAcceptanceSamples_HaveStableDiagnosticParity(string relativePath, string expectedCode)
@@ -2685,8 +2685,16 @@ public sealed class AcceptanceProgramTests
 
         var bytecodeResult = Run(sourceText, bytecodeInputProvider);
 
-        Assert.Equal(ExecutionStatus.RuntimeFailure, bytecodeResult.Status);
-        Assert.Equal(ExecutionEngineKind.BytecodeVm, bytecodeResult.ActualEngine);
+        if (expectedCode == "MB2046")
+        {
+            Assert.Equal(ExecutionStatus.SemanticFailure, bytecodeResult.Status);
+            Assert.Null(bytecodeResult.ActualEngine);
+        }
+        else
+        {
+            Assert.Equal(ExecutionStatus.RuntimeFailure, bytecodeResult.Status);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, bytecodeResult.ActualEngine);
+        }
 
         var bytecodeDiagnostic = Assert.Single(bytecodeResult.Diagnostics);
         Assert.Equal(expectedCode, bytecodeDiagnostic.Code);

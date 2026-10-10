@@ -1,7 +1,10 @@
 ' WRITEFILE создаёт или перезаписывает текстовый файл.
-DIM path AS STRING = ".artifacts/axiom_sample_writefile.txt"
+DIM path AS STRING = MAKETEMPFILE("axiom_write_")
 
-PRINT WRITEFILE(path, "Hello")
+' Первую запись создаёт файл с фразой «Привет, мир!».
+PRINT WRITEFILE(path, "Привет, мир!")
 PRINT READFILE(path)
-PRINT WRITEFILE(path, "New text")
+' Вторая запись заменяет его содержимое целиком.
+PRINT WRITEFILE(path, "Новый текст")
 PRINT READFILE(path)
+DELETEFILE(path)

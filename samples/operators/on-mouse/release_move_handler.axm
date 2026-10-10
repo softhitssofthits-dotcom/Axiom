@@ -1,6 +1,6 @@
-' Manual check: move the pointer and release the left button inside SCREEN, then press ESC.
+' Ручная проверка: перемещайте указатель и отпустите левую кнопку мыши в окне SCREEN; для завершения нажмите ESC.
 SCREEN 1
-PRINT "Move mouse, release left button inside SCREEN. Press ESC to finish."
+PRINT "Двигайте указатель и отпустите левую кнопку в окне SCREEN. Для завершения нажмите ESC."
 DIM moveSeen AS BOOLEAN = FALSE
 DIM moveX AS LONG = 0
 DIM moveY AS LONG = 0
@@ -24,7 +24,7 @@ PRINT upSeen
 PRINT upButton
 PRINT upX
 PRINT upY
-PRINT "done"
+PRINT "Готово"
 
 SUB HandleMove(button AS INTEGER, x AS LONG, y AS LONG)
     moveSeen = TRUE

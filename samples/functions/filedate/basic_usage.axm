@@ -1,4 +1,7 @@
-DIM path AS STRING = ".artifacts/axiom_sample_filedate.txt"
+' MAKETEMPFILE создаёт отдельный файл для этой проверки.
+DIM path AS STRING = MAKETEMPFILE("axiom_filedate_")
 
-PRINT WRITEFILE(path, "Hello")
+' Записываем файл, чтобы у него появилась дата изменения.
+PRINT WRITEFILE(path, "Привет")
 PRINT LEN(FILEDATE(path)) > 0
+DELETEFILE(path)

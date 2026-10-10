@@ -1,9 +1,9 @@
-' Manual check: SCREEN opens the graphics window; the final values are printed after SCREEN 0.
+' Ручная проверка: SCREEN открывает графическое окно; итоговые координаты появятся после возврата к SCREEN 0.
 SCREEN 1
-PRINT "Move the pointer inside the SCREEN window."
+PRINT "Переместите указатель мыши внутри окна SCREEN."
 DIM my AS LONG = MOUSEY()
 DIM mx AS LONG = MOUSEX()
 SCREEN 0
 PRINT my
 PRINT mx
-PRINT "done"
+PRINT "Готово"

@@ -1,30 +1,30 @@
-' Move or click over the active program surface, press ESC to finish.
+' Двигайте мышь, нажимайте кнопки и прокручивайте колесо внутри окна. Нажмите ESC для завершения.
 SCREEN 3
 ON MOUSE("MOVE"), HandleMove
 ON MOUSE(1), HandleButton
 ON MOUSE(2), HandleButton
 ON MOUSE(3), HandleButton
 ON MOUSE("WHEEL"), HandleWheel
-PRINT "Move, click, wheel. ESC exits."
+PRINT "Двигайте мышь, нажимайте кнопки и крутите колесо. ESC завершает программу."
 DO WHILE NOT KEYPRESS("ESC")
     SLEEP 1
 LOOP
 SCREEN 0
-PRINT "Mouse sample finished"
+PRINT "Проверка мыши завершена"
 
 SUB HandleMove(value AS INTEGER, x AS LONG, y AS LONG)
     LOCATE 1, 1
-    PRINT "Move, click, wheel. ESC exits."
+    PRINT "Двигайте мышь, нажимайте кнопки и крутите колесо. ESC завершает программу."
     LOCATE 3, 1
-    PRINT "move x="; x; " y="; y; "                    "
+    PRINT "Движение: x="; x; " y="; y; "                    "
 END SUB
 
 SUB HandleButton(button AS INTEGER, x AS LONG, y AS LONG)
     LOCATE 4, 1
-    PRINT "button="; button; " x="; x; " y="; y; "                    "
+    PRINT "Кнопка="; button; " x="; x; " y="; y; "                    "
 END SUB
 
 SUB HandleWheel(delta AS INTEGER, x AS LONG, y AS LONG)
     LOCATE 5, 1
-    PRINT "wheel="; delta; " x="; x; " y="; y; "                    "
+    PRINT "Колесо="; delta; " x="; x; " y="; y; "                    "
 END SUB

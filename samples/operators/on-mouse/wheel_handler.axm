@@ -1,6 +1,6 @@
-' Manual check: scroll the wheel inside SCREEN, then press ESC.
+' Ручная проверка: прокрутите колесо мыши внутри SCREEN, затем нажмите ESC.
 SCREEN 1
-PRINT "Scroll mouse wheel inside SCREEN. Press ESC to finish."
+PRINT "Прокрутите колесо мыши в окне SCREEN. Для завершения нажмите ESC."
 DIM wheelSeen AS BOOLEAN = FALSE
 DIM wheelDelta AS INTEGER = 0
 DIM wheelX AS LONG = 0
@@ -17,7 +17,7 @@ PRINT wheelSeen
 PRINT wheelDelta
 PRINT wheelX
 PRINT wheelY
-PRINT "done"
+PRINT "Готово"
 
 SUB HandleWheel(delta AS INTEGER, x AS LONG, y AS LONG)
     wheelSeen = TRUE
@@ -25,5 +25,5 @@ SUB HandleWheel(delta AS INTEGER, x AS LONG, y AS LONG)
     wheelX = x
     wheelY = y
     LOCATE 3, 1
-    PRINT "wheel="; delta; " x="; x; " y="; y; "                    "
+    PRINT "Колесо="; delta; " x="; x; " y="; y; "                    "
 END SUB

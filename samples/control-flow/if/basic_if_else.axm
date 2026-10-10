@@ -1,9 +1,9 @@
 ' Пример показывает ветвление IF ... ELSE.
-' При текущем значении value ожидается вывод: not positive.
+' При текущем значении value ожидается вывод: «не положительное».
 DIM value AS INTEGER = -89
 
 IF value > 0 THEN
-    PRINT "positive"
+    PRINT "положительное"
 ELSE
-    PRINT "not positive"
+    PRINT "не положительное"
 END IF

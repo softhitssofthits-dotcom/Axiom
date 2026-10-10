@@ -45,7 +45,7 @@ internal static class DocumentCommands
                 edits = resultText != snapshot.SourceText ? new[] { new TextEdit(prefix, snapshot.SourceText.Length - prefix - suffix, resultText.Substring(prefix, resultText.Length - prefix - suffix)) } : [],
                 plan.NewCaretOffset };
         }
-        var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText));
+        var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText, includeUsageWarnings: true));
         var diagnostics = result.Diagnostics.Concat(result.BackendDiagnostics)
             .DistinctBy(d => (d.Code, d.Location.Span, d.Message))
             .Select(d => {

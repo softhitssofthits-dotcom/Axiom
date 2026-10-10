@@ -1,6 +1,6 @@
-' Manual check: click inside the SCREEN window before the program finishes.
+' Ручная проверка: нажмите кнопки мыши в окне SCREEN, пока программа считывает события нажатия.
 SCREEN 1
-PRINT "Click left once and middle once inside SCREEN."
+PRINT "Нажмите один раз левую и один раз среднюю кнопку в окне SCREEN."
 DIM firstLeft AS BOOLEAN = MOUSEPRESS(1)
 DIM secondLeft AS BOOLEAN = MOUSEPRESS(1)
 DIM middlePress AS BOOLEAN = MOUSEPRESS(3)
@@ -8,4 +8,4 @@ SCREEN 0
 PRINT firstLeft
 PRINT secondLeft
 PRINT middlePress
-PRINT "done"
+PRINT "Готово"

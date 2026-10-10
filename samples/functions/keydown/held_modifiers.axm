@@ -1,5 +1,5 @@
 ' KEYDOWN() проверяет, удерживается ли клавиша сейчас.
-' В IDE щёлкните по Output и удерживайте CTRL+LEFT.
+' В IDE щёлкните по вкладке «Консоль» и удерживайте CTRL+LEFT.
 PRINT "Удерживайте CTRL+LEFT."
 
 DIM matched AS BOOLEAN = FALSE

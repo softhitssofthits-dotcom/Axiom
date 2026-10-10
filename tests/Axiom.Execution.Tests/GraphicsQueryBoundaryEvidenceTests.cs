@@ -49,7 +49,13 @@ public sealed class GraphicsQueryBoundaryEvidenceTests
 
     private static void Check(IInputProvider? host, string source, string[] expected)
     {
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, inputProvider: host));
+        var pipeline = new AxiomExecutionPipeline();
+        // Проверяем перехват ошибок самой VM при неизвестном компилятору
+        // входном состоянии; отдельная проверка IDE отвергает известный режим.
+        var compiled = pipeline.Compile(new CompilationRequest(source,
+            initialGraphicsContext: Axiom.Semantics.InitialGraphicsContext.Unknown));
+        Assert.True(compiled.Succeeded, string.Join("\n", compiled.Diagnostics.Select(d => d.Message)));
+        var run = pipeline.RunCompiled(compiled.CompiledProgram!, new ExecutionRequest(source, inputProvider: host));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);

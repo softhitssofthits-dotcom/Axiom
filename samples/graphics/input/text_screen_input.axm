@@ -1,4 +1,4 @@
-﻿' Expected: SCREEN 0 uses the separate SCREEN text window, not the IDE Output tab.
+﻿' Ожидается: SCREEN 0 открывает отдельное текстовое окно, а ввод не попадает во вкладку «Консоль» IDE.
 SCREEN 0
 DIM name AS STRING, age AS INTEGER
 INPUT "Ваше имя"; name

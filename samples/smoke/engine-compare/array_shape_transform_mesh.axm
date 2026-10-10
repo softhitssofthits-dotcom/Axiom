@@ -1,6 +1,6 @@
-' Сравнительный сценарий: shape-builtins массивов без callback-слоя.
-' Нагружает ARRAYDISTINCT, ARRAYTOREVERSED, ARRAYREVERSE,
-' ARRAYFLATTEN и ARRAYRESHAPE на одном и том же 2D-массиве.
+' РџСЂРѕРІРµСЂРєР° РІСЃС‚СЂРѕРµРЅРЅС‹С… С„СѓРЅРєС†РёР№ РёР·РјРµРЅРµРЅРёСЏ С„РѕСЂРјС‹ РјР°СЃСЃРёРІРѕРІ Р±РµР· С„СѓРЅРєС†РёР№ РѕР±СЂР°С‚РЅРѕРіРѕ РІС‹Р·РѕРІР°.
+' РџСЂРѕРІРµСЂСЏСЋС‚СЃСЏ ARRAYDISTINCT, ARRAYTOREVERSED, ARRAYREVERSE,
+' ARRAYFLATTEN Рё ARRAYRESHAPE РЅР° РѕРґРЅРѕРј РґРІСѓРјРµСЂРЅРѕРј РјР°СЃСЃРёРІРµ.
 
 DIM template(1 TO 18, 1 TO 18) AS INTEGER
 DIM current(,) AS INTEGER

@@ -31,7 +31,12 @@ public sealed class MouseBoundaryEvidenceTests
     {
         foreach (var expression in new[] { "MOUSEX()", "MOUSEY()", "MOUSEBUTTON(2147483647)", "MOUSEPRESS(-2147483648)" })
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {expression}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 42\nEND TRY"));
+            var source = $"TRY\nPRINT {expression}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 42\nEND TRY";
+            var pipeline = new AxiomExecutionPipeline();
+            var compilation = pipeline.Compile(new CompilationRequest(source,
+                initialGraphicsContext: Axiom.Semantics.InitialGraphicsContext.Unknown));
+            Assert.True(compilation.Succeeded);
+            var run = pipeline.RunCompiled(compilation.CompiledProgram!, new ExecutionRequest(source));
             Check(run, ["MB3010", "42"]);
         }
     }

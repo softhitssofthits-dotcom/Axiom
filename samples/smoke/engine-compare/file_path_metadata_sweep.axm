@@ -1,6 +1,6 @@
-' Сравнительный сценарий: файловые path/info built-in.
+' Нагрузка на встроенные функции работы с путями и сведениями о файлах.
 ' Нагружает COMBINEPATH, FULLPATH, FILENAME, DIRNAME, FILEEXISTS, PATHEXISTS,
-' FILESIZE, FILEDATE, ISABSOLUTEPATH и GETFILES почти без строкового и regex-слоя.
+' FILESIZE, FILEDATE, ISABSOLUTEPATH и GETFILES почти без обработки строк и регулярных выражений.
 
 DIM artifactsRoot AS STRING = COMBINEPATH(CURRENTDIR(), ".artifacts")
 DIM compareRoot AS STRING = COMBINEPATH(artifactsRoot, "manual-checks")

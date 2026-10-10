@@ -1,5 +1,6 @@
 // Live diagnostics (check --stdin) and the Problems panel.
 const { testWorkspace, writeAxm } = require('../helpers');
+const path = require('path');
 
 module.exports = [
   {
@@ -68,6 +69,68 @@ module.exports = [
         null, { timeout: 15000, polling: 200 }
       );
       C.ok(true, 'clean check reported');
+    },
+  },
+  {
+    id: 'unused-variable-warning',
+    name: 'Неиспользуемая переменная отмечается жёлтым предупреждением и не блокирует запуск',
+    async fn({ S, C }) {
+      const file = writeAxm(testWorkspace('unused-variable'), 'unused.axm', 'DIM spare AS INTEGER = 42\nPRINT "Программа выполнена"\n');
+      await S.launch(); await S.stubOpenDialog([file]);
+      await S.page.evaluate(() => window.__ide.handleAction('open'));
+      await S.page.waitForFunction(p => window.__ide.activeFile === p, file);
+      await S.page.evaluate(() => window.__ide.handleAction('check'));
+      await S.page.waitForFunction(() => document.getElementById('diagnostics-content').textContent.includes('MB2047'));
+      C.ok(await S.page.locator('#diagnostics-content .diagnostic-icon.warning').count() > 0, 'предупреждение имеет жёлтый значок');
+      const markers = await S.markers();
+      C.ok(markers.some(marker => marker.message.includes('MB2047') && marker.severity === 4), 'Monaco показывает предупреждение, а не ошибку');
+      await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
+      await S.waitConsole('Программа выполнена');
+      C.ok(true, 'предупреждение не блокирует запуск');
+      await S.page.evaluate(() => window.__ide.setLanguage('en'));
+      await S.page.evaluate(() => window.__ide.handleAction('check'));
+      await S.page.waitForFunction(() => document.getElementById('diagnostics-content').textContent.includes('MB2047'));
+      C.ok(await S.page.evaluate(() => document.getElementById('diagnostics-content').textContent.includes('never used')), 'предупреждение переведено на английский');
+    },
+  },
+  {
+    id: 'circle-text-mode-check-run-diagnostic',
+    name: 'Check находит графику в SCREEN 0 и блокирует Run; сообщение сохраняется при смене языка',
+    async fn({ S, C }) {
+      const file = path.resolve(__dirname, '..', '..', '..', 'samples', 'operators', 'circle', 'text_screen_error.axm');
+      await S.launch();
+      await S.stubOpenDialog([file]);
+      await S.page.evaluate(() => window.__ide.handleAction('open'));
+      await S.page.waitForFunction(
+        (p) => window.__ide && window.__ide.activeFile === p && !window.__ide.dirty.has(p),
+        file, { timeout: 8000, polling: 100 }
+      );
+
+      await S.page.evaluate(() => window.__ide.handleAction('check'));
+      await S.page.waitForFunction(
+        () => document.getElementById('diagnostics-content').innerText.includes('MB2046'),
+        null, { timeout: 15000, polling: 200 }
+      );
+      C.ok(true, 'Check показал ошибку MB2046 до запуска');
+
+      await S.page.evaluate(() => {
+        window.__ide.setLanguage('en');
+        window.__ide.run();
+      });
+      await S.waitIdle();
+      await S.page.waitForFunction(
+        () => document.getElementById('diagnostics-content').textContent.includes('MB2046'),
+        null, { timeout: 8000, polling: 100 }
+      );
+      C.ok(true, 'Run сохранил ошибку компиляции в английском интерфейсе');
+      C.ok(await S.page.evaluate(() => !window.__ide.execution.surface), 'запуск не создал окно программы');
+
+      await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+      C.ok(await S.page.evaluate(() => document.getElementById('diagnostics-content').textContent.includes('MB2046')),
+        'смена языка на русский не скрыла диагностику');
+      await S.page.evaluate(() => window.__ide.setLanguage('en'));
+      C.ok(await S.page.evaluate(() => document.getElementById('diagnostics-content').textContent.includes('MB2046')),
+        'повторная смена языка не скрыла диагностику и не перезапустила программу');
     },
   },
 ];

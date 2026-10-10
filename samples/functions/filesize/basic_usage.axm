@@ -1,4 +1,7 @@
-DIM path AS STRING = ".artifacts/axiom_sample_filesize.txt"
+' Размер проверяется на отдельном временном файле.
+DIM path AS STRING = MAKETEMPFILE("axiom_filesize_")
 
-PRINT WRITEFILE(path, "Hello")
+' Размер считается в байтах, поэтому сначала записываем известный текст.
+PRINT WRITEFILE(path, "Привет")
 PRINT FILESIZE(path)
+DELETEFILE(path)

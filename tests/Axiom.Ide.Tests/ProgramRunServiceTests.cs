@@ -844,6 +844,29 @@ PRINT "�������� SCREEN 10 ���������"
     }
 
     [Fact]
+    public void CircleInTextMode_FailsCheckAndBlocksRun()
+    {
+        var service = CreateService();
+        const string source = """
+' Ожидается MB2046: CIRCLE нельзя выполнять в текстовом режиме.
+SCREEN 0
+CIRCLE (10, 10), 5, 14
+""";
+
+        var check = service.Compile(source);
+        Assert.Equal(ProgramCompilationStatus.SemanticFailure, check.Status);
+        Assert.Equal("MB2046", Assert.Single(check.Diagnostics).Code);
+
+        var run = service.Run(source);
+        Assert.Equal(ProgramRunStatus.SemanticFailure, run.Status);
+        var diagnostic = Assert.Single(run.Diagnostics);
+        Assert.Equal("Semantic", diagnostic.Stage);
+        Assert.Equal("MB2046", diagnostic.Code);
+        Assert.Equal(3, diagnostic.Line);
+        Assert.Contains("CIRCLE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Run_WhenHostCancellationIsRequested_ReturnsCancelled()
     {
         var consoleService = new FakeProgramConsoleService(new FakeProgramInputPromptService())

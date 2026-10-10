@@ -1,17 +1,17 @@
-' SELECT CASE with string ranges and CASE IS comparisons
+' SELECT CASE умеет сравнивать строки и проверять, входит ли буква в диапазон.
 DIM command AS STRING = "Nuts"
 DIM letter AS STRING = "B"
 
 SELECT CASE command
     CASE IS > "M"
-        PRINT "after"
+        PRINT "После буквы M"
     CASE ELSE
-        PRINT "before"
+        PRINT "До буквы M"
 END SELECT
 
 SELECT CASE letter
     CASE "A" TO "M"
-        PRINT "first"
+        PRINT "Первая часть алфавита"
     CASE ELSE
-        PRINT "second"
+        PRINT "Вторая часть алфавита"
 END SELECT

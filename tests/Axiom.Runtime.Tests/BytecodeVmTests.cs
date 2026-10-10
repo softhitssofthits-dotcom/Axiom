@@ -7017,7 +7017,8 @@ END FUNCTION
         var syntax = Parser.Parse(text, out var parserDiagnostics);
         Assert.Empty(parserDiagnostics);
 
-        var program = Binder.Bind(syntax, out var binderDiagnostics);
+        // Проверяем защиту самой VM даже для программ, отвергаемых компилятором.
+        var program = Binder.Bind(syntax, out var binderDiagnostics, checkGraphicsModes: false);
         Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var loweringResult = new BoundProgramLowerer().Lower(program);

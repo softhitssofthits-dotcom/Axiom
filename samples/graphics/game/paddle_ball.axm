@@ -1,5 +1,5 @@
-﻿' Paddle-ball SCREEN smoke test.
-' LEFT and RIGHT move the paddle, SPACE toggles pause, ESC exits.
+﻿' Небольшая игра на операторе SCREEN: отбивайте мяч платформой.
+' Стрелки LEFT и RIGHT двигают платформу, SPACE ставит игру на паузу, ESC завершает её.
 SCREEN 3
 
 DIM paddleW AS INTEGER = 90
@@ -17,11 +17,11 @@ DIM oldBallY AS INTEGER = ballY
 DIM frame AS INTEGER = 0
 DIM running AS BOOLEAN = TRUE
 DIM paused AS BOOLEAN = FALSE
-DIM status AS STRING = "running"
+DIM status AS STRING = "игра продолжается"
 
 COLOR 15, 0
 LOCATE 1, 1
-PRINT "LEFT/RIGHT move, SPACE pauses/resumes, ESC exits"
+PRINT "LEFT/RIGHT — двигать платформу, SPACE — пауза, ESC — выход"
 
 DO WHILE running
     oldPaddleX = paddleX
@@ -33,7 +33,7 @@ DO WHILE running
     END IF
 
     IF KEYPRESS("ESC") THEN
-        status = "esc"
+        status = "выход по ESC"
         running = FALSE
     ELSE
         IF NOT paused THEN
@@ -79,7 +79,7 @@ DO WHILE running
             END IF
 
             IF ballY - ballR > SCREENHEIGHT() THEN
-                status = "miss"
+                status = "мяч пропущен"
                 running = FALSE
             END IF
 
@@ -106,9 +106,9 @@ DO WHILE running
 
     LOCATE 3, 1
     IF paused THEN
-        PRINT "PAUSED frame="; frame; " ball="; ballX; ","; ballY; "                    "
+        PRINT "ПАУЗА, кадр="; frame; " мяч="; ballX; ","; ballY; "                    "
     ELSE
-        PRINT "frame="; frame; " ball="; ballX; ","; ballY; "                    "
+        PRINT "Кадр="; frame; " мяч="; ballX; ","; ballY; "                    "
     END IF
 
     FOR delay = 1 TO 250
@@ -118,4 +118,4 @@ DO WHILE running
 LOOP
 
 SCREEN 0
-PRINT "Paddle ball sample finished: "; status
+PRINT "Игра завершена: "; status

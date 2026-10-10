@@ -1,13 +1,13 @@
-' SELECT CASE with ranges and IS comparisons
+' SELECT CASE показывает сравнения IS и проверку нескольких числовых диапазонов.
 DIM score AS INTEGER = 82
 
 SELECT CASE score
     CASE IS > 90
-        PRINT "excellent"
+        PRINT "Отлично"
     CASE IS >= 75
-        PRINT "good"
+        PRINT "Хорошо"
     CASE IS < 50
-        PRINT "fail"
+        PRINT "Нужно повторить"
     CASE ELSE
-        PRINT "retry"
+        PRINT "Попробуйте ещё раз"
 END SELECT

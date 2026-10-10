@@ -1,5 +1,5 @@
 ' KEYPRESS() возвращает TRUE один раз для одного события нажатия.
-' В IDE щёлкните по Output и один раз нажмите LEFT.
+' В IDE щёлкните по вкладке «Консоль» и один раз нажмите LEFT.
 PRINT "Нажмите LEFT один раз."
 
 DIM pressed AS BOOLEAN = FALSE

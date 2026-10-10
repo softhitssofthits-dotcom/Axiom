@@ -279,7 +279,8 @@ public sealed class AxiomExecutionPipeline
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var compilation = CompileCore(request.SourceText, request.ProgressReporter, request.BytecodeSnapshotPath);
+        var compilation = CompileCore(request.SourceText, request.ProgressReporter, request.BytecodeSnapshotPath,
+            request.IncludeUsageWarnings, request.InitialGraphicsContext);
 
         foreach (var diagnostic in compilation.Diagnostics)
         {
@@ -298,7 +299,13 @@ public sealed class AxiomExecutionPipeline
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var compilation = CompileCore(request.SourceText, progressReporter: null, request.BytecodeSnapshotPath);
+        var initialGraphicsContext = request.InputProvider is IGraphicsHost graphicsHost
+            ? graphicsHost.IsCanvasActive ? InitialGraphicsContext.Canvas
+                : graphicsHost.IsScreenActive ? InitialGraphicsContext.GraphicsScreen
+                : graphicsHost.IsScreenOutputActive ? InitialGraphicsContext.TextScreen : InitialGraphicsContext.None
+            : InitialGraphicsContext.None;
+        var compilation = CompileCore(request.SourceText, progressReporter: null, request.BytecodeSnapshotPath,
+            initialGraphicsContext: initialGraphicsContext);
 
         if (!compilation.FrontendSucceeded)
         {
@@ -384,7 +391,9 @@ public sealed class AxiomExecutionPipeline
     private static CompilationResult CompileCore(
         string sourceText,
         IProgress<int>? progressReporter,
-        string? bytecodeSnapshotPath)
+        string? bytecodeSnapshotPath,
+        bool includeUsageWarnings = false,
+        InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
     {
         var frontendStopwatch = Stopwatch.StartNew();
 
@@ -403,7 +412,10 @@ public sealed class AxiomExecutionPipeline
         }
 
         progressReporter?.Report(55);
-        var boundProgram = Binder.Bind(syntax, out var semanticDiagnostics);
+        var boundProgram = Binder.Bind(syntax, out var semanticDiagnostics, initialGraphicsContext: initialGraphicsContext);
+
+        if (includeUsageWarnings && !semanticDiagnostics.Any(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
+            semanticDiagnostics.AddRange(VariableUsageAnalysis.Analyze(boundProgram));
 
         if (semanticDiagnostics.Any(static diagnostic => diagnostic.Severity != DiagnosticSeverity.Warning))
         {

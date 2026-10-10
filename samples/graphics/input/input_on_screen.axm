@@ -1,9 +1,9 @@
-﻿' Expected: INPUT prompt belongs to the active SCREEN session.
+﻿' Ожидается: подсказка INPUT показывается в активном окне SCREEN.
 SCREEN 2
 DIM name AS STRING
-INPUT "Your name"; name
-PRINT "Hello, "; name
+INPUT "Как вас зовут"; name
+PRINT "Здравствуйте, "; name
 DO WHILE NOT KEYPRESS("ESC")
 LOOP
 SCREEN 0
-PRINT "Input sample finished"
+PRINT "Ввод завершён"

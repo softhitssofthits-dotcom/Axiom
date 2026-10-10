@@ -1,4 +1,4 @@
-' ERASE returns an array to the unallocated state.
+' ERASE освобождает массив: после этого для работы с ним снова нужно выполнить REDIM.
 
 DIM values() AS INTEGER
 REDIM values(1 TO 2)

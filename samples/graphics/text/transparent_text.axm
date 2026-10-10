@@ -1,16 +1,16 @@
-' Expected: the first line has an opaque panel, the second line is drawn transparently over graphics.
+' Ожидается: первая строка печатается на непрозрачной подложке, а вторая ложится прямо поверх рисунка.
 SCREEN 1
 LINE (0, 0)-(319, 199), 1, BF
 LINE (24, 24)-(296, 120), 4, BF
 LOCATE 4, 5
 COLOR 14, 1
-PRINT "Opaque status bar on blue background"
+PRINT "Непрозрачная строка на синем фоне"
 LOCATE 7, 5
 COLOR 15, TRANSPARENT
-PRINT "Transparent caption over the red rectangle"
+PRINT "Прозрачная надпись поверх красного прямоугольника"
 LOCATE 16, 1
 COLOR 10, TRANSPARENT
-PRINT "Press ESC to finish"
+PRINT "Нажмите ESC для завершения"
 SLEEP 500
 SCREEN 0
-PRINT "Transparent text sample finished"
+PRINT "Проверка прозрачного текста завершена"

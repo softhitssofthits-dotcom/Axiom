@@ -1,6 +1,6 @@
-' Manual check: hold mouse buttons inside the SCREEN window.
+' Ручная проверка: удерживайте кнопки мыши в окне SCREEN, пока программа считывает их состояние.
 SCREEN 1
-PRINT "Hold left and middle mouse buttons inside SCREEN."
+PRINT "Удерживайте левую и среднюю кнопки мыши в окне SCREEN."
 DIM leftDown AS BOOLEAN = MOUSEBUTTON(1)
 DIM rightDown AS BOOLEAN = MOUSEBUTTON(2)
 DIM middleDown AS BOOLEAN = MOUSEBUTTON(3)
@@ -10,4 +10,4 @@ PRINT leftDown
 PRINT rightDown
 PRINT middleDown
 PRINT unknownDown
-PRINT "done"
+PRINT "Готово"

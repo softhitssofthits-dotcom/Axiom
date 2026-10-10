@@ -1,12 +1,12 @@
 ' Пример показывает SELECT CASE со строковыми значениями.
-' При текущем значении command ожидается вывод: save.
-DIM command AS STRING = "SAVE"
+' При команде «СОХРАНИТЬ» ожидается соответствующее русское сообщение.
+DIM command AS STRING = "СОХРАНИТЬ"
 
 SELECT CASE command
-    CASE "OPEN"
-        PRINT "open"
-    CASE "SAVE"
-        PRINT "save"
+    CASE "ОТКРЫТЬ"
+        PRINT "Открыть файл"
+    CASE "СОХРАНИТЬ"
+        PRINT "Сохранить файл"
     CASE ELSE
-        PRINT "unknown"
+        PRINT "Неизвестная команда"
 END SELECT

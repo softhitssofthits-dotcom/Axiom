@@ -55,12 +55,14 @@ public sealed partial class Binder
 
     public DiagnosticBag Diagnostics => _diagnostics;
 
-    public static BoundProgram Bind(ProgramSyntax program, out DiagnosticBag diagnostics)
+    public static BoundProgram Bind(ProgramSyntax program, out DiagnosticBag diagnostics,
+        bool checkGraphicsModes = true, InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
     {
         ArgumentNullException.ThrowIfNull(program);
 
         var binder = new Binder();
         var boundProgram = binder.BindProgram(program);
+        if (checkGraphicsModes) binder.CheckGraphicsModes(boundProgram, initialGraphicsContext);
         diagnostics = binder.Diagnostics;
         return boundProgram;
     }
@@ -102,7 +104,8 @@ public sealed partial class Binder
             }
         }
 
-        return new BoundProgram(GetProgramLocation(program), _globalStatements, _routines);
+        var boundProgram = new BoundProgram(GetProgramLocation(program), _globalStatements, _routines);
+        return boundProgram;
     }
 }
 

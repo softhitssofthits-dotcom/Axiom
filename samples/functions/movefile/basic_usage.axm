@@ -1,8 +1,13 @@
 ' Создаёт файл и переносит его в текущей рабочей папке.
-DIM source AS STRING = ".artifacts/axiom_sample_move_source.txt"
-DIM target AS STRING = ".artifacts/axiom_sample_move_target.txt"
+DIM folder AS STRING = MAKETEMPDIR("axiom_move_")
+DIM source AS STRING = COMBINEPATH(folder, "source.txt")
+DIM target AS STRING = COMBINEPATH(folder, "target.txt")
 
-PRINT WRITEFILE(source, "Hello")
+' Создаём исходник, затем переносим его по новому пути.
+PRINT WRITEFILE(source, "Привет")
 PRINT MOVEFILE(source, target, TRUE)
+' После переноса старого пути нет, а нового — есть.
 PRINT FILEEXISTS(source)
 PRINT FILEEXISTS(target)
+DELETEFILE(target)
+DELETEDIR(folder)

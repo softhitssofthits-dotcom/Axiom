@@ -1,8 +1,12 @@
 ' Создаёт файл и переименовывает его в текущей рабочей папке.
-DIM source AS STRING = ".artifacts/axiom_sample_rename_source.txt"
-DIM target AS STRING = ".artifacts/axiom_sample_rename_target.txt"
+DIM folder AS STRING = MAKETEMPDIR("axiom_rename_")
+DIM source AS STRING = COMBINEPATH(folder, "source.txt")
+DIM target AS STRING = COMBINEPATH(folder, "target.txt")
 
-PRINT DELETEFILE(target)
-PRINT WRITEFILE(source, "Hello")
-PRINT RENAMEFILE(source, "axiom_sample_rename_target.txt")
+' Убираем копию от прошлого запуска, если она осталась.
+' Создаём файл и переносим его под новое имя.
+PRINT WRITEFILE(source, "Привет")
+PRINT RENAMEFILE(source, "target.txt")
 PRINT FILEEXISTS(target)
+DELETEFILE(target)
+DELETEDIR(folder)

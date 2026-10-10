@@ -1,4 +1,7 @@
-DIM path AS STRING = ".artifacts/axiom_sample_readfile.txt"
+' Этот пример создаёт файл рядом с собой, а затем читает тот же файл.
+DIM path AS STRING = MAKETEMPFILE("axiom_read_")
 
-PRINT WRITEFILE(path, "Hello")
+' Записываем фразу, чтобы READFILE было что прочитать.
+PRINT WRITEFILE(path, "Привет, мир!")
 PRINT READFILE(path)
+DELETEFILE(path)

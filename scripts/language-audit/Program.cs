@@ -7,8 +7,28 @@ using Axiom.Semantics;
 // Независимый аудит: сохраняет наблюдения, не меняет реализацию языка.
 var root = Path.GetFullPath(args.FirstOrDefault() ?? ".");
 Directory.SetCurrentDirectory(root);
-var inventoryOnly = args.Skip(1).Contains("--inventory-only", StringComparer.Ordinal);
-var output = Path.Combine(root, inventoryOnly ? ".artifacts/language-inventory-current" : ".artifacts/language-audit-20261007");
+var options = args.Skip(1).ToArray();
+var inventoryOnly = options.Contains("--inventory-only", StringComparer.Ordinal);
+var outputOption = Array.IndexOf(options, "--output-dir");
+string output;
+if (outputOption >= 0)
+{
+    if (outputOption + 1 >= options.Length || options[outputOption + 1].StartsWith("--", StringComparison.Ordinal))
+        throw new ArgumentException("Для --output-dir укажите каталог внутри .artifacts.");
+
+    var artifactsRoot = Path.GetFullPath(Path.Combine(root, ".artifacts"));
+    output = Path.GetFullPath(options[outputOption + 1], root);
+    var relativeOutput = Path.GetRelativePath(artifactsRoot, output);
+    if (Path.IsPathRooted(relativeOutput)
+        || relativeOutput == ".."
+        || relativeOutput.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+        || relativeOutput.StartsWith(".." + Path.AltDirectorySeparatorChar, StringComparison.Ordinal))
+        throw new ArgumentException("Для --output-dir укажите каталог внутри .artifacts.");
+}
+else
+{
+    output = Path.Combine(root, inventoryOnly ? ".artifacts/language-inventory-current" : ".artifacts/language-audit-20261007");
+}
 Directory.CreateDirectory(output);
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 Inventory.Write(root, output);

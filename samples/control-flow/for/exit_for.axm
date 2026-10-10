@@ -2,7 +2,7 @@
 ' Ожидается вывод:
 ' 1
 ' 2
-' done
+' Готово
 
 FOR i = 1 TO 5
     IF i = 3 THEN
@@ -12,4 +12,4 @@ FOR i = 1 TO 5
     PRINT i
 NEXT
 
-PRINT "done"
+PRINT "Готово"

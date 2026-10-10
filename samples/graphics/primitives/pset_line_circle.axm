@@ -1,4 +1,4 @@
-﻿' Expected: primitives draw on the SCREEN pixel layer.
+﻿' Ожидается: графические примитивы рисуют точки, линии и окружность в окне SCREEN.
 SCREEN 8
 PSET (10, 10), 12
 PRESET (11, 10), 0
@@ -6,9 +6,9 @@ LINE (20, 20) - (220, 80), 10
 LINE (30, 100) - (180, 160), 11, b
 LINE (220, 100) - (360, 660), 11, BF
 CIRCLE (420, 160), 50, 14
-PRINT "POINT(10,10)="; POINT(10, 10)
-PRINT "Press ESC to return to Output"
+PRINT "Цвет точки (10, 10): "; POINT(10, 10)
+PRINT "Нажмите ESC, чтобы вернуться к текстовому окну"
 DO WHILE NOT KEYPRESS("ESC")
 LOOP
 SCREEN 0
-PRINT "Graphics primitives sample finished"
+PRINT "Проверка графических примитивов завершена"

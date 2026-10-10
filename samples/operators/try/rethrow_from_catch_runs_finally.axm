@@ -1,19 +1,19 @@
 ' Повторный выброс ошибки из CATCH (ERROR err) не отменяет FINALLY:
 ' внутренний FINALLY выполняется перед передачей ошибки внешнему CATCH.
 ' Ожидаемый вывод:
-' inner-cleanup
+' Внутренняя очистка
 ' APP010
-' after
+' После обработки ошибки
 TRY
     TRY
         ERROR "APP010", "Исходная ошибка"
     CATCH inner
         ERROR inner
     FINALLY
-        PRINT "inner-cleanup"
+        PRINT "Внутренняя очистка"
     END TRY
 CATCH outer
     PRINT outer.Code
 END TRY
 
-PRINT "after"
+PRINT "После обработки ошибки"

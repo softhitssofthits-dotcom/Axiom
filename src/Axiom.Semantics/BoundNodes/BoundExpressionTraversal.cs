@@ -1,0 +1,101 @@
+namespace Axiom.Semantics;
+
+// Выражения одного узла перечислены явно: тела ветвей обходит анализ потока.
+internal static class BoundExpressionTraversal
+{
+    public static IEnumerable<BoundExpression> Immediate(BoundNode sourceNode)
+    {
+        BoundExpression?[] expressions = sourceNode switch
+        {
+            BoundLiteralExpression node => [],
+            BoundFunctionExpression node => [],
+            BoundVariableExpression node => [],
+            BoundArrayAccessExpression node => [node.Target, ..node.Indices],
+            BoundArrayRangeExpression node => [node.LowerBound, node.UpperBound],
+            BoundFieldAccessExpression node => [node.Target],
+            BoundRecordLiteralExpression node => [..node.Initializers.Select(static item => item.Expression)],
+            BoundTypeConstructorExpression node => [..node.Arguments],
+            BoundUnaryExpression node => [node.Operand],
+            BoundBinaryExpression node => [node.Left, node.Right],
+            BoundCallExpression node => [node.Target, ..node.Arguments],
+            BoundConversionExpression node => [node.Expression],
+            BoundErrorExpression node => [],
+            BoundInterpolatedStringExpression node => [..node.Parts.Select(static item => item.Expression)],
+            BoundSelectCaseStatement node => [node.TestExpression],
+            BoundVariableDeclarationStatement node => [node.Initializer, ..node.ArrayBounds.SelectMany(static item => new[] { item.LowerBound, item.UpperBound })],
+            BoundVariableDeclarationsStatement node => [..node.Declarations.SelectMany(Immediate)],
+            BoundAssignmentStatement node => [node.Target, node.Expression],
+            BoundEraseStatement node => [node.Target],
+            BoundRedimStatement node => [node.Target, ..node.ArrayBounds.SelectMany(static item => new[] { item.LowerBound, item.UpperBound })],
+            BoundPrintStatement node => [..node.Items.Select(static item => item.Expression)],
+            BoundPrintUsingStatement node => [node.FormatExpression, ..node.Items.Select(static item => item.Expression)],
+            BoundInputStatement node => [],
+            BoundSleepStatement node => [node.DurationExpression],
+            BoundRandomizeStatement node => [node.SeedExpression],
+            BoundScreenStatement node => [node.ModeExpression, node.ColorSwitchExpression, node.ActivePageExpression, node.VisualPageExpression],
+            BoundCanvasStatement node => [node.WidthExpression, node.HeightExpression],
+            BoundBeginFrameStatement node => [],
+            BoundPresentStatement node => [],
+            BoundCameraStatement node => [node.XExpression, node.YExpression],
+            BoundViewportStatement node => [node.LeftExpression, node.TopExpression, node.RightExpression, node.BottomExpression],
+            BoundResetCameraStatement node => [],
+            BoundPCopyStatement node => [node.SourcePageExpression, node.DestinationPageExpression],
+            BoundViewStatement node => [node.LeftExpression, node.TopExpression, node.RightExpression, node.BottomExpression, node.FillColorExpression, node.BorderColorExpression],
+            BoundViewPrintStatement node => [node.TopExpression, node.BottomExpression],
+            BoundWindowStatement node => [node.LeftExpression, node.TopExpression, node.RightExpression, node.BottomExpression],
+            BoundClsStatement node => [node.ColorExpression],
+            BoundColorStatement node => [node.ForegroundExpression, node.BackgroundExpression],
+            BoundLocateStatement node => [node.RowExpression, node.ColumnExpression],
+            BoundPaletteStatement node => [node.IndexExpression, node.ColorExpression, node.ValuesExpression],
+            BoundPSetStatement node => [node.XExpression, node.YExpression, node.ColorExpression],
+            BoundGetStatement node => [node.X1Expression, node.Y1Expression, node.X2Expression, node.Y2Expression, node.BufferExpression],
+            BoundPutStatement node => [node.XExpression, node.YExpression, node.BufferExpression],
+            BoundLineStatement node => [node.X1Expression, node.Y1Expression, node.X2Expression, node.Y2Expression, node.ColorExpression],
+            BoundCircleStatement node => [node.XExpression, node.YExpression, node.RadiusExpression, node.ColorExpression, node.StartExpression, node.EndExpression, node.AspectExpression],
+            BoundPaintStatement node => [node.XExpression, node.YExpression, node.FillColorExpression, node.BorderColorExpression, node.BackgroundExpression],
+            BoundDrawStatement node => [node.CommandExpression],
+            BoundDrawLineStatement node => [node.X1Expression, node.Y1Expression, node.X2Expression, node.Y2Expression, node.ColorExpression],
+            BoundDrawCircleStatement node => [node.XExpression, node.YExpression, node.RadiusExpression, node.ColorExpression],
+            BoundFillCircleStatement node => [node.XExpression, node.YExpression, node.RadiusExpression, node.ColorExpression],
+            BoundDrawTextStatement node => [node.TextExpression, node.XExpression, node.YExpression, node.ColorExpression],
+            BoundDrawImageStatement node => [node.ImageExpression, node.XExpression, node.YExpression, node.WidthExpression, node.HeightExpression],
+            BoundDrawRectStatement node => [node.XExpression, node.YExpression, node.WidthExpression, node.HeightExpression, node.ColorExpression],
+            BoundFillRectStatement node => [node.XExpression, node.YExpression, node.WidthExpression, node.HeightExpression, node.ColorExpression],
+            BoundDrawSpriteStatement node => [node.SpriteExpression, node.FrameExpression, node.XExpression, node.YExpression, node.WidthExpression, node.HeightExpression],
+            BoundDrawTileStatement node => [node.TilesetExpression, node.TileIndexExpression, node.XExpression, node.YExpression],
+            BoundDrawTilemapStatement node => [node.TilemapExpression, node.XExpression, node.YExpression],
+            BoundDrawTileLayerStatement node => [node.TilemapExpression, node.LayerIndexExpression, node.XExpression, node.YExpression],
+            BoundSetMapTileStatement node => [node.TilemapExpression, node.LayerIndexExpression, node.ColumnExpression, node.RowExpression, node.TilesetIndexExpression, node.TileIndexExpression, node.FlagsExpression],
+            BoundOnKeyStatement node => [node.KeyExpression],
+            BoundOnMouseStatement node => [node.ButtonExpression],
+            BoundOpenStatement node => [node.PathExpression, node.EncodingExpression],
+            BoundCloseStatement node => [],
+            BoundErrorStatement node => [node.Expression, node.MessageExpression],
+            BoundIfStatement node => [node.Condition],
+            BoundTryStatement node => [],
+            BoundWhileStatement node => [node.Condition],
+            BoundDoLoopStatement node => [node.Condition],
+            BoundForStatement node => [node.StartExpression, node.EndExpression, node.StepExpression],
+            BoundExitForStatement node => [],
+            BoundExitDoStatement node => [],
+            BoundContinueForStatement node => [],
+            BoundContinueWhileStatement node => [],
+            BoundContinueDoStatement node => [],
+            BoundReturnStatement node => [node.Expression],
+            BoundExpressionStatement node => [node.Expression],
+            _ => []
+        };
+        return expressions.OfType<BoundExpression>();
+    }
+
+    public static IEnumerable<BoundStatement> Nested(BoundStatement statement) => statement switch
+    {
+        BoundIfStatement node => node.Statements.Concat(node.ElseStatements),
+        BoundSelectCaseStatement node => node.Clauses.SelectMany(static clause => clause.Statements).Concat(node.ElseStatements),
+        BoundTryStatement node => node.Statements.Concat(node.CatchStatements).Concat(node.FinallyStatements),
+        BoundForStatement node => node.Statements,
+        BoundWhileStatement node => node.Statements,
+        BoundDoLoopStatement node => node.Statements,
+        _ => []
+    };
+}

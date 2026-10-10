@@ -1,4 +1,4 @@
-' Большая ручная smoke-проверка для запуска в Axiom.Ide в режиме Bytecode.
+' Большая ручная проверка языка для запуска в Axiom.Ide в режиме Bytecode.
 ' Этот файл специально длиннее обычных тематических примеров: он проверяет не одну
 ' возможность, а совместную работу большого куска языка в одной программе.
 ' Если программа падает в режиме Bytecode, это хороший кандидат на реальную границу VM.
@@ -124,7 +124,7 @@ PRINT ARRAYCONTAINS(numbers, 30)
 PRINT ARRAYINDEXOF(numbers, 20)
 PRINT ARRAYLASTINDEXOF(numbers, 20)
 
-' Higher-order массивные функции: ARRAYMAP, ARRAYFILTER, ARRAYREDUCE.
+' Функции высшего порядка для массивов: ARRAYMAP, ARRAYFILTER и ARRAYREDUCE принимают другие функции как аргументы.
 DIM doubled() AS INTEGER
 doubled = ARRAYMAP(numbers, DoubleValue)
 PRINT doubled(3)

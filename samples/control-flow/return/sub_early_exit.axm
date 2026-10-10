@@ -1,14 +1,14 @@
 ' Эта программа показывает досрочный выход через RETURN внутри SUB.
 ' Ожидаемый вывод:
-' before return
-' after if
+' До досрочного RETURN
+' После блока IF
 SUB Show(flag AS BOOLEAN)
     IF flag THEN
-        PRINT "before return"
+        PRINT "До досрочного RETURN"
         RETURN
     END IF
 
-    PRINT "after if"
+    PRINT "После блока IF"
 END SUB
 
 Show(TRUE)

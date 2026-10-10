@@ -5,7 +5,7 @@
 ' 1
 ' 2
 ' 3
-' after=3
+' После цикла: 3
 
 DIM afterValue AS INTEGER
 
@@ -14,4 +14,4 @@ FOR i = 1 TO 3
     afterValue = i
 NEXT
 
-PRINT "after=" & afterValue
+PRINT "После цикла: " & afterValue

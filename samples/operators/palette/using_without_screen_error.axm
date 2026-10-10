@@ -1,4 +1,4 @@
-' Ожидается: MB3010, PALETTE USING требует активный графический SCREEN.
+' Ожидается ошибка компиляции MB2046: PALETTE USING требует графический SCREEN.
 DIM colors(0 TO 2) AS INTEGER
 colors(0) = 16
 colors(1) = 196

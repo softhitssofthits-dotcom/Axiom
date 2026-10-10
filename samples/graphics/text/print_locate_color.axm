@@ -1,11 +1,11 @@
-﻿' Expected: text appears on the SCREEN text layer, not in Output, until SCREEN 0.
+﻿' Ожидается: текст виден в окне SCREEN, а не во вкладке «Консоль»; после SCREEN 0 программа возвращается к текстовому экрану.
 SCREEN 10
 COLOR 14, 1
-PRINT "yellow text on blue background"
+PRINT "Жёлтый текст на синем фоне"
 PRINT "Нажмите любую клавишу для продолжения"
 SLEEP ' Ждем нажатия любой клавиши
 COLOR 15
-PRINT "white text, previous background"
+PRINT "Белый текст на прежнем фоне"
 COLOR 46
 PRINT
 PRINT "Русский текст в графическом режиме"
@@ -21,9 +21,9 @@ FOR i = 16 TO 255
 NEXT
 COLOR 15, 0
 LOCATE 22, 4
-PRINT "Axiom SCREEN text"
-PRINT USING "width #### height ####"; SCREENWIDTH(); SCREENHEIGHT()
-PRINT "Нажмите любую кнопку для выхода"
+PRINT "Текстовый экран Axiom"
+PRINT USING "Ширина #### высота ####"; SCREENWIDTH(); SCREENHEIGHT()
+PRINT "Нажмите любую клавишу для выхода"
 SLEEP ' Ждем нажатия любой клавиши
 CLS
 SCREEN 0

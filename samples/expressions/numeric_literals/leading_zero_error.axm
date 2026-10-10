@@ -1,2 +1,2 @@
-' Expected syntax diagnostic MB0003: numeric literals cannot use leading zeros.
+' Ожидаемая ошибка синтаксиса MB0003: числовой литерал не может начинаться с нулей.
 PRINT RIGHT("Hello", 000+3)

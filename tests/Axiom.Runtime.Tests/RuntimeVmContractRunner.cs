@@ -13,7 +13,9 @@ internal static class RuntimeVmContractRunner
         var syntax = Parser.Parse(source, out var parseDiagnostics);
         Assert.Empty(parseDiagnostics);
 
-        var program = Binder.Bind(syntax, out var bindDiagnostics);
+        // Эти проверки вызывают VM напрямую, включая её защиту от неверного
+        // графического состояния. Отказ компилятора проверяется отдельно.
+        var program = Binder.Bind(syntax, out var bindDiagnostics, checkGraphicsModes: false);
         Assert.DoesNotContain(bindDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
 
         var lowered = new BoundProgramLowerer().Lower(program);

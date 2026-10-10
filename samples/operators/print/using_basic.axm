@@ -1,8 +1,8 @@
 ' Пример показывает оператор PRINT USING с разными масками форматирования.
 ' Ожидается вывод:
-' Name: Bob   |
-' Total:  12.50
-' Flag: X
-PRINT USING "Name: \    \|"; "Bob"
-PRINT USING "Total: ###.##"; 12.5
-PRINT USING "Flag: !"; "XYZ"
+' Имя: Боб   |
+' Итого:  12.50
+' Флаг: Д
+PRINT USING "Имя: \    \|"; "Боб"
+PRINT USING "Итого: ###.##"; 12.5
+PRINT USING "Флаг: !"; "Да"

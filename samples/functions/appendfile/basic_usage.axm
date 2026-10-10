@@ -1,5 +1,11 @@
-DIM path AS STRING = ".artifacts/axiom_sample_appendfile.txt"
+' MAKETEMPFILE создаёт новый временный файл и возвращает путь к нему.
+DIM path AS STRING = MAKETEMPFILE("axiom_append_")
 
-PRINT WRITEFILE(path, "Hello")
+' Сначала записываем слово «Привет» в новый файл.
+PRINT WRITEFILE(path, "Привет")
+' Затем дописываем знак восклицания в конец файла.
 PRINT APPENDFILE(path, "!")
+' Читаем и показываем итоговую фразу «Привет!».
 PRINT READFILE(path)
+' Удаляем файл, чтобы следующий запуск начинался с чистого состояния.
+DELETEFILE(path)

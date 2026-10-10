@@ -1,5 +1,5 @@
-' deterministic benchmark for RND()
-' exercises repeated random generation while keeping identical output across engines
+' Проверка повторных вызовов RND() с одинаковым начальным состоянием.
+' При одном и том же зерне программа должна выдавать одинаковые контрольные суммы.
 
 DIM sumScaled AS LONG = 0
 DIM bucketChecksum AS LONG = 0

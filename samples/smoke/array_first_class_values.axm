@@ -1,15 +1,18 @@
-﻿' Acceptance sample: arrays as first-class values.
-' Demonstrates whole-array assignment, parameter passing and function return.
+﻿' Проверочный пример: массив можно присвоить целиком, передать в процедуру и вернуть из функции.
 
+
+' Создаём массив из двух чисел и записываем в его ячейки значения.
 DIM values(1 TO 2) AS INTEGER
 values(1) = 10
 values(2) = 20
 
+' Переменная alias получает этот массив; процедура изменит его первый элемент.
 DIM alias() AS INTEGER
 alias = values
 
 Bump(alias)
 
+' Функция Echo возвращает массив, а переменная copy принимает результат.
 DIM copy() AS INTEGER
 copy = Echo(values)
 

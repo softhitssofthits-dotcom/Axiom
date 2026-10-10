@@ -5,6 +5,6 @@
 ' Файл windows1251_fallback_source.txt намеренно сохранён не в UTF-8, а в Windows-1251.
 ' Если READFILE теряет такие байты как символы замены, здесь будет напечатан мусор.
 
-DIM sourcePath AS STRING = "samples\functions\readfile\windows1251_fallback_source.txt" ' Путь к короткому файлу Windows-1251.
+DIM sourcePath AS STRING = "windows1251_fallback_source.txt" ' Файл Windows-1251 находится рядом с этим примером.
 
 PRINT READFILE(sourcePath) ' Должно напечатать нормальное русское слово из файла Windows-1251.

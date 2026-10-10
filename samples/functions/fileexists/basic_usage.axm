@@ -1,6 +1,11 @@
 ' Создаёт небольшой файл в текущей рабочей папке.
-DIM path AS STRING = ".artifacts/axiom_sample_fileexists.txt"
+DIM folder AS STRING = MAKETEMPDIR("axiom_exists_")
+DIM path AS STRING = COMBINEPATH(folder, "sample.txt")
 
+' До записи файла по этому пути ещё нет.
 PRINT FILEEXISTS(path)
-PRINT WRITEFILE(path, "Hello")
+' Создаём файл и снова проверяем тот же путь.
+PRINT WRITEFILE(path, "Привет")
 PRINT FILEEXISTS(path)
+DELETEFILE(path)
+DELETEDIR(folder)

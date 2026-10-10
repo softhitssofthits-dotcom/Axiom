@@ -1,6 +1,6 @@
-' Manual check: click inside the full-screen SCREEN window, then press ESC.
+' Ручная проверка: нажмите левую кнопку мыши внутри окна SCREEN, затем нажмите ESC.
 SCREEN 1
-PRINT "Click left mouse button inside SCREEN. Press ESC to finish."
+PRINT "Нажмите левую кнопку мыши в окне SCREEN. Для завершения нажмите ESC."
 DIM seen AS BOOLEAN = FALSE
 DIM seenButton AS INTEGER = 0
 DIM seenX AS LONG = 0
@@ -18,7 +18,7 @@ PRINT seen
 PRINT seenButton
 PRINT seenX
 PRINT seenY
-PRINT "done"
+PRINT "Готово"
 
 SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
     seen = TRUE
@@ -26,5 +26,5 @@ SUB HandleMouse(button AS INTEGER, x AS LONG, y AS LONG)
     seenX = x
     seenY = y
     LOCATE 3, 1
-    PRINT "button="; button; " x="; x; " y="; y; "                    "
+    PRINT "Кнопка="; button; " x="; x; " y="; y; "                    "
 END SUB

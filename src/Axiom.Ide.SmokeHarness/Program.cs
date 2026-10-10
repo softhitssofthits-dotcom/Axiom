@@ -21,7 +21,7 @@ internal static class Program
     }
 }
 
-internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecutablePath, bool EventLogOnly, bool InKeyOnly, bool OnMouseOnly, bool GetPutOnly, bool Screen10Only, bool SpriteOnly, bool DebuggerOnly, bool InputCanvasOnly)
+internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecutablePath, bool EventLogOnly, bool InKeyOnly, bool OnMouseOnly, bool GetPutOnly, bool Screen10Only, bool SpriteOnly, bool DebuggerOnly, bool InputCanvasOnly, bool RuntimeDiagnosticLanguageOnly, bool VisualSamplesOnly, string? VisualSampleFilter)
 {
     public static SmokeHarnessOptions Parse(string[] args)
     {
@@ -61,6 +61,27 @@ internal sealed record SmokeHarnessOptions(bool KeepWorkspace, string? IdeExecut
             string.Equals(argument, "--debugger-only", StringComparison.OrdinalIgnoreCase));
         var inputCanvasOnly = args.Any(static argument =>
             string.Equals(argument, "--input-canvas-only", StringComparison.OrdinalIgnoreCase));
-        return new SmokeHarnessOptions(keepWorkspace, ideExecutablePath, eventLogOnly, inKeyOnly, onMouseOnly, getPutOnly, screen10Only, spriteOnly, debuggerOnly, inputCanvasOnly);
+        var runtimeDiagnosticLanguageOnly = args.Any(static argument =>
+            string.Equals(argument, "--runtime-diagnostic-language-only", StringComparison.OrdinalIgnoreCase));
+        var visualSamplesOnly = args.Any(static argument =>
+            string.Equals(argument, "--visual-samples-only", StringComparison.OrdinalIgnoreCase));
+        string? visualSampleFilter = null;
+        for (var index = 0; index < args.Length; index++)
+        {
+            if (!string.Equals(args[index], "--visual-sample-filter", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (index + 1 >= args.Length)
+            {
+                throw new ArgumentException("Expected text after --visual-sample-filter.");
+            }
+
+            visualSampleFilter = args[index + 1];
+            index++;
+        }
+
+        return new SmokeHarnessOptions(keepWorkspace, ideExecutablePath, eventLogOnly, inKeyOnly, onMouseOnly, getPutOnly, screen10Only, spriteOnly, debuggerOnly, inputCanvasOnly, runtimeDiagnosticLanguageOnly, visualSamplesOnly, visualSampleFilter);
     }
 }

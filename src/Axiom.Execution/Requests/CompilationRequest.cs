@@ -1,3 +1,5 @@
+using Axiom.Semantics;
+
 namespace Axiom.Execution;
 
 public sealed class CompilationRequest
@@ -6,7 +8,9 @@ public sealed class CompilationRequest
         string sourceText,
         IProgress<int>? progressReporter = null,
         IDiagnosticSink? diagnosticSink = null,
-        string? bytecodeSnapshotPath = null)
+        string? bytecodeSnapshotPath = null,
+        bool includeUsageWarnings = false,
+        InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
 
@@ -14,6 +18,8 @@ public sealed class CompilationRequest
         ProgressReporter = progressReporter;
         DiagnosticSink = diagnosticSink ?? NullDiagnosticSink.Instance;
         BytecodeSnapshotPath = bytecodeSnapshotPath;
+        IncludeUsageWarnings = includeUsageWarnings;
+        InitialGraphicsContext = initialGraphicsContext;
     }
 
     public string SourceText { get; }
@@ -23,4 +29,8 @@ public sealed class CompilationRequest
     public IDiagnosticSink DiagnosticSink { get; }
 
     public string? BytecodeSnapshotPath { get; }
+
+    public bool IncludeUsageWarnings { get; }
+
+    public InitialGraphicsContext InitialGraphicsContext { get; }
 }

@@ -1,8 +1,11 @@
 ' Создаёт и удаляет учебный файл в текущей рабочей папке.
-DIM path AS STRING = ".artifacts/axiom_sample_deletefile.txt"
+DIM path AS STRING = MAKETEMPFILE("axiom_delete_")
 
-PRINT WRITEFILE(path, "Hello")
+' Сначала убеждаемся, что файл действительно создан.
+PRINT WRITEFILE(path, "Привет")
 PRINT FILEEXISTS(path)
+' Удаляем файл и проверяем, что теперь его нет.
 PRINT DELETEFILE(path)
 PRINT FILEEXISTS(path)
+' Повторное удаление отсутствующего файла должно вернуть FALSE.
 PRINT DELETEFILE(path)

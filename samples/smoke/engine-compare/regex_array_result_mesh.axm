@@ -1,6 +1,6 @@
-﻿' Сравнительный сценарий: массивные regex-built-in без цепочки замен.
+﻿' Нагрузка на встроенные функции регулярных выражений, возвращающие массивы, без цепочки замен.
 ' Программа собирает большой текстовый корпус и отдельно нагружает
-' REGEXMATCHES, REGEXEXTRACTALL и REGEXSPLIT с режимом ignore-case.
+' REGEXMATCHES, REGEXEXTRACTALL и REGEXSPLIT с режимом без учёта регистра.
 
 DIM lines() AS STRING
 DIM corpus AS STRING
