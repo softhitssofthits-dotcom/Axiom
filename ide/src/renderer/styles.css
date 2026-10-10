@@ -143,6 +143,8 @@ html[data-theme="light"] .logo-dark { display: none; }
 
 .menu-text {
   flex: 1;
+  min-width: 0;
+  white-space: normal;
 }
 
 .menu-shortcut {

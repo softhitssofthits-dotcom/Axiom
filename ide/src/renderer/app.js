@@ -227,6 +227,12 @@ class AxiomIDE {
       },
     });
 
+    monaco.languages.registerDocumentSemanticTokensProvider('axiom', {
+      getLegend: () => window.AxiomSemanticColors.legend,
+      provideDocumentSemanticTokens: model => window.AxiomSemanticColors.classify(model.getValue(), monaco.editor.tokenize(model.getValue(), 'axiom')),
+      releaseDocumentSemanticTokens() {},
+    });
+
     // No bracketed blocks in BASIC: only quotes auto-close.
     monaco.languages.setLanguageConfiguration('axiom', {
       comments: { lineComment: "'" },
@@ -241,7 +247,7 @@ class AxiomIDE {
     });
 
     monaco.editor.defineTheme('axiom-light', {
-      base: 'vs', inherit: true,
+      base: 'vs', inherit: true, semanticHighlighting: true,
       rules: [
         { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
         { token: 'string', foreground: 'a31515' },
@@ -252,7 +258,13 @@ class AxiomIDE {
         { token: 'keyword', foreground: '0000ff' },
         { token: 'type', foreground: '267f99' },
         { token: 'support.function', foreground: '795e26' },
-        { token: 'operator', foreground: '000000' },
+        { token: 'identifier', foreground: '215E9C' },
+        { token: 'variable', foreground: '215E9C' },
+        { token: 'variable.readonly', foreground: '8F4400' },
+        { token: 'function', foreground: '795E26' },
+        { token: 'array', foreground: '7552A5' },
+        { token: 'operator', foreground: 'AF1970' },
+        { token: 'delimiter', foreground: '705A00' },
       ],
       colors: {
         'editor.background': '#ffffff',
@@ -268,7 +280,7 @@ class AxiomIDE {
     });
 
     monaco.editor.defineTheme('axiom-dark', {
-      base: 'vs-dark', inherit: true,
+      base: 'vs-dark', inherit: true, semanticHighlighting: true,
       rules: [
         { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
         { token: 'string', foreground: 'ce9178' },
@@ -279,7 +291,13 @@ class AxiomIDE {
         { token: 'keyword', foreground: 'c586c0' },
         { token: 'type', foreground: '4ec9b0' },
         { token: 'support.function', foreground: 'dcdcaa' },
-        { token: 'operator', foreground: 'd4d4d4' },
+        { token: 'identifier', foreground: '9CDCFE' },
+        { token: 'variable', foreground: '9CDCFE' },
+        { token: 'variable.readonly', foreground: 'F0B975' },
+        { token: 'function', foreground: 'DCDCAA' },
+        { token: 'array', foreground: 'B9A3E3' },
+        { token: 'operator', foreground: 'E69BC8' },
+        { token: 'delimiter', foreground: 'D7BA7D' },
       ],
       colors: {
         'editor.background': '#1a1e27',
@@ -305,6 +323,7 @@ class AxiomIDE {
       language: 'axiom',
       theme: this.settings.theme === 'light' ? 'axiom-light' : 'axiom-dark',
       automaticLayout: true,
+      'semanticHighlighting.enabled': true,
       fontSize: 14,
       fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
       minimap: { enabled: false },
@@ -338,7 +357,7 @@ class AxiomIDE {
       this.log('editor.change', { length: this.editor.getValue().length, activeFile: this.activeFile });
     });
     // Autoformat trigger: blur normalizes the whole buffer (no save required).
-    // The manual Format command keeps its save-first semantics.
+    // The manual Format command formats the current unsaved buffer too.
     this.editor.onDidBlurEditorText(() => {
       // Debounce: format only when the focus has really left the editor. Quick menu
       // round-trips (undo/copy/paste re-focus the editor) cancel the pending format,
