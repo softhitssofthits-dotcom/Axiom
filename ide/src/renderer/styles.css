@@ -405,71 +405,22 @@ html[data-theme="light"] .logo-dark { display: none; }
   min-height: 0;
 }
 
-/* Panel resizer (D79/D81): drag to resize the console; double-click resets to default.
-   9px grab zone (D81: a 5px strip was nearly impossible to catch at 125% scaling).
-   No static grip: the D81 gray tick read as a stray dot (user note on D82) — at rest the
-   strip is invisible; on hover the 2px marker line, the row-resize cursor and the
-   tooltip show it. */
-#panel-resizer {
-  height: 9px;
-  flex-shrink: 0;
-  cursor: row-resize;
-  background: transparent;
-  position: relative;
-  z-index: 5;
-  touch-action: none;
-}
-
-/* drag preview line (Axiom GridSplitter ShowsPreview): moves with the mouse, the panel
-   height is committed once on release */
-#panel-resize-preview {
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--accent-color);
-  z-index: 1000;
-  pointer-events: none;
-  display: none;
-}
-
-/* hover/drag marker (user note on D82): a thin 2px accent line, not a painted band —
-   the 9px grab zone itself stays transparent (D81 size untouched), so the feedback
-   reads as a line rather than a thick strip */
-#panel-resizer::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  transform: translateY(-50%);
-  background: transparent;
-}
-
-#panel-resizer:hover::before,
-body.panel-resizing #panel-resizer::before {
-  background: var(--accent-color);
-}
-
-body.panel-resizing {
-  cursor: row-resize;
-  user-select: none;
-}
-
-/* while dragging, hit-testing must not steal the mouse from the window-level listeners */
-body.panel-resizing #editor-container,
-body.panel-resizing #bottom-panel {
-  pointer-events: none;
-}
+/* Both splitters keep pointer capture; only their own marker changes while dragging. */
+#panel-resizer { height: 9px; flex: 0 0 9px; cursor: row-resize; }
+#sidebar-resizer { width: 9px; flex: 0 0 9px; cursor: col-resize; }
+#panel-resizer, #sidebar-resizer { position: relative; background: transparent; touch-action: none; user-select: none; z-index: 5; }
+#panel-resizer::before, #sidebar-resizer::before { content: ''; position: absolute; background: transparent; }
+#panel-resizer::before { left: 0; right: 0; top: 4px; height: 2px; }
+#sidebar-resizer::before { top: 0; bottom: 0; left: 4px; width: 2px; }
+#panel-resizer:focus, #sidebar-resizer:focus { outline: none; }
+#panel-resizer:hover::before, #sidebar-resizer:hover::before, [role="separator"].dragging::before, [role="separator"]:focus-visible::before { background: var(--accent-color); }
+body.splitter-dragging { user-select: none; }
+body.splitter-x { cursor: col-resize; }
+body.splitter-y { cursor: row-resize; }
 
 /* Bottom panel */
 #bottom-panel {
   height: var(--panel-height);
-  /* D82: keeps the editor's guaranteed space intact when the window is resized AFTER a drag
-     (the JS clamp only runs on drag/restore). 149px = EDITOR_MIN(140) + RESIZER_H(9) from
-     setupPanelResizer() in app.js — keep the two in sync. */
-  max-height: calc(100% - 149px);
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   display: flex;

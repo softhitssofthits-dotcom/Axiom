@@ -501,78 +501,25 @@ class AxiomIDE {
     });
   }
 
-  // ================= panel resizer =================
-
-  // Splitter по образцу GridSplitter из WPF Axiom IDE: во время drag двигается тонкая
-  // линия-предпросмотр, высота панели применяется ОДИН раз при отпускании.
+  // Both panels use the same pointer, cancellation and size constraints.
   setupPanelResizer() {
-    const resizer = document.getElementById('panel-resizer');
-    const panel = document.getElementById('bottom-panel');
-    const main = document.getElementById('main-content');
-    const preview = document.getElementById('panel-resize-preview');
-    const MIN_HEIGHT = 64;      // tabs + a couple of terminal rows
-    // Guarantees #editor-container keeps at least this much space. The same invariant is
-    // ALSO enforced in CSS by #bottom-panel { max-height: calc(100% - 149px) }, which
-    // re-clamps the panel when the window is resized after a drag.
-    const EDITOR_MIN = 140;
-    const RESIZER_H = 9;        // height of #panel-resizer in styles.css
+    const {PanelSplitter} = window.PanelSplitters;
+    this.bottomSplitter = new PanelSplitter({handle: document.getElementById('panel-resizer'), panel: document.getElementById('bottom-panel'), container: document.getElementById('main-content'), axis: 'y', minimum: 64, reserve: 140, defaultSize: 200, savedSize: this.settings.consoleHeight, onCommit: size => this.saveSettings({consoleHeight: size})});
+    this.sidebarSplitter = new PanelSplitter({handle: document.getElementById('sidebar-resizer'), panel: document.getElementById('shell-sidebar'), container: document.getElementById('workspace'), axis: 'x', minimum: 160, reserve: 160, maximum: 480, defaultSize: 208, savedSize: this.settings.sidebarWidth, onCommit: size => this.saveSettings({sidebarWidth: size})});
+    document.getElementById('sidebar-close').onclick = () => this.setSidebarVisible(false);
+    document.getElementById('tb-toggle-sidebar').onclick = () => this.setSidebarVisible(this.settings.sidebarVisible === false);
+    this.setSidebarVisible(this.settings.sidebarVisible !== false);
+    this.setBottomPanelVisible(this.settings.bottomPanelVisible !== false);
+  }
 
-    const clamp = (h) => Math.max(MIN_HEIGHT, Math.min(h, main.clientHeight - EDITOR_MIN - RESIZER_H));
-
-    // Manual double-tap detection: preventDefault() on pointerdown (needed to keep the
-    // drag from selecting text) suppresses the compatibility mouse sequence, so a
-    // 'dblclick' listener on the strip never fires. Two taps within 500ms and ~6px of
-    // each other = reset.
-    let lastTapAt = 0;
-    let lastTapX = 0;
-
-    resizer.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-
-      const now = performance.now();
-      if (now - lastTapAt < 500 && Math.abs(e.clientX - lastTapX) < 6) {
-        lastTapAt = 0;
-        panel.style.height = ''; // back to the CSS default
-        this.saveSettings({ consoleHeight: null });
-        this.focusEditor();
-        return; // reset consumed the tap — don't start a drag
-      }
-      lastTapAt = now;
-      lastTapX = e.clientX;
-
-      document.body.classList.add('panel-resizing');
-      try { resizer.setPointerCapture(e.pointerId); } catch {}
-
-      const showPreview = (h) => {
-        preview.style.display = 'block';
-        preview.style.top = Math.round(main.getBoundingClientRect().bottom - h) + 'px';
-      };
-      // live rect, not the pointerdown cache: a window resize mid-drag must not skew the
-      // committed height; the preview line then sticks to the cursor
-      const heightAt = (clientY) => clamp(main.getBoundingClientRect().bottom - clientY);
-      const onMove = (ev) => showPreview(heightAt(ev.clientY));
-      const onUp = (ev) => {
-        resizer.removeEventListener('pointermove', onMove);
-        resizer.removeEventListener('pointerup', onUp);
-        resizer.removeEventListener('pointercancel', onUp);
-        document.body.classList.remove('panel-resizing');
-        preview.style.display = 'none';
-        const h = heightAt(ev.clientY);
-        panel.style.height = Math.round(h) + 'px';
-        this.saveSettings({ consoleHeight: h });
-        this.focusEditor();
-      };
-      resizer.addEventListener('pointermove', onMove);
-      resizer.addEventListener('pointerup', onUp);
-      resizer.addEventListener('pointercancel', onUp);
-      showPreview(clamp(panel.getBoundingClientRect().height));
-    });
-
-    const saved = this.settings.consoleHeight;
-    if (typeof saved === 'number' && isFinite(saved) && saved > 0) {
-      panel.style.height = Math.round(clamp(saved)) + 'px';
-    }
+  setSidebarVisible(visible) {
+    this.sidebarSplitter?.cancel();
+    document.getElementById('shell-sidebar').hidden = !visible;
+    document.getElementById('sidebar-resizer').hidden = !visible;
+    this.saveSettings({sidebarVisible: visible});
+    document.querySelector('[data-check="sidebarVisible"]')?.classList.toggle('on', visible);
+    document.getElementById('tb-toggle-sidebar')?.setAttribute('aria-pressed', String(visible));
+    this.sidebarSplitter?.layout();
   }
 
   setupKeyboardShortcuts() {
@@ -595,6 +542,7 @@ class AxiomIDE {
       if (mod && e.shiftKey && shortcutKey === 's') { consume(); this.handleAction('save-as'); return; }
       if (mod && e.shiftKey && shortcutKey === 'c') { consume(); this.handleAction('check'); return; }
       if (mod && e.shiftKey && shortcutKey === 'e') { consume(); this.handleAction('toggle-project-explorer'); return; }
+      if (mod && !e.shiftKey && shortcutKey === 'b') { consume(); this.handleAction('toggle-sidebar'); return; }
       if (mod && e.shiftKey && shortcutKey === 'o') { consume(); this.handleAction('toggle-output'); return; }
       // Terminal clipboard: Ctrl+C copies selected text only; without a selection it is
       // consumed as a no-op. Ctrl+V pastes sanitized text. Both act only while the
@@ -678,6 +626,7 @@ class AxiomIDE {
       case 'check': this.check(true); break;
       case 'stop': this.stop(); break;
       case 'toggle-output': this.togglePanel(); break;
+      case 'toggle-sidebar': this.setSidebarVisible(this.settings.sidebarVisible === false); break;
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
       case 'theme-light': this.setTheme('light'); break;
       case 'theme-dark': this.setTheme('dark'); break;
@@ -1728,16 +1677,17 @@ class AxiomIDE {
     if (name === 'console') setTimeout(() => this.fitConsole(), 0);
   }
 
-  togglePanel() {
-    const panel = document.getElementById('bottom-panel');
-    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-    this.updateOutputMenuCheck();
+  togglePanel() { this.setBottomPanelVisible(document.getElementById('bottom-panel').style.display === 'none'); }
+
+  setBottomPanelVisible(visible) {
+    this.bottomSplitter?.cancel();
+    document.getElementById('bottom-panel').style.display = visible ? 'flex' : 'none';
+    document.getElementById('panel-resizer').hidden = !visible;
+    this.saveSettings({bottomPanelVisible: visible});
+    this.bottomSplitter?.layout(); this.updateOutputMenuCheck();
   }
 
-  showPanel() {
-    document.getElementById('bottom-panel').style.display = 'flex';
-    this.updateOutputMenuCheck();
-  }
+  showPanel() { this.setBottomPanelVisible(true); }
 
   // View menu affordance: "Нижняя панель" shows its ✓ exactly when the panel is visible.
   updateOutputMenuCheck() {
@@ -1768,6 +1718,7 @@ class AxiomIDE {
 
   applyLocale() {
     I18N.apply();
+    this.rebuildOutline();
     this.setProjectExplorerVisible(this.settings.projectExplorer !== false);
     this.renderMiscellaneousFiles();
   }

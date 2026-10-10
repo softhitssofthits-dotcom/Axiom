@@ -76,6 +76,7 @@
       <div class="menu-item" data-menu="view">
         <span class="menu-label" data-i18n="menu.view">Вид</span>
         <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="toggle-sidebar"><span class="menu-check" data-check="sidebarVisible">✓</span><span class="menu-text" data-i18n="menu.view.sidebar">Боковая панель</span><span class="menu-shortcut">Ctrl+B</span></div>
           <div class="menu-dropdown-item" data-action="toggle-project-explorer"><span class="menu-check" data-check="projectExplorer">✓</span><span class="menu-text" data-i18n="menu.view.projectExplorer">Файлы проекта</span><span class="menu-shortcut">Ctrl+Shift+E</span></div>
           <div class="menu-separator"></div>
           <div class="menu-dropdown-item" data-action="toggle-output"><span class="menu-check" data-check="outputPanel">✓</span><span class="menu-text" data-i18n="menu.view.panel">Нижняя панель</span><span class="menu-shortcut">Ctrl+Shift+O</span></div>
@@ -167,7 +168,7 @@
     </div>
 
     <div id="status-bar">
-      <div id="panel-resize-preview"></div>
+
       <span id="status-text" data-i18n="status.ready">Готово</span>
       <span id="status-file-path"></span>
       <span id="status-line-col">Ln 1, Col 1</span>
@@ -189,7 +190,8 @@
   <script src="document-save.js"></script>
   <script src="diagnostic-language.js"></script>
   <script src="semantic-colors.js"></script>
-  <script src="app.js"></script>
+  <script src="panel-splitter.js"></script>
   <script src="shell.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

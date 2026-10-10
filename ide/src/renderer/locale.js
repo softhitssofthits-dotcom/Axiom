@@ -64,9 +64,12 @@ const I18N = (() => {
       'tb.panel': 'Нижняя панель (Ctrl+Shift+O)',
       'panel.console': 'Консоль',
       'panel.problems': 'Проблемы',
-      'panel.structure': 'Структура',
+      'panel.structure': 'Структура программы',
+      'menu.view.sidebar': 'Боковая панель',
+      'sidebar.close': 'Закрыть боковую панель',
+      'sidebar.resizeHint': 'Потяните границу для изменения ширины; двойной щелчок — сброс',
       'panel.resizeHint': 'Потяните, чтобы изменить размер консоли; двойной щелчок — вернуть по умолчанию',
-      'outline.empty': 'Нет структуры файла.',
+      'outline.empty': 'В программе пока нет процедур SUB, функций FUNCTION или типов TYPE.',
       'outline.ln': 'Стр',
       'snippet.if': 'IF — шаблон условия', 'snippet.if.d': 'шаблон: условие',
       'snippet.ifelse': 'IF-ELSE — шаблон', 'snippet.ifelse.d': 'шаблон: IF с ветвью ELSE',
@@ -183,9 +186,12 @@ const I18N = (() => {
       'tb.panel': 'Bottom Panel (Ctrl+Shift+O)',
       'panel.console': 'Console',
       'panel.problems': 'Problems',
-      'panel.structure': 'Outline',
+      'panel.structure': 'Program outline',
+      'menu.view.sidebar': 'Sidebar',
+      'sidebar.close': 'Close sidebar',
+      'sidebar.resizeHint': 'Drag to resize; double-click resets width',
       'panel.resizeHint': 'Drag to resize the console; double-click restores the default',
-      'outline.empty': 'No structure.',
+      'outline.empty': 'No SUB procedures, FUNCTION functions or TYPE declarations yet.',
       'outline.ln': 'Ln',
       'snippet.if': 'IF — condition template', 'snippet.if.d': 'template: condition',
       'snippet.ifelse': 'IF-ELSE — template', 'snippet.ifelse.d': 'template: IF with ELSE',
@@ -262,7 +268,7 @@ const I18N = (() => {
     });
     document.querySelectorAll('[data-i18n-title]').forEach((el) => {
       const k = el.dataset.i18nTitle;
-      if (k) el.title = t(k);
+      if (k) { el.title = t(k); if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'separator') el.setAttribute('aria-label', t(k)); }
     });
   }
 
