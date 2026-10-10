@@ -12,6 +12,7 @@ class AxiomIDE {
     this.langMeta = null; // language registry from `axiom metadata`; null until loaded
     this.editor = null;
     this.openFiles = new window.DocumentStore();
+    this.editedLines = new window.EditedLines();
     this.documentServices = new window.DocumentServices(this.openFiles, API);
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
     this.dirty = new Set();
@@ -26,7 +27,7 @@ class AxiomIDE {
     this.fileChangePrompts = new Set(); // paths with an open external-change prompt
     // The program always runs in the integrated ConPTY terminal — the console is the only run mode.
     this.settings = { theme: 'dark', language: 'ru', recentFiles: [], projectExplorer: true };
-    this._autoFormatting = false; // true while an auto-format edit is applied (suppresses dirty-marking)
+    this._autoFormatting = false; // Защищает от повторного форматирования и регистрации автоматических правок как пользовательских.
     // One coordination state for all background editor services. Requests are cheap to
     // abandon, but their results must never win after a newer edit or a focus transition.
     this._serviceSeq = 0;
@@ -340,7 +341,7 @@ class AxiomIDE {
       const model=this.editor.getModel(),previous=this._structuralLine;
       const sameModel=this._structuralModel===model;
       this._structuralLine=e.position.lineNumber;this._structuralModel=model;
-      if(sameModel&&previous!==e.position.lineNumber)this.editLineTransition(model,previous,e.position);
+      if(sameModel&&previous!==e.position.lineNumber&&this.editedLines.has(model,previous))this.editLineTransition(model,previous,e.position);
     });
     this.editor.onDidFocusEditorText(() => {
       this._lastEditorFocus = performance.now();
@@ -349,8 +350,10 @@ class AxiomIDE {
     this.editor.onDidBlurEditorText(() => {
       if (this.settings.smartIdentifierEnabled) this.formatWholeDocument('ax-smart-blur', this.activeFile, 'document.normalizeIdentifiers');
     });
-    this.editor.onDidChangeModelContent(() => {
+    this.editor.onDidChangeModelContent((event) => {
+      this.editedLines.record(this.editor.getModel(),event.changes,!this._autoFormatting);
       if (this.activeFile) this.markDirty(this.activeFile, true);
+      if (this.activeFile && !this.openFiles.isDirty(this.activeFile)) this.editedLines.clear(this.editor.getModel());
       this.scheduleLiveCheck();
       this.scheduleOutlineRebuild();
       this.log('editor.change', { length: this.editor.getValue().length, activeFile: this.activeFile });
@@ -1481,9 +1484,11 @@ class AxiomIDE {
       const result = await this.documentServices.request(this.activeFile, 'document.editTransition', {
         previousLineNumber, currentLineNumber: position.lineNumber, caretOffset,
         formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled });
-      if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled || !result || !result.edits.length || this.editor.getModel() !== model ||
+      if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled || !result || this.editor.getModel() !== model ||
           (this.running && this.openFiles.get(this._runFile)?.model === model) ||
           model.getOffsetAt(this.editor.getPosition()) !== caretOffset) return;
+      this.editedLines.consume(model,previousLineNumber);
+      if (!result.edits.length) return;
       const edits = result.edits.map(e => {
         if (!Number.isInteger(e.start) || !Number.isInteger(e.length) || e.start < 0 || e.length < 0 ||
             e.start + e.length > model.getValueLength()) throw new Error('Некорректный диапазон правки.');

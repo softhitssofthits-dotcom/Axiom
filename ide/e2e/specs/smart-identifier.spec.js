@@ -18,6 +18,7 @@ module.exports=[{id:'smart-identifier-legacy',name:'Умный идентифи�
  }
  await S.page.evaluate(source=>{const i=window.__ide;i.editor.getModel().setValue(source);i.editor.setPosition({lineNumber:2,column:1});i.editor.focus();},source);
  await S.page.waitForTimeout(150);
+ await S.page.keyboard.press('End');await S.page.keyboard.type(' ');
  await S.page.evaluate(()=>window.__ide.editor.setPosition({lineNumber:3,column:1}));
  await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('PlayerSpeed = 4'));C.ok(true,'Переход между строками нормализует имя');
  C.eq(fs.readFileSync(file,'utf8'),source,'Диск не меняется до сохранения');
