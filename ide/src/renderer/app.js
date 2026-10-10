@@ -175,6 +175,7 @@ class AxiomIDE {
           [/\+|-|\*|\/|\\|\^|&/, 'operator'],
           [/[()]/, '@brackets'],
           [/[,;:]/, 'delimiter'],
+          [/[^\x00-\x7F\s]+/, 'invalid'],
           [/[a-zA-Z_][a-zA-Z0-9_]*/, {
             cases: {
               '@keywords': 'keyword',
@@ -207,6 +208,7 @@ class AxiomIDE {
           [/\+|-|\*|\/|\\|\^|&/, 'operator'],
           [/[()]/, '@brackets'],
           [/[,;:]/, 'delimiter'],
+          [/[^\x00-\x7F\s]+/, 'invalid'],
           [/[a-zA-Z_][a-zA-Z0-9_]*/, {
             cases: {
               '@keywords': 'keyword',
@@ -257,6 +259,7 @@ class AxiomIDE {
         { token: 'type', foreground: '267f99' },
         { token: 'support.function', foreground: '795e26' },
         { token: 'identifier', foreground: '215E9C' },
+        { token: 'invalid', foreground: 'C40000' },
         { token: 'variable', foreground: '215E9C' },
         { token: 'variable.readonly', foreground: '8F4400' },
         { token: 'function', foreground: '795E26' },
@@ -290,6 +293,7 @@ class AxiomIDE {
         { token: 'type', foreground: '4ec9b0' },
         { token: 'support.function', foreground: 'dcdcaa' },
         { token: 'identifier', foreground: '9CDCFE' },
+        { token: 'invalid', foreground: 'F44747' },
         { token: 'variable', foreground: '9CDCFE' },
         { token: 'variable.readonly', foreground: 'F0B975' },
         { token: 'function', foreground: 'DCDCAA' },
@@ -332,6 +336,7 @@ class AxiomIDE {
       scrollBeyondLastLine: false,
       tabSize: 4,
       insertSpaces: true,
+      acceptSuggestionOnEnter: 'off',
     });
 
     this.trace = new window.TraceController(this);

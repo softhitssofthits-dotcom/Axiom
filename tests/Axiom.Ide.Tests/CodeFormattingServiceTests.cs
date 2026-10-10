@@ -333,19 +333,20 @@ public sealed class CodeFormattingServiceTests
     }
 
     [Fact]
-    public void FormatLine_Classic_PreservesCyrillicIdentifiers()
+    public void FormatLine_Classic_PreservesInvalidCyrillicSource()
     {
         var result = _service.FormatLine("dim счётчик as integer=42", CodeFormattingStyle.Classic);
 
-        Assert.Equal("DIM счётчик AS INTEGER = 42", result);
+        Assert.Equal("dim счётчик as integer=42", result);
+        Assert.False(_service.IsLineSyntaxValid("dim счётчик as integer=42"));
     }
 
     [Fact]
-    public void FormatLine_Modern_PreservesCyrillicIdentifiers()
+    public void FormatLine_Modern_PreservesInvalidCyrillicSource()
     {
         var result = _service.FormatLine("dim имя as string=\"привет\"", CodeFormattingStyle.Modern);
 
-        Assert.Equal("Dim имя As String = \"привет\"", result);
+        Assert.Equal("dim имя as string=\"привет\"", result);
     }
 
     [Fact]
@@ -365,11 +366,11 @@ public sealed class CodeFormattingServiceTests
     }
 
     [Fact]
-    public void FormatLine_Classic_HandlesMixedCyrillicAndLatinIdentifiers()
+    public void FormatLine_Classic_PreservesInvalidMixedIdentifiers()
     {
         var result = _service.FormatLine("print myVar+счётчик*2", CodeFormattingStyle.Classic);
 
-        Assert.Equal("PRINT myVar + счётчик * 2", result);
+        Assert.Equal("print myVar+счётчик*2", result);
     }
 
     [Fact]
@@ -385,7 +386,7 @@ public sealed class CodeFormattingServiceTests
     {
         var result = _service.FormatLine("print формат+1", CodeFormattingStyle.Classic);
 
-        Assert.Equal("PRINT формат + 1", result);
+        Assert.Equal("print формат+1", result);
     }
 
     [Fact]
@@ -395,7 +396,7 @@ public sealed class CodeFormattingServiceTests
 
         var result = _service.FormatDocument(source, CodeFormattingStyle.Classic);
 
-        Assert.Equal("DIM имя AS STRING = \"Алиса\"\r\nPRINT имя\r\n", result);
+        Assert.Equal(source, result);
     }
 
     [Fact]

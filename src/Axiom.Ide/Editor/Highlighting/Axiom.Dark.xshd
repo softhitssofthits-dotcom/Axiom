@@ -21,6 +21,7 @@
            foreground="#C586C0" />
     <Color name="InterpolationText"
            foreground="#D4D4D4" />
+    <Color name="Invalid" foreground="#F44747" />
 
     <RuleSet ignoreCase="true">
         <Span color="Comment" multiline="false">
@@ -54,6 +55,7 @@
     </RuleSet>
 
     <RuleSet name="Code" ignoreCase="true">
+        <Rule color="Invalid">[^\x00-\x7F\s]+</Rule>
         <Rule color="Number">\b\d+(\.\d+)?\b|&amp;H[0-9A-F]+\b</Rule>
         <Rule color="Operator">&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;=|&gt;=|:=|:|[-+*/\\^=&lt;&gt;&amp;]</Rule>
 

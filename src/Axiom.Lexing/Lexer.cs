@@ -800,9 +800,9 @@ public sealed class Lexer
         Diagnostics.Report(code, message, CreateLocation(start, length));
     }
 
-    private static bool IsIdentifierStart(char c) => char.IsLetter(c) || c == '_';
+    private static bool IsIdentifierStart(char c) => char.IsAsciiLetter(c) || c == '_';
 
-    private static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_';
+    private static bool IsIdentifierPart(char c) => char.IsAsciiLetterOrDigit(c) || c == '_';
 
     private static bool IsHexDigit(char c) =>
         (c >= '0' && c <= '9')

@@ -12,5 +12,5 @@ DIM Total = 5
 total = total + 1
 PRINT ToTaL
 
-DIM счётчик AS INTEGER = 3
-PRINT СЧЁТЧИК
+DIM counter AS INTEGER = 3 ' Для имён используются только латинские буквы.
+PRINT COUNTER ' Разный регистр латинских букв обозначает ту же переменную.

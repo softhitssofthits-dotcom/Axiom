@@ -5,6 +5,26 @@ namespace Axiom.Lexing.Tests;
 
 public sealed class LexerTests
 {
+    [Theory]
+    [InlineData("DIM aя AS INTEGER", "я")]
+    [InlineData("CONST ё AS INTEGER = 1", "ё")]
+    [InlineData("SUB Тест()", "Т")]
+    [InlineData("DIM café AS INTEGER", "é")]
+    [InlineData("FOR счёт = 1 TO 2", "с")]
+    public void Lex_RejectsNonAsciiLettersInIdentifiers(string source, string invalid)
+    {
+        Lex(source, out var diagnostics);
+        Assert.Contains(diagnostics, d => d.Code == DiagnosticCodes.InvalidCharacter &&
+            d.Location.Span.Start == source.IndexOf(invalid, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Lex_PreservesRussianStringsAndCommentsWithAsciiNames()
+    {
+        Lex("DIM _value1 AS INTEGER\nPRINT \"Русский текст: я, ё\" ' Русский комментарий\nREM Ещё комментарий\nINPUT \"Введите число\", _value1", out var diagnostics);
+        Assert.Empty(diagnostics);
+    }
+
     [Fact]
     public void Lex_RecognizesKeywordsCaseInsensitively()
     {

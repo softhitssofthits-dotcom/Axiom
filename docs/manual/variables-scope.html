@@ -53,11 +53,11 @@
             <h2>Каким может быть имя переменной</h2>
             <p>Имя переменной — это слово, по которому программа находит значение. В Axiom действуют простые правила:</p>
             <ol>
-                <li>Имя начинается с буквы или знака подчёркивания <code>_</code>.</li>
-                <li>Дальше можно использовать буквы, цифры и знак подчёркивания.</li>
+                <li>Имя начинается с латинской буквы <code>A–Z</code>, <code>a–z</code> или знака подчёркивания <code>_</code>.</li>
+                <li>Дальше можно использовать латинские буквы, цифры <code>0–9</code> и знак подчёркивания.</li>
                 <li>Пробелы и знаки пунктуации (тире, точки, запятые) в имени запрещены.</li>
                 <li>Имя не должно совпадать с зарезервированным словом языка (<code>IF</code>, <code>PRINT</code>, <code>DIM</code> и другими).</li>
-                <li>Буквы могут быть любыми: латинские и русские работают одинаково.</li>
+                <li>Русские буквы и буквы других алфавитов в именах запрещены: недопустимый символ вызывает <code>MB0001</code>.</li>
             </ol>
             <table class="compact-table">
                 <thead>
@@ -66,15 +66,17 @@
                 <tbody>
                     <tr><td><code>name</code>, <code>total</code>, <code>version1</code></td><td><code>1value</code></td><td>имя не может начинаться с цифры</td></tr>
                     <tr><td><code>_tmp</code>, <code>studentName</code></td><td><code>user-name</code></td><td>дефис — это знак пунктуации</td></tr>
-                    <tr><td><code>счётчик</code>, <code>сумма_1</code></td><td><code>user name</code></td><td>пробел внутри имени запрещён</td></tr>
+                    <tr><td><code>counter</code>, <code>sum_1</code></td><td><code>aя</code>, <code>сумма</code></td><td>в имени разрешены только латинские буквы</td></tr>
                     <tr><td><code>score</code>, <code>SCORE</code></td><td><code>PRINT</code></td><td>зарезервированное слово языка</td></tr>
                 </tbody>
             </table>
-            <p>Русские буквы в именах полностью поддерживаются:</p>
-            <pre><code class="language-basic">DIM счётчик AS INTEGER = 3
-PRINT СЧЁТЧИК</code></pre>
+            <p>Имена пишутся латинскими буквами, а сообщения в кавычках и комментарии могут быть русскими:</p>
+            <pre><code class="language-basic">DIM counter AS INTEGER = 3 ' Объявляем счётчик.
+PRINT COUNTER
+PRINT "Русский текст разрешён в строках."</code></pre>
             <p>Вывод:</p>
-            <pre><code>3</code></pre>
+            <pre><code>3
+Русский текст разрешён в строках.</code></pre>
         </section>
 
         <section class="article-section" id="case">
