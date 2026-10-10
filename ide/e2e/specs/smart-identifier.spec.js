@@ -1,0 +1,38 @@
+const {testWorkspace,writeAxm}=require('../helpers');
+const fs=require('node:fs');
+const source='DIM PlayerSpeed AS INTEGER\nplayerspeed = 4\nPRINT "playerspeed" \' playerspeed\n';
+module.exports=[{id:'smart-identifier-legacy',name:'Умный идентификатор: меню, Enter, мышь, отмена и сохранение настройки',async fn({S,C}){
+ const file=writeAxm(testWorkspace('smart-identifier'),'Имена.axm',source);
+ await S.launch();await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));
+ await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);
+ C.ok(!await S.page.evaluate(()=>!!window.__ide.settings.smartIdentifierEnabled),'По умолчанию выключен, как в прежней IDE');
+ await S.page.locator('[data-menu="edit"] .menu-label').click();await S.page.locator('#formatting-submenu .submenu-trigger').hover();await S.page.locator('[data-action="smart-identifier"]').click();
+ C.ok(await S.page.evaluate(()=>window.__ide.settings.smartIdentifierEnabled),'Включён настоящим пунктом меню');
+ for(const style of ['Classic','Modern']){
+  await S.page.evaluate(async({source,style})=>{const i=window.__ide;await i.setFormattingStyle(style);i.editor.getModel().setValue(source);i.editor.setPosition({lineNumber:2,column:16});i.editor.focus();},{source,style});
+  await S.page.keyboard.press('Enter');await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('PlayerSpeed = 4'));
+  C.eq(await S.page.evaluate(()=>window.__ide.editor.getPosition().lineNumber),3,'Один Enter и нормализация: '+style);
+  C.ok(await S.page.evaluate(()=>window.__ide.editor.getValue().includes('"playerspeed" \' playerspeed')),'Строка и комментарий не изменены');
+  await S.page.keyboard.press('Control+z');await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('playerspeed = 4'));
+  C.ok(true,'Нормализация отменяется');
+ }
+ await S.page.evaluate(source=>{const i=window.__ide;i.editor.getModel().setValue(source);i.editor.setPosition({lineNumber:2,column:1});i.editor.focus();},source);
+ await S.page.waitForTimeout(150);
+ await S.page.evaluate(()=>window.__ide.editor.setPosition({lineNumber:3,column:1}));
+ await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('PlayerSpeed = 4'));C.ok(true,'Переход между строками нормализует имя');
+ C.eq(fs.readFileSync(file,'utf8'),source,'Диск не меняется до сохранения');
+ await S.page.evaluate(()=>window.__ide.markDirty(window.__ide.activeFile,false));
+ const userData=S.userData;await S.close();await S.launch({userData});
+ C.ok(await S.page.evaluate(()=>window.__ide.settings.smartIdentifierEnabled),'Настройка переживает перезапуск');
+ await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('PlayerSpeed = 4'));
+ C.ok(true,'При открытии работает прежняя нормализация');
+ await S.page.evaluate(()=>{const i=window.__ide;i.editor.getModel().setValue('DIM PlayerSpeed AS INTEGER\nplayerspeed=4\n');i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();});
+ await S.page.locator('#sidebar-close').click();
+ await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('PlayerSpeed=4'));
+ C.ok(true,'Уход фокуса меняет только регистр имени, без форматирования всего документа');
+ await S.page.keyboard.press('Escape');
+ await S.page.evaluate(()=>window.__ide.handleAction('smart-identifier'));
+ await S.page.evaluate(source=>{const i=window.__ide;i.editor.getModel().setValue(source);i.editor.setPosition({lineNumber:2,column:1});i.editor.focus();},source);
+ await S.page.waitForTimeout(150);await S.page.evaluate(()=>window.__ide.editor.setPosition({lineNumber:3,column:1}));await S.page.waitForTimeout(500);
+ C.ok(await S.page.evaluate(()=>window.__ide.editor.getValue().includes('playerspeed = 4')),'Выключение сохраняет авторское написание');
+}}];

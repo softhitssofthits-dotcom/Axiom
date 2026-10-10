@@ -68,6 +68,29 @@ async function withHost(fn) {
   try { await host.event('host.ready'); await fn(host); } finally { await host.close(); }
 }
 
+test('Умный идентификатор сохраняет прежние имена, строки и комментарии в обоих стилях',()=>withHost(async h=>{
+ const sourceText='DIM PlayerSpeed AS INTEGER\nCONST MaxSpeed AS INTEGER = 9\nDIM Cells(0 TO 2) AS INTEGER\nplayerspeed = maxspeed\ncells(1) = playerspeed\nPRINT Twice(playerspeed), "playerspeed" \' playerspeed\n\nFUNCTION Twice(InputValue AS INTEGER) AS INTEGER\nRETURN inputvalue * 2\nEND FUNCTION\n';
+ const snapshot={documentId:'smart',documentRevision:8,sourceText};
+ const compiled=await h.request('document.compile',snapshot);assert.equal(compiled.ok,true);assert.deepEqual(compiled.payload.diagnostics,[]);
+ const disabled=await h.request('document.normalizeIdentifiers',snapshot);
+ assert.equal(disabled.payload.sourceText,sourceText);
+ for(const formattingStyle of ['Classic','Modern']){
+  const r=await h.request('document.format',{...snapshot,formattingStyle,smartIdentifierEnabled:true});
+  assert.equal(r.ok,true);assert.equal(r.payload.documentRevision,8);
+  assert.match(r.payload.sourceText,/PlayerSpeed = MaxSpeed/);assert.match(r.payload.sourceText,/Cells\(1\) = PlayerSpeed/);
+  assert.match(r.payload.sourceText,/Twice\(PlayerSpeed\)/);assert.match(r.payload.sourceText,/InputValue \* 2/);
+  assert.ok(r.payload.sourceText.includes('"playerspeed" \' playerspeed'));
+ }
+ const plain='DIM PlayerSpeed AS INTEGER\nplayerspeed=2\nPRINT UnknownName \' playerspeed\n';
+ const normalized=await h.request('document.normalizeIdentifiers',{...snapshot,sourceText:plain,smartIdentifierEnabled:true});
+ assert.equal(normalized.payload.sourceText,'DIM PlayerSpeed AS INTEGER\nPlayerSpeed=2\nPRINT UnknownName \' playerspeed\n');
+ assert.equal((await h.request('document.format',{...snapshot,smartIdentifierEnabled:'yes'})).ok,false);
+ const transition=await h.request('document.editTransition',{...snapshot,sourceText:plain,smartIdentifierEnabled:true,previousLineNumber:2,currentLineNumber:3,caretOffset:plain.indexOf('PRINT')});
+ assert.equal(transition.ok,true);let text=plain;
+ for(const e of [...transition.payload.edits].reverse())text=text.slice(0,e.start)+e.newText+text.slice(e.start+e.length);
+ assert.match(text,/PlayerSpeed = 2/);assert.equal(text.slice(transition.payload.newCaretOffset).startsWith('PRINT'),true);
+}));
+
 test('DesktopHost исполняет точный пример одной VM', () => withHost(async h => {
   const source = fs.readFileSync(path.join(root, 'samples/smoke/bytecode-only/compiler_execution.axm'), 'utf8');
   assert.equal((await h.start(source)).ok, true);

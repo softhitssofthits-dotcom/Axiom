@@ -22,9 +22,12 @@ internal static class DocumentCommands
         if (payload.TryGetProperty("formattingStyle", out var styleValue) &&
             (!Enum.TryParse(styleValue.GetString(), out style) || !Enum.IsDefined(style)))
             throw new ArgumentException("Неизвестный стиль форматирования.");
+        if (method == "document.normalizeIdentifiers")
+            return new { snapshot.DocumentId, snapshot.DocumentRevision,
+                sourceText = NormalizeIdentifiers(snapshot.SourceText, payload) };
         if (method == "document.format")
             return new { snapshot.DocumentId, snapshot.DocumentRevision,
-                sourceText = formatter.FormatDocument(snapshot.SourceText, style) };
+                sourceText = NormalizeIdentifiers(formatter.FormatDocument(snapshot.SourceText, style), payload) };
         if (method == "document.editTransition")
         {
             var previous = payload.GetProperty("previousLineNumber").GetInt32();
@@ -33,7 +36,7 @@ internal static class DocumentCommands
             var plan = new BlockEditPlanner(formatter).Plan(source, previous,
                 payload.GetProperty("currentLineNumber").GetInt32(),
                 caret, style);
-            var resultText = source[..plan.Start] + plan.NewText + source[(plan.Start + plan.Length)..];
+            var resultText = NormalizeIdentifiers(source[..plan.Start] + plan.NewText + source[(plan.Start + plan.Length)..], payload);
             var prefix = 0;
             while (prefix < snapshot.SourceText.Length && prefix < resultText.Length && snapshot.SourceText[prefix] == resultText[prefix]) prefix++;
             var suffix = 0;
@@ -54,6 +57,14 @@ internal static class DocumentCommands
             }).ToArray();
         return new { snapshot.DocumentId, snapshot.DocumentRevision,
             status = result.Status.ToString(), diagnostics };
+    }
+
+    private static string NormalizeIdentifiers(string source, JsonElement payload)
+    {
+        if (!payload.TryGetProperty("smartIdentifierEnabled", out var enabled)) return source;
+        if (enabled.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+            throw new ArgumentException("Некорректное значение настройки умного идентификатора.");
+        return enabled.GetBoolean() ? new IdentifierNormalizationService().NormalizeDocument(source) : source;
     }
 
     private static string FormatPreviousLine(string source, int lineNumber, ICodeFormattingService formatter, CodeFormattingStyle style, ref int caret)

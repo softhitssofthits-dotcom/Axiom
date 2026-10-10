@@ -346,6 +346,9 @@ class AxiomIDE {
       this._lastEditorFocus = performance.now();
       this.log('editor.focus', this.focusState());
     });
+    this.editor.onDidBlurEditorText(() => {
+      if (this.settings.smartIdentifierEnabled) this.formatWholeDocument('ax-smart-blur', this.activeFile, 'document.normalizeIdentifiers');
+    });
     this.editor.onDidChangeModelContent(() => {
       if (this.activeFile) this.markDirty(this.activeFile, true);
       this.scheduleLiveCheck();
@@ -388,14 +391,20 @@ class AxiomIDE {
       { id: 'copy', label: 'Copy', icon: 'codicon-copy' },
       { id: 'paste', label: 'Paste', icon: 'codicon-files' },
       { separator: true },
+      { id: 'trace-breakpoint', translation: 'trace.breakpoint', key: 'F9', icon: 'codicon-debug-breakpoint', trace: 'breakpoint' },
+      { id: 'trace-clear', translation: 'trace.clear', key: 'Ctrl+Shift+F9', icon: 'codicon-clear-all', trace: 'clear' },
+      { separator: true },
       { id: 'command-palette', label: 'Command Palette', key: 'F1', icon: 'codicon-symbol-misc' },
     ];
     const close = () => { menu.hidden = true; menu.replaceChildren(); };
+    let contextLine;
     const run = (id) => {
       close();
       // The menu button temporarily owns focus. Restore Monaco first.
       this.editor?.focus();
-      if (id === 'change-all') this.editor?.trigger('ax-context', 'editor.action.changeAllOccurrences');
+      if (id === 'trace-breakpoint') { if (this.trace.allowed('breakpoint')) this.trace.toggle(contextLine); }
+      else if (id === 'trace-clear') this.trace.command('clear');
+      else if (id === 'change-all') this.editor?.trigger('ax-context', 'editor.action.changeAllOccurrences');
       else if (id === 'command-palette') this.editor?.trigger('ax-context', 'editor.action.quickCommand');
       else this.handleAction(id);
     };
@@ -403,6 +412,7 @@ class AxiomIDE {
       if (!event.target.closest?.('.monaco-editor')) return;
       event.preventDefault();
       event.stopPropagation();
+      contextLine = this.editor.getTargetAtClientPoint(event.clientX, event.clientY)?.position?.lineNumber;
       menu.replaceChildren();
       items.forEach((item) => {
         if (item.separator) {
@@ -416,7 +426,9 @@ class AxiomIDE {
         row.className = 'xs-context-item';
         row.dataset.action = item.id;
         row.setAttribute('role', 'menuitem');
-        row.innerHTML = `<span class="xs-context-item-icon codicon ${item.icon}"></span><span class="xs-context-item-label">${item.label}</span>${item.key ? `<span class="xs-context-item-key">${item.key}</span>` : ''}`;
+        row.setAttribute('aria-label', item.translation ? I18N.t(item.translation) : item.label);
+        row.disabled = !!item.trace && (!this.trace.allowed(item.trace) || (item.trace === 'breakpoint' && !contextLine));
+        row.innerHTML = `<span class="xs-context-item-icon codicon ${item.icon}"></span><span class="xs-context-item-label">${item.translation ? I18N.t(item.translation) : item.label}</span>${item.key ? `<span class="xs-context-item-key">${item.key}</span>` : ''}`;
         menu.appendChild(row);
       });
       menu.hidden = false;
@@ -609,6 +621,10 @@ class AxiomIDE {
 
   handleAction(action) {
     if (action.startsWith('trace-')) return this.trace.command(action.slice(6));
+    if (action === 'smart-identifier') {
+      this.saveSettings({smartIdentifierEnabled:!this.settings.smartIdentifierEnabled});
+      this.updateFormatMenuChecks();return;
+    }
     const editor = this.editor;
     switch (action) {
       case 'new': this.newFile(); break;
@@ -826,6 +842,7 @@ class AxiomIDE {
     // A freshly opened document is diagnosed right away (same debounced live check as
     // typing) — its squiggles must not wait for the first keystroke.
     this.scheduleLiveCheck();
+    if (this.settings.smartIdentifierEnabled) await this.formatWholeDocument('ax-smart-open', p, 'document.normalizeIdentifiers');
     API.watchFile(p).catch(() => {});
     if (!p.startsWith('untitled')) {
       API.addRecentFile(p).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
@@ -860,6 +877,7 @@ class AxiomIDE {
     this.editor.setModel(f.model);
     if (f.viewState) this.editor.restoreViewState(f.viewState);
     this.activeFile = p;
+    this.trace?.update();
     document.getElementById('status-file-path').textContent = p;
     document.querySelectorAll('.editor-tab').forEach((t) => t.classList.toggle('active', t.dataset.path === p));
     document.querySelectorAll('.project-file').forEach((t) => t.classList.toggle('active', t.dataset.path === p || t.title === p));
@@ -1020,7 +1038,7 @@ class AxiomIDE {
 
   // ================= autoformat triggers =================
 
-  async formatWholeDocument(owner, path = this.activeFile) {
+  async formatWholeDocument(owner, path = this.activeFile, method = 'document.format') {
     if (this.running && path === this._runFile) return false;
     const document = this.openFiles.get(path);
     const model = document?.model;
@@ -1032,15 +1050,18 @@ class AxiomIDE {
     }
     const sel = this.editor.getModel() === model ? this.editor.getSelection() : null;
     const text = model.getValue();
+    const smartIdentifierEnabled = !!this.settings.smartIdentifierEnabled;
     const request = ++this._serviceSeq;
     clearTimeout(this._liveCheckTimer);
     this._liveCheckTimer = null;
     this._formatBusy++;
     this.log('format.document.start', { owner, length: text.length, request });
     try {
-      const r = await this.documentServices.request(path, 'document.format', { formattingStyle: this.settings.formattingStyle || 'Classic' });
+      const r = await this.documentServices.request(path, method, { formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled });
       if (!r || typeof r.sourceText !== 'string') { this.log('format.document.failed', { owner, request, reason: r?.reason }); return; }
       const m = this.openFiles.get(path)?.model;
+      if (this.running && path === this._runFile) return;
+      if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled) return;
       if (request !== this._serviceSeq || !m || m !== model) { this.log('format.document.stale', { owner, request }); return; }
       if (m.getValue() !== text) { this.log('format.document.stale-edit', { owner, request }); return; } // the buffer changed while the request was in flight — stale, skip
       const edits = this.lineDiffEdits(m, r.sourceText);
@@ -1103,6 +1124,7 @@ class AxiomIDE {
   }
 
   updateFormatMenuChecks() {
+    document.querySelector('.menu-check[data-check="smartIdentifier"]')?.classList.toggle('on',!!this.settings.smartIdentifierEnabled);
     for (const [key, style] of [['formatClassic', 'Classic'], ['formatModern', 'Modern']]) {
       document.querySelector('.menu-check[data-check="' + key + '"]')?.classList.toggle('on', (this.settings.formattingStyle || 'Classic') === style);
     }
@@ -1454,11 +1476,13 @@ class AxiomIDE {
     const document = this.openFiles.get(this.activeFile);
     if (!document || document.readonly || model.getLanguageId() !== 'axiom') return;
     const caretOffset = model.getOffsetAt(position);
+    const smartIdentifierEnabled = !!this.settings.smartIdentifierEnabled;
     try {
       const result = await this.documentServices.request(this.activeFile, 'document.editTransition', {
         previousLineNumber, currentLineNumber: position.lineNumber, caretOffset,
-        formattingStyle: this.settings.formattingStyle || 'Classic' });
-      if (!result || !result.edits.length || this.editor.getModel() !== model ||
+        formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled });
+      if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled || !result || !result.edits.length || this.editor.getModel() !== model ||
+          (this.running && this.openFiles.get(this._runFile)?.model === model) ||
           model.getOffsetAt(this.editor.getPosition()) !== caretOffset) return;
       const edits = result.edits.map(e => {
         if (!Number.isInteger(e.start) || !Number.isInteger(e.length) || e.start < 0 || e.length < 0 ||
@@ -1857,6 +1881,9 @@ class AxiomIDE {
         }
       }
       if (!this.activeFile && this.openFiles.size) this.switchToFile([...this.openFiles.keys()][0]);
+      if (this.settings.smartIdentifierEnabled) {
+        for (const path of this.openFiles.keys()) await this.formatWholeDocument('ax-smart-restore', path, 'document.normalizeIdentifiers');
+      }
       // The restored buffer must be re-checked so the diagnostics (markers + Problems)
       // reappear right away.
       if (this.activeFile) this.scheduleLiveCheck();

@@ -4,6 +4,24 @@ async function open(S){const file=writeAxm(testWorkspace('trace'),'шаги.axm'
 async function paused(S,line){await S.page.waitForFunction(n=>!!window.__ide.execution.stopId && !window.__ide.execution.debugBusy && window.__ide.execution.line===n,line);}
 async function menu(S,command){await S.page.locator('#menu-trace > .menu-label').click();await S.page.locator(`#menu-trace [data-action="trace-${command}"]`).click();}
 module.exports=[
+{id:'trace-context-menu',name:'Прежние команды точек остановки в контекстном меню ru/en',async fn({S,C}){
+await open(S);
+async function context(line){
+ const point=await S.page.evaluate(n=>{const ide=window.__ide;ide.editor.revealLineInCenter(n);const p=ide.editor.getScrolledVisiblePosition({lineNumber:n,column:2});const r=ide.editor.getDomNode().getBoundingClientRect();return {x:r.x+p.left,y:r.y+p.top+p.height/2};},line);
+ await S.page.mouse.click(point.x,point.y,{button:'right'});
+}
+await context(2);await S.page.getByRole('menuitem',{name:'Установить / снять точку остановки',exact:true}).click();
+C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).join(',')),'2','Правая кнопка установила точку на выбранной строке');
+await context(2);await S.page.getByRole('menuitem',{name:'Установить / снять точку остановки',exact:true}).click();
+C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).length),0,'Повтор снял точку');
+await S.page.evaluate(()=>window.__ide.handleAction('lang-en'));await context(2);
+await S.page.getByRole('menuitem',{name:'Toggle Breakpoint',exact:true}).click();
+C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).join(',')),'2','Английский пункт устанавливает точку');
+await context(2);await S.page.getByRole('menuitem',{name:'Clear All Breakpoints',exact:true}).click();
+C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).length),0,'Английский пункт очищает точки');
+await S.page.evaluate(()=>window.__ide.handleAction('lang-ru'));await context(2);
+C.ok(await S.page.getByRole('menuitem',{name:'Очистить все точки остановки',exact:true}).isVisible(),'Перевод вернулся на русский');await S.page.keyboard.press('Escape');
+}},
 {id:'trace-function-and-loop',name:'Функция, другая вкладка и повторная точка в цикле',async fn({S,C}){
 await open(S);const file=writeAxm(testWorkspace('trace-function'),'функция.axm','DIM result AS INTEGER = Twice(3)\nPRINT result\n\nFUNCTION Twice(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION\n');
 await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);

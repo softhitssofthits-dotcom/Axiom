@@ -201,7 +201,7 @@ internal sealed class DesktopHost : IDisposable
                     using (var metadata = JsonDocument.Parse(Axiom.Semantics.AxiomLanguageMetadata.ToJson()))
                         Respond(id, metadata.RootElement.Clone());
                     break;
-                case "document.compile": case "document.analyse": case "document.format": case "document.editTransition":
+                case "document.compile": case "document.analyse": case "document.format": case "document.editTransition": case "document.normalizeIdentifiers":
                     if (_sessionId is not null && method == "document.compile") throw new HostError("BUSY", "Программа ещё выполняется.");
                     if (_documentRequests >= 8) throw new HostError("BUSY", "Слишком много запросов документа.");
                     _documentRequests++;
