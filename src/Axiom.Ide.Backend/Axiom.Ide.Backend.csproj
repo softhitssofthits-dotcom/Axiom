@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Axiom.Execution\Axiom.Execution.csproj" />
+    <ProjectReference Include="..\Axiom.Formatting\Axiom.Formatting.csproj" />
+    <ProjectReference Include="..\Axiom.Ide.Contracts\Axiom.Ide.Contracts.csproj" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo"><_Parameter1>Axiom.Ide</_Parameter1></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo"><_Parameter1>Axiom.Ide.Tests</_Parameter1></AssemblyAttribute>
+  </ItemGroup>
+</Project>

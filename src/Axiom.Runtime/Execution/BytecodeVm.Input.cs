@@ -20,6 +20,12 @@ public sealed partial class BytecodeVm
 
         var request = new InputRequest(plan.PromptText, plan.Targets.Length);
         var text = _host.IsScreenOutputActive ? _host.ReadGraphicsInput(request) : _host.ReadInput(request);
+        // Остановка во время ожидания не является вводом пустой строки.
+        // Не преобразовываем значения и не записываем цели отменённого INPUT.
+        if (CheckCancellationRequested())
+        {
+            return;
+        }
         InvalidateReverseExecutionHistory();
 
         if (!TryParseAndStoreInputValues(frame, plan.Targets, text, location, instructionIndex))

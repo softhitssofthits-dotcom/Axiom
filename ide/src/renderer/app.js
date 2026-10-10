@@ -2,7 +2,7 @@ const API = window.axiom;
 
 const DEFAULT_TEMPLATE = [
   "' Новая программа на Axiom.",
-  'PRINT "Hello, world"',
+  'PRINT "Привет, мир!"',
   '',
 ].join('\n');
 
@@ -11,7 +11,9 @@ class AxiomIDE {
     this.monaco = null;
     this.langMeta = null; // language registry from `axiom metadata`; null until loaded
     this.editor = null;
-    this.openFiles = new Map(); // path -> { model, viewState }
+    this.openFiles = new window.DocumentStore();
+    this.documentServices = new window.DocumentServices(this.openFiles, API);
+    this.documentSaver = new window.DocumentSaver(this.openFiles, API);
     this.dirty = new Set();
     this.activeFile = null;
     this.projectDir = null;
@@ -33,6 +35,7 @@ class AxiomIDE {
     this._liveCheckSeq = 0;
     this._outlineSeq = 0;
     this._lastEditorFocus = 0;
+    this.execution = new window.ExecutionController(this, API);
     this.init();
   }
 
@@ -87,7 +90,8 @@ class AxiomIDE {
     } catch (e) {
       this.log('init.failed', { message: e?.message || String(e) }, 'error');
       console.error('init failed', e);
-      document.body.innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#ccc">Failed to load Monaco. Run `npm install` and `npm run prepare` (see run-ide.bat).</div>';
+      const problem=document.createElement('div');problem.style.cssText='padding:24px;font-family:Segoe UI,sans-serif;color:var(--text-primary)';
+      problem.textContent='Не удалось открыть IDE: '+(e.message||String(e));document.body.replaceChildren(problem);
     }
   }
 
@@ -131,16 +135,9 @@ class AxiomIDE {
   };
 
   async loadLanguageMetadata() {
-    this.langMeta = null;
-    try {
-      const r = await Promise.race([
-        API.getLanguageMetadata(),
-        new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: 'timeout' }), 3000)),
-      ]);
-      if (r && r.ok && r.metadata && typeof r.metadata === 'object') this.langMeta = r.metadata;
-    } catch {
-      this.langMeta = null;
-    }
+    const result=await API.getLanguageMetadata();
+    if(!result?.ok||!result.metadata)throw new Error(result?.error?.message||'Не получен реестр языка DesktopHost.');
+    this.langMeta=result.metadata;
   }
 
   static dictList(value, fallback) {
@@ -321,6 +318,10 @@ class AxiomIDE {
     this.editor.onDidChangeCursorPosition((e) => {
       document.getElementById('status-line-col').textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
       this.log('editor.cursor', { line: e.position.lineNumber, col: e.position.column, reason: e.reason });
+      const model=this.editor.getModel(),previous=this._structuralLine;
+      const sameModel=this._structuralModel===model;
+      this._structuralLine=e.position.lineNumber;this._structuralModel=model;
+      if(sameModel&&previous!==e.position.lineNumber)this.editLineTransition(model,previous,e.position);
     });
     this.editor.onDidFocusEditorText(() => {
       this._lastEditorFocus = performance.now();
@@ -329,9 +330,7 @@ class AxiomIDE {
       this.log('editor.focus', this.focusState());
     });
     this.editor.onDidChangeModelContent(() => {
-      // Auto-format edits are non-semantic normalization — they must not re-dirty a
-      // just-saved buffer.
-      if (this.activeFile && !this._autoFormatting) this.markDirty(this.activeFile, true);
+      if (this.activeFile) this.markDirty(this.activeFile, true);
       this.scheduleLiveCheck();
       this.scheduleOutlineRebuild();
       this.log('editor.change', { length: this.editor.getValue().length, activeFile: this.activeFile });
@@ -654,6 +653,7 @@ class AxiomIDE {
     }, true);
 
     window.addEventListener('beforeunload', () => this.saveOpenTabs(true));
+    API.onWindowCloseRequested(() => this.prepareWindowClose().catch(error => { this.setStatus(I18N.t("status.saveFailed")); alert(error.message); }));
 
     // When the window regains focus, put it back on the editor unless focus is
     // already on a real input.
@@ -682,6 +682,7 @@ class AxiomIDE {
       case 'close-project': this.closeProject(); break;
       case 'save': this.save(); break;
       case 'save-as': this.saveAs(); break;
+      case 'save-all': this.saveAll(); break;
       case 'close-tab': if (this.activeFile) this.closeFile(this.activeFile); break;
       case 'exit': window.close(); break;
       case 'undo': editor?.trigger('menu', 'undo'); this.focusEditor(); break;
@@ -827,17 +828,20 @@ class AxiomIDE {
     return !!this.projectDir && !!p && !p.startsWith('untitled') && !this.isProjectFile(p);
   }
 
-  closeProject() {
+  async closeProject() {
     if (!this.projectDir) return;
     // Take the membership snapshot before clearing projectDir: after closure the remaining
     // documents are no longer classified as project files. Confirm every dirty project
     // document first, so cancelling one confirmation leaves the project and all its tabs intact.
+    const closingProjectDir = this.projectDir;
     const projectFiles = [...this.openFiles.keys()].filter((file) => this.isProjectFile(file));
+    const approved = new Map();
     for (const file of projectFiles) {
-      if (!this.dirty.has(file)) continue;
-      const name = file.split(/[/\\]/).pop();
-      if (!confirm(I18N.t('dialog.unsaved', name))) return;
+      const entry = this.openFiles.get(file);
+      if (!await this.prepareClose(file)) return;
+      if (entry) approved.set(entry, entry.model.getValue());
     }
+    if (this.projectDir !== closingProjectDir || [...approved].some(([entry, text]) => this.openFiles.get(entry.path) !== entry || entry.model.getValue() !== text)) return;
     this.projectDir = null;
     this.saveSettings({ lastProjectDir: null });
     const title = document.getElementById('project-title');
@@ -846,10 +850,7 @@ class AxiomIDE {
     document.getElementById('project-files').innerHTML = '';
     // A project owns its open documents. Closing it releases their editor models and tabs,
     // while files opened from elsewhere deliberately remain available as independent files.
-    for (const file of projectFiles) {
-      this.dirty.delete(file); // confirmation above authorizes discarding unsaved project edits
-      this.closeFile(file);
-    }
+    for (const entry of approved.keys()) await this.closeFile(entry.path, true);
     // Without a project the distinction does not exist: the section hides itself.
     this.renderMiscellaneousFiles();
   }
@@ -869,7 +870,7 @@ class AxiomIDE {
 
   async openFile(p) {
     if (this.openFiles.has(p)) {
-      this.switchToFile(p);
+      this.switchToFile(this.openFiles.get(p).path);
       // Re-opening an already-open file still bumps recency.
       if (!p.startsWith('untitled')) {
         API.addRecentFile(p).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
@@ -879,7 +880,7 @@ class AxiomIDE {
     let content;
     try { content = await API.readFileContent(p); }
     catch { alert(I18N.t('dialog.openFailed', p)); return; }
-    const model = this.monaco.editor.createModel(content, 'axiom', this.monaco.Uri.file(p));
+    const model = this.monaco.editor.createModel(content.replace(/^\uFEFF/, ''), /\.axm$/i.test(p) ? 'axiom' : 'plaintext', this.monaco.Uri.file(p));
     this.openFiles.set(p, { model, viewState: null });
     this.createTab(p);
     this.switchToFile(p);
@@ -897,7 +898,8 @@ class AxiomIDE {
     const tab = document.createElement('div');
     tab.className = 'editor-tab';
     tab.dataset.path = p;
-    tab.innerHTML = `<span class="tab-name">${name}</span><span class="dirty-indicator" style="display:none">*</span><button class="tab-close" aria-label="Close tab"><span class="codicon codicon-close"></span></button>`;
+    tab.innerHTML = '<span class="tab-name"></span><span class="dirty-indicator" style="display:none">*</span><button class="tab-close" aria-label="Закрыть вкладку"><span class="codicon codicon-close"></span></button>';
+    tab.querySelector('.tab-name').textContent = name;
     tab.addEventListener('click', (e) => {
       if (!e.target.classList.contains('tab-close')) this.switchToFile(tab.dataset.path);
     });
@@ -928,13 +930,14 @@ class AxiomIDE {
     this.rebuildOutline();
   }
 
-  closeFile(p) {
+  async closeFile(p, approved = false) {
     const f = this.openFiles.get(p);
-    if (!f) return;
-    if (this.dirty.has(p)) {
-      const name = p.split(/[/\\]/).pop();
-      if (!confirm(I18N.t('dialog.unsaved', name))) return;
-    }
+    if (!f || f.closing) return false;
+    f.closing = true;
+    try {
+    if (!approved && !await this.prepareClose(p)) return false;
+    p = f.path;
+    if (this.openFiles.get(p) !== f) return false;
     f.model.dispose();
     this.openFiles.delete(p);
     this.dirty.delete(p);
@@ -953,6 +956,8 @@ class AxiomIDE {
     }
     if (this.projectDir) this.refreshProjectFiles();
     this.renderMiscellaneousFiles();
+    return true;
+    } finally { f.closing = false; }
   }
 
   async refreshProjectFiles() {
@@ -962,33 +967,69 @@ class AxiomIDE {
   }
 
   markDirty(p, d) {
+    if (!d) this.openFiles.markSaved(p);
+    else d = p.startsWith('untitled') || this.openFiles.isDirty(p);
     if (d) this.dirty.add(p); else this.dirty.delete(p);
     const tab = [...document.querySelectorAll('.editor-tab')].find((t) => t.dataset.path === p);
     if (tab) tab.querySelector('.dirty-indicator').style.display = d ? 'inline' : 'none';
   }
 
-  async save() {
-    if (!this.activeFile) return;
-    if (this.settings.formatOnSave) await this.formatWholeDocument('ax-format-on-save');
-    const content = this.editor.getValue();
-    if (this.activeFile.startsWith('untitled')) {
-      const p = await API.saveFileDialog(this.activeFile);
-      if (!p) return;
-      if (this.openFiles.has(p)) {
-        alert(I18N.t('dialog.alreadyOpen', p.split(/[/\\]/).pop()));
-        this.focusEditor();
-        return;
-      }
-      const ok = await API.writeFile(p, content);
-      if (!ok) { this.saveFailed(p); return; } // no false success
-      this.renameActive(p);
-    } else {
-      const ok = await API.writeFile(this.activeFile, content);
-      if (!ok) { this.saveFailed(this.activeFile); return; }
-      this.markDirty(this.activeFile, false);
+  async save(path = this.activeFile, saveAs = false) {
+    const entry = this.openFiles.get(path);
+    if (!entry) return false;
+    path = entry.path;
+    if (entry.readonly) { alert("Документ доступен только для чтения."); return false; }
+    if (this.settings.formatOnSave && !await this.formatWholeDocument('ax-format-on-save', path)) return false;
+    try {
+      const result = await this.documentSaver.save(path, saveAs);
+      if (!result) return false;
+      if (result.path !== result.oldPath) this.renameActive(result.path, result.oldPath);
+      this.markDirty(result.path, this.openFiles.isDirty(result.path));
+      this.setStatus(I18N.t('status.saved'));
+      return !this.openFiles.isDirty(result.path);
+    } catch (error) {
+      this.setStatus(I18N.t('status.saveFailed'));
+      alert(error.message);
+      return false;
     }
-    this.setStatus(I18N.t('status.saved'));
-    this.focusEditor();
+  }
+
+  async saveAll() {
+    for (const entry of [...this.openFiles.values()]) {
+      if (entry.path.startsWith('untitled') || this.openFiles.isDirty(entry.path)) {
+        if (!await this.save(entry.path)) return false;
+      }
+    }
+    return true;
+  }
+
+  async prepareClose(path, discarded = null) {
+    const entry = this.openFiles.get(path);
+    if (!entry) return true;
+    if (!path.startsWith('untitled') && !this.openFiles.isDirty(path)) return true;
+    const text = entry.model.getValue();
+    const choice = await API.confirmDocumentClose(path.split(/[/\\]/).pop());
+    if (this.openFiles.get(path) !== entry || entry.model.getValue() !== text) return false;
+    if (choice === 'discard') { discarded?.add(entry); return true; }
+    if (choice !== 'save') return false;
+    return await this.save(path);
+  }
+
+  async prepareWindowClose() {
+    if (this._closingWindow) return;
+    this._closingWindow = true;
+    try {
+      const approved = new Map();
+      const discarded = new Set();
+      for (const entry of [...this.openFiles.values()]) {
+        if (!await this.prepareClose(entry.path, discarded)) return;
+        approved.set(entry, entry.model.getValue());
+      }
+      if (this.openFiles.size !== approved.size || [...this.openFiles.values()].some(e => !approved.has(e) || approved.get(e) !== e.model.getValue())) return;
+      this._discardedOnExit = discarded;
+      this.saveOpenTabs(true);
+      API.approveWindowClose();
+    } finally { this._closingWindow = false; }
   }
 
   saveFailed(p) {
@@ -999,33 +1040,15 @@ class AxiomIDE {
     this.focusEditor();
   }
 
-  async saveAs() {
-    if (!this.activeFile) return;
-    const p = await API.saveFileDialog(this.activeFile.startsWith('untitled') ? undefined : this.activeFile);
-    if (!p) return;
-    if (this.openFiles.has(p) && p !== this.activeFile) {
-      // Overwriting another open tab's path would corrupt its buffer/tab map.
-      alert(I18N.t('dialog.alreadyOpen', p.split(/[/\\]/).pop()));
-      this.focusEditor();
-      return;
-    }
-    if (this.settings.formatOnSave) await this.formatWholeDocument('ax-format-on-save');
-    const ok = await API.writeFile(p, this.editor.getValue());
-    if (!ok) { this.saveFailed(p); return; }
-    this.renameActive(p);
-    this.setStatus(I18N.t('status.saved'));
-    this.focusEditor();
-  }
+  async saveAs() { return this.save(this.activeFile, true); }
 
-  renameActive(newPath) {
-    const old = this.activeFile;
-    const f = this.openFiles.get(old);
+  renameActive(newPath, old = this.activeFile) {
+    const f = this.openFiles.get(old) || this.openFiles.get(newPath);
     if (!f) return;
-    this.openFiles.delete(old);
-    this.openFiles.set(newPath, { model: f.model, viewState: null });
+    if (this.openFiles.has(old)) this.openFiles.rename(old, newPath);
     this.dirty.delete(old);
     this.dirty.delete(newPath);
-    this.activeFile = newPath;
+    if (this.activeFile === old) this.activeFile = newPath;
     API.unwatchFile(old).catch(() => {});
     API.watchFile(newPath).catch(() => {});
     const tab = [...document.querySelectorAll('.editor-tab')].find((t) => t.dataset.path === old);
@@ -1039,9 +1062,9 @@ class AxiomIDE {
     });
     // The file was just written to disk, so the renamed tab must not keep the dirty
     // marker visible.
-    this.markDirty(newPath, false);
-    document.getElementById('status-file-path').textContent = newPath;
-    document.querySelectorAll('.editor-tab').forEach((t) => t.classList.toggle('active', t.dataset.path === newPath));
+    this.markDirty(newPath, this.openFiles.isDirty(newPath));
+    document.getElementById('status-file-path').textContent = this.activeFile || '';
+    document.querySelectorAll('.editor-tab').forEach((t) => t.classList.toggle('active', t.dataset.path === this.activeFile));
     this.renderMiscellaneousFiles();
     this.updateSaveButton();
     API.addRecentFile(newPath).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
@@ -1058,14 +1081,16 @@ class AxiomIDE {
 
   // ================= autoformat triggers =================
 
-  async formatWholeDocument(owner) {
-    const model = this.editor.getModel();
+  async formatWholeDocument(owner, path = this.activeFile) {
+    const document = this.openFiles.get(path);
+    const model = document?.model;
     if (!model) return;
+    if (document.readonly || model.getLanguageId() !== "axiom") return true;
     if (this._formatBusy) {
       this.log('format.document.skipped-busy', { owner, busy: this._formatBusy });
       return;
     }
-    const sel = this.editor.getSelection();
+    const sel = this.editor.getModel() === model ? this.editor.getSelection() : null;
     const text = model.getValue();
     const request = ++this._serviceSeq;
     clearTimeout(this._liveCheckTimer);
@@ -1073,25 +1098,28 @@ class AxiomIDE {
     this._formatBusy++;
     this.log('format.document.start', { owner, length: text.length, request });
     try {
-      const r = await API.formatBuffer(text);
-      if (!r || !r.ok || typeof r.text !== 'string') { this.log('format.document.failed', { owner, request, reason: r?.reason }); return; }
-      const m = this.editor.getModel();
+      const r = await this.documentServices.request(path, 'document.format', { formattingStyle: this.settings.formattingStyle || 'Classic' });
+      if (!r || typeof r.sourceText !== 'string') { this.log('format.document.failed', { owner, request, reason: r?.reason }); return; }
+      const m = this.openFiles.get(path)?.model;
       if (request !== this._serviceSeq || !m || m !== model) { this.log('format.document.stale', { owner, request }); return; }
       if (m.getValue() !== text) { this.log('format.document.stale-edit', { owner, request }); return; } // the buffer changed while the request was in flight — stale, skip
-      const edits = this.lineDiffEdits(m, r.text);
-      if (!edits.length) { this.log('format.document.noop', { owner, request }); return; }
-      this.editor.pushUndoStop();
+      const edits = this.lineDiffEdits(m, r.sourceText);
+      if (!edits.length) { this.log('format.document.noop', { owner, request }); return true; }
+      model.pushStackElement();
       this._autoFormatting = true;
       try {
-        this.editor.executeEdits(owner, edits);
+        model.pushEditOperations([], edits, () => null);
       } finally {
         this._autoFormatting = false;
       }
-      this.editor.pushUndoStop(); // the whole autoformat is a single undo step
-      if (sel) this.editor.setSelection(sel);
+      model.pushStackElement(); // the whole autoformat is a single undo step
+      if (sel && this.editor.getModel() === model) this.editor.setSelection(sel);
       this.log('format.document.applied', { owner, request, edits: edits.length });
+      return true;
     } catch (e) {
       this.log('format.document.exception', { owner, request, message: e?.message || String(e) }, 'error');
+      this.showIdeProblem('status.fmtFailed', e.message);
+      return false;
     } finally {
       this._formatBusy = Math.max(0, this._formatBusy - 1);
       if (!this._formatBusy) { this.scheduleLiveCheck(); this.scheduleOutlineRebuild(); }
@@ -1168,17 +1196,17 @@ class AxiomIDE {
 
   async runLiveCheck(seq = this._liveCheckSeq) {
     const model = this.editor.getModel();
-    if (!model || !this.settings.checkOnChange || seq !== this._liveCheckSeq) return;
+    if (!model || model.getLanguageId() !== 'axiom' || !this.settings.checkOnChange || seq !== this._liveCheckSeq) return;
     if (this._formatBusy) { this.log('check.live.skipped-format', { seq, busy: this._formatBusy }); return; }
     const text = model.getValue();
     const filePath = this.activeFile; // keep diagnostics tied to their file
     this.log('check.live.start', { seq, length: text.length, filePath });
-    const r = await API.checkBuffer(text, filePath);
+    const r = await this.documentServices.request(filePath, 'document.analyse');
     if (!r || !Array.isArray(r.diagnostics)) { this.log('check.live.failed', { seq, reason: r?.reason }); return; }
     const m = this.editor.getModel();
     if (seq !== this._liveCheckSeq || this._formatBusy || !m || m !== model) { this.log('check.live.stale', { seq }); return; }
     if (m.getValue() !== text) { this.log('check.live.stale-edit', { seq }); return; } // stale
-    r.diagnostics.forEach((d) => { d.file = filePath; });
+    r.diagnostics.forEach((d) => { d.file = filePath; d.col = d.column; });
     this.applyDiagnostics(r.diagnostics, true);
     this.log('check.live.applied', { seq, diagnostics: r.diagnostics.length });
   }
@@ -1244,19 +1272,14 @@ class AxiomIDE {
   }
 
   async check(explicit = false) {
-    if (!this.activeFile || this.activeFile.startsWith('untitled')) return;
-    // Classic save semantics: the file on disk changes only on explicit save actions.
-    // Check/Run/Format analyze the saved file, so a dirty document must be saved first.
-    const target = this.runTarget();
-    if (!target || target.startsWith('untitled')) return;
-    if (this.dirty.has(target)) {
-      alert(I18N.t('dialog.saveBeforeCheck'));
-      this.focusEditor();
-      return;
-    }
+    const target = this.activeFile;
+    if (!target) return;
     const startedAt = performance.now();
     try {
-      const r = await API.checkFile(target);
+      const r = await this.documentServices.request(target, 'document.compile');
+      if (!r || target !== this.activeFile) return;
+      r.diagnostics.forEach(d => { d.file = target; d.col = d.column; });
+      if (r.status === 'BackendFailure' && !r.diagnostics.length) throw new Error('Компилятор не подготовил байт-код.');
       this.applyDiagnostics(r.diagnostics, true);
       if (explicit) {
         const elapsed = Math.round(performance.now() - startedAt);
@@ -1278,22 +1301,27 @@ class AxiomIDE {
     if (explicit) this.focusEditor();
   }
 
-  async run() {
+  async run(launchKind = 'run') {
     if (this.running) return;
-    const target = this.runTarget();
-    if (!target || target.startsWith('untitled')) { alert(I18N.t('dialog.saveBeforeRun')); return; }
-    if (this.dirty.has(target)) { alert(I18N.t('dialog.saveBeforeRun')); return; }
+    let target = this.runTarget();
+    if (!target) return;
+    if (target.startsWith('untitled') || this.dirty.has(target)) {
+      if (!confirm('Перед запуском нужно сохранить документ. Сохранить и запустить?')) return;
+      await this.save(); target = this.runTarget();
+      if (!target || target.startsWith('untitled') || this.dirty.has(target)) return;
+    }
     this._runFile = target;
     // The integrated ConPTY console is the only run path: output, stderr and interactive
     // input all live in the terminal.
-    await this.runInConsole();
+    document.getElementById('program-canvas')?.setAttribute('hidden', '');
+    await this.execution.start(target, launchKind);
   }
 
   stop() {
     // Stop is silent when nothing is running — no misleading status.
     if (!this.running) return;
     this._stopRequested = true; // the pty exit event must not overwrite "Остановлено"
-    API.stopRun(); // kills the ConPTY session running the program
+    this.execution.stop();
     this.setStatus(I18N.t('status.stopped'));
   }
 
@@ -1367,6 +1395,7 @@ class AxiomIDE {
   // Input typed before the first program output is held here (no echo) and flushed when
   // that output arrives, or after 2s for programs that print nothing before reading.
   consoleInput(d) {
+    if (this.execution) { this.queueConsoleWrite(() => this.execution.input(d)); return; }
     this.log('terminal.input', { length: String(d ?? '').length, control: /[\u0000-\u001f\u007f]/.test(String(d ?? '')) });
     if (this._consoleHold) {
       if (d === '\u0003') { this.queueConsoleWrite(() => API.ptyWrite(d)); return; }
@@ -1403,7 +1432,7 @@ class AxiomIDE {
       .replace(/\r\n?/g, '\r')
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
       .slice(0, 100000);
-    if (clean) { API.ptyWrite(clean); return; }
+    if (clean) { return this.execution.input(clean); }
     this.setStatus(I18N.t('console.pasteNoText'));
   }
 
@@ -1487,33 +1516,33 @@ class AxiomIDE {
   }
 
   async formatDocument() {
-    if (!this.activeFile || this.activeFile.startsWith('untitled')) return;
-    if (this.dirty.has(this.activeFile)) {
-      alert(I18N.t('dialog.saveBeforeFormat'));
-      this.focusEditor();
-      return;
-    }
-    try {
-      const r = await API.formatFile(this.activeFile);
-      if (r.ok && r.formatted != null) {
-        const f = this.openFiles.get(this.activeFile);
-        if (f) {
-          const pos = this.editor.getPosition();
-          f.model.setValue(r.formatted);
-          this.markDirty(this.activeFile, true);
-          this.editor.setPosition(pos);
-          // The formatted text lives only in the editor buffer (the user must still save).
-          this.setStatus(I18N.t('status.formatted'));
-        }
-      } else if (r.diagnostics && r.diagnostics.length) {
-        this.applyDiagnostics(r.diagnostics, true);
-        this.switchPanel('diagnostics');
-      }
-    } catch (e) {
-      this.showIdeProblem('status.fmtFailed', e && e.message ? e.message : String(e));
-      this.setStatus(I18N.t('status.error'));
-    }
+    if (!this.activeFile) return;
+    if (await this.formatWholeDocument('ax-format-command')) this.setStatus(I18N.t('status.formatted'));
     this.focusEditor();
+  }
+
+  async editLineTransition(model, previousLineNumber, position) {
+    if (this._autoFormatting || this._formatBusy || !this.activeFile || model !== this.editor.getModel()) return;
+    const document = this.openFiles.get(this.activeFile);
+    if (!document || document.readonly || model.getLanguageId() !== 'axiom') return;
+    const caretOffset = model.getOffsetAt(position);
+    try {
+      const result = await this.documentServices.request(this.activeFile, 'document.editTransition', {
+        previousLineNumber, currentLineNumber: position.lineNumber, caretOffset,
+        formattingStyle: this.settings.formattingStyle || 'Classic' });
+      if (!result || !result.edits.length || this.editor.getModel() !== model ||
+          model.getOffsetAt(this.editor.getPosition()) !== caretOffset) return;
+      const edits = result.edits.map(e => {
+        if (!Number.isInteger(e.start) || !Number.isInteger(e.length) || e.start < 0 || e.length < 0 ||
+            e.start + e.length > model.getValueLength()) throw new Error('Некорректный диапазон правки.');
+        const start=model.getPositionAt(e.start),end=model.getPositionAt(e.start+e.length);
+        return {range:new this.monaco.Range(start.lineNumber,start.column,end.lineNumber,end.column),text:e.newText};
+      });
+      this.editor.pushUndoStop();this._autoFormatting=true;
+      try {this.editor.executeEdits('axiom-block-edit',edits);this.editor.setPosition(model.getPositionAt(result.newCaretOffset));}
+      finally {this._autoFormatting=false;}
+      this.editor.pushUndoStop();
+    } catch(e) {this.showIdeProblem('status.fmtFailed',e.message);}
   }
 
   // ================= external file changes (watcher) =================
@@ -1861,7 +1890,9 @@ class AxiomIDE {
   saveOpenTabs(useSync = false) {
     const tabs = [];
     for (const [p, f] of this.openFiles) {
-      const isDirty = this.dirty.has(p);
+      const discarded = this._discardedOnExit?.has(f);
+      if (discarded && p.startsWith("untitled")) continue;
+      const isDirty = !discarded && this.dirty.has(p);
       tabs.push({ path: p, isActive: p === this.activeFile, content: isDirty ? f.model.getValue() : undefined });
     }
     // On window teardown the async invoke loses the race with the renderer being

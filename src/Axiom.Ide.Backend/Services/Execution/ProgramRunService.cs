@@ -3,7 +3,6 @@ using Axiom.Ide.Models;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.Services.Input;
-using Axiom.Ide.Services.Shell;
 using Axiom.Runtime;
 using System.Diagnostics;
 using System.IO;
@@ -17,16 +16,19 @@ public sealed class ProgramRunService : IProgramRunService
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
     private CompiledProgram? _compiledProgram;
+    private readonly IProgramMessageProvider _messages;
 
     public ProgramRunService(
         AxiomExecutionPipeline pipeline,
         IProgramConsoleService consoleService,
         IIdeTraceService? traceService = null,
-        IIdeEventLogService? eventLogService = null)
+        IIdeEventLogService? eventLogService = null,
+        IProgramMessageProvider? messageProvider = null)
     {
         ArgumentNullException.ThrowIfNull(pipeline);
         ArgumentNullException.ThrowIfNull(consoleService);
 
+        _messages = messageProvider ?? new DefaultProgramMessageProvider();
         _pipeline = pipeline;
         _consoleService = consoleService;
         _traceService = traceService ?? NullIdeTraceService.Instance;
@@ -88,7 +90,7 @@ public sealed class ProgramRunService : IProgramRunService
                 ProgramCompilationStatus.InfrastructureFailure,
                 [ProgramDiagnosticItem.CreateInfrastructure(
                     "IDE0003",
-                    IdeLanguageResourceService.GetCurrentFormattedString(
+                    _messages.Format(
                         "Compile.Infrastructure.UnexpectedError",
                         "Unexpected compilation error: {0}",
                         exception.Message))]);
@@ -269,7 +271,7 @@ public sealed class ProgramRunService : IProgramRunService
             {
                 ProgramDiagnosticItem.CreateInfrastructure(
                     "IDE0001",
-                    IdeLanguageResourceService.GetCurrentFormattedString(
+                    _messages.Format(
                         "Run.Infrastructure.UnexpectedError",
                         "Unexpected execution error: {0}",
                         exception.Message))
@@ -408,7 +410,7 @@ public sealed class ProgramRunService : IProgramRunService
             {
                 ProgramDiagnosticItem.CreateInfrastructure(
                     "IDE0004",
-                    IdeLanguageResourceService.GetCurrentFormattedString(
+                    _messages.Format(
                         "Run.Infrastructure.UnexpectedContinueError",
                         "Unexpected continuation error: {0}",
                         exception.Message))

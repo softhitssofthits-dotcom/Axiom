@@ -1,4 +1,4 @@
-﻿using System.Windows.Threading;
+using System.Windows.Threading;
 using Axiom.Ide.Graphics;
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
@@ -11,6 +11,7 @@ namespace Axiom.Ide.Services.Input;
 public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConsoleService, IRuntimeCancellationProvider, IGraphicsWindowInputSink
 {
     private readonly IIdeTraceService _traceService;
+    private readonly Dispatcher _dispatcher;
     private readonly IIdeEventLogService _eventLogService;
     private readonly SessionManager _sessionManager;
     private readonly ConsoleOutputService _consoleOutput;
@@ -21,8 +22,10 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     public ProgramConsoleService(
         IIdeTraceService? traceService = null,
         IIdeEventLogService? eventLogService = null,
-        IScreenModeSizeProvider? screenModeSizeProvider = null)
+        IScreenModeSizeProvider? screenModeSizeProvider = null,
+        Dispatcher? dispatcher = null)
     {
+        _dispatcher = dispatcher ?? System.Windows.Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
         _traceService = traceService ?? NullIdeTraceService.Instance;
         _eventLogService = eventLogService ?? NullIdeEventLogService.Instance;
         _sessionManager = new SessionManager(traceService, eventLogService);
@@ -65,6 +68,7 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
         {
             if (e.PropertyName is nameof(GraphicsHostService.GraphicsText)
                 or nameof(GraphicsHostService.GraphicsFrame)
+                or nameof(GraphicsHostService.ScreenWindowHandle)
                 or nameof(GraphicsHostService.IsScreenActive)
                 or nameof(GraphicsHostService.IsCanvasActive)
                 or nameof(GraphicsHostService.IsScreenOutputActive)
@@ -569,6 +573,16 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
         _sessionManager.EndSession();
     }
 
+    public void CancelPendingInput()
+    {
+        InvokeOnDispatcher(() =>
+        {
+            _sessionManager.IsCancellationRequested = true;
+            _inputPrompt.CancelPendingFrame();
+            _inputPrompt.ResetInputState();
+        });
+    }
+
     public void Clear()
     {
         InvokeOnDispatcher(ResetSessionState);
@@ -669,7 +683,7 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        var dispatcher = System.Windows.Application.Current?.Dispatcher ?? System.Windows.Threading.Dispatcher.CurrentDispatcher;
+        var dispatcher = _dispatcher;
 
         if (dispatcher.CheckAccess())
         {

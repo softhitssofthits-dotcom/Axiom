@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../../node_modules/@vscode/codicons/dist/codicon.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="design-system.css">
+  <link rel="stylesheet" href="shell.css">
 </head>
 <body>
   <div id="app">
@@ -32,6 +33,7 @@
           </div>
           <div class="menu-separator"></div>
           <div class="menu-dropdown-item" data-action="save"><span class="menu-icon codicon codicon-save"></span><span class="menu-text" data-i18n="menu.file.save">Сохранить</span><span class="menu-shortcut">Ctrl+S</span></div>
+          <div class="menu-dropdown-item" data-action="save-all"><span class="menu-icon codicon codicon-save-all"></span><span class="menu-text" data-i18n="menu.file.saveAll">Сохранить всё</span></div>
           <div class="menu-dropdown-item" data-action="save-as"><span class="menu-icon codicon codicon-save-as"></span><span class="menu-text" data-i18n="menu.file.saveAs">Сохранить как…</span><span class="menu-shortcut">Ctrl+Shift+S</span></div>
           <div class="menu-separator"></div>
           <div class="menu-dropdown-item" data-action="close-tab"><span class="menu-icon codicon codicon-close"></span><span class="menu-text" data-i18n="menu.file.closeTab">Закрыть вкладку</span><span class="menu-shortcut">Ctrl+W</span></div>
@@ -177,6 +179,11 @@
   <script src="vs/loader.js"></script>
   <script src="locale.js"></script>
   <script src="lang-features.js"></script>
+  <script src="execution-controller.js"></script>
+  <script src="documents.js"></script>
+  <script src="document-services.js"></script>
+  <script src="document-save.js"></script>
   <script src="app.js"></script>
+  <script src="shell.js"></script>
 </body>
 </html>

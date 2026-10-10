@@ -17,8 +17,8 @@ public sealed class EditorFeatureTests
     [Fact]
     public void ScreenRenderer_UsesDirect3D11SwapChainDependency()
     {
-        var project = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Axiom.Ide.csproj"));
-        var renderer = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Graphics\Direct3D11SwapChainRenderer.cs"));
+        var project = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide.Backend\Axiom.Ide.Backend.csproj"));
+        var renderer = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide.Backend\Graphics\Direct3D11SwapChainRenderer.cs"));
 
         Assert.Contains("Vortice.Direct3D11", project, StringComparison.Ordinal);
         Assert.Contains("D3D11CreateDeviceAndSwapChain", renderer, StringComparison.Ordinal);
@@ -33,8 +33,8 @@ public sealed class EditorFeatureTests
     [Fact]
     public void ScreenRenderer_UsesNativeWin32Direct3DWindow()
     {
-        var nativeWindow = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Graphics\NativeGraphicsScreenWindow.cs"), Encoding.UTF8);
-        var graphicsService = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide\Services\Graphics\GraphicsHostService.cs"), Encoding.UTF8);
+        var nativeWindow = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide.Backend\Graphics\NativeGraphicsScreenWindow.cs"), Encoding.UTF8);
+        var graphicsService = File.ReadAllText(GetRepositoryFilePath(@"src\Axiom.Ide.Backend\Services\Graphics\GraphicsHostService.cs"), Encoding.UTF8);
 
         Assert.Contains("CreateWindowEx", nativeWindow, StringComparison.Ordinal);
         Assert.Contains("WndProc", nativeWindow, StringComparison.Ordinal);

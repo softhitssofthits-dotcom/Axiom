@@ -95,64 +95,6 @@ function parseDiagnostics(stderr) {
 
 // ---------- process management ----------
 
-// Spawns axiom for the non-run commands (check/fmt): a bounded call that must not hang the
-// UI forever. `run` is served exclusively by the ConPTY console path (startConsoleRun).
-function runAxiom(command, filePath, extraArgs) {
-  return new Promise((resolve) => {
-    const axiom = resolveAxiom();
-    if (!axiom) { resolve(axiomNotFound(filePath)); return; }
-
-    const child = spawn(axiom, [command, ...(extraArgs || []), filePath], { cwd: path.dirname(filePath), windowsHide: true, env: buildEnv() });
-    // A hung CLI must not freeze check/fmt/metadata forever.
-    const timeoutMs = 15000;
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill();
-    }, timeoutMs);
-
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', (d) => { stdout += d.toString(); });
-    child.stderr.on('data', (d) => { stderr += d.toString(); });
-
-    child.on('error', (err) => {
-      clearTimeout(timer);
-      resolve({
-        stdout, stderr,
-        diagnostics: [{
-          file: filePath, line: 0, col: 0, severity: 'error', code: IDE_CODE,
-          message: 'Не удалось запустить axiom: ' + err.message,
-        }],
-        exitCode: 1,
-      });
-    });
-
-    child.on('close', (code) => {
-      clearTimeout(timer);
-      if (timedOut) {
-        resolve({
-          stdout, stderr,
-          diagnostics: [{
-            file: filePath, line: 0, col: 0, severity: 'error', code: IDE_CODE,
-            message: `axiom ${command} не завершился за ${timeoutMs / 1000} с и был остановлен.`,
-          }],
-          exitCode: 1,
-        });
-        return;
-      }
-      resolve({ stdout, stderr, diagnostics: parseDiagnostics(stderr), exitCode: code ?? 1 });
-    });
-
-    // axiom may exit before consuming the piped stdin (bad file, fast crash); writing to
-    // the closed pipe then raises EPIPE, which without a handler crashes the main process.
-    child.stdin.on('error', () => {});
-    // check/fmt never read stdin — close it immediately so a substitute binary (e2e fakes)
-    // does not linger in interactive mode waiting on an open pipe.
-    child.stdin.end();
-  });
-}
-
 // ---------- integrated console ----------
 
 // The program runs inside a real Windows pseudoconsole (ConPTY): the terminal echoes
@@ -341,85 +283,22 @@ function logIpc(event, data) {
 }
 
 function setupIpc(logger) {
+  ipcMain.handle('confirm-document-close', async (event, name) => {
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    if (!owner || typeof name !== 'string' || name.length > 1024) return 'cancel';
+    const en = loadSettings().language === 'en';
+    const result = await dialog.showMessageBox(owner, {
+      type: 'question', title: 'Axiom IDE', message: en ? 'Save changes to “' + name + '”?' : 'Сохранить изменения в документе «' + name + '»?',
+      buttons: en ? ['Save', 'Don’t Save', 'Cancel'] : ['Сохранить', 'Не сохранять', 'Отмена'], defaultId: 0, cancelId: 2, noLink: true,
+    });
+    return ['save', 'discard', 'cancel'][result.response] || 'cancel';
+  });
   ideLogger = logger || null;
   ipcMain.on('ide-log', (_event, payload) => {
     if (!payload || typeof payload !== 'object') return;
     const level = payload.level === 'error' || payload.level === 'warn' ? payload.level : 'info';
     try { ideLogger?.write(level, `renderer.${String(payload.event || 'event')}`, payload.data); } catch {}
   });
-  ipcMain.handle('check-file', async (_e, filePath) => {
-    logIpc('check-file.start', { filePath });
-    // Machine-readable diagnostics via `axiom check <file> --json` (stdout JSON).
-    const r = await runAxiom('check', filePath, ['--json']);
-    if (r.stdout.trim()) {
-      try {
-        const parsed = JSON.parse(r.stdout);
-        if (parsed && Array.isArray(parsed.diagnostics)) return { diagnostics: parsed.diagnostics };
-      } catch {}
-      // Non-empty, non-JSON stdout can only come from a broken binary — real
-      // `axiom check --json` always emits valid JSON.
-      return {
-        diagnostics: [{
-          file: filePath, line: 0, col: 0, severity: 'error', code: IDE_CODE,
-          message: 'axiom check выдал нечитаемый вывод: ' + r.stdout.trim().slice(0, 200),
-        }],
-      };
-    }
-    // A crashed/unparseable CLI must not look like "Проблем нет":
-    // surface the raw failure as a problem.
-    if (!r.diagnostics.length && r.exitCode !== 0) {
-      const detail = r.stderr.trim() || `axiom check завершился с кодом ${r.exitCode} без диагностик`;
-      return {
-        diagnostics: [{
-          file: filePath, line: 0, col: 0, severity: 'error', code: IDE_CODE,
-          message: 'Не удалось выполнить проверку: ' + detail.slice(0, 500),
-        }],
-      };
-    }
-    logIpc('check-file.end', { filePath, diagnostics: r.diagnostics.length, exitCode: r.exitCode });
-    return { diagnostics: r.diagnostics };
-  });
-
-  ipcMain.handle('format-file', async (_e, filePath) => {
-    logIpc('format-file.start', { filePath });
-    const r = await runAxiom('fmt', filePath);
-    logIpc('format-file.end', { filePath, diagnostics: r.diagnostics.length, exitCode: r.exitCode });
-    if (r.diagnostics.length === 0 && r.exitCode === 0) {
-      return { formatted: r.stdout, ok: true };
-    }
-    return { formatted: null, ok: false, diagnostics: r.diagnostics };
-  });
-
-  // Buffer formatting over stdin — no save required (whole document only: the Axiom
-  // formatter normalizes the whole file; there is no single-line mode yet).
-  ipcMain.handle('format-buffer', async (_e, text) => {
-    logIpc('format-buffer.start', { length: typeof text === 'string' ? text.length : null });
-    if (typeof text !== 'string') return { ok: false, reason: 'bad-input' };
-    const axiom = resolveAxiom();
-    if (!axiom) return { ok: false, reason: 'axiom-not-found' };
-    const args = ['fmt', '--stdin'];
-    return new Promise((resolve) => {
-      const child = spawn(axiom, args, { windowsHide: true, env: buildEnv() });
-      const timer = setTimeout(() => child.kill(), 15000);
-      let out = '';
-      let err = '';
-      child.stdout.on('data', (d) => (out += d.toString()));
-      child.stderr.on('data', (d) => (err += d.toString()));
-      child.on('error', () => { clearTimeout(timer); resolve({ ok: false, reason: 'spawn-failed' }); });
-      child.on('close', (code) => {
-        clearTimeout(timer);
-        if (code !== 0) {
-          resolve({ ok: false, reason: 'exit-' + code, stderr: err.slice(0, 400) });
-          return;
-        }
-        resolve({ ok: true, text: out });
-      });
-      child.stdin.on('error', () => {}); // EPIPE guard: axiom may exit before reading the pipe
-      child.stdin.write(text);
-      child.stdin.end();
-    });
-  });
-
   ipcMain.handle('stop-run', async () => {
     // The ConPTY session is the only run path — Stop kills it; with nothing
     // running this is a no-op.
@@ -491,73 +370,6 @@ function setupIpc(logger) {
       child.stderr.on('data', (d) => (err += d.toString()));
       child.on('error', () => { clearTimeout(timer); resolve(base); });
       child.on('close', () => { clearTimeout(timer); resolve({ ...base, axiom: (out + err).trim() }); });
-    });
-  });
-
-  // Language registry for the editor (monarch dictionaries, completion source of truth).
-  // Runs `axiom metadata` once per IDE session and caches the parsed JSON.
-  let metadataCache = null;
-  ipcMain.handle('get-language-metadata', async () => {
-    if (metadataCache) return { ok: true, metadata: metadataCache };
-    const axiom = resolveAxiom();
-    if (!axiom) return { ok: false, reason: 'axiom-not-found' };
-    return new Promise((resolve) => {
-      const child = spawn(axiom, ['metadata'], { windowsHide: true, env: buildEnv() });
-      const timer = setTimeout(() => child.kill(), 10000);
-      let out = '';
-      let err = '';
-      child.stdout.on('data', (d) => (out += d.toString()));
-      child.stderr.on('data', (d) => (err += d.toString()));
-      child.on('error', () => { clearTimeout(timer); resolve({ ok: false, reason: 'spawn-failed' }); });
-      child.on('close', (code) => {
-        clearTimeout(timer);
-        if (code !== 0 || !out.trim()) {
-          resolve({ ok: false, reason: 'exit-' + code, stderr: err.slice(0, 400) });
-          return;
-        }
-        try {
-          metadataCache = JSON.parse(out);
-          resolve({ ok: true, metadata: metadataCache });
-        } catch {
-          resolve({ ok: false, reason: 'parse-failed' });
-        }
-      });
-    });
-  });
-
-  // Buffer diagnostics — `axiom check --stdin` (JSON on stdout), no save required.
-  ipcMain.handle('check-buffer', async (_e, text, filePath) => {
-    logIpc('check-buffer.start', { filePath, length: typeof text === 'string' ? text.length : null });
-    if (typeof text !== 'string') return { ok: false, diagnostics: [], reason: 'bad-input' };
-    const axiom = resolveAxiom();
-    if (!axiom) return { ok: false, diagnostics: [], reason: 'axiom-not-found' };
-    const cwd = typeof filePath === 'string' && path.isAbsolute(filePath) && fs.existsSync(path.dirname(filePath))
-      ? path.dirname(filePath)
-      : undefined;
-    return new Promise((resolve) => {
-      const child = spawn(axiom, ['check', '--stdin', '--json'], { windowsHide: true, env: buildEnv(), cwd });
-      const timer = setTimeout(() => child.kill(), 15000);
-      let out = '';
-      let err = '';
-      child.stdout.on('data', (d) => (out += d.toString()));
-      child.stderr.on('data', (d) => (err += d.toString()));
-      child.on('error', () => { clearTimeout(timer); resolve({ ok: false, diagnostics: [], reason: 'spawn-failed' }); });
-      child.on('close', (code) => {
-        clearTimeout(timer);
-        if (!out.trim()) {
-          resolve({ ok: false, diagnostics: [], reason: 'exit-' + code, stderr: err.slice(0, 400) });
-          return;
-        }
-        try {
-          const parsed = JSON.parse(out);
-          resolve({ ok: !!parsed.ok, diagnostics: Array.isArray(parsed.diagnostics) ? parsed.diagnostics : [] });
-        } catch {
-          resolve({ ok: false, diagnostics: [], reason: 'parse-failed' });
-        }
-      });
-      child.stdin.on('error', () => {}); // EPIPE guard: axiom may exit before reading the pipe
-      child.stdin.write(text);
-      child.stdin.end();
     });
   });
 

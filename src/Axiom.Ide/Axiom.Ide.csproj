@@ -2,12 +2,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Axiom.Execution\Axiom.Execution.csproj" />
+    <ProjectReference Include="..\Axiom.Ide.Backend\Axiom.Ide.Backend.csproj" />
     <ProjectReference Include="..\Axiom.Formatting\Axiom.Formatting.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
   </ItemGroup>
 
   <ItemGroup>

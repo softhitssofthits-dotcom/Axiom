@@ -4,6 +4,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { isolatedEnvironment, workspacePath } = require('./isolation.cjs');
 
 const ROOT = path.resolve(__dirname, '..', '..'); // C:\Axiom
 const IDE_DIR = path.join(ROOT, 'ide');
@@ -11,12 +12,12 @@ const MAIN_JS = path.join(IDE_DIR, 'src', 'main', 'main.js');
 const AXIOM = path.join(ROOT, '.artifacts', 'bin', 'Axiom.Cli', 'Release', 'net10.0', 'axiom.exe');
 const EVIDENCE = path.join(__dirname, 'evidence');
 const SHOTS = path.join(EVIDENCE, 'shots');
-const TMP = path.join(__dirname, '.tmp');
+const TMP = path.join(ROOT, '.artifacts', 'ide-shell', 'e2e', String(process.pid));
 
 for (const d of [EVIDENCE, SHOTS, TMP]) fs.mkdirSync(d, { recursive: true });
 
 function testWorkspace(tag) {
-  const dir = path.join(TMP, tag);
+  const dir = workspacePath(TMP, tag);
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
   return dir;
@@ -88,7 +89,9 @@ class Session {
     }
     if (opts.windowState) fs.writeFileSync(path.join(appDataDir, 'window-state.json'), typeof opts.windowState === 'string' ? opts.windowState : JSON.stringify(opts.windowState), 'utf-8');
 
-    const env = { ...process.env, APPDATA: this.userData, AXIOM_EXE: opts.axiomExe !== undefined ? opts.axiomExe : AXIOM };
+    const env = isolatedEnvironment(process.env, this.userData, opts.axiomExe !== undefined ? opts.axiomExe : AXIOM);
+    fs.mkdirSync(env.APPDATA, { recursive: true });
+    fs.mkdirSync(env.LOCALAPPDATA, { recursive: true });
     this.electronApp = await _electron.launch({ args: [MAIN_JS, `--user-data-dir=${this.userData}`], cwd: IDE_DIR, env });
     try { this.electronApp.process().stderr.on('data', (d) => this.mainStderr.push(d.toString())); } catch {}
     this.processExit = new Promise((resolve) => {
@@ -100,8 +103,12 @@ class Session {
     this.page.on('requestfailed', (r) => this.requestFailed.push(`${r.url()} :: ${(r.failure() && r.failure().errorText) || 'failed'}`));
     this.page.on('dialog', async (d) => {
       this.rendererDialogs.push({ type: d.type(), message: d.message() });
-      if (d.type() === 'confirm' && this.confirmAction === 'dismiss') await d.dismiss();
-      else await d.accept();
+      try {
+        if (d.type() === 'confirm' && this.confirmAction === 'dismiss') await d.dismiss();
+        else await d.accept();
+      } catch (error) {
+        if (!/No dialog is showing|Target.*closed/i.test(error.message)) throw error;
+      }
     });
     if (opts.allowNotReady) {
       try { await this.page.waitForSelector('#app.ready', { timeout: opts.readyTimeoutMs || 8000 }); } catch { this.notReady = true; }
@@ -112,6 +119,7 @@ class Session {
   }
 
   async close() {
+    try { if (this.electronApp) await this.electronApp.evaluate(({ dialog }) => { dialog.showMessageBox = async () => ({ response: 1 }); }); } catch {}
     try { if (this.electronApp) await this.electronApp.close(); } catch {}
     this.electronApp = null;
     this.page = null;

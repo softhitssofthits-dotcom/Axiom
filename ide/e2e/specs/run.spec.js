@@ -74,8 +74,8 @@ module.exports = [
     },
   },
   {
-    id: 'run-graphics-program-reports-console-limitation',
-    name: 'A SCREEN program exits with a clear console-mode diagnostic',
+    id: 'run-screen-program-uses-shared-graphics-host',
+    name: 'SCREEN выполняется через общие службы и завершается без ограничения CLI',
     async fn({ S, C }) {
       const ws = testWorkspace('run-graphics');
       const file = writeAxm(ws, 'screen.axm', 'SCREEN 1\nPRINT "после экрана"\n');
@@ -89,9 +89,10 @@ module.exports = [
       await S.page.evaluate(() => window.__ide.handleAction('run'));
       await S.waitIdle();
       const panel = await S.activePanel();
-      C.eq(panel, 'diagnostics', 'problems panel activated after a failed run');
+      C.eq(panel, 'console', 'после успешного SCREEN панель ошибок не открывается');
       const items = await S.diagnosticItems();
-      C.ok(items.some((it) => it.text.includes('Графический режим не поддерживается')), 'graphics diagnostic surfaced', JSON.stringify(items));
+      C.eq(items.length, 0, 'общий хост поддерживает SCREEN');
+      await S.waitStatus('Завершено');
     },
   },
 ];

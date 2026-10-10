@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Axiom.Ide.Backend\Axiom.Ide.Backend.csproj" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)host-build.json" LogicalName="host-build.json" />
+  </ItemGroup>
+  <Target Name="PrepareHostBuildStamp" BeforeTargets="PrepareResources">
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)\..\..\ide\src\main\backend-fingerprint.js&quot; &quot;$(MSBuildProjectDirectory)\..\..&quot; &quot;$(IntermediateOutputPath)host-build.json&quot;" />
+  </Target>
+</Project>

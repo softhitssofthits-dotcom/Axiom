@@ -8,7 +8,9 @@ public sealed record ProgramDiagnosticItem(
     string Message,
     int? Line,
     int? Column,
-    int? Length)
+    int? Length,
+    int? SpanStart = null,
+    int? SpanLength = null)
 {
     public string Position =>
         Line.HasValue && Column.HasValue
@@ -25,7 +27,9 @@ public sealed record ProgramDiagnosticItem(
             diagnostic.Message,
             diagnostic.Location.Line,
             diagnostic.Location.Column,
-            diagnostic.Location.Length);
+            diagnostic.Location.Length,
+            diagnostic.Location.Span.Start,
+            diagnostic.Location.Span.Length);
     }
 
     public static ProgramDiagnosticItem CreateInfrastructure(string code, string message)

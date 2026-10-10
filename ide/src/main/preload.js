@@ -1,6 +1,17 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('axiom', {
+  backendReady: () => ipcRenderer.invoke('backend-ready'),
+  documentCommand: (method, snapshot) => ipcRenderer.invoke('backend-document', method, snapshot),
+  startExecution: document => ipcRenderer.invoke('backend-start', document),
+  stopExecution: sessionId => ipcRenderer.invoke('backend-stop', sessionId),
+  submitInput: (sessionId, requestId, text) => ipcRenderer.invoke('backend-input', sessionId, requestId, text),
+  debugCommand: (sessionId, command, stopId) => ipcRenderer.invoke('backend-debug', sessionId, command, stopId),
+  acknowledgeFrame: (sessionId, frameId) => ipcRenderer.invoke('backend-frame-ack', sessionId, frameId),
+  acknowledgeOutput: (sessionId, outputVersion) => ipcRenderer.invoke('backend-output-ack', sessionId, outputVersion),
+  onBackendEvent: cb => { const listener = (_e, data) => cb(data); ipcRenderer.on('backend-event', listener); return () => ipcRenderer.removeListener('backend-event', listener); },
+  onBackendFrame: cb => { const listener = (_e, data) => cb(data); ipcRenderer.on('backend-frame', listener); return () => ipcRenderer.removeListener('backend-frame', listener); },
+  onBackendFault: cb => { const listener = (_e, data) => cb(data); ipcRenderer.on('backend-fault', listener); return () => ipcRenderer.removeListener('backend-fault', listener); },
   // files
   readFileContent: (p) => ipcRenderer.invoke('read-file-content', p),
   writeFile: (p, content) => ipcRenderer.invoke('write-file', p, content),
@@ -8,12 +19,11 @@ contextBridge.exposeInMainWorld('axiom', {
   openProjectDialog: () => ipcRenderer.invoke('open-project-dialog'),
   listProjectFiles: (p) => ipcRenderer.invoke('list-project-files', p),
   saveFileDialog: (defaultPath) => ipcRenderer.invoke('save-file-dialog', defaultPath),
+  confirmDocumentClose: name => ipcRenderer.invoke('confirm-document-close', name),
+  onWindowCloseRequested: cb => { ipcRenderer.on('window-close-requested', () => cb()); ipcRenderer.send('window-close-handler-ready'); },
+  approveWindowClose: () => ipcRenderer.send('window-close-approved'),
 
   // run / check / format / stop
-  checkFile: (p) => ipcRenderer.invoke('check-file', p),
-  formatFile: (p) => ipcRenderer.invoke('format-file', p),
-  formatBuffer: (text) => ipcRenderer.invoke('format-buffer', text),
-  checkBuffer: (text, filePath) => ipcRenderer.invoke('check-buffer', text, filePath),
   stopRun: () => ipcRenderer.invoke('stop-run'),
 
   // Integrated console: the program runs in a real ConPTY (terminal echo, Enter
@@ -32,7 +42,10 @@ contextBridge.exposeInMainWorld('axiom', {
 
   // meta
   getVersion: () => ipcRenderer.invoke('get-version'),
-  getLanguageMetadata: () => ipcRenderer.invoke('get-language-metadata'),
+  getLanguageMetadata: async () => {
+    const response = await ipcRenderer.invoke('backend-language-metadata');
+    return response.ok ? { ok: true, metadata: response.payload } : response;
+  },
 
   // settings
   getSettings: () => ipcRenderer.invoke('get-settings'),

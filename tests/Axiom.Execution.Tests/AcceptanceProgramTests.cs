@@ -3196,6 +3196,12 @@ public sealed class AcceptanceProgramTests
 
     private static IInputProvider CreateAuditInputProvider(string relativePath)
     {
+        if (relativePath.Equals("samples/operators/input/cancel_wait.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            // Общий проход проверяет запуск с корректным числовым вводом.
+            // Отмена проверяется отдельным Runtime-тестом и настоящим DesktopHost.
+            return new QueueInputProvider("123");
+        }
         if (relativePath.Equals("samples/graphics/text/print_locate_color.axm", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE"], pressedKeys: []);

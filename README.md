@@ -750,3 +750,17 @@ dotnet run --project src/Axiom.ManualChecks/Axiom.ManualChecks.csproj -- benchma
 ## План новой основной оболочки IDE
 
 Подробный план замены оболочки с сохранением возможностей действующей Axiom IDE: [IDE_SHELL_REPLACEMENT_PLAN.md](docs/plans/IDE_SHELL_REPLACEMENT_PLAN.md). Он содержит 16 этапов, таблицу 52 возможностей и проект обмена Electron/.NET. Реализация по этому плану ещё не начата; действующая WPF-IDE и Electron-прототип запускаются прежним способом.
+
+
+## Текущее состояние новой оболочки — Session 1332
+
+Новая Electron-оболочка уже реализуется по утверждённому макету. Она использует Axiom.DesktopHost и общий BytecodeVm для исполнения, ввода, графики и отладки; проверка и форматирование буфера также проходят через DesktopHost. Прежнее описание запуска через ConPTY выше относится к раннему прототипу. WPF-IDE пока сохранена для сравнения возможностей.
+
+Перед запуском новой оболочки из свежего рабочего каталога соберите служебный процесс:
+
+```powershell
+dotnet build src/Axiom.DesktopHost/Axiom.DesktopHost.csproj
+.\run-ide.bat
+```
+
+Команда dotnet run --project src/Axiom.Ide/Axiom.Ide.csproj запускает прежнюю WPF-оболочку. Новая оболочка находится в ide/; подтверждённое состояние и следующий шаг записаны в docs/WORKLOG5.md и docs/PLANS4.md.

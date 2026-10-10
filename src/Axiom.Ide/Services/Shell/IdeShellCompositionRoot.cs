@@ -34,7 +34,7 @@ public sealed class IdeShellCompositionRoot
     {
         var pipeline = new AxiomExecutionPipeline();
         var consoleService = new ProgramConsoleService(TraceService, EventLogService);
-        var runService = new ProgramRunService(pipeline, consoleService, TraceService, EventLogService);
+        var runService = new ProgramRunService(pipeline, consoleService, TraceService, EventLogService, new WpfProgramMessageProvider());
         var documentFileService = new DocumentFileService();
         var recentFilesService = new RecentFilesService();
         var promptService = new WpfDialogPromptService();

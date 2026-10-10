@@ -1,0 +1,5 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #101720; color: #a8b7cb; height: 100vh; display: grid; grid-template-rows: minmax(0,1fr) 28px; font: 12px "Segoe UI", sans-serif; }
+main { min-height: 0; display: flex; align-items: center; justify-content: center; padding: 8px; overflow: hidden; }
+canvas { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
+footer { background: #1c2635; padding: 5px 12px; }

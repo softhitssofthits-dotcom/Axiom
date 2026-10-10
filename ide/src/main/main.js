@@ -1,9 +1,15 @@
-const { app, BrowserWindow, Menu, screen } = require('electron');
+const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { setupIpc, killActivePty } = require('./ipc');
 const { ensureFreshAxiom } = require('./axiom-ensure');
 const { IdeLogger } = require('./ide-logger');
+const { setupBackendIpc, closeBackend } = require('./backend-ipc');
+
+// Explicit profile injection keeps UI checks away from the user's real settings.
+if (process.env.AXIOM_IDE_USER_DATA_DIR) {
+  app.setPath('userData', path.resolve(process.env.AXIOM_IDE_USER_DATA_DIR));
+}
 
 let logger = null;
 
@@ -139,7 +145,29 @@ function createWindow() {
     log.write(severity, eventName, { message, line: lineNumber, sourceId });
   });
   mainWindow.once('ready-to-show', () => mainWindow?.show());
-  mainWindow.on('close', () => { log.info('window.close'); saveState(); });
+  let closeApproved = false;
+  let closeHandlerReady = false;
+  const handlerReady = event => {
+    if (event.sender === mainWindow?.webContents && event.senderFrame === event.sender.mainFrame) closeHandlerReady = true;
+  };
+  ipcMain.on('window-close-handler-ready', handlerReady);
+  const approveClose = event => {
+    if (event.sender !== mainWindow?.webContents || event.senderFrame !== event.sender.mainFrame) return;
+    closeApproved = true;
+    mainWindow.close();
+  };
+  ipcMain.on('window-close-approved', approveClose);
+  mainWindow.once('closed', () => {
+    ipcMain.removeListener('window-close-approved', approveClose);
+    ipcMain.removeListener('window-close-handler-ready', handlerReady);
+    if (process.platform !== 'darwin') app.quit();
+  });
+  mainWindow.on('close', event => {
+    if (closeHandlerReady && !closeApproved && !mainWindow.webContents.isDestroyed() && !mainWindow.webContents.isCrashed()) {
+      event.preventDefault(); mainWindow.webContents.send('window-close-requested'); return;
+    }
+    log.info('window.close'); saveState();
+  });
   return mainWindow;
 }
 
@@ -163,6 +191,7 @@ if (!gotLock) {
     ensureAxiomAtStartup();
 
     setupIpc(getLogger());
+    setupBackendIpc();
     Menu.setApplicationMenu(null);
     createWindow();
 
@@ -177,5 +206,14 @@ if (!gotLock) {
 
   // Quitting (window close / Exit menu) must not orphan a running Axiom program:
   // without this the program keeps running invisibly after the IDE is gone.
-  app.on('before-quit', killActivePty);
+  let backendClosed = false;
+  app.on('before-quit', event => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      event.preventDefault(); mainWindow.close(); return;
+    }
+    if (backendClosed) return;
+    killActivePty();
+    event.preventDefault();
+    closeBackend().finally(() => { backendClosed = true; app.quit(); });
+  });
 }

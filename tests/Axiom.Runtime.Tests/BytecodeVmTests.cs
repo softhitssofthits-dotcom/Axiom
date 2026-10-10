@@ -3840,6 +3840,16 @@ PRINT firstName; age + 1
     }
 
     [Fact]
+    public void Execute_CompiledInputCancelledWhileWaitingDoesNotConvertEmptyText()
+    {
+        var host = new TestRuntimeHost { CancelOnInput = true };
+        var (_, _, result) = ExecuteProgram("DIM value AS INTEGER\nINPUT value\nPRINT value", host);
+        Assert.True(result.Cancelled);
+        Assert.Empty(result.Diagnostics);
+        Assert.Empty(host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledInputReportsConversionFailure()
     {
         const string text = """
@@ -7277,6 +7287,7 @@ END FUNCTION
         public string ReadInput(InputRequest request)
         {
             InputRequests.Add(request);
+            _inputCancelled = CancelOnInput;
             return _inputs.Count > 0 ? _inputs.Dequeue() : string.Empty;
         }
 
@@ -7869,8 +7880,10 @@ END FUNCTION
             Output.RemoveRange(checkpoint, Output.Count - checkpoint);
         }
 
+        public bool CancelOnInput { get; init; }
+        private bool _inputCancelled;
         public bool IsCancellationRequested =>
-            _readKeyCalls >= _cancelAfterReadKeyCalls
+            _inputCancelled || _readKeyCalls >= _cancelAfterReadKeyCalls
             || ++_cancellationPolls >= _cancelAfterCancellationPolls;
 
         bool IRuntimeCancellationProvider.IsCancellationRequested => IsCancellationRequested;

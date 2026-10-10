@@ -146,6 +146,8 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     public IntPtr ScreenWindowHandle => _graphicsWindow?.Hwnd ?? IntPtr.Zero;
 
+    public bool UseNativeCanvasWindow { get; set; } = true;
+
     public bool IsScreenActive => _inputState.Snapshot.IsScreenActive;
 
     public bool IsCanvasActive => _isCanvasActive;
@@ -2204,6 +2206,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void EnsureGraphicsWindow()
     {
+        if (_isCanvasActive && !UseNativeCanvasWindow) return;
         if (_graphicsWindow is not null)
         {
             _graphicsWindow.Activate();
@@ -2214,6 +2217,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         _graphicsWindow.Closed += OnGraphicsWindowClosed;
         _graphicsWindow.Show();
         _graphicsWindow.PresentFrame(GraphicsFrame);
+        OnPropertyChanged(nameof(ScreenWindowHandle));
     }
 
     private void CloseGraphicsWindow()
@@ -2227,6 +2231,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         _graphicsWindow = null;
         window.Closed -= OnGraphicsWindowClosed;
         window.Close();
+        OnPropertyChanged(nameof(ScreenWindowHandle));
     }
 
     private void OnGraphicsWindowClosed(object? sender, EventArgs e)
