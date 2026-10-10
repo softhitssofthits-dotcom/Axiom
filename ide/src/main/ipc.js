@@ -283,6 +283,12 @@ function logIpc(event, data) {
 }
 
 function setupIpc(logger) {
+  ipcMain.handle('create-project-file', (event, root, target, text) => {
+    if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame.url.endsWith('/index.html'))
+      return { ok: false, message: 'Недопустимый источник команды.' };
+    try { return { ok: true, path: require('./file-service').createProjectFile(root, target, text) }; }
+    catch (error) { return { ok: false, message: error.message }; }
+  });
   ipcMain.handle('confirm-document-close', async (event, name) => {
     const owner = BrowserWindow.fromWebContents(event.sender);
     if (!owner || typeof name !== 'string' || name.length > 1024) return 'cancel';

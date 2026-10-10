@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('axiom', {
   // files
   readFileContent: (p) => ipcRenderer.invoke('read-file-content', p),
   writeFile: (p, content) => ipcRenderer.invoke('write-file', p, content),
+  createProjectFile: (root, target, text) => ipcRenderer.invoke('create-project-file', root, target, text),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   openProjectDialog: () => ipcRenderer.invoke('open-project-dialog'),
   listProjectFiles: (p) => ipcRenderer.invoke('list-project-files', p),

@@ -175,7 +175,8 @@ class AxiomIDE {
           [/\d+[%&#DRFSILdrfsil]?/, 'number'],
           [/<>|<=|>=|=|<|>/, 'operator'],
           [/\+|-|\*|\/|\\|\^|&/, 'operator'],
-          [/[(),;:]/, '@brackets'],
+          [/[()]/, '@brackets'],
+          [/[,;:]/, 'delimiter'],
           [/[a-zA-Z_][a-zA-Z0-9_]*/, {
             cases: {
               '@keywords': 'keyword',
@@ -206,7 +207,8 @@ class AxiomIDE {
           [/\d+%?[DL]?/, 'number'],
           [/<>|<=|>=|=|<|>/, 'operator'],
           [/\+|-|\*|\/|\\|\^|&/, 'operator'],
-          [/[(),;:]/, '@brackets'],
+          [/[()]/, '@brackets'],
+          [/[,;:]/, 'delimiter'],
           [/[a-zA-Z_][a-zA-Z0-9_]*/, {
             cases: {
               '@keywords': 'keyword',
@@ -748,11 +750,14 @@ class AxiomIDE {
       alert('Сначала откройте папку проекта.');
       return;
     }
+    const projectRoot = this.projectDir;
     const defaultPath = this.projectDir + '\\program.axm';
     const selectedPath = await API.saveFileDialog(defaultPath);
     if (!selectedPath) return;
-    const written = await API.writeFile(selectedPath, "' Новая программа на Axiom.\n");
-    if (!written) { alert(I18N.t('dialog.openFailed', selectedPath)); return; }
+    if (this.projectDir !== projectRoot) return;
+    if (this.openFiles.has(selectedPath)) { alert(I18N.t('dialog.alreadyOpen', selectedPath)); return; }
+    const result = await API.createProjectFile(projectRoot, selectedPath, "' Новая программа на Axiom.\n");
+    if (!result.ok) { alert(result.message); return; }
     const files = await API.listProjectFiles(this.projectDir);
     this.renderProjectFiles(files);
     await this.openFile(selectedPath);
