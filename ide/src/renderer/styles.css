@@ -732,8 +732,8 @@ body.panel-resizing #bottom-panel {
 }
 
 /* F3: check marks for the format-trigger toggles (Edit menu) */
-.menu-check { display: none; margin-right: 6px; color: #4da3ff; font-weight: 700; }
-.menu-check.on { display: inline; }
+.menu-check { display: inline-flex; width: 18px; flex: 0 0 18px; justify-content: center; visibility: hidden; color: #4da3ff; font-weight: 700; }
+.menu-check.on { visibility: visible; }
 
 /* F5: outline panel (Bottom panel tab "Structure") */
 #outline-list { overflow-y: auto; padding: 4px 0; }

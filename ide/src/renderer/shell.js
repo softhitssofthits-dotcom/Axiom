@@ -20,12 +20,11 @@ const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-check','tb-run',
 toolbar.querySelectorAll('.toolbar-sep').forEach(s=>s.remove());groups.forEach(ids=>{const group=document.createElement('div');group.className='command-group';ids.forEach(id=>group.append(document.getElementById(id)));toolbar.append(group);});
 toolbar.querySelectorAll('button').forEach(b=>b.setAttribute('aria-label',b.title));
 const bar=document.getElementById('menubar'),menus=[...bar.querySelectorAll(':scope > .menu-item')];
-const brand=document.createElement('span');brand.className='shell-brand';brand.textContent='A / AXIOM';bar.prepend(brand);
 const more=document.createElement('button');more.id='menu-overflow';more.textContent='•••';more.setAttribute('aria-label','Остальные меню');more.setAttribute('aria-expanded','false');bar.append(more);
 const overflow=document.createElement('div');overflow.id='menu-overflow-content';overflow.hidden=true;bar.append(overflow);
 more.onclick=()=>{overflow.hidden=!overflow.hidden;more.setAttribute('aria-expanded',String(!overflow.hidden));};
 function fit(){overflow.hidden=true;more.setAttribute('aria-expanded','false');menus.forEach(m=>bar.insertBefore(m,more));more.hidden=true;
-const available=bar.clientWidth-brand.offsetWidth-16;let used=menus.reduce((n,m)=>n+m.offsetWidth,0);
+const available=bar.clientWidth-16;let used=menus.reduce((n,m)=>n+m.offsetWidth,0);
 if(used>available){more.hidden=false;for(let i=menus.length-1;i>=0&&used>available-more.offsetWidth;i--){used-=menus[i].offsetWidth;overflow.prepend(menus[i]);}}
 }
 new ResizeObserver(fit).observe(bar);
