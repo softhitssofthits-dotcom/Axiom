@@ -13,3 +13,10 @@ module.exports = [{ id: 'files-create-without-overwrite', name: 'Создани�
   C.eq(await S.page.evaluate(p => window.axiom.readFileContent(p), target), "' Новая программа на Axiom.\n", 'Русский текст записан');
   C.ok(await S.page.evaluate(p => [...document.querySelectorAll('.project-file')].some(b => b.title === p), target), 'Дерево обновлено');
 } }];
+module.exports.push({ id: 'files-mixed-line-endings-run', name: 'Run запускает сохранённый файл со смешанными окончаниями строк', async fn({ S, C }) {
+  const file = writeAxm(testWorkspace('mixed-lines'), 'mixed.axm', 'DIM value AS INTEGER = 7\r\nPRINT value\n');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openFile(p), file);
+  C.ok(await S.page.evaluate(() => !window.__ide.dirty.has(window.__ide.activeFile)), 'Открытый файл не помечен изменённым');
+  await S.page.evaluate(() => window.__ide.run()); await S.waitIdle(); await S.waitConsole('7');
+  C.ok(!(await S.diagnosticItems()).some(item => item.text.includes('Сохраните его')), 'Run принимает нормализованные окончания строк');
+} });

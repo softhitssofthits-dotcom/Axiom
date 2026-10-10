@@ -13,6 +13,8 @@ module.exports=[{id:'identifier-alphabet-diagnostics',name:'Русские им�
  C.ok((await S.markers()).some(d=>d.message.includes('Недопустимый символ')),'Ошибка по-русски');
  const valid='DIM a AS INTEGER = 67\nCONST Limit AS INTEGER = 100\nPRINT "Русский текст", a \' Комментарий\n';
  await S.page.evaluate(source=>window.__ide.editor.getModel().setValue(source),valid);await S.page.evaluate(()=>window.__ide.check(false));
- C.eq((await S.markers()).length,0,'Строки и комментарии с русскими буквами допустимы');
+ const validMarkers=await S.markers();
+ C.eq(validMarkers.filter(marker=>marker.severity===8).length,0,'Строки и комментарии с русскими буквами допустимы');
+ C.ok(validMarkers.some(marker=>marker.severity===4 && marker.message.includes('MB2047')),'Неиспользуемая константа Limit отмечена предупреждением');
  await S.page.evaluate(()=>window.__ide.save());await S.page.evaluate(()=>window.__ide.run());await S.waitIdle();await S.waitConsole('Русский текст');C.ok(true,'Русский текст реально выведен');
 }}];

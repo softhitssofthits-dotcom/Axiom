@@ -145,6 +145,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     }
 
     public IntPtr ScreenWindowHandle => _graphicsWindow?.Hwnd ?? IntPtr.Zero;
+    public bool ScreenWindowVisible => _graphicsWindow?.IsVisible ?? false;
 
     public bool UseNativeCanvasWindow { get; set; } = true;
 

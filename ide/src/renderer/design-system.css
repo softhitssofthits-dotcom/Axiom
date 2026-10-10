@@ -298,6 +298,9 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 .tab-content { color: var(--xs-text-muted); }
 #console-content, #terminal { background: #151820; }
 [data-theme="light"] #console-content, [data-theme="light"] #terminal { background: #ffffff; }
+/* Незанятые строками пиксели терминала должны иметь фон текущей темы. */
+#terminal .xterm-viewport { background-color: #151820; }
+[data-theme="light"] #terminal .xterm-viewport { background-color: #ffffff; }
 .diagnostic-item { min-height: 32px; padding: 6px 12px; border-bottom-color: var(--xs-border-subtle); color: var(--xs-text-muted); }
 .diagnostic-item:hover { background: var(--xs-surface-hover); }
 .diagnostic-location { color: var(--xs-text-faint); }

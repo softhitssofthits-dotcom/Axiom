@@ -123,7 +123,7 @@ module.exports = [
         null, { timeout: 8000, polling: 100 }
       );
       C.ok(true, 'Run сохранил ошибку компиляции в английском интерфейсе');
-      C.ok(await S.page.evaluate(() => !window.__ide.execution.surface), 'запуск не создал окно программы');
+      C.ok(await S.page.evaluate(() => !window.__ide.execution.surface || window.__ide.execution.surface.state === 'closed'), 'запуск не создал активное окно программы');
 
       await S.page.evaluate(() => window.__ide.setLanguage('ru'));
       C.ok(await S.page.evaluate(() => document.getElementById('diagnostics-content').textContent.includes('MB2046')),

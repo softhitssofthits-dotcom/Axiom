@@ -32,8 +32,8 @@ test('Закрытая сессия CANVAS не открывается позд�
 
 test('CANVAS передаёт стрелки, текст раскладки и сбрасывает состояние при потере фокуса', () => {
   const handlers = {}, events = [];
-  const context = { document: { getElementById: () => ({}) },
-    window: { canvasHost: { onFrame() {}, key: data => events.push({ ...data }) },
+  const context = { document: { getElementById: () => ({ addEventListener() {} }) },
+    window: { canvasHost: { onFrame() {}, mouse() {}, key: data => events.push({ ...data }) },
       addEventListener: (name, fn) => { handlers[name] = fn; } } };
   vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../src/renderer/canvas.js'), 'utf8'), context);
   const send = (action, code, key) => handlers[action]({ code, key, preventDefault() {} });
@@ -47,4 +47,28 @@ test('CANVAS передаёт стрелки, текст раскладки и �
   send('keydown', 'Space', ' '); assert.equal(events.at(-1).text, 'SPACE');
   send('keydown', 'Escape', 'Escape'); assert.equal(events.at(-1).text, 'ESC');
   handlers.blur(); assert.deepEqual(events.at(-1), { action: 'clear' });
+});
+
+test('CANVAS пересчитывает координаты мыши, различает кнопки и передаёт колесо', () => {
+  const handlers = {}, events = [];
+  const canvas = { width:200, height:100, addEventListener: (name, fn) => { handlers[name] = fn; },
+    getBoundingClientRect: () => ({ left:10, top:20, width:400, height:200 }), setPointerCapture() {} };
+  const context = { document: { getElementById: () => canvas },
+    window: { canvasHost: { onFrame() {}, key() {}, mouse: data => events.push({ ...data }) }, addEventListener() {} } };
+  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../src/renderer/canvas.js'), 'utf8'), context);
+  const event = { clientX:130, clientY:100, pointerId:1, preventDefault() {} };
+  handlers.pointermove(event);
+  assert.deepEqual(events.at(-1), { action:'move', x:60, y:40 });
+  for (const [button, expected] of [[0,1],[2,2],[1,3]]) {
+    handlers.pointerdown({ ...event, button });
+    assert.deepEqual(events.at(-1), { action:'down', button:expected, x:60, y:40 });
+    handlers.pointerup({ ...event, button });
+    assert.deepEqual(events.at(-1), { action:'up', button:expected, x:60, y:40 });
+  }
+  handlers.wheel({ ...event, deltaY:3 });
+  assert.deepEqual(events.at(-1), { action:'wheel', delta:-120, x:60, y:40 });
+  handlers.wheel({ ...event, deltaY:-3 });
+  assert.equal(events.at(-1).delta, 120);
+  handlers.pointercancel();
+  assert.deepEqual(events.at(-1), { action:'clear' });
 });

@@ -125,10 +125,14 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     public event EventHandler? Closed;
 
     public IntPtr Hwnd { get; private set; }
+    public bool IsVisible => Hwnd != IntPtr.Zero && IsWindowVisible(Hwnd);
 
     public void Show()
     {
         ShowWindow(Hwnd, SwShowNormal);
+        // Первый ShowWindow может использовать SW_HIDE из STARTUPINFO скрытого
+        // служебного процесса Electron. Следующий вызов явно показывает SCREEN.
+        if (!IsVisible) ShowWindow(Hwnd, SwShowNormal);
         UpdateWindow(Hwnd);
         SetFocus(Hwnd);
     }
@@ -748,8 +752,12 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     [DllImport("user32.dll")]
     private static extern bool ScreenToClient(IntPtr hWnd, ref Point point);
 
-    [DllImport("user32.dll")]
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr DefWindowProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(IntPtr hWnd);
 
     [DllImport("user32.dll")]
     private static extern bool ValidateRect(IntPtr hWnd, IntPtr lpRect);

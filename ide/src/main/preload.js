@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('axiom', {
   startExecution: document => ipcRenderer.invoke('backend-start', document),
   stopExecution: sessionId => ipcRenderer.invoke('backend-stop', sessionId),
   submitInput: (sessionId, requestId, text) => ipcRenderer.invoke('backend-input', sessionId, requestId, text),
+  programKey: (sessionId, data) => ipcRenderer.invoke('backend-key', sessionId, data),
   debugCommand: (sessionId, command, stopId) => ipcRenderer.invoke('backend-debug', sessionId, command, stopId),
   acknowledgeFrame: (sessionId, frameId) => ipcRenderer.invoke('backend-frame-ack', sessionId, frameId),
   acknowledgeOutput: (sessionId, outputVersion) => ipcRenderer.invoke('backend-output-ack', sessionId, outputVersion),

@@ -1,4 +1,4 @@
-' Создаёт исходный файл и копирует его в текущей рабочей папке.
+' Создаёт исходный файл и его копию в отдельной временной папке.
 DIM folder AS STRING = MAKETEMPDIR("axiom_copy_")
 DIM source AS STRING = COMBINEPATH(folder, "source.txt")
 DIM target AS STRING = COMBINEPATH(folder, "copy.txt")

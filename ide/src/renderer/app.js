@@ -904,6 +904,8 @@ class AxiomIDE {
     if (!approved && !await this.prepareClose(p)) return false;
     p = f.path;
     if (this.openFiles.get(p) !== f) return false;
+    this.monaco.editor.setModelMarkers(f.model, 'axiom', []);
+    this._lastDiagnostics = (this._lastDiagnostics || []).filter(d => d.file !== p);
     f.model.dispose();
     this.openFiles.delete(p);
     this.dirty.delete(p);
@@ -1331,6 +1333,27 @@ class AxiomIDE {
     this.log('terminal.created');
     this.fitConsole();
     this.term.onData((d) => this.consoleInput(d)); // keystrokes go through the type-ahead hold
+    // INKEY, KEYPRESS, KEYDOWN и SLEEP должны видеть клавиши консоли и отпускание модификаторов.
+    const heldProgramKeys = new Map();
+    const sendProgramKey = data => {
+      const session = this.execution?.sessionId;
+      if (!session) return;
+      this._programKeyWrites = (this._programKeyWrites || Promise.resolve())
+        .then(() => API.programKey(session, data)).catch(() => {});
+    };
+    this.term.textarea.addEventListener('keydown', event => {
+      if (!this.running) return;
+      const data = programKey(event);
+      if (!data) return;
+      heldProgramKeys.set(event.code, data.key);
+      sendProgramKey({ action: 'down', ...data });
+    }, true);
+    window.addEventListener('keyup', event => {
+      const key = heldProgramKeys.get(event.code);
+      heldProgramKeys.delete(event.code);
+      if (key && ![...heldProgramKeys.values()].includes(key)) sendProgramKey({ action: 'up', key });
+    }, true);
+    window.addEventListener('blur', () => { heldProgramKeys.clear(); sendProgramKey({ action: 'clear' }); });
     // Paste guard: any DOM paste into the terminal (Ctrl+V, context menu, Shift+Insert)
     // goes through the sanitizer — control characters in raw clipboard data once
     // terminated the program through ConPTY.

@@ -17,4 +17,9 @@ function createProjectFile(root, target, text) {
   }
   return destination;
 }
-module.exports = { createProjectFile };
+// Monaco нормализует окончания строк при открытии, сохраняя сами строки программы.
+function sameSourceText(saved, snapshot) {
+  return typeof saved === 'string' && typeof snapshot === 'string' &&
+    saved.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n') === snapshot.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+}
+module.exports = { createProjectFile, sameSourceText };

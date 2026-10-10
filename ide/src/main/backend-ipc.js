@@ -6,6 +6,7 @@ const { randomUUID } = require('node:crypto');
 const { BackendClient } = require('./backend-client');
 const { sourceFingerprint } = require('./backend-fingerprint');
 const { CanvasWindow } = require('./canvas-window');
+const { sameSourceText } = require('./file-service');
 
 let client;
 let owner;
@@ -16,6 +17,7 @@ const canvas = new CanvasWindow({
   acknowledge: (id, frameId) => id === graphicsSessionId ? getClient().request('graphics.ack', { frameId }, id) : Promise.resolve(),
   stop: id => id === sessionId ? getClient().request('execution.stop', {}, id) : Promise.resolve(),
   input: (id, data) => id === sessionId ? getClient().request('graphics.key', data, id) : Promise.resolve(),
+  mouse: (id, data) => id === sessionId ? getClient().request('graphics.mouse', data, id) : Promise.resolve(),
 });
 const root = path.resolve(__dirname, '../../..');
 const rendererUrl = pathToFileURL(path.join(root, 'ide/src/renderer/index.html')).href;
@@ -65,7 +67,7 @@ function setupBackendIpc() {
         !['run', 'debug'].includes(document.launchKind)) throw new Error('Некорректный снимок документа.');
     // Запуск должен соответствовать действительно сохранённому файлу.
     const saved = fs.readFileSync(document.sourceFilePath, 'utf8').replace(/^\uFEFF/, '');
-    if (saved !== document.sourceText) throw new Error('Документ изменён после сохранения. Сохраните его перед запуском.');
+    if (!sameSourceText(saved, document.sourceText)) throw new Error('Документ изменён после сохранения. Сохраните его перед запуском.');
     canvas.reset();
     sessionId = randomUUID();
     graphicsSessionId = sessionId;
@@ -77,6 +79,13 @@ function setupBackendIpc() {
   handle('backend-stop', async id => {
     if (!sessionId || id !== sessionId) throw new Error('Указанная сессия уже завершена.');
     return getClient().request('execution.stop', {}, id);
+  });
+  handle('backend-key', async (id, data) => {
+    if (id !== sessionId || !data || !['down', 'up', 'clear'].includes(data.action) ||
+        (data.action !== 'clear' && (typeof data.key !== 'string' || !data.key.length || data.key.length > 32)) ||
+        (data.text !== undefined && (typeof data.text !== 'string' || data.text.length > 32)))
+      throw new Error('Недопустимое событие клавиатуры программы.');
+    return getClient().request('graphics.key', data, id);
   });
   handle('backend-input', async (id, requestId, text) => {
     if (typeof text !== 'string' || typeof requestId !== 'string' || id !== sessionId) throw new Error('Недопустимый ввод.');

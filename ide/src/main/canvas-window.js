@@ -4,11 +4,20 @@ const { pathToFileURL } = require('node:url');
 
 // Окно получает только кадры своей сессии и подтверждает показанный кадр.
 class CanvasWindow {
-  constructor({ acknowledge, stop, input }) {
+  constructor({ acknowledge, stop, input, mouse }) {
     this.acknowledge = acknowledge; this.stop = stop; this.window = null;
     this.sessionId = null; this.pending = null; this.ready = false;
     this.closedSessionId = null;
     this.url = pathToFileURL(path.join(__dirname, '../renderer/canvas.html')).href;
+    ipcMain.on('canvas-mouse', (event, data) => {
+      if (!this.window || event.sender !== this.window.webContents ||
+          event.senderFrame !== event.sender.mainFrame || event.senderFrame.url !== this.url || !data ||
+          !['move','down','up','wheel','clear'].includes(data.action) ||
+          (data.action !== 'clear' && (!Number.isSafeInteger(data.x) || !Number.isSafeInteger(data.y))) ||
+          (['down','up'].includes(data.action) && ![1,2,3].includes(data.button)) ||
+          (data.action === 'wheel' && !Number.isInteger(data.delta))) return;
+      mouse?.(this.sessionId, data).catch(() => {});
+    });
     ipcMain.on('canvas-key', (event, data) => {
       if (!this.window || event.sender !== this.window.webContents ||
           event.senderFrame !== event.sender.mainFrame || event.senderFrame.url !== this.url ||

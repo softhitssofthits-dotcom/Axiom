@@ -206,13 +206,13 @@ public sealed class AcceptanceProgramTests
     }
 
     [Theory]
-    [InlineData("samples/control-flow/if/basic_if_else.axm", new[] { "not positive" })]
-    [InlineData("samples/control-flow/if/elseif_chain.axm", new[] { "medium" })]
+    [InlineData("samples/control-flow/if/basic_if_else.axm", new[] { "не положительное" })]
+    [InlineData("samples/control-flow/if/elseif_chain.axm", new[] { "среднее значение" })]
     [InlineData("samples/control-flow/for/basic_loop.axm", new[] { "1", "2", "3" })]
     [InlineData("samples/control-flow/for/step_loop.axm", new[] { "0", "2", "4", "6" })]
     [InlineData("samples/control-flow/for/nested_loops.axm", new[] { "1:1", "1:2", "2:1", "2:2" })]
-    [InlineData("samples/control-flow/for/exit_for.axm", new[] { "1", "2", "done" })]
-    [InlineData("samples/control-flow/for/predeclared_counter.axm", new[] { "1", "2", "3", "after=3" })]
+    [InlineData("samples/control-flow/for/exit_for.axm", new[] { "1", "2", "Готово" })]
+    [InlineData("samples/control-flow/for/predeclared_counter.axm", new[] { "1", "2", "3", "После цикла: 3" })]
     [InlineData("samples/control-flow/while/basic_loop.axm", new[] { "0", "1", "2" })]
     [InlineData("samples/control-flow/do/do_while_loop.axm", new[] { "0", "1", "2", "done" })]
     [InlineData("samples/control-flow/do/do_until_loop.axm", new[] { "0", "1", "2" })]
@@ -220,15 +220,15 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/control-flow/do/loop_until.axm", new[] { "0", "1", "2" })]
     [InlineData("samples/control-flow/do/do_loop_exit.axm", new[] { "0", "1", "done" })]
     [InlineData("samples/control-flow/select_case/exact_values.axm", new[] { "two" })]
-    [InlineData("samples/control-flow/select_case/ranges_and_is.axm", new[] { "good" })]
-    [InlineData("samples/control-flow/select_case/string_values.axm", new[] { "save" })]
-    [InlineData("samples/control-flow/select_case/mixed_selectors.axm", new[] { "matched" })]
-    [InlineData("samples/control-flow/select_case/string_ranges.axm", new[] { "after", "first" })]
+    [InlineData("samples/control-flow/select_case/ranges_and_is.axm", new[] { "Хорошо" })]
+    [InlineData("samples/control-flow/select_case/string_values.axm", new[] { "Сохранить файл" })]
+    [InlineData("samples/control-flow/select_case/mixed_selectors.axm", new[] { "Значение подошло" })]
+    [InlineData("samples/control-flow/select_case/string_ranges.axm", new[] { "После буквы M", "Первая часть алфавита" })]
     [InlineData("samples/control-flow/select_case/boolean_values.axm", new[] { "enabled" })]
     [InlineData("samples/control-flow/select_case/first_match.axm", new[] { "first" })]
     [InlineData("samples/control-flow/select_case/no_match_no_else.axm", new[] { "after" })]
     [InlineData("samples/control-flow/return/function_value.axm", new[] { "42" })]
-    [InlineData("samples/control-flow/return/sub_early_exit.axm", new[] { "before return", "after if" })]
+    [InlineData("samples/control-flow/return/sub_early_exit.axm", new[] { "До досрочного RETURN", "После блока IF" })]
     public void ControlFlowAcceptanceSamples_RunOnBytecodeVm(string relativePath, string[] expectedOutput)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -301,11 +301,11 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/operators/assignment/basic_assignment.axm", new[] { "15" })]
     [InlineData("samples/operators/assignment/array_element.axm", new[] { "7" })]
     [InlineData("samples/operators/print/basic_expression.axm", new[] { "7" })]
-    [InlineData("samples/operators/print/empty_print.axm", new[] { "Before", "", "After" })]
-    [InlineData("samples/operators/print/separator_semicolon.axm", new[] { "Hello, world", "123" })]
+    [InlineData("samples/operators/print/empty_print.axm", new[] { "До", "", "После" })]
+    [InlineData("samples/operators/print/separator_semicolon.axm", new[] { "Привет, мир", "123" })]
     [InlineData("samples/operators/print/separator_comma.axm", new[] { "A B C", "1 2 3 4 5 " })]
     [InlineData("samples/operators/print/mixed_list.axm", new[] { "12 3" })]
-    [InlineData("samples/operators/print/using_basic.axm", new[] { "Name: Bob   |", "Total:  12.50", "Flag: X" })]
+    [InlineData("samples/operators/print/using_basic.axm", new[] { "Имя: Боб   |", "Итого:  12.50", "Флаг: Д" })]
     public void DeclarationAssignmentAndPrintAcceptanceSamples_RunOnBytecodeVm(string relativePath, string[] expectedOutput)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
@@ -368,7 +368,7 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
-        Assert.Equal(["Name: Bob   |", "Total:  12.50", "Flag: X"], result.Output);
+        Assert.Equal(["Имя: Боб   |", "Итого:  12.50", "Флаг: Д"], result.Output);
     }
 
     [Fact]
@@ -1645,7 +1645,7 @@ public sealed class AcceptanceProgramTests
             [
                 "320",
                 "240",
-                "done"
+                "Готово"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -1721,7 +1721,7 @@ public sealed class AcceptanceProgramTests
                 "FALSE",
                 "TRUE",
                 "FALSE",
-                "done"
+                "Готово"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -1748,7 +1748,7 @@ public sealed class AcceptanceProgramTests
                 "TRUE",
                 "FALSE",
                 "TRUE",
-                "done"
+                "Готово"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -1776,7 +1776,7 @@ public sealed class AcceptanceProgramTests
                 "1",
                 "320",
                 "240",
-                "done"
+                "Готово"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -1846,7 +1846,7 @@ public sealed class AcceptanceProgramTests
                 "1",
                 "320",
                 "240",
-                "done"
+                "Готово"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -1876,7 +1876,7 @@ public sealed class AcceptanceProgramTests
                 "-120",
                 "320",
                 "240",
-                "done"
+                "Готово"
             ],
             inputProvider.GraphicsOutput);
     }
@@ -1893,7 +1893,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["text mode screen"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Текстовый экран"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -1995,7 +1995,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Transparent text sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Проверка прозрачного текста завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2010,7 +2010,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Input sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Ввод завершён"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2040,7 +2040,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Graphics primitives sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Проверка графических примитивов завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2055,7 +2055,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Circle full forms sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Проверка окружностей завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2070,7 +2070,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Circle full turn sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Проверка полного оборота завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2085,7 +2085,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["STEP and POINT position sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Проверка STEP и POINT завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2254,7 +2254,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["6", "9", "12", "15", "GET sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["6", "9", "12", "15", "Проверка GET завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2269,7 +2269,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["1", "2", "254", "253", "PUT sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["1", "2", "254", "253", "Проверка PUT завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2755,7 +2755,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Mouse sample finished"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Проверка мыши завершена"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -2770,7 +2770,7 @@ public sealed class AcceptanceProgramTests
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Output);
-        Assert.Equal(["Paddle ball sample finished: esc"], inputProvider.GraphicsOutput);
+        Assert.Equal(["Игра завершена: выход по ESC"], inputProvider.GraphicsOutput);
     }
 
     [Fact]
@@ -3188,6 +3188,7 @@ public sealed class AcceptanceProgramTests
         {
             var repositoryRoot = FindRepositoryRoot();
             var directory = relativePath.Equals("samples/functions/readfile/single_byte_round_trip.axm", StringComparison.OrdinalIgnoreCase)
+                || relativePath.Equals("samples/functions/readfile/windows1251_fallback.axm", StringComparison.OrdinalIgnoreCase)
                 ? Path.GetDirectoryName(Path.Combine(repositoryRoot, relativePath))!
                 : repositoryRoot;
             try

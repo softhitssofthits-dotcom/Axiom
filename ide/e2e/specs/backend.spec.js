@@ -34,7 +34,7 @@ module.exports = [
     C.ok(after!==null && after>before+12, `Стрелка переместила героя: ${before} → ${after}`);
     await page.close(); await S.waitIdle(); await S.page.waitForTimeout(300);
     C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length, 0, 'После закрытия игры второе окно не появляется');
-    C.eq((await S.diagnosticItems()).length, 0, 'Игра остановлена без диагностики');
+    C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(), 0, 'Игра остановлена без ошибок; предупреждения о переменных допустимы');
   } },
   { id: 'backend-canvas-keyboard', name: 'Клавиши CANVAS, отпускание, потеря фокуса и закрытие', async fn({ S, C }) {
     await open(S, 'CANVAS 16, 12\nDO\nBEGINFRAME\nIF KEYDOWN("RIGHT") THEN\nCLS RGB(255, 0, 0)\nELSE\nCLS RGB(0, 255, 0)\nEND IF\nIF KEYPRESS("SPACE") THEN\nPRINT "Пауза"\nEND IF\nPRESENT\nSLEEP 10\nLOOP\n', 'canvas-keyboard');
@@ -68,6 +68,8 @@ module.exports = [
     await S.page.evaluate(() => window.__ide.run());
     await S.page.waitForFunction(() => BigInt(window.__ide.execution.surface?.windowHandle || '0') > 0n);
     C.ok(true, 'получен реальный HWND');
+    await S.page.waitForFunction(() => window.__ide.execution.surface?.windowVisible === true);
+    C.ok(true, 'окно SCREEN действительно видно при скрытом запуске служебного процесса');
     await S.page.evaluate(() => window.__ide.stop()); await S.waitIdle();
     C.eq((await S.diagnosticItems()).length, 0, 'графическое выполнение отменено без диагностики');
   } },

@@ -60,9 +60,10 @@ internal sealed class DesktopHost : IDisposable
             if (_sessionId is not null && e.PropertyName is nameof(ProgramConsoleService.GraphicsFrame) or nameof(ProgramConsoleService.ScreenWindowHandle) or nameof(ProgramConsoleService.IsScreenActive) or nameof(ProgramConsoleService.IsCanvasActive))
             {
                 Event("graphics.surface", new { kind = _console.IsCanvasActive ? "canvas" : "screen",
-                    state = _console.IsScreenActive || _console.IsCanvasActive ? "changed" : "closed",
+                    state = _console.IsScreenOutputActive || _console.IsCanvasActive ? "changed" : "closed",
                     logicalWidth = _console.ScreenWidth, logicalHeight = _console.ScreenHeight,
-                    windowHandle = _console.ScreenWindowHandle.ToInt64().ToString() });
+                    windowHandle = _console.ScreenWindowHandle.ToInt64().ToString(),
+                    windowVisible = _console.GraphicsHost.ScreenWindowVisible });
                 if (_console.IsCanvasActive && _console.GraphicsFrame is { } frame) _frames?.Publish(_sessionId!, frame);
             }
             if (e.PropertyName != nameof(ProgramConsoleService.IsWaitingForInput) || _sessionId is null) return;
@@ -150,7 +151,7 @@ internal sealed class DesktopHost : IDisposable
                     RequireSession(request); Cancel(); Respond(id, new { accepted = true }); break;
                 case "graphics.key":
                     RequireSession(request);
-                    if (!_console.IsCanvasActive) throw new HostError("INVALID_STATE", "Холст не активен.");
+                    // Клавиатура нужна и текстовым программам: INKEY, KEYDOWN, KEYPRESS и SLEEP.
                     string keyAction = String(payload, "action") ?? "";
                     string key = String(payload, "key") ?? "";
                     string keyText = String(payload, "text") ?? "";
@@ -172,6 +173,8 @@ internal sealed class DesktopHost : IDisposable
                     if (_frames?.Acknowledge(String(payload, "frameId") ?? "") != true)
                         throw new HostError("INVALID_STATE", "Кадр уже подтверждён или недействителен.");
                     Respond(id, new { accepted = true }); break;
+                case "graphics.mouse":
+                    RequireSession(request); HandleMouse(payload); Respond(id, new { accepted = true }); break;
                 case "output.ack":
                     RequireSession(request);
                     if (String(payload, "outputVersion") != _pendingOutputVersion || _pendingOutputVersion is null)
@@ -298,6 +301,32 @@ internal sealed class DesktopHost : IDisposable
     {
         if (_sessionId is null || String(request, "sessionId") != _sessionId)
             throw new HostError("INVALID_SESSION", "Указанная сессия уже завершена.");
+    }
+
+    private void HandleMouse(JsonElement payload)
+    {
+        if (!_console.IsCanvasActive) throw new HostError("INVALID_STATE", "Холст не активен.");
+        string action = String(payload, "action") ?? "";
+        if (action == "clear") { _console.ClearMouseState(); return; }
+        if (action is not ("move" or "down" or "up" or "wheel") ||
+            !payload.TryGetProperty("x", out var xValue) || !xValue.TryGetInt64(out long x) ||
+            !payload.TryGetProperty("y", out var yValue) || !yValue.TryGetInt64(out long y))
+            throw new HostError("INVALID_REQUEST", "Недопустимые координаты мыши.");
+        int button = 0, delta = 0;
+        if (action is "down" or "up" && (!payload.TryGetProperty("button", out var buttonValue) ||
+            !buttonValue.TryGetInt32(out button) || button is < 1 or > 3))
+            throw new HostError("INVALID_REQUEST", "Недопустимая кнопка мыши.");
+        if (action == "wheel" && (!payload.TryGetProperty("delta", out var deltaValue) || !deltaValue.TryGetInt32(out delta)))
+            throw new HostError("INVALID_REQUEST", "Недопустимое движение колеса мыши.");
+        // Из окна приходят пиксели холста. Камеру и VIEWPORT применяет VM при чтении.
+        _console.SetMousePosition(x, y);
+        switch (action)
+        {
+            case "move": _console.EnqueueMouseMove(); break;
+            case "down": _console.SetMouseButtonDown(button); _console.EnqueueMouseButtonPress(button); break;
+            case "up": _console.SetMouseButtonUp(button); _console.EnqueueMouseButtonRelease(button); break;
+            case "wheel": _console.EnqueueMouseWheel(delta); break;
+        }
     }
 
     private void Cancel()
