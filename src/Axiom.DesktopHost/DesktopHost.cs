@@ -148,6 +148,23 @@ internal sealed class DesktopHost : IDisposable
                 case "execution.start": StartExecution(id, String(request, "sessionId"), payload); break;
                 case "execution.stop":
                     RequireSession(request); Cancel(); Respond(id, new { accepted = true }); break;
+                case "graphics.key":
+                    RequireSession(request);
+                    if (!_console.IsCanvasActive) throw new HostError("INVALID_STATE", "Холст не активен.");
+                    string keyAction = String(payload, "action") ?? "";
+                    string key = String(payload, "key") ?? "";
+                    string keyText = String(payload, "text") ?? "";
+                    if (keyAction is not ("down" or "up" or "clear") ||
+                        (keyAction != "clear" && (key.Length is 0 or > 32)) || keyText.Length > 32)
+                        throw new HostError("INVALID_REQUEST", "Недопустимое событие клавиатуры.");
+                    if (keyAction == "clear") _console.ClearKeyState();
+                    else if (keyAction == "up") _console.SetKeyUp(key);
+                    else
+                    {
+                        _console.SetKeyDown(key);
+                        if (!_console.IsWaitingForInput && keyText.Length > 0) _console.EnqueueKey(keyText);
+                    }
+                    Respond(id, new { accepted = true }); break;
                 case "graphics.ack":
                     // Последний кадр может быть показан после execution.finished.
                     if (_graphicsSessionId is null || String(request, "sessionId") != _graphicsSessionId)

@@ -15,6 +15,7 @@ let closing;
 const canvas = new CanvasWindow({
   acknowledge: (id, frameId) => id === graphicsSessionId ? getClient().request('graphics.ack', { frameId }, id) : Promise.resolve(),
   stop: id => id === sessionId ? getClient().request('execution.stop', {}, id) : Promise.resolve(),
+  input: (id, data) => id === sessionId ? getClient().request('graphics.key', data, id) : Promise.resolve(),
 });
 const root = path.resolve(__dirname, '../../..');
 const rendererUrl = pathToFileURL(path.join(root, 'ide/src/renderer/index.html')).href;

@@ -1,4 +1,5 @@
-const { testWorkspace, writeAxm } = require('../helpers');
+const { testWorkspace, writeAxm, ROOT } = require('../helpers');
+const path = require('node:path');
 async function open(S, source, tag) {
   const file = writeAxm(testWorkspace(tag), 'программа.axm', source);
   await S.launch(); await S.stubOpenDialog([file]);
@@ -7,6 +8,52 @@ async function open(S, source, tag) {
   return file;
 }
 module.exports = [
+  { id: 'backend-maze-chase-controls', name: 'Настоящий Maze Chase: движение героя и единственное окно', async fn({ S, C }) {
+    const file = path.join(ROOT, 'samples/graphics/game/maze_chase.axm');
+    await S.launch(); await S.stubOpenDialog([file]);
+    await S.page.evaluate(() => window.__ide.handleAction('open'));
+    await S.page.waitForFunction(p => window.__ide.activeFile === p, file);
+    await S.page.evaluate(() => window.__ide.run());
+    let page;
+    for (let i=0;i<200;i++) { page=(await S.electronApp.windows()).find(p=>p.url().endsWith('/canvas.html')); if(page)break;await S.page.waitForTimeout(50); }
+    if (!page) throw new Error('Maze Chase не открыл холст');
+    await page.waitForFunction(() => document.getElementById('program-canvas').width === 1024);
+    const playerX = () => page.evaluate(() => {
+      const d=document.getElementById('program-canvas').getContext('2d').getImageData(0,30,1024,630).data;
+      let sum=0, count=0;
+      for(let i=0;i<d.length;i+=4) if(d[i]>200 && d[i+1]>170 && d[i+2]<70) { sum+=(i/4)%1024;count++; }
+      return count ? sum/count : null;
+    });
+    let before;
+    for(let i=0;i<100;i++){before=await playerX();if(before!==null)break;await page.waitForTimeout(50);}
+    C.ok(before!==null, 'Герой найден по жёлтым пикселям в стартовом коридоре');
+    await page.keyboard.down('ArrowRight');
+    let after=before;
+    for(let i=0;i<100;i++){after=await playerX();if(after!==null && after>before+12)break;await page.waitForTimeout(50);}
+    await page.keyboard.up('ArrowRight');
+    C.ok(after!==null && after>before+12, `Стрелка переместила героя: ${before} → ${after}`);
+    await page.close(); await S.waitIdle(); await S.page.waitForTimeout(300);
+    C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length, 0, 'После закрытия игры второе окно не появляется');
+    C.eq((await S.diagnosticItems()).length, 0, 'Игра остановлена без диагностики');
+  } },
+  { id: 'backend-canvas-keyboard', name: 'Клавиши CANVAS, отпускание, потеря фокуса и закрытие', async fn({ S, C }) {
+    await open(S, 'CANVAS 16, 12\nDO\nBEGINFRAME\nIF KEYDOWN("RIGHT") THEN\nCLS RGB(255, 0, 0)\nELSE\nCLS RGB(0, 255, 0)\nEND IF\nIF KEYPRESS("SPACE") THEN\nPRINT "Пауза"\nEND IF\nPRESENT\nSLEEP 10\nLOOP\n', 'canvas-keyboard');
+    await S.page.evaluate(() => window.__ide.run());
+    let page;
+    for (let i=0;i<100;i++) { page=(await S.electronApp.windows()).find(p=>p.url().endsWith('/canvas.html')); if(page)break;await S.page.waitForTimeout(50); }
+    if (!page) throw new Error('Нет окна CANVAS');
+    const color = channel => page.waitForFunction(c => document.getElementById('program-canvas').getContext('2d').getImageData(0,0,1,1).data[c] === 255, channel);
+    await color(1); await page.keyboard.down('ArrowRight'); await color(0);
+    C.ok(true, 'KEYDOWN видит удерживаемую стрелку');
+    await page.keyboard.up('ArrowRight'); await color(1); C.ok(true, 'KEYUP отпускает стрелку');
+    await page.keyboard.press('Space'); await S.waitConsole('Пауза'); C.ok(true, 'KEYPRESS получает SPACE');
+    await page.keyboard.down('ArrowRight'); await color(0);
+    await page.evaluate(() => window.dispatchEvent(new Event('blur'))); await color(1);
+    C.ok(true, 'Уход фокуса сбрасывает удерживаемую стрелку');
+    await page.close(); await S.waitIdle(); await S.page.waitForTimeout(300);
+    C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length, 0, 'Поздние кадры не создают второе окно');
+    C.eq((await S.diagnosticItems()).length, 0, 'Закрытие без ошибки');
+  } },
   { id: 'backend-input-stop-and-repeat', name: 'Отмена INPUT и чистый повтор', async fn({ S, C }) {
     await open(S, 'DIM value AS INTEGER\nINPUT value\nPRINT value\n', 'backend-input');
     await S.page.evaluate(() => window.__ide.run());
