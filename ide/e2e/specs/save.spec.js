@@ -10,15 +10,14 @@ async function open(S, tag) {
   return file;
 }
 module.exports = [
-  { id: 'save-all-background-format', name: 'Сохранить всё форматирует неактивную модель с сохранением undo', async fn({ S, C }) {
+  { id: 'save-all-background-format', name: 'Сохранить всё записывает обе модели без дополнительного форматирования', async fn({ S, C }) {
     const a = await open(S, 'save-all-format'); const b = writeAxm(testWorkspace('save-all-format-second'), 'второй.axm', 'PRINT 2\n');
     await S.page.evaluate(() => window.__ide.editor.getModel().setValue('print 11\n'));
     await S.stubOpenDialog([b]); await S.page.evaluate(() => window.__ide.handleAction('open'));
     await S.page.waitForFunction(p => window.__ide.activeFile === p, b);
-    C.ok(await S.page.evaluate(async () => { const i = window.__ide; i.settings.formatOnSave = true; i.editor.getModel().setValue('print 22\n'); return i.saveAll(); }), 'Обе вкладки сохранены с форматированием');
-    C.eq((await S.page.evaluate(p => window.axiom.readFileContent(p), a)).trim(), 'PRINT 11', 'Неактивная вкладка отформатирована');
-    await S.page.evaluate(p => { const i = window.__ide; i.switchToFile(p); i.editor.trigger('test', 'undo', null); }, a);
-    C.eq((await S.page.evaluate(() => window.__ide.editor.getValue())).trim(), 'print 11', 'Форматирование неактивной вкладки отменяется');
+    C.ok(await S.page.evaluate(async () => { const i = window.__ide; i.settings.formatOnSave = true; i.editor.getModel().setValue('print 22\n'); return i.saveAll(); }), 'Обе вкладки сохранены');
+    C.eq((await S.page.evaluate(p => window.axiom.readFileContent(p), a)).trim(), 'print 11', 'Неактивная вкладка записана без изменения регистра');
+    C.eq((await S.page.evaluate(() => window.__ide.editor.getValue())).trim(), 'print 22', 'Сохранение не изменило активную модель');
   } },
   { id: 'save-write-failure', name: 'Ошибка записи сохраняет вкладку и несохранённый текст', async fn({ S, C }) {
     const file = await open(S, 'save-write-failure');

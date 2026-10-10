@@ -189,7 +189,7 @@ html[data-theme="light"] .logo-dark { display: none; }
   white-space: nowrap;
 }
 
-.menu-item-submenu:hover .submenu-dropdown {
+.menu-item-submenu.open > .submenu-dropdown {
   display: block;
 }
 

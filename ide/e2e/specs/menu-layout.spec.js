@@ -2,7 +2,8 @@ module.exports = [{ id: 'menu-fixed-check-column', name: 'В меню тольк
   await S.launch();
   C.eq(await S.page.locator('#menubar .shell-brand').count(), 0, 'В строке меню нет надписи A / AXIOM');
   await S.page.locator('[data-menu="edit"] .menu-label').click();
-  for (const key of ['formatOnBlur', 'formatOnSave', 'checkOnChange']) {
+  await S.page.locator('#formatting-submenu .submenu-trigger').hover();
+  for (const key of ['formatClassic', 'formatModern']) {
     const layout = await S.page.evaluate(key => {
       const check = document.querySelector('.menu-check[data-check="' + key + '"]');
       const text = check.parentElement.querySelector('.menu-text');

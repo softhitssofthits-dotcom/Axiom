@@ -24,9 +24,8 @@ class AxiomIDE {
     this._stopRequested = false;
     this._consoleT0 = null;
     this.fileChangePrompts = new Set(); // paths with an open external-change prompt
-    // Autoformat trigger defaults — blur on, save off; each is a Правка-menu toggle.
     // The program always runs in the integrated ConPTY terminal — the console is the only run mode.
-    this.settings = { theme: 'dark', language: 'ru', recentFiles: [], formatOnBlur: true, formatOnSave: false, checkOnChange: true, projectExplorer: true };
+    this.settings = { theme: 'dark', language: 'ru', recentFiles: [], projectExplorer: true };
     this._autoFormatting = false; // true while an auto-format edit is applied (suppresses dirty-marking)
     // One coordination state for all background editor services. Requests are cheap to
     // abandon, but their results must never win after a newer edit or a focus transition.
@@ -100,10 +99,8 @@ class AxiomIDE {
       const s = await API.getSettings();
       if (s) Object.assign(this.settings, s);
     } catch {}
-    // A missing or corrupt trigger setting falls back to its default.
-    for (const [k, d] of [['formatOnBlur', true], ['formatOnSave', false], ['checkOnChange', true]]) {
-      if (typeof this.settings[k] !== 'boolean') this.settings[k] = d;
-    }
+    // Retired settings from earlier Electron profiles must not change editor behavior.
+    for (const key of ['formatOnBlur', 'formatOnSave', 'checkOnChange']) delete this.settings[key];
     this.updateFormatMenuChecks();
   }
 
@@ -346,8 +343,6 @@ class AxiomIDE {
     });
     this.editor.onDidFocusEditorText(() => {
       this._lastEditorFocus = performance.now();
-      clearTimeout(this._blurTimer);
-      this._blurTimer = null;
       this.log('editor.focus', this.focusState());
     });
     this.editor.onDidChangeModelContent(() => {
@@ -355,24 +350,6 @@ class AxiomIDE {
       this.scheduleLiveCheck();
       this.scheduleOutlineRebuild();
       this.log('editor.change', { length: this.editor.getValue().length, activeFile: this.activeFile });
-    });
-    // Autoformat trigger: blur normalizes the whole buffer (no save required).
-    // The manual Format command formats the current unsaved buffer too.
-    this.editor.onDidBlurEditorText(() => {
-      // Debounce: format only when the focus has really left the editor. Quick menu
-      // round-trips (undo/copy/paste re-focus the editor) cancel the pending format,
-      // so navigating menus never mutates the buffer mid-action.
-      clearTimeout(this._blurTimer);
-      this._blurTimer = setTimeout(() => {
-        this._blurTimer = null;
-        if (!this.settings.formatOnBlur) return;
-        if (this.editor.hasTextFocus()) return; // refocused before the timer fired
-        if (this.isTransientUiFocus()) {
-          this.log('format.blur.deferred', this.focusState());
-          return;
-        }
-        this.formatWholeDocument('ax-format-on-blur').catch(() => {});
-      }, 300);
     });
     // Double-click on an error squiggle opens the same details peek as Alt+F8.
     this.editor.onMouseDown((e) => {
@@ -463,63 +440,44 @@ class AxiomIDE {
 
   setupMenubar() {
     let openMenu = null;
-    let lastOpenMenu = null; // remembers the menu that was open a moment ago (hover-switch)
-
+    const closeSubmenus = () => document.querySelectorAll('.menu-item-submenu.open').forEach(item => {
+      item.classList.remove('open');
+      item.querySelector('.submenu-trigger')?.setAttribute('aria-expanded', 'false');
+    });
     const closeAll = () => {
-      document.querySelectorAll('.menu-item.open').forEach((el) => el.classList.remove('open'));
+      closeSubmenus();
+      document.querySelectorAll('.menu-item.open').forEach(item => item.classList.remove('open'));
       openMenu = null;
     };
-
-    const openMenuFor = (menuItem) => {
-      closeAll();
-      menuItem.classList.add('open');
-      openMenu = menuItem;
-      lastOpenMenu = menuItem;
-    };
-
-    document.querySelectorAll('.menu-item').forEach((menuItem) => {
-      const label = menuItem.querySelector('.menu-label');
-      if (!label) return;
-
-      label.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        if (menuItem.classList.contains('open')) closeAll();
-        else openMenuFor(menuItem);
-      });
-
-      label.addEventListener('mouseenter', () => {
-        if (openMenu === menuItem) return;
-        if (openMenu) { openMenuFor(menuItem); return; }
-        // When the pointer moves from an open menu to a sibling label, the old menu's
-        // mouseleave fires first and closes everything; without this branch the hovered
-        // menu would never open on hover.
-        if (lastOpenMenu && lastOpenMenu !== menuItem) openMenuFor(menuItem);
-      });
-
-      // Close when the pointer leaves the whole menu (label + dropdown), so a
-      // lingering open dropdown can't swallow clicks on the tab bar below it.
-      menuItem.addEventListener('mouseleave', () => {
-        if (openMenu === menuItem) {
-          closeAll();
-          setTimeout(() => { if (!openMenu) lastOpenMenu = null; }, 0);
-        }
-      });
+    const openMenuFor = item => { closeAll(); item.classList.add('open'); openMenu = item; };
+    document.querySelectorAll('.menu-item').forEach(item => {
+      const label = item.querySelector('.menu-label'); if (!label) return;
+      label.addEventListener('mousedown', e => { e.preventDefault(); item === openMenu ? closeAll() : openMenuFor(item); });
+      label.addEventListener('mouseenter', () => { if (openMenu && openMenu !== item) openMenuFor(item); });
     });
-
-    document.querySelectorAll('.menu-dropdown-item').forEach((item) => {
-      item.addEventListener('click', () => {
-        const action = item.dataset.action;
-        closeAll();
-        lastOpenMenu = null; // a real action closes menus for good
-        if (action) this.handleAction(action);
-      });
+    document.querySelectorAll('.menu-item-submenu').forEach(item => {
+      const trigger = item.querySelector('.submenu-trigger'); const dropdown = item.querySelector('.submenu-dropdown');
+      trigger.tabIndex = 0; trigger.setAttribute('aria-haspopup', 'menu'); trigger.setAttribute('aria-expanded', 'false');
+      const open = () => {
+        closeSubmenus(); item.classList.add('open'); trigger.setAttribute('aria-expanded', 'true');
+        const anchor = trigger.getBoundingClientRect(); const size = dropdown.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        const right = anchor.right; const left = right + size.width <= innerWidth - 8 ? right : anchor.left - size.width;
+        dropdown.style.left = Math.max(8, Math.min(left, innerWidth - size.width - 8)) + 'px';
+        dropdown.style.top = Math.max(8, Math.min(anchor.top, innerHeight - size.height - 8)) + 'px';
+      };
+      trigger.addEventListener('mouseenter', open);
+      trigger.addEventListener('click', e => { e.stopPropagation(); open(); });
+      trigger.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowRight'].includes(e.key)) { e.preventDefault(); open(); } });
     });
-
-    document.addEventListener('mousedown', (e) => {
-      if (openMenu && !openMenu.contains(e.target)) { closeAll(); lastOpenMenu = null; }
-    });
-
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAll(); lastOpenMenu = null; } });
+    document.querySelectorAll('.menu-dropdown-item').forEach(item => item.addEventListener('click', () => {
+      const action = item.dataset.action; if (!action) return;
+      closeAll(); this.handleAction(action);
+    }));
+    document.addEventListener('mousedown', e => { if (openMenu && !openMenu.contains(e.target)) closeAll(); });
+    document.addEventListener('click', e => { if (openMenu?.contains(e.target) && e.target.closest('.recent-item')) closeAll(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+    window.addEventListener('resize', closeAll);
   }
 
   setupToolbar() {
@@ -716,9 +674,6 @@ class AxiomIDE {
       case 'format': this.formatDocument(); break;
       case 'format-classic': this.setFormattingStyle('Classic'); break;
       case 'format-modern': this.setFormattingStyle('Modern'); break;
-      case 'toggle-format-on-blur': this.toggleSetting('formatOnBlur'); break;
-      case 'toggle-format-on-save': this.toggleSetting('formatOnSave'); break;
-      case 'toggle-check-on-change': this.toggleSetting('checkOnChange'); break;
       case 'run': this.run(); break;
       case 'check': this.check(true); break;
       case 'stop': this.stop(); break;
@@ -1005,7 +960,6 @@ class AxiomIDE {
     if (!entry) return false;
     path = entry.path;
     if (entry.readonly) { alert("Документ доступен только для чтения."); return false; }
-    if (this.settings.formatOnSave && !await this.formatWholeDocument('ax-format-on-save', path)) return false;
     try {
       const result = await this.documentSaver.save(path, saveAs);
       if (!result) return false;
@@ -1181,24 +1135,6 @@ class AxiomIDE {
     return edits;
   }
 
-  toggleSetting(key) {
-    this.saveSettings({ [key]: !this.settings[key] });
-    if (key === 'checkOnChange' && !this.settings.checkOnChange) {
-      clearTimeout(this._liveCheckTimer);
-      this._liveCheckTimer = null;
-      this.log('check.live.disabled');
-    }
-    this.updateFormatMenuChecks();
-    const labels = {
-      formatOnBlur: 'menu.edit.fmtBlur',
-      formatOnSave: 'menu.edit.fmtSave',
-      checkOnChange: 'menu.edit.checkLive',
-    };
-    const labelKey = labels[key] || key;
-    this.setStatus(I18N.t(labelKey) + ': ' + I18N.t(this.settings[key] ? 'fmt.on' : 'fmt.off'));
-    this.focusEditor();
-  }
-
   async setFormattingStyle(style) {
     if (!['Classic', 'Modern'].includes(style)) return;
     this.saveSettings({ formattingStyle: style });
@@ -1210,10 +1146,6 @@ class AxiomIDE {
     for (const [key, style] of [['formatClassic', 'Classic'], ['formatModern', 'Modern']]) {
       document.querySelector('.menu-check[data-check="' + key + '"]')?.classList.toggle('on', (this.settings.formattingStyle || 'Classic') === style);
     }
-    for (const key of ['formatOnBlur', 'formatOnSave', 'checkOnChange']) {
-      const el = document.querySelector(`.menu-check[data-check="${key}"]`);
-      if (el) el.classList.toggle('on', !!this.settings[key]);
-    }
   }
 
   // ================= live diagnostics + outline =================
@@ -1223,7 +1155,6 @@ class AxiomIDE {
   // active file's directory.
   scheduleLiveCheck() {
     this._liveCheckSeq++;
-    if (!this.settings.checkOnChange) return;
     clearTimeout(this._liveCheckTimer);
     const seq = this._liveCheckSeq;
     this._liveCheckTimer = setTimeout(() => this.runLiveCheck(seq).catch((e) => this.log('check.live.exception', { message: e?.message || String(e) }, 'error')), 600);
@@ -1232,7 +1163,7 @@ class AxiomIDE {
 
   async runLiveCheck(seq = this._liveCheckSeq) {
     const model = this.editor.getModel();
-    if (!model || model.getLanguageId() !== 'axiom' || !this.settings.checkOnChange || seq !== this._liveCheckSeq) return;
+    if (!model || model.getLanguageId() !== 'axiom' || seq !== this._liveCheckSeq) return;
     if (this._formatBusy) { this.log('check.live.skipped-format', { seq, busy: this._formatBusy }); return; }
     const text = model.getValue();
     const filePath = this.activeFile; // keep diagnostics tied to their file
