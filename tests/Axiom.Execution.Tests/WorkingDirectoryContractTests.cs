@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class WorkingDirectoryContractTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void RunCompiled_ReusedProgramDoesNotReuseWorkingDirectory(ExecutionMode mode)
+    [Fact]
+    public void RunCompiled_ReusedProgramDoesNotReuseWorkingDirectory()
     {
         var root = Path.Combine(AppContext.BaseDirectory, "directory-cache-" + Guid.NewGuid().ToString("N"));
         var first = Path.Combine(root, "first");
@@ -20,10 +18,9 @@ public sealed class WorkingDirectoryContractTests
             Assert.True(compilation.Succeeded);
             foreach (var directory in new[] { first, second })
             {
-                var result = pipeline.RunCompiled(compilation.CompiledProgram!, new ExecutionRequest(source, mode: mode, resourceBaseDirectory: directory));
+                var result = pipeline.RunCompiled(compilation.CompiledProgram!, new ExecutionRequest(source, resourceBaseDirectory: directory));
                 Assert.Equal(ExecutionStatus.Success, result.Status);
                 Assert.Equal([directory, "TRUE", Path.Combine(directory, "nested")], result.Output);
-                Assert.False(result.UsedInterpreterFallback);
             }
         }
         finally { Directory.Delete(root, recursive: true); }
@@ -53,10 +50,8 @@ public sealed class WorkingDirectoryContractTests
         finally { Directory.Delete(root, recursive: true); }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Run_UsesProgramDirectoryAndChangesItWithoutChangingProcessDirectory(ExecutionMode mode)
+    [Fact]
+    public void Run_UsesProgramDirectoryAndChangesItWithoutChangingProcessDirectory()
     {
         var processDirectory = Environment.CurrentDirectory;
         var root = Path.Combine(AppContext.BaseDirectory, "working-directory-" + Guid.NewGuid().ToString("N"));
@@ -87,22 +82,19 @@ public sealed class WorkingDirectoryContractTests
                 END TRY
                 PRINT CURRENTDIR() = "{{root}}\nested"
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode, resourceBaseDirectory: root));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, resourceBaseDirectory: root));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "MB3007", "TRUE"], result.Output);
             Assert.Equal(processDirectory, Environment.CurrentDirectory);
             Assert.Equal("До перехода", File.ReadAllText(Path.Combine(root, beforeName)));
             Assert.Equal("После перехода", File.ReadAllText(Path.Combine(root, "nested", afterName)));
             Assert.Equal("😀", File.ReadAllText(Path.Combine(root, "nested", chunkName)));
-            var nextRun = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT CURRENTDIR()", mode: mode, resourceBaseDirectory: root));
+            var nextRun = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT CURRENTDIR()", resourceBaseDirectory: root));
             Assert.Equal([root], nextRun.Output);
         }
         finally
         {
-            // Страховка для проверки прежнего алгоритма, который менял процесс.
-            Environment.CurrentDirectory = processDirectory;
             Directory.Delete(root, recursive: true);
             foreach (var name in new[] { beforeName, afterName, chunkName })
             {

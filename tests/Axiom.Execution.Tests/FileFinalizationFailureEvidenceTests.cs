@@ -7,14 +7,14 @@ public sealed class FileFinalizationFailureEvidenceTests
 {
     public static IEnumerable<object[]> FlushCases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var append in new[] { false, true })
-        foreach (var large in new[] { false, true }) yield return [mode, append, large];
+        foreach (var large in new[] { false, true }) yield return [append, large];
     }
 
     [Theory]
     [MemberData(nameof(FlushCases))]
-    public void FlushAfterUnlockWritesBufferedTextExactlyOnce(ExecutionMode mode, bool append, bool large)
+    public void FlushAfterUnlockWritesBufferedTextExactlyOnce(bool append, bool large)
     {
         if (!OperatingSystem.IsWindows()) return;
         var path = Path.GetTempFileName();
@@ -46,10 +46,9 @@ public sealed class FileFinalizationFailureEvidenceTests
                 PRINT FILELENGTH(f)
                 CLOSE f
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode, outputWriter: writer));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, outputWriter: writer));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.True(writer.Locked);
             Assert.Equal(["TRUE", "Заблокировать", "MB3007", "TRUE", (bytes.Length - 2).ToString(),
                 (bytes.Length - 2).ToString(), "Разблокировать", "TRUE", "TRUE", "TRUE", bytes.Length.ToString(), bytes.Length.ToString()], result.Output);
@@ -58,10 +57,8 @@ public sealed class FileFinalizationFailureEvidenceTests
         finally { File.Delete(path); }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void AutomaticCloseFailurePreservesPrimaryProgramError(ExecutionMode mode)
+    [Fact]
+    public void AutomaticCloseFailurePreservesPrimaryProgramError()
     {
         if (!OperatingSystem.IsWindows()) return;
         var path = Path.GetTempFileName();
@@ -75,9 +72,8 @@ public sealed class FileFinalizationFailureEvidenceTests
                 PRINT "Заблокировать"
                 ERROR "APP1173", "Первичная ошибка"
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode, outputWriter: writer));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, outputWriter: writer));
             Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.True(writer.Locked);
             Assert.Equal(["APP1173", "MB3007"], result.Diagnostics.Select(d => d.Code));
             Assert.Contains("Первичная ошибка", result.Diagnostics[0].Message);
@@ -88,11 +84,9 @@ public sealed class FileFinalizationFailureEvidenceTests
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void FailedCloseReleasesAllResourcesAndReportsAxiomDiagnostic(ExecutionMode mode, bool explicitClose)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void FailedCloseReleasesAllResourcesAndReportsAxiomDiagnostic(bool explicitClose)
     {
         if (!OperatingSystem.IsWindows()) return;
         var first = Path.GetTempFileName();
@@ -110,8 +104,7 @@ public sealed class FileFinalizationFailureEvidenceTests
                 PRINT "Заблокировать"
                 {{(explicitClose ? "TRY\nCLOSE a\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT ISOPEN(a)\nCLOSE b" : "")}}
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode, outputWriter: writer));
-            Assert.False(result.UsedInterpreterFallback);
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, outputWriter: writer));
             Assert.True(writer.Locked);
             if (explicitClose)
             {

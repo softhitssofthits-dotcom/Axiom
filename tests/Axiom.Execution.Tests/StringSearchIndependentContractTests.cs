@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringSearchIndependentContractTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Utf16PositionsAndOrdinalSearchAreExplicit(ExecutionMode mode)
+    [Fact]
+    public void Utf16PositionsAndOrdinalSearchAreExplicit()
     {
-        Check(mode, """
+        Check("""
 PRINT LEN("А😀Б😀")
 PRINT INSTR("А😀Б😀", "Б")
 PRINT INSTR(3, "А😀Б😀", "😀")
@@ -28,12 +26,10 @@ PRINT INSTR("a" + CHR(0) + "b", CHR(0))
 """, ["6", "4", "5", "5", "2", "2", "FALSE", "TRUE", "TRUE", "АяБя", "TRUE", "TRUE", "3", "2", "1", "xa", "2"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void EmptyValuesAndExtremeIndexesHaveDefinedResults(ExecutionMode mode)
+    [Fact]
+    public void EmptyValuesAndExtremeIndexesHaveDefinedResults()
     {
-        Check(mode, """
+        Check("""
 PRINT INSTR("", "")
 PRINT INSTR("", "a")
 PRINT INSTR(4, "abc", "")
@@ -55,12 +51,10 @@ PRINT REPLACE("abc", "a", "")
 """, ["1", "0", "4", "0", "0", "1", "4", "1", "TRUE", "TRUE", "TRUE", "0", "0", "abc", "0", "bc", "TRUE", "bc"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ReplaceManyUsesLongestFirstAndDoesNotRescanReplacement(ExecutionMode mode)
+    [Fact]
+    public void ReplaceManyUsesLongestFirstAndDoesNotRescanReplacement()
     {
-        Check(mode, """
+        Check("""
 DIM oldItems(5 TO 8) AS STRING
 DIM newItems(-2 TO 1) AS STRING
 oldItems(5) = "a"
@@ -84,23 +78,17 @@ PRINT REPLACEMANY("А😀Б", absentOld, absentNew)
     {
         foreach (var call in new[] { "LEFT(\"abc\", 0)", "RIGHT(\"abc\", -1)", "MID(\"abc\", 0, 1)", "MID(\"abc\", 1, 0)", "INSTR(0, \"abc\", \"a\")", "INSTRREV(0, \"abc\", \"a\")", "REPLACE(\"\", \"\", \"x\")", "SUBSTRCOUNT(\"\", \"\")" })
         {
-            var first = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: ExecutionMode.Interpreter));
-            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: ExecutionMode.Bytecode));
-            Assert.False(first.Succeeded);
+            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call));
             Assert.False(second.Succeeded);
-            var a = Assert.Single(first.Diagnostics);
             var b = Assert.Single(second.Diagnostics);
-            Assert.Equal("MB3007", a.Code);
-            Assert.Equal((a.Code, a.Location.Line, a.Location.Column, a.Location.Span), (b.Code, b.Location.Line, b.Location.Column, b.Location.Span));
-            foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-                Check(mode, $"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+            Assert.Equal("MB3007", b.Code);
+
+                Check($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ReplaceManyRejectsUnequalLengthsEmptyRulesAndWrongRank(ExecutionMode mode)
+    [Fact]
+    public void ReplaceManyRejectsUnequalLengthsEmptyRulesAndWrongRank()
     {
         foreach (var setup in new[] {
             "DIM oldItems(1 TO 2) AS STRING\nDIM newItems(1 TO 1) AS STRING\noldItems(1) = \"a\"\noldItems(2) = \"b\"",
@@ -110,20 +98,17 @@ PRINT REPLACEMANY("А😀Б", absentOld, absentNew)
         {
             if (setup.Contains("1 TO 1, 1 TO 1", StringComparison.Ordinal))
             {
-                var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "\nPRINT REPLACEMANY(\"\", oldItems, newItems)", mode: mode));
+                var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "\nPRINT REPLACEMANY(\"\", oldItems, newItems)"));
                 Assert.False(result.Succeeded);
                 Assert.Contains(result.Diagnostics, d => d.Code == "MB2003");
-                Assert.False(result.UsedInterpreterFallback);
             }
             else
-                Check(mode, setup + "\nTRY\nPRINT REPLACEMANY(\"\", oldItems, newItems)\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+                Check(setup + "\nTRY\nPRINT REPLACEMANY(\"\", oldItems, newItems)\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void OrdinalSearchDoesNotUseTurkishOrRussianCulture(ExecutionMode mode)
+    [Fact]
+    public void OrdinalSearchDoesNotUseTurkishOrRussianCulture()
     {
         var previous = System.Globalization.CultureInfo.CurrentCulture;
         try
@@ -131,7 +116,7 @@ PRINT REPLACEMANY("А😀Б", absentOld, absentNew)
             foreach (var culture in new[] { "en-US", "tr-TR", "ru-RU" })
             {
                 System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
-                Check(mode, """
+                Check("""
 PRINT CONTAINS("Iıİi", "i")
 PRINT INSTR("Iıİi", "i")
 PRINT INSTRREV("Iıİi", "i")
@@ -144,11 +129,10 @@ PRINT ENDSWITH("Iıİi", "I")
         finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expected, result.Output);
     }
 }

@@ -132,22 +132,18 @@ public sealed class DateTimeFormEvidenceTests
     [MemberData(nameof(WrongArguments))]
     public void EveryArgumentRejectsBooleanWithMatchingDiagnostics(string id, string call)
     {
-        var results = new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode }.Select(mode =>
-            new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM moment AS DATETIME = \"2024-02-29 23:59:59\"\nDIM later AS DATETIME = \"2024-03-01 00:00:00\"\nPRINT " + call, mode: mode))).ToArray();
-        foreach (var result in results)
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM moment AS DATETIME = \"2024-02-29 23:59:59\"\nDIM later AS DATETIME = \"2024-03-01 00:00:00\"\nPRINT " + call));
         {
             Assert.False(result.Succeeded, id);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.NotEmpty(result.Diagnostics);
         }
-        Assert.Equal(results[0].Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), results[1].Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
     }
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void EveryRegisteredFormProducesExpectedValueInBothEngines(string id, string call, string expected, string expectedType)
+    public void EveryRegisteredFormProducesExpectedValueInBytecodeVm(string id, string call, string expected, string expectedType)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
             var source = "DIM moment AS DATETIME = \"2024-02-29 23:59:59\"\nDIM later AS DATETIME = \"2024-03-01 00:00:00\"\nPRINT " + call;
             var syntax = Parser.Parse(source, out var parsingDiagnostics);
@@ -158,9 +154,8 @@ public sealed class DateTimeFormEvidenceTests
             var boundCall = Assert.IsType<BoundCallExpression>(Assert.Single(print.Items).Expression);
             Assert.Equal(id, Assert.IsType<BoundFunctionExpression>(boundCall.Target).Function.BuiltinId?.ToString());
             Assert.Equal(expectedType, boundCall.Type.Name.ToUpperInvariant());
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, runtimeClock: new DateTimeIndependentContractTests.ControlledClock(), mode: mode));
-            Assert.True(result.Succeeded, id + " " + mode + " " + string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-            Assert.False(result.UsedInterpreterFallback);
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, runtimeClock: new DateTimeIndependentContractTests.ControlledClock()));
+            Assert.True(result.Succeeded, id + " " + "BytecodeVm" + " " + string.Join("\n", result.Diagnostics.Select(d => d.Message)));
             Assert.Equal(new[] { expected }, result.Output);
         }
     }

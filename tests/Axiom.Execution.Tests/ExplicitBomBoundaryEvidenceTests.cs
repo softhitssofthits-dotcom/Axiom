@@ -16,13 +16,13 @@ public sealed class ExplicitBomBoundaryEvidenceTests
             ("UTF-16LE", "EFBBBF", "MB3007"), ("UTF-16LE", "FEFF", "MB3007"),
             ("UTF-16BE", "EFBBBF", "MB3007"), ("UTF-16BE", "FFFE", "MB3007")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var (encoding, hex, expected) in data) yield return [mode, encoding, hex, expected];
+
+        foreach (var (encoding, hex, expected) in data) yield return [encoding, hex, expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void LiteralBytesRespectSelectedEncodingAndOnlyOneSignature(ExecutionMode mode, string encoding, string hex, string expected)
+    public void LiteralBytesRespectSelectedEncodingAndOnlyOneSignature(string encoding, string hex, string expected)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "bom-boundary-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -49,11 +49,10 @@ public sealed class ExplicitBomBoundaryEvidenceTests
                     PRINT err.Code
                 END TRY
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(expected == "MB3007" ? new[] { "MB3007", "MB3007" }
                 : expected.Length == 0 ? new[] { "TRUE", "0" } : new[] { "TRUE", "1", "TRUE" }, result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));

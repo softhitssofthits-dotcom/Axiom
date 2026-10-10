@@ -79,7 +79,7 @@ END TRY</code></pre>
 <li><code>CATCH</code> пока не фильтрует ошибки по коду или типу.</li>
 <li>В одном блоке <code>TRY</code> поддерживается не более одного <code>CATCH</code>.</li>
 <li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
-<li><code>TRY/CATCH/FINALLY</code>, <code>ERROR код</code>, <code>ERROR код, сообщение</code> и <code>ERROR err</code> поддерживаются интерпретатором и <code>BytecodeVm</code>.</li>
+<li><code>TRY/CATCH/FINALLY</code>, <code>ERROR код</code>, <code>ERROR код, сообщение</code> и <code>ERROR err</code> выполняются <code>BytecodeVm</code> после компиляции.</li>
 </ul>
 </section>
 

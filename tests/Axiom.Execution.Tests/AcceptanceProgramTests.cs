@@ -115,33 +115,21 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/functions/pow/invalid_domain_error.axm", "MB3007")]
     [InlineData("samples/functions/ascw/empty_text_error.axm", "MB3007")]
     [InlineData("samples/functions/chrw/invalid_code_error.axm", "MB3007")]
-    public void NegativeRuntimeAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter(
+    public void NegativeRuntimeAcceptanceProgram_HasStableDiagnosticOnBytecodeVm(
         string relativePath,
         string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var bytecodeResult = Run(sourceText, mode: ExecutionMode.Bytecode);
-        var interpreterResult = Run(sourceText, mode: ExecutionMode.Interpreter);
+        var bytecodeResult = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, bytecodeResult.Status);
-        Assert.Equal(ExecutionStatus.RuntimeFailure, interpreterResult.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, bytecodeResult.ActualEngine);
-        Assert.Equal(ExecutionEngineKind.Interpreter, interpreterResult.ActualEngine);
-        Assert.False(bytecodeResult.UsedInterpreterFallback);
-        Assert.False(interpreterResult.UsedInterpreterFallback);
-        Assert.Null(bytecodeResult.InterpreterFallbackReason);
-        Assert.Null(interpreterResult.InterpreterFallbackReason);
-        Assert.Equal(bytecodeResult.Output, interpreterResult.Output);
 
         var bytecodeDiagnostic = Assert.Single(bytecodeResult.Diagnostics);
-        var interpreterDiagnostic = Assert.Single(interpreterResult.Diagnostics);
         Assert.Equal(expectedCode, bytecodeDiagnostic.Code);
-        Assert.Equal(expectedCode, interpreterDiagnostic.Code);
         Assert.True(bytecodeDiagnostic.Location.Line > 0);
         Assert.True(bytecodeDiagnostic.Location.Column > 0);
-        Assert.True(interpreterDiagnostic.Location.Line > 0);
-        Assert.True(interpreterDiagnostic.Location.Column > 0);
     }
 
     [Theory]
@@ -150,25 +138,18 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/scope_field_requires_self.axm", "MB2044")]
     [InlineData("samples/acceptance/negative/scope_field_typo_suggestion.axm", "MB2023")]
     [InlineData("samples/acceptance/negative/call_operator_hint.axm", "MB2001")]
-    public void NegativeSemanticAcceptanceProgram_HasStableDiagnosticParityBetweenBytecodeAndInterpreter(
+    public void NegativeSemanticAcceptanceProgram_HasStableDiagnosticOnBytecodeVm(
         string relativePath,
         string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var bytecodeResult = Run(sourceText, mode: ExecutionMode.Bytecode);
-        var interpreterResult = Run(sourceText, mode: ExecutionMode.Interpreter);
+        var bytecodeResult = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.SemanticFailure, bytecodeResult.Status);
-        Assert.Equal(ExecutionStatus.SemanticFailure, interpreterResult.Status);
-        Assert.Equal(bytecodeResult.Output, interpreterResult.Output);
 
         var bytecodeDiagnostic = Assert.Single(bytecodeResult.Diagnostics);
-        var interpreterDiagnostic = Assert.Single(interpreterResult.Diagnostics);
         Assert.Equal(expectedCode, bytecodeDiagnostic.Code);
-        Assert.Equal(expectedCode, interpreterDiagnostic.Code);
-        Assert.Equal(bytecodeDiagnostic.Location.Line, interpreterDiagnostic.Location.Line);
-        Assert.Equal(bytecodeDiagnostic.Location.Column, interpreterDiagnostic.Location.Column);
     }
 
     [Fact]
@@ -252,13 +233,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -275,13 +255,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -302,13 +281,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -332,13 +310,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -737,7 +714,7 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/smoke/full_language_bytecode.axm");
 
-        var result = Run(sourceText, inputProvider: new QueueInputProvider("Ника, 7"), mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider: new QueueInputProvider("Ника, 7"));
 
         Assert.True(
             result.Succeeded,
@@ -745,7 +722,6 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "full-smoke-start",
@@ -1148,13 +1124,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -1163,13 +1138,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/multidimensional_array_fields.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["10", "20", "4", "FALSE", "9", "0"], result.Output);
     }
 
@@ -1178,13 +1152,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/array_field_views.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["23", "24", "2", "4", "4", "99"], result.Output);
     }
 
@@ -1193,13 +1166,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/named_literals.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Ada", "36", "Paris", "0", "0", "TRUE"], result.Output);
     }
 
@@ -1208,13 +1180,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/positional_constructor.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Ada", "36", "Paris", "Grace", "40", "TRUE"], result.Output);
     }
 
@@ -1236,13 +1207,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -1352,7 +1322,7 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/try/handled_runtime_error.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
@@ -1366,7 +1336,7 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/error/user_code_catch.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
@@ -1380,7 +1350,7 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/error/rethrow_caught_error.axm");
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
@@ -1396,8 +1366,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("LEFT"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("LEFT"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1405,7 +1374,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Щёлкните по панели вывода и нажмите LEFT.",
@@ -1421,8 +1389,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("SPACE"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("SPACE"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1430,7 +1397,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Пауза 500 мс...",
@@ -1447,8 +1413,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1456,7 +1421,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Щёлкните по панели вывода, нажмите LEFT, затем нажмите ESC.",
@@ -1473,8 +1437,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("RIGHT", "ESC"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("RIGHT", "ESC"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1482,7 +1445,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Нажмите любую клавишу, затем нажмите ESC.",
@@ -1499,8 +1461,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1508,7 +1469,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Нажмите любую клавишу, затем нажмите ESC.",
@@ -1525,8 +1485,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: ["LEFT", "ESC"], pressedKeys: ["CTRL", "LEFT"]),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider(keys: ["LEFT", "ESC"], pressedKeys: ["CTRL", "LEFT"]));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1534,7 +1493,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Удерживайте CTRL, нажмите LEFT, затем нажмите ESC.",
@@ -1551,8 +1509,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("", "", "LEFT", "LEFT", "ESC"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("", "", "LEFT", "LEFT", "ESC"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1560,7 +1517,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Нажмите LEFT при отключённом обработчике, затем LEFT после ON, затем ESC.",
@@ -1578,8 +1534,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "LEFT"]),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "LEFT"]));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1587,7 +1542,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Удерживайте CTRL+LEFT.",
@@ -1604,8 +1558,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "PAGEUP"]),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["CTRL", "PAGEUP"]));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1613,7 +1566,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Удерживайте CTRL+PAGEUP.",
@@ -1630,8 +1582,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider("LEFT"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("LEFT"));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1639,7 +1590,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Нажмите LEFT один раз.",
@@ -1657,8 +1607,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: new QueueKeyboardInputProvider(keys: ["LEFT"], pressedKeys: ["CTRL", "LEFT"]),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider(keys: ["LEFT"], pressedKeys: ["CTRL", "LEFT"]));
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1666,7 +1615,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "Удерживайте CTRL и нажмите LEFT.",
@@ -1684,8 +1632,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1693,7 +1640,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1712,8 +1658,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1721,7 +1666,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "110",
@@ -1738,8 +1682,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1747,7 +1690,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "60",
@@ -1764,8 +1706,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1773,7 +1714,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1794,8 +1734,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1803,7 +1742,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1823,8 +1761,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1832,7 +1769,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1858,8 +1794,7 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(
             result.Status == ExecutionStatus.Success,
@@ -1867,7 +1802,6 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "TRUE",
@@ -1897,13 +1831,11 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1932,13 +1864,11 @@ public sealed class AcceptanceProgramTests
 
         var result = Run(
             sourceText,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1957,12 +1887,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/screen/mode_info.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["text mode screen"], inputProvider.GraphicsOutput);
     }
@@ -1973,12 +1902,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/screen/best_fit_dimensions.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1999,12 +1927,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/screen/text_scroll.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2047,12 +1974,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/text/print_locate_color.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Empty(inputProvider.GraphicsOutput);
     }
@@ -2063,12 +1989,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/text/transparent_text.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Transparent text sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2079,12 +2004,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/input/input_on_screen.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: [], inputs: ["Ada"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Input sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2095,12 +2019,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/input/text_screen_input.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], inputs: ["Ada", "7"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Ваше имя? Ada", "Ваш возраст? 7", "Привет, Ada тебе 7 лет."], inputProvider.GraphicsOutput);
     }
@@ -2111,12 +2034,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/pset_line_circle.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Graphics primitives sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2127,12 +2049,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/circle_arcs_step_aspect.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Circle full forms sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2143,12 +2064,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/circle_full_turn.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Circle full turn sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2159,12 +2079,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/primitives/step_and_point_position.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["STEP and POINT position sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2175,12 +2094,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/view/screen_and_relative.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2199,12 +2117,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/view-print/scrolling_region.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Contains("VIEW PRINT sample finished", inputProvider.GraphicsOutput);
     }
@@ -2215,12 +2132,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/window/cartesian_and_screen.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2243,12 +2159,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/functions/pmap/window_and_viewport_conversion.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2269,12 +2184,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/palette/change_and_reset_colors.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["SPACE", "SPACE", "ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2292,12 +2206,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/palette/using_array_colors.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2315,12 +2228,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/pcopy/page_copy_buffer.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2336,12 +2248,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/get/rectangle_capture.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["6", "9", "12", "15", "GET sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2352,12 +2263,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/put/default_xor_and_preset.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["1", "2", "254", "253", "PUT sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2368,12 +2278,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/paint/pattern_repaint.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["PAINT pattern sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2384,12 +2293,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/paint/step_default_fill.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["PAINT STEP sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2401,12 +2309,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsImageSampleInputProvider(relativePath);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["image size=16x16", "DRAWIMAGE sample finished"], inputProvider.GraphicsOutput);
 
@@ -2422,12 +2329,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsSpriteSampleInputProvider(relativePath, ["SPACE", "SPACE", "ESC"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2450,12 +2356,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsSpriteSampleInputProvider(relativePath, ["SPACE", "SPACE", "ESC"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -2477,12 +2382,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal([(160L, 90L)], inputProvider.CanvasActivations);
         Assert.Equal(2, inputProvider.PresentFrameCount);
@@ -2498,12 +2402,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal([(160L, 90L)], inputProvider.CanvasActivations);
         Assert.Equal(2, inputProvider.PresentFrameCount);
@@ -2521,12 +2424,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE", "ESC"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal([(160L, 90L)], inputProvider.CanvasActivations);
         Assert.Equal(3, inputProvider.PresentFrameCount);
@@ -2543,12 +2445,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
         Assert.Equal(2, inputProvider.BeginFrameCount);
         Assert.Equal([0x12161E, 0x080A10], inputProvider.FrameClears);
@@ -2566,12 +2467,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
         Assert.True(inputProvider.CanvasDrawTexts.Count >= 2);
         Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
@@ -2586,12 +2486,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["72"], result.Output);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
         Assert.Single(inputProvider.CanvasDrawTexts);
@@ -2606,12 +2505,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["24"], result.Output);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
         Assert.Single(inputProvider.CanvasDrawTexts);
@@ -2626,12 +2524,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
         Assert.True(inputProvider.CanvasCameraCalls.Count >= 1);
         Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
@@ -2647,12 +2544,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(320L, 180L)], inputProvider.CanvasActivations);
         Assert.True(inputProvider.CanvasDrawLines.Count >= 2);
         Assert.True(inputProvider.CanvasDrawCircles.Count >= 1);
@@ -2666,12 +2562,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/functions/point/canvas_pixel_read.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["0", "15"], result.Output);
         Assert.Equal([(16L, 16L)], inputProvider.CanvasActivations);
         Assert.Equal([0], inputProvider.FrameClears);
@@ -2684,12 +2579,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/pset/canvas_world_pixel.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["12", "0"], result.Output);
         Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
         Assert.Equal([0], inputProvider.FrameClears);
@@ -2702,12 +2596,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/preset/canvas_background_pixel.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["0", "15"], result.Output);
         Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
         Assert.Equal([0xFFFFFF], inputProvider.FrameClears);
@@ -2720,12 +2613,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/paint/canvas_region_fill.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["6", "9"], result.Output);
         Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
         Assert.Equal([0], inputProvider.FrameClears);
@@ -2738,12 +2630,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/get/canvas_block_capture.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["6", "9", "12", "15"], result.Output);
         Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
         Assert.Equal([0], inputProvider.FrameClears);
@@ -2756,12 +2647,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/operators/put/canvas_block_restore.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["6", "9", "12", "15"], result.Output);
         Assert.Equal([(24L, 18L)], inputProvider.CanvasActivations);
         Assert.Equal([0], inputProvider.FrameClears);
@@ -2792,26 +2682,16 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var bytecodeInputProvider = CreateGraphicsNegativeInputProvider(relativePath);
-        var interpreterInputProvider = CreateGraphicsNegativeInputProvider(relativePath);
 
-        var bytecodeResult = Run(sourceText, bytecodeInputProvider, ExecutionMode.Bytecode);
-        var interpreterResult = Run(sourceText, interpreterInputProvider, ExecutionMode.Interpreter);
+        var bytecodeResult = Run(sourceText, bytecodeInputProvider);
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, bytecodeResult.Status);
-        Assert.Equal(ExecutionStatus.RuntimeFailure, interpreterResult.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, bytecodeResult.ActualEngine);
-        Assert.Equal(ExecutionEngineKind.Interpreter, interpreterResult.ActualEngine);
-        Assert.False(bytecodeResult.UsedInterpreterFallback);
-        Assert.False(interpreterResult.UsedInterpreterFallback);
 
         var bytecodeDiagnostic = Assert.Single(bytecodeResult.Diagnostics);
-        var interpreterDiagnostic = Assert.Single(interpreterResult.Diagnostics);
         Assert.Equal(expectedCode, bytecodeDiagnostic.Code);
-        Assert.Equal(expectedCode, interpreterDiagnostic.Code);
         Assert.True(bytecodeDiagnostic.Location.Line > 0);
         Assert.True(bytecodeDiagnostic.Location.Column > 0);
-        Assert.True(interpreterDiagnostic.Location.Line > 0);
-        Assert.True(interpreterDiagnostic.Location.Column > 0);
     }
 
     private static (long X, long Y, int Width, int Height) ToDrawImageShape(DrawImageCall call) =>
@@ -2836,12 +2716,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal([expectedLine], inputProvider.GraphicsOutput);
     }
@@ -2862,12 +2741,11 @@ public sealed class AcceptanceProgramTests
                 new MouseInputEvent(MouseInputEventKind.Wheel, -120)
             ]);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Mouse sample finished"], inputProvider.GraphicsOutput);
     }
@@ -2878,12 +2756,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText("samples/graphics/game/paddle_ball.axm");
         var inputProvider = new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
 
-        var result = Run(sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = Run(sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["Paddle ball sample finished: esc"], inputProvider.GraphicsOutput);
     }
@@ -2895,12 +2772,11 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["ESC"]);
 
-        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([(1024L, 660L)], inputProvider.CanvasActivations);
         Assert.True(inputProvider.CanvasCameraCalls.Count >= 1);
         Assert.True(inputProvider.ResetCanvasCameraCount >= 1);
@@ -2929,7 +2805,7 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
 
-        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
@@ -2946,7 +2822,7 @@ public sealed class AcceptanceProgramTests
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["k", "", "", "", "", "", "", "", "ESC"]);
 
-        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, ExecutionMode.Bytecode);
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
@@ -2973,7 +2849,7 @@ public sealed class AcceptanceProgramTests
 
         try
         {
-            var result = RunFromWorkingDirectory(calibrationDirectory, sourceText, inputProvider, ExecutionMode.Bytecode);
+            var result = RunFromWorkingDirectory(calibrationDirectory, sourceText, inputProvider);
 
             Assert.True(result.Succeeded, FormatDiagnostics(result));
             Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
@@ -3017,12 +2893,11 @@ public sealed class AcceptanceProgramTests
             calibrationText = calibrationText.Replace("pelletCenterCols(26) = 0", "pelletCenterCols(26) = 9", StringComparison.Ordinal);
             File.WriteAllText(targetCalibrationPath, calibrationText);
 
-            var result = RunFromWorkingDirectory(workingDirectory, sourceText, mode: ExecutionMode.Bytecode);
+            var result = RunFromWorkingDirectory(workingDirectory, sourceText);
 
             Assert.True(result.Succeeded, FormatDiagnostics(result));
             Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(
                 [
                     "Калибровка перенесена в maze_chase.axm.",
@@ -3043,20 +2918,18 @@ public sealed class AcceptanceProgramTests
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
-    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
-    public void MazeChaseAcceptanceSample_MovesPlayerInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    [InlineData(ExecutionEngineKind.BytecodeVm)]
+    public void MazeChaseAcceptanceSample_MovesPlayerInBytecodeVm(ExecutionEngineKind expectedEngine)
     {
         var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, keys: ["", "", "", "", "ESC"], pressedKeys: ["RIGHT"]);
 
-        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider, mode);
+        var result = RunFromSampleDirectory(relativePath, sourceText, inputProvider);
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(expectedEngine, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
 
         var playerDraws = inputProvider.DrawSprites
             .Where((_, index) => index % 2 == 0)
@@ -3103,13 +2976,12 @@ public sealed class AcceptanceProgramTests
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);
 
-        var result = Run(sourceText, mode: ExecutionMode.Bytecode);
+        var result = Run(sourceText);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expectedOutput, result.Output);
     }
 
@@ -3215,7 +3087,6 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.DoesNotContain(result.Diagnostics, static diagnostic => diagnostic.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
     }
 
     public static IEnumerable<object[]> PositiveAcceptanceSamplePaths()
@@ -3307,25 +3178,18 @@ public sealed class AcceptanceProgramTests
     {
         lock (WorkingDirectoryLock)
         {
-            var originalDirectory = Environment.CurrentDirectory;
             var repositoryRoot = FindRepositoryRoot();
-
+            var directory = relativePath.Equals("samples/functions/readfile/single_byte_round_trip.axm", StringComparison.OrdinalIgnoreCase)
+                ? Path.GetDirectoryName(Path.Combine(repositoryRoot, relativePath))!
+                : repositoryRoot;
             try
             {
-                Environment.CurrentDirectory = relativePath.Equals("samples/functions/readfile/single_byte_round_trip.axm", StringComparison.OrdinalIgnoreCase)
-                    ? Path.GetDirectoryName(Path.Combine(repositoryRoot, relativePath))!
-                    : repositoryRoot;
-
-                return Run(sourceText, inputProvider: CreateAuditInputProvider(relativePath), mode: ExecutionMode.Bytecode);
+                return RunFromWorkingDirectory(directory, sourceText, CreateAuditInputProvider(relativePath));
             }
             finally
             {
-                Environment.CurrentDirectory = originalDirectory;
-
                 if (relativePath.Equals("samples/smoke/repair_plans_mojibake.axm", StringComparison.OrdinalIgnoreCase))
-                {
                     File.Delete(Path.Combine(repositoryRoot, "README_copy.md"));
-                }
             }
         }
     }
@@ -3555,44 +3419,29 @@ public sealed class AcceptanceProgramTests
 
     private static ExecutionResult Run(
         string sourceText,
-        IInputProvider? inputProvider = null,
-        ExecutionMode mode = ExecutionMode.Bytecode)
+        IInputProvider? inputProvider = null)
     {
         var pipeline = new AxiomExecutionPipeline();
-        return pipeline.Run(new ExecutionRequest(sourceText, inputProvider, mode: mode));
+        return pipeline.Run(new ExecutionRequest(sourceText, inputProvider));
     }
 
     private static ExecutionResult RunFromSampleDirectory(
         string relativePath,
         string sourceText,
-        IInputProvider? inputProvider = null,
-        ExecutionMode mode = ExecutionMode.Bytecode)
+        IInputProvider? inputProvider = null)
     {
         var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
         var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
-        return RunFromWorkingDirectory(sampleDirectory, sourceText, inputProvider, mode);
+        return RunFromWorkingDirectory(sampleDirectory, sourceText, inputProvider);
     }
 
     private static ExecutionResult RunFromWorkingDirectory(
         string workingDirectory,
         string sourceText,
-        IInputProvider? inputProvider = null,
-        ExecutionMode mode = ExecutionMode.Bytecode)
+        IInputProvider? inputProvider = null)
     {
-        lock (WorkingDirectoryLock)
-        {
-            var originalDirectory = Environment.CurrentDirectory;
-
-            try
-            {
-                Environment.CurrentDirectory = workingDirectory;
-                return Run(sourceText, inputProvider, mode);
-            }
-            finally
-            {
-                Environment.CurrentDirectory = originalDirectory;
-            }
-        }
+        return new AxiomExecutionPipeline().Run(new ExecutionRequest(
+            sourceText, inputProvider, resourceBaseDirectory: workingDirectory));
     }
 
     private static string CreateArtifactsTestDirectory(string prefix)

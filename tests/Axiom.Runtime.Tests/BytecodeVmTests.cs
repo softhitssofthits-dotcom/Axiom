@@ -6989,24 +6989,12 @@ FUNCTION GetValue() AS INTEGER
 END FUNCTION
 """;
 
-        var syntax = Parser.Parse(text, out var parserDiagnostics);
-        Assert.Empty(parserDiagnostics);
+        var (_, _, result) = ExecuteProgram(text);
 
-        var program = Binder.Bind(syntax, out var binderDiagnostics);
-        Assert.DoesNotContain(binderDiagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
-
-        var loweringResult = new BoundProgramLowerer().Lower(program);
-        Assert.True(loweringResult.Succeeded);
-
-        var compilationResult = new BytecodeCompiler().Compile(loweringResult.Program!);
-
-        var allDiagnostics = compilationResult.Diagnostics
-            .Select(d => $"{d.Code}:{d.Message}")
-            .ToArray();
-
-        Assert.True(
-            compilationResult.Diagnostics.Any(static d => d.Code == "BC4054"),
-            $"Expected BC4054 diagnostic for missing return value. Got: {string.Join("; ", allDiagnostics)}");
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3006");
+        Assert.Contains("GetValue", diagnostic.Message, StringComparison.Ordinal);
+        Assert.Contains("RETURN", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     private static (BytecodeModule module, TestRuntimeHost host, RuntimeResult result) ExecuteProgram(

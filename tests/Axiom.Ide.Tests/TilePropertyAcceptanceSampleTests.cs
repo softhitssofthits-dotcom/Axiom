@@ -68,23 +68,20 @@ public sealed class TilePropertyAcceptanceSampleTests
             ("maptileset/cell_tileset_index.axm", new[] { "Номера тайлсетов для трёх клеток:", "1", "0", "0" }),
             ("maptileflags/changed_cell_flags.axm", new[] { "Маски отражения клетки:", "0", "3", "0" })
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
             foreach (var example in examples)
-                yield return new object[] { mode, example.Path, example.Expected };
+                yield return new object[] { example.Path, example.Expected };
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExplicitScreenZeroEstablishesTextWindowDimensions(ExecutionMode mode)
+    [Fact]
+    public void ExplicitScreenZeroEstablishesTextWindowDimensions()
     {
         var console = new ProgramConsoleService();
         Assert.Equal(0, console.ScreenWidth);
         Assert.Equal(0, console.ScreenHeight);
         var service = new ProgramRunService(new AxiomExecutionPipeline(), console);
-        var run = service.Run("SCREEN 0", mode);
+        var run = service.Run("SCREEN 0");
         Assert.Equal(ProgramRunStatus.Success, run.Status);
-        Assert.False(run.UsedInterpreterFallback);
         Assert.Equal(640, console.ScreenWidth);
         Assert.Equal(300, console.ScreenHeight);
         Assert.False(console.IsScreenActive);
@@ -92,7 +89,7 @@ public sealed class TilePropertyAcceptanceSampleTests
 
     [Theory]
     [MemberData(nameof(Samples))]
-    public void RepositorySampleRunsWithRealIdeResourceLoader(ExecutionMode mode, string relative, string[] expected)
+    public void RepositorySampleRunsWithRealIdeResourceLoader(string relative, string[] expected)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "PROJECT.md")))
@@ -101,9 +98,8 @@ public sealed class TilePropertyAcceptanceSampleTests
         var path = Path.Combine(directory!.FullName, "samples", "functions", relative);
         var source = File.ReadAllText(path);
         var service = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService());
-        var run = service.Run(source, mode, sourceFilePath: path);
+        var run = service.Run(source, sourceFilePath: path);
         Assert.Equal(ProgramRunStatus.Success, run.Status);
-        Assert.False(run.UsedInterpreterFallback);
         Assert.Equal(string.Join(Environment.NewLine, expected), run.OutputText);
     }
 }

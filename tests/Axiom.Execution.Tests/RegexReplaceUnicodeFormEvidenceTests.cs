@@ -22,10 +22,8 @@ public sealed class RegexReplaceUnicodeFormEvidenceTests
         Assert.Equal(TypeSymbol.String, call.Type);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ReplacementKeepsUtf16UnitsAndCountLimits(ExecutionMode mode)
+    [Fact]
+    public void ReplacementKeepsUtf16UnitsAndCountLimits()
     {
         var source = """
             DIM high AS STRING = LEFT("😀", 1)
@@ -43,11 +41,10 @@ public sealed class RegexReplaceUnicodeFormEvidenceTests
             PRINT REGEXREPLACE("é", "é", "Замена", "i") = "é"
             PRINT REGEXREPLACE(high + nul + low, "[", "Замена", "q", 0) = high + nul + low
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(Enumerable.Repeat("TRUE", 11), run.Output);
     }
 }

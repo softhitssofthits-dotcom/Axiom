@@ -7,15 +7,11 @@ namespace Axiom.Ide.Tests;
 public sealed class TilesetArithmeticBoundaryTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false, false)]
-    [InlineData(ExecutionMode.Interpreter, false, true)]
-    [InlineData(ExecutionMode.Bytecode, false, false)]
-    [InlineData(ExecutionMode.Bytecode, false, true)]
-    [InlineData(ExecutionMode.Interpreter, true, false)]
-    [InlineData(ExecutionMode.Interpreter, true, true)]
-    [InlineData(ExecutionMode.Bytecode, true, false)]
-    [InlineData(ExecutionMode.Bytecode, true, true)]
-    public void AtlasArithmeticUsesActualGeometryWithoutIntegerWrap(ExecutionMode mode, bool largeSpacing, bool map)
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void AtlasArithmeticUsesActualGeometryWithoutIntegerWrap(bool largeSpacing, bool map)
     {
         var repository = new DirectoryInfo(AppContext.BaseDirectory);
         while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "PROJECT.md"))) repository = repository.Parent;
@@ -27,10 +23,9 @@ public sealed class TilesetArithmeticBoundaryTests
             var file = largeSpacing ? "large_spacing.tmj" : "large_margin.tmj";
             source = "DIM m AS TILEMAP\nTRY\nm = LOADTILEMAP(\"../loadtilemap/" + file + "\")\nPRINT MAPTILE(m, 1, 1, 1)\nCATCH err\nPRINT err.Code\nEND TRY";
         }
-        var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(source, mode,
+        var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(source,
             sourceFilePath: Path.Combine(repository.FullName, "samples/functions/loadtileset/check.axm"));
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(largeSpacing ? "1" : "MB3005", result.OutputText);
     }
 }

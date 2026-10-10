@@ -27,13 +27,13 @@ public sealed class ExponentialBoundaryEvidenceTests
             ("POW(-2, 3)", "-8"),
             ("POW(-2, 0.25)", "MB3007")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var c in cases) yield return [mode, c.Expression, c.Expected];
+
+        foreach (var c in cases) yield return [c.Expression, c.Expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ExponentialEdgesHaveLiteralOrBoundedExpectations(ExecutionMode mode, string expression, string expected)
+    public void ExponentialEdgesHaveLiteralOrBoundedExpectations(string expression, string expected)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             TRY
@@ -44,11 +44,10 @@ public sealed class ExponentialBoundaryEvidenceTests
                 PRINT "Завершено"
             END TRY
             PRINT "Продолжение"
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { expected, "Завершено", "Продолжение" }, result.Output);
     }
 }

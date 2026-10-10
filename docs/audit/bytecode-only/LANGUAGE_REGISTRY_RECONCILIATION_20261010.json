@@ -1,0 +1,19 @@
+{
+  "GeneratedAt": "2026-10-10T00:19:49.2141816+03:00",
+  "Descriptors": 335,
+  "Names": 271,
+  "EnumIds": 323,
+  "RegisteredIds": 320,
+  "Reserved": [
+    "DateAdd",
+    "DateDiff",
+    "DatePart"
+  ],
+  "MetadataMatches": true,
+  "RowsWithEvidenceCandidates": 335,
+  "RowsWithoutEvidenceCandidates": 0,
+  "MissingLight": [],
+  "MissingDark": [],
+  "MissingVmDispatch": [],
+  "DuplicateSignatures": []
+}

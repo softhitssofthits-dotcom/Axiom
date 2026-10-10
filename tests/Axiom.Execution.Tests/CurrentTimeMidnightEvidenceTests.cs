@@ -4,10 +4,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class CurrentTimeMidnightEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FixedMidnightSourceKeepsUtcLocalAndFractionalTimerDistinct(ExecutionMode mode)
+    [Fact]
+    public void FixedMidnightSourceKeepsUtcLocalAndFractionalTimerDistinct()
     {
         var source = """
             PRINT DATE()
@@ -21,11 +19,10 @@ public sealed class CurrentTimeMidnightEvidenceTests
             PRINT NOW("UTC")
             PRINT TIMER()
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, runtimeClock: new MidnightClock(), mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, runtimeClock: new MidnightClock()));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "2000-03-01", "00:00:00", "2000-03-01 00:00:00", "2000-02-29", "21:00:00", "2000-02-29 21:00:00", "2000-02-29", "21:00:00", "2000-02-29 21:00:00", "0.125" }, run.Output);
     }
 

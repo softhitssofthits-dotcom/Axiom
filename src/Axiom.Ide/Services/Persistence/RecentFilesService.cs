@@ -59,8 +59,7 @@ public sealed class RecentFilesService : IRecentFilesService
             WindowState = _state.WindowState,
             Theme = _state.Theme,
             Language = _state.Language,
-            SmartIdentifierEnabled = _state.SmartIdentifierEnabled,
-            PreferredExecutionMode = _state.PreferredExecutionMode
+            SmartIdentifierEnabled = _state.SmartIdentifierEnabled
         });
 
         SaveState();
@@ -87,8 +86,7 @@ public sealed class RecentFilesService : IRecentFilesService
             WindowState = _state.WindowState,
             Theme = _state.Theme,
             Language = _state.Language,
-            SmartIdentifierEnabled = _state.SmartIdentifierEnabled,
-            PreferredExecutionMode = _state.PreferredExecutionMode
+            SmartIdentifierEnabled = _state.SmartIdentifierEnabled
         });
 
         SaveState();
@@ -101,8 +99,7 @@ public sealed class RecentFilesService : IRecentFilesService
         IdeWindowState windowState,
         IdeTheme theme,
         IdeLanguage language,
-        bool smartIdentifierEnabled = false,
-        ExecutionMode preferredExecutionMode = ExecutionMode.Bytecode)
+        bool smartIdentifierEnabled = false)
     {
         _state = NormalizeState(new RecentFilesState
         {
@@ -113,8 +110,7 @@ public sealed class RecentFilesService : IRecentFilesService
             WindowState = windowState.ToString(),
             Theme = theme.ToString(),
             Language = language.ToString(),
-            SmartIdentifierEnabled = smartIdentifierEnabled,
-            PreferredExecutionMode = preferredExecutionMode.ToString()
+            SmartIdentifierEnabled = smartIdentifierEnabled
         });
 
         SaveState();
@@ -198,8 +194,7 @@ public sealed class RecentFilesService : IRecentFilesService
             WindowState = NormalizeWindowState(state.WindowState).ToString(),
             Theme = NormalizeTheme(state.Theme).ToString(),
             Language = NormalizeLanguage(state.Language).ToString(),
-            SmartIdentifierEnabled = state.SmartIdentifierEnabled ?? false,
-            PreferredExecutionMode = NormalizeExecutionMode(state.PreferredExecutionMode).ToString()
+            SmartIdentifierEnabled = state.SmartIdentifierEnabled ?? false
         };
     }
 
@@ -237,18 +232,6 @@ public sealed class RecentFilesService : IRecentFilesService
         return Enum.TryParse<IdeLanguage>(languageValue, ignoreCase: true, out var language)
             ? language
             : IdeLanguage.Russian;
-    }
-
-    private static ExecutionMode NormalizeExecutionMode(string? executionModeValue)
-    {
-        if (string.IsNullOrWhiteSpace(executionModeValue))
-        {
-            return ExecutionMode.Bytecode;
-        }
-
-        return Enum.TryParse<ExecutionMode>(executionModeValue, ignoreCase: true, out var executionMode)
-            ? executionMode
-            : ExecutionMode.Bytecode;
     }
 
     private static string? NormalizeDirectoryPath(string? persistedDirectoryPath, IReadOnlyList<string> recentFiles)
@@ -321,8 +304,7 @@ public sealed class RecentFilesService : IRecentFilesService
                NormalizeWindowState(left.WindowState) == NormalizeWindowState(right.WindowState) &&
                NormalizeTheme(left.Theme) == NormalizeTheme(right.Theme) &&
                NormalizeLanguage(left.Language) == NormalizeLanguage(right.Language) &&
-               (left.SmartIdentifierEnabled ?? false) == (right.SmartIdentifierEnabled ?? false) &&
-               NormalizeExecutionMode(left.PreferredExecutionMode) == NormalizeExecutionMode(right.PreferredExecutionMode);
+               (left.SmartIdentifierEnabled ?? false) == (right.SmartIdentifierEnabled ?? false);
     }
 
     private static RecentFilesSnapshot CreateSnapshot(RecentFilesState state)
@@ -335,7 +317,6 @@ public sealed class RecentFilesService : IRecentFilesService
             state.IsStatusBarVisible ?? true,
             NormalizeTheme(state.Theme),
             NormalizeLanguage(state.Language),
-            state.SmartIdentifierEnabled ?? false,
-            NormalizeExecutionMode(state.PreferredExecutionMode));
+            state.SmartIdentifierEnabled ?? false);
     }
 }

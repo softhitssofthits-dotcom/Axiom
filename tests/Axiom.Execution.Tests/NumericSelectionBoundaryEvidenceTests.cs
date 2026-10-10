@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class NumericSelectionBoundaryEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void AdjacentExtremeLongsAreSelectedWithoutDoubleRounding(ExecutionMode mode)
+    [Fact]
+    public void AdjacentExtremeLongsAreSelectedWithoutDoubleRounding()
     {
-        Check(mode, """
+        Check("""
             DIM low AS LONG = -9223372036854775807 - CLNG(1)
             DIM high AS LONG = 9223372036854775807
             PRINT MIN(high, high - CLNG(1))
@@ -23,12 +21,10 @@ public sealed class NumericSelectionBoundaryEvidenceTests
             """, ["9223372036854775806", "-9223372036854775807", "-9223372036854775807", "9223372036854775806", "9223372036854775807", "MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void AdjacentExtremeDecimalsAndCollapsedIntervalStayExact(ExecutionMode mode)
+    [Fact]
+    public void AdjacentExtremeDecimalsAndCollapsedIntervalStayExact()
     {
-        Check(mode, """
+        Check("""
             DIM high AS DECIMAL = CDEC(9223372036854775807) * CDEC(8589934592) + CDEC(8589934591)
             DIM low AS DECIMAL = -high
             PRINT MIN(high, high - CDEC(1))
@@ -46,12 +42,10 @@ public sealed class NumericSelectionBoundaryEvidenceTests
             """, ["79228162514264337593543950334", "-79228162514264337593543950334", "-79228162514264337593543950334", "79228162514264337593543950334", "79228162514264337593543950335", "-79228162514264337593543950335", "79228162514264337593543950335", "MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void MinimumDecimalFractionIsComparedWithoutRoundingToZero(ExecutionMode mode)
+    [Fact]
+    public void MinimumDecimalFractionIsComparedWithoutRoundingToZero()
     {
-        Check(mode, """
+        Check("""
             DIM tiny AS DECIMAL = CDEC(1) / (CDEC(1000000000) * CDEC(1000000000) * CDEC(10000000000))
             PRINT MIN(tiny, CDEC(0))
             PRINT MAX(-tiny, CDEC(0))
@@ -62,13 +56,12 @@ public sealed class NumericSelectionBoundaryEvidenceTests
             """, ["0", "0", "-0.0000000000000000000000000001", "0.0000000000000000000000000001", "0.0000000000000000000000000001", "-0.0000000000000000000000000001"]);
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 }

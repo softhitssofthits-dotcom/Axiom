@@ -4,10 +4,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class MouseBoundaryEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ScreenCoordinatesKeepFullLongRangeAndInvalidButtonsPreservePresses(ExecutionMode mode)
+    [Fact]
+    public void ScreenCoordinatesKeepFullLongRangeAndInvalidButtonsPreservePresses()
     {
         var host = new MouseHost();
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -24,28 +22,25 @@ public sealed class MouseBoundaryEvidenceTests
             PRINT MOUSEPRESS(1)
             PRINT MOUSEPRESS(2)
             PRINT MOUSEPRESS(3)
-            """, inputProvider: host, mode: mode));
-        Check(mode, run, [long.MaxValue.ToString(), long.MinValue.ToString(), "FALSE", "FALSE", "FALSE", "TRUE", "FALSE", "FALSE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE"]);
+            """, inputProvider: host));
+        Check(run, [long.MaxValue.ToString(), long.MinValue.ToString(), "FALSE", "FALSE", "FALSE", "TRUE", "FALSE", "FALSE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void AllMouseFormsWithoutSurfaceFailInsideLanguageAndRunFinally(ExecutionMode mode)
+    [Fact]
+    public void AllMouseFormsWithoutSurfaceFailInsideLanguageAndRunFinally()
     {
         foreach (var expression in new[] { "MOUSEX()", "MOUSEY()", "MOUSEBUTTON(2147483647)", "MOUSEPRESS(-2147483648)" })
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {expression}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 42\nEND TRY", mode: mode));
-            Check(mode, run, ["MB3010", "42"]);
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {expression}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 42\nEND TRY"));
+            Check(run, ["MB3010", "42"]);
         }
     }
 
-    private static void Check(ExecutionMode mode, ExecutionResult run, string[] expected)
+    private static void Check(ExecutionResult run, string[] expected)
     {
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(expected, run.Output);
     }
 

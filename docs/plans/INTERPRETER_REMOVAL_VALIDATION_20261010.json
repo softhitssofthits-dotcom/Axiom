@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "generatedLocal": "2026-10-10T00:30:20.046215+03:00",
+  "baseRevision": "af0959985500750d2f644da6b5ffd3d116cc9823",
+  "branch": "master",
+  "committed": false,
+  "pushed": false,
+  "state": "Реализация и обязательные проверки завершены; ограничения перечислены отдельно",
+  "runtimeTransfer": {
+    "declarations": 597,
+    "active": 596,
+    "historicallyDisabled": 1,
+    "missingMethods": 0,
+    "matchingAssertSequences": 594,
+    "explainedDifferences": [
+      "Два SLEEP-теста используют проверки Parser/Binder в общем runner",
+      "Последний TryCatch-метод отделён от общего вспомогательного кода"
+    ]
+  },
+  "executionMigration": {
+    "originalCases": 4156,
+    "handoffCases": 3098,
+    "finalCases": 3103,
+    "legacyProgressFiles": 158,
+    "finalOldApiReferencesInThoseFiles": 0,
+    "removedDuplicatesOrSwitchCases": 1059,
+    "compilerTruthCaseAddedEarlier": 1,
+    "takeoverCasesAdded": 5
+  },
+  "projects": [
+    {
+      "project": "Axiom.Lexing.Tests",
+      "counters": {
+        "total": 18,
+        "executed": 18,
+        "passed": 18,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 18
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_25_12_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Parsing.Tests",
+      "counters": {
+        "total": 146,
+        "executed": 146,
+        "passed": 146,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 146
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_25_14_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Semantics.Tests",
+      "counters": {
+        "total": 416,
+        "executed": 416,
+        "passed": 416,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 416
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_25_16_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Runtime.Tests",
+      "counters": {
+        "total": 1080,
+        "executed": 1080,
+        "passed": 1080,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 1080
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_25_19_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Execution.Tests",
+      "counters": {
+        "total": 3103,
+        "executed": 3103,
+        "passed": 3103,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 3103
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_25_35_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Ide.Tests",
+      "counters": {
+        "total": 931,
+        "executed": 931,
+        "passed": 931,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 931
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_27_12_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Bytecode.Tests",
+      "counters": {
+        "total": 242,
+        "executed": 242,
+        "passed": 242,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 242
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_27_32_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Syntax.Tests",
+      "counters": {
+        "total": 66,
+        "executed": 66,
+        "passed": 66,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 66
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_27_34_net10.0.trx"
+    },
+    {
+      "project": "Axiom.Cli.Tests",
+      "counters": {
+        "total": 30,
+        "executed": 30,
+        "passed": 30,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "aborted": 0,
+        "inconclusive": 0,
+        "passedButRunAborted": 0,
+        "notRunnable": 0,
+        "notExecuted": 0,
+        "disconnected": 0,
+        "warning": 0,
+        "completed": 0,
+        "inProgress": 0,
+        "pending": 0
+      },
+      "outcomes": {
+        "Passed": 30
+      },
+      "trx": ".artifacts/interpreter-removal/completion-verified/comp_DESKTOP-BO55EHF_2026-10-10_00_27_36_net10.0.trx"
+    }
+  ],
+  "totals": {
+    "total": 6032,
+    "executed": 6032,
+    "passed": 6032,
+    "failed": 0,
+    "notExecuted": 0
+  },
+  "discoveredNames": {
+    "Axiom.Lexing.Tests": 18,
+    "Axiom.Parsing.Tests": 146,
+    "Axiom.Semantics.Tests": 416,
+    "Axiom.Runtime.Tests": 1080,
+    "Axiom.Execution.Tests": 3103,
+    "Axiom.Ide.Tests": 931,
+    "Axiom.Bytecode.Tests": 239,
+    "Axiom.Syntax.Tests": 66,
+    "Axiom.Cli.Tests": 30
+  },
+  "discoveredNamesTotal": 6029,
+  "historicalCounts": {
+    "twoEngineSolution": 7387,
+    "handoffSolution": 6026,
+    "takeoverIntermediateSolution": 6030
+  },
+  "build": {
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 17,
+    "warningScope": "Прежние CS8602 и CS9113 в тестах IDE",
+    "log": ".artifacts/interpreter-removal/final-build-current.log"
+  },
+  "deletedEngineSourceFiles": [
+    "src/Axiom.Runtime/Environment/CallFrame.cs",
+    "src/Axiom.Runtime/Environment/RuntimeScope.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.Array.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.DateTime.Helpers.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.DateTime.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.FileSystem.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.Numeric.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.Regex.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Array.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Char.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Edit.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Fill.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Helpers.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Search.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.Trim.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.String.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Builtins.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Expressions.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.FileIO.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Graphics.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Helpers.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Keyboard.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Mouse.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.PrintUsing.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.Statements.cs",
+    "src/Axiom.Runtime/Execution/Interpreter.cs",
+    "src/Axiom.Execution/Requests/ExecutionMode.cs"
+  ],
+  "ui": [
+    {
+      "scenario": "full",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-full-complete.log",
+      "workspace": ".artifacts/ui-smoke/20261010-001938",
+      "completedSteps": [
+        "Initial shell state",
+        "Open editable text files from File Manager",
+        "Do not open .exe from File Manager",
+        "File Manager context menu + file operations",
+        "Find / Replace dialog + regex mode",
+        "Discard dirty tab on close",
+        "Run success -> Output",
+        "Run INKEY sample -> Output keyboard input",
+        "Run failure -> Diagnostics",
+        "IDE event log viewer shows menu command events",
+        "Bottom pane toggles",
+        "Status bar toggle",
+        "Persist maximized window + hidden file manager"
+      ]
+    },
+    {
+      "scenario": "debugger",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-debugger-complete.log",
+      "workspace": ".artifacts/ui-smoke/20261010-001916",
+      "completedSteps": [
+        "Отладка: запуск, Over, Into, Out, Back, Continue",
+        "Точка останова, Stop, повторный запуск"
+      ]
+    },
+    {
+      "scenario": "input_canvas",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-input-canvas-final.log",
+      "workspace": ".artifacts/ui-smoke/20261010-001317",
+      "completedSteps": [
+        "INPUT: настоящий ввод и повторный запуск",
+        "CANVAS: реальный холст и проверка пикселей"
+      ]
+    },
+    {
+      "scenario": "mouse",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-on-mouse-complete.log",
+      "workspace": ".artifacts/ui-smoke/20261010-001907",
+      "completedSteps": [
+        "Initial shell state",
+        "ON MOUSE: нажатие, отпускание и колесо в окне SCREEN",
+        "Close IDE after ON MOUSE smoke"
+      ]
+    },
+    {
+      "scenario": "get_put",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-get-put-verified.log",
+      "workspace": ".artifacts/ui-smoke/20261010-000953",
+      "completedSteps": [
+        "Initial shell state",
+        "Run GET sample -> SCREEN trace",
+        "Run PUT sample -> SCREEN trace",
+        "Close IDE after GET/PUT smoke"
+      ]
+    },
+    {
+      "scenario": "sprites",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-sprite-verified.log",
+      "workspace": ".artifacts/ui-smoke/20261010-001004",
+      "completedSteps": [
+        "Initial shell state",
+        "Run SPRITE sample -> SCREEN trace",
+        "Run SPRITE PCOPY sample -> SCREEN trace",
+        "Close IDE after SPRITE smoke"
+      ]
+    },
+    {
+      "scenario": "screen10",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-screen10-current.log",
+      "workspace": ".artifacts/ui-smoke/20261009-235645",
+      "completedSteps": [
+        "Initial shell state",
+        "Проверка SCREEN 10 -> трасса SCREEN",
+        "Close IDE after SCREEN 10 smoke"
+      ]
+    },
+    {
+      "scenario": "inkey",
+      "exitCode": 0,
+      "log": ".artifacts/interpreter-removal/ui-inkey-current.log",
+      "workspace": ".artifacts/ui-smoke/20261010-000653",
+      "completedSteps": [
+        "Initial shell state",
+        "Run INKEY sample -> Output keyboard input",
+        "Close IDE after INKEY smoke"
+      ]
+    }
+  ],
+  "debuggerEvidence": [
+    {
+      "command": "StepStart",
+      "event": "debugger.step-start-result",
+      "line": 1,
+      "status": "Success",
+      "stopped": "True"
+    },
+    {
+      "command": "run.step-over.result",
+      "event": "debugger.resume-result",
+      "line": 2,
+      "status": "Success",
+      "stopped": "True"
+    },
+    {
+      "command": "run.step-into.result",
+      "event": "debugger.resume-result",
+      "line": 5,
+      "status": "Success",
+      "stopped": "True"
+    },
+    {
+      "command": "run.step-out.result",
+      "event": "debugger.resume-result",
+      "line": 2,
+      "status": "Success",
+      "stopped": "True"
+    },
+    {
+      "command": "run.step-back.result",
+      "event": "debugger.resume-result",
+      "line": 5,
+      "status": "Success",
+      "stopped": "True"
+    },
+    {
+      "command": "run.continue.result",
+      "event": "debugger.resume-result",
+      "line": null,
+      "status": "Success",
+      "stopped": "False"
+    },
+    {
+      "command": "RunDebug",
+      "event": "debugger.stopped",
+      "line": 5,
+      "status": "Success",
+      "stopped": null
+    },
+    {
+      "command": "RunDebug",
+      "event": "debugger.stopped",
+      "line": 5,
+      "status": "Success",
+      "stopped": null
+    },
+    {
+      "command": "run.continue.result",
+      "event": "debugger.resume-result",
+      "line": null,
+      "status": "Success",
+      "stopped": "False"
+    }
+  ],
+  "otherChecks": {
+    "electronMetadata": {
+      "passed": 3,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "bytecodeBenchmark": {
+      "cases": 48,
+      "passed": 48,
+      "iterations": 2,
+      "warmup": 1,
+      "exitCode": 0
+    },
+    "aggregateMeasurement": {
+      "helperCases": 20,
+      "compiledVmPrograms": 1,
+      "exitCode": 0
+    },
+    "opcodeProfile": {
+      "selectedFamily": "numeric",
+      "cases": 1,
+      "passed": 1,
+      "exitCode": 0
+    },
+    "languageAudit": {
+      "scenarios": 449,
+      "runs": 449,
+      "samplesCompiled": 763,
+      "assertedViolations": 0,
+      "exitCode": 0
+    },
+    "removedCompareCommand": {
+      "expectedExitCode": 1,
+      "actualExitCode": 1
+    },
+    "cliSamples": {
+      "compilerExecution": [
+        "Сумма: 3",
+        "",
+        "Шаг: 1",
+        "Шаг: 2",
+        "MB3007",
+        "Завершено"
+      ],
+      "arrayPushOverflow": [
+        "MB3007",
+        "2147483647",
+        "42"
+      ],
+      "exitCodes": [
+        0,
+        0
+      ]
+    },
+    "registryReconciliation": {
+      "GeneratedAt": "2026-10-10T00:19:49.2141816+03:00",
+      "Descriptors": 335,
+      "Names": 271,
+      "EnumIds": 323,
+      "RegisteredIds": 320,
+      "Reserved": [
+        "DateAdd",
+        "DateDiff",
+        "DatePart"
+      ],
+      "MetadataMatches": true,
+      "RowsWithEvidenceCandidates": 335,
+      "RowsWithoutEvidenceCandidates": 0,
+      "MissingLight": [],
+      "MissingDark": [],
+      "MissingVmDispatch": [],
+      "DuplicateSignatures": []
+    }
+  },
+  "binarySha256": {
+    ".artifacts/bin/Axiom.Runtime/Debug/net10.0/Axiom.Runtime.dll": "796e5d273c61610efa29ecae2b41c7425af43ba1b6b6870fc5a4909a7a0d20fd",
+    ".artifacts/bin/Axiom.Execution/Debug/net10.0/Axiom.Execution.dll": "8e65948752053221d976e4e4d9156c3a65fcf01a8fc93b2c608726d7451660ed",
+    ".artifacts/bin/Axiom.Ide/Debug/net10.0-windows/Axiom.Ide.dll": "27c81d58d9987e99ee6465b7549f2aad20c853c147b7af3e6f85ab62440deb0b",
+    ".artifacts/bin/Axiom.Ide.SmokeHarness/Debug/net10.0-windows/Axiom.Ide.SmokeHarness.dll": "03b162c2deb61610e00e6578423db0472b1140c52c8c6ace7d785d3905a88793"
+  },
+  "limitations": [
+    "Компиляция в байт-код не добавляет самостоятельные native exe",
+    "7387 и 6032 относятся к разным наборам вариантов исполнения; исчезновение дублей объяснено отдельно",
+    "Зелёный агрегат и упоминания в реестре не доказывают каждую перегрузку",
+    "Старая нестабильность CompileProgram_ShowsCompilationTimingText не исправлялась; отдельный и последовательный прогоны прошли",
+    "Параллельный первый итоговый прогон имел 4 ошибки: 3 ожидания старого About и 1 нестабильное ожидание фоновой работы",
+    "Новая скорость VM не сравнивалась с исходной VM той же машины; ускорение не заявляется",
+    "Отладочный повтор после Stop проверен с точкой останова и Continue",
+    "Длительные нагрузки и отложенная автором диагностика аварии IDE не выполнялись",
+    "Из-за пересечения двух ранних UI-прогонов исходный пользовательский список недавних файлов потерян; прежние предпочтения полностью не восстановлены",
+    "Пустой C:/docs/audit/bytecode-only создан ошибочным экспортом; удаление отклонено автоматической проверкой: blocked by policy"
+  ]
+}

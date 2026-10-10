@@ -100,14 +100,10 @@ END FUNCTION
     public void IncompatibleCallbackSignaturesAreRejectedBeforeExecution(string call, string function)
     {
         var source = Setup + "\nPRINT " + call + "\n" + function;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.All(first.Diagnostics, d => Assert.StartsWith("MB2", d.Code));
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.NotEmpty(second.Diagnostics);
+        Assert.All(second.Diagnostics, d => Assert.StartsWith("MB2", d.Code));
     }
 
 
@@ -154,22 +150,17 @@ END FUNCTION
     public void UnhandledCallbackFailurePreservesOriginalDiagnosticLocation()
     {
         var source = Setup + "\nDIM result(,) AS INTEGER\nresult = ARRAYMAP(a, Fault)\n" + Functions;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal("MB3001", Assert.Single(first.Diagnostics).Code);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.Equal("MB3001", Assert.Single(second.Diagnostics).Code);
     }
 
     private static void CheckBoth(string source, string[] expected)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
-            Assert.True(run.Succeeded, mode + "\n" + string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
+            Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Equal(expected, run.Output);
         }
     }

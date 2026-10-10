@@ -4,15 +4,15 @@ public sealed class FileTransferLockedHandleEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var operation in new[] { "COPYFILE", "MOVEFILE" })
         foreach (var scenario in new[] { "source-locked", "target-locked", "source-missing" })
-            yield return [mode, operation, scenario];
+            yield return [operation, scenario];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void RealTransferFailurePreservesBothObjects(ExecutionMode mode, string operation, string scenario)
+    public void RealTransferFailurePreservesBothObjects(string operation, string scenario)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "transfer-locked-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -36,11 +36,10 @@ public sealed class FileTransferLockedHandleEvidenceTests
                         PRINT "Завершено"
                     END TRY
                     PRINT "Продолжение"
-                    """, mode: mode));
+                    """));
                 Assert.Equal(ExecutionStatus.Success, result.Status);
                 Assert.Empty(result.Diagnostics);
-                Assert.False(result.UsedInterpreterFallback);
-                Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+                Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
                 Assert.Equal(new[] { "MB3007", "Завершено", "Продолжение" }, result.Output);
             }
             if (scenario == "source-missing") Assert.False(File.Exists(source));

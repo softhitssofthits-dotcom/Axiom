@@ -69,6 +69,7 @@
                     <li>подходит ли здесь <code>ARRAYISALLOCATED</code> для защитной проверки.</li>
                 </ul>
                 <p><code>ARRAYRANK</code> может работать с ещё не выделенным динамическим массивом, потому что число измерений известно по объявлению. Функции, которым нужны фактические границы, требуют выделенной памяти.</p>
+                <p>Сообщение функции указывает её имя и имя аргумента, содержащего невыделенный массив. Например, у <code>ARRAYRESHAPE</code> различаются аргументы <code>source</code> и <code>template</code>, а у <code>ARRAYCONCAT</code> — <code>left</code> и <code>right</code>.</p>
             </section>
 
             <section class="article-section">
@@ -78,6 +79,7 @@
                 <ul>
                     <li>индекс меньше <code>LBOUND</code> или больше <code>UBOUND</code>;</li>
                     <li>указано измерение, которого у массива нет;</li>
+                    <li>функция <code>ARRAYPUSH</code> или <code>ARRAYINSERT</code> должна увеличить верхнюю границу <code>2147483647</code>; отказ происходит до изменения массива;</li>
                     <li>в <code>ARRAYPUSH</code>, <code>ARRAYINSERT</code>, <code>ARRAYPOP</code>, <code>ARRAYREMOVE</code> или похожую функцию передан срез неподходящей формы.</li>
                 </ul>
                 <h3>Что проверить</h3>

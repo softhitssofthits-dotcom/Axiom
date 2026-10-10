@@ -177,13 +177,6 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return new RuntimeValue(type, value);
     }
 
-    public static RuntimeValue FromFunction(FunctionSymbol function, RuntimeScope capturedScope)
-    {
-        ArgumentNullException.ThrowIfNull(function);
-        ArgumentNullException.ThrowIfNull(capturedScope);
-        return new RuntimeValue(FunctionTypeSymbol.FromFunction(function), new RuntimeFunctionValue(function, capturedScope));
-    }
-
     private static RuntimeValue[] CreateCachedIntegers()
     {
         var values = new RuntimeValue[CachedIntegerMax - CachedIntegerMin + 1];

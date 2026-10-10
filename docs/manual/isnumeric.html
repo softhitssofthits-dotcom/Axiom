@@ -34,7 +34,7 @@
             <h1 class="page-title">ISNUMERIC</h1>
             <p class="lead">ISNUMERIC — встроенная функция языка Axiom, которая проверяет, представляет ли вся строка конечное десятичное число типа DOUBLE.</p>
             <section class="article-section"><h2>Назначение</h2><p>Функция ISNUMERIC помогает проверить введённый текст до вызова VAL. Например, строка «12abc» содержит числовой префикс, но не является числом целиком. Проверка возвращает FALSE, тогда как VAL возвращает 12.</p></section>
-            <section class="article-section"><h2>Где работает</h2><p>Функция работает в интерпретаторе и байткодном движке, в консольных и графических программах. Функция не зависит от языка интерфейса и региональных настроек Windows.</p></section>
+            <section class="article-section"><h2>Где работает</h2><p>Функция работает в <code>BytecodeVm</code> после компиляции, в консольных и графических программах. Функция не зависит от языка интерфейса и региональных настроек Windows.</p></section>
             <section class="article-section"><h2>Синтаксис</h2><pre><code class="language-basic">result = ISNUMERIC(text)</code></pre></section>
             <section class="article-section"><h2>Аргумент</h2><p>Аргумент text должен быть строкой. Числовой аргумент и BOOLEAN автоматически в строку не преобразуются.</p></section>
             <section class="article-section"><h2>Результат</h2><p>Функция возвращает BOOLEAN: TRUE, если строка целиком разбирается в конечный DOUBLE, иначе FALSE. Строка не меняется; функция не возвращает само число.</p></section>

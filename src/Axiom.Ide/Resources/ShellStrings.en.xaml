@@ -35,9 +35,6 @@
     <sys:String x:Key="Menu.Run.Compile">_Compile</sys:String>
     <sys:String x:Key="Menu.Run.Run">_Run Program</sys:String>
     <sys:String x:Key="Menu.Run.Cancel">_Cancel Run</sys:String>
-    <sys:String x:Key="Menu.Run.ExecutionMode">Execution _Mode</sys:String>
-    <sys:String x:Key="Menu.Run.ExecutionMode.Interpreter">_Interpreter</sys:String>
-    <sys:String x:Key="Menu.Run.ExecutionMode.Bytecode">_Bytecode</sys:String>
     <sys:String x:Key="Menu.Debug">_Debug</sys:String>
     <sys:String x:Key="Menu.Debug.StartDebugging">Start/_Continue Debugging</sys:String>
     <sys:String x:Key="Menu.Debug.StepBack">Step _Back</sys:String>
@@ -72,7 +69,7 @@
     <sys:String x:Key="Window.Title.Default">Axiom IDE</sys:String>
     <sys:String x:Key="Window.Title.WithDocument">{0}{1} - Axiom IDE</sys:String>
     <sys:String x:Key="About.Title">About Axiom IDE</sys:String>
-    <sys:String x:Key="About.Message">Axiom IDE&#x0D;&#x0A;&#x0D;&#x0A;Lightweight editor and interpreter shell for the Axiom language.&#x0D;&#x0A;Designed around a small QuickBASIC-inspired workflow with a modern WPF UI.</sys:String>
+    <sys:String x:Key="About.Message">Axiom IDE&#x0D;&#x0A;&#x0D;&#x0A;Editor and bytecode compiler shell for the Axiom language.&#x0D;&#x0A;Programs run on BytecodeVm in a modern WPF UI.</sys:String>
     <sys:String x:Key="About.StatusOpened">About dialog opened.</sys:String>
     <sys:String x:Key="About.StatusClosed">About dialog closed.</sys:String>
     <sys:String x:Key="App.Error.Title">Axiom IDE Error</sys:String>
@@ -168,7 +165,6 @@
     <sys:String x:Key="Run.Metrics.Engine">Engine: {0}</sys:String>
     <sys:String x:Key="Run.Metrics.CacheHit">yes</sys:String>
     <sys:String x:Key="Run.Metrics.CacheMiss">no</sys:String>
-    <sys:String x:Key="Run.Engine.Interpreter">interpreter</sys:String>
     <sys:String x:Key="Run.Engine.BytecodeVm">bytecode VM</sys:String>
     <sys:String x:Key="Run.Engine.None">none</sys:String>
 

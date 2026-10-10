@@ -19,13 +19,13 @@ public sealed class IntegralConversionEvidenceTests
             ("CLNG(9007199254740993)", "9007199254740993"),
             ("CLNG(CDBL(9007199254740993))", "9007199254740992")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var (expression, expected) in cases) yield return [mode, expression, expected];
+
+        foreach (var (expression, expected) in cases) yield return [expression, expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void TruncationAndExactBoundsHaveIndependentExpectedValues(ExecutionMode mode, string expression, string expected)
+    public void TruncationAndExactBoundsHaveIndependentExpectedValues(string expression, string expected)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             TRY
@@ -36,10 +36,9 @@ public sealed class IntegralConversionEvidenceTests
                 PRINT "Завершено"
             END TRY
             PRINT "Продолжение"
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { expected, "Завершено", "Продолжение" }, result.Output);
     }
 }

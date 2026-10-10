@@ -80,22 +80,16 @@ m(-1, 6) = 6
 
     [Theory]
     [MemberData(nameof(WrongArguments))]
-    public void WrongTypesMatchBetweenEngines(string call)
+    public void WrongTypesMatchOnBytecodeVm(string call)
     {
         var source = Setup + "\nPRINT " + call;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.NotEmpty(second.Diagnostics);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CopiesAndEmptyResultsHaveIndependentStorageAndVisibleBounds(ExecutionMode mode)
+    [Fact]
+    public void CopiesAndEmptyResultsHaveIndependentStorageAndVisibleBounds()
     {
         const string extra = """
 result = ARRAYCLONE(a)
@@ -127,9 +121,8 @@ PRINT ARRAYISALLOCATED(result)
 PRINT ARRAYLENGTH(result)
 PRINT ARRAYRANK(result)
 """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + extra, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + extra));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-        Assert.False(run.UsedInterpreterFallback);
         Assert.Equal(new[] { "30", "5", "7", "1", "2", "10", "TRUE", "0", "1", "0", "0", "2", "0", "-2", "-1", "4", "3", "FALSE", "0", "1" }, run.Output);
     }
 
@@ -138,18 +131,13 @@ PRINT ARRAYRANK(result)
     public void ExplicitAxisIsValidatedEvenForOneDimensionalArrays(string call)
     {
         var source = Setup + "\nresult = " + call;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal("MB3007", Assert.Single(first.Diagnostics).Code);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+        Assert.Equal("MB3007", Assert.Single(second.Diagnostics).Code);
+
         {
-            var caught = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\nTRY\nresult = " + call + "\nCATCH err\nPRINT err.Code\nEND TRY", mode: mode));
+            var caught = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\nTRY\nresult = " + call + "\nCATCH err\nPRINT err.Code\nEND TRY"));
             Assert.True(caught.Succeeded);
-            Assert.False(caught.UsedInterpreterFallback);
             Assert.Equal(new[] { "MB3007" }, caught.Output);
         }
     }
@@ -181,11 +169,10 @@ PRINT ARRAYRANK(result)
         var output = !isArray ? "" : kind == "array2"
             ? "\nFOR i = LBOUND(matrix, 1) TO UBOUND(matrix, 1)\nFOR j = LBOUND(matrix, 2) TO UBOUND(matrix, 2)\nPRINT matrix(i, j)\nNEXT j\nNEXT i"
             : "\nFOR i = LBOUND(result) TO UBOUND(result)\nPRINT result(i)\nNEXT i";
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + statement + output, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + statement + output));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(expected, run.Output);
         }
     }

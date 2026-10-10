@@ -74,21 +74,19 @@ public sealed class TilemapMetadataAccessTests
             (true, "MAPWORLDX(m, 100, 0)", "0"),
             (true, "MAPWORLDX(m, 100, 3)", "0"),
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var row in rows) yield return [mode, row.Loaded, row.Expression, row.Expected];
+
+        foreach (var row in rows) yield return [row.Loaded, row.Expression, row.Expected];
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void AccessHasLiteralResultsAndSafeMissingValues(ExecutionMode mode, bool loaded, string expression, string expected)
+    public void AccessHasLiteralResultsAndSafeMissingValues(bool loaded, string expression, string expected)
     {
-        Check(mode, "DIM m AS TILEMAP\n" + (loaded ? "m = LOADTILEMAP(\"access_map.tmj\")\n" : "") + "PRINT " + expression, expected);
+        Check("DIM m AS TILEMAP\n" + (loaded ? "m = LOADTILEMAP(\"access_map.tmj\")\n" : "") + "PRINT " + expression, expected);
     }
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void TilePropertyFollowsChangedAndClearedCell(ExecutionMode mode)
+    [Fact]
+    public void TilePropertyFollowsChangedAndClearedCell()
     {
-        Check(mode, """
+        Check("""
             DIM m AS TILEMAP
             m = LOADTILEMAP("access_map.tmj")
             PRINT MAPTILEPROPERTY(m, 1, 1, 1, "solid")
@@ -98,12 +96,10 @@ public sealed class TilemapMetadataAccessTests
             PRINT "[" + MAPTILEPROPERTY(m, 1, 1, 1, "solid") + "]"
             """, string.Join(Environment.NewLine, "TRUE", "FALSE", "[]"));
     }
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void UnsupportedObjectKeepsReasonInLanguageCatch(ExecutionMode mode)
+    [Fact]
+    public void UnsupportedObjectKeepsReasonInLanguageCatch()
     {
-        Check(mode, """
+        Check("""
             DIM m AS TILEMAP
             TRY
                 m = LOADTILEMAP("unsupported_object.tmj")
@@ -114,16 +110,15 @@ public sealed class TilemapMetadataAccessTests
             """, string.Join(Environment.NewLine, "MB3005", "LOADTILEMAP: Объекты ellipse пока не поддерживаются."));
     }
 
-    private static void Check(ExecutionMode mode, string source, string expected)
+    private static void Check(string source, string expected)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "PROJECT.md"))) directory = directory.Parent;
         Assert.NotNull(directory);
         var path = Path.Combine(directory.FullName, "samples/functions/loadtilemap/metadata_validation.axm");
         var service = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService());
-        var result = service.Run(source, mode, sourceFilePath: path);
+        var result = service.Run(source, sourceFilePath: path);
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expected, result.OutputText);
     }
 }

@@ -38,13 +38,11 @@ public sealed class KeyboardUnicodeEvidenceTests
         Assert.NotEmpty(binding);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ReadingPreservesWholeUtf16EventsAndQueriesDoNotConsumeThem(ExecutionMode mode)
+    [Fact]
+    public void ReadingPreservesWholeUtf16EventsAndQueriesDoNotConsumeThem()
     {
         var input = new LiteralKeyboardProvider(["😀", "\0", "\uD83D", "e\u0301", "é"], ["😀", "\0", "\uD83D"]);
-        Check(mode, input, """
+        Check(input, """
             PRINT KEYDOWN("😀")
             PRINT KEYDOWN(CHRW(0))
             PRINT KEYDOWN(LEFT("😀", 1))
@@ -59,13 +57,11 @@ public sealed class KeyboardUnicodeEvidenceTests
             """, ["TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void PressConsumesOneWholeEventAndPreservesUnmatchedOrder(ExecutionMode mode)
+    [Fact]
+    public void PressConsumesOneWholeEventAndPreservesUnmatchedOrder()
     {
         var input = new LiteralKeyboardProvider(["é", "😀", "\0", "\uD83D", "e\u0301", "😀"], []);
-        Check(mode, input, """
+        Check(input, """
             PRINT KEYPRESS("😀" + CHRW(0))
             PRINT KEYPRESS("")
             PRINT KEYPRESS("😀")
@@ -78,12 +74,10 @@ public sealed class KeyboardUnicodeEvidenceTests
             """, ["FALSE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void AbsentProviderReturnsEmptyOrFalseForWholeUnicodeNames(ExecutionMode mode)
+    [Fact]
+    public void AbsentProviderReturnsEmptyOrFalseForWholeUnicodeNames()
     {
-        Check(mode, null, """
+        Check(null, """
             PRINT INKEY() = ""
             PRINT KEYDOWN("😀")
             PRINT KEYPRESS(CHRW(0))
@@ -91,13 +85,12 @@ public sealed class KeyboardUnicodeEvidenceTests
             """, ["TRUE", "FALSE", "FALSE", "FALSE"]);
     }
 
-    private static void Check(ExecutionMode mode, IInputProvider? input, string source, string[] expected)
+    private static void Check(IInputProvider? input, string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, inputProvider: input, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, inputProvider: input));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 

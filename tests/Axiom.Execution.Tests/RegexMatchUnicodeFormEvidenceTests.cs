@@ -22,10 +22,8 @@ public sealed class RegexMatchUnicodeFormEvidenceTests
         Assert.Equal(type, call.Type.Name.ToUpperInvariant());
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void MatchPreservesUtf16UnitsAndNul(ExecutionMode mode)
+    [Fact]
+    public void MatchPreservesUtf16UnitsAndNul()
     {
         var source = """
             DIM high AS STRING = LEFT("😀", 1)
@@ -44,11 +42,10 @@ public sealed class RegexMatchUnicodeFormEvidenceTests
             PRINT REGEXISMATCH("", "")
             PRINT REGEXMATCH("", "", "s") = ""
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE", "TRUE", "TRUE", "TRUE" }, run.Output);
     }
 }

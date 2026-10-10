@@ -5,11 +5,9 @@ namespace Axiom.Execution.Tests;
 public sealed class DirectoryTraversalContractTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void CopyDirectory_RejectsDescendantBeforeChangingFiles(ExecutionMode mode, bool extendedPath)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CopyDirectory_RejectsDescendantBeforeChangingFiles(bool extendedPath)
     {
         var root = Path.Combine(AppContext.BaseDirectory, "copy-recheck-" + Guid.NewGuid().ToString("N"));
         var destination = Path.Combine(root, "child");
@@ -30,19 +28,16 @@ public sealed class DirectoryTraversalContractTests
                 END TRY
                 PRINT FILEEXISTS("{{destination}}\a.dat")
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.Equal(ExecutionStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["MB3007", "TRUE", "FALSE"], result.Output);
             Assert.Equal("Сохранить", File.ReadAllText(Path.Combine(destination, "b.dat")));
         }
         finally { Directory.Delete(root, recursive: true); }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void DirectorySizeAndCopy_DoNotFollowChildDirectoryLinks(ExecutionMode mode)
+    [Fact]
+    public void DirectorySizeAndCopy_DoNotFollowChildDirectoryLinks()
     {
         var root = Path.Combine(AppContext.BaseDirectory, "directory-recheck-" + Guid.NewGuid().ToString("N"));
         var source = Path.Combine(root, "source");
@@ -65,10 +60,9 @@ public sealed class DirectoryTraversalContractTests
                 PRINT DIREXISTS("{{destination}}\linked")
                 PRINT DIREXISTS("{{destination}}\loop")
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(sourceText, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(sourceText));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["3", "TRUE", "TRUE", "FALSE", "FALSE"], result.Output);
             Assert.Equal(new byte[11], File.ReadAllBytes(Path.Combine(outside, "foreign.dat")));
         }
@@ -80,10 +74,8 @@ public sealed class DirectoryTraversalContractTests
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CopyDirectory_RejectsDescendantThroughDirectoryAlias(ExecutionMode mode)
+    [Fact]
+    public void CopyDirectory_RejectsDescendantThroughDirectoryAlias()
     {
         var root = Path.Combine(AppContext.BaseDirectory, "alias-recheck-" + Guid.NewGuid().ToString("N"));
         var source = Path.Combine(root, "source");
@@ -102,9 +94,8 @@ public sealed class DirectoryTraversalContractTests
                 PRINT DIREXISTS("{{source}}\child")
                 PRINT COPYDIR("{{source}}", "{{root}}\source-extra")
                 PRINT DIRSIZE("{{root}}\source-extra")
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["MB3007", "FALSE", "TRUE", "3"], result.Output);
             Assert.Single(Directory.EnumerateFiles(source));
         }

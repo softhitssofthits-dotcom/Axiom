@@ -6,10 +6,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DriveInfoEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void LocalDriveMatchesIndependentWindowsInventory(ExecutionMode mode)
+    [Fact]
+    public void LocalDriveMatchesIndependentWindowsInventory()
     {
         if (!OperatingSystem.IsWindows()) return;
         var root = Path.GetPathRoot(Path.GetTempPath())!;
@@ -39,10 +37,9 @@ public sealed class DriveInfoEvidenceTests
             PRINT TOTALSPACE("{{path}}")
             PRINT FREESPACE("{{path}}")
             PRINT TOTALFREESPACE("{{path}}")
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { root, format, type, size.ToString(CultureInfo.InvariantCulture) }, result.Output.Take(4));
         foreach (var value in result.Output.Skip(4)) Assert.InRange(long.Parse(value, CultureInfo.InvariantCulture), 0L, size);
         Assert.False(Path.Exists(path));

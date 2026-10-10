@@ -6,13 +6,13 @@ public sealed class FileLineBatchEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var encoding in new[] { "UTF-8", "UTF-16LE", "UTF-16BE" }) yield return [mode, encoding];
+
+        foreach (var encoding in new[] { "UTF-8", "UTF-16LE", "UTF-16BE" }) yield return [encoding];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void EmptyLineBatchSkipAndEofHaveDistinctResults(ExecutionMode mode, string encodingName)
+    public void EmptyLineBatchSkipAndEofHaveDistinctResults(string encodingName)
     {
         var path = Path.GetTempFileName();
         try
@@ -54,10 +54,9 @@ public sealed class FileLineBatchEvidenceTests
                 END TRY
                 PRINT EOF(f)
                 CLOSE f
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { "TRUE", "INPUT", "0", "0", "2", "TRUE", "TRUE", "3", "TRUE", "4", "1", "TRUE", "TRUE", "0", "MB3007", "TRUE" }, result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
         }

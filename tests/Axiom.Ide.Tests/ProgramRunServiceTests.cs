@@ -132,7 +132,6 @@ PRINT ok
         Assert.Equal(ProgramCompilationStatus.Success, compileResult.Status);
         Assert.Equal(ProgramRunStatus.Success, runResult.Status);
         Assert.True(runResult.UsedCompiledCache);
-        Assert.Equal(ExecutionMode.Bytecode, runResult.RequestedExecutionMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, runResult.ActualEngine);
         Assert.Equal(TimeSpan.Zero, runResult.PreparationDuration);
         Assert.True(runResult.ExecutionDuration >= TimeSpan.Zero);
@@ -157,12 +156,10 @@ op = AddOne
 PRINT op(4)
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedExecutionMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal("5", result.OutputText);
     }
@@ -185,12 +182,10 @@ END TRY
 PRINT "after"
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedExecutionMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             string.Join(Environment.NewLine, "before", "caught", "MB3001", "cleanup", "after"),
             result.OutputText);
@@ -208,7 +203,7 @@ PRINT 2
 PRINT 3
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
+        var result = service.Run(sourceText, sourceBreakpointLines: [2]);
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.True(result.Succeeded);
@@ -236,7 +231,6 @@ PRINT "done"
 
         var result = service.Run(
             sourceText,
-            ExecutionMode.Bytecode,
             stopBeforeFirstInstruction: true);
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
@@ -260,7 +254,7 @@ PRINT 2
 PRINT 3
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [2]);
         var continuedResult = service.Continue(stoppedResult.DebuggerState!);
 
         Assert.True(stoppedResult.Stopped);
@@ -282,7 +276,7 @@ PRINT 2
 PRINT 3
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [2]);
         var steppedResult = service.StepOver(stoppedResult.DebuggerState!);
 
         Assert.True(stoppedResult.Stopped);
@@ -305,7 +299,7 @@ FOR i = 1 TO 2
 NEXT
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [2]);
         var steppedResult = service.StepOver(stoppedResult.DebuggerState!);
 
         Assert.True(steppedResult.Stopped);
@@ -327,7 +321,7 @@ END FUNCTION
 PRINT AddOne(4)
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [5]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [5]);
         var steppedResult = service.StepInto(stoppedResult.DebuggerState!);
 
         Assert.True(steppedResult.Stopped);
@@ -351,7 +345,7 @@ PRINT AddOne(4)
 PRINT "done"
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [5]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [5]);
         var insideRoutine = service.StepInto(stoppedResult.DebuggerState!);
         var steppedOut = service.StepOut(insideRoutine.DebuggerState!);
 
@@ -372,7 +366,7 @@ value = value + 1
 PRINT value
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [3]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [3]);
         Assert.True(stoppedResult.CanStepBack);
 
         var steppedBack = service.StepBack(stoppedResult.DebuggerState!);
@@ -401,7 +395,7 @@ END SUB
 PrintBanner("debug sample")
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [7]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [7]);
         var insideRoutine = service.StepInto(stoppedResult.DebuggerState!);
         var afterFirstPrint = service.StepOver(insideRoutine.DebuggerState!);
         var afterSecondPrint = service.StepOver(afterFirstPrint.DebuggerState!);
@@ -432,7 +426,7 @@ values(2) = 20
 PRINT values(1)
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [4]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [4]);
 
         Assert.True(stoppedResult.Stopped);
         Assert.True(stoppedResult.CanStepBack);
@@ -460,7 +454,7 @@ PRINT values(1)
 PRINT 99
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [4]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [4]);
 
         Assert.True(stoppedResult.Stopped);
         Assert.Equal(4, stoppedResult.StoppedAt!.Line);
@@ -497,7 +491,7 @@ PRINT board(1, 1)
 PRINT board(1, 2)
 """;
 
-        var stoppedResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [13]);
+        var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [13]);
 
         Assert.True(stoppedResult.Stopped);
         Assert.Equal(13, stoppedResult.StoppedAt!.Line);
@@ -543,7 +537,7 @@ PRINT board(2, 2)
 PRINT board(2, 3)
 """;
 
-        var firstPrint = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [10]);
+        var firstPrint = service.Run(sourceText, sourceBreakpointLines: [10]);
 
         Assert.True(firstPrint.Stopped);
         Assert.Equal(10, firstPrint.StoppedAt!.Line);
@@ -582,7 +576,7 @@ PRINT 2
 """;
 
         var compileResult = service.Compile(sourceText);
-        var runResult = service.Run(sourceText, ExecutionMode.Bytecode, sourceBreakpointLines: [2]);
+        var runResult = service.Run(sourceText, sourceBreakpointLines: [2]);
 
         Assert.Equal(ProgramCompilationStatus.Success, compileResult.Status);
         Assert.True(runResult.UsedCompiledCache);
@@ -591,7 +585,7 @@ PRINT 2
     }
 
     [Fact]
-    public void Run_GraphicsStepSample_CompletesOnBytecodeVmWithoutInterpreterFallback()
+    public void Run_GraphicsStepSample_CompletesOnBytecodeVmWithBytecodeVm()
     {
         var consoleService = new ProgramConsoleService();
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
@@ -614,12 +608,10 @@ SCREEN 0
 PRINT "done"
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedExecutionMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(string.Empty, result.OutputText);
         Assert.False(consoleService.IsScreenActive);
@@ -653,7 +645,7 @@ PRINT buffer(2, 6)
 PRINT "GET sample finished"
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
         var graphicsOutput = traceService.Entries
             .Where(static entry => entry.Category == "screen.output")
             .Select(static entry => entry.Message)
@@ -694,7 +686,7 @@ PRINT presetRight
 PRINT "PUT sample finished"
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
         var graphicsOutput = traceService.Entries
             .Where(static entry => entry.Category == "screen.output")
             .Select(static entry => entry.Message)
@@ -713,7 +705,7 @@ PRINT "PUT sample finished"
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
         var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "operators", "get", "canvas_block_capture.axm")));
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
         var consoleOutput = traceService.Entries
             .Where(static entry => entry.Category == "console.output")
             .Select(static entry => entry.Message)
@@ -734,7 +726,7 @@ PRINT "PUT sample finished"
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
         var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "operators", "put", "canvas_block_restore.axm")));
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
         var consoleOutput = traceService.Entries
             .Where(static entry => entry.Category == "console.output")
             .Select(static entry => entry.Message)
@@ -775,10 +767,10 @@ PRINT "mode10 width="; width
 PRINT "mode10 height="; height
 PRINT "mode10 cols="; cols
 PRINT "mode10 rows="; rows
-PRINT "Проверка SCREEN 10 завершена"
+PRINT "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ SCREEN 10 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
 """;
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
         var graphicsOutput = traceService.Entries
             .Where(static entry => entry.Category == "screen.output")
             .Select(static entry => entry.Message)
@@ -795,7 +787,7 @@ PRINT "Проверка SCREEN 10 завершена"
                 "mode10 height=1079",
                 "mode10 cols=239",
                 "mode10 rows=89",
-                "Проверка SCREEN 10 завершена"
+                "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ SCREEN 10 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
             ],
             graphicsOutput);
     }
@@ -808,12 +800,11 @@ PRINT "Проверка SCREEN 10 завершена"
 
         var sourceText = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "samples", "graphics", "screen", "text_scroll.axm")));
 
-        var result = service.Run(sourceText, ExecutionMode.Bytecode);
+        var result = service.Run(sourceText);
         var visibleLines = consoleService.GraphicsText.Split(Environment.NewLine);
 
         Assert.Equal(ProgramRunStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(25, visibleLines.Length);
         Assert.Equal("line 5", visibleLines[0]);
         Assert.Equal("visible after scroll", visibleLines[23]);
@@ -848,14 +839,12 @@ PRINT "Проверка SCREEN 10 завершена"
         Assert.Equal("MB3001", result.Diagnostics[0].Code);
         Assert.Equal(1, result.Diagnostics[0].Line);
         Assert.Equal(9, result.Diagnostics[0].Column);
-        Assert.Contains("ноль", result.Diagnostics[0].Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("РЅРѕР»СЊ", result.Diagnostics[0].Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(string.Empty, result.OutputText);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Bytecode)]
-    [InlineData(ExecutionMode.Interpreter)]
-    public void Run_WhenHostCancellationIsRequested_ReturnsCancelled(ExecutionMode mode)
+    [Fact]
+    public void Run_WhenHostCancellationIsRequested_ReturnsCancelled()
     {
         var consoleService = new FakeProgramConsoleService(new FakeProgramInputPromptService())
         {
@@ -868,8 +857,7 @@ PRINT "Проверка SCREEN 10 завершена"
             DO WHILE TRUE
             LOOP
             PRINT "after"
-            """,
-            mode);
+            """);
 
         Assert.Equal(ProgramRunStatus.Cancelled, result.Status);
         Assert.True(result.Succeeded);

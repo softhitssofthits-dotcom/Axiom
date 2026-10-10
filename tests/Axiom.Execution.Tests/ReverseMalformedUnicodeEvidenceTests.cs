@@ -17,13 +17,13 @@ public sealed class ReverseMalformedUnicodeEvidenceTests
 
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        for (var index = 0; index < Data.Length; index++) yield return [mode, index];
+
+        for (var index = 0; index < Data.Length; index++) yield return [index];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ReverseHasLiteralExpectedUtf16Sequence(ExecutionMode mode, int index)
+    public void ReverseHasLiteralExpectedUtf16Sequence(int index)
     {
         var (text, expected) = Data[index];
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
@@ -32,11 +32,10 @@ public sealed class ReverseMalformedUnicodeEvidenceTests
             PRINT result = "{{expected}}"
             PRINT LEN(result)
             PRINT original = "{{text}}"
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { "TRUE", expected.Length.ToString(System.Globalization.CultureInfo.InvariantCulture), "TRUE" }, result.Output);
     }
 }

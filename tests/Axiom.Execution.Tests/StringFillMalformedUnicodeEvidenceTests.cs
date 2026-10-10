@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringFillMalformedUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void RepetitionAndPaddingKeepExactUtf16Units(ExecutionMode mode)
+    [Fact]
+    public void RepetitionAndPaddingKeepExactUtf16Units()
     {
         var source = """
             DIM high AS STRING = LEFT("😀", 1)
@@ -32,11 +30,10 @@ public sealed class StringFillMalformedUnicodeEvidenceTests
             PRINT CENTER("", 3, high) = high + high + high
             PRINT original = high + "А" + nul + low
             """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(Enumerable.Repeat("TRUE", 19), result.Output);
     }
 }

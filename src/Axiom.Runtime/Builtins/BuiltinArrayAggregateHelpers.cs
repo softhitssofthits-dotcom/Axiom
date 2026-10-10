@@ -5,8 +5,8 @@ using Axiom.Semantics;
 namespace Axiom.Runtime.Builtins;
 
 /// <summary>
-/// Реализация агрегатов ARRAYSUM/ARRAYMIN/ARRAYMAX/ARRAYAVERAGE: общая для
-/// Interpreter и BytecodeVm. Движки передают два способа сообщения об ошибках:
+/// Реализация агрегатов ARRAYSUM/ARRAYMIN/ARRAYMAX/ARRAYAVERAGE для BytecodeVm.
+/// Вызывающий код передаёт два способа сообщения об ошибках:
 /// reportArgumentError оборачивает detail в стандартную диагностику аргумента
 /// (MB3007 с именем функции), reportResultError получает готовый полный текст
 /// для диагностики результата (MB3008).

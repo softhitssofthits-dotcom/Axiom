@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class CaseSupplementaryUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CaseConversionPreservesMalformedUnitsAndConvertsSupplementaryLetters(ExecutionMode mode)
+    [Fact]
+    public void CaseConversionPreservesMalformedUnitsAndConvertsSupplementaryLetters()
     {
         // Ожидания регистра взяты из UnicodeData: U+10400/U+10428 и U+03C2/U+03A3.
         var source = """
@@ -26,11 +24,10 @@ public sealed class CaseSupplementaryUnicodeEvidenceTests
             PRINT LCASE("😀" + CHRW(1114111)) = "😀" + CHRW(1114111)
             PRINT UCASE("😀" + CHRW(1114111)) = "😀" + CHRW(1114111)
             """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(["TRUE", "TRUE", "2", "2", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE"], result.Output);
     }
 }

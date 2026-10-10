@@ -36,24 +36,20 @@ public sealed class ArrayTransformAxisContractTests
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void SortingShortMultidimensionalArraysStillValidatesAxis(ExecutionMode mode, bool empty)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SortingShortMultidimensionalArraysStillValidatesAxis(bool empty)
     {
         var setup = "DIM seed(1 TO 1, 7 TO 7) AS INTEGER\nDIM a(,) AS INTEGER\nDIM result(,) AS INTEGER\na = " + (empty ? "ARRAYTAKE(seed, 0, 1)" : "ARRAYCLONE(seed)") + "\n";
         foreach (var axis in new[] { 0, 3 })
             foreach (var statement in new[] { $"ARRAYSORT(a, {axis})", $"result = ARRAYTOSORTED(a, {axis})" })
             {
-                var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "TRY\n" + statement + "\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT ARRAYLENGTH(a)\nPRINT LBOUND(a, 2)\nPRINT UBOUND(a, 2)", mode: mode));
+                var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "TRY\n" + statement + "\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT ARRAYLENGTH(a)\nPRINT LBOUND(a, 2)\nPRINT UBOUND(a, 2)"));
                 Assert.True(run.Succeeded);
-                Assert.False(run.UsedInterpreterFallback);
                 Assert.Equal(new[] { "MB3007", empty ? "0" : "1", "7", "7" }, run.Output);
             }
-        var valid = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "ARRAYSORT(a, 2)\nresult = ARRAYTOSORTED(a, 2)\nPRINT ARRAYLENGTH(result)\nPRINT LBOUND(result, 2)\nPRINT UBOUND(result, 2)", mode: mode));
+        var valid = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "ARRAYSORT(a, 2)\nresult = ARRAYTOSORTED(a, 2)\nPRINT ARRAYLENGTH(result)\nPRINT LBOUND(result, 2)\nPRINT UBOUND(result, 2)"));
         Assert.True(valid.Succeeded);
-        Assert.False(valid.UsedInterpreterFallback);
         Assert.Equal(new[] { empty ? "0" : "1", "7", "7" }, valid.Output);
     }
 
@@ -65,12 +61,11 @@ public sealed class ArrayTransformAxisContractTests
         var setup = "DIM a() AS INTEGER\nREDIM a(5 TO 7)\nDIM result() AS INTEGER\n";
         setup += binarySearch ? "a(5) = 10\na(6) = 20\na(7) = 30\n" : "a(5) = 30\na(6) = 10\na(7) = 20\n";
         foreach (var axis in new[] { "", ", 1" })
-            foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
             {
                 var source = setup + template.Replace("AXIS", axis, StringComparison.Ordinal) + $"\nFOR i = LBOUND({target}) TO UBOUND({target})\nPRINT {target}(i)\nNEXT i";
-                var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+                var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
                 Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-                Assert.False(run.UsedInterpreterFallback);
                 Assert.Equal(expected, run.Output);
             }
     }
@@ -88,21 +83,16 @@ public sealed class ArrayTransformAxisContractTests
             for (var i = 0; i < length; i++)
                 setup += $"a({5 + i}) = {(i + 1) * 11}\n";
         }
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + statement, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + statement, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + statement));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        var diagnostic = Assert.Single(first.Diagnostics);
+        var diagnostic = Assert.Single(second.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("dimension", diagnostic.Message, StringComparison.Ordinal);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
             var source = setup + "TRY\n" + statement + "\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT ARRAYLENGTH(a)\nFOR i = LBOUND(a) TO UBOUND(a)\nPRINT a(i)\nNEXT i";
-            var caught = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var caught = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(caught.Succeeded, string.Join("\n", caught.Diagnostics.Select(d => d.Message)));
-            Assert.False(caught.UsedInterpreterFallback);
             var expected = new[] { "MB3007", length.ToString(System.Globalization.CultureInfo.InvariantCulture) }.Concat(Enumerable.Range(1, length).Select(i => (i * 11).ToString(System.Globalization.CultureInfo.InvariantCulture)));
             Assert.Equal(expected, caught.Output);
         }

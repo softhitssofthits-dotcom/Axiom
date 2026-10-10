@@ -9,12 +9,12 @@ public sealed class TilemapInvalidInputTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var index in Enumerable.Range(0, 20)) yield return [mode, index];
+
+        foreach (var index in Enumerable.Range(0, 20)) yield return [index];
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void InvalidFieldsProduceCatchableDiagnosticAndPreservePreviousMap(ExecutionMode mode, int index)
+    public void InvalidFieldsProduceCatchableDiagnosticAndPreservePreviousMap(int index)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-tile-invalid-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -63,9 +63,8 @@ public sealed class TilemapInvalidInputTests
                     PRINT err.Code
                 END TRY
                 PRINT MAPWIDTH(m)
-                """, mode, sourceFilePath: Path.Combine(root, "check.axm"));
+                """, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(string.Join(Environment.NewLine, "MB3005", "1"), result.OutputText);
         }
         finally

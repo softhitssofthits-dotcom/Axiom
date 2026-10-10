@@ -33,7 +33,7 @@
         <section class="article-section">
             <h2>Где работает функция INKEY</h2>
             <p>Встроенная функция <code>INKEY</code> читает активную клавиатурную очередь программы. Если программа работает без оператора <code>SCREEN</code>, ввод приходит из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, ввод приходит из окна <code>SCREEN</code>.</p>
-            <p>Встроенная функция <code>INKEY</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+            <p>Встроенная функция <code>INKEY</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
         </section>
 
         <section class="article-section">

@@ -306,22 +306,18 @@ public sealed class AxiomExecutionPipeline
                 compilation.Status,
                 compilation.Diagnostics,
                 request.DiagnosticSink,
-                request.Mode,
                 compilation.FrontendPreparationDuration,
                 compilation.LoweringDuration,
                 compilation.BytecodeEmissionDuration);
         }
 
-        if ((request.Mode == ExecutionMode.Bytecode || request.BytecodeSnapshotPath is not null)
-            && !compilation.BytecodeAvailable
-            && compilation.BackendDiagnostics.Count > 0)
+        if (!compilation.Succeeded)
         {
             return CreateExecutionResult(
                 ExecutionStatus.BackendFailure,
                 compilation.Diagnostics.Concat(compilation.BackendDiagnostics).ToArray(),
                 [],
                 request.DiagnosticSink,
-                request.Mode,
                 actualEngine: null,
                 frontendPreparationDuration: compilation.FrontendPreparationDuration,
                 loweringDuration: compilation.LoweringDuration,
@@ -353,10 +349,7 @@ public sealed class AxiomExecutionPipeline
             execution.Status,
             merged,
             execution.Output,
-            execution.RequestedMode,
             execution.ActualEngine,
-            execution.UsedInterpreterFallback,
-            execution.InterpreterFallbackReason,
             execution.FrontendPreparationDuration,
             execution.LoweringDuration,
             execution.BytecodeEmissionDuration,
@@ -373,11 +366,6 @@ public sealed class AxiomExecutionPipeline
         ArgumentNullException.ThrowIfNull(compiledProgram);
         ArgumentNullException.ThrowIfNull(request);
 
-        if (request.Mode == ExecutionMode.Interpreter)
-        {
-            return RunThroughInterpreter(compiledProgram, request, usedInterpreterFallback: false, interpreterFallbackReason: null);
-        }
-
         var coverageDiagnostic = GetBytecodeCoverageDiagnostic(compiledProgram);
         if (compiledProgram.BytecodeModule is not null
             && coverageDiagnostic is null)
@@ -390,7 +378,6 @@ public sealed class AxiomExecutionPipeline
             [coverageDiagnostic ?? CreateGenericBytecodeCoverageDiagnostic(compiledProgram.BoundProgram.Location)],
             [],
             request.DiagnosticSink,
-            request.Mode,
             actualEngine: null);
     }
 
@@ -445,7 +432,7 @@ public sealed class AxiomExecutionPipeline
         {
             progressReporter?.Report(100);
             return new CompilationResult(
-                CompilationStatus.Success,
+                CompilationStatus.BackendFailure,
                 semanticDiagnostics.ToArray(),
                 compiledProgram,
                 loweringResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
@@ -471,7 +458,7 @@ public sealed class AxiomExecutionPipeline
         if (!bytecodeResult.Succeeded)
         {
             return new CompilationResult(
-                CompilationStatus.Success,
+                CompilationStatus.BackendFailure,
                 semanticDiagnostics.ToArray(),
                 compiledProgram,
                 bytecodeResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
@@ -486,7 +473,7 @@ public sealed class AxiomExecutionPipeline
             && !TryWriteBytecodeSnapshot(bytecodeSnapshotPath, bytecodeResult.Module!, out var snapshotDiagnostic))
         {
             return new CompilationResult(
-                CompilationStatus.Success,
+                CompilationStatus.BackendFailure,
                 semanticDiagnostics.ToArray(),
                 compiledProgram,
                 [snapshotDiagnostic],
@@ -552,7 +539,6 @@ public sealed class AxiomExecutionPipeline
         CompilationStatus compilationStatus,
         IReadOnlyList<Diagnostic> diagnostics,
         IDiagnosticSink diagnosticSink,
-        ExecutionMode requestedMode,
         TimeSpan frontendPreparationDuration,
         TimeSpan loweringDuration,
         TimeSpan bytecodeEmissionDuration)
@@ -561,6 +547,7 @@ public sealed class AxiomExecutionPipeline
         {
             CompilationStatus.SyntaxFailure => ExecutionStatus.SyntaxFailure,
             CompilationStatus.SemanticFailure => ExecutionStatus.SemanticFailure,
+            CompilationStatus.BackendFailure => ExecutionStatus.BackendFailure,
             CompilationStatus.Success => ExecutionStatus.Success,
             _ => throw new ArgumentOutOfRangeException(nameof(compilationStatus))
         };
@@ -570,7 +557,6 @@ public sealed class AxiomExecutionPipeline
             diagnostics,
             [],
             diagnosticSink,
-            requestedMode,
             actualEngine: null,
             frontendPreparationDuration: frontendPreparationDuration,
             loweringDuration: loweringDuration,
@@ -587,10 +573,7 @@ public sealed class AxiomExecutionPipeline
             result.Status,
             result.Diagnostics,
             result.Output,
-            result.RequestedMode,
             result.ActualEngine,
-            result.UsedInterpreterFallback,
-            result.InterpreterFallbackReason,
             frontendPreparationDuration,
             loweringDuration,
             bytecodeEmissionDuration,
@@ -600,32 +583,6 @@ public sealed class AxiomExecutionPipeline
             result.UsedBytecodeCache,
             result.StopState,
             result.PendingOutput);
-    }
-
-    private static ExecutionResult RunThroughInterpreter(
-        CompiledProgram compiledProgram,
-        ExecutionRequest request,
-        bool usedInterpreterFallback,
-        string? interpreterFallbackReason)
-    {
-        var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider, request.ResourceBaseDirectory);
-        var executionStopwatch = Stopwatch.StartNew();
-        var runtimeResult = Interpreter.Execute(compiledProgram.BoundProgram, runtimeHost);
-        executionStopwatch.Stop();
-        var status = runtimeResult.Cancelled
-            ? ExecutionStatus.Cancelled
-            : runtimeResult.Succeeded ? ExecutionStatus.Success : ExecutionStatus.RuntimeFailure;
-
-        return CreateExecutionResult(
-            status,
-            runtimeResult.Diagnostics,
-            runtimeHost.Output,
-            request.DiagnosticSink,
-            request.Mode,
-            ExecutionEngineKind.Interpreter,
-            usedInterpreterFallback: usedInterpreterFallback,
-            interpreterFallbackReason: interpreterFallbackReason,
-            runtimeExecutionDuration: executionStopwatch.Elapsed);
     }
 
     private static ExecutionResult RunThroughBytecodeVm(BytecodeModule module, ExecutionRequest request)
@@ -663,7 +620,6 @@ public sealed class AxiomExecutionPipeline
             runtimeResult.Diagnostics,
             runtimeHost.Output,
             request.DiagnosticSink,
-            request.Mode,
             ExecutionEngineKind.BytecodeVm,
             runtimeExecutionDuration: executionStopwatch.Elapsed,
             stopState: runtimeResult.StopState,
@@ -1207,7 +1163,7 @@ public sealed class AxiomExecutionPipeline
     {
         return new Diagnostic(
             DiagnosticCodes.BytecodeCoverage,
-            "Байт-кодный режим запуска пока не покрывает текущую программу.",
+            "Компилятор не создал исполняемый байт-код для текущей программы.",
             location);
     }
 
@@ -1216,10 +1172,7 @@ public sealed class AxiomExecutionPipeline
         IEnumerable<Diagnostic> diagnostics,
         IReadOnlyList<string> output,
         IDiagnosticSink diagnosticSink,
-        ExecutionMode requestedMode,
         ExecutionEngineKind? actualEngine,
-        bool usedInterpreterFallback = false,
-        string? interpreterFallbackReason = null,
         TimeSpan frontendPreparationDuration = default,
         TimeSpan loweringDuration = default,
         TimeSpan bytecodeEmissionDuration = default,
@@ -1241,10 +1194,7 @@ public sealed class AxiomExecutionPipeline
             status,
             diagnosticList,
             output.ToArray(),
-            requestedMode,
             actualEngine,
-            usedInterpreterFallback,
-            interpreterFallbackReason,
             frontendPreparationDuration,
             loweringDuration,
             bytecodeEmissionDuration,

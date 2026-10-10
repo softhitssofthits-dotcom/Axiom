@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringEditMalformedUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void EditingUsesUtf16PositionsWithoutRepairingUnits(ExecutionMode mode)
+    [Fact]
+    public void EditingUsesUtf16PositionsWithoutRepairingUnits()
     {
         var source = """
             DIM high AS STRING = LEFT("😀", 1)
@@ -25,11 +23,10 @@ public sealed class StringEditMalformedUnicodeEvidenceTests
             PRINT REMOVE("é", 1, 1) = "́"
             PRINT REMOVE("é", 2, 1) = "e"
             """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(Enumerable.Repeat("TRUE", 13), result.Output);
     }
 }

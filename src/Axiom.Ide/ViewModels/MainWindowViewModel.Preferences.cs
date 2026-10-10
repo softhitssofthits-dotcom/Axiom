@@ -79,36 +79,6 @@ public sealed partial class MainWindowViewModel
         UpdateTitle();
     }
 
-    private void UseInterpreterExecutionMode()
-    {
-        SelectedExecutionMode = ExecutionMode.Interpreter;
-        LogIdeEvent(
-            IdeEventLevel.Info,
-            "commands",
-            "command.executed",
-            commandName: "UseInterpreterExecutionMode",
-            menuName: "Run",
-            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["executionMode"] = SelectedExecutionMode.ToString()
-            });
-    }
-
-    private void UseBytecodeExecutionMode()
-    {
-        SelectedExecutionMode = ExecutionMode.Bytecode;
-        LogIdeEvent(
-            IdeEventLevel.Info,
-            "commands",
-            "command.executed",
-            commandName: "UseBytecodeExecutionMode",
-            menuName: "Run",
-            properties: new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["executionMode"] = SelectedExecutionMode.ToString()
-            });
-    }
-
     private void CloseOutputPane()
     {
         BottomPane.HideOutput();
@@ -206,7 +176,6 @@ public sealed partial class MainWindowViewModel
         _preferredWindowState = snapshot.WindowState;
         _selectedTheme = snapshot.Theme;
         _selectedLanguage = snapshot.Language;
-        _selectedExecutionMode = snapshot.PreferredExecutionMode;
         _isSmartIdentifierEnabled = snapshot.SmartIdentifierEnabled;
     }
 
@@ -283,8 +252,7 @@ public sealed partial class MainWindowViewModel
             _preferredWindowState,
             SelectedTheme,
             SelectedLanguage,
-            IsSmartIdentifierEnabled,
-            SelectedExecutionMode);
+            IsSmartIdentifierEnabled);
     }
 
     private void RaiseShellCommandCanExecuteChanged()

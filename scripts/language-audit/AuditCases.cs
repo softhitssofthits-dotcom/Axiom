@@ -11,12 +11,15 @@ static class AuditCases
         Expr("clng-upper-neighbour", "CLNG(9223372036854774784.0)", "9223372036854774784");
         Expr("clng-lower", "CLNG(-9223372036854775808.0)", "-9223372036854775808");
         Expr("clng-lower-outside", "CLNG(-9223372036854777856.0)", error: "MB3008");
-        Expr("clng-positive-inf", "CLNG(VAL(" + Q("1e309") + "))", error: "MB3008");
-        Expr("clng-nan", "CLNG(VAL(" + Q("NaN") + "))", error: "MB3008");
-        Expr("cint-nan", "CINT(VAL(\"NaN\"))", error: "MB3008");
+        // VAL отвергает нечисловой/неконечный текст возвратом 0. Эти выражения
+        // проверяют преобразование нуля, а не передачу Infinity/NaN в CINT/CLNG.
+        // Договор независимо закреплён NumericBoundaryContractTests.Val_RejectsNonFiniteAndPreservesOrdinaryParsing.
+        Expr("clng-positive-inf", "CLNG(VAL(" + Q("1e309") + "))", "0");
+        Expr("clng-nan", "CLNG(VAL(" + Q("NaN") + "))", "0");
+        Expr("cint-nan", "CINT(VAL(\"NaN\"))", "0");
         Expr("cint-upper-fraction", "CINT(2147483647.9)", "2147483647");
         Expr("cint-lower-fraction", "CINT(-2147483648.9)", "-2147483648");
-        Expr("cdec-nan", "CDEC(VAL(\"NaN\"))", error: "MB3008");
+        Expr("cdec-nan", "CDEC(VAL(\"NaN\"))", "0");
         Expr("val-inf", "VAL(" + Q("1e309") + ")", "0");
         Expr("val-nan", "VAL(" + Q("NaN") + ")", "0");
         Expr("val-prefix", "VAL(" + Q("12abc") + ")", "12");

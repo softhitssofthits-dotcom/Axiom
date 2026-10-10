@@ -21,13 +21,13 @@ public sealed class NumericPresentationEvidenceTests
             ("CDEC(VAL(\"1e-29\"))", "0")
         };
         foreach (var culture in new[] { "en-US", "ru-RU", "tr-TR" })
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var (expression, expected) in cases) yield return [culture, mode, expression, expected];
+
+        foreach (var (expression, expected) in cases) yield return [culture, expression, expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void NumericPresentationAndBoundsAreCultureIndependent(string culture, ExecutionMode mode, string expression, string expected)
+    public void NumericPresentationAndBoundsAreCultureIndependent(string culture, string expression, string expected)
     {
         var previous = CultureInfo.CurrentCulture;
         try
@@ -40,10 +40,9 @@ public sealed class NumericPresentationEvidenceTests
                     PRINT err.Code
                 END TRY
                 PRINT "Продолжение"
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { expected, "Продолжение" }, result.Output);
         }
         finally { CultureInfo.CurrentCulture = previous; }

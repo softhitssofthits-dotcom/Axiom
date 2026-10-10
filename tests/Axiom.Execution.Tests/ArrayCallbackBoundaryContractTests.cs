@@ -33,11 +33,10 @@ FUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER
     RETURN acc + value
 END FUNCTION
 """;
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(expected, run.Output);
         }
     }
@@ -63,11 +62,10 @@ FUNCTION Sum(acc AS INTEGER, value AS INTEGER) AS INTEGER
     RETURN acc + value
 END FUNCTION
 """;
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { expected, "0" }, run.Output);
         }
     }
@@ -78,11 +76,10 @@ END FUNCTION
     public void PredicateStopsAfterFirstDecisiveElement(string function, int value, string expected)
     {
         var source = $"DIM a(5 TO 7) AS INTEGER\nDIM calls AS INTEGER\na(5) = {value}\nPRINT {function}(a, Positive)\nPRINT calls\nFUNCTION Positive(value AS INTEGER) AS BOOLEAN\n calls = calls + 1\n RETURN value > 0\nEND FUNCTION";
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { expected, "1" }, run.Output);
         }
     }

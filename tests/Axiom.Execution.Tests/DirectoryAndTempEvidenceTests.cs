@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DirectoryAndTempEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ChangeDirIsHostLocalAndFailurePreservesBase(ExecutionMode mode)
+    [Fact]
+    public void ChangeDirIsHostLocalAndFailurePreservesBase()
     {
         var processDirectory = Environment.CurrentDirectory;
         var root = Path.Combine(Path.GetTempPath(), "axiom-cwd-" + Guid.NewGuid().ToString("N"));
@@ -25,10 +23,9 @@ public sealed class DirectoryAndTempEvidenceTests
                 END TRY
                 PRINT CURRENTDIR() = "{{child}}"
                 PRINT READFILE("data.txt")
-                """, resourceBaseDirectory: root, mode: mode));
+                """, resourceBaseDirectory: root));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { "TRUE", "TRUE", "TRUE", "TRUE", "MB3007", "TRUE", "Сохранить😀" }, result.Output);
             Assert.Equal("Сохранить😀", File.ReadAllText(Path.Combine(child, "data.txt")));
             Assert.False(File.Exists(Path.Combine(root, "data.txt")));
@@ -37,10 +34,8 @@ public sealed class DirectoryAndTempEvidenceTests
         finally { Directory.Delete(root, true); }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void TemporaryFunctionsCreateDistinctEmptyObjectsWithPrefix(ExecutionMode mode)
+    [Fact]
+    public void TemporaryFunctionsCreateDistinctEmptyObjectsWithPrefix()
     {
         var prefix = "axiom_" + Guid.NewGuid().ToString("N") + "_";
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
@@ -58,13 +53,12 @@ public sealed class DirectoryAndTempEvidenceTests
             CATCH err
                 PRINT err.Code
             END TRY
-            """, mode: mode));
+            """));
         var paths = result.Output.Take(4).ToArray();
         try
         {
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(6, result.Output.Count);
             Assert.Equal(4, paths.Distinct(StringComparer.OrdinalIgnoreCase).Count());
             Assert.Equal(new[] { "MB3007", "MB3007" }, result.Output.Skip(4));

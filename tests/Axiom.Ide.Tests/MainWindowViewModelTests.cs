@@ -326,7 +326,7 @@ public sealed class MainWindowViewModelTests
                 preparationDuration: TimeSpan.FromMilliseconds(7),
                 executionDuration: TimeSpan.FromMilliseconds(11),
                 usedCompiledCache: true,
-                actualEngine: Axiom.Execution.ExecutionEngineKind.Interpreter)
+                actualEngine: Axiom.Execution.ExecutionEngineKind.BytecodeVm)
         };
         var viewModel = CreateViewModel(documentService: documentService, runService: runService);
         PrepareSavedActiveDocument(viewModel, @"C:\temp\program.axm", "PRINT 1");
@@ -342,7 +342,7 @@ public sealed class MainWindowViewModelTests
         Assert.NotEqual(string.Empty, viewModel.StatusBar.TotalTimingText);
         Assert.Contains("18", viewModel.StatusBar.TotalTimingText, StringComparison.Ordinal);
         Assert.Contains("да", viewModel.StatusBar.CacheTimingText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("интерпретатор", viewModel.StatusBar.EngineTimingText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("байт-код", viewModel.StatusBar.EngineTimingText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1306,7 +1306,8 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal("О программе Axiom IDE", promptService.LastInfoTitle);
         Assert.Contains("Axiom IDE", promptService.LastInfoMessage, StringComparison.Ordinal);
-        Assert.Contains("оболочка интерпретатора", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("оболочка компилятора байт-кода", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("BytecodeVm", promptService.LastInfoMessage, StringComparison.Ordinal);
         Assert.Equal("Окно «О программе» закрыто.", viewModel.StatusBar.StatusText);
     }
 
@@ -1321,7 +1322,8 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal("About Axiom IDE", promptService.LastInfoTitle);
         Assert.Contains("Axiom IDE", promptService.LastInfoMessage, StringComparison.Ordinal);
-        Assert.Contains("interpreter shell", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("bytecode compiler shell", promptService.LastInfoMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("BytecodeVm", promptService.LastInfoMessage, StringComparison.Ordinal);
         Assert.Equal("About dialog closed.", viewModel.StatusBar.StatusText);
     }
 
@@ -1519,28 +1521,6 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public void ExecutionModeCommands_SwitchModeAndPersistShellPreferences()
-    {
-        var recentFilesService = new FakeRecentFilesService(
-            new RecentFilesSnapshot([], @"C:\temp", true, IdeWindowState.Normal));
-        var viewModel = CreateViewModel(recentFilesService: recentFilesService);
-
-        viewModel.UseInterpreterExecutionModeCommand.Execute(null);
-
-        Assert.Equal(Axiom.Execution.ExecutionMode.Interpreter, viewModel.SelectedExecutionMode);
-        Assert.True(viewModel.IsInterpreterExecutionModeEnabled);
-        Assert.False(viewModel.IsBytecodeExecutionModeEnabled);
-        Assert.Equal(Axiom.Execution.ExecutionMode.Interpreter, recentFilesService.LastPreferredExecutionMode);
-
-        viewModel.UseBytecodeExecutionModeCommand.Execute(null);
-
-        Assert.Equal(Axiom.Execution.ExecutionMode.Bytecode, viewModel.SelectedExecutionMode);
-        Assert.False(viewModel.IsInterpreterExecutionModeEnabled);
-        Assert.True(viewModel.IsBytecodeExecutionModeEnabled);
-        Assert.Equal(Axiom.Execution.ExecutionMode.Bytecode, recentFilesService.LastPreferredExecutionMode);
-    }
-
-    [Fact]
     public void ShellPreferenceCommands_WriteStructuredEventLogEntries()
     {
         var recentFilesService = new FakeRecentFilesService(
@@ -1553,7 +1533,6 @@ public sealed class MainWindowViewModelTests
 
         viewModel.UseDarkThemeCommand.Execute(null);
         viewModel.UseEnglishLanguageCommand.Execute(null);
-        viewModel.UseInterpreterExecutionModeCommand.Execute(null);
         viewModel.ToggleSmartIdentifierCommand.Execute(null);
         viewModel.UseModernFormattingCommand.Execute(null);
 
@@ -1569,12 +1548,6 @@ public sealed class MainWindowViewModelTests
                 && entry.CommandName == "UseEnglishLanguage"
                 && entry.MenuName == "View"
                 && entry.Properties?["language"] == "English");
-        Assert.Contains(
-            eventLogService.Entries,
-            static entry => entry.EventName == "command.executed"
-                && entry.CommandName == "UseInterpreterExecutionMode"
-                && entry.MenuName == "Run"
-                && entry.Properties?["executionMode"] == "Interpreter");
         Assert.Contains(
             eventLogService.Entries,
             static entry => entry.EventName == "command.executed"
@@ -1655,23 +1628,6 @@ public sealed class MainWindowViewModelTests
             static entry => entry.EventName == "command.executed"
                 && entry.CommandName == "About"
                 && entry.MenuName == "Help");
-    }
-
-    [Fact]
-    public void RunProgram_PassesSelectedExecutionModeToRunService()
-    {
-        var documentService = new FakeDocumentFileService
-        {
-            DocumentToLoad = new DocumentFileContent(@"C:\temp\program.axm", "PRINT 1", false)
-        };
-        var runService = new FakeProgramRunService();
-        var viewModel = CreateViewModel(documentService: documentService, runService: runService);
-        PrepareSavedActiveDocument(viewModel, @"C:\temp\program.axm", "PRINT 1");
-
-        viewModel.UseInterpreterExecutionModeCommand.Execute(null);
-        viewModel.RunCommand.Execute(null);
-
-        Assert.Equal(Axiom.Execution.ExecutionMode.Interpreter, runService.LastExecutionMode);
     }
 
     [Fact]
@@ -2356,26 +2312,6 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public void RestoreShellPreferences_RestoresExecutionMode()
-    {
-        var viewModel = CreateViewModel(
-            recentFilesService: new FakeRecentFilesService(
-                new RecentFilesSnapshot(
-                    [],
-                    @"C:\temp",
-                    true,
-                    IdeWindowState.Normal,
-                    true,
-                    IdeTheme.Light,
-                    IdeLanguage.Russian,
-                    false,
-                    Axiom.Execution.ExecutionMode.Interpreter)));
-
-        Assert.Equal(Axiom.Execution.ExecutionMode.Interpreter, viewModel.SelectedExecutionMode);
-        Assert.True(viewModel.IsInterpreterExecutionModeEnabled);
-    }
-
-    [Fact]
     public void OpenRecentCommand_RemovesMissingRecentEntry()
     {
         var missingPath = @"C:\temp\missing.axm";
@@ -2662,7 +2598,6 @@ public sealed class MainWindowViewModelTests
         public int StepBackCallCount { get; private set; }
         public string? LastCompiledSourceText { get; private set; }
         public string? LastSourceText { get; private set; }
-        public Axiom.Execution.ExecutionMode LastExecutionMode { get; private set; } = Axiom.Execution.ExecutionMode.Bytecode;
         public IReadOnlyList<int> LastSourceBreakpointLines { get; private set; } = [];
         public bool LastStopBeforeFirstInstruction { get; private set; }
         public string? LastSourceFilePath { get; private set; }
@@ -2677,7 +2612,6 @@ public sealed class MainWindowViewModelTests
 
         public ProgramRunResult Run(
             string sourceText,
-            Axiom.Execution.ExecutionMode mode = Axiom.Execution.ExecutionMode.Bytecode,
             IEnumerable<int>? sourceBreakpointLines = null,
             bool stopBeforeFirstInstruction = false,
             string? sourceFilePath = null,
@@ -2686,7 +2620,6 @@ public sealed class MainWindowViewModelTests
         {
             CallCount++;
             LastSourceText = sourceText;
-            LastExecutionMode = mode;
             LastSourceBreakpointLines = sourceBreakpointLines?.ToArray() ?? [];
             LastStopBeforeFirstInstruction = stopBeforeFirstInstruction;
             LastSourceFilePath = sourceFilePath;
@@ -2791,7 +2724,6 @@ public sealed class MainWindowViewModelTests
         public IdeTheme LastTheme { get; private set; } = IdeTheme.Light;
         public IdeLanguage LastLanguage { get; private set; } = IdeLanguage.Russian;
         public bool LastSmartIdentifierEnabled { get; private set; }
-        public Axiom.Execution.ExecutionMode LastPreferredExecutionMode { get; private set; } = Axiom.Execution.ExecutionMode.Bytecode;
 
         public RecentFilesSnapshot GetSnapshot() => _snapshot;
 
@@ -2806,8 +2738,7 @@ public sealed class MainWindowViewModelTests
                 _snapshot.IsStatusBarVisible,
                 _snapshot.Theme,
                 _snapshot.Language,
-                _snapshot.SmartIdentifierEnabled,
-                _snapshot.PreferredExecutionMode);
+                _snapshot.SmartIdentifierEnabled);
             return _snapshot;
         }
 
@@ -2821,8 +2752,7 @@ public sealed class MainWindowViewModelTests
                 WindowState = _snapshot.WindowState,
                 Theme = _snapshot.Theme,
                 Language = _snapshot.Language,
-                SmartIdentifierEnabled = _snapshot.SmartIdentifierEnabled,
-                PreferredExecutionMode = _snapshot.PreferredExecutionMode
+                SmartIdentifierEnabled = _snapshot.SmartIdentifierEnabled
             };
             return _snapshot;
         }
@@ -2833,8 +2763,7 @@ public sealed class MainWindowViewModelTests
             IdeWindowState windowState,
             IdeTheme theme,
             IdeLanguage language,
-            bool smartIdentifierEnabled = false,
-            Axiom.Execution.ExecutionMode preferredExecutionMode = Axiom.Execution.ExecutionMode.Bytecode)
+            bool smartIdentifierEnabled = false)
         {
             LastIsFilesPaneVisible = isFilesPaneVisible;
             LastIsStatusBarVisible = isStatusBarVisible;
@@ -2842,7 +2771,6 @@ public sealed class MainWindowViewModelTests
             LastTheme = theme;
             LastLanguage = language;
             LastSmartIdentifierEnabled = smartIdentifierEnabled;
-            LastPreferredExecutionMode = preferredExecutionMode;
             _snapshot = _snapshot with
             {
                 IsFilesPaneVisible = isFilesPaneVisible,
@@ -2850,8 +2778,7 @@ public sealed class MainWindowViewModelTests
                 WindowState = windowState,
                 Theme = theme,
                 Language = language,
-                SmartIdentifierEnabled = smartIdentifierEnabled,
-                PreferredExecutionMode = preferredExecutionMode
+                SmartIdentifierEnabled = smartIdentifierEnabled
             };
             return _snapshot;
         }

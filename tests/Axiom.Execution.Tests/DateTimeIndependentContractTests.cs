@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DateTimeIndependentContractTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CalendarBoundariesUseGregorianRules(ExecutionMode mode)
+    [Fact]
+    public void CalendarBoundariesUseGregorianRules()
     {
-        Check(mode, """
+        Check("""
 PRINT ISLEAPYEAR(1900)
 PRINT ISLEAPYEAR(2000)
 PRINT ISLEAPYEAR(2100)
@@ -28,12 +26,10 @@ PRINT DATEPART("w", DATESERIAL(2024, 1, 1))
 """, ["FALSE", "TRUE", "FALSE", "29", "28", "0001-01-01", "9999-12-31", "2024-02-29", "2025-02-28", "2024-02-29", "2024-02-01", "2024-02-29", "9999-01-01", "0001-12-31", "-2", "366", "1"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void TimeWrapsAndDiffCountsBoundaries(ExecutionMode mode)
+    [Fact]
+    public void TimeWrapsAndDiffCountsBoundaries()
     {
-        Check(mode, """
+        Check("""
 PRINT TIMESERIAL(0, 0, 0)
 PRINT TIMESERIAL(23, 59, 59)
 PRINT DATEADD("s", 1, TIMESERIAL(23, 59, 59))
@@ -44,10 +40,8 @@ PRINT DATEPART("n", TIMESERIAL(23, 59, 59))
 """, ["00:00:00", "23:59:59", "00:00:00", "23:59:59", "1", "-86399", "59"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void InvalidCalendarAndArithmeticRemainCatchable(ExecutionMode mode)
+    [Fact]
+    public void InvalidCalendarAndArithmeticRemainCatchable()
     {
         foreach (var call in new[] {
             "DATESERIAL(1900, 2, 29)", "DATESERIAL(2024, 4, 31)",
@@ -59,15 +53,13 @@ PRINT DATEPART("n", TIMESERIAL(23, 59, 59))
             "DATEADD(\"q\", 2147483647, DATESERIAL(2024, 1, 1))",
             "DATEPART(\"h\", DATESERIAL(2024, 1, 1))",
             "DATEADD(\"d\", 1, TIMESERIAL(0, 0, 0))" })
-            Check(mode, $"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT \"Продолжение\"", ["MB3007", "Продолжение"]);
+            Check($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT \"Продолжение\"", ["MB3007", "Продолжение"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExplicitZoneDistinguishesMissingAndRepeatedLocalTimes(ExecutionMode mode)
+    [Fact]
+    public void ExplicitZoneDistinguishesMissingAndRepeatedLocalTimes()
     {
-        Check(mode, """
+        Check("""
 DIM moment AS DATETIME
 moment = "2024-01-15 12:00:00"
 PRINT UTCOFFSET(moment, "America/New_York")
@@ -82,15 +74,13 @@ PRINT FROMUTC(moment, "America/New_York")
 """, ["-300", "2024-01-15 17:00:00", "-240", "2024-07-15 16:00:00", "2024-11-03 01:30:00", "2024-11-03 01:30:00"]);
         foreach (var value in new[] { "2024-03-10 02:30:00", "2024-11-03 01:30:00" })
             foreach (var name in new[] { "TOUTC", "UTCOFFSET" })
-                Check(mode, $"DIM moment AS DATETIME\n moment = \"{value}\"\nTRY\nPRINT {name}(moment, \"America/New_York\")\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+                Check($"DIM moment AS DATETIME\n moment = \"{value}\"\nTRY\nPRINT {name}(moment, \"America/New_York\")\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void TemporalDeclarationsResetOnEachLoopIteration(ExecutionMode mode)
+    [Fact]
+    public void TemporalDeclarationsResetOnEachLoopIteration()
     {
-        Check(mode, """
+        Check("""
 FOR i = 1 TO 2
 DIM d AS DATE
 DIM t AS TIME
@@ -105,10 +95,8 @@ NEXT i
 """, ["0001-01-01", "00:00:00", "0001-01-01 00:00:00", "0001-01-01", "00:00:00", "0001-01-01 00:00:00"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CanonicalParsingDoesNotDependOnCulture(ExecutionMode mode)
+    [Fact]
+    public void CanonicalParsingDoesNotDependOnCulture()
     {
         var previous = System.Globalization.CultureInfo.CurrentCulture;
         try
@@ -116,7 +104,7 @@ NEXT i
             foreach (var culture in new[] { "ru-RU", "en-US", "ar-SA", "th-TH" })
             {
                 System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
-                Check(mode, """
+                Check("""
 PRINT DATEVALUE("2000-02-29")
 PRINT DATEVALUE("2000-02-29 23:59:59")
 PRINT TIMEVALUE("00:00:00")
@@ -136,30 +124,26 @@ PRINT ISDATE("")
         }
         finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
         foreach (var call in new[] { "DATEVALUE(\"1900-02-29\")", "DATEVALUE(\"23:59:59\")", "TIMEVALUE(\"2000-02-29\")", "TIMEVALUE(\"23:59:60\")" })
-            Check(mode, $"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+            Check($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ZoneErrorsAndUtcRangeOverflowAreCatchable(ExecutionMode mode)
+    [Fact]
+    public void ZoneErrorsAndUtcRangeOverflowAreCatchable()
     {
         foreach (var call in new[] {
             "DATE(\"Axiom/NoSuchZone\")", "TIME(\"\")", "NOW(\"Axiom/NoSuchZone\")",
             "TOUTC(moment, \"Axiom/NoSuchZone\")", "FROMUTC(moment, \"Axiom/NoSuchZone\")", "UTCOFFSET(moment, \"Axiom/NoSuchZone\")" })
-            Check(mode, $"DIM moment AS DATETIME = \"2024-01-01 00:00:00\"\nTRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+            Check($"DIM moment AS DATETIME = \"2024-01-01 00:00:00\"\nTRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
         foreach (var scenario in new[] {
             ("0001-01-01 00:00:00", "TOUTC", "Asia/Tokyo"),
             ("9999-12-31 23:59:59", "TOUTC", "America/New_York"),
             ("0001-01-01 00:00:00", "FROMUTC", "America/New_York"),
             ("9999-12-31 23:59:59", "FROMUTC", "Asia/Tokyo") })
-            Check(mode, $"DIM moment AS DATETIME = \"{scenario.Item1}\"\nTRY\nPRINT {scenario.Item2}(moment, \"{scenario.Item3}\")\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+            Check($"DIM moment AS DATETIME = \"{scenario.Item1}\"\nTRY\nPRINT {scenario.Item2}(moment, \"{scenario.Item3}\")\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CurrentFormsUseOneControlledInstantAndCrossUtcDay(ExecutionMode mode)
+    [Fact]
+    public void CurrentFormsUseOneControlledInstantAndCrossUtcDay()
     {
         var clock = new ControlledClock();
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -177,18 +161,15 @@ PRINT UTCOFFSET()
 PRINT DATE("LOCAL")
 PRINT TIME("LOCAL")
 PRINT NOW("LOCAL")
-""", runtimeClock: clock, mode: mode));
+""", runtimeClock: clock));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { "2024-03-01", "00:30:00", "2024-03-01 00:30:00", "2024-02-29", "21:30:00", "2024-02-29 21:30:00", "2024-02-29", "21:30:00", "2024-02-29 21:30:00", "1800", "180", "2024-03-01", "00:30:00", "2024-03-01 00:30:00" }, result.Output);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void DateTimeArithmeticAndPartsCoverEveryToken(ExecutionMode mode)
+    [Fact]
+    public void DateTimeArithmeticAndPartsCoverEveryToken()
     {
-        Check(mode, """
+        Check("""
 DIM moment AS DATETIME = "2024-02-29 23:59:59"
 DIM later AS DATETIME = "2025-03-01 00:00:00"
 PRINT DATEADD("YYYY", 1, moment)
@@ -229,24 +210,17 @@ PRINT DATEPART("s", moment)
             "MONTHNAME(0)", "WEEKDAYNAME(8)", "DAYSINMONTH(2024, 0)", "ISLEAPYEAR(0)" })
         {
             var source = "DIM moment AS DATETIME = \"2024-02-29 23:59:59\"\nPRINT " + call;
-            var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-            Assert.False(first.Succeeded);
+            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.False(second.Succeeded);
-            Assert.False(second.UsedInterpreterFallback);
-            var a = Assert.Single(first.Diagnostics);
             var b = Assert.Single(second.Diagnostics);
-            Assert.Equal("MB3007", a.Code);
-            Assert.Equal((a.Code, a.Location.Line, a.Location.Column, a.Location.Span), (b.Code, b.Location.Line, b.Location.Column, b.Location.Span));
+            Assert.Equal("MB3007", b.Code);
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void TimeArithmeticWrapsLargeIntegerHoursWithoutTickOverflow(ExecutionMode mode)
+    [Fact]
+    public void TimeArithmeticWrapsLargeIntegerHoursWithoutTickOverflow()
     {
-        Check(mode, """
+        Check("""
 PRINT DATEADD("h", 2147483647, TIMESERIAL(23, 59, 59))
 PRINT DATEADD("h", (-2147483647 - 1), TIMESERIAL(0, 0, 0))
 PRINT DATEADD("h", 256204778, TIMESERIAL(23, 59, 59))
@@ -269,11 +243,10 @@ PRINT DATEADD("s", (-2147483647 - 1), TIMESERIAL(23, 59, 59))
         }
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expected, result.Output);
     }
 }

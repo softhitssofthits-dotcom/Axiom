@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ReadAllLinesBoundaryEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CarriageReturnAcceptanceSampleRuns(ExecutionMode mode)
+    [Fact]
+    public void CarriageReturnAcceptanceSampleRuns()
     {
         var repository = new DirectoryInfo(AppContext.BaseDirectory);
         while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "Axiom.sln"))) repository = repository.Parent;
@@ -15,10 +13,9 @@ public sealed class ReadAllLinesBoundaryEvidenceTests
         Directory.CreateDirectory(root);
         try
         {
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode, resourceBaseDirectory: root));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, resourceBaseDirectory: root));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["TRUE", "TRUE", "3", "А/Б/В", "TRUE"], result.Output);
             Assert.Empty(Directory.GetFiles(Path.Combine(root, ".artifacts")));
         }
@@ -33,20 +30,20 @@ public sealed class ReadAllLinesBoundaryEvidenceTests
 
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            yield return [mode, Array.Empty<byte>(), "0|TRUE|1|0|"];
-            yield return [mode, new byte[] { 10 }, "1|TRUE|1|1|"];
-            yield return [mode, new byte[] { 13, 10, 13, 10 }, "2|TRUE|1|2|/"];
-            yield return [mode, new byte[] { 0xD0, 0x90, 0, 0xF0, 0x9F, 0x98, 0x80, 13, 0x65, 0xCC, 0x81, 10 }, "2|TRUE|1|2|А\0😀/é"];
-            yield return [mode, new byte[] { 13 }, "1|TRUE|1|1|"];
-            yield return [mode, new byte[] { 13, 13 }, "2|TRUE|1|2|/"];
+            yield return [Array.Empty<byte>(), "0|TRUE|1|0|"];
+            yield return [new byte[] { 10 }, "1|TRUE|1|1|"];
+            yield return [new byte[] { 13, 10, 13, 10 }, "2|TRUE|1|2|/"];
+            yield return [new byte[] { 0xD0, 0x90, 0, 0xF0, 0x9F, 0x98, 0x80, 13, 0x65, 0xCC, 0x81, 10 }, "2|TRUE|1|2|А\0😀/é"];
+            yield return [new byte[] { 13 }, "1|TRUE|1|1|"];
+            yield return [new byte[] { 13, 13 }, "2|TRUE|1|2|/"];
         }
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void LiteralBytesDetermineLineShapeAndKeepFileUnchanged(ExecutionMode mode, byte[] bytes, string expected)
+    public void LiteralBytesDetermineLineShapeAndKeepFileUnchanged(byte[] bytes, string expected)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "read-all-lines-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -68,11 +65,10 @@ public sealed class ReadAllLinesBoundaryEvidenceTests
                     PRINT err.Code
                 END TRY
                 PRINT JOIN(lines, "/")
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(expected.Split('|').Concat(["MB3007", expected[(expected.LastIndexOf('|') + 1)..]]), result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
             Assert.False(File.Exists(path + ".missing"));

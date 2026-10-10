@@ -36,11 +36,10 @@ PRINT LEN(text)
 PRINT count
 PRINT reconstructed = text
 """;
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { utf16.ToString(), scalars.ToString(), "TRUE" }, run.Output);
         }
     }
@@ -56,11 +55,10 @@ PRINT CHRW(ASCW(family)) = family
 PRINT LEN(LEFT("😀", 1))
 PRINT ASCW(LEFT("😀", 1))
 """;
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded);
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { "FALSE", "FALSE", "1", "65533" }, run.Output);
         }
     }

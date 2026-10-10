@@ -15,10 +15,8 @@ public sealed class NumericPromotionContractTests
                         yield return new object[] { name, first, second, third };
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExplicitDecimalToDoubleConversionCanRoundAndPreservesOrdinaryValues(ExecutionMode mode)
+    [Fact]
+    public void ExplicitDecimalToDoubleConversionCanRoundAndPreservesOrdinaryValues()
     {
         const string source = """
 PRINT CDBL(CDEC(2))
@@ -31,9 +29,8 @@ DIM large AS DECIMAL = CDEC(9223372036854775807) * CDEC(1000000000)
 PRINT CDBL(large) > 0
 PRINT MIN(CDBL(CDEC(2)), 3.0)
 """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { "2", "-2.5", "0", "9007199254740992", "TRUE", "TRUE", "2" }, result.Output);
     }
 
@@ -65,29 +62,21 @@ PRINT MIN(CDBL(CDEC(2)), 3.0)
             Assert.Equal(expectedType, call.Type.Name.ToUpperInvariant());
             Assert.All(call.Arguments, argument => Assert.Equal(expectedType, argument.Type.Name.ToUpperInvariant()));
         }
-        var interpreter = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var vm = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(vm.UsedInterpreterFallback);
+        var vm = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         if (rejected)
         {
-            Assert.False(interpreter.Succeeded);
             Assert.False(vm.Succeeded);
-            Assert.Equal(interpreter.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), vm.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
         }
         else
         {
-            Assert.True(interpreter.Succeeded);
             Assert.True(vm.Succeeded);
             string[] expected = [name == "MIN" ? "2" : name == "MAX" ? "3" : "4"];
-            Assert.Equal(expected, interpreter.Output);
             Assert.Equal(expected, vm.Output);
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void LargeLongAndDecimalStayExactWithoutImplicitDouble(ExecutionMode mode)
+    [Fact]
+    public void LargeLongAndDecimalStayExactWithoutImplicitDouble()
     {
         const string source = """
 DIM smallest AS LONG = -9223372036854775807 - CLNG(1)
@@ -114,9 +103,8 @@ CATCH err
  PRINT err.Code
 END TRY
 """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { "TRUE", "TRUE", "TRUE", "TRUE", "-1", "TRUE", "TRUE", "TRUE", "TRUE", "2", "MB3008", "MB3008" }, result.Output);
     }
 }

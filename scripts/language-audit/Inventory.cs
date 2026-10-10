@@ -34,7 +34,6 @@ static class Inventory
             ReturnType = d.DeclaredReturnType.Name, Binding = d.BindingKind.ToString(),
             OperandPolicy = d.OperandBindingPolicy.ToString(), ResultPolicy = d.ResultTypePolicy.ToString(),
             VmDispatch = BytecodeVm.SupportsBuiltin(d.Id, d.Parameters.Count),
-            Interpreter = Mentions(sources.Where(p => Path.GetFileName(p).StartsWith("Interpreter")), "BuiltinFunctionId." + d.Id),
             Vm = Mentions(sources.Where(p => Path.GetFileName(p).StartsWith("BytecodeVm")), "BuiltinFunctionId." + d.Id),
             Helpers = Mentions(sources.Where(p => p.Contains("Builtins")), d.Name),
             Tests = Mentions(tests, d.Name), Samples = Mentions(samples, d.Name), Manual = Mentions(manuals, d.Name),
@@ -46,7 +45,6 @@ static class Inventory
         var reserved = Enum.GetValues<BuiltinFunctionId>().Where(id => !BuiltinFunctions.TryGetDescriptor(id, out _)).Select(id => id.ToString()).ToArray();
         var integrity = new
         {
-            MissingInterpreterDispatch = rows.Where(r => r.Interpreter.Length == 0).Select(r => r.Id).Distinct().ToArray(),
             MissingVmDispatch = rows.Where(r => !r.VmDispatch).Select(r => r.Id).Distinct().ToArray(),
             DuplicateSignatures = rows.GroupBy(r => r.Name + "(" + string.Join(",",r.Parameters.Select(p=>p.Type)) + ")").Where(g=>g.Count()>1).Select(g=>g.Key).ToArray(),
             Keywords = AxiomLanguageKeywords.Keywords.Order().ToArray(),
@@ -62,9 +60,9 @@ static class Inventory
         var lines = new List<string> { $"# Независимая матрица реестра — {DateTime.Now:yyyy-MM-dd}", "",
             "Получена из загруженного реестра, включая перегрузки. Тип результата при специальной политике определяется связывателем; объявленный тип не является окончательным. Упоминания в тестах, примерах и справочнике — карта поиска, не доказательство выполнения. Семантический статус каждой строки: UNVERIFIED_PER_FORM. Историческая находка хранится отдельно и не означает текущий дефект.", "",
             $"Дескрипторов: {rows.Length}; имён: {rows.Select(r => r.Name).Distinct().Count()}; ID: {Enum.GetValues<BuiltinFunctionId>().Length}; незарегистрированные ID: {string.Join(", ", reserved)}.", "",
-            "| Имя | ID | Параметры | Объявленный результат | Связывание / операнды / результат | Interpreter / VM | Тесты / примеры / manual | Подсветка светлая / тёмная |",
+            "| Имя | ID | Параметры | Объявленный результат | Связывание / операнды / результат | BytecodeVm | Тесты / примеры / manual | Подсветка светлая / тёмная |",
             "|---|---|---|---|---|---|---|---|" };
-        lines.AddRange(rows.Select(r => $"| {r.Name} | {r.Id} | {string.Join(", ", r.Parameters.Select(p => p.Name + ": " + p.Type))} | {r.ReturnType} | {r.Binding} / {r.OperandPolicy} / {r.ResultPolicy} | {r.Interpreter.Length} файлов / {r.VmDispatch} | {r.Tests.Length} / {r.Samples.Length} / {r.Manual.Length} | {r.Light} / {r.Dark} |"));
+        lines.AddRange(rows.Select(r => $"| {r.Name} | {r.Id} | {string.Join(", ", r.Parameters.Select(p => p.Name + ": " + p.Type))} | {r.ReturnType} | {r.Binding} / {r.OperandPolicy} / {r.ResultPolicy} | {r.VmDispatch} | {r.Tests.Length} / {r.Samples.Length} / {r.Manual.Length} | {r.Light} / {r.Dark} |"));
         File.WriteAllLines(Path.Combine(output, "matrix.md"), lines);
     }
 }

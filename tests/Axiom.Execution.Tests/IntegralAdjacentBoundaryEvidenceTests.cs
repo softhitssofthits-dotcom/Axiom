@@ -25,13 +25,13 @@ public sealed class IntegralAdjacentBoundaryEvidenceTests
             ("CINT(CDEC(1) / CDEC(2))", "0"),
             ("CLNG(CDEC(1) / CDEC(2))", "0")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var (call, expected) in cases) yield return [mode, call, expected];
+
+        foreach (var (call, expected) in cases) yield return [call, expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void AdjacentRepresentableValuesAndDecimalFractionsRespectTruncation(ExecutionMode mode, string call, string expected)
+    public void AdjacentRepresentableValuesAndDecimalFractionsRespectTruncation(string call, string expected)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             TRY
@@ -42,11 +42,10 @@ public sealed class IntegralAdjacentBoundaryEvidenceTests
                 PRINT "Завершено"
             END TRY
             PRINT "Продолжение"
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { expected, "Завершено", "Продолжение" }, result.Output);
     }
 }

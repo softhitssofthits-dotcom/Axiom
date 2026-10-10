@@ -58,12 +58,9 @@ public sealed class FilePropertyFormEvidenceTests
     public void WrongArgumentsFailSemanticallyAtSameLocation(string call)
     {
         var source = "DIM f AS FILE\nPRINT " + call;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.Equal(ExecutionStatus.SemanticFailure, first.Status);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.SemanticFailure, second.Status);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Span)));
+        Assert.Equal(ExecutionStatus.SemanticFailure, second.Status);
+        Assert.NotEmpty(second.Diagnostics);
     }
 }

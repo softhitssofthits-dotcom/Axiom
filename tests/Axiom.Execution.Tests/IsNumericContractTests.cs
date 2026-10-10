@@ -37,7 +37,7 @@ public sealed class IsNumericContractTests
     [InlineData("１２", false)]
     [InlineData("١٢", false)]
     [InlineData("1 2", false)]
-    public void FullInvariantFiniteNumberContractMatchesBothEngines(string text, bool expected)
+    public void FullInvariantFiniteNumberContractMatchesBytecodeVm(string text, bool expected)
     {
         foreach (var culture in new[] { "en-US", "ru-RU", "tr-TR" })
         {
@@ -45,11 +45,10 @@ public sealed class IsNumericContractTests
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
-                foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
                 {
-                    var run = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT isnumeric(\"{text}\")", mode: mode));
+                    var run = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT isnumeric(\"{text}\")"));
                     Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-                    Assert.False(run.UsedInterpreterFallback);
                     Assert.Equal(new[] { expected ? "TRUE" : "FALSE" }, run.Output);
                 }
             }
@@ -80,11 +79,10 @@ public sealed class IsNumericContractTests
     public void HiddenCharactersRespectFullStringContract(int code, bool expected)
     {
         var text = code == 0 ? "\"12\" + CHRW(0)" : $"CHRW({code}) + \"12\"";
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT ISNUMERIC(" + text + ")", mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT ISNUMERIC(" + text + ")"));
             Assert.True(run.Succeeded);
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { expected ? "TRUE" : "FALSE" }, run.Output);
         }
     }
@@ -99,11 +97,10 @@ public sealed class IsNumericContractTests
         var call = Assert.IsType<BoundCallExpression>(Assert.Single(Assert.IsType<BoundPrintStatement>(program.GlobalStatements.Last()).Items).Expression);
         Assert.Equal(BuiltinFunctionId.IsNumeric, Assert.IsType<BoundFunctionExpression>(call.Target).Function.BuiltinId);
         Assert.Equal(TypeSymbol.Boolean, call.Type);
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT ISNUMERIC(\"12abc\")\nPRINT VAL(\"12abc\")\nPRINT ISNUMERIC(\"1e999\")\nPRINT VAL(\"1e999\")", mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT ISNUMERIC(\"12abc\")\nPRINT VAL(\"12abc\")\nPRINT ISNUMERIC(\"1e999\")\nPRINT VAL(\"1e999\")"));
             Assert.True(run.Succeeded);
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { "FALSE", "12", "FALSE", "0" }, run.Output);
         }
     }

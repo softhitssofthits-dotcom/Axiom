@@ -7,8 +7,14 @@ using Axiom.Runtime;
 
 var root = FindRepositoryRoot();
 
-return args.Length > 0 && string.Equals(args[0], "compare-engines", StringComparison.OrdinalIgnoreCase)
-    ? RunEngineComparison(root, args[1..])
+if (args.Length > 0 && string.Equals(args[0], "compare-engines", StringComparison.OrdinalIgnoreCase))
+{
+    Console.Error.WriteLine("Сравнение исполнителей больше не поддерживается. Используйте benchmark-bytecode для измерения BytecodeVm.");
+    return 1;
+}
+
+return args.Length > 0 && string.Equals(args[0], "benchmark-bytecode", StringComparison.OrdinalIgnoreCase)
+    ? RunBytecodeBenchmark(root, args[1..])
     : args.Length > 0 && string.Equals(args[0], "audit-bytecode-coverage", StringComparison.OrdinalIgnoreCase)
         ? RunBytecodeCoverageAudit(root, args[1..])
         : args.Length > 0 && string.Equals(args[0], "profile-bytecode-opcodes", StringComparison.OrdinalIgnoreCase)
@@ -162,7 +168,7 @@ PRINT CLAMP(value, 0.1, 20)
     return failed == 0 ? 0 : 1;
 }
 
-static int RunEngineComparison(string root, string[] args)
+static int RunBytecodeBenchmark(string root, string[] args)
 {
     var options = ParseBenchmarkOptions(root, args);
     var benchmarks = GetBenchmarkCases()
@@ -183,12 +189,12 @@ static int RunEngineComparison(string root, string[] args)
     var passed = 0;
     var failed = 0;
 
-    report.AppendLine("Axiom Engine Comparison Report");
+    report.AppendLine("Axiom: измерение производительности байт-кода");
     report.AppendLine($"Generated: {reportTime:yyyy-MM-dd HH:mm:ss zzz}");
     report.AppendLine($"Repository: {root}");
-    report.AppendLine($"Iterations per engine: {options.Iterations}");
-    report.AppendLine($"Warmup iterations per engine: {options.WarmupIterations}");
-    report.AppendLine("Measurement order: interleaved with alternating engine start");
+    report.AppendLine($"Повторений: {options.Iterations}");
+    report.AppendLine($"Прогрев: {options.WarmupIterations}");
+    report.AppendLine("Исполнитель: BytecodeVm");
     report.AppendLine();
 
     foreach (var benchmark in benchmarks)
@@ -217,8 +223,8 @@ static int RunEngineComparison(string root, string[] args)
     report.AppendLine();
     report.AppendLine("Interpretation");
     report.AppendLine("==============");
-    report.AppendLine("A lower bytecode/interpreter ratio means the bytecode VM is faster on that benchmark.");
-    report.AppendLine("Runtime ratios compare only execution time; total ratios include frontend preparation and lowering.");
+    report.AppendLine("Измеряется один исполнитель BytecodeVm; сравнение скорости с интерпретатором удалено.");
+    report.AppendLine("Время исполнения учитывается отдельно; общее время включает разбор, привязку, понижение и выпуск байт-кода.");
 
     var reportText = report.ToString();
     WriteReport(options.OutputPath, reportText);
@@ -306,125 +312,34 @@ static int RunBytecodeOpcodeProfile(string root, string[] args)
 
 static BenchmarkOutcome RunBenchmarkCase(string root, BenchmarkCase benchmark, BenchmarkOptions options)
 {
-    var sourcePath = Path.Combine(root, benchmark.RelativePath);
-    var sourceText = File.ReadAllText(sourcePath, Encoding.UTF8);
-
-    WarmUpBenchmarkRuns(sourceText, benchmark, ExecutionMode.Interpreter, options.WarmupIterations);
-    WarmUpBenchmarkRuns(sourceText, benchmark, ExecutionMode.Bytecode, options.WarmupIterations);
-
-    ExecutionResult? interpreterBaseline = null;
-    ExecutionResult? bytecodeBaseline = null;
-    var interpreterRuntimeSamples = new List<double>(options.Iterations);
-    var interpreterTotalSamples = new List<double>(options.Iterations);
-    var bytecodeRuntimeSamples = new List<double>(options.Iterations);
-    var bytecodeTotalSamples = new List<double>(options.Iterations);
-    var interpreterStabilityIssue = string.Empty;
-    var bytecodeStabilityIssue = string.Empty;
-
+    var sourceText = File.ReadAllText(Path.Combine(root, benchmark.RelativePath), Encoding.UTF8);
+    WarmUpBenchmarkRuns(sourceText, benchmark, options.WarmupIterations);
+    ExecutionResult? baseline = null;
+    var runtimeSamples = new List<double>(options.Iterations);
+    var totalSamples = new List<double>(options.Iterations);
+    var stabilityIssue = string.Empty;
     for (var iteration = 0; iteration < options.Iterations; iteration++)
     {
-        if (iteration % 2 == 0)
-        {
-            AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Interpreter),
-                "Interpreter",
-                ref interpreterBaseline,
-                interpreterRuntimeSamples,
-                interpreterTotalSamples,
-                ref interpreterStabilityIssue);
-            AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Bytecode),
-                "Bytecode",
-                ref bytecodeBaseline,
-                bytecodeRuntimeSamples,
-                bytecodeTotalSamples,
-                ref bytecodeStabilityIssue);
-        }
-        else
-        {
-            AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Bytecode),
-                "Bytecode",
-                ref bytecodeBaseline,
-                bytecodeRuntimeSamples,
-                bytecodeTotalSamples,
-                ref bytecodeStabilityIssue);
-            AddBenchmarkSample(
-                ExecuteBenchmarkRun(sourceText, benchmark, ExecutionMode.Interpreter),
-                "Interpreter",
-                ref interpreterBaseline,
-                interpreterRuntimeSamples,
-                interpreterTotalSamples,
-                ref interpreterStabilityIssue);
-        }
+        AddBenchmarkSample(ExecuteBenchmarkRun(sourceText, benchmark), "BytecodeVm",
+            ref baseline, runtimeSamples, totalSamples, ref stabilityIssue);
     }
-
-    var interpreterSummary = new BenchmarkExecutionRuns(
-        interpreterBaseline ?? throw new InvalidOperationException("Expected at least one interpreter benchmark run."),
-        CreateStats(interpreterRuntimeSamples),
-        CreateStats(interpreterTotalSamples),
-        interpreterStabilityIssue);
-    var bytecodeSummary = new BenchmarkExecutionRuns(
-        bytecodeBaseline ?? throw new InvalidOperationException("Expected at least one bytecode benchmark run."),
-        CreateStats(bytecodeRuntimeSamples),
-        CreateStats(bytecodeTotalSamples),
-        bytecodeStabilityIssue);
-
+    var result = baseline ?? throw new InvalidOperationException("Отсутствует результат измерения.");
     var issues = new List<string>();
-
-    if (interpreterSummary.Result.Status != ExecutionStatus.Success)
-    {
-        issues.Add($"Interpreter finished with status {interpreterSummary.Result.Status}.");
-    }
-
-    if (bytecodeSummary.Result.Status != ExecutionStatus.Success)
-    {
-        issues.Add($"Bytecode finished with status {bytecodeSummary.Result.Status}.");
-    }
-
-    if (!string.Equals(interpreterSummary.StabilityIssue, string.Empty, StringComparison.Ordinal))
-    {
-        issues.Add(interpreterSummary.StabilityIssue);
-    }
-
-    if (!string.Equals(bytecodeSummary.StabilityIssue, string.Empty, StringComparison.Ordinal))
-    {
-        issues.Add(bytecodeSummary.StabilityIssue);
-    }
-
-    if (interpreterSummary.Result.Status == ExecutionStatus.Success
-        && bytecodeSummary.Result.Status == ExecutionStatus.Success)
-    {
-        if (!interpreterSummary.Result.Output.SequenceEqual(bytecodeSummary.Result.Output, StringComparer.Ordinal))
-        {
-            issues.Add("Interpreter and bytecode produced different output.");
-        }
-
-        if (!AreDiagnosticsEqual(interpreterSummary.Result.Diagnostics, bytecodeSummary.Result.Diagnostics))
-        {
-            issues.Add("Interpreter and bytecode produced different diagnostics.");
-        }
-    }
-
-    return new BenchmarkOutcome(
-        interpreterSummary.Result,
-        interpreterSummary.RuntimeStats,
-        interpreterSummary.TotalStats,
-        bytecodeSummary.Result,
-        bytecodeSummary.RuntimeStats,
-        bytecodeSummary.TotalStats,
-        issues);
+    if (result.Status != ExecutionStatus.Success || result.ActualEngine != ExecutionEngineKind.BytecodeVm)
+        issues.Add($"Исполнение завершено со статусом {result.Status}, исполнитель {result.ActualEngine}.");
+    if (stabilityIssue.Length > 0) issues.Add(stabilityIssue);
+    return new BenchmarkOutcome(result, CreateStats(runtimeSamples), CreateStats(totalSamples), issues);
 }
 
-static void WarmUpBenchmarkRuns(string sourceText, BenchmarkCase benchmark, ExecutionMode mode, int warmupIterations)
+static void WarmUpBenchmarkRuns(string sourceText, BenchmarkCase benchmark, int warmupIterations)
 {
     for (var iteration = 0; iteration < warmupIterations; iteration++)
     {
-        _ = ExecuteBenchmarkRun(sourceText, benchmark, mode);
+        _ = ExecuteBenchmarkRun(sourceText, benchmark);
     }
 }
 
-static ExecutionResult ExecuteBenchmarkRun(string sourceText, BenchmarkCase benchmark, ExecutionMode mode)
+static ExecutionResult ExecuteBenchmarkRun(string sourceText, BenchmarkCase benchmark)
 {
     var pipeline = new AxiomExecutionPipeline();
     IInputProvider? inputProvider = benchmark.InputProviderFactory is not null
@@ -439,7 +354,7 @@ static ExecutionResult ExecuteBenchmarkRun(string sourceText, BenchmarkCase benc
 
     try
     {
-        return pipeline.Run(new ExecutionRequest(sourceText, inputProvider: inputProvider, runtimeClock: benchmark.RuntimeClock, runtimeRandom: runtimeRandom, mode: mode));
+        return pipeline.Run(new ExecutionRequest(sourceText, inputProvider: inputProvider, runtimeClock: benchmark.RuntimeClock, runtimeRandom: runtimeRandom));
     }
     finally
     {
@@ -579,18 +494,12 @@ static void AppendBenchmarkReport(StringBuilder report, BenchmarkCase benchmark,
     report.AppendLine($"File: {benchmark.RelativePath}");
     report.AppendLine($"Iterations: {options.Iterations}");
     report.AppendLine($"Warmup iterations: {options.WarmupIterations}");
-    report.AppendLine($"Interpreter engine: {outcome.InterpreterResult.ActualEngine?.ToString() ?? "<none>"}");
-    report.AppendLine($"Bytecode engine:    {outcome.BytecodeResult.ActualEngine?.ToString() ?? "<none>"}");
-    report.AppendLine($"Interpreter status: {outcome.InterpreterResult.Status}");
-    report.AppendLine($"Bytecode status:    {outcome.BytecodeResult.Status}");
-    report.AppendLine($"Interpreter runtime ms (min/avg/median/max): {FormatStats(outcome.InterpreterRuntime)}");
+    report.AppendLine($"Исполнитель:    {outcome.BytecodeResult.ActualEngine?.ToString() ?? "<none>"}");
+    report.AppendLine($"Статус:    {outcome.BytecodeResult.Status}");
     report.AppendLine($"Bytecode runtime ms (min/avg/median/max):    {FormatStats(outcome.BytecodeRuntime)}");
-    report.AppendLine($"Interpreter total ms   (min/avg/median/max): {FormatStats(outcome.InterpreterTotal)}");
     report.AppendLine($"Bytecode total ms      (min/avg/median/max): {FormatStats(outcome.BytecodeTotal)}");
-    report.AppendLine($"Runtime ratio bytecode/interpreter: {FormatRatio(outcome.BytecodeRuntime.Average, outcome.InterpreterRuntime.Average)}");
-    report.AppendLine($"Total ratio bytecode/interpreter:   {FormatRatio(outcome.BytecodeTotal.Average, outcome.InterpreterTotal.Average)}");
-    report.AppendLine($"Output lines: {outcome.InterpreterResult.Output.Count}");
-    report.AppendLine($"Diagnostics:  {FormatDiagnostics(outcome.InterpreterResult.Diagnostics)}");
+    report.AppendLine($"Строк вывода: {outcome.BytecodeResult.Output.Count}");
+    report.AppendLine($"Диагностика: {FormatDiagnostics(outcome.BytecodeResult.Diagnostics)}");
 
     if (outcome.Issues.Count > 0)
     {
@@ -633,22 +542,12 @@ static string FormatStats(BenchmarkStats stats)
     return $"{stats.Minimum:F1} / {stats.Average:F1} / {stats.Median:F1} / {stats.Maximum:F1}";
 }
 
-static string FormatRatio(double numerator, double denominator)
-{
-    if (denominator == 0)
-    {
-        return "n/a";
-    }
-
-    return $"{numerator / denominator:F3}x";
-}
-
 static BenchmarkOptions ParseBenchmarkOptions(string root, string[] args)
 {
     string? filter = null;
     var iterations = 1;
     var warmupIterations = 1;
-    var outputPath = ResolveOutputPath(root, args, "axiom-engine-compare");
+    var outputPath = ResolveOutputPath(root, args, "axiom-bytecode-benchmark");
 
     for (var index = 0; index < args.Length; index++)
     {
@@ -1770,9 +1669,6 @@ sealed record BenchmarkExecutionRuns(
     string StabilityIssue);
 
 sealed record BenchmarkOutcome(
-    ExecutionResult InterpreterResult,
-    BenchmarkStats InterpreterRuntime,
-    BenchmarkStats InterpreterTotal,
     ExecutionResult BytecodeResult,
     BenchmarkStats BytecodeRuntime,
     BenchmarkStats BytecodeTotal,

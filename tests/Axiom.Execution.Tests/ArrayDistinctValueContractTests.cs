@@ -52,11 +52,10 @@ PRINT ARRAYLENGTH(result)
 
     private static void CheckBoth(string source, string[] expected)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
-            Assert.True(run.Succeeded, mode + "\n" + string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
+            Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Equal(expected, run.Output);
         }
     }

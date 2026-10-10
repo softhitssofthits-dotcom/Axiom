@@ -10,7 +10,7 @@ public readonly record struct RuntimeCallChainFrame(
     TextLocation CallSite);
 
 /// <summary>
-/// Единый для Interpreter и BytecodeVm формат цепочки вызовов в runtime-диагностике:
+/// Формат цепочки вызовов BytecodeVm в диагностике времени выполнения:
 /// одинаковое именование кадров (локальная функция/процедура/функция), одинаковое
 /// упоминание содержащей процедуры и одинаковый порядок кадров.
 /// </summary>

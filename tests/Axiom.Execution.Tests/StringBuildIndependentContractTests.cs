@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringBuildIndependentContractTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void EmptyCountsAndUtf16FillHaveExplicitContracts(ExecutionMode mode)
+    [Fact]
+    public void EmptyCountsAndUtf16FillHaveExplicitContracts()
     {
-        Check(mode, """
+        Check("""
 PRINT REPEAT("", 2147483647) = ""
 PRINT REPEAT("я", 0) = ""
 PRINT SPACE(0) = ""
@@ -27,12 +25,10 @@ PRINT REMOVE("А😀Б", 2, 0)
 """, ["TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "аая", "яаа", ".😀..", "😀", "TRUE", "АБ😀", "😀АБ", "TRUE", "А", "А😀Б", "А😀Б"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void SplitKeepsEdgeAndRepeatedSeparatorsAndJoinUsesVisibleOrder(ExecutionMode mode)
+    [Fact]
+    public void SplitKeepsEdgeAndRepeatedSeparatorsAndJoinUsesVisibleOrder()
     {
-        Check(mode, """
+        Check("""
 DIM parts() AS STRING
 parts = SPLIT("", "😀")
 PRINT ARRAYLENGTH(parts)
@@ -58,21 +54,16 @@ PRINT JOIN(absent, "|") = ""
     }
 
     [Fact]
-    public void InvalidCountsFillAndSeparatorMatchInBothEngines()
+    public void InvalidCountsFillAndSeparatorMatchInBytecodeVm()
     {
         foreach (var call in new[] { "REPEAT(\"\", -1)", "SPACE(-1)", "STRING(-1, \"\")", "STRING(1, \"\")", "PADLEFT(\"abc\", 0, \"\")", "PADRIGHT(\"abc\", 0, \"\")", "CENTER(\"abc\", 0, \"\")", "PADLEFT(\"abc\", -1)", "PADRIGHT(\"abc\", -1)", "CENTER(\"abc\", -1)", "INSERT(\"abc\", 0, \"x\")", "REMOVE(\"abc\", 0, 0)", "REMOVE(\"abc\", 1, -1)", "JOIN(SPLIT(\"\", \"\"))" })
         {
-            var first = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: ExecutionMode.Interpreter));
-            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: ExecutionMode.Bytecode));
-            Assert.False(first.Succeeded);
+            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call));
             Assert.False(second.Succeeded);
-            Assert.False(second.UsedInterpreterFallback);
-            var a = Assert.Single(first.Diagnostics);
             var b = Assert.Single(second.Diagnostics);
-            Assert.Equal("MB3007", a.Code);
-            Assert.Equal((a.Code, a.Location.Line, a.Location.Column, a.Location.Span), (b.Code, b.Location.Line, b.Location.Column, b.Location.Span));
-            foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-                Check(mode, $"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+            Assert.Equal("MB3007", b.Code);
+
+                Check($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
         }
     }
 
@@ -80,19 +71,15 @@ PRINT JOIN(absent, "|") = ""
     public void JoinRejectsWrongArrayRankBeforeExecution()
     {
         var source = "DIM items(1 TO 1, 1 TO 1) AS STRING\nPRINT JOIN(items)";
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.Contains(first.Diagnostics, d => d.Code == "MB2003");
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Span)));
+        Assert.Contains(second.Diagnostics, d => d.Code == "MB2003");
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expected, result.Output);
     }
 }

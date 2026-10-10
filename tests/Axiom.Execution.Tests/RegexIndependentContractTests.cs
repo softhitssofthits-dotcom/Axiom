@@ -4,18 +4,18 @@ public sealed class RegexIndependentContractTests
 {
     public static IEnumerable<object[]> Forms()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var name in new[] { "REGEXISMATCH", "REGEXMATCH", "REGEXEXTRACT", "REGEXMATCHES", "REGEXEXTRACTALL", "REGEXSPLIT", "REGEXREPLACE", "REGEXCOUNT" })
         foreach (var modes in new[] { false, true })
         {
-            yield return [mode, name, modes, false];
-            if (name == "REGEXREPLACE") yield return [mode, name, modes, true];
+            yield return [name, modes, false];
+            if (name == "REGEXREPLACE") yield return [name, modes, true];
         }
     }
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void AllFormsHaveCorrectOrdinaryResultsAndResultTypes(ExecutionMode mode, string name, bool modes, bool count)
+    public void AllFormsHaveCorrectOrdinaryResultsAndResultTypes(string name, bool modes, bool count)
     {
         var call = Call(name, "\"А12 б34\"", "\"([АБаб])([0-9]+)\"", modes ? "Ii" : null, count);
         var expected = name switch
@@ -34,25 +34,25 @@ public sealed class RegexIndependentContractTests
             : $"DIM v AS {(name == "REGEXISMATCH" ? "BOOLEAN" : name == "REGEXCOUNT" ? "INTEGER" : "STRING")} = {call}\nPRINT v";
         if (name == "REGEXMATCHES") source = $"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1)\nPRINT v(2)";
         if (name == "REGEXEXTRACTALL") source = $"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1)\nPRINT v(2)";
-        AssertRun(source, mode, expected);
+        AssertRun(source, expected);
     }
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void EveryFormRejectsInvalidPatternAndWrongTextType(ExecutionMode mode, string name, bool modes, bool count)
+    public void EveryFormRejectsInvalidPatternAndWrongTextType(string name, bool modes, bool count)
     {
         var call = Call(name, "\"текст\"", "\"[\"", modes ? "i" : null, count);
-        AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", mode, ["MB3007"]);
-        var wrong = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {Call(name, "TRUE", "\"а\"", modes ? "i" : null, count)}", mode: mode));
+        AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+        var wrong = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {Call(name, "TRUE", "\"а\"", modes ? "i" : null, count)}"));
         Assert.False(wrong.Succeeded);
         Assert.NotEmpty(wrong.Diagnostics);
         if (modes)
-            AssertRun($"TRY\nPRINT {Call(name, "\"а\"", "\"а\"", "q", count)}\nCATCH err\nPRINT err.Code\nEND TRY", mode, ["MB3007"]);
+            AssertRun($"TRY\nPRINT {Call(name, "\"а\"", "\"а\"", "q", count)}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
     }
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void EveryFormHandlesEmptyInputAndMissingMatch(ExecutionMode mode, string name, bool modes, bool count)
+    public void EveryFormHandlesEmptyInputAndMissingMatch(string name, bool modes, bool count)
     {
         foreach (var text in new[] { "", "ж" })
         {
@@ -60,20 +60,18 @@ public sealed class RegexIndependentContractTests
             if (name is "REGEXMATCHES" or "REGEXEXTRACTALL" or "REGEXSPLIT")
             {
                 var expectedCount = name == "REGEXSPLIT" && text.Length > 0 ? "1" : "0";
-                AssertRun($"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)", mode, [expectedCount]);
+                AssertRun($"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)", [expectedCount]);
             }
             else
             {
                 var expected = name switch { "REGEXISMATCH" => "FALSE", "REGEXCOUNT" => "0", "REGEXREPLACE" => text, _ => "" };
-                AssertRun($"PRINT {call}", mode, [expected]);
+                AssertRun($"PRINT {call}", [expected]);
             }
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ModesZeroWidthSplitAndMissingCapturesAreExplicit(ExecutionMode mode)
+    [Fact]
+    public void ModesZeroWidthSplitAndMissingCapturesAreExplicit()
     {
         AssertRun("""
 PRINT REGEXMATCH("А", "а", "i")
@@ -95,13 +93,11 @@ PRINT ARRAYLENGTH(v)
 PRINT v(1)
 PRINT v(2) = ""
 PRINT REGEXEXTRACT("a", "(?<10>a)", 1) = ""
-""", mode, ["А", "b", "TRUE", "TRUE", "TRUE", "TRUE", "4", "TRUE", "a", "b", "TRUE", "2", "a", "TRUE", "TRUE"]);
+""", ["А", "b", "TRUE", "TRUE", "TRUE", "TRUE", "4", "TRUE", "a", "b", "TRUE", "2", "a", "TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void EmptyMatchesUnicodeAndReplacementTokensFollowExplicitContracts(ExecutionMode mode)
+    [Fact]
+    public void EmptyMatchesUnicodeAndReplacementTokensFollowExplicitContracts()
     {
         AssertRun("""
 PRINT REGEXCOUNT("😀", ".")
@@ -119,13 +115,11 @@ PRINT REGEXREPLACE("ab", "(?<letter>[a-z])", "${letter}$$$&", 1)
 PRINT REGEXEXTRACT("bbb", "(a)?b", 1) = ""
 PRINT REGEXEXTRACT("a", "(a)", 99) = ""
 PRINT REGEXREPLACE("a", "[", "x", "q", 0)
-""", mode, ["2", "3", "TRUE", "1", "TRUE", "0", "!a!b", "a$ab", "TRUE", "TRUE", "a"]);
+""", ["2", "3", "TRUE", "1", "TRUE", "0", "!a!b", "a$ab", "TRUE", "TRUE", "a"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExplicitNumericGroupNumbersAreNotArrayOrdinals(ExecutionMode mode)
+    [Fact]
+    public void ExplicitNumericGroupNumbersAreNotArrayOrdinals()
     {
         AssertRun("""
 PRINT REGEXEXTRACT("a", "(?<10>a)", 10)
@@ -137,34 +131,30 @@ PRINT v(2)
 v = REGEXEXTRACTALL("AA", "(?<10>a)", 10, "i")
 PRINT v(1)
 PRINT v(2)
-""", mode, ["a", "A", "a", "a", "A", "A"]);
+""", ["a", "A", "a", "a", "A", "A"]);
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void LimitedReplacementDoesNotSearchUnneededSuffix(ExecutionMode mode, bool modes)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LimitedReplacementDoesNotSearchUnneededSuffix(bool modes)
     {
         var text = "x" + new string('a', 12000) + "!a";
         var suffix = modes ? ", \"i\", 1" : ", 1";
-        AssertRun($"PRINT REGEXREPLACE(\"{text}\", \"x|(?:a|aa)+$\", \"y\"{suffix}) = \"y{text[1..]}\"", mode, ["TRUE"]);
+        AssertRun($"PRINT REGEXREPLACE(\"{text}\", \"x|(?:a|aa)+$\", \"y\"{suffix}) = \"y{text[1..]}\"", ["TRUE"]);
     }
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void EveryFormConvertsRealMatchTimeoutToCatchableDiagnostic(ExecutionMode mode, string name, bool modes, bool count)
+    public void EveryFormConvertsRealMatchTimeoutToCatchableDiagnostic(string name, bool modes, bool count)
     {
         var text = new string('a', 12000) + "!a";
         var call = Call(name, $"\"{text}\"", "\"(?:a|aa)+$\"", modes ? "i" : null, count);
-        AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", mode, ["MB3007"]);
+        AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void NegativeGroupAndCountAreCatchableArgumentErrors(ExecutionMode mode)
+    [Fact]
+    public void NegativeGroupAndCountAreCatchableArgumentErrors()
     {
         foreach (var call in new[]
         {
@@ -175,13 +165,11 @@ PRINT v(2)
             "REGEXREPLACE(\"a\", \"a\", \"x\", -1)",
             "REGEXREPLACE(\"a\", \"a\", \"x\", \"i\", -1)"
         })
-            AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", mode, ["MB3007"]);
+            AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void IgnoreCaseAndCachedModesAreCultureInvariant(ExecutionMode mode)
+    [Fact]
+    public void IgnoreCaseAndCachedModesAreCultureInvariant()
     {
         var previous = System.Globalization.CultureInfo.CurrentCulture;
         try
@@ -189,29 +177,25 @@ PRINT v(2)
             foreach (var culture in new[] { "en-US", "tr-TR", "ru-RU" })
             {
                 System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
-                AssertRun("PRINT REGEXISMATCH(\"I\", \"i\", \"i\")\nPRINT REGEXMATCH(\"I\", \"i\", \"i\")", mode, ["TRUE", "I"]);
+                AssertRun("PRINT REGEXISMATCH(\"I\", \"i\", \"i\")\nPRINT REGEXMATCH(\"I\", \"i\", \"i\")", ["TRUE", "I"]);
             }
         }
         finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void PatternBackslashesAreWrittenOnceInAxiomStrings(ExecutionMode mode)
+    [Fact]
+    public void PatternBackslashesAreWrittenOnceInAxiomStrings()
     {
         AssertRun("""
 PRINT REGEXEXTRACT("A12", "([A-Z])(\d+)", 2)
 PRINT REGEXEXTRACT("A12", "([A-Z])(\\d+)", 2) = ""
 PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")
-""", mode, ["12", "TRUE", "A-12 B-34"]);
+""", ["12", "TRUE", "A-12 B-34"]);
     }
 
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void GroupZeroWholeMatchAndWrongArgumentTypesAreExplicit(ExecutionMode mode)
+    [Fact]
+    public void GroupZeroWholeMatchAndWrongArgumentTypesAreExplicit()
     {
         AssertRun("""
 PRINT REGEXEXTRACT("код12", "код([0-9]+)", 0)
@@ -219,7 +203,7 @@ DIM v() AS STRING
 v = REGEXEXTRACTALL("код12 код34", "код([0-9]+)", 0, "i")
 PRINT v(1)
 PRINT v(2)
-""", mode, ["код12", "код12", "код34"]);
+""", ["код12", "код12", "код34"]);
         foreach (var call in new[]
         {
             "REGEXISMATCH(\"a\", TRUE)",
@@ -230,7 +214,7 @@ PRINT v(2)
             "REGEXREPLACE(\"a\", \"a\", \"x\", \"i\", FALSE)"
         })
         {
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {call}", mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {call}"));
             Assert.False(result.Succeeded);
             Assert.NotEmpty(result.Diagnostics);
         }
@@ -238,16 +222,16 @@ PRINT v(2)
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void EveryFormHandlesEmptyPatternWithoutLosingZeroWidthMatches(ExecutionMode mode, string name, bool modes, bool count)
+    public void EveryFormHandlesEmptyPatternWithoutLosingZeroWidthMatches(string name, bool modes, bool count)
     {
         var call = Call(name, "\"ab\"", "\"\"", modes ? "i" : null, count);
         if (name == "REGEXREPLACE") call = call.Replace("\"$2:$1\"", "\"!\"", StringComparison.Ordinal);
         if (name is "REGEXMATCHES" or "REGEXEXTRACTALL" or "REGEXSPLIT")
-            AssertRun($"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1) = \"\"", mode, [name == "REGEXSPLIT" ? "4" : "3", "TRUE"]);
+            AssertRun($"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1) = \"\"", [name == "REGEXSPLIT" ? "4" : "3", "TRUE"]);
         else
         {
             var expected = name switch { "REGEXISMATCH" => "TRUE", "REGEXCOUNT" => "3", "REGEXREPLACE" => count ? "!ab" : "!a!b!", _ => "" };
-            AssertRun($"PRINT {call}", mode, [expected]);
+            AssertRun($"PRINT {call}", [expected]);
         }
     }
 
@@ -261,11 +245,10 @@ PRINT v(2)
         return $"{name}({string.Join(", ", args)})";
     }
 
-    private static void AssertRun(string source, ExecutionMode mode, string[] expected)
+    private static void AssertRun(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Equal(expected, result.Output);
-        Assert.False(result.UsedInterpreterFallback);
     }
 }

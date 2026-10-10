@@ -6,15 +6,15 @@ public sealed class DirectoryUnicodeMaskEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var operation in new[] { "GETFILES", "GETDIRS" })
         foreach (var pattern in new[] { "*", "é*", "é*", "😀*", "null" })
-            yield return [mode, operation, pattern];
+            yield return [operation, pattern];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ExactUnicodeMasksKeepDistinctNamesAndRejectNull(ExecutionMode mode, string operation, string pattern)
+    public void ExactUnicodeMasksKeepDistinctNamesAndRejectNull(string operation, string pattern)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "directory-unicode-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -43,11 +43,10 @@ public sealed class DirectoryUnicodeMaskEvidenceTests
                     PRINT err.Code
                 END TRY
                 PRINT "Продолжение"
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             var matched = pattern switch { "*" => names, "é*" => new[] { "é.txt" }, "é*" => new[] { "é.txt" }, "😀*" => new[] { "😀.txt" }, _ => [] };
             var expected = pattern == "null" ? new[] { "MB3007", "Продолжение" }
                 : new[] { matched.Length.ToString(CultureInfo.InvariantCulture) }.Concat(matched.Select(name => Path.Combine(root, name))).Append("Продолжение");

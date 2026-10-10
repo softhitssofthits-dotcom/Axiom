@@ -36,11 +36,10 @@ m(-1, 6) = 23
     [MemberData(nameof(ValidCases))]
     public void ShapeOperationsProduceIndependentExpectedResults(string body, string[] expected)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + body, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + body));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(expected, run.Output);
         }
     }
@@ -51,11 +50,10 @@ m(-1, 6) = 23
     [InlineData("shaped = ARRAYCONCAT(m, template, 2)")]
     public void IncompatibleSizesAreCatchableAndPreserveInputs(string statement)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\nTRY\n" + statement + "\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT m(-2, 4)\nPRINT ARRAYLENGTH(m)\nPRINT template(9, -4)", mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\nTRY\n" + statement + "\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT m(-2, 4)\nPRINT ARRAYLENGTH(m)\nPRINT template(9, -4)"));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(new[] { "MB3007", "11", "6", "0" }, run.Output);
         }
     }
@@ -68,13 +66,9 @@ m(-1, 6) = 23
     public void UnallocatedArgumentsReportMatchingLocations(string statement)
     {
         var source = Setup + "\nDIM pending() AS INTEGER\nDIM pendingMatrix(,) AS INTEGER\n" + statement;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal("MB3005", Assert.Single(first.Diagnostics).Code);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.Equal("MB3005", Assert.Single(second.Diagnostics).Code);
     }
 
     [Theory]
@@ -88,14 +82,10 @@ m(-1, 6) = 23
     public void WrongTypesAreRejectedBeforeExecution(string statement)
     {
         var source = Setup + "\n" + statement;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.All(first.Diagnostics, d => Assert.StartsWith("MB2", d.Code));
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.NotEmpty(second.Diagnostics);
+        Assert.All(second.Diagnostics, d => Assert.StartsWith("MB2", d.Code));
     }
 
     [Theory]

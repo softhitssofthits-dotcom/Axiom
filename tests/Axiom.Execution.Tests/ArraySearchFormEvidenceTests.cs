@@ -38,11 +38,10 @@ m(-1, 8) = 4
     [Fact]
     public void MultidimensionalBinarySearchRequiresExplicitDimension()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\nresult = ARRAYBINARYSEARCH(m, 2)", mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\nresult = ARRAYBINARYSEARCH(m, 2)"));
             Assert.False(run.Succeeded);
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal("MB2003", Assert.Single(run.Diagnostics).Code);
         }
     }
@@ -72,11 +71,10 @@ m(-1, 8) = 4
         var output = !array ? "" : kind == "array2"
             ? "\nFOR i = LBOUND(hits, 1) TO UBOUND(hits, 1)\nFOR j = LBOUND(hits, 2) TO UBOUND(hits, 2)\nPRINT hits(i, j)\nNEXT j\nNEXT i"
             : "\nFOR i = LBOUND(result) TO UBOUND(result)\nPRINT result(i)\nNEXT i";
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + statement + output, mode: mode));
-            Assert.True(run.Succeeded, mode + "\n" + string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + statement + output));
+            Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Equal(expected, run.Output);
         }
     }

@@ -17,16 +17,16 @@ public sealed class PlannedSyntaxEvidenceTests
             ("restore", "RESTORE"),
             ("line-input", "DIM text AS STRING\nLINE INPUT text"),
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var form in forms) yield return [mode, form.Name, form.Source];
+
+        foreach (var form in forms) yield return [form.Name, form.Source];
     }
 
     [Theory]
     [MemberData(nameof(UnsupportedForms))]
-    public void ProposedSyntaxIsRejectedBeforeExecution(ExecutionMode mode, string name, string source)
+    public void ProposedSyntaxIsRejectedBeforeExecution(string name, string source)
     {
         Assert.NotEmpty(name);
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(result.Succeeded);
         Assert.Empty(result.Output);
         Assert.NotEmpty(result.Diagnostics);
@@ -34,7 +34,6 @@ public sealed class PlannedSyntaxEvidenceTests
             diagnostic.Code.StartsWith("MB0", StringComparison.Ordinal) ||
             diagnostic.Code.StartsWith("MB1", StringComparison.Ordinal) ||
             diagnostic.Code.StartsWith("MB2", StringComparison.Ordinal), diagnostic.Code));
-        Assert.False(result.UsedInterpreterFallback);
     }
 
     public static IEnumerable<object[]> Alternatives()
@@ -45,19 +44,18 @@ public sealed class PlannedSyntaxEvidenceTests
             ("DIM values(1 TO 2) AS INTEGER\nvalues(1) = 3\nvalues(2) = 7\nDIM result() AS INTEGER\nresult = ARRAYMAP(values, Twice)\nPRINT result(1)\nPRINT result(2)\nFUNCTION Twice(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION", ["6", "14"]),
             ("FUNCTION Plus(value AS INTEGER, extra AS INTEGER) AS INTEGER\nRETURN value + extra\nEND FUNCTION\nFUNCTION PlusOne(value AS INTEGER) AS INTEGER\nRETURN Plus(value, 1)\nEND FUNCTION\nPRINT PlusOne(2)\nPRINT Plus(2, 4)\nPRINT \"первая\" + CHRW(10) + \"вторая\"", ["3", "6", "первая\nвторая"])
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        for (var index = 0; index < cases.Length; index++) yield return [mode, index, cases[index].Source, cases[index].Expected];
+
+        for (var index = 0; index < cases.Length; index++) yield return [index, cases[index].Source, cases[index].Expected];
     }
 
     [Theory]
     [MemberData(nameof(Alternatives))]
-    public void ExistingFormsSolveLimitedRelatedTasks(ExecutionMode mode, int index, string source, string[] expected)
+    public void ExistingFormsSolveLimitedRelatedTasks(int index, string source, string[] expected)
     {
         Assert.InRange(index, 0, 2);
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expected, result.Output);
     }
 }

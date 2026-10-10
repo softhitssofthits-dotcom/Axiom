@@ -22,12 +22,9 @@ public sealed class DriveFormEvidenceTests
         var call = Assert.IsType<BoundCallExpression>(Assert.Single(print.Items).Expression);
         Assert.Equal(id, Assert.IsType<BoundFunctionExpression>(call.Target).Function.BuiltinId?.ToString());
         Assert.Equal(type, call.Type.Name.ToUpperInvariant());
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {name}(TRUE)", mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {name}(TRUE)", mode: ExecutionMode.Bytecode));
-        Assert.Equal(ExecutionStatus.SemanticFailure, first.Status);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {name}(TRUE)"));
         Assert.Equal(ExecutionStatus.SemanticFailure, second.Status);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Span)));
+        Assert.Equal(ExecutionStatus.SemanticFailure, second.Status);
+        Assert.NotEmpty(second.Diagnostics);
     }
 }

@@ -9,13 +9,13 @@ public sealed class TilemapLayerNumericTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var index in Enumerable.Range(0, 11))
-        foreach (var objectLayer in new[] { false, true }) yield return [mode, index, objectLayer];
+        foreach (var objectLayer in new[] { false, true }) yield return [index, objectLayer];
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void InvalidFieldsProduceCatchableDiagnosticAndPreservePreviousMap(ExecutionMode mode, int index, bool objectLayer)
+    public void InvalidFieldsProduceCatchableDiagnosticAndPreservePreviousMap(int index, bool objectLayer)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-layer-number-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -50,9 +50,8 @@ public sealed class TilemapLayerNumericTests
                     PRINT err.Message
                 END TRY
                 PRINT MAPWIDTH(m)
-                """, mode, sourceFilePath: Path.Combine(root, "check.axm"));
+                """, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             var reason = index < 2 ? "LOADTILEMAP: Поле opacity слоя должно быть от 0 до 1."
                 : $"LOADTILEMAP: Поле {fields[index]} слоя должно быть конечным числом DOUBLE.";
             Assert.Equal(index < 8 ? string.Join(Environment.NewLine, "MB3005", reason, "1") : "1", result.OutputText);

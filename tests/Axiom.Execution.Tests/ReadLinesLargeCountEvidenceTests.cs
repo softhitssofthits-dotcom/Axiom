@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ReadLinesLargeCountEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void MaximumCountSampleRuns(ExecutionMode mode)
+    [Fact]
+    public void MaximumCountSampleRuns()
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "readlines-sample-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -15,10 +13,9 @@ public sealed class ReadLinesLargeCountEvidenceTests
             while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "Axiom.sln"))) repository = repository.Parent;
             Assert.NotNull(repository);
             var source = File.ReadAllText(Path.Combine(repository.FullName, "samples/functions/readlines/maximum_count.axm"));
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, resourceBaseDirectory: root, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, resourceBaseDirectory: root));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { "TRUE", "TRUE", "Прочитано строк: 2", "Первая строка", "Вторая строка", "TRUE" }, result.Output);
             Assert.Empty(Directory.GetFiles(Path.Combine(root, ".artifacts")));
         }
@@ -32,11 +29,9 @@ public sealed class ReadLinesLargeCountEvidenceTests
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void MaximumCountReadsOnlyActualRows(ExecutionMode mode, bool oneLine)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MaximumCountReadsOnlyActualRows(bool oneLine)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "readlines-large-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -56,10 +51,9 @@ public sealed class ReadLinesLargeCountEvidenceTests
                 END IF
                 PRINT EOF(f)
                 CLOSE f
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(oneLine ? new[] { "1", "А", "TRUE" } : new[] { "0", "TRUE" }, result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
         }

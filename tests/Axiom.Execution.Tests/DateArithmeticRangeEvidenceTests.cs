@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DateArithmeticRangeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FullDateTimeRangeReturnsExactLongAndExtremeAddsAreCatchable(ExecutionMode mode)
+    [Fact]
+    public void FullDateTimeRangeReturnsExactLongAndExtremeAddsAreCatchable()
     {
         var source = """
             DIM firstMoment AS DATETIME = "0001-01-01 00:00:00"
@@ -33,11 +31,10 @@ public sealed class DateArithmeticRangeEvidenceTests
             PRINT DATEADD("s", 2147483647, TIMESERIAL(0, 0, 0))
             PRINT DATEADD("s", (-2147483647 - 1), TIMESERIAL(0, 0, 0))
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "315537897599", "-315537897599", "3652058", "9998", "365", "4", "23", "MB3007", "2000-02-29", "MB3007", "2000-02-29", "03:14:07", "20:45:52" }, run.Output);
     }
 }

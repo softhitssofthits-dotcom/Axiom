@@ -11,10 +11,9 @@ public sealed class ProgramRunResult
         TimeSpan preparationDuration = default,
         TimeSpan executionDuration = default,
         bool usedCompiledCache = false,
-        Axiom.Execution.ExecutionMode requestedExecutionMode = Axiom.Execution.ExecutionMode.Bytecode,
+
         Axiom.Execution.ExecutionEngineKind? actualEngine = null,
-        bool usedInterpreterFallback = false,
-        string? interpreterFallbackReason = null,
+
         TimeSpan loweringDuration = default,
         TimeSpan bytecodeEmissionDuration = default,
         bool usedLoweredCache = false,
@@ -30,10 +29,9 @@ public sealed class ProgramRunResult
         PreparationDuration = preparationDuration;
         ExecutionDuration = executionDuration;
         UsedCompiledCache = usedCompiledCache;
-        RequestedExecutionMode = requestedExecutionMode;
+
         ActualEngine = actualEngine;
-        UsedInterpreterFallback = usedInterpreterFallback;
-        InterpreterFallbackReason = interpreterFallbackReason;
+
         LoweringDuration = loweringDuration;
         BytecodeEmissionDuration = bytecodeEmissionDuration;
         UsedLoweredCache = usedLoweredCache;
@@ -67,13 +65,7 @@ public sealed class ProgramRunResult
 
     public bool UsedBytecodeCache { get; }
 
-    public Axiom.Execution.ExecutionMode RequestedExecutionMode { get; }
-
     public Axiom.Execution.ExecutionEngineKind? ActualEngine { get; }
-
-    public bool UsedInterpreterFallback { get; }
-
-    public string? InterpreterFallbackReason { get; }
 
     public IProgramDebuggerState? DebuggerState { get; }
 

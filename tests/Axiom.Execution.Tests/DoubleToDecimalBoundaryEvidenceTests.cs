@@ -17,13 +17,13 @@ public sealed class DoubleToDecimalBoundaryEvidenceTests
             ("1.7976931348623157e308", "MB3008"),
             ("-1.7976931348623157e308", "MB3008")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var c in cases) yield return [mode, c.Text, c.Expected];
+
+        foreach (var c in cases) yield return [c.Text, c.Expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void DoubleConversionHasLiteralRangeAndPrecisionEvidence(ExecutionMode mode, string text, string expected)
+    public void DoubleConversionHasLiteralRangeAndPrecisionEvidence(string text, string expected)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             DIM value AS DOUBLE = VAL("{{text}}")
@@ -35,24 +35,20 @@ public sealed class DoubleToDecimalBoundaryEvidenceTests
                 PRINT "Завершено"
             END TRY
             PRINT "Продолжение"
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { expected, "Завершено", "Продолжение" }, result.Output);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void UncaughtOverflowPointsToCdecCall(ExecutionMode mode)
+    [Fact]
+    public void UncaughtOverflowPointsToCdecCall()
     {
         const string source = "PRINT CDEC(VAL(\"79228162514264337593543950336\"))";
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Empty(result.Output);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3008", diagnostic.Code);
         Assert.Equal(source.IndexOf("CDEC", StringComparison.Ordinal), diagnostic.Location.Span.Start);

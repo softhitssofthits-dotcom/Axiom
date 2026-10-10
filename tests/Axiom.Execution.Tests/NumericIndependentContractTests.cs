@@ -3,25 +3,21 @@ namespace Axiom.Execution.Tests;
 public sealed class NumericIndependentContractTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void SignedZeroConstantsRemainDistinctInEitherOrder(ExecutionMode mode, bool negativeFirst)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SignedZeroConstantsRemainDistinctInEitherOrder(bool negativeFirst)
     {
         var source = negativeFirst
             ? "DIM negative AS DOUBLE = -0.0\nDIM positive AS DOUBLE = 0.0\n"
             : "DIM positive AS DOUBLE = 0.0\nDIM negative AS DOUBLE = -0.0\n";
         source += "PRINT SETSIGN(3, positive)\nPRINT SETSIGN(3, negative)\nPRINT ATN2(negative, -1) < 0\nPRINT ATN2(positive, -1) > 0\nPRINT SETSIGN(3, -negative)";
-        Check(mode, source, ["3", "-3", "TRUE", "TRUE", "3"]);
+        Check(source, ["3", "-3", "TRUE", "TRUE", "3"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExactIntegersAndRoundingBoundariesArePreserved(ExecutionMode mode)
+    [Fact]
+    public void ExactIntegersAndRoundingBoundariesArePreserved()
     {
-        Check(mode, """
+        Check("""
 DIM large AS LONG = 9007199254740993
 DIM minimum AS INTEGER = -2147483647 - 1
 PRINT MIN(large, large + CLNG(1)) = large
@@ -72,22 +68,17 @@ PRINT SETSIGN(3, -0.0)
     public void InvalidDomainsAndOverflowMatchAndCanBeCaught(string call, string code)
     {
         var source = "PRINT " + call;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal(code, Assert.Single(first.Diagnostics).Code);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-            Check(mode, "TRY\n PRINT " + call + "\nCATCH err\n PRINT err.Code\nEND TRY\nPRINT \"Продолжение\"", [code, "Продолжение"]);
+        Assert.Equal(code, Assert.Single(second.Diagnostics).Code);
+
+            Check("TRY\n PRINT " + call + "\nCATCH err\n PRINT err.Code\nEND TRY\nPRINT \"Продолжение\"", [code, "Продолжение"]);
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(expected, result.Output);
     }
 }

@@ -6,7 +6,7 @@ using Axiom.Semantics;
 internal static class BytecodeCoverageAudit
 {
     private static readonly Regex TitleRegex = new(
-        "title:\\s*\"(?<title>[^\"]+)\"",
+        "\"?title\"?:\\s*\"(?<title>[^\"]+)\"",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static int Run(string root, string outputPath)
@@ -147,8 +147,7 @@ internal static class BytecodeCoverageAudit
 
         foreach (var line in File.ReadLines(path, Encoding.UTF8))
         {
-            if (!line.Contains("kind: \"Функция\"", StringComparison.Ordinal) &&
-                !line.Contains("kind: \"Функции\"", StringComparison.Ordinal))
+            if (!Regex.IsMatch(line, "\"?kind\"?\\s*:\\s*\"Функци(?:я|и)\"", RegexOptions.CultureInvariant))
             {
                 continue;
             }
@@ -159,7 +158,7 @@ internal static class BytecodeCoverageAudit
                 continue;
             }
 
-            var explicitNames = Regex.Match(line, @"functions:\s*\[(?<names>[^\]]*)\]", RegexOptions.CultureInvariant);
+            var explicitNames = Regex.Match(line, @"""?functions""?:\s*\[(?<names>[^\]]*)\]", RegexOptions.CultureInvariant);
             if (explicitNames.Success)
             {
                 foreach (Match name in Regex.Matches(explicitNames.Groups["names"].Value, "\"(?<name>[^\"]+)\"", RegexOptions.CultureInvariant))

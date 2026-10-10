@@ -9,13 +9,13 @@ public sealed class TilemapLayerAppearanceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var index in Enumerable.Range(0, 11))
-        foreach (var objectLayer in new[] { false, true }) yield return [mode, index, objectLayer];
+        foreach (var objectLayer in new[] { false, true }) yield return [index, objectLayer];
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void InvalidFieldsProduceCatchableDiagnosticAndPreservePreviousMap(ExecutionMode mode, int index, bool objectLayer)
+    public void InvalidFieldsProduceCatchableDiagnosticAndPreservePreviousMap(int index, bool objectLayer)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-layer-appearance-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -49,9 +49,8 @@ public sealed class TilemapLayerAppearanceTests
                     PRINT err.Message
                 END TRY
                 PRINT MAPWIDTH(m)
-                """, mode, sourceFilePath: Path.Combine(root, "check.axm"));
+                """, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             var reason = fields[index] == "tintcolor" ? "LOADTILEMAP: Поле tintcolor слоя поддерживает только непрозрачный белый цвет."
                 : "LOADTILEMAP: Поле mode слоя поддерживает только строку normal.";
             Assert.Equal(index is 0 or 5 or 8 ? "1" : string.Join(Environment.NewLine, "MB3005", reason, "1"), result.OutputText);

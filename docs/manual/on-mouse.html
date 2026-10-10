@@ -38,7 +38,7 @@
             <h2>Где работает оператор ON MOUSE</h2>
             <p>Оператор <code>ON MOUSE</code> работает при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. Без активной рисуемой поверхности выполнение сообщает диагностику <code>MB3010</code>.</p>
             <p>При активном <code>SCREEN</code> координаты событий мыши измеряются в пикселях клиентской области активного окна и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>. При активном <code>CANVAS</code> параметры <code>x</code> и <code>y</code> передаются уже в мировых координатах и учитывают текущие <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
-            <p>Оператор <code>ON MOUSE</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+            <p>Оператор <code>ON MOUSE</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
         </section>
 
         <section class="article-section">

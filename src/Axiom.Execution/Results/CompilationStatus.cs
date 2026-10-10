@@ -4,5 +4,6 @@ public enum CompilationStatus
 {
     Success,
     SyntaxFailure,
-    SemanticFailure
+    SemanticFailure,
+    BackendFailure
 }

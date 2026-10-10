@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class WholeFileDefaultEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void DefaultUtf8FormsPreserveTextAndDistinguishEmptyLines(ExecutionMode mode)
+    [Fact]
+    public void DefaultUtf8FormsPreserveTextAndDistinguishEmptyLines()
     {
         var path = Path.GetTempFileName();
         try
@@ -26,10 +24,9 @@ public sealed class WholeFileDefaultEvidenceTests
                 PRINT ARRAYLENGTH(lines)
                 PRINT WRITEFILE("{{path}}", "А😀" + CHRW(13) + CHRW(10) + CHRW(10))
                 PRINT APPENDFILE("{{path}}", "Б")
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { "TRUE", "TRUE", "TRUE", "3", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "0", "TRUE", "TRUE" }, result.Output);
             Assert.Equal(new byte[] { 0xD0, 0x90, 0xF0, 0x9F, 0x98, 0x80, 13, 10, 10, 0xD0, 0x91 }, File.ReadAllBytes(path));
         }

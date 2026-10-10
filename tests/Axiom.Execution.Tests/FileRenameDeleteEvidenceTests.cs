@@ -4,14 +4,14 @@ public sealed class FileRenameDeleteEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var directory in new[] { false, true })
-        foreach (var scenario in new[] { "success", "conflict", "path-name" }) yield return [mode, directory, scenario];
+        foreach (var scenario in new[] { "success", "conflict", "path-name" }) yield return [directory, scenario];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void RenamePreservesBytesAndRejectsConflictOrPathName(ExecutionMode mode, bool directory, string scenario)
+    public void RenamePreservesBytesAndRejectsConflictOrPathName(bool directory, string scenario)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-rename-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -35,7 +35,7 @@ public sealed class FileRenameDeleteEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode);
+                """);
             Assert.Equal(new[] { scenario == "success" ? "TRUE" : "MB3007" }, result.Output);
             var retained = scenario == "success" ? target : source;
             Assert.Equal(bytes, File.ReadAllBytes(directory ? Path.Combine(retained, "data.bin") : retained));
@@ -46,10 +46,8 @@ public sealed class FileRenameDeleteEvidenceTests
         finally { Directory.Delete(root, true); }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void NonemptyDirectoryFailurePreservesBytesAndExplicitDeletionWorks(ExecutionMode mode)
+    [Fact]
+    public void NonemptyDirectoryFailurePreservesBytesAndExplicitDeletionWorks()
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-delete-" + Guid.NewGuid().ToString("N"));
         var child = Path.Combine(root, "child");
@@ -65,7 +63,7 @@ public sealed class FileRenameDeleteEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode);
+                """);
             Assert.Equal(new[] { "MB3007" }, refusal.Output);
             Assert.Equal(bytes, File.ReadAllBytes(file));
             var result = Run($$"""
@@ -82,19 +80,18 @@ public sealed class FileRenameDeleteEvidenceTests
                 PRINT MAKEDIR("{{child}}/nested")
                 PRINT DELETEDIRRECURSIVE("{{child}}")
                 PRINT DELETEDIRRECURSIVE("{{child}}")
-                """, mode);
+                """);
             Assert.Equal(new[] { "TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE", "TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE", "FALSE" }, result.Output);
             Assert.False(Directory.Exists(child));
         }
         finally { Directory.Delete(root, true); }
     }
 
-    private static ExecutionResult Run(string source, ExecutionMode mode)
+    private static ExecutionResult Run(string source)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         return result;
     }
 }

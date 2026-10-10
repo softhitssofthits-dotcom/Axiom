@@ -5,15 +5,6 @@ namespace Axiom.Runtime;
 
 public sealed class RuntimeFunctionValue
 {
-    public RuntimeFunctionValue(FunctionSymbol function, RuntimeScope capturedScope)
-    {
-        ArgumentNullException.ThrowIfNull(function);
-        ArgumentNullException.ThrowIfNull(capturedScope);
-
-        Function = function;
-        CapturedScope = capturedScope;
-    }
-
     internal RuntimeFunctionValue(FunctionSymbol function, IReadOnlyList<BytecodeVariableSlot> capturedSlots)
         : this(function, capturedSlots, bytecodeBuiltinBindingId: null)
     {
@@ -33,7 +24,6 @@ public sealed class RuntimeFunctionValue
         ArgumentNullException.ThrowIfNull(capturedSlots);
 
         Function = function;
-        CapturedScope = null!;
         BytecodeCapturedSlots = capturedSlots;
         BytecodeBuiltinBindingId = bytecodeBuiltinBindingId;
     }
@@ -48,15 +38,12 @@ public sealed class RuntimeFunctionValue
         ArgumentNullException.ThrowIfNull(capturedSlots);
 
         Function = routine.Symbol;
-        CapturedScope = null!;
         BytecodeRoutine = routine;
         BytecodeCapturedSlots = capturedSlots;
         BytecodeBuiltinBindingId = bytecodeBuiltinBindingId;
     }
 
     public FunctionSymbol Function { get; }
-
-    public RuntimeScope CapturedScope { get; }
 
     internal BytecodeRoutine? BytecodeRoutine { get; }
 

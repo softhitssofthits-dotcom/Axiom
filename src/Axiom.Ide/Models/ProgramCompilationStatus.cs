@@ -5,5 +5,6 @@ public enum ProgramCompilationStatus
     Success,
     SyntaxFailure,
     SemanticFailure,
+    BackendFailure,
     InfrastructureFailure
 }

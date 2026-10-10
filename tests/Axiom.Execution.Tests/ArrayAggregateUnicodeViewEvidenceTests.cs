@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayAggregateUnicodeViewEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void StringExtremaCompareUtf16WithoutNormalizingOrRepairing(ExecutionMode mode)
+    [Fact]
+    public void StringExtremaCompareUtf16WithoutNormalizingOrRepairing()
     {
-        Check(mode, """
+        Check("""
             DIM words(-1 TO 0) AS STRING
             DIM high AS STRING = LEFT("😀", 1)
             DIM low AS STRING = RIGHT("😀", 1)
@@ -40,12 +38,10 @@ public sealed class ArrayAggregateUnicodeViewEvidenceTests
             """, Enumerable.Repeat("TRUE", 14).ToArray());
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void NumericAggregatesOnlyReadVisibleRegion(ExecutionMode mode)
+    [Fact]
+    public void NumericAggregatesOnlyReadVisibleRegion()
     {
-        Check(mode, """
+        Check("""
             DIM grid(-1 TO 1, 5 TO 7) AS DECIMAL
             FOR r = -1 TO 1
                 FOR c = 5 TO 7
@@ -69,13 +65,12 @@ public sealed class ArrayAggregateUnicodeViewEvidenceTests
             """, ["4.00", "0.25", "1.75", "1", "0.5", "1000", "0.25", "1.75"]);
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Status == ExecutionStatus.Success, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 }

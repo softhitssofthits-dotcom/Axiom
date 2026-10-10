@@ -28,10 +28,8 @@ public sealed class RegexExtractUnicodeFormEvidenceTests
         else Assert.Equal(TypeSymbol.String, call.Type);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void GroupsPreserveMalformedUnitsAndExplicitNumbers(ExecutionMode mode)
+    [Fact]
+    public void GroupsPreserveMalformedUnitsAndExplicitNumbers()
     {
         var source = """
             DIM high AS STRING = LEFT("😀", 1)
@@ -57,11 +55,10 @@ public sealed class RegexExtractUnicodeFormEvidenceTests
             PRINT ARRAYISALLOCATED(values)
             PRINT ARRAYLENGTH(values)
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "1", "3", "TRUE", "TRUE", "TRUE", "2", "TRUE", "TRUE", "TRUE", "0" }, run.Output);
     }
 }

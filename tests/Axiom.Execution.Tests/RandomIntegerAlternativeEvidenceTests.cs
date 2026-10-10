@@ -11,9 +11,8 @@ public sealed class RandomIntegerAlternativeEvidenceTests
     [InlineData(0.9999999999999999, "10")]
     public void SmallIndexFormulaHandlesValidSourceEndpoints(double value, string expected)
     {
-        foreach (var mode in Modes)
         {
-            var run = Run("PRINT INT(RND()*10)+1", mode, new FixedRandom(value));
+            var run = Run("PRINT INT(RND()*10)+1", new FixedRandom(value));
             Assert.True(run.Succeeded);
             Assert.Equal(expected, Assert.Single(run.Output));
         }
@@ -25,9 +24,8 @@ public sealed class RandomIntegerAlternativeEvidenceTests
     [InlineData("DIM width AS LONG = 4294967296\nPRINT INT(RND()*width)")]
     public void CheckedWidthAndIntegerReturnAreRealLimits(string source)
     {
-        foreach (var mode in Modes)
         {
-            var run = Run(source, mode, new FixedRandom(0.5));
+            var run = Run(source, new FixedRandom(0.5));
             Assert.False(run.Succeeded);
             Assert.Contains(run.Diagnostics, d => d.Code == "MB3008");
         }
@@ -45,9 +43,8 @@ DIM high AS LONG = 2147483647
 DIM width AS LONG = high-low+1
 PRINT CLNG(FLOOR(RND()*width))+low
 """;
-        foreach (var mode in Modes)
         {
-            var run = Run(source, mode, new FixedRandom(value));
+            var run = Run(source, new FixedRandom(value));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Equal(expected, Assert.Single(run.Output));
         }
@@ -62,9 +59,8 @@ DIM width AS LONG = 2
 PRINT CLNG(FLOOR(RND()*width)+low)
 PRINT CLNG(FLOOR(RND()*width))+low
 """;
-        foreach (var mode in Modes)
         {
-            var run = Run(source, mode, new FixedRandom(0.5, 0.5));
+            var run = Run(source, new FixedRandom(0.5, 0.5));
             Assert.True(run.Succeeded);
             Assert.Equal(new[] { "9007199254740992", "9007199254740993" }, run.Output);
         }
@@ -74,9 +70,8 @@ PRINT CLNG(FLOOR(RND()*width))+low
     public void EqualWeightDiscreteSourceDoesNotMakeThreeBucketsEqual()
     {
         const string source = "FOR i = 1 TO 8\nPRINT INT(RND()*3)\nNEXT i";
-        foreach (var mode in Modes)
         {
-            var run = Run(source, mode, new FixedRandom(Enumerable.Range(0, 8).Select(i => i / 8.0).ToArray()));
+            var run = Run(source, new FixedRandom(Enumerable.Range(0, 8).Select(i => i / 8.0).ToArray()));
             Assert.True(run.Succeeded);
             Assert.Equal(new[] { 3, 3, 2 }, Enumerable.Range(0, 3).Select(i => run.Output.Count(x => x == i.ToString())).ToArray());
         }
@@ -95,10 +90,9 @@ FUNCTION RandomThree() AS INTEGER
 END FUNCTION
 PRINT RandomThree()
 """;
-        foreach (var mode in Modes)
         {
             var random = new FixedRandom(7.0/8, 6.0/8, 5.0/8);
-            var run = Run(source, mode, random);
+            var run = Run(source, random);
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Equal("3", Assert.Single(run.Output));
             Assert.Equal(3, random.Calls);
@@ -120,19 +114,15 @@ NEXT i
 """;
         var reference = new Random(42);
         var expected = Enumerable.Range(0, 10).Select(_ => ((int)Math.Floor(reference.NextDouble()*10)+1).ToString(CultureInfo.InvariantCulture)).ToArray();
-        foreach (var mode in Modes)
         {
-            var run = Run(source, mode, new SeededRandom());
+            var run = Run(source, new SeededRandom());
             Assert.True(run.Succeeded);
             Assert.Equal(expected.Concat(expected), run.Output);
         }
     }
-
-    private static ExecutionMode[] Modes => [ExecutionMode.Interpreter, ExecutionMode.Bytecode];
-    private static ExecutionResult Run(string source, ExecutionMode mode, IRuntimeRandom random)
+    private static ExecutionResult Run(string source, IRuntimeRandom random)
     {
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, runtimeRandom: random, mode: mode));
-        Assert.False(run.UsedInterpreterFallback);
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, runtimeRandom: random));
         return run;
     }
 

@@ -1,4 +1,4 @@
-﻿using Axiom.Core;
+using Axiom.Core;
 using Axiom.Runtime;
 
 using Axiom.Bytecode;
@@ -83,21 +83,32 @@ public sealed class ExecutionPipelineTests
     public void Compile_ReturnsDiagnosticWhenBytecodeSnapshotWriteFails()
     {
         var pipeline = new AxiomExecutionPipeline();
-        var snapshotDirectory = Path.Combine(Path.GetTempPath(), $"axiom-bytecode-dir-{Guid.NewGuid():N}");
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !File.Exists(Path.Combine(root.FullName, "PROJECT.md")))
+        {
+            root = root.Parent;
+        }
+
+        Assert.NotNull(root);
+        var snapshotDirectory = Path.Combine(root!.FullName, ".artifacts", "snapshot-failure-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(snapshotDirectory);
 
         try
         {
             var result = pipeline.Compile(new CompilationRequest("PRINT 1 + 2", bytecodeSnapshotPath: snapshotDirectory));
 
-            Assert.Equal(CompilationStatus.Success, result.Status);
-            Assert.True(result.Succeeded);
-            Assert.Empty(result.Diagnostics);
+            Assert.Equal(CompilationStatus.BackendFailure, result.Status);
+            Assert.True(result.FrontendSucceeded);
+            Assert.False(result.Succeeded);
             Assert.False(result.BackendSucceeded);
             Assert.False(result.BytecodeAvailable);
             var diagnostic = Assert.Single(result.BackendDiagnostics);
             Assert.Equal("MB4003", diagnostic.Code);
             Assert.Contains("Не удалось записать JSON-снимок байткода", diagnostic.Message, StringComparison.Ordinal);
+
+            var followUp = pipeline.Run(new ExecutionRequest("PRINT 7"));
+            Assert.Equal(ExecutionStatus.Success, followUp.Status);
+            Assert.Equal(["7"], followUp.Output);
         }
         finally
         {
@@ -105,6 +116,35 @@ public sealed class ExecutionPipelineTests
             {
                 Directory.Delete(snapshotDirectory, recursive: true);
             }
+        }
+    }
+
+    [Fact]
+    public void CompileSnapshotFailureIsNotFullCompilationSuccess()
+    {
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !File.Exists(Path.Combine(root.FullName, "PROJECT.md")))
+        {
+            root = root.Parent;
+        }
+
+        Assert.NotNull(root);
+        var directory = Path.Combine(root!.FullName, ".artifacts",
+            "snapshot-failure-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var result = new AxiomExecutionPipeline().Compile(
+                new CompilationRequest("PRINT 3", bytecodeSnapshotPath: directory));
+            Assert.Equal(CompilationStatus.BackendFailure, result.Status);
+            Assert.True(result.FrontendSucceeded);
+            Assert.False(result.Succeeded);
+            Assert.False(result.BackendSucceeded);
+            Assert.Equal("MB4003", Assert.Single(result.BackendDiagnostics).Code);
+        }
+        finally
+        {
+            Directory.Delete(directory);
         }
     }
 
@@ -119,9 +159,7 @@ public sealed class ExecutionPipelineTests
             new ExecutionRequest("PRINT 1 + 2"));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["3"], result.Output);
     }
 
@@ -134,7 +172,6 @@ public sealed class ExecutionPipelineTests
         Assert.True(result.Succeeded);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["3"], result.Output);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.True(result.RuntimeExecutionDuration >= TimeSpan.Zero);
     }
@@ -149,30 +186,6 @@ public sealed class ExecutionPipelineTests
             DIM Foo AS INTEGER = 7
             PRINT Foo
             """);
-
-        Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(["7"], result.Output);
-
-        var warning = Assert.Single(result.Diagnostics);
-        Assert.Equal(DiagnosticCodes.NameClassCollision, warning.Code);
-        Assert.Equal(DiagnosticSeverity.Warning, warning.Severity);
-    }
-
-    [Fact]
-    public void Run_InterpreterMode_WithWarningDiagnostic_SucceedsAndCarriesWarning()
-    {
-        var pipeline = new AxiomExecutionPipeline();
-
-        var result = pipeline.Run(new ExecutionRequest(
-            """
-            DIM Foo AS INTEGER = 7
-
-            SUB Foo()
-            END SUB
-
-            PRINT Foo
-            """,
-            mode: ExecutionMode.Interpreter));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(["7"], result.Output);
@@ -198,27 +211,6 @@ public sealed class ExecutionPipelineTests
         var error = Assert.Single(result.Diagnostics, static d => d.Code == "MB2016");
         Assert.Equal(DiagnosticSeverity.Error, error.Severity);
         Assert.Contains("локальный", error.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public void Run_InterpreterMode_WithForCounterReuse_ReportsError()
-    {
-        var pipeline = new AxiomExecutionPipeline();
-
-        var result = pipeline.Run(new ExecutionRequest(
-            """
-            DIM i AS INTEGER
-
-            FOR i = 1 TO 3
-                PRINT i
-            NEXT
-            """,
-            mode: ExecutionMode.Interpreter));
-
-        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
-
-        var error = Assert.Single(result.Diagnostics, static d => d.Code == "MB2016");
-        Assert.Equal(DiagnosticSeverity.Error, error.Severity);
     }
 
     [Fact]
@@ -255,33 +247,15 @@ public sealed class ExecutionPipelineTests
     }
 
     [Fact]
-    public void Run_WithInterpreterMode_UsesInterpreterEngine()
-    {
-        var pipeline = new AxiomExecutionPipeline();
-
-        var result = pipeline.Run(new ExecutionRequest(
-            "PRINT 1 + 2",
-            mode: ExecutionMode.Interpreter));
-
-        Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Interpreter, result.RequestedMode);
-        Assert.Equal(ExecutionEngineKind.Interpreter, result.ActualEngine);
-        Assert.Equal(["3"], result.Output);
-    }
-
-    [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForCoveredProgram()
     {
         var pipeline = new AxiomExecutionPipeline();
 
         var result = pipeline.Run(new ExecutionRequest(
-            "PRINT 1 + 2",
-            mode: ExecutionMode.Bytecode));
+            "PRINT 1 + 2"));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["3"], result.Output);
     }
 
@@ -297,7 +271,6 @@ PRINT 3
 
         var result = pipeline.Run(new ExecutionRequest(
             text,
-            mode: ExecutionMode.Bytecode,
             sourceBreakpointLines: [2]));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
@@ -322,7 +295,6 @@ PRINT value
 
         var result = pipeline.Run(new ExecutionRequest(
             text,
-            mode: ExecutionMode.Bytecode,
             sourceBreakpointLines: [3]));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
@@ -367,14 +339,10 @@ PRINT op(4)
         var pipeline = new AxiomExecutionPipeline();
 
         var result = pipeline.Run(new ExecutionRequest(
-            sourceText,
-            mode: ExecutionMode.Bytecode));
+            sourceText));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["5"], result.Output);
     }
 
@@ -395,9 +363,7 @@ PRINT op(4)
         var result = pipeline.Run(new ExecutionRequest(sourceText));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["5"], result.Output);
     }
@@ -419,7 +385,6 @@ PRINT wide >> 3
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["3", "8", "8", "4", "8"], result.Output);
     }
 
@@ -469,7 +434,7 @@ NEXT
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
@@ -486,7 +451,7 @@ NEXT
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
@@ -608,11 +573,10 @@ SELECT CASE value
 END SELECT
 """;
 
-        var result = Run(text, mode: ExecutionMode.Bytecode);
+        var result = Run(text);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["first"], result.Output);
     }
 
@@ -632,11 +596,10 @@ END SELECT
 PRINT "after"
 """;
 
-        var result = Run(text, mode: ExecutionMode.Bytecode);
+        var result = Run(text);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["after"], result.Output);
     }
 
@@ -732,7 +695,6 @@ PRINT "done"
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["1", "2", "done"], result.Output);
     }
 
@@ -886,7 +848,6 @@ END IF
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["yes"], result.Output);
     }
 
@@ -909,7 +870,6 @@ PRINT "[" + code + "]"
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["[    ]", "[AB  ]", "[Alph]"], result.Output);
     }
 
@@ -929,11 +889,10 @@ PRINT "[" + code + "]"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["[    ]", "[AB  ]", "[Alph]"], result.Output);
     }
 
@@ -958,7 +917,6 @@ PRINT CHRW(9608)
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Hel", "llo", "ello", "hello", "one three", "3", "[.A..]", "159", "1071", "█", "█"], result.Output);
     }
 
@@ -975,11 +933,10 @@ PRINT REMOVE("abcdef", 2, 3)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["TRUE", "TRUE", "TRUE", "aaaaa", "ab-cd", "aef"], result.Output);
     }
 
@@ -994,12 +951,10 @@ PRINT INKEY()
 
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider("A", "LEFT"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("A", "LEFT"));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["A", "LEFT", ""], result.Output);
     }
 
@@ -1008,12 +963,10 @@ PRINT INKEY()
     {
         var result = Run(
             "PRINT INKEY()",
-            inputProvider: new QueueInputProvider(),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueInputProvider());
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([""], result.Output);
     }
 
@@ -1029,12 +982,10 @@ PRINT INKEY()
 
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["LEFT", "CTRL"]),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider(keys: [], pressedKeys: ["LEFT", "CTRL"]));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["TRUE", "TRUE", "FALSE", ""], result.Output);
     }
 
@@ -1050,12 +1001,10 @@ PRINT INKEY()
 
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC", "A"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "ESC", "A"));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["TRUE", "FALSE", "TRUE", "A"], result.Output);
     }
 
@@ -1078,12 +1027,10 @@ PRINT rightDown
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, pressedMouseButtons: [1]);
         var result = Run(
             text,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["320", "240", "TRUE", "FALSE"], inputProvider.GraphicsOutput);
     }
@@ -1108,12 +1055,10 @@ PRINT "after line step-step="; POINT(0); ","; POINT(1)
 PRINT "pixel 10,20="; POINT(10, 20)
 PRINT "pixel 15,24="; POINT(15, 24)
 """,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1144,12 +1089,10 @@ PRINT "rel pos="; POINT(0); ","; POINT(1)
 VIEW
 PRINT "reset pos="; POINT(0); ","; POINT(1)
 """,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1185,12 +1128,10 @@ PRINT "cart pixel="; POINT(104, 205)
 PRINT "cart pos="; POINT(0); ","; POINT(1)
 PRINT "cart logical="; POINT(2); ","; POINT(3)
 """,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1226,12 +1167,10 @@ WINDOW (100, 210)-(110, 200)
 PRINT "cart="; PMAP(105, 0); ","; PMAP(205, 1)
 PRINT "cart back="; PMAP(3, 2); ","; PMAP(3, 3)
 """,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(
             [
@@ -1262,11 +1201,10 @@ PRINT POINT(8, 8)
 """;
 
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: []);
-        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+        var result = Run(text, inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["8", "8", "12", "12", "9", "0", "9"], inputProvider.GraphicsOutput);
     }
@@ -1286,11 +1224,10 @@ PRINT POINT(10, 7)
 """;
 
         var inputProvider = new MinimalGraphicsHostInputProvider();
-        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+        var result = Run(text, inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["10", "10", "14", "14", "14", "14"], inputProvider.GraphicsOutput);
     }
@@ -1315,11 +1252,10 @@ PRINT POINT(17, 10)
 """;
 
         var inputProvider = new MinimalGraphicsHostInputProvider();
-        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+        var result = Run(text, inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["20", "10", "17", "12", "0", "9"], inputProvider.GraphicsOutput);
     }
@@ -1348,11 +1284,10 @@ PRINT POINT(11, 11)
 """;
 
         var inputProvider = new MinimalGraphicsHostInputProvider();
-        var result = Run(text, inputProvider: inputProvider, mode: ExecutionMode.Bytecode);
+        var result = Run(text, inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["1", "2", "3", "4", "1", "2", "3", "4"], inputProvider.GraphicsOutput);
     }
@@ -1386,12 +1321,10 @@ PRINT MOUSEX()
 PRINT MOUSEY()
 PRINT MOUSEBUTTON(1)
 """,
-            inputProvider: new QueueInputProvider(),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueInputProvider());
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
     }
 
@@ -1412,12 +1345,10 @@ PRINT middle
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mousePresses: [1, 3]);
         var result = Run(
             text,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["TRUE", "FALSE", "TRUE"], inputProvider.GraphicsOutput);
     }
@@ -1438,12 +1369,10 @@ END SUB
 
         var result = Run(
             text,
-            inputProvider: new QueueKeyboardInputProvider("LEFT", "A"),
-            mode: ExecutionMode.Bytecode);
+            inputProvider: new QueueKeyboardInputProvider("LEFT", "A"));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["ready", "handler", "A"], result.Output);
     }
 
@@ -1477,12 +1406,10 @@ END SUB
         var inputProvider = new QueueKeyboardInputProvider(keys: [], pressedKeys: [], mouseX: 320, mouseY: 240, mousePresses: [1]);
         var result = Run(
             text,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["TRUE", "1", "320", "240", "FALSE"], inputProvider.GraphicsOutput);
     }
@@ -1520,12 +1447,10 @@ END SUB
             mouseEvents: [new MouseInputEvent(MouseInputEventKind.Wheel, -120)]);
         var result = Run(
             text,
-            inputProvider: inputProvider,
-            mode: ExecutionMode.Bytecode);
+            inputProvider: inputProvider);
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Output);
         Assert.Equal(["TRUE", "-120", "320", "240"], inputProvider.GraphicsOutput);
     }
@@ -1538,11 +1463,10 @@ PRINT REPLACE("abc", "", "x")
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("REPLACE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1574,7 +1498,6 @@ PRINT parts(2)
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["3", "A12", "C56", "3", "34", "3", "b34"], result.Output);
     }
 
@@ -1587,11 +1510,10 @@ matches = REGEXMATCHES("abc", "a", "q")
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("REGEXMATCHES", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1613,7 +1535,6 @@ PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["TRUE", "42", "12", "one # two 34", "2"], result.Output);
     }
 
@@ -1625,11 +1546,10 @@ PRINT REGEXEXTRACT("abc", "(a)", -1)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("REGEXEXTRACT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1651,7 +1571,6 @@ PRINT JOIN(parts, "/")
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["3", "green", "red/green/blue"], result.Output);
     }
 
@@ -1664,11 +1583,10 @@ parts = SPLIT("abc", "")
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("SPLIT", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1687,7 +1605,6 @@ PRINT USING "!"; "Hello"
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal([" 3.14", "H"], result.Output);
     }
 
@@ -1699,11 +1616,10 @@ PRINT USING "##"; "oops"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("PRINT USING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1724,7 +1640,6 @@ PRINT name; age + 1
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["Ada42"], result.Output);
         var request = Assert.Single(inputProvider.Requests);
         Assert.Equal("Pair", request.PromptText);
@@ -1740,11 +1655,10 @@ INPUT value
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, inputProvider: new QueueInputProvider("oops"), mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text, inputProvider: new QueueInputProvider("oops")));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3003", diagnostic.Code);
         Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1770,7 +1684,6 @@ PRINT value < 1
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["-4", "3", "-3", "3", "8", "3", "-5", "TRUE", "TRUE"], result.Output);
     }
 
@@ -1793,7 +1706,6 @@ PRINT SIN(angle)
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(["1.5", "8", "0"], result.Output);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
     }
 
     [Fact]
@@ -1804,11 +1716,10 @@ PRINT LOG(0)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("LOG", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -1839,7 +1750,6 @@ PRINT ENDOFYEAR("2026-04-20")
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "2026-04-20",
@@ -1872,7 +1782,6 @@ PRINT ISDATE(UTCNOW())
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["TRUE", "TRUE", "TRUE", "TRUE"], result.Output);
     }
 
@@ -1898,7 +1807,6 @@ PRINT DATEPART("y", dt)
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "2026-02-28",
@@ -1948,7 +1856,6 @@ PRINT FIX(TIMER())
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(
             [
                 "2026-04-20",
@@ -1973,11 +1880,10 @@ PRINT DATEADD("ww", 1, DATEVALUE("2026-04-20"))
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("DATEADD", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -2002,7 +1908,6 @@ NEXT
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["1:1", "1:2", "2:1", "2:2"], result.Output);
     }
 
@@ -2016,11 +1921,10 @@ NEXT
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["1", "2", "3"], result.Output);
     }
 
@@ -2034,11 +1938,10 @@ NEXT
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3004", diagnostic.Code);
     }
@@ -2062,7 +1965,6 @@ END FUNCTION
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["12"], result.Output);
     }
 
@@ -2082,11 +1984,10 @@ END FUNCTION
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["12"], result.Output);
     }
 
@@ -2106,11 +2007,10 @@ END FUNCTION
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["cleanup", "42"], result.Output);
     }
@@ -2134,11 +2034,10 @@ PRINT "after"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["before", "cleanup", "after"], result.Output);
     }
@@ -2161,11 +2060,10 @@ PRINT "after"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["inside", "cleanup", "after"], result.Output);
     }
@@ -2189,11 +2087,10 @@ PRINT "after"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["before", "cleanup", "after"], result.Output);
     }
@@ -2214,11 +2111,10 @@ END TRY
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["inner cleanup", "outer cleanup"], result.Output);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("INNER", diagnostic.Code);
@@ -2245,11 +2141,10 @@ PRINT "after"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["INNER", "CLEANUP", "cleanup failure", "after"], result.Output);
     }
@@ -2273,11 +2168,10 @@ END TRY
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["inner", "APP003", "Original failure", "3"], result.Output);
     }
@@ -2302,11 +2196,10 @@ PRINT "after"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["inner-cleanup", "APP010", "after"], result.Output);
     }
@@ -2325,38 +2218,34 @@ END TRY
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["cleanup"], result.Output);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("APP012", diagnostic.Code);
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
-    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
-    public void Run_PowerDomainErrorMatchesInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    [InlineData(ExecutionEngineKind.BytecodeVm)]
+    public void Run_PowerDomainErrorMatchesInBytecodeVm(ExecutionEngineKind expectedEngine)
     {
         const string text = "PRINT (-8) ^ (1.0 / 3.0)";
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(expectedEngine, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3012", diagnostic.Code);
         Assert.Equal("Оператор '^' не определён для отрицательного основания и нецелой степени.", diagnostic.Message);
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
-    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
-    public void Run_UnifiedDiagnosticTextsMatchInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    [InlineData(ExecutionEngineKind.BytecodeVm)]
+    public void Run_UnifiedDiagnosticTextsMatchInBytecodeVm(ExecutionEngineKind expectedEngine)
     {
         const string text = """
 DIM low AS DOUBLE
@@ -2367,20 +2256,18 @@ PRINT CLAMP(5, low, high)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(expectedEngine, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Equal("Функция CLAMP: аргумент 'low' не должен быть больше аргумента 'high'.", diagnostic.Message);
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
-    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
-    public void Run_Wave4FeaturesMatchInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    [InlineData(ExecutionEngineKind.BytecodeVm)]
+    public void Run_Wave4FeaturesMatchInBytecodeVm(ExecutionEngineKind expectedEngine)
     {
         const string text = """
 RANDOMIZE 42
@@ -2405,11 +2292,10 @@ PRINT a(1) >= 3 ANDALSO a(1) = 10
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(expectedEngine, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(
         [
@@ -2420,9 +2306,8 @@ PRINT a(1) >= 3 ANDALSO a(1) = 10
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Bytecode, ExecutionEngineKind.BytecodeVm)]
-    [InlineData(ExecutionMode.Interpreter, ExecutionEngineKind.Interpreter)]
-    public void Run_TypeInvariantFailureReportsConstructorCallChainInBothEngines(ExecutionMode mode, ExecutionEngineKind expectedEngine)
+    [InlineData(ExecutionEngineKind.BytecodeVm)]
+    public void Run_TypeInvariantFailureReportsConstructorCallChainInBytecodeVm(ExecutionEngineKind expectedEngine)
     {
         const string text = """
 TYPE Person
@@ -2442,11 +2327,10 @@ p = Person(-1)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: mode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(expectedEngine, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3005", diagnostic.Code);
         Assert.Contains("Инвариант TYPE 'Person' вернул FALSE", diagnostic.Message, StringComparison.Ordinal);
@@ -2477,7 +2361,6 @@ END SUB
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["2"], result.Output);
     }
 
@@ -2501,11 +2384,10 @@ END SUB
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["2"], result.Output);
     }
 
@@ -2526,12 +2408,10 @@ END FUNCTION
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["23"], result.Output);
     }
 
@@ -2552,12 +2432,10 @@ END FUNCTION
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["23"], result.Output);
     }
@@ -2579,12 +2457,10 @@ END FUNCTION
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
-        Assert.Equal(ExecutionMode.Bytecode, result.RequestedMode);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(["7"], result.Output);
     }
@@ -2608,12 +2484,10 @@ Outer()
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["4"], result.Output);
     }
 
@@ -2631,12 +2505,10 @@ PRINT UBOUND(values)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["7", "2", "2"], result.Output);
     }
 
@@ -2658,12 +2530,10 @@ PRINT grid(3, 12)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["1", "2", "10", "11", "9", "0"], result.Output);
     }
 
@@ -2681,12 +2551,10 @@ PRINT bounds(3, 2)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["3", "2", "0"], result.Output);
     }
 
@@ -2708,12 +2576,10 @@ PRINT UBOUND(rowView)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["70", "9", "10", "11"], result.Output);
     }
 
@@ -2745,12 +2611,10 @@ PRINT ARRAYLENGTH(uniqueValues)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["5", "7", "10", "30", "30", "2"], result.Output);
     }
 
@@ -2763,11 +2627,10 @@ PRINT ARRAYSKIP(source, -1)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("ARRAYSKIP", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -2800,12 +2663,10 @@ PRINT values(6)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["1", "2", "5", "6", "3", "4"], result.Output);
     }
 
@@ -2838,11 +2699,10 @@ PRINT board(2, 11)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(["110", "210", "112", "111", "212", "211"], result.Output);
     }
 
@@ -2855,11 +2715,10 @@ PRINT ARRAYPOP(values)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3007", diagnostic.Code);
         Assert.Contains("ARRAYPOP", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -2900,12 +2759,10 @@ PRINT ARRAYBINARYSEARCH(sorted, 25)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["TRUE", "5", "9", "2", "4", "6", "9", "6", "4"], result.Output);
     }
 
@@ -2940,12 +2797,10 @@ PRINT hit(2)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["2", "2", "3", "3", "5", "2", "3"], result.Output);
     }
 
@@ -2974,12 +2829,10 @@ PRINT reshaped(2, 12)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["3", "5", "3", "5"], result.Output);
     }
 
@@ -2992,11 +2845,10 @@ PRINT ARRAYBINARYSEARCH(values, 1)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("MB3005", diagnostic.Code);
     }
@@ -3050,12 +2902,10 @@ RunCallbacks()
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["TRUE", "TRUE", "2", "N3", "N4", "24"], result.Output);
     }
 
@@ -3089,12 +2939,10 @@ PRINT validDates(2)
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["ADA", "LINUS", "5", "2", "2026-05-01"], result.Output);
     }
 
@@ -3128,12 +2976,10 @@ PRINT "[" + first.Name + "]"
 """;
 
         var pipeline = new AxiomExecutionPipeline();
-        var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+        var result = pipeline.Run(new ExecutionRequest(text));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Null(result.InterpreterFallbackReason);
         Assert.Equal(["[     ]", "[Ada  ]", "36", "London", "[Grace]"], result.Output);
     }
 
@@ -3188,7 +3034,7 @@ PRINT READFILE("{{EscapePath(missingPath)}}")
 """;
 
             var pipeline = new AxiomExecutionPipeline();
-            var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+            var result = pipeline.Run(new ExecutionRequest(text));
 
             Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
@@ -3214,7 +3060,7 @@ PRINT COPYFILE("{{EscapePath(missingPath)}}", "{{EscapePath(targetPath)}}")
 """;
 
             var pipeline = new AxiomExecutionPipeline();
-            var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+            var result = pipeline.Run(new ExecutionRequest(text));
 
             Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
@@ -3253,11 +3099,10 @@ CLOSE target
 """;
 
             var pipeline = new AxiomExecutionPipeline();
-            var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+            var result = pipeline.Run(new ExecutionRequest(text));
 
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["first", "second", "FALSE", "TRUE"], result.Output);
             Assert.Equal("saved\n", File.ReadAllText(outputPath));
         }
@@ -3280,7 +3125,7 @@ OPEN "{{EscapePath(missingPath)}}" FOR INPUT AS f
 """;
 
             var pipeline = new AxiomExecutionPipeline();
-            var result = pipeline.Run(new ExecutionRequest(text, mode: ExecutionMode.Bytecode));
+            var result = pipeline.Run(new ExecutionRequest(text));
 
             Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
@@ -3590,19 +3435,12 @@ PRINT INT(RND() * 1000)
 PRINT INT(RND() * 1000)
 """;
 
-        var interpreterResult = Run(
-            text,
-            runtimeRandom: new FixedRuntimeRandom(0.125, 0.5, 0.875),
-            mode: ExecutionMode.Interpreter);
         var bytecodeResult = Run(
             text,
-            runtimeRandom: new FixedRuntimeRandom(0.125, 0.5, 0.875),
-            mode: ExecutionMode.Bytecode);
+            runtimeRandom: new FixedRuntimeRandom(0.125, 0.5, 0.875));
 
-        Assert.Equal(ExecutionStatus.Success, interpreterResult.Status);
         Assert.Equal(ExecutionStatus.Success, bytecodeResult.Status);
-        Assert.Equal(["125", "500", "875"], interpreterResult.Output);
-        Assert.Equal(interpreterResult.Output, bytecodeResult.Output);
+        Assert.Equal(["125", "500", "875"], bytecodeResult.Output);
     }
 
     [Fact]
@@ -3672,10 +3510,9 @@ INPUT value
         IOutputWriter? outputWriter = null,
         IDiagnosticSink? diagnosticSink = null,
         IRuntimeClock? runtimeClock = null,
-        IRuntimeRandom? runtimeRandom = null,
-        ExecutionMode mode = ExecutionMode.Bytecode)
+        IRuntimeRandom? runtimeRandom = null)
     {
-        var request = new ExecutionRequest(sourceText, inputProvider, outputWriter, diagnosticSink, runtimeClock, runtimeRandom, mode: mode);
+        var request = new ExecutionRequest(sourceText, inputProvider, outputWriter, diagnosticSink, runtimeClock, runtimeRandom);
         var pipeline = new AxiomExecutionPipeline();
         return pipeline.Run(request);
     }
@@ -4554,4 +4391,3 @@ INPUT value
         }
     }
 }
-

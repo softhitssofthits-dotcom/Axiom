@@ -16,13 +16,13 @@ public sealed class CharacterScalarBoundaryEvidenceTests
             (65536, "\uD800\uDC00", "\uD800\uDC00", 65536, 2),
             (1114111, "\uDBFF\uDFFF", "\uDBFF\uDFFF", 1114111, 2)
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var c in cases) yield return [mode, c.Code, c.Chr, c.ChrW, c.Asc, c.Length];
+
+        foreach (var c in cases) yield return [c.Code, c.Chr, c.ChrW, c.Asc, c.Length];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ScalarBoundariesHaveLiteralCharactersAndCodes(ExecutionMode mode, int code, string chr, string chrW, int asc, int length)
+    public void ScalarBoundariesHaveLiteralCharactersAndCodes(int code, string chr, string chrW, int asc, int length)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             PRINT CHR({{code}}) = "{{chr}}"
@@ -30,18 +30,15 @@ public sealed class CharacterScalarBoundaryEvidenceTests
             PRINT ASC("{{chr}}")
             PRINT ASCW("{{chrW}}")
             PRINT LEN(CHRW({{code}}))
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { "TRUE", "TRUE", asc.ToString(), code.ToString(), length.ToString() }, result.Output);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FirstScalarIgnoresFollowingMalformedUnitsAndCombiningMarks(ExecutionMode mode)
+    [Fact]
+    public void FirstScalarIgnoresFollowingMalformedUnitsAndCombiningMarks()
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
             DIM high AS STRING = LEFT("😀", 1)
@@ -52,10 +49,9 @@ public sealed class CharacterScalarBoundaryEvidenceTests
             PRINT ASCW(high + "А")
             PRINT ASCW(low + high)
             PRINT ASC(high + low + "А")
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { "1040", "128", "101", "65533", "65533", "128512" }, result.Output);
     }
 }

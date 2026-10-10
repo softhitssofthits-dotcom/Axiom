@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ReplaceMalformedUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ReplaceMatchesUtf16UnitsAndDoesNotRescanInsertedText(ExecutionMode mode)
+    [Fact]
+    public void ReplaceMatchesUtf16UnitsAndDoesNotRescanInsertedText()
     {
-        Check(mode, """
+        Check("""
             DIM high AS STRING = LEFT("😀", 1)
             DIM low AS STRING = RIGHT("😀", 1)
             PRINT REPLACE("😀А😀", high, "Н") = "Н" + low + "АН" + low
@@ -22,17 +20,15 @@ public sealed class ReplaceMalformedUnicodeEvidenceTests
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void ReplaceManyLongestRuleWinsRegardlessOfShortRuleOrder(ExecutionMode mode, bool pairFirst)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ReplaceManyLongestRuleWinsRegardlessOfShortRuleOrder(bool pairFirst)
     {
         var first = pairFirst ? "\"😀\"" : "high";
         var second = pairFirst ? "high" : "\"😀\"";
         var firstNew = pairFirst ? "\"😀\"" : "\"Н\"";
         var secondNew = pairFirst ? "\"Н\"" : "\"😀\"";
-        Check(mode, $$"""
+        Check($$"""
             DIM high AS STRING = LEFT("😀", 1)
             DIM low AS STRING = RIGHT("😀", 1)
             DIM oldItems(-3 TO 1) AS STRING
@@ -53,13 +49,12 @@ public sealed class ReplaceMalformedUnicodeEvidenceTests
             """, ["TRUE", "TRUE", "TRUE"]);
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 }

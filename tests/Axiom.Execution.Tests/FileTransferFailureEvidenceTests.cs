@@ -3,11 +3,9 @@ namespace Axiom.Execution.Tests;
 public sealed class FileTransferFailureEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, "COPYFILE")]
-    [InlineData(ExecutionMode.Bytecode, "COPYFILE")]
-    [InlineData(ExecutionMode.Interpreter, "MOVEFILE")]
-    [InlineData(ExecutionMode.Bytecode, "MOVEFILE")]
-    public void CopyFollowsSourceLinkWhileMoveTransfersLink(ExecutionMode mode, string operation)
+    [InlineData("COPYFILE")]
+    [InlineData("MOVEFILE")]
+    public void CopyFollowsSourceLinkWhileMoveTransfersLink(string operation)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-transfer-link-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -19,10 +17,9 @@ public sealed class FileTransferFailureEvidenceTests
             byte[] bytes = [0, 0xFF, 0x80, 13, 10];
             File.WriteAllBytes(target, bytes);
             File.CreateSymbolicLink(link, target);
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {operation}(\"{link}\", \"{destination}\")", mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT {operation}(\"{link}\", \"{destination}\")"));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["TRUE"], result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(target));
             Assert.Equal(bytes, File.ReadAllBytes(destination));
@@ -42,15 +39,15 @@ public sealed class FileTransferFailureEvidenceTests
 
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var operation in new[] { "COPYFILE", "MOVEFILE" })
         foreach (var scenario in new[] { "existing", "missing-parent", "overwrite" })
-            yield return [mode, operation, scenario];
+            yield return [operation, scenario];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void TransferPreservesDataOnConflictAndReplacesOnlyWhenRequested(ExecutionMode mode, string operation, string scenario)
+    public void TransferPreservesDataOnConflictAndReplacesOnlyWhenRequested(string operation, string scenario)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-transfer-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -69,10 +66,9 @@ public sealed class FileTransferFailureEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             if (scenario == "overwrite")
             {
                 Assert.Equal(["TRUE"], result.Output);

@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayDistinctUnicodeViewEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void DistinctPreservesMalformedUnitsAndVisibleFirstOccurrenceOrder(ExecutionMode mode)
+    [Fact]
+    public void DistinctPreservesMalformedUnitsAndVisibleFirstOccurrenceOrder()
     {
         var source = """
             DIM grid(-1 TO 1, 5 TO 7) AS STRING
@@ -42,11 +40,10 @@ public sealed class ArrayDistinctUnicodeViewEvidenceTests
             PRINT uniqueAmounts(1)
             PRINT uniqueAmounts(2)
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "1", "1", "5", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "2", "79228162514264337593543950335", "79228162514264337593543950334" }, run.Output);
     }
 }

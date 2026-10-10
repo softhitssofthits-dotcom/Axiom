@@ -16,6 +16,5 @@ public interface IRecentFilesService
         IdeWindowState windowState,
         IdeTheme theme,
         IdeLanguage language,
-        bool smartIdentifierEnabled = false,
-        ExecutionMode preferredExecutionMode = ExecutionMode.Bytecode);
+        bool smartIdentifierEnabled = false);
 }

@@ -72,11 +72,10 @@ PRINT LEN(LEFT("😀", 1))
     [InlineData("MID(\"a\", 1, 0, \"GRAPHEME\")")]
     public void InvalidArgumentsProduceRuntimeDiagnostic(string expression)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + expression, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + expression));
             Assert.False(run.Succeeded);
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Contains(run.Diagnostics, d => d.Code == "MB3007");
         }
     }
@@ -109,9 +108,9 @@ PRINT rebuilt = text
     [InlineData("MID(\"a\", 1, 1, TRUE)")]
     public void WrongArgumentTypesAreRejectedBeforeExecution(string expression)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + expression, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + expression));
             Assert.False(run.Succeeded);
             Assert.NotEmpty(run.Diagnostics);
             Assert.DoesNotContain(run.Diagnostics, d => d.Code.StartsWith("MB3", StringComparison.Ordinal));
@@ -123,7 +122,7 @@ PRINT rebuilt = text
     [InlineData("left")]
     [InlineData("right")]
     [InlineData("mid")]
-    public void RunnableSamplesHaveExpectedOutputInBothEngines(string name)
+    public void RunnableSamplesHaveExpectedOutputInBytecodeVm(string name)
     {
         string[] expected = name switch
         {
@@ -138,11 +137,10 @@ PRINT rebuilt = text
 
     private static void Run(string source, params string[] expected)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(expected, run.Output);
         }
     }

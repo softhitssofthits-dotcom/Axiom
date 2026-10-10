@@ -32,7 +32,6 @@ public sealed class RecentFilesServiceTests : IDisposable
         Assert.Equal(IdeTheme.Light, snapshot.Theme);
         Assert.Equal(IdeLanguage.Russian, snapshot.Language);
         Assert.False(snapshot.SmartIdentifierEnabled);
-        Assert.Equal(ExecutionMode.Bytecode, snapshot.PreferredExecutionMode);
     }
 
     [Fact]
@@ -109,7 +108,6 @@ public sealed class RecentFilesServiceTests : IDisposable
         Assert.Equal(IdeTheme.Light, snapshot.Theme);
         Assert.Equal(IdeLanguage.Russian, snapshot.Language);
         Assert.False(snapshot.SmartIdentifierEnabled);
-        Assert.Equal(ExecutionMode.Bytecode, snapshot.PreferredExecutionMode);
     }
 
     [Fact]
@@ -129,7 +127,6 @@ public sealed class RecentFilesServiceTests : IDisposable
         Assert.Equal(IdeTheme.Light, snapshot.Theme);
         Assert.Equal(IdeLanguage.Russian, snapshot.Language);
         Assert.False(snapshot.SmartIdentifierEnabled);
-        Assert.Equal(ExecutionMode.Bytecode, snapshot.PreferredExecutionMode);
     }
 
     [Fact]
@@ -170,8 +167,7 @@ public sealed class RecentFilesServiceTests : IDisposable
             IdeWindowState.Maximized,
             IdeTheme.Dark,
             IdeLanguage.English,
-            smartIdentifierEnabled: true,
-            preferredExecutionMode: ExecutionMode.Interpreter);
+            smartIdentifierEnabled: true);
 
         var reloadedService = new RecentFilesService(stateFilePath);
         var snapshot = reloadedService.GetSnapshot();
@@ -182,7 +178,6 @@ public sealed class RecentFilesServiceTests : IDisposable
         Assert.Equal(IdeTheme.Dark, snapshot.Theme);
         Assert.Equal(IdeLanguage.English, snapshot.Language);
         Assert.True(snapshot.SmartIdentifierEnabled);
-        Assert.Equal(ExecutionMode.Interpreter, snapshot.PreferredExecutionMode);
     }
 
     [Fact]
@@ -198,8 +193,7 @@ public sealed class RecentFilesServiceTests : IDisposable
                 WindowState = IdeWindowState.Minimized.ToString(),
                 Theme = IdeTheme.Dark.ToString(),
                 Language = IdeLanguage.English.ToString(),
-                SmartIdentifierEnabled = true,
-                PreferredExecutionMode = ExecutionMode.Bytecode.ToString()
+                SmartIdentifierEnabled = true
             }));
 
         var service = new RecentFilesService(stateFilePath);
@@ -211,7 +205,69 @@ public sealed class RecentFilesServiceTests : IDisposable
         Assert.Equal(IdeTheme.Dark, snapshot.Theme);
         Assert.Equal(IdeLanguage.English, snapshot.Language);
         Assert.True(snapshot.SmartIdentifierEnabled);
-        Assert.Equal(ExecutionMode.Bytecode, snapshot.PreferredExecutionMode);
+    }
+
+    [Theory]
+    [InlineData("Interpreter")]
+    [InlineData("Bytecode")]
+    [InlineData("Auto")]
+    [InlineData("interpreter")]
+    [InlineData("unknown")]
+    [InlineData(null)]
+    public void OldEnginePreferenceDoesNotResetOtherPreferences(string? oldMode)
+    {
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !File.Exists(Path.Combine(root.FullName, "PROJECT.md")))
+        {
+            root = root.Parent;
+        }
+
+        Assert.NotNull(root);
+        var directory = Path.Combine(root!.FullName, ".artifacts",
+            "old-engine-state-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var statePath = Path.Combine(directory, "state.json");
+        var probeFile = Path.Combine(directory, "probe.axm");
+        File.WriteAllText(probeFile, "PRINT 1");
+        var state = new Dictionary<string, object?>
+        {
+            ["RecentFiles"] = new[] { probeFile },
+            ["LastDirectoryPath"] = directory,
+            ["Theme"] = "Dark",
+            ["Language"] = "English",
+            ["SmartIdentifierEnabled"] = true,
+            ["IsFilesPaneVisible"] = false,
+            ["IsStatusBarVisible"] = true,
+            ["WindowState"] = "Normal"
+        };
+        if (oldMode is not null)
+        {
+            state["PreferredExecutionMode"] = oldMode;
+        }
+
+        File.WriteAllText(statePath, JsonSerializer.Serialize(state));
+        try
+        {
+            var service = new RecentFilesService(statePath);
+            var snapshot = service.GetSnapshot();
+            Assert.Equal(IdeTheme.Dark, snapshot.Theme);
+            Assert.Equal(IdeLanguage.English, snapshot.Language);
+            Assert.True(snapshot.SmartIdentifierEnabled);
+            Assert.False(snapshot.IsFilesPaneVisible);
+            Assert.Equal([probeFile], snapshot.RecentFiles);
+            Assert.Equal(directory, snapshot.LastDirectoryPath);
+
+            service.UpdateShellPreferences(false, true, IdeWindowState.Normal,
+                IdeTheme.Dark, IdeLanguage.English, true);
+            using var saved = JsonDocument.Parse(File.ReadAllText(statePath));
+            Assert.False(saved.RootElement.TryGetProperty("PreferredExecutionMode", out _));
+            Assert.Equal(IdeTheme.Dark, new RecentFilesService(statePath).GetSnapshot().Theme);
+        }
+        finally
+        {
+            File.Delete(statePath);
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     public void Dispose()

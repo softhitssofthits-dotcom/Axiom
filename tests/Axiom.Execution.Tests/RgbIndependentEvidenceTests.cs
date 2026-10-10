@@ -16,13 +16,13 @@ public sealed class RgbIndependentEvidenceTests
             ("0, 9223372036854775807, 0", "MB3007"),
             ("0, 0, 9223372036854775807", "MB3007")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var (arguments, expected) in cases) yield return [mode, arguments, expected];
+
+        foreach (var (arguments, expected) in cases) yield return [arguments, expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void PackedValueAndEachComponentBoundaryWorkWithoutScreen(ExecutionMode mode, string arguments, string expected)
+    public void PackedValueAndEachComponentBoundaryWorkWithoutScreen(string arguments, string expected)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             TRY
@@ -31,10 +31,9 @@ public sealed class RgbIndependentEvidenceTests
                 PRINT err.Code
             END TRY
             PRINT "Продолжение"
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { expected, "Продолжение" }, result.Output);
     }
 
@@ -45,14 +44,13 @@ public sealed class RgbIndependentEvidenceTests
     [InlineData("RGB(\"1\", 2, 3)")]
     public void InvalidFormsAreRejectedBeforeExecution(string call)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call));
             Assert.False(result.Succeeded);
             Assert.NotEmpty(result.Diagnostics);
             Assert.All(result.Diagnostics, diagnostic => Assert.StartsWith("MB2", diagnostic.Code));
             Assert.Empty(result.Output);
-            Assert.False(result.UsedInterpreterFallback);
         }
     }
 }

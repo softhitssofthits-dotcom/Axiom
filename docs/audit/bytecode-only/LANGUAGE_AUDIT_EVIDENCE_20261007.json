@@ -1,0 +1,2049 @@
+﻿[
+    {
+        "Id":  "clng-upper-exclusive",
+        "Source":  "PRINT CLNG(9223372036854775808.0)",
+        "Expected":  null,
+        "ErrorCode":  "MB3008",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3008",
+                                "Message":  "Результат CLNG(value) выходит за диапазон LONG.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "clng-upper-neighbour",
+        "Source":  "PRINT CLNG(9223372036854774784.0)",
+        "Expected":  "9223372036854774784",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "9223372036854774784",
+        "Utf16":  "0039 0032 0032 0033 0033 0037 0032 0030 0033 0036 0038 0035 0034 0037 0037 0034 0037 0038 0034",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "clng-lower",
+        "Source":  "PRINT CLNG(-9223372036854775808.0)",
+        "Expected":  "-9223372036854775808",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "-9223372036854775808",
+        "Utf16":  "002D 0039 0032 0032 0033 0033 0037 0032 0030 0033 0036 0038 0035 0034 0037 0037 0035 0038 0030 0038",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "clng-lower-outside",
+        "Source":  "PRINT CLNG(-9223372036854777856.0)",
+        "Expected":  null,
+        "ErrorCode":  "MB3008",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3008",
+                                "Message":  "Результат CLNG(value) выходит за диапазон LONG.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "clng-positive-inf",
+        "Source":  "PRINT CLNG(VAL(\"1e309\"))",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "clng-nan",
+        "Source":  "PRINT CLNG(VAL(\"NaN\"))",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cint-nan",
+        "Source":  "PRINT CINT(VAL(\"NaN\"))",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cint-upper-fraction",
+        "Source":  "PRINT CINT(2147483647.9)",
+        "Expected":  "2147483647",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2147483647",
+        "Utf16":  "0032 0031 0034 0037 0034 0038 0033 0036 0034 0037",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cint-lower-fraction",
+        "Source":  "PRINT CINT(-2147483648.9)",
+        "Expected":  "-2147483648",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "-2147483648",
+        "Utf16":  "002D 0032 0031 0034 0037 0034 0038 0033 0036 0034 0038",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cdec-nan",
+        "Source":  "PRINT CDEC(VAL(\"NaN\"))",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "val-inf",
+        "Source":  "PRINT VAL(\"1e309\")",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "val-nan",
+        "Source":  "PRINT VAL(\"NaN\")",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "val-prefix",
+        "Source":  "PRINT VAL(\"12abc\")",
+        "Expected":  "12",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "12",
+        "Utf16":  "0031 0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "val-comma",
+        "Source":  "PRINT VAL(\"1,5\")",
+        "Expected":  "15",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "15",
+        "Utf16":  "0031 0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "val-hex",
+        "Source":  "PRINT VAL(\"\u0026HFF\")",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cdec-overflow",
+        "Source":  "PRINT CDEC(VAL(\"1e30\"))",
+        "Expected":  null,
+        "ErrorCode":  "MB3008",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3008",
+                                "Message":  "Результат CDEC(value) выходит за диапазон DECIMAL.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cint-trunc",
+        "Source":  "PRINT CINT(-2.9)",
+        "Expected":  "-2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "-2",
+        "Utf16":  "002D 0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "int-floor",
+        "Source":  "PRINT INT(-2.9)",
+        "Expected":  "-3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "-3",
+        "Utf16":  "002D 0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "pow-domain",
+        "Source":  "PRINT POW(-2, 0.5)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция POW: аргумент \u0027value\u0027 cannot be used with the specified exponent.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "power-domain",
+        "Source":  "PRINT (-2) ^ 0.5",
+        "Expected":  null,
+        "ErrorCode":  "MB3012",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3012",
+                                "Message":  "Оператор \u0027^\u0027 не определён для отрицательного основания и нецелой степени.",
+                                "Location":  "1:12"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "pow-zero",
+        "Source":  "PRINT POW(0,0)",
+        "Expected":  "1",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1",
+        "Utf16":  "0031",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "cbrt-negative",
+        "Source":  "PRINT CBRT(-8)",
+        "Expected":  "-2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "-2",
+        "Utf16":  "002D 0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "abs-min",
+        "Source":  "PRINT ABS(CINT(-2147483648))",
+        "Expected":  null,
+        "ErrorCode":  "MB3008",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3008",
+                                "Message":  "Результат ABS выходит за диапазон INTEGER.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "sqr-domain",
+        "Source":  "PRINT SQR(-1)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция SQR: аргумент \u0027value\u0027 must be greater than or equal to 0.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "log-domain",
+        "Source":  "PRINT LOG(0)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция LOG: аргумент \u0027value\u0027 must be greater than 0.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "acosh-domain",
+        "Source":  "PRINT ACOSH(0.5)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция ACOSH: аргумент \u0027value\u0027 must be greater than or equal to 1.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "atanh-domain",
+        "Source":  "PRINT ATANH(1)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция ATANH: аргумент \u0027value\u0027 must be greater than -1 and less than 1.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "round-half",
+        "Source":  "PRINT ROUND(2.5)",
+        "Expected":  "3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "3",
+        "Utf16":  "0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "numeric-promotion",
+        "Source":  "PRINT MIN(1,2.5)",
+        "Expected":  "1",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1",
+        "Utf16":  "0031",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "decimal-mixed",
+        "Source":  "PRINT CDEC(0.1) + CDEC(0.2)",
+        "Expected":  "0.3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0.3",
+        "Utf16":  "0030 002E 0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "format-hex-existing",
+        "Source":  "PRINT $\"{255:X}\"",
+        "Expected":  "FF",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FF",
+        "Utf16":  "0046 0046",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "format-decimal-existing",
+        "Source":  "PRINT $\"{1.25:F2}\"",
+        "Expected":  "1.25",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1.25",
+        "Utf16":  "0031 002E 0032 0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "average-positive",
+        "Source":  "DIM a(1 TO 2) AS DOUBLE\na(1) = VAL(\"1e308\")\na(2) = VAL(\"1e308\")\nPRINT ARRAYAVERAGE(a)",
+        "Expected":  "1E+308",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1E+308",
+        "Utf16":  "0031 0045 002B 0033 0030 0038",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "average-cancel",
+        "Source":  "DIM a(1 TO 2) AS DOUBLE\na(1) = VAL(\"1e308\")\na(2) = VAL(\"-1e308\")\nPRINT ARRAYAVERAGE(a)",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "min-bool-single",
+        "Source":  "DIM a(1 TO 1) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция ARRAYMIN: аргумент \u0027array\u0027 поддерживает только числовые элементы, получен BOOLEAN.",
+                                "Location":  "3:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "min-bool-double",
+        "Source":  "DIM a(1 TO 2) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция ARRAYMIN: аргумент \u0027array\u0027 поддерживает только числовые элементы, получен BOOLEAN.",
+                                "Location":  "3:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "sum-long-overflow",
+        "Source":  "DIM a(1 TO 2) AS LONG\na(1)=9223372036854775807\na(2)=1\nPRINT ARRAYSUM(a)",
+        "Expected":  null,
+        "ErrorCode":  "MB3008",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3008",
+                                "Message":  "Результат функции ARRAYSUM выходит за диапазон типа LONG.",
+                                "Location":  "4:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "sum-catch",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2147483647\na(2)=1\nTRY\nPRINT ARRAYSUM(a)\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 7\nEND TRY",
+        "Expected":  "MB3008\n7",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "MB3008\n7",
+        "Utf16":  "004D 0042 0033 0030 0030 0038 000A 0037",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "sum-overflow",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2147483647\na(2)=1\nPRINT ARRAYSUM(a)",
+        "Expected":  null,
+        "ErrorCode":  "MB3008",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3008",
+                                "Message":  "Результат функции ARRAYSUM выходит за диапазон типа INTEGER.",
+                                "Location":  "4:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "array-rank",
+        "Source":  "DIM a(-1 TO 0, 2 TO 3) AS INTEGER\na(-1,2)=1\na(-1,3)=2\na(0,2)=3\na(0,3)=4\nPRINT ARRAYSUM(a), ARRAYMIN(a), ARRAYMAX(a), ARRAYAVERAGE(a)",
+        "Expected":  "10 1 4 2.5",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "10 1 4 2.5",
+        "Utf16":  "0031 0030 0020 0031 0020 0034 0020 0032 002E 0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "aggregate-scalar-type-ARRAYSUM",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result AS INTEGER\nresult=ARRAYSUM(a)\nPRINT result",
+        "Expected":  "5",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "5",
+        "Utf16":  "0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "aggregate-inferred-type-ARRAYSUM",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result = ARRAYSUM(a)\nPRINT result + 1",
+        "Expected":  "6",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "6",
+        "Utf16":  "0036",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "aggregate-scalar-type-ARRAYMIN",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result AS INTEGER\nresult=ARRAYMIN(a)\nPRINT result",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "aggregate-inferred-type-ARRAYMIN",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result = ARRAYMIN(a)\nPRINT result + 1",
+        "Expected":  "3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "3",
+        "Utf16":  "0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "aggregate-scalar-type-ARRAYMAX",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result AS INTEGER\nresult=ARRAYMAX(a)\nPRINT result",
+        "Expected":  "3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "3",
+        "Utf16":  "0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "aggregate-inferred-type-ARRAYMAX",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result = ARRAYMAX(a)\nPRINT result + 1",
+        "Expected":  "4",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "4",
+        "Utf16":  "0034",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "array-clone",
+        "Source":  "DIM a(1 TO 2) AS INTEGER\na(1)=9\nDIM b() AS INTEGER\nb=ARRAYCLONE(a)\nb(1)=4\nPRINT a(1), b(1)",
+        "Expected":  "9 4",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "9 4",
+        "Utf16":  "0039 0020 0034",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "array-unallocated",
+        "Source":  "DIM a() AS INTEGER\nPRINT ARRAYAVERAGE(a)",
+        "Expected":  null,
+        "ErrorCode":  "MB3005",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3005",
+                                "Message":  "Функция ARRAYAVERAGE: аргумент \u0027array\u0027 содержит массив, который ещё не выделен.",
+                                "Location":  "2:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "array-empty",
+        "Source":  "DIM a(1 TO 0) AS INTEGER\nPRINT ARRAYMIN(a)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция ARRAYMIN: аргумент \u0027array\u0027 не может быть пустым выделенным массивом.",
+                                "Location":  "2:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-len",
+        "Source":  "PRINT LEN(\"a😀é\")",
+        "Expected":  "5",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "5",
+        "Utf16":  "0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-reverse",
+        "Source":  "PRINT REVERSE(\"a😀b\")",
+        "Expected":  "b😀a",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "b😀a",
+        "Utf16":  "0062 D83D DE00 0061",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-reverse-twice-cut",
+        "Source":  "PRINT REVERSE(REVERSE(LEFT(\"😀\",1))) = LEFT(\"😀\",1)",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-asc-cut",
+        "Source":  "PRINT ASCW(LEFT(\"😀\",1))",
+        "Expected":  "65533",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "65533",
+        "Utf16":  "0036 0035 0035 0033 0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-instr",
+        "Source":  "PRINT INSTR(\"a😀b😀\",\"😀\")",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-count",
+        "Source":  "PRINT SUBSTRCOUNT(\"😀😀\",\"😀\")",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-join",
+        "Source":  "PRINT JOIN(SPLIT(\"😀;е;😎\",\";\"),\";\")",
+        "Expected":  "😀;е;😎",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "😀;е;😎",
+        "Utf16":  "D83D DE00 003B 0435 003B D83D DE0E",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "unicode-normalization",
+        "Source":  "PRINT \"é\" = \"é\"",
+        "Expected":  "FALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE",
+        "Utf16":  "0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-m",
+        "Source":  "PRINT REGEXCOUNT(\"a\" + CHR(10) + \"b\",\"^.\",\"m\")",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-s",
+        "Source":  "PRINT REGEXISMATCH(\"a\" + CHR(10) + \"b\",\"a.b\",\"s\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-x",
+        "Source":  "PRINT REGEXISMATCH(\"ab\",\"a b\",\"x\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-repeat-mode",
+        "Source":  "PRINT REGEXISMATCH(\"A\",\"a\",\"ii\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-invalid-mode",
+        "Source":  "PRINT REGEXCOUNT(\"a\",\".\",\"q\")",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция REGEXCOUNT: аргумент \u0027modes\u0027 содержит неизвестный режим \u0027q\u0027. Допустимы только i, m, s, x.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-invalid",
+        "Source":  "PRINT REGEXCOUNT(\"a\",\"[\")",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция REGEXCOUNT: аргумент \u0027pattern\u0027 содержит недопустимое регулярное выражение: Invalid pattern \u0027[\u0027 at offset 1. Unterminated [] set.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-zero-width",
+        "Source":  "PRINT REGEXCOUNT(\"ab\",\"\")",
+        "Expected":  "3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "3",
+        "Utf16":  "0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "regex-timeout",
+        "Source":  "PRINT REGEXISMATCH(REPEAT(\"a\",10000) + \"!\",\"^(a+)+$\")",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция REGEXISMATCH: аргумент \u0027pattern\u0027 выполняется слишком долго.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "short-circuit",
+        "Source":  "PRINT FALSE ANDALSO (1 / 0 \u003e 0)\nPRINT TRUE ORELSE (1 / 0 \u003e 0)",
+        "Expected":  "FALSE\nTRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE\nTRUE",
+        "Utf16":  "0046 0041 004C 0053 0045 000A 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "random-seed",
+        "Source":  "RANDOMIZE 42\nDIM a AS DOUBLE\na=RND()\nRANDOMIZE 42\nPRINT a=RND()",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "finally-rethrow",
+        "Source":  "TRY\nTRY\nERROR \"APP005\"\nCATCH err\nERROR err\nFINALLY\nPRINT 7\nEND TRY\nCATCH outer\nPRINT 8\nEND TRY",
+        "Expected":  "7\n8",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "7\n8",
+        "Utf16":  "0037 000A 0038",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "bound-dimension",
+        "Source":  "DIM a(-1 TO 0,2 TO 3) AS INTEGER\nPRINT LBOUND(a,2), UBOUND(a,2)",
+        "Expected":  "2 3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2 3",
+        "Utf16":  "0032 0020 0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "date-leap",
+        "Source":  "PRINT ISDATE(\"2024-02-29\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "date-nonleap",
+        "Source":  "PRINT ISDATE(\"2023-02-29\")",
+        "Expected":  "FALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE",
+        "Utf16":  "0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-cp-short",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\cp-short.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\cp-short.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "Я\nЯ",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "Я\nЯ",
+        "Utf16":  "042F 000A 042F",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-cp-three",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\cp-three.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\cp-three.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "АБВ\nАБВ",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "АБВ\nАБВ",
+        "Utf16":  "0410 0411 0412 000A 0410 0411 0412",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-utf-two",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\utf-two.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\utf-two.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "я\nя",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "я\nя",
+        "Utf16":  "044F 000A 044F",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-utf-cross-header",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\utf-cross-header.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\utf-cross-header.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "аб\nаб",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "аб\nаб",
+        "Utf16":  "0430 0431 000A 0430 0431",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-invalid-prefix",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\invalid-prefix.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\invalid-prefix.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "Яabc\nЯabc",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "Яabc\nЯabc",
+        "Utf16":  "042F 0061 0062 0063 000A 042F 0061 0062 0063",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-cp-long",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\cp-long.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\cp-long.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "Привет, мир\nПривет, мир",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "Привет, мир\nПривет, мир",
+        "Utf16":  "041F 0440 0438 0432 0435 0442 002C 0020 043C 0438 0440 000A 041F 0440 0438 0432 0435 0442 002C 0020 043C 0438 0440",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-bom",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\bom.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\bom.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "a\na",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "a\na",
+        "Utf16":  "0061 000A 0061",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-empty",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\empty.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\empty.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "\n",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "\n",
+        "Utf16":  "000A",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-bom-only",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\bom-only.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\bom-only.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "\n",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "\n",
+        "Utf16":  "000A",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "encoding-utf-emoji",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\utf-emoji.txt\")\nDIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\utf-emoji.txt\" FOR INPUT AS f\nPRINT READTOEND(f)\nCLOSE f",
+        "Expected":  "😀\n😀",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "😀\n😀",
+        "Utf16":  "D83D DE00 000A D83D DE00",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "file-newline-bytes",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\newline.txt\" FOR OUTPUT AS f\nWRITELINE(f, \"я\")\nCLOSE f\nPRINT FILESIZE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\newline.txt\")",
+        "Expected":  "3",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "3",
+        "Utf16":  "0033",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "D18F0A"
+    },
+    {
+        "Id":  "readtext-emoji-one",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\emoji-bom.txt\" FOR INPUT AS f\nPRINT READTEXT(f,1)\nPRINT FILEPOS(f)\nCLOSE f",
+        "Expected":  null,
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "😀\n4",
+        "Utf16":  "D83D DE00 000A 0034",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  null,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "append-cp1251",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts/language-audit-20261007\\emoji-bom.txt\" FOR APPEND AS f\nWRITE(f,\"я\")\nCLOSE f\nPRINT READFILE(\"C:\\Axiom\\.artifacts/language-audit-20261007\\emoji-bom.txt\")",
+        "Expected":  null,
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "АСЏ",
+        "Utf16":  "0410 0421 040F",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  null,
+        "SideEffect":  "C0D18F"
+    },
+    {
+        "Id":  "fs-exists",
+        "Source":  "PRINT FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\exists\\данные.txt\"), DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\exists\"), PATHEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\exists\\данные.txt\")\nPRINT FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\exists\\нет\")",
+        "Expected":  "TRUE TRUE TRUE\nFALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE TRUE TRUE\nFALSE",
+        "Utf16":  "0054 0052 0055 0045 0020 0054 0052 0055 0045 0020 0054 0052 0055 0045 000A 0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-readlines",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\readlines\\данные.txt\")\nPRINT ARRAYLENGTH(READALLLINES(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\readlines\\данные.txt\"))",
+        "Expected":  "abc\n1",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "abc\n1",
+        "Utf16":  "0061 0062 0063 000A 0031",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-names",
+        "Source":  "PRINT FILENAME(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\\данные.txt\"), EXTNAME(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\\данные.txt\")\nPRINT ISABSOLUTEPATH(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\\данные.txt\")\nPRINT DIRNAME(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\\данные.txt\") = \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\"\nPRINT COMBINEPATH(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\",\"данные.txt\") = \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\names\\данные.txt\"",
+        "Expected":  "данные.txt .txt\nTRUE\nTRUE\nTRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "данные.txt .txt\nTRUE\nTRUE\nTRUE",
+        "Utf16":  "0434 0430 043D 043D 044B 0435 002E 0074 0078 0074 0020 002E 0074 0078 0074 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-fullpath",
+        "Source":  "PRINT FULLPATH(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\fullpath\\данные.txt\") = \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\fullpath\\данные.txt\"\nPRINT PATHROOT(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\fullpath\\данные.txt\") = \"C:\\\"",
+        "Expected":  "TRUE\nTRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE\nTRUE",
+        "Utf16":  "0054 0052 0055 0045 000A 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-lists",
+        "Source":  "PRINT ARRAYLENGTH(GETFILES(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\lists\")), ARRAYLENGTH(GETFILES(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\lists\",\"*.txt\"))\nPRINT ARRAYLENGTH(GETDIRS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\lists\")), ARRAYLENGTH(GETDIRS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\lists\",\"в*\"))",
+        "Expected":  "1 1\n1 1",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1 1\n1 1",
+        "Utf16":  "0031 0020 0031 000A 0031 0020 0031",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-size",
+        "Source":  "PRINT FILESIZE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\size\\данные.txt\"), DIRSIZE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\size\")",
+        "Expected":  "3 5",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "3 5",
+        "Utf16":  "0033 0020 0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-dates",
+        "Source":  "PRINT LEN(FILEDATE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\dates\\данные.txt\")) \u003e 0\nPRINT LEN(FILECREATEDATE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\dates\\данные.txt\")) \u003e 0\nPRINT LEN(FILEACCESSEDDATE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\dates\\данные.txt\")) \u003e 0\nPRINT LEN(DIRDATE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\dates\")) \u003e 0",
+        "Expected":  "TRUE\nTRUE\nTRUE\nTRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE\nTRUE\nTRUE\nTRUE",
+        "Utf16":  "0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-drive",
+        "Source":  "PRINT FREESPACE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\drive\") \u003e= 0\nPRINT TOTALFREESPACE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\drive\") \u003e= 0\nPRINT TOTALSPACE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\drive\") \u003e 0\nPRINT LEN(DRIVENAME(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\drive\")) \u003e 0\nPRINT LEN(DRIVEFORMAT(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\drive\")) \u003e 0\nPRINT LEN(DRIVETYPE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\drive\")) \u003e 0",
+        "Expected":  "TRUE\nTRUE\nTRUE\nTRUE\nTRUE\nTRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE\nTRUE\nTRUE\nTRUE\nTRUE\nTRUE",
+        "Utf16":  "0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045 000A 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-attributes",
+        "Source":  "PRINT ISREADONLY(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\attributes\\данные.txt\"), ISHIDDEN(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\attributes\\данные.txt\")",
+        "Expected":  "FALSE FALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE FALSE",
+        "Utf16":  "0046 0041 004C 0053 0045 0020 0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-write-append",
+        "Source":  "WRITEFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\write-append\\данные.txt\",\"Я\")\nAPPENDFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\write-append\\данные.txt\",\"😀\")\nPRINT READFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\write-append\\данные.txt\")",
+        "Expected":  "Я😀",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "Я😀",
+        "Utf16":  "042F D83D DE00",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:D0AFF09F9880"
+    },
+    {
+        "Id":  "fs-copy",
+        "Source":  "COPYFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy\\данные.txt\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy\\копия\")\nPRINT READFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy\\копия\")",
+        "Expected":  "abc",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "abc",
+        "Utf16":  "0061 0062 0063",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263;копия:616263"
+    },
+    {
+        "Id":  "fs-copy-overwrite",
+        "Source":  "COPYFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-overwrite\\данные.txt\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-overwrite\\копия\",TRUE)\nCOPYFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-overwrite\\данные.txt\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-overwrite\\копия\",TRUE)\nPRINT READFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-overwrite\\копия\")",
+        "Expected":  "abc",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "abc",
+        "Utf16":  "0061 0062 0063",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263;копия:616263"
+    },
+    {
+        "Id":  "fs-copy-existing",
+        "Source":  "COPYFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-existing\\данные.txt\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-existing\\данные.txt\",FALSE)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция COPYFILE: аргумент \u0027destination\u0027 The file \u0027C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copy-existing\\данные.txt\u0027 already exists.",
+                                "Location":  "1:1"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-move",
+        "Source":  "MOVEFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move\\данные.txt\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move\\новый\")\nPRINT FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move\\данные.txt\"), FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move\\новый\")",
+        "Expected":  "FALSE TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE TRUE",
+        "Utf16":  "0046 0041 004C 0053 0045 0020 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;новый:616263"
+    },
+    {
+        "Id":  "fs-move-overwrite",
+        "Source":  "MOVEFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move-overwrite\\данные.txt\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move-overwrite\\новый\",TRUE)\nPRINT FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\move-overwrite\\новый\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;новый:616263"
+    },
+    {
+        "Id":  "fs-rename",
+        "Source":  "RENAMEFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\rename\\данные.txt\",\"новый.txt\")\nPRINT FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\rename\\новый.txt\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;новый.txt:616263"
+    },
+    {
+        "Id":  "fs-deletefile",
+        "Source":  "DELETEFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\deletefile\\данные.txt\")\nPRINT FILEEXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\deletefile\\данные.txt\")",
+        "Expected":  "FALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE",
+        "Utf16":  "0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879"
+    },
+    {
+        "Id":  "fs-directory",
+        "Source":  "MAKEDIR(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\directory\\новый/глубже\")\nPRINT DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\directory\\новый/глубже\")\nDELETEDIR(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\directory\\новый/глубже\")\nPRINT DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\directory\\новый/глубже\")",
+        "Expected":  "TRUE\nFALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE\nFALSE",
+        "Utf16":  "0054 0052 0055 0045 000A 0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-recursive-delete",
+        "Source":  "DELETEDIRRECURSIVE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\recursive-delete\\вложенный\")\nPRINT DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\recursive-delete\\вложенный\")",
+        "Expected":  "FALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE",
+        "Utf16":  "0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "данные.txt:616263"
+    },
+    {
+        "Id":  "fs-copydir",
+        "Source":  "COPYDIR(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copydir\\вложенный\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copydir\\копия\")\nPRINT DIRSIZE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copydir\\копия\")",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263;копия\\ещё.txt:7879"
+    },
+    {
+        "Id":  "fs-copydir-overwrite",
+        "Source":  "COPYDIR(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copydir-overwrite\\вложенный\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copydir-overwrite\\копия\",TRUE)\nPRINT DIRSIZE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\copydir-overwrite\\копия\")",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263;копия\\ещё.txt:7879"
+    },
+    {
+        "Id":  "fs-movedir",
+        "Source":  "MOVEDIR(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\movedir\\вложенный\",\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\movedir\\новый\")\nPRINT DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\movedir\\вложенный\"), DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\movedir\\новый\")",
+        "Expected":  "FALSE TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "FALSE TRUE",
+        "Utf16":  "0046 0041 004C 0053 0045 0020 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "данные.txt:616263;новый\\ещё.txt:7879"
+    },
+    {
+        "Id":  "fs-renamedir",
+        "Source":  "RENAMEDIR(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\renamedir\\вложенный\",\"новый\")\nPRINT DIREXISTS(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\renamedir\\новый\")",
+        "Expected":  "TRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE",
+        "Utf16":  "0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "данные.txt:616263;новый\\ещё.txt:7879"
+    },
+    {
+        "Id":  "fs-missing-read",
+        "Source":  "PRINT READFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\missing-read\\нет\")",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция READFILE: аргумент \u0027path\u0027 Could not find file \u0027C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\missing-read\\нет\u0027.",
+                                "Location":  "1:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-missing-parent",
+        "Source":  "WRITEFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\missing-parent\\нет/данные.txt\",\"x\")",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция WRITEFILE: аргумент \u0027path\u0027 Could not find a part of the path \u0027C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\missing-parent\\нет\\данные.txt\u0027.",
+                                "Location":  "1:1"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-handle-lifecycle",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-lifecycle\\данные.txt\" FOR INPUT AS f\nPRINT ISOPEN(f), FILEMODE(f), FILEPOS(f), FILELENGTH(f), LINENUMBER(f), EOF(f)\nPRINT FILEPATH(f) = \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-lifecycle\\данные.txt\"\nPRINT READTEXT(f,1), FILEPOS(f)\nSEEKFILE(f,3)\nPRINT EOF(f)\nREWIND(f)\nPRINT READLINE(f)\nCLOSE f\nPRINT ISOPEN(f)",
+        "Expected":  "TRUE INPUT 0 3 1 FALSE\nTRUE\na 1\nTRUE\nabc\nFALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "TRUE INPUT 0 3 1 FALSE\nTRUE\na 1\nTRUE\nabc\nFALSE",
+        "Utf16":  "0054 0052 0055 0045 0020 0049 004E 0050 0055 0054 0020 0030 0020 0033 0020 0031 0020 0046 0041 004C 0053 0045 000A 0054 0052 0055 0045 000A 0061 0020 0031 000A 0054 0052 0055 0045 000A 0061 0062 0063 000A 0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-handle-readlines",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-readlines\\данные.txt\" FOR INPUT AS f\nPRINT ARRAYLENGTH(READLINES(f,2))\nREWIND(f)\nSKIPLINE(f)\nPRINT EOF(f)\nCLOSE f",
+        "Expected":  "1\nTRUE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1\nTRUE",
+        "Utf16":  "0031 000A 0054 0052 0055 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-handle-write",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-write\\данные.txt\" FOR OUTPUT AS f\nWRITE(f,\"ab\")\nFLUSH(f)\nPRINT FILEPOS(f), FILELENGTH(f)\nCLOSE f\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-write\\данные.txt\" FOR APPEND AS f\nWRITE(f,\"c\")\nCLOSE f\nPRINT READFILE(\"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-write\\данные.txt\")",
+        "Expected":  "2 2\nabc",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2 2\nabc",
+        "Utf16":  "0032 0020 0032 000A 0061 0062 0063",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-handle-closed",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-closed\\данные.txt\" FOR INPUT AS f\nCLOSE f\nPRINT READTOEND(f)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Операция READTOEND: нужен открытый файл.",
+                                "Location":  "4:7"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-handle-seek-negative",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-seek-negative\\данные.txt\" FOR INPUT AS f\nSEEKFILE(f,-1)",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция SEEKFILE: аргумент \u0027position\u0027 не может быть отрицательным.",
+                                "Location":  "3:1"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "fs-handle-mode",
+        "Source":  "DIM f AS FILE\nOPEN \"C:\\Axiom\\.artifacts\\language-audit-20261007\\fs-cases\\handle-mode\\данные.txt\" FOR INPUT AS f\nWRITE(f,\"x\")",
+        "Expected":  null,
+        "ErrorCode":  "MB3007",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3007",
+                                "Message":  "Функция WRITE: аргумент \u0027file\u0027 должен быть открыт для записи.",
+                                "Location":  "3:1"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  "вложенный\\ещё.txt:7879;данные.txt:616263"
+    },
+    {
+        "Id":  "core-precedence",
+        "Source":  "PRINT 2+3*4, 2^3^2, 8 \\ 3, 8 MOD 3\nPRINT NOT FALSE AND TRUE\nPRINT 1 \u003c\u003c 3, 8 \u003e\u003e 2",
+        "Expected":  "14 512 2 2\nTRUE\n8 2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "14 512 2 2\nTRUE\n8 2",
+        "Utf16":  "0031 0034 0020 0035 0031 0032 0020 0032 0020 0032 000A 0054 0052 0055 0045 000A 0038 0020 0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-byref",
+        "Source":  "SUB Inc(BYREF x AS INTEGER)\nx=x+1\nEND SUB\nDIM a AS INTEGER=4\nInc(a)\nPRINT a",
+        "Expected":  "5",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "5",
+        "Utf16":  "0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-recursion",
+        "Source":  "FUNCTION Fact(n AS INTEGER) AS INTEGER\nIF n \u003c= 1 THEN\nRETURN 1\nEND IF\nRETURN n*Fact(n-1)\nEND FUNCTION\nPRINT Fact(6)",
+        "Expected":  "720",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "720",
+        "Utf16":  "0037 0032 0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-type-copy",
+        "Source":  "TYPE Box\nValue AS INTEGER\nEND TYPE\nDIM a AS Box\na.Value=4\nDIM b AS Box\nb=a\nb.Value=7\nPRINT a.Value,b.Value\nPRINT a=b",
+        "Expected":  "4 7\nFALSE",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "4 7\nFALSE",
+        "Utf16":  "0034 0020 0037 000A 0046 0041 004C 0053 0045",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-for-step",
+        "Source":  "DIM total AS INTEGER=0\nFOR i=5 TO 1 STEP -2\ntotal=total+i\nNEXT i\nPRINT total",
+        "Expected":  "9",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "9",
+        "Utf16":  "0039",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-loop-finally",
+        "Source":  "FOR i=1 TO 2\nTRY\nCONTINUE FOR\nFINALLY\nPRINT i\nEND TRY\nNEXT",
+        "Expected":  "1\n2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "1\n2",
+        "Utf16":  "0031 000A 0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-return-finally",
+        "Source":  "FUNCTION F() AS INTEGER\nTRY\nRETURN 9\nFINALLY\nPRINT 7\nEND TRY\nEND FUNCTION\nPRINT F()",
+        "Expected":  "7\n9",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "7\n9",
+        "Utf16":  "0037 000A 0039",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-select",
+        "Source":  "SELECT CASE 4\nCASE 1 TO 3\nPRINT 1\nCASE 4,5\nPRINT 2\nCASE ELSE\nPRINT 3\nEND SELECT",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-if",
+        "Source":  "IF FALSE THEN\nPRINT 1\nELSEIF TRUE THEN\nPRINT 2\nELSE\nPRINT 3\nEND IF",
+        "Expected":  "2",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "2",
+        "Utf16":  "0032",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-while-do",
+        "Source":  "DIM n AS INTEGER=0\nWHILE n\u003c2\nn=n+1\nEND WHILE\nDO\nn=n-1\nLOOP UNTIL n=0\nPRINT n",
+        "Expected":  "0",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "0",
+        "Utf16":  "0030",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-print",
+        "Source":  "PRINT\nPRINT \"Русский 😀\"\nPRINT 1;2\nPRINT USING \"##.##\"; 1.25",
+        "Expected":  "\nРусский 😀\n12\n 1.25",
+        "ErrorCode":  null,
+        "Status":  "Success",
+        "Engine":  "BytecodeVm",
+        "Actual":  "\nРусский 😀\n12\n 1.25",
+        "Utf16":  "000A 0420 0443 0441 0441 043A 0438 0439 0020 D83D DE00 000A 0031 0032 000A 0020 0031 002E 0032 0035",
+        "Diagnostics":  [
+
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-expression-no-effect",
+        "Source":  "DIM a AS INTEGER\na",
+        "Expected":  null,
+        "ErrorCode":  "MB2040",
+        "Status":  "SemanticFailure",
+        "Engine":  null,
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB2040",
+                                "Message":  "Оператор-выражение не имеет эффекта: выражение не вызывает процедуру или функцию. Если это вызов, добавьте скобки, например FLUSH(f).",
+                                "Location":  "2:1"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-byref-invalid",
+        "Source":  "SUB Inc(BYREF x AS INTEGER)\nx=x+1\nEND SUB\nInc(1+2)",
+        "Expected":  null,
+        "ErrorCode":  "MB2028",
+        "Status":  "SemanticFailure",
+        "Engine":  null,
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB2028",
+                                "Message":  "Аргумент параметра BYREF должен быть простой переменной того же типа без промежуточного преобразования.",
+                                "Location":  "4:6"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    },
+    {
+        "Id":  "core-call-depth",
+        "Source":  "FUNCTION F(n AS INTEGER) AS INTEGER\nRETURN F(n+1)\nEND FUNCTION\nPRINT F(0)",
+        "Expected":  null,
+        "ErrorCode":  "MB3011",
+        "Status":  "RuntimeFailure",
+        "Engine":  "BytecodeVm",
+        "Actual":  "",
+        "Utf16":  "",
+        "Diagnostics":  [
+                            {
+                                "Code":  "MB3011",
+                                "Message":  "Превышена максимальная глубина стека вызовов (200) при вызове \u0027F\u0027. Возможно, программа содержит бесконечную рекурсию.\r\nЦепочка вызовов:\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 2:8.\r\n- функция \u0027F\u0027, вызов в 4:7.",
+                                "Location":  "2:8"
+                            }
+                        ],
+        "Pass":  true,
+        "SideEffect":  null
+    }
+]

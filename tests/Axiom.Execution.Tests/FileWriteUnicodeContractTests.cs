@@ -5,11 +5,9 @@ namespace Axiom.Execution.Tests;
 public sealed class FileWriteUnicodeContractTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void Write_SplitSurrogatesHaveStableBytesAndPositions(ExecutionMode mode, bool flushBetween)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Write_SplitSurrogatesHaveStableBytesAndPositions(bool flushBetween)
     {
         var path = Path.GetTempFileName();
         try
@@ -27,14 +25,13 @@ public sealed class FileWriteUnicodeContractTests
                 CLOSE f
                 PRINT READFILE("{{path}}") = "��"
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
             Assert.Equal(flushBetween
                 ? ["TRUE", "3", "TRUE", "TRUE", "6", "6", "TRUE"]
                 : new[] { "TRUE", "3", "TRUE", "6", "6", "TRUE" }, result.Output);
             Assert.Equal(Encoding.UTF8.GetBytes("��"), File.ReadAllBytes(path));
-            Assert.False(result.UsedInterpreterFallback);
         }
         finally { File.Delete(path); }
     }

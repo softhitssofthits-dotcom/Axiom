@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayCallbackUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CallbacksReceiveWholeVisibleStringsInOrder(ExecutionMode mode)
+    [Fact]
+    public void CallbacksReceiveWholeVisibleStringsInOrder()
     {
         var source = """
             DIM grid(-1 TO 1, 5 TO 7) AS STRING
@@ -57,11 +55,10 @@ public sealed class ArrayCallbackUnicodeEvidenceTests
                 RETURN acc + value + "|"
             END FUNCTION
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "FALSE", "2", "TRUE", "1", "4", "1", "TRUE", "4", "0", "7", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "4", "TRUE", "TRUE" }, run.Output);
     }
 }

@@ -16,14 +16,14 @@ public sealed class NumericDoubleTextBoundaryEvidenceTests
             ("VAL(\"-4.9406564584124654e-324\")", "-5E-324", "-1"),
             ("VAL(\"2.2250738585072014e-308\")", "2.2250738585072014E-308", "1")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var culture in new[] { "en-US", "ru-RU", "tr-TR" })
-        foreach (var (literal, text, sign) in data) yield return [mode, culture, literal, text, sign];
+        foreach (var (literal, text, sign) in data) yield return [culture, literal, text, sign];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ExtremeDoubleTextRoundtripPreservesValueAndZeroSign(ExecutionMode mode, string culture, string literal, string text, string sign)
+    public void ExtremeDoubleTextRoundtripPreservesValueAndZeroSign(string culture, string literal, string text, string sign)
     {
         var previous = CultureInfo.CurrentCulture;
         try
@@ -36,11 +36,10 @@ public sealed class NumericDoubleTextBoundaryEvidenceTests
                 PRINT ISNUMERIC(text)
                 PRINT VAL(text) = value
                 PRINT SETSIGN(1, VAL(text))
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(new[] { text, "TRUE", "TRUE", sign }, result.Output);
         }
         finally { CultureInfo.CurrentCulture = previous; }

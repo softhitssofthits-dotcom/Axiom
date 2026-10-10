@@ -52,11 +52,10 @@ a(7) = 20
         else
             Assert.Equal("VOID", call.Type.Name.ToUpperInvariant());
         var source = Setup + "\n" + statement + $"\nFOR i = LBOUND({target}) TO UBOUND({target})\nPRINT {target}(i)\nNEXT i\nPRINT a(5)";
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
-            Assert.True(run.Succeeded, mode + "\n" + string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
+            Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Equal(expected, run.Output);
         }
     }

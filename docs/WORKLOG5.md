@@ -5342,3 +5342,140 @@ LegacyStringUnicodeEvidenceTests добавляет2 случая обоих д�
 ## Session 1311 - 2026-10-09 20:22 - Принят договор POW и подготовлена отправка аудита
 
 Пользователь выбрал готовую Math.Pow с сохранением ошибок Axiom и поручил коммит/push. Оба движка уже используют эту функцию; вычислительный код не менялся. Добавлены34 проверки соответствия .NET (побитовое сравнение конечных результатов, знак нуля, граница субнормальных чисел, MB3007/MB3008, FINALLY и продолжение). Совместно198/198, ошибок/пропусков0, exit0; сводка POW_DOTNET_CONTRACT_20261009_1311.json. Проверка примера теперь требует результата Math.Pow текущей среды. Руководство, спецификация, покрытие, план, реестр и передача синхронизированы. NUM26-CAND-001 CLOSED_ACCEPTED_DOTNET_CONTRACT: принято готовое вычисление, математическое округление не исправлялось. Прежняя восстановленная регрессия7353/7353 относится к состоянию до новых тестов; новое полное решение не запускалось, поскольку код исполнения не менялся. Подготовлена отправка всего накопленного прохода аудита; пользовательские удаления .playwright-mcp исключены.
+
+
+## Session 1312 - 2026-10-09 20:34 - Обзор Electron-IDE и фиксация будущих направлений
+
+Прочитаны исходники/README IDE C:\X__sharp\ide, текущего ide/ Axiom, старый ELECTRON_IDE_PLAN и сервисы WPF. Просмотрены сохранённые снимки startup_clean/startup-ready, живой запуск не выполнялся. Electron-IDE уже входит в master; local/wip-block-scope-for-counter содержит прежнее дерево ide. Старый перенос основывался на копировании оболочки X# с графикой и отладкой на потом. Новый запрос: сохранить возможности Axiom, использовать X# как визуальный ориентир. Отладчик BytecodeVm уже существует, графический сервис связан с WPF; CLI явно отклоняет SCREEN/CANVAS. Эти границы требуют отдельного плана, а не только изменения CSS. Намерение позднее планировать отказ от Interpreter также записано. Обновлены PLANS4 и уточнение ELECTRON_IDE_PLAN. Код не менялся, тесты не запускались; коммит/push этого обзора не выполнялись.
+
+
+## Session 1313 - 2026-10-09 20:51 - Подробный план отказа от интерпретатора
+
+Создан docs/plans/INTERPRETER_REMOVAL_PLAN.md для последующего агента: этапы0–9, точные основные файлы, правила сохранения общих частей, перенос уникальных ожиданий, backend-успех, миграция старого JSON IDE, удаление режимов/исполнителя/окружения, инструменты аудита/измерений, документация, настоящая IDE и передача состояния. Применены writing-plans и software-architecture. Поиск зависимостей сохранён в CSV по235 файлам. Первичный поиск632 публичных методов включал вспомогательные методы; итоговая таблица содержит597 объявлений Fact/Theory, одно под #if false; число обнаруженных xUnit-случаев не утверждается. Даны конкретные образцы VM-исполнителя, независимого теста, backend-отказа, совместимости состояния и будущего .axm-примера. Уточнено: Electron-прототип незавершён, редактор/консоль не считаются готовыми. Обновлены PLANS4/ARCHITECTURE. Код и тесты исполнения не менялись, реализации нет, коммит/push не выполнялись. Далее только по отдельному поручению — этап0 плана.
+
+## Session 1314 - 2026-10-09 21:17 - Этап 0 отказа от интерпретатора: нативное выполнение
+
+Делегирование плана исполнителю ZCode не запустилось: `Model request failed`, файлы и команды не выполнялись (побочных эффектов нет). Этап 0 документа `docs/plans/INTERPRETER_REMOVAL_PLAN.md` выполнен координатором нативно; рабочий код не менялся.
+
+Снимок этапа 0: HEAD af0959985500750d2f644da6b5ffd3d116cc9823 (master); пользовательские изменения сохранены (9 удалённых `.playwright-mcp/`, изменённые `docs/ARCHITECTURE.md`, `docs/ELECTRON_IDE_PLAN.md`, `docs/PLANS4.md`, `docs/WORKLOG5.md`, неотслеживаемые `docs/plans/`).
+
+Проверки (все exit 0): сборка `Axiom.sln` (0 ошибок / 18 предупреждений); `--list-tests` девяти проектов (7384 записи); полная регрессия `dotnet test Axiom.sln` — 7387/7387, не пройдено 0, пропущено 0, 9 TRX, старт 21:10:02, финиш 21:15:31; `node --test ide/tests/lang-features.test.cjs`; `language-audit --inventory-only` (реестр обновлён, прежний и новый снимки сохранены в `inventory/before-1314` и `after-1314`). Списки тестов, TRX, логи, снимки — в `.artifacts/interpreter-removal/` (`baseline/`, `test-lists/`, `inventory/`, `STAGE0_NOTES.md`).
+
+Подтверждения и уточнения к таблице переноса: 597 объявлений = 581 Fact + 16 Theory подтверждено; одно `#if false` (FileSystem, пара одноимённых MojibakeCopy — выключенная и действующая); общие хелперы класса InterpreterTests находятся в `InterpreterTests.TryCatch.cs`; вне таблицы тот же partial-класс расширяет `tests/Axiom.Runtime.Tests/GraphicsBaselineTests.cs` (9 Fact, общий ExecuteProgram) — учесть в поиске этапа 1; fallback-поля сосредоточены в `AxiomExecutionPipeline`, `ExecutionResult`, `ProgramRunResult`, `ProgramRunService`. Создан `docs/plans/INTERPRETER_REMOVAL_PROGRESS.csv` (598 строк = шапка + 597, все `НЕ_ПЕРЕНЕСЕНО`; колонки исходной таблицы + `Artifact`/`Result`/`Reason`).
+
+Средовой нюанс: в шелле AutoCoder `dotnet` из PATH указывает на бандл AutoClaw без SDK; рабочий вызов — добавить `C:\Program Files\dotnet` в начало PATH и задать `DOTNET_ROOT` (SDK 10.0.401).
+
+Не выполнено: ручная проверка контрольных сценариев WPF-IDE (раздел 15 плана) — требуется человек/GUI (до правок кода этапов 1+ либо на этапе 8); SmokeHarness не запускался.
+
+Следующий шаг: этап 1 плана (перенос Runtime-проверок на VM-путь) — либо повторный запуск ZCode-исполнителя, либо решение пользователя о нативном продолжении. Коммит/push не выполнялись.
+
+## Session 1315 - 2026-10-09 21:27 - Этап 1: VM-раннер и первые два переноса проверок
+
+Повторный запуск ZCode-исполнителя снова завершился ошибкой запуска (`Model request failed`; файлы и команды не выполнялись). Два одинаковых отказа подряд — блокер устойчив, повторы прекращены; работа продолжена нативно по плану «Отказ от интерпретатора».
+
+Этап 1 (первый шаг плана): создан `tests/Axiom.Runtime.Tests/RuntimeVmContractRunner.cs` (путь Parser -> Binder -> BoundProgramLowerer -> BytecodeCompiler -> BytecodeVm; явные проверки понижения и компиляции) и общий `tests/Axiom.Runtime.Tests/TestRuntimeHost.cs` (хост механически извлечён из `InterpreterTests.TryCatch.cs`: дедент, `private` -> `internal`; записи CircleCall...CanvasTextCall — на верхнем уровне). Добавлены `LanguageContractTests.Helpers.cs` (ExecuteProgram/WithKeys/WithPressedKeys/WithKeysAndPressedKeys/WithMouseState/At через раннер) и первые перенесённые проверки: `Execute_ArithmeticExpression` (-> LanguageContractTests.cs) и `Execute_TryFinallyRunsBeforeUnhandledFailureEscapes` (-> LanguageContractTests.TryCatch.cs) с сохранением буквальных ожиданий.
+
+Верификация: сборка тестового проекта — 0 предупреждений / 0 ошибок; адресный прогон 2/2, exit 0 (TRX `.artifacts/interpreter-removal/stage1/comp_DESKTOP-BO55EHF_2026-10-09_21_26_16_net10.0.trx`); после успеха старые методы удалены из InterpreterTests.cs (1284 строки) и InterpreterTests.TryCatch.cs (1501 строка); полный прогон `Axiom.Runtime.Tests` — 1079/1079, exit 0 (TRX `stage1-runtime-full`). VM не требует `IReversibleOutputWriter` (только реверс отладки, использование через проверку интерфейса).
+
+`docs/plans/INTERPRETER_REMOVAL_PROGRESS.csv`: две строки переведены в ПЕРЕНЕСЕНО (Artifact/Result заполнены). Конвенции продолжения — `.artifacts/interpreter-removal/STAGE1_NOTES.md`. Следующий шаг: продолжать перенос по тематическим файлам (малые: Error 16, Print 25, Wave4 12, Type 30), после каждого — адресный прогон, полный Runtime.Tests, PROGRESS.csv и WORKLOG. Коммит/push не выполнялись.
+
+## Session 1316 - 2026-10-09 21:49 - Этап 1: четыре файла проверок на VM и исправление AXD-020a
+
+Продолжение этапа 1 плана «Отказ от интерпретатора» (нативно; ZCode-исполнитель недоступен — третья попытка не предпринималась, блокер устойчив). Перенесены четыре малых тематических файла: `InterpreterTests.Error.cs` (16), `Print.cs` (25), `Wave4.cs` (12), `Type.cs` (30) → `LanguageContractTests.{Error,Print,Wave4,Type}.cs` (механическая замена класса; все проверки используют уже перенесённый `ExecuteProgram`). Первый адресный прогон дал 85/86 и вскрыл подтверждённый пробел VM.
+
+AXD-020a (функция без RETURN) — исправлен минимальной правкой: высотная проверка модуля (BC4054) больше не отклоняет пустой стек у Return в невойд-функции; сценарий легален и даёт рантайм MB3006 (типовой контроль стека уже допускал пустой стек). Текст MB3006 VM выровнен с Interpreter. Обновлён `BytecodeVmTests.Execute_CompiledReportsMissingReturnValue` (теперь рантайм-ожидание с выполнением тела), добавлен независимый пример `samples/acceptance/negative/function_branch_without_return_value.axm`. Валидаторные тесты не менялись.
+
+Верификация (все exit 0): сборка решения 0/0; `Axiom.Bytecode.Tests` 242/242; адресный `LanguageContractTests` 86/86; полный `Axiom.Runtime.Tests` до удаления старых 1163/1163, после удаления четырёх старых файлов 1079/1079; полное решение — 7387/7387; 9 TRX; exit 0; 21:42:51-21:48:08 (TRX в `.artifacts/interpreter-removal/stage1c`). Старые четыре файла удалены после зелёных прогонов. PROGRESS.csv: 83 строки → ПЕРЕНЕСЕНО (перенесено всего 85, осталось 512). Артефакты: `.artifacts/interpreter-removal/stage1b` (TRX/логи), `STAGE1B_NOTES.md`. Коммит/push не выполнялись.
+
+## Session 1317 - 2026-10-09 21:55 - Этап 1: пять файлов и остаток TryCatch (116 проверок)
+
+Продолжение этапа 1 (нативно; ZCode не предпринимался). Перенесены: `StringNonBmp` (6), `FileSystemDiagnostics` (6), `FileIO` (28), `FileSystem` (29 объявлений, из них 1 выключенный), `DateTime` (37) и остаток `TryCatch` (8). В `LanguageContractTests.Helpers.cs` перенесены 10 утилитных хелперов из старого TryCatch.cs (`ToBasicString`, `SetRepairSamplePaths`, `FindRepositoryRoot`, `CreateUtf8Cp1251Mojibake`, `CreateTest*TimeZone`, `CreateNamedTimeZones`, `CreateTestImage/Sprite/Tilemap`; + `using System.Text`). Старые пять файлов удалены; старый `InterpreterTests.TryCatch.cs` сохраняет хелперы и `TestRuntimeHost` для оставшихся Array/String/Graphics/InterpreterTests.
+
+Особенности: выключенный `#if false` вариант MojibakeCopy перенесён как отключённый (PROGRESS.csv: `ПЕРЕНЕСЕНО_ОТКЛЮЧЁН` + причина; активная одноимённая проверка перенесена отдельно); промежуточная ошибка скрипта (AddRange) поймана сверкой и исправлена; прямые `Interpreter.Execute` (2 SLEEP-теста в InterpreterTests.cs) задокументированы для переноса главного файла.
+
+Верификация (все exit 0): сборка тестового проекта 0/0; адресный `LanguageContractTests` 202/202 (`stage1d/...21_53_40`); полный `Axiom.Runtime.Tests` 1079/1079 (`stage1d/...21_54_48`). `src` не менялся — новых пробелов VM нет. PROGRESS.csv: 113 строк → ПЕРЕНЕСЕНО, 1 → ПЕРЕНЕСЕНО_ОТКЛЮЧЁН; осталось 398. Артефакты: `.artifacts/interpreter-removal/stage1d`, `STAGE1C_NOTES.md`. Коммит/push не выполнялись.
+
+## Session 1318 - 2026-10-09 22:11 - Этап 1 завершён: главный+String+Graphics+Array перенесены, AXD-021/AXD-022 исправлены
+
+Завершён перенос проверок Runtime на VM: перенесены остаток главного `InterpreterTests.cs` (82; два SLEEP-теста адаптированы на `ExecuteProgram(text, host)`), `String` (90), `Graphics` (100), `Array` (126) и внеплановый `GraphicsBaselineTests` (9, вне таблицы 597). Старый класс `InterpreterTests` удалён целиком. Найдены и исправлены два пробела VM:
+- AXD-021: тексты MB3005 невыделенного массива приведены к договору Interpreter (имя функции + имя аргумента) — 36 сайтов и хелперы `BytecodeVm.Builtins.Array.cs`;
+- AXD-022 (новый): `ARRAYPUSH` у верхней границы INTEGER выбрасывал сырое CLR-исключение — добавлена предварительная проверка с MB3007 (как в Interpreter).
+
+Верификация: адресный `LanguageContractTests` 681/681 (`stage1e/...22_02_40`); полный `Axiom.Runtime.Tests` 1079/1079 (`stage1f`); полное решение 7387/7387 (`stage1f`). CLI-пример `samples/acceptance/negative/array_push_upper_bound_overflow.axm`: exit 1, stderr MB3007+ARRAYPUSH. PROGRESS.csv: 596 перенесено + 1 отключённая = 597/597. Примеры: `array_push_upper_bound_overflow.axm`. Сводка — `STAGE1D_NOTES.md`. Коммит/push не выполнялись.
+
+## Session 1319 - 2026-10-09 22:20 - Этап 2, фаза A: паритетные Theory сведены к одному запуску VM
+
+Начат этап 2 («сквозные проверки Execution»). Построена таблица `docs/plans/INTERPRETER_REMOVAL_EXECUTION_PROGRESS.csv`: 158 файлов с упоминаниями Interpreter (471 ссылка; 240 строк `InlineData(ExecutionMode.Interpreter)`; 427 fallback-ссылок; 265 проверок ActualEngine). Анализ парности: interpreter-only Theory нет; у каждой Interpreter-строки есть Bytecode-двойник; 5 особых пар (mode+ExecutionEngineKind) обработаны общей очисткой с сохранением `ActualEngine == BytecodeVm`.
+
+Фаза A: удалены все строки `[InlineData(ExecutionMode.Interpreter…)]` — 240 строк в 95 файлах; в каждой Theory сохранён ровно один реальный запуск VM с прежними независимыми ожиданиями. Полный прогон `Axiom.Execution.Tests`: **3916/3916, exit 0** (было 4156; TRX `stage2a/comp_...22_16_25`). Осталось: 145 ссылок `ExecutionMode.Interpreter` в телах (mode-аргументы и двойники), 427 fallback-ссылок и 265 engine-ссылок — фазы B/C, учтены в таблице. Сводка — `.artifacts/interpreter-removal/STAGE2_NOTES.md`. Коммит/push не выполнялись.
+
+## Session 1320 - 2026-10-09 22:33 - Этап 2, фаза B: Execution.Tests очищены от запусков Interpreter (3097/3097)
+
+Фаза B этапа 2. Удалены все запуски `ExecutionMode.Interpreter` и паритетные сравнения движков в `tests/Axiom.Execution.Tests`:
+- 103 цикла/генератора `foreach (var mode in new[] { Interpreter, Bytecode })` сведены к одному VM-прогону (81 файл; часть — MemberData-генераторы, поэтому число случаев уменьшилось закономерно: 3916→3100);
+- 24 пары `first/second` переведены на VM-ожидания (19 файлов), паритетные сравнения удалены;
+- удалены 4 позиционные InlineData-строки Interpreter в PathBaseResolution (пары Bytecode сохранены);
+- спецправки: 3 двойника `Run_*InterpreterMode_*` удалены (покрытие сохранено Bytecode-версиями), RND-детерминизм на VM-ожидании, Acceptance-сайты (3) очищены, RegexDiagnosticParityProbe переписан и переименован (`…OnBytecodeVm`), NumericPromotion без сравнений, DateTimeForm/PathNull — один VM-прогон, `RandomInteger.Modes → [Bytecode]`.
+
+Итог: `ExecutionMode.Interpreter` в проекте = 0; прогон **3097/3097, exit 0** (TRX `stage2c/comp_...22_28_48`; промежуточные: stage2b 3100/3100). Fallback-проверки и `ActualEngine == BytecodeVm` сохранены по §8. Сводка — `.artifacts/interpreter-removal/STAGE2_NOTES.md`; таблица EXECUTION_PROGRESS.csv обновлена (158 записей, все B_DONE). Следующее: ревизия fallback/engine-проверок и пункт замыканий/рекурсии/BYREF/представлений; затем этапы 3–9. Коммит/push не выполнялись.
+
+## Session 1321 - 2026-10-09 22:41 - Этап 2 завершён: fallback/engine-ревизия и конструкции вне built-in
+
+Завершение этапа 2. §8-3: 75 вестигиальных тернарников `mode == ExecutionMode.Bytecode ? … : ExecutionEngineKind.Interpreter` упрощены до `ExecutionEngineKind.BytecodeVm`; `ExecutionEngineKind.Interpreter` в Execution.Tests = 0. Fallback-проверки сохранены по плану: `UsedInterpreterFallback` — 408 ссылок, `InterpreterFallbackReason` — 16, `ActualEngine` — 262.
+
+§8-4 (конструкции вне built-in): адресные группы подтвердили исполнение VM — рекурсия (`BytecodeVmTests.Execute_CompiledMutualRecursion*`, перенесённые `LanguageContractTests.Error.Execute_ReportsCallStackOverflowForMutualRecursion` и `Execute_MutualRecursionIsEvenIsOddTerminates`), BYREF (`Execute_CompiledByRefScalar/RecordParameter…`), замыкания/локальные подпрограммы (`Run_SupportsLocalSubWithoutCaptureOnBytecodeVm`, `…LocalSubOuterLocalCapture`, acceptance-примеры LocalSub/Capture/Closure/SharedClosureState), представления (`ResizingAView…`, `FillThroughView…`, `TypeArrayFieldViews…`, Unicode-view наборы).
+
+Прогоны (все exit 0): адресный Runtime 15/15 (`stage2d/…22_35_32`); адресный Execution 14/14 (`stage2d/…22_35_40`); полный Execution **3097/3097** (`stage2d/…22_35_49`); полное решение **6328/6328, 9 TRX, exit 0** (`stage2d/solution-full.log`). Сводка — `.artifacts/interpreter-removal/STAGE2_NOTES.md`; таблица EXECUTION_PROGRESS.csv — 158 × B_DONE. Следующее: этапы 3–9 (успех компиляции, IDE-режим, удаление Interpreter, инструменты, документация, UI-регрессия). Коммит/push не выполнялись.
+
+## Session 1322 - 2026-10-09 22:54 - Этап 3: успех компиляции сделан однозначным
+
+Этап 3 плана. Введён `CompilationStatus.BackendFailure`; отказы понижения, эмиссии и записи снимка больше не маскируются под `Success`. `CompilationResult`: `FrontendSucceeded` (Success|BackendFailure) и честный `Succeeded` (Success && BackendSucceeded && BytecodeAvailable && модуль есть). `AxiomExecutionPipeline` дополнен маппингом; IDE (`ProgramCompilationStatus.BackendFailure`, оба маппинга `ProgramRunService`, объединение frontend+backend диагностик с дедупликацией в `Compile`/`Run`, кэш обновляется только полным результатом). CLI `check` — полная компиляционная проверка без исполнения/файлов; при backend-отказе честный код 1.
+
+Тесты: переписана `Compile_ReturnsDiagnosticWhenBytecodeSnapshotWriteFails` (каталог под `.artifacts/`, BackendFailure/FrontendSucceeded/Succeeded/MB4003 + контрольный Run) и добавлена `CompileSnapshotFailureIsNotFullCompilationSuccess`. Прогоны (все exit 0): ExecutionPipelineTests 160/160; ProgramRunServiceTests 44/44; Cli.Tests 30/30; полный Execution 3098/3098; решение 6329/6329, 9 TRX, exit 0. Сводка — `.artifacts/interpreter-removal/STAGE3_NOTES.md`. Следующее: этап 4. Коммит/push не выполнялись.
+
+## Session 1323 - 2026-10-09 23:20 - Этап 4: режим снят с IDE, состояние мигрировано
+
+Этап 4 плана. Удалён выбор исполнителя из IDE: меню `ExecutionModeMenuItem` и ресурсы, `SelectedExecutionMode`/`Is*ExecutionModeEnabled`, команды `UseInterpreter/UseBytecodeExecutionMode`; `IProgramRunService.Run` без параметра режима (все реализации/вызовы обновлены); из `ProgramRunResult` убраны `RequestedExecutionMode` и fallback-поля, из журналов — `executionMode`; `RecentFilesSnapshot/State/Service` без типизированного режима (старые JSON безопасны — System.Text.Json игнорирует неизвестное поле, доказано новым тестом `OldEnginePreferenceDoesNotResetOtherPreferences` с 6 вариантами); SmokeHarness переведён на обычный запуск с проверкой события VM.
+
+Тесты: обновлены фейки/заглушки, пункт меню в `EditorFeatureTests`, хелперы Tilemap-наборов; восстановлена унаследованная битая кодировка needle в `Run_MapsRuntimeDiagnosticsToUiModel` («ноль»). `Axiom.Ide.Tests` 931/931, exit 0 (TRX `stage4b/…23_15_11`; снижение с 1234 атрибутировано: парные mode-варианты теорий, удалённые mode-тесты, +6 новый тест). Полное решение 6026/6026, 9 TRX, exit 0 (`stage4b`). Сводка — `.artifacts/interpreter-removal/STAGE4_NOTES.md`. Следующее: этап 5 — удаление `Interpreter*` и fallback-полей. Коммит/push не выполнялись.
+
+
+## Session 1324 - 2026-10-09 23:54 - Проверка передачи и реализация единственного исполнителя
+
+По поручению автора принят незавершённый переход от другого агента. Все его изменения найдены в основной рабочей копии `C:\Axiom`, временный каталог содержит только результаты проверок. Независимо сопоставлены 597 строк переноса Runtime с исходниками HEAD; пропущенных методов нет, проверки результата сохранены. Повторный прогон при передаче дал 6025 успешных случаев и одну ошибку: тесты каталогов мешали друг другу через `Environment.CurrentDirectory`. Вспомогательные запуски переведены на `resourceBaseDirectory`, проверка неизменности каталога процесса сохранена.
+
+Удалены 24 файла `Interpreter*`, `RuntimeScope`, `CallFrame`, `ExecutionMode`, резервный путь, параметры режима и поля результатов. Сохранены проверка покрытия, `BackendFailure`, компилятор, кадры VM, слоты замыканий, встроенные привязки, графика, ввод, кэши и отладка. Все потребители Execution и измерения переведены на VM. `benchmark-bytecode` заменяет `compare-engines`; 48 нагрузок прошли с двумя повторами и прогревом. Общая функция и скомпилированная программа проверены `scripts/aggregate-perf`.
+
+Добавлены защиты отсутствия старых типов/API и пример `samples/smoke/bytecode-only/compiler_execution.axm`. Девять проектов дали 6030/6030: Runtime +1 защитный случай, Execution +2 защиты и +1 новый пример в общем наборе; остальные числа совпали с передачей. Сопоставление TRX по методам не выявило потери сквозных случаев. При механической правке были ошибочно затронуты два иных поля `Mode`; тесты обнаружили это, строки восстановлены, последующий полный прогон зелёный. После этого выполнена сборка всего решения, чтобы обновить также копии Runtime в инструментах.
+
+У инструментов обнаружены прежние неверные ожидания: четыре числовых случая использовали `VAL` для получения NaN/Infinity, хотя договор `VAL` возвращает ноль. Они исправлены по существующему независимому тесту; запуск 449 сценариев и компиляция 762 примеров теперь не дают нарушений утверждённых ожиданий. Отсутствие отдельного ожидания по форме не считается подтверждением семантики.
+
+Живые проверки IDE продолжаются. Добавлен отдельный сценарий отладки с событиями и точными строками; старые проверки SCREEN читают современный JSON-журнал. Первоначальный полный сценарий остановился на файловом менеджере. Следующее: завершить повторные UI-проверки и последнюю регрессию, сохранить переносимую итоговую сводку `INTERPRETER_REMOVAL_RESULT.md`. Коммит и публикация не выполнялись.
+
+
+## Session 1325 - 2026-10-10 00:37 - Завершение отказа от интерпретатора
+
+Завершены этапы 0–9 плана. Первые четыре этапа другого агента проверены по исходникам, таблицам переноса и текущим тестам; устранена гонка каталога процесса. Удалены 27 исходных файлов старого исполнителя/API, режимы и резервный путь. Компилятор, общий Runtime, BytecodeVm, замыкания, BYREF, отладка и проверка покрытия сохранены. Инструменты работают с одной VM; руководства, определения продукта и примеры приведены к текущему договору.
+
+Итоговая сборка: код 0, ошибок 0, 17 прежних предупреждений тестов IDE. Последовательная регрессия: 6032/6032, девять TRX, пропусков нет. Обнаружено 6029 имён тестов; три дополнительных случая разворачиваются из Theory. Восемь живых сценариев IDE прошли, включая шаги отладки, точку останова/Stop/повтор, два INPUT, SCREEN, CANVAS/POINT, мышь, GET/PUT, спрайты и INKEY. Измерение VM — 48/48 нагрузок; language-audit — 449 сценариев и компиляция 763 примеров без нарушений утверждённых ожиданий; реестр — 335 форм; проверки Electron metadata — 3/3. Полный профиль всех нагрузок и исчерпывающий аудит всех перегрузок не заявляются.
+
+Первый заключительный прогон имел три устаревших ожидания About и одну нестабильность фонового ожидания IDE. Ожидания About исправлены; адресный и последующий последовательный полный прогоны прошли. Нестабильность ожидания не объявляется исправленной. Отложенная автором авария IDE не исследовалась.
+
+При моей ранней ошибке пересеклись два инструмента UI-проверки и перезаписали общий файл настроек IDE. Исходный список недавних файлов полностью восстановить не удалось; исходные предпочтения нельзя считать полностью восстановленными. Сохранена копия состояния, проверочные пути удалены, установлен каталог C:\Axiom. Добавлены именованная блокировка и сохранение исходного файла на диск до проверки. Исходники проекта не пострадали. Неудачный запуск экспорта PowerShell 5 создал пустой C:\docs\audit\bytecode-only; определение корня исправлено, повторные экспорты прошли. Удаление этого пустого каталога отклонено автоматической проверкой («blocked by policy»), обход не выполнялся.
+
+Переносимые результаты: docs/plans/INTERPRETER_REMOVAL_RESULT.md, INTERPRETER_REMOVAL_VALIDATION_20261010.json, INTERPRETER_REMOVAL_EXECUTION_FINAL.csv. Новые примеры: samples/smoke/bytecode-only/compiler_execution.axm и samples/functions/arraypush/upper_bound_overflow.axm; обновлён samples/smoke/debug_step_controls.axm. У ARRAYPUSH подтверждено сохранение границ и данных при MB3007. Четыре неверных ожидания инструмента относительно VAL исправлены по самостоятельному договору, язык для этого не менялся.
+
+Точная точка продолжения: локальная реализация закончена. Сначала прочитать итоговую сводку и проверить рабочее дерево; коммит/push выполнять только по отдельному поручению. Девять пользовательских удалений .playwright-mcp/* сохранены, временные результаты остаются в .artifacts/. Следующее направление продукта — отдельный план смены оболочки с сохранением функций действующей IDE. Коммит и публикация в этой задаче не выполнялись.
+
+
+## Session 1326 - 2026-10-10 07:59 - Подробный план замены оболочки IDE
+
+По поручению автора подготовлен только план, реализация не начата. Проверены текущие службы WPF, Electron-прототип ide/, референс C:\X__sharp\ide и локальные ветки. Electron-коммит 2904ee9 уже входит в master; отдельной новой рабочей копии нет. Старая ветка не является основой завершённого незакоммиченного перехода на VM.
+
+Созданы docs/plans/IDE_SHELL_REPLACEMENT_PLAN.md, IDE_SHELL_FEATURE_MATRIX.csv (52 обязательные возможности) и IDE_SHELL_PROTOCOL.md. План содержит 16 этапов (0–15), конкретные исходные/будущие пути, условия начала/завершения, приёмочные ожидания, миграцию данных, измерения, локальную поставку и финальное удаление старой редакторной оболочки после принятия. Изложен проект архитектуры Electron + общие службы .NET / DesktopHost с сохранением нативного SCREEN и существующей VM. Протокол описывает ввод, отмену, состояния, отладку, отдельный канал кадров CANVAS и защиту от устаревших событий.
+
+Зафиксированы существенные различия прототипа: графика отклоняется ConsoleHost, отладчика в preload нет, отличаются F5/F3 и предложение сохранить перед запуском, fmt предоставляет только Classic, проверка свежести по HEAD не замечает dirty-исходники. У AxiomBlockEditingService зависимость от AvalonEdit.TextDocument; запланировано выделение общего BlockEditPlanner. У ProgramDiagnosticItem нет абсолютного span; запланировано сохранение диапазона до отображения без смены языкового договора. Изоляция профиля пользователя и ограничения процессной очистки обязательны до новых UI-проверок.
+
+Проверки этой документной задачи: все 52 исходных пути матрицы существуют; внутренние ссылки/JSON-примеры/статусы плана сверены; git diff --check без ошибок. Общий .NET и живые UI-прогоны заново не выполнялись, программный код не изменён. Предыдущие 6032/6032 являются исходной исторической сводкой, свежий прогон обязателен в этапе 0. Коммит и push не выполнялись; пользовательские и предыдущие изменения сохранены.
+
+Точная точка продолжения: прочитать новые три документа; по поручению на реализацию начать этап 0 — сохранение исходного дерева, изоляция проверок и свежая исходная сводка, затем карта возможностей/макет. Не начинать с копирования X Sharp, переключения на старую ветку или удаления WPF. Сначала доказать связь с общими службами через INPUT, SCREEN/CANVAS и breakpoint; массовое оформление после этого. Макет требует выбора автора на этапе 1; текущая задача его не утверждает.

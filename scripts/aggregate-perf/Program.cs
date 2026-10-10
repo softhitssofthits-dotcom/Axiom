@@ -47,7 +47,6 @@ foreach (var pattern in new[] { "ordinary", "cancellation", "subnormal", "zero" 
     measurements.Add(new { Scope = "helper", Pattern = pattern, Size = size, row.Milliseconds, row.Bytes, row.MedianMs, row.MedianBytes });
     Console.WriteLine($"Функция: {pattern}, {size} элементов: {row.MedianMs:F3} мс, {row.MedianBytes / (double)size:F1} байт/элемент");
 }
-foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
 {
     var pipeline = new AxiomExecutionPipeline();
     var source = File.ReadAllText(Path.Combine(root, "samples/smoke/engine-compare/arrayaverage_exact_cancellation.axm"));
@@ -55,14 +54,14 @@ foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode }
     if (!compiled.Succeeded) throw new InvalidOperationException("Программа измерения не компилируется.");
     double Invoke()
     {
-        var result = pipeline.RunCompiled(compiled.CompiledProgram!, new ExecutionRequest(source, mode: mode));
-        if (!result.Succeeded || result.UsedInterpreterFallback || string.Join("\n", result.Output) != "TRUE")
+        var result = pipeline.RunCompiled(compiled.CompiledProgram!, new ExecutionRequest(source));
+        if (!result.Succeeded || string.Join("\n", result.Output) != "TRUE")
             throw new InvalidOperationException("Нарушен результат или выбранный движок программы измерения.");
         return 1;
     }
     var row = Measure(Invoke);
-    measurements.Add(new { Scope = "program", Mode = mode.ToString(), Size = 30_000, Calls = 8, row.Milliseconds, row.Bytes, row.MedianMs, row.MedianBytes });
-    Console.WriteLine($"Программа: {mode}: {row.MedianMs:F3} мс, {row.MedianBytes} байт");
+    measurements.Add(new { Scope = "program", Size = 30_000, Calls = 8, row.Milliseconds, row.Bytes, row.MedianMs, row.MedianBytes });
+    Console.WriteLine($"Программа: BytecodeVm: {row.MedianMs:F3} мс, {row.MedianBytes} байт");
 }
 File.WriteAllText(Path.Combine(output, reportName), JsonSerializer.Serialize(new
 {

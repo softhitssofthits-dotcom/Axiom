@@ -1132,15 +1132,24 @@ public sealed class BytecodeModuleValidator
     private void ValidateReturnStack(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, int stackHeight)
     {
         var expectedStackHeight = routine.ResultType == TypeSymbol.Void ? 0 : 1;
-        if (stackHeight != expectedStackHeight)
+        if (stackHeight == expectedStackHeight)
         {
-            Report(
-                "BC4054",
-                $"Инструкция Return в процедуре '{routine.Name}' ожидает высоту стека {expectedStackHeight}, но получила {stackHeight}.",
-                module,
-                routine.Id,
-                instructionIndex);
+            return;
         }
+
+        // Пустой стек у Return в FUNCTION — легальный сценарий: ветвь завершилась
+        // без RETURN со значением, ошибку MB3006 фиксирует рантайм (AXD-020a).
+        if (expectedStackHeight == 1 && stackHeight == 0)
+        {
+            return;
+        }
+
+        Report(
+            "BC4054",
+            $"Инструкция Return в процедуре '{routine.Name}' ожидает высоту стека {expectedStackHeight}, но получила {stackHeight}.",
+            module,
+            routine.Id,
+            instructionIndex);
     }
 
     private void ValidateRoutineStackTypes(

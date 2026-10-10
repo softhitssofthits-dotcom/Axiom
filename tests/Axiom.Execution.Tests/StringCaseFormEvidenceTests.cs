@@ -63,11 +63,10 @@ newItems(2) = "y"
         var boundCall = Assert.IsType<BoundCallExpression>(Assert.Single(print.Items).Expression);
         Assert.Equal(id, Assert.IsType<BoundFunctionExpression>(boundCall.Target).Function.BuiltinId?.ToString());
         Assert.Equal(expectedType, boundCall.Type.Name.ToUpperInvariant());
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { expected }, result.Output);
         }
     }
@@ -77,12 +76,8 @@ newItems(2) = "y"
     public void WrongTypesHaveMatchingDiagnostics(string id, string call)
     {
         var source = Setup + "\nPRINT " + call;
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded, id);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded, id);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.NotEmpty(second.Diagnostics);
     }
 }

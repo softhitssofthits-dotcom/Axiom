@@ -96,7 +96,6 @@ public sealed class DocumentOpenFormattingTests
 
         public ProgramRunResult Run(
             string sourceText,
-            ExecutionMode mode = ExecutionMode.Bytecode,
             IEnumerable<int>? sourceBreakpointLines = null,
             bool stopBeforeFirstInstruction = false,
             string? sourceFilePath = null,
@@ -173,8 +172,7 @@ public sealed class DocumentOpenFormattingTests
             IdeWindowState windowState,
             IdeTheme theme,
             IdeLanguage language,
-            bool smartIdentifierEnabled = false,
-            ExecutionMode preferredExecutionMode = ExecutionMode.Bytecode)
+            bool smartIdentifierEnabled = false)
         {
             return RecentFilesSnapshot.Empty;
         }

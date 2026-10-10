@@ -67,7 +67,7 @@ END TRY</code></pre>
 <li>Ошибку, созданную <code>ERROR</code>, можно перехватить тем же <code>TRY/CATCH</code>, что и системную ошибку времени выполнения.</li>
 <li><code>ERROR err</code> принимает только значение встроенного типа <code>ERROR</code>; строковый код и сообщение в этой форме не задаются заново.</li>
 <li>Если обработчика нет, выполнение программы завершается.</li>
-<li><code>ERROR</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</li>
+<li><code>ERROR</code> выполняется <code>BytecodeVm</code> после компиляции.</li>
 </ul>
 </section>
 

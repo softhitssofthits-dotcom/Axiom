@@ -1,0 +1,14 @@
+' Отрицательный пример: ветвь FUNCTION завершается без RETURN со значением.
+' Ожидаемая диагностика:
+' MB3006 — ветвь завершилась без возвращаемого значения (ошибка времени выполнения).
+FUNCTION Branch(flag AS INTEGER) AS INTEGER
+    IF flag = 1 THEN
+        RETURN 10
+    END IF
+END FUNCTION
+
+' Ветвь с RETURN возвращает значение.
+PRINT Branch(1)
+
+' Ветвь без RETURN доходит до конца функции — MB3006.
+PRINT Branch(2)

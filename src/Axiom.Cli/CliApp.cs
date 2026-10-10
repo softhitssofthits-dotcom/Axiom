@@ -10,6 +10,7 @@ namespace Axiom.Cli;
 /// при `run` и продукт команды при `fmt`/`check --json`/`metadata`; все диагностические
 /// сообщения, usage и версия идут в stderr. Коды возврата: 0 — успех, 1 — ошибки компиляции
 /// или рантайма, 2 — неверный usage или файл не найден.
+/// Команда `check` выполняет полную компиляционную проверку (frontend и backend), не исполняет программу и не создаёт файлы.
 /// </summary>
 internal static class CliApp
 {
@@ -28,6 +29,7 @@ internal static class CliApp
                     --stdin   читать источник из stdin (check, fmt)
                     --help    показать эту справку
                     --version показать версию и git-ревизию
+          notes:    check — полная компиляционная проверка (frontend и backend), без запуска программы и без файлов
         axiom {Version}
         """;
 

@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class AuditRemainingBehaviorTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Average_PreservesTinyRemainderAfterLargeCancellation(ExecutionMode mode)
+    [Fact]
+    public void Average_PreservesTinyRemainderAfterLargeCancellation()
     {
         const string source = """
             DIM values(1 TO 3) AS DOUBLE
@@ -17,13 +15,11 @@ public sealed class AuditRemainingBehaviorTests
             values(3) = -VAL("1e308")
             PRINT ARRAYAVERAGE(values) = VAL("1e-308") / 3
             """;
-        AssertProgram(source, mode, ["TRUE", "TRUE"]);
+        AssertProgram(source, ["TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Average_RoundsSubnormalTiesAndMaximumFiniteValues(ExecutionMode mode)
+    [Fact]
+    public void Average_RoundsSubnormalTiesAndMaximumFiniteValues()
     {
         const string source = """
             DIM values(1 TO 2) AS DOUBLE
@@ -39,12 +35,10 @@ public sealed class AuditRemainingBehaviorTests
             values(2) = values(1)
             PRINT ARRAYAVERAGE(values) = values(1)
             """;
-        AssertProgram(source, mode, ["TRUE", "TRUE", "TRUE", "TRUE"]);
+        AssertProgram(source, ["TRUE", "TRUE", "TRUE", "TRUE"]);
     }
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Average_LargeFiniteValuesDoNotOverflow(ExecutionMode mode)
+    [Fact]
+    public void Average_LargeFiniteValuesDoNotOverflow()
     {
         const string source = """
             DIM values(1 TO 2) AS DOUBLE
@@ -54,13 +48,11 @@ public sealed class AuditRemainingBehaviorTests
             values(2) = -values(1)
             PRINT ARRAYAVERAGE(values)
             """;
-        AssertProgram(source, mode, ["TRUE", "0"]);
+        AssertProgram(source, ["TRUE", "0"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Aggregates_AcceptMultidimensionalArrays(ExecutionMode mode)
+    [Fact]
+    public void Aggregates_AcceptMultidimensionalArrays()
     {
         const string source = """
             DIM values(1 TO 2, 1 TO 2) AS INTEGER
@@ -73,13 +65,11 @@ public sealed class AuditRemainingBehaviorTests
             PRINT ARRAYMAX(values)
             PRINT ARRAYAVERAGE(values)
             """;
-        AssertProgram(source, mode, ["10", "1", "4", "2.5"]);
+        AssertProgram(source, ["10", "1", "4", "2.5"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void MinMax_RejectBooleanSingletons(ExecutionMode mode)
+    [Fact]
+    public void MinMax_RejectBooleanSingletons()
     {
         const string source = """
             DIM flags(1 TO 1) AS BOOLEAN
@@ -95,13 +85,11 @@ public sealed class AuditRemainingBehaviorTests
                 PRINT err.Code
             END TRY
             """;
-        AssertProgram(source, mode, ["MB3007", "MB3007"]);
+        AssertProgram(source, ["MB3007", "MB3007"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Reverse_PreservesIsolatedSurrogateAndFullEmoji(ExecutionMode mode)
+    [Fact]
+    public void Reverse_PreservesIsolatedSurrogateAndFullEmoji()
     {
         const string source = """
             DIM half AS STRING = LEFT("😀", 1)
@@ -109,15 +97,14 @@ public sealed class AuditRemainingBehaviorTests
             PRINT REVERSE(REVERSE(half + "А")) = half + "А"
             PRINT REVERSE("А😀Б")
             """;
-        AssertProgram(source, mode, ["TRUE", "TRUE", "Б😀А"]);
+        AssertProgram(source, ["TRUE", "TRUE", "Б😀А"]);
     }
 
-    private static void AssertProgram(string source, ExecutionMode mode, string[] output)
+    private static void AssertProgram(string source, string[] output)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
         Assert.Equal(output, result.Output);
-        Assert.False(result.UsedInterpreterFallback);
     }
 }

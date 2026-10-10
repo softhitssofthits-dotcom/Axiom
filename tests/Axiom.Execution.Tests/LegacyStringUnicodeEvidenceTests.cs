@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class LegacyStringUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void DefaultSlicesAndPredicatesKeepLiteralUtf16AndNullUnits(ExecutionMode mode)
+    [Fact]
+    public void DefaultSlicesAndPredicatesKeepLiteralUtf16AndNullUnits()
     {
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
             DIM high AS STRING = LEFT("😀", 1)
@@ -25,11 +23,10 @@ public sealed class LegacyStringUnicodeEvidenceTests
             PRINT ENDSWITH(text, "é")
             PRINT STARTSWITH(text, "")
             PRINT ENDSWITH(text, "")
-            """, mode: mode));
+            """));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "5", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "TRUE", "TRUE", "TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "TRUE" }, run.Output);
     }
 }

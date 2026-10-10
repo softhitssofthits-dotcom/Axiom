@@ -2,10 +2,8 @@ using Axiom.Runtime;
 namespace Axiom.Execution.Tests;
 public sealed class TilemapLoadFailureTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FailureIsReportedOnceAndNextExplicitLoadCanSucceed(ExecutionMode mode)
+    [Fact]
+    public void FailureIsReportedOnceAndNextExplicitLoadCanSucceed()
     {
         var host = new FailingOnceHost();
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -18,10 +16,9 @@ public sealed class TilemapLoadFailureTests
             END TRY
             m = LOADTILEMAP("second.tmj")
             PRINT MAPWIDTH(m)
-            """, inputProvider: host, mode: mode));
+            """, inputProvider: host));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { "MB3005", "LOADTILEMAP: Проверочный отказ.", "2" }, result.Output);
         Assert.Equal(2, host.Calls);
     }

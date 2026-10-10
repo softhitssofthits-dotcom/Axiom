@@ -4,17 +4,17 @@ public sealed class FileByteOverwriteEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            foreach (var position in new[] { 1, 2, 3, 4 }) yield return [mode, "UTF-8", position];
+            foreach (var position in new[] { 1, 2, 3, 4 }) yield return ["UTF-8", position];
             foreach (var name in new[] { "UTF-16LE", "UTF-16BE" })
-            foreach (var position in new[] { 2, 4 }) yield return [mode, name, position];
+            foreach (var position in new[] { 2, 4 }) yield return [name, position];
         }
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ByteOverwriteIsExactButDoesNotGuaranteeValidText(ExecutionMode mode, string name, int position)
+    public void ByteOverwriteIsExactButDoesNotGuaranteeValidText(string name, int position)
     {
         var path = Path.GetTempFileName();
         try
@@ -39,10 +39,9 @@ public sealed class FileByteOverwriteEvidenceTests
                     PRINT err.Code
                 END TRY
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(result.Status == ExecutionStatus.Success, string.Join(" | ", result.Diagnostics));
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             byte[] content = name switch
             {
                 "UTF-8" => [0x41, 0xF0, 0x9F, 0x98, 0x80, 0x42],

@@ -3,11 +3,9 @@ namespace Axiom.Execution.Tests;
 public sealed class ArrayMutationUnicodeEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void OneDimensionalMutationPreservesWholeUnicodeValues(ExecutionMode mode, bool explicitAxis)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void OneDimensionalMutationPreservesWholeUnicodeValues(bool explicitAxis)
     {
         var axis = explicitAxis ? ", 1" : "";
         var source = """
@@ -35,11 +33,10 @@ public sealed class ArrayMutationUnicodeEvidenceTests
             END TRY
             PRINT words(-1) = "😀"
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "-2", "1", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "-2", "-1", "TRUE", "TRUE", "MB3007", "TRUE" }, run.Output);
     }
 }

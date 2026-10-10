@@ -6,20 +6,19 @@ public sealed class InputStringEvidenceTests
 {
     public static IEnumerable<object[]> SingleValues()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var text in new[] { "", " ", "  текст  ", "а,б", ",", "а,,б,", "\"а,б\"", "\"\"", "\"незакрытая", "\tА😀\t", "\u00a0текст\u00a0", "А，Б" })
-            yield return [mode, text];
+            yield return [text];
     }
 
     [Theory]
     [MemberData(nameof(SingleValues))]
-    public void SingleStringPreservesEntireProviderLine(ExecutionMode mode, string text)
+    public void SingleStringPreservesEntireProviderLine(string text)
     {
         var provider = new OneInput(text);
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM value AS STRING = \"исходное\"\nINPUT value\nPRINT value", inputProvider: provider, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM value AS STRING = \"исходное\"\nINPUT value\nPRINT value", inputProvider: provider));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(1, provider.Calls);
         Assert.Equal(new[] { text }, result.Output);
     }
@@ -34,13 +33,13 @@ public sealed class InputStringEvidenceTests
             ("\u00a0А\u00a0,\tБ\t", ["А", "Б"]),
             ("\"А,Б\",В", ["MB3003", "исходное А", "исходное Б"])
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var item in cases) yield return [mode, item.Text, item.Expected];
+
+        foreach (var item in cases) yield return [item.Text, item.Expected];
     }
 
     [Theory]
     [MemberData(nameof(MultipleValues))]
-    public void MultipleStringsUsePlainCommaFieldsAndKeepStateOnCountFailure(ExecutionMode mode, string text, string[] expected)
+    public void MultipleStringsUsePlainCommaFieldsAndKeepStateOnCountFailure(string text, string[] expected)
     {
         var provider = new OneInput(text);
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -53,10 +52,9 @@ public sealed class InputStringEvidenceTests
             END TRY
             PRINT first
             PRINT second
-            """, inputProvider: provider, mode: mode));
+            """, inputProvider: provider));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(1, provider.Calls);
         Assert.Equal(expected, result.Output);
     }

@@ -4,14 +4,14 @@ public sealed class DirectoryTransferKindEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var operation in new[] { "COPYDIR", "COPYDIR_OVERWRITE", "MOVEDIR" })
-        foreach (var wrongSource in new[] { false, true }) yield return [mode, operation, wrongSource];
+        foreach (var wrongSource in new[] { false, true }) yield return [operation, wrongSource];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void FileInsteadOfDirectoryCannotDestroyEitherPayload(ExecutionMode mode, string operation, bool wrongSource)
+    public void FileInsteadOfDirectoryCannotDestroyEitherPayload(string operation, bool wrongSource)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "directory-transfer-kind", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -28,11 +28,10 @@ public sealed class DirectoryTransferKindEvidenceTests
             var source = wrongSource ? file : directory;
             var destination = wrongSource ? directory : file;
             var call = operation == "COPYDIR_OVERWRITE" ? $"COPYDIR(\"{source}\", \"{destination}\", TRUE)" : $"{operation}(\"{source}\", \"{destination}\")";
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT FILEEXISTS(\"{file}\")\nEND TRY", mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT FILEEXISTS(\"{file}\")\nEND TRY"));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["MB3007", "TRUE"], result.Output);
             Assert.Equal(first, File.ReadAllBytes(file));
             Assert.Equal(second, File.ReadAllBytes(payload));

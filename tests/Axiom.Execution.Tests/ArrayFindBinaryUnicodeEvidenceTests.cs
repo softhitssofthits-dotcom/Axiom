@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayFindBinaryUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void BinarySearchUsesSortedUtf16ValuesAndExactLongs(ExecutionMode mode)
+    [Fact]
+    public void BinarySearchUsesSortedUtf16ValuesAndExactLongs()
     {
-        Check(mode, """
+        Check("""
             DIM words(-3 TO 3) AS STRING
             DIM high AS STRING = LEFT("😀", 1)
             words(-3) = ""
@@ -38,12 +36,10 @@ public sealed class ArrayFindBinaryUnicodeEvidenceTests
             """, ["-3", "-2", "-1", "0", "1", "2", "3", "-4", "6", "6", "4", "8", "9007199254740993"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FindAllReturnsVisibleCoordinatesForWholeStrings(ExecutionMode mode)
+    [Fact]
+    public void FindAllReturnsVisibleCoordinatesForWholeStrings()
     {
-        Check(mode, """
+        Check("""
             DIM grid(-1 TO 1, 5 TO 7) AS STRING
             DIM hits(,) AS INTEGER
             DIM target AS STRING = LEFT("😀", 1) + CHRW(0)
@@ -76,13 +72,12 @@ public sealed class ArrayFindBinaryUnicodeEvidenceTests
             """, ["2", "1", "2", "1", "2", "0", "6", "1", "7", "0", "TRUE", "TRUE", "-2", "0"]);
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 }

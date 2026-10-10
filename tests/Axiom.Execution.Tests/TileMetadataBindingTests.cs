@@ -50,17 +50,16 @@ public sealed class TileMetadataBindingTests
             "MAPPROPERTY(m, 1)",
             "MAPLAYERNAME(m, TRUE)",
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var expression in expressions) yield return [mode, expression];
+
+        foreach (var expression in expressions) yield return [expression];
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void WrongTypesAndArgumentCountsFailBeforeExecution(ExecutionMode mode, string expression)
+    public void WrongTypesAndArgumentCountsFailBeforeExecution(string expression)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM m AS TILEMAP\nPRINT " + expression, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM m AS TILEMAP\nPRINT " + expression));
         Assert.False(result.Succeeded);
         Assert.Empty(result.Output);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.NotEmpty(result.Diagnostics);
         Assert.All(result.Diagnostics, diagnostic => Assert.StartsWith("MB2", diagnostic.Code));
     }

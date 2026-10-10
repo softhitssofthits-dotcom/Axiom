@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayConcatUnicodeViewEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ConcatenationKeepsWholeValuesAndIndependentVisibleCopies(ExecutionMode mode)
+    [Fact]
+    public void ConcatenationKeepsWholeValuesAndIndependentVisibleCopies()
     {
         var source = """
             DIM grid(-1 TO 1, 5 TO 7) AS STRING
@@ -39,11 +37,10 @@ public sealed class ArrayConcatUnicodeViewEvidenceTests
             PRINT merged(0, 8) = token
             PRINT grid(-1, 5) = "Внешний"
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "1", "4", "TRUE", "TRUE", "TRUE", "TRUE", "0", "1", "6", "9", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE" }, run.Output);
     }
 }

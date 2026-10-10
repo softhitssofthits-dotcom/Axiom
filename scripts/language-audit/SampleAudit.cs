@@ -22,24 +22,32 @@ static class SampleAudit
             object[]? runs = null;
             if (candidate && !excluded && compilation.Succeeded)
             {
-                runs = new[] {ExecutionMode.Interpreter,ExecutionMode.Bytecode}.Select(mode =>
-                {
-                    try
-                    {
-                        var host = new ControlledHost();
-                        var r = new AxiomExecutionPipeline().Run(new ExecutionRequest(source,mode:mode,runtimeClock:host,runtimeRandom:host,cancellationProvider:new Deadline(TimeSpan.FromSeconds(2))));
-                        return (object)new {Mode=mode.ToString(),Status=r.Status.ToString(),Engine=r.ActualEngine?.ToString(),r.UsedInterpreterFallback,
-                            Output=r.Output, r.PendingOutput, Diagnostics=r.Diagnostics.Select(d=>new {d.Code,d.Message,Location=d.Location.ToString()}).ToArray()};
-                    }
-                    catch(Exception e) { return new {Mode=mode.ToString(),Exception=e.GetType().Name,Message=e.Message}; }
-                }).ToArray();
+                runs = [RunSample(source)];
             }
-            results.Add(new {Path=relative,Compilation=compilation.Status.ToString(),Diagnostics=compilation.Diagnostics.Select(d=>new {d.Code,d.Message}).ToArray(),
-                Bytecode=compilation.BytecodeAvailable,Runs=runs, Reason=runs is null ? "Проверен только frontend; отсутствует безопасный автономный контекст или есть диагностика" : "Проверка паритета, ожидаемый вывод отдельно не утверждается"});
+            results.Add(new {Path=relative,Compilation=compilation.Status.ToString(),Diagnostics=compilation.Diagnostics.Concat(compilation.BackendDiagnostics).Select(d=>new {d.Code,d.Message}).ToArray(),
+                Bytecode=compilation.BytecodeAvailable,Runs=runs, Reason=runs is null ? "Проверена полная компиляция; автономный запуск не выполнен из-за ограничений контекста или диагностики" : "Запуск BytecodeVm; ожидаемый вывод отдельно не утверждается"});
         }
         File.WriteAllText(Path.Combine(output,"samples.json"),JsonSerializer.Serialize(results,new JsonSerializerOptions {WriteIndented=true}));
-        Console.WriteLine($"Проверен разбор {results.Count} примеров.");
+        Console.WriteLine($"Проверена компиляция {results.Count} примеров.");
     }
+    private static object RunSample(string source)
+    {
+        try
+        {
+            var host = new ControlledHost();
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source,
+                runtimeClock: host, runtimeRandom: host,
+                cancellationProvider: new Deadline(TimeSpan.FromSeconds(2))));
+            return new { Status = result.Status.ToString(), Engine = result.ActualEngine?.ToString(),
+                result.Output, result.PendingOutput,
+                Diagnostics = result.Diagnostics.Select(d => new { d.Code, d.Message, Location = d.Location.ToString() }).ToArray() };
+        }
+        catch (Exception exception)
+        {
+            return new { Exception = exception.GetType().Name, Message = exception.Message };
+        }
+    }
+
 }
 
 sealed class ControlledHost : IRuntimeClock, IRuntimeRandom

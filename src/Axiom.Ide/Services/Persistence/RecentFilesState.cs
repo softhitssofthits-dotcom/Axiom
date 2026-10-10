@@ -18,5 +18,4 @@ public sealed class RecentFilesState
 
     public bool? SmartIdentifierEnabled { get; init; }
 
-    public string? PreferredExecutionMode { get; init; }
 }

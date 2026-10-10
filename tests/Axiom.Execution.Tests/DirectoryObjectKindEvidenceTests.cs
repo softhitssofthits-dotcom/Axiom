@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DirectoryObjectKindEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExistenceAndCreationDistinguishUnicodeFileAndDirectory(ExecutionMode mode)
+    [Fact]
+    public void ExistenceAndCreationDistinguishUnicodeFileAndDirectory()
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "directory-kind-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -33,11 +31,10 @@ public sealed class DirectoryObjectKindEvidenceTests
                 PRINT MAKEDIR("{{nested}}")
                 PRINT DIREXISTS("{{file}}")
                 PRINT PATHEXISTS("{{file}}")
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["FALSE", "TRUE", "FALSE", "FALSE", "MB3007", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "TRUE"], result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(file));
             Assert.Equal(new[] { nested }, Directory.GetDirectories(directory));

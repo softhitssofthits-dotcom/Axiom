@@ -8,14 +8,14 @@ public sealed partial class BytecodeVm
 {
     private int EvaluateLBoundBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "LBOUND", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "LBOUND", "array", location);
         var dimension = ResolveArrayInfoDimension("LBOUND", array, arguments, location);
         return array.GetLowerBound(dimension);
     }
 
     private int EvaluateUBoundBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "UBOUND", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "UBOUND", "array", location);
         var dimension = ResolveArrayInfoDimension("UBOUND", array, arguments, location);
         return array.GetUpperBound(dimension);
     }
@@ -32,7 +32,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayBoundsBuiltin(RuntimeValue argument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYBOUNDS", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYBOUNDS", "array", location);
         var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.Integer, rank: 2);
         return RuntimeValue.FromArray(
             resultType,
@@ -54,7 +54,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArraySliceBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSLICE", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSLICE", "array", location);
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
         var start = arguments[1].AsInteger();
         var count = RequireNonNegativeCount("ARRAYSLICE", "count", arguments[2].AsInteger(), location);
@@ -96,7 +96,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayFlattenBuiltin(RuntimeValue argument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYFLATTEN", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYFLATTEN", "array", location);
         var sourceArrayType = (ArrayTypeSymbol)argument.Type;
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var values = new List<RuntimeValue>(array.Length);
@@ -108,8 +108,8 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayReshapeBuiltin(RuntimeValue sourceArgument, RuntimeValue templateArgument, TextLocation location)
     {
-        var source = RequireAllocatedArrayArgument(sourceArgument, "ARRAYRESHAPE", location);
-        var template = RequireAllocatedArrayArgument(templateArgument, "ARRAYRESHAPE", location);
+        var source = RequireAllocatedArrayArgument(sourceArgument, "ARRAYRESHAPE", "source", location);
+        var template = RequireAllocatedArrayArgument(templateArgument, "ARRAYRESHAPE", "template", location);
 
         if (source.Length != template.Length)
         {
@@ -135,7 +135,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayToSortedBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTOSORTED", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTOSORTED", "array", location);
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;
@@ -180,7 +180,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayToReversedBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTOREVERSED", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTOREVERSED", "array", location);
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYTOREVERSED", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;
@@ -201,7 +201,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayTakeBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTAKE", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTAKE", "array", location);
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
         var count = RequireNonNegativeCount("ARRAYTAKE", "count", arguments[1].AsInteger(), location);
 
@@ -229,7 +229,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArraySkipBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSKIP", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSKIP", "array", location);
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
         var count = RequireNonNegativeCount("ARRAYSKIP", "count", arguments[1].AsInteger(), location);
 
@@ -270,7 +270,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayDistinctBuiltin(RuntimeValue argument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYDISTINCT", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYDISTINCT", "array", location);
         var sourceArrayType = (ArrayTypeSymbol)argument.Type;
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var values = new List<RuntimeValue>(array.Length);
@@ -300,11 +300,11 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayConcatBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var left = RequireAllocatedArrayArgument(arguments[0], "ARRAYCONCAT", location);
+        var left = RequireAllocatedArrayArgument(arguments[0], "ARRAYCONCAT", "left", location);
         var explicitDimension = arguments.Count > 2
             ? ResolveTransformDimension("ARRAYCONCAT", left, arguments, dimensionArgumentIndex: 2, location)
             : (int?)null;
-        var right = RequireAllocatedArrayArgument(arguments[1], "ARRAYCONCAT", location);
+        var right = RequireAllocatedArrayArgument(arguments[1], "ARRAYCONCAT", "right", location);
         var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
         if (left.Rank == 1)
@@ -439,7 +439,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayFillBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYFILL", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYFILL", "array", location);
 
         BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => array.SetValue(indices, value));
 
@@ -448,7 +448,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayReverseBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYREVERSE", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYREVERSE", "array", location);
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYREVERSE", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;
@@ -466,7 +466,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArraySortBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSORT", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSORT", "array", location);
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYSORT", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;
@@ -507,16 +507,16 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayPushBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireResizableArrayArgument(arguments[0], "ARRAYPUSH", location);
+        var array = RequireResizableArrayArgument(arguments[0], "ARRAYPUSH", "array", location);
         var explicitDimension = arguments.Count > 2
             ? ResolveTransformDimension("ARRAYPUSH", array, arguments, dimensionArgumentIndex: 2, location)
             : (int?)null;
 
         if (array.Rank == 1)
         {
+            var newUpperBound = GetExpandedArrayUpperBound("ARRAYPUSH", array, dimension: 1, location);
             if (!array.TryAppendOneDimensional(arguments[1]))
             {
-                var newUpperBound = GetExpandedArrayUpperBound("ARRAYPUSH", array, dimension: 1, location);
                 array.AllocatePreserving(array.LowerBound, newUpperBound);
                 array.SetValue(newUpperBound, arguments[1]);
             }
@@ -525,7 +525,7 @@ public sealed partial class BytecodeVm
         }
 
         var dimension = explicitDimension ?? ResolveTransformDimension("ARRAYPUSH", array, arguments, dimensionArgumentIndex: 2, location);
-        var valueArray = RequireAllocatedArrayArgument(arguments[1], "ARRAYPUSH", location);
+        var valueArray = RequireAllocatedArrayArgument(arguments[1], "ARRAYPUSH", "value", location);
         EnsureCompatibleDynamicArrayValueShape("ARRAYPUSH", array, valueArray, dimension, location);
 
         var expandedUpperBound = GetExpandedArrayUpperBound("ARRAYPUSH", array, dimension, location);
@@ -546,7 +546,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayPopBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireResizableArrayArgument(arguments[0], "ARRAYPOP", location);
+        var array = RequireResizableArrayArgument(arguments[0], "ARRAYPOP", "array", location);
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYPOP", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;
@@ -598,7 +598,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayInsertBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireResizableArrayArgument(arguments[0], "ARRAYINSERT", location);
+        var array = RequireResizableArrayArgument(arguments[0], "ARRAYINSERT", "array", location);
         var explicitDimension = arguments.Count > 3
             ? ResolveTransformDimension("ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3, location)
             : (int?)null;
@@ -629,7 +629,7 @@ public sealed partial class BytecodeVm
         }
 
         var dimension = explicitDimension ?? ResolveTransformDimension("ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3, location);
-        var valueArray = RequireAllocatedArrayArgument(arguments[2], "ARRAYINSERT", location);
+        var valueArray = RequireAllocatedArrayArgument(arguments[2], "ARRAYINSERT", "value", location);
         EnsureCompatibleDynamicArrayValueShape("ARRAYINSERT", array, valueArray, dimension, location);
         var insertionDimensionIndex = RequireArrayInsertionIndex("ARRAYINSERT", array, index, dimension, location);
         var selectedDimensionIsEmpty = BuiltinArrayHelpers.GetDimensionLength(array, dimension) == 0;
@@ -666,7 +666,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayRemoveBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireResizableArrayArgument(arguments[0], "ARRAYREMOVE", location);
+        var array = RequireResizableArrayArgument(arguments[0], "ARRAYREMOVE", "array", location);
         var explicitDimension = arguments.Count > 2
             ? ResolveTransformDimension("ARRAYREMOVE", array, arguments, dimensionArgumentIndex: 2, location)
             : (int?)null;
@@ -729,7 +729,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArraySumBuiltin(RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(value, "ARRAYSUM", location);
+        var array = RequireAllocatedArrayArgument(value, "ARRAYSUM", "array", location);
         return BuiltinArrayAggregateHelpers.Sum(
             array,
             location,
@@ -739,19 +739,19 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayMinBuiltin(RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(value, "ARRAYMIN", location);
+        var array = RequireAllocatedArrayArgument(value, "ARRAYMIN", "array", location);
         return BuiltinArrayAggregateHelpers.Min(array, location, (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYMIN", "array", detail, errorLocation));
     }
 
     private RuntimeValue EvaluateArrayMaxBuiltin(RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(value, "ARRAYMAX", location);
+        var array = RequireAllocatedArrayArgument(value, "ARRAYMAX", "array", location);
         return BuiltinArrayAggregateHelpers.Max(array, location, (detail, errorLocation) => ReportBuiltInArgumentError("ARRAYMAX", "array", detail, errorLocation));
     }
 
     private RuntimeValue EvaluateArrayAverageBuiltin(RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(value, "ARRAYAVERAGE", location);
+        var array = RequireAllocatedArrayArgument(value, "ARRAYAVERAGE", "array", location);
         return BuiltinArrayAggregateHelpers.Average(
             array,
             location,
@@ -761,14 +761,14 @@ public sealed partial class BytecodeVm
 
     private bool EvaluateArrayContainsBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYCONTAINS", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYCONTAINS", "array", location);
         return BuiltinArrayHelpers.ArrayContainsValue(array, value);
     }
 
     private RuntimeValue EvaluateArrayIndexOfBuiltin(RuntimeValue argument, RuntimeValue value, bool searchFromEnd, TextLocation location)
     {
         var functionName = searchFromEnd ? "ARRAYLASTINDEXOF" : "ARRAYINDEXOF";
-        var array = RequireAllocatedArrayArgument(argument, functionName, location);
+        var array = RequireAllocatedArrayArgument(argument, functionName, "array", location);
 
         if (array.Rank != 1)
         {
@@ -780,7 +780,7 @@ public sealed partial class BytecodeVm
 
     private int EvaluateArrayCountBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYCOUNT", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYCOUNT", "array", location);
         var count = 0;
 
         BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
@@ -796,7 +796,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayFindAllBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYFINDALL", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYFINDALL", "array", location);
 
         if (array.Rank != 1)
         {
@@ -864,7 +864,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayBinarySearchBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYBINARYSEARCH", location);
+        var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYBINARYSEARCH", "array", location);
         var explicitDimension = arguments.Count > 2
             ? ResolveTransformDimension("ARRAYBINARYSEARCH", array, arguments, dimensionArgumentIndex: 2, location)
             : (int?)null;
@@ -885,7 +885,7 @@ public sealed partial class BytecodeVm
 
     private bool EvaluateArrayEveryBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYEVERY", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYEVERY", "array", location);
         var predicate = RequireFunctionArgument(predicateArgument, location);
 
         if (array.Rank == 1)
@@ -908,7 +908,7 @@ public sealed partial class BytecodeVm
 
     private bool EvaluateArraySomeBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYSOME", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYSOME", "array", location);
         var predicate = RequireFunctionArgument(predicateArgument, location);
 
         if (array.Rank == 1)
@@ -931,7 +931,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayFilterBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYFILTER", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYFILTER", "array", location);
         var sourceArrayType = (ArrayTypeSymbol)argument.Type;
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
         var predicate = RequireFunctionArgument(predicateArgument, location);
@@ -957,7 +957,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateArrayMapBuiltin(RuntimeValue argument, RuntimeValue selectorArgument, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYMAP", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYMAP", "array", location);
         var selector = RequireFunctionArgument(selectorArgument, location);
         var resultType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(selector.Function.ReturnType, array.Rank);
 
@@ -978,7 +978,7 @@ public sealed partial class BytecodeVm
         RuntimeValue reducerArgument,
         TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, "ARRAYREDUCE", location);
+        var array = RequireAllocatedArrayArgument(argument, "ARRAYREDUCE", "array", location);
         var reducer = RequireFunctionArgument(reducerArgument, location);
 
         if (array.Rank == 1)
@@ -1172,22 +1172,22 @@ public sealed partial class BytecodeVm
         return InvokeBytecodeFunction(callback, arguments, location);
     }
 
-    private RuntimeArrayValue RequireAllocatedArrayArgument(RuntimeValue argument, string functionName, TextLocation location)
+    private RuntimeArrayValue RequireAllocatedArrayArgument(RuntimeValue argument, string functionName, string argumentName, TextLocation location)
     {
         var array = RequireArrayArgument(argument, functionName, location);
         if (!array.IsAllocated)
         {
             return ReportInvalidRuntimeState<RuntimeArrayValue>(
-                $"Массив 'array' объявлен, но ещё не выделен.",
+                $"Функция {functionName}: аргумент '{argumentName}' содержит массив, который ещё не выделен.",
                 location);
         }
 
         return array;
     }
 
-    private RuntimeArrayValue RequireResizableArrayArgument(RuntimeValue argument, string functionName, TextLocation location)
+    private RuntimeArrayValue RequireResizableArrayArgument(RuntimeValue argument, string functionName, string argumentName, TextLocation location)
     {
-        var array = RequireAllocatedArrayArgument(argument, functionName, location);
+        var array = RequireAllocatedArrayArgument(argument, functionName, argumentName, location);
 
         if (array.IsView)
         {

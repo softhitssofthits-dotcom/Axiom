@@ -9,36 +9,36 @@
 ' остановитесь на строке PRINT DoubleValue(number)
 ' и нажмите F11, чтобы войти внутрь функции DoubleValue.
 FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
-    PRINT "function: inside DoubleValue"
+    PRINT "Внутри функции DoubleValue"
     RETURN value * 2
 END FUNCTION
 
 ' Проверка Step Into и Step Out:
-' остановитесь на строке PrintBanner("debug sample")
+' остановитесь на строке PrintBanner("Проверка отладки")
 ' и нажмите F11, чтобы войти внутрь процедуры PrintBanner.
 ' Когда отладчик остановится внутри процедуры, нажмите Shift+F11,
 ' чтобы выйти из процедуры обратно в основную программу.
 ' Внутри процедуры можно нажать Ctrl+F10, чтобы вернуться к строке вызова.
 SUB PrintBanner(title AS STRING)
-    PRINT "sub: begin"
+    PRINT "Начало процедуры"
     PRINT title
-    PRINT "sub: end"
+    PRINT "Конец процедуры"
 END SUB
 
 DIM number AS INTEGER = 21
 DIM result AS INTEGER
 
-PRINT "main: start"
+PRINT "Начало программы"
 
 ' Проверка Step Over:
 ' остановитесь на следующей строке и нажмите F10.
 ' Процедура выполнится целиком, но отладчик не зайдёт внутрь неё.
-PrintBanner("debug sample")
+PrintBanner("Проверка отладки")
 
 ' Проверка Step Into:
 ' остановитесь на следующей строке и нажмите F11.
 ' Отладчик должен зайти внутрь функции DoubleValue.
 result = DoubleValue(number)
 
-PRINT "main: result = " + STR(result)
-PRINT "main: end"
+PRINT "Результат: " + STR(result)
+PRINT "Программа завершена"

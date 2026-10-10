@@ -4,12 +4,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class GraphicsQueryBoundaryEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void IdentityPMapKeepsExtremeFiniteCoordinatesAndFractions(ExecutionMode mode)
+    [Fact]
+    public void IdentityPMapKeepsExtremeFiniteCoordinatesAndFractions()
     {
-        Check(mode, new QueryHost(canvas: false), """
+        Check(new QueryHost(canvas: false), """
             DIM largest AS DOUBLE = VAL("1.7976931348623157e308")
             PRINT PMAP(largest, 0) = largest
             PRINT PMAP(-largest, 1) = -largest
@@ -20,12 +18,10 @@ public sealed class GraphicsQueryBoundaryEvidenceTests
             """, ["TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CanvasMetricsCountUtf16CellsAndLineFeeds(ExecutionMode mode)
+    [Fact]
+    public void CanvasMetricsCountUtf16CellsAndLineFeeds()
     {
-        Check(mode, new QueryHost(canvas: true), """
+        Check(new QueryHost(canvas: true), """
             PRINT TEXTWIDTH("")
             PRINT TEXTHEIGHT("")
             PRINT TEXTWIDTH("😀")
@@ -40,26 +36,23 @@ public sealed class GraphicsQueryBoundaryEvidenceTests
             """, ["0", "12", "16", "8", "8", "16", "8", "16", "24", "0", "24"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExtremeSelectorsAndMissingSurfaceAreCatchable(ExecutionMode mode)
+    [Fact]
+    public void ExtremeSelectorsAndMissingSurfaceAreCatchable()
     {
         foreach (var expression in new[] { "POINT(-2147483648)", "POINT(2147483647)", "PMAP(0, -2147483648)", "PMAP(0, 2147483647)" })
-            Check(mode, new QueryHost(canvas: false), Catch(expression), ["MB3007", "42"]);
+            Check(new QueryHost(canvas: false), Catch(expression), ["MB3007", "42"]);
         foreach (var expression in new[] { "TEXTWIDTH(\"😀\")", "TEXTHEIGHT(CHRW(0))", "POINT(0)", "POINT(0, 0)", "PMAP(0, 0)" })
-            Check(mode, null, Catch(expression), ["MB3010", "42"]);
+            Check(null, Catch(expression), ["MB3010", "42"]);
     }
 
     private static string Catch(string expression) => $"TRY\nPRINT {expression}\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 42\nEND TRY";
 
-    private static void Check(ExecutionMode mode, IInputProvider? host, string source, string[] expected)
+    private static void Check(IInputProvider? host, string source, string[] expected)
     {
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, inputProvider: host, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, inputProvider: host));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(expected, run.Output);
     }
 

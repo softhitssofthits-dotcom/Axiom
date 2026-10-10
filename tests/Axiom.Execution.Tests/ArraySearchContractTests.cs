@@ -122,13 +122,9 @@ PRINT ARRAYINDEXOF(a, 42)
     public void UnallocatedInputHasMatchingDiagnostic(string function)
     {
         var source = "DIM a() AS INTEGER\nPRINT " + function + "(a, 1)";
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal("MB3005", Assert.Single(first.Diagnostics).Code);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.Equal("MB3005", Assert.Single(second.Diagnostics).Code);
     }
 
     [Theory]
@@ -141,14 +137,10 @@ PRINT ARRAYINDEXOF(a, 42)
     public void SearchValueMustMatchArrayElementType(string function)
     {
         var source = "DIM a(1 TO 1) AS INTEGER\nPRINT " + function + "(a, TRUE)";
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-        Assert.False(first.Succeeded);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.All(first.Diagnostics, d => Assert.StartsWith("MB2", d.Code));
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column, d.Location.Span)));
+        Assert.NotEmpty(second.Diagnostics);
+        Assert.All(second.Diagnostics, d => Assert.StartsWith("MB2", d.Code));
     }
 
     [Fact]
@@ -173,11 +165,10 @@ PRINT ARRAYCOUNT(a, "ёж")
 
     private static void CheckBoth(string source, string[] expected)
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-            Assert.False(run.UsedInterpreterFallback);
             Assert.Equal(expected, run.Output);
         }
     }

@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayFillCloneUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FillAndCloneRespectVisibleOwnerAndIndependentCopy(ExecutionMode mode)
+    [Fact]
+    public void FillAndCloneRespectVisibleOwnerAndIndependentCopy()
     {
         var source = """
             DIM grid(-1 TO 1, 5 TO 7) AS STRING
@@ -42,11 +40,10 @@ public sealed class ArrayFillCloneUnicodeEvidenceTests
             END TRY
             PRINT ARRAYISALLOCATED(absent)
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(Enumerable.Repeat("TRUE", 7).Concat(new[] { "0", "1", "6", "7", "TRUE", "TRUE", "TRUE", "TRUE", "FALSE", "MB3005", "FALSE" }), run.Output);
     }
 }

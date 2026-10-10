@@ -10,9 +10,8 @@ public sealed record RecentFilesSnapshot(
     bool IsStatusBarVisible = true,
     IdeTheme Theme = IdeTheme.Light,
     IdeLanguage Language = IdeLanguage.Russian,
-    bool SmartIdentifierEnabled = false,
-    ExecutionMode PreferredExecutionMode = ExecutionMode.Bytecode)
+    bool SmartIdentifierEnabled = false)
 {
     public static RecentFilesSnapshot Empty { get; } =
-        new(Array.Empty<string>(), null, true, IdeWindowState.Normal, true, IdeTheme.Light, IdeLanguage.Russian, false, ExecutionMode.Bytecode);
+        new(Array.Empty<string>(), null, true, IdeWindowState.Normal, true, IdeTheme.Light, IdeLanguage.Russian, false);
 }

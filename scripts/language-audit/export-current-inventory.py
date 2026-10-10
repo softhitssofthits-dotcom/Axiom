@@ -31,11 +31,12 @@ assert Counter(map(registry_signature, inventory['Rows'])) == Counter(map(metada
 assert not inventory['Integrity']['MissingVmDispatch'], 'Нет поддержки VM'
 assert not inventory['Integrity']['DuplicateSignatures'], 'Повторяющиеся сигнатуры'
 
-audit = root / 'docs/audit'
+audit = root / 'docs/audit/bytecode-only'
+audit.mkdir(parents=True, exist_ok=True)
 candidates = {}
 registered_forms = {(row['Id'], row['Arity']) for row in inventory['Rows']}
 registered_names = {(row['Id'], row['Arity'], row['Name']) for row in inventory['Rows']}
-for path in sorted(audit.glob('*EVIDENCE_????????.csv')):
+for path in sorted((root / 'docs/audit').glob('*EVIDENCE_????????.csv')):
     if path.stem[-8:] > args.snapshot_date:
         continue
     for line, row in enumerate(csv.DictReader(path.open(encoding='utf-8-sig', newline='')), 2):
@@ -46,7 +47,7 @@ for path in sorted(audit.glob('*EVIDENCE_????????.csv')):
                 assert (identifier, int(arity)) in registered_forms, f'{path.name}:{line}: неизвестная форма {identifier}/{arity}'
                 if row.get('Name'):
                     assert (identifier, int(arity), row['Name']) in registered_names, f'{path.name}:{line}: имя не соответствует ID/Arity'
-            candidates.setdefault(identifier, []).append((row.get('Arity'), f'{path.name}:{line}'))
+            candidates.setdefault(identifier, []).append((row.get('Arity'), f'../{path.name}:{line}'))
 
 target = audit / f'LANGUAGE_FUNCTION_MATRIX_{args.snapshot_date}.csv'
 fields = ['Name', 'Id', 'Arity', 'Parameters', 'DeclaredReturn', 'Binding', 'OperandPolicy',
@@ -78,7 +79,6 @@ summary = {
     'RowsWithEvidenceCandidates': linked, 'RowsWithoutEvidenceCandidates': len(inventory['Rows']) - linked,
     'MissingLight': [row['Id'] for row in inventory['Rows'] if not row['Light']],
     'MissingDark': [row['Id'] for row in inventory['Rows'] if not row['Dark']],
-    'MissingInterpreterMentions': inventory['Integrity']['MissingInterpreterDispatch'],
     'MissingVmDispatch': inventory['Integrity']['MissingVmDispatch'],
     'DuplicateSignatures': inventory['Integrity']['DuplicateSignatures'],
 }

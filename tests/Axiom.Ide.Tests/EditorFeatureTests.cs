@@ -1407,14 +1407,13 @@ public sealed class EditorFeatureTests
         Assert.Contains("InputGestureText=\"Ctrl+F5\"", xaml, StringComparison.Ordinal);
         var runProgramIndex = xaml.IndexOf("AutomationProperties.AutomationId=\"RunProgramMenuItem\"", StringComparison.Ordinal);
         var debugStartIndex = xaml.IndexOf("AutomationProperties.AutomationId=\"StartDebuggingMenuItem\"", StringComparison.Ordinal);
-        var executionModeIndex = xaml.IndexOf("AutomationProperties.AutomationId=\"ExecutionModeMenuItem\"", StringComparison.Ordinal);
         var separatorAfterRunIndex = xaml.IndexOf("<Separator />", runProgramIndex, StringComparison.Ordinal);
         Assert.True(
             runProgramIndex >= 0
             && separatorAfterRunIndex > runProgramIndex
-            && separatorAfterRunIndex < executionModeIndex
-            && debugStartIndex > executionModeIndex,
+            && debugStartIndex > runProgramIndex,
             "Run Program should stay in Run menu while debugging commands live in Debug menu.");
+        Assert.DoesNotContain("ExecutionModeMenuItem", xaml, StringComparison.Ordinal);
         Assert.Contains("Menu.Debug.StepOver", xaml, StringComparison.Ordinal);
         Assert.Contains("InputGestureText=\"F10\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Menu.Debug.StepBack", xaml, StringComparison.Ordinal);

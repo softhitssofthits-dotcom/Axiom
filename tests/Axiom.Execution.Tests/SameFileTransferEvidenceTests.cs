@@ -6,14 +6,14 @@ public sealed class SameFileTransferEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var operation in new[] { "COPYFILE", "MOVEFILE" })
-        foreach (var overwrite in new[] { false, true }) yield return [mode, operation, overwrite];
+        foreach (var overwrite in new[] { false, true }) yield return [operation, overwrite];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void IdenticalPathNeverChangesBytes(ExecutionMode mode, string operation, bool overwrite)
+    public void IdenticalPathNeverChangesBytes(string operation, bool overwrite)
     {
         var path = Path.GetTempFileName();
         try
@@ -26,10 +26,9 @@ public sealed class SameFileTransferEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(operation == "COPYFILE" ? ["MB3007"] : new[] { "TRUE" }, result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
         }
@@ -38,7 +37,7 @@ public sealed class SameFileTransferEvidenceTests
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void HardLinkedNamesNeverCorruptSharedBytes(ExecutionMode mode, string operation, bool overwrite)
+    public void HardLinkedNamesNeverCorruptSharedBytes(string operation, bool overwrite)
     {
         if (!OperatingSystem.IsWindows()) return;
         var root = Path.Combine(Path.GetTempPath(), "axiom-hardlink-" + Guid.NewGuid().ToString("N"));
@@ -74,10 +73,9 @@ public sealed class SameFileTransferEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             var successfulMove = operation == "MOVEFILE";
             Assert.Equal(successfulMove ? ["TRUE"] : new[] { "MB3007" }, result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(alias));

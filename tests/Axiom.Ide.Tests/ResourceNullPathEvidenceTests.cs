@@ -8,31 +8,28 @@ namespace Axiom.Ide.Tests;
 
 public sealed class ResourceNullPathEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void AcceptanceSampleRejectsNullPath(ExecutionMode mode)
+    [Fact]
+    public void AcceptanceSampleRejectsNullPath()
     {
         var repository = new DirectoryInfo(AppContext.BaseDirectory);
         while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "PROJECT.md"))) repository = repository.Parent;
         Assert.NotNull(repository);
         var file = Path.Combine(repository.FullName, "samples/smoke/resources/null_path.axm");
-        var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(File.ReadAllText(file), mode, sourceFilePath: file);
+        var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(File.ReadAllText(file), sourceFilePath: file);
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(string.Join(Environment.NewLine, "Отказ загрузки: MB3005", "Программа продолжает работу"), result.OutputText);
     }
 
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var kind in new[] { "IMAGE", "SPRITE", "TILESET", "TILEMAP" })
-            yield return [mode, kind];
+            yield return [kind];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ExistingPrefixResourceMustNotLoadWhenPathContainsNull(ExecutionMode mode, string kind)
+    public void ExistingPrefixResourceMustNotLoadWhenPathContainsNull(string kind)
     {
         var repository = new DirectoryInfo(AppContext.BaseDirectory);
         while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "PROJECT.md"))) repository = repository.Parent;
@@ -58,9 +55,8 @@ public sealed class ResourceNullPathEvidenceTests
             END TRY
             PRINT "Продолжение"
             """;
-        var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(source, mode);
+        var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(source);
         Assert.Equal(ProgramRunStatus.Success, result.Status);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(string.Join(Environment.NewLine, "MB3005", "Продолжение"), result.OutputText);
     }
 }

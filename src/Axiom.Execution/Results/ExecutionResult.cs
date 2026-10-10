@@ -9,10 +9,7 @@ public sealed class ExecutionResult
         ExecutionStatus status,
         IReadOnlyList<Diagnostic> diagnostics,
         IReadOnlyList<string> output,
-        ExecutionMode requestedMode = ExecutionMode.Bytecode,
         ExecutionEngineKind? actualEngine = null,
-        bool usedInterpreterFallback = false,
-        string? interpreterFallbackReason = null,
         TimeSpan frontendPreparationDuration = default,
         TimeSpan loweringDuration = default,
         TimeSpan bytecodeEmissionDuration = default,
@@ -30,10 +27,9 @@ public sealed class ExecutionResult
         Status = status;
         Diagnostics = diagnostics;
         Output = output;
-        RequestedMode = requestedMode;
+
         ActualEngine = actualEngine;
-        UsedInterpreterFallback = usedInterpreterFallback;
-        InterpreterFallbackReason = interpreterFallbackReason;
+
         FrontendPreparationDuration = frontendPreparationDuration;
         LoweringDuration = loweringDuration;
         BytecodeEmissionDuration = bytecodeEmissionDuration;
@@ -51,13 +47,7 @@ public sealed class ExecutionResult
 
     public IReadOnlyList<string> Output { get; }
 
-    public ExecutionMode RequestedMode { get; }
-
     public ExecutionEngineKind? ActualEngine { get; }
-
-    public bool UsedInterpreterFallback { get; }
-
-    public string? InterpreterFallbackReason { get; }
 
     public TimeSpan FrontendPreparationDuration { get; }
 

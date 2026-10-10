@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DirectoryDeleteBoundaryEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void DeletionStaysInsideOwnedTreeAndDistinguishesKinds(ExecutionMode mode)
+    [Fact]
+    public void DeletionStaysInsideOwnedTreeAndDistinguishesKinds()
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "directory-delete-tests", Guid.NewGuid().ToString("N")));
         var target = Path.GetFullPath(Path.Combine(root, "é😀"));
@@ -36,11 +34,10 @@ public sealed class DirectoryDeleteBoundaryEvidenceTests
                 PRINT DELETEDIRRECURSIVE("{{target}}")
                 PRINT DELETEDIR("{{target}}")
                 PRINT FILEEXISTS("{{preserved}}")
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["FALSE", "FALSE", "MB3007", "TRUE", "TRUE", "FALSE", "FALSE", "FALSE", "TRUE"], result.Output);
             Assert.False(Directory.Exists(target));
             Assert.Equal(bytes, File.ReadAllBytes(preserved));

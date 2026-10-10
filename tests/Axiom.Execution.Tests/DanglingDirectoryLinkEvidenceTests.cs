@@ -3,11 +3,9 @@ namespace Axiom.Execution.Tests;
 public sealed class DanglingDirectoryLinkEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void DanglingFileLinksAreSkippedInSourceAndRejectedInDestination(ExecutionMode mode, bool sourceLink)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DanglingFileLinksAreSkippedInSourceAndRejectedInDestination(bool sourceLink)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-dangling-file-" + Guid.NewGuid().ToString("N"));
         var source = Path.Combine(root, "source");
@@ -28,10 +26,9 @@ public sealed class DanglingDirectoryLinkEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(sourceLink ? ["0", "TRUE"] : new[] { "16", "MB3007" }, result.Output);
             Assert.False(File.Exists(target));
             Assert.NotNull(new FileInfo(link).LinkTarget);
@@ -45,10 +42,8 @@ public sealed class DanglingDirectoryLinkEvidenceTests
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CopyRejectsDanglingNestedDestinationWithoutRecreatingTarget(ExecutionMode mode)
+    [Fact]
+    public void CopyRejectsDanglingNestedDestinationWithoutRecreatingTarget()
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-dangling-" + Guid.NewGuid().ToString("N"));
         var source = Path.Combine(root, "source");
@@ -71,10 +66,9 @@ public sealed class DanglingDirectoryLinkEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(["MB3007"], result.Output);
             Assert.False(Directory.Exists(target));
             Assert.Equal("Источник", File.ReadAllText(Path.Combine(source, "child", "data.txt")));

@@ -12,7 +12,6 @@ public sealed class ExecutionRequest
         IRuntimeClock? runtimeClock = null,
         IRuntimeRandom? runtimeRandom = null,
         IRuntimeCancellationProvider? cancellationProvider = null,
-        ExecutionMode mode = ExecutionMode.Bytecode,
         string? bytecodeSnapshotPath = null,
         IEnumerable<int>? sourceBreakpointLines = null,
         bool stopBeforeFirstInstruction = false,
@@ -27,7 +26,7 @@ public sealed class ExecutionRequest
         RuntimeClock = runtimeClock ?? NullRuntimeHost.Instance;
         RuntimeRandom = runtimeRandom ?? NullRuntimeHost.Instance;
         CancellationProvider = cancellationProvider;
-        Mode = mode;
+
         BytecodeSnapshotPath = bytecodeSnapshotPath;
         SourceBreakpointLines = NormalizeSourceBreakpointLines(sourceBreakpointLines);
         StopBeforeFirstInstruction = stopBeforeFirstInstruction;
@@ -47,8 +46,6 @@ public sealed class ExecutionRequest
     public IRuntimeRandom RuntimeRandom { get; }
 
     public IRuntimeCancellationProvider? CancellationProvider { get; }
-
-    public ExecutionMode Mode { get; }
 
     public string? BytecodeSnapshotPath { get; }
 

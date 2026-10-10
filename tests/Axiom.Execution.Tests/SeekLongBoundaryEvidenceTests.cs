@@ -3,11 +3,9 @@ namespace Axiom.Execution.Tests;
 public sealed class SeekLongBoundaryEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, "9223372036854775807")]
-    [InlineData(ExecutionMode.Bytecode, "9223372036854775807")]
-    [InlineData(ExecutionMode.Interpreter, "-9223372036854775807 - CLNG(1)")]
-    [InlineData(ExecutionMode.Bytecode, "-9223372036854775807 - CLNG(1)")]
-    public void LongExtremaCannotChangeInputPositionOrBytes(ExecutionMode mode, string position)
+    [InlineData("9223372036854775807")]
+    [InlineData("-9223372036854775807 - CLNG(1)")]
+    public void LongExtremaCannotChangeInputPositionOrBytes(string position)
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "seek-long-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -31,11 +29,10 @@ public sealed class SeekLongBoundaryEvidenceTests
                 PRINT READTEXT(f, 1)
                 PRINT FILEPOS(f)
                 CLOSE f
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["А", "MB3007", "2", "FALSE", "😀", "6"], result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
             using var released = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);

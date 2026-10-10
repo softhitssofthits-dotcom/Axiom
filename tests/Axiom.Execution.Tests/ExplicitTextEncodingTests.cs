@@ -5,15 +5,11 @@ namespace Axiom.Execution.Tests;
 public sealed class ExplicitTextEncodingTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, "UTF-8")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-8")]
-    [InlineData(ExecutionMode.Interpreter, "WINDOWS-1251")]
-    [InlineData(ExecutionMode.Bytecode, "WINDOWS-1251")]
-    [InlineData(ExecutionMode.Interpreter, "UTF-16LE")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-16LE")]
-    [InlineData(ExecutionMode.Interpreter, "UTF-16BE")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-16BE")]
-    public void WholeFileFormsRoundTripAndAppendExactlyOnePreamble(ExecutionMode mode, string name)
+    [InlineData("UTF-8")]
+    [InlineData("WINDOWS-1251")]
+    [InlineData("UTF-16LE")]
+    [InlineData("UTF-16BE")]
+    public void WholeFileFormsRoundTripAndAppendExactlyOnePreamble(string name)
     {
         InDirectory(root =>
         {
@@ -28,32 +24,28 @@ PRINT ARRAYLENGTH(lines)
 PRINT lines(1) = "{{first}}"
 PRINT lines(2) = "я!"
 """;
-            AssertProgram(source, root, mode, ["TRUE", "TRUE", "TRUE", "2", "TRUE", "TRUE"]);
+            AssertProgram(source, root, ["TRUE", "TRUE", "TRUE", "2", "TRUE", "TRUE"]);
             var encoding = EncodingFor(name);
             Assert.Equal(encoding.GetPreamble().Concat(encoding.GetBytes(first + "\nя!\n")), File.ReadAllBytes(Path.Combine(root, "text.txt")));
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExplicitAppendCreatesFileAndValidatesExistingPayloadBeforeWriting(ExecutionMode mode)
+    [Fact]
+    public void ExplicitAppendCreatesFileAndValidatesExistingPayloadBeforeWriting()
     {
         InDirectory(root =>
         {
-            AssertProgram("PRINT APPENDFILE(\"new.txt\", \"А\", \"WINDOWS-1251\")", root, mode, ["TRUE"]);
+            AssertProgram("PRINT APPENDFILE(\"new.txt\", \"А\", \"WINDOWS-1251\")", root, ["TRUE"]);
             Assert.Equal(new byte[] { 0xC0 }, File.ReadAllBytes(Path.Combine(root, "new.txt")));
             File.WriteAllBytes(Path.Combine(root, "bad.txt"), [0xEF, 0xBB, 0xBF, 0xC0]);
             var original = File.ReadAllBytes(Path.Combine(root, "bad.txt"));
-            AssertProgram("TRY\nPRINT APPENDFILE(\"bad.txt\", \"я\", \"UTF-8\")\nCATCH err\nPRINT err.Code\nEND TRY", root, mode, ["MB3007"]);
+            AssertProgram("TRY\nPRINT APPENDFILE(\"bad.txt\", \"я\", \"UTF-8\")\nCATCH err\nPRINT err.Code\nEND TRY", root, ["MB3007"]);
             Assert.Equal(original, File.ReadAllBytes(Path.Combine(root, "bad.txt")));
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void InvalidEncodingTextAndConflictingBomLeaveDestinationUnchanged(ExecutionMode mode)
+    [Fact]
+    public void InvalidEncodingTextAndConflictingBomLeaveDestinationUnchanged()
     {
         InDirectory(root =>
         {
@@ -70,37 +62,32 @@ PRINT lines(2) = "я!"
             })
             {
                 File.WriteAllBytes(path, original);
-                AssertProgram($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", root, mode, ["MB3007"]);
+                AssertProgram($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", root, ["MB3007"]);
                 Assert.Equal(original, File.ReadAllBytes(path));
             }
-            AssertProgram("TRY\nPRINT WRITEFILE(\"absent.txt\", \"😀\", \"WINDOWS-1251\")\nCATCH err\nPRINT err.Code\nEND TRY", root, mode, ["MB3007"]);
+            AssertProgram("TRY\nPRINT WRITEFILE(\"absent.txt\", \"😀\", \"WINDOWS-1251\")\nCATCH err\nPRINT err.Code\nEND TRY", root, ["MB3007"]);
             Assert.False(File.Exists(Path.Combine(root, "absent.txt")));
         });
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, "UTF-8", "C0AF")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-8", "C0AF")]
-    [InlineData(ExecutionMode.Interpreter, "UTF-16LE", "FFFE41")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-16LE", "FFFE41")]
-    [InlineData(ExecutionMode.Interpreter, "UTF-16BE", "FEFFD800")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-16BE", "FEFFD800")]
-    public void MalformedInputFailsStrictlyForReadAndAppend(ExecutionMode mode, string name, string hex)
+    [InlineData("UTF-8", "C0AF")]
+    [InlineData("UTF-16LE", "FFFE41")]
+    [InlineData("UTF-16BE", "FEFFD800")]
+    public void MalformedInputFailsStrictlyForReadAndAppend(string name, string hex)
     {
         InDirectory(root =>
         {
             var bytes = Convert.FromHexString(hex);
             File.WriteAllBytes(Path.Combine(root, "bad.txt"), bytes);
             foreach (var call in new[] { $"READFILE(\"bad.txt\", \"{name}\")", $"APPENDFILE(\"bad.txt\", \"я\", \"{name}\")" })
-                AssertProgram($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", root, mode, ["MB3007"]);
+                AssertProgram($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", root, ["MB3007"]);
             Assert.Equal(bytes, File.ReadAllBytes(Path.Combine(root, "bad.txt")));
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExternalBomAndBomlessFilesUseChosenEncodingAndPreservePrefixOnAppend(ExecutionMode mode)
+    [Fact]
+    public void ExternalBomAndBomlessFilesUseChosenEncodingAndPreservePrefixOnAppend()
     {
         InDirectory(root =>
         {
@@ -111,34 +98,30 @@ PRINT lines(2) = "я!"
                 var bom = name == "UTF-8" ? new byte[] { 0xEF, 0xBB, 0xBF } : encoding.GetPreamble();
                 var prefix = (withBom ? bom : []).Concat(encoding.GetBytes("А")).ToArray();
                 File.WriteAllBytes(Path.Combine(root, "external.txt"), prefix);
-                AssertProgram($"PRINT READFILE(\"external.txt\", \"{name}\") = \"А\"\nPRINT APPENDFILE(\"external.txt\", \"я\", \"{name}\")", root, mode, ["TRUE", "TRUE"]);
+                AssertProgram($"PRINT READFILE(\"external.txt\", \"{name}\") = \"А\"\nPRINT APPENDFILE(\"external.txt\", \"я\", \"{name}\")", root, ["TRUE", "TRUE"]);
                 Assert.Equal(prefix.Concat(encoding.GetBytes("я")), File.ReadAllBytes(Path.Combine(root, "external.txt")));
             }
             File.WriteAllBytes(Path.Combine(root, "boundary.txt"), new UTF8Encoding(false).GetBytes(new string('a', 4095) + "😀"));
-            AssertProgram("PRINT APPENDFILE(\"boundary.txt\", \"я\", \"UTF-8\")", root, mode, ["TRUE"]);
+            AssertProgram("PRINT APPENDFILE(\"boundary.txt\", \"я\", \"UTF-8\")", root, ["TRUE"]);
             Assert.Equal(new string('a', 4095) + "😀я", File.ReadAllText(Path.Combine(root, "boundary.txt"), new UTF8Encoding(false, true)));
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void Windows1251TreatsBomLikePrefixesAsOrdinaryText(ExecutionMode mode)
+    [Fact]
+    public void Windows1251TreatsBomLikePrefixesAsOrdinaryText()
     {
         InDirectory(root =>
         {
             foreach (var text in new[] { "яюА", "юяА", "п»їА" })
             {
-                AssertProgram($"PRINT WRITEFILE(\"prefix.txt\", \"{text}\", \"WINDOWS-1251\")\nPRINT APPENDFILE(\"prefix.txt\", \"я\", \"WINDOWS-1251\")\nPRINT READFILE(\"prefix.txt\", \"WINDOWS-1251\") = \"{text}я\"", root, mode, ["TRUE", "TRUE", "TRUE"]);
+                AssertProgram($"PRINT WRITEFILE(\"prefix.txt\", \"{text}\", \"WINDOWS-1251\")\nPRINT APPENDFILE(\"prefix.txt\", \"я\", \"WINDOWS-1251\")\nPRINT READFILE(\"prefix.txt\", \"WINDOWS-1251\") = \"{text}я\"", root, ["TRUE", "TRUE", "TRUE"]);
                 Assert.Equal(EncodingFor("WINDOWS-1251").GetBytes(text + "я"), File.ReadAllBytes(Path.Combine(root, "prefix.txt")));
             }
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void OpenChosenEncodingRoundTripsAllModesAndBytePositions(ExecutionMode mode)
+    [Fact]
+    public void OpenChosenEncodingRoundTripsAllModesAndBytePositions()
     {
         InDirectory(root =>
         {
@@ -165,17 +148,15 @@ PRINT READLINE(f) = ""
 PRINT READLINE(f) = "!"
 CLOSE f
 """;
-                AssertProgram(source, root, mode, ["0", "TRUE", "TRUE", "TRUE", bytes.ToString(), "0", "TRUE", "TRUE", "TRUE"]);
+                AssertProgram(source, root, ["0", "TRUE", "TRUE", "TRUE", bytes.ToString(), "0", "TRUE", "TRUE", "TRUE"]);
                 var enc = EncodingFor(name);
                 Assert.Equal(enc.GetPreamble().Concat(enc.GetBytes(text + "\n!")), File.ReadAllBytes(Path.Combine(root, "stream.txt")));
             }
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void OpenRejectsEncodingAndMalformedInputWithoutChangingFile(ExecutionMode mode)
+    [Fact]
+    public void OpenRejectsEncodingAndMalformedInputWithoutChangingFile()
     {
         InDirectory(root =>
         {
@@ -184,7 +165,7 @@ CLOSE f
             File.WriteAllBytes(path, original);
             foreach (var form in new[] { "INPUT AS f USING \"UTF-16LE\"", "APPEND AS f USING \"UTF-16LE\"", "OUTPUT AS f USING \"UTF-7\"" })
             {
-                AssertProgram($"DIM f AS FILE\nTRY\nOPEN \"bad.txt\" FOR {form}\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT ISOPEN(f)", root, mode, ["MB3007", "FALSE"]);
+                AssertProgram($"DIM f AS FILE\nTRY\nOPEN \"bad.txt\" FOR {form}\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT ISOPEN(f)", root, ["MB3007", "FALSE"]);
                 Assert.Equal(original, File.ReadAllBytes(path));
                 using var released = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
             }
@@ -192,11 +173,9 @@ CLOSE f
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, "UTF-16LE")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-16LE")]
-    [InlineData(ExecutionMode.Interpreter, "UTF-16BE")]
-    [InlineData(ExecutionMode.Bytecode, "UTF-16BE")]
-    public void OpenUtf16SeekLineNumbersAndInvalidReadPositions(ExecutionMode mode, string name)
+    [InlineData("UTF-16LE")]
+    [InlineData("UTF-16BE")]
+    public void OpenUtf16SeekLineNumbersAndInvalidReadPositions(string name)
     {
         InDirectory(root =>
         {
@@ -240,14 +219,12 @@ PRINT REWIND(f)
 PRINT READTEXT(f, 3) = "Ċਁ😀"
 CLOSE f
 """;
-            AssertProgram(source, root, mode, ["TRUE", "12", "2", "TRUE", "3", "TRUE", "4", "TRUE", "TRUE", "8", "TRUE", "MB3007", "6", "TRUE", "TRUE", "MB3007", "1", "MB3007", "1", "TRUE", "TRUE"]);
+            AssertProgram(source, root, ["TRUE", "12", "2", "TRUE", "3", "TRUE", "4", "TRUE", "TRUE", "8", "TRUE", "MB3007", "6", "TRUE", "TRUE", "MB3007", "1", "MB3007", "1", "TRUE", "TRUE"]);
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void OpenStrictWriteFailurePreservesBufferedContentPositionAndLength(ExecutionMode mode)
+    [Fact]
+    public void OpenStrictWriteFailurePreservesBufferedContentPositionAndLength()
     {
         InDirectory(root =>
         {
@@ -281,7 +258,7 @@ PRINT FILELENGTH(f) = saved
 PRINT WRITE(f, "!")
 CLOSE f
 """;
-                AssertProgram(source, root, mode, ["TRUE", "MB3007", "TRUE", "TRUE", "TRUE", "TRUE", "MB3007", "TRUE", "TRUE", "TRUE"]);
+                AssertProgram(source, root, ["TRUE", "MB3007", "TRUE", "TRUE", "TRUE", "TRUE", "MB3007", "TRUE", "TRUE", "TRUE"]);
                 var enc = EncodingFor(name);
                 Assert.Equal(enc.GetPreamble().Concat(enc.GetBytes("Ая!")), File.ReadAllBytes(Path.Combine(root, "write.txt")));
             }
@@ -300,12 +277,11 @@ CLOSE f
         };
     }
 
-    private static void AssertProgram(string source, string root, ExecutionMode mode, string[] expected)
+    private static void AssertProgram(string source, string root, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode, resourceBaseDirectory: root));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, resourceBaseDirectory: root));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Equal(expected, result.Output);
-        Assert.False(result.UsedInterpreterFallback);
     }
 
     private static void InDirectory(Action<string> action)

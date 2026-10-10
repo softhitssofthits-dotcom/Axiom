@@ -3,15 +3,11 @@ namespace Axiom.Execution.Tests;
 public sealed class DirectoryFailureEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, "COPYDIR", false)]
-    [InlineData(ExecutionMode.Bytecode, "COPYDIR", false)]
-    [InlineData(ExecutionMode.Interpreter, "COPYDIR", true)]
-    [InlineData(ExecutionMode.Bytecode, "COPYDIR", true)]
-    [InlineData(ExecutionMode.Interpreter, "MOVEDIR", false)]
-    [InlineData(ExecutionMode.Bytecode, "MOVEDIR", false)]
-    [InlineData(ExecutionMode.Interpreter, "MOVEDIR", true)]
-    [InlineData(ExecutionMode.Bytecode, "MOVEDIR", true)]
-    public void SameOrDescendantDestinationPreservesSource(ExecutionMode mode, string operation, bool descendant)
+    [InlineData("COPYDIR", false)]
+    [InlineData("COPYDIR", true)]
+    [InlineData("MOVEDIR", false)]
+    [InlineData("MOVEDIR", true)]
+    public void SameOrDescendantDestinationPreservesSource(string operation, bool descendant)
     {
         InDirectory(root =>
         {
@@ -20,17 +16,15 @@ public sealed class DirectoryFailureEvidenceTests
             var file = Path.Combine(source, "данные.txt");
             File.WriteAllText(file, "Сохранить");
             var destination = descendant ? Path.Combine(source, "новый") : source;
-            var result = RunCaught($"{operation}(\"{source}\", \"{destination}\")", mode);
+            var result = RunCaught($"{operation}(\"{source}\", \"{destination}\")");
             Assert.Equal(["MB3007"], result.Output);
             Assert.Equal("Сохранить", File.ReadAllText(file));
             Assert.Single(Directory.EnumerateFileSystemEntries(source));
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CopyFailureIsNotAtomicButPreservesSourceAndConflictingFile(ExecutionMode mode)
+    [Fact]
+    public void CopyFailureIsNotAtomicButPreservesSourceAndConflictingFile()
     {
         InDirectory(root =>
         {
@@ -41,7 +35,7 @@ public sealed class DirectoryFailureEvidenceTests
             File.WriteAllText(Path.Combine(source, "first.txt"), "Первый");
             File.WriteAllText(Path.Combine(source, "child", "conflict.txt"), "Новый");
             File.WriteAllText(Path.Combine(destination, "child", "conflict.txt"), "Старый");
-            var result = RunCaught($"COPYDIR(\"{source}\", \"{destination}\")", mode);
+            var result = RunCaught($"COPYDIR(\"{source}\", \"{destination}\")");
             Assert.Equal(["MB3007"], result.Output);
             Assert.Equal("Первый", File.ReadAllText(Path.Combine(destination, "first.txt")));
             Assert.Equal("Старый", File.ReadAllText(Path.Combine(destination, "child", "conflict.txt")));
@@ -50,10 +44,8 @@ public sealed class DirectoryFailureEvidenceTests
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CopyRejectsNestedDestinationLinkWithoutChangingItsTarget(ExecutionMode mode)
+    [Fact]
+    public void CopyRejectsNestedDestinationLinkWithoutChangingItsTarget()
     {
         InDirectory(root =>
         {
@@ -69,7 +61,7 @@ public sealed class DirectoryFailureEvidenceTests
             DirectoryTraversalContractTests.CreateDirectoryLink(link, outside);
             try
             {
-                var result = RunCaught($"COPYDIR(\"{source}\", \"{destination}\", TRUE)", mode);
+                var result = RunCaught($"COPYDIR(\"{source}\", \"{destination}\", TRUE)");
                 Assert.Equal(["MB3007"], result.Output);
                 Assert.Equal("Сохранить", File.ReadAllText(Path.Combine(outside, "data.txt")));
                 Assert.Single(Directory.EnumerateFiles(outside));
@@ -79,11 +71,9 @@ public sealed class DirectoryFailureEvidenceTests
     }
 
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void MoveFailurePreservesSourceAndExistingDestination(ExecutionMode mode, bool missingParent)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MoveFailurePreservesSourceAndExistingDestination(bool missingParent)
     {
         InDirectory(root =>
         {
@@ -93,7 +83,7 @@ public sealed class DirectoryFailureEvidenceTests
             if (!missingParent) Directory.CreateDirectory(destination);
             File.WriteAllText(Path.Combine(source, "data.txt"), "Источник");
             if (!missingParent) File.WriteAllText(Path.Combine(destination, "data.txt"), "Назначение");
-            var result = RunCaught($"MOVEDIR(\"{source}\", \"{destination}\")", mode);
+            var result = RunCaught($"MOVEDIR(\"{source}\", \"{destination}\")");
             Assert.Equal(["MB3007"], result.Output);
             Assert.Equal("Источник", File.ReadAllText(Path.Combine(source, "data.txt")));
             if (!missingParent) Assert.Equal("Назначение", File.ReadAllText(Path.Combine(destination, "data.txt")));
@@ -101,10 +91,8 @@ public sealed class DirectoryFailureEvidenceTests
         });
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void MoveDirectoryAliasMovesLinkRatherThanTarget(ExecutionMode mode)
+    [Fact]
+    public void MoveDirectoryAliasMovesLinkRatherThanTarget()
     {
         InDirectory(root =>
         {
@@ -116,7 +104,7 @@ public sealed class DirectoryFailureEvidenceTests
             DirectoryTraversalContractTests.CreateDirectoryLink(alias, target);
             try
             {
-                var result = RunCaught($"MOVEDIR(\"{alias}\", \"{moved}\")", mode);
+                var result = RunCaught($"MOVEDIR(\"{alias}\", \"{moved}\")");
                 Assert.Equal(["TRUE"], result.Output);
                 Assert.False(Directory.Exists(alias));
                 Assert.True((File.GetAttributes(moved) & FileAttributes.ReparsePoint) != 0);
@@ -131,12 +119,11 @@ public sealed class DirectoryFailureEvidenceTests
         });
     }
 
-    private static ExecutionResult RunCaught(string call, ExecutionMode mode)
+    private static ExecutionResult RunCaught(string call)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY"));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         return result;
     }
 

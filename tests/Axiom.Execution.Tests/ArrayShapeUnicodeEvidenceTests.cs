@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayShapeUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void VisibleUnicodeOrderAndIndependentTemplateShapeArePreserved(ExecutionMode mode)
+    [Fact]
+    public void VisibleUnicodeOrderAndIndependentTemplateShapeArePreserved()
     {
         var source = """
             DIM grid(-1 TO 1, 5 TO 7) AS STRING
@@ -48,11 +46,10 @@ public sealed class ArrayShapeUnicodeEvidenceTests
             PRINT shaped(9, -2) = "Другая замена"
             PRINT grid(-1, 5) = "Внешний"
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "1", "4", "TRUE", "TRUE", "TRUE", "TRUE", "9", "10", "-2", "-1", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "MB3007", "TRUE", "TRUE" }, run.Output);
     }
 }

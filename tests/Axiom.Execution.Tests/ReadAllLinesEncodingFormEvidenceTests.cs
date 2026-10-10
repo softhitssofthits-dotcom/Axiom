@@ -6,11 +6,9 @@ namespace Axiom.Execution.Tests;
 public sealed class ReadAllLinesEncodingFormEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void Utf16LineSeparatorsRespectUnitsAndPreserveBytes(ExecutionMode mode, bool bigEndian)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Utf16LineSeparatorsRespectUnitsAndPreserveBytes(bool bigEndian)
     {
         // U+0D41 содержит байт CR, но сам не является переводом строки.
         byte[] bytes = bigEndian
@@ -32,11 +30,10 @@ public sealed class ReadAllLinesEncodingFormEvidenceTests
                 PRINT LBOUND(lines)
                 PRINT UBOUND(lines)
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["3", "TRUE", "TRUE", "TRUE", "1", "3"], result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
             using var released = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);

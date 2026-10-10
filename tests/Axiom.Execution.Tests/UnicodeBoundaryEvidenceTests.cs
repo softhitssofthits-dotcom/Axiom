@@ -16,13 +16,13 @@ public sealed class UnicodeBoundaryEvidenceTests
 
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        for (var index = 0; index < Data().Length; index++) yield return [mode, index];
+
+        for (var index = 0; index < Data().Length; index++) yield return [index];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void EveryExpectedBoundaryIsCheckedAgainstLiteralParts(ExecutionMode mode, int index)
+    public void EveryExpectedBoundaryIsCheckedAgainstLiteralParts(int index)
     {
         var (text, unit, parts) = Data()[index];
         var source = new System.Text.StringBuilder($"DIM text AS STRING = {text}\nPRINT LEN(text, \"{unit}\")\n");
@@ -33,10 +33,9 @@ public sealed class UnicodeBoundaryEvidenceTests
             source.AppendLine($"PRINT RIGHT(text, {parts.Length - i}, \"{unit}\") = ({string.Join(" + ", parts.Skip(i))})");
         }
         source.AppendLine($"PRINT MID(text, {parts.Length + 1}, 1, \"{unit}\") = \"\"");
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source.ToString(), mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source.ToString()));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { parts.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) }.Concat(Enumerable.Repeat("TRUE", parts.Length * 3 + 1)), result.Output);
     }
 }

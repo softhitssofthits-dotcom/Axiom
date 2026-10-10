@@ -13,13 +13,13 @@ public sealed class PathComponentEvidenceTests
             (@"\\server\share\dir\file.txt", "file.txt", @"\\server\share\dir", ".txt", @"\\server\share"),
             (@"C:\base\.hidden", ".hidden", @"C:\base", ".hidden", @"C:\")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var (path, name, directory, extension, root) in cases) yield return [mode, path, name, directory, extension, root];
+
+        foreach (var (path, name, directory, extension, root) in cases) yield return [path, name, directory, extension, root];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ComponentsResolveLexicallyWithoutExistingResource(ExecutionMode mode, string path, string name, string directory, string extension, string root)
+    public void ComponentsResolveLexicallyWithoutExistingResource(string path, string name, string directory, string extension, string root)
     {
         if (!OperatingSystem.IsWindows()) return;
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
@@ -27,17 +27,14 @@ public sealed class PathComponentEvidenceTests
             PRINT DIRNAME("{{path}}")
             PRINT EXTNAME("{{path}}")
             PRINT PATHROOT("{{path}}")
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { name, directory, extension, root }, result.Output);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void FullyQualifiedDiffersFromDriveRelativeAndRootRelative(ExecutionMode mode)
+    [Fact]
+    public void FullyQualifiedDiffersFromDriveRelativeAndRootRelative()
     {
         if (!OperatingSystem.IsWindows()) return;
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -47,10 +44,9 @@ public sealed class PathComponentEvidenceTests
             PRINT ISABSOLUTEPATH("\file.txt")
             PRINT ISABSOLUTEPATH("file.txt")
             PRINT ISABSOLUTEPATH("")
-            """, mode: mode));
+            """));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { "TRUE", "TRUE", "FALSE", "FALSE", "FALSE", "FALSE" }, result.Output);
     }
 }

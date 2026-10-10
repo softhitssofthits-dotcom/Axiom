@@ -10,7 +10,7 @@ public interface IProgramRunService
 
     ProgramRunResult Run(
         string sourceText,
-        ExecutionMode mode = ExecutionMode.Bytecode,
+
         IEnumerable<int>? sourceBreakpointLines = null,
         bool stopBeforeFirstInstruction = false,
         string? sourceFilePath = null,

@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class FileMetadataEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void MetadataUsesByteLengthLocalTimesAndActualAttributes(ExecutionMode mode)
+    [Fact]
+    public void MetadataUsesByteLengthLocalTimesAndActualAttributes()
     {
         if (!OperatingSystem.IsWindows()) return;
         var root = Path.Combine(Path.GetTempPath(), "axiom-metadata-" + Guid.NewGuid().ToString("N"));
@@ -38,17 +36,15 @@ public sealed class FileMetadataEvidenceTests
                 """ + "\n");
             foreach (var function in new[] { "FILESIZE", "FILEDATE", "FILECREATEDATE", "FILEACCESSEDDATE", "DIRDATE", "ISREADONLY", "ISHIDDEN" })
                 source.AppendLine($"TRY\nPRINT {function}(\"{root}/missing\")\nCATCH err\nPRINT err.Code\nEND TRY");
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source.ToString(), mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source.ToString()));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] { "5", "2024-01-02 03:04:05", "2024-01-01 01:02:03", "2024-01-03 04:05:06", "2024-01-02 03:04:05", "TRUE", "TRUE" }.Concat(Enumerable.Repeat("MB3007", 7)), result.Output);
             Assert.Equal(bytes, File.ReadAllBytes(path));
             File.SetAttributes(path, FileAttributes.Normal);
-            var reset = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT ISREADONLY(\"{path}\")\nPRINT ISHIDDEN(\"{path}\")", mode: mode));
+            var reset = new AxiomExecutionPipeline().Run(new ExecutionRequest($"PRINT ISREADONLY(\"{path}\")\nPRINT ISHIDDEN(\"{path}\")"));
             Assert.Equal(ExecutionStatus.Success, reset.Status);
             Assert.Equal(new[] { "FALSE", "FALSE" }, reset.Output);
-            Assert.False(reset.UsedInterpreterFallback);
         }
         finally { File.SetAttributes(path, FileAttributes.Normal); Directory.Delete(root, true); }
     }

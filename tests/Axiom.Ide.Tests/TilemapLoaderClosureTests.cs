@@ -9,16 +9,16 @@ public sealed class TilemapLoaderClosureTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         for (var index = 0; index < 26; index++)
         {
-            yield return [mode, index, false];
-            if (index is >= 4 and <= 10 or 16 or 17 or 20 or 21 or 22) yield return [mode, index, true];
+            yield return [index, false];
+            if (index is >= 4 and <= 10 or 16 or 17 or 20 or 21 or 22) yield return [index, true];
         }
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void FinalLoaderBoundariesAreExplicit(ExecutionMode mode, int index, bool external)
+    public void FinalLoaderBoundariesAreExplicit(int index, bool external)
     {
         var repository = new DirectoryInfo(AppContext.BaseDirectory);
         while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "PROJECT.md"))) repository = repository.Parent;
@@ -70,9 +70,8 @@ public sealed class TilemapLoaderClosureTests
                 map["tilesets"] = JsonNode.Parse("[{\"firstgid\":1,\"source\":\"atlas.tsj\"}]");
             }
             File.WriteAllText(Path.Combine(root, "map.tmj"), map.ToJsonString());
-            var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run("DIM m AS TILEMAP\nTRY\nm = LOADTILEMAP(\"map.tmj\")\nPRINT MAPTILESET(m, 1, 1, 1)\nPRINT MAPTILE(m, 1, 1, 1)\nPRINT MAPTILEFLAGS(m, 1, 1, 1)\nCATCH err\nPRINT err.Code\nEND TRY", mode, sourceFilePath: Path.Combine(root, "check.axm"));
+            var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run("DIM m AS TILEMAP\nTRY\nm = LOADTILEMAP(\"map.tmj\")\nPRINT MAPTILESET(m, 1, 1, 1)\nPRINT MAPTILE(m, 1, 1, 1)\nPRINT MAPTILEFLAGS(m, 1, 1, 1)\nCATCH err\nPRINT err.Code\nEND TRY", sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             var expected = index == 13 ? string.Join(Environment.NewLine, "2", "1", "0")
                 : index is 14 or 15 or 16 or 17 ? string.Join(Environment.NewLine, "1", "1", "0") : "MB3005";
             Assert.Equal(expected, result.OutputText);

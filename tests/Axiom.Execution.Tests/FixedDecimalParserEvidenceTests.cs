@@ -18,13 +18,13 @@ public sealed class FixedDecimalParserEvidenceTests
             ("79228162514264337593543950335.0", "MB3008"),
             ("0.00000000000000000000000000001", "MB3008")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var item in cases) yield return [mode, item.Text, item.Expected];
+
+        foreach (var item in cases) yield return [item.Text, item.Expected];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void UserFunctionHasExactUsefulSubsetAndExplicitLimits(ExecutionMode mode, string text, string expected)
+    public void UserFunctionHasExactUsefulSubsetAndExplicitLimits(string text, string expected)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "PROJECT.md"))) directory = directory.Parent;
@@ -39,10 +39,9 @@ public sealed class FixedDecimalParserEvidenceTests
                 PRINT err.Code
             END TRY
             """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
         Assert.Equal(new[] { expected }, result.Output);
     }
 }

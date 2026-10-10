@@ -6,16 +6,16 @@ public sealed class FileOutputPositionEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var encoding in new[] { "UTF-8", "UTF-16LE", "UTF-16BE" })
         foreach (var flush in new[] { false, true })
-            yield return [mode, encoding, flush];
+            yield return [encoding, flush];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
     public void OverwritePreservesTailAndAppendRejectsSeek(
-        ExecutionMode mode, string name, bool flushBeforeSeek)
+        string name, bool flushBeforeSeek)
     {
         var path = Path.GetTempFileName();
         try
@@ -66,10 +66,9 @@ public sealed class FileOutputPositionEvidenceTests
                 CLOSE f
                 PRINT READFILE("{{path}}", "{{name}}") = "Q😀ZCЯ" + CHRW(10) + CHRW(10)
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(result.Status == ExecutionStatus.Success, string.Join(" | ", result.Diagnostics));
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             var originalLength = 3 * width + 4;
             var expected = new List<string> { "TRUE", originalLength.ToString() };
             if (flushBeforeSeek) expected.Add("TRUE");

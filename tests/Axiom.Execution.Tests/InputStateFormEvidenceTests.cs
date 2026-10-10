@@ -32,29 +32,24 @@ public sealed class InputStateFormEvidenceTests
         Assert.Equal(type switch { "LONG" => TypeSymbol.Long, "BOOLEAN" => TypeSymbol.Boolean, "DOUBLE" => TypeSymbol.Double, _ => TypeSymbol.Integer }, call.Type);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void NoProviderHasInactiveZeroScreenState(ExecutionMode mode)
+    [Fact]
+    public void NoProviderHasInactiveZeroScreenState()
     {
-        Check(mode, null, ["FALSE", "0", "0", "0"]);
+        Check(null, ["FALSE", "0", "0", "0"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void QueryReflectsScreenStateWithoutNarrowingIntegerDimensions(ExecutionMode mode)
+    [Fact]
+    public void QueryReflectsScreenStateWithoutNarrowingIntegerDimensions()
     {
-        Check(mode, new StateHost(), ["TRUE", "10", "2147483647", "1"]);
+        Check(new StateHost(), ["TRUE", "10", "2147483647", "1"]);
     }
 
-    private static void Check(ExecutionMode mode, IInputProvider? host, string[] expected)
+    private static void Check(IInputProvider? host, string[] expected)
     {
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT SCREENISACTIVE()\nPRINT SCREENMODE()\nPRINT SCREENWIDTH()\nPRINT SCREENHEIGHT()", inputProvider: host, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT SCREENISACTIVE()\nPRINT SCREENMODE()\nPRINT SCREENWIDTH()\nPRINT SCREENHEIGHT()", inputProvider: host));
         Assert.True(run.Succeeded);
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(expected, run.Output);
     }
 

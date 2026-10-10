@@ -233,23 +233,6 @@
                           Command="{Binding CancelRunCommand}"
                           Style="{StaticResource DropDownMenuItemStyle}"
                           AutomationProperties.AutomationId="CancelRunMenuItem" />
-                <Separator />
-                <MenuItem Header="{DynamicResource Menu.Run.ExecutionMode}"
-                          Style="{StaticResource DropDownMenuItemStyle}"
-                          AutomationProperties.AutomationId="ExecutionModeMenuItem">
-                    <MenuItem Header="{DynamicResource Menu.Run.ExecutionMode.Interpreter}"
-                              Command="{Binding UseInterpreterExecutionModeCommand}"
-                              IsCheckable="True"
-                              IsChecked="{Binding IsInterpreterExecutionModeEnabled, Mode=OneWay}"
-                              Style="{StaticResource DropDownMenuItemStyle}"
-                              AutomationProperties.AutomationId="ExecutionModeInterpreterMenuItem" />
-                    <MenuItem Header="{DynamicResource Menu.Run.ExecutionMode.Bytecode}"
-                              Command="{Binding UseBytecodeExecutionModeCommand}"
-                              IsCheckable="True"
-                              IsChecked="{Binding IsBytecodeExecutionModeEnabled, Mode=OneWay}"
-                              Style="{StaticResource DropDownMenuItemStyle}"
-                              AutomationProperties.AutomationId="ExecutionModeBytecodeMenuItem" />
-                </MenuItem>
             </MenuItem>
 
             <!-- Debug -->

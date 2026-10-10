@@ -60,15 +60,12 @@ a(-1, 8) = 4
         }
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void IntegerMatrixAggregatesReturnIndependentExpectedValues(ExecutionMode mode)
+    [Fact]
+    public void IntegerMatrixAggregatesReturnIndependentExpectedValues()
     {
         var source = Setup + "\nPRINT ARRAYSUM(a)\nPRINT ARRAYMIN(a)\nPRINT ARRAYMAX(a)\nPRINT ARRAYAVERAGE(a)\nPRINT a(-2, 7)\nPRINT a(-1, 8)";
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-        Assert.False(run.UsedInterpreterFallback);
         Assert.Equal(new[] { "7", "0", "4", "1.75", "1", "4" }, run.Output);
     }
 }

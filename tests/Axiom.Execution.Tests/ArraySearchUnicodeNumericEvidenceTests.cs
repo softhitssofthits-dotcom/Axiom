@@ -2,12 +2,10 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArraySearchUnicodeNumericEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void StringsMatchWholeUtf16ValuesAndVisibleViews(ExecutionMode mode)
+    [Fact]
+    public void StringsMatchWholeUtf16ValuesAndVisibleViews()
     {
-        Check(mode, """
+        Check("""
             DIM words(-3 TO 3) AS STRING
             DIM high AS STRING = LEFT("😀", 1)
             words(-3) = "é"
@@ -35,12 +33,10 @@ public sealed class ArraySearchUnicodeNumericEvidenceTests
             """, ["2", "-1", "2", "1", "1", "1", "FALSE", "1", "1", "TRUE", "1", "-1", "-1", "TRUE", "TRUE"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void LongAndDecimalNeighborsRemainDistinct(ExecutionMode mode)
+    [Fact]
+    public void LongAndDecimalNeighborsRemainDistinct()
     {
-        Check(mode, """
+        Check("""
             DIM values(-2 TO 1) AS LONG
             values(-2) = 9007199254740992
             values(-1) = 9007199254740993
@@ -61,13 +57,12 @@ public sealed class ArraySearchUnicodeNumericEvidenceTests
             """, ["2", "-1", "1", "FALSE", "2", "5", "6", "FALSE"]);
     }
 
-    private static void Check(ExecutionMode mode, string source, string[] expected)
+    private static void Check(string source, string[] expected)
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 }

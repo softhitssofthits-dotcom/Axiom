@@ -3,11 +3,9 @@ namespace Axiom.Execution.Tests;
 public sealed class RootDirectoryLinkEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    public void ExplicitDanglingRootLinkIsResolvedBeforeCopy(ExecutionMode mode, bool sourceLink)
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ExplicitDanglingRootLinkIsResolvedBeforeCopy(bool sourceLink)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-root-link-" + Guid.NewGuid().ToString("N"));
         var source = Path.Combine(root, "source");
@@ -29,10 +27,9 @@ public sealed class RootDirectoryLinkEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.NotNull(new DirectoryInfo(alias).LinkTarget);
             Assert.Equal("Источник", File.ReadAllText(Path.Combine(source, "data.txt")));
             if (sourceLink)

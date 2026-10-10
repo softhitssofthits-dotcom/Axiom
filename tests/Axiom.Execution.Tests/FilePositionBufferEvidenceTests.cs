@@ -6,16 +6,16 @@ public sealed class FilePositionBufferEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var encoding in new[] { "UTF-8", "UTF-16LE", "UTF-16BE" })
         foreach (var prefix in new[] { 0, 127, 128, 254, 255, 256 })
-            yield return [mode, encoding, prefix];
+            yield return [encoding, prefix];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
     public void ScalarReadAcrossBufferPreservesBytePositionsAndLineBoundary(
-        ExecutionMode mode, string encodingName, int prefixLength)
+        string encodingName, int prefixLength)
     {
         var path = Path.GetTempFileName();
         try
@@ -73,11 +73,10 @@ public sealed class FilePositionBufferEvidenceTests
                 PRINT FILEPOS(f)
                 CLOSE f
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(result.Status == ExecutionStatus.Success,
                 string.Join(" | ", result.Diagnostics.Select(d => d.ToString())) + " OUTPUT: " + string.Join(" | ", result.Output));
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(new[] {
                 length.ToString(), "0", "TRUE", afterEmoji.ToString(), "TRUE", afterLine.ToString(), "2",
                 "TRUE", length.ToString(), "TRUE", "MB3007", "TRUE", length.ToString(),

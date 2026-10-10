@@ -4671,7 +4671,7 @@ public sealed partial class BytecodeVm
         {
             ReportRuntimeDiagnostic(
                 DiagnosticCodes.RuntimeMissingReturnValue,
-                $"Функция '{routine.Name}' завершилась без значения RETURN.",
+                $"Функция '{routine.Name}' завершилась без RETURN со значением.",
                 callSiteLocation);
             throw new RuntimeFailureException();
         }
@@ -4925,8 +4925,8 @@ public sealed partial class BytecodeVm
     private IReadOnlyList<RuntimeCallChainFrame>? CreateConstructorChainFrames(BytecodeInstruction instruction, TextLocation callSite)
     {
         // Кадр конструктора к моменту проверки инварианта уже выгружен, поэтому
-        // цепочка строится по операнду инструкции: он повторяет договор Interpreter,
-        // где проверка исполняется, пока кадр конструктора ещё в стеке.
+        // цепочка строится по операнду инструкции, сохраняя имя конструктора
+        // и место его вызова в диагностике.
         if (instruction.OperandCount < 2
             || !_routines.TryGetValue(instruction.GetOperand(1), out var constructorRoutine))
         {
@@ -4946,7 +4946,7 @@ public sealed partial class BytecodeVm
             {
                 ReportRuntimeDiagnostic(
                     DiagnosticCodes.RuntimeMissingReturnValue,
-                    $"Функция '{frame.Routine.Name}' завершилась без значения RETURN.",
+                    $"Функция '{frame.Routine.Name}' завершилась без RETURN со значением.",
                     ResolveLocation(frame.Routine.Id, instructionIndex));
                 throw new RuntimeFailureException();
             }
@@ -6314,7 +6314,7 @@ public sealed partial class BytecodeVm
     private string AppendCallChain(string message, IReadOnlyList<RuntimeCallChainFrame>? extraChainFrames = null)
     {
         // Точка входа не является пользовательской процедурой и в цепочку не входит:
-        // кадры начинаются с первой вызванной процедуры, как в Interpreter.
+        // кадры начинаются с первой вызванной процедуры.
         var frames = new List<RuntimeCallChainFrame>(_callStack.Count + (extraChainFrames?.Count ?? 0));
         if (extraChainFrames is not null)
         {

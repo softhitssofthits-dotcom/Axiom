@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class AppendBufferedSeekFailureEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ForbiddenSeekPreservesPendingUnicodeWrites(ExecutionMode mode)
+    [Fact]
+    public void ForbiddenSeekPreservesPendingUnicodeWrites()
     {
         var root = Path.GetFullPath(Path.Combine(".artifacts", "append-seek-tests", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(root);
@@ -39,11 +37,10 @@ public sealed class AppendBufferedSeekFailureEvidenceTests
                 PRINT FILEPOS(f)
                 PRINT FILELENGTH(f)
                 CLOSE f
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["APPEND", "TRUE", "TRUE", "6", "6", "MB3007", "6", "MB3007", "6", "6", "TRUE", "9", "9"], result.Output);
             Assert.Equal(new byte[] { 0xD0, 0x90, 0xF0, 0x9F, 0x98, 0x80, 0, 0xD0, 0x91 }, File.ReadAllBytes(path));
             using var released = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);

@@ -24,12 +24,11 @@ var observations = new List<object>();
 var violations = 0;
 foreach (var item in cases)
 {
-    foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-    {
+        {
         try
         {
             item.Prepare?.Invoke();
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(item.Source, mode: mode,
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(item.Source,
                 cancellationProvider: new Deadline(TimeSpan.FromSeconds(8))));
             var actual = string.Join("\n", result.Output) + result.PendingOutput;
             var diagnostics = result.Diagnostics.Select(d => new { d.Code, d.Message, Location = d.Location.ToString() }).ToArray();
@@ -37,15 +36,15 @@ foreach (var item in cases)
                 ? result.Diagnostics.Any(d => d.Code == item.ErrorCode)
                 : item.Expected is not null ? result.Succeeded && actual == item.Expected : (bool?)null;
             if (pass is false) violations++;
-            observations.Add(new { item.Id, Mode = mode.ToString(), item.Source, item.Expected, item.ErrorCode,
-                Status = result.Status.ToString(), Engine = result.ActualEngine?.ToString(), result.UsedInterpreterFallback,
+            observations.Add(new { item.Id, item.Source, item.Expected, item.ErrorCode,
+                Status = result.Status.ToString(), Engine = result.ActualEngine?.ToString(),
                 Actual = actual, Utf16 = string.Join(" ", actual.Select(c => ((int)c).ToString("X4"))), Diagnostics = diagnostics,
                 Pass = pass, SideEffect = item.Inspect?.Invoke() });
         }
         catch (Exception e)
         {
             violations++;
-            observations.Add(new { item.Id, Mode = mode.ToString(), item.Source, Exception = e.ToString(), Pass = false });
+            observations.Add(new { item.Id, item.Source, Exception = e.ToString(), Pass = false });
         }
     }
 }

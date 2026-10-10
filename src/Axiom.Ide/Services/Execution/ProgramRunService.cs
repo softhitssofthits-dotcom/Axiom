@@ -41,6 +41,8 @@ public sealed class ProgramRunService : IProgramRunService
         {
             var compilationResult = _pipeline.Compile(new CompilationRequest(sourceText, progress));
             var diagnostics = compilationResult.Diagnostics
+                .Concat(compilationResult.BackendDiagnostics)
+                .DistinctBy(static diagnostic => (diagnostic.Code, diagnostic.Location.Line, diagnostic.Location.Column, diagnostic.Location.Span, diagnostic.Message))
                 .Select(ProgramDiagnosticItem.FromDiagnostic)
                 .ToArray();
 
@@ -95,7 +97,7 @@ public sealed class ProgramRunService : IProgramRunService
 
     public ProgramRunResult Run(
         string sourceText,
-        ExecutionMode mode = ExecutionMode.Bytecode,
+
         IEnumerable<int>? sourceBreakpointLines = null,
         bool stopBeforeFirstInstruction = false,
         string? sourceFilePath = null,
@@ -133,6 +135,8 @@ public sealed class ProgramRunService : IProgramRunService
                 {
                     _compiledProgram = null;
                     var failedDiagnostics = compilationResult.Diagnostics
+                        .Concat(compilationResult.BackendDiagnostics)
+                        .DistinctBy(static diagnostic => (diagnostic.Code, diagnostic.Location.Line, diagnostic.Location.Column, diagnostic.Location.Span, diagnostic.Message))
                         .Select(ProgramDiagnosticItem.FromDiagnostic)
                         .ToArray();
 
@@ -149,8 +153,7 @@ public sealed class ProgramRunService : IProgramRunService
                         Properties = new Dictionary<string, string?>(StringComparer.Ordinal)
                         {
                             ["status"] = compilationResult.Status.ToString(),
-                            ["diagnostics"] = failedDiagnostics.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                            ["requestedMode"] = mode.ToString()
+                            ["diagnostics"] = failedDiagnostics.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)
                         }
                     });
 
@@ -161,8 +164,7 @@ public sealed class ProgramRunService : IProgramRunService
                         string.Empty,
                         preparationDuration: preparationDuration,
                         executionDuration: TimeSpan.Zero,
-                        usedCompiledCache: false,
-                        requestedExecutionMode: mode);
+                        usedCompiledCache: false);
                 }
 
                 compiledProgram = compilationResult.CompiledProgram!;
@@ -182,7 +184,6 @@ public sealed class ProgramRunService : IProgramRunService
                     inputProvider: inputProvider,
                     outputWriter: _consoleService,
                     cancellationProvider: effectiveCancellation,
-                    mode: mode,
                     sourceBreakpointLines: sourceBreakpointLines,
                     stopBeforeFirstInstruction: stopBeforeFirstInstruction,
                     resourceBaseDirectory: runBaseDirectory));
@@ -208,7 +209,7 @@ public sealed class ProgramRunService : IProgramRunService
 
             _traceService.Write(
                 "run.pipeline",
-                $"status={executionResult.Status} | requestedMode={executionResult.RequestedMode} | actualEngine={executionResult.ActualEngine?.ToString() ?? "none"} | stopped={executionResult.Stopped} | diagnostics={diagnostics.Length} | outputLines={executionResult.Output.Count} | compiledCache={(usesCompiledCache ? "hit" : "miss")} | bytecodeCache={(executionResult.UsedBytecodeCache ? "hit" : "miss")} | preparationMs={preparationDuration.TotalMilliseconds:F3} | loweringMs={executionResult.LoweringDuration.TotalMilliseconds:F3} | bytecodeMs={executionResult.BytecodeEmissionDuration.TotalMilliseconds:F3} | executionMs={executionDuration.TotalMilliseconds:F3}");
+                $"status={executionResult.Status} | actualEngine={executionResult.ActualEngine?.ToString() ?? "none"} | stopped={executionResult.Stopped} | diagnostics={diagnostics.Length} | outputLines={executionResult.Output.Count} | compiledCache={(usesCompiledCache ? "hit" : "miss")} | bytecodeCache={(executionResult.UsedBytecodeCache ? "hit" : "miss")} | preparationMs={preparationDuration.TotalMilliseconds:F3} | loweringMs={executionResult.LoweringDuration.TotalMilliseconds:F3} | bytecodeMs={executionResult.BytecodeEmissionDuration.TotalMilliseconds:F3} | executionMs={executionDuration.TotalMilliseconds:F3}");
             _eventLogService.Write(new IdeEventLogEntry
             {
                 Level = executionResult.Status == ExecutionStatus.Success ? IdeEventLevel.Info : IdeEventLevel.Warning,
@@ -224,7 +225,6 @@ public sealed class ProgramRunService : IProgramRunService
                 Properties = new Dictionary<string, string?>(StringComparer.Ordinal)
                 {
                     ["status"] = executionResult.Status.ToString(),
-                    ["requestedMode"] = executionResult.RequestedMode.ToString(),
                     ["actualEngine"] = executionResult.ActualEngine?.ToString() ?? "none",
                     ["diagnostics"] = diagnostics.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["compiledCache"] = usesCompiledCache ? "hit" : "miss",
@@ -239,13 +239,7 @@ public sealed class ProgramRunService : IProgramRunService
                 preparationDuration: preparationDuration,
                 executionDuration: executionDuration,
                 usedCompiledCache: usesCompiledCache,
-                requestedExecutionMode: mode,
                 actualEngine: executionResult.ActualEngine,
-                usedInterpreterFallback: executionResult.UsedInterpreterFallback || mode == ExecutionMode.Bytecode && executionResult.ActualEngine == ExecutionEngineKind.Interpreter,
-                interpreterFallbackReason: executionResult.InterpreterFallbackReason
-                    ?? (mode == ExecutionMode.Bytecode && executionResult.ActualEngine == ExecutionEngineKind.Interpreter
-                        ? "Bytecode VM does not yet cover this program."
-                        : null),
                 loweringDuration: executionResult.LoweringDuration,
                 bytecodeEmissionDuration: executionResult.BytecodeEmissionDuration,
                 usedLoweredCache: executionResult.UsedLoweredCache,
@@ -387,7 +381,6 @@ public sealed class ProgramRunService : IProgramRunService
                 diagnostics,
                 BuildOutputText(GetConsoleOutputText(), runtimeResult.PendingOutput),
                 executionDuration: executionStopwatch.Elapsed,
-                requestedExecutionMode: ExecutionMode.Bytecode,
                 actualEngine: ExecutionEngineKind.BytecodeVm,
                 debuggerState: debuggerState);
         }
@@ -426,7 +419,6 @@ public sealed class ProgramRunService : IProgramRunService
                 diagnostics,
                 GetConsoleOutputText(),
                 executionDuration: executionStopwatch.Elapsed,
-                requestedExecutionMode: ExecutionMode.Bytecode,
                 actualEngine: ExecutionEngineKind.BytecodeVm);
         }
     }
@@ -473,6 +465,7 @@ public sealed class ProgramRunService : IProgramRunService
             CompilationStatus.Success => ProgramCompilationStatus.Success,
             CompilationStatus.SyntaxFailure => ProgramCompilationStatus.SyntaxFailure,
             CompilationStatus.SemanticFailure => ProgramCompilationStatus.SemanticFailure,
+            CompilationStatus.BackendFailure => ProgramCompilationStatus.BackendFailure,
             _ => ProgramCompilationStatus.InfrastructureFailure
         };
     }
@@ -483,6 +476,7 @@ public sealed class ProgramRunService : IProgramRunService
         {
             CompilationStatus.SyntaxFailure => ProgramRunStatus.SyntaxFailure,
             CompilationStatus.SemanticFailure => ProgramRunStatus.SemanticFailure,
+            CompilationStatus.BackendFailure => ProgramRunStatus.BackendFailure,
             CompilationStatus.Success => ProgramRunStatus.Success,
             _ => ProgramRunStatus.InfrastructureFailure
         };

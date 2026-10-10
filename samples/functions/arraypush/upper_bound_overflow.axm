@@ -1,0 +1,14 @@
+' Ожидается: MB3007, затем 2147483647 и 42. После отказа массив сохранён.
+DIM values(2147483647 TO 2147483647) AS INTEGER
+values(2147483647) = 42
+
+' Добавление потребовало бы индекса за верхней границей INTEGER.
+TRY
+    ARRAYPUSH(values, 1)
+CATCH err
+    PRINT err.Code
+END TRY
+
+' Отказ не меняет прежнюю границу и существующий элемент.
+PRINT UBOUND(values)
+PRINT values(2147483647)

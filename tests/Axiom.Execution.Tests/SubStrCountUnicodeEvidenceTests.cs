@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class SubStrCountUnicodeEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void CountsOrdinalNonOverlappingUtf16Fragments(ExecutionMode mode)
+    [Fact]
+    public void CountsOrdinalNonOverlappingUtf16Fragments()
     {
         var source = """
             DIM high AS STRING = LEFT("😀", 1)
@@ -31,11 +29,10 @@ public sealed class SubStrCountUnicodeEvidenceTests
                 PRINT "Продолжение"
             END TRY
             """;
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { "1", "3", "3", "1", "0", "1", "2", "0", "1", "2", "0", "0", "MB3007", "Продолжение" }, result.Output);
     }
 }

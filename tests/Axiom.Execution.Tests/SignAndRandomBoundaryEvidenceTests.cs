@@ -14,16 +14,16 @@ public sealed class SignAndRandomBoundaryEvidenceTests
             ("-(CDEC(9223372036854775807) * CDEC(8589934592) + CDEC(8589934591))", "-79228162514264337593543950335", "79228162514264337593543950335")
         };
         var signs = new (string Negative, string Positive)[] { ("-1", "0"), ("CLNG(-1)", "CLNG(0)"), ("-0.0", "0.0"), ("CDEC(-1)", "CDEC(0)") };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var v in values)
         foreach (var s in signs)
         foreach (var negative in new[] { false, true })
-            yield return [mode, v.Value, negative ? s.Negative : s.Positive, negative ? v.Negative : v.Positive];
+            yield return [v.Value, negative ? s.Negative : s.Positive, negative ? v.Negative : v.Positive];
     }
 
     [Theory]
     [MemberData(nameof(SignCases))]
-    public void SignSourceTypesPreserveExactMagnitudeOrReportOverflow(ExecutionMode mode, string value, string sign, string expected)
+    public void SignSourceTypesPreserveExactMagnitudeOrReportOverflow(string value, string sign, string expected)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
             TRY
@@ -32,14 +32,12 @@ public sealed class SignAndRandomBoundaryEvidenceTests
                 PRINT err.Code
             END TRY
             PRINT "Продолжение"
-            """, mode: mode));
-        Check(mode, result, [expected, "Продолжение"]);
+            """));
+        Check(result, [expected, "Продолжение"]);
     }
 
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void RndConsumesOneHostValuePerCallWithoutRoundingEndpoints(ExecutionMode mode)
+    [Fact]
+    public void RndConsumesOneHostValuePerCallWithoutRoundingEndpoints()
     {
         var random = new FixedRandom();
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -47,17 +45,16 @@ public sealed class SignAndRandomBoundaryEvidenceTests
             PRINT RND() = VAL("5e-324")
             PRINT RND() = 0.5
             PRINT RND() = VAL("0.9999999999999999")
-            """, runtimeRandom: random, mode: mode));
-        Check(mode, result, ["TRUE", "TRUE", "TRUE", "TRUE"]);
+            """, runtimeRandom: random));
+        Check(result, ["TRUE", "TRUE", "TRUE", "TRUE"]);
         Assert.Equal(4, random.Calls);
     }
 
-    private static void Check(ExecutionMode mode, ExecutionResult result, string[] expected)
+    private static void Check(ExecutionResult result, string[] expected)
     {
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(expected, result.Output);
     }
 

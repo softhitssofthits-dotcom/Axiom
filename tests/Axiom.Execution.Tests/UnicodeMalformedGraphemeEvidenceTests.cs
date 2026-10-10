@@ -17,8 +17,8 @@ public sealed class UnicodeMalformedGraphemeEvidenceTests
 
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        for (var index = 0; index < Parts.Length; index++) yield return [mode, index];
+
+        for (var index = 0; index < Parts.Length; index++) yield return [index];
     }
 
     [Theory]
@@ -34,20 +34,15 @@ public sealed class UnicodeMalformedGraphemeEvidenceTests
         })
         {
             var source = "DIM text AS STRING = \"\ud800\"\nPRINT " + call;
-            var first = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Interpreter));
-            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: ExecutionMode.Bytecode));
-            Assert.False(first.Succeeded);
+            var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.False(second.Succeeded);
-            Assert.False(second.UsedInterpreterFallback);
-            Assert.Contains(first.Diagnostics, d => d.Code == "MB3007");
-            Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column)),
-                second.Diagnostics.Select(d => (d.Code, d.Location.Line, d.Location.Column)));
+            Assert.Contains(second.Diagnostics, d => d.Code == "MB3007");
         }
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void GraphemeSlicesPreserveLiteralMalformedUnits(ExecutionMode mode, int index)
+    public void GraphemeSlicesPreserveLiteralMalformedUnits(int index)
     {
         var parts = Parts[index];
         var text = string.Concat(parts);
@@ -61,11 +56,10 @@ public sealed class UnicodeMalformedGraphemeEvidenceTests
         source.AppendLine("PRINT LEFT(text, 2147483647, \"GRAPHEME\") = text");
         source.AppendLine("PRINT RIGHT(text, 2147483647, \"GRAPHEME\") = text");
         source.AppendLine("PRINT MID(text, 2147483647, 1, \"GRAPHEME\") = \"\"");
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source.ToString(), mode: mode));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source.ToString()));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(new[] { parts.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) }
             .Concat(Enumerable.Repeat("TRUE", parts.Length * 3 + 3)), result.Output);
     }

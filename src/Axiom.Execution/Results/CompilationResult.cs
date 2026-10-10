@@ -34,7 +34,7 @@ public sealed class CompilationResult
 
     public CompiledProgram? CompiledProgram { get; }
 
-    public bool FrontendSucceeded => Succeeded;
+    public bool FrontendSucceeded => Status is CompilationStatus.Success or CompilationStatus.BackendFailure;
 
     public IReadOnlyList<Diagnostic> BackendDiagnostics { get; }
 
@@ -48,5 +48,5 @@ public sealed class CompilationResult
 
     public TimeSpan BytecodeEmissionDuration { get; }
 
-    public bool Succeeded => Status == CompilationStatus.Success;
+    public bool Succeeded => Status == CompilationStatus.Success && BackendSucceeded && BytecodeAvailable && CompiledProgram?.BytecodeModule is not null;
 }

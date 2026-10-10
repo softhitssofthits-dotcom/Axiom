@@ -9,16 +9,16 @@ public sealed class TilemapUnsupportedFeatureTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         for (var index = 0; index < 18; index++)
         {
-            yield return [mode, index, false];
-            if (index is 7 or 12 or 13 or 14) yield return [mode, index, true];
+            yield return [index, false];
+            if (index is 7 or 12 or 13 or 14) yield return [index, true];
         }
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public void DeferredFeaturesFailInsteadOfBeingSilentlyDiscarded(ExecutionMode mode, int index, bool external)
+    public void DeferredFeaturesFailInsteadOfBeingSilentlyDiscarded(int index, bool external)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "PROJECT.md"))) directory = directory.Parent;
@@ -62,9 +62,8 @@ public sealed class TilemapUnsupportedFeatureTests
             File.WriteAllText(Path.Combine(root, file), index == 0 ? "<map orientation=\"orthogonal\" width=\"1\" height=\"1\" tilewidth=\"16\" tileheight=\"16\"/>" : map.ToJsonString());
             var service = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService());
             var source = "DIM m AS TILEMAP\nTRY\nm = LOADTILEMAP(\"" + file + "\")\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT MAPWIDTH(m)";
-            var result = service.Run(source, mode, sourceFilePath: Path.Combine(root, "check.axm"));
+            var result = service.Run(source, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(string.Join(Environment.NewLine, "MB3005", "0"), result.OutputText);
         }
         finally

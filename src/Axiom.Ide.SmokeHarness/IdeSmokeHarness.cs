@@ -97,20 +97,36 @@ internal sealed class IdeSmokeHarness
 
     public void Run()
     {
+        using var stateMutex = new Mutex(false, @"Local\Axiom.Ide.SmokeHarness.State");
+        if (!stateMutex.WaitOne(0))
+            throw new InvalidOperationException("Другой сценарий IDE уже использует общий файл настроек.");
         Console.WriteLine($"Repository: {_repositoryRoot}");
         Console.WriteLine($"IDE executable: {_ideExecutablePath}");
         Console.WriteLine($"Workspace: {_workspaceRootPath}");
         Console.WriteLine();
 
-        BackupStateFile();
-        PrepareWorkspace();
-
         try
         {
+            BackupStateFile();
+            PrepareWorkspace();
             WriteShellState(isFilesPaneVisible: true, isStatusBarVisible: true, windowState: "Normal");
 
             LaunchIde();
             var mainWindow = WaitForMainWindow();
+
+            if (_options.InputCanvasOnly)
+            {
+                RunInputCanvasSmoke(mainWindow);
+                Console.WriteLine("Проверка INPUT и CANVAS в настоящем окне завершена.");
+                return;
+            }
+
+            if (_options.DebuggerOnly)
+            {
+                RunDebuggerSmoke(mainWindow);
+                Console.WriteLine("Проверка отладки в настоящем окне IDE завершена.");
+                return;
+            }
 
             if (_options.EventLogOnly)
             {
@@ -185,7 +201,122 @@ internal sealed class IdeSmokeHarness
             {
                 Directory.Delete(_workspaceRootPath, recursive: true);
             }
+            stateMutex.ReleaseMutex();
         }
+    }
+
+    private void RunInputCanvasSmoke(AutomationElement mainWindow)
+    {
+        ReportStep("INPUT: настоящий ввод и повторный запуск");
+        OpenFileFromTree(mainWindow, "input.axm");
+        for (var iteration = 0; iteration < 2; iteration++)
+        {
+            SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "запуск INPUT");
+            var input = RequireElement(mainWindow, "ConsoleInputTextBox");
+            SetElementValue(mainWindow, "ConsoleInputTextBox", "2718");
+            input.SetFocus();
+            PressVirtualKey(input, VkReturn);
+            WaitForText("OutputTextBox", static text => text.Contains("2718", StringComparison.Ordinal));
+            WaitForLatestIdeLogText(static text => text.Contains("input.submitted | 2718", StringComparison.Ordinal));
+        }
+        ReportStepCompleted();
+
+        ReportStep("CANVAS: реальный холст и проверка пикселей");
+        OpenFileFromTree(mainWindow, "canvas.axm");
+        SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "запуск CANVAS");
+        WaitForLatestIdeLogText(static text => text.Contains("canvas.activated | size=16x16", StringComparison.Ordinal));
+        // POINT возвращает номер палитры для белого цвета: тот же независимый договор,
+        // что в PointCanvasAcceptanceSample_RunsOnBytecodeVm (0 и 15).
+        WaitForText("OutputTextBox", static text => text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Contains("15")
+            && text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Contains("0"));
+        ReportStepCompleted();
+    }
+
+    private void RunDebuggerSmoke(AutomationElement mainWindow)
+    {
+        var path = Path.Combine(_workspaceRootPath, "debugger.axm");
+        OpenFileFromTree(mainWindow, "debugger.axm");
+        long sequence = 0;
+        JsonElement Step(string menuId, string command, bool stopped)
+        {
+            InvokeMenuItem(mainWindow, "DebugMenuItem", menuId);
+            JsonElement? observed = null;
+            WaitFor(() =>
+            {
+                observed = ReadDebugEvent(path, command, sequence, stopped);
+                return observed.HasValue ? true : (bool?)null;
+            }, $"Нет события отладки {command}, stopped={stopped}.");
+            var entry = observed!.Value;
+            if (entry.GetProperty("properties").GetProperty("status").GetString() != "Success")
+                throw new InvalidOperationException($"Команда отладки {command} завершилась ошибкой.");
+            sequence = entry.GetProperty("sequence").GetInt64();
+            File.AppendAllText(Path.Combine(_workspaceRootPath, "debugger-evidence.jsonl"),
+                entry.GetRawText() + Environment.NewLine, Encoding.UTF8);
+            return entry;
+        }
+
+        ReportStep("Отладка: запуск, Over, Into, Out, Back, Continue");
+        Step("StepIntoMenuItem", "StepStart", true);
+        var over = Step("StepOverMenuItem", "run.step-over.result", true);
+        var into = Step("StepIntoMenuItem", "run.step-into.result", true);
+        if (into.GetProperty("line").GetInt32() == over.GetProperty("line").GetInt32())
+            throw new InvalidOperationException("Шаг Into не изменил строку остановки.");
+        Step("StepOutMenuItem", "run.step-out.result", true);
+        var back = Step("StepBackMenuItem", "run.step-back.result", true);
+        Step("StartDebuggingMenuItem", "run.continue.result", false);
+        WaitForText("OutputTextBox", static text => text.Contains("42", StringComparison.Ordinal)
+            && text.Contains("Готово", StringComparison.Ordinal));
+        ReportStepCompleted();
+
+        ReportStep("Точка останова, Stop, повторный запуск");
+        // Редактор сохранил строку последней остановки; добавляем точку на ней.
+        InvokeMenuItem(mainWindow, "DebugMenuItem", "ToggleBreakpointMenuItem");
+        var breakpoint = Step("StartDebuggingMenuItem", "RunDebug", true);
+        if (breakpoint.GetProperty("line").GetInt32() != back.GetProperty("line").GetInt32())
+            throw new InvalidOperationException("Запуск остановился не на установленной точке.");
+        InvokeMenuItem(mainWindow, "DebugMenuItem", "StopDebuggingMenuItem");
+        Step("StartDebuggingMenuItem", "RunDebug", true);
+        Step("StartDebuggingMenuItem", "run.continue.result", false);
+        InvokeMenuItem(mainWindow, "DebugMenuItem", "ClearAllBreakpointsMenuItem");
+        WaitForText("OutputTextBox", static text => text.Contains("42", StringComparison.Ordinal)
+            && text.Contains("Готово", StringComparison.Ordinal));
+        ReportStepCompleted();
+    }
+
+    private static JsonElement? ReadDebugEvent(string documentPath, string command, long afterSequence, bool stopped)
+    {
+        var logs = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Axiom", "Logs", "Events");
+        foreach (var file in Directory.GetFiles(logs, "ide-events-*.jsonl").OrderDescending())
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+            while (reader.ReadLine() is { } line)
+            {
+                try
+                {
+                    using var json = JsonDocument.Parse(line);
+                    var entry = json.RootElement;
+                    if (entry.TryGetProperty("documentPath", out var path)
+                        && string.Equals(path.GetString(), documentPath, StringComparison.OrdinalIgnoreCase)
+                        && entry.TryGetProperty("commandName", out var name) && name.GetString() == command
+                        && entry.GetProperty("sequence").GetInt64() > afterSequence
+                        && entry.TryGetProperty("properties", out var properties)
+                        )
+                    {
+                        var eventName = entry.GetProperty("eventName").GetString();
+                        if (command == "RunDebug" && eventName is not ("debugger.stopped" or "debugger.run-finished"))
+                            continue;
+                        var actual = properties.TryGetProperty("stopped", out var state)
+                            ? bool.TryParse(state.GetString(), out var value) && value
+                            : entry.GetProperty("eventName").GetString() == "debugger.stopped";
+                        if (actual == stopped) return entry.Clone();
+                    }
+                }
+                catch (JsonException) { /* Последняя строка может ещё записываться. */ }
+            }
+        }
+        return null;
     }
 
     private void RunEventLogOnlySmoke(AutomationElement mainWindow)
@@ -234,6 +365,8 @@ internal sealed class IdeSmokeHarness
         OpenFileFromTree(mainWindow, "config.json");
         SendSmokeCommand(mainWindow, WmAppSmokeHarnessShowFindReplace, "show Find / Replace dialog");
         var findDialog = WaitForWindow("FindReplaceDialog");
+        var replaceTab = RequireElement(findDialog, "ReplaceTabItem");
+        ((SelectionItemPattern)replaceTab.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
         SetElementValue(findDialog, "SearchPatternTextBox", "demo");
         SetElementValue(findDialog, "ReplacePatternTextBox", "smoke");
         var previousStatus = ReadElementText(mainWindow, "StatusBarTextBlock");
@@ -336,21 +469,21 @@ internal sealed class IdeSmokeHarness
         RequireElement(mainWindow, "OutputTextBox");
         ReportStepCompleted();
 
-        ReportStep("Run ON MOUSE sample -> Output mouse input");
+        ReportStep("ON MOUSE: нажатие, отпускание и колесо в окне SCREEN");
         OpenFileFromTree(mainWindow, Path.GetFileName(_onMouseProgramPath));
         SendSmokeCommand(mainWindow, WmAppSmokeHarnessRun, "run active document");
         WaitForLatestIdeLogText(static text =>
-            text.Contains("console.output | Click inside Output, roll the mouse wheel, then press ESC.", StringComparison.Ordinal));
-        var outputTextBox = RequireElement(mainWindow, "OutputTextBox");
-        ClickElement(outputTextBox);
+            text.Contains("screen.output | Нажмите кнопку мыши, прокрутите колесо и нажмите ESC.", StringComparison.Ordinal));
+        var screenWindow = WaitForNativeScreenWindow();
+        ClickElement(AutomationElement.FromHandle(screenWindow));
         SendMouseWheel(120);
         Thread.Sleep(500);
-        PressVirtualKey(outputTextBox, VkEscape);
-        WaitForLatestIdeLogText(static text => text.Contains("console.output | DONE", StringComparison.Ordinal));
+        PressVirtualKey(screenWindow, VkEscape);
+        WaitForLatestIdeLogText(static text => text.Contains("screen.output | Завершено", StringComparison.Ordinal));
         WaitForLatestIdeLogText(static text =>
-            text.Contains("console.output | PRESS", StringComparison.Ordinal)
-            && text.Contains("console.output | UP", StringComparison.Ordinal)
-            && text.Contains("console.output | WHEEL", StringComparison.Ordinal));
+            text.Contains("screen.output | Нажатие", StringComparison.Ordinal)
+            && text.Contains("screen.output | Отпускание", StringComparison.Ordinal)
+            && text.Contains("screen.output | Колесо", StringComparison.Ordinal));
         ReportStepCompleted();
 
         ReportStep("Close IDE after ON MOUSE smoke");
@@ -443,7 +576,6 @@ internal sealed class IdeSmokeHarness
         WaitForLatestIdeLogText(static text =>
             text.Contains("\"eventName\":\"run.completed\"", StringComparison.Ordinal)
             && text.Contains("\"status\":\"Success\"", StringComparison.Ordinal)
-            && text.Contains("\"requestedMode\":\"Bytecode\"", StringComparison.Ordinal)
             && text.Contains("\"actualEngine\":\"BytecodeVm\"", StringComparison.Ordinal));
         ReportStepCompleted();
 
@@ -471,7 +603,6 @@ internal sealed class IdeSmokeHarness
         WaitForLatestIdeLogText(static text =>
             text.Contains("\"eventName\":\"run.completed\"", StringComparison.Ordinal)
             && text.Contains("\"status\":\"Success\"", StringComparison.Ordinal)
-            && text.Contains("\"requestedMode\":\"Bytecode\"", StringComparison.Ordinal)
             && text.Contains("\"actualEngine\":\"BytecodeVm\"", StringComparison.Ordinal));
         ReportStepCompleted();
 
@@ -526,7 +657,12 @@ internal sealed class IdeSmokeHarness
 
         OpenTreeItemContextMenu(mainWindow, createdFileName);
         ActivateContextMenuItem("FilesTreeRenameMenuItem");
-        CompleteTextInputDialog(renamedFileName);
+        var renameBox = WaitFor(() => mainWindow.FindFirst(TreeScope.Descendants, new AndCondition(
+            new PropertyCondition(AutomationElement.AutomationIdProperty, "FilesTreeRenameTextBox"),
+            new PropertyCondition(AutomationElement.IsOffscreenProperty, false))),
+            "Поле переименования в дереве файлов не появилось.");
+        ((ValuePattern)renameBox.GetCurrentPattern(ValuePattern.Pattern)).SetValue(renamedFileName);
+        PressVirtualKey(renameBox, VkReturn);
         WaitForWorkspaceNode(mainWindow, renamedFileName);
         AssertWorkspaceNodeMissing(createdFileName);
         AssertWindowTitleContains(mainWindow, renamedFileName);
@@ -565,8 +701,11 @@ internal sealed class IdeSmokeHarness
 
     private void RunIdeEventLogViewerSmoke(AutomationElement mainWindow)
     {
+        // Запись actualEngine проверяется после успешного исполнения, а не
+        // после синтаксической ошибки, при которой VM вообще не запускается.
+        OpenFileFromTree(mainWindow, Path.GetFileName(_successProgramPath));
         InvokeMenuItem(mainWindow, "ViewMenuItem", "ViewLanguageMenuItem", "ViewLanguageEnglishMenuItem");
-        InvokeMenuItem(mainWindow, "RunMenuItem", "ExecutionModeMenuItem", "ExecutionModeInterpreterMenuItem");
+        InvokeMenuItem(mainWindow, "RunMenuItem", "RunProgramMenuItem");
         InvokeMenuItem(mainWindow, "FormatMenuItem", "FormatSmartIdentifierMenuItem");
         InvokeMenuItem(mainWindow, "HelpMenuItem", "HelpAboutMenuItem");
 
@@ -587,10 +726,9 @@ internal sealed class IdeSmokeHarness
             "language: English");
         AssertIdeEventLogViewerEntry(
             viewerWindow,
-            "UseInterpreterExecutionMode",
-            "commandName: UseInterpreterExecutionMode",
-            "menuName: Run",
-            "executionMode: Interpreter");
+            "run.completed",
+            "commandName: Run",
+            "actualEngine: BytecodeVm");
         AssertIdeEventLogViewerEntry(
             viewerWindow,
             "ToggleSmartIdentifier",
@@ -1151,7 +1289,11 @@ internal sealed class IdeSmokeHarness
         }
 
         BringElementWindowToForeground(mainWindow);
-        ClickElement(mainWindow, automationIds[0]);
+        var topMenu = RequireElement(mainWindow, automationIds[0]);
+        if (topMenu.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out var topExpansion))
+            ((ExpandCollapsePattern)topExpansion).Expand();
+        else
+            ClickElement(topMenu);
 
         for (var index = 1; index < automationIds.Length; index++)
         {
@@ -1159,7 +1301,22 @@ internal sealed class IdeSmokeHarness
             var current = WaitFor(
                 () => FindElementForProcess(automationId),
                 $"Could not find menu item '{automationIds[index]}'.");
-            ClickElement(current);
+            if (index == automationIds.Length - 1
+                && current.TryGetCurrentPattern(InvokePattern.Pattern, out var invoke))
+            {
+                ((InvokePattern)invoke).Invoke();
+                // Escape закрывает меню после обычной команды, но также может
+                // отменить только что открытое дочернее окно.
+                if (automationId is not ("HelpAboutMenuItem" or "ViewEventLogViewerMenuItem"))
+                    PressVirtualKey(mainWindow, VkEscape);
+            }
+            else
+            {
+                if (current.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out var expansion))
+                    ((ExpandCollapsePattern)expansion).Expand();
+                else
+                    ClickElement(current);
+            }
         }
     }
 
@@ -1428,13 +1585,34 @@ internal sealed class IdeSmokeHarness
 
     private static string DecodeJsonLogText(string text)
     {
+        var normalized = new StringBuilder();
+        foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            try
+            {
+                using var json = JsonDocument.Parse(line);
+                var entry = json.RootElement;
+                var eventName = entry.GetProperty("eventName").GetString();
+                if (eventName == "command.executed"
+                    && entry.TryGetProperty("commandName", out var command) && command.GetString() == "Run"
+                    && entry.TryGetProperty("documentName", out var document))
+                    normalized.AppendLine($"run.request | document={document.GetString()}");
+                if (entry.TryGetProperty("textPreview", out var preview))
+                {
+                    normalized.AppendLine($"{eventName} | {preview.GetString()}");
+                    if (eventName == "output.changed")
+                        normalized.AppendLine($"console.output | {preview.GetString()}");
+                }
+            }
+            catch (JsonException) { /* Незавершённая последняя строка. */ }
+        }
         try
         {
-            return Regex.Unescape(text);
+            return Regex.Unescape(text) + Environment.NewLine + normalized;
         }
         catch (ArgumentException)
         {
-            return text;
+            return text + Environment.NewLine + normalized;
         }
     }
 
@@ -1732,6 +1910,14 @@ internal sealed class IdeSmokeHarness
     {
         Directory.CreateDirectory(_workspaceRootPath);
 
+        CopyRepositoryFileToWorkspace(Path.Combine("samples", "operators", "input", "single_variable.axm"),
+            Path.Combine(_workspaceRootPath, "input.axm"));
+        CopyRepositoryFileToWorkspaceForSmoke(Path.Combine("samples", "functions", "point", "canvas_pixel_read.axm"),
+            Path.Combine(_workspaceRootPath, "canvas.axm"), static source => source.Replace("SLEEP 500", "SLEEP 2000", StringComparison.Ordinal));
+
+        File.WriteAllText(Path.Combine(_workspaceRootPath, "debugger.axm"),
+            "PRINT 1\nPRINT Twice(21)\nPRINT \"Готово\"\nFUNCTION Twice(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION\n", Encoding.UTF8);
+
         File.WriteAllText(
             _configFilePath,
             "{\n  \"name\": \"demo\",\n  \"mode\": \"smoke\"\n}\n",
@@ -1768,7 +1954,7 @@ internal sealed class IdeSmokeHarness
             DIM keyName AS STRING
             DIM started AS DOUBLE = TIMER()
 
-            DO WHILE TIMER() - started < 5
+            DO WHILE TIMER() - started < 30
                 keyName = INKEY()
                 IF keyName <> "" THEN
                     PRINT keyName
@@ -1786,29 +1972,32 @@ internal sealed class IdeSmokeHarness
         File.WriteAllText(
             _onMouseProgramPath,
             """
+            ' События мыши работают в графическом окне.
+            SCREEN 1
             ON MOUSE(1), Pressed
             ON MOUSE(1, "UP"), Released
             ON MOUSE("WHEEL"), Wheeled
 
-            PRINT "Click inside Output, roll the mouse wheel, then press ESC."
+            PRINT "Нажмите кнопку мыши, прокрутите колесо и нажмите ESC."
 
             DO WHILE NOT KEYPRESS("ESC")
                 DIM idle AS INTEGER = 1
                 SLEEP 1
             LOOP
 
-            PRINT "DONE"
+            PRINT "Завершено"
+            SCREEN 0
 
             SUB Pressed(button AS INTEGER, x AS LONG, y AS LONG)
-                PRINT "PRESS"
+                PRINT "Нажатие"
             END SUB
 
             SUB Released(button AS INTEGER, x AS LONG, y AS LONG)
-                PRINT "UP"
+                PRINT "Отпускание"
             END SUB
 
             SUB Wheeled(delta AS INTEGER, x AS LONG, y AS LONG)
-                PRINT "WHEEL"
+                PRINT "Колесо"
             END SUB
             """ + Environment.NewLine,
             Encoding.UTF8);
@@ -1850,6 +2039,12 @@ internal sealed class IdeSmokeHarness
         _originalStateBytes = _stateFileExisted
             ? File.ReadAllBytes(_stateFilePath)
             : null;
+        Directory.CreateDirectory(_workspaceRootPath);
+        if (_originalStateBytes is not null)
+            File.WriteAllBytes(Path.Combine(_workspaceRootPath, "original-recent-files.json"), _originalStateBytes);
+        else
+            File.WriteAllText(Path.Combine(_workspaceRootPath, "original-state-absent.txt"),
+                "До проверки файл настроек отсутствовал.", Encoding.UTF8);
     }
 
     private void RestoreStateFile()
@@ -1897,9 +2092,9 @@ internal sealed class IdeSmokeHarness
             IsStatusBarVisible = isStatusBarVisible,
             WindowState = windowState,
             Theme = "Light",
-            Language = "Russian",
+            Language = "English",
             SmartIdentifierEnabled = false,
-            PreferredExecutionMode = "Bytecode"
+            PreferredExecutionMode = "Interpreter"
         };
 
         File.WriteAllText(

@@ -161,8 +161,10 @@ public sealed class ShellResourceTests
         Assert.Equal("{0}{1} - Axiom IDE", english["Window.Title.WithDocument"]);
         Assert.Equal("О программе Axiom IDE", russian["About.Title"]);
         Assert.Equal("About Axiom IDE", english["About.Title"]);
-        Assert.Contains("оболочка интерпретатора", (string)russian["About.Message"], StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("interpreter shell", (string)english["About.Message"], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("оболочка компилятора байт-кода", (string)russian["About.Message"], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("bytecode compiler shell", (string)english["About.Message"], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("BytecodeVm", (string)russian["About.Message"], StringComparison.Ordinal);
+        Assert.Contains("BytecodeVm", (string)english["About.Message"], StringComparison.Ordinal);
         Assert.Equal("Окно «О программе» открыто.", russian["About.StatusOpened"]);
         Assert.Equal("Окно «О программе» закрыто.", russian["About.StatusClosed"]);
         Assert.Equal("About dialog opened.", english["About.StatusOpened"]);

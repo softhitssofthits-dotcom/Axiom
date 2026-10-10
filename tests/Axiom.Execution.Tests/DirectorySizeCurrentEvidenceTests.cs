@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class DirectorySizeCurrentEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void NestedByteSizeAndRejectedChangeKeepProgramDirectory(ExecutionMode mode)
+    [Fact]
+    public void NestedByteSizeAndRejectedChangeKeepProgramDirectory()
     {
         var processDirectory = Environment.CurrentDirectory;
         var root = Path.GetFullPath(Path.Combine(".artifacts", "directory-size-current", Guid.NewGuid().ToString("N")));
@@ -38,11 +36,10 @@ public sealed class DirectorySizeCurrentEvidenceTests
                 PRINT CHANGEDIR("..")
                 PRINT CURRENTDIR() = "{{root}}"
                 PRINT DIRSIZE(".")
-                """, mode: mode, resourceBaseDirectory: root));
+                """, resourceBaseDirectory: root));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(["TRUE", "7", "TRUE", "TRUE", "3", "MB3007", "TRUE", "MB3007", "TRUE", "TRUE", "7"], result.Output);
             Assert.Equal(processDirectory, Environment.CurrentDirectory);
             Assert.Equal(bytes, File.ReadAllBytes(first));

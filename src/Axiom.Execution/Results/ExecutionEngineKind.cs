@@ -2,6 +2,5 @@ namespace Axiom.Execution;
 
 public enum ExecutionEngineKind
 {
-    Interpreter,
-    BytecodeVm
+    BytecodeVm = 1
 }

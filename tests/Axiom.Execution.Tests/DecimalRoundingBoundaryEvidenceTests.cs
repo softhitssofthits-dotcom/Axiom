@@ -21,13 +21,13 @@ public sealed class DecimalRoundingBoundaryEvidenceTests
             ("79228162514264337593543950335", "79228162514264337593543950335", "79228162514264337593543950335", "79228162514264337593543950335", "79228162514264337593543950335"),
             ("-79228162514264337593543950335", "-79228162514264337593543950335", "-79228162514264337593543950335", "-79228162514264337593543950335", "-79228162514264337593543950335")
         };
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
-        foreach (var c in cases) yield return [mode, c.Input, c.Floor, c.Ceil, c.Round, c.Fix];
+
+        foreach (var c in cases) yield return [c.Input, c.Floor, c.Ceil, c.Round, c.Fix];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ExactDecimalInputRetainsRoundingBoundary(ExecutionMode mode, string input, string floor, string ceil, string round, string fix)
+    public void ExactDecimalInputRetainsRoundingBoundary(string input, string floor, string ceil, string round, string fix)
     {
         var provider = new DecimalInput(input);
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
@@ -39,11 +39,10 @@ public sealed class DecimalRoundingBoundaryEvidenceTests
             PRINT ROUND(value)
             PRINT FIX(value)
             PRINT SGN(value)
-            """, inputProvider: provider, mode: mode));
+            """, inputProvider: provider));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.False(result.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(1, provider.Calls);
         Assert.Equal(new[] { input, floor, ceil, round, fix, input.StartsWith('-') ? "-1" : "1" }, result.Output);
     }

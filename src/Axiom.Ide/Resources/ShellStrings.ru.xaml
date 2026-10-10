@@ -35,9 +35,6 @@
     <sys:String x:Key="Menu.Run.Compile">_Компилировать</sys:String>
     <sys:String x:Key="Menu.Run.Run">_Запуск программы</sys:String>
     <sys:String x:Key="Menu.Run.Cancel">_Отменить выполнение</sys:String>
-    <sys:String x:Key="Menu.Run.ExecutionMode">_Режим запуска</sys:String>
-    <sys:String x:Key="Menu.Run.ExecutionMode.Interpreter">_Интерпретатор</sys:String>
-    <sys:String x:Key="Menu.Run.ExecutionMode.Bytecode">_Байткод</sys:String>
     <sys:String x:Key="Menu.Debug">_Отладка</sys:String>
     <sys:String x:Key="Menu.Debug.StartDebugging">_Начать/продолжить отладку</sys:String>
     <sys:String x:Key="Menu.Debug.StepBack">Шаг _назад</sys:String>
@@ -72,7 +69,7 @@
     <sys:String x:Key="Window.Title.Default">Axiom IDE</sys:String>
     <sys:String x:Key="Window.Title.WithDocument">{0}{1} - Axiom IDE</sys:String>
     <sys:String x:Key="About.Title">О программе Axiom IDE</sys:String>
-    <sys:String x:Key="About.Message">Axiom IDE&#x0D;&#x0A;&#x0D;&#x0A;Лёгкий редактор и оболочка интерпретатора для языка Axiom.&#x0D;&#x0A;Создан вокруг небольшого рабочего процесса в духе QuickBASIC с современным интерфейсом WPF.</sys:String>
+    <sys:String x:Key="About.Message">Axiom IDE&#x0D;&#x0A;&#x0D;&#x0A;Редактор и оболочка компилятора байт-кода языка Axiom.&#x0D;&#x0A;Программы выполняются в BytecodeVm; интерфейс построен на WPF.</sys:String>
     <sys:String x:Key="About.StatusOpened">Окно «О программе» открыто.</sys:String>
     <sys:String x:Key="About.StatusClosed">Окно «О программе» закрыто.</sys:String>
     <sys:String x:Key="App.Error.Title">Ошибка Axiom IDE</sys:String>
@@ -168,8 +165,7 @@
     <sys:String x:Key="Run.Metrics.Engine">Движок: {0}</sys:String>
     <sys:String x:Key="Run.Metrics.CacheHit">да</sys:String>
     <sys:String x:Key="Run.Metrics.CacheMiss">нет</sys:String>
-    <sys:String x:Key="Run.Engine.Interpreter">интерпретатор</sys:String>
-    <sys:String x:Key="Run.Engine.BytecodeVm">байткодная VM</sys:String>
+    <sys:String x:Key="Run.Engine.BytecodeVm">байт-кодная VM</sys:String>
     <sys:String x:Key="Run.Engine.None">нет</sys:String>
 
     <sys:String x:Key="Toolbar.New">Создать</sys:String>

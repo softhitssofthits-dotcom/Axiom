@@ -4,15 +4,15 @@ public sealed class FileDestinationLinkEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var operation in new[] { "COPYFILE", "MOVEFILE" })
         foreach (var exists in new[] { false, true })
-        foreach (var overwrite in new[] { false, true }) yield return [mode, operation, exists, overwrite];
+        foreach (var overwrite in new[] { false, true }) yield return [operation, exists, overwrite];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void DestinationLinkHasExplicitlyMeasuredOverwriteBehavior(ExecutionMode mode, string operation, bool targetExists, bool overwrite)
+    public void DestinationLinkHasExplicitlyMeasuredOverwriteBehavior(string operation, bool targetExists, bool overwrite)
     {
         var root = Path.Combine(Path.GetTempPath(), "axiom-destination-link-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -32,10 +32,9 @@ public sealed class FileDestinationLinkEvidenceTests
                 CATCH err
                     PRINT err.Code
                 END TRY
-                """, mode: mode));
+                """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
-            Assert.False(result.UsedInterpreterFallback);
             if (!overwrite && !(operation == "COPYFILE" && !targetExists))
             {
                 Assert.Equal(["MB3007"], result.Output);

@@ -3,11 +3,9 @@ namespace Axiom.Execution.Tests;
 public sealed class ArrayWindowUnicodeCountEvidenceTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    public void ExtremeCountsDoNotAllocateBeyondSourceOrChangeIt(ExecutionMode mode, bool explicitAxis)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ExtremeCountsDoNotAllocateBeyondSourceOrChangeIt(bool explicitAxis)
     {
         var axis = explicitAxis ? ", 1" : "";
         var source = """
@@ -41,11 +39,10 @@ public sealed class ArrayWindowUnicodeCountEvidenceTests
             PRINT result(1) = "😀"
             PRINT words(2147483647) = "😀"
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "3", "1", "3", "TRUE", "TRUE", "TRUE", "TRUE", "TRUE", "0", "1", "0", "TRUE", "MB3007", "TRUE", "TRUE" }, run.Output);
     }
 }

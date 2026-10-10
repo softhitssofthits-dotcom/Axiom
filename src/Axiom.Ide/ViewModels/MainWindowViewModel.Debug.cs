@@ -55,7 +55,6 @@ public sealed partial class MainWindowViewModel
             textPreview: documentContent.SourceText,
             properties: new Dictionary<string, string?>(StringComparer.Ordinal)
             {
-                ["executionMode"] = SelectedExecutionMode.ToString(),
                 ["useSourceBreakpoints"] = useSourceBreakpoints.ToString(),
                 ["breakpoints"] = sourceBreakpointLines.Count().ToString(System.Globalization.CultureInfo.InvariantCulture)
             });
@@ -69,7 +68,6 @@ public sealed partial class MainWindowViewModel
                 {
                     return _programRunService.Run(
                         documentContent.SourceText,
-                        SelectedExecutionMode,
                         sourceBreakpointLines,
                         sourceFilePath: runDocument?.FilePath,
                         cancellationProvider: cancellation);
@@ -254,14 +252,12 @@ public sealed partial class MainWindowViewModel
             textPreview: documentContent.SourceText,
             properties: new Dictionary<string, string?>(StringComparer.Ordinal)
             {
-                ["executionMode"] = ExecutionMode.Bytecode.ToString()
             });
 
         var runDocument = Documents.ActiveDocument;
         var result = await ExecuteRunOperationAsync(
             () => _programRunService.Run(
                 documentContent.SourceText,
-                ExecutionMode.Bytecode,
                 SourceBreakpointLines,
                 stopBeforeFirstInstruction: true,
                 sourceFilePath: runDocument?.FilePath));
@@ -471,7 +467,6 @@ public sealed partial class MainWindowViewModel
                 textPreview: documentContent.SourceText,
                 properties: new Dictionary<string, string?>(StringComparer.Ordinal)
                 {
-                    ["executionMode"] = SelectedExecutionMode.ToString()
                 });
 
             while (!compilationTask.IsCompleted)

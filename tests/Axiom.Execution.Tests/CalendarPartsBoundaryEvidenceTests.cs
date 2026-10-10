@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class CalendarPartsBoundaryEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void ExtremeDatesAndCanonicalNamesHaveLiteralResults(ExecutionMode mode)
+    [Fact]
+    public void ExtremeDatesAndCanonicalNamesHaveLiteralResults()
     {
         var previous = System.Globalization.CultureInfo.CurrentCulture;
         try
@@ -40,11 +38,10 @@ public sealed class CalendarPartsBoundaryEvidenceTests
                     PRINT err.Code
                 END TRY
                 """;
-            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             Assert.Empty(run.Diagnostics);
-            Assert.False(run.UsedInterpreterFallback);
-            Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+            Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
             Assert.Equal(new[] { "1", "9999", "12", "31", "1", "5", "0", "59", "59", "January", "December", "Monday", "Sunday", "0001-01-01", "9999-12-31", "0001-01-01", "9999-12-31", "MB3007", "MB3007" }, run.Output);
         }
         finally { System.Globalization.CultureInfo.CurrentCulture = previous; }

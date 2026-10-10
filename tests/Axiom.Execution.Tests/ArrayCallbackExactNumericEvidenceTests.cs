@@ -2,10 +2,8 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayCallbackExactNumericEvidenceTests
 {
-    [Theory]
-    [InlineData(ExecutionMode.Interpreter)]
-    [InlineData(ExecutionMode.Bytecode)]
-    public void NumericCallbacksKeepExactValuesAndPreserveResultOnOverflow(ExecutionMode mode)
+    [Fact]
+    public void NumericCallbacksKeepExactValuesAndPreserveResultOnOverflow()
     {
         var source = """
             DIM longs(5 TO 6) AS LONG
@@ -52,11 +50,10 @@ public sealed class ArrayCallbackExactNumericEvidenceTests
                 RETURN value + CDEC(1)
             END FUNCTION
             """;
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
-        Assert.False(run.UsedInterpreterFallback);
-        Assert.Equal(mode == ExecutionMode.Bytecode ? ExecutionEngineKind.BytecodeVm : ExecutionEngineKind.Interpreter, run.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
         Assert.Equal(new[] { "9007199254740992", "9007199254740993", "18014398509481985", "79228162514264337593543950335", "79228162514264337593543950334", "-1", "MB3008", "1", "79228162514264337593543950335", "79228162514264337593543950334", "79228162514264337593543950335" }, run.Output);
     }
 }

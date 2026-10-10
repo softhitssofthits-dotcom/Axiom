@@ -37,7 +37,7 @@
         <section class="article-section">
             <h2>Где работает оператор ON KEY</h2>
             <p>Оператор <code>ON KEY</code> работает в любой среде выполнения, где доступна клавиатурная очередь. Если программа работает без оператора <code>SCREEN</code>, события поступают из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, события поступают из окна <code>SCREEN</code>.</p>
-            <p>Оператор <code>ON KEY</code> поддерживается интерпретатором и <code>BytecodeVm</code>.</p>
+            <p>Оператор <code>ON KEY</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
         </section>
 
         <section class="article-section">

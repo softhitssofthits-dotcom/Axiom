@@ -11,14 +11,14 @@ public sealed class NestedResourceNullPathEvidenceTests
 {
     public static IEnumerable<object[]> Cases()
     {
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         foreach (var variant in new[] { "embedded-image", "external-image", "external-source" })
-            yield return [mode, variant];
+            yield return [variant];
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void NestedPathWithNullCannotLoadPrefixResource(ExecutionMode mode, string variant)
+    public void NestedPathWithNullCannotLoadPrefixResource(string variant)
     {
         var repository = new DirectoryInfo(AppContext.BaseDirectory);
         while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "PROJECT.md"))) repository = repository.Parent;
@@ -46,9 +46,8 @@ public sealed class NestedResourceNullPathEvidenceTests
             }
             File.WriteAllText(Path.Combine(root, "map.tmj"), map.ToJsonString());
             var source = "DIM map AS TILEMAP\nTRY\nmap = LOADTILEMAP(\"map.tmj\")\nPRINT \"Ошибочная загрузка\"\nCATCH err\nPRINT err.Code\nEND TRY\nPRINT \"Продолжение\"";
-            var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(source, mode, sourceFilePath: Path.Combine(root, "check.axm"));
+            var result = new ProgramRunService(new AxiomExecutionPipeline(), new ProgramConsoleService()).Run(source, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            Assert.False(result.UsedInterpreterFallback);
             Assert.Equal(string.Join(Environment.NewLine, "MB3005", "Продолжение"), result.OutputText);
         }
         finally

@@ -5,11 +5,9 @@ namespace Axiom.Execution.Tests;
 public sealed class ReadTextUnicodeContractTests
 {
     [Theory]
-    [InlineData(ExecutionMode.Interpreter, true)]
-    [InlineData(ExecutionMode.Bytecode, true)]
-    [InlineData(ExecutionMode.Interpreter, false)]
-    [InlineData(ExecutionMode.Bytecode, false)]
-    public void ReadText_EmojiAdvancesExactlyFourBytesAndRewindWorks(ExecutionMode mode, bool bom)
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ReadText_EmojiAdvancesExactlyFourBytesAndRewindWorks(bool bom)
     {
         var path = Path.GetTempFileName();
         try
@@ -46,11 +44,10 @@ public sealed class ReadTextUnicodeContractTests
                 PRINT READTEXT(f, 1)
                 CLOSE f
                 """;
-            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);
             Assert.Equal(["", "0", "😀", "Завершено", "4", "FALSE", "А", "6", "TRUE", "TRUE", "😀А", "TRUE", "MB3007", "1", "TRUE", "А"], result.Output);
-            Assert.False(result.UsedInterpreterFallback);
         }
         finally { File.Delete(path); }
     }

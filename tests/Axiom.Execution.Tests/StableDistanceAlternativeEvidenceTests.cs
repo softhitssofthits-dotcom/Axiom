@@ -31,15 +31,15 @@ END FUNCTION
     public void ExistingFunctionsCanComputeFiniteDistanceWithoutIntermediateOverflow(string x, string y, string expectedText)
     {
         var expected = double.Parse(expectedText, CultureInfo.InvariantCulture);
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = Run(Function + $"\nPRINT StableDistance(VAL(\"{x}\"), VAL(\"{y}\"))", mode);
+            var run = Run(Function + $"\nPRINT StableDistance(VAL(\"{x}\"), VAL(\"{y}\"))");
             Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
             var actual = double.Parse(Assert.Single(run.Output), CultureInfo.InvariantCulture);
             Assert.True(double.IsFinite(actual));
             Assert.True(actual >= 0);
             var ulps = Math.Abs(BitConverter.DoubleToInt64Bits(actual) - BitConverter.DoubleToInt64Bits(expected));
-            Assert.True(ulps <= 4, $"{mode}: {actual:R}, expected {expected:R}, ULP={ulps}");
+            Assert.True(ulps <= 4, $"BytecodeVm: {actual:R}, expected {expected:R}, ULP={ulps}");
         }
     }
 
@@ -51,9 +51,9 @@ DIM x AS DOUBLE = VAL("3e-200")
 DIM y AS DOUBLE = VAL("4e-200")
 PRINT SQR(x*x + y*y)
 """;
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = Run(source, mode);
+            var run = Run(source);
             Assert.True(run.Succeeded);
             Assert.Equal("0", Assert.Single(run.Output));
         }
@@ -67,18 +67,17 @@ PRINT SQR(x*x + y*y)
         var source = useScaledFunction
             ? Function + "\nPRINT StableDistance(VAL(\"1.7e308\"), VAL(\"1.7e308\"))"
             : "DIM x AS DOUBLE = VAL(\"3e200\")\nDIM y AS DOUBLE = VAL(\"4e200\")\nPRINT SQR(x*x + y*y)";
-        foreach (var mode in new[] { ExecutionMode.Interpreter, ExecutionMode.Bytecode })
+
         {
-            var run = Run(source, mode);
+            var run = Run(source);
             Assert.False(run.Succeeded);
             Assert.Contains(run.Diagnostics, d => d.Code == "MB3008");
         }
     }
 
-    private static ExecutionResult Run(string source, ExecutionMode mode)
+    private static ExecutionResult Run(string source)
     {
-        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source, mode: mode));
-        Assert.False(run.UsedInterpreterFallback);
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         return run;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -50,7 +50,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private IdeWindowState _preferredWindowState;
     private IdeTheme _selectedTheme = IdeTheme.Light;
     private IdeLanguage _selectedLanguage = IdeLanguage.Russian;
-    private ExecutionMode _selectedExecutionMode = ExecutionMode.Bytecode;
     private bool _isSmartIdentifierEnabled;
     private string? _filesPaneClipboardPath;
     private bool _filesPaneClipboardIsCut;
@@ -197,8 +196,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         UseDarkThemeCommand = new RelayCommand(UseDarkTheme);
         UseRussianLanguageCommand = new RelayCommand(UseRussianLanguage);
         UseEnglishLanguageCommand = new RelayCommand(UseEnglishLanguage);
-        UseInterpreterExecutionModeCommand = new RelayCommand(UseInterpreterExecutionMode);
-        UseBytecodeExecutionModeCommand = new RelayCommand(UseBytecodeExecutionMode);
         ShowOutputCommand = new RelayCommand(ShowOutputPane);
         ShowDiagnosticsCommand = new RelayCommand(ShowDiagnosticsPane);
         ShowIdeEventLogViewerCommand = new RelayCommand(ShowIdeEventLogViewer, CanUseIdeEventLogCommands);
@@ -324,26 +321,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public bool IsEnglishLanguageEnabled => SelectedLanguage == IdeLanguage.English;
 
-    public ExecutionMode SelectedExecutionMode
-    {
-        get => _selectedExecutionMode;
-        private set
-        {
-            if (!SetProperty(ref _selectedExecutionMode, value))
-            {
-                return;
-            }
-
-            OnPropertyChanged(nameof(IsInterpreterExecutionModeEnabled));
-            OnPropertyChanged(nameof(IsBytecodeExecutionModeEnabled));
-            PersistShellPreferences();
-        }
-    }
-
-    public bool IsInterpreterExecutionModeEnabled => SelectedExecutionMode == ExecutionMode.Interpreter;
-
-    public bool IsBytecodeExecutionModeEnabled => SelectedExecutionMode == ExecutionMode.Bytecode;
-
     public IReadOnlyList<int> SourceBreakpointLines =>
         Documents.ActiveDocument?.SourceBreakpointLines ?? [];
 
@@ -380,8 +357,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public RelayCommand UseDarkThemeCommand { get; }
     public RelayCommand UseRussianLanguageCommand { get; }
     public RelayCommand UseEnglishLanguageCommand { get; }
-    public RelayCommand UseInterpreterExecutionModeCommand { get; }
-    public RelayCommand UseBytecodeExecutionModeCommand { get; }
     public RelayCommand ShowOutputCommand { get; }
     public RelayCommand ShowDiagnosticsCommand { get; }
     public RelayCommand ShowIdeEventLogViewerCommand { get; }
@@ -633,7 +608,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _promptService.ShowInfo(
             GetLocalizedString(
                 "About.Message",
-                "Axiom IDE\r\n\r\nLightweight editor and interpreter shell for the Axiom language.\r\nDesigned around a small QuickBASIC-inspired workflow with a modern WPF UI."),
+                "Axiom IDE\r\n\r\nEditor and bytecode compiler shell for the Axiom language.\r\nPrograms run on BytecodeVm in a modern WPF UI."),
             GetLocalizedString("About.Title", "About Axiom IDE"));
         StatusBar.StatusText = GetLocalizedString("About.StatusClosed", "About dialog closed.");
     }
@@ -1172,7 +1147,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 result.Diagnostics.Take(3).Select(static diagnostic =>
                     $"{diagnostic.Code}@{diagnostic.Line}:{diagnostic.Column} {diagnostic.Message}"));
 
-        return $"status={result.Status} | requestedMode={result.RequestedExecutionMode} | actualEngine={result.ActualEngine?.ToString() ?? "none"} | stopped={result.Stopped} | diagnostics={result.Diagnostics.Count} | outputChars={result.OutputText.Length} | preparationMs={result.PreparationDuration.TotalMilliseconds:F3} | loweringMs={result.LoweringDuration.TotalMilliseconds:F3} | bytecodeMs={result.BytecodeEmissionDuration.TotalMilliseconds:F3} | executionMs={result.ExecutionDuration.TotalMilliseconds:F3} | totalMs={result.TotalDuration.TotalMilliseconds:F3} | compiledCache={(result.UsedCompiledCache ? "hit" : "miss")} | bytecodeCache={(result.UsedBytecodeCache ? "hit" : "miss")} | output=\"{BuildSourcePreview(result.OutputText)}\" | diagnosticsPreview=\"{BuildSourcePreview(diagnosticsPreview)}\"";
+        return $"status={result.Status} | actualEngine={result.ActualEngine?.ToString() ?? "none"} | stopped={result.Stopped} | diagnostics={result.Diagnostics.Count} | outputChars={result.OutputText.Length} | preparationMs={result.PreparationDuration.TotalMilliseconds:F3} | loweringMs={result.LoweringDuration.TotalMilliseconds:F3} | bytecodeMs={result.BytecodeEmissionDuration.TotalMilliseconds:F3} | executionMs={result.ExecutionDuration.TotalMilliseconds:F3} | totalMs={result.TotalDuration.TotalMilliseconds:F3} | compiledCache={(result.UsedCompiledCache ? "hit" : "miss")} | bytecodeCache={(result.UsedBytecodeCache ? "hit" : "miss")} | output=\"{BuildSourcePreview(result.OutputText)}\" | diagnosticsPreview=\"{BuildSourcePreview(diagnosticsPreview)}\"";
     }
 
     private string FormatStoppedStatus(ProgramRunResult result)
@@ -1218,7 +1193,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         return engine switch
         {
-            Axiom.Execution.ExecutionEngineKind.Interpreter => GetLocalizedString("Run.Engine.Interpreter", "interpreter"),
             Axiom.Execution.ExecutionEngineKind.BytecodeVm => GetLocalizedString("Run.Engine.BytecodeVm", "bytecode VM"),
             _ => GetLocalizedString("Run.Engine.None", "none")
         };

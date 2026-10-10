@@ -57,12 +57,9 @@ public sealed class DirectoryFormEvidenceTests
     [InlineData("CHANGEDIR(TRUE)")]
     public void WrongArgumentTypesFailBeforeExecution(string call)
     {
-        var first = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: ExecutionMode.Interpreter));
-        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call, mode: ExecutionMode.Bytecode));
-        Assert.Equal(ExecutionStatus.SemanticFailure, first.Status);
+        var second = new AxiomExecutionPipeline().Run(new ExecutionRequest("PRINT " + call));
         Assert.Equal(ExecutionStatus.SemanticFailure, second.Status);
-        Assert.NotEmpty(first.Diagnostics);
-        Assert.False(second.UsedInterpreterFallback);
-        Assert.Equal(first.Diagnostics.Select(d => (d.Code, d.Location.Span)), second.Diagnostics.Select(d => (d.Code, d.Location.Span)));
+        Assert.Equal(ExecutionStatus.SemanticFailure, second.Status);
+        Assert.NotEmpty(second.Diagnostics);
     }
 }
