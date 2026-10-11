@@ -28,3 +28,9 @@ test('Сохранить как не перезаписывает файл др�
   const saver = new DocumentSaver(store, { saveFileDialog: async () => 'c:/A.axm', writeFile: async () => { writes++; return true; } });
   await assert.rejects(saver.save('untitled1')); assert.equal(writes, 0); assert.equal(store.size, 2);
 });
+test('Отмена конфликта не объявляет текст сохранённым и передаёт исходную версию файла', async () => {
+  const { store, model } = fixture(); store.rename('untitled1', 'C:\\a.axm'); let expected;
+  const saver = new DocumentSaver(store, { writeFile: async (_p, _text, baseline) => { expected = baseline; return null; } });
+  assert.equal(await saver.save('C:\\a.axm'), null);
+  assert.equal(expected, 'старый'); assert.equal(store.isDirty('C:\\a.axm'), true); assert.equal(model.getValue(), 'новый');
+});

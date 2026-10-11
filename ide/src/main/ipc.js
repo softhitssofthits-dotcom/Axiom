@@ -380,9 +380,17 @@ function setupIpc(logger) {
   });
 
   ipcMain.handle('read-file-content', async (_e, filePath) => fs.readFileSync(filePath, 'utf-8'));
-  ipcMain.handle('write-file', async (_e, filePath, content) => {
+  ipcMain.handle('write-file', async (_e, filePath, content, expectedText) => {
     try {
-      fs.writeFileSync(filePath, content, 'utf-8');
+      const saved = await require('./file-service').writeDocumentFile(filePath, content, expectedText, async missing => {
+        const result = await dialog.showMessageBox({
+          type: 'warning', title: 'Сохранение файла',
+          message: missing ? 'Файл удалён с диска. Создать его заново?' : 'Файл изменён на диске. Заменить внешние изменения текстом редактора?',
+          detail: filePath, buttons: ['Заменить', 'Отмена'], defaultId: 1, cancelId: 1,
+        });
+        return result.response === 0;
+      });
+      if (saved === null) return null;
       watcherNoteSelfWrite(filePath); // own writes must not trigger the external-change prompt
       return true;
     } catch {

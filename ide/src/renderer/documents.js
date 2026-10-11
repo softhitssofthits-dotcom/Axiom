@@ -34,8 +34,8 @@
       this.entries.delete(key(oldPath)); entry.path = newPath; this.entries.set(key(newPath), entry);
       return entry;
     }
-    isDirty(path) { const entry = this.get(path); return !!entry && entry.model.getValue() !== entry.savedText; }
-    markSaved(path, text) { const entry = this.get(path); if (entry) { entry.savedText = text === undefined ? entry.model.getValue() : text; entry.savedRevision = entry.revision; } }
+    isDirty(path) { const entry = this.get(path); return !!entry && (!!entry.missing || entry.model.getValue() !== entry.savedText); }
+    markSaved(path, text) { const entry = this.get(path); if (entry) { entry.missing = false; entry.savedText = text === undefined ? entry.model.getValue() : text; entry.savedRevision = entry.revision; } }
   }
   return { DocumentStore };
 });

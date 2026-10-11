@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 79,
+  "count": 82,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -116,6 +116,21 @@
       "id": "files-mixed-line-endings-run",
       "spec": "files.spec.js",
       "name": "Run запускает сохранённый файл со смешанными окончаниями строк"
+    },
+    {
+      "id": "files-save-external-conflict",
+      "spec": "files.spec.js",
+      "name": "Внешнее изменение перед сохранением требует решения и сохраняет обе версии при отмене"
+    },
+    {
+      "id": "files-external-deletion-clean-document",
+      "spec": "files.spec.js",
+      "name": "Удалённый неизменённый файл требует решения перед закрытием и восстанавливается сохранением"
+    },
+    {
+      "id": "files-repeated-external-change-during-read",
+      "spec": "files.spec.js",
+      "name": "Повторное внешнее изменение во время чтения приводит к последней версии"
     },
     {
       "id": "files-external-reload-preserves-new-edit",

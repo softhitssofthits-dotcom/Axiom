@@ -18,7 +18,10 @@
         const other = this.store.get(target);
         if (other && other !== entry) throw new Error('Этот файл уже открыт в другой вкладке.');
         const text = entry.model.getValue();
-        if (!await this.api.writeFile(target, text)) throw new Error('Не удалось сохранить файл: ' + target);
+        const sameTarget = this.store.get(target) === entry;
+        const saved = await this.api.writeFile(target, text, sameTarget ? (entry.missing ? null : entry.savedText) : undefined);
+        if (saved === null) return null;
+        if (!saved) throw new Error('Не удалось сохранить файл: ' + target);
         if (this.store.get(path) !== entry || entry.path !== path) return null;
         this.store.rename(path, target);
         this.store.markSaved(target, text);

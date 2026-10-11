@@ -22,4 +22,22 @@ function sameSourceText(saved, snapshot) {
   return typeof saved === 'string' && typeof snapshot === 'string' &&
     saved.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n') === snapshot.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 }
-module.exports = { createProjectFile, sameSourceText };
+// Проверка и запись выполняются в одном процессе; после диалога версия проверяется снова.
+async function writeDocumentFile(target, text, expectedText, confirmOverwrite) {
+  const read = () => {
+    try { return fs.readFileSync(target, 'utf8'); }
+    catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  };
+  let current = read();
+  if (expectedText !== undefined && !(current === null ? expectedText === null : sameSourceText(current, expectedText))) {
+    for (;;) {
+      if (!await confirmOverwrite(current === null)) return null;
+      const latest = read();
+      if (latest === current) break;
+      current = latest;
+    }
+  }
+  fs.writeFileSync(target, text, 'utf8');
+  return true;
+}
+module.exports = { createProjectFile, sameSourceText, writeDocumentFile };

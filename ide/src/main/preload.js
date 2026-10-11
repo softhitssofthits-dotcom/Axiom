@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld('axiom', {
   onBackendFault: cb => { const listener = (_e, data) => cb(data); ipcRenderer.on('backend-fault', listener); return () => ipcRenderer.removeListener('backend-fault', listener); },
   // files
   readFileContent: (p) => ipcRenderer.invoke('read-file-content', p),
-  writeFile: (p, content) => ipcRenderer.invoke('write-file', p, content),
+  writeFile: (p, content, expectedText) => ipcRenderer.invoke('write-file', p, content, expectedText),
   createProjectFile: (root, target, text) => ipcRenderer.invoke('create-project-file', root, target, text),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   openProjectDialog: () => ipcRenderer.invoke('open-project-dialog'),

@@ -19,6 +19,7 @@ class AxiomIDE {
     this._stopRequested = false;
     this._consoleT0 = null;
     this.fileChangePrompts = new Set(); // paths with an open external-change prompt
+    this.fileChangeEvents = new Map();
     this._diagnosticFilter = 'all';
     // The program always runs in the integrated ConPTY terminal — the console is the only run mode.
     this.settings = { theme: 'dark', language: 'ru', recentFiles: [], projectExplorer: true };
@@ -1049,7 +1050,14 @@ class AxiomIDE {
   async prepareClose(path, discarded = null) {
     const entry = this.openFiles.get(path);
     if (!entry) return true;
-    if (!path.startsWith('untitled') && !this.openFiles.isDirty(path)) return true;
+    if (!path.startsWith('untitled') && !this.openFiles.isDirty(path)) {
+      let unavailable = false;
+      try { await API.readFileContent(path); }
+      catch { unavailable = true; }
+      if (this.openFiles.get(path) !== entry || entry.path !== path) return false;
+      if (unavailable) { entry.missing = true; this.markDirty(path, true); }
+      if (!this.openFiles.isDirty(path)) return true;
+    }
     const text = entry.model.getValue();
     const choice = await API.confirmDocumentClose(path.split(/[/\\]/).pop());
     if (this.openFiles.get(path) !== entry || entry.model.getValue() !== text) return false;
@@ -1618,6 +1626,7 @@ class AxiomIDE {
   async handleExternalChange(ev) {
     const p = ev && ev.path;
     if (!p || !this.openFiles.has(p) || p.startsWith('untitled')) return;
+    this.fileChangeEvents.set(p, ev);
     if (this.fileChangePrompts.has(p)) return;
     const entry = this.openFiles.get(p);
     const documentId = entry.documentId;
@@ -1625,20 +1634,33 @@ class AxiomIDE {
     this.fileChangePrompts.add(p);
     try {
       const name = p.split(/[/\\]/).pop();
-      const message = ev.exists ? I18N.t('dialog.fileChangedReload', name) : I18N.t('dialog.fileDeleted', name);
-      const reload = confirm(message);
-      if (!reload) return;
-      const content = await API.readFileContent(p);
-      const f = this.openFiles.get(p);
-      if (f !== entry || f.documentId !== documentId || f.revision !== revision || f.path !== p) return;
-      f.model.setValue(content);
-      this.markDirty(p, false);
-      this.setStatus(I18N.t('status.reloaded'));
-      if (this.activeFile === p) this.editor.focus();
+      let approved = false;
+      for (;;) {
+        const event = this.fileChangeEvents.get(p);
+        const f = this.openFiles.get(p);
+        if (f !== entry || f.documentId !== documentId || f.revision !== revision || f.path !== p) return;
+        if (!event.exists) {
+          f.missing = true;
+          this.markDirty(p, true);
+          this.setStatus(I18N.t('dialog.fileDeleted', name));
+          return;
+        }
+        if (!approved && !confirm(I18N.t('dialog.fileChangedReload', name))) return;
+        approved = true;
+        const content = await API.readFileContent(p);
+        if (this.openFiles.get(p) !== entry || entry.documentId !== documentId || entry.revision !== revision || entry.path !== p) return;
+        if (this.fileChangeEvents.get(p) !== event) continue;
+        f.model.setValue(content);
+        this.markDirty(p, false);
+        this.setStatus(I18N.t('status.reloaded'));
+        if (this.activeFile === p) this.editor.focus();
+        return;
+      }
     } catch {
       alert(I18N.t('dialog.openFailed', p));
     } finally {
       this.fileChangePrompts.delete(p);
+      this.fileChangeEvents.delete(p);
     }
   }
 

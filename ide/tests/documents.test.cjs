@@ -33,3 +33,10 @@ test('Удаление освобождает подписку, отмена д�
   const document = store.get('a'); assert.equal(store.size, 1);
   store.delete('a'); a.edit('PRINT 2'); assert.equal(document.revision, 0); assert.equal(store.size, 0);
 });
+test('Исчезнувший неизменённый файл требует сохранения даже после возврата исходного текста', () => {
+  const store = new DocumentStore(); const editor = model('PRINT 1'); store.set('a.axm', { model: editor });
+  store.get('a.axm').missing = true;
+  assert.equal(store.isDirty('a.axm'), true);
+  editor.edit('PRINT 2'); editor.edit('PRINT 1'); assert.equal(store.isDirty('a.axm'), true);
+  store.markSaved('a.axm'); assert.equal(store.isDirty('a.axm'), false);
+});
