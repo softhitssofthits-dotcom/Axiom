@@ -120,4 +120,5 @@ function recoverBackend() {
   });
   return recovering;
 }
-module.exports = { setupBackendIpc, closeBackend, recoverBackend };
+async function writeLockedFile(payload) { await recovering; return getClient().request('file.save', payload); }
+module.exports = { setupBackendIpc, closeBackend, recoverBackend, writeLockedFile };

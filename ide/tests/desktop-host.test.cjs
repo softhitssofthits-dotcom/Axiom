@@ -4,7 +4,8 @@ const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const net = require('node:net');
-const { randomUUID } = require('node:crypto');
+const { randomUUID, createHash } = require('node:crypto');
+const sourceHash = text => createHash('sha256').update(text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')).digest('hex');
 const { resolveHostPath } = require('../src/main/host-ensure');
 const root = path.resolve(__dirname, '../..');
 const exe = process.env.AXIOM_DESKTOP_HOST_EXE || resolveHostPath({}, root).exe;
@@ -68,6 +69,33 @@ async function withHost(fn) {
   const host = new Host();
   try { await host.event('host.ready'); await fn(host); } finally { await host.close(); }
 }
+
+test('Исключительное сохранение отказывает при чужом дескрипторе и не меняет файл', () => withHost(async h => {
+  const folder = path.join(root, '.artifacts/ide-shell/locked-save-tests'); fs.mkdirSync(folder, { recursive: true });
+  const file = path.join(folder, 'открытый.axm'); fs.writeFileSync(file, 'PRINT 1\r\n');
+  const fd = fs.openSync(file, 'r+');
+  try {
+    const blocked = await h.request('file.save', { path: file, text: 'PRINT 2\n', expectedHash: sourceHash('PRINT 1\n') });
+    assert.equal(blocked.ok, false); assert.equal(blocked.error.code, 'FILE_SAVE_FAILED');
+    assert.equal(fs.readFileSync(file, 'utf8'), 'PRINT 1\r\n');
+  } finally { fs.closeSync(fd); }
+  const saved = await h.request('file.save', { path: file, text: 'PRINT 2\n', expectedHash: sourceHash('PRINT 1\n') });
+  assert.equal(saved.ok, true); assert.equal(saved.payload.saved, true);
+  assert.equal(fs.readFileSync(file, 'utf8'), 'PRINT 2\n');
+}));
+test('Два процесса не могут сохранить разные тексты поверх одного исходного снимка', async () => {
+  const a = new Host(), b = new Host();
+  try {
+    await Promise.all([a.event('host.ready'), b.event('host.ready')]);
+    const folder = path.join(root, '.artifacts/ide-shell/locked-save-tests'); fs.mkdirSync(folder, { recursive: true });
+    const file = path.join(folder, 'одновременный.axm'); const baseline = 'a'.repeat(2 * 1024 * 1024); fs.writeFileSync(file, baseline);
+    const results = await Promise.all([a.request('file.save', { path: file, text: 'Первый процесс', expectedHash: sourceHash(baseline) }), b.request('file.save', { path: file, text: 'Второй процесс', expectedHash: sourceHash(baseline) })]);
+    assert.equal(results.filter(r => r.ok && r.payload.saved).length, 1);
+    const other = results.find(r => !r.ok || !r.payload.saved);
+    assert.ok(other.ok ? other.payload.conflict : other.error.code === 'FILE_SAVE_FAILED');
+    assert.ok(['Первый процесс', 'Второй процесс'].includes(fs.readFileSync(file, 'utf8')));
+  } finally { await a.close(); await b.close(); }
+});
 
 test('Умный идентификатор сохраняет прежние имена, строки и комментарии в обоих стилях',()=>withHost(async h=>{
  const sourceText='DIM PlayerSpeed AS INTEGER\nCONST MaxSpeed AS INTEGER = 9\nDIM Cells(0 TO 2) AS INTEGER\nplayerspeed = maxspeed\ncells(1) = playerspeed\nPRINT Twice(playerspeed), "playerspeed" \' playerspeed\n\nFUNCTION Twice(InputValue AS INTEGER) AS INTEGER\nRETURN inputvalue * 2\nEND FUNCTION\n';

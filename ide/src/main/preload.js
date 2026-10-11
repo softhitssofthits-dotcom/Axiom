@@ -51,6 +51,8 @@ contextBridge.exposeInMainWorld('axiom', {
 
   // settings
   getSettings: () => ipcRenderer.invoke('get-settings'),
+  getRecovery: () => ipcRenderer.invoke('get-recovery'),
+  saveRecoverySync: tabs => ipcRenderer.sendSync('save-recovery-sync', tabs),
   saveSettings: (patch) => ipcRenderer.invoke('save-settings', patch),
   // Synchronous final save from beforeunload (cannot await async invoke there)
   saveSettingsSync: (patch) => ipcRenderer.sendSync('save-settings-sync', patch),

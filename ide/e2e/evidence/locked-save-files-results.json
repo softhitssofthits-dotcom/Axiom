@@ -1,0 +1,171 @@
+[
+  {
+    "id": "files-create-without-overwrite",
+    "spec": "files.spec.js",
+    "name": "Создание файла не перезаписывает существующий и сохраняет открытую модель",
+    "ms": 2488,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56118/1765826a-d69e-40bf-82a2-1c862cef1dd1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "alert",
+        "message": "Файл «C:\\Axiom\\.artifacts\\ide-shell\\e2e\\18420\\project-create\\существующий.axm» уже открыт во вкладке редактора."
+      }
+    ]
+  },
+  {
+    "id": "files-mixed-line-endings-run",
+    "spec": "files.spec.js",
+    "name": "Run запускает сохранённый файл со смешанными окончаниями строк",
+    "ms": 2581,
+    "passed": 2,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56122/6e9b5a46-1f4c-4a87-884c-3ff4c604edf7\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-save-external-conflict",
+    "spec": "files.spec.js",
+    "name": "Внешнее изменение перед сохранением требует решения и сохраняет обе версии при отмене",
+    "ms": 2541,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56128/de625bf9-2e99-40ec-a43d-41ba99d9e233\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-external-deletion-clean-document",
+    "spec": "files.spec.js",
+    "name": "Удалённый неизменённый файл требует решения перед закрытием и восстанавливается сохранением",
+    "ms": 4487,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Error occurred in handler for 'read-file-content': Error: ENOENT: no such file or directory, open 'C:\\Axiom\\.artifacts\\ide-shell\\e2e\\18420\\delete-clean-document\\исчезнувший.axm'\n    at Object.readFileSync (node:fs:483:20)\n    at Object.readFileSync (node:electron/js2c/node_init:1:12479)\n    at C:\\Axiom\\ide\\src\\main\\ipc.js:384:66\n    at Session.<anonymous> (node:electron/js2c/browser_init:1:118964)\n    at Session.emit (node:events:514:28) {\n  errno: -4058,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: 'C:\\\\Axiom\\\\.artifacts\\\\ide-shell\\\\e2e\\\\18420\\\\delete-clean-document\\\\исчезнувший.axm'\n}\nDebugger ending on ws://127.0.0.1:56132/0bc70e8a-ab26-4699-8fa4-55ff1fb6d224\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-repeated-external-change-during-read",
+    "spec": "files.spec.js",
+    "name": "Повторное внешнее изменение во время чтения приводит к последней версии",
+    "ms": 2567,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56137/e9352bcb-0257-47fb-a771-10a738ed45e6\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Файл «повторные_правки.axm» изменён на диске. Перезагрузить его?"
+      }
+    ]
+  },
+  {
+    "id": "files-external-reload-preserves-new-edit",
+    "spec": "files.spec.js",
+    "name": "Запоздавшее чтение внешнего файла сохраняет новую правку редактора",
+    "ms": 2793,
+    "passed": 2,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56141/b66c65e2-d860-4bd9-b97b-583b1a5044cf\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Файл «правки.axm» изменён на диске. Перезагрузить его?"
+      }
+    ]
+  },
+  {
+    "id": "files-external-change-decisions",
+    "spec": "files.spec.js",
+    "name": "Внешнее изменение можно отклонить без потери правок и затем принять",
+    "ms": 5433,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56146/78ae1ccd-70a4-4b31-8043-d1de9f0e2197\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Файл «внешний.axm» изменён на диске. Перезагрузить его?"
+      },
+      {
+        "type": "confirm",
+        "message": "Файл «внешний.axm» изменён на диске. Перезагрузить его?"
+      }
+    ]
+  },
+  {
+    "id": "files-external-reload-reopened-document",
+    "spec": "files.spec.js",
+    "name": "Поздняя перезагрузка не меняет повторно открытую вкладку",
+    "ms": 2467,
+    "passed": 2,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56150/7d204096-c10e-4fda-88b2-9469b36a3e55\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Файл «повтор.axm» изменён на диске. Перезагрузить его?"
+      }
+    ]
+  },
+  {
+    "id": "files-external-deletion-preserves-buffer",
+    "spec": "files.spec.js",
+    "name": "Удаление файла снаружи не уничтожает открытую модель",
+    "ms": 3986,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56155/9e5e9fd4-ade0-4d31-bb5a-62411fbf93c4\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-save-open-writer",
+    "spec": "files.spec.js",
+    "name": "Открытый дескриптор другого процесса препятствует сохранению без потери текста",
+    "ms": 2611,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56160/bc1f9465-30dd-4fdb-894b-5a81c784da06\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

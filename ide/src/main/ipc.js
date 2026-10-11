@@ -175,6 +175,7 @@ function startConsoleRun(filePath) {
 // Polls mtime/size for every open file so the IDE can offer a reload when the
 // file is changed or deleted outside of the IDE (no fs.watch quirks, deterministic).
 const watchedFiles = new Map(); // path -> { exists, mtimeMs, size, lastNotifiedMtime, deletedNotified }
+const activeFileWrites = new Map();
 let watchTimer = null;
 
 function statOf(p) {
@@ -195,6 +196,7 @@ function ensureWatchLoop() {
   if (watchTimer) return;
   watchTimer = setInterval(() => {
     for (const [p, w] of watchedFiles) {
+      if (activeFileWrites.has(p)) continue;
       const info = statOf(p);
       if (!info.exists) {
         if (w.exists && !w.deletedNotified) {
@@ -381,6 +383,7 @@ function setupIpc(logger) {
 
   ipcMain.handle('read-file-content', async (_e, filePath) => fs.readFileSync(filePath, 'utf-8'));
   ipcMain.handle('write-file', async (_e, filePath, content, expectedText) => {
+    activeFileWrites.set(filePath, (activeFileWrites.get(filePath) || 0) + 1);
     try {
       const saved = await require('./file-service').writeDocumentFile(filePath, content, expectedText, async missing => {
         const result = await dialog.showMessageBox({
@@ -389,12 +392,15 @@ function setupIpc(logger) {
           detail: filePath, buttons: ['Заменить', 'Отмена'], defaultId: 1, cancelId: 1,
         });
         return result.response === 0;
-      });
+      }, payload => require('./backend-ipc').writeLockedFile(payload));
       if (saved === null) return null;
       watcherNoteSelfWrite(filePath); // own writes must not trigger the external-change prompt
       return true;
     } catch {
       return false;
+    } finally {
+      const remaining = activeFileWrites.get(filePath) - 1;
+      if (remaining) activeFileWrites.set(filePath, remaining); else activeFileWrites.delete(filePath);
     }
   });
 
@@ -478,6 +484,12 @@ function setupIpc(logger) {
     return picked;
   });
 
+  const recovery = new (require('./recovery-store').RecoveryStore)(app.getPath('userData'));
+  ipcMain.handle('get-recovery', () => recovery.load()?.tabs ?? null);
+  ipcMain.on('save-recovery-sync', (event, tabs) => {
+    try { event.returnValue = { ok: true, sequence: recovery.save(tabs) }; }
+    catch (error) { event.returnValue = { ok: false, message: error.message }; }
+  });
   ipcMain.handle('get-settings', async () => loadSettings());
   ipcMain.handle('save-settings', async (_e, patch) => {
     Object.assign(loadSettings(), patch);

@@ -151,3 +151,18 @@ module.exports.push({ id: 'files-external-deletion-preserves-buffer', name: 'У�
   C.ok(await S.page.evaluate(() => window.__ide.save()), 'Явное сохранение воссоздаёт файл');
   C.eq(require('fs').readFileSync(file, 'utf8'), 'PRINT 99\n', 'Записан пользовательский текст');
 } });
+module.exports.push({ id: 'files-save-open-writer', name: 'Открытый дескриптор другого процесса препятствует сохранению без потери текста', async fn({ S, C }) {
+  const fs = require('fs'); const file = writeAxm(testWorkspace('save-open-writer'), 'открытый.axm', 'PRINT 1\n');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openFile(p), file);
+  await S.page.evaluate(() => { const i = window.__ide; i.settings.formatOnBlur = false; i.settings.checkOnChange = false;
+    i.editor.getModel().setValue('PRINT 2\n'); window.__saveErrors = []; window.alert = message => window.__saveErrors.push(message); });
+  const fd = fs.openSync(file, 'r+');
+  try {
+    C.eq(await S.page.evaluate(() => window.__ide.save()), false, 'Чужой дескриптор отменяет запись');
+    C.eq(fs.readFileSync(file, 'utf8'), 'PRINT 1\n', 'Исходный файл не изменён');
+    C.ok(await S.page.evaluate(p => window.__ide.openFiles.isDirty(p), file), 'Правка остаётся несохранённой');
+    C.eq(await S.page.evaluate(() => window.__saveErrors.length), 1, 'Ошибка сохранения показана пользователю');
+  } finally { fs.closeSync(fd); }
+  C.ok(await S.page.evaluate(() => window.__ide.save()), 'После освобождения дескриптора запись проходит');
+  C.eq(fs.readFileSync(file, 'utf8'), 'PRINT 2\n', 'Записана правка редактора');
+} });

@@ -5,7 +5,8 @@ class AxiomIDE {
     this.monaco = null;
     this.langMeta = null; // language registry from `axiom metadata`; null until loaded
     this.editor = null;
-    this.openFiles = new window.DocumentStore();
+    this._recoveryEnabled = false;
+    this.openFiles = new window.DocumentStore(() => this.persistRecovery());
     this.editedLines = new window.EditedLines();
     this.documentServices = new window.DocumentServices(this.openFiles, API);
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
@@ -83,6 +84,8 @@ class AxiomIDE {
       await this.restoreTabs();
       await this.restoreProject();
       if (!this.openFiles.size) this.newFile();
+      this._recoveryEnabled = true;
+      this.persistRecovery();
       this.renderRecentFiles();
       this.applyLocale();
       API.onFileChanged((ev) => this.handleExternalChange(ev));
@@ -969,6 +972,7 @@ class AxiomIDE {
     this.updateSaveButton();
     this.editor.focus();
     this.rebuildOutline();
+    this.persistRecovery();
   }
 
   async closeFile(p, approved = false) {
@@ -980,6 +984,7 @@ class AxiomIDE {
     if (!approved && !await this.prepareClose(p)) return false;
     p = f.path;
     if (this.openFiles.get(p) !== f) return false;
+    if (!this.persistRecovery(new Set([f]))) return false;
     this.monaco.editor.setModelMarkers(f.model, 'axiom', []);
     this._lastDiagnostics = (this._lastDiagnostics || []).filter(d => d.file !== p);
     f.model.dispose();
@@ -1017,6 +1022,7 @@ class AxiomIDE {
     if (d) this.dirty.add(p); else this.dirty.delete(p);
     const tab = [...document.querySelectorAll('.editor-tab')].find((t) => t.dataset.path === p);
     if (tab) tab.querySelector('.dirty-indicator').style.display = d ? 'inline' : 'none';
+    this.persistRecovery();
   }
 
   async save(path = this.activeFile, saveAs = false) {
@@ -1079,6 +1085,7 @@ class AxiomIDE {
       if (this.openFiles.size !== approved.size || [...this.openFiles.values()].some(e => !approved.has(e) || approved.get(e) !== e.model.getValue())) return;
       this._discardedOnExit = discarded;
       this.saveOpenTabs(true);
+      if (this._recoveryFailed) { this._discardedOnExit = null; return; }
       API.approveWindowClose();
     } finally { this._closingWindow = false; }
   }
@@ -2031,7 +2038,25 @@ class AxiomIDE {
 
   // ================= persistence =================
 
+  persistRecovery(excluded = null) {
+    if (!this._recoveryEnabled) return true;
+    const tabs = [];
+    for (const [p, f] of this.openFiles) {
+      if (excluded?.has(f)) continue;
+      const discarded = this._discardedOnExit?.has(f);
+      if (discarded && p.startsWith('untitled')) continue;
+      tabs.push({ path: p, isActive: p === this.activeFile, content: discarded ? f.savedText : f.model.getValue(),
+        savedText: f.savedText, isDirty: !discarded && (p.startsWith('untitled') || this.openFiles.isDirty(p)),
+        missing: !!f.missing, readonly: !!f.readonly });
+    }
+    const result = API.saveRecoverySync(tabs);
+    if (!result.ok) { this._recoveryFailed = true; this.setStatus('Не удалось сохранить данные восстановления: ' + result.message); }
+    else this._recoveryFailed = false;
+    return result.ok;
+  }
+
   saveOpenTabs(useSync = false) {
+    this.persistRecovery();
     const tabs = [];
     for (const [p, f] of this.openFiles) {
       const discarded = this._discardedOnExit?.has(f);
@@ -2048,22 +2073,34 @@ class AxiomIDE {
   }
 
   async restoreTabs() {
-    const tabs = this.settings.openTabs;
+    const recovery = await API.getRecovery();
+    const tabs = recovery ?? this.settings.openTabs;
     if (Array.isArray(tabs) && tabs.length) {
       for (const tab of tabs) {
         if (tab.path && !tab.path.startsWith('untitled')) {
           try {
             const disk = await API.readFileContent(tab.path);
-            const content = typeof tab.content === 'string' && tab.content !== disk ? tab.content : disk;
-            const model = this.monaco.editor.createModel(content, 'axiom', this.monaco.Uri.file(tab.path));
-            this.openFiles.set(tab.path, { model, viewState: null });
+            const restored = typeof tab.content === 'string' && (recovery ? tab.isDirty : tab.content !== disk);
+            const model = this.monaco.editor.createModel(restored ? tab.content : disk.replace(/^\uFEFF/, ''), 'axiom', this.monaco.Uri.file(tab.path));
+            this.openFiles.set(tab.path, { model, viewState: null, readonly: !!tab.readonly });
+            this.openFiles.get(tab.path).savedText = restored ? (tab.savedText ?? disk.replace(/^\uFEFF/, '').replace(/\r\n?/g, model.getEOL())) : model.getValue();
+            this.openFiles.get(tab.path).missing = !!(restored && tab.missing);
             this.createTab(tab.path);
-            if (typeof tab.content === 'string' && tab.content !== disk) this.markDirty(tab.path, true);
+            if (restored) this.markDirty(tab.path, true);
             if (tab.isActive) this.switchToFile(tab.path);
-          } catch { /* file gone */ }
+          } catch {
+            if (typeof tab.content !== 'string') continue;
+            const model = this.monaco.editor.createModel(tab.content, 'axiom', this.monaco.Uri.file(tab.path));
+            this.openFiles.set(tab.path, { model, viewState: null, readonly: !!tab.readonly });
+            const entry = this.openFiles.get(tab.path); entry.savedText = tab.savedText ?? tab.content; entry.missing = true;
+            this.createTab(tab.path); this.markDirty(tab.path, true);
+            if (tab.isActive) this.switchToFile(tab.path);
+          }
+          API.watchFile(tab.path).catch(() => {});
         } else if (tab.path && typeof tab.content === 'string') {
           const model = this.monaco.editor.createModel(tab.content, 'axiom');
           this.openFiles.set(tab.path, { model, viewState: null });
+          this.openFiles.get(tab.path).savedText = tab.savedText ?? '';
           this.createTab(tab.path);
           this.markDirty(tab.path, true);
           if (tab.isActive) this.switchToFile(tab.path);

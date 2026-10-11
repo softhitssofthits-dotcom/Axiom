@@ -200,6 +200,13 @@ internal sealed class DesktopHost : IDisposable
                         "debug.stepOut" => _runner.StepOut(debugger), "debug.stepBack" => _runner.StepBack(debugger),
                         _ => _runner.Continue(debugger) });
                     break;
+                case "file.save":
+                    var fileRequestId = id;
+                    _ = Task.Run(() => {
+                        try { Respond(fileRequestId, FileCommands.Save(payload)); }
+                        catch (Exception e) { Error(fileRequestId, "FILE_SAVE_FAILED", e.Message); }
+                    });
+                    break;
                 case "language.metadata":
                     using (var metadata = JsonDocument.Parse(Axiom.Semantics.AxiomLanguageMetadata.ToJson()))
                         Respond(id, metadata.RootElement.Clone());

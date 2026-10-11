@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { createHash } = require('node:crypto');
 
 function createProjectFile(root, target, text) {
   if (typeof root !== 'string' || typeof target !== 'string' || typeof text !== 'string')
@@ -22,22 +23,17 @@ function sameSourceText(saved, snapshot) {
   return typeof saved === 'string' && typeof snapshot === 'string' &&
     saved.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n') === snapshot.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 }
-// Проверка и запись выполняются в одном процессе; после диалога версия проверяется снова.
-async function writeDocumentFile(target, text, expectedText, confirmOverwrite) {
-  const read = () => {
-    try { return fs.readFileSync(target, 'utf8'); }
-    catch (error) { if (error.code === 'ENOENT') return null; throw error; }
-  };
-  let current = read();
-  if (expectedText !== undefined && !(current === null ? expectedText === null : sameSourceText(current, expectedText))) {
-    for (;;) {
-      if (!await confirmOverwrite(current === null)) return null;
-      const latest = read();
-      if (latest === current) break;
-      current = latest;
-    }
+async function writeDocumentFile(target, text, expectedText, confirmOverwrite, attempt) {
+  let exact = false;
+  let expectedHash = expectedText === undefined ? undefined : expectedText === null ? null :
+    createHash('sha256').update(expectedText.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')).digest('hex');
+  for (;;) {
+    const result = await attempt({ path: target, text, expectedHash, exact });
+    if (result.saved) return true;
+    if (!result.conflict) throw new Error('Не удалось сохранить файл.');
+    if (!await confirmOverwrite(result.missing)) return null;
+    expectedHash = result.currentHash;
+    exact = true;
   }
-  fs.writeFileSync(target, text, 'utf8');
-  return true;
 }
 module.exports = { createProjectFile, sameSourceText, writeDocumentFile };

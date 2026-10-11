@@ -4,7 +4,14 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createProjectFile, sameSourceText } = require('../src/main/file-service');
-const { writeDocumentFile } = require('../src/main/file-service');
+const { writeDocumentFile: saveWithAttempt } = require('../src/main/file-service');
+const { BackendClient } = require('../src/main/backend-client');
+const { resolveHostPath } = require('../src/main/host-ensure');
+async function writeDocumentFile(...args) {
+  const client = new BackendClient({ executable: resolveHostPath({}, path.resolve(__dirname, '../..')).exe });
+  try { await client.ready(); return await saveWithAttempt(...args, payload => client.request('file.save', payload)); }
+  finally { await client.close(); }
+}
 function scratchWorkspace(prefix) {
   const base = path.resolve(__dirname, '../../.artifacts');
   fs.mkdirSync(base, { recursive: true });

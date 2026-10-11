@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 82,
+  "count": 85,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -151,6 +151,11 @@
       "id": "files-external-deletion-preserves-buffer",
       "spec": "files.spec.js",
       "name": "Удаление файла снаружи не уничтожает открытую модель"
+    },
+    {
+      "id": "files-save-open-writer",
+      "spec": "files.spec.js",
+      "name": "Открытый дескриптор другого процесса препятствует сохранению без потери текста"
     },
     {
       "id": "format-menu-triggers",
@@ -366,6 +371,16 @@
       "id": "save-window-cancel",
       "spec": "save.spec.js",
       "name": "Отмена выхода оставляет окно и изменённый текст"
+    },
+    {
+      "id": "save-recovery-main-crash",
+      "spec": "save.spec.js",
+      "name": "Авария основного процесса восстанавливает последнюю правку, безымянный и исчезнувший документы"
+    },
+    {
+      "id": "save-recovery-renderer-crash",
+      "spec": "save.spec.js",
+      "name": "Авария интерфейса восстанавливает документы без запуска прежней программы"
     },
     {
       "id": "shell-responsive-commands",
