@@ -268,14 +268,14 @@ internal sealed class DesktopHost : IDisposable
             _debugger = debugger; _stopId = (++_stopCounter).ToString();
             Event("execution.state", new { state = "Paused" });
             Event("debug.paused", new { stopId = _stopId, debugger.StopInfo.Line, debugger.StopInfo.Column,
-                debugger.StopInfo.Opcode, debugger.StopInfo.CallDepth, debugger.StopInfo.CanStepBack, outputText = result.OutputText });
+                debugger.StopInfo.Opcode, debugger.StopInfo.CallDepth, debugger.StopInfo.CanStepBack, outputText = _console.OutputText });
             return;
         }
         var status = result.Status switch {
             ProgramRunStatus.Success => "Succeeded", ProgramRunStatus.Cancelled => "Cancelled",
             ProgramRunStatus.SyntaxFailure or ProgramRunStatus.SemanticFailure or ProgramRunStatus.BackendFailure => "CompilationFailed",
             ProgramRunStatus.RuntimeFailure => "RuntimeFailed", _ => "InfrastructureFailed" };
-        Event("execution.finished", new { status, result.OutputText, actualEngine = result.ActualEngine?.ToString(),
+        Event("execution.finished", new { status, outputText = _console.OutputText, actualEngine = result.ActualEngine?.ToString(),
             diagnostics = result.Diagnostics, durationMilliseconds = result.TotalDuration.TotalMilliseconds });
         Finish();
     }

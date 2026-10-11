@@ -1,13 +1,13 @@
 class ExecutionController {
   constructor(ide, api) {
     this.ide = ide; this.api = api; this.sessionId = null; this.stopId = null;
-    this.inputRequestId = null; this.inputText = ''; this.outputText = ''; this.pendingEvents = [];
+    this.inputRequestId = null; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
     this.disposers = [api.onBackendEvent(message => this.event(message)),
       api.onBackendFault(fault => this.fault(fault.message))];
   }
   async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
     const ide = this.ide;
-    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.inputRequestId = null; this.stopId = null;
+    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.stopId = null;
     this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
@@ -34,12 +34,15 @@ class ExecutionController {
         this.ide.setStatus(I18N.t(({Compiling:'trace.compiling',Running:'status.running',WaitingForInput:'trace.waiting',Paused:'trace.running'})[payload.state] || 'trace.running'));
         break;
       case 'output.append': case 'output.replace':
-        this.outputText = message.event === 'output.append' ? this.outputText + payload.text : payload.text;
+        // Снимок INPUT может опережать таймер вывода. append относится только
+        // к опубликованному потоку, а не к уже полученному полному снимку.
+        this.streamedOutputText = message.event === 'output.append' ? this.streamedOutputText + payload.text : payload.text;
+        if (message.event === 'output.replace' || !this.outputText.startsWith(this.streamedOutputText)) this.outputText = this.streamedOutputText;
         this.renderOutput(); this.api.acknowledgeOutput(this.sessionId, payload.outputVersion); break;
       case 'input.request':
-        this.inputRequestId = payload.inputRequestId; this.inputText = '';
+        this.inputRequestId = payload.inputRequestId; this.inputText = ''; this.inputPrompt = payload.prompt;
         this.outputText = payload.outputText; this.renderOutput();
-        this.ide.term.write(payload.prompt); this.ide.term.focus(); break;
+        this.ide.term.focus(); break;
       case 'debug.paused':
         this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
@@ -53,6 +56,7 @@ class ExecutionController {
         break;
       case 'graphics.error': this.fault(payload.message); break;
       case 'execution.finished':
+        this.inputRequestId = null; this.inputPrompt = ''; this.inputText = '';
         this.outputText = payload.outputText; this.renderOutput();
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
         this.ide.setStatus(I18N.t(({Succeeded:'status.finished',Cancelled:'status.stopped',CompilationFailed:'trace.compileFailed',RuntimeFailed:'trace.runtimeFailed'})[payload.status] || 'trace.failed'));
@@ -68,7 +72,8 @@ class ExecutionController {
   }
   renderOutput() {
     if (!this.ide.term) return;
-    this.ide.term.reset(); this.ide.term.write((this.outputText || '').replace(/\r?\n/g, '\r\n'));
+    const text = (this.outputText || '') + (this.inputRequestId ? this.inputPrompt + this.inputText : '');
+    this.ide.term.reset(); this.ide.term.write(text.replace(/\r?\n/g, '\r\n'));
   }
   async input(data) {
     if (data === '\u0003') { await this.stop(); return; }
@@ -76,7 +81,7 @@ class ExecutionController {
     for (const character of data) {
       if (character === '\r' || character === '\n') {
         const id = this.inputRequestId; const text = this.inputText;
-        this.inputRequestId = null; this.inputText = ''; this.ide.term.write('\r\n');
+        this.inputRequestId = null; this.inputText = ''; this.inputPrompt = ''; this.ide.term.write('\r\n');
         const result = await this.api.submitInput(this.sessionId, id, text);
         if (!result.ok) this.fault(result.error.message);
         break;

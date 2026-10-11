@@ -1,0 +1,46 @@
+[
+  {
+    "id": "input-sequential-prompts",
+    "spec": "input-prompts.spec.js",
+    "name": "Два последовательных INPUT: приглашение и введённое имя не повторяются",
+    "ms": 5640,
+    "passed": 8,
+    "failures": [],
+    "notes": [
+      "Консоль во время второго INPUT: Введите ваше имя: Анна\nВведите ваш возраст?\n\n"
+    ],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59429/bf8ddb9b-ff02-4257-822b-83705646d9fc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-snapshot-stream-order",
+    "spec": "input-prompts.spec.js",
+    "name": "Снимок INPUT и запоздалый поток вывода: согласование и сохранность набора",
+    "ms": 3789,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59434/cd729412-c90c-484c-9b5c-3534457bca99\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-name-age-sample",
+    "spec": "input-prompts.spec.js",
+    "name": "Учебный пример имени и возраста запускается в Electron",
+    "ms": 13715,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59440/ecc6b494-99a9-43f6-a08f-cc4ebc5df5fd\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

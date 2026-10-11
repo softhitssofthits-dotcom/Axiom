@@ -1,0 +1,30 @@
+[
+  {
+    "id": "graphics-close-ide-owns-host",
+    "spec": "graphics-shutdown.spec.js",
+    "name": "Выход из Electron при INPUT, SCREEN/SLEEP и цикле CANVAS освобождает свой процесс",
+    "ms": 13333,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Waiting for the debugger to disconnect...\r\nWaiting for the debugger to disconnect...\r\nWaiting for the debugger to disconnect...\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-host-fault-recover",
+    "spec": "graphics-shutdown.spec.js",
+    "name": "После отказа своего DesktopHost Electron отклоняет старый ввод и запускает новую VM",
+    "ms": 6628,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59412/26d7ac4b-c33c-40dd-bad9-43b810f197e0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
